@@ -1,15 +1,15 @@
-# Dwf Data/Document WorkFlow
+# DataWF Data/Document WorkFlow
 
 ## Overview
 
 Data/Document Work Flow is a set of .NET C# libraries to build simple cross-platform information system:
 
-- Dwf.Common - collections, reflections, io and networks helpers
-- Dwf.Data - cross RDBMS ORM
-- Dwf.Gui - Xwt based desktop UI
-- Dwf.Data.Gui - Database desktop UI
-- Dwf.Module.Flow - Document work flow module
-- Dwf.Mudule.FlowGui - Configure, create, edit and send document throw the flow
+- DataWF.Common - collections, reflections, io and networks helpers
+- DataWF.Data - cross RDBMS ORM
+- DataWF.Gui - Xwt based desktop UI
+- DataWF.Data.Gui - Database desktop UI
+- DataWF.Module.Flow - Document work flow module
+- DataWF.Mudule.FlowGui - Configure, create, edit and send document throw the flow
 
 Note: At this time, most of Dwf libraries is in developing stage and not ready for production!
 
@@ -18,7 +18,7 @@ Note: At this time, most of Dwf libraries is in developing stage and not ready f
 Implement RPC/REST Server with Desktop/Web UI.
 Avalonia UI and move project to .net standard
 
-## Dwf.Data
+## DataWF.Data
 
 ORM based on ADO.NET drivers. Not use EF.
 
@@ -78,7 +78,7 @@ Connection example:
     var connection = new DBConnection("test") { System = DBSystem.SQLite, DataBase = "test.sqlite" };
     var qresult = DBService.ExecuteQResult(connection, $"select * from {SomeTableName}");
 
-## Dwf.Gui
+## DataWF.Gui
 
 Cross Platform Desktop UI, based on Xwt. Provide several widgets to build data navigation application
 
@@ -92,17 +92,17 @@ Main widgets:
 
 Note: Move UI from WinForm/Gtk# to Xwt is not compleate and little bugly.
 
-## Dwf.Data.Gui
+## DataWF.Data.Gui
 
 - DB Configure
 - Database export utilite
 - Query tool
 - Report engeene
 
-## Dwf.Module.Flow
+## DataWF.Module.Flow
 
 WorkFlow manager (Users & User Group & Privileges, Flows, Stages, Templates, Attributes);
 
-## Dwf.Module.FlowGui
+## DataWF.Module.FlowGui
 
 Document editor (Create, Edit, Send document throw the flow);
