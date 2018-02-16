@@ -7,9 +7,9 @@ namespace DataWF.Common
     public delegate V GetHandler<T, V>(ref T target);
     public delegate void SetHandler<T, V>(ref T target, V value);
 
-    public class EmitRefPropertyInvoker<T, V> : IInvoker// where T : struct
+    public class RefPropertyInvoker<T, V> : IInvoker// where T : struct
     {
-        public EmitRefPropertyInvoker(PropertyInfo info)
+        public RefPropertyInvoker(PropertyInfo info)
         {
             Name = info.Name;
             CanWrite = info.CanWrite;

@@ -6,15 +6,15 @@ using System.Reflection.Emit;
 
 namespace DataWF.Common
 {
-    public class EmitComplexInvoker<T, V> : Invoker<T, V>
+    public class ComplexInvoker<T, V> : Invoker<T, V>
     {
-        public EmitComplexInvoker(string property, List<MemberInfo> list)
+        public ComplexInvoker(string property, List<MemberInfo> list)
             : base(property, GetInvokerGet(property, list), GetInvokerSet(property, list))
         {
 
         }
 
-        public EmitComplexInvoker(string property)
+        public ComplexInvoker(string property)
             : this(property, TypeHelper.GetMemberInfoList(typeof(T), property))
         {
         }

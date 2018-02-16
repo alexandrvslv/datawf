@@ -4,13 +4,13 @@ using System.Reflection;
 
 namespace DataWF.Common
 {
-    public class EmitPropertyInvoker<T, V> : Invoker<T, V>
+    public class PropertyInvoker<T, V> : Invoker<T, V>
     {
-        public EmitPropertyInvoker(PropertyInfo info)
+        public PropertyInvoker(PropertyInfo info)
             : base(info.Name, GetInvokerGet(info.GetGetMethod()), info.CanWrite ? GetInvokerSet(info.GetSetMethod()) : null)
         { }
 
-        public EmitPropertyInvoker(string name)
+        public PropertyInvoker(string name)
             : this((PropertyInfo)TypeHelper.GetMemberInfo(typeof(T), name))
         { }
 

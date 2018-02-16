@@ -4,9 +4,9 @@ using System.Reflection;
 
 namespace DataWF.Common
 {
-    public class EmitPropertyIndexInvoker<T, V, K> : IndexInvoker<T, V, K>
+    public class IndexPropertyInvoker<T, V, K> : IndexInvoker<T, V, K>
     {
-        public EmitPropertyIndexInvoker(PropertyInfo info, K index)
+        public IndexPropertyInvoker(PropertyInfo info, K index)
             : base(info.Name, GetInvokerGet(info.GetGetMethod()), info.CanWrite ? GetInvokerSet(info.GetSetMethod()) : null)
         {
             Index = index;

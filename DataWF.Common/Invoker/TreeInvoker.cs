@@ -2,9 +2,9 @@
 
 namespace DataWF.Common
 {
-    public class GroupIsExpandedInvoker : IInvoker<IGroup, bool>
+    public class TreeInvoker : IInvoker<IGroup, bool>
     {
-        public GroupIsExpandedInvoker()
+        public TreeInvoker()
         {
             Name = nameof(IGroup.IsExpanded);
             DataType = typeof(bool);

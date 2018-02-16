@@ -4,10 +4,10 @@ using System.Reflection;
 
 namespace DataWF.Common
 {
-    public class EmitMethodInvoker<T, V> : IndexInvoker<T, V, object[]>
+    public class MethodInvoker<T, V> : IndexInvoker<T, V, object[]>
     {
 
-        public EmitMethodInvoker(MethodInfo infoGet, MethodInfo infoSet)
+        public MethodInvoker(MethodInfo infoGet, MethodInfo infoSet)
             : base(infoGet.Name, GetMethodInvoker(infoGet))
         {
 

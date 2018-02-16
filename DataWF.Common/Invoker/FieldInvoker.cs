@@ -4,13 +4,13 @@ using System.Reflection;
 
 namespace DataWF.Common
 {
-    public class EmitFieldInvoker<T, V> : Invoker<T, V>
+    public class FieldInvoker<T, V> : Invoker<T, V>
     {
-        public EmitFieldInvoker(FieldInfo info)
+        public FieldInvoker(FieldInfo info)
             : base(info.Name, GetFieldGetInvoker(info), GetFieldSetInvoker(info))
         { }
 
-        public EmitFieldInvoker(string name)
+        public FieldInvoker(string name)
             : this((FieldInfo)TypeHelper.GetMemberInfo(typeof(T), name))
         { }
 
