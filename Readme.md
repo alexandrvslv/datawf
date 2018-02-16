@@ -11,7 +11,7 @@ Data/Document Work Flow is a set of .NET C# libraries to build simple cross-plat
 - DataWF.Module.Flow - Document work flow module
 - DataWF.Mudule.FlowGui - Configure, create, edit and send document throw the flow
 
-Note: At this time, most of Dwf libraries is in developing stage and not ready for production!
+Note: At this time, most of DataWF libraries is in developing stage and not ready for production!
 
 ## Planing
 
