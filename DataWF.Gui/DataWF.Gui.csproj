@@ -1,0 +1,180 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{337D88BA-7460-4C2A-B83D-6B27DF626983}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>DataWF.GuiXwt</RootNamespace>
+    <AssemblyName>DataWF.Gui</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <NoStdLib>false</NoStdLib>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <NoStdLib>false</NoStdLib>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System.Data" />
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Xwt">
+      <HintPath>..\packages\Xwt.0.2.70\lib\net40\Xwt.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="GroupBox\GroupBox.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="GuiService.cs" />
+    <Compile Include="LayoutList\Enums.cs" />
+    <Compile Include="LayoutList\LayoutValueChangedEventArgs.cs" />
+    <Compile Include="LayoutList\LayoutColumn.cs" />
+    <Compile Include="LayoutList\LayoutColumnList.cs" />
+    <Compile Include="LayoutList\LayoutColumnMap.cs" />
+    <Compile Include="LayoutList\LayoutEditor.cs" />
+    <Compile Include="LayoutList\LayoutGroup.cs" />
+    <Compile Include="LayoutList\LayoutGroupList.cs" />
+    <Compile Include="LayoutList\LayoutList.cs" />
+    <Compile Include="LayoutList\LayoutListDrawArgs.cs" />
+    <Compile Include="LayoutList\LayoutListPropertiesArgs.cs" />
+    <Compile Include="LayoutList\LayoutHitTestEventArgs.cs" />
+    <Compile Include="LayoutList\LayoutHitTestInfo.cs" />
+    <Compile Include="LayoutList\LayoutListInfo.cs" />
+    <Compile Include="LayoutList\LayoutListInfoCache.cs" />
+    <Compile Include="LayoutList\LayoutSelection.cs" />
+    <Compile Include="LayoutList\LayoutSort.cs" />
+    <Compile Include="LayoutList\LayoutDataTable.cs" />
+    <Compile Include="Node\Category.cs" />
+    <Compile Include="Node\CategoryList.cs" />
+    <Compile Include="Node\Node.cs" />
+    <Compile Include="Node\LayoutNodeInfo.cs" />
+    <Compile Include="Node\LayoutNodeList.cs" />
+    <Compile Include="Dock\DockBox.cs" />
+    <Compile Include="Dock\DockBoxHitTest.cs" />
+    <Compile Include="Dock\DockInterface.cs" />
+    <Compile Include="Dock\DockMap.cs" />
+    <Compile Include="Dock\DockMapItem.cs" />
+    <Compile Include="Dock\DockPage.cs" />
+    <Compile Include="Dock\DockPageBox.cs" />
+    <Compile Include="Dock\DockPanel.cs" />
+    <Compile Include="Cells\CellEditorAccess.cs" />
+    <Compile Include="Cells\CellEditorCheck.cs" />
+    <Compile Include="Cells\CellEditorColor.cs" />
+    <Compile Include="Cells\CellEditorDate.cs" />
+    <Compile Include="Cells\CellEditorEnum.cs" />
+    <Compile Include="Cells\CellEditorFields.cs" />
+    <Compile Include="Cells\CellEditorFile.cs" />
+    <Compile Include="Cells\CellEditorFont.cs" />
+    <Compile Include="Cells\CellEditorImage.cs" />
+    <Compile Include="Cells\CellEditorNetTree.cs" />
+    <Compile Include="Cells\CellEditorPath.cs" />
+    <Compile Include="Cells\CellEditorList.cs" />
+    <Compile Include="Cells\CellEditorText.cs" />
+    <Compile Include="Misc\BarCodeCtrl.cs" />
+    <Compile Include="GroupBox\GroupBoxItem.cs" />
+    <Compile Include="GroupBox\GroupBoxMap.cs" />
+    <Compile Include="Misc\IntervalSelector.cs" />
+    <Compile Include="Misc\LogExplorer.cs" />
+    <Compile Include="Misc\LogList.cs" />
+    <Compile Include="Misc\NetTree.cs" />
+    <Compile Include="Misc\NotifyWindow.cs" />
+    <Compile Include="Misc\ToolTipControl.cs" />
+    <Compile Include="Misc\ToolTipWindow.cs" />
+    <Compile Include="Misc\ToolWindow.cs" />
+    <Compile Include="Tool\GlyphMenuItem.cs" />
+    <Compile Include="Tool\ToolDropDown.cs" />
+    <Compile Include="Tool\ToolItem.cs" />
+    <Compile Include="Tool\ToolSplit.cs" />
+    <Compile Include="Tool\SeparatorToolItem.cs" />
+    <Compile Include="Tool\Toolsbar.cs" />
+    <Compile Include="Tool\ToolTextEntry.cs" />
+    <Compile Include="Dock\DockPageList.cs" />
+    <Compile Include="Dock\DockPageEventArgs.cs" />
+    <Compile Include="Layout\ILayoutMap.cs" />
+    <Compile Include="Layout\ILayoutItem.cs" />
+    <Compile Include="Layout\LayoutMap.cs" />
+    <Compile Include="Layout\LayoutItem.cs" />
+    <Compile Include="Layout\LayoutMapTool.cs" />
+    <Compile Include="Layout\LayoutItems.cs" />
+    <Compile Include="LayoutList\ILayoutCellEditor.cs" />
+    <Compile Include="LayoutList\LayoutSelectionEventArgs.cs" />
+    <Compile Include="LayoutList\LayoutSelectionRow.cs" />
+    <Compile Include="LayoutList\LayoutSortList.cs" />
+    <Compile Include="Tool\ToolLayoutMap.cs" />
+    <Compile Include="Tool\ToolLayoutItem.cs" />
+    <Compile Include="Cells\CellEditorGlyph.cs" />
+    <Compile Include="Cells\CellEditorLocalizeImage.cs" />
+    <Compile Include="Tool\ToolItemWidget.cs" />
+    <Compile Include="Test\DiffTest.cs" />
+    <Compile Include="Test\FileItem.cs" />
+    <Compile Include="Test\Files.cs" />
+    <Compile Include="Test\SyntaxText.cs" />
+    <Compile Include="Test\TestClass.cs" />
+    <Compile Include="Tool\ToolProgressBar.cs" />
+    <Compile Include="Tool\ToolComboBox.cs" />
+    <Compile Include="Misc\VPanel.cs" />
+    <Compile Include="Styles\CellStyle.cs" />
+    <Compile Include="Styles\CellStyleBrush.cs" />
+    <Compile Include="Styles\PListStyles.cs" />
+    <Compile Include="LayoutList\LayoutValueEventArgs.cs" />
+    <Compile Include="LayoutList\LayoutMenu.cs" />
+    <Compile Include="Cells\CellEditorPassword.cs" />
+    <Compile Include="Tool\ToolPasswordEntry.cs" />
+    <Compile Include="Tool\ToolSearchEntry.cs" />
+    <Compile Include="Tool\ToolFieldEditor.cs" />
+    <Compile Include="GuiEnvironment.cs" />
+    <Compile Include="LayoutList\LayoutFilter.cs" />
+    <Compile Include="LayoutList\LayoutFilterList.cs" />
+    <Compile Include="LayoutList\LayoutFieldInfoCache.cs" />
+    <Compile Include="LayoutList\LayoutField.cs" />
+    <Compile Include="LayoutList\LayoutFieldInfo.cs" />
+    <Compile Include="LayoutList\LayoutListCanvas.cs" />
+    <Compile Include="GraphContext.cs" />
+    <Compile Include="LayoutList\LayoutMenuEditor.cs" />
+    <Compile Include="LayoutList\LayoutFilterView.cs" />
+    <Compile Include="Cells\CellEditorHeader.cs" />
+    <Compile Include="LayoutList\LayoutBoundsCache.cs" />
+    <Compile Include="LayoutList\ILayoutList.cs" />
+    <Compile Include="LayoutList\ILayoutCell.cs" />
+    <Compile Include="LayoutList\ILayoutEditor.cs" />
+    <Compile Include="Layout\LayoutItemComparer.cs" />
+    <Compile Include="Tool\IToolItem.cs" />
+    <Compile Include="Tool\ToolLabel.cs" />
+    <Compile Include="Editors\AccessEditor.cs" />
+    <Compile Include="Editors\ListEditor.cs" />
+    <Compile Include="Editors\FieldEditor.cs" />
+    <Compile Include="Editors\ImageEditor.cs" />
+    <Compile Include="Editors\LocalizeEditor.cs" />
+    <Compile Include="Editors\ListExplorer.cs" />
+    <Compile Include="Editors\ListExplorerCursor.cs" />
+    <Compile Include="Editors\StyleEditor.cs" />
+    <Compile Include="Editors\ListEditorEventArgs.cs" />
+    <Compile Include="Editors\ListExplorerNode.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj">
+      <Project>{32A948C0-5468-4392-A490-91947BFC3BE4}</Project>
+      <Name>DataWF.Common</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup />
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+</Project>

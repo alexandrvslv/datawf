@@ -1,0 +1,166 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{91E766B4-1057-4C16-AA5A-B4E26E91DA7C}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Doc.Odf</RootNamespace>
+    <AssemblyName>Doc.Odf</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <PlatformTarget>anycpu</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>none</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="ICSharpCode.SharpZipLib">
+      <HintPath>..\packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
+    </Reference>
+    <Reference Include="Xwt">
+      <HintPath>..\packages\Xwt.0.2.65\lib\net40\Xwt.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="ODFRichTextBox.cs" />
+    <Compile Include="ODTDocument.cs" />
+    <Compile Include="ODTService.cs" />
+    <Compile Include="ODTXmlPrefix.cs" />
+    <Compile Include="Resources.cs" />
+    <Compile Include="Document\DocumentBody.cs" />
+    <Compile Include="Document\DocumentContent.cs" />
+    <Compile Include="Document\DocumentSpreadSheet.cs" />
+    <Compile Include="Document\DocumentStyles.cs" />
+    <Compile Include="Document\FontFaceDeclarations.cs" />
+    <Compile Include="Document\FormatedString.cs" />
+    <Compile Include="Document\Frame.cs" />
+    <Compile Include="Document\FrameImage.cs" />
+    <Compile Include="Document\IndexBody.cs" />
+    <Compile Include="Document\IndexEntryLinkEnd.cs" />
+    <Compile Include="Document\IndexEntryLinkStart.cs" />
+    <Compile Include="Document\IndexEntryPageNumber.cs" />
+    <Compile Include="Document\IndexEntrySpan.cs" />
+    <Compile Include="Document\IndexEntryTabStop.cs" />
+    <Compile Include="Document\IndexEntryText.cs" />
+    <Compile Include="Document\IndexTitleTemplate.cs" />
+    <Compile Include="Document\Scripts.cs" />
+    <Compile Include="Document\SoftPageBreak.cs" />
+    <Compile Include="Document\Streedsheet.cs" />
+    <Compile Include="Text\Paragraph.cs" />
+    <Compile Include="Text\TextSpan.cs" />
+    <Compile Include="Text\BodyText.cs" />
+    <Compile Include="Text\TextElement.cs" />
+    <Compile Include="Text\TextHeader.cs" />
+    <Compile Include="Text\TextLink.cs" />
+    <Compile Include="Text\TextSection.cs" />
+    <Compile Include="Text\TextSequenceDeclaration.cs" />
+    <Compile Include="Text\TextSequenceDeclarations.cs" />
+    <Compile Include="Text\TextSpace.cs" />
+    <Compile Include="Text\TextTab.cs" />
+    <Compile Include="Text\DrawTextBox.cs" />
+    <Compile Include="Document\DocumentManifest.cs" />
+    <Compile Include="Document\DocumentSettings.cs" />
+    <Compile Include="Document\Settings.cs" />
+    <Compile Include="Table\Cell.cs" />
+    <Compile Include="Table\Column.cs" />
+    <Compile Include="Table\CoveredCell.cs" />
+    <Compile Include="Table\Row.cs" />
+    <Compile Include="Table\Table.cs" />
+    <Compile Include="Table\TableCalculationSettings.cs" />
+    <Compile Include="Table\TableOfContent.cs" />
+    <Compile Include="Table\TableOfContentEntryTemplate.cs" />
+    <Compile Include="Table\TableOfContentSource.cs" />
+    <Compile Include="Text\Placeholder.cs" />
+    <Compile Include="Document\ConfigItem.cs" />
+    <Compile Include="Document\ConfigItemMapEntry.cs" />
+    <Compile Include="Document\ConfigItemMapIndexed.cs" />
+    <Compile Include="Document\ConfigItemSet.cs" />
+    <Compile Include="Document\DocumentMeta.cs" />
+    <Compile Include="Document\ManifestFile.cs" />
+    <Compile Include="Document\Meta.cs" />
+    <Compile Include="Document\MetaCreationDate.cs" />
+    <Compile Include="Document\MetaCreator.cs" />
+    <Compile Include="Document\MetaDate.cs" />
+    <Compile Include="Document\MetaEditiongCycles.cs" />
+    <Compile Include="Document\MetaEditiongDuration.cs" />
+    <Compile Include="Document\MetaGenerator.cs" />
+    <Compile Include="Document\MetaInitialCreator.cs" />
+    <Compile Include="Document\MetaStatistic.cs" />
+    <Compile Include="CellDocument.cs" />
+    <Compile Include="Base\BaseConfig.cs" />
+    <Compile Include="Base\BaseContent.cs" />
+    <Compile Include="Base\BaseItem.cs" />
+    <Compile Include="Base\DocumentElement.cs" />
+    <Compile Include="Base\DocumentElementCollection.cs" />
+    <Compile Include="Style\AutomaticStyles.cs" />
+    <Compile Include="Style\BackgroundImageStyle.cs" />
+    <Compile Include="Style\FontFace.cs" />
+    <Compile Include="Table\ColumnProperties.cs" />
+    <Compile Include="Table\RowProperties.cs" />
+    <Compile Include="Table\TableProperties.cs" />
+    <Compile Include="Style\BaseProperties.cs" />
+    <Compile Include="Table\CellProperties.cs" />
+    <Compile Include="Text\TextProperties.cs" />
+    <Compile Include="Style\BaseStyle.cs" />
+    <Compile Include="Table\CellStyle.cs" />
+    <Compile Include="Table\ColumnStyle.cs" />
+    <Compile Include="Table\RowStyle.cs" />
+    <Compile Include="Table\TableStyle.cs" />
+    <Compile Include="Text\ParagraphStyle.cs" />
+    <Compile Include="Text\SectionStyle.cs" />
+    <Compile Include="Text\TextBibliographyConfiguration.cs" />
+    <Compile Include="Text\TextDocument.cs" />
+    <Compile Include="Text\TextSortKey.cs" />
+    <Compile Include="Text\TextStyle.cs" />
+    <Compile Include="List\List.cs" />
+    <Compile Include="List\ListItem.cs" />
+    <Compile Include="List\ListLevelLableAligment.cs" />
+    <Compile Include="List\ListLevelProperties.cs" />
+    <Compile Include="List\ListLevelStyleNumber.cs" />
+    <Compile Include="Number\Number.cs" />
+    <Compile Include="Number\NumberStyle.cs" />
+    <Compile Include="Number\NumberText.cs" />
+    <Compile Include="Number\NumberTextStyle.cs" />
+    <Compile Include="Style\CurrencyStyle.cs" />
+    <Compile Include="Style\DefaultStyle.cs" />
+    <Compile Include="Style\GraphicStyle.cs" />
+    <Compile Include="Table\ColumnsStyle.cs" />
+    <Compile Include="Text\SectionProperties.cs" />
+    <Compile Include="Style\MasterStyles.cs" />
+    <Compile Include="Style\Styles.cs" />
+    <Compile Include="Text\ParagraphProperties.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\empty.ods" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\empty.odt">
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+</Project>

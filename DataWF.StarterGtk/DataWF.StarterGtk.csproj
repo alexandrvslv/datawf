@@ -1,0 +1,118 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <Import Project="..\packages\Xwt.Gtk.0.2.70\build\Xwt.Gtk.props" Condition="Exists('..\packages\Xwt.Gtk.0.2.70\build\Xwt.Gtk.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{687DFE24-9DE0-4A3B-9854-CF41B8FDC134}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>DataWF.Starter</RootNamespace>
+    <StartupObject>DataWF.Starter.Program</StartupObject>
+    <AssemblyName>DataWF.StarterGtk</AssemblyName>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <PlatformTarget>x86</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>none</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Xwt">
+      <HintPath>..\packages\Xwt.0.2.70\lib\net40\Xwt.dll</HintPath>
+    </Reference>
+    <Reference Include="Xwt.Gtk">
+      <HintPath>..\packages\Xwt.Gtk.0.2.70\lib\net40\Xwt.Gtk.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.0">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4 %28x86 и x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>Клиентский профиль .NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Установщик Windows 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DataWF.Odf\DataWF.Odf.csproj">
+      <Project>{91E766B4-1057-4C16-AA5A-B4E26E91DA7C}</Project>
+      <Name>DataWF.Odf</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DataWF.Gui\DataWF.Gui.csproj">
+      <Project>{337D88BA-7460-4C2A-B83D-6B27DF626983}</Project>
+      <Name>DataWF.Gui</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj">
+      <Project>{C982088F-82EC-4400-8D3C-BD76221C0C9C}</Project>
+      <Name>DataWF.Data</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DataWF.Data.Gui\DataWF.Data.Gui.csproj">
+      <Project>{3CCBAB5D-85AE-4DE0-A20E-AD302AF442A2}</Project>
+      <Name>DataWF.Data.Gui</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj">
+      <Project>{32A948C0-5468-4392-A490-91947BFC3BE4}</Project>
+      <Name>DataWF.Common</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Remove="Properties\Resources.resx" />
+  </ItemGroup>
+</Project>

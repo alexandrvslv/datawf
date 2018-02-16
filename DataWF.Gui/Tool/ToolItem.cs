@@ -1,0 +1,350 @@
+﻿using System;
+using DataWF.Common;
+using Xwt;
+using Xwt.Drawing;
+
+namespace DataWF.Gui
+{
+    public class ToolItem : LayoutItem, IGlyph, IText, IDisposable, IToolItem
+    {
+        protected CellStyle style;
+        protected GlyphType glyph;
+        protected Image image;
+        protected TextLayout text;
+        protected Widget content;
+        protected ToolItemDisplayStyle displayStyle = ToolItemDisplayStyle.Image;
+        protected Rectangle imageBound;
+        protected Rectangle textBound;
+        protected Rectangle contentBound;
+        protected CellDisplayState state = CellDisplayState.Default;
+
+        protected double indent = 5D;
+        private bool checkOnClick;
+        private bool check;
+        private bool sensitive = true;
+        private Canvas bar;
+
+        public ToolItem()
+        {
+            var baseColor = Colors.Silver;
+            style = GuiEnvironment.StylesInfo["Tool"];
+        }
+
+        public ToolItem(EventHandler click) : this()
+        {
+            Click += click;
+        }
+
+        public ToolItem(Widget content) : this()
+        {
+            Content = content;
+        }
+
+        public override bool Visible
+        {
+            get { return base.Visible; }
+            set
+            {
+                if (content != null)
+                    content.Visible = value;
+                base.Visible = value;
+            }
+        }
+
+        public Widget Content
+        {
+            get { return content; }
+            set
+            {
+                if (content != value)
+                {
+                    if (Bar != null && content != null)
+                        Bar.RemoveChild(content);
+                    content = value;
+                    if (Bar != null && content != null)
+                        Bar.AddChild(content);
+                    CheckSize();
+                }
+            }
+        }
+
+        public ToolItemDisplayStyle DisplayStyle
+        {
+            get { return displayStyle; }
+            set
+            {
+                if (displayStyle != value)
+                {
+                    displayStyle = value;
+                    CheckSize();
+                }
+            }
+        }
+
+        public virtual void Dispose()
+        {
+            text.Dispose();
+            if (content != null)
+                Dispose();
+        }
+
+        public string Text
+        {
+            get { return text?.Text; }
+            set
+            {
+                if (Text != value)
+                {
+                    if (text == null)
+                    {
+                        text = new TextLayout()
+                        {
+                            Font = style.Font,
+                            Trimming = TextTrimming.WordElipsis
+                        };
+                    }
+                    text.Text = value;
+                    text.Height = MinHeight;
+                    text.Width = -1;
+                    OnTextChanged(EventArgs.Empty);
+                }
+            }
+        }
+
+        public Image Image
+        {
+            get { return image; }
+            set
+            {
+                if (image != value)
+                {
+                    image = value;
+                    CheckSize();
+                }
+            }
+        }
+
+        public Color ForeColor
+        {
+            get { return style.FontBrush.Color; }
+            set
+            {
+                style = style.Clone();
+                style.FontBrush.Color = value.BlendWith(style.FontBrush.Color, 0.6);
+                CheckSize();
+            }
+        }
+
+        public GlyphType Glyph
+        {
+            get { return glyph; }
+            set
+            {
+                if (glyph != value)
+                {
+                    glyph = value;
+                    CheckSize();
+                }
+            }
+        }
+
+        public CellDisplayState State
+        {
+            get { return state; }
+            set
+            {
+                if (state != value && sensitive)
+                {
+                    state = value;
+                    Bar?.QueueDraw();
+                }
+            }
+        }
+
+        public bool Sensitive
+        {
+            get { return sensitive; }
+            set
+            {
+                if (sensitive != value)
+                {
+                    sensitive = value;
+                    Bar?.QueueDraw();
+                }
+            }
+        }
+
+        public bool Checked
+        {
+            get { return check; }
+            set
+            {
+                if (check != value)
+                {
+                    check = value;
+                    Bar?.QueueDraw();
+                }
+            }
+        }
+
+        public bool CheckOnClick
+        {
+            get { return checkOnClick; }
+            set
+            {
+                if (checkOnClick != value)
+                {
+                    checkOnClick = value;
+                }
+            }
+        }
+
+        public double MinHeight { get; set; } = 28;
+
+        public double MinWidth { get; set; } = 28;
+
+        public Canvas Bar
+        {
+            get { return bar; }
+            set
+            {
+                if (bar != value)
+                {
+                    if (bar != null && Content != null)
+                        bar.RemoveChild(Content);
+                    bar = value;
+                    if (bar != null && Content != null)
+                        bar.AddChild(Content);
+                }
+            }
+        }
+
+        public override Rectangle Bound
+        {
+            get { return base.Bound; }
+            set
+            {
+                var halfIndent = indent / 2D;
+                value = value.Inflate(-halfIndent, -halfIndent);
+                if (DisplayStyle.HasFlag(ToolItemDisplayStyle.Image))
+                {
+                    imageBound.X = value.X + (MinWidth - imageBound.Width) / 2D;
+                    imageBound.Y = value.Y + (value.Height - imageBound.Height) / 2D;
+                }
+                if (DisplayStyle.HasFlag(ToolItemDisplayStyle.Text))
+                {
+                    textBound.X = DisplayStyle.HasFlag(ToolItemDisplayStyle.Image) ? imageBound.Right : value.X + 2D;
+                    textBound.Y = value.Y + (value.Height - textBound.Height) / 2D;
+                }
+                contentBound.X = DisplayStyle.HasFlag(ToolItemDisplayStyle.Text)
+                    ? textBound.Right
+                    : DisplayStyle.HasFlag(ToolItemDisplayStyle.Image)
+                        ? imageBound.Right
+                        : value.X;
+                contentBound.Y = value.Y + (value.Height - contentBound.Height) / 2D;
+                contentBound.Width = value.Width - (contentBound.Left - value.Left);
+                base.Bound = value;
+            }
+        }
+
+        internal Rectangle GetContentBound()
+        {
+            return contentBound;
+        }
+
+        protected virtual internal void OnDraw(GraphContext context)
+        {
+            object formatted = DisplayStyle.HasFlag(ToolItemDisplayStyle.Image) ? image ?? (glyph != GlyphType.None ? (object)glyph : GlyphType.GearAlias) : null;
+            var dstate = !Sensitive ? CellDisplayState.Alternate : state == CellDisplayState.Default && Checked ? CellDisplayState.Selected : state;
+            context.DrawCell(style, formatted, Bound, imageBound, dstate);
+
+            if (DisplayStyle.HasFlag(ToolItemDisplayStyle.Text) && !string.IsNullOrEmpty(Text))
+            {
+                context.DrawText(style, text, textBound, state);
+            }
+        }
+
+        protected internal void CheckSize()
+        {
+            imageBound.Location = Point.Zero;
+            if (DisplayStyle.HasFlag(ToolItemDisplayStyle.Image))
+                imageBound.Size = Image != null || Glyph != GlyphType.None ? new Size(MinHeight - 2, MinHeight - 2) : Size.Zero;
+            else
+                imageBound.Size = Size.Zero;
+
+            textBound.Location = new Point(imageBound.Right, 0);
+            if (text != null)
+            {
+                textBound.Size = text.GetSize();
+                textBound.Width += indent;
+            }
+            else
+            {
+                textBound.Width = 0;
+            }
+            contentBound.X = (DisplayStyle.HasFlag(ToolItemDisplayStyle.Text) ? textBound.Right : imageBound.Right);
+            contentBound.Y = 0;
+            contentBound.Height = MinHeight;
+            if (content != null)
+            {
+                contentBound.Size = content.Surface.GetPreferredSize(SizeConstraint.Unconstrained, SizeConstraint.Unconstrained);
+                contentBound.Width += indent;
+            }
+            else
+            {
+                contentBound.Width = 0;
+            }
+            width = Math.Max(contentBound.Right, MinWidth) + indent;
+            height = Math.Max(Math.Max(textBound.Height, contentBound.Height), MinHeight) + indent;
+            Bar?.QueueForReallocate();
+        }
+
+        protected internal void OnMouseEntered(EventArgs args)
+        {
+            State = CellDisplayState.Hover;
+        }
+
+        protected internal void OnMouseExited(EventArgs args)
+        {
+            State = CellDisplayState.Default;
+        }
+
+        protected internal void OnButtonPressed(ButtonEventArgs args)
+        {
+            State = CellDisplayState.Pressed;
+        }
+
+        protected internal void OnButtonReleased(ButtonEventArgs args)
+        {
+            State = CellDisplayState.Hover;
+            if (args.MultiplePress <= 1)
+                OnClick(EventArgs.Empty);
+        }
+
+        public event EventHandler Click;
+        public event EventHandler TextChanged;
+
+        protected virtual void OnClick(EventArgs e)
+        {
+            if (checkOnClick)
+                check = !check;
+            if (Click != null)
+                Click(this, e);
+        }
+
+        protected virtual void OnTextChanged(EventArgs e)
+        {
+            CheckSize();
+            if (TextChanged != null)
+                TextChanged(this, e);
+        }
+    }
+    [Flags]
+    public enum ToolItemDisplayStyle
+    {
+        None = 0,
+        Text = 1,
+        Image = 2,
+        ImageAndText = Text | Image
+    }
+}

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="48"
+   height="48"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.48.3.1 r9886"
+   inkscape:export-filename="/home/alexandr/text3016.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90"
+   sodipodi:docname="drawing.png">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="3.959798"
+     inkscape:cx="28.341107"
+     inkscape:cy="28.721042"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1869"
+     inkscape:window-height="1056"
+     inkscape:window-x="51"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-1004.3622)">
+    <text
+       xml:space="preserve"
+       style="font-size:33.8879776px;font-style:normal;font-weight:bold;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans Bold"
+       x="20.405106"
+       y="1118.8601"
+       id="text3005"
+       sodipodi:linespacing="125%"
+       transform="scale(1.0649276,0.93903096)"
+       inkscape:export-filename="/home/alexandr/text3015.png"
+       inkscape:export-xdpi="95.309143"
+       inkscape:export-ydpi="95.309143"><tspan
+         sodipodi:role="line"
+         id="tspan3007"
+         x="20.405106"
+         y="1118.8601">F</tspan></text>
+    <text
+       sodipodi:linespacing="125%"
+       id="text2997"
+       y="725.78369"
+       x="-3.1800799"
+       style="font-size:41.72652817px;font-style:normal;font-weight:bold;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans Bold"
+       xml:space="preserve"
+       transform="scale(0.69199081,1.4451059)"
+       inkscape:export-xdpi="95.309143"
+       inkscape:export-ydpi="95.309143"
+       inkscape:export-filename="/home/alexandr/text3015.png"><tspan
+         y="725.78369"
+         x="-3.1800799"
+         id="tspan2999"
+         sodipodi:role="line">D</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:32.23076248px;font-style:normal;font-weight:bold;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans Bold"
+       x="19.927801"
+       y="1011.5729"
+       id="text3015"
+       sodipodi:linespacing="125%"
+       transform="scale(0.98914512,1.010974)"
+       inkscape:export-xdpi="95.309143"
+       inkscape:export-ydpi="95.309143"><tspan
+         sodipodi:role="line"
+         id="tspan3017"
+         x="19.927801"
+         y="1011.5729">w</tspan></text>
+  </g>
+</svg>
