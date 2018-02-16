@@ -80,7 +80,7 @@ namespace DataWF.Common
             if (list.Count > 1)
             {
                 MemberInfo last = list.Last();
-                var emittype = typeof(EmitComplexInvoker<,>).MakeGenericType(type, TypeHelper.GetMemberType(last));
+                var emittype = typeof(ComplexInvoker<,>).MakeGenericType(type, TypeHelper.GetMemberType(last));
                 return (IInvoker)CreateObject(emittype, new[] { typeof(string), typeof(List<MemberInfo>) }, new object[] { property, list }, true);
             }
             return null;
@@ -119,7 +119,7 @@ namespace DataWF.Common
             IInvoker result = null;
             if (info is FieldInfo)
             {
-                var type = typeof(EmitFieldInvoker<,>).MakeGenericType(info.DeclaringType,
+                var type = typeof(FieldInvoker<,>).MakeGenericType(info.DeclaringType,
                                                                        ((FieldInfo)info).FieldType);
                 result = (IInvoker)CreateObject(type, new[] { typeof(FieldInfo) }, new[] { info }, true);
             }
@@ -130,20 +130,20 @@ namespace DataWF.Common
                 {
                     if (info.DeclaringType.IsValueType)
                     {
-                        var type = typeof(EmitRefPropertyInvoker<,>).MakeGenericType(info.DeclaringType,
+                        var type = typeof(RefPropertyInvoker<,>).MakeGenericType(info.DeclaringType,
                                                                                   ((PropertyInfo)info).PropertyType);
                         result = (IInvoker)CreateObject(type, new[] { typeof(PropertyInfo) }, new[] { info }, true);
                     }
                     else
                     {
-                        var type = typeof(EmitPropertyInvoker<,>).MakeGenericType(info.DeclaringType,
+                        var type = typeof(PropertyInvoker<,>).MakeGenericType(info.DeclaringType,
                                                                                   ((PropertyInfo)info).PropertyType);
                         result = (IInvoker)CreateObject(type, new[] { typeof(PropertyInfo) }, new[] { info }, true);
                     }
                 }
                 else
                 {
-                    var type = typeof(EmitPropertyIndexInvoker<,,>).MakeGenericType(info.DeclaringType,
+                    var type = typeof(IndexPropertyInvoker<,,>).MakeGenericType(info.DeclaringType,
                                                                                     ((PropertyInfo)info).PropertyType,
                                                                                     parameters[0].ParameterType);
                     result = (IInvoker)CreateObject(type, new[] { typeof(PropertyInfo), parameters[0].ParameterType }, new[] { info, index }, true);
@@ -157,7 +157,7 @@ namespace DataWF.Common
                 }
                 else
                 {
-                    var type = typeof(EmitMethodInvoker<,>).MakeGenericType(info.DeclaringType,
+                    var type = typeof(MethodInvoker<,>).MakeGenericType(info.DeclaringType,
                                                                             ((MethodInfo)info).ReturnType);
                     result = (IInvoker)CreateObject(type, new[] { typeof(MethodInfo) }, new[] { info }, true);
                 }

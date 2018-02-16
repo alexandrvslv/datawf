@@ -9,7 +9,7 @@ namespace DataWF.Common
         {
             return new QueryParameter()
             {
-                Invoker = new GroupIsExpandedInvoker(),
+                Invoker = new TreeInvoker(),
                 Comparer = CompareType.Equal,
                 Value = true
             };

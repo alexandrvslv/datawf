@@ -110,7 +110,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void PropertyEmit()
         {
-            TestProperty(new EmitPropertyInvoker<TestClass, int>("X"));
+            TestProperty(new PropertyInvoker<TestClass, int>("X"));
         }
 
         [Test()]
@@ -164,7 +164,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void BenchmarkPropertyEmit()
         {
-            Benchmark("Property", "Emit", new EmitPropertyInvoker<TestClass, int>("X"));
+            Benchmark("Property", "Emit", new PropertyInvoker<TestClass, int>("X"));
         }
 
         [Test()]
@@ -184,7 +184,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void BenchmarkBoxingPropertyEmit()
         {
-            BenchmarkBoxing("Property", "Emit", new EmitComplexInvoker<TestClass, int>("X"));
+            BenchmarkBoxing("Property", "Emit", new ComplexInvoker<TestClass, int>("X"));
         }
 
         [Test()]
@@ -198,7 +198,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void InlinePropertyEmit()
         {
-            TestInlineProperty(new EmitComplexInvoker<TestClass, int>("Group.Struct.Width"));
+            TestInlineProperty(new ComplexInvoker<TestClass, int>("Group.Struct.Width"));
         }
 
         [Test()]
@@ -268,7 +268,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void BenchmarkInlinePropertyEmit()
         {
-            Benchmark("Inline Property", "Emit", new EmitComplexInvoker<TestClass, int>("Group.Struct.Width"));
+            Benchmark("Inline Property", "Emit", new ComplexInvoker<TestClass, int>("Group.Struct.Width"));
         }
 
         [Test()]
@@ -296,7 +296,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void BenchmarkBoxingInlinePropertyEmit()
         {
-            BenchmarkBoxing("Inline Property", "Emit", new EmitComplexInvoker<TestClass, int>("Group.Struct.Width"));
+            BenchmarkBoxing("Inline Property", "Emit", new ComplexInvoker<TestClass, int>("Group.Struct.Width"));
         }
 
         [Test()]
@@ -311,7 +311,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void FieldEmit()
         {
-            TestField(new EmitFieldInvoker<TestClass, int>("Field"));
+            TestField(new FieldInvoker<TestClass, int>("Field"));
         }
 
         [Test()]
@@ -365,7 +365,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void BenchmarkFieldEmit()
         {
-            Benchmark("Field", "Emit", new EmitFieldInvoker<TestClass, int>("Field"));
+            Benchmark("Field", "Emit", new FieldInvoker<TestClass, int>("Field"));
         }
 
         [Test()]
@@ -385,7 +385,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void BenchmarkBoxingFieldEmit()
         {
-            BenchmarkBoxing("Field", "Emit", new EmitFieldInvoker<TestClass, int>("Field"));
+            BenchmarkBoxing("Field", "Emit", new FieldInvoker<TestClass, int>("Field"));
         }
 
         [Test()]
@@ -399,7 +399,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void InlineFieldEmit()
         {
-            TestInlineField(new EmitComplexInvoker<TestClass, int>("Struct.Field"));
+            TestInlineField(new ComplexInvoker<TestClass, int>("Struct.Field"));
         }
 
         [Test()]
@@ -453,7 +453,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void BenchmarkInlineFieldEmit()
         {
-            Benchmark("Inline Field", "Emit", new EmitComplexInvoker<TestClass, int>("Struct.Field"));
+            Benchmark("Inline Field", "Emit", new ComplexInvoker<TestClass, int>("Struct.Field"));
         }
 
         [Test()]
@@ -473,7 +473,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void BenchmarkBoxingInlineFieldEmit()
         {
-            BenchmarkBoxing("Inline Field", "Emit", new EmitComplexInvoker<TestClass, int>("Struct.Field"));
+            BenchmarkBoxing("Inline Field", "Emit", new ComplexInvoker<TestClass, int>("Struct.Field"));
         }
 
         [Test()]
