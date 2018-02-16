@@ -30,12 +30,8 @@ namespace DataWF.Common
         /// <summary>
         /// Deserialize the specified element from the specified file.
         /// </summary>
-        /// <param name='element'>
-        /// Setting.
-        /// </param>
-        /// <param name='fileName'>
-        /// File name.
-        /// </param>
+        /// <param name='fileName'>File name.</param>
+        /// <param name='element'>Elemet to restore, null able.</param>
         public static object Deserialize(string fileName, object element = null)
         {
             return instance.XmlDeserialize(fileName, element);
@@ -44,12 +40,8 @@ namespace DataWF.Common
         /// <summary>
         /// Serialize the specified setting to the specified fileName.
         /// </summary>
-        /// <param name='element'>
-        /// Setting.
-        /// </param>
-        /// <param name='fileName'>
-        /// File name.
-        /// </param>
+        /// <param name='element'>Elemet to store.</param>
+        /// <param name='fileName'>File name.</param>
         public static void Serialize(object element, string fileName)
         {
             instance.XmlSerialize(element, fileName);
@@ -67,7 +59,7 @@ namespace DataWF.Common
             Notify?.Invoke(e);
         }
 
-        public bool CheckFileSerialize { get; set; } = true;
+        public bool CheckFileSerialize { get; set; }
 
         public bool ByProperty { get; set; } = true;
 
@@ -188,7 +180,7 @@ namespace DataWF.Common
                     if (i < list.Count)
                         list[i] = newobj;
                     else
-                        list.Add(newobj);//rAdd.Get(newobj, new object[] { newobj });
+                        list.Add(newobj);
                     i++;
                 }
             }
@@ -369,6 +361,12 @@ namespace DataWF.Common
             {
                 writer.WriteValue(TextFormat(element));
             }
+            else if (CheckFileSerialize && element is IFileSerialize)
+            {
+                var fileSerialize = element as IFileSerialize;
+                fileSerialize.Save();
+                writer.WriteAttributeString("FileName", fileSerialize.FileName);               
+            }
             else if (element is IDictionary)
             {
                 WriteDictionary(writer, element, type);
@@ -400,14 +398,6 @@ namespace DataWF.Common
                     else if (TypeHelper.IsXmlText(info))
                     {
                         writer.WriteElementString(info.Name, TextFormat(value));
-                    }
-                    else if (CheckFileSerialize && value is IFileSerialize)
-                    {
-                        writer.WriteStartElement(info.Name);
-                        var fileSerialize = value as IFileSerialize;
-                        fileSerialize.Save();
-                        writer.WriteAttributeString("FileName", fileSerialize.FileName);
-                        writer.WriteEndElement();
                     }
                     else
                     {

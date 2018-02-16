@@ -28,7 +28,6 @@ namespace DataWF.Data
     {
         protected DBConstaintType type;
         protected string value;
-        protected DBColumnReferenceList columns = new DBColumnReferenceList();
 
         public DBConstraint()
         {
@@ -36,7 +35,7 @@ namespace DataWF.Data
 
         public virtual void GenerateName()
         {
-            name = string.Format("{0}{1}{2}", type.ToString().Substring(0, 2).ToLower(), Table.Name, columns.Names);
+            name = string.Format("{0}{1}{2}", type.ToString().Substring(0, 2).ToLower(), Table.Name, Columns.Names);
         }
 
         public DBConstaintType Type
@@ -59,45 +58,43 @@ namespace DataWF.Data
                 if (value == this.value)
                     return;
                 this.value = value;
+                OnPropertyChanged(nameof(Value), true);
             }
         }
 
-        public DBColumnReferenceList Columns
-        {
-            get { return columns; }
-        }
+        public DBColumnReferenceList Columns { get; set; } = new DBColumnReferenceList();
 
         [XmlIgnore]
         public DBColumn Column
         {
-            get { return columns.Count == 0 ? null : columns[0].Column; }
+            get { return Columns.Count == 0 ? null : Columns[0].Column; }
             set
             {
-                if (columns.Contains(value))
+                if (Columns.Contains(value))
                     return;
                 if (value == null)
-                    columns.Clear();
+                    Columns.Clear();
                 else
                 {
                     if (Table == null)
                         Table = value.Table;
-                    columns.Add(value);
+                    Columns.Add(value);
                 }
             }
         }
 
-        [Browsable(false)]
+        [XmlIgnore, Browsable(false)]
         public string ColumnName
         {
-            get { return columns.Count == 0 ? null : columns[0].ColumnName; }
+            get { return Columns.Count == 0 ? null : Columns[0].ColumnName; }
             set
             {
-                if (columns.Contains(value))
+                if (Columns.Contains(value))
                     return;
                 if (value == null)
-                    columns.Clear();
+                    Columns.Clear();
                 else
-                    columns.Add(value);
+                    Columns.Add(value);
             }
         }
 

@@ -72,7 +72,7 @@ namespace DataWF.Data
         protected DBColumnKeys keys = DBColumnKeys.None;
         protected int size;
         protected int scale;
-        private Type dataType = typeof(string);
+        private Type dataType = null;
         protected DBDataType type = DBDataType.String;
         protected DBColumnTypes ctype = DBColumnTypes.Default;
         protected string gname;
@@ -92,12 +92,12 @@ namespace DataWF.Data
         }
 
         public DBColumn(string name)
-            : base(name)
+            : this(name, typeof(string))
         {
         }
 
         public DBColumn(string name, Type type)
-            : this(name)
+            : base(name)
         {
             DataType = type;
         }

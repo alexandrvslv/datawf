@@ -162,7 +162,7 @@ namespace DataWF.Data
                 if (procedure.ProcedureType == ProcedureTypes.Source && procedure.Source != null && procedure.Source.Length > 0)
                 {
                     string file = Path.Combine(path, procedure.Name + ".cs");
-                    System.IO.File.WriteAllText(file, procedure.Source);
+                    File.WriteAllText(file, procedure.Source);
                     sources.Add(file);
                 }
             Assembly assembly = Compile(outFile, sources.ToArray(), out result, inMemory);
@@ -187,7 +187,7 @@ namespace DataWF.Data
                 //string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), @"Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\");
                 //csharpParameters.CompilerOptions = "/optimize /lib:" + path + "";
 
-                CompilerParameters csharpParameters = new CompilerParameters();
+                var csharpParameters = new CompilerParameters();
                 csharpParameters.ReferencedAssemblies.Add("System.dll");
                 csharpParameters.ReferencedAssemblies.Add("System.Core.dll");
                 csharpParameters.ReferencedAssemblies.Add("System.Data.dll");

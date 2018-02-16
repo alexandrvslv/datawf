@@ -159,7 +159,7 @@ namespace DataWF.Common
             Type type = Type.GetType(value);
             if (type == null)
             {
-                int index = value.IndexOf(',');
+                int index = value.LastIndexOf(',');
                 string code = index >= 0 ? value.Substring(0, index) : value;
                 type = Type.GetType(code);
                 var asseblyes = AppDomain.CurrentDomain.GetAssemblies();
@@ -597,6 +597,24 @@ namespace DataWF.Common
         {
             var index = type.FullName.IndexOf('[');
             return index < 0 ? type.FullName : type.FullName.Substring(0, index);
+        }
+
+        public static string BinaryFormatType(Type type)
+        {
+            if (type.IsGenericType)
+            {
+                var builder = new StringBuilder();
+                builder.Append($"{type.Namespace}.{type.Name}[");
+                foreach (var parameter in type.GetGenericArguments())
+                {
+                    builder.Append($"[{BinaryFormatType(parameter)}], ");
+                }
+                builder.Length -= 2;
+                builder.Append("], ");
+                builder.Append(type.Assembly.GetName().Name);
+                return builder.ToString();
+            }
+            return $"{type.FullName}, {type.Assembly.GetName().Name}";
         }
 
         //private static Dictionary<string, MethodInfo> _cGenericMethods = new Dictionary<string, MethodInfo>(StringComparer.OrdinalIgnoreCase);

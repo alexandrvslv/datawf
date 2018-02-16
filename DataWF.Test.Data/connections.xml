@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<!--Dwf.Data.DBConnectionList, Dwf.Data-->
+<!--DataWF.Data.DBConnectionList, DataWF.Data-->
 <e Count="5">
   <i DataBase="test.sqlite" Host="" IntegratedSecurity="False" IsolationLevel="Unspecified" Name="TestSqlLite" Pool="False" Port="0" Schema="" SystemName="SQLite" TimeOut="80" User="" />
   <i DataBase="postgres" Host="localhost" IntegratedSecurity="False" IsolationLevel="ReadUncommitted" Name="TestPostgres" Password="test" Pool="False" Port="5432" Schema="public" SystemName="Postgres" TimeOut="80" User="test" />

@@ -27,8 +27,8 @@ namespace DataWF.Data
         public DBForeignList(DBSchema schema)
             : base(schema)
         {
-            Indexes.Add(new Invoker<DBForeignKey, string>(nameof(DBForeignKey.Value), (item) => item.Value));
-            Indexes.Add(new Invoker<DBForeignKey, string>(nameof(DBForeignKey.ReferenceTableName), (item) => item.Value));
+            Indexes.Add(new Invoker<DBForeignKey, string>(nameof(DBForeignKey.ReferenceName), (item) => item.ReferenceName));
+            Indexes.Add(new Invoker<DBForeignKey, string>(nameof(DBForeignKey.ReferenceTableName), (item) => item.ReferenceTableName));
         }
 
         public DBForeignKey GetForeignByColumn(DBColumn column)
@@ -38,7 +38,7 @@ namespace DataWF.Data
 
         public IEnumerable<DBForeignKey> GetByReference(DBColumn reference)
         {
-            return GetByValue(reference.FullName);
+            return Select(nameof(DBForeignKey.ReferenceName), CompareType.Equal, reference.FullName);;
         }
 
         public IEnumerable<DBForeignKey> GetByReference(DBTable reference)

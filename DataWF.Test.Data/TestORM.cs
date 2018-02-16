@@ -13,8 +13,8 @@ namespace DataWF.Test.Data
     public class TestORM
     {
         private const string SchemaName = "test";
-        private const string EmployerTableName = "employer";
-        private const string PositionTableName = "employer_position";
+        private const string EmployerTableName = "tb_employer";
+        private const string PositionTableName = "tb_position";
         private DBSchema schema;
 
         [SetUp]
@@ -67,6 +67,25 @@ namespace DataWF.Test.Data
         public void GenerateMsSql()
         {
             Generate(DBService.Connections["TestMSSql"]);
+        }
+
+        [Test]
+        public void SchemaSerialization()
+        {
+            DBService.Generate(GetType().Assembly);
+            var file = "data.xml";
+            Serialization.Serialize(DBService.Schems, file);
+            DBService.Schems.Clear();
+            Serialization.Deserialize(file, DBService.Schems);
+            Assert.AreEqual(1, DBService.Schems.Count);
+            var schem = DBService.Schems[0];
+            Assert.AreEqual(2, schem.Tables.Count);
+            var table = schem.Tables[EmployerTableName];
+            Assert.IsNotNull(table);
+            Assert.IsInstanceOf<DBTable<Employer>>(table);
+            var column = table.Columns["id"];
+            Assert.IsNotNull(column);
+            Assert.AreEqual(typeof(int), column.DataType);
         }
 
         public void Generate(DBConnection connection)

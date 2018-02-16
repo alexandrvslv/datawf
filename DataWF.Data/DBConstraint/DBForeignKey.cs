@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
     public class DBForeignKey : DBConstraint
     {
-        [NonSerialized]
-        private DBColumn _rcolumn;
-
         public DBForeignKey()
         {
             Type = DBConstaintType.Foreign;
@@ -22,27 +20,40 @@ namespace DataWF.Data
             Reference = value.PrimaryKey;
         }
 
+        public DBColumnReferenceList References { get; set; } = new DBColumnReferenceList();
+
         public override void GenerateName()
         {
-            name = string.Format("{0}{1}{2}{3}", Table.Name, Column.Name, Reference.Table.Name, Reference.Name);
+            name = string.Format("{0}{1}{2}{3}", Table.Name, Columns.Names, Reference.Table.Name, References.Names);
         }
 
-
+        [XmlIgnore]
         public DBColumn Reference
         {
-            get
-            {
-                if (_rcolumn == null)
-                    _rcolumn = DBService.ParseColumn(value, schema);
-                return _rcolumn;
-            }
+            get { return References.Count == 0 ? null : References[0].Column; }
             set
             {
-                if (Reference != value)
-                {
-                    Value = value?.FullName;
-                    _rcolumn = value;
-                }
+                if (References.Contains(value))
+                    return;
+                if (value == null)
+                    References.Clear();
+                else
+                    References.Add(value);
+            }
+        }
+
+        [XmlIgnore, Browsable(false)]
+        public string ReferenceName
+        {
+            get { return References.Count == 0 ? null : References[0].ColumnName; }
+            set
+            {
+                if (References.Contains(value))
+                    return;
+                if (value == null)
+                    References.Clear();
+                else
+                    References.Add(value);
             }
         }
 
@@ -56,10 +67,8 @@ namespace DataWF.Data
         [Browsable(false)]
         public string ReferenceTableName
         {
-            get { return value == null ? null : Value.Substring(0, value.LastIndexOf(".", StringComparison.Ordinal)); }
+            get { return ReferenceName?.Substring(0, ReferenceName.LastIndexOf(".", StringComparison.Ordinal)); }
         }
-
-
 
         public override string ToString()
         {

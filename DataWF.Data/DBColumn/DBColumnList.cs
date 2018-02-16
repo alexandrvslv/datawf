@@ -126,7 +126,7 @@ namespace DataWF.Data
             {
                 item.Index = DBPullIndex.Fabric(item.DataType, table, item);
             }
-            if (item.IsPrimaryKey)
+            if (item.IsPrimaryKey && Table.Schema != null)
             {
                 DBConstraint primary = null;
                 foreach (var constraint in Table.Schema.Constraints.GetByColumn(table.PrimaryKey))

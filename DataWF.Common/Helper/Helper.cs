@@ -896,27 +896,11 @@ namespace DataWF.Common
             }
             else if (value is Type)
             {
-                var type = (Type)value;
-                if (type.IsGenericType)
-                {
-                    var builder = new StringBuilder();
-                    builder.Append($"{type.Namespace}.{type.Name}[");
-                    foreach(var parameter in type.GetGenericArguments())
-                    {
-                        builder.Append($"[{TextBinaryFormat(parameter)}], ");                        
-                    }
-                    builder.Length -= 2;
-                    builder.Append("]");
-                    result = builder.ToString();
-                }
-                else
-                {
-                    result = $"{type.FullName}, {type.Assembly.GetName().Name}";
-                }
+                result = TypeHelper.BinaryFormatType((Type)value);
             }
             else if (value is MemberInfo)
             {
-                result = ((MemberInfo)value).DeclaringType.FullName + ", " + ((MemberInfo)value).DeclaringType.Assembly.GetName().Name + ";" + ((MemberInfo)value).Name;
+                result = TypeHelper.BinaryFormatType(((MemberInfo)value).DeclaringType) + ";" + ((MemberInfo)value).Name;
             }
             else if (value is byte[])
             {

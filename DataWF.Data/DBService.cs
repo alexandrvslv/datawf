@@ -81,11 +81,11 @@ namespace DataWF.Data
         public static char[] DotSplit = { '.' };
         private static DBSchema defaultSchema;
         private static DBConnectionList connections = new DBConnectionList();
-        private static DBSchemaList items = new DBSchemaList();
+        private static DBSchemaList schems = new DBSchemaList();
 
         public static void SaveCache()
         {
-            foreach (DBSchema schema in items)
+            foreach (DBSchema schema in schems)
             {
                 foreach (DBTable table in schema.Tables)
                 {
@@ -99,7 +99,7 @@ namespace DataWF.Data
 
         public static void LoadCache()
         {
-            foreach (DBSchema schema in items)
+            foreach (DBSchema schema in schems)
             {
                 foreach (DBTable table in schema.Tables)
                 {
@@ -203,7 +203,7 @@ namespace DataWF.Data
         public static void Save(string file)
         {
             Serialization.Serialize(connections, "connections.xml");
-            Serialization.Serialize(items, file);
+            Serialization.Serialize(schems, file);
         }
 
         public static void Load()
@@ -214,7 +214,7 @@ namespace DataWF.Data
         public static void Load(string file)
         {
             Serialization.Deserialize("connections.xml", connections);
-            Serialization.Deserialize(file, items);
+            Serialization.Deserialize(file, schems);
         }
 
         public static DBConnectionList Connections
@@ -225,22 +225,22 @@ namespace DataWF.Data
 
         public static DBSchemaList Schems
         {
-            get { return items; }
+            get { return schems; }
         }
 
         public static DBSchema DefaultSchema
         {
             get
             {
-                if (defaultSchema == null && items.Count > 0)
-                    defaultSchema = items[0];
+                if (defaultSchema == null && schems.Count > 0)
+                    defaultSchema = schems[0];
                 return defaultSchema;
             }
             set
             {
                 defaultSchema = value;
-                if (!items.Contains(defaultSchema))
-                    items.Add(defaultSchema);
+                if (defaultSchema != null && !schems.Contains(defaultSchema))
+                    schems.Add(defaultSchema);
             }
         }
 
@@ -618,10 +618,16 @@ namespace DataWF.Data
 
         public static void RefreshToString()
         {
-            foreach (DBSchema s in Schems)
-                foreach (DBTable table in s.Tables)
+            foreach (DBSchema schema in Schems)
+            {
+                foreach (DBTable table in schema.Tables)
+                {
                     foreach (DBItem row in table)
+                    {
                         row.cacheToString = string.Empty;
+                    }
+                }
+            }
         }
 
         public static string FormatToSqlText(object value)
@@ -659,7 +665,7 @@ namespace DataWF.Data
         public static event DBExecuteDelegate Execute;
 
         internal static void OnExecute(DBExecuteType type, string text, TimeSpan ms, object rez)
-        {           
+        {
             Execute?.Invoke(new DBExecuteEventArg { Time = ms, Query = text, Type = type, Rezult = rez });
         }
 

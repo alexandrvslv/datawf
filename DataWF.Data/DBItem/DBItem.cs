@@ -33,17 +33,11 @@ namespace DataWF.Data
 {
     public class DBItem : ICloneable, IComparable<DBItem>, IDisposable, IGroup, IAccessable, ICheck, INotifyPropertyChanged, IEditable, IStatus
     {
-        [NonSerialized]
         public static readonly DBItem EmptyItem = new DBItem() { cacheToString = "Loading" };
-        [NonSerialized]
         public object Tag;
-        [NonSerialized]
         internal int hindex = -1;
-        [NonSerialized]
-        protected DBTable table;
-        [NonSerialized]
         internal string cacheToString = string.Empty;
-        [NonSerialized]
+        protected DBTable table;
         protected DBItemState state = DBItemState.New;
         protected DBUpdateState update = DBUpdateState.Default;
 
