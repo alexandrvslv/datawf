@@ -56,14 +56,14 @@ namespace DataWF.Module.FlowGui
                 Width = 380
             };
 
-            gFiles = new Dwf.Gui.GroupBoxItem()
+            gFiles = new GroupBoxItem()
             {
                 Widget = files,
                 Name = "groupFiles",
                 Width = 380
             };
 
-            gAttribute = new Dwf.Gui.GroupBoxItem()
+            gAttribute = new GroupBoxItem()
             {
                 Widget = fields,
                 FillWidth = true,

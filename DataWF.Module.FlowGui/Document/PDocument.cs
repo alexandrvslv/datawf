@@ -32,7 +32,7 @@ namespace DataWF.Module.FlowGui
                     ed = new CellEditorFlowTree();
                     ((CellEditorFlowTree)ed).DataType = c.Invoker.DataType;
                 }
-                else if (data is DocumentSearch && c.Invoker.DataType == typeof(Dwf.Data.DBItem))
+                else if (data is DocumentSearch && c.Invoker.DataType == typeof(DBItem))
                 {
                     ed = new CellEditorFlowTree();
                     ((CellEditorFlowTree)ed).DataType = c.Invoker.DataType;

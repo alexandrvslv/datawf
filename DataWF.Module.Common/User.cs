@@ -30,7 +30,6 @@ using System.Linq;
 
 namespace DataWF.Module.Common
 {
-
     public enum UserTypes
     {
         Persone,
@@ -38,14 +37,112 @@ namespace DataWF.Module.Common
         Division
     }
 
-    [Table("flow", "ruser", BlockSize = 100)]
+    [Table("datawf_common", "ruser", BlockSize = 100)]
     public class User : DBItem, IComparable, IDisposable
     {
-        public static User CurrentUser { get; set; }
+        public static void SetCurrent(string login, string password)
+        {
+            var user = GetUser(login, GetSha(password));
+            CurrentUser = user ?? throw new Exception();
+        }
+
+        public static User CurrentUser { get; internal set; }
 
         public static DBTable<User> DBTable
         {
             get { return DBService.GetTable<User>(); }
+        }
+
+        private static string GetString(byte[] data)
+        {
+            var builder = new StringBuilder();
+            for (int i = 0; i < data.Length; i++)
+            {
+                builder.Append(data[i].ToString("x2"));
+            }
+            return builder.ToString();
+        }
+
+        private static string GetSha(string input)
+        {
+            if (input == null)
+                return null;
+
+            return GetString(SHA1.Create().ComputeHash(Encoding.Default.GetBytes(input)));
+        }
+
+        private static string GetMd5(string input)
+        {
+            if (input == null)
+                return null;
+
+            return GetString(MD5.Create().ComputeHash(Encoding.Default.GetBytes(input)));
+        }
+
+        public static string ValidateText(User User, string password, bool checkOld)
+        {
+            string message = string.Empty;
+            if (password.Length < 8)//(?=^.{6,255}$)
+                message += Locale.Get("Login", " Must be more than 8 characters long.");
+            if (!Regex.IsMatch(password, @"(?=.*\d)(?=.*[A-Z])(?=.*[a-z])(?=.*[^A-Za-z0-9])^.*", RegexOptions.CultureInvariant))
+                message += Locale.Get("Login", " Should contain a number, uppercase and lowercase letters and special character.");
+            if (Regex.IsMatch(password, @"(.)\1{2,}", RegexOptions.CultureInvariant))
+                message += Locale.Get("Login", " Remove repeted characters.");
+            if (User.Login != null && password.IndexOf(User.Login, StringComparison.OrdinalIgnoreCase) >= 0)
+                message += Locale.Get("Login", " Should not contain your Login.");
+
+            var proc = User.Table.Schema?.Procedures["simple"];
+            if (proc != null)
+            {
+                string[] split = proc.Source.Split('\r', '\n');
+                foreach (string s in split)
+                {
+                    if (s.Length > 0 && password.IndexOf(s, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        message += Locale.Get("Login", " Should not contain simple words.");
+                        break;
+                    }
+                }
+            }
+
+            if (checkOld)
+            {
+                string encoded = GetSha(password);
+                var list = GetOld(User);
+                foreach (var item in list)
+                    if (item.TextData == encoded)
+                    {
+                        message += Locale.Get("Login", " Password was same before.");
+                        break;
+                    }
+            }
+
+            return message;
+        }
+
+        public static IEnumerable<UserLog> GetOld(User User)
+        {
+            var filter = new QQuery(string.Empty, UserLog.DBTable);
+            filter.BuildPropertyParam(nameof(UserLog.UserId), CompareType.Equal, User.PrimaryId);
+            filter.BuildPropertyParam(nameof(UserLog.LogType), CompareType.Equal, UserLogType.Password);
+            filter.Orders.Add(new QOrder { Column = UserLog.DBTable.ParseProperty(nameof(UserLog.Id)), Direction = ListSortDirection.Descending });
+            return UserLog.DBTable.Load(filter, DBLoadParam.Load | DBLoadParam.Synchronize);
+        }
+
+        public static User GetUser(string login, string passoword)
+        {
+            var query = new QQuery(string.Empty, User.DBTable);
+            query.BuildPropertyParam(nameof(Login), CompareType.Equal, login);
+            query.BuildPropertyParam(nameof(Password), CompareType.Equal, passoword);
+            var user = User.DBTable.Select(query).FirstOrDefault();
+            if (user != null)
+                UserLog.LogUser(user, UserLogType.Authorization, "GetUser");
+            return user;
+        }
+
+        public static void SetCurrentUser(User user)
+        {
+            CurrentUser = user;
         }
 
         [NonSerialized]
@@ -56,6 +153,8 @@ namespace DataWF.Module.Common
             Build(DBTable);
             UserType = UserTypes.Persone;
         }
+
+        public UserLog LogStart;
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
@@ -85,7 +184,7 @@ namespace DataWF.Module.Common
             set { this[Table.TypeKey] = (int?)value; }
         }
 
-        [Column("login", 40, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing), Index("ruser_login", true)]
+        [Column("login", 256, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing), Index("ruser_login", true)]
         public string Login
         {
             get { return GetValue<string>(Table.CodeKey); }
@@ -114,7 +213,7 @@ namespace DataWF.Module.Common
         }
 
         [ReadOnly(true)]
-        [Column("super")]
+        [Column("super", Default = "false", Keys = DBColumnKeys.Notnull)]
         public bool? Super
         {
             get { return GetValue<bool?>(ParseProperty(nameof(Super))); }
@@ -135,7 +234,7 @@ namespace DataWF.Module.Common
             }
         }
 
-        [Column("email")]
+        [Column("email", 1024)]
         public string EMail
         {
             get { return GetProperty<string>(nameof(EMail)); }
@@ -155,7 +254,7 @@ namespace DataWF.Module.Common
             set { Status = value ? DBStatus.Actual : DBStatus.Error; }
         }
 
-        [Column("password", Keys = DBColumnKeys.Password), PasswordPropertyText(true)]
+        [Column("password", 256, Keys = DBColumnKeys.Password), PasswordPropertyText(true)]
         public string Password
         {
             get { return GetProperty<string>(nameof(Password)); }
@@ -168,92 +267,7 @@ namespace DataWF.Module.Common
             }
         }
 
-        private static string GetString(byte[] data)
-        {
-            var s = new StringBuilder();
-            for (int i = 0; i < data.Length; i++)
-                s.Append(data[i].ToString("x2"));
 
-            return s.ToString();
-        }
-
-        private static string GetSha(string input)
-        {
-            if (input == null)
-                return null;
-
-            return GetString(SHA1.Create().ComputeHash(Encoding.Default.GetBytes(input)));
-        }
-
-        private static string GetMd5(string input)
-        {
-            if (input == null)
-                return null;
-
-            return GetString(MD5.Create().ComputeHash(Encoding.Default.GetBytes(input)));
-        }
-
-        public static string ValidateText(User User, string password, bool checkOld)
-        {
-            string message = string.Empty;
-            if (password.Length < 8)//(?=^.{6,255}$)
-                message += Locale.Get("Login", " Must be more than 8 characters long.");
-            if (!Regex.IsMatch(password, @"(?=.*\d)(?=.*[A-Z])(?=.*[a-z])(?=.*[^A-Za-z0-9])^.*", RegexOptions.CultureInvariant))
-                message += Locale.Get("Login", " Should contain a number, uppercase and lowercase letters and special character.");
-            if (Regex.IsMatch(password, @"(.)\1{2,}", RegexOptions.CultureInvariant))
-                message += Locale.Get("Login", " Remove repeted characters.");
-
-            if (User.Login != null && password.IndexOf(User.Login, StringComparison.OrdinalIgnoreCase) >= 0)
-                message += Locale.Get("Login", " Should not contain your Login.");
-
-            DBProcedure proc = User.Table.Schema?.Procedures["simple"];
-            if (proc != null)
-            {
-                string[] split = proc.Source.Split('\r', '\n');
-                foreach (string s in split)
-                    if (s.Length > 0 && password.IndexOf(s, StringComparison.OrdinalIgnoreCase) >= 0)
-                    {
-                        message += Locale.Get("Login", " Should not contain simple words.");
-                        break;
-                    }
-            }
-
-
-            if (checkOld)
-            {
-                string encoded = GetSha(password);
-                var list = GetOld(User);
-                foreach (var item in list)
-                    if (item.TextData == encoded)
-                    {
-                        message += Locale.Get("Login", " Password was same before.");
-                        break;
-                    }
-            }
-
-            return message;
-        }
-
-        public static IEnumerable<DataLog> GetOld(User User)
-        {
-            QQuery filter = new QQuery(string.Empty, DataLog.DBTable);
-            filter.BuildPropertyParam(nameof(DataLog.UserId), CompareType.Equal, User.PrimaryId);
-            filter.BuildPropertyParam(nameof(DataLog.LogType), CompareType.Equal, DataLogType.Password);
-
-            var plist = DataLog.DBTable.Load(filter, DBLoadParam.Load | DBLoadParam.Synchronize);
-            plist.Sort(new DBComparer(DataLog.DBTable.PrimaryKey, ListSortDirection.Descending));
-
-            return plist;
-        }
-
-        public static User GetUser(string login, string passoword)
-        {
-            var query = new QQuery(string.Empty, User.DBTable);
-            query.BuildPropertyParam(nameof(User.Login), CompareType.Equal, login);
-            query.BuildPropertyParam(nameof(User.Password), CompareType.Equal, passoword);
-
-            return User.DBTable.Select(query).FirstOrDefault();
-        }
 
         #region IComparable Members
 

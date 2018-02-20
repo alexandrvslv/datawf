@@ -27,7 +27,7 @@ namespace DataWF.Module.Common
     public class ItemDataLog
     {
         private DBItem row;
-        private List<DataLog> logs;
+        private List<UserLog> logs;
         private SelectableList<LogChange> changes = new SelectableList<LogChange>();
         private string user;
         private DBTable table;
@@ -63,19 +63,19 @@ namespace DataWF.Module.Common
 
         public void RefreshLogs()
         {
-            QQuery query = new QQuery(string.Empty, DataLog.DBTable);
-            query.BuildPropertyParam(nameof(DataLog.TargetTable), CompareType.Equal, row.Table.FullName);
-            query.BuildPropertyParam(nameof(DataLog.TargetId), CompareType.Equal, row.PrimaryId);
-            query.BuildPropertyParam(nameof(DataLog.DBState), CompareType.Equal, DBStatus.New);
-            Logs.AddRange(DataLog.DBTable.Load(query, DBLoadParam.Load | DBLoadParam.Synchronize));
+            QQuery query = new QQuery(string.Empty, UserLog.DBTable);
+            query.BuildPropertyParam(nameof(UserLog.TargetTable), CompareType.Equal, row.Table.FullName);
+            query.BuildPropertyParam(nameof(UserLog.TargetId), CompareType.Equal, row.PrimaryId);
+            query.BuildPropertyParam(nameof(UserLog.DBState), CompareType.Equal, DBStatus.New);
+            Logs.AddRange(UserLog.DBTable.Load(query, DBLoadParam.Load | DBLoadParam.Synchronize));
         }
 
-        public List<DataLog> Logs
+        public List<UserLog> Logs
         {
             get
             {
                 if (logs == null)
-                    logs = new List<DataLog>();//DataLog.DBTable);
+                    logs = new List<UserLog>();//DataLog.DBTable);
                 return logs;
             }
             set
@@ -92,36 +92,34 @@ namespace DataWF.Module.Common
 
         public void RefreshChanges()
         {
-            logs.Sort(new DBComparer(DataLog.DBTable.DateKey));
+            logs.Sort(new DBComparer(UserLog.DBTable.PrimaryKey));
 
             changes.Clear();
             user = string.Empty;
-            foreach (DataLog log in Logs)
+            DBLogItem prev = null;
+            foreach (UserLog log in Logs)
             {
                 if (log.Status == DBStatus.New)
                 {
                     string name = log.User == null ? "null" : log.User.Name;
                     if (user.IndexOf(name, StringComparison.Ordinal) < 0)
                         user += name + "; ";
-                    Dictionary<string, object> vals = log.NewMap == null ? log.OldMap : log.NewMap;
-                    if (vals != null)
+                    var newItem = log.LogItem;
+                    foreach (var logColumn in log.LogTable.GetLogColumns())
                     {
-                        foreach (KeyValuePair<string, object> item in vals)
+                        LogChange map = changes.SelectOne(nameof(LogChange.Column), CompareType.Equal, logColumn.BaseColumn);
+                        if (map == null)
                         {
-                            DBColumn Column = table.ParseColumn(item.Key);
-                            LogChange map = changes.Find("Column", CompareType.Equal, Column);
-                            if (map == null)
-                            {
-                                map = new LogChange();
-                                map.Column = Column;
-                                map.Old = log.OldMap != null && log.OldMap.ContainsKey(item.Key) ? log.OldMap[item.Key] : null;
-                                changes.Add(map);
-                            }
-                            if (!map.User.Contains(name))
-                                map.User += name + "; ";
-                            map.New = log.NewMap != null && log.NewMap.ContainsKey(item.Key) ? log.NewMap[item.Key] : null;
+                            map = new LogChange();
+                            map.Column = logColumn.BaseColumn;
+                            map.Old = prev?.GetValue(logColumn);
+                            changes.Add(map);
                         }
+                        if (!map.User.Contains(name))
+                            map.User += name + "; ";
+                        map.New = newItem.GetValue(logColumn);
                     }
+                    prev = log.LogItem;
                 }
             }
         }
@@ -136,7 +134,7 @@ namespace DataWF.Module.Common
         public bool Check()
         {
             bool flag = true;
-            foreach (DataLog log in Logs)
+            foreach (UserLog log in Logs)
                 if (log.Status == DBStatus.New && log.User.IsCurrent)// && !log.User.Super
                 {
                     flag = false;
@@ -148,22 +146,22 @@ namespace DataWF.Module.Common
 
         public void Accept()
         {
-            DataLog.Accept(row, logs);
+            UserLog.Accept(row, logs);
             RefreshLogs();
         }
 
         public void Reject()
         {
-            DataLog.Reject(logs);
+            UserLog.Reject(logs);
             RefreshLogs();
         }
 
 
-        public List<DataLog> GetChilds()
+        public List<UserLog> GetChilds()
         {
-            var query = new QQuery("", DataLog.DBTable);
-            query.BuildPropertyParam(nameof(DataLog.ParentId), CompareType.In, logs);
-            return DataLog.DBTable.Load(query);
+            var query = new QQuery("", UserLog.DBTable);
+            query.BuildPropertyParam(nameof(UserLog.ParentId), CompareType.In, logs);
+            return UserLog.DBTable.Load(query);
         }
     }
 }

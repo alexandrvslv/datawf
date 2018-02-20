@@ -274,10 +274,10 @@ namespace DataWF.Module.Flow
                     QWork.BuildPropertyParam(nameof(DocumentWork.DateComplete), CompareType.Equal, Date);
                 else if (DateType == DocumentSearchDate.History)
                 {
-                    var QLog = new QQuery("", DataLog.DBTable);
-                    QLog.Columns.Add(new QColumn(DataLog.DBTable.ParseProperty(nameof(DataLog.DocumentId))));
-                    QLog.BuildPropertyParam(nameof(DataLog.Date), CompareType.Equal, Date);
-                    QLog.BuildPropertyParam(nameof(DataLog.UserId), CompareType.In, User.IsCompaund ? User.GetSubGroupFull<User>(true) : User.GetParents<User>(true));
+                    var QLog = new QQuery("", UserLog.DBTable);
+                    QLog.Columns.Add(new QColumn(UserLog.DBTable.ParseProperty(nameof(UserLog.DocumentId))));
+                    QLog.BuildPropertyParam(nameof(UserLog.Date), CompareType.Equal, Date);
+                    QLog.BuildPropertyParam(nameof(UserLog.UserId), CompareType.In, User.IsCompaund ? User.GetSubGroupFull<User>(true) : User.GetParents<User>(true));
                     QDoc.BuildParam(Document.DBTable.PrimaryKey, QLog);
                 }
             }

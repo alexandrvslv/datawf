@@ -26,13 +26,25 @@ using DataWF.Common;
 namespace DataWF.Module.Common
 {
 
-    [Table("system", "rgroup", BlockSize = 10)]
+    [Table("datawf_common", "rgroup", BlockSize = 10)]
     public class UserGroup : DBItem, IDisposable, IAccessGroup
     {
         public static DBTable<UserGroup> DBTable
         {
-            get { return DBService.GetTable<UserGroup>(); }
+            get
+            {
+                var table = DBService.GetTable<UserGroup>();
+                if (table != null && AccessValue.Groups != table)
+                    AccessValue.Groups = table;
+                return table;
+            }
         }
+
+        public void AddUser(User user)
+        {
+            user.Access.SetFlag(this, AccessType.Create);
+        }
+
         //[NonSerialized()]
         //private GroupPermissionList _permission;
         //[NonSerialized()]
@@ -50,7 +62,7 @@ namespace DataWF.Module.Common
             set { SetValue(value, Table.PrimaryKey); }
         }
 
-        int IAccessGroup.Id { get { return Id.Value; } }
+        int IAccessGroup.Id { get { return Id ?? -1; } }
 
         [Column("groupnumber", Keys = DBColumnKeys.Code), Index("rgroup_number")]
         public string Number
@@ -69,14 +81,18 @@ namespace DataWF.Module.Common
         public IEnumerable<User> GetUsers()
         {
             foreach (User user in User.DBTable)
-                if (user.Access.GetCreate(this))
+                if (user.Access.Get(this).Create)
                     yield return user;
         }
 
         [Browsable(false)]
         public bool IsCurrent
         {
-            get { return (Status == DBStatus.Actual || User.CurrentUser.Super.Value) && User.CurrentUser.Access.GetCreate(this); }
+            get
+            {
+                return (Status == DBStatus.Actual || (User.CurrentUser?.Super.Value ?? false))
+                    && (User.CurrentUser?.Access.Get(this).Create ?? false);
+            }
         }
 
         //public GroupPermissionList GroupPermissions

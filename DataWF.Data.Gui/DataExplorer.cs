@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using Xwt;
 using System.Linq;
 
@@ -591,18 +592,16 @@ namespace DataWF.Data.Gui
                 window.Show(this, Point.Zero);
                 window.ButtonAcceptClick += (s, a) =>
                   {
-                      if (list.SelectedItem is System.Reflection.Assembly)
+                      if (list.SelectedItem is Assembly)
                       {
-                          var schems = DBService.Generate((System.Reflection.Assembly)list.SelectedItem);
-                          if (schems.Count > 0)
+                          var schema = DBService.Generate((Assembly)list.SelectedItem);
+                          if (schema != null)
                           {
                               var text = new StringBuilder();
-                              foreach (var schema in schems)
-                              {
-                                  text.AppendLine(schema.FormatSql(DDLType.Create));
-                                  text.AppendLine("go");
-                                  text.AppendLine(schema.FormatSchema());
-                              }
+                              text.AppendLine(schema.FormatSql(DDLType.Create));
+                              text.AppendLine("go");
+                              text.AppendLine(schema.FormatSql());
+
                               var query = new DataQuery();
                               query.Query = text.ToString();
 

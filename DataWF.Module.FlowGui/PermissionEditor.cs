@@ -113,16 +113,16 @@ namespace DataWF.Module.FlowGui
             this.Name = "PermissionEditor";
             this.Text = "Permissions";
 
-            FlowEnvironment.RowLoged += FlowEnvirRowLoged;
+            UserLog.RowLoged += FlowEnvirRowLoged;
 
             Localize();
         }
 
         private void FlowEnvirRowLoged(object sender, DBItemEventArgs e)
         {
-            if (e.Row == _group && changes.Count > 0)
+            if (e.Item == _group && changes.Count > 0)
             {
-                using (var transaction = new DBTransaction(e.Row.Table.Schema.Connection) { Tag = sender, Reference = false })
+                using (var transaction = new DBTransaction(e.Item.Table.Schema.Connection) { Tag = sender, Reference = false })
                 {
                     foreach (var item in changes)
                         if (item != _group)
@@ -289,7 +289,7 @@ namespace DataWF.Module.FlowGui
                     cell.Name == "Delete" ||
                     cell.Name == "Admin" ||
                     cell.Name == "Accept")
-                    cell.CellEditor = new Dwf.Gui.CellEditorCheck();
+                    cell.CellEditor = new CellEditorCheck();
             }
             return cell.CellEditor;
         }
@@ -299,7 +299,7 @@ namespace DataWF.Module.FlowGui
             if (e.ListChangedType == ListChangedType.ItemAdded)
             {
                 Node node = tree.Nodes[e.NewIndex];
-                if (node.Tag is GroupPermission || node.Tag is PermissionList)
+                if (node.Tag is GroupPermission || node.Tag is GroupPermissionList)
                     node["Type"] = "DataBase";
                 else if (node.Tag is Work || node.Tag is WorkList || node.Tag is Stage)
                     node["Type"] = "Flows";
@@ -449,7 +449,7 @@ namespace DataWF.Module.FlowGui
 
         protected override void Dispose(bool disposing)
         {
-            FlowEnvironment.RowLoged -= FlowEnvirRowLoged;
+            UserLog.RowLoged -= FlowEnvirRowLoged;
             _group.PropertyChanged -= GroupPropertyChanged;
             base.Dispose(disposing);
         }

@@ -202,8 +202,8 @@ namespace DataWF.Module.Flow
         public string SaveData(string fileName, byte[] Data)
         {
             string directory = Path.GetDirectoryName(fileName);
-            if (!System.IO.Directory.Exists(directory))
-                System.IO.Directory.CreateDirectory(directory);
+            if (!Directory.Exists(directory))
+                Directory.CreateDirectory(directory);
             File.WriteAllBytes(fileName, Data);
             return fileName;
         }
@@ -277,6 +277,15 @@ namespace DataWF.Module.Flow
         {
             Data = File.ReadAllBytes(p);
             DataName = Path.GetFileName(p);
+        }
+
+        public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)
+        {
+            base.OnPropertyChanged(property, column, value);
+            if (Document != null)
+            {
+                Document.OnReferenceChanged(this);
+            }
         }
 
         public static BackgroundWorker ExecuteAsync(DocumentData data, ExecuteArgs param)

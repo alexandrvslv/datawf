@@ -35,7 +35,7 @@ namespace DataWF.Module.Common
         GTypeMember
     }
 
-    [Table("flow", "gpermission", BlockSize = 2000)]
+    [Table("datawf_common", "rpermission", BlockSize = 2000)]
     public class GroupPermission : DBItem
     {
         public static DBTable<GroupPermission> DBTable
@@ -77,7 +77,7 @@ namespace DataWF.Module.Common
             set { SetValue(value, Table.TypeKey); }
         }
 
-        [Column("code", 40, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing)]
+        [Column("code", 512, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing)]
         [Index("rpermission_code", true)]
         public string Code
         {
@@ -139,22 +139,22 @@ namespace DataWF.Module.Common
 
         private object GetClass()
         {
-            return System.Type.GetType(PrimaryCode);
+            return System.Type.GetType(Code);
         }
 
         public DBSchema GetSchema()
         {
-            return DBService.Schems[PrimaryCode];
+            return DBService.Schems[Code];
         }
 
         public DBTable GetTable()
         {
-            return DBService.ParseTable(PrimaryCode);
+            return DBService.ParseTable(Code);
         }
 
         public DBColumn GetColumn()
         {
-            return DBService.ParseColumn(PrimaryCode);
+            return DBService.ParseColumn(Code);
         }
 
         public override string ToString()
@@ -216,6 +216,7 @@ namespace DataWF.Module.Common
                     Type = type,
                     Code = code
                 };
+                //permission.Access.Fill();
             }
             item.Access = permission.Access;
 
@@ -223,7 +224,6 @@ namespace DataWF.Module.Common
                 permission.Parent = group;
             permission.Save();
 
-            //item.Access.Referesh(def, groups);
             return permission;
         }
 
@@ -244,6 +244,8 @@ namespace DataWF.Module.Common
 
         public static void CachePermissionTable(GroupPermission parent, DBTable table)
         {
+            if (table is DBLogTable)
+                return;
             var permission = Get(parent, table);
 
             foreach (DBColumn column in table.Columns)
@@ -254,17 +256,17 @@ namespace DataWF.Module.Common
         {
             foreach (DBSchema schema in DBService.Schems)
             {
-                var pernmission = Get(null, schema);
+                var permission = Get(null, schema);
                 var groups = schema.TableGroups.GetTopParents();
 
                 foreach (DBTableGroup group in groups)
                 {
-                    CachePermissionTableGroup(pernmission, group);
+                    CachePermissionTableGroup(permission, group);
                 }
                 foreach (DBTable table in schema.Tables)
                 {
                     if (table.Group == null)
-                        CachePermissionTable(pernmission, table);
+                        CachePermissionTable(permission, table);
                 }
             }
         }

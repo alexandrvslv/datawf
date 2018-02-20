@@ -122,6 +122,9 @@
     <Compile Include="DBSystem\DBTableInfo.cs" />
     <Compile Include="DBExport\DBExportEnvironment.cs" />
     <Compile Include="DBTable\IDBTableContent.cs" />
+    <Compile Include="DBTable\DBLogTable.cs" />
+    <Compile Include="DBItem\DBLogItem.cs" />
+    <Compile Include="DBTable\IDBVirtualTable.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config">

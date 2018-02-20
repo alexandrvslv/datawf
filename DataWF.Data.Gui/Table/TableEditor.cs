@@ -801,7 +801,7 @@ namespace DataWF.Data.Gui
 
                 if (Status == TableControlStatus.Search && list.ListSource.Count > 0)
                 {
-                    question.Text = Common.Locale.Get("TableEditor", "Found duplicate records!\nContinee?");
+                    question.Text = Locale.Get("TableEditor", "Found duplicate records!\nContinee?");
                     if (MessageDialog.AskQuestion(ParentWindow, question) == Command.No)
                         return;
                 }
@@ -809,7 +809,7 @@ namespace DataWF.Data.Gui
                 {
                     if (bufRow[baseColumn].ToString() != OwnerRow.PrimaryId.ToString())
                     {
-                        question.Text = Common.Locale.Get("TableEditor", "Change reference?");
+                        question.Text = Locale.Get("TableEditor", "Change reference?");
                         if (MessageDialog.AskQuestion(ParentWindow, question) == Command.Yes)
                             bufRow[baseColumn] = OwnerRow.PrimaryId;
                     }
@@ -831,13 +831,13 @@ namespace DataWF.Data.Gui
 
                 if (status == TableControlStatus.Clone)
                 {
-                    question.Text = Common.Locale.Get("TableEditor", "Clone References?");
+                    question.Text = Locale.Get("TableEditor", "Clone References?");
                     if (MessageDialog.AskQuestion(ParentWindow, question) == Command.Yes)
                     {
                         var relations = Table.GetChildRelations();
                         foreach (var relation in relations)
                         {
-                            question.Text = string.Format(Common.Locale.Get("TableEditor", "Clone Reference {0}?"), relation.Table);
+                            question.Text = string.Format(Locale.Get("TableEditor", "Clone Reference {0}?"), relation.Table);
                             if (MessageDialog.AskQuestion(ParentWindow, question) == Command.No)
                                 continue;
 
@@ -913,7 +913,7 @@ namespace DataWF.Data.Gui
         {
             if (Table.IsEdited)
             {
-                var question = new QuestionMessage(Common.Locale.Get("TableEditor", "Continue Rejecting?"), "Check");
+                var question = new QuestionMessage(Locale.Get("TableEditor", "Continue Rejecting?"), "Check");
                 question.Buttons.Add(Command.No);
                 question.Buttons.Add(Command.Yes);
                 if (MessageDialog.AskQuestion(ParentWindow, question) == Command.Yes)

@@ -53,7 +53,8 @@ namespace DataWF.Data
         Encript = 1 << 17,
         Password = 1 << 18,
         Reference = 1 << 19,
-        TableReference = 1 << 20
+        TableReference = 1 << 20,
+        NoLog = 1 << 21
     }
 
     public class DBColumn : DBSchemaItem, IComparable, IComparable<DBColumn>, ICloneable, IDBTableContent, IInvoker<DBItem, object>
@@ -265,7 +266,7 @@ namespace DataWF.Data
             }
         }
 
-        [Category("Database")]
+        [Category("Database"), DefaultValue(DBColumnKeys.None)]
         public DBColumnKeys Keys
         {
             get { return keys; }
@@ -311,7 +312,7 @@ namespace DataWF.Data
             }
         }
 
-        [Category("Database")]
+        [Category("Database"), XmlIgnore]
         public int Order
         {
             get { return order; }
@@ -476,7 +477,7 @@ namespace DataWF.Data
             }
         }
 
-        [Category("Database")]
+        [Category("Database"), DefaultValue(DBColumnTypes.Default)]
         public DBColumnTypes ColumnType
         {
             get { return ctype; }
@@ -502,7 +503,7 @@ namespace DataWF.Data
             }
         }
 
-        [Category("Database")]
+        [Category("Database"), DefaultValue(0)]
         public int Size
         {
             get { return size; }
@@ -530,7 +531,7 @@ namespace DataWF.Data
             }
         }
 
-        [Category("Database")]
+        [Category("Database"), DefaultValue(0)]
         public int Scale
         {
             get { return scale; }

@@ -137,7 +137,7 @@ namespace DataWF.Module.Flow
                 {
                     foreach (User user in User.DBTable)
                     {
-                        if (user.Access.GetCreate(access.Group))
+                        if (user.Access.Get(access.Group).Create)
                             yield return user;
                     }
                 }

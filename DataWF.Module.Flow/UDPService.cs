@@ -42,7 +42,7 @@ namespace DataWF.Module.Flow
         class MessageItem
         {
             public DBTable Table;
-            public DataLogType Type;
+            public UserLogType Type;
             public object Id;
         }
         public static UDPService Default;
@@ -163,19 +163,19 @@ namespace DataWF.Module.Flow
 
         private void OnCommit(DBItemEventArgs arg)
         {
-            var log = arg.Row;
+            var log = arg.Item;
 
-            if (!(log is DataLog) && log.Table.Type == DBTableType.Table &&
+            if (!(log is UserLog) && log.Table.Type == DBTableType.Table &&
                 (log.Table == DocumentWork.DBTable || log.Table == MessageAddress.DBTable || log.Table.IsLoging))
             {
-                DataLogType type = DataLogType.None;
+                UserLogType type = UserLogType.None;
                 if ((arg.State & DBUpdateState.Delete) == DBUpdateState.Delete)
-                    type = DataLogType.Delete;
+                    type = UserLogType.Delete;
                 else if ((arg.State & DBUpdateState.Update) == DBUpdateState.Update)
-                    type = DataLogType.Update;
+                    type = UserLogType.Update;
                 else if ((arg.State & DBUpdateState.Insert) == DBUpdateState.Insert)
-                    type = DataLogType.Insert;
-                if (type != DataLogType.None)
+                    type = UserLogType.Insert;
+                if (type != UserLogType.None)
                 {
                     buffer.Add(new MessageItem() { Table = log.Table, Id = log.PrimaryId, Type = type });
                 }
@@ -217,9 +217,9 @@ namespace DataWF.Module.Flow
                         if (!log.Id.Equals(id))
                         {
                             id = log.Id;
-                            temp.AppendFormat(";{0}{1}", log.Type == DataLogType.Insert ? "I" :
-                                                         log.Type == DataLogType.Update ? "U" :
-                                                         log.Type == DataLogType.Delete ? "D" : "",
+                            temp.AppendFormat(";{0}{1}", log.Type == UserLogType.Insert ? "I" :
+                                                         log.Type == UserLogType.Update ? "U" :
+                                                         log.Type == UserLogType.Delete ? "D" : "",
                                                          log.Id);
                         }
                     }

@@ -574,6 +574,11 @@ namespace DataWF.Data
             }
         }
 
+        public IEnumerable<DBItem> Load(DBLoadParam param)
+        {
+            return Table.LoadItems(this, param);
+        }
+
         //       public void ParseExpression(QParam param, string query)
         //       {
         //string word = string.Empty;

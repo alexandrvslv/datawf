@@ -73,67 +73,20 @@ namespace DataWF.Module.Flow
 
         public static void OnDBRowChanged(DBItemEventArgs arg)
         {
-            var item = arg.Row;
-
-            if (arg.Row.Table == DataLog.DBTable) //|| arg.Row.Table == FlowEnvir.Config.Document.Table)
+            if (arg.Item.Table == UserLog.DBTable) //|| arg.Row.Table == FlowEnvir.Config.Document.Table)
                 return;
 
-            if (arg.Row.Table.GetType() != typeof(IDBVirtualTable))
+            if (!(arg.Item.Table is IDBVirtualTable))
             {
-                var cols = arg.Row.Table.Columns.GetByReference(Document.DBTable);
+                var cols = arg.Item.Table.Columns.GetByReference(Document.DBTable);
 
                 foreach (DBColumn col in cols)
                 {
-                    var document = item.GetReference<Document>(col, DBLoadParam.None, null);
+                    var document = arg.Item.GetReference<Document>(col, DBLoadParam.None, null);
                     if (document != null)
-                        document.OnReferenceChanged(arg);
+                        document.OnReferenceChanged(arg.Item);
                 }
             }
-        }
-
-        public static event EventHandler<DBItemEventArgs> RowLoging;
-        public static event EventHandler<DBItemEventArgs> RowLoged;
-
-        public static void OnDBRowUpdating(DBItemEventArgs arg)
-        {
-        }
-
-        public static void OnDBRowUpdated(DBItemEventArgs arg)
-        {
-            if (arg.Row.Table.IsLoging &&
-                arg.Row.Table != DataLog.DBTable &&
-                //arg.Row.Table != Config.DocumentWork.Table &&
-                //arg.Row.Table != Config.MessageAddress.Table &&
-                arg.Row.Table != Message.DBTable)
-            {
-                if (RowLoging != null)
-                    RowLoging(null, arg);
-                var parent = arg.Transaction.Tag is DataLog ? (DataLog)arg.Transaction.Tag : DataLog.LogStart;
-                var log = DataLog.LogRow(parent, arg.Row, arg.Columns, arg.State);
-
-                if (arg.Transaction.SubTransaction == null)
-                {
-                    arg.Transaction.BeginSubTransaction(DataLog.DBTable.Schema);
-                    arg.Transaction.SubTransaction.Reference = false;
-                }
-                log.Save(arg.Transaction.SubTransaction);
-                if (RowLoged != null)
-                    RowLoged(log, arg);
-            }
-        }
-
-        public static void LoadDocuments(User user)
-        {
-            var qWork = new QQuery(string.Empty, DocumentWork.DBTable);
-            qWork.Columns.Add(new QColumn(nameof(DocumentWork.Document)));
-            qWork.BuildPropertyParam(nameof(DocumentWork.IsComplete), CompareType.Equal, false);
-            qWork.BuildPropertyParam(nameof(DocumentWork.UserId), CompareType.In, user.GetParents<User>(true));
-
-            var qDocs = new QQuery(string.Empty, Document.DBTable);
-            qDocs.BuildPropertyParam(nameof(Document.Id), CompareType.In, qWork);
-
-            Document.DBTable.Load(qDocs, DBLoadParam.Synchronize);
-            DocumentWork.DBTable.Load(qWork, DBLoadParam.Synchronize);
         }
 
         public static void LoadBooks()
@@ -149,7 +102,7 @@ namespace DataWF.Module.Flow
                 //cache groups
                 UserGroup.DBTable.Load(transaction, "", DBLoadParam.Synchronize | DBLoadParam.CheckDeleted);
 
-                AccessItem.Groups = new DBTableView<UserGroup>(UserGroup.DBTable, "", DBViewKeys.None, DBStatus.Current);
+                AccessValue.Groups = new DBTableView<UserGroup>(UserGroup.DBTable, "", DBViewKeys.None, DBStatus.Current);
                 AccessItem.Default = false;
 
                 Location.DBTable.Load(transaction, "", DBLoadParam.Synchronize | DBLoadParam.CheckDeleted);
@@ -179,7 +132,7 @@ namespace DataWF.Module.Flow
 
             Helper.Logs.Add(new StateInfo("Flow Synchronization", "Complete", "in " + watch.ElapsedMilliseconds + " ms", StatusType.Information));
 
-            DataLog.DBTable.DefaultComparer = new DBComparer(DataLog.DBTable.PrimaryKey) { Hash = true };
+            UserLog.DBTable.DefaultComparer = new DBComparer(UserLog.DBTable.PrimaryKey) { Hash = true };
             DocumentWork.DBTable.DefaultComparer = new DBComparer(DocumentWork.DBTable.PrimaryKey) { Hash = true };
             //Logs.Add(new StateInfo("Flow Check", "Config Falil", "AccountInfo", StatusType.Warning));
         }
@@ -242,7 +195,7 @@ namespace DataWF.Module.Flow
         public void Initialize()
         {
             DBService.Execute += FlowEnvironment.OnDBServiceExecute;
-            DBService.RowUpdated += FlowEnvironment.OnDBRowUpdated;
+            //TODO DBService.RowUpdated += FlowEnvironment.OnDBRowUpdated;
 
             Serialization.Notify += Helper.OnSerializeNotify;
             FlowEnvironment.Config.LogUpdate = true;
@@ -255,7 +208,7 @@ namespace DataWF.Module.Flow
         public void Dispose()
         {
             DBService.Execute -= FlowEnvironment.OnDBServiceExecute;
-            DBService.RowUpdated -= FlowEnvironment.OnDBRowUpdated;
+            //TODO DBService.RowUpdated -= FlowEnvironment.OnDBRowUpdated;
 
             Serialization.Notify -= Helper.OnSerializeNotify;
 

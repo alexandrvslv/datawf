@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace DataWF.Common
 {
@@ -14,157 +15,147 @@ namespace DataWF.Common
     {
         public readonly static AccessItem Empty = new AccessItem();
         //public static event EventHandler<AccessItemEventArg> GetGroup;
-        public static IEnumerable<IAccessGroup> Groups;
         public static bool Default = true;
 
-        private IAccessGroup group;
-        private AccessType data;
+        public AccessItem(IAccessGroup group, AccessType data = AccessType.None) : this()
+        {
+            Group = group;
+            Data = data;
+        }
 
         public override string ToString()
         {
-            return $"{group.Name}({data})";
+            return $"{Group?.Name}({Data})";
         }
 
-        public IAccessGroup Group
+        public IAccessGroup Group { get; private set; }
+
+        public int GroupId
         {
-            get { return group; }
-            set { group = value; }
+            get { return Group?.Id ?? -1; }
+            internal set
+            {
+                if (value >= 0)
+                {
+                    foreach (var item in AccessValue.Groups)
+                    {
+                        if (item.Id == value)
+                        {
+                            Group = item;
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
-        public AccessType Data { get { return data; } }
+        public AccessType Data { get; internal set; }
 
         public bool IsEmpty
         {
-            get { return data == 0; }
+            get { return Data == 0; }
         }
 
         public bool View
         {
-            get { return (data & AccessType.View) == AccessType.View; }
+            get { return (Data & AccessType.View) == AccessType.View; }
             set
             {
                 if (View != value)
                 {
                     if (value)
-                        data |= AccessType.View;
+                        Data |= AccessType.View;
                     else
-                        data &= ~AccessType.View;
+                        Data &= ~AccessType.View;
                 }
             }
         }
 
         public bool Create
         {
-            get { return (data & AccessType.Create) == AccessType.Create; }
+            get { return (Data & AccessType.Create) == AccessType.Create; }
             set
             {
                 if (Create != value)
                 {
                     if (value)
-                        data |= AccessType.Create;
+                        Data |= AccessType.Create;
                     else
-                        data &= ~AccessType.Create;
+                        Data &= ~AccessType.Create;
                 }
             }
         }
 
         public bool Edit
         {
-            get { return (data & AccessType.Edit) == AccessType.Edit; }
+            get { return (Data & AccessType.Edit) == AccessType.Edit; }
             set
             {
                 if (Edit != value)
                 {
                     if (value)
-                        data |= AccessType.Edit;
+                        Data |= AccessType.Edit;
                     else
-                        data &= ~AccessType.Edit;
+                        Data &= ~AccessType.Edit;
                 }
             }
         }
 
         public bool Delete
         {
-            get { return (data & AccessType.Delete) == AccessType.Delete; }
+            get { return (Data & AccessType.Delete) == AccessType.Delete; }
             set
             {
                 if (Delete != value)
                 {
                     if (value)
-                        data |= AccessType.Delete;
+                        Data |= AccessType.Delete;
                     else
-                        data &= ~AccessType.Delete;
+                        Data &= ~AccessType.Delete;
                 }
             }
         }
 
         public bool Admin
         {
-            get { return (data & AccessType.Admin) == AccessType.Admin; }
+            get { return (Data & AccessType.Admin) == AccessType.Admin; }
             set
             {
                 if (Admin != value)
                 {
                     if (value)
-                        data |= AccessType.Admin;
+                        Data |= AccessType.Admin;
                     else
-                        data &= ~AccessType.Admin;
+                        Data &= ~AccessType.Admin;
                 }
             }
         }
 
         public bool Accept
         {
-            get { return (data & AccessType.Accept) == AccessType.Accept; }
+            get { return (Data & AccessType.Accept) == AccessType.Accept; }
             set
             {
                 if (Accept != value)
                 {
                     if (value)
-                        data |= AccessType.Accept;
+                        Data |= AccessType.Accept;
                     else
-                        data &= ~AccessType.Accept;
+                        Data &= ~AccessType.Accept;
                 }
             }
         }
 
-        public void Write(BinaryWriter writer)
+        internal void Write(BinaryWriter writer)
         {
-            writer.Write(group.Id);
-            writer.Write((int)data);
+            writer.Write(GroupId);
+            writer.Write((int)Data);
         }
 
-        public void Read(BinaryReader readre, int size)
+        internal void Read(BinaryReader reader)
         {
-            var groupId = readre.ReadInt32();
-            if (Groups != null)
-            {
-                foreach (IAccessGroup item in Groups)
-                {
-                    if (item.Id == groupId)
-                    {
-                        group = item;
-                        break;
-                    }
-                }
-            }
-            //if (GetGroup != null)
-            //{
-            //    var arg = new AccessItemEventArg() { Item = this };
-            //    GetGroup(this, arg);
-            //}
-            if (size == 9)
-            {
-                View = readre.ReadBoolean();
-                Create = readre.ReadBoolean();
-                Edit = readre.ReadBoolean();
-                Delete = readre.ReadBoolean();
-                Admin = readre.ReadBoolean();
-            }
-            else
-            {
-                data = (AccessType)readre.ReadInt32();
-            }
+            GroupId = reader.ReadInt32();
+            Data = (AccessType)reader.ReadInt32();
         }
     }
 }

@@ -35,6 +35,11 @@ namespace DataWF.Gui
             }
         }
 
+        public ToolItem this[string name]
+        {
+            get { return (ToolItem)Items[name]; }
+        }
+
         protected override Size OnGetPreferredSize(SizeConstraint widthConstraint, SizeConstraint heightConstraint)
         {
             var size = base.OnGetPreferredSize(widthConstraint, heightConstraint);

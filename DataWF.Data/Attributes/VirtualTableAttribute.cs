@@ -44,7 +44,7 @@ namespace DataWF.Data
         public override DBTable CreateTable()
         {
             if (BaseTable.Table == null)
-                BaseTable.Generate(BaseType);
+                BaseTable.Generate(BaseType, Schema);
             var table = (DBTable)EmitInvoker.CreateObject(typeof(DBVirtualTable<>).MakeGenericType(ItemType));
             table.Name = TableName;
             table.Schema = Schema;

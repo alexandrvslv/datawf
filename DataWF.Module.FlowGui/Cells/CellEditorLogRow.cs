@@ -8,8 +8,8 @@ namespace DataWF.Module.FlowGui
     {
         public override object FormatValue(object value, object dataSource, Type valueType)
         {
-            if (dataSource is DataLog)
-                value = ((DataLog)dataSource).TargetItem;
+            if (dataSource is UserLog)
+                value = ((UserLog)dataSource).TargetItem;
             return base.FormatValue(value, dataSource, valueType);
         }
 

@@ -62,7 +62,11 @@ namespace DataWF.Data
         public DBSchema Schema
         {
             get { return cacheSchema ?? (cacheSchema = DBService.Schems[SchemaName]); }
-            internal set { cacheSchema = value; }
+            internal set
+            {
+                cacheSchema = value;
+                SchemaName = value?.Name;
+            }
         }
 
         [XmlIgnore]
@@ -81,6 +85,8 @@ namespace DataWF.Data
 
         public int BlockSize { get; set; } = 1000;
 
+        public bool IsLoging { get; set; } = true;
+
         public virtual DBTable CreateTable()
         {
             var table = (DBTable)EmitInvoker.CreateObject(typeof(DBTable<>).MakeGenericType(ItemType));
@@ -93,13 +99,22 @@ namespace DataWF.Data
             return table;
         }
 
-        public DBTable Generate(Type type)
+        public DBTable Generate(Type type, DBSchema schema)
         {
             Initialize(type);
             if (Schema == null)
             {
-                Schema = new DBSchema(SchemaName);
-                DBService.Schems.Add(Schema);
+                if (schema != null)
+                {
+                    if (string.IsNullOrEmpty(schema.Name))
+                        schema.Name = SchemaName;
+                    Schema = schema;
+                }
+                else
+                {
+                    Schema = new DBSchema(SchemaName);
+                    DBService.Schems.Add(Schema);
+                }
             }
             if (Table == null)
             {
@@ -125,6 +140,7 @@ namespace DataWF.Data
             {
                 Schema.Tables.Add(Table);
             }
+            Table.IsLoging = IsLoging;
             return Table;
         }
 

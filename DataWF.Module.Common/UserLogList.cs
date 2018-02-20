@@ -21,26 +21,26 @@ using DataWF.Data;
 
 namespace DataWF.Module.Common
 {
-    public class DataLogList : DBTableView<DataLog>
+    public class UserLogList : DBTableView<UserLog>
     {
-        public DataLogList(string filter)
-            : base(DataLog.DBTable, filter)
+        public UserLogList(string filter)
+            : base(UserLog.DBTable, filter)
         {
         }
 
-        public DataLogList()
+        public UserLogList()
             : this("")
         {
         }
 
-        public DataLogList(DBItem document)
-            : this(DataLog.DBTable.ParseProperty(nameof(DataLog.DocumentId)).Name + "='" + document.PrimaryId + "'")
+        public UserLogList(DBItem document)
+            : this(UserLog.DBTable.ParseProperty(nameof(UserLog.DocumentId)).Name + "='" + document.PrimaryId + "'")
         {
         }
 
         public void FilterByDocument(DBItem document)
         {
-            Filter = DataLog.DBTable.ParseProperty(nameof(DataLog.DocumentId)).Name + "='" + document.PrimaryId + "'";
+            Filter = UserLog.DBTable.ParseProperty(nameof(UserLog.DocumentId)).Name + "='" + document.PrimaryId + "'";
         }
     }
 }

@@ -78,7 +78,7 @@ namespace DataWF.Data
             {
 
                 Column.Column.IsReference = true;
-                var referenceTable = DBService.GetTable(ReferenceType, true);
+                var referenceTable = DBService.GetTable(ReferenceType, Table.Schema, true);
                 ForeignKey = new DBForeignKey()
                 {
                     Table = Table.Table,

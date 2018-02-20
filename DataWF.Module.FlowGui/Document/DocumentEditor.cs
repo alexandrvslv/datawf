@@ -345,7 +345,7 @@ namespace DataWF.Module.FlowGui
                     task.Action = () =>
                     {
                         Application.Invoke(() => MessageDialog.ShowMessage(ParentWindow,
-                                                                           string.Format(Dwf.Common.Locale.Get("DocumentEditor", "Method {0}\nExecute successful!"), proc.Name), "Methods"));
+                                                                           string.Format(Locale.Get("DocumentEditor", "Method {0}\nExecute successful!"), proc.Name), "Methods"));
                         return null;
                     };
                     GuiService.Main.AddTask(this, task);
@@ -422,13 +422,13 @@ namespace DataWF.Module.FlowGui
             {
                 if (GuiService.Main == null)
                     Helper.OnException((Exception)arg.Result);
-                MessageDialog.ShowError(ParentWindow, "Document Procedure", string.Format(Dwf.Common.Locale.Get("DocumentEditor", "Method {0}\nExecution fail!"), arg.Procedure.Name));
+                MessageDialog.ShowError(ParentWindow, "Document Procedure", string.Format(Locale.Get("DocumentEditor", "Method {0}\nExecution fail!"), arg.Procedure.Name));
             }
             else
             {
                 if (arg.Result == null || arg.Result.ToString().Length == 0)
                 {
-                    MessageDialog.ShowMessage(ParentWindow, "Document Procedure", string.Format(Dwf.Common.Locale.Get("DocumentEditor", "Method {0}\nExecut successful!"), arg.Procedure.Name));
+                    MessageDialog.ShowMessage(ParentWindow, "Document Procedure", string.Format(Locale.Get("DocumentEditor", "Method {0}\nExecut successful!"), arg.Procedure.Name));
                 }
                 else
                 {

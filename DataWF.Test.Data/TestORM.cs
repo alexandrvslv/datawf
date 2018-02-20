@@ -27,7 +27,7 @@ namespace DataWF.Test.Data
             if (DBService.Connections.Count == 0)
                 Serialization.Deserialize("connections.xml", DBService.Connections);
 
-            AccessItem.Groups = new List<IAccessGroup> {
+            AccessValue.Groups = new List<IAccessGroup> {
                 new AccessGroupBung() { Id = 1, Name = "Group1", IsCurrent = true },
                 new AccessGroupBung() { Id = 2, Name = "Group2", IsCurrent = true },
                 new AccessGroupBung() { Id = 3, Name = "Group3", IsCurrent = true }
@@ -79,7 +79,7 @@ namespace DataWF.Test.Data
             Serialization.Deserialize(file, DBService.Schems);
             Assert.AreEqual(1, DBService.Schems.Count);
             var schem = DBService.Schems[0];
-            Assert.AreEqual(2, schem.Tables.Count);
+            Assert.AreEqual(4, schem.Tables.Count);
             var table = schem.Tables[EmployerTableName];
             Assert.IsNotNull(table);
             Assert.IsInstanceOf<DBTable<Employer>>(table);
@@ -102,24 +102,8 @@ namespace DataWF.Test.Data
             Assert.IsNotNull(schema, "Attribute Generator Fail. On Column Employer Id");
             schema.Connection = connection;
 
-            try { DBService.ExecuteQuery(connection, schema.FormatSql(DDLType.Drop), true, DBExecuteType.NoReader); }
-            catch (Exception ex) { Debug.WriteLine(ex); }
+            schema.CreateDatabase();
 
-            var textCreate = schema.FormatSql(DDLType.Create);
-
-            DBService.ExecuteGoQuery(connection, textCreate, true);
-
-            if (connection.Schema?.Length > 0)
-            {
-                if (connection.System == DBSystem.Oracle)
-                    connection.User = SchemaName;
-                else if (connection.System != DBSystem.SQLite)
-                    connection.DataBase = SchemaName;
-            }
-
-            var ddlText = schema.FormatSchema();
-
-            DBService.ExecuteGoQuery(schema.Connection, ddlText, true);
             var result = schema.GetTablesInfo(connection.Schema, EmployerTableName);
             Assert.IsTrue(result.Count == 1, "Generate Sql Table / Get Information Fail.");
             result = schema.GetTablesInfo(connection.Schema, PositionTableName);
@@ -138,9 +122,9 @@ namespace DataWF.Test.Data
                 Name = "Ivan",
                 Access = new AccessValue(new[]
                 {
-                    new AccessItem() { Group = AccessItem.Groups.First(i => i.Id == 1), View = true },
-                    new AccessItem() { Group = AccessItem.Groups.First(i => i.Id == 2), Admin = true },
-                    new AccessItem() { Group = AccessItem.Groups.First(i => i.Id == 3), Create = true }
+                    new AccessItem(AccessValue.Groups.First(i => i.Id == 1), AccessType.View),
+                    new AccessItem(AccessValue.Groups.First(i => i.Id == 2), AccessType.Admin),
+                    new AccessItem(AccessValue.Groups.First(i => i.Id == 3), AccessType.Create)
                 })
             };
             Assert.AreEqual(employer.Type, EmployerType.Type2, "Default Value & Enum");

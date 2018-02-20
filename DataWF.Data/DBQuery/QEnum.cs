@@ -43,6 +43,7 @@ namespace DataWF.Data
         public QItemList<QItem> Items
         {
             get { return items; }
+            set { items = value; }
         }
 
         public override object GetValue(DBItem row = null)

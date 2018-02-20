@@ -24,15 +24,15 @@ using DataWF.Common;
 
 namespace DataWF.Module.Common
 {
-    public class PermissionList : DBTableView<GroupPermission>
+    public class GroupPermissionList : DBTableView<GroupPermission>
     {
-        public PermissionList(DBTable<GroupPermission> table, string filter, DBViewKeys mode)
+        public GroupPermissionList(DBTable<GroupPermission> table, string filter, DBViewKeys mode)
             : base(table, filter, mode)
         {
             ApplySort(new InvokerComparer(typeof(GroupPermission), "ToString", ListSortDirection.Ascending));
         }
 
-        public PermissionList(string filter = "", DBViewKeys mode = DBViewKeys.None)
+        public GroupPermissionList(string filter = "", DBViewKeys mode = DBViewKeys.None)
             : this(GroupPermission.DBTable, filter, mode)
         {
         }

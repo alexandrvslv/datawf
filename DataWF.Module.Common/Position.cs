@@ -22,14 +22,19 @@ using DataWF.Common;
 
 namespace DataWF.Module.Common
 {
-    [Table("flow", "rposition")]
+    [Table("datawf_common", "rposition")]
     public class Position : DBItem
     {
         public static DBTable<Position> DBTable
         {
             get { return DBService.GetTable<Position>(); }
         }
-        
+
+        public Position()
+        {
+            Build(DBTable);
+        }
+
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {

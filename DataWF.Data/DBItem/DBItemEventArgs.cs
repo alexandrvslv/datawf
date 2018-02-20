@@ -38,67 +38,40 @@ namespace DataWF.Data
 
     public class DBItemEventArgs : CancelEventArgs
     {
-        private DBItem row;
-        private DBUpdateState state;
-        private DBColumn column;
-        private object value;
-        private string property = string.Empty;
-        private List<DBColumn> columns;
-
-        public DBItemEventArgs(DBItem item, DBColumn Column = null, string property = null, object Value = null)
+        public DBItemEventArgs(DBItem item, DBColumn column = null, string property = null, object value = null)
         {
-            this.row = item;
-            this.state = item.DBState;
-            this.column = Column;
-            this.value = Value;
-            this.Property = property;
-            this.columns = row.GetChangeKeys().ToList();
+            Item = item;
+            State = item.DBState;
+            Column = column;
+            Value = value;
+            Property = property ?? string.Empty;
+            Columns = item.GetChangeKeys().ToList();
         }
 
-        public DBUpdateState State
-        {
-            get { return state; }
-            set { state = value; }
-        }
+        public DBUpdateState State { get; set; }
 
-        public DBColumn Column
-        {
-            get { return column; }
-        }
+        public DBColumn Column { get; private set; }
 
-        public string Property
-        {
-            get { return property; }
-            private set { property = value ?? string.Empty; }
-        }
+        public string Property { get; set; }
 
-        public object Value
-        {
-            get { return value; }
-            set { this.value = value; }
-        }
+        public object Value { get; set; }
 
-        public DBItem Row
-        {
-            get { return row; }
-        }
+        public DBItem Item { get; private set; }
 
-        public List<DBColumn> Columns
-        {
-            get { return columns; }
-            set { columns = value; }
-        }
+        public DBLogItem LogItem { get; set; }
+
+        public List<DBColumn> Columns { get; set; }
 
         public DBTransaction Transaction { get; set; }
 
         public bool StateAdded(DBUpdateState filter)
         {
-            return (state & filter) != filter && (row.DBState & filter) == filter;
+            return (State & filter) != filter && (Item.DBState & filter) == filter;
         }
 
         public bool StateRemoved(DBUpdateState filter)
         {
-            return (state & filter) == filter && (row.DBState & filter) != filter; ;
+            return (State & filter) == filter && (Item.DBState & filter) != filter; ;
         }
     }
 }

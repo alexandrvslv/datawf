@@ -224,7 +224,7 @@ namespace DataWF.Data
             if (check)
             {
                 CheckState();
-                DBService.RaiseRowEdited(args);
+                DBService.OnEdited(args);
             }
         }
 
@@ -641,7 +641,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
-        [Column("dateupdate", Keys = DBColumnKeys.Stamp, Order = 101)]
+        [Column("dateupdate", Keys = DBColumnKeys.Stamp | DBColumnKeys.NoLog, Order = 101)]
         public DateTime? Stamp
         {
             get { return Table.StampKey == null ? null : GetValue<DateTime?>(Table.StampKey); }
@@ -656,7 +656,7 @@ namespace DataWF.Data
             {
                 AccessValue access = Table.Access;
 
-                if (table.AccessKey != null && AccessItem.Groups != null && this[table.AccessKey] != null)
+                if (table.AccessKey != null && this[table.AccessKey] != null)
                 {
                     access = GetCache(table.AccessKey) as AccessValue;
                     if (access == null)
@@ -859,7 +859,7 @@ namespace DataWF.Data
                     var arg = new DBItemEventArgs(this) { State = update };
                     update = value;
                     OnPropertyChanged(nameof(DBState), null, value);
-                    DBService.RaiseRowStateEdited(arg);
+                    DBService.OnStateEdited(arg);
                 }
             }
         }
@@ -888,7 +888,7 @@ namespace DataWF.Data
                     DBState = DBUpdateState.Default;
                 }
                 RemoveOld();
-                DBService.RaiseRowAccept(this);
+                DBService.OnAccept(this);
             }
         }
 
@@ -929,7 +929,7 @@ namespace DataWF.Data
                     }
                     DBState = DBUpdateState.Default;
                 }
-                DBService.RaiseRowReject(this);
+                DBService.OnReject(this);
             }
         }
 
@@ -980,7 +980,7 @@ namespace DataWF.Data
             return rez;
         }
 
-        public List<T> GetParents<T>(bool addCurrent = false)
+        public IEnumerable<T> GetParents<T>(bool addCurrent = false)
         {
             return GroupHelper.GetAllParent<T>(this, addCurrent);
         }
@@ -989,9 +989,10 @@ namespace DataWF.Data
         {
             string rez = "";
             rez = PrimaryId.ToString();
-            var list = GroupHelper.GetAllParent<DBItem>(this);
-            foreach (DBItem row in list)
+            foreach (DBItem row in GroupHelper.GetAllParent<DBItem>(this))
+            {
                 rez += "," + row.PrimaryId;
+            }
             return rez;
         }
 
@@ -1019,6 +1020,16 @@ namespace DataWF.Data
             }
         }
 
+        public virtual bool OnUpdating(DBItemEventArgs arg)
+        {
+            return Table.OnUpdating(arg);
+        }
+
+        public virtual bool OnUpdated(DBItemEventArgs arg)
+        {
+            return Table.OnUpdated(arg);
+        }
+
         #region INotifyPropertyChanged Members
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -1027,7 +1038,7 @@ namespace DataWF.Data
         public virtual DBItemEventArgs OnPropertyChanging(string property, DBColumn column = null, object value = null)
         {
             var args = new DBItemEventArgs(this, column, column.Name, value);
-            DBService.RaiseRowEditing(args);
+            DBService.OnEditing(args);
             PropertyChanging?.Invoke(args);
             return args;
         }

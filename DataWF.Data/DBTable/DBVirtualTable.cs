@@ -25,14 +25,6 @@ using System.Text;
 
 namespace DataWF.Data
 {
-    public interface IDBVirtualTable
-    {
-        DBTable BaseTable { get; set; }
-        QQuery FilterQuery { get; }
-        void Refresh();
-        void CheckItem(ListChangedType type, DBItem item, string property);
-    }
-
     public class DBVirtualTable<T> : DBTable<T>, IDBVirtualTable where T : DBVirtualItem, new()
     {
         private DBTable cacheBaseTable;

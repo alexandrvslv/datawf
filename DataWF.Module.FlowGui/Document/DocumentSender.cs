@@ -164,7 +164,7 @@ namespace DataWF.Module.FlowGui
             GuiService.Localize(toolComplete, "DocumentSender", "Complete");
             GuiService.Localize(toolForward, "DocumentSender", "Forward");
             GuiService.Localize(toolRecovery, "DocumentSender", "Recovery");
-            this.Title = Dwf.Common.Locale.Get("DocumentSender", "Document Sender");
+            this.Title = Locale.Get("DocumentSender", "Document Sender");
         }
 
         public event EventHandler SendComplete;
@@ -507,7 +507,7 @@ namespace DataWF.Module.FlowGui
         {
             if (stages.Count == 0 && SendType != DocumentSendType.Complete && SendType != DocumentSendType.Return)
             {
-                MessageDialog.ShowMessage(this, Dwf.Common.Locale.Get("DocumentSender", "Select Stage!"));
+                MessageDialog.ShowMessage(this, Locale.Get("DocumentSender", "Select Stage!"));
                 return;
             }
             //listDocuments.Sensitive = false;
@@ -581,7 +581,7 @@ namespace DataWF.Module.FlowGui
 
             elements.Add("Номер", firstDoc.Id);
 
-            elements.Add("ДатаОтправки", dt.ToString("D", Dwf.Common.Locale.Data.Culture));
+            elements.Add("ДатаОтправки", dt.ToString("D", Locale.Data.Culture));
 
             string departs = "";
             foreach (StageSender ss in stages)

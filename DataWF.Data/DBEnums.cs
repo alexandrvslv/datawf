@@ -170,7 +170,9 @@ namespace DataWF.Data
         getdate,
         datename,
         format,
-        parse
+        parse,
+        max,
+        min
     }
 
     public enum DBRowBinarySeparator
@@ -183,4 +185,13 @@ namespace DataWF.Data
         End,
         Null
     }
+
+    public enum DBLogType
+    {
+        None,
+        Insert,
+        Update,
+        Delete
+    }
+
 }

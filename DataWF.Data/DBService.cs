@@ -123,76 +123,69 @@ namespace DataWF.Data
 
         public static event DBItemEditEventHandler RowAdded;
 
-        internal static void RaiseRowAdded(DBItem e)
+        internal static void OnAdded(DBItem e)
         {
             var args = new DBItemEventArgs(e) { State = DBUpdateState.Insert };
-            RaiseRowStateEdited(args);
+            OnStateEdited(args);
             RowAdded?.Invoke(args);
         }
 
         public static event DBItemEditEventHandler RowRemoved;
 
-        internal static void RaiseRowRemoved(DBItem e)
+        internal static void OnRemoved(DBItem e)
         {
             var args = new DBItemEventArgs(e) { State = DBUpdateState.Delete };
-            RaiseRowStateEdited(args);
+            OnStateEdited(args);
             RowRemoved?.Invoke(args);
         }
 
         public static event DBItemEditEventHandler RowEditing;
 
-        internal static void RaiseRowEditing(DBItemEventArgs e)
+        internal static void OnEditing(DBItemEventArgs e)
         {
-            if (RowEditing != null)
-                RowEditing(e);
+            RowEditing?.Invoke(e);
         }
 
         public static event DBItemEditEventHandler RowEdited;
 
-        internal static void RaiseRowEdited(DBItemEventArgs e)
+        internal static void OnEdited(DBItemEventArgs e)
         {
-            if (RowEdited != null)
-                RowEdited(e);
+            RowEdited?.Invoke(e);
         }
 
         public static event DBItemEditEventHandler RowStateEdited;
 
-        internal static void RaiseRowStateEdited(DBItemEventArgs e)
+        internal static void OnStateEdited(DBItemEventArgs e)
         {
-            if (RowStateEdited != null)
-                RowStateEdited(e);
+            RowStateEdited?.Invoke(e);
         }
 
         public static event DBItemEditEventHandler RowUpdating;
 
-        internal static void RaiseRowUpdating(DBItemEventArgs e)
+        internal static void OnUpdating(DBItemEventArgs e)
         {
-            if (RowUpdating != null)
-                RowUpdating(e);
+            RowUpdating?.Invoke(e);
         }
 
         public static event DBItemEditEventHandler RowUpdated;
 
-        internal static void RaiseRowUpdated(DBItemEventArgs e)
+        internal static void OnUpdated(DBItemEventArgs e)
         {
-            if (RowUpdated != null)
-                RowUpdated(e);
+            RowUpdated?.Invoke(e);
         }
 
         public static event DBItemEditEventHandler RowAccept;
 
-        internal static void RaiseRowAccept(DBItem item)
+        internal static void OnAccept(DBItem item)
         {
-            if (RowAccept != null)
-                RowAccept(new DBItemEventArgs(item));
+            RowAccept?.Invoke(new DBItemEventArgs(item));
         }
 
         public static event DBItemEditEventHandler RowReject;
 
-        internal static void RaiseRowReject(DBItem item)
+        internal static void OnReject(DBItem item)
         {
-            if (RowReject != null)
-                RowReject(new DBItemEventArgs(item));
+            RowReject?.Invoke(new DBItemEventArgs(item));
         }
 
         public static void Save()
@@ -1144,7 +1137,9 @@ namespace DataWF.Data
                     val = i;
             }
             else if (type == typeof(TimeSpan))
+            {
                 val = TimeSpan.Parse(value);
+            }
             else if (type == typeof(double))
             {
                 if (double.TryParse(value, out double d))
@@ -1160,18 +1155,29 @@ namespace DataWF.Data
                 if (long.TryParse(value, out long l))
                     val = l;
             }
-
+            else if (type == typeof(bool))
+            {
+                if (bool.TryParse(value, out bool l))
+                    val = l;
+            }
             return val;
         }
 
-        public static bool Equal(object field, object value)
+        public static bool Equal(object x, object y)
         {
-            if (field == null)
-                return value == null;
+            if (x == null)
+                return y == null;
 
-            bool equal = field.Equals(value);
-            if (!equal && field is byte[] && value is byte[])
-                equal = Helper.CompareByte((byte[])field, (byte[])value);
+            var equal = object.ReferenceEquals(x, y);
+            if (!equal)
+            {
+                if (x is byte[] && y is byte[])
+                    equal = Helper.CompareByte((byte[])x, (byte[])y);
+                else if (x is string && y is string)
+                    equal = string.Equals((string)x, (string)y, StringComparison.Ordinal);
+                else
+                    equal = x.Equals(y);
+            }
             return equal;
         }
 
@@ -1328,33 +1334,37 @@ namespace DataWF.Data
             return table;
         }
 
-        public static DBTable<T> GetTable<T>(bool generate = false) where T : DBItem, new()
+        public static DBTable<T> GetTable<T>(DBSchema schema = null, bool generate = false) where T : DBItem, new()
         {
-            return (DBTable<T>)GetTable(typeof(T), generate);
+            return (DBTable<T>)GetTable(typeof(T), schema, generate);
         }
 
-        public static DBTable GetTable(Type type, bool generate = false)
+        public static DBTable GetTable(Type type, DBSchema schema = null, bool generate = false)
         {
             var config = GetTableAttribute(type);
             if (config != null)
             {
                 if (config.Table == null && generate)
-                    config.Generate(type);
+                    config.Generate(type, schema);
                 return config.Table;
             }
             return null;
         }
 
-        public static List<DBSchema> Generate(Assembly assembly)
+        public static DBSchema Generate(Assembly assembly)
         {
-            var schems = new List<DBSchema>();
+            var schema = new DBSchema();
+            schems.Add(schema);
+            Generate(assembly, schema);
+            return schema;
+        }
+
+        public static void Generate(Assembly assembly, DBSchema schema)
+        {
             foreach (var type in assembly.GetTypes())
             {
-                var table = GetTable(type, true);
-                if (table != null && !schems.Contains(table.Schema))
-                    schems.Add(table.Schema);
+                var table = GetTable(type, schema, true);
             }
-            return schems;
         }
 
         public static DBProcedure ParseProcedure(string name)

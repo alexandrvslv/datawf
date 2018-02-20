@@ -48,18 +48,16 @@ namespace DataWF.Common
             return false;
         }
 
-        public static List<T> GetAllParent<T>(IGroup item, bool addSender = false)
+        public static IEnumerable<T> GetAllParent<T>(IGroup item, bool addSender = false)
         {
-            List<T> list = new List<T>(Level(item) + 1);
             if (addSender)
-                list.Add((T)item);
+                yield return (T)item;
             IGroup g = item.Group;
             while (g != null)
             {
-                list.Add((T)g);
+                yield return (T)g;
                 g = g.Group;
             }
-            return list;
         }
 
         public static string GetFullName(IGroup item, string separator)

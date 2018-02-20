@@ -28,20 +28,10 @@ namespace DataWF.TestGui
             Helper.OnException(e.ErrorException);
         }
 
-        private DockBox dock = new DockBox();
-        private Toolsbar tools = new Toolsbar();
-        private ToolItem button0 = new ToolItem();
-        private ToolItem button1 = new ToolItem();
-        private ToolItem button2 = new ToolItem();
-        private ToolItem button3 = new ToolItem();
-        private ToolItem button4 = new ToolItem();
-        private ToolItem button5 = new ToolItem();
-        private ToolItem button6 = new ToolItem();
-        private ToolItem button7 = new ToolItem();
-        private ToolItem button8 = new ToolItem();
-        private ToolItem button9 = new ToolItem();
         private ListEditor fields;
         private ListExplorer custom;
+        private DockBox dock;
+        private Toolsbar tools;
 
         public FormTest()
         {
@@ -60,72 +50,67 @@ namespace DataWF.TestGui
             };
             //Load();
             // 
-            button0.DisplayStyle = ToolItemDisplayStyle.Text;
-            button0.Name = "button0";
-            button0.Click += Button0Click;
-            // 
-            button1.DisplayStyle = ToolItemDisplayStyle.Text;
-            button1.Name = "button1";
-            button1.Click += Button1Click;
-            // 
-            button2.DisplayStyle = ToolItemDisplayStyle.Text;
-            button2.Name = "button2";
-            button2.Click += Button2Click;
-            // 
-            button3.DisplayStyle = ToolItemDisplayStyle.Text;
-            button3.Name = "button3";
-            button3.Click += Button3Click;
-            // 
-            button4.DisplayStyle = ToolItemDisplayStyle.Text;
-            button4.Name = "button4";
-            button4.Click += Button4Click;
-            // 
-            button5.DisplayStyle = ToolItemDisplayStyle.Text;
-            button5.Name = "button5";
-            button5.Click += Button5Click;
-            // 
-            button6.DisplayStyle = ToolItemDisplayStyle.Text;
-            button6.Name = "button6";
-            button6.Click += Button6Click;
 
-            button7.DisplayStyle = ToolItemDisplayStyle.Text;
-            button7.Name = "button7";
-            button7.Click += Button7Click;
-
-            button8.DisplayStyle = ToolItemDisplayStyle.Text;
-            button8.Name = "button8";
-            button8.Click += Button8Click;
-
-            button9.DisplayStyle = ToolItemDisplayStyle.Text;
-            button9.Name = "button9";
-            button9.Click += Button9Click;
-            // 
-            // toolStrip
-            // 
-            tools.Items.AddRange(new ToolItem[] {
-                button0,
-                button1,
-                button2,
-                button3,
-                button4,
-                button6,
-                button7,
-                button8,
-                button9
-            });
-            tools.Name = "toolStrip";
-            // 
-            // FormTest
-            // 
+            tools = new Toolsbar(new[] {
+                new ToolItem(Button0Click)
+                {
+                    DisplayStyle = ToolItemDisplayStyle.Text,
+                    Name = "button0"
+                },
+                new ToolItem(Button1Click)
+                {
+                    DisplayStyle = ToolItemDisplayStyle.Text,
+                    Name = "button1"
+                },
+                new ToolItem(Button2Click)
+                {
+                    DisplayStyle = ToolItemDisplayStyle.Text,
+                    Name = "button2"
+                },
+                new ToolItem(Button3Click)
+                {
+                    DisplayStyle = ToolItemDisplayStyle.Text,
+                    Name = "button3"
+                },
+                new ToolItem(Button4Click)
+                {
+                    DisplayStyle = ToolItemDisplayStyle.Text,
+                    Name = "button4"
+                },
+                new ToolItem(Button5Click)
+                {
+                    DisplayStyle = ToolItemDisplayStyle.Text,
+                    Name = "button5"
+                },
+                new ToolItem(Button6Click)
+                {
+                    DisplayStyle = ToolItemDisplayStyle.Text,
+                    Name = "button6"
+                },
+                new ToolItem(Button7Click)
+                {
+                    DisplayStyle = ToolItemDisplayStyle.Text,
+                    Name = "button7"
+                },
+                new ToolItem(Button8Click)
+                {
+                    DisplayStyle = ToolItemDisplayStyle.Text,
+                    Name = "button8"
+                },
+                new ToolItem(Button9Click)
+                {
+                    DisplayStyle = ToolItemDisplayStyle.Text,
+                    Name = "button9"
+                }
+            })
+            { Name = "tools" };
 
             var logs = new LogExplorer();
 
-            dock.Name = "dock";
+            dock = new DockBox() { Name = "dock" };
             dock.Put(logs, DockType.Bottom);
 
-            var box = new VBox();
-            box.Spacing = 0;
-            box.Margin = new WidgetSpacing();
+            var box = new VBox() { Spacing = 0, Margin = new WidgetSpacing() };
             box.PackStart(tools, false, false);
             box.PackStart(dock, true, true);
 
@@ -301,17 +286,17 @@ namespace ais.test
 
         public void Localize()
         {
-            button0.Text = Locale.Get("Test", "Files");
-            button1.Text = Locale.Get("Test", "List Editor");
-            button2.Text = Locale.Get("Test", "Data List");
-            button3.Text = Locale.Get("Test", "Test Reflection");
-            button3.Text = Locale.Get("Test", "Test Reflection Accesor");
-            button4.Text = Locale.Get("Test", "Option Editor");
-            button5.Text = Locale.Get("Test", "SSyntax Highlight");
-            button6.Text = Locale.Get("Test", "Diff Test");
-            button7.Text = Locale.Get("Test", "Styles");
-            button8.Text = Locale.Get("Test", "MonoTextEditor");
-            button9.Text = Locale.Get("Test", "OpendDocumentFormat");
+            tools["button0"].Text = Locale.Get("Test", "Files");
+            tools["button1"].Text = Locale.Get("Test", "List Editor");
+            tools["button2"].Text = Locale.Get("Test", "Data List");
+            tools["button3"].Text = Locale.Get("Test", "Test Reflection");
+            tools["button3"].Text = Locale.Get("Test", "Test Reflection Accesor");
+            tools["button4"].Text = Locale.Get("Test", "Option Editor");
+            tools["button5"].Text = Locale.Get("Test", "SSyntax Highlight");
+            tools["button6"].Text = Locale.Get("Test", "Diff Test");
+            tools["button7"].Text = Locale.Get("Test", "Styles");
+            tools["button8"].Text = Locale.Get("Test", "MonoTextEditor");
+            tools["button9"].Text = Locale.Get("Test", "OpendDocumentFormat");
         }
         #endregion
 

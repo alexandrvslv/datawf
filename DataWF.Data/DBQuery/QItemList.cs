@@ -22,6 +22,7 @@ using System.ComponentModel;
 using DataWF.Data;
 using DataWF.Common;
 using System.Data;
+using System.Collections.Generic;
 
 namespace DataWF.Data
 {
@@ -41,6 +42,11 @@ namespace DataWF.Data
         {
             Indexes.Add(new Invoker<T, string>(nameof(QItem.Text), (item) => item.Text));
             ApplySort(new InvokerComparer(typeof(T), "Order", ListSortDirection.Ascending));
+        }
+
+        public QItemList(IEnumerable<T> items) : this()
+        {
+            AddRange(items);
         }
 
         public QItemList(IQuery exp)

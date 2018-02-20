@@ -6,6 +6,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using DataWF.Common;
 
 namespace DataWF.Data
@@ -98,7 +99,7 @@ namespace DataWF.Data
             item.State |= DBItemState.Attached;
             OnListChanged(item, null, ListChangedType.ItemAdded);
 
-            DBService.RaiseRowAdded(item);
+            DBService.OnAdded(item);
         }
 
         public override bool Remove(DBItem item)
@@ -120,7 +121,7 @@ namespace DataWF.Data
             items.Remove(item);
             item.State &= ~DBItemState.Attached;
 
-            DBService.RaiseRowRemoved(item);
+            DBService.OnRemoved(item);
             return true;
         }
 
@@ -261,7 +262,7 @@ namespace DataWF.Data
 
         public override IEnumerable<DBItem> LoadItems(QQuery query, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null)
         {
-            return LoadItems(query, param, synch);
+            return Load(query, param, synch);
         }
 
         public List<T> Load(QQuery query, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null)
@@ -383,47 +384,50 @@ namespace DataWF.Data
             return buf;
         }
 
-        public void LoadAsync(QQuery query, DBLoadParam param, IDBTableView synch)
+        public Task<IEnumerable<T>> LoadAsync(QQuery query, DBLoadParam param, IDBTableView synch)
         {
-            ThreadPool.QueueUserWorkItem((o) =>
+            return Task.Run<IEnumerable<T>>(() =>
             {
                 try
                 {
-                    Load(query, param, synch);
+                    return Load(query, param, synch);
                 }
                 catch (Exception e)
                 {
                     Helper.OnException(e);
+                    return null;
                 }
             });
         }
 
-        public void LoadAsync(DBTransaction transaction, IDbCommand command, DBLoadParam param)
+        public Task<IEnumerable<T>> LoadAsync(DBTransaction transaction, IDbCommand command, DBLoadParam param)
         {
-            ThreadPool.QueueUserWorkItem((o) =>
+            return Task.Run<IEnumerable<T>>(() =>
             {
                 try
                 {
-                    Load(transaction, command, param);
+                    return Load(transaction, command, param);
                 }
                 catch (Exception e)
                 {
                     Helper.OnException(e);
+                    return null;
                 }
             });
         }
 
-        public void LoadAsync(string query, DBLoadParam param, IEnumerable columns, IDBTableView synch)
+        public Task<IEnumerable<T>> LoadAsync(string query, DBLoadParam param, IEnumerable columns, IDBTableView synch)
         {
-            ThreadPool.QueueUserWorkItem((o) =>
+            return Task.Run<IEnumerable<T>>(() =>
             {
                 try
                 {
-                    Load(query, param, columns, synch);
+                    return Load(query, param, columns, synch);
                 }
                 catch (Exception e)
                 {
                     Helper.OnException(e);
+                    return null;
                 }
             });
         }

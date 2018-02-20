@@ -212,5 +212,18 @@ namespace DataWF.Module.Flow
             set { SetProperty(value, nameof(Type)); }
         }
 
+        public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)
+        {
+            base.OnPropertyChanged(property, column, value);
+            if (Document != null)
+            {
+                Document.OnReferenceChanged(this);
+            }
+            if (Reference != null)
+            {
+                Reference.OnReferenceChanged(this);
+            }
+        }
+
     }
 }

@@ -262,47 +262,34 @@ namespace DataWF.Module.Flow
 
         public static event DocumentSaveDelegate Saved;
 
-        [NonSerialized]
         private DocInitType initype = DocInitType.Default;
-        [NonSerialized]
         internal Action<Document, ListChangedType> _refChanged;
-        [NonSerialized]
-        protected EventHandler<DBItemEventArgs> referenceChanged;
-        [NonSerialized]
         private int changes = 0;
 
-        public event EventHandler<DBItemEventArgs> ReferenceChanged
-        {
-            add { referenceChanged += value; }
-            remove { referenceChanged -= value; }
-        }
+        public event EventHandler<DBItemEventArgs> ReferenceChanged;
 
-        internal void OnReferenceChanged(DBItemEventArgs arg)
+        internal void OnReferenceChanged(DBItem item)
         {
             //(arg.State & DBRowState.Commit) == DBRowState.Commit ||
 
-            if (arg.Row.Table == DocumentWork.DBTable)
+            if (item is DocumentWork)
             {
-                var work = (DocumentWork)arg.Row;
-                if (work.IsComplete.GetValueOrDefault() || arg.Row.DBState == DBUpdateState.Default)
+                var work = (DocumentWork)item;
+                if (work.IsComplete.GetValueOrDefault() || work.DBState == DBUpdateState.Default)
                     RefreshCache();
             }
-            else if (arg.Row.Table == DocumentReference.DBTable)
+            else if (item is DocumentReference)
             {
-                var reference = (DocumentReference)arg.Row;
+                var reference = (DocumentReference)item;
                 if (_refChanged != null && (initype & DocInitType.Refed) != DocInitType.Refed && (initype & DocInitType.Refing) != DocInitType.Refing)
                     _refChanged(this, ListChangedType.Reset);
             }
-            if (arg.Row.DBState == DBUpdateState.Default && arg.State == DBUpdateState.Insert)
-            {
-            }
-            else if (arg.Row.DBState != DBUpdateState.Default && (arg.Row.DBState & DBUpdateState.Commit) != DBUpdateState.Commit && arg.Row.Attached)
+            if (item.DBState != DBUpdateState.Default && (item.DBState & DBUpdateState.Commit) != DBUpdateState.Commit && item.Attached)
                 changes++;
-            else if (arg.Row.DBState == DBUpdateState.Default || !arg.Row.Attached)
+            else if (item.DBState == DBUpdateState.Default || !item.Attached)
                 changes--;
 
-            if (referenceChanged != null)
-                referenceChanged(this, arg);
+            ReferenceChanged?.Invoke(this, new DBItemEventArgs(item));
         }
 
         public Document()
@@ -998,6 +985,20 @@ namespace DataWF.Module.Flow
         {
             var datas = GetDatas();
             return datas.FirstOrDefault();
+        }
+
+        public void LoadDocuments(User user)
+        {
+            var qWork = new QQuery(string.Empty, DocumentWork.DBTable);
+            qWork.Columns.Add(new QColumn(nameof(DocumentWork.Document)));
+            qWork.BuildPropertyParam(nameof(DocumentWork.IsComplete), CompareType.Equal, false);
+            qWork.BuildPropertyParam(nameof(DocumentWork.UserId), CompareType.In, user.GetParents<User>(true));
+
+            var qDocs = new QQuery(string.Empty, Document.DBTable);
+            qDocs.BuildPropertyParam(nameof(Document.Id), CompareType.In, qWork);
+
+            Document.DBTable.Load(qDocs, DBLoadParam.Synchronize);
+            DocumentWork.DBTable.Load(qWork, DBLoadParam.Synchronize);
         }
 
         public override void Dispose()

@@ -21,6 +21,7 @@ using DataWF.Common;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -30,7 +31,7 @@ namespace DataWF.Data
 {
     public class DBSchema : DBSchemaItem, IFileSerialize
     {
-        protected string connection = "";
+        protected string connectionName = "";
         protected string dataBase = "";
 
         protected DBTableList tables;
@@ -38,7 +39,7 @@ namespace DataWF.Data
         [NonSerialized()]
         protected string fileName = "";
         [NonSerialized()]
-        protected DBConnection _connection;
+        protected DBConnection connection;
         protected DBIndexList indexes;
         protected DBConstraintList<DBConstraint> constraints;
         protected DBForeignList foreigns;
@@ -171,11 +172,15 @@ namespace DataWF.Data
         [XmlIgnore]
         public DBConnection Connection
         {
-            get { return _connection == null ? _connection = DBService.Connections[connection] : _connection; }
+            get { return connection ?? (connection = DBService.Connections[connectionName]); }
             set
             {
-                _connection = value;
-                connection = _connection == null ? string.Empty : _connection.Name;
+                connection = value;
+                connectionName = connection?.Name;
+                if (value != null && !DBService.Connections.Contains((value)))
+                {
+                    DBService.Connections.Add(value);
+                }
             }
         }
 
@@ -249,7 +254,7 @@ namespace DataWF.Data
             }
         }
 
-        public string FormatSchema()
+        public string FormatSql()
         {
             var ddl = new StringBuilder();
             System?.Format(ddl, this);
@@ -272,5 +277,29 @@ namespace DataWF.Data
         {
             return System.GetTablesInfo(Connection, schemaName, tableName);
         }
+
+        public void CreateDatabase()
+        {
+            try { DBService.ExecuteQuery(Connection, FormatSql(DDLType.Drop), true, DBExecuteType.NoReader); }
+            catch (Exception ex) { Debug.WriteLine(ex); }
+
+            DBService.ExecuteGoQuery(Connection, FormatSql(DDLType.Create), true);
+
+            if (Connection.Schema?.Length > 0)
+            {
+                if (Connection.System == DBSystem.Oracle)
+                {
+                    Connection.User = Name;
+                }
+                else if (Connection.System != DBSystem.SQLite)
+                {
+                    Connection.DataBase = Name;
+                }
+            }
+
+            DBService.ExecuteGoQuery(Connection, FormatSql(), true);
+        }
+
+
     }
 }

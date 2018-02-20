@@ -84,7 +84,7 @@ Cross Platform Desktop UI, based on Xwt. Provide several widgets to build data n
 
 Main widgets:
 
-- LayoutList - usiversal widget, can be used like list view, tree view or property view. Support sorting, grouping, filtering and construct from reflection
+- LayoutList - universal widget, can be used like list view, tree view or property view. Support sorting, grouping, filtering and can construct from reflection
 - Toolsbar - buttons container(missed in Xwt)
 - GroupBox - widget layout container
 - DockBox - dock panel manager

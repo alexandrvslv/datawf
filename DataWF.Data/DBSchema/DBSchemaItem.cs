@@ -82,24 +82,9 @@ namespace DataWF.Data
         }
 
         [Browsable(false), Category("Policy"), XmlIgnore]
-        public AccessValue Access
+        public virtual AccessValue Access
         {
-            get
-            {
-                if (access == null)
-                {
-                    access = new AccessValue();
-                    if (AccessItem.Groups != null)
-                    {
-                        foreach (IAccessGroup group in AccessItem.Groups)
-                        {
-                            if (group != null && group.IsCurrent)
-                                access.Add(new AccessItem { Group = group, View = true, Edit = true, Create = true, Admin = true });
-                        }
-                    }
-                }
-                return access;
-            }
+            get { return access ?? (access = new AccessValue()); }
             set { access = value; }
         }
 

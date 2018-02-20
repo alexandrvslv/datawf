@@ -25,7 +25,6 @@ namespace DataWF.Data.Gui
                 DBService.LoadCache();
                 Helper.LogWorkingSet("Data Cache");
 
-
                 AccessItem.Default = true;
             }
             finally
@@ -75,9 +74,8 @@ namespace DataWF.Data.Gui
             Title = "Login";
 
             Helper.Logs.ListChanged += FlowEnvirLogsOnListChanged;
-            AsyncCallback callBack = new AsyncCallback(OnCallBackFinish);
-            EventHandler initialize = new EventHandler(OnInitialize);
-            initialize.BeginInvoke(this, EventArgs.Empty, callBack, null);
+            var initialize = new EventHandler(OnInitialize);
+            initialize.BeginInvoke(this, EventArgs.Empty, new AsyncCallback(OnCallBackFinish), null);
         }
 
         public Command DialogResult { get; private set; }

@@ -62,7 +62,7 @@ namespace DataWF.Module.FlowGui
         private DataTree toolWindTree;
         private DBItem filter;
         private DataLogMode mode = DataLogMode.Default;
-        private DBTableView<DataLog> logs;
+        private DBTableView<UserLog> logs;
         private DBTable table = null;
         private HPaned split = new HPaned();
         private RichTextView detailText = new RichTextView();
@@ -192,9 +192,9 @@ namespace DataWF.Module.FlowGui
             toolType.DropDownItems.Add(toolTypeStart);
             toolType.DropDownItems.Add(toolTypeStop);
             toolType.DropDownItems.Add(new SeparatorMenuItem());
-            toolType.DropDownItems.Add(this.toolTypeInsert);
-            toolType.DropDownItems.Add(this.toolTypeUpdate);
-            toolType.DropDownItems.Add(this.toolTypeDelete);
+            toolType.DropDownItems.Add(toolTypeInsert);
+            toolType.DropDownItems.Add(toolTypeUpdate);
+            toolType.DropDownItems.Add(toolTypeDelete);
             toolType.Name = "toolType";
             toolType.Text = "Type";
 
@@ -315,7 +315,7 @@ namespace DataWF.Module.FlowGui
 
             Localize();
 
-            logs = new DBTableView<DataLog>(DataLog.DBTable, string.Empty, DBViewKeys.Static);
+            logs = new DBTableView<UserLog>(UserLog.DBTable, string.Empty, DBViewKeys.Static);
             logs.ListChanged += LogsListChanged;
 
             loader.View = logs;
@@ -371,15 +371,15 @@ namespace DataWF.Module.FlowGui
         {
             if (cell.CellEditor != null)
                 return cell.CellEditor;
-            if (cell.Name == DataLog.DBTable.ParseProperty(nameof(DataLog.TargetTableName)).Name)
+            if (cell.Name == UserLog.DBTable.ParseProperty(nameof(UserLog.TargetTableName)).Name)
             {
                 cell.Name = "DBTable";
-                cell.Invoker = EmitInvoker.Initialize(typeof(DataLog), cell.Name);
+                cell.Invoker = EmitInvoker.Initialize(typeof(UserLog), cell.Name);
             }
-            else if (cell.Name == DataLog.DBTable.ParseProperty(nameof(DataLog.TargetId)).Name)
+            else if (cell.Name == UserLog.DBTable.ParseProperty(nameof(UserLog.TargetId)).Name)
             {
                 cell.Name = "DBRow";
-                cell.Invoker = EmitInvoker.Initialize(typeof(DataLog), cell.Name);
+                cell.Invoker = EmitInvoker.Initialize(typeof(UserLog), cell.Name);
             }
 
             return null;
@@ -507,10 +507,10 @@ namespace DataWF.Module.FlowGui
 
         private void SelectData()
         {
-            var log = list.SelectedItem as DataLog;
-            if (log != null && (log.LogType == DataLogType.Insert || log.LogType == DataLogType.Update || log.LogType == DataLogType.Delete))
+            var log = list.SelectedItem as UserLog;
+            if (log != null && (log.LogType == UserLogType.Insert || log.LogType == UserLogType.Update || log.LogType == UserLogType.Delete))
             {
-                detailList.ListSource = log.GetLogMapList();
+                detailList.FieldSource = log.LogItem;
                 detailRow.FieldSource = log.TargetItem;
                 detailText.LoadText(log.TextData, Xwt.Formats.TextFormat.Plain);
             }
@@ -524,7 +524,7 @@ namespace DataWF.Module.FlowGui
 
         private void ListCellDoubleClick(object sender, LayoutHitTestEventArgs e)
         {
-            var log = list.SelectedItem as DataLog;
+            var log = list.SelectedItem as UserLog;
             var view = new DataLogView();
             view.SetFilter(log);
             view.ShowDialog(this);
@@ -562,7 +562,7 @@ namespace DataWF.Module.FlowGui
 
         public void SetFilter(DBItem filter)
         {
-            if (filter.Access.Admin || filter is DataLog)
+            if (filter.Access.Admin || filter is UserLog)
             {
                 toolRollback.Visible = filter.Access.Edit;
                 this.filter = filter;
@@ -590,14 +590,14 @@ namespace DataWF.Module.FlowGui
                     toolModeLogConfirm.Visible = false;
                     SetMode(toolModeGroup);
                 }
-                else if (filter is DataLog)
+                else if (filter is UserLog)
                 {
                     toolModeDocument.Visible = false;
                     toolModeUser.Visible = false;
                     toolModeTable.Visible = false;
                     toolModeGroup.Visible = false;
-                    SetMode(((DataLog)filter).TextData.Equals("Accept", StringComparison.InvariantCultureIgnoreCase) ||
-                        ((DataLog)filter).TextData.Equals("Reject", StringComparison.InvariantCultureIgnoreCase) ? toolModeLogConfirm : toolModeDefault);
+                    SetMode(((UserLog)filter).TextData.Equals("Accept", StringComparison.InvariantCultureIgnoreCase) ||
+                        ((UserLog)filter).TextData.Equals("Reject", StringComparison.InvariantCultureIgnoreCase) ? toolModeLogConfirm : toolModeDefault);
                 }
                 else
                 {
@@ -640,69 +640,69 @@ namespace DataWF.Module.FlowGui
         {
             var f = new List<object>();
             if (toolTypeAuthorization.Checked)
-                f.Add(DataLogType.Authorization);
+                f.Add(UserLogType.Authorization);
             if (toolTypePassword.Checked)
-                f.Add(DataLogType.Password);
+                f.Add(UserLogType.Password);
             if (toolTypeStart.Checked)
-                f.Add(DataLogType.Start);
+                f.Add(UserLogType.Start);
             if (toolTypeStop.Checked)
-                f.Add(DataLogType.Stop);
+                f.Add(UserLogType.Stop);
             if (toolTypeInsert.Checked)
-                f.Add(DataLogType.Insert);
+                f.Add(UserLogType.Insert);
             if (toolTypeUpdate.Checked)
-                f.Add(DataLogType.Update);
+                f.Add(UserLogType.Update);
             if (toolTypeDelete.Checked)
-                f.Add(DataLogType.Delete);
+                f.Add(UserLogType.Delete);
 
-            QQuery query = new QQuery(string.Empty, DataLog.DBTable);
-            query.BuildPropertyParam(nameof(DataLog.LogType), CompareType.In, f);
+            QQuery query = new QQuery(string.Empty, UserLog.DBTable);
+            query.BuildPropertyParam(nameof(UserLog.LogType), CompareType.In, f);
 
             if (dateField.DataValue != null)
             {
                 var interval = (DateInterval)dateField.DataValue;
-                query.BuildPropertyParam(nameof(DataLog.Date), CompareType.GreaterOrEqual, interval.Min);
-                query.BuildPropertyParam(nameof(DataLog.Date), CompareType.LessOrEqual, interval.Max.AddDays(1));
+                query.BuildPropertyParam(nameof(UserLog.Date), CompareType.GreaterOrEqual, interval.Min);
+                query.BuildPropertyParam(nameof(UserLog.Date), CompareType.LessOrEqual, interval.Max.AddDays(1));
             }
             if (dataField.DataValue != null)
             {
                 var table = dataField.DataValue as DBTable;
-                query.BuildPropertyParam(nameof(DataLog.TargetTable), CompareType.Equal, table.FullName);
+                query.BuildPropertyParam(nameof(UserLog.TargetTable), CompareType.Equal, table.FullName);
             }
 
             if (filter is Document && mode == DataLogMode.Document)
             {
-                query.BuildPropertyParam(nameof(DataLog.DocumentId), CompareType.Equal, filter.PrimaryId);
+                query.BuildPropertyParam(nameof(UserLog.DocumentId), CompareType.Equal, filter.PrimaryId);
                 FlowEnvironment.CurrentDocument = (Document)filter;
             }
             else if (filter is User && mode == DataLogMode.User)
             {
                 if (filter.IsCompaund)
-                    query.BuildPropertyParam(nameof(DataLog.UserId), CompareType.In, filter.GetSubGroupFull<User>(true));
+                    query.BuildPropertyParam(nameof(UserLog.UserId), CompareType.In, filter.GetSubGroupFull<User>(true));
                 else
-                    query.BuildPropertyParam(nameof(DataLog.UserId), CompareType.Equal, filter.PrimaryId);
+                    query.BuildPropertyParam(nameof(UserLog.UserId), CompareType.Equal, filter.PrimaryId);
             }
             else if (filter is UserGroup && mode == DataLogMode.Group)
             {
-                query.BuildPropertyParam(nameof(DataLog.UserId), CompareType.In, ((UserGroup)filter).GetUsers().ToList());
+                query.BuildPropertyParam(nameof(UserLog.UserId), CompareType.In, ((UserGroup)filter).GetUsers().ToList());
             }
-            else if (filter is DataLog && mode == DataLogMode.LogConfirm)
+            else if (filter is UserLog && mode == DataLogMode.LogConfirm)
             {
-                query.BuildPropertyParam(nameof(DataLog.RedoId), CompareType.Equal, filter.PrimaryId);
+                query.BuildPropertyParam(nameof(UserLog.RedoId), CompareType.Equal, filter.PrimaryId);
             }
             else if (mode == DataLogMode.Table)
             {
-                query.BuildPropertyParam(nameof(DataLog.TargetTableName), CompareType.Equal, table.FullName);
+                query.BuildPropertyParam(nameof(UserLog.TargetTableName), CompareType.Equal, table.FullName);
             }
             else if (filter != null)
             {
                 filter = filter is DBVirtualItem ? ((DBVirtualItem)filter).Main : filter;
 
-                if (filter is DataLog)
-                    query.BuildPropertyParam(nameof(DataLog.ParentId), CompareType.Equal, filter.PrimaryId);
+                if (filter is UserLog)
+                    query.BuildPropertyParam(nameof(UserLog.ParentId), CompareType.Equal, filter.PrimaryId);
                 else
                 {
-                    query.BuildPropertyParam(nameof(DataLog.TargetTableName), CompareType.Equal, filter.Table.FullName);
-                    query.BuildPropertyParam(nameof(DataLog.TargetId), CompareType.Equal, filter.PrimaryId);
+                    query.BuildPropertyParam(nameof(UserLog.TargetTableName), CompareType.Equal, filter.Table.FullName);
+                    query.BuildPropertyParam(nameof(UserLog.TargetId), CompareType.Equal, filter.PrimaryId);
                 }
             }
             //logs.UpdateFilter();
@@ -736,9 +736,9 @@ namespace DataWF.Module.FlowGui
             if (list.SelectedItem == null)
                 return;
 
-            var redo = list.Selection.GetItems<DataLog>();
+            var redo = list.Selection.GetItems<UserLog>();
             if (redo[0].TargetTable != null && redo[0].TargetTable.Access.Edit)
-                DataLog.Reject(redo);
+                UserLog.Reject(redo);
             else
                 MessageDialog.ShowMessage(ParentWindow, "Access denied!");
         }
@@ -756,7 +756,7 @@ namespace DataWF.Module.FlowGui
         public bool Check()
         {
             bool flag = false;
-            DataLog log = logs.Last<DataLog>();
+            UserLog log = logs.Last<UserLog>();
             if (log != null && log.TargetTable != null)
             {
                 if (log.TargetTable.StatusKey == null)

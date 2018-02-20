@@ -273,5 +273,14 @@ namespace DataWF.Module.Flow
 
         public bool IsResend { get; set; }
 
+        public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)
+        {
+            base.OnPropertyChanged(property, column, value);
+            if (Document != null)
+            {
+                Document.OnReferenceChanged(this);
+            }
+        }
+
     }
 }

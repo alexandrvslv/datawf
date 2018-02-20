@@ -6,10 +6,18 @@ namespace DataWF.Common
 {
     public class AccessValue
     {
+        public static IEnumerable<IAccessGroup> Groups = new List<IAccessGroup>();
+
         public List<AccessItem> Items = new List<AccessItem>(1);
 
         public AccessValue()
-        { }
+        {
+            foreach (IAccessGroup group in Groups)
+            {
+                if (group != null && group.IsCurrent)
+                    Add(new AccessItem(group, AccessType.View | AccessType.Edit | AccessType.Create | AccessType.Admin));
+            }
+        }
 
         public AccessValue(IEnumerable<AccessItem> items)
         {
@@ -18,7 +26,10 @@ namespace DataWF.Common
 
         public AccessValue(byte[] buffer)
         {
-            Read(buffer);
+            if (buffer != null)
+            {
+                Read(buffer);
+            }
         }
 
         public bool View
@@ -64,10 +75,16 @@ namespace DataWF.Common
             return AccessItem.Default;
         }
 
+        public void SetFlag(IAccessGroup group, AccessType type)
+        {
+            Add(new AccessItem(group, type));
+
+        }
+
         public byte[] Write()
         {
             byte[] buffer = null;
-            using (MemoryStream stream = new MemoryStream())
+            using (var stream = new MemoryStream())
             using (var writer = new BinaryWriter(stream))
             {
                 Write(writer);
@@ -91,12 +108,11 @@ namespace DataWF.Common
 
         public void Read(byte[] buffer)
         {
-            if (buffer != null)
-                using (var stream = new MemoryStream(buffer))
-                using (var reader = new BinaryReader(stream))
-                {
-                    Read(reader, buffer);
-                }
+            using (var stream = new MemoryStream(buffer))
+            using (var reader = new BinaryReader(stream))
+            {
+                Read(reader, buffer);
+            }
         }
 
         public void Read(BinaryReader reader, byte[] buffer)
@@ -105,12 +121,11 @@ namespace DataWF.Common
             Items.Capacity = reader.ReadInt32();
             if (Items.Capacity > 0)
             {
-                int size = (buffer.Length - 4) / Items.Capacity;
                 for (int i = 0; i < Items.Capacity; i++)
                     if (reader.BaseStream.Position < (reader.BaseStream.Length))
                     {
-                        AccessItem item = new AccessItem();
-                        item.Read(reader, size);
+                        var item = new AccessItem();
+                        item.Read(reader);
                         if (item.Group != null)
                             Items.Add(item);
                     }
@@ -130,11 +145,11 @@ namespace DataWF.Common
         public AccessItem Get(IAccessGroup group)
         {
             foreach (var item in Items)
+            {
                 if (item.Group == group)
                     return item;
-            var n = new AccessItem { Group = group };
-            Items.Add(n);
-            return n;
+            }
+            return new AccessItem(group);
         }
 
         public void Add(AccessItem item)
@@ -146,51 +161,33 @@ namespace DataWF.Common
                 Items[index] = item;
         }
 
-        public List<IAccessGroup> GetGroups(AccessType type)
+        public IEnumerable<IAccessGroup> GetGroups(AccessType type)
         {
-            var groups = new List<IAccessGroup>();
             foreach (var item in Items)
-                if (type == AccessType.View && item.View)
-                    groups.Add(item.Group);
-                else if (type == AccessType.Edit && item.Edit)
-                    groups.Add(item.Group);
-                else if (type == AccessType.Create && item.Create)
-                    groups.Add(item.Group);
-                else if (type == AccessType.Delete && item.Delete)
-                    groups.Add(item.Group);
-                else if (type == AccessType.Admin && item.Admin)
-                    groups.Add(item.Group);
-                else if (type == AccessType.Accept && item.Accept)
-                    groups.Add(item.Group);
-            return groups;
-        }
-
-        public bool GetCreate(IAccessGroup group)
-        {
-            foreach (AccessItem item in Items)
-                if (item.Group == group)
-                    return item.Create;
-
-            return false;
+            {
+                if ((type & item.Data) == type)
+                    yield return item.Group;
+            }
         }
 
         public override string ToString()
         {
             return string.Format("<{0}>{1}{2}{3}{4}{5}{6}",
                 Items.Count,
-                View ? "View " : string.Empty,
-                Edit ? "Edit " : string.Empty,
-                Create ? "Create " : string.Empty,
-                Delete ? "Delete " : string.Empty,
-                Admin ? "Admin " : string.Empty,
-                Accept ? "Accept " : string.Empty);
+                View ? " View" : string.Empty,
+                Edit ? " Edit" : string.Empty,
+                Create ? " Create" : string.Empty,
+                Delete ? " Delete" : string.Empty,
+                Admin ? " Admin" : string.Empty,
+                Accept ? " Accept" : string.Empty);
         }
 
         public void Fill()
         {
-            if (AccessItem.Groups != null)
-                foreach (IAccessGroup group in AccessItem.Groups)
-                    Get(group);
+            foreach (IAccessGroup group in Groups)
+            {
+                Get(group);
+            }
         }
 
         public AccessValue Clone()

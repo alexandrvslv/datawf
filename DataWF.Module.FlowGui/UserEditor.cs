@@ -83,11 +83,11 @@ namespace DataWF.Module.FlowGui
 
         private void OnRowUpdated(object sender, DBItemEventArgs arg)
         {
-            if (User != null && arg.Row.PrimaryId.Equals(User.Id))
+            if (User != null && arg.Item.PrimaryId.Equals(User.Id))
             {
                 if (arg.Columns != null && arg.Columns.Contains(User.DBTable.ParseProperty(nameof(User.Password))))
                 {
-                    DataLog.LogUser(User, DataLogType.Password, "Temporary Password");
+                    UserLog.LogUser(User, UserLogType.Password, "Temporary Password");
                 }
             }
         }
@@ -161,9 +161,9 @@ namespace DataWF.Module.FlowGui
                 }
                 else
                 {
-                    Common.User.CurrentUser = row;
+                    User.SetCurrentUser(row);
                     //row ["session_start"] = DateTime.Now;
-                    DataLog.LogUser(row, DataLogType.Start, null);
+                    UserLog.LogUser(row, UserLogType.Start, null);
                     if (!row.Super.GetValueOrDefault())
                     {
                         GroupPermission.CachePermission();

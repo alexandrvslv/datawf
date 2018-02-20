@@ -110,9 +110,9 @@ namespace DataWF.Module.FlowGui
                 _change = value;
                 listDiff.ListSource = _change != null ? _change.Changes : null;
                 listChilds.ListSource = value.GetChilds();
-                foreach (DataLog log in listChilds.ListSource)
+                foreach (UserLog log in listChilds.ListSource)
                 {
-                    var cache = log.GetCache(DataLog.DBTable.ParseProperty(nameof(DataLog.TextData)));
+                    var cache = log.GetCache(UserLog.DBTable.ParseProperty(nameof(UserLog.TextData)));
                     if (cache == null)
                         log.RefereshText();
                 }
@@ -140,7 +140,7 @@ namespace DataWF.Module.FlowGui
                     Accept(item);
             else
             {
-                foreach (DataLog log in listChilds.ListSource)
+                foreach (UserLog log in listChilds.ListSource)
                     _change.Logs.Add(log);
                 Accept(_change);
             }
@@ -162,7 +162,7 @@ namespace DataWF.Module.FlowGui
                     item.Reject();
             else
             {
-                foreach (DataLog log in listChilds.ListSource)
+                foreach (UserLog log in listChilds.ListSource)
                     _change.Logs.Add(log);
                 _change.Reject();
             }
@@ -303,7 +303,7 @@ namespace DataWF.Module.FlowGui
                 foreach (Node node in listObjects.Nodes)
                 {
                     DBTable table = node.Tag as DBTable;
-                    if (table != null && table != DataLog.DBTable && table.IsLoging && table.StatusKey != null)
+                    if (table != null && table != UserLog.DBTable && table.IsLoging && table.StatusKey != null)
                     {
                         string filter = DBService.FormatStatusFilter(table, DBStatus.Accept);
                         command.CommandText = table.BuildQuery("where " + filter, null, "count(*)");
@@ -374,11 +374,11 @@ namespace DataWF.Module.FlowGui
                         {
                         }
                 }
-            QQuery qdelete = new QQuery("", DataLog.DBTable);
-            qdelete.BuildPropertyParam(nameof(DataLog.TargetTableName), CompareType.Equal, table.FullName);
-            qdelete.BuildPropertyParam(nameof(DataLog.LogType), CompareType.Equal, DataLogType.Delete);
-            qdelete.BuildPropertyParam(nameof(DataLog.State), CompareType.Equal, DBStatus.New);
-            var list = DataLog.DBTable.Load(qdelete, DBLoadParam.Synchronize);
+            QQuery qdelete = new QQuery("", UserLog.DBTable);
+            qdelete.BuildPropertyParam(nameof(UserLog.TargetTableName), CompareType.Equal, table.FullName);
+            qdelete.BuildPropertyParam(nameof(UserLog.LogType), CompareType.Equal, UserLogType.Delete);
+            qdelete.BuildPropertyParam(nameof(UserLog.State), CompareType.Equal, DBStatus.New);
+            var list = UserLog.DBTable.Load(qdelete, DBLoadParam.Synchronize);
             foreach (var log in list)
             {
                 ItemDataLog change = new ItemDataLog();

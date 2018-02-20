@@ -39,7 +39,7 @@ namespace DataWF.Data
         protected DBCommand dmlInsert;
         protected DBCommand dmlInsertSequence;
         protected DBCommand dmlDelete;
-        protected bool loging = true;
+        protected DBLogTable logTable;
         protected DBTableGroup tableGroup;
         protected DBColumn accessKey = DBColumn.EmptyKey;
         protected DBColumn primaryKey = DBColumn.EmptyKey;
@@ -77,20 +77,22 @@ namespace DataWF.Data
             Init();
         }
 
-        internal void ClearCache()
+        public string LogTableName { get; set; }
+
+        [XmlIgnore]
+        public DBLogTable LogTable
         {
-            dmlInsert = null;
-            dmlInsertSequence = null;
-            dmlDelete = null;
-            accessKey = DBColumn.EmptyKey;
-            primaryKey = DBColumn.EmptyKey;
-            dateKey = DBColumn.EmptyKey;
-            stampKey = DBColumn.EmptyKey;
-            codeKey = DBColumn.EmptyKey;
-            typeKey = DBColumn.EmptyKey;
-            groupKey = DBColumn.EmptyKey;
-            stateKey = DBColumn.EmptyKey;
-            imageKey = DBColumn.EmptyKey;
+            get
+            {
+                return logTable ?? (logTable = string.IsNullOrEmpty(LogTableName)
+                                    ? null
+                                    : (DBLogTable)DBService.ParseTable(LogTableName));
+            }
+            set
+            {
+                logTable = value;
+                LogTableName = value?.name;
+            }
         }
 
         public object Lock
@@ -361,14 +363,20 @@ namespace DataWF.Data
             }
         }
 
-        [Category("Database")]
+        [XmlIgnore, Category("Database")]
         public bool IsLoging
         {
-            get { return loging; }
+            get { return LogTable != null; }
             set
             {
-                loging = value;
-                OnPropertyChanged(nameof(IsLoging), false);
+                if (value)
+                {
+                    GenerateLogTable();
+                }
+                else
+                {
+                    LogTable = null;
+                }
             }
         }
 
@@ -553,18 +561,18 @@ namespace DataWF.Data
 
         public event EventHandler<DBItemEventArgs> RowUpdating;
 
-        public bool RaiseRowUpdating(DBItemEventArgs e)
+        public bool OnUpdating(DBItemEventArgs e)
         {
-            DBService.RaiseRowUpdating(e);
+            DBService.OnUpdating(e);
             RowUpdating?.Invoke(this, e);
             return !e.Cancel;
         }
 
         public event EventHandler<DBItemEventArgs> RowUpdated;
 
-        public bool RaiseRowUpdated(DBItemEventArgs e)
+        public bool OnUpdated(DBItemEventArgs e)
         {
-            DBService.RaiseRowUpdated(e);
+            DBService.OnUpdated(e);
             RowUpdated?.Invoke(this, e);
             return !e.Cancel;
         }
@@ -578,65 +586,64 @@ namespace DataWF.Data
 
         public abstract IEnumerable<DBItem> GetChangedItems();
 
-        public virtual bool SaveItem(DBItem row, DBTransaction transaction)
+        public virtual bool SaveItem(DBItem item, DBTransaction transaction)
         {
-            if (row.DBState == DBUpdateState.Default || (row.DBState & DBUpdateState.Commit) == DBUpdateState.Commit)
+            if (item.DBState == DBUpdateState.Default || (item.DBState & DBUpdateState.Commit) == DBUpdateState.Commit)
             {
-                if (!row.Attached)
-                    Add(row);
+                if (!item.Attached)
+                    Add(item);
                 return false;
             }
 
-            if (row.DBState == DBUpdateState.Insert)
+            if (item.DBState == DBUpdateState.Insert)
             {
                 if (StampKey != null)
-                    row.Stamp = DateTime.Now;
+                    item.Stamp = DateTime.Now;
                 if (DateKey != null)
-                    row.Date = DateTime.Now;
-                if (IsLoging && StatusKey != null && row.GetType().Name != "DocumentLog")
-                    row.Status = DBStatus.New;
+                    item.Date = DateTime.Now;
+                if (IsLoging && StatusKey != null && item.GetType().Name != "DocumentLog")
+                    item.Status = DBStatus.New;
             }
-            else if ((row.DBState & DBUpdateState.Update) == DBUpdateState.Update)
+            else if ((item.DBState & DBUpdateState.Update) == DBUpdateState.Update)
             {
                 if (StampKey != null)
-                    row.Stamp = DateTime.Now;
-                if (IsLoging && StatusKey != null && row.Status == DBStatus.Actual && !row.Changed(StatusKey) && !row.Changed(AccessKey) && row.GetType().Name != "DocumentLog")
-                    row.Status = DBStatus.Edit;
+                    item.Stamp = DateTime.Now;
+                if (IsLoging && StatusKey != null && item.Status == DBStatus.Actual && !item.Changed(StatusKey) && !item.Changed(AccessKey) && item.GetType().Name != "DocumentLog")
+                    item.Status = DBStatus.Edit;
             }
 
-            if (!row.Attached)
-                Add(row);
+            if (!item.Attached)
+                Add(item);
 
-            transaction.Rows.Add(row);
+            transaction.Rows.Add(item);
 
-            var args = new DBItemEventArgs(row) { Transaction = transaction };
+            var args = new DBItemEventArgs(item) { Transaction = transaction };
 
-            if (transaction.Reference && (row.DBState & DBUpdateState.Delete) != DBUpdateState.Delete)
+            if (transaction.Reference && (item.DBState & DBUpdateState.Delete) != DBUpdateState.Delete)
             {
-                var rcolumns = columns.GetIsReference();
-                foreach (var column in rcolumns)
+                foreach (var column in Columns.GetIsReference())
                 {
                     if (column.ColumnType == DBColumnTypes.Default)
                     {
-                        var item = row.GetCache(column) as DBItem;
-                        if (item != null && item != row)
+                        var refItem = item.GetCache(column) as DBItem;
+                        if (refItem != null && refItem != item)
                         {
-                            if (item.IsChanged)
-                                item.Table.SaveItem(item, transaction);
-                            if (row[column] == DBNull.Value)
-                                row[column] = item;
+                            if (refItem.IsChanged)
+                                refItem.Save(transaction);
+                            if (item.GetValue(column) == null)
+                                item.SetValue(refItem.PrimaryId, column);
                         }
                     }
                 }
             }
 
-            if (RaiseRowUpdating(args))
+            if (item.OnUpdating(args))
             {
                 DBCommand dmlCommand = null;
 
-                if (row.DBState == DBUpdateState.Insert)
+                if (item.DBState == DBUpdateState.Insert)
                 {
-                    if (PrimaryKey != null && row.PrimaryId == null && Schema.System != DBSystem.SQLite)
+                    if (PrimaryKey != null && item.PrimaryId == null && Schema.System != DBSystem.SQLite)
                     {
                         if (dmlInsertSequence == null)
                             dmlInsertSequence = DBCommand.Build(this, comInsert, DBCommandTypes.InsertSequence, columns);
@@ -644,39 +651,44 @@ namespace DataWF.Data
                     }
                     else
                     {
-                        row.GenerateId(transaction);
+                        item.GenerateId(transaction);
                         if (dmlInsert == null)
                             dmlInsert = DBCommand.Build(this, comInsert, DBCommandTypes.Insert, columns);
                         dmlCommand = dmlInsert;
                     }
                 }
-                else if ((row.DBState & DBUpdateState.Delete) == DBUpdateState.Delete)
+                else if ((item.DBState & DBUpdateState.Delete) == DBUpdateState.Delete)
                 {
                     if (dmlDelete == null)
                         dmlDelete = DBCommand.Build(this, comDelete, DBCommandTypes.Delete);
                     dmlCommand = dmlDelete;
                 }
-                else if ((row.DBState & DBUpdateState.Update) == DBUpdateState.Update)
+                else if ((item.DBState & DBUpdateState.Update) == DBUpdateState.Update)
                 {
                     //if (dmlUpdate == null)
                     dmlCommand = DBCommand.Build(this, comUpdate, DBCommandTypes.Update, args.Columns);
                     if (dmlCommand.Text.Length == 0)
                     {
-                        row.Accept();
+                        item.Accept();
                         return true;
                     }
                 }
                 var command = transaction.AddCommand(dmlCommand.Text, dmlCommand.Type);
-                dmlCommand.FillCommand(command, row);
+                dmlCommand.FillCommand(command, item);
 
                 var result = DBService.ExecuteQuery(transaction, command, dmlCommand == dmlInsertSequence ? DBExecuteType.Scalar : DBExecuteType.NoReader);
                 if (!(result is Exception))
                 {
-                    Schema.Connection.System.UploadCommand(row, command);
-                    if (PrimaryKey != null && row.PrimaryId == null)
-                        row[PrimaryKey] = result;
-                    RaiseRowUpdated(args);
-                    row.DBState |= DBUpdateState.Commit;
+                    Schema.Connection.System.UploadCommand(item, command);
+                    if (PrimaryKey != null && item.PrimaryId == null)
+                        item[PrimaryKey] = result;
+                    if (LogTable != null)
+                    {
+                        args.LogItem = new DBLogItem(item);
+                        args.LogItem.Save(transaction);
+                    }
+                    item.OnUpdated(args);
+                    item.DBState |= DBUpdateState.Commit;
                     return true;
                 }
             }
@@ -1185,7 +1197,6 @@ namespace DataWF.Data
             //bc.bname = this.bname;
             table.query = query;
             table.caching = caching;
-            table.loging = loging;
             table.type = type;
             table.groupName = groupName;
             table.sequenceName = sequenceName;
@@ -1205,6 +1216,31 @@ namespace DataWF.Data
                 }
             }
             return table;
+        }
+
+        internal void ClearCache()
+        {
+            dmlInsert = null;
+            dmlInsertSequence = null;
+            dmlDelete = null;
+            accessKey = DBColumn.EmptyKey;
+            primaryKey = DBColumn.EmptyKey;
+            dateKey = DBColumn.EmptyKey;
+            stampKey = DBColumn.EmptyKey;
+            codeKey = DBColumn.EmptyKey;
+            typeKey = DBColumn.EmptyKey;
+            groupKey = DBColumn.EmptyKey;
+            stateKey = DBColumn.EmptyKey;
+            imageKey = DBColumn.EmptyKey;
+        }
+
+        public DBTable GenerateLogTable()
+        {
+            if (LogTable != null)
+                return LogTable;
+            LogTable = new DBLogTable { BaseTable = this };
+            Schema.Tables.Add(logTable);
+            return logTable;
         }
 
         public void GenerateColumns(DBTableInfo tableInfo)
