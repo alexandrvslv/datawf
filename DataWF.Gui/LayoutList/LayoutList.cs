@@ -61,7 +61,7 @@ namespace DataWF.Gui
         protected LayoutListMode listMode = LayoutListMode.List;
         protected EditModes editMode = EditModes.None;
         //columns map info
-        protected LayoutListInfo listInfo = new LayoutListInfo();
+        protected LayoutListInfo listInfo;
         protected LayoutFieldInfo fieldInfo;
         protected LayoutNodeInfo nodeInfo;
         //selection collection
@@ -194,6 +194,7 @@ namespace DataWF.Gui
             handleProperty = OnPropertyChanged;
 
             cacheDraw.LayoutList = this;
+            ListInfo = new LayoutListInfo();
         }
 
         public string Text { get; set; }
