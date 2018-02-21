@@ -14,6 +14,9 @@ namespace DataWF.Data
     {
         public static DBPullIndex Fabric(Type type, DBTable list, DBColumn column)
         {
+            if (type == null)
+                throw new ArgumentException($"Type is null on column {column.FullName}");
+
             Type gtype = typeof(DBPullIndex<>).MakeGenericType(type);
 
             return (DBPullIndex)EmitInvoker.CreateObject(gtype, new Type[] { typeof(DBTable), typeof(DBColumn) }, new object[] { list, column }, true);

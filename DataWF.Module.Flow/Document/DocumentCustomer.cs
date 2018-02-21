@@ -20,6 +20,7 @@
 
 using DataWF.Data;
 using System.ComponentModel;
+using DataWF.Module.Customer;
 
 namespace DataWF.Module.Flow
 {

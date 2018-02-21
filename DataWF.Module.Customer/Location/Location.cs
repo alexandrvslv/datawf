@@ -23,7 +23,7 @@ using DataWF.Data;
 using System.ComponentModel;
 using DataWF.Common;
 
-namespace DataWF.Module.Flow
+namespace DataWF.Module.Customer
 {
     public enum LocationType
     {
@@ -43,7 +43,7 @@ namespace DataWF.Module.Flow
         { }
     }
 
-    [Table("flow", "rlocation", BlockSize = 2000)]
+    [Table("wf_customer", "rlocation", BlockSize = 2000)]
     public class Location : DBItem
     {
         public static DBTable<Location> DBTable

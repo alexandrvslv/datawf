@@ -2,23 +2,19 @@
 using System;
 using System.ComponentModel;
 using System.Linq;
+using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
     public class DBColumnReferenceList : SelectableList<DBColumnReference>
     {
-        [NonSerialized]
-        private string names;
-
         public DBColumnReferenceList()
         {
             //Indexes.Add("Column");
         }
 
-        public string Names
-        {
-            get { return names; }
-        }
+        [XmlIgnore]
+        public string Names { get; private set; }
 
         public void Add(DBColumn column)
         {
@@ -42,12 +38,12 @@ namespace DataWF.Data
 
         public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, string property = null)
         {
-            names = string.Empty;
-            foreach (var item in this.items)
+            Names = string.Empty;
+            foreach (var item in items)
             {
-                names += item.ColumnName.Substring(item.ColumnName.LastIndexOf('.') + 1);
+                Names += item.ColumnName.Substring(item.ColumnName.LastIndexOf('.') + 1);
                 if (!IsLast(item))
-                    names += ", ";
+                    Names += ", ";
             }
             base.OnListChanged(type, newIndex, oldIndex, property);
         }

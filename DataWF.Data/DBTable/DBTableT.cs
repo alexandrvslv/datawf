@@ -304,7 +304,7 @@ namespace DataWF.Data
                 return null;
             var whereInd = command.CommandText.IndexOf("where ", StringComparison.OrdinalIgnoreCase);
             var arg = new DBLoadProgressEventArgs(transaction.View, 0, 0, null);
-            var creference = columns.GetIsReference();
+            var creference = Columns.GetIsReference();
             List<T> buf = null;
 
             if (items.Count == 0)
@@ -502,7 +502,7 @@ namespace DataWF.Data
                 var temp = transaction ?? new DBTransaction(Schema.Connection);
                 try
                 {
-                    var command = temp.AddCommand(DetectQuery(string.Format("where {0}={1}{0}", column.Name, Schema.System.ParameterPrefix), columns));
+                    var command = temp.AddCommand(DetectQuery(string.Format("where {0}={1}{0}", column.Name, Schema.System.ParameterPrefix), Columns));
                     temp.AddParameter(command, Schema.System.ParameterPrefix + column.Name, code);
                     var list = Load(temp, command, param);
                     row = list.Count == 0 ? null : list[0];

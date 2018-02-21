@@ -23,21 +23,10 @@ using System;
 
 namespace DataWF.Data
 {
-    public class DBColumnGroupList : DBSchemaItemList<DBColumnGroup>
+    public class DBColumnGroupList : DBTableItemList<DBColumnGroup>
     {
-        [NonSerialized()]
-        protected DBTable table;
-
-        public DBTable Table
+        public DBColumnGroupList(DBTable table) : base(table)
         {
-            get { return table; }
-            set { table = value; }
-        }
-
-        public DBColumnGroupList(DBTable table)
-            : base()
-        {
-            this.table = table;
         }
 
         public override void Add(DBColumnGroup item)
@@ -46,8 +35,6 @@ namespace DataWF.Data
             item.Order = this.Count;
             if (Contains(item.Name))
                 return;
-            if (item.Table == null)
-                item.Table = table;
             base.Add(item);
             //_Sort();
         }

@@ -28,9 +28,7 @@ namespace DataWF.Data
     [AttributeUsage(AttributeTargets.Property)]
     public class IndexAttribute : Attribute
     {
-        [NonSerialized]
         List<ColumnAttribute> columns = new List<ColumnAttribute>();
-        [NonSerialized]
         DBIndex cacheIndex;
 
         public IndexAttribute()
@@ -42,10 +40,8 @@ namespace DataWF.Data
             Unique = unique;
         }
 
-        [XmlAttribute]
         public string IndexName { get; set; }
 
-        [XmlAttribute]
         [DefaultValue(false)]
         public bool Unique { get; set; }
 
@@ -57,12 +53,7 @@ namespace DataWF.Data
 
         public DBIndex Index
         {
-            get
-            {
-                if (cacheIndex == null)
-                    cacheIndex = Table?.Schema?.Indexes[IndexName];
-                return cacheIndex;
-            }
+            get { return cacheIndex ?? (cacheIndex = Table?.Table?.Indexes[IndexName]); }
             internal set { cacheIndex = value; }
         }
 
@@ -83,7 +74,7 @@ namespace DataWF.Data
                 {
                     Index.Columns.Add(column.Column);
                 }
-                Table.Schema.Indexes.Add(Index);
+                Table.Table.Indexes.Add(Index);
             }
             return Index;
         }

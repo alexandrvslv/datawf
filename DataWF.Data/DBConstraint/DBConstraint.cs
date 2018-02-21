@@ -31,6 +31,7 @@ namespace DataWF.Data
 
         public DBConstraint()
         {
+            Columns = new DBColumnReferenceList();
         }
 
         public virtual void GenerateName()
@@ -62,12 +63,12 @@ namespace DataWF.Data
             }
         }
 
-        public DBColumnReferenceList Columns { get; set; } = new DBColumnReferenceList();
+        public DBColumnReferenceList Columns { get; set; }
 
         [XmlIgnore]
         public DBColumn Column
         {
-            get { return Columns.Count == 0 ? null : Columns[0].Column; }
+            get { return Columns.GetFirst()?.Column; }
             set
             {
                 if (Columns.Contains(value))
@@ -86,7 +87,7 @@ namespace DataWF.Data
         [XmlIgnore, Browsable(false)]
         public string ColumnName
         {
-            get { return Columns.Count == 0 ? null : Columns[0].ColumnName; }
+            get { return Columns.GetFirst().ColumnName; }
             set
             {
                 if (Columns.Contains(value))
@@ -105,9 +106,9 @@ namespace DataWF.Data
 
         public override string FormatSql(DDLType ddlType)
         {
-            var ddl = new StringBuilder();
-            Schema?.Connection?.System.Format(ddl, this, ddlType);
-            return ddl.ToString();
+            var builder = new StringBuilder();
+            Schema?.Connection?.System.Format(builder, this, ddlType);
+            return builder.ToString();
         }
 
         public override object Clone()

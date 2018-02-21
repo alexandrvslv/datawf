@@ -57,14 +57,13 @@ namespace DataWF.Data
         NoLog = 1 << 21
     }
 
-    public class DBColumn : DBSchemaItem, IComparable, IComparable<DBColumn>, ICloneable, IDBTableContent, IInvoker<DBItem, object>
+    public class DBColumn : DBTableItem, IComparable, IComparable<DBColumn>, ICloneable, IInvoker<DBItem, object>
     {
         public static DBColumn EmptyKey = new DBColumn();
 
         #region Variable
         private QExpression expression;
         protected DBTable cacheReferenceTable;
-        protected DBTable table;
         protected DBColumnList list;
         CultureInfo cacheCulture;
         DBColumnGroup cacheGroup;
@@ -127,8 +126,8 @@ namespace DataWF.Data
         {
             get
             {
-                if (pull == null && table != null)
-                    pull = Pull.Fabric(DataType, table.BlockSize);
+                if (pull == null && Table != null)
+                    pull = Pull.Fabric(DataType, Table.BlockSize);
                 return pull;
             }
             internal set
@@ -150,18 +149,7 @@ namespace DataWF.Data
             get { return string.Format("{0}.{1}.{2}", Schema?.Name, Table?.Name, name); }
         }
 
-        [XmlIgnore, Browsable(false)]
-        public DBTable Table
-        {
-            get { return table; }
-            set { table = value; }
-        }
 
-        [Browsable(false)]
-        public override DBSchema Schema
-        {
-            get { return table?.Schema; }
-        }
 
         [XmlText, DefaultValue((string)null)]
         public string SubList
@@ -175,7 +163,7 @@ namespace DataWF.Data
             if (expression == null)
             {
                 expression = new QExpression();
-                expression.Parse(query, table);
+                expression.Parse(query, Table);
             }
             return expression;
         }
@@ -329,7 +317,7 @@ namespace DataWF.Data
 
         public DBForeignKey GetForeign()
         {
-            return Schema?.Foreigns.GetForeignByColumn(this);
+            return Table?.Foreigns.GetForeignByColumn(this);
         }
 
         [XmlIgnore, Category("Database")]
@@ -338,7 +326,7 @@ namespace DataWF.Data
             get
             {
                 if (IsReference && cacheReferenceTable == null)
-                    cacheReferenceTable = Schema?.Foreigns.GetByColumn(this)?.FirstOrDefault()?.ReferenceTable;
+                    cacheReferenceTable = Table?.Foreigns.GetByColumn(this)?.FirstOrDefault()?.ReferenceTable;
                 return cacheReferenceTable;
             }
             set

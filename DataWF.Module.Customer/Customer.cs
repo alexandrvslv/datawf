@@ -21,8 +21,9 @@ using System;
 using System.ComponentModel;
 using DataWF.Data;
 using DataWF.Common;
+using DataWF.Module.Common;
 
-namespace DataWF.Module.Flow
+namespace DataWF.Module.Customer
 {
     public class CustomerList : DBTableView<Customer>
     {
@@ -32,16 +33,13 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [Table("flow", "dcustomer", BlockSize = 5000)]
+    [Table("wf_customer", "dcustomer", BlockSize = 5000)]
     public class Customer : DBItem, IDisposable
     {
         public static DBTable<Customer> DBTable
         {
             get { return DBService.GetTable<Customer>(); }
         }
-
-        [NonSerialized]
-        DocumentList _documents;
 
         public Customer()
         {
@@ -147,23 +145,7 @@ namespace DataWF.Module.Flow
             set { SetPropertyReference(value, nameof(AddressId)); }
         }
 
-        [Browsable(false)]
-        public DocumentList Documents
-        {
-            get
-            {
-                if (_documents == null)
-                    _documents = new DocumentList(this);
-                return _documents;
-            }
-        }
 
-        public override void Dispose()
-        {
-            base.Dispose();
-            if (_documents != null)
-                _documents.Dispose();
-        }
     }
 
 }

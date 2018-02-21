@@ -7,7 +7,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>DataWF.GuiXwt</RootNamespace>
     <AssemblyName>DataWF.Gui</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -33,7 +33,7 @@
     <Reference Include="System" />
     <Reference Include="System.Xml" />
     <Reference Include="Xwt">
-      <HintPath>..\packages\Xwt.0.2.70\lib\net40\Xwt.dll</HintPath>
+      <HintPath>..\packages\Xwt.0.2.76\lib\net40\Xwt.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

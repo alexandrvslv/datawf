@@ -37,7 +37,6 @@ namespace DataWF.Data.Gui
         private GlyphMenuItem toolAddProcedureParam = new GlyphMenuItem();
 
         private GlyphMenuItem toolDBCheck = new GlyphMenuItem();
-        private GlyphMenuItem toolDBRelation = new GlyphMenuItem();
         private GlyphMenuItem toolDBRefreshSchema = new GlyphMenuItem();
         private GlyphMenuItem toolDBPatchCreate = new GlyphMenuItem();
         private GlyphMenuItem toolDBPatchLoad = new GlyphMenuItem();
@@ -98,9 +97,6 @@ namespace DataWF.Data.Gui
 
             toolDBPatchLoad.Name = "toolDBPatchLoad";
             toolDBPatchLoad.Click += ToolDBPatchLoadClick;
-
-            toolDBRelation.Name = "toolDBRelation";
-            toolDBRelation.Click += ToolDBRelationClick;
 
             toolTableExplorer.Name = "toolTableExplorer";
             toolTableExplorer.Click += ToolTableExplorerOnClick;
@@ -212,7 +208,6 @@ namespace DataWF.Data.Gui
             contextTools.Items.Add(toolRefresh);
             contextTools.Items.Add(toolDBCheck);
             contextTools.Items.Add(toolDBRefreshSchema);
-            contextTools.Items.Add(toolDBRelation);
             contextTools.Items.Add(toolDBGenerate);
             contextTools.Items.Add(new SeparatorMenuItem());
             contextTools.Items.Add(toolDBExport);
@@ -463,14 +458,12 @@ namespace DataWF.Data.Gui
             GuiService.Localize(toolAddProcedure, typeof(DBProcedure).FullName, "DBProcedure", GlyphType.GearAlias);
             GuiService.Localize(toolAddProcedureParam, typeof(DBProcParameter).FullName, "DBProcedureParam", GlyphType.Columns);
 
-
             GuiService.Localize(toolRefresh, Name, "Refresh", GlyphType.Refresh);
             GuiService.Localize(toolDBRefreshSchema, Name, "Initialize DB");
             GuiService.Localize(toolDBExport, Name, "Export DB");
             GuiService.Localize(toolDBPatchCreate, Name, "Patch Create");
             GuiService.Localize(toolDBPatchLoad, Name, "Patch Load");
             GuiService.Localize(toolDBCheck, Name, "Check connection");
-            GuiService.Localize(toolDBRelation, Name, "Refresh relations");
             GuiService.Localize(toolTableExplorer, Name, "Table Explorer");
             GuiService.Localize(toolTableReport, Name, "Table Report");
             GuiService.Localize(toolTableRefresh, Name, "Table Initialize");
@@ -572,11 +565,11 @@ namespace DataWF.Data.Gui
             else if (listExplorer.Value is DBColumn)
                 ((DBColumn)listExplorer.Value).Table.Columns.Add((DBColumn)listExplorer.Value);
             else if (listExplorer.Value is DBIndex)
-                ((DBIndex)listExplorer.Value).Schema.Indexes.Add((DBIndex)listExplorer.Value);
+                ((DBIndex)listExplorer.Value).Table.Indexes.Add((DBIndex)listExplorer.Value);
             else if (listExplorer.Value is DBForeignKey)
-                ((DBForeignKey)listExplorer.Value).Schema.Foreigns.Add((DBForeignKey)listExplorer.Value);
+                ((DBForeignKey)listExplorer.Value).Table.Foreigns.Add((DBForeignKey)listExplorer.Value);
             else if (listExplorer.Value is DBConstraint)
-                ((DBConstraint)listExplorer.Value).Schema.Constraints.Add((DBConstraint)listExplorer.Value);
+                ((DBConstraint)listExplorer.Value).Table.Constraints.Add((DBConstraint)listExplorer.Value);
         }
 
         private void ToolDBGenerateClick(object sender, EventArgs e)
@@ -1067,39 +1060,6 @@ namespace DataWF.Data.Gui
             //GuiService.Main.CurrentProject = ph;
         }
 
-        private void ToolDBRelationClick(object sender, EventArgs e)
-        {
-            var schema = dataTree.SelectedObject as DBSchema;
-            if (schema == null && dataTree.SelectedObject is DBSchemaItem)
-                schema = ((DBSchemaItem)dataTree.SelectedObject).Schema;
-            //foreigns
-            (schema).GenerateRelations();
-            //column gruop
-            foreach (var table in schema.Tables)
-            {
-                var ngcolumn = table.ColumnGroups[null];
-                if (ngcolumn != null)
-                    ngcolumn.Name = "name";
-                var gcolumn = table.ColumnGroups["system"];
-                if (gcolumn == null)
-                {
-                    gcolumn = new DBColumnGroup("system");
-                    table.ColumnGroups.Add(gcolumn);
-                    foreach (var column in table.Columns)
-                    {
-                        if ((column.Keys & DBColumnKeys.Primary) == DBColumnKeys.Primary ||
-                            (column.Keys & DBColumnKeys.Date) == DBColumnKeys.Date ||
-                            (column.Keys & DBColumnKeys.Stamp) == DBColumnKeys.Stamp ||
-                            (column.Keys & DBColumnKeys.State) == DBColumnKeys.State ||
-                            (column.Keys & DBColumnKeys.Access) == DBColumnKeys.Access)
-                            column.Group = gcolumn;
-                    }
-                }
-
-
-            }
-            //            
-        }
 
         private void ToolTableExplorerOnClick(object sender, EventArgs e)
         {

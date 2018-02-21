@@ -7,7 +7,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>DataWF.Module.Flow</RootNamespace>
     <AssemblyName>DataWF.Module.Flow</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -41,13 +41,7 @@
     <Compile Include="UDPService.cs" />
     <Compile Include="Account\Account.cs" />
     <Compile Include="Account\Balance.cs" />
-    <Compile Include="Account\Book.cs" />
-    <Compile Include="Account\BookType.cs" />
     <Compile Include="Account\Payment.cs" />
-    <Compile Include="Customer\Customer.cs" />
-    <Compile Include="Customer\CustomerAddress.cs" />
-    <Compile Include="Customer\CustomerIndentify.cs" />
-    <Compile Include="Customer\CustomerReference.cs" />
     <Compile Include="Document\Document.cs" />
     <Compile Include="Document\DocumentCustomer.cs" />
     <Compile Include="Document\DocumentData.cs" />
@@ -57,10 +51,6 @@
     <Compile Include="Document\DocumentSearch.cs" />
     <Compile Include="Document\DocumentTools.cs" />
     <Compile Include="Document\DocumentWork.cs" />
-    <Compile Include="Location\Address.cs" />
-    <Compile Include="Location\Country.cs" />
-    <Compile Include="Location\Currency.cs" />
-    <Compile Include="Location\Location.cs" />
     <Compile Include="Scheduler\Scheduler.cs" />
     <Compile Include="Scheduler\SchedulerRun.cs" />
     <Compile Include="Scheduler\Statistic.cs" />
@@ -89,6 +79,10 @@
     <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj">
       <Project>{76A4B048-D827-4CC9-879E-BCAFE5C796CC}</Project>
       <Name>DataWF.Module.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DataWF.Module.Customer\DataWF.Module.Customer.csproj">
+      <Project>{D9D3537E-C1F9-4F59-AE2B-5098213FF747}</Project>
+      <Name>DataWF.Module.Customer</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

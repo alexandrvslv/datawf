@@ -20,23 +20,22 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Data;
-using System.ComponentModel;
 using DataWF.Common;
 
-namespace DataWF.Module.Flow
+namespace DataWF.Module.Common
 {
-    [Table("flow", "rbook", BlockSize = 200)]
-    public class Book : DBItem
+    [Table("wf_common", "rbooktype", BlockSize = 200)]
+    public class BookType : DBItem
     {
-        public static DBTable<Book> DBTable
+        public static DBTable<BookType> DBTable
         {
-            get { return DBService.GetTable<Book>(); }
+            get { return DBService.GetTable<BookType>(); }
         }
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
+        public short? Id
         {
-            get { return GetValue<int?>(Table.PrimaryKey); }
+            get { return GetValue<short?>(Table.PrimaryKey); }
             set { SetValue(value, Table.PrimaryKey); }
         }
 
@@ -45,13 +44,6 @@ namespace DataWF.Module.Flow
         {
             get { return GetValue<string>(Table.CodeKey); }
             set { SetValue(value, Table.CodeKey); }
-        }
-
-        [Column("typeid", Keys = DBColumnKeys.Type)]
-        public BookType? Type
-        {
-            get { return GetValue<BookType?>(Table.TypeKey); }
-            set { SetValue(value, Table.TypeKey); }
         }
 
         [Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]

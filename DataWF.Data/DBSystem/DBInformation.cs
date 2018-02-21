@@ -138,13 +138,13 @@ INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS KCU2
                     var rcol = rtab?.ParseColumn(item[iRefColumn].ToString());
                     if (col != null && rcol != null)
                     {
-                        var reference = schema.Foreigns.GetByColumns(col, rcol);
+                        var reference = col.Table.Foreigns.GetByColumns(col, rcol);
                         if (reference == null)
                         {
                             reference = new DBForeignKey();
                             reference.Column = col;
                             reference.Reference = rcol;
-                            schema.Foreigns.Add(reference);
+                            col.Table.Foreigns.Add(reference);
                         }
                         reference.Name = name;
                     }

@@ -1,12 +1,12 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{9D872B67-0087-4B29-AD5D-B4B4B045D2F7}</ProjectGuid>
+    <ProjectGuid>{1CD6F41B-3619-4210-BCBD-4AD8DD55B00E}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>DataWF.Test.Common</RootNamespace>
-    <AssemblyName>DataWF.Test.Common</AssemblyName>
+    <RootNamespace>DataWf.Test.Module.Customer</RootNamespace>
+    <AssemblyName>DataWf.Test.Module.Customer</AssemblyName>
     <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -17,53 +17,42 @@
     <DefineConstants>DEBUG;</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
     <OutputPath>bin\Release</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Data" />
     <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.3.9.0\lib\net45\nunit.framework.dll</HintPath>
     </Reference>
-    <Reference Include="System.Xml.Serialization" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="TestPull.cs" />
-    <Compile Include="TestInvoker.cs" />
-    <Compile Include="TestSelectable.cs" />
-    <Compile Include="TestClasses\TestClass.cs" />
-    <Compile Include="TestClasses\TestExactFieldInvoker.cs" />
-    <Compile Include="TestClasses\TestExactInlineFieldInvoker.cs" />
-    <Compile Include="TestClasses\TestExactInlinePropertyInvoker.cs" />
-    <Compile Include="TestClasses\TestExactPropertyInvoker.cs" />
-    <Compile Include="TestClasses\TestStruct.cs" />
-    <Compile Include="TestSerialize.cs" />
+    <Compile Include="Generate.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj">
       <Project>{32A948C0-5468-4392-A490-91947BFC3BE4}</Project>
       <Name>DataWF.Common</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="TestClasses\" />
+    <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj">
+      <Project>{C982088F-82EC-4400-8D3C-BD76221C0C9C}</Project>
+      <Name>DataWF.Data</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj">
+      <Project>{76A4B048-D827-4CC9-879E-BCAFE5C796CC}</Project>
+      <Name>DataWF.Module.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DataWF.Module.Customer\DataWF.Module.Customer.csproj">
+      <Project>{D9D3537E-C1F9-4F59-AE2B-5098213FF747}</Project>
+      <Name>DataWF.Module.Customer</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <Target Name="RunTests" DependsOnTargets="Build">
-    <PropertyGroup>
-      <ExeLauncher Condition="('$(OS)' != 'Windows_NT')">mono</ExeLauncher>
-    </PropertyGroup>
-    <Exec Command="$(ExeLauncher) nunit3-console.exe $(ProjectDir)$(OutputPath)$(AssemblyName).dll" WorkingDirectory="$(ProjectDir)..\packages\NUnit.ConsoleRunner.3.7.0\tools" />
-  </Target>
 </Project>

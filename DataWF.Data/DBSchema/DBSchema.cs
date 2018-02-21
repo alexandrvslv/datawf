@@ -33,18 +33,8 @@ namespace DataWF.Data
     {
         protected string connectionName = "";
         protected string dataBase = "";
-
-        protected DBTableList tables;
-        protected DBTableGroupList tableGroups;
-        [NonSerialized()]
         protected string fileName = "";
-        [NonSerialized()]
         protected DBConnection connection;
-        protected DBIndexList indexes;
-        protected DBConstraintList<DBConstraint> constraints;
-        protected DBForeignList foreigns;
-        protected DBProcedureList procedures;
-        protected DBSequenceList sequences;
 
         public DBSchema()
             : this(null)
@@ -54,13 +44,10 @@ namespace DataWF.Data
             : base(name)
         {
             DataBase = name;
-            sequences = new DBSequenceList(this);
-            tables = new DBTableList(this);
-            tableGroups = new DBTableGroupList(this);
-            indexes = new DBIndexList(this);
-            constraints = new DBConstraintList<DBConstraint>(this);
-            foreigns = new DBForeignList(this);
-            procedures = new DBProcedureList(this);
+            Sequences = new DBSequenceList(this);
+            Tables = new DBTableList(this);
+            TableGroups = new DBTableGroupList(this);
+            Procedures = new DBProcedureList(this);
         }
 
         public DBSchema(string name, string fileName)
@@ -73,41 +60,12 @@ namespace DataWF.Data
 
         public void InitTables()
         {
-            foreach (DBTable table in tables)
+            foreach (DBTable table in Tables)
             {
                 foreach (DBColumn column in table.Columns)
                     if (column.Index == null && (column.IsPrimaryKey || (column.Keys & DBColumnKeys.Indexing) == DBColumnKeys.Indexing))
                         column.Index = DBPullIndex.Fabric(column.DataType, table, column);
             }
-        }
-
-        public void GenerateRelations()
-        {
-            foreach (DBTable stable in tables)
-            {
-                foreach (DBColumn scolumn in stable.Columns)
-                    if (scolumn.IsReference && scolumn.ReferenceTable != null)
-                    {
-                        GenerateRelation(stable, scolumn, scolumn.ReferenceTable.PrimaryKey);
-                    }
-            }
-        }
-
-        private void GenerateRelation(DBTable stable, DBColumn scolumn, DBColumn reference)
-        {
-            DBForeignKey relation = foreigns.GetByColumns(scolumn, reference);
-            if (relation == null)
-            {
-                relation = new DBForeignKey();
-                relation.Table = stable;
-                relation.Column = scolumn;
-                relation.Reference = reference;
-                relation.GenerateName();
-                foreigns.Add(relation);
-            }
-            //List<DBTable> views = reference.Table.GetChilds();
-            //foreach (DBTable view in views)
-            //    GenerateRelation(stable, scolumn, view.PrimaryKey);
         }
 
         public DBTable InitTable(string name)
@@ -189,46 +147,13 @@ namespace DataWF.Data
             get { return Connection?.System; }
         }
 
-        public DBTableList Tables
-        {
-            get { return tables; }
-            set { tables = value; }
-        }
+        public DBTableList Tables { get; private set; }
 
-        public DBTableGroupList TableGroups
-        {
-            get { return tableGroups; }
-            set { tableGroups = value; }
-        }
+        public DBTableGroupList TableGroups { get; private set; }
 
-        [Category("Performance")]
-        public DBIndexList Indexes
-        {
-            get { return indexes; }
-        }
+        public DBProcedureList Procedures { get; private set; }
 
-        [Category("Performance")]
-        public DBConstraintList<DBConstraint> Constraints
-        {
-            get { return constraints; }
-        }
-
-        [Category("Performance")]
-        public DBForeignList Foreigns
-        {
-            get { return foreigns; }
-        }
-
-        [Category("Performance")]
-        public DBProcedureList Procedures
-        {
-            get { return procedures; }
-        }
-
-        public DBSequenceList Sequences
-        {
-            get { return sequences; }
-        }
+        public DBSequenceList Sequences { get; private set; }
 
         public override string Name
         {
@@ -300,6 +225,31 @@ namespace DataWF.Data
             DBService.ExecuteGoQuery(Connection, FormatSql(), true);
         }
 
+        internal IEnumerable<DBConstraint> GetConstraints()
+        {
+            foreach (var table in Tables)
+            {
+                foreach (var constraint in table.Constraints)
+                    yield return constraint;
+            }
+        }
 
+        internal IEnumerable<DBForeignKey> GetForeigns()
+        {
+            foreach (var table in Tables)
+            {
+                foreach (var constraint in table.Foreigns)
+                    yield return constraint;
+            }
+        }
+
+        internal IEnumerable<DBIndex> GetIndexes()
+        {
+            foreach (var table in Tables)
+            {
+                foreach (var index in table.Indexes)
+                    yield return index;
+            }
+        }
     }
 }

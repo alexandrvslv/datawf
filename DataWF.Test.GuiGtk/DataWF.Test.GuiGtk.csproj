@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\Xwt.Gtk.0.2.70\build\Xwt.Gtk.props" Condition="Exists('..\packages\Xwt.Gtk.0.2.70\build\Xwt.Gtk.props')" />
+  <Import Project="..\packages\Xwt.Gtk.0.2.76\build\Xwt.Gtk.props" Condition="Exists('..\packages\Xwt.Gtk.0.2.76\build\Xwt.Gtk.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -8,7 +8,7 @@
     <OutputType>WinExe</OutputType>
     <RootNamespace>DataWF.Test.GuiGtk</RootNamespace>
     <AssemblyName>DataWF.Test.GuiGtk</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <StartupObject>DataWF.TestGui.Program</StartupObject>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -63,10 +63,10 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="Xwt">
-      <HintPath>..\packages\Xwt.0.2.70\lib\net40\Xwt.dll</HintPath>
+      <HintPath>..\packages\Xwt.0.2.76\lib\net40\Xwt.dll</HintPath>
     </Reference>
     <Reference Include="Xwt.Gtk">
-      <HintPath>..\packages\Xwt.Gtk.0.2.70\lib\net40\Xwt.Gtk.dll</HintPath>
+      <HintPath>..\packages\Xwt.Gtk.0.2.76\lib\net40\Xwt.Gtk.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

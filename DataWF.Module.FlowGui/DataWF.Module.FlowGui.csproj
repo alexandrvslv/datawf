@@ -7,7 +7,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>DataWF.FlowGui</RootNamespace>
     <AssemblyName>DataWF.FlowGui</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -39,18 +39,6 @@
     <Reference Include="DocumentFormat.OpenXml">
       <HintPath>..\dll\DocumentFormat.OpenXml.dll</HintPath>
     </Reference>
-    <Reference Include="Mono.Cecil">
-      <HintPath>..\packages\Mono.Cecil.0.9.5.4\lib\net40\Mono.Cecil.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Cecil.Mdb">
-      <HintPath>..\packages\Mono.Cecil.0.9.5.4\lib\net40\Mono.Cecil.Mdb.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Cecil.Pdb">
-      <HintPath>..\packages\Mono.Cecil.0.9.5.4\lib\net40\Mono.Cecil.Pdb.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Cecil.Rocks">
-      <HintPath>..\packages\Mono.Cecil.0.9.5.4\lib\net40\Mono.Cecil.Rocks.dll</HintPath>
-    </Reference>
     <Reference Include="ICSharpCode.NRefactory.Cecil">
       <HintPath>..\packages\ICSharpCode.NRefactory.5.5.1\lib\Net40\ICSharpCode.NRefactory.Cecil.dll</HintPath>
     </Reference>
@@ -64,7 +52,19 @@
       <HintPath>..\packages\ICSharpCode.NRefactory.5.5.1\lib\Net40\ICSharpCode.NRefactory.Xml.dll</HintPath>
     </Reference>
     <Reference Include="Xwt">
-      <HintPath>..\packages\Xwt.0.2.70\lib\net40\Xwt.dll</HintPath>
+      <HintPath>..\packages\Xwt.0.2.76\lib\net40\Xwt.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil">
+      <HintPath>..\packages\Mono.Cecil.0.9.6.4\lib\net45\Mono.Cecil.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil.Mdb">
+      <HintPath>..\packages\Mono.Cecil.0.9.6.4\lib\net45\Mono.Cecil.Mdb.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil.Pdb">
+      <HintPath>..\packages\Mono.Cecil.0.9.6.4\lib\net45\Mono.Cecil.Pdb.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil.Rocks">
+      <HintPath>..\packages\Mono.Cecil.0.9.6.4\lib\net45\Mono.Cecil.Rocks.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -129,6 +129,10 @@
     <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj">
       <Project>{76A4B048-D827-4CC9-879E-BCAFE5C796CC}</Project>
       <Name>DataWF.Module.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DataWF.Module.Customer\DataWF.Module.Customer.csproj">
+      <Project>{D9D3537E-C1F9-4F59-AE2B-5098213FF747}</Project>
+      <Name>DataWF.Module.Customer</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

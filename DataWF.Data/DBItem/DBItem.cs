@@ -625,7 +625,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
-        [Column("stateid", Default = "1", Keys = DBColumnKeys.State, Order = 99)]
+        [Column("stateid", Default = "1", GroupName = "system", Keys = DBColumnKeys.State, Order = 99)]
         public DBStatus Status
         {
             get { return Table.StatusKey == null ? DBStatus.Empty : GetValue<DBStatus?>(Table.StatusKey).GetValueOrDefault(); }
@@ -633,7 +633,7 @@ namespace DataWF.Data
         }
 
 
-        [Column("datecreate", Keys = DBColumnKeys.Date, Order = 100)]
+        [Column("datecreate", GroupName = "system", Keys = DBColumnKeys.Date, Order = 100)]
         public DateTime? Date
         {
             get { return Table.DateKey == null ? null : GetValue<DateTime?>(Table.DateKey); }
@@ -641,7 +641,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
-        [Column("dateupdate", Keys = DBColumnKeys.Stamp | DBColumnKeys.NoLog, Order = 101)]
+        [Column("dateupdate", GroupName = "system", Keys = DBColumnKeys.Stamp | DBColumnKeys.NoLog, Order = 101)]
         public DateTime? Stamp
         {
             get { return Table.StampKey == null ? null : GetValue<DateTime?>(Table.StampKey); }
@@ -649,7 +649,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
-        [Column("gaccess", 512, DataType = typeof(byte[]), Keys = DBColumnKeys.Access, Order = 102)]
+        [Column("gaccess", 512, DataType = typeof(byte[]), GroupName = "system", Keys = DBColumnKeys.Access, Order = 102)]
         public virtual AccessValue Access
         {
             get

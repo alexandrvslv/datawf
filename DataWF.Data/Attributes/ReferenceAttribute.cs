@@ -24,9 +24,7 @@ namespace DataWF.Data
 {
     public class ReferenceAttribute : Attribute
     {
-        [NonSerialized]
         private ColumnAttribute cacheColumn;
-        [NonSerialized]
         private DBForeignKey cacheKey;
 
         public ReferenceAttribute(string name, string property)
@@ -47,22 +45,12 @@ namespace DataWF.Data
 
         public ColumnAttribute Column
         {
-            get
-            {
-                if (cacheColumn == null)
-                    cacheColumn = Table?.GetColumnByProperty(Property);
-                return cacheColumn;
-            }
+            get { return cacheColumn ?? (cacheColumn = Table?.GetColumnByProperty(Property)); }
         }
 
         public DBForeignKey ForeignKey
         {
-            get
-            {
-                if (cacheKey == null)
-                    cacheKey = Table?.Schema?.Foreigns[Name];
-                return cacheKey;
-            }
+            get { return cacheKey ?? (cacheKey = Table?.Table?.Foreigns[Name]); }
             internal set { cacheKey = value; }
         }
 
@@ -86,7 +74,7 @@ namespace DataWF.Data
                     Reference = referenceTable.PrimaryKey,
                     Name = Name
                 };
-                Table.Schema.Foreigns.Add(ForeignKey);
+                Table.Table.Foreigns.Add(ForeignKey);
             }
 
             return ForeignKey;

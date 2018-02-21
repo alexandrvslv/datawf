@@ -110,17 +110,17 @@ namespace DataWF.Data
 
         public void GenerateColumns()
         {
-            columnGroups.Clear();
+            ColumnGroups.Clear();
             foreach (DBColumnGroup @group in BaseTable.ColumnGroups)
             {
                 var newGroup = (DBColumnGroup)@group.Clone();
-                columnGroups.Add(newGroup);
+                ColumnGroups.Add(newGroup);
             }
-            columns.Clear();
+            Columns.Clear();
             foreach (DBColumn col in BaseTable.Columns)
             {
                 var newCol = new DBVirtualColumn(col);
-                columns.Add(newCol);
+                Columns.Add(newCol);
                 if (col.LocalizeInfo.Names.Count > 0)
                 {
                     newCol.LocalizeInfo.Names.Add(col.LocalizeInfo.Names[0].Value, col.LocalizeInfo.Names[0].Culture);
@@ -190,7 +190,7 @@ namespace DataWF.Data
             DBTable table = BaseTable;
             DBColumn column = index >= 0 ? table.Columns[index] : null;
             if (column != null)
-                column = columns.GetByBase(column.Name);
+                column = Columns.GetByBase(column.Name);
             return column;
         }
 
@@ -199,12 +199,12 @@ namespace DataWF.Data
             var ddl = new StringBuilder();
             ddl.AppendLine("create view " + Name + " as");
             ddl.Append("select ");
-            foreach (DBVirtualColumn col in columns)
+            foreach (DBVirtualColumn column in Columns)
             {
-                if (col.ColumnType == DBColumnTypes.Default)
-                    ddl.Append(col.BaseName + " as " + col.Name);
-                else if (col.ColumnType == DBColumnTypes.Query)
-                    ddl.Append(col.Query + " as " + col.Name);
+                if (column.ColumnType == DBColumnTypes.Default)
+                    ddl.Append(column.BaseName + " as " + column.Name);
+                else if (column.ColumnType == DBColumnTypes.Query)
+                    ddl.Append(column.Query + " as " + column.Name);
                 else
                     continue;
                 ddl.Append(", ");

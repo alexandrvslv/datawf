@@ -9,9 +9,10 @@ namespace DataWF.Data
 {
     public class DBForeignKey : DBConstraint
     {
-        public DBForeignKey()
+        public DBForeignKey() : base()
         {
             Type = DBConstaintType.Foreign;
+            References = new DBColumnReferenceList();
         }
 
         public DBForeignKey(DBColumn column, DBTable value) : this()
@@ -20,7 +21,7 @@ namespace DataWF.Data
             Reference = value.PrimaryKey;
         }
 
-        public DBColumnReferenceList References { get; set; } = new DBColumnReferenceList();
+        public DBColumnReferenceList References { get; set; }
 
         public override void GenerateName()
         {
@@ -30,7 +31,7 @@ namespace DataWF.Data
         [XmlIgnore]
         public DBColumn Reference
         {
-            get { return References.Count == 0 ? null : References[0].Column; }
+            get { return References.GetFirst()?.Column; }
             set
             {
                 if (References.Contains(value))
@@ -45,7 +46,7 @@ namespace DataWF.Data
         [XmlIgnore, Browsable(false)]
         public string ReferenceName
         {
-            get { return References.Count == 0 ? null : References[0].ColumnName; }
+            get { return References.GetFirst()?.ColumnName; }
             set
             {
                 if (References.Contains(value))

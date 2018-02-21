@@ -19,6 +19,7 @@
 using System;
 using System.ComponentModel;
 using DataWF.Data;
+using DataWF.Module.Common;
 
 namespace DataWF.Module.Flow
 {

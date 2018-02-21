@@ -16,6 +16,8 @@ namespace DataWF.Test.Module.Common
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
             var schema = DBService.Generate(typeof(User).Assembly);
             Assert.IsNotNull(schema);
+            Assert.IsNotNull(BookType.DBTable);
+            Assert.IsNotNull(Book.DBTable);
             Assert.IsNotNull(UserGroup.DBTable);
             Assert.IsNotNull(GroupPermission.DBTable);
             Assert.IsNotNull(User.DBTable);

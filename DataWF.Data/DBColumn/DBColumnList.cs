@@ -56,7 +56,7 @@ namespace DataWF.Data
                     {
                         if (column.Index == null && (column.IsPrimaryKey || (column.Keys & DBColumnKeys.Indexing) == DBColumnKeys.Indexing))
                         {
-                            column.Index = DBPullIndex.Fabric(column.DataType, table, column);
+                            column.Index = DBPullIndex.Fabric(column.DataType, Table, column);
                         }
                         else if (column.Index != null)
                         {
@@ -124,12 +124,12 @@ namespace DataWF.Data
 
             if (item.Index == null && (item.IsPrimaryKey || (item.Keys & DBColumnKeys.Indexing) == DBColumnKeys.Indexing))
             {
-                item.Index = DBPullIndex.Fabric(item.DataType, table, item);
+                item.Index = DBPullIndex.Fabric(item.DataType, Table, item);
             }
             if (item.IsPrimaryKey && Table.Schema != null)
             {
                 DBConstraint primary = null;
-                foreach (var constraint in Table.Schema.Constraints.GetByColumn(table.PrimaryKey))
+                foreach (var constraint in Table.Constraints.GetByColumn(Table.PrimaryKey))
                 {
                     if (constraint.Type == DBConstaintType.Primary)
                     {
@@ -139,9 +139,9 @@ namespace DataWF.Data
                 }
                 if (primary == null)
                 {
-                    primary = new DBConstraint() { Column = table.PrimaryKey, Type = DBConstaintType.Primary };
+                    primary = new DBConstraint() { Column = Table.PrimaryKey, Type = DBConstaintType.Primary };
                     primary.GenerateName();
-                    Table.Schema.Constraints.Add(primary);
+                    Table.Constraints.Add(primary);
                 }
             }
         }

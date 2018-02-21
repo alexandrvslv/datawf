@@ -22,18 +22,11 @@ using System.Collections.Generic;
 
 namespace DataWF.Data
 {
-    public class DBConstraintList<T> : DBSchemaItemList<T> where T : DBConstraint, new()
+    public class DBConstraintList<T> : DBTableItemList<T> where T : DBConstraint, new()
     {
-        public DBConstraintList(DBSchema schema)
-            : base(schema)
+        public DBConstraintList(DBTable table) : base(table)
         {
-            Indexes.Add(new Invoker<DBConstraint, string>(nameof(DBConstraint.TableName), (item) => item.TableName));
             Indexes.Add(new Invoker<DBConstraint, string>(nameof(DBConstraint.ColumnName), (item) => item.ColumnName));
-        }
-
-        public IEnumerable<T> GetByTable(DBTable table)
-        {
-            return Select(nameof(DBConstraint.TableName), CompareType.Equal, table.FullName);
         }
 
         public IEnumerable<T> GetByColumn(DBColumn column)

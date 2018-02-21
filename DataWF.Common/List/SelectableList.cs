@@ -390,7 +390,7 @@ namespace DataWF.Common
         }
 
         public T Find(Query query)
-        { 
+        {
             return Select(query).FirstOrDefault();
         }
 
@@ -456,16 +456,12 @@ namespace DataWF.Common
 
         public T GetFirst()
         {
-            if (items.Count == 0)
-                return default(T);
-            return items[0];
+            return items.Count == 0 ? default(T) : items[0];
         }
 
         public T GetLast()
         {
-            if (items.Count == 0)
-                return default(T);
-            return items[items.Count - 1];
+            return items.Count == 0 ? default(T) : items[items.Count - 1];
         }
 
         [Browsable(false)]

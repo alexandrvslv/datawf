@@ -7,17 +7,10 @@ using System.Text;
 
 namespace DataWF.Data
 {
-    public class DBIndexList : DBSchemaItemList<DBIndex>
+    public class DBIndexList : DBTableItemList<DBIndex>
     {
-        public DBIndexList(DBSchema schema)
-            : base(schema)
+        public DBIndexList(DBTable table) : base(table)
         {
-            Indexes.Add(new Invoker<DBIndex, string>(nameof(DBIndex.TableName), (item) => item.TableName));
-        }
-
-        public IEnumerable<DBIndex> GetByTable(DBTable table)
-        {
-            return Select(nameof(DBIndex.TableName), CompareType.Equal, table.FullName);
         }
     }
 }

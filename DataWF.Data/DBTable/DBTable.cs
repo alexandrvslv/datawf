@@ -64,17 +64,20 @@ namespace DataWF.Data
         protected string sequenceName;
         protected bool caching = false;
         protected DBTableType type = DBTableType.Table;
-        protected DBColumnGroupList columnGroups;
-        protected DBColumnList columns;
         public Type itemType = typeof(DBItem);
         private int block = 1000;
         internal object locker = new object();
-        [NonSerialized]
         protected List<IDBVirtualTable> virtualViews = new List<IDBVirtualTable>(0);
+
 
         protected DBTable(string name = null) : base(name)
         {
-            Init();
+            ColumnGroups = new DBColumnGroupList(this);
+            Columns = new DBColumnList(this);
+            Indexes = new DBIndexList(this);
+            Constraints = new DBConstraintList<DBConstraint>(this);
+            Foreigns = new DBForeignList(this);
+            ItemType = ItemType;
         }
 
         public string LogTableName { get; set; }
@@ -82,12 +85,7 @@ namespace DataWF.Data
         [XmlIgnore]
         public DBLogTable LogTable
         {
-            get
-            {
-                return logTable ?? (logTable = string.IsNullOrEmpty(LogTableName)
-                                    ? null
-                                    : (DBLogTable)DBService.ParseTable(LogTableName));
-            }
+            get { return logTable ?? (logTable = DBService.ParseTable(LogTableName) as DBLogTable); }
             set
             {
                 logTable = value;
@@ -111,7 +109,7 @@ namespace DataWF.Data
         }
 
         [XmlIgnore]
-        public virtual Type ItemType
+        public Type ItemType
         {
             get { return itemType; }
             set
@@ -392,16 +390,10 @@ namespace DataWF.Data
         }
 
         [Category("Column")]
-        public DBColumnList Columns
-        {
-            get { return columns; }
-        }
+        public DBColumnList Columns { get; private set; }
 
         [Category("Column")]
-        public DBColumnGroupList ColumnGroups
-        {
-            get { return columnGroups; }
-        }
+        public DBColumnGroupList ColumnGroups { get; private set; }
 
         public abstract int Count { get; }
 
@@ -433,17 +425,10 @@ namespace DataWF.Data
             }
         }
 
-        private void Init()
-        {
-            columnGroups = new DBColumnGroupList(this);
-            columns = new DBColumnList(this);
-            ItemType = ItemType;
-        }
-
         public void FillReferenceBlock(DBTransaction transaction, DBLoadParam param = DBLoadParam.None)
         {
             var command = transaction.Command;
-            foreach (var column in columns.GetIsReference())
+            foreach (var column in Columns.GetIsReference())
             {
                 if ((column.Keys & DBColumnKeys.Group) != DBColumnKeys.Group && column.ReferenceTable != this && !column.ReferenceTable.IsSynchronized)
                 {
@@ -646,14 +631,14 @@ namespace DataWF.Data
                     if (PrimaryKey != null && item.PrimaryId == null && Schema.System != DBSystem.SQLite)
                     {
                         if (dmlInsertSequence == null)
-                            dmlInsertSequence = DBCommand.Build(this, comInsert, DBCommandTypes.InsertSequence, columns);
+                            dmlInsertSequence = DBCommand.Build(this, comInsert, DBCommandTypes.InsertSequence, Columns);
                         dmlCommand = dmlInsertSequence;
                     }
                     else
                     {
                         item.GenerateId(transaction);
                         if (dmlInsert == null)
-                            dmlInsert = DBCommand.Build(this, comInsert, DBCommandTypes.Insert, columns);
+                            dmlInsert = DBCommand.Build(this, comInsert, DBCommandTypes.Insert, Columns);
                         dmlCommand = dmlInsert;
                     }
                 }
@@ -753,7 +738,7 @@ namespace DataWF.Data
                 s = i + 1;
                 i = name.IndexOf('.', s);
             }
-            return table.columns[name.Substring(s)];
+            return table.Columns[name.Substring(s)];
         }
 
         public abstract void Clear();
@@ -982,12 +967,25 @@ namespace DataWF.Data
             virtualViews.Add(view);
         }
 
+        [Category("Performance")]
+        public DBIndexList Indexes { get; private set; }
+
+        [Category("Performance")]
+        public DBConstraintList<DBConstraint> Constraints { get; private set; }
+
+        [Category("Performance")]
+        public DBForeignList Foreigns { get; private set; }
+
         [Browsable(false)]
         public IEnumerable<DBForeignKey> GetChildRelations()
         {
             if (Schema == null)
-                return null;
-            return Schema.Foreigns.GetByReference(this);
+                yield break;
+            foreach (var table in Schema.Tables)
+            {
+                foreach (var foreign in table.Foreigns.GetByReference(this))
+                    yield return foreign;
+            }
         }
 
         public void GetAllParentTables(List<DBTable> parents)
@@ -1005,34 +1003,13 @@ namespace DataWF.Data
 
         public IEnumerable<DBTable> GetParentTables()
         {
-            foreach (var item in GetParentRelations())
+            foreach (var item in Foreigns)
             {
                 yield return item.ReferenceTable;
 
                 if (item.ReferenceTable is IDBVirtualTable)
                     yield return ((IDBVirtualTable)item.ReferenceTable).BaseTable;
             }
-        }
-
-        public IEnumerable<DBForeignKey> GetParentRelations()
-        {
-            if (Schema == null)
-                return null;
-            return Schema.Foreigns.GetByTable(this);
-        }
-
-        public IEnumerable<DBConstraint> GetConstraints()
-        {
-            if (Schema == null)
-                return null;
-            return Schema.Constraints.GetByTable(this);
-        }
-
-        public IEnumerable<DBIndex> GetIndexes()
-        {
-            if (Schema == null)
-                return null;
-            return Schema.Indexes.GetByTable(this);
         }
 
         public virtual void Dispose()
@@ -1204,12 +1181,12 @@ namespace DataWF.Data
             foreach (var @group in ColumnGroups)
             {
                 var newCol = (DBColumnGroup)@group.Clone();
-                table.columnGroups.Add(newCol);
+                table.ColumnGroups.Add(newCol);
             }
             foreach (var column in Columns)
             {
                 var newCol = (DBColumn)column.Clone();
-                table.columns.Add(newCol);
+                table.Columns.Add(newCol);
                 if (column.LocalizeInfo.Names.Count > 0)
                 {
                     newCol.LocalizeInfo.Names.Add(column.LocalizeInfo.Names[0].Value, column.LocalizeInfo.Names[0].Culture);
@@ -1241,6 +1218,24 @@ namespace DataWF.Data
             LogTable = new DBLogTable { BaseTable = this };
             Schema.Tables.Add(logTable);
             return logTable;
+        }
+
+        private void GenerateRelation(DBColumn column, DBColumn reference)
+        {
+            DBForeignKey relation = Foreigns.GetByColumns(column, reference);
+            if (relation == null)
+            {
+                relation = new DBForeignKey()
+                {
+                    Column = column,
+                    Reference = reference
+                };
+                relation.GenerateName();
+                Foreigns.Add(relation);
+            }
+            //List<DBTable> views = reference.Table.GetChilds();
+            //foreach (DBTable view in views)
+            //    GenerateRelation(stable, scolumn, view.PrimaryKey);
         }
 
         public void GenerateColumns(DBTableInfo tableInfo)

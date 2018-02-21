@@ -25,47 +25,6 @@ using DataWF.Common;
 
 namespace DataWF.Data
 {
-    public class DBLogColumn : DBColumn
-    {
-        private DBColumn baseColumn;
-
-        public DBLogColumn()
-        { }
-
-        public DBLogColumn(DBColumn column)
-        {
-            BaseColumn = column;
-        }
-
-        public DBLogTable LogTable { get { return (DBLogTable)Table; } }
-
-        public string BaseColumnName { get; set; }
-
-        [XmlIgnore]
-        public DBColumn BaseColumn
-        {
-            get { return baseColumn ?? (baseColumn = LogTable?.BaseTable?.ParseColumn(BaseColumnName)); }
-            set
-            {
-                if (BaseColumn != null || value == null)
-                    throw new Exception("Log table Initialized!");
-                baseColumn = value;
-                BaseColumnName = value.Name;
-
-                Name = value.Name + "_log";
-                DataType = value.DataType;
-                DBDataType = value.DBDataType;
-                Size = value.Size;
-                Scale = value.Scale;
-            }
-        }
-
-        public override AccessValue Access
-        {
-            get { return BaseColumn?.Access; }
-            set { base.Access = value; }
-        }
-    }
 
     public class DBLogTable : DBTable<DBLogItem>
     {
@@ -140,6 +99,7 @@ namespace DataWF.Data
             }
         }
 
+        [XmlIgnore]
         public override AccessValue Access
         {
             get { return BaseTable.Access; }

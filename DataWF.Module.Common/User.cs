@@ -37,7 +37,7 @@ namespace DataWF.Module.Common
         Division
     }
 
-    [Table("datawf_common", "ruser", BlockSize = 100)]
+    [Table("wf_common", "ruser", BlockSize = 100)]
     public class User : DBItem, IComparable, IDisposable
     {
         public static void SetCurrent(string login, string password)

@@ -51,6 +51,8 @@ namespace DataWF.Data
 
         public string ColumnName { get; set; }
 
+        public string GroupName { get; set; }
+
         [DefaultValue(DBColumnTypes.Default)]
         public DBColumnTypes ColumnType { get; set; }
 
@@ -98,7 +100,8 @@ namespace DataWF.Data
                 DefaultValue = Default,
                 Keys = Keys,
                 Table = Table.Table,
-                DisplayName = Property
+                DisplayName = Property,
+                GroupName = GroupName
             };
         }
 
@@ -108,6 +111,14 @@ namespace DataWF.Data
                 throw new Exception("Table Not Initialized!");
             if (Column == null)
             {
+                if (!string.IsNullOrEmpty(GroupName))
+                {
+                    var cgroup = Table.Table.ColumnGroups[GroupName];
+                    if (cgroup == null)
+                    {
+                        Table.Table.ColumnGroups.Add(new DBColumnGroup(GroupName));
+                    }
+                }
                 if ((Keys & DBColumnKeys.Culture) == DBColumnKeys.Culture)
                 {
                     foreach (var culture in Locale.Data.Cultures)

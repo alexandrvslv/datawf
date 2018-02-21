@@ -22,7 +22,7 @@ using System.ComponentModel;
 using DataWF.Common;
 using System;
 
-namespace DataWF.Module.Flow
+namespace DataWF.Module.Customer
 {
     public class AddressList : DBTableView<Address>
     {
@@ -31,7 +31,7 @@ namespace DataWF.Module.Flow
         { }
     }
 
-    [Table("flow", "daddress", BlockSize = 2000)]
+    [Table("wf_customer", "daddress", BlockSize = 2000)]
     public class Address : DBItem
     {
         public static DBTable<Address> DBTable

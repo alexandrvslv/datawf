@@ -180,7 +180,7 @@ namespace DataWF.Data
 
         public virtual void Format(StringBuilder ddl, DBColumn column, DDLType ddlType)
         {
-            var constraints = column.Schema.Constraints.GetByColumn(column).ToList();
+            var constraints = column.Table.Constraints.GetByColumn(column).ToList();
             switch (ddlType)
             {
                 case DDLType.Create:
@@ -354,12 +354,12 @@ namespace DataWF.Data
                         ddl.Length -= 1;
                         if (constraints)
                         {
-                            foreach (var constraint in table.GetConstraints())
+                            foreach (var constraint in table.Constraints)
                             {
                                 ddl.Append(",");
                                 Format(ddl, constraint);
                             }
-                            foreach (var relation in table.GetParentRelations())
+                            foreach (var relation in table.Foreigns)
                             {
                                 ddl.Append(",");
                                 Format(ddl, relation);
@@ -369,7 +369,7 @@ namespace DataWF.Data
                         if (indexes)
                         {
                             ddl.AppendLine("go");
-                            foreach (var item in table.GetIndexes())
+                            foreach (var item in table.Indexes)
                             {
                                 Format(ddl, item, DDLType.Create);
                                 ddl.AppendLine("go");
@@ -384,17 +384,17 @@ namespace DataWF.Data
                     ddl.AppendLine("go");
                     break;
                 case DDLType.Drop:
-                    foreach (var item in table.GetIndexes())
+                    foreach (var item in table.Indexes)
                     {
                         Format(ddl, item, DDLType.Drop);
                         ddl.AppendLine("go");
                     }
-                    foreach (var item in table.GetParentRelations())
+                    foreach (var item in table.Foreigns)
                     {
                         Format(ddl, item, DDLType.Drop);
                         ddl.AppendLine("go");
                     }
-                    foreach (var item in table.GetConstraints())
+                    foreach (var item in table.Constraints)
                     {
                         Format(ddl, item, DDLType.Drop);
                         ddl.AppendLine("go");
@@ -430,13 +430,13 @@ namespace DataWF.Data
 
             if (schema.Connection.System != DBSystem.SQLite)
             {
-                foreach (var constraint in schema.Constraints)
+                foreach (var constraint in schema.GetConstraints())
                 {
                     Format(ddl, constraint, DDLType.Create);
                     ddl.AppendLine("go");
                 }
 
-                foreach (var foreign in schema.Foreigns)
+                foreach (var foreign in schema.GetForeigns())
                 {
                     Format(ddl, foreign, DDLType.Create);
                     ddl.AppendLine("go");
@@ -449,7 +449,7 @@ namespace DataWF.Data
                 ddl.AppendLine("go");
             }
 
-            foreach (var index in schema.Indexes)
+            foreach (var index in schema.GetIndexes())
             {
                 Format(ddl, index, DDLType.Create);
                 ddl.AppendLine("go");

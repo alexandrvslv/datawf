@@ -9,10 +9,10 @@ namespace DataWF.Data
     public class DBIndex : DBTableItem
     {
         private bool unique;
-        private DBColumnReferenceList columns = new DBColumnReferenceList();
 
         public DBIndex()
         {
+            Columns = new DBColumnReferenceList();
         }
 
         public bool Unique
@@ -27,11 +27,7 @@ namespace DataWF.Data
             }
         }
 
-        public DBColumnReferenceList Columns
-        {
-            get { return columns; }
-            set { columns = value; }
-        }
+        public DBColumnReferenceList Columns { get; set; }
 
         public override object Clone()
         {
@@ -49,7 +45,9 @@ namespace DataWF.Data
 
         public override string FormatSql(DDLType ddlType)
         {
-            throw new NotImplementedException();
+            var builder = new StringBuilder();
+            Schema?.System?.Format(builder, this, ddlType);
+            return builder.ToString();
         }
     }
 }

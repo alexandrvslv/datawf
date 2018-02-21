@@ -1,8 +1,10 @@
 ﻿/*
- Location.cs
+ Account.cs
  
  Author:
       Alexandr <alexandr_vslv@mail.ru>
+ 
+  
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License as published by
@@ -17,58 +19,53 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
 using DataWF.Data;
 using System.ComponentModel;
 using DataWF.Common;
 
-namespace DataWF.Module.Flow
+namespace DataWF.Module.Common
 {
-    [VirtualTable("flow", "rcountry", typeof(Location), "typeid = 2")]
-    public class Country : DBVirtualItem
+    [Table("wf_common", "rbook", BlockSize = 200)]
+    public class Book : DBItem
     {
-        [VirtualColumn("unid", Keys = DBColumnKeys.Primary)]
+        public static DBTable<Book> DBTable
+        {
+            get { return DBService.GetTable<Book>(); }
+        }
+
+        [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
             set { SetValue(value, Table.PrimaryKey); }
         }
 
-        [VirtualColumn("code", Keys = DBColumnKeys.View | DBColumnKeys.Code)]
+        [Column("code", 40, Keys = DBColumnKeys.Code | DBColumnKeys.View)]
         public string Code
         {
             get { return GetValue<string>(Table.CodeKey); }
             set { SetValue(value, Table.CodeKey); }
         }
 
-        [VirtualColumn("codei")]
-        public string CodeI
+        [Column("typeid", Keys = DBColumnKeys.Type)]
+        public short? TypeId
         {
-            get { return GetProperty<string>(nameof(CodeI)); }
-            set { SetProperty(value, nameof(CodeI)); }
+            get { return GetValue<short?>(Table.TypeKey); }
+            set { SetValue(value, Table.TypeKey); }
         }
 
-        [Browsable(false)]
-        [VirtualColumn("parentid", Keys = DBColumnKeys.Group)]
-        public int? ContinentId
+        [Reference("rbook_typeid", nameof(TypeId))]
+        public BookType Type
         {
-            get { return GetValue<int?>(Table.GroupKey); }
-            set { SetValue(value, Table.GroupKey); }
+            get { return GetReference<BookType>(Table.TypeKey); }
+            set { SetReference(value, Table.TypeKey); }
         }
 
-        [Reference("fk_rcountry", nameof(ContinentId))]
-        public Location Continent
-        {
-            get { return GetReference<Location>(Table.GroupKey); }
-            set { SetReference(value, Table.GroupKey); }
-        }
-
-        [VirtualColumn("name", Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
+        [Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
         public override string Name
         {
             get { return GetName("name"); }
             set { SetName("name", value); }
         }
-
     }
 }

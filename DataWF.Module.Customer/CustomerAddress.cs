@@ -4,8 +4,9 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using DataWF.Data;
+using DataWF.Module.Common;
 
-namespace DataWF.Module.Flow
+namespace DataWF.Module.Customer
 {
     public class CustomerAddressList : DBTableView<CustomerAddress>
     {
@@ -16,7 +17,7 @@ namespace DataWF.Module.Flow
 
     }
 
-    [Table("flow", "caddress", BlockSize = 2000)]
+    [Table("wf_customer", "caddress", BlockSize = 2000)]
     public class CustomerAddress : DBItem
     {
         public static DBTable<CustomerAddress> DBTable

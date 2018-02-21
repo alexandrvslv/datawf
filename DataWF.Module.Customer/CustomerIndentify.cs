@@ -21,8 +21,9 @@ using System.ComponentModel;
 using System.Linq;
 using DataWF.Data;
 using DataWF.Common;
+using DataWF.Module.Common;
 
-namespace DataWF.Module.Flow
+namespace DataWF.Module.Customer
 {
     public class CustomerIdentifyList : DBTableView<CustomerIdentify>
     {
@@ -52,7 +53,7 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [Table("flow", "cindentify", BlockSize = 2000)]
+    [Table("wf_customer", "cindentify", BlockSize = 2000)]
     public class CustomerIdentify : DBItem
     {
         public static DBTable<CustomerIdentify> DBTable

@@ -24,24 +24,17 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    public class DBColumnGroup : DBSchemaItem, IComparable, IComparable<DBColumnGroup>, IDBTableContent
+    public class DBColumnGroup : DBTableItem, IComparable, IComparable<DBColumnGroup>
     {
-        [NonSerialized()]
-        protected DBColumnGroupList list;
-        [NonSerialized()]
-        protected DBTable table;
-
         protected int order = -1;
 
         public DBColumnGroup()
             : base()
-        {
-        }
+        { }
 
         public DBColumnGroup(string name)
             : base(name)
-        {
-        }
+        { }
 
         public override string FullName
         {
@@ -64,19 +57,6 @@ namespace DataWF.Data
                 order = value;
                 OnPropertyChanged(nameof(Order), false);
             }
-        }
-
-        [XmlIgnore, Browsable(false)]
-        public DBTable Table
-        {
-            get { return table; }
-            set { table = value; }
-        }
-
-        [Browsable(false)]
-        public override DBSchema Schema
-        {
-            get { return table == null ? null : table.Schema; }
         }
 
         public IEnumerable<DBColumn> GetColumns()

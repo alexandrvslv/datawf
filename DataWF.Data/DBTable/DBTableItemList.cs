@@ -18,34 +18,32 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using System;
+using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    public class DBTableItemList<T> : DBSchemaItemList<T> where T : DBSchemaItem, new()
+    public class DBTableItemList<T> : DBSchemaItemList<T> where T : DBTableItem, new()
     {
-        [NonSerialized()]
-        protected DBTable table;
 
         public DBTableItemList(DBTable table)
             : base()
         {
-            this.table = table;
+            Table = table;
         }
 
-        public DBTable Table
-        {
-            get { return table; }
-            set { table = value; }
-        }
+        [XmlIgnore]
+        public DBTable Table { get; set; }
 
         public override void Add(T item)
         {
-            if (table == null)
+            if (Table == null)
+            {
                 throw new InvalidOperationException("Table property nead to be specified before add any item!");
-
-            if (item is IDBTableContent && ((IDBTableContent)item).Table == null)
-                ((IDBTableContent)item).Table = table;
-
+            }
+            if (item.Table == null)
+            {
+                item.Table = Table;
+            }
             base.Add(item);
         }
     }

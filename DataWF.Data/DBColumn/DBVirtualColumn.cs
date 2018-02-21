@@ -26,9 +26,7 @@ namespace DataWF.Data
 {
     public class DBVirtualColumn : DBColumn
     {
-        [NonSerialized]
         private DBColumn cacheBaseColumn;
-        [XmlAttribute]
         protected string bname;
 
         public DBVirtualColumn()

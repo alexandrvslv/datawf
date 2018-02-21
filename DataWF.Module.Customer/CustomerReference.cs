@@ -19,8 +19,9 @@
 using System;
 using System.ComponentModel;
 using DataWF.Data;
+using DataWF.Module.Common;
 
-namespace DataWF.Module.Flow
+namespace DataWF.Module.Customer
 {
     public class CustomerReferenceList : DBTableView<CustomerReference>
     {
@@ -30,7 +31,7 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [Table("flow", "creference")]
+    [Table("wf_customer", "creference")]
     public class CustomerReference : DBItem
     {
         public static DBTable<CustomerReference> DBTable

@@ -28,7 +28,7 @@ namespace DataWF.Data.Gui
 
     public class DataTree : LayoutList
     {
-        private ListChangedEventHandler _schemaChanged;
+        private ListChangedEventHandler schemaChanged;
         private object datafilter = null;
         DataTreeKeys dataKeys = DataTreeKeys.None;
         //TODO
@@ -37,7 +37,7 @@ namespace DataWF.Data.Gui
         public DataTree()
             : base()
         {
-            _schemaChanged = new ListChangedEventHandler(OnItemsListChanged);
+            schemaChanged = new ListChangedEventHandler(OnItemsListChanged);
             base.ListSensetive = true;
             Mode = LayoutListMode.Tree;
         }
@@ -99,9 +99,9 @@ namespace DataWF.Data.Gui
 
         private void InitSchems()
         {
-            DBService.Schems.ListChanged -= _schemaChanged;
+            DBService.Schems.ListChanged -= schemaChanged;
             if (ShowSchema)
-                DBService.Schems.ListChanged += _schemaChanged;
+                DBService.Schems.ListChanged += schemaChanged;
 
             Nodes.Sense = false;
             foreach (DBSchema schema in DBService.Schems)
@@ -285,25 +285,16 @@ namespace DataWF.Data.Gui
         {
             Node node = InitItem(schema);
 
-            schema.TableGroups.ListChanged -= _schemaChanged;
-            schema.Tables.ListChanged -= _schemaChanged;
-            schema.Constraints.ListChanged -= _schemaChanged;
-            schema.Foreigns.ListChanged -= _schemaChanged;
-            schema.Indexes.ListChanged -= _schemaChanged;
-            schema.Procedures.ListChanged -= _schemaChanged;
+            schema.TableGroups.ListChanged -= schemaChanged;
+            schema.Tables.ListChanged -= schemaChanged;
+            schema.Procedures.ListChanged -= schemaChanged;
 
             if (ShowTableGroup)
-                schema.TableGroups.ListChanged += _schemaChanged;
+                schema.TableGroups.ListChanged += schemaChanged;
             if (ShowTable)
-                schema.Tables.ListChanged += _schemaChanged;
-            if (ShowConstraint)
-                schema.Constraints.ListChanged += _schemaChanged;
-            if (ShowForeign)
-                schema.Foreigns.ListChanged += _schemaChanged;
-            if (ShowIndex)
-                schema.Indexes.ListChanged += _schemaChanged;
+                schema.Tables.ListChanged += schemaChanged;
             if (ShowProcedures)
-                schema.Procedures.ListChanged += _schemaChanged;
+                schema.Procedures.ListChanged += schemaChanged;
 
             foreach (var tgoup in schema.TableGroups.GetTopParents())
             {
@@ -425,9 +416,9 @@ namespace DataWF.Data.Gui
 
         public void InitColumns(DBTable table, Node node)
         {
-            table.Columns.ListChanged -= _schemaChanged;
+            table.Columns.ListChanged -= schemaChanged;
             if (ShowColumn)
-                table.Columns.ListChanged += _schemaChanged;
+                table.Columns.ListChanged += schemaChanged;
 
             foreach (DBColumn column in table.Columns)
             {
@@ -449,7 +440,11 @@ namespace DataWF.Data.Gui
 
         public void InitIndexes(DBTable table, Node node)
         {
-            foreach (var index in table.GetIndexes())
+            table.Indexes.ListChanged -= schemaChanged;
+            if (ShowIndex)
+                table.Indexes.ListChanged += schemaChanged;
+
+            foreach (var index in table.Indexes)
             {
                 var inode = Find(index);
                 if (ShowIndex)
@@ -467,9 +462,9 @@ namespace DataWF.Data.Gui
 
         public void InitColumnGroups(DBTable table, Node node)
         {
-            table.ColumnGroups.ListChanged -= _schemaChanged;
+            table.ColumnGroups.ListChanged -= schemaChanged;
             if (ShowColumnGroup)
-                table.ColumnGroups.ListChanged += _schemaChanged;
+                table.ColumnGroups.ListChanged += schemaChanged;
 
             foreach (DBColumnGroup columnGroup in table.ColumnGroups)
             {
@@ -507,7 +502,12 @@ namespace DataWF.Data.Gui
 
         public void InitConstraints(DBTable table, Node node)
         {
-            foreach (var constr in table.GetConstraints())
+            table.Constraints.ListChanged -= schemaChanged;
+
+            if (ShowConstraint)
+                table.Constraints.ListChanged += schemaChanged;
+
+            foreach (var constr in table.Constraints)
             {
                 var inode = Find(constr);
                 if (ShowConstraint)
@@ -525,7 +525,11 @@ namespace DataWF.Data.Gui
 
         public void InitForeigns(DBTable table, Node node)
         {
-            foreach (var constr in table.GetParentRelations())
+            table.Foreigns.ListChanged -= schemaChanged;
+            if (ShowForeign)
+                table.Foreigns.ListChanged += schemaChanged;
+
+            foreach (var constr in table.Foreigns)
             {
                 var inode = Find(constr);
                 if (ShowForeign)

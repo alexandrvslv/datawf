@@ -10,38 +10,19 @@ namespace DataWF.Data
 {
     public abstract class DBTableItem : DBSchemaItem, IDBTableContent
     {
-        protected string table;
-        [NonSerialized()]
-        private DBTable _table = null;
+        protected DBTableItem()
+        { }
+
+        protected DBTableItem(string name) : base(name)
+        { }
+
+        [XmlIgnore, Browsable(false)]
+        public DBTable Table { get; set; }
 
         [Browsable(false)]
-        public string TableName
+        public override DBSchema Schema
         {
-            get { return table; }
-            set
-            {
-                if (value != table)
-                {
-                    table = value;
-                    OnPropertyChanged(nameof(TableName), true);
-                }
-            }
-        }
-
-        [XmlIgnore]
-        public DBTable Table
-        {
-            get { return _table ?? (_table = DBService.ParseTable(table, schema)); }
-            set
-            {
-                if (_table != value)
-                {
-                    table = value?.FullName;
-                    _table = value;
-                    schema = value?.Schema;
-                    OnPropertyChanged(nameof(Table), true);
-                }
-            }
+            get { return Table?.Schema; }
         }
 
     }
