@@ -248,7 +248,7 @@ namespace DataWF.Data
             }
         }
 
-        IEnumerable<DBItem> IDBTableView.Load(DBLoadParam param = DBLoadParam.None)
+        IEnumerable<DBItem> IDBTableView.Load(DBLoadParam param)
         {
             return Load(param);
         }

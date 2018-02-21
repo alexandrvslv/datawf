@@ -126,8 +126,6 @@ namespace Mono.TextEditor.Theatrics
         protected override void OnMouseScrolled(MouseScrolledEventArgs args)
         {
             var alloc = Bounds;
-            double dx, dy;
-
             if ((args.Direction == ScrollDirection.Left
                  || args.Direction == ScrollDirection.Right)
                 && hScrollBar.Visible)

@@ -73,14 +73,14 @@ namespace DataWF.Common
             var last = list.Last();
             foreach (var item in list)
             {
-                 if(item is PropertyInfo 
-                 && ((PropertyInfo)item).PropertyType.IsValueType 
-                 && (!((PropertyInfo)item).CanWrite ||  ((PropertyInfo)last).GetSetMethod() == null))
+                if (item is PropertyInfo
+                    && ((PropertyInfo)item).PropertyType.IsValueType
+                    && (!((PropertyInfo)item).CanWrite || ((PropertyInfo)item).GetSetMethod() == null))
                     return null;
             }
-            if (last is MethodInfo 
-            ||  (last is PropertyInfo 
-            && (!((PropertyInfo)last).CanWrite || ((PropertyInfo)last).GetSetMethod() == null)))
+            if (last is MethodInfo
+                || (last is PropertyInfo
+                    && (!((PropertyInfo)last).CanWrite || ((PropertyInfo)last).GetSetMethod() == null)))
             {
                 return null;
             }

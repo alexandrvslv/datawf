@@ -36,8 +36,8 @@ namespace DataWF.Common
             return !c1.Min.Equals(c2.Min) || !c1.Max.Equals(c2.Max);
         }
 
-        private DateTime _Min;
-        private DateTime _Max;
+        private DateTime min;
+        private DateTime max;
 
         public DateInterval(DateTime date)
             : this(date, date)
@@ -45,44 +45,64 @@ namespace DataWF.Common
 
         public DateInterval(DateTime dateMin, DateTime dateMax)
         {
-            _Max = dateMax;
-            _Min = dateMin;
+            max = dateMax;
+            min = dateMin;
         }
 
         public DateTime Min
         {
-            get { return _Min; }
+            get { return min; }
             set
             {
-                if (_Min == value)
+                if (min == value)
                     return;
-                _Min = value;
-                if (_Min > _Max)
-                    _Max = _Min;
+                min = value;
+                if (min > max)
+                    max = min;
             }
         }
 
         public DateTime Max
         {
-            get { return _Max; }
+            get { return max; }
             set
             {
-                if (_Max == value)
+                if (max == value)
                     return;
-                _Max = value;
-                if (_Max < _Min)
-                    _Min = _Max;
+                max = value;
+                if (max < min)
+                    min = max;
             }
         }
 
         public override string ToString()
         {
-            return _Min.ToShortDateString() + "  " + _Max.ToShortDateString();
+            return min.ToShortDateString() + "  " + max.ToShortDateString();
         }
 
         public bool IsEqual()
         {
-            return _Min.Ticks.Equals(_Max.Ticks);
+            return min.Ticks.Equals(max.Ticks);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is DateInterval)
+            {
+                var dateObj = (DateInterval)obj;
+                return this.min.Equals(dateObj.min) && this.max.Equals(dateObj.max);
+            }
+            else if (obj is DateTime)
+            {
+                var dateObj = (DateTime)obj;
+                return this.min.Equals(dateObj) && this.max.Equals(dateObj);
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return min.GetHashCode() ^ max.GetHashCode();
         }
     }
 }

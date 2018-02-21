@@ -17,7 +17,7 @@ namespace DataWF.Module.FlowGui
 {
     public class PDocument : LayoutDBTable
     {
-        public static ILayoutCellEditor InitCellEditor(object sender, object listItem, ILayoutCell cell)
+        public new static ILayoutCellEditor InitCellEditor(object sender, object listItem, ILayoutCell cell)
         {
             ILayoutCell c = listItem is ILayoutCell && cell.Name == "Value" ? (ILayoutCell)listItem : cell;
 

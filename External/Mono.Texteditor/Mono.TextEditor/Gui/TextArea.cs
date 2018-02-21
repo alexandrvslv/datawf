@@ -1325,7 +1325,7 @@ namespace Mono.TextEditor
             }
             catch (Exception ex)
             {
-                //Application.(ex, false);
+                System.Diagnostics.Debug.WriteLine(ex.Message);
             }
             base.OnMouseMoved(e);
         }
@@ -2901,7 +2901,7 @@ namespace Mono.TextEditor
                 if (checkMouseOver)
                 {
                     // Don't hide the tooltip window if the mouse pointer is inside it.
-                    Xwt.ModifierKeys m;
+                    //Xwt.ModifierKeys m;
                     if (tipWindow.ScreenBounds.Contains(Xwt.Desktop.MouseLocation))
                         return;
                 }
