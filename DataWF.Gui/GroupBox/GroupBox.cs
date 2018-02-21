@@ -176,7 +176,7 @@ namespace DataWF.Gui
 
         public void Sort()
         {
-            map.Items.Sort(new Comparison<ILayoutItem>(LayoutMapTool.Compare));
+            map.Items.Sort(new Comparison<ILayoutItem>(LayoutMapHelper.Compare));
         }
 
         public int Row

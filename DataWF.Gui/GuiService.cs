@@ -30,7 +30,8 @@ namespace DataWF.Gui
         public static Command ShowDialog(this Widget widget, WindowFrame owner)
         {
             var window = new Dialog();
-            //window.TransientFor = owner.ParentWindow;
+            if (owner != null)
+                window.TransientFor = owner;
             window.Content = widget;
             return window.Run(owner);
         }
@@ -170,7 +171,7 @@ namespace DataWF.Gui
         {
             return Convert.ToBase64String(ImageToByte(img));
         }
-        
+
 
         public static bool IsCompound(Type type)
         {

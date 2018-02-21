@@ -222,7 +222,7 @@ namespace DataWF.Gui
         protected override Size OnGetPreferredSize(SizeConstraint widthConstraint, SizeConstraint heightConstraint)
         {
             base.OnGetPreferredSize(widthConstraint, heightConstraint);
-            foreach (DockMapItem item in LayoutMapTool.GetVisibleItems(map))
+            foreach (DockMapItem item in LayoutMapHelper.GetVisibleItems(map))
             {
                 var size = item.Panel.Surface.GetPreferredSize();
                 item.Width = size.Width;
@@ -236,7 +236,7 @@ namespace DataWF.Gui
         {
             base.OnReallocate();
             map.GetBound(Size.Width, Size.Height);
-            foreach (DockMapItem item in LayoutMapTool.GetVisibleItems(map))
+            foreach (DockMapItem item in LayoutMapHelper.GetVisibleItems(map))
             {
                 map.GetBound(item);
                 item.Bound = item.Bound.Inflate(-3, -3);
@@ -327,7 +327,7 @@ namespace DataWF.Gui
         public DockBoxHitTest DockHitTest(double x, double y, double size)
         {
             var htest = new DockBoxHitTest();
-            foreach (DockMapItem item in LayoutMapTool.GetVisibleItems(map))
+            foreach (DockMapItem item in LayoutMapHelper.GetVisibleItems(map))
             {
                 if (item.Bound.Contains(x, y))
                 {
@@ -413,7 +413,7 @@ namespace DataWF.Gui
 
         public DockMapItem GetDockItem(string Name, DockMapItem exitem, LayoutAlignType type, bool gp)
         {
-            DockMapItem item = LayoutMapTool.Get(map, Name) as DockMapItem;
+            DockMapItem item = LayoutMapHelper.Get(map, Name) as DockMapItem;
             if (item == null)
             {
                 item = CreateDockItem(Name);
@@ -422,9 +422,9 @@ namespace DataWF.Gui
                 if (Name == "Bottom")
                     item.Height = 200;
                 if (exitem == null)
-                    LayoutMapTool.Add(map, item);
+                    LayoutMapHelper.Add(map, item);
                 else
-                    LayoutMapTool.InsertWith(item, exitem, type, gp);
+                    LayoutMapHelper.InsertWith(item, exitem, type, gp);
 
             }
             return item;
@@ -446,7 +446,7 @@ namespace DataWF.Gui
         #region Container
         public bool Contains(Widget c)
         {
-            foreach (DockMapItem item in LayoutMapTool.GetItems(map))
+            foreach (DockMapItem item in LayoutMapHelper.GetItems(map))
                 if (item.Panel.Contains(c))
                     return true;
             return false;
@@ -454,7 +454,7 @@ namespace DataWF.Gui
 
         public bool Delete(Widget c)
         {
-            foreach (DockMapItem item in LayoutMapTool.GetItems(map))
+            foreach (DockMapItem item in LayoutMapHelper.GetItems(map))
             {
                 if (item.Panel.Contains(c))
                 {
@@ -467,7 +467,7 @@ namespace DataWF.Gui
 
         public IEnumerable<Widget> GetControls()
         {
-            foreach (DockMapItem item in LayoutMapTool.GetItems(map))
+            foreach (DockMapItem item in LayoutMapHelper.GetItems(map))
             {
                 foreach (var widget in item.Panel.GetControls())
                     yield return widget;
@@ -476,7 +476,7 @@ namespace DataWF.Gui
 
         public IEnumerable<DockPage> GetPages()
         {
-            foreach (DockMapItem item in LayoutMapTool.GetItems(map))
+            foreach (DockMapItem item in LayoutMapHelper.GetItems(map))
             {
                 foreach (var pageItem in item.Panel.Pages.Items)
                     yield return pageItem;
@@ -485,7 +485,7 @@ namespace DataWF.Gui
 
         public DockPage GetPage(Widget c)
         {
-            foreach (DockMapItem item in LayoutMapTool.GetItems(map))
+            foreach (DockMapItem item in LayoutMapHelper.GetItems(map))
             {
                 DockPage dp = item.Panel.GetPage(c);
                 if (dp != null)
@@ -510,7 +510,7 @@ namespace DataWF.Gui
 
         public IEnumerable<IDockContainer> GetDocks()
         {
-            foreach (DockMapItem item in LayoutMapTool.GetVisibleItems(map))
+            foreach (DockMapItem item in LayoutMapHelper.GetVisibleItems(map))
             {
                 yield return item.Panel;
             }

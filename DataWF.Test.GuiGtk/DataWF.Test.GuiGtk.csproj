@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{69C37C81-AEAD-4F49-BB18-0750387E680D}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>DataWF.TestGuiGtk</RootNamespace>
-    <AssemblyName>DataWF.TestGuiGtk</AssemblyName>
+    <RootNamespace>DataWF.Test.GuiGtk</RootNamespace>
+    <AssemblyName>DataWF.Test.GuiGtk</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <StartupObject>DataWF.TestGui.Program</StartupObject>
   </PropertyGroup>

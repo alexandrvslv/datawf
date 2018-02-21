@@ -14,13 +14,13 @@ namespace DataWF.Gui
         public DockMapItem Add(DockPanel panel)
         {
             var item = new DockMapItem() { Name = panel.Name, Panel = panel };
-            LayoutMapTool.Add(this, item);
+            LayoutMapHelper.Add(this, item);
             return item;
         }
 
         public void GetBound(DockMapItem item)
         {
-            LayoutMapTool.GetBound(this, item, null, null);
+            LayoutMapHelper.GetBound(this, item, null, null);
         }
 
         public void Dispose()

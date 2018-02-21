@@ -221,7 +221,7 @@ namespace DataWF.Data.Gui
 
         public static void ExpMapLayout(Doc.Odf.Table sheetData, ILayoutMap map, int scol, int srow, out int mcol, out int mrow, LayoutList list, object listItem)
         {
-            int tws = LayoutMapTool.GetWithdSpan(map);
+            int tws = LayoutMapHelper.GetWithdSpan(map);
             //int ths = tool.LayoutMapTool.GetHeightSpan(map);
             mrow = srow;
             mcol = scol;
@@ -234,7 +234,7 @@ namespace DataWF.Data.Gui
 
                 int cc = 0;
                 int rr = 0;
-                LayoutMapTool.GetVisibleIndex(map, item, out cc, out rr);
+                LayoutMapHelper.GetVisibleIndex(map, item, out cc, out rr);
                 int c = cc + scol;
                 int r = rr + srow;
                 if (item is ILayoutMap)
@@ -270,7 +270,7 @@ namespace DataWF.Data.Gui
 
                     temp.Add(cell);
 
-                    int ws = LayoutMapTool.GetRowWidthSpan(map, item.Row);
+                    int ws = LayoutMapHelper.GetRowWidthSpan(map, item.Row);
                     if (tws > ws)
                     {
                         cell.NumberColumnsSpanned = ((tws - ws) + 1).ToString();
@@ -279,7 +279,7 @@ namespace DataWF.Data.Gui
                         ccell.ColumnsRepeatedCount = (tws - ws).ToString();
                         temp.Add(ccell);
                     }
-                    int hs = LayoutMapTool.GetRowHeightSpan(map, item.Row, true);
+                    int hs = LayoutMapHelper.GetRowHeightSpan(map, item.Row, true);
                     if (hs > 1)
                     {
                         cell.NumberRowsSpanned = (hs).ToString();
@@ -304,7 +304,7 @@ namespace DataWF.Data.Gui
 
         public static void ExpMapLayout(SheetData sheetData, ILayoutMap map, int scol, int srow, out int mcol, out int mrow, LayoutList list, object listItem)
         {
-            int tws = LayoutMapTool.GetWithdSpan(map);
+            int tws = LayoutMapHelper.GetWithdSpan(map);
             //int ths = tool.LayoutMapTool.GetHeightSpan(map);
             mrow = srow;
             mcol = scol;
@@ -317,7 +317,7 @@ namespace DataWF.Data.Gui
 
                 int c = 0;
                 int r = 0;
-                LayoutMapTool.GetVisibleIndex(map, item, out c, out r);
+                LayoutMapHelper.GetVisibleIndex(map, item, out c, out r);
                 c += scol;
                 r += srow;
                 if (item is ILayoutMap)
@@ -350,13 +350,13 @@ namespace DataWF.Data.Gui
 
                     temp.Append(cell);
 
-                    int ws = LayoutMapTool.GetRowWidthSpan(map, item.Row);
+                    int ws = LayoutMapHelper.GetRowWidthSpan(map, item.Row);
                     if (tws > ws)
                     {
                         MergeCell mcell = new MergeCell() { Reference = new StringValue(Helper.GetReference(c, r, c + tws - ws, r)) };
                         GetMergeCells(sheetData.Parent).Append(mcell);
                     }
-                    int hs = LayoutMapTool.GetRowHeightSpan(map, item.Row, true);
+                    int hs = LayoutMapHelper.GetRowHeightSpan(map, item.Row, true);
                     if (hs > 1)
                     {
                         MergeCell mcell = new MergeCell() { Reference = new StringValue(Helper.GetReference(c, r, c, r + hs - 1)) };
@@ -639,7 +639,7 @@ namespace DataWF.Data.Gui
 
         public void WriteMapItem(ILayoutMap map, int listIndex, object listItem, int sc, int sr, ref int mr, List<Row> prows = null)
         {
-            int tws = LayoutMapTool.GetWithdSpan(map);
+            int tws = LayoutMapHelper.GetWithdSpan(map);
             Row row = null;
             var rows = prows;
             if (prows == null)
@@ -658,7 +658,7 @@ namespace DataWF.Data.Gui
                 if (item.Visible)
                 {
                     int c, r;
-                    LayoutMapTool.GetVisibleIndex(map, item, out c, out r);
+                    LayoutMapHelper.GetVisibleIndex(map, item, out c, out r);
                     c += sc; r += sr;
                     if (item is ILayoutMap)
                     {
@@ -699,8 +699,8 @@ namespace DataWF.Data.Gui
                         if (celldata is decimal)
                             cellc.StyleIndex = 3;
 
-                        int ws = LayoutMapTool.GetRowWidthSpan(map, item.Row);
-                        int hs = LayoutMapTool.GetRowHeightSpan(map, item.Row, true);
+                        int ws = LayoutMapHelper.GetRowWidthSpan(map, item.Row);
+                        int hs = LayoutMapHelper.GetRowHeightSpan(map, item.Row, true);
                         if (tws > ws && hs > 1)
                         {
                             mcells.Add(new MergeCell() { Reference = Helper.GetReference(c, rr, c + tws - ws, rr + hs - 1) });
@@ -760,7 +760,7 @@ namespace DataWF.Data.Gui
                 if (column.Visible)
                 {
                     int c, r;
-                    LayoutMapTool.GetVisibleIndex(map, column, out c, out r);
+                    LayoutMapHelper.GetVisibleIndex(map, column, out c, out r);
                     c += sc; r += sr;
 
                     if (column is ILayoutMap)

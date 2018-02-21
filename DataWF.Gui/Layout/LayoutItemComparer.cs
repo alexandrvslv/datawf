@@ -6,7 +6,7 @@ namespace DataWF.Gui
     {
         public int Compare(ILayoutItem x, ILayoutItem y)
         {
-            return LayoutMapTool.Compare(x, y);
+            return LayoutMapHelper.Compare(x, y);
         }
     }
 }

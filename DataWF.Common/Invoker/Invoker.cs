@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace DataWF.Common
 {
@@ -31,6 +32,7 @@ namespace DataWF.Common
 
         public object Get(object target)
         {
+            Debug.WriteLineIf(target != null && !typeof(T).IsInstanceOfType(target), $"expected {typeof(T)} but get {target.GetType()}");
             return Get((T)target);
         }
 

@@ -18,15 +18,10 @@ namespace DataWF.Gui
         [DefaultValue(0D)]
         private double indent = 0D;
 
-        [NonSerialized]
         public Func<ILayoutItem, double> CalcHeight;
-        [NonSerialized]
         public Func<ILayoutItem, double> CalcWidth;
-        [NonSerialized]
         protected Rectangle bound = new Rectangle();
-        [NonSerialized]
         private double maxHeight;
-        [NonSerialized]
         private double maxWidth;
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -51,7 +46,7 @@ namespace DataWF.Gui
 
         public ILayoutMap TopMap
         {
-            get { return LayoutMapTool.GetTopMap(this); }
+            get { return LayoutMapHelper.GetTopMap(this); }
         }
 
         public int Count
@@ -61,7 +56,7 @@ namespace DataWF.Gui
 
         public ILayoutItem this[string property]
         {
-            get { return LayoutMapTool.Get(this, property); }
+            get { return LayoutMapHelper.Get(this, property); }
         }
 
         public ILayoutItem this[int index]
@@ -71,18 +66,18 @@ namespace DataWF.Gui
 
         public ILayoutItem this[int rowIndex, int colIndex]
         {
-            get { return LayoutMapTool.Get(this, rowIndex, colIndex); }
+            get { return LayoutMapHelper.Get(this, rowIndex, colIndex); }
         }
 
         public double Height
         {
-            get { return LayoutMapTool.GetHeight(this, maxHeight, CalcHeight); }
+            get { return LayoutMapHelper.GetHeight(this, maxHeight, CalcHeight); }
             set { maxHeight = value; }
         }
 
         public double Width
         {
-            get { return LayoutMapTool.GetWidth(this, maxWidth, CalcWidth); }
+            get { return LayoutMapHelper.GetWidth(this, maxWidth, CalcWidth); }
             set { maxWidth = value; }
         }
 
@@ -120,22 +115,22 @@ namespace DataWF.Gui
         [XmlIgnore]
         public bool Visible
         {
-            get { return LayoutMapTool.IsVisible(this); }
+            get { return LayoutMapHelper.IsVisible(this); }
             set { }
         }
 
         [XmlIgnore]
         public bool FillWidth
         {
-            get { return LayoutMapTool.IsFillWidth(this); }
-            set { LayoutMapTool.SetFillWidth(this, value); }
+            get { return LayoutMapHelper.IsFillWidth(this); }
+            set { LayoutMapHelper.SetFillWidth(this, value); }
         }
 
         [XmlIgnore]
         public bool FillHeight
         {
-            get { return LayoutMapTool.IsFillHeight(this); }
-            set { LayoutMapTool.SetFillHeight(this, value); }
+            get { return LayoutMapHelper.IsFillHeight(this); }
+            set { LayoutMapHelper.SetFillHeight(this, value); }
         }
 
         public string Name
@@ -183,7 +178,7 @@ namespace DataWF.Gui
 
         public bool Contains(ILayoutItem item)
         {
-            return LayoutMapTool.Contains(this, item);
+            return LayoutMapHelper.Contains(this, item);
         }
 
         public virtual Rectangle GetBound()
@@ -193,14 +188,14 @@ namespace DataWF.Gui
 
         public virtual Rectangle GetBound(double maxWidth, double maxHeight)
         {
-            LayoutMapTool.GetBound(this, maxWidth, maxHeight, CalcWidth, CalcHeight);
+            LayoutMapHelper.GetBound(this, maxWidth, maxHeight, CalcWidth, CalcHeight);
             return bound;
         }
 
         public virtual Rectangle GetBound(ILayoutItem item)
         {
             //maxWidth, maxHeight, 
-            LayoutMapTool.GetBound(this, item, CalcWidth, CalcHeight);
+            LayoutMapHelper.GetBound(this, item, CalcWidth, CalcHeight);
             return item.Bound;
         }
 
@@ -211,34 +206,41 @@ namespace DataWF.Gui
 
         public virtual void Replace(ILayoutItem oldColumn, ILayoutItem newColumn)
         {
-            LayoutMapTool.Replace(oldColumn, newColumn);
+            LayoutMapHelper.Replace(oldColumn, newColumn);
         }
 
         public virtual void Grouping(ILayoutItem x, ILayoutItem y, LayoutAlignType type)
         {
-            LayoutMapTool.Grouping(x, y, type);
+            LayoutMapHelper.Grouping(x, y, type);
         }
 
         public virtual void Move(ILayoutItem moved, ILayoutItem destination, LayoutAlignType anch, bool builGroup)
         {
             bound.Width = 0;
-            LayoutMapTool.Move(moved, destination, anch, builGroup);
+            LayoutMapHelper.Move(moved, destination, anch, builGroup);
         }
 
         public virtual void Add(ILayoutItem column)
         {
-            LayoutMapTool.Add(this, column);
+            LayoutMapHelper.Add(this, column);
         }
 
-        public virtual void Insert(int index, ILayoutItem column)
+        public virtual void Insert(int index, ILayoutItem item)
         {
-            column.Col = index;
-            Insert(column, false);
+            item.Col = index;
+            Insert(item, false);
         }
+
+        public void InsertRow(int index, ILayoutItem item)
+        {
+            item.Row = index;
+            Insert(item, true);
+        }
+
 
         public virtual void Insert(ILayoutItem column, bool inserRow = false)
         {
-            LayoutMapTool.Insert(this, column, inserRow);
+            LayoutMapHelper.Insert(this, column, inserRow);
         }
 
         public virtual void InsertAfter(ILayoutItem column, ILayoutItem excolumn)
@@ -250,12 +252,12 @@ namespace DataWF.Gui
 
         public virtual bool Remove(ILayoutItem column)
         {
-            return LayoutMapTool.Remove(column);
+            return LayoutMapHelper.Remove(column);
         }
 
         public virtual void Reset()
         {
-            LayoutMapTool.Reset(this);
+            LayoutMapHelper.Reset(this);
         }
 
         protected virtual void OnItemsListChanged(object sender, ListChangedEventArgs e)
@@ -275,22 +277,22 @@ namespace DataWF.Gui
 
         public IEnumerable<ILayoutItem> GetItems()
         {
-            return LayoutMapTool.GetItems(this);
+            return LayoutMapHelper.GetItems(this);
         }
 
         public int CompareTo(LayoutMap other)
         {
-            return LayoutMapTool.Compare(this, other);
+            return LayoutMapHelper.Compare(this, other);
         }
 
         public int CompareTo(ILayoutItem other)
         {
-            return LayoutMapTool.Compare(this, other);
+            return LayoutMapHelper.Compare(this, other);
         }
 
         public int CompareTo(object obj)
         {
-            return LayoutMapTool.Compare(this, obj as ILayoutItem);
+            return LayoutMapHelper.Compare(this, obj as ILayoutItem);
         }
 
         public IEnumerator<ILayoutItem> GetEnumerator()

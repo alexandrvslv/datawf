@@ -58,7 +58,7 @@ namespace DataWF.Gui
             base.OnReallocate();
 
             items.GetBound(Size.Width, Size.Height);
-            foreach (ToolItem item in LayoutMapTool.GetVisibleItems(items))
+            foreach (ToolItem item in LayoutMapHelper.GetVisibleItems(items))
             {
                 items.GetBound(item);
                 if (item.Content != null && item.Content.Parent == this)
@@ -72,7 +72,7 @@ namespace DataWF.Gui
             base.OnDraw(ctx, dirtyRect);
             var context = GraphContext.Default;
             context.Context = ctx;
-            foreach (ToolItem item in LayoutMapTool.GetVisibleItems(items))
+            foreach (ToolItem item in LayoutMapHelper.GetVisibleItems(items))
             {
                 item.OnDraw(context);
             }
@@ -86,7 +86,7 @@ namespace DataWF.Gui
 
         protected ToolItem HitTest(Point position)
         {
-            foreach (ToolItem item in LayoutMapTool.GetVisibleItems(items))
+            foreach (ToolItem item in LayoutMapHelper.GetVisibleItems(items))
             {
                 if (item.Bound.Contains(position))
                 {

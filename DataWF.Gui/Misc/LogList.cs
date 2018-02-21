@@ -7,30 +7,26 @@ namespace DataWF.Gui
 {
     public class LogList : LayoutList
     {
-        private CellStyle style;
-        public LogList()
-            : base()
-        {
-            style = GuiEnvironment.StylesInfo["Logs"];
-        }
+        public LogList() : base()
+        { }
 
         protected override void OnDrawHeader(LayoutListDrawArgs e)
         {
             if (e.Item is StateInfo)
             {
                 GlyphType type = GlyphType.InfoCircle;
-                CellDisplayState gstate = CellDisplayState.Default;
+                Color color = Colors.Blue;
                 if (((StateInfo)e.Item).Type == StatusType.Error)
                 {
                     type = GlyphType.ExclamationCircle;
-                    gstate = CellDisplayState.Selected;
+                    color = Colors.Red;
                 }
                 if (((StateInfo)e.Item).Type == StatusType.Warning)
                 {
                     type = GlyphType.ExclamationTriangle;
-                    gstate = CellDisplayState.Hover;
+                    color = Colors.Yellow;
                 }
-                e.Context.DrawGlyph(style, e.Bound, type, gstate);
+                e.Context.DrawGlyph(color, e.Bound, type);
             }
             else
             {

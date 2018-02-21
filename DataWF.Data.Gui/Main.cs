@@ -137,16 +137,17 @@ namespace DataWF.Data.Gui
 
         protected void ShowException(Exception ex)
         {
+            var list = new LayoutList();
+            list.FieldSource = new ExceptionInfo(ex);
+            list.ListInfo.CalcHeigh = true;
+
             var exceptionWindow = new ToolWindow();
             exceptionWindow.Label.Text = "Exception!";
             exceptionWindow.Mode = ToolShowMode.Dialog;
             exceptionWindow.Width = 640;
             exceptionWindow.ButtonClose.Visible = false;
-            exceptionWindow.Target = new LayoutList();
-            ((LayoutList)exceptionWindow.Target).FieldSource = new ExceptionInfo(ex);
-            ((LayoutList)exceptionWindow.Target).ListInfo.CalcHeigh = true;
-            exceptionWindow.Visible = false;
-            exceptionWindow.Show(Content, Point.Zero);
+            exceptionWindow.Target = list;
+            exceptionWindow.Show(null, Point.Zero);
         }
 
 
@@ -465,18 +466,18 @@ namespace DataWF.Data.Gui
 
         private void ToolLocalizeOnClick(object sender, EventArgs e)
         {
-            var se = new LocalizeEditor();
-            se.ShowDialog(this);
-            se.Dispose();
-            Common.Locale.Save();
+            var editor = new LocalizeEditor();
+            editor.ShowDialog(this);
+            editor.Dispose();
+            Locale.Save();
         }
 
         private void ToolConfigClick(object sender, EventArgs e)
         {
-            var sed = new ListExplorer();
-            sed.DataSource = GuiEnvironment.Instance;
-            sed.ShowDialog(this);
-            sed.Dispose();
+            var editor = new ListExplorer();
+            editor.DataSource = GuiEnvironment.Instance;
+            editor.ShowDialog(this);
+            editor.Dispose();
         }
 
         private void ToolSaveConfigOnClick(object sender, EventArgs e)

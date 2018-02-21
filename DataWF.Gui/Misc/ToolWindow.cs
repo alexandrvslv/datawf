@@ -216,8 +216,10 @@ namespace DataWF.Gui
             set
             {
                 senderWindow = value;
-                if (value is WindowFrame)
-                    TransientFor = (WindowFrame)value;
+                if (value != null)
+                {
+                    TransientFor = value;
+                }
             }
         }
 

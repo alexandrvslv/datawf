@@ -53,6 +53,8 @@ namespace DataWF.Gui
         protected override void OnDraw(Context ctx, Rectangle dirtyRect)
         {
             base.OnDraw(ctx, dirtyRect);
+            if (List.ListSource == null)
+                return;
             GraphContext.Default.Context = ctx;
             List.OnDrawList(GraphContext.Default, dirtyRect);
         }

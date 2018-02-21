@@ -71,7 +71,16 @@ namespace DataWF.Common
         public static Action<T, V> GetInvokerSet(string name, List<MemberInfo> list)
         {
             var last = list.Last();
-            if (last is MethodInfo || last is PropertyInfo && !((PropertyInfo)last).CanWrite)
+            foreach (var item in list)
+            {
+                 if(item is PropertyInfo 
+                 && ((PropertyInfo)item).PropertyType.IsValueType 
+                 && (!((PropertyInfo)item).CanWrite ||  ((PropertyInfo)last).GetSetMethod() == null))
+                    return null;
+            }
+            if (last is MethodInfo 
+            ||  (last is PropertyInfo 
+            && (!((PropertyInfo)last).CanWrite || ((PropertyInfo)last).GetSetMethod() == null)))
             {
                 return null;
             }

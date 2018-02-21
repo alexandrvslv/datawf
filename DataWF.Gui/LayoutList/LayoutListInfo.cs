@@ -371,7 +371,7 @@ namespace DataWF.Gui
         public virtual void OnBoundChanged(EventArgs e)
         {
             columns.Bound = Rectangle.Zero;
-            foreach (var item in LayoutMapTool.GetItems(columns))
+            foreach (var item in LayoutMapHelper.GetItems(columns))
                 item.Bound = Rectangle.Zero;
             if (BoundChanged != null)
                 BoundChanged(this, e);
@@ -445,7 +445,7 @@ namespace DataWF.Gui
         {
             if (Columns.Bound.Width.Equals(0) || wd != null || hd != null || Columns.FillWidth)
             {
-                LayoutMapTool.GetBound(columns, HeaderVisible ? w - headerWidth * scale : w, 0, wd, hd);
+                LayoutMapHelper.GetBound(columns, HeaderVisible ? w - headerWidth * scale : w, 0, wd, hd);
 
                 Columns.Bound = new Rectangle(Columns.Bound.X + HeaderWidth,
                                              Columns.Bound.Y,
@@ -458,13 +458,13 @@ namespace DataWF.Gui
         {
             if (column.Bound.Width.Equals(0) || wd != null || hd != null || columns.FillWidth)
             {
-                LayoutMapTool.GetBound(columns, column, wd, hd);
+                LayoutMapHelper.GetBound(columns, column, wd, hd);
             }
         }
 
         public IEnumerable<LayoutColumn> GetDisplayed(double left, double right)
         {
-            foreach (ILayoutItem col in LayoutMapTool.GetItems(columns))
+            foreach (ILayoutItem col in LayoutMapHelper.GetItems(columns))
             {
                 if (col.Visible)
                 {
@@ -488,7 +488,7 @@ namespace DataWF.Gui
 
         public void Dispose()
         {
-            var list = LayoutMapTool.GetItems(columns);
+            var list = LayoutMapHelper.GetItems(columns);
             foreach (LayoutColumn col in list)
                 col.Dispose();
         }

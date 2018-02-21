@@ -31,7 +31,7 @@ namespace DataWF.Gui
                         }
                     }
                     bar = value;
-                    if (bar != value)
+                    if (bar != null)
                     {
                         foreach (IToolItem item in Items)
                         {
@@ -63,11 +63,11 @@ namespace DataWF.Gui
                     toolItem.Bar = null;
                 }
             }
-            else if (e.ListChangedType == ListChangedType.Reset)
-            {
-                if (items.Count == 0)
-                    bar.Clear();
-            }
+            //else if (e.ListChangedType == ListChangedType.Reset)
+            //{
+            //    if (items.Count == 0)
+            //        bar.Clear();
+            //}
             else if (e.ListChangedType == ListChangedType.ItemChanged)
             {
                 bar.QueueForReallocate();

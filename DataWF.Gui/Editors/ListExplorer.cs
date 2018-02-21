@@ -12,7 +12,7 @@ namespace DataWF.Gui
     public class ListExplorer : VPanel, IDockContent
     {
         private object dataSource;
-        private ToolFieldEditor field;
+        private ToolFieldEditor toolTree;
         private ToolItem toolPrev;
         private ToolItem toolNext;
 
@@ -22,23 +22,6 @@ namespace DataWF.Gui
 
         public ListExplorer(ListEditor dataEditor)
         {
-            field = new ToolFieldEditor();
-            field.FillWidth = true;
-            field.Field.BindData(Selection, nameof(ListExplorerCursor.Current), new CellEditorList());
-
-            toolPrev = new ToolItem();
-            toolPrev.Glyph = GlyphType.ArrowLeft;
-            toolPrev.Click += ToolPrevClick;
-
-            toolNext = new ToolItem();
-            toolNext.Glyph = GlyphType.ArrowRight;
-            toolNext.Click += ToolNextClick;
-
-            Bar = new Toolsbar();
-            Bar.Items.Add(toolPrev);
-            Bar.Items.Add(toolNext);
-            Bar.Items.Add(field);
-
             Editor = dataEditor;
             Editor.List.HideEmpty = false;
             Editor.List.EditMode = EditModes.ByClick;
@@ -48,12 +31,22 @@ namespace DataWF.Gui
             Editor.ItemSelect += OnEditorItemSelect;
             Editor.GetCellEditor += OnGetCellEditor;
 
-            PackStart(Bar, false, false);
+            toolTree = new ToolFieldEditor() { FillWidth = true };
+            toolTree.Field.BindData(Selection, nameof(ListExplorerCursor.Current), new CellEditorList());
+            toolPrev = new ToolItem(ToolPrevClick) { Glyph = GlyphType.ArrowLeft };
+            toolNext = new ToolItem(ToolNextClick) { Glyph = GlyphType.ArrowRight };
+
+            var group = new ToolLayoutMap();
+            group.Add(toolPrev);
+            group.Add(toolNext);
+            group.Add(toolTree);
+
+            Bar.Items.Insert(group, true);
+
             PackStart(Editor, true, true);
             Name = "OptionEditor";
 
-            Tree = new LayoutList();
-            Tree = ((CellEditorList)field.Editor).DropDown.Target as LayoutList;
+            Tree = ((CellEditorList)toolTree.Editor).DropDown.Target as LayoutList;
             Tree.Mode = LayoutListMode.Tree;
             Tree.SelectionChanged += OnTreeAfterSelect;
         }
@@ -97,8 +90,8 @@ namespace DataWF.Gui
 
         public bool ViewTree
         {
-            get { return field.Visible; }
-            set { field.Visible = value; }
+            get { return toolTree.Visible; }
+            set { toolTree.Visible = value; }
         }
 
         public object Value
@@ -119,7 +112,7 @@ namespace DataWF.Gui
 
         public ListEditor Editor { get; protected set; }
 
-        public Toolsbar Bar { get; protected set; }
+        public Toolsbar Bar { get { return Editor.Bar; } }
 
         public object DataSource
         {
@@ -182,8 +175,8 @@ namespace DataWF.Gui
         protected virtual void OnNodeSelect(ListExplorerNode node)
         {
             Selection.Current = node;
-            field.Field.DropDown.Hide();
-            field.DataValue = node;
+            toolTree.Field.DropDown.Hide();
+            toolTree.DataValue = node;
 
             node.Apply(Editor);
 

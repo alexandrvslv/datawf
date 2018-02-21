@@ -2476,7 +2476,7 @@ namespace DataWF.Gui
         {
             listInfo.Columns.Bound = Rectangle.Zero;
             ClearFilter();
-            var list = LayoutMapTool.GetItems(listInfo.Columns);
+            var list = LayoutMapHelper.GetItems(listInfo.Columns);
             foreach (LayoutColumn item in list)
             {
                 BuildColumn(item.Owner as LayoutColumn, item.Name);
@@ -3923,7 +3923,7 @@ namespace DataWF.Gui
                 return;
             if (!listInfo.GroupVisible)
             {
-                int start = (int)((bounds.Area.Top + clip.Y) * gridCols / bounds.Columns.Height);
+                int start = listInfo.CalcHeigh ? 0 : (int)((bounds.Area.Top + clip.Y) * gridCols / bounds.Columns.Height);
                 if (listInfo.Columns.Visible)
                     start--;
                 if (start < 0)
@@ -4616,7 +4616,7 @@ namespace DataWF.Gui
         public StringBuilder ToTabbedList(IEnumerable items)
         {
             var sb = new StringBuilder();
-            var list = LayoutMapTool.GetVisibleItems(listInfo.Columns).ToArray();
+            var list = LayoutMapHelper.GetVisibleItems(listInfo.Columns).ToArray();
             foreach (LayoutColumn column in list)
             {
                 sb.Append(column.Text + "\t");
@@ -4644,7 +4644,7 @@ namespace DataWF.Gui
 
             //  Load NumCells variable to write table 
             //  row properties
-            var lc = LayoutMapTool.GetVisibleItems(listInfo.Columns).ToArray();
+            var lc = LayoutMapHelper.GetVisibleItems(listInfo.Columns).ToArray();
             int NumCells = lc.Length;
             //  load NumRows variable to set up table 
             //  contents loop for recordset

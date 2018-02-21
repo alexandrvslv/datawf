@@ -9,39 +9,31 @@ namespace DataWF.Gui
 {
     public class LogExplorer : VPanel, IDockContent
     {
-        private LogList list = new LogList();
-        private Toolsbar tools = new Toolsbar();
-        private ToolItem toolLoad = new ToolItem();
-        private ToolItem toolSave = new ToolItem();
+        private LogList list;
+        private Toolsbar tools;
+        private ToolItem toolLoad;
+        private ToolItem toolSave;
 
         public LogExplorer()
         {
-            list.AllowEditColumn = true;
-            list.EditMode = EditModes.None;
-            list.GenerateToString = false;
-            list.Grouping = false;
-            list.Name = "list";
-            list.ReadOnly = true;
-            list.ListSource = Helper.Logs;
-            list.ListInfo.ShowToolTip = true;
-            //
-            //tools
-            //
+            list = new LogList()
+            {
+                AllowEditColumn = true,
+                EditMode = EditModes.ByClick,
+                GenerateToString = false,
+                Grouping = false,
+                Name = "list",
+                ReadOnly = true,
+                ListSource = Helper.Logs
+            };
 
-            toolLoad.Name = "Load";
-            toolLoad.Click += OnToolLoadClick;
-
-            toolSave.Name = "Save";
-            toolSave.Click += OnToolSaveClick;
-
-            this.tools.Items.Add(toolLoad);
-            this.tools.Items.Add(toolSave);
-
+            toolLoad = new ToolItem(OnToolLoadClick) { Name = "Load" };
+            toolSave = new ToolItem(OnToolSaveClick) { Name = "Save" };
+            tools = new Toolsbar(new[] { toolLoad, toolSave });
             Name = "LogEditor";
 
-            this.PackStart(tools, false, false);
-            this.PackStart(list, true, true);
-
+            PackStart(tools, false, false);
+            PackStart(list, true, true);
 
             Localize();
             //System.Drawing.SystemIcons.
@@ -79,7 +71,6 @@ namespace DataWF.Gui
         #region ILocalizable implementation
         public void Localize()
         {
-
             GuiService.Localize(toolLoad, "LogExplorer", "Load", GlyphType.FolderOpen);
             GuiService.Localize(toolSave, "LogExplorer", "Save", GlyphType.SaveAlias);
             GuiService.Localize(this, "LogExplorer", "Logs", GlyphType.InfoCircle);

@@ -52,7 +52,7 @@ namespace DataWF.Gui
 
         public IEnumerable<LayoutColumn> GetVisible()
         {
-            foreach (var item in LayoutMapTool.GetVisibleItems(this))
+            foreach (var item in LayoutMapHelper.GetVisibleItems(this))
             {
                 yield return ((LayoutColumn)item);
             }

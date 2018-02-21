@@ -182,7 +182,7 @@ namespace DataWF.Gui
 
         public int CompareTo(object obj)
         {
-            return LayoutMapTool.Compare(this, obj as ILayoutItem);
+            return LayoutMapHelper.Compare(this, obj as ILayoutItem);
         }
 
         #endregion

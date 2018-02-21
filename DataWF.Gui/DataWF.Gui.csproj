@@ -108,7 +108,7 @@
     <Compile Include="Layout\ILayoutItem.cs" />
     <Compile Include="Layout\LayoutMap.cs" />
     <Compile Include="Layout\LayoutItem.cs" />
-    <Compile Include="Layout\LayoutMapTool.cs" />
+    <Compile Include="Layout\LayoutMapHelper.cs" />
     <Compile Include="Layout\LayoutItems.cs" />
     <Compile Include="LayoutList\ILayoutCellEditor.cs" />
     <Compile Include="LayoutList\LayoutSelectionEventArgs.cs" />

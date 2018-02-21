@@ -317,8 +317,10 @@ namespace DataWF.Gui
         protected internal void OnButtonReleased(ButtonEventArgs args)
         {
             State = CellDisplayState.Hover;
-            if (args.MultiplePress <= 1)
+            if (args.MultiplePress <= 1 && Sensitive)
+            {
                 OnClick(EventArgs.Empty);
+            }
         }
 
         public event EventHandler Click;

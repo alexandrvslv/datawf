@@ -15,7 +15,7 @@ namespace DataWF.Gui
         Bottom
     }
 
-    public static class LayoutMapTool
+    public static class LayoutMapHelper
     {
         public static bool IsFillWidth(ILayoutMap map)
         {
@@ -70,7 +70,7 @@ namespace DataWF.Gui
 
         public static void GetBound(ILayoutMap imap, double maxWidth, double maxHeight, Func<ILayoutItem, double> calcWidth, Func<ILayoutItem, double> calcHeight)
         {
-            imap.Bound = new Rectangle(0, 0, GetWidth(imap, maxWidth, calcWidth), GetHeight(imap, maxHeight, calcHeight)).Inflate(imap.Indent, imap.Indent);
+            imap.Bound = new Rectangle(0, 0, GetWidth(imap, maxWidth + imap.Indent, calcWidth), GetHeight(imap, maxHeight + imap.Indent, calcHeight)).Inflate(imap.Indent, imap.Indent);
         }
 
         //public static void GetBound(ILayoutMap imap, ILayoutItem item, double maxWidth, double maxHeight, Func<ILayoutItem, double> calcWidth, Func<ILayoutItem, double> calcHeight)
@@ -78,75 +78,61 @@ namespace DataWF.Gui
         //    GetBound(imap, item, calcWidth, calcHeight);
         //}
 
-        public static void GetBound(ILayoutMap imap, ILayoutItem item, Func<ILayoutItem, double> calcWidth, Func<ILayoutItem, double> calcHeight)
+        public static void GetBound(ILayoutMap map, ILayoutItem item, Func<ILayoutItem, double> calcWidth, Func<ILayoutItem, double> calcHeight)
         {
             double x = 0, y = 0;
             int r = -1;
-            ILayoutMap map = null;
+            ILayoutMap subMap = null;
             var bound = new Rectangle();
-            foreach (ILayoutItem col in imap.Items)
+            foreach (ILayoutItem entry in map.Items)
             {
-                if (col.Row != r)
+                if (entry.Row != r)
                 {
                     x = 0;
                     if (r != -1)
-                        y += GetRowHeight(imap, r, imap.Bound.Height, true, calcHeight);
-                    r = col.Row;
+                        y += GetRowHeight(map, r, map.Bound.Height, true, calcHeight);
+                    r = entry.Row;
                     //if (col.Row < column.Row)
                     //     continue;
                 }
-                if (!col.Visible)
+                if (!entry.Visible)
                     continue;
-                if (col == item)
+                if (entry == item)
                 {
                     bound.X = x;
                     bound.Y = y;
-                    bound.Width = GetWidth(col, imap.Bound.Width, calcWidth);
-                    bound.Height = GetRowHeight(imap, r, imap.Bound.Height, true, calcHeight);
+                    bound.Width = GetWidth(entry, map.Bound.Width, calcWidth);
+                    bound.Height = GetRowHeight(map, r, map.Bound.Height, true, calcHeight);
                     break;
                 }
-                else if (col is ILayoutMap && Contains((ILayoutMap)col, item))
+                else if (entry is ILayoutMap && Contains((ILayoutMap)entry, item))
                 {
-                    map = (ILayoutMap)col;
-                    GetBound(imap, map, calcWidth, calcHeight);
-                    GetBound(map, item, calcWidth, calcHeight);
-                    bound = new Rectangle(item.Bound.X,
-                                          item.Bound.Y,
-                                          item.Bound.Width,
-                                          item.Bound.Height);
-                    break;
+                    subMap = (ILayoutMap)entry;
+                    GetBound(map, subMap, calcWidth, calcHeight);
+                    GetBound(subMap, item, calcWidth, calcHeight);
+                    return;
                 }
-                x += GetWidth(col, imap.Bound.Width, calcWidth);
+                x += GetWidth(entry, map.Bound.Width, calcWidth);
             }
-            bound.X += imap.Indent;
-            bound.Y += imap.Indent;
-
-            if (imap.Bound.Width > 0 && IsLastColumn(imap, item) && bound.Right < imap.Bound.Width)
-                bound.Width += imap.Bound.Width - bound.Right - imap.Indent;
-            if (imap.Bound.Height > 0 && IsLastRow(imap, item) && bound.Bottom < imap.Bound.Height)
-                bound.Height += imap.Bound.Height - bound.Bottom - imap.Indent;
-
-            if (map != null)
+            if (item.Map == map)
             {
+                bound.X += map.Bound.X;// + imap.Indent
+                bound.Y += map.Bound.Y;// + imap.Indent
+
                 if (IsLastColumn(map, item) && bound.Right < map.Bound.Right)
-                    bound.Width += map.Bound.Right - item.Bound.Right;
+                    bound.Width += map.Bound.Right - bound.Right - map.Indent;
                 if (IsLastRow(map, item) && bound.Bottom < map.Bound.Bottom)
-                    bound.Height += map.Bound.Bottom - bound.Bottom;
-            }
-            if (item.Map == imap)
-            {
-                bound.X += imap.Bound.X;
-                bound.Y += imap.Bound.Y;
+                    bound.Height += map.Bound.Bottom - bound.Bottom - map.Indent;
             }
             item.Bound = bound;
         }
 
-        public static bool IsFirstColumn(ILayoutItem column)
+        public static bool IsFirstColumn(ILayoutItem item)
         {
-            foreach (ILayoutItem col in column.Map.Items)
-                if (col.Row == column.Row)
+            foreach (ILayoutItem entry in item.Map.Items)
+                if (entry.Row == item.Row)
                 {
-                    if (col.Col < column.Col)
+                    if (entry.Col < item.Col)
                         return false;
                     else// if (col.Col > column.Col)
                         break;
@@ -154,25 +140,24 @@ namespace DataWF.Gui
             return true;
         }
 
-        public static bool IsLastColumn(ILayoutItem column)
+        public static bool IsLastColumn(ILayoutItem item)
         {
-            return IsLastColumn(column.Map, column);
+            return IsLastColumn(item.Map, item);
         }
 
-        public static bool IsLastColumn(ILayoutMap map, ILayoutItem column)
+        public static bool IsLastColumn(ILayoutMap map, ILayoutItem item)
         {
-            if (map == null || column.Map != map)
+            if (map == null || item.Map != map)
                 return false;
 
-            for (int i = 0; i < map.Items.Count; i++)
+            foreach (ILayoutItem entry in map.Items)
             {
-                ILayoutItem col = map.Items[i];
-                if (col.Row == column.Row)
+                if (entry.Row == item.Row)
                 {
-                    if (col.Visible && col.Col > column.Col)
+                    if (entry.Visible && entry.Col > item.Col)
                         return false;
                 }
-                else if (col.Row > column.Row)
+                else if (entry.Row > item.Row)
                     return true;
             }
             return true;
@@ -527,21 +512,19 @@ namespace DataWF.Gui
             ILayoutItem exs = Get(map, item.Row, item.Col);
             if (exs != null)
             {
-                for (int i = map.Items.IndexOf(exs); i < map.Items.Count; i++)
+                var buffer = inserRow
+                ? map.Items.Where(p => item.Row <= p.Row && item.Col <= p.Col).ToArray()
+                : map.Items.Where(p => item.Row == p.Row && item.Col <= p.Col).ToArray();
+                foreach (ILayoutItem col in buffer)
                 {
-                    ILayoutItem col = (ILayoutItem)map.Items[i];
                     if (inserRow)
-                    {
-                        if (item.Row <= col.Row)
-                            col.Row++;
-                    }
-                    else if (item.Row == col.Row)
+                        col.Row++;
+                    else
                         col.Col++;
                 }
-                map.Sort();
             }
             map.Items.Add(item);
-            //
+            map.Sort();
         }
 
         public static void Move(ILayoutItem moved, ILayoutItem destination, LayoutAlignType type, bool builGroup)
