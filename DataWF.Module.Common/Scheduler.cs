@@ -27,7 +27,7 @@ using System.Reflection;
 using DataWF.Data;
 using DataWF.Common;
 
-namespace DataWF.Module.Flow
+namespace DataWF.Module.Common
 {
     public class SchedulerList : DBTableView<Scheduler>
     {
@@ -43,7 +43,7 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [Table("flow", "rscheduler", BlockSize = 20)]
+    [Table("wf_common", "rscheduler", BlockSize = 20)]
     public class Scheduler : DBItem//, IComparable
     {
         public static DBTable<Scheduler> DBTable

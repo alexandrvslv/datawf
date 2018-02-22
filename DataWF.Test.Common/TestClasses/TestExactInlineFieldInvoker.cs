@@ -15,6 +15,8 @@ namespace DataWF.Test.Common
 
         public Type DataType { get; set; }
 
+        public Type TargetType { get { return typeof(TestClass); } }
+
         public string Name { get; set; }
 
         public int Get(TestClass target)

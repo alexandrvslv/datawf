@@ -23,7 +23,7 @@ using DataWF.Data;
 using System.ComponentModel;
 using DataWF.Common;
 
-namespace DataWF.Module.Customer
+namespace DataWF.Module.Counterpart
 {
     public enum LocationType
     {

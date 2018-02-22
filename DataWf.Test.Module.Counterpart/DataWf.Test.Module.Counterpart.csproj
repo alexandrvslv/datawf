@@ -5,8 +5,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{1CD6F41B-3619-4210-BCBD-4AD8DD55B00E}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>DataWf.Test.Module.Customer</RootNamespace>
-    <AssemblyName>DataWf.Test.Module.Customer</AssemblyName>
+    <RootNamespace>DataWf.Test.Module.Counterparty</RootNamespace>
+    <AssemblyName>DataWf.Test.Module.Counterparty</AssemblyName>
     <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -49,9 +49,9 @@
       <Project>{76A4B048-D827-4CC9-879E-BCAFE5C796CC}</Project>
       <Name>DataWF.Module.Common</Name>
     </ProjectReference>
-    <ProjectReference Include="..\DataWF.Module.Customer\DataWF.Module.Customer.csproj">
+    <ProjectReference Include="..\DataWF.Module.Counterpart\DataWF.Module.Counterpart.csproj">
       <Project>{D9D3537E-C1F9-4F59-AE2B-5098213FF747}</Project>
-      <Name>DataWF.Module.Customer</Name>
+      <Name>DataWF.Module.Counterpart</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

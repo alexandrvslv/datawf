@@ -102,7 +102,8 @@ namespace DataWF.Module.Flow
         }
 
         public Type DataType { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
+        public Type TargetType { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        
         public bool CanWrite { get { return true; } }
 
         public object Get(Document document)

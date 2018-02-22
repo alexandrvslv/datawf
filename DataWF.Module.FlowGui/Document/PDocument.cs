@@ -11,6 +11,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using Xwt.Drawing;
 using System.IO;
+using DataWF.Module.Counterpart;
 //using System.Windows.Forms;
 
 namespace DataWF.Module.FlowGui

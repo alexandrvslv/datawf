@@ -96,6 +96,7 @@ namespace DataWF.Data
             table.ItemType = ItemType;
             table.BlockSize = BlockSize;
             table.DisplayName = ItemType.Name;
+            table.Sequence = table.GenerateSequence(table);
             return table;
         }
 
@@ -120,8 +121,6 @@ namespace DataWF.Data
             {
                 Table = CreateTable();
             }
-
-            Table.Sequence = DBSequence.Generate(Table);
 
             foreach (var column in cacheColumns)
             {

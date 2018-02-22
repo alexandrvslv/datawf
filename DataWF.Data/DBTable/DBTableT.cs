@@ -93,8 +93,7 @@ namespace DataWF.Data
             items.Add(item);
             foreach (var column in Columns)
             {
-                if (column.Index != null)
-                    column.Index.Add(item);
+                column.Index?.Add(item);
             }
             item.State |= DBItemState.Attached;
             OnListChanged(item, null, ListChangedType.ItemAdded);

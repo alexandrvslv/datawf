@@ -26,7 +26,7 @@ using System.Collections;
 using System.Data;
 using System.Linq;
 using DataWF.Module.Common;
-using DataWF.Module.Customer;
+using DataWF.Module.Counterpart;
 
 namespace DataWF.Module.Flow
 {

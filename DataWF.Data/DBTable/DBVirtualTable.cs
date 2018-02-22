@@ -27,9 +27,14 @@ namespace DataWF.Data
 {
     public class DBVirtualTable<T> : DBTable<T>, IDBVirtualTable where T : DBVirtualItem, new()
     {
-        private DBTable cacheBaseTable;
+        private DBTable baseTable;
         protected string baseTableName;
         private QQuery filterQuery;
+
+        public DBVirtualTable()
+        {
+            Columns.Indexes.Add(new Invoker<DBVirtualColumn, string>(nameof(DBVirtualColumn.BaseName), item => item.BaseName));
+        }
 
         [XmlIgnore, Browsable(false)]
         public QQuery FilterQuery
@@ -51,7 +56,7 @@ namespace DataWF.Data
                 if (baseTableName != value)
                 {
                     baseTableName = value;
-                    cacheBaseTable = null;
+                    baseTable = null;
                     filterQuery = null;
                     OnPropertyChanged(nameof(BaseTableName), true);
                 }
@@ -61,25 +66,26 @@ namespace DataWF.Data
         [XmlIgnore, Category("Database")]
         public DBTable BaseTable
         {
-            get
-            {
-                if (cacheBaseTable == null && baseTableName != null)
-                    cacheBaseTable = Schema == null ? null : Schema.Tables[baseTableName];
-                return cacheBaseTable;
-            }
+            get { return baseTable ?? (baseTable = Schema?.Tables[baseTableName]); }
             set
             {
                 if (BaseTable == value)
                     return;
                 BaseTableName = value?.Name;
                 sequenceName = value.SequenceName;
-                cacheBaseTable = value;
+                baseTable = value;
             }
+        }
+
+        public override bool IsLoging
+        {
+            get { return BaseTable.IsLoging; }
+            set { BaseTable.IsLoging = value; }
         }
 
         public void CheckItem(ListChangedType type, DBItem item, string property)
         {
-            var view = item.GetVirtual(this);
+            var view = (T)item.GetVirtual(this);
             if (type == ListChangedType.ItemChanged)
             {
                 if ((view == null || !view.Attached) && Query.Contains(property) && BaseTable.CheckItem(item, FilterQuery))
@@ -185,15 +191,6 @@ namespace DataWF.Data
             return row;
         }
 
-        public DBColumn GetVColumn(int index)
-        {
-            DBTable table = BaseTable;
-            DBColumn column = index >= 0 ? table.Columns[index] : null;
-            if (column != null)
-                column = Columns.GetByBase(column.Name);
-            return column;
-        }
-
         public override string FormatSql(DDLType ddlType)
         {
             var ddl = new StringBuilder();
@@ -214,6 +211,18 @@ namespace DataWF.Data
             ddl.AppendLine("from {SqlName} where {Query};");
 
             return ddl.ToString();
+        }
+
+        public DBVirtualColumn GetColumnByBase(int index)
+        {
+            DBTable table = BaseTable;
+            DBColumn column = index >= 0 ? table.Columns[index] : null;
+            return column != null ? GetColumnByBase(column) : null;
+        }
+
+        public DBVirtualColumn GetColumnByBase(DBColumn column)
+        {
+            return (DBVirtualColumn)Columns.SelectOne(nameof(DBVirtualColumn.BaseName), column.Name);
         }
     }
 }

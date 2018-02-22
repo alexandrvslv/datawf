@@ -14,6 +14,8 @@ namespace DataWF.Common
 
         public Type DataType { get; set; }
 
+        public Type TargetType { get { return typeof(object[]); } }
+
         public string Name { get; set; }
 
         public object Get(object[] target)

@@ -43,12 +43,19 @@ namespace DataWF.Data
 
         public override DBTable CreateTable()
         {
+            if (BaseTable == null)
+            {
+                throw new InvalidOperationException("BaseType of table with table attribute not specified!");
+            }
             if (BaseTable.Table == null)
+            {
                 BaseTable.Generate(BaseType, Schema);
+            }
             var table = (DBTable)EmitInvoker.CreateObject(typeof(DBVirtualTable<>).MakeGenericType(ItemType));
             table.Name = TableName;
             table.Schema = Schema;
             ((IDBVirtualTable)table).BaseTable = BaseTable.Table;
+            table.Query = Query;
             return table;
         }
     }

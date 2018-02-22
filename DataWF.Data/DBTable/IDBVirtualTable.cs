@@ -27,5 +27,6 @@ namespace DataWF.Data
         QQuery FilterQuery { get; }
         void Refresh();
         void CheckItem(ListChangedType type, DBItem item, string property);
+        DBVirtualColumn GetColumnByBase(DBColumn column);
     }
 }

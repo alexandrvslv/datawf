@@ -39,9 +39,6 @@
     <Compile Include="FlowEnvironment.cs" />
     <Compile Include="ParamBase.cs" />
     <Compile Include="UDPService.cs" />
-    <Compile Include="Account\Account.cs" />
-    <Compile Include="Account\Balance.cs" />
-    <Compile Include="Account\Payment.cs" />
     <Compile Include="Document\Document.cs" />
     <Compile Include="Document\DocumentCustomer.cs" />
     <Compile Include="Document\DocumentData.cs" />
@@ -51,9 +48,6 @@
     <Compile Include="Document\DocumentSearch.cs" />
     <Compile Include="Document\DocumentTools.cs" />
     <Compile Include="Document\DocumentWork.cs" />
-    <Compile Include="Scheduler\Scheduler.cs" />
-    <Compile Include="Scheduler\SchedulerRun.cs" />
-    <Compile Include="Scheduler\Statistic.cs" />
     <Compile Include="Template\Template.cs" />
     <Compile Include="Template\TemplateParam.cs" />
     <Compile Include="Work\Stage.cs" />
@@ -80,9 +74,9 @@
       <Project>{76A4B048-D827-4CC9-879E-BCAFE5C796CC}</Project>
       <Name>DataWF.Module.Common</Name>
     </ProjectReference>
-    <ProjectReference Include="..\DataWF.Module.Customer\DataWF.Module.Customer.csproj">
+    <ProjectReference Include="..\DataWF.Module.Counterpart\DataWF.Module.Counterpart.csproj">
       <Project>{D9D3537E-C1F9-4F59-AE2B-5098213FF747}</Project>
-      <Name>DataWF.Module.Customer</Name>
+      <Name>DataWF.Module.Counterpart</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

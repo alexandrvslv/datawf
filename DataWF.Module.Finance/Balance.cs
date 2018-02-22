@@ -22,8 +22,9 @@ using System;
 using System.ComponentModel;
 using DataWF.Data;
 using DataWF.Module.Common;
+using DataWF.Module.Counterpart;
 
-namespace DataWF.Module.Flow
+namespace DataWF.Module.Finance
 {
     public class BalanceList : DBTableView<Balance>
     {
@@ -33,7 +34,7 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [Table("flow", "daccountbalance", BlockSize = 5000)]
+    [Table("flow", "dbalance", BlockSize = 5000)]
     public class Balance : DBItem
     {
         public static DBTable<Balance> DBTable
@@ -43,7 +44,7 @@ namespace DataWF.Module.Flow
 
         public static DBTableView<Balance> DataView
         {
-            get { return (DBTableView<Balance>)DBTable.DefaultView; }
+            get { return DBTable.DefaultView; }
         }
 
         public Balance()

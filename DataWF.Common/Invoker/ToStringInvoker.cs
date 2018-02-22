@@ -6,9 +6,11 @@ namespace DataWF.Common
     {
         public bool CanWrite { get { return false; } }
 
-        public Type DataType { get { return typeof(string); } set{} }
+        public Type DataType { get { return typeof(string); } set { } }
 
-        public string Name { get { return nameof(Object.ToString); } set{} }
+        public Type TargetType { get { return typeof(object); } }
+
+        public string Name { get { return nameof(Object.ToString); } set { } }
 
         public object Get(object target)
         {

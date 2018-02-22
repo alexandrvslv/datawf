@@ -763,7 +763,7 @@ namespace DataWF.Data
         /// </param>
         public static string GetRowText(DBTable table, object id)
         {
-            return GetRowText(table, id, table.Columns.GetViewColumns());
+            return GetRowText(table, id, table.Columns.GetIsView());
         }
 
         /// <summary>
@@ -835,7 +835,7 @@ namespace DataWF.Data
         /// </param>
         public static string GetRowText(DBTable table, object id, bool allColumns, bool showColumn, string separator)
         {
-            return GetRowText(table.LoadItemById(id), (allColumns ? (IEnumerable<DBColumn>)table.Columns : table.Columns.GetViewColumns()), showColumn, separator);
+            return GetRowText(table.LoadItemById(id), (allColumns ? (IEnumerable<DBColumn>)table.Columns : table.Columns.GetIsView()), showColumn, separator);
         }
 
         /// <summary>
@@ -858,7 +858,7 @@ namespace DataWF.Data
         /// </param>
         public static string GetRowText(DBItem row, bool allColumns, bool showColumn, string separator)
         {
-            return GetRowText(row, (allColumns ? (IEnumerable<DBColumn>)row.Table.Columns : row.Table.Columns.GetViewColumns()), showColumn, separator);
+            return GetRowText(row, (allColumns ? (IEnumerable<DBColumn>)row.Table.Columns : row.Table.Columns.GetIsView()), showColumn, separator);
         }
 
         /// <summary>
@@ -875,7 +875,7 @@ namespace DataWF.Data
             if (row == null)
                 return "<null>";
             //DBTable table = row.VirtualTable != null ? row.VirtualTable : row.Table;
-            return GetRowText(row, row.Table.Columns.GetViewColumns(), false, " - ");
+            return GetRowText(row, row.Table.Columns.GetIsView(), false, " - ");
         }
 
         /// <summary>
@@ -1361,7 +1361,12 @@ namespace DataWF.Data
 
         public static void Generate(Assembly assembly, DBSchema schema)
         {
-            foreach (var type in assembly.GetTypes())
+            Generate(assembly.GetExportedTypes(), schema);
+        }
+
+        public static void Generate(IEnumerable<Type> types, DBSchema schema)
+        {
+            foreach (var type in types)
             {
                 var table = GetTable(type, schema, true);
             }

@@ -21,6 +21,8 @@ namespace DataWF.Common
 
         public Type DataType { get; set; }
 
+        public Type TargetType { get { return typeof(T); } }
+
         public Func<T, V> GetAction { get; protected set; }
 
         public Action<T, V> SetAction { get; protected set; }

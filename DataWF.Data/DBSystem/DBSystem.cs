@@ -424,6 +424,8 @@ namespace DataWF.Data
         {
             foreach (var table in schema.Tables)
             {
+                if (table is IDBVirtualTable)
+                    continue;
                 Format(ddl, table, DDLType.Create, schema.Connection.System == DBSystem.SQLite, false);
                 ddl.AppendLine("go");
             }
@@ -432,12 +434,16 @@ namespace DataWF.Data
             {
                 foreach (var constraint in schema.GetConstraints())
                 {
+                    if (constraint.Table is IDBVirtualTable)
+                        continue;
                     Format(ddl, constraint, DDLType.Create);
                     ddl.AppendLine("go");
                 }
 
                 foreach (var foreign in schema.GetForeigns())
                 {
+                    if (foreign.Table is IDBVirtualTable)
+                        continue;
                     Format(ddl, foreign, DDLType.Create);
                     ddl.AppendLine("go");
                 }
@@ -451,6 +457,8 @@ namespace DataWF.Data
 
             foreach (var index in schema.GetIndexes())
             {
+                if (index.Table is IDBVirtualTable)
+                    continue;
                 Format(ddl, index, DDLType.Create);
                 ddl.AppendLine("go");
             }

@@ -26,9 +26,9 @@ using System.Linq;
 using DataWF.Data;
 using DataWF.Common;
 using DataWF.Module.Common;
-using DataWF.Module.Customer;
+using DataWF.Module.Counterpart;
 
-namespace DataWF.Module.Flow
+namespace DataWF.Module.Finance
 {
     public class AccountList : DBTableView<Account>
     {

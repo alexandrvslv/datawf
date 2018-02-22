@@ -27,7 +27,7 @@ using System.Reflection;
 using DataWF.Data;
 using DataWF.Common;
 
-namespace DataWF.Module.Flow
+namespace DataWF.Module.Common
 {
     public class StatisticList : DBTableView<Statistic>
     {
@@ -43,7 +43,7 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [Table("flow", "dstatistic")]
+    [Table("wf_common", "dstats")]
     public class Statistic : DBItem//, IComparable
     {
         public static DBTable<Statistic> DBTable

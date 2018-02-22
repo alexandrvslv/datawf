@@ -6,6 +6,8 @@ namespace DataWF.Common
     {
         Type DataType { get; set; }
 
+        Type TargetType { get; }
+
         string Name { get; set; }
 
         bool CanWrite { get; }

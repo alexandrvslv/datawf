@@ -27,6 +27,8 @@ namespace DataWF.Common
 
         public Type DataType { get; set; }
 
+        public Type TargetType { get { return typeof(T); } }
+
         internal GetHandler<T, V> GetAction { get; private set; }
 
         internal SetHandler<T, V> SetAction { get; private set; }

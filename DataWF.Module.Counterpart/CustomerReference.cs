@@ -21,7 +21,7 @@ using System.ComponentModel;
 using DataWF.Data;
 using DataWF.Module.Common;
 
-namespace DataWF.Module.Customer
+namespace DataWF.Module.Counterpart
 {
     public class CustomerReferenceList : DBTableView<CustomerReference>
     {

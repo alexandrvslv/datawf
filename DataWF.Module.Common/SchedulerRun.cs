@@ -4,7 +4,7 @@ using System;
 using System.Threading;
 using System.Timers;
 
-namespace DataWF.Module.Flow
+namespace DataWF.Module.Common
 {
     public enum SchedulerType
     {

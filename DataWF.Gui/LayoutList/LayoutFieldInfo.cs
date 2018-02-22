@@ -39,6 +39,8 @@ namespace DataWF.Gui
 
         public Type DataType { get; set; }
 
+        public Type TargetType { get { return typeof(LayoutField); } }
+
         public string Name { get; set; }
 
         public object Get(LayoutField target)

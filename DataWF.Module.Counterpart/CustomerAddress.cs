@@ -6,7 +6,7 @@ using System.Text;
 using DataWF.Data;
 using DataWF.Module.Common;
 
-namespace DataWF.Module.Customer
+namespace DataWF.Module.Counterpart
 {
     public class CustomerAddressList : DBTableView<CustomerAddress>
     {

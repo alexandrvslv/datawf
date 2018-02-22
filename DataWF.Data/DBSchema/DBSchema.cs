@@ -68,7 +68,7 @@ namespace DataWF.Data
             }
         }
 
-        public DBTable InitTable(string name)
+        public DBTable GenerateTable(string name)
         {
             DBTable table = null;
             table = Tables[name];
@@ -80,11 +80,11 @@ namespace DataWF.Data
             return table;
         }
 
-        public void GenerateTables(List<DBTableInfo> tables)
+        public void GenerateTables(IEnumerable<DBTableInfo> tables)
         {
             foreach (var tableInfo in tables)
             {
-                var table = InitTable(tableInfo.Name);
+                var table = GenerateTable(tableInfo.Name);
                 table.Type = tableInfo.View ? DBTableType.View : DBTableType.Table;
                 table.GenerateColumns(tableInfo);
             }

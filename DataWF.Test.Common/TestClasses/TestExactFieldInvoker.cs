@@ -13,6 +13,8 @@ namespace DataWF.Test.Common
 
         public bool CanWrite { get { return true; } }
 
+        public Type TargetType { get { return typeof(TestClass); } }
+
         public Type DataType { get; set; }
 
         public string Name { get; set; }

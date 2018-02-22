@@ -116,7 +116,7 @@ namespace DataWF.Data
 
         public override object GetValue(DBItem row)
         {
-            return temp ?? row[Column];
+            return temp ?? row.GetValue(Column);
         }
 
         public string Prefix
@@ -127,7 +127,7 @@ namespace DataWF.Data
                 if (prefix != value)
                 {
                     prefix = value;
-                    OnPropertyChanged("Prefix");
+                    OnPropertyChanged(nameof(Prefix));
                 }
             }
         }

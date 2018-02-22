@@ -189,9 +189,7 @@ namespace DataWF.Module.FlowGui
         private LayoutList listRows = new LayoutList();
         private LayoutList listDiff = new LayoutList();
         private ManualResetEvent wait = new ManualResetEvent(false);
-        private Image image;
-        private GlyphType glyph;
-
+       
         public ChangeViewer()
         {
             tools.Items.Add(toolRefresh);

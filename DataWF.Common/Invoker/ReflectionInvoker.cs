@@ -13,11 +13,14 @@ namespace DataWF.Common
             List = TypeHelper.GetMemberInfoList(type, name);
             Last = List.Last();
             DataType = TypeHelper.GetMemberType(Last);
+            TargetType = type;
         }
 
         public bool CanWrite { get { return Last is FieldInfo || Last is PropertyInfo && ((PropertyInfo)Last).CanWrite; } }
 
         public Type DataType { get; set; }
+
+        public Type TargetType { get; set; }
 
         public string Name { get; set; }
 

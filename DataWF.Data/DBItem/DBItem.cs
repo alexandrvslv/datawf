@@ -110,7 +110,7 @@ namespace DataWF.Data
                     if (handler.Target is DBVirtualItem && ((DBVirtualItem)handler.Target).Attached)
                     {
                         var target = (DBVirtualItem)handler.Target;
-                        var dcolumn = target.Table.Columns.GetByBase(column.Name);
+                        var dcolumn = target.VirtualTable.GetColumnByBase(column);
                         if (dcolumn != null && dcolumn.Index != null)
                             dcolumn.Index.Remove(target, value);
                     }

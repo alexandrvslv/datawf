@@ -342,6 +342,11 @@ namespace DataWF.Data
             }
         }
 
+        [XmlIgnore, Browsable(false), Category("Database")]
+        public bool IsView
+        {
+            get { return (Keys & DBColumnKeys.View) == DBColumnKeys.View; }
+        }
 
         [XmlIgnore, Browsable(false), Category("Database")]
         public bool IsReference
@@ -394,6 +399,9 @@ namespace DataWF.Data
                 OnPropertyChanged(nameof(DBDataType), true);
             }
         }
+
+        [Browsable(false)]
+        public Type TargetType { get { return typeof(DBItem); } }
 
         [Browsable(false), Category("Database")]
         public Type DataType

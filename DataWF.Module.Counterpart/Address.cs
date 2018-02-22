@@ -22,7 +22,7 @@ using System.ComponentModel;
 using DataWF.Common;
 using System;
 
-namespace DataWF.Module.Customer
+namespace DataWF.Module.Counterpart
 {
     public class AddressList : DBTableView<Address>
     {

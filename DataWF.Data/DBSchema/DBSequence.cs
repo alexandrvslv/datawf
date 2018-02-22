@@ -29,18 +29,6 @@ namespace DataWF.Data
 {
     public class DBSequence : DBSchemaItem
     {
-        public static DBSequence Generate(DBTable table)
-        {
-            var name = $"seq_{table.Name}";
-            var sequence = table.Schema.Sequences[name];
-            if (sequence == null)
-            {
-                sequence = new DBSequence(name);
-                table.Schema.Sequences.Add(sequence);
-            }
-            return sequence;
-        }
-
         private string cacheQuery;
 
         public DBSequence()

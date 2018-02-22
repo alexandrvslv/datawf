@@ -130,9 +130,13 @@
       <Project>{76A4B048-D827-4CC9-879E-BCAFE5C796CC}</Project>
       <Name>DataWF.Module.Common</Name>
     </ProjectReference>
-    <ProjectReference Include="..\DataWF.Module.Customer\DataWF.Module.Customer.csproj">
+    <ProjectReference Include="..\DataWF.Module.Counterpart\DataWF.Module.Counterpart.csproj">
       <Project>{D9D3537E-C1F9-4F59-AE2B-5098213FF747}</Project>
-      <Name>DataWF.Module.Customer</Name>
+      <Name>DataWF.Module.Counterpart</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DataWF.Module.Finance\DataWF.Module.Finance.csproj">
+      <Project>{89A2D4B4-6352-4193-BB62-12E9DEA49221}</Project>
+      <Name>DataWF.Module.Finance</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

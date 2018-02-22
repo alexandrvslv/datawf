@@ -22,23 +22,28 @@ using DataWF.Data;
 using System.ComponentModel;
 using DataWF.Common;
 
-namespace DataWF.Module.Customer
+namespace DataWF.Module.Counterpart
 {
-    [VirtualTable("wf_customer", "rcurrency", typeof(Location), "typeid = 3")]
-    public class Currency : DBVirtualItem
+    [VirtualTable("wf_customer", "rcountry", typeof(Location), "typeid = 2")]
+    public class Country : DBVirtualItem
     {
+        public static DBVirtualTable<Country> DBTable
+        {
+            get { return (DBVirtualTable<Country>)DBService.GetTable<Country>(); }
+        }
+
         [VirtualColumn("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
-            set { this[Table.PrimaryKey] = value; }
+            set { SetValue(value, Table.PrimaryKey); }
         }
 
         [VirtualColumn("code", Keys = DBColumnKeys.View | DBColumnKeys.Code)]
         public string Code
         {
             get { return GetValue<string>(Table.CodeKey); }
-            set { this[Table.CodeKey] = value; }
+            set { SetValue(value, Table.CodeKey); }
         }
 
         [VirtualColumn("codei")]
@@ -50,16 +55,16 @@ namespace DataWF.Module.Customer
 
         [Browsable(false)]
         [VirtualColumn("parentid", Keys = DBColumnKeys.Group)]
-        public int? CountryId
+        public int? ContinentId
         {
             get { return GetValue<int?>(Table.GroupKey); }
             set { SetValue(value, Table.GroupKey); }
         }
 
-        [Reference("fk_rcurrency_parentid", nameof(CountryId))]
-        public Country Country
+        [Reference("fk_rcountry_continent", nameof(ContinentId))]
+        public Location Continent
         {
-            get { return GetReference<Country>(Table.GroupKey); }
+            get { return GetReference<Location>(Table.GroupKey); }
             set { SetReference(value, Table.GroupKey); }
         }
 

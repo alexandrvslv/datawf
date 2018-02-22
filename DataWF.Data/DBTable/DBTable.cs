@@ -362,7 +362,7 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, Category("Database")]
-        public bool IsLoging
+        public virtual bool IsLoging
         {
             get { return LogTable != null; }
             set
@@ -845,9 +845,13 @@ namespace DataWF.Data
             if (param.Parameters.Count == 0)
             {
                 if (param.ValueLeft == null || param.ValueRight == null)
+                {
                     result = true;
+                }
                 else
+                {
                     result = CheckItem(item, param.ValueLeft.GetValue(item), param.ValueRight.GetValue(item), param.Comparer);
+                }
             }
             else
             {
@@ -1220,22 +1224,31 @@ namespace DataWF.Data
             return logTable;
         }
 
-        private void GenerateRelation(DBColumn column, DBColumn reference)
+        private DBForeignKey GenerateRelation(DBColumn column, DBColumn reference)
         {
-            DBForeignKey relation = Foreigns.GetByColumns(column, reference);
+            var relation = Foreigns.GetByColumns(column, reference);
             if (relation == null)
             {
-                relation = new DBForeignKey()
-                {
-                    Column = column,
-                    Reference = reference
-                };
+                relation = new DBForeignKey() { Column = column, Reference = reference };
                 relation.GenerateName();
                 Foreigns.Add(relation);
             }
+            return relation;
             //List<DBTable> views = reference.Table.GetChilds();
             //foreach (DBTable view in views)
             //    GenerateRelation(stable, scolumn, view.PrimaryKey);
+        }
+
+        public DBSequence GenerateSequence(DBTable table)
+        {
+            var sname = $"seq_{table.Name}";
+            var sequence = table.Schema.Sequences[sname];
+            if (sequence == null)
+            {
+                sequence = new DBSequence(sname);
+                table.Schema.Sequences.Add(sequence);
+            }
+            return sequence;
         }
 
         public void GenerateColumns(DBTableInfo tableInfo)

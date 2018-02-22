@@ -17,7 +17,7 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+using System;
 
 namespace DataWF.Data
 {
@@ -31,19 +31,14 @@ namespace DataWF.Data
 
         public VirtualColumnAttribute(string baseName)
         {
-            BaseName = baseName;
+            ColumnName = BaseName = baseName;
         }
 
         public string BaseName { get; private set; }
 
         public ColumnAttribute BaseColumn
         {
-            get
-            {
-                if (cacheBaseColumn == null)
-                    cacheBaseColumn = TableView?.BaseTable?.GetColumn(BaseName);
-                return cacheBaseColumn;
-            }
+            get { return cacheBaseColumn ?? (cacheBaseColumn = TableView?.BaseTable?.GetColumn(BaseName)); }
             set { cacheBaseColumn = value; }
         }
 
@@ -54,7 +49,11 @@ namespace DataWF.Data
 
         public override DBColumn CreateColumn(string name)
         {
-            return new DBVirtualColumn(TableView?.BaseTable?.GetColumn(name)?.Column)
+            var baseColumn = TableView?.BaseTable?.Table.ParseColumn(name);
+            if (baseColumn == null)
+                throw new InvalidOperationException("BaseColumn mast be availible!");
+            
+            return new DBVirtualColumn(baseColumn)
             {
                 Keys = Keys,
                 Table = Table.Table

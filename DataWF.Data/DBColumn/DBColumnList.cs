@@ -27,25 +27,18 @@ namespace DataWF.Data
 {
     public class DBColumnList : DBTableItemList<DBColumn>
     {
-        [NonSerialized()]
-        internal List<DBColumn> _viewCols = null;
-
         public DBColumnList(DBTable table)
             : base(table)
         {
-            Indexes.Add(new Invoker<DBColumn, string>(nameof(DBColumn.GroupName), (item) => item.GroupName));
-            Indexes.Add(new Invoker<DBColumn, bool>(nameof(DBColumn.IsReference), (item) => item.IsReference));
-            Indexes.Add(new Invoker<DBColumn, DBTable>(nameof(DBColumn.ReferenceTable), (item) => item.ReferenceTable));
+            Indexes.Add(new Invoker<DBColumn, string>(nameof(DBColumn.GroupName), item => item.GroupName));
+            Indexes.Add(new Invoker<DBColumn, bool>(nameof(DBColumn.IsView), item => item.IsView));
+            Indexes.Add(new Invoker<DBColumn, bool>(nameof(DBColumn.IsReference), item => item.IsReference));
+            Indexes.Add(new Invoker<DBColumn, DBTable>(nameof(DBColumn.ReferenceTable), item => item.ReferenceTable));
         }
 
         public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, string property = null)
         {
             base.OnListChanged(type, newIndex, oldIndex, property);
-            if (_viewCols != null)
-            {
-                _viewCols.Clear();
-                _viewCols = null;
-            }
             if (Table != null && Table.Schema != null)
             {
                 Table.ClearCache();
@@ -87,21 +80,6 @@ namespace DataWF.Data
                 int i = GetIndexByName(name);
                 this[i] = value;
             }
-        }
-
-        public IEnumerable<DBColumn> GetViewColumns()
-        {
-            if (_viewCols == null)
-            {
-                _viewCols = new List<DBColumn>();
-                foreach (DBColumn col in this)
-                    if ((col.Keys & DBColumnKeys.View) == DBColumnKeys.View)// && col.Access.View)
-                        //if (!col.IsCulture)
-                        _viewCols.Add(col);
-                //else if (col.Culture.TwoLetterISOLanguageName == Localize.Data.Culture.TwoLetterISOLanguageName)
-                //    _viewCols.Add(col);
-            }
-            return _viewCols;
         }
 
         public new void Clear()
@@ -195,6 +173,11 @@ namespace DataWF.Data
         public IEnumerable<DBColumn> GetIsReference()
         {
             return Select(nameof(DBColumn.IsReference), CompareType.Equal, true);
+        }
+
+        public IEnumerable<DBColumn> GetIsView()
+        {
+            return Select(nameof(DBColumn.IsView), CompareType.Equal, true);
         }
 
         public DBColumn GetByKey(DBColumnKeys key)

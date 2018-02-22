@@ -63,7 +63,7 @@ namespace DataWF.Module.Common
             set { SetValue(value, Table.GroupKey); }
         }
 
-        [Reference("fk_rpermission_parentid", "ParentId")]
+        [Reference("fk_rpermission_parentid", nameof(ParentId))]
         public GroupPermission Parent
         {
             get { return GetReference<GroupPermission>(Table.GroupKey); }

@@ -44,6 +44,8 @@ namespace DataWF.Common
 
         public void Add(T item)
         {
+            if (!Invoker.TargetType.IsInstanceOfType(item))
+                return;
             var value = Invoker.Get(item);
             value = value ?? DBNull.Value;
 

@@ -20,8 +20,9 @@ using System;
 using System.ComponentModel;
 using DataWF.Data;
 using DataWF.Module.Common;
+using DataWF.Module.Counterpart;
 
-namespace DataWF.Module.Flow
+namespace DataWF.Module.Finance
 {
     public class PaymentList : DBTableView<Payment>
     {
@@ -32,7 +33,7 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [Table("flow", "daccountpayment", BlockSize = 5000)]
+    [Table("flow", "dpayment", BlockSize = 5000)]
     public class Payment : DBItem
     {
         public static DBTable<Payment> DBTable

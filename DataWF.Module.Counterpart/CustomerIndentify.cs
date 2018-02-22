@@ -23,7 +23,7 @@ using DataWF.Data;
 using DataWF.Common;
 using DataWF.Module.Common;
 
-namespace DataWF.Module.Customer
+namespace DataWF.Module.Counterpart
 {
     public class CustomerIdentifyList : DBTableView<CustomerIdentify>
     {

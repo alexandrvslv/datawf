@@ -623,6 +623,10 @@ namespace DataWF.Common
             {
                 result = false;
             }
+            if (x.GetType().IsEnum)
+                x = (int)x;
+            if (y.GetType().IsEnum)
+                y = (int)y;
             else if (x.GetType() == y.GetType())
             {
                 if (x is string)
@@ -631,6 +635,10 @@ namespace DataWF.Common
                     result = x.GetHashCode().Equals(y.GetHashCode());
                 else
                     result = x.Equals(y);
+            }
+            else if(x.Equals(y))
+            {
+                result = true;
             }
             else
             {
