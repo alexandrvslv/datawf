@@ -459,7 +459,7 @@ namespace DataWF.Module.FlowGui
                 return;
             var details = new DataLogView();
             details.SetFilter(((ItemDataLog)listRows.SelectedItem).Row);
-            details.Show(this);
+            details.ShowWindow(this);
         }
 
         protected override void Dispose(bool disposing)

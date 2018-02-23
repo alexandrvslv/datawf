@@ -397,7 +397,7 @@ namespace DataWF.Module.FlowGui
                 return;
             var v = new DocumentEditor();
             v.Document = document;
-            v.Show(this);
+            v.ShowWindow(this);
         }
 
         public void ShowDocument(Document document)
@@ -410,7 +410,7 @@ namespace DataWF.Module.FlowGui
                 v.Name = name;
                 v.Document = document;
                 if (GuiService.Main == null || !mainDock)
-                    v.Show(this);
+                    v.ShowWindow(this);
             }
             if (GuiService.Main != null && mainDock)
                 GuiService.Main.DockPanel.Put(v, DockType.Content);

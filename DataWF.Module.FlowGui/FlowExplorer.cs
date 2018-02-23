@@ -34,7 +34,7 @@ namespace DataWF.Module.FlowGui
         private GlyphMenuItem toolAddScheduler = new GlyphMenuItem();
         private Menu contextTools = new Menu();
         private GlyphMenuItem toolRefresh = new GlyphMenuItem();
-        private GlyphMenuItem toolGenerateDB = new GlyphMenuItem();        
+        private GlyphMenuItem toolGenerateDB = new GlyphMenuItem();
         private GlyphMenuItem toolConfig = new GlyphMenuItem();
         private GlyphMenuItem toolStat = new GlyphMenuItem();
         private FlowTree tree = new FlowTree();
@@ -88,7 +88,7 @@ namespace DataWF.Module.FlowGui
             contextAdd.Items.Add(toolAddStage);
             contextAdd.Items.Add(toolAddStageParam);
             contextAdd.Items.Add(toolAddUser);
-            contextAdd.Items.Add(toolAddGroup);            
+            contextAdd.Items.Add(toolAddGroup);
             contextAdd.Items.Add(toolAddScheduler);
 
             toolAddTemplate.Sensitive = Template.DBTable.Access.Create;
@@ -331,7 +331,7 @@ namespace DataWF.Module.FlowGui
                     access.Create = false;
                     row.Access.Add(access);
                 }
-            }            
+            }
             else if (item == toolAddScheduler)
             {
                 row = new Scheduler();
@@ -350,7 +350,7 @@ namespace DataWF.Module.FlowGui
                 if (editor == null)
                     editor = new PermissionEditor() { Group = group };
                 GuiService.Main.DockPanel.Put(editor, DockType.Content);
-            }            
+            }
             else if (item is User)
             {
                 if (item == User.CurrentUser && !((User)item).Super.Value)
@@ -360,7 +360,7 @@ namespace DataWF.Module.FlowGui
                 }
                 UserEditor editor = new UserEditor();
                 editor.User = (User)item;
-                editor.Show(this);
+                editor.ShowWindow(this);
             }
             else if (item is DBItem)
             {
@@ -387,7 +387,7 @@ namespace DataWF.Module.FlowGui
 
                 if (obj is DBItem)
                 {
-                    var row = (DBItem)((DBItem)obj).Clone();                    
+                    var row = (DBItem)((DBItem)obj).Clone();
                     if (row is User)
                     {
                         ((User)row).Super = false;

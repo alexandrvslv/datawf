@@ -387,7 +387,7 @@ namespace DataWF.Module.FlowGui
         {
             var logs = new DataLogView();
             logs.SetFilter(_group);
-            logs.Show(this);
+            logs.ShowWindow(this);
         }
 
         private void ToolSaveClick(object sender, EventArgs e)

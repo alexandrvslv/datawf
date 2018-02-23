@@ -205,7 +205,7 @@ namespace DataWF.Module.FlowGui
             {
                 DocumentEditor editor = new DocumentEditor();
                 editor.Document = item.Document;
-                editor.Show(this);
+                editor.ShowWindow(this);
             }
         }
 

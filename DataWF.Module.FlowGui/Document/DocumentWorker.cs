@@ -415,9 +415,9 @@ namespace DataWF.Module.FlowGui
         {
             if (documents.Count == 1)
             {
-                DocumentEditor wdi = new DocumentEditor();
-                wdi.Document = documents[0];
-                wdi.Show(Worker);
+                var editor = new DocumentEditor();
+                editor.Document = documents[0];
+                editor.ShowWindow(Worker);
             }
             else if (documents.Count > 1)
             {

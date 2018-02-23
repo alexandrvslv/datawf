@@ -260,7 +260,7 @@ namespace DataWF.Module.FlowGui
         {
             var logViewer = new DataLogView();
             logViewer.SetFilter(document);
-            logViewer.Show(this);
+            logViewer.ShowWindow(this);
         }
 
         #region IDocumentUserControl Members
@@ -412,7 +412,7 @@ namespace DataWF.Module.FlowGui
             {
                 var editor = new DocumentEditor();
                 editor.Document = (Document)arg.Result;
-                editor.Show(arg.Tag as DocumentEditor);
+                editor.ShowWindow(arg.Tag as DocumentEditor);
             }
             else if (arg.Result is DocumentData)
             {

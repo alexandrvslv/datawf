@@ -93,7 +93,7 @@ namespace DataWF.Module.FlowGui
             if (GuiService.Main != null)
                 GuiService.Main.DockPanel.Put(md);
             else
-                md.Show(this);
+                md.ShowWindow(this);
         }
 
         private void TreeCellDoubleClick(object sender, LayoutHitTestEventArgs e)
