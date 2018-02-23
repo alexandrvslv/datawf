@@ -1,12 +1,13 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Xml.Serialization;
 using DataWF.Common;
 using Xwt;
 using Xwt.Drawing;
 
 namespace DataWF.Gui
 {
-    public class DockPage : INotifyPropertyChanged
+    public class DockPage : IContainerNotifyPropertyChanged
     {
         private GlyphType glyph;
         private bool hideOnClose;
@@ -17,11 +18,7 @@ namespace DataWF.Gui
         private string toolText;
         private bool closing = false;
         private Rectangle bound = new Rectangle();
-        [NonSerialized()]
-        private DockPageList pageList;
-        [NonSerialized()]
         public object Tag;
-        [NonSerialized()]
         private Widget widget;
 
         public DockPage()
@@ -40,18 +37,19 @@ namespace DataWF.Gui
         }
 
         public Rectangle BoundImage { get; set; }
+
         public Rectangle BoundText { get; set; }
+
         public Rectangle BoundClose { get; set; }
 
         public DockPageList List
         {
-            get { return pageList; }
-            internal set { pageList = value; }
+            get { return (DockPageList)Container; }
         }
 
         public DockPageBox Box
         {
-            get { return pageList?.Box; }
+            get { return List?.Box; }
         }
 
         public DockPanel Panel
@@ -133,7 +131,7 @@ namespace DataWF.Gui
 
         public string Name
         {
-            get { return this.name; }
+            get { return name; }
             set
             {
                 if (name != value)
@@ -190,6 +188,9 @@ namespace DataWF.Gui
             set { hideOnClose = value; }
         }
 
+        [XmlIgnore]
+        public INotifyListChanged Container { get; set; }
+
         private void DockPageFormClosed(object sender, EventArgs e)
         {
             Close();
@@ -202,7 +203,7 @@ namespace DataWF.Gui
 
         private void UncheckExcept()
         {
-            foreach (DockPage item in pageList)
+            foreach (DockPage item in List)
                 if (item != this)
                     item.Active = false;
         }
@@ -220,7 +221,7 @@ namespace DataWF.Gui
             BoundClose = new Rectangle(
                 (Box.ItemOrientation == Orientation.Horizontal ? Bound.Right - 16 : Bound.X + 3),
                 (Box.ItemOrientation == Orientation.Horizontal ? Bound.Y + 3 : Bound.Bottom - 16),
-                14, 14);            
+                14, 14);
         }
 
         #region INotifyPropertyChanged implementation
@@ -228,8 +229,8 @@ namespace DataWF.Gui
 
         protected void OnPropertyChanged(string property)
         {
-            if (PropertyChanged != null)
-                PropertyChanged(this, new PropertyChangedEventArgs(property));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+            Container?.OnPropertyChanged(this, new PropertyChangedEventArgs(property));
         }
 
         internal void Draw(GraphContext context)

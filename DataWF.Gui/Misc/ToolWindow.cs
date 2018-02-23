@@ -24,7 +24,6 @@ namespace DataWF.Gui
         protected HBox hbox;
         protected ScrollView panel;
         private Point movePoint;
-        private LayoutAlignType sizeAlign = LayoutAlignType.None;
         private bool byDeactivate;
         private bool closeOnAccept = true;
         private bool closeOnClose = true;
@@ -289,7 +288,6 @@ namespace DataWF.Gui
                     timerStart.Start();
                     return;
                 }
-
             }
             Sender = sender;
 

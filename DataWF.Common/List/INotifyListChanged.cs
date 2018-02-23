@@ -17,4 +17,5 @@ namespace DataWF.Common
     {
         INotifyListChanged Container { get; set; }
     }
+
 }

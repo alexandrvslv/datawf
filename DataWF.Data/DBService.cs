@@ -946,7 +946,7 @@ namespace DataWF.Data
                 string temprez = header + value + separator;
                 if (column.IsCulture)
                 {
-                    if (column.Culture.TwoLetterISOLanguageName == Locale.Data.Culture.TwoLetterISOLanguageName)
+                    if (column.Culture.TwoLetterISOLanguageName == Locale.Instance.Culture.TwoLetterISOLanguageName)
                     {
                         bufRez += temprez;
                         if (value.Length != 0)

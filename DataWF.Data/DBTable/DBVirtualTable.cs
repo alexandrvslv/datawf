@@ -127,9 +127,9 @@ namespace DataWF.Data
             {
                 var newCol = new DBVirtualColumn(col);
                 Columns.Add(newCol);
-                if (col.LocalizeInfo.Names.Count > 0)
+                if (col.LocaleInfo.Count > 0)
                 {
-                    newCol.LocalizeInfo.Names.Add(col.LocalizeInfo.Names[0].Value, col.LocalizeInfo.Names[0].Culture);
+                    newCol.LocaleInfo.Add(col.LocaleInfo[0].Value, col.LocaleInfo[0].Culture);
                 }
             }
         }

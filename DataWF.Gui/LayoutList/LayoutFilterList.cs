@@ -5,8 +5,6 @@ namespace DataWF.Gui
 {
     public class LayoutFilterList : SelectableList<LayoutFilter>
     {
-        private LayoutList list;
-
         public LayoutFilterList()
         {
             Indexes.Add(new Invoker<LayoutFilter, string>(nameof(LayoutFilter.Name), (item) => item.Name));
@@ -17,20 +15,11 @@ namespace DataWF.Gui
             List = list;
         }
 
-        public LayoutList List
-        {
-            get { return list; }
-            set { list = value; }
-        }
+        public LayoutList List { get; set; }
 
         public LayoutFilter GetByName(string name)
         {
             return SelectOne(nameof(LayoutFilter.Name), name);
-        }
-
-        public override void Add(LayoutFilter item)
-        {
-            base.Add(item);
         }
 
         internal IEnumerable<QueryParameter> GetParameters()

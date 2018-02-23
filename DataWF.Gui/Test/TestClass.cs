@@ -351,8 +351,8 @@ namespace DataWF.TestGui
             for (int i = 0; i < count; i++)
             {
                 TestClass tc = new TestClass(i, "TestClass" + i);
-                if (Locale.Data.Images.Count > 0)
-                    tc.Image = Locale.Data.Images[i % Locale.Data.Images.Count].Image as Image;
+                if (Locale.Instance.Images.Count > 0)
+                    tc.Image = Locale.Instance.Images[i % Locale.Instance.Images.Count].Image as Image;
                 tc.Enum = (TestEnum)(i % 4);
                 tc.Flag = (TestFlag)(i % 15);
                 if (i > 10)
@@ -372,7 +372,7 @@ namespace DataWF.TestGui
         private TestFlag _flag = TestFlag.Flag1;
         private DateTime _date = DateTime.Now;
         private string _comment;
-        private LString _name = new LString();
+        private LocaleString _name = new LocaleString();
         private Size _size;
         private List<TestClass> _list = new List<TestClass>();
         private bool _expand;
@@ -478,7 +478,7 @@ namespace DataWF.TestGui
         }
 
         [Category("Compaund")]
-        public LString Name
+        public LocaleString Name
         {
             get { return _name; }
             set

@@ -443,7 +443,7 @@ namespace DataWF.Data
             UpdateFilter();
         }
 
-        public override void Add(T item)
+        public override int AddInternal(T item)
         {
             lock (items)
             {
@@ -451,7 +451,9 @@ namespace DataWF.Data
                     table.Add(item);
                 int index = GetIndexBySort(item);
                 if (index < 0)
-                    Insert((-index) - 1, item);
+                    index = (-index) - 1;
+                InsertInternal(index, item);
+                return index;
             }
         }
 

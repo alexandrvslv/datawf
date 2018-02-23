@@ -168,8 +168,7 @@ namespace DataWF.TestGui
         private void Button4Click(object sender, EventArgs e)
         {
             if (custom == null)
-                custom = new ListExplorer();
-            custom.DataSource = GuiEnvironment.Instance;
+                custom = new LocalizeEditor();
             dock.Put(custom);
         }
 

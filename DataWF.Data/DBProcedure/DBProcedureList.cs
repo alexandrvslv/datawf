@@ -33,11 +33,6 @@ namespace DataWF.Data
             Indexes.Add(new Invoker<DBProcedure, ProcedureTypes>(nameof(DBProcedure.ProcedureType), (item) => item.ProcedureType));
         }
 
-        public override void Add(DBProcedure item)
-        {
-            base.Add(item);
-        }
-
         public IEnumerable<DBProcedure> SelectByFile(string fileName)
         {
             var query = new Query();

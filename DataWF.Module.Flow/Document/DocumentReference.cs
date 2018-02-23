@@ -66,7 +66,7 @@ namespace DataWF.Module.Flow
             get { return mode; }
         }
 
-        public override void Add(DocumentReference item)
+        public override int AddInternal(DocumentReference item)
         {
             if (doc != null)
             {
@@ -75,7 +75,7 @@ namespace DataWF.Module.Flow
                 else if (mode == DocumentReferenceMode.Refing && item.Reference == null)
                     item.Reference = doc;
             }
-            base.Add(item);
+            return base.AddInternal(item);
             //if (mode == DocumentReferenceListMode.Refed && item.Reference != null && !item.Reference.Refing.Contains(item))
             //{
             //    item.Reference.Refing.Add(item);
@@ -118,16 +118,17 @@ namespace DataWF.Module.Flow
             this.mode = mode;
         }
 
-        public override void Add(DocumentReference item)
+        public override int AddInternal(DocumentReference item)
         {
             if (Contains(item))
-                return;
+                return -1;
             if (mode == DocumentReferenceMode.Refed && item.Document == null)
                 item.Document = document;
             else if (mode == DocumentReferenceMode.Refing && item.Reference == null)
                 item.Reference = document;
-            base.Add(item);
+            var index = base.AddInternal(item);
             item.Attach();
+            return index;
         }
 
         public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, string property = null)

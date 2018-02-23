@@ -67,7 +67,7 @@ namespace DataWF.Data.Gui
             Localize();
 
             dock.ContentFocus += DockOnContentFocus;
-            foreach (CultureInfo ci in Common.Locale.Data.Cultures)
+            foreach (CultureInfo ci in Locale.Instance.Cultures)
             {
                 var menuItem = new GlyphMenuItem();
                 menuItem.Tag = ci;
@@ -154,20 +154,16 @@ namespace DataWF.Data.Gui
         private void LangGlyphMenuItemClicked(object sender, EventArgs e)
         {
             var item = (GlyphMenuItem)sender;
-            if (Common.Locale.Data.Culture == (CultureInfo)item.Tag)
+            if (Locale.Instance.Culture == (CultureInfo)item.Tag)
                 return;
-            Common.Locale.Data.Culture = (CultureInfo)item.Tag;
+            Locale.Instance.Culture = (CultureInfo)item.Tag;
             Localize();
             DBService.RefreshToString();
         }
 
         public ListEditor Properties
         {
-            get
-            {
-                ListEditor fe = (ListEditor)GetControl(typeof(ListEditor).FullName);
-                return fe;
-            }
+            get { return (ListEditor)GetControl(typeof(ListEditor).FullName); }
         }
 
         //private ILayoutCellEditor HandleFieldsGetCellEditor(object sender, object listItem, object value, ILayoutCell cell)
@@ -219,30 +215,30 @@ namespace DataWF.Data.Gui
 
         public void Localize()
         {
-            Title = Common.Locale.Get("MainForm", "Document Work Flow");
+            Title = Locale.Get("MainForm", "Document Work Flow");
 
-            menuProject.Text = Common.Locale.Get("MainForm", "Project");
-            menuProjectCreate.Text = Common.Locale.Get("MainForm", "New");
-            menuProjectOpen.Text = Common.Locale.Get("MainForm", "Open");
-            menuProjectProps.Text = Common.Locale.Get("MainForm", "Property");
-            menuProjectSave.Text = Common.Locale.Get("MainForm", "Save");
-            menuProjectSaveAs.Text = Common.Locale.Get("MainForm", "SaveAs");
-            menuProjectRecent.Text = Common.Locale.Get("MainForm", "Recent");
-            menuProjectClose.Text = Common.Locale.Get("MainForm", "Close");
-            menuProjectExit.Text = Common.Locale.Get("MainForm", "Exit");
+            menuProject.Text = Locale.Get("MainForm", "Project");
+            menuProjectCreate.Text = Locale.Get("MainForm", "New");
+            menuProjectOpen.Text = Locale.Get("MainForm", "Open");
+            menuProjectProps.Text = Locale.Get("MainForm", "Property");
+            menuProjectSave.Text = Locale.Get("MainForm", "Save");
+            menuProjectSaveAs.Text = Locale.Get("MainForm", "SaveAs");
+            menuProjectRecent.Text = Locale.Get("MainForm", "Recent");
+            menuProjectClose.Text = Locale.Get("MainForm", "Close");
+            menuProjectExit.Text = Locale.Get("MainForm", "Exit");
 
-            menuEdit.Text = Common.Locale.Get("MainForm", "Edit");
-            menuEditMain.Text = Common.Locale.Get("MainForm", "Main Config");
-            menuEditLocalize.Text = Common.Locale.Get("MainForm", "Config Localize");
-            menuEditDb.Text = Common.Locale.Get("MainForm", "Config Db");
+            menuEdit.Text = Locale.Get("MainForm", "Edit");
+            menuEditMain.Text = Locale.Get("MainForm", "Main Config");
+            menuEditLocalize.Text = Locale.Get("MainForm", "Config Localize");
+            menuEditDb.Text = Locale.Get("MainForm", "Config Db");
 
-            menuView.Text = Common.Locale.Get("MainForm", "View");
+            menuView.Text = Locale.Get("MainForm", "View");
 
-            menuWindow.Text = Common.Locale.Get("MainForm", "Window");
-            menuWindowLang.Text = Common.Locale.Get("MainForm", "Language");
+            menuWindow.Text = Locale.Get("MainForm", "Window");
+            menuWindowLang.Text = Locale.Get("MainForm", "Language");
 
-            menuHelp.Text = Common.Locale.Get("MainForm", "Help");
-            menuHelpAbout.Text = Common.Locale.Get("MainForm", "About");
+            menuHelp.Text = Locale.Get("MainForm", "Help");
+            menuHelpAbout.Text = Locale.Get("MainForm", "About");
 
             dock.Localizing();
         }
@@ -251,12 +247,12 @@ namespace DataWF.Data.Gui
 
         private void DockOnContentFocus(object sender, EventArgs e)
         {
-            var w = (Widget)sender;
-            if (w is DockPanel)
-                w = ((DockPanel)w).CurrentWidget;
-            if (currentWidget != w)
+            var widget = (Widget)sender;
+            if (widget is DockPanel)
+                widget = ((DockPanel)widget).CurrentWidget;
+            if (currentWidget != widget)
             {
-                currentWidget = w;
+                currentWidget = widget;
                 bool flag = (currentWidget is IProjectEditor);
                 menuProjectProps.Sensitive = flag;
                 menuProjectSave.Sensitive = flag;
@@ -285,13 +281,10 @@ namespace DataWF.Data.Gui
             ShowControl(GetControl(name));
         }
 
-        private void ShowControl(Widget c)
+        private void ShowControl(Widget widget)
         {
-            if (c != null)
-            {
-                if (c is IDockContent)
-                    dock.Put(c);
-            }
+            if (widget is IDockContent)
+                dock.Put(widget);
         }
 
         private void MenuViewOnItemClicked(object sender, EventArgs e)
@@ -305,7 +298,6 @@ namespace DataWF.Data.Gui
         {
             get { return icon; }
         }
-
 
         #endregion
 
@@ -383,7 +375,7 @@ namespace DataWF.Data.Gui
         {
             var item = new GlyphMenuItem();
             item.Name = type.FullName;
-            item.Text = Common.Locale.Get(item.Name, type.Name);
+            item.Text = Locale.Get(item.Name, type.Name);
             item.Tag = type;
             return item;
         }
@@ -402,7 +394,7 @@ namespace DataWF.Data.Gui
             }
             else
             {
-                item.Image = Common.Locale.GetImage("default") as Image;
+                item.Image = Locale.GetImage("default") as Image;
             }
             return item;
         }
@@ -464,20 +456,16 @@ namespace DataWF.Data.Gui
                 notify.SetStatus(info, true);
         }
 
-        private void ToolLocalizeOnClick(object sender, EventArgs e)
+        private void ToolLocalizeClick(object sender, EventArgs e)
         {
             var editor = new LocalizeEditor();
-            editor.ShowDialog(this);
-            editor.Dispose();
-            Locale.Save();
+            editor.ShowWindow(this);
         }
 
         private void ToolConfigClick(object sender, EventArgs e)
         {
-            var editor = new ListExplorer();
-            editor.DataSource = GuiEnvironment.Instance;
-            editor.ShowDialog(this);
-            editor.Dispose();
+            var editor = new ListExplorer { DataSource = GuiEnvironment.Instance };
+            editor.ShowWindow(this);
         }
 
         private void ToolSaveConfigOnClick(object sender, EventArgs e)
@@ -757,7 +745,7 @@ namespace DataWF.Data.Gui
 
             menuEditLocalize.Name = "menuEditLocalize";
             menuEditLocalize.Text = "Config Localize";
-            menuEditLocalize.Click += ToolLocalizeOnClick;
+            menuEditLocalize.Click += ToolLocalizeClick;
 
             menuEditDb.Name = "menuEditDb";
             menuEditDb.Text = "Config Db";

@@ -189,15 +189,10 @@ namespace DataWF.Gui
 
         public CellStyle this[string param]
         {
-            get
-            {
-                if (items.Count == 0)
-                    GenerateDefault();
-                return SelectOne("Name", param);
-            }
+            get { return SelectOne("Name", param); }
         }
 
-        public override void Add(CellStyle item)
+        public override int AddInternal(CellStyle item)
         {
             if (item == null)
                 throw new ArgumentException();
@@ -206,8 +201,9 @@ namespace DataWF.Gui
             {
                 if (exist != null)
                     item.Name += "Clone";
-                base.Add(item);
+                return base.AddInternal(item);
             }
+            return -1;
         }
 
         public override void Dispose()

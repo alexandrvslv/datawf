@@ -1,5 +1,6 @@
 ﻿using DataWF.Common;
 using System.Collections.Generic;
+using System.Xml.Serialization;
 
 namespace DataWF.Gui
 {
@@ -25,6 +26,7 @@ namespace DataWF.Gui
             Info = info;
         }
 
+        [XmlIgnore]
         public LayoutListInfo Info { get; set; }
 
         public LayoutSort this[string name]
@@ -65,10 +67,10 @@ namespace DataWF.Gui
             return sort;
         }
 
-        public override void Add(LayoutSort item)
+        public override int AddInternal(LayoutSort item)
         {
             item.Order = Count;
-            base.Add(item);
+            return base.AddInternal(item);
         }
 
         public bool Remove(string name)

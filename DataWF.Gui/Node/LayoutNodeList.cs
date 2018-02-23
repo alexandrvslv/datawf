@@ -8,7 +8,7 @@ namespace DataWF.Gui
 {
     public class LayoutNodeList<T> : SelectableList<T> where T : Node, new()
     {
-        private int index;
+        private int order;
         [NonSerialized()]
         private CategoryList groups;
         private bool sense = true;
@@ -65,21 +65,21 @@ namespace DataWF.Gui
             return node;
         }
 
-        public override void Add(T item)
+        public override int AddInternal(T item)
         {
             if (Contains(item))
-                return;
+                return -1;
             if (item.Order == -1)
             {
-                index++;
-                item.Order = index;
+                item.Order = ++order;
             }
             CheckGrop(item);
-            base.Add(item);
+            var index = base.AddInternal(item);
             for (int i = 0; i < item.Childs.Count; i++)
             {
                 Add((T)item.Childs[i]);
             }
+            return index;
         }
 
         public void CheckGrop(T item)

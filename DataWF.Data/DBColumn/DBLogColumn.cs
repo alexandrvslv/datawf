@@ -39,18 +39,18 @@ namespace DataWF.Data
         public DBLogTable LogTable { get { return (DBLogTable)Table; } }
 
         [Browsable(false)]
-        public string BaseColumnName { get; set; }
+        public string BaseName { get; set; }
 
         [XmlIgnore]
         public DBColumn BaseColumn
         {
-            get { return baseColumn ?? (baseColumn = LogTable?.BaseTable?.ParseColumn(BaseColumnName)); }
+            get { return baseColumn ?? (baseColumn = LogTable?.BaseTable?.ParseColumn(BaseName)); }
             set
             {
                 if (BaseColumn != null || value == null)
                     throw new Exception("Log table Initialized!");
                 baseColumn = value;
-                BaseColumnName = value.Name;
+                BaseName = value.Name;
 
                 Name = value.Name + "_log";
                 DataType = value.DataType;

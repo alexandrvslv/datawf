@@ -20,7 +20,6 @@ namespace DataWF.Module.Flow
 
     public abstract class ParamBase : DBItem
     {
-        [NonSerialized()]
         protected object _cache;
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
@@ -106,15 +105,8 @@ namespace DataWF.Module.Flow
                 result.Access = this.Access;
                 //TODO reference if (index >= 0)
                 //    result.Reference = ParamCode.Substring(index + 1);
-                LocaleItem litem = (LocaleItem)column.LocalizeInfo.Clone();
-                litem.Category = "DBDocument";
-                foreach (DBColumn col in Table.Columns.GetByGroup("name"))
-                {
-                    string val = this[col].ToString();
-                    if (val.Length != 0)
-                        litem.Names.Add(val, col.Culture);
-                }
-                result.LocalizeInfo = litem;
+
+                result.LocaleInfo = (LocaleItem)column.LocaleInfo.Clone();
             }
             return result;
         }

@@ -30,45 +30,32 @@ namespace DataWF.Gui
                                    LayoutListKeys.GenerateMenu;
 
         protected LayoutEditor editor = new LayoutEditor();
-
-        protected LayoutFilterWindow filterView;
-        //
         protected LayoutListState ustate = LayoutListState.Default;
 
         private Point _cacheLocation = new Point();
         private PointerButton _cacheButton = 0;
         private Point location = new Point(0, 0);
         private Rectangle _recMove = new Rectangle();
-        //
         private Dictionary<LayoutColumn, object> collectedCache = new Dictionary<LayoutColumn, object>();
-        //
         private int _p0;
-        //private PColumn dragColumn;
         private object dragItem;
 
         private bool post = false;
-        //
-        //list item type
         protected Type listItemType;
         protected Type fieldType;
-        //list
-        protected IList filterList;
+        protected LayoutFilterWindow filterView;
+        protected IList listBackup;
         protected IList listSource;
         protected object fieldSource;
         protected ManualResetEvent listEvent = new ManualResetEvent(false);
-        //
         protected EditListState editState = EditListState.Edit;
         protected LayoutListMode listMode = LayoutListMode.List;
         protected EditModes editMode = EditModes.None;
-        //columns map info
         protected LayoutListInfo listInfo;
         protected LayoutFieldInfo fieldInfo;
         protected LayoutNodeInfo nodeInfo;
-        //selection collection
         protected LayoutSelection selection;
-        //groupping info
         protected LayoutGroupList groups;
-        //
         protected bool caching = false;
         protected bool _gridMode = false;
         protected bool checkView = true;
@@ -89,12 +76,8 @@ namespace DataWF.Gui
         private Dictionary<int, Dictionary<LayoutColumn, TextLayout>> cache = null;
         private int gridCols = 1;
         private int gridRows = 1;
-        //protected PListGetCellEditorArg _cacheGetCellEditorArg = new PListGetCellEditorArg();
-
-        //handle columns map info canged
 
         #region Events
-
         protected ListChangedEventHandler handleListChanged;
         protected PropertyChangedEventHandler handleProperty;
         protected EventHandler handleColumnsBound;
@@ -102,10 +85,8 @@ namespace DataWF.Gui
         protected Func<ILayoutItem, double> handleCalcHeigh;
         protected Func<ILayoutItem, double> handlCalcWidth;
         protected PListGetEditorHandler handleGetCellEditor;
-
-        public event EventHandler<NotifyProperty> PositionChanged;
-
         protected EventHandler filterChanged;
+        protected EventHandler filterChanging;
 
         public event EventHandler ColumnFilterChanged
         {
@@ -113,14 +94,13 @@ namespace DataWF.Gui
             remove { filterChanged -= value; }
         }
 
-        protected EventHandler filterChanging;
-
         public event EventHandler ColumnFilterChanging
         {
             add { filterChanging += value; }
             remove { filterChanging -= value; }
         }
 
+        public event EventHandler<NotifyProperty> PositionChanged;
         public event EventHandler DataSourceChanged;
         public event EventHandler ColumnSort;
         public event EventHandler ColumnGrouping;
@@ -165,7 +145,6 @@ namespace DataWF.Gui
         private Menu menu;
         //protected static PrintOperation print;
         public string Description;
-        private QueryParameter treeParameter;
 
         public LayoutList()
         {
@@ -2854,7 +2833,6 @@ namespace DataWF.Gui
                 }
                 else if (TypeHelper.IsInterface(listItemType, typeof(IGroup)))
                 {
-                    treeParameter = QueryParameter.CreateTreeFilter(listItemType);
                     OnFilterChange();
                     var sort = listInfo.Sorters.Count == 0 ? listInfo.Sorters.Add(nameof(object.ToString)) : listInfo.Sorters.GetLast();
                     OnColumnSort(sort.Column, sort.Direction);
@@ -3389,63 +3367,63 @@ namespace DataWF.Gui
 
         protected void RevertFilteredCollection()
         {
-            if (filterList != null)
+            if (listBackup != null)
             {
                 var temp = listSource;
-                listSource = filterList;
+                listSource = listBackup;
                 if (temp is INotifyListChanged)
                 {
                     ((INotifyListChanged)temp).ListChanged -= handleListChanged;
                 }
                 if (temp is IDisposable)
                 {
-                    ((IDisposable)filterList).Dispose();
+                    ((IDisposable)listBackup).Dispose();
                 }
-                filterList = null;
+                listBackup = null;
             }
         }
 
-        protected void SetFilteredCollection()
+        protected IFilterable SetFilteredCollection()
         {
-            SetFilteredCollection(typeof(SelectableListView<>).MakeGenericType(ListType));
-        }
-
-        protected void SetFilteredCollection(Type type)
-        {
-            filterList = listSource;
-            var temp = (IFilterable)EmitInvoker.CreateObject(type, new Type[] { typeof(IList) }, new object[] { listSource }, true);
-            if (temp is INotifyListChanged)
+            var type = typeof(SelectableListView<>).MakeGenericType(ListType);
+            listBackup = listSource;
+            listSource = (IList)EmitInvoker.CreateObject(type, new Type[] { typeof(IList) }, new object[] { listSource }, true);
+            if (listSource is INotifyListChanged)
             {
-                ((INotifyListChanged)temp).ListChanged += handleListChanged;
+                ((INotifyListChanged)listSource).ListChanged += handleListChanged;
             }
-            listSource = temp;
+            return (IFilterable)listSource;
         }
 
         protected internal virtual void OnFilterChange()
         {
-            var filtered = listSource as IFilterable;
-            if (filtered == null && (TreeMode || filterView?.FilterView.Filters.Count > 0))
+            var filtered = ListSource as IFilterable;
+            if (TreeMode || filterView?.FiltersCount > 0)
             {
-                ShowFilter();
-                SetFilteredCollection();
-                filtered = listSource as IFilterable;
-            }
-            else if ((!TreeMode && filterView?.FilterView.Filters.Count == 0) && filterList != null)
-            {
-                HideFilter();
-                RevertFilteredCollection();
-                filtered = null;
-            }
-            if (filtered != null)
-            {
+                if (filtered == null)
+                {
+                    filtered = SetFilteredCollection();
+                }
+                if (filterView?.FiltersCount > 0)
+                {
+                    ShowFilter();
+                }
+
                 filtered.FilterQuery.Parameters.Clear();
                 if (TreeMode)
-                    filtered.FilterQuery.Parameters.Add(treeParameter);
+                    filtered.FilterQuery.Parameters.Add(QueryParameter.CreateTreeFilter(listItemType));
                 if (filterView != null)
                     filtered.FilterQuery.Parameters.AddRange(filterView.FilterView.Filters.GetParameters());
                 filtered.UpdateFilter();
             }
-
+            else
+            {
+                HideFilter();
+                if (listBackup != null)
+                {
+                    RevertFilteredCollection();
+                }
+            }
             filterChanged?.Invoke(this, EventArgs.Empty);
         }
 
@@ -3472,10 +3450,7 @@ namespace DataWF.Gui
 
         protected virtual void OnGroupMouseUp(LayoutHitTestEventArgs e)
         {
-            if (GroupClick != null)
-            {
-                GroupClick(this, e);
-            }
+            GroupClick?.Invoke(this, e);
             if (e.HitTest.MouseButton == PointerButton.Left)
             {
                 bounds.GroupHeader = GetGroupHeaderBound(e.HitTest.Group);
@@ -4649,7 +4624,7 @@ namespace DataWF.Gui
             //  load NumRows variable to set up table 
             //  contents loop for recordset
             //  populate header row
-            StringBuilder sb = new StringBuilder();
+            StringBuilder builder = new StringBuilder();
 
             //foreach (PColumn column in lc)
             //{
@@ -4670,39 +4645,39 @@ namespace DataWF.Gui
             //    sb.AppendLine();
             //}
 
-            sb.AppendLine(@"{\rtf1\ansi\ansicpg1252\deff0\deflang1033{\fonttbl{\f0\fnil\fcharset0 Courier New;}}");
-            sb.AppendLine("\\trowd\\trautofit1\\intbl");
+            builder.AppendLine(@"{\rtf1\ansi\ansicpg1252\deff0\deflang1033{\fonttbl{\f0\fnil\fcharset0 Courier New;}}");
+            builder.AppendLine("\\trowd\\trautofit1\\intbl");
             int j = 1;
             for (int i = 0; i < NumCells; i++)
             {
-                sb.Append("\\cellx" + j);
+                builder.Append("\\cellx" + j);
                 j++;
             }
-            sb.AppendLine("{");
+            builder.AppendLine("{");
             foreach (LayoutColumn column in lc)
             {
-                sb.AppendLine(column.Name + "\\cell ");
+                builder.AppendLine(column.Name + "\\cell ");
             }
-            sb.AppendLine("}");
-            sb.AppendLine("{");
-            sb.AppendLine("\\trowd\\trautofit1\\intbl");
+            builder.AppendLine("}");
+            builder.AppendLine("{");
+            builder.AppendLine("\\trowd\\trautofit1\\intbl");
             j = 1;
             for (int i = 0; i < NumCells; i++)
             {
-                sb.AppendLine("\\cellx" + j);
+                builder.AppendLine("\\cellx" + j);
                 j = (j + 1);
             }
-            sb.AppendLine("\\row }");
+            builder.AppendLine("\\row }");
             foreach (object val in items)
             {
-                sb.AppendLine("\\trowd\\trautofit1\\intbl");
+                builder.AppendLine("\\trowd\\trautofit1\\intbl");
                 j = 1;
                 for (int i = 0; i < NumCells; i++)
                 {
-                    sb.Append("\\cellx" + j);
+                    builder.Append("\\cellx" + j);
                     j = (j + 1);
                 }
-                sb.AppendLine("{");
+                builder.AppendLine("{");
                 foreach (LayoutColumn column in lc)
                 {
                     object f = FormatValue(val, column);
@@ -4710,21 +4685,21 @@ namespace DataWF.Gui
                         f = (string)f + "\\cell ";
                     else
                         f = "<data>\\cell ";
-                    sb.Append((string)f);
+                    builder.Append((string)f);
                 }
-                sb.AppendLine("}");
-                sb.AppendLine("{");
-                sb.AppendLine("\\trowd\\trautofit1\\intbl");
+                builder.AppendLine("}");
+                builder.AppendLine("{");
+                builder.AppendLine("\\trowd\\trautofit1\\intbl");
                 j = 1;
                 for (int i = 0; i < NumCells; i++)
                 {
-                    sb.Append("\\cellx" + j);
+                    builder.Append("\\cellx" + j);
                     j = (j + 1);
                 }
-                sb.AppendLine("\\row }");
+                builder.AppendLine("\\row }");
             }
-            sb.AppendLine("}");
-            return sb;
+            builder.AppendLine("}");
+            return builder;
         }
 
         [DefaultValue(true)]
@@ -4811,8 +4786,7 @@ namespace DataWF.Gui
                 }
                 else
                 {
-                    editor = new CellEditorText();
-                    ((CellEditorText)editor).MultiLine = true;
+                    editor = new CellEditorText { MultiLine = true };
                 }
             }
             else if (type == typeof(byte[]))
@@ -4826,27 +4800,33 @@ namespace DataWF.Gui
             }
             else if (type == typeof(bool))
             {
-                editor = new CellEditorCheck();
-                ((CellEditorCheck)editor).ValueTrue = true;
-                ((CellEditorCheck)editor).ValueFalse = false;
-                ((CellEditorCheck)editor).ValueNull = null;
-                ((CellEditorCheck)editor).TreeState = false;
+                editor = new CellEditorCheck
+                {
+                    ValueTrue = true,
+                    ValueFalse = false,
+                    ValueNull = null,
+                    TreeState = false
+                };
             }
             else if (type == typeof(CheckBoxState))
             {
-                editor = new CellEditorCheck();
-                ((CellEditorCheck)editor).ValueTrue = CheckBoxState.On;
-                ((CellEditorCheck)editor).ValueFalse = CheckBoxState.Off;
-                ((CellEditorCheck)editor).ValueNull = CheckBoxState.Mixed;
-                ((CellEditorCheck)editor).TreeState = true;
+                editor = new CellEditorCheck
+                {
+                    ValueTrue = CheckBoxState.On,
+                    ValueFalse = CheckBoxState.Off,
+                    ValueNull = CheckBoxState.Mixed,
+                    TreeState = true
+                };
             }
             else if (type == typeof(CheckedState))
             {
-                editor = new CellEditorCheck();
-                ((CellEditorCheck)editor).ValueTrue = CheckedState.Checked;
-                ((CellEditorCheck)editor).ValueFalse = CheckedState.Unchecked;
-                ((CellEditorCheck)editor).ValueNull = CheckedState.Indeterminate;
-                ((CellEditorCheck)editor).TreeState = true;
+                editor = new CellEditorCheck
+                {
+                    ValueTrue = CheckedState.Checked,
+                    ValueFalse = CheckedState.Unchecked,
+                    ValueNull = CheckedState.Indeterminate,
+                    TreeState = true
+                };
             }
             else if (type == typeof(System.Net.IPAddress))
             {
@@ -4862,18 +4842,15 @@ namespace DataWF.Gui
             }
             else if (type == typeof(DateInterval))
             {
-                editor = new CellEditorDate() { Format = cell.Format };
-                ((CellEditorDate)editor).TwoDate = true;
+                editor = new CellEditorDate() { Format = cell.Format, TwoDate = true };
             }
             else if (type == typeof(System.Globalization.CultureInfo))
             {
-                editor = new CellEditorList();
-                ((CellEditorList)editor).DataSource = Common.Locale.Data.Cultures;
+                editor = new CellEditorList { DataSource = Locale.Instance.Cultures };
             }
             else if (type == typeof(EncodingInfo))
             {
-                editor = new CellEditorList();
-                ((CellEditorList)editor).DataSource = Encoding.GetEncodings();
+                editor = new CellEditorList { DataSource = Encoding.GetEncodings() };
             }
             else if (type == typeof(Color))
             {
@@ -4904,7 +4881,12 @@ namespace DataWF.Gui
                     else if (type == typeof(int) || type == typeof(long) || type == typeof(short))
                         cell.Format = "########################";
                 }
-                editor = new CellEditorText() { Format = cell.Format, MultiLine = false, DropDownWindow = false };
+                editor = new CellEditorText()
+                {
+                    Format = cell.Format,
+                    MultiLine = false,
+                    DropDownWindow = false
+                };
             }
             editor.DataType = type;
             return editor;

@@ -581,7 +581,7 @@ namespace DataWF.Module.FlowGui
 
             elements.Add("Номер", firstDoc.Id);
 
-            elements.Add("ДатаОтправки", dt.ToString("D", Locale.Data.Culture));
+            elements.Add("ДатаОтправки", dt.ToString("D", Locale.Instance.Culture));
 
             string departs = "";
             foreach (StageSender ss in stages)

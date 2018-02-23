@@ -87,24 +87,26 @@ namespace DataWF.Data
             base.Clear();
         }
 
-        public override void Add(DBColumn item)
+        public override int AddInternal(DBColumn item)
         {
             if (Contains(item))
-                return;
+            {
+                return -1;
+            }
             if (Contains(item.Name))
             {
-                throw new Exception("Columns contains " + item.Name);
+                throw new InvalidOperationException($"Columns name duplication {item.Name}");
             }
             // if (col.Order == -1 || col.Order > this.Count)
             item.Order = this.Count;
 
-            base.Add(item);
+            var index = base.AddInternal(item);
 
             if (item.Index == null && (item.IsPrimaryKey || (item.Keys & DBColumnKeys.Indexing) == DBColumnKeys.Indexing))
             {
                 item.Index = DBPullIndex.Fabric(item.DataType, Table, item);
             }
-            if (item.IsPrimaryKey && Table.Schema != null)
+            if (item.IsPrimaryKey)
             {
                 DBConstraint primary = null;
                 foreach (var constraint in Table.Constraints.GetByColumn(Table.PrimaryKey))
@@ -122,6 +124,7 @@ namespace DataWF.Data
                     Table.Constraints.Add(primary);
                 }
             }
+            return index;
         }
 
         public DBColumn Add(string name)

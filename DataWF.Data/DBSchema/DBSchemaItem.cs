@@ -72,13 +72,14 @@ namespace DataWF.Data
                 if (schema == value)
                     return;
                 schema = value;
+                litem = null;
             }
         }
 
         public override string ToString()
         {
-            var item = LocalizeInfo;
-            return item == null || item.Names.Count == 0 ? name : item.CurrentName;
+            var item = LocaleInfo;
+            return item == null || item.Count == 0 ? name : item.Value;
         }
 
         [Browsable(false), Category("Policy"), XmlIgnore]
@@ -100,19 +101,15 @@ namespace DataWF.Data
         }
 
         [Browsable(false), Category("Naming"), XmlIgnore]
-        public LocaleItem LocalizeInfo
+        public LocaleItem LocaleInfo
         {
             get
             {
-                var lockCategory = GetLocalizeCategory();
+                var locCategory = GetLocalizeCategory();
                 var locName = Name;
-                if (string.IsNullOrEmpty(lockCategory) || string.IsNullOrEmpty(locName))
+                if (string.IsNullOrEmpty(locCategory) || string.IsNullOrEmpty(locName))
                     return null;
-                if (litem == null
-                    || !litem.Name.Equals(locName, StringComparison.OrdinalIgnoreCase)
-                    || !litem.Category.Equals(lockCategory, StringComparison.OrdinalIgnoreCase))
-                    litem = Locale.Data.Names.GetByIndex(lockCategory, locName);
-                return litem;
+                return litem ?? (litem = Locale.GetItem(locCategory, locName));
             }
             set
             {
@@ -125,11 +122,11 @@ namespace DataWF.Data
         [Category("Naming"), XmlIgnore]
         public string DisplayName
         {
-            get { return LocalizeInfo?.CurrentName ?? Name; }
+            get { return LocaleInfo?.Value ?? Name; }
             set
             {
-                if (LocalizeInfo != null)
-                    LocalizeInfo.CurrentName = value;
+                if (LocaleInfo != null)
+                    LocaleInfo.Value = value;
             }
         }
 

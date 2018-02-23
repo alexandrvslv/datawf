@@ -21,15 +21,7 @@ namespace DataWF.Data
 {
     public class DBSchemaList : DBSchemaItemList<DBSchema>
     {
-        public DBSchemaList()
-            : base()
-        {
-        }
-
-        public override void Add(DBSchema item)
-        {
-            base.Add(item);
-            item.InitTables();
-        }
+        public DBSchemaList() : base()
+        { }
     }
 }

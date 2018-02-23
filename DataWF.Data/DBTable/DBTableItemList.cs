@@ -25,8 +25,7 @@ namespace DataWF.Data
     public class DBTableItemList<T> : DBSchemaItemList<T> where T : DBTableItem, new()
     {
 
-        public DBTableItemList(DBTable table)
-            : base()
+        public DBTableItemList(DBTable table) : base()
         {
             Table = table;
         }
@@ -34,7 +33,7 @@ namespace DataWF.Data
         [XmlIgnore]
         public DBTable Table { get; set; }
 
-        public override void Add(T item)
+        public override int AddInternal(T item)
         {
             if (Table == null)
             {
@@ -44,7 +43,7 @@ namespace DataWF.Data
             {
                 item.Table = Table;
             }
-            base.Add(item);
+            return base.AddInternal(item);
         }
     }
 }

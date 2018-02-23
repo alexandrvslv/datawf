@@ -7,6 +7,10 @@ namespace DataWF.Gui
     public class GuiEnvironment : IDisposable
     {
         private static GuiEnvironment instance = new GuiEnvironment();
+        static GuiEnvironment()
+        {
+            Instance.Styles.GenerateDefault();
+        }
 
         public static GuiEnvironment Instance
         {
@@ -55,7 +59,7 @@ namespace DataWF.Gui
 
         public static void Load(string name = "gui.xml")
         {
-            LImage.ImageCache += (item) =>
+            LocaleImage.ImageCache += (item) =>
             {
                 using (var stream = new MemoryStream(item.Data))
                     return Xwt.Drawing.Image.FromStream(stream);

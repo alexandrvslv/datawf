@@ -258,20 +258,12 @@ namespace DataWF.Gui
                 if (dataSource is INotifyPropertyChanged)
                     ((INotifyPropertyChanged)dataSource).PropertyChanged += OnDataPropertyChanged;
 
-                Type type = dataSource == null ? null : dataSource.GetType();
+                Type type = dataSource?.GetType();
 
                 if (dataSource is IList)
                 {
                     list.Mode = LayoutListMode.List;
-                    if (dataSource is ISelectable && !(dataSource is IFilterable))
-                    {
-                        Type typeItem = typeof(SelectableListView<>).MakeGenericType(((ISelectable)dataSource).ItemType);
-                        list.ListSource = (IList)EmitInvoker.CreateObject(typeItem, new Type[] { typeof(IList) }, new object[] { dataSource }, true);
-                    }
-                    else
-                    {
-                        list.ListSource = (IList)dataSource;
-                    }
+                    list.ListSource = (IList)dataSource;
                     type = list.ListType;
                     toolPosition.Visible = true;
                 }

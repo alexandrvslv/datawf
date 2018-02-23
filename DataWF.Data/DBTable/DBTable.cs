@@ -390,10 +390,19 @@ namespace DataWF.Data
         }
 
         [Category("Column")]
-        public DBColumnList Columns { get; private set; }
+        public DBColumnList Columns { get; set; }
 
         [Category("Column")]
-        public DBColumnGroupList ColumnGroups { get; private set; }
+        public DBColumnGroupList ColumnGroups { get; set; }
+
+        [Category("Performance")]
+        public DBConstraintList<DBConstraint> Constraints { get; set; }
+
+        [Category("Performance")]
+        public DBIndexList Indexes { get; set; }
+
+        [Category("Performance")]
+        public DBForeignList Foreigns { get; set; }
 
         public abstract int Count { get; }
 
@@ -757,8 +766,6 @@ namespace DataWF.Data
                 rows[i].Accept();
         }
 
-
-
         [Browsable(false)]
         public abstract IDBTableView DefaultItemsView { get; }
 
@@ -971,15 +978,6 @@ namespace DataWF.Data
             virtualViews.Add(view);
         }
 
-        [Category("Performance")]
-        public DBIndexList Indexes { get; private set; }
-
-        [Category("Performance")]
-        public DBConstraintList<DBConstraint> Constraints { get; private set; }
-
-        [Category("Performance")]
-        public DBForeignList Foreigns { get; private set; }
-
         [Browsable(false)]
         public IEnumerable<DBForeignKey> GetChildRelations()
         {
@@ -1191,9 +1189,9 @@ namespace DataWF.Data
             {
                 var newCol = (DBColumn)column.Clone();
                 table.Columns.Add(newCol);
-                if (column.LocalizeInfo.Names.Count > 0)
+                if (column.LocaleInfo.Count > 0)
                 {
-                    newCol.LocalizeInfo.Names.Add(column.LocalizeInfo.Names[0].Value, column.LocalizeInfo.Names[0].Culture);
+                    newCol.LocaleInfo.Add(column.LocaleInfo[0].Value, column.LocaleInfo[0].Culture);
                 }
             }
             return table;

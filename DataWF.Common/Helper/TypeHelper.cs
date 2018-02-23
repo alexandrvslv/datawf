@@ -154,6 +154,11 @@ namespace DataWF.Common
             return false;
         }
 
+        public static bool IsIndex(PropertyInfo property)
+        {
+            return property.GetIndexParameters().Length > 0;
+        }
+
         public static Type ParseType(string value)
         {
             Type type = Type.GetType(value);
@@ -246,8 +251,9 @@ namespace DataWF.Common
             {
                 Type itemType = GetMemberType(info);
                 if (itemType.IsSubclassOf(typeof(Delegate))
-                || (itemType == info.DeclaringType && itemType.IsValueType)
-                || info is PropertyInfo && !((PropertyInfo)info).CanWrite && !IsDictionary(itemType) && !IsCollection(itemType))
+                    || (itemType == info.DeclaringType && itemType.IsValueType)
+                    || (info is PropertyInfo && !((PropertyInfo)info).CanWrite))
+                    //!IsDictionary(itemType) && !IsCollection(itemType)
                     flag = true;
 
                 try { XmlConvert.VerifyName(info.Name); }
@@ -601,31 +607,28 @@ namespace DataWF.Common
 
         public static string BinaryFormatType(Type type)
         {
+            var builder = new StringBuilder();
             if (type.IsGenericType)
             {
-                var builder = new StringBuilder();
                 builder.Append($"{type.Namespace}.{type.Name}[");
                 foreach (var parameter in type.GetGenericArguments())
                 {
                     builder.Append($"[{BinaryFormatType(parameter)}], ");
                 }
                 builder.Length -= 2;
-                builder.Append("], ");
-                builder.Append(type.Assembly.GetName().Name);
-                return builder.ToString();
+                builder.Append("]");
             }
-            return $"{type.FullName}, {type.Assembly.GetName().Name}";
+            else
+            {
+                builder.Append(type.FullName);
+            }
+            var assemblyName = type.Assembly.GetName().Name;
+            if (assemblyName != "mscorlib")
+            {
+                builder.Append(", ");
+                builder.Append(assemblyName);
+            }
+            return builder.ToString();
         }
-
-        //private static Dictionary<string, MethodInfo> _cGenericMethods = new Dictionary<string, MethodInfo>(StringComparer.OrdinalIgnoreCase);
-        //public static MethodInfo MakeGenericMethod(MethodInfo info, Type type)
-        //{
-        //    string name = info.DeclaringType.FullName + info.Name + type.Name;
-        //    MethodInfo result = null;
-        //    if (!_cGenericMethods.TryGetValue(name, out result))
-        //        _cGenericMethods[name] = result = info.MakeGenericMethod(type);
-        //    return result;
-        //}
-
     }
 }

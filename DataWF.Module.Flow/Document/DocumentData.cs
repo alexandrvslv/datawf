@@ -47,11 +47,11 @@ namespace DataWF.Module.Flow
         {
         }
 
-        public override void Add(DocumentData item)
+        public override int AddInternal(DocumentData item)
         {
             if (document != null && item.Document == null)
                 item.Document = document;
-            base.Add(item);
+            return base.AddInternal(item);
         }
 
         public void FilterByDocument(Document document)
@@ -71,14 +71,15 @@ namespace DataWF.Module.Flow
             this.document = document;
         }
 
-        public override void Add(DocumentData item)
+        public override int AddInternal(DocumentData item)
         {
             if (Contains(item))
-                return;
+                return -1;
             if (item.Document == null)
                 item.Document = document;
-            base.Add(item);
+            int index = base.AddInternal(item);
             item.Attach();
+            return index;
         }
     }
 

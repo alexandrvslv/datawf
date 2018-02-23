@@ -5,8 +5,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{1CD6F41B-3619-4210-BCBD-4AD8DD55B00E}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>DataWf.Test.Module.Counterparty</RootNamespace>
-    <AssemblyName>DataWf.Test.Module.Counterparty</AssemblyName>
+    <RootNamespace>DataWF.Test.Module.Counterparty</RootNamespace>
+    <AssemblyName>DataWF.Test.Module.Counterparty</AssemblyName>
     <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">

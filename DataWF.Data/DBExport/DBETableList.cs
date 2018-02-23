@@ -26,24 +26,18 @@ namespace DataWF.Data
 {
     public class DBETableList : SelectableList<DBETable>
     {
-        [NonSerialized]
-        private DBExport export;
 
         public DBETableList(DBExport export)
         {
-            this.export = export;
+            Export = export;
         }
 
-        public DBExport Export
-        {
-            get { return export; }
-            set { export = value; }
-        }
+        public DBExport Export { get; set; }
 
-        public override void Add(DBETable item)
+        public override int AddInternal(DBETable item)
         {
-            item.Export = export;
-            base.Add(item);
+            item.Export = Export;
+            return base.AddInternal(item);
         }
 
     }

@@ -20,6 +20,8 @@ namespace DataWF.Gui
         {
             get { return (LayoutFilterView)Target; }
         }
+
+        public int FiltersCount { get { return FilterView.Filters.Count; } }
     }
 
     public class LayoutFilterView : LayoutList

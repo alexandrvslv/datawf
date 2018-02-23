@@ -13,34 +13,39 @@ namespace DataWF.Gui
 {
     public class LocalizeEditor : ListExplorer, ILocalizable
     {
-        private ToolItem toolLoadImages = new ToolItem();
-        private ToolItem toolSave = new ToolItem();
-        private ToolItem toolImages = new ToolItem();
-        private ToolWindow window = new ToolWindow();
+        private ToolItem toolLoadImages;
+        private ToolItem toolSave;
+        private ToolItem toolImages;
+        private ToolWindow window;
 
         public LocalizeEditor()
         {
-            toolImages.DisplayStyle = ToolItemDisplayStyle.Text;
-            toolImages.Name = "toolImages";
-            toolImages.Text = "Images";
-            toolImages.Click += ToolImagesClick;
+            toolImages = new ToolItem(ToolImagesClick)
+            {
+                DisplayStyle = ToolItemDisplayStyle.Text,
+                Name = "toolImages",
+                Text = "Images"
+            };
 
-            toolLoadImages.DisplayStyle = ToolItemDisplayStyle.Text;
-            toolLoadImages.Name = "toolLoadImages";
-            toolLoadImages.Text = "Load Images";
-            toolLoadImages.Click += ToolLoadImagesClick;
+            toolLoadImages = new ToolItem(ToolLoadImagesClick)
+            {
+                DisplayStyle = ToolItemDisplayStyle.Text,
+                Name = "toolLoadImages",
+                Text = "Load Images"
+            };
 
-            toolSave.DisplayStyle = ToolItemDisplayStyle.Text;
-            toolSave.Name = "toolSave";
-            toolSave.Text = "Save";
-            toolSave.Click += this.ToolSaveClick;
+            toolSave = new ToolItem()
+            {
+                DisplayStyle = ToolItemDisplayStyle.Text,
+                Name = "toolSave",
+                Text = "Save"
+            };
 
             Editor.Bar.Items.Add(new SeparatorToolItem());
             Editor.Bar.Items.Add(toolSave);
             Editor.Bar.Items.Add(toolImages);
             Editor.Bar.Items.Add(toolLoadImages);
             Editor.ReadOnly = false;
-            Editor.DataSource = Common.Locale.Data.Names;
             Editor.List.RetriveCellEditor += (object listItem, object value, ILayoutCell cell) =>
             {
                 if (cell.GetEditor(listItem) == null)
@@ -53,12 +58,14 @@ namespace DataWF.Gui
                 return null;
             };
 
+            DataSource = Locale.Instance;
+
             var images = new ListEditor();
             images.List.ListInfo.ColumnsVisible = false;
             images.List.ListInfo.HeaderVisible = false;
-            images.DataSource = Common.Locale.Data.Images;
+            images.DataSource = Locale.Instance.Images;
 
-            window.Target = images;
+            window = new ToolWindow { Target = images };
 
             Name = "LocalizeEditor";
             Text = "LocalizeEditor";
@@ -86,7 +93,7 @@ namespace DataWF.Gui
             {
                 foreach (string name in dialog.FileNames)
                 {
-                    Common.Locale.Data.Images.Add(new LImage()
+                    Locale.Instance.Images.Add(new LocaleImage
                     {
                         Data = File.ReadAllBytes(name),
                         FileName = name
@@ -97,7 +104,7 @@ namespace DataWF.Gui
 
         private void ToolSaveClick(object sender, EventArgs e)
         {
-            Common.Locale.Save();
+            Locale.Save();
         }
     }
 

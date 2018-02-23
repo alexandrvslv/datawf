@@ -50,13 +50,11 @@
     <Compile Include="List\QueryParameterList.cs" />
     <Compile Include="List\LogicType.cs" />
     <Compile Include="List\QResult.cs" />
-    <Compile Include="Localize\LImage.cs" />
-    <Compile Include="Localize\LImageList.cs" />
-    <Compile Include="Localize\LString.cs" />
-    <Compile Include="Localize\LStringList.cs" />
-    <Compile Include="Localize\Locale.cs" />
-    <Compile Include="Localize\LocaleItem.cs" />
-    <Compile Include="Localize\LocaleItemList.cs" />
+    <Compile Include="Locale\LocaleImage.cs" />
+    <Compile Include="Locale\LocaleImageList.cs" />
+    <Compile Include="Locale\LocaleString.cs" />
+    <Compile Include="Locale\Locale.cs" />
+    <Compile Include="Locale\LocaleItem.cs" />
     <Compile Include="Log\ExceptionInfo.cs" />
     <Compile Include="Log\StateInfo.cs" />
     <Compile Include="Log\StateInfoEventArgs.cs" />
@@ -76,8 +74,6 @@
     <Compile Include="Project\ProjectHandler.cs" />
     <Compile Include="Project\ProjectType.cs" />
     <Compile Include="Invoker\EmitInvoker.cs" />
-    <Compile Include="Invoker\Serialization.cs" />
-    <Compile Include="Invoker\SerializationNotifyEventArgs.cs" />
     <Compile Include="List\Pull.cs" />
     <Compile Include="List\INotifyListChanged.cs" />
     <Compile Include="Invoker\IInvoker.cs" />
@@ -111,6 +107,15 @@
     <Compile Include="Helper\GlyphType.cs" />
     <Compile Include="Helper\Interfaces.cs" />
     <Compile Include="Helper\Interval.cs" />
+    <Compile Include="Locale\LocaleCategory.cs" />
+    <Compile Include="Serializer\Serialization.cs" />
+    <Compile Include="Serializer\SerializationNotifyEventArgs.cs" />
+    <Compile Include="Serializer\XmlEmitReader.cs" />
+    <Compile Include="Serializer\XmlEmitWriter.cs" />
+    <Compile Include="Serializer\IDictionaryItem.cs" />
+    <Compile Include="Serializer\DictionaryItemT.cs" />
+    <Compile Include="Serializer\SerializeType.cs" />
+    <Compile Include="Serializer\DictionaryItem.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="fontawesome-webfont.ttf">
@@ -129,6 +134,7 @@
   <ItemGroup>
     <Folder Include="Access\" />
     <Folder Include="Helper\" />
+    <Folder Include="Serializer\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

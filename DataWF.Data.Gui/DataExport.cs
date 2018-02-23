@@ -313,11 +313,9 @@ namespace DataWF.Data.Gui
             export.Target = temp;
             foreach (var table in export.Tables)
                 table.Query = null;
-            var fileXML = System.IO.Path.GetFileNameWithoutExtension(export.Source.Connection.Host) + ".xml";
+            var fileXML = Path.GetFileNameWithoutExtension(export.Source.Connection.Host) + ".xml";
 
-            Serialization.CheckIFile = false;
             Serialization.Serialize(export, fileXML);
-            Serialization.CheckIFile = true;
 
             using (var dialog = new SaveFileDialog())
             {

@@ -34,7 +34,7 @@ namespace DataWF.Starter
                     using (var op = new ListExplorer())
                     {
                         op.DataSource = obj;
-                        op.Show(null);
+                        op.ShowWindow((WindowFrame)null);
                     }
                     Application.Run();
                     Serialization.Serialize(obj, args[i]);

@@ -86,7 +86,6 @@
     <Compile Include="DBTable\DBTableItem.cs" />
     <Compile Include="DBTable\DBTableList.cs" />
     <Compile Include="DBQuery\QExpression.cs" />
-    <Compile Include="DBItem\SortIndex.cs" />
     <Compile Include="DBItem\DBVirtualItem.cs" />
     <Compile Include="DBTable\DBVirtualTable.cs" />
     <Compile Include="Attributes\IndexAttribute.cs" />

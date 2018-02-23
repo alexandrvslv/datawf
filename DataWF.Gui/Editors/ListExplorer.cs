@@ -190,13 +190,12 @@ namespace DataWF.Gui
         {
             if (node.DataSource == null)
                 return;
-            object obj = node.DataSource;
 
-            foreach (var property in obj.GetType().GetProperties())
+            foreach (var property in node.DataSource.GetType().GetProperties())
             {
-                if (TypeHelper.GetBrowsable(property) && TypeHelper.IsList(property.PropertyType))
+                if (TypeHelper.GetBrowsable(property) && TypeHelper.IsList(property.PropertyType) && !TypeHelper.IsIndex(property))
                 {
-                    Node propertyNode = InitNode(property, EmitInvoker.GetValue(property, obj));
+                    Node propertyNode = InitNode(property, EmitInvoker.GetValue(property, node.DataSource));
                     if (propertyNode != null)
                     {
                         propertyNode.Group = node;
@@ -243,9 +242,9 @@ namespace DataWF.Gui
 
         public virtual void Localize()
         {
-            toolPrev.Text = Common.Locale.Get("OptionEditor", "Prev");
-            toolNext.Text = Common.Locale.Get("OptionEditor", "Next");
-            Text = Common.Locale.Get("OptionEditor", "Option Editor");
+            toolPrev.Text = Locale.Get("OptionEditor", "Prev");
+            toolNext.Text = Locale.Get("OptionEditor", "Next");
+            Text = Locale.Get("OptionEditor", "Option Editor");
             Editor.Localize();
         }
     }

@@ -29,14 +29,12 @@ namespace DataWF.Data
         {
         }
 
-        public override void Add(DBColumnGroup item)
+        public override int AddInternal(DBColumnGroup item)
         {
-            //if (item.Order == -1) 
             item.Order = this.Count;
             if (Contains(item.Name))
-                return;
-            base.Add(item);
-            //_Sort();
+                throw new InvalidOperationException($"Column group Name duplicaation {item.Name}!");
+            return base.AddInternal(item);
         }
     }
 }

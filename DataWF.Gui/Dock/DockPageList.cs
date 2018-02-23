@@ -6,29 +6,17 @@ namespace DataWF.Gui
 {
     public class DockPageList : SelectableList<DockPage>
     {
-        [NonSerialized()]
-        private DockPageBox box;
-
         public DockPageList(DockPageBox box)
             : base()
         {
-            this.box = box;
+            Box = box;
         }
 
-        public DockPageBox Box
-        {
-            get { return box; }
-        }
+        public DockPageBox Box { get; private set; }
 
         public DockPage this[string name]
         {
             get { return SelectOne(nameof(DockPage.Name), CompareType.Equal, name); }
-        }
-        
-        public override void Add(DockPage item)
-        {
-            item.List = this;
-            base.Add(item);
         }
 
         public override void Dispose()

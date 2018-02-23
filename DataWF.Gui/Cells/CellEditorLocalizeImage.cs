@@ -8,7 +8,7 @@ namespace DataWF.Gui
     {
         public CellEditorLocalizeImage()
         {
-            listSource = Locale.Data.Images;
+            listSource = Locale.Instance.Images;
         }
 
         public override object FormatValue(object value, object dataSource, Type valueType)
@@ -20,8 +20,8 @@ namespace DataWF.Gui
 
         public override object ParseValue(object value, object dataSource, Type valueType)
         {
-            if (value is LImage)
-                value = ((LImage)value).Key;
+            if (value is LocaleImage)
+                value = ((LocaleImage)value).Key;
             return base.ParseValue(value, dataSource, valueType);
         }
     }

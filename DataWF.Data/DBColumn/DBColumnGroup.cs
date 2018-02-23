@@ -28,12 +28,10 @@ namespace DataWF.Data
     {
         protected int order = -1;
 
-        public DBColumnGroup()
-            : base()
+        public DBColumnGroup() : base()
         { }
 
-        public DBColumnGroup(string name)
-            : base(name)
+        public DBColumnGroup(string name) : base(name)
         { }
 
         public override string FullName
@@ -64,22 +62,16 @@ namespace DataWF.Data
             return Table.Columns.GetByGroup(this);
         }
 
-        #region IComparable Members
-
         public override int CompareTo(object obj)
         {
             return (CompareTo((DBColumnGroup)obj));
         }
-
-        #endregion
-        #region IComparable<DBColumn> Members
 
         public int CompareTo(DBColumnGroup other)
         {
             return order.CompareTo(other.order);
         }
 
-        #endregion
         public override object Clone()
         {
             return new DBColumnGroup()

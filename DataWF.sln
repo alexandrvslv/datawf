@@ -47,7 +47,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Test.Module.Common",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Module.Counterpart", "DataWF.Module.Counterpart\DataWF.Module.Counterpart.csproj", "{D9D3537E-C1F9-4F59-AE2B-5098213FF747}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWf.Test.Module.Counterpart", "DataWf.Test.Module.Counterpart\DataWf.Test.Module.Counterpart.csproj", "{1CD6F41B-3619-4210-BCBD-4AD8DD55B00E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Test.Module.Counterpart", "DataWF.Test.Module.Counterpart\DataWF.Test.Module.Counterpart.csproj", "{1CD6F41B-3619-4210-BCBD-4AD8DD55B00E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Module.Finance", "DataWF.Module.Finance\DataWF.Module.Finance.csproj", "{89A2D4B4-6352-4193-BB62-12E9DEA49221}"
 EndProject

@@ -40,9 +40,7 @@ namespace DataWF.Data
 
     public class DBProcedure : DBSchemaItem, IData, IGroup
     {
-        [NonSerialized()]
         private Assembly tempAssembly;
-        [NonSerialized()]
         private byte[] cacheData;
 
         public DBProcedure()
@@ -118,9 +116,7 @@ namespace DataWF.Data
             get { return Store.SelectByParent(this); }
         }
 
-        [Description("Перечень Параметров Процедуры"), DisplayName("Параметры")]
-
-        public DBProcParameterList Parameters { get; internal set; }
+        public DBProcParameterList Parameters { get; set; }
 
         public DateTime Stamp { get; set; } = DateTime.Now;
 
@@ -174,8 +170,6 @@ namespace DataWF.Data
 
             return assembly;
         }
-
-
 
         public static Assembly Compile(string outFile, string[] files, out CompilerResults result, bool inMemory)
         {

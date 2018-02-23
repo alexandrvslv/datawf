@@ -38,7 +38,7 @@ namespace DataWF.Data.Gui
 
             DateTime dt = DateTime.Now;
 
-            elements.Add("дата", dt.ToString("D", Locale.Data.Culture));
+            elements.Add("дата", dt.ToString("D", Locale.Instance.Culture));
 
             string filename = Path.Combine(Helper.GetDirectory(Environment.SpecialFolder.LocalApplicationData), fields.FieldSource.ToString() + DateTime.Now.ToString("yyyyMMddHHmss") + ".odt");
             // File.WriteAllBytes(filename, td.UnLoad());

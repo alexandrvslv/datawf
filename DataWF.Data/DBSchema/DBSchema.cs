@@ -58,16 +58,6 @@ namespace DataWF.Data
             Serialization.Deserialize(fileName, this);
         }
 
-        public void InitTables()
-        {
-            foreach (DBTable table in Tables)
-            {
-                foreach (DBColumn column in table.Columns)
-                    if (column.Index == null && (column.IsPrimaryKey || (column.Keys & DBColumnKeys.Indexing) == DBColumnKeys.Indexing))
-                        column.Index = DBPullIndex.Fabric(column.DataType, table, column);
-            }
-        }
-
         public DBTable GenerateTable(string name)
         {
             DBTable table = null;
@@ -147,13 +137,13 @@ namespace DataWF.Data
             get { return Connection?.System; }
         }
 
-        public DBTableList Tables { get; private set; }
+        public DBTableList Tables { get; set; }
 
-        public DBTableGroupList TableGroups { get; private set; }
+        public DBTableGroupList TableGroups { get; set; }
 
-        public DBProcedureList Procedures { get; private set; }
+        public DBProcedureList Procedures { get; set; }
 
-        public DBSequenceList Sequences { get; private set; }
+        public DBSequenceList Sequences { get; set; }
 
         public override string Name
         {

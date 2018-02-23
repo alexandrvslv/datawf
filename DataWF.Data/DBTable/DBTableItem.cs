@@ -10,6 +10,8 @@ namespace DataWF.Data
 {
     public abstract class DBTableItem : DBSchemaItem, IDBTableContent
     {
+        private DBTable table;
+
         protected DBTableItem()
         { }
 
@@ -17,7 +19,18 @@ namespace DataWF.Data
         { }
 
         [XmlIgnore, Browsable(false)]
-        public DBTable Table { get; set; }
+        public DBTable Table
+        {
+            get { return table; }
+            set
+            {
+                if (table != value)
+                {
+                    table = value;
+                    LocaleInfo = null;
+                }
+            }
+        }
 
         [Browsable(false)]
         public override DBSchema Schema

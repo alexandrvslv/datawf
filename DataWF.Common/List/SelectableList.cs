@@ -11,13 +11,92 @@ namespace DataWF.Common
 
     public class SelectableList<T> : ISelectable, ISelectable<T>, IList, IList<T>
     {
-        [NonSerialized]
         protected ListIndexes<T> indexes = new ListIndexes<T>();
+        protected Type type;
+        protected List<T> items;
+        protected IComparer<T> comparer;
+        protected InvokerComparer<T> searchComparer;
+        protected PropertyChangedEventHandler propertyHandler;
+        protected SelectableListView<T> defaultView;
 
-        [XmlIgnore]
+        public SelectableList()
+        {
+            Initialize();
+        }
+
+        public SelectableList(IEnumerable<T> items, IComparer<T> comparer = null)
+        {
+            Initialize();
+            this.comparer = comparer;
+            AddRange(items);
+        }
+
+        [XmlIgnore, Browsable(false)]
         public ListIndexes<T> Indexes
         {
             get { return indexes; }
+        }
+
+        [XmlIgnore, Browsable(false)]
+        public int Capacity
+        {
+            get { return items.Capacity; }
+            set { items.Capacity = value; }
+        }
+
+        [Browsable(false)]
+        public bool IsFixedSize
+        {
+            get { return false; }
+        }
+
+        [XmlIgnore]
+        [Browsable(false)]
+        public Type ItemType
+        {
+            get { return type; }
+            set { type = value; }
+        }
+
+        [Browsable(false)]
+        public bool IsSorted
+        {
+            get { return comparer != null; }
+        }
+
+        [XmlIgnore, Browsable(false)]
+        public SelectableListView<T> DefaultView
+        {
+            get
+            {
+                if (defaultView == null)
+                    defaultView = new SelectableListView<T>(this);
+                return defaultView;
+            }
+        }
+
+        public int Count
+        {
+            get { return items.Count; }
+        }
+
+        [Browsable(false)]
+        public bool IsReadOnly
+        {
+            get { return false; }
+        }
+
+        [Browsable(false), XmlIgnore]
+        public virtual bool IsSynchronized
+        {
+            get { return true; }
+            set { }
+        }
+
+        [Browsable(false)]
+        public object SyncRoot
+        {
+            get { return items; }
         }
 
         #region Use Index
@@ -74,23 +153,9 @@ namespace DataWF.Common
 
         #endregion
 
-        protected Type type;
-        protected List<T> items;
-        protected IComparer<T> comparer;
-        protected InvokerComparer<T> searchComparer;
-        protected PropertyChangedEventHandler propertyHandler;
-        protected SelectableListView<T> defaultView;
-
-        public SelectableList()
+        public virtual object NewItem()
         {
-            Initialize();
-        }
-
-        public SelectableList(IEnumerable<T> items, IComparer<T> comparer = null)
-        {
-            Initialize();
-            this.comparer = comparer;
-            AddRange(items);
+            return TypeHelper.CreateObject(type);
         }
 
         private void Initialize()
@@ -188,12 +253,6 @@ namespace DataWF.Common
             }
         }
 
-        public int Capacity
-        {
-            get { return items.Capacity; }
-            set { items.Capacity = value; }
-        }
-
         public void InsertInternal(int index, T item)
         {
             if (item == null)
@@ -231,7 +290,7 @@ namespace DataWF.Common
             OnListChanged(ListChangedType.ItemAdded, index);
         }
 
-        public int AddInternal(T item)
+        public virtual int AddInternal(T item)
         {
             int index = GetIndexBySort(item);
             InsertInternal(index, item);
@@ -264,7 +323,10 @@ namespace DataWF.Common
         public virtual void Add(T item)
         {
             int index = AddInternal(item);
-            OnListChanged(ListChangedType.ItemAdded, index);
+            if (index >= 0)
+            {
+                OnListChanged(ListChangedType.ItemAdded, index);
+            }
         }
 
         public void RemoveInternal(T item, int index)
@@ -341,10 +403,6 @@ namespace DataWF.Common
             set { this[index] = (T)value; }
         }
 
-        public virtual object NewItem()
-        {
-            return TypeHelper.CreateObject(type);
-        }
 
         public void ApplySortInternal(params string[] property)
         {
@@ -404,11 +462,6 @@ namespace DataWF.Common
             return Select(property, comparer, value).FirstOrDefault();
         }
 
-        public bool IsSorted
-        {
-            get { return comparer != null; }
-        }
-
         public event ListChangedEventHandler ListChanged;
 
         public void RemoveSort()
@@ -464,17 +517,6 @@ namespace DataWF.Common
             return items.Count == 0 ? default(T) : items[items.Count - 1];
         }
 
-        [Browsable(false)]
-        public SelectableListView<T> DefaultView
-        {
-            get
-            {
-                if (defaultView == null)
-                    defaultView = new SelectableListView<T>(this);
-                return defaultView;
-            }
-        }
-
         #region ICollection Members
         public bool Contains(object item)
         {
@@ -486,30 +528,9 @@ namespace DataWF.Common
             return items.Contains(item);
         }
 
-        public int Count
-        {
-            get { return items.Count; }
-        }
-
-        public bool IsReadOnly
-        {
-            get { return false; }
-        }
-
         public void CopyTo(T[] array, int index)
         {
             items.CopyTo(array, index);
-        }
-
-        public virtual bool IsSynchronized
-        {
-            get { return true; }
-            set { }
-        }
-
-        public object SyncRoot
-        {
-            get { return items; }
         }
 
         void ICollection.CopyTo(Array array, int index)
@@ -519,8 +540,6 @@ namespace DataWF.Common
 
         #endregion
 
-        #region IEnumerable Members
-
         IEnumerator IEnumerable.GetEnumerator()
         {
             return items.GetEnumerator();
@@ -529,19 +548,6 @@ namespace DataWF.Common
         public IEnumerator<T> GetEnumerator()
         {
             return items.GetEnumerator();
-        }
-
-        #endregion
-
-        public bool IsFixedSize
-        {
-            get { return false; }
-        }
-
-        public Type ItemType
-        {
-            get { return type; }
-            set { type = value; }
         }
 
         public void AddRange(IEnumerable<T> list)

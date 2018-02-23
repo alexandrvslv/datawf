@@ -15,7 +15,7 @@ namespace DataWF.Gui
             Masked = true;
             string temp = Format;
             if (temp == null || temp.Length == 0)
-                temp = Locale.Data.Culture.DateTimeFormat.ShortDatePattern;
+                temp = Locale.Instance.Culture.DateTimeFormat.ShortDatePattern;
             if (temp.IndexOf("MM", StringComparison.OrdinalIgnoreCase) < 0)
                 temp = temp.Replace("M", "MM");
             if (temp.IndexOf("dd", StringComparison.OrdinalIgnoreCase) < 0)

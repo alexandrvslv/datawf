@@ -29,11 +29,6 @@ namespace DataWF.Data
             Indexes.Add(new Invoker<DBTableGroup, string>(nameof(DBTableGroup.GroupName), (item) => item.GroupName));
         }
 
-        public override void Add(DBTableGroup item)
-        {
-            base.Add(item);
-        }
-
         public IEnumerable<DBTableGroup> GetTopParents()
         {
             return Select(nameof(DBTableGroup.GroupName), CompareType.Equal, null);

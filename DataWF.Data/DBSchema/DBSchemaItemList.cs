@@ -20,14 +20,12 @@
 using DataWF.Common;
 using System;
 using System.ComponentModel;
+using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
     public class DBSchemaItemList<T> : SelectableList<T> where T : DBSchemaItem
     {
-        [NonSerialized()]
-        protected DBSchema schema;
-
         public DBSchemaItemList()
             : this(null)
         { }
@@ -36,15 +34,11 @@ namespace DataWF.Data
             : base()
         {
             Indexes.Add(new Invoker<DBSchemaItem, string>(nameof(DBSchemaItem.Name), (item) => item.Name));
-            this.schema = schema;
+            Schema = schema;
         }
 
-        [Browsable(false)]
-        public DBSchema Schema
-        {
-            get { return schema; }
-            internal set { schema = value; }
-        }
+        [XmlIgnore, Browsable(false)]
+        public DBSchema Schema { get; internal set; }
 
         public virtual T this[string name]
         {
@@ -96,22 +90,23 @@ namespace DataWF.Data
         //  return value;
         //}
 
-        public override void Add(T item)
+        public override int AddInternal(T item)
         {
             if (Contains(item.Name))
                 throw new Exception($"{typeof(T).Name} with name {item.Name} already exist");
 
-            if (item.Schema == null && schema != null)
-                item.Schema = schema;
+            if (item.Schema == null && Schema != null)
+                item.Schema = Schema;
 
-            base.Add(item);
+            int index = base.AddInternal(item);
             DBService.OnDBSchemaChanged(item, DDLType.Create);
+            return index;
         }
 
         public override object NewItem()
         {
-            T item = (T)EmitInvoker.CreateObject(typeof(T));
-            item.Schema = schema;
+            T item = (T)base.NewItem();
+            item.Schema = Schema;
             return item;
         }
     }

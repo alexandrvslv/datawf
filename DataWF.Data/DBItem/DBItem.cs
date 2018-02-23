@@ -526,17 +526,17 @@ namespace DataWF.Data
             update = state;
         }
 
-        public void SetCultureStrings(string @group, LStringList value)
+        public void SetCultureStrings(string @group, LocaleItem value)
         {
-            foreach (LString c in value)
+            foreach (LocaleString c in value)
             {
                 SetName(@group, c.Culture, c.Value);
             }
         }
 
-        public LStringList GetCultureStrings(string @group, string cultures)
+        public LocaleItem GetCultureStrings(string @group, string cultures)
         {
-            var cs = new LStringList();
+            var cs = new LocaleItem();
             if (string.IsNullOrEmpty(cultures))
             {
                 foreach (DBColumn col in table.Columns.GetByGroup(@group))
@@ -566,7 +566,7 @@ namespace DataWF.Data
 
         public string GetName(string @group)
         {
-            return GetName(@group, Locale.Data.Culture);
+            return GetName(@group, Locale.Instance.Culture);
         }
 
         public string GetName(string @group, CultureInfo culture)
@@ -588,7 +588,7 @@ namespace DataWF.Data
 
         public void SetName(string @group, string value)
         {
-            SetName(@group, Locale.Data.Culture, value);
+            SetName(@group, Locale.Instance.Culture, value);
         }
 
         public void SetName(string @group, CultureInfo culture, string value)

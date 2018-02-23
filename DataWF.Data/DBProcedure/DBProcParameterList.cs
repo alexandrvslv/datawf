@@ -22,19 +22,17 @@ namespace DataWF.Data
 {
     public class DBProcParameterList : DBSchemaItemList<DBProcParameter>
     {
-        private DBProcedure procedure;
-
         public DBProcParameterList(DBProcedure procedure)
         {
             this.Procedure = procedure;
         }
 
-        public DBProcedure Procedure { get => procedure; set => procedure = value; }
+        public DBProcedure Procedure { get; set; }
 
-        public override void Add(DBProcParameter item)
+        public override int AddInternal(DBProcParameter item)
         {
             item.Procedure = Procedure;
-            base.Add(item);
+            return base.AddInternal(item);
         }
     }
 }

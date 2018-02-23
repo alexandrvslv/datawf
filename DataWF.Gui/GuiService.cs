@@ -27,44 +27,59 @@ namespace DataWF.Gui
             return new Color(1D - color.Red, 1D - color.Green, 1D - color.Blue, color.Alpha);
         }
 
-        public static Command ShowDialog(this Widget widget, WindowFrame owner)
-        {
-            var window = new Dialog();
-            if (owner != null)
-                window.TransientFor = owner;
-            window.Content = widget;
-            return window.Run(owner);
-        }
-
         public static Command ShowDialog(this Widget widget, Widget owner)
         {
             return widget.ShowDialog(owner.ParentWindow);
         }
 
-        public static void Show(this Widget widget, Widget owner)
+        public static Command ShowDialog(this Widget widget, WindowFrame owner)
         {
-            var window = new Dialog();
-            window.TransientFor = owner?.ParentWindow;
-            window.Content = widget;
-            window.Show();
+            var window = new Dialog { Content = widget };
+            if (owner != null)
+                window.TransientFor = owner;
+            return window.Run(owner);
+        }
+
+        public static void ShowWindow(this Widget widget, Widget owner)
+        {
+            widget.ShowWindow(owner.ParentWindow);
+        }
+
+        public static void ShowWindow(this Widget widget, WindowFrame owner)
+        {
+            var vbox = new VBox();
+            vbox.PackStart(widget, true, true);
+            var window = new Window
+            {
+                Content = vbox,
+                Resizable = true,
+                InitialLocation = WindowLocation.CenterParent,
+                Title = widget is IText ? ((IText)widget).Text : widget.Name,
+                Padding = new WidgetSpacing(5, 5, 5, 5)
+            };
+            if (owner != null)
+            {
+                window.TransientFor = owner;
+            }
+            window.Visible = true;
+            //window.Show();
         }
 
         public static void Localize(object obj, string category, string name, GlyphType def = GlyphType.None)
         {
-            var item = Locale.Data.Names.GetByIndex(category, name);
+            var item = Locale.GetItem(category, name);
             if (item.Glyph == GlyphType.None && def != GlyphType.None)
                 item.Glyph = def;
             var picture = obj as IGlyph;
             if (picture != null)
             {
-                var image = Locale.Data.Images.GetByIndex(item.ImageKey);
-                picture.Image = (Image)image?.Cache;
+                picture.Image = Locale.GetImage(item.ImageKey) as Image;
                 picture.Glyph = item.Glyph;
             }
 
             var text = TypeHelper.GetMemberInfo(obj.GetType(), "Text");
             if (text != null)
-                EmitInvoker.SetValue(text, obj, item.CurrentName);
+                EmitInvoker.SetValue(text, obj, item.Value);
         }
 
         public static LayoutAlignType GetAlignRect(Rectangle bound, double size, double x, double y, ref Rectangle rec)
@@ -108,15 +123,6 @@ namespace DataWF.Gui
             return type;
         }
 
-        /// <summary>
-        /// Images from base64.
-        /// </summary>
-        /// <returns>
-        /// The from base64.
-        /// </returns>
-        /// <param name='text'>
-        /// Text.
-        /// </param>
         public static Image ImageFromBase64(string text)
         {
             try
@@ -132,15 +138,6 @@ namespace DataWF.Gui
             }
         }
 
-        /// <summary>
-        /// Images from byte.
-        /// </summary>
-        /// <returns>
-        /// The from byte.
-        /// </returns>
-        /// <param name='bytes'>
-        /// Bytes.
-        /// </param>
         public static Image ImageFromByte(byte[] bytes)
         {
             using (var stream = new MemoryStream(bytes))
@@ -149,15 +146,6 @@ namespace DataWF.Gui
             }
         }
 
-        /// <summary>
-        /// Images to byte.
-        /// </summary>
-        /// <returns>
-        /// The to byte.
-        /// </returns>
-        /// <param name='img'>
-        /// Image.
-        /// </param>
         public static byte[] ImageToByte(Image img)
         {
             using (var stream = new MemoryStream())

@@ -26,23 +26,17 @@ namespace DataWF.Data
 {
     public class DBEColumnList : SelectableList<DBEColumn>
     {
-        private DBETable table;
-
         public DBEColumnList(DBETable table)
         {
-            this.table = table;
+            Table = table;
         }
 
-        public DBETable Export
-        {
-            get { return table; }
-            set { table = value; }
-        }
+        public DBETable Table { get; set; }
 
-        public override void Add(DBEColumn item)
+        public override int AddInternal(DBEColumn item)
         {
-            item.Table = table;
-            base.Add(item);
+            item.Table = Table;
+            return base.AddInternal(item);
         }
 
     }

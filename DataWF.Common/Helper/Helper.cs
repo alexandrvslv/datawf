@@ -951,7 +951,7 @@ namespace DataWF.Common
             return string.Format("{0:0.00} {1}", l, i == 0 ? "B" : i == 1 ? "KB" : i == 2 ? "MB" : "GB");
         }
 
-        public static object TextParse(string value, Type type, string format)
+        public static object TextParse(string value, Type type, string format = "binary")
         {
             object rez = null;
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
@@ -1151,9 +1151,9 @@ namespace DataWF.Common
             return decimal.TryParse(p, out buf);
         }
 
-        public static void OnSerializeNotify(SerializationNotifyEventArgs arg)
+        public static void OnSerializeNotify(object sender, SerializationNotifyEventArgs arg)
         {
-            string message = arg.Type.ToString() + " " + arg.Obj;
+            string message = arg.Type.ToString() + " " + arg.Element;
             Logs.Add(new StateInfo("Serialization", message, arg.FileName, StatusType.Information));
         }
 

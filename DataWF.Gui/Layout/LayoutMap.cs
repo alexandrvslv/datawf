@@ -13,9 +13,7 @@ namespace DataWF.Gui
         protected int row = 0;
         protected int col = 0;
         protected LayoutItems items = null;
-        [DefaultValue(1D)]
         private double scale = 1D;
-        [DefaultValue(0D)]
         private double indent = 0D;
 
         public Func<ILayoutItem, double> CalcHeight;
@@ -84,6 +82,7 @@ namespace DataWF.Gui
         public LayoutItems Items
         {
             get { return items; }
+            set { items = value; }
         }
 
         public int Row

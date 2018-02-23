@@ -516,9 +516,8 @@ namespace DataWF.Data.Gui
                                 dbfile = file;
                         }
                         export.Source.Connection.Host = dbfile;
-                        var editor = new DataExport();
-                        editor.Export = export;
-                        editor.Show(this);
+                        var editor = new DataExport { Export = export };
+                        editor.ShowWindow(this);
                     }
                 }
             }
@@ -548,7 +547,7 @@ namespace DataWF.Data.Gui
                 editor.Patch();
                 editor.ParentWindow.Close();
             };
-            editor.Show(this);
+            editor.ShowWindow(this);
             editor.Initialise();
         }
 
@@ -796,7 +795,7 @@ namespace DataWF.Data.Gui
                 GuiService.Main.DockPanel.Put(editor, DockType.Content);
             else
             {
-                editor.Show(this);
+                editor.ShowWindow(this);
             }
         }
 

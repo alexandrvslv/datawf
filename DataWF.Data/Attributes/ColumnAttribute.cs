@@ -121,7 +121,7 @@ namespace DataWF.Data
                 }
                 if ((Keys & DBColumnKeys.Culture) == DBColumnKeys.Culture)
                 {
-                    foreach (var culture in Locale.Data.Cultures)
+                    foreach (var culture in Locale.Instance.Cultures)
                     {
                         GenerateCultureColumn(Table.Table, culture);
                     }

@@ -31,13 +31,13 @@ namespace DataWF.Data
             //indexList.Add(nameof(DBTable.BaseName));
         }
 
-        public override void Add(DBTable item)
+        public override int AddInternal(DBTable item)
         {
-            base.Add(item);
             if (item is IDBVirtualTable)
             {
                 ((IDBVirtualTable)item).BaseTable.AddVirtual((IDBVirtualTable)item);
             }
+            return base.AddInternal(item);
         }
     }
 }
