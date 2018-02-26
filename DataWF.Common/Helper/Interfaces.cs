@@ -210,4 +210,15 @@ namespace DataWF.Common
         byte[] Data { get; set; }
         string DataName { get; set; }
     }
+
+    public interface INamed
+    {
+        string Name { get; set; }
+    }
+
+    public interface INamedList : IList
+    {
+        INamed Get(string name);
+        void Set(INamed value);
+    }
 }

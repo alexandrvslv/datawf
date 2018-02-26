@@ -116,6 +116,7 @@
     <Compile Include="Serializer\DictionaryItemT.cs" />
     <Compile Include="Serializer\SerializeType.cs" />
     <Compile Include="Serializer\DictionaryItem.cs" />
+    <Compile Include="Serializer\Serializer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="fontawesome-webfont.ttf">

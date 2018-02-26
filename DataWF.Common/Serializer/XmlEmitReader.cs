@@ -7,12 +7,12 @@ namespace DataWF.Common
 {
     public class XmlEmitReader : IDisposable
     {
+        private Serializer Serializer { get; set; }
         public XmlReader Reader { get; set; }
-        public bool CheckIFile { get; set; }
 
-        public XmlEmitReader(Stream stream, bool checkIFile)
+        public XmlEmitReader(Stream stream, Serializer serializer)
         {
-            CheckIFile = checkIFile;
+            Serializer = serializer;
             Reader = XmlReader.Create(stream);
         }
 
@@ -28,85 +28,74 @@ namespace DataWF.Common
             return type;
         }
 
-        public void ReadAttributes(object element, Type type)
+        public void ReadAttributes(object element, TypeSerializationInfo info)
         {
             if (Reader.HasAttributes)
             {
                 while (Reader.MoveToNextAttribute())
                 {
-                    ReadAttribute(element, type);
+                    ReadAttribute(element, info);
                 }
                 Reader.MoveToElement();
             }
         }
 
-        public void ReadAttribute(object element, Type type)
+        public void ReadAttribute(object element, TypeSerializationInfo info)
         {
-            var member = TypeHelper.GetMemberInfo(type, Reader.Name, false);
+            var member = info.GetProperty(Reader.Name);
             if (member != null)
             {
-                EmitInvoker.SetValue(member, element, Helper.TextParse(Reader.Value, TypeHelper.GetMemberType(member)));
+                member.Invoker.Set(element, Helper.TextParse(Reader.Value, member.PropertyType));
             }
         }
 
-        public void ReadElement(object element, Type type, Type mtype)
+        public void ReadElement(object element, TypeSerializationInfo info, Type mtype)
         {
-            var member = TypeHelper.GetMemberInfo(type, Reader.Name, false);
+            var member = info.GetProperty(Reader.Name);
             if (member != null)
             {
-                mtype = mtype ?? TypeHelper.GetMemberType(member);
-                if (TypeHelper.IsXmlText(member) || TypeHelper.IsXmlAttribute(mtype))
+                mtype = mtype ?? member.PropertyType;
+                var mInfo = Serializer.GetTypeInfo(mtype);
+                if (member.IsText || mInfo.IsAttribute)
                 {
-                    EmitInvoker.SetValue(member, element, Helper.TextParse(Reader.ReadElementContentAsString(), mtype));
+                    member.Invoker.Set(element, Helper.TextParse(Reader.ReadElementContentAsString(), mtype));
                 }
                 else
                 {
-                    object value = EmitInvoker.GetValue(member, element);
+                    object value = member.Invoker.Get(element);
                     if (value == null)
-                        value = EmitInvoker.CreateObject(mtype, true);
+                        value = mInfo.Constructor.Create();
                     value = Read(value);
-                    EmitInvoker.SetValue(member, element, value);
+                    member.Invoker.Set(element, value);
                 }
             }
             else
             {
                 Reader.ReadInnerXml();
             }
-
         }
 
-        public object ReadCollection(object element, Type type)
+        public object ReadCollection(object element, TypeSerializationInfo info)
         {
-            Type defaultType = null;
-            int count = 0, i = 0;
-            if (Reader.HasAttributes)
-            {
-                while (Reader.MoveToNextAttribute())
-                {
-                    if (Reader.Name == "DT")
-                    {
-                        defaultType = TypeHelper.ParseType(Reader.Value);
-                    }
-                    else if (Reader.Name == "Count")
-                    {
-                        count = (int)Helper.TextParse(Reader.Value, typeof(int));
-                    }
-                    else
-                    {
-                        ReadAttribute(element, type);
-                    }
-                }
-                Reader.MoveToElement();
-            }
+            Type defaultType = TypeHelper.ParseType(Reader.GetAttribute("DT"));
+            int.TryParse(Reader.GetAttribute(nameof(ICollection.Count)), out int count);
+            int i = 0;
+
             if (element == null)
             {
-                element = EmitInvoker.CreateObject(type, new[] { typeof(int) }, new object[] { count }, true);
+                element = EmitInvoker.CreateObject(info.Type, new[] { typeof(int) }, new object[] { count }, true);
+            }
+            else
+            {
+                ReadAttributes(element, info);
+            }
+            if (Reader.IsEmptyElement)
+            {
+                return element;
             }
             var list = (IList)element;
-            //list.Clear();
-            if (Reader.IsEmptyElement)
-                return element;
-            defaultType = defaultType ?? TypeHelper.GetListItemType(list);
+
+            defaultType = defaultType ?? TypeHelper.GetItemType(list);
             while (Reader.Read() && Reader.NodeType != XmlNodeType.EndElement)
             {
                 Type itemType = defaultType;
@@ -126,18 +115,37 @@ namespace DataWF.Common
                         }
                         else
                         {
-                            newobj = i < list.Count ? list[i] : EmitInvoker.CreateObject(itemType, true);
+                            if (list is INamedList)
+                            {
+                                newobj = ((INamedList)list).Get(Reader.GetAttribute(nameof(INamed.Name)));
+                            }
+                            else if (i < list.Count)
+                            {
+                                newobj = list[i];
+                            }
+                            if (newobj == null)
+                            {
+                                newobj = EmitInvoker.CreateObject(itemType, true);
+                            }
                             newobj = Read(newobj);
                         }
-                        if (i < list.Count)
+                        if (list is INamedList)
+                        {
+                            ((INamedList)list).Set((INamed)newobj);
+                        }
+                        else if (i < list.Count)
+                        {
                             list[i] = newobj;
+                        }
                         else
+                        {
                             list.Add(newobj);
+                        }
                         i++;
                     }
                     else
                     {
-                        ReadElement(element, type, mtype);
+                        ReadElement(element, info, mtype);
                     }
                 }
             }
@@ -145,29 +153,29 @@ namespace DataWF.Common
             return element;
         }
 
-        public object ReadDictionary(object element, Type type)
+        public object ReadDictionary(object element, TypeSerializationInfo info)
         {
-            ReadAttributes(element, type);
+            ReadAttributes(element, info);
             if (Reader.IsEmptyElement)
                 return element;
             var dictionary = (IDictionary)element;
-            var item = DictionaryItem.Create(type);
+            var item = DictionaryItem.Create(info.Type);
 
             while (Reader.Read() && Reader.NodeType != XmlNodeType.EndElement)
             {
                 if (Reader.NodeType == XmlNodeType.Element)
                 {
                     Read(item);
-                    dictionary[item.Key] = item.Value;
+                    dictionary.Add(item.Key, item.Value);
                     item.Reset();
                 }
             }
             return element;
         }
 
-        public object ReadIFile(object element, Type type)
+        public object ReadIFile(object element, TypeSerializationInfo info)
         {
-            string fileName = Reader.GetAttribute("FileName");
+            string fileName = Reader.ReadElementContentAsString();
             if (fileName != null)
             {
                 var fullName = Path.GetFullPath(fileName);
@@ -194,41 +202,40 @@ namespace DataWF.Common
 
         public object Read(object element)
         {
-            string name = Reader.Name;
             Type type = element?.GetType();
 
             if (Reader.NodeType == XmlNodeType.Comment)
             {
                 type = ReadComment();
             }
-
             if (type == null)
             {
                 throw new ArgumentException("Element type can't be resolved!", nameof(element));
             }
-            if (TypeHelper.IsXmlAttribute(type))
+            var info = Serializer.GetTypeInfo(type);
+            if (info.IsAttribute)
             {
                 return Helper.TextParse(Reader.ReadElementContentAsString(), type);
             }
             if (element == null || element.GetType() != type)
             {
-                element = EmitInvoker.CreateObject(type, true);
+                element = info.Constructor?.Create();
             }
-            if (CheckIFile && element is IFileSerialize && Reader.Depth > 0)
+            if (Serializer.CheckIFile && element is IFileSerialize && Reader.Depth > 0)
             {
-                return ReadIFile(element, type);
+                return ReadIFile(element, info);
             }
             if (TypeHelper.IsDictionary(type))
             {
-                return ReadDictionary(element, type);
+                return ReadDictionary(element, info);
             }
             if (TypeHelper.IsList(type))
             {
-                return ReadCollection(element, type);
+                return ReadCollection(element, info);
             }
             if (Reader.HasAttributes)
             {
-                ReadAttributes(element, type);
+                ReadAttributes(element, info);
             }
             if (Reader.IsEmptyElement)
             {
@@ -243,7 +250,7 @@ namespace DataWF.Common
                 }
                 if (Reader.NodeType == XmlNodeType.Element)
                 {
-                    ReadElement(element, type, mtype);
+                    ReadElement(element, info, mtype);
                 }
                 else if (Reader.NodeType == XmlNodeType.Text)
                 {

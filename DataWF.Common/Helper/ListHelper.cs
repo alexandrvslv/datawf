@@ -636,7 +636,7 @@ namespace DataWF.Common
                 else
                     result = x.Equals(y);
             }
-            else if(x.Equals(y))
+            else if (x.Equals(y))
             {
                 result = true;
             }

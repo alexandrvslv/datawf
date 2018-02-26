@@ -8,29 +8,36 @@ namespace DataWF.Common
 {
     public class XmlEmitWriter : IDisposable
     {
+        private Serializer Serializer { get; set; }
         public XmlWriter Writer { get; set; }
 
-        public bool CheckIFile { get; set; }
-
-        public XmlEmitWriter(Stream stream, bool indent, bool checkIFile)
+        public XmlEmitWriter(Stream stream, Serializer serializer)
         {
-            CheckIFile = checkIFile;
-            Writer = XmlWriter.Create(stream, new XmlWriterSettings { Indent = indent });
+            Writer = XmlWriter.Create(stream, new XmlWriterSettings { Indent = serializer.Indent });
+            Serializer = serializer;
         }
 
-        public void WriteCollection(object element, Type type)
+        public void WriteNamedList(INamedList list, Type type)
         {
-            var collection = (ICollection)element;
-            var dtype = TypeHelper.GetListItemType(collection, false);
+            var dtype = TypeHelper.GetItemType(list, false);
+            foreach (object item in list)
+            {
+                Write(item, "i", dtype != item.GetType());
+            }
+        }
+
+        public void WriteCollection(ICollection collection, Type type)
+        {
+            var dtype = TypeHelper.GetItemType(collection, false);
             foreach (object item in collection)
             {
                 Write(item, "i", dtype != item.GetType());
             }
         }
 
-        public void WriteDictionary(object element, Type type)
+        public void WriteDictionary(IEnumerable dictionary, Type type)
         {
-            var dictionary = element as IEnumerable;
+            //var dictionary = element as IEnumerable;
             var item = DictionaryItem.Create(type);
             foreach (var entry in dictionary)
             {
@@ -41,78 +48,83 @@ namespace DataWF.Common
 
         public void BeginWrite(object element)
         {
+            if (element == null)
+                return;
+
             Write(element, "e", true);
-            Writer.Flush();
         }
 
         public void Write(object element, string name, bool writeType)
         {
-            if (element == null)
-                return;
-            //Console.WriteLine($"Xml Write {name}");
             Type type = element.GetType();
+            Write(element, Serializer.GetTypeInfo(type), name, writeType);
+        }
+
+        public void Write(object element, TypeSerializationInfo info, string name, bool writeType)
+        {
+            //Console.WriteLine($"Xml Write {name}");
             if (writeType)
             {
-                Writer.WriteComment(Helper.TextBinaryFormat(type));
+                Writer.WriteComment(info.TypeName);
             }
             Writer.WriteStartElement(name);
-            if (TypeHelper.IsXmlAttribute(type))
+            if (info.IsAttribute)
             {
                 Writer.WriteValue(Helper.TextBinaryFormat(element));
             }
-            else if (CheckIFile && element is IFileSerialize)
+            else if (Serializer.CheckIFile && element is IFileSerialize)
             {
                 var fileSerialize = element as IFileSerialize;
                 fileSerialize.Save();
-                Writer.WriteAttributeString("FileName", fileSerialize.FileName);
+                Writer.WriteElementString("FileName", fileSerialize.FileName);
             }
             else
             {
                 if (element is IList)
                 {
-                    var dtype = TypeHelper.GetListItemType(((IList)element), false);
+                    var dtype = TypeHelper.GetItemType(((IList)element), false);
                     Writer.WriteAttributeString("Count", Helper.TextBinaryFormat(((IList)element).Count));
-                    if (!type.IsGenericType
+                    if (!info.Type.IsGenericType
                         && (!(element is ISortable) || ((ISortable)element).ItemType.IsInterface)
-                        && dtype != typeof(object) && !type.IsArray)
+                        && dtype != typeof(object) && !info.Type.IsArray)
                     {
                         Writer.WriteAttributeString("DT", Helper.TextBinaryFormat(dtype));
                     }
                 }
 
-                foreach (PropertyInfo info in TypeHelper.GetTypeItems(type, true))
+                foreach (var property in info.Properties)
                 {
-                    if (TypeHelper.IsIndex(info) || TypeHelper.IsNonSerialize(info))
-                        continue;
-                    var value = TypeHelper.GetValue(info, element);
-                    if (value == null || TypeHelper.CheckDefault(info, value))
-                        //|| (value is IDictionary && ((IDictionary)value).Count == 0)
-                        //|| (value is IList && ((IList)value).Count == 0))
+                    var value = property.Invoker.Get(element);
+                    if (value == null || property.CheckDefault(value))
                         continue;
 
-                    var mtype = TypeHelper.GetMemberType(info);
+                    var mtype = property.PropertyType;
 
-                    if (TypeHelper.IsXmlAttribute(info))
+                    if (property.IsAttribute)
                     {
-                        Writer.WriteAttributeString(info.Name, Helper.TextBinaryFormat(value));
+                        Writer.WriteAttributeString(property.PropertyName, Helper.TextBinaryFormat(value));
                     }
-                    else if (TypeHelper.IsXmlText(info))
+                    else if (property.IsText)
                     {
-                        Writer.WriteElementString(info.Name, Helper.TextBinaryFormat(value));
+                        Writer.WriteElementString(property.PropertyName, Helper.TextBinaryFormat(value));
                     }
                     else
                     {
-                        Write(value, info.Name, value.GetType() != mtype && mtype != typeof(Type));
+                        Write(value, property.PropertyName, value.GetType() != mtype && mtype != typeof(Type));
                     }
                 }
 
-                if (element is IList)
+                if (element is IDictionary)
                 {
-                    WriteCollection(element, type);
+                    WriteDictionary((IEnumerable)element, info.Type);
                 }
-                else if (element is IDictionary)
+                else if (element is INamedList)
                 {
-                    WriteDictionary(element, type);
+                    WriteNamedList((INamedList)element, info.Type);
+                }
+                else if (element is IList)
+                {
+                    WriteCollection((ICollection)element, info.Type);
                 }
             }
             Writer.WriteEndElement();

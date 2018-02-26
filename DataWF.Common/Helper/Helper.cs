@@ -890,6 +890,10 @@ namespace DataWF.Common
                 return null;
             string result = null;
 
+            if (value is string)
+            {
+                result = (string)value;
+            }
             if (value is CultureInfo)
             {
                 result = ((CultureInfo)value).Name;

@@ -18,8 +18,10 @@ namespace DataWF.Common
     {
         private static Type[] typeOneArray = { typeof(string) };
         private static Dictionary<string, MemberInfo> casheNames = new Dictionary<string, MemberInfo>(200, StringComparer.Ordinal);
+        private static Dictionary<string, Type> cacheTypes = new Dictionary<string, Type>(500, StringComparer.Ordinal);
         private static Dictionary<MemberInfo, bool> cacheIsXmlText = new Dictionary<MemberInfo, bool>(500);
-        private static Dictionary<MemberInfo, TypeConverter> cacheTypeConverter = new Dictionary<MemberInfo, TypeConverter>(500);
+        private static Dictionary<Type, TypeConverter> cacheTypeConverter = new Dictionary<Type, TypeConverter>(500);
+        private static Dictionary<Type, List<PropertyInfo>> cacheTypeProperties = new Dictionary<Type, List<PropertyInfo>>(500);
         private static Dictionary<MemberInfo, bool> cacheIsXmlAttribute = new Dictionary<MemberInfo, bool>(500);
         private static Dictionary<Type, bool> cacheTypeIsXmlAttribute = new Dictionary<Type, bool>(500);
         private static Dictionary<MemberInfo, bool> cacheIsXmlSerialize = new Dictionary<MemberInfo, bool>(500);
@@ -76,57 +78,21 @@ namespace DataWF.Common
         //    return split[split.Length - 1];
         //}
 
-        /// <summary>
-        /// Determines whether the specified type is dictionary.
-        /// </summary>
-        /// <returns>
-        /// <c>true</c> if specified type implement IDictionary; otherwise, <c>false</c>.
-        /// </returns>
-        /// <param name='type'>
-        /// type.
-        /// </param>
         public static bool IsDictionary(Type type)
         {
             return IsInterface(type, typeof(IDictionary)) && type != typeof(byte[]);
         }
 
-        /// <summary>
-        /// Determines whether the specified type is list.
-        /// </summary>
-        /// <returns>
-        /// <c>true</c> if specified type implement IList; otherwise, <c>false</c>.
-        /// </returns>
-        /// <param name='type'>
-        /// type.
-        /// </param>
         public static bool IsList(Type type)
         {
             return IsInterface(type, typeof(IList)) && type != typeof(byte[]);
         }
 
-        /// <summary>
-        /// Determines whether this specified type is collection.
-        /// </summary>
-        /// <returns>
-        /// <c>true</c> if this specified type is collection; otherwise, <c>false</c>.
-        /// </returns>
-        /// <param name='type'>
-        /// If set to <c>true</c> type.
-        /// </param>
         public static bool IsCollection(Type type)
         {
             return IsInterface(type, typeof(ICollection)) && type != typeof(byte[]);
         }
 
-        /// <summary>
-        /// Determines whether the specified type is file serialized.
-        /// </summary>
-        /// <returns>
-        /// <c>true</c> if specified type implement IFSerialize; otherwise, <c>false</c>.
-        /// </returns>
-        /// <param name='type'>
-        /// type
-        /// </param>
         public static bool IsFSerialize(Type type)
         {
             return IsInterface(type, typeof(IFileSerialize));
@@ -161,19 +127,25 @@ namespace DataWF.Common
 
         public static Type ParseType(string value)
         {
-            Type type = Type.GetType(value);
-            if (type == null)
+            if (string.IsNullOrEmpty(value))
+                return null;
+            if (!cacheTypes.TryGetValue(value, out Type type))
             {
-                int index = value.LastIndexOf(',');
-                string code = index >= 0 ? value.Substring(0, index) : value;
-                type = Type.GetType(code);
-                var asseblyes = AppDomain.CurrentDomain.GetAssemblies();
-                foreach (var assembly in asseblyes)
+                type = Type.GetType(value);
+                if (type == null)
                 {
-                    type = assembly.GetType(code);
-                    if (type != null)
-                        break;
+                    int index = value.LastIndexOf(',');
+                    string code = index >= 0 ? value.Substring(0, index) : value;
+                    type = Type.GetType(code);
+                    var asseblyes = AppDomain.CurrentDomain.GetAssemblies();
+                    foreach (var assembly in asseblyes)
+                    {
+                        type = assembly.GetType(code);
+                        if (type != null)
+                            break;
+                    }
                 }
+                cacheTypes[value] = type;
             }
             return type;
         }
@@ -236,15 +208,6 @@ namespace DataWF.Common
             return flag;
         }
 
-        /// <summary>
-        /// Determines whether specified field is non serialized.
-        /// </summary>
-        /// <returns>
-        /// <c>true</c> if the specified field have NonSerializedAttribute ; otherwise, <c>false</c>.
-        /// </returns>
-        /// <param name='info'>
-        /// filed info.
-        /// </param>
         public static bool IsNonSerialize(MemberInfo info)
         {
             if (!cacheIsXmlSerialize.TryGetValue(info, out bool flag))
@@ -273,26 +236,19 @@ namespace DataWF.Common
             return flag;
         }
 
-        /// <summary>
-        /// Compare the default value the specified field DefaultValueAttribute and specified value.
-        /// </summary>
-        /// <returns>
-        /// <c>true</c> if the specified field have DefaultValueAttribute and it's value equal to specified value ; otherwise, <c>false</c>.
-        /// </returns>
-        /// <param name='field'>
-        /// Field Info.
-        /// </param>
-        /// <param name='value'>
-        /// Value.
-        /// </param>
-        public static bool CheckDefault(MemberInfo field, object value)
+        public static object GetDefault(MemberInfo info)
         {
-            if (!cacheDefault.TryGetValue(field, out object defaultValue))
+            if (!cacheDefault.TryGetValue(info, out object defaultValue))
             {
-                var defaultAttribute = (DefaultValueAttribute)field.GetCustomAttribute(typeof(DefaultValueAttribute), false);
-                defaultValue = cacheDefault[field] = defaultAttribute == null ? null : defaultAttribute.Value;
+                var defaultAttribute = (DefaultValueAttribute)info.GetCustomAttribute(typeof(DefaultValueAttribute), false);
+                defaultValue = cacheDefault[info] = defaultAttribute == null ? null : defaultAttribute.Value;
             }
+            return defaultValue;
+        }
 
+        public static bool CheckDefault(MemberInfo info, object value)
+        {
+            var defaultValue = GetDefault(info);
             if (defaultValue == null && value == null)
                 return true;
             if (defaultValue == null)
@@ -309,6 +265,18 @@ namespace DataWF.Common
             if (info is MethodInfo)
                 return ((MethodInfo)info).ReturnType;
             return info.ReflectedType;
+        }
+
+        public static PropertyInfo GetPropertyInfo(Type type, string name)
+        {
+            if (type == null || name == null)
+                return null;
+            string cachename = string.Format("{0}.{1}", type.FullName, name);
+            PropertyInfo info = null;
+            if (casheNames.TryGetValue(cachename, out var minfo))
+                return (PropertyInfo)minfo;
+            casheNames[cachename] = info = type.GetProperty(name, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+            return info;
         }
 
         public static MemberInfo GetMemberInfo(Type type, string name, bool generic = false, params Type[] types)
@@ -405,18 +373,6 @@ namespace DataWF.Common
             return EmitInvoker.GetValue(info, item);
         }
 
-        /// <summary>
-        /// Gets the fields.
-        /// </summary>
-        /// <returns>
-        /// The fields array.
-        /// </returns>
-        /// <param name='type'>
-        /// Type.
-        /// </param>
-        /// <param name='nonPublic'>
-        /// Non public flag.
-        /// </param>
         public static FieldInfo[] GetFields(Type type, bool nonPublic)
         {
             BindingFlags flag = BindingFlags.Instance;
@@ -431,50 +387,15 @@ namespace DataWF.Common
             BindingFlags flag = BindingFlags.Instance | BindingFlags.Public;
             if (nonPublic)
                 flag |= BindingFlags.NonPublic;
-            PropertyInfo[] buf = type.GetProperties(flag);
-            if (buf.Length > 1 && buf[0].DeclaringType != buf[buf.Length - 1].DeclaringType)
-            {
-                type = buf[0].DeclaringType;
-                var bufs = new List<PropertyInfo>(buf);
-                for (int i = bufs.Count - 1, j = 0; i > 0; i--, j++)
-                {
-                    PropertyInfo b = bufs[i];
-                    if (b.DeclaringType != type)
-                    {
-                        bufs.RemoveAt(i);
-                        bufs.Insert(0, b);
-                        i++;
-                    }
-                    else
-                        break;
-                    if (j >= bufs.Count)
-                        break;
-                }
-                for (int i = 0; i < bufs.Count; i++)
-                    buf[i] = bufs[i];
-            }
-            //Array.Sort(buf, delegate(PropertyInfo x, PropertyInfo y) {
-            //	int v = x.DeclaringType.BaseType == y.DeclaringType.BaseType?0:1;
-            //	return v;
-            //});
-            return buf;
+            return type.GetProperties(flag);
         }
 
-        /// <summary>
-        /// Creates the object using EmitInvoker.
-        /// </summary>
-        /// <returns>
-        /// The object.
-        /// </returns>
-        /// <param name='type'>
-        /// Type.
-        /// </param>
         public static object CreateObject(Type type)
         {
             if (type == typeof(string))
                 return "";
-            var ra = EmitInvoker.Initialize(type, Type.EmptyTypes, true);
-            return ra == null ? null : ra.Create();
+            var invoker = EmitInvoker.Initialize(type, Type.EmptyTypes, true);
+            return invoker?.Create();
         }
 
         public static string GetDisplayName(PropertyInfo property)
@@ -532,25 +453,29 @@ namespace DataWF.Common
             return attrs != null && attrs.IsModule;
         }
 
-        public static List<MemberInfo> GetTypeItems(Type type, bool byProperty)
+        public static List<PropertyInfo> GetTypeProperties(Type type)
         {
-            var flist = byProperty ? GetPropertyes(type, false).Cast<MemberInfo>().ToList() : GetFields(type, true).Cast<MemberInfo>().ToList();
-            flist.Sort(delegate (MemberInfo x, MemberInfo y)
+            if (!cacheTypeProperties.TryGetValue(type, out var flist))
             {
-                if (IsXmlAttribute(x) && !IsXmlText(x))
+                flist = GetPropertyes(type, false).ToList();
+                flist.Sort(delegate (PropertyInfo x, PropertyInfo y)
                 {
+                    if (IsXmlAttribute(x) && !IsXmlText(x))
+                    {
+                        if (IsXmlAttribute(y) && !IsXmlText(y))
+                            return string.Compare(x.Name, y.Name, StringComparison.Ordinal);
+                        return -1;
+                    }
                     if (IsXmlAttribute(y) && !IsXmlText(y))
-                        return string.Compare(x.Name, y.Name, StringComparison.Ordinal);
-                    return -1;
-                }
-                if (IsXmlAttribute(y) && !IsXmlText(y))
-                    return 1;
-                return string.Compare(x.Name, y.Name, StringComparison.Ordinal);
-            });
+                        return 1;
+                    return string.Compare(x.Name, y.Name, StringComparison.Ordinal);
+                });
+                cacheTypeProperties[type] = flist;
+            }
             return flist;
         }
 
-        public static Type GetListItemType(ICollection collection, bool ignoreInteface = true)
+        public static Type GetItemType(ICollection collection, bool ignoreInteface = true)
         {
             Type t = typeof(object);
 
