@@ -1,13 +1,15 @@
 ﻿using DataWF.Common;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using Xwt;
 using Xwt.Drawing;
 
 namespace DataWF.Gui
 {
-    public class PListStyles : SelectableList<CellStyle>
+    public class CellStyleList : SelectableList<CellStyle>, INamedList
     {
-        public PListStyles()
+        public CellStyleList()
         {
             Indexes.Add(new Invoker<CellStyle, string>(nameof(CellStyle.Name), (item) => item.Name));
         }
@@ -189,7 +191,16 @@ namespace DataWF.Gui
 
         public CellStyle this[string param]
         {
-            get { return SelectOne("Name", param); }
+            get { return SelectOne(nameof(CellStyle.Name), param); }
+            set
+            {
+                var exists = this[param];
+                if (exists != value)
+                {
+                    Remove(exists);
+                    Add(value);
+                }
+            }
         }
 
         public override int AddInternal(CellStyle item)
@@ -206,11 +217,36 @@ namespace DataWF.Gui
             return -1;
         }
 
+        public bool Contains(string name)
+        {
+            return this[name] != null;
+        }
+
+        public bool Remove(string name)
+        {
+            return Remove(this[name]);
+        }
+
         public override void Dispose()
         {
             foreach (var item in items)
                 item.Dispose();
             base.Dispose();
         }
+
+        public INamed Get(string name)
+        {
+            return this[name];
+        }
+
+        public void Set(INamed value)
+        {
+            if (value != null)
+            {
+                this[value.Name] = (CellStyle)value;
+            }
+        }
     }
+
+
 }

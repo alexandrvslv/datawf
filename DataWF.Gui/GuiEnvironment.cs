@@ -32,7 +32,7 @@ namespace DataWF.Gui
             get { return instance.Projects; }
         }
 
-        public static PListStyles StylesInfo
+        public static CellStyleList StylesInfo
         {
             get { return instance.Styles; }
         }
@@ -80,7 +80,7 @@ namespace DataWF.Gui
         public LayoutFieldInfoCache Fields { get; set; } = new LayoutFieldInfoCache();
         public LayoutListInfoCache Lists { get; set; } = new LayoutListInfoCache();
         public ProjectHandleList Projects { get; set; } = new ProjectHandleList();
-        public PListStyles Styles { get; set; } = new PListStyles();
+        public CellStyleList Styles { get; set; } = new CellStyleList();
         public WebLinkList Links { get; set; } = new WebLinkList();
 
         public void Dispose()

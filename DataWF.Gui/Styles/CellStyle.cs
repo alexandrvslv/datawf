@@ -1,12 +1,13 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Xml.Serialization;
+using DataWF.Common;
 using Xwt;
 using Xwt.Drawing;
 
 namespace DataWF.Gui
 {
-    public class CellStyle : IDisposable
+    public class CellStyle : IDisposable, INamed
     {
         protected Font font = null;
         protected CellStyleBrush back = null;

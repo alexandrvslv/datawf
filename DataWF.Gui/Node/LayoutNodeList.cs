@@ -58,6 +58,15 @@ namespace DataWF.Gui
                 n.order = nindex++;
         }
 
+        public void Localize()
+        {
+            foreach (var node in items)
+            {
+                if (node is ILocalizable)
+                    ((ILocalizable)node).Localize();
+            }
+        }
+
         public Node Add(string name, string header)
         {
             T node = new T() { Name = name, Text = header };

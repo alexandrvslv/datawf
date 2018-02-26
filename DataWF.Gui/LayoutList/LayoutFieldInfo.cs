@@ -125,11 +125,13 @@ namespace DataWF.Gui
         public CategoryList Categories
         {
             get { return cats; }
+            set { cats = value; }
         }
 
         public LayoutNodeList<LayoutField> Nodes
         {
             get { return nodes; }
+            set { nodes = value; }
         }
 
         public CellStyle Style

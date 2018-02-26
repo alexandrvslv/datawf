@@ -1990,7 +1990,7 @@ namespace DataWF.Gui
                     else if (listSource is IBindingList)
                         ((IBindingList)listSource).ListChanged += handleListChanged;
 
-                    ListType = TypeHelper.GetListItemType(listSource);
+                    ListType = TypeHelper.GetItemType(listSource);
 
                     GeneratingHeadColumn();
                     hitt.Location = LayoutHitTestLocation.None;
@@ -4000,7 +4000,10 @@ namespace DataWF.Gui
         {
             if (listSource != null)
                 RefreshInfo();
-
+            if (listMode == LayoutListMode.Tree)
+            {
+                Nodes.Localize();
+            }
             if (listMode == LayoutListMode.Fields)
             {
                 foreach (LayoutField field in fieldInfo.Nodes)

@@ -7,11 +7,12 @@ namespace DataWF.Gui
 {
     public class LayoutListInfoCache
     {
-        Dictionary<string, LayoutListInfo> items = new Dictionary<string, LayoutListInfo>();
+        Dictionary<string, LayoutListInfo> items = new Dictionary<string, LayoutListInfo>(StringComparer.Ordinal);
 
         public Dictionary<string, LayoutListInfo> Items
         {
             get { return items; }
+            set { items = value; }
         }
 
         public void Remove(string key)
@@ -33,8 +34,7 @@ namespace DataWF.Gui
         {
             get
             {
-                LayoutListInfo info = null;
-                items.TryGetValue(key, out info);
+                items.TryGetValue(key, out LayoutListInfo info);
                 return info;
             }
             set

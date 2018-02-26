@@ -1,14 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace DataWF.Gui
 {
     public class LayoutFieldInfoCache
     {
-        Dictionary<string, LayoutFieldInfo> items = new Dictionary<string, LayoutFieldInfo>();
+        Dictionary<string, LayoutFieldInfo> items = new Dictionary<string, LayoutFieldInfo>(StringComparer.Ordinal);
 
         public Dictionary<string, LayoutFieldInfo> Items
         {
             get { return items; }
+            set { items = value; }
         }
 
         public void Remove(string key)

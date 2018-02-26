@@ -33,7 +33,7 @@
     <Reference Include="System" />
     <Reference Include="System.Xml" />
     <Reference Include="Xwt">
-      <HintPath>..\packages\Xwt.0.2.76\lib\net40\Xwt.dll</HintPath>
+      <HintPath>..\packages\Xwt.0.2.78\lib\net40\Xwt.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -129,7 +129,7 @@
     <Compile Include="Misc\VPanel.cs" />
     <Compile Include="Styles\CellStyle.cs" />
     <Compile Include="Styles\CellStyleBrush.cs" />
-    <Compile Include="Styles\PListStyles.cs" />
+    <Compile Include="Styles\CellStyleList.cs" />
     <Compile Include="LayoutList\LayoutValueEventArgs.cs" />
     <Compile Include="LayoutList\LayoutMenu.cs" />
     <Compile Include="Cells\CellEditorPassword.cs" />

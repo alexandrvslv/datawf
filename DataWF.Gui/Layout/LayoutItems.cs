@@ -4,7 +4,7 @@ using DataWF.Common;
 
 namespace DataWF.Gui
 {
-    public class LayoutItems : SelectableList<ILayoutItem>
+    public class LayoutItems : SelectableList<ILayoutItem>, INamedList
     {
         public LayoutItems(ILayoutMap map)
         {
@@ -15,9 +15,26 @@ namespace DataWF.Gui
         [XmlIgnore]
         public ILayoutMap Map { get; private set; }
 
-        public override void Clear()
+        public override int AddInternal(ILayoutItem item)
         {
-            base.Clear();
+            if (string.IsNullOrEmpty(item.Name))
+                item.Name = "litem" + items.Count;
+            return base.AddInternal(item);
+        }
+
+        public INamed Get(string name)
+        {
+            return LayoutMapHelper.Get(Map, name);
+        }
+
+        public void Set(INamed value)
+        {
+            var exist = LayoutMapHelper.Get(Map, value.Name);
+            if (exist != value)
+            {
+                Remove(exist);
+                Add((ILayoutItem)value);
+            }
         }
     }
 }

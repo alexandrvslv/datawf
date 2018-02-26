@@ -3,7 +3,7 @@ using Xwt;
 
 namespace DataWF.Gui
 {
-    public interface ILayoutItem : IContainerNotifyPropertyChanged
+    public interface ILayoutItem : IContainerNotifyPropertyChanged, INamed
     {
         Rectangle Bound { get; set; }
 
@@ -20,8 +20,6 @@ namespace DataWF.Gui
         bool FillWidth { get; set; }
 
         bool FillHeight { get; set; }
-
-        string Name { get; }
 
         ILayoutMap Map { get; }
     }

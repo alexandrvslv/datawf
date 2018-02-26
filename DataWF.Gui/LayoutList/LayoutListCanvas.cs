@@ -76,7 +76,8 @@ namespace DataWF.Gui
             var size = base.OnGetPreferredSize(widthConstraint, heightConstraint);
             if (List.AutoSize && List.ListInfo != null)
             {
-                List.ListInfo.GetColumnsBound(widthConstraint.AvailableSize, null, null);
+                if (List.ListInfo.Columns.Bound.Width == 0)
+                    List.ListInfo.GetColumnsBound(widthConstraint.AvailableSize, null, null);
                 var content = List.GetContentBound();
                 size = new Size(content.Width > MinWidth ? content.Width : MinWidth,
                                 content.Height > MinHeight ? content.Height : MinHeight);
