@@ -450,8 +450,6 @@ namespace DataWF.Data
                 if (AutoAttach && !item.Attached)
                     table.Add(item);
                 int index = GetIndexBySort(item);
-                if (index < 0)
-                    index = (-index) - 1;
                 InsertInternal(index, item);
                 return index;
             }

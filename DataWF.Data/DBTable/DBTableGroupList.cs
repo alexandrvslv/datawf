@@ -31,7 +31,12 @@ namespace DataWF.Data
 
         public IEnumerable<DBTableGroup> GetTopParents()
         {
-            return Select(nameof(DBTableGroup.GroupName), CompareType.Equal, null);
+            return GetByGroup(null);
+        }
+
+        public IEnumerable<DBTableGroup> GetByGroup(string name)
+        {
+            return Select(nameof(DBTableGroup.GroupName), CompareType.Equal, name);
         }
     }
 }

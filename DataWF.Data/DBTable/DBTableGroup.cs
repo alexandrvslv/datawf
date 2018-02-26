@@ -27,10 +27,8 @@ namespace DataWF.Data
 {
     public class DBTableGroup : DBSchemaItem, IComparable, IGroup
     {
-        [NonSerialized()]
-        protected DBTableGroup _cache;
-        protected string parent;
-        [NonSerialized()]
+        protected DBTableGroup group;
+        protected string groupName;
         protected bool expand = true;
 
         public DBTableGroup()
@@ -57,12 +55,12 @@ namespace DataWF.Data
         [Browsable(false)]
         public string GroupName
         {
-            get { return parent; }
+            get { return groupName; }
             set
             {
-                if (parent == value)
+                if (groupName == value)
                     return;
-                parent = value;
+                groupName = value;
                 OnPropertyChanged(nameof(GroupName), false);
             }
         }
@@ -76,49 +74,27 @@ namespace DataWF.Data
         [Category("Group")]
         public DBTableGroup Group
         {
-            get
-            {
-                if (parent == null)
-                    return null;
-                if (_cache == null)
-                    _cache = Schema == null ? null : Schema.TableGroups[parent];
-                return _cache;
-            }
+            get { return group ?? (group = Schema?.TableGroups[groupName]); }
             set
             {
                 if (value == null || (value.Group != this && value != this))
                 {
-                    parent = value == null ? null : value.name;
-                    _cache = value;
+                    groupName = value?.name;
+                    group = value;
                     OnPropertyChanged(nameof(Group), false);
                 }
             }
         }
 
         [Browsable(false), Category("Group")]
-        public IEnumerable<DBTableGroup> Childs
+        public IEnumerable<DBTableGroup> GetChilds()
         {
-            get
-            {
-                if (Schema == null)
-                    yield break;
-                foreach (DBTableGroup group in Schema.TableGroups)
-                {
-                    if (group.Group == this)
-                        yield return group;
-                }
-            }
+            return Schema?.TableGroups.GetByGroup(Name);
         }
 
         public IEnumerable<DBTable> GetTables()
         {
-            if (Schema == null)
-                yield break;
-            foreach (DBTable table in Schema.Tables)
-            {
-                if (table.Group == this)
-                    yield return table;
-            }
+            return Schema?.Tables.GetByGroup(Name);
         }
 
         #region IComparable Members

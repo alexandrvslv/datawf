@@ -17,18 +17,24 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using System.Collections.Generic;
+using DataWF.Common;
+
 namespace DataWF.Data
 {
     public class DBTableList : DBSchemaItemList<DBTable>
     {
-        public DBTableList()
-            : this(null)
+        public DBTableList() : this(null)
         { }
 
-        public DBTableList(DBSchema schema)
-            : base(schema)
+        public DBTableList(DBSchema schema) : base(schema)
         {
-            //indexList.Add(nameof(DBTable.BaseName));
+            Indexes.Add(new Invoker<DBTable, string>(nameof(DBTable.GroupName), (item) => item.GroupName));
+        }
+
+        public IEnumerable<DBTable> GetByGroup(string name)
+        {
+            return Select(nameof(DBTable.GroupName), CompareType.Equal, name);
         }
 
         public override int AddInternal(DBTable item)
