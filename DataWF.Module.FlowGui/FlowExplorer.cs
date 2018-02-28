@@ -9,6 +9,7 @@ using DataWF.Gui;
 using DataWF.Common;
 using Xwt;
 using Xwt.Drawing;
+using DataWF.Module.CommonGui;
 
 namespace DataWF.Module.FlowGui
 {
@@ -71,16 +72,19 @@ namespace DataWF.Module.FlowGui
             tree.CellDoubleClick += TreeNodeMouseDoubleClick;
             tree.Visible = true;
             tree.Status = DBStatus.Current;
-            FlowTreeKeys keys = FlowTreeKeys.None;
+            var keys = FlowTreeKeys.None;
             if (TemplateParam.DBTable.Access.View) keys |= FlowTreeKeys.TemplateParam;
             if (Template.DBTable.Access.View) keys |= FlowTreeKeys.Template;
-            if (User.DBTable.Access.View) keys |= FlowTreeKeys.User;
-            if (UserGroup.DBTable.Access.View) keys |= FlowTreeKeys.Group;
-            if (Scheduler.DBTable.Access.View) keys |= FlowTreeKeys.Scheduler;
             if (StageParam.DBTable.Access.View) keys |= FlowTreeKeys.StageParam;
             if (Stage.DBTable.Access.View) keys |= FlowTreeKeys.Stage;
             if (Work.DBTable.Access.View) keys |= FlowTreeKeys.Work;
             tree.FlowKeys = keys;
+
+            var userKeys = UserTreeKeys.None;
+            if (User.DBTable.Access.View) userKeys |= UserTreeKeys.User;
+            if (UserGroup.DBTable.Access.View) userKeys |= UserTreeKeys.Group;
+            if (Scheduler.DBTable.Access.View) userKeys |= UserTreeKeys.Scheduler;
+            tree.UserKeys = userKeys;
 
             contextAdd.Items.Add(toolAddTemplate);
             contextAdd.Items.Add(toolAddTemplateParam);
@@ -210,45 +214,9 @@ namespace DataWF.Module.FlowGui
             if (tree.SelectedNode != null)
             {
                 var query = new DataQuery();
-                query.Query = GenereteExport(tree);
+                query.Query = tree.GenereteExport();
                 query.ShowDialog(this);
             }
-        }
-
-        public static string GenereteExport(LayoutList tree)
-        {
-            StringBuilder rez = new StringBuilder();
-
-            if (tree.SelectedNode != null)
-            {
-                foreach (var s in tree.Selection)
-                {
-                    Node node = (Node)s.Item;
-                    if (node.Tag is DBItem)
-                    {
-                        rez.Append(DMLPatch((DBItem)node.Tag));
-                    }
-                    else if (node.Tag is IList)
-                    {
-                        foreach (DBItem item in (IEnumerable)node.Tag)
-                        {
-                            rez.Append(DMLPatch(item));
-                        }
-                    }
-                }
-            }
-            return rez.ToString();
-        }
-
-        public static string DMLPatch(DBItem item)
-        {
-            StringBuilder rez = new StringBuilder();
-            rez.AppendLine(string.Format("if exists(select * from {0} where {1}={2})", item.Table.Name, item.Table.PrimaryKey.Name, item.PrimaryId));
-            rez.AppendLine("    " + item.Table.System.FormatCommand(item.Table, DBCommandTypes.Update, item) + ";");
-            rez.AppendLine("else");
-            rez.AppendLine("    " + item.Table.System.FormatCommand(item.Table, DBCommandTypes.Insert, item) + ";");
-            rez.AppendLine();
-            return rez.ToString();
         }
 
         public class StatWindow : ToolWindow

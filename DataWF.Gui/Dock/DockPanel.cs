@@ -92,7 +92,7 @@ namespace DataWF.Gui
             }
             else if (e.ListChangedType == ListChangedType.ItemDeleted)
             {
-                if (e.NewIndex != -1)
+                if (e.NewIndex >= 0)
                 {
                     DockPage page = this.pages.Items[e.NewIndex];
                     RemovePage(page, true);

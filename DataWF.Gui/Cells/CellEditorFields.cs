@@ -19,7 +19,7 @@ namespace DataWF.Gui
 
         public override Widget InitDropDownContent()
         {
-            return editor.GetCacheControl<ListEditor>("ListEditor");
+            return editor.GetCacheControl<ListEditor>();
         }
 
         protected override object GetDropDownValue()

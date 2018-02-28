@@ -19,7 +19,7 @@ namespace DataWF.Gui
 
         public override Widget InitEditorContent()
         {
-            var box = editor.GetCacheControl<PasswordEntry>("PasswordEntry");
+            var box = editor.GetCacheControl<PasswordEntry>();
             box.KeyPressed += TextBoxKeyPress;
             box.KeyReleased += TextBoxKeyUp;
             //box.Readonly = readOnly;

@@ -51,9 +51,6 @@
     <Reference Include="ICSharpCode.NRefactory.Xml">
       <HintPath>..\packages\ICSharpCode.NRefactory.5.5.1\lib\Net40\ICSharpCode.NRefactory.Xml.dll</HintPath>
     </Reference>
-    <Reference Include="Xwt">
-      <HintPath>..\packages\Xwt.0.2.76\lib\net40\Xwt.dll</HintPath>
-    </Reference>
     <Reference Include="Mono.Cecil">
       <HintPath>..\packages\Mono.Cecil.0.9.6.4\lib\net45\Mono.Cecil.dll</HintPath>
     </Reference>
@@ -66,11 +63,12 @@
     <Reference Include="Mono.Cecil.Rocks">
       <HintPath>..\packages\Mono.Cecil.0.9.6.4\lib\net45\Mono.Cecil.Rocks.dll</HintPath>
     </Reference>
+    <Reference Include="Xwt">
+      <HintPath>..\packages\Xwt.0.2.78\lib\net40\Xwt.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ChangeViewer.cs" />
-    <Compile Include="DataLog.cs" />
     <Compile Include="FlowExplorer.cs" />
     <Compile Include="FlowTree.cs" />
     <Compile Include="MenuItemStage.cs" />
@@ -78,9 +76,7 @@
     <Compile Include="MenuItemUser.cs" />
     <Compile Include="Messanger.cs" />
     <Compile Include="MessengerExplorer.cs" />
-    <Compile Include="PermissionEditor.cs" />
     <Compile Include="PMessage.cs" />
-    <Compile Include="UserEditor.cs" />
     <Compile Include="Cells\CellEditorFlowParameters.cs" />
     <Compile Include="Cells\CellEditorFlowTree.cs" />
     <Compile Include="Cells\CellEditorLogRow.cs" />
@@ -137,6 +133,10 @@
     <ProjectReference Include="..\DataWF.Module.Finance\DataWF.Module.Finance.csproj">
       <Project>{89A2D4B4-6352-4193-BB62-12E9DEA49221}</Project>
       <Name>DataWF.Module.Finance</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DataWF.Module.CommonGui\DataWF.Module.CommonGui.csproj">
+      <Project>{E17A78AE-28C2-4264-A36D-A7EBAFE7626D}</Project>
+      <Name>DataWF.Module.CommonGui</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

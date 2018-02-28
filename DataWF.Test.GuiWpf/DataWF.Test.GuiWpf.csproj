@@ -62,10 +62,10 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="Xwt">
-      <HintPath>..\packages\Xwt.0.2.76\lib\net40\Xwt.dll</HintPath>
+      <HintPath>..\packages\Xwt.0.2.78\lib\net40\Xwt.dll</HintPath>
     </Reference>
     <Reference Include="Xwt.WPF">
-      <HintPath>..\packages\Xwt.WPF.0.2.76\lib\net40\Xwt.WPF.dll</HintPath>
+      <HintPath>..\packages\Xwt.WPF.0.2.78\lib\net40\Xwt.WPF.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

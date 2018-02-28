@@ -8,10 +8,9 @@ using System.ComponentModel;
 using Xwt.Drawing;
 using System.Threading;
 using DataWF.Module.Common;
-using DataWF.Module.Flow;
 using Xwt;
 
-namespace DataWF.Module.FlowGui
+namespace DataWF.Module.CommonGui
 {
     public class ChangeAccept : ToolWindow
     {
@@ -189,7 +188,7 @@ namespace DataWF.Module.FlowGui
         private LayoutList listRows = new LayoutList();
         private LayoutList listDiff = new LayoutList();
         private ManualResetEvent wait = new ManualResetEvent(false);
-       
+
         public ChangeViewer()
         {
             tools.Items.Add(toolRefresh);
@@ -222,7 +221,7 @@ namespace DataWF.Module.FlowGui
             listObjects.FieldSource = null;
             listObjects.Mode = LayoutListMode.List;
             listObjects.Name = "listObjects";
-            listObjects.DataKeys = DataTreeKeys.CheckTableEdit | DataTreeKeys.Table | DataTreeKeys.Schema;
+            listObjects.DataKeys = DataTreeKeys.CheckTableAdmin | DataTreeKeys.Table | DataTreeKeys.Schema;
             listObjects.ListInfo.Columns.Add("Count", 35);
             listObjects.BuildColumn(null, "Count");
             listObjects.SelectionChanged += ListObjectsSelectionChanged;

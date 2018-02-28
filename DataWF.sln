@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.0
+VisualStudioVersion = 15.0.27130.2020
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.StarterGtk", "DataWF.StarterGtk\DataWF.StarterGtk.csproj", "{687DFE24-9DE0-4A3B-9854-CF41B8FDC134}"
 EndProject
@@ -51,11 +51,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Test.Module.Counterp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Module.Finance", "DataWF.Module.Finance\DataWF.Module.Finance.csproj", "{89A2D4B4-6352-4193-BB62-12E9DEA49221}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Module.CommonGui", "DataWF.Module.CommonGui\DataWF.Module.CommonGui.csproj", "{E17A78AE-28C2-4264-A36D-A7EBAFE7626D}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		DataWF.TestGuiShare\DataWF.TestGuiShare.projitems*{0968c296-837f-48c3-b310-7b2aa9452ef8}*SharedItemsImports = 13
-		DataWF.TestGuiShare\DataWF.TestGuiShare.projitems*{69c37c81-aead-4f49-bb18-0750387e680d}*SharedItemsImports = 4
-		DataWF.TestGuiShare\DataWF.TestGuiShare.projitems*{6dfefa1c-cbc0-4efc-bdac-ff46ba86b9f3}*SharedItemsImports = 4
+		DataWF.Test.GuiShare\DataWF.Test.GuiShare.projitems*{0968c296-837f-48c3-b310-7b2aa9452ef8}*SharedItemsImports = 13
+		DataWF.Test.GuiShare\DataWF.Test.GuiShare.projitems*{69c37c81-aead-4f49-bb18-0750387e680d}*SharedItemsImports = 4
+		DataWF.Test.GuiShare\DataWF.Test.GuiShare.projitems*{6dfefa1c-cbc0-4efc-bdac-ff46ba86b9f3}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -282,13 +284,25 @@ Global
 		{89A2D4B4-6352-4193-BB62-12E9DEA49221}.Release|x64.Build.0 = Release|Any CPU
 		{89A2D4B4-6352-4193-BB62-12E9DEA49221}.Release|x86.ActiveCfg = Release|Any CPU
 		{89A2D4B4-6352-4193-BB62-12E9DEA49221}.Release|x86.Build.0 = Release|Any CPU
+		{E17A78AE-28C2-4264-A36D-A7EBAFE7626D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E17A78AE-28C2-4264-A36D-A7EBAFE7626D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E17A78AE-28C2-4264-A36D-A7EBAFE7626D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E17A78AE-28C2-4264-A36D-A7EBAFE7626D}.Debug|x64.Build.0 = Debug|Any CPU
+		{E17A78AE-28C2-4264-A36D-A7EBAFE7626D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E17A78AE-28C2-4264-A36D-A7EBAFE7626D}.Debug|x86.Build.0 = Debug|Any CPU
+		{E17A78AE-28C2-4264-A36D-A7EBAFE7626D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E17A78AE-28C2-4264-A36D-A7EBAFE7626D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E17A78AE-28C2-4264-A36D-A7EBAFE7626D}.Release|x64.ActiveCfg = Release|Any CPU
+		{E17A78AE-28C2-4264-A36D-A7EBAFE7626D}.Release|x64.Build.0 = Release|Any CPU
+		{E17A78AE-28C2-4264-A36D-A7EBAFE7626D}.Release|x86.ActiveCfg = Release|Any CPU
+		{E17A78AE-28C2-4264-A36D-A7EBAFE7626D}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{687DFE24-9DE0-4A3B-9854-CF41B8FDC134} = {A5F3D8FA-311C-40F7-9AD5-3F998D61E96D}
-		{EA38C2A9-BC62-419A-8385-2C72ECBBD5E7} = {4F5DA472-639D-4798-9C04-DBAA318F6C0E}
+		{EA38C2A9-BC62-419A-8385-2C72ECBBD5E7} = {A5F3D8FA-311C-40F7-9AD5-3F998D61E96D}
 		{91E766B4-1057-4C16-AA5A-B4E26E91DA7C} = {B61599DA-EA6D-4C01-A720-BCA13C15F81A}
 		{A2329308-3751-4DBD-9A75-5F7B8B024625} = {9862F37D-3BE1-4ACA-9CF0-BB75B04FD109}
 		{337D88BA-7460-4C2A-B83D-6B27DF626983} = {A5F3D8FA-311C-40F7-9AD5-3F998D61E96D}
@@ -306,6 +320,7 @@ Global
 		{D9D3537E-C1F9-4F59-AE2B-5098213FF747} = {4F5DA472-639D-4798-9C04-DBAA318F6C0E}
 		{1CD6F41B-3619-4210-BCBD-4AD8DD55B00E} = {E6FA534E-87C1-41F5-BF7C-75343C26C481}
 		{89A2D4B4-6352-4193-BB62-12E9DEA49221} = {4F5DA472-639D-4798-9C04-DBAA318F6C0E}
+		{E17A78AE-28C2-4264-A36D-A7EBAFE7626D} = {A5F3D8FA-311C-40F7-9AD5-3F998D61E96D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1F744653-49E6-408E-A9CA-7C21732CF644}

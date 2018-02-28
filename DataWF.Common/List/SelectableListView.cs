@@ -126,7 +126,7 @@ namespace DataWF.Common
                     }
                     else if (checkItem)
                     {
-                        if (index == -1)
+                        if (index < 1)
                             base.Add(item);
                         else
                         {

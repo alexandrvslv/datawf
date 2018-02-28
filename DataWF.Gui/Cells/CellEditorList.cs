@@ -102,7 +102,7 @@ namespace DataWF.Gui
 
         public override Widget InitDropDownContent()
         {
-            var list = editor.GetCacheControl<LayoutList>("LayoutList");
+            var list = editor.GetCacheControl<LayoutList>();
             list.AllowCheck = false;
             list.GenerateColumns = false;
             list.GenerateToString = false;

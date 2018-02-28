@@ -231,7 +231,7 @@ namespace DataWF.Module.Common
         {
             var permission = Get(parent, group);
 
-            foreach (var subGroup in group.Childs)
+            foreach (var subGroup in group.GetChilds())
             {
                 CachePermissionTableGroup(permission, subGroup);
             }

@@ -1,18 +1,18 @@
 ﻿using DataWF.Data;
 using DataWF.Gui;
 using DataWF.Common;
-using DataWF.Module.Flow;
 using System;
 using Xwt.Drawing;
 using Xwt;
 using System.Linq;
 using DataWF.Module.Common;
+using DataWF.Data.Gui;
 
-namespace DataWF.Module.FlowGui
+namespace DataWF.Module.CommonGui
 {
     public class UserEditor : VPanel, IDockContent
     {
-        private User _user;
+        private User user;
         private GroupBoxItem groupAttributes = new GroupBoxItem();
         private GroupBoxItem groupGroups = new GroupBoxItem();
         private GroupBox groupMap = new GroupBox();
@@ -31,7 +31,7 @@ namespace DataWF.Module.FlowGui
             info.Nodes.Add(new LayoutField("Name"));
             info.Nodes.Add(new LayoutField("EMail"));
 
-            var f = new PDocument();
+            var f = new LayoutDBTable();
             f.AllowCellSize = true;
             f.CheckView = false;
             f.EditMode = EditModes.ByClick;
@@ -60,7 +60,6 @@ namespace DataWF.Module.FlowGui
 
             groupMap.Add(groupAttributes);
             groupMap.Add(groupGroups);
-
 
             groups.Name = "groups";
             groups.Text = "Groups";
@@ -94,22 +93,22 @@ namespace DataWF.Module.FlowGui
 
         public void FillGroup()
         {
-            _user.Access.Fill();
-            groups.Accessable = _user;
+            user.Access.Fill();
+            groups.Accessable = user;
             groups.SetType(AccessType.Create);
             groups.Readonly = false;
         }
 
         public User User
         {
-            get { return _user; }
+            get { return user; }
             set
             {
-                if (_user == value)
+                if (user == value)
                     return;
-                _user = value;
-                fields.DataSource = _user;
-                _user.PropertyChanged += UserPropertyChanged;
+                user = value;
+                fields.DataSource = user;
+                user.PropertyChanged += UserPropertyChanged;
                 //((Field)fields.FieldInfo.Nodes["Login"]).ReadOnly = _user.Attached;
                 FillGroup();
             }

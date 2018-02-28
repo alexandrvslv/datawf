@@ -9,7 +9,6 @@ namespace DataWF.Data.Gui
     public class CellEditorDataTree : CellEditorText
     {
         protected DataTreeKeys key = DataTreeKeys.None;
-        protected object datafilter;
 
         public CellEditorDataTree()
             : base()
@@ -24,11 +23,7 @@ namespace DataWF.Data.Gui
             get { return DropDown?.Target as DataTree; }
         }
 
-        public object DataFilter
-        {
-            get { return datafilter; }
-            set { datafilter = value; }
-        }
+        public DBSchemaItem DataFilter { get; set; }
 
         public DataTreeKeys DataKeys
         {
@@ -89,22 +84,22 @@ namespace DataWF.Data.Gui
 
         public virtual DataTree GetToolTarget()
         {
-            return editor.GetCacheControl<DataTree>("DataTree");
+            return editor.GetCacheControl<DataTree>();
         }
 
         public override Widget InitDropDownContent()
         {
             if (EditItem is DBTable && DataType == typeof(DBTableGroup))
             {
-                datafilter = ((DBTable)EditItem).Schema;
+                DataFilter = ((DBTable)EditItem).Schema;
             }
             else if (EditItem is DBTable && DataType == typeof(DBTable))
             {
-                datafilter = ((DBTable)EditItem).Schema;
+                DataFilter = ((DBTable)EditItem).Schema;
             }
             else if (EditItem is DBTableGroup && DataType == typeof(DBTableGroup))
             {
-                datafilter = ((DBTableGroup)EditItem).Schema;
+                DataFilter = ((DBTableGroup)EditItem).Schema;
             }
             else if (EditItem is DBColumn && DataType == typeof(DBTable))
             {
@@ -112,20 +107,20 @@ namespace DataWF.Data.Gui
             }
             else if (EditItem is DBColumn && DataType == typeof(DBColumnGroup))
             {
-                datafilter = ((DBColumn)EditItem).Table;
+                DataFilter = ((DBColumn)EditItem).Table;
             }
             else if (EditItem is DBTable && DataType == typeof(DBColumn))
             {
-                datafilter = EditItem;
+                DataFilter = (DBTable)EditItem;
             }
             else if (EditItem is DBVirtualColumn)
             {
-                datafilter = ((DBVirtualColumn)EditItem).VirtualTable.BaseTable;
+                DataFilter = ((DBVirtualColumn)EditItem).VirtualTable.BaseTable;
             }
 
             var tree = GetToolTarget();
             tree.DataKeys = key;
-            tree.DataFilter = datafilter;
+            tree.DataFilter = DataFilter;
             tree.Localize();
             foreach (Node n in tree.Nodes.GetTopLevel())
                 n.Expand = true;

@@ -82,7 +82,7 @@ namespace DataWF.Module.Flow
 
         [NonSerialized()]
         private TemplateParamList allparams;
-       
+
         public Template()
         {
             Build(DBTable);
@@ -132,14 +132,11 @@ namespace DataWF.Module.Flow
             set { SetPropertyReference(value, nameof(WorkId)); }
         }
 
-        public IEnumerable<TemplateParam> TemplateParams
+        public IEnumerable<TemplateParam> GetParams()
         {
-            get
-            {
-                return TemplateParam.DBTable.Select(
-                    TemplateParam.DBTable.ParseProperty(nameof(TemplateParam.TemplateId)),
-                    PrimaryId, CompareType.Equal);
-            }
+            return TemplateParam.DBTable.Select(
+                TemplateParam.DBTable.ParseProperty(nameof(TemplateParam.TemplateId)),
+                PrimaryId, CompareType.Equal);
         }
 
         public TemplateParamList TemplateAllParams

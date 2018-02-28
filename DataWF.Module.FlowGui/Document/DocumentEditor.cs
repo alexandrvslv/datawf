@@ -14,6 +14,7 @@ using System.ComponentModel;
 using DataWF.Module.Common;
 using DataWF.Module.Flow;
 using Xwt;
+using DataWF.Module.CommonGui;
 
 namespace DataWF.Module.FlowGui
 {

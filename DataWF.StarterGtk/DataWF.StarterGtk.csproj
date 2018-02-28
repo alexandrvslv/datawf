@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
-  <Import Project="..\packages\Xwt.Gtk.0.2.76\build\Xwt.Gtk.props" Condition="Exists('..\packages\Xwt.Gtk.0.2.76\build\Xwt.Gtk.props')" />
+  <Import Project="..\packages\Xwt.Gtk.0.2.78\build\Xwt.Gtk.props" Condition="Exists('..\packages\Xwt.Gtk.0.2.78\build\Xwt.Gtk.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -53,10 +53,10 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="Xwt">
-      <HintPath>..\packages\Xwt.0.2.76\lib\net40\Xwt.dll</HintPath>
+      <HintPath>..\packages\Xwt.0.2.78\lib\net40\Xwt.dll</HintPath>
     </Reference>
     <Reference Include="Xwt.Gtk">
-      <HintPath>..\packages\Xwt.Gtk.0.2.76\lib\net40\Xwt.Gtk.dll</HintPath>
+      <HintPath>..\packages\Xwt.Gtk.0.2.78\lib\net40\Xwt.Gtk.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -110,6 +110,30 @@
     <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj">
       <Project>{32A948C0-5468-4392-A490-91947BFC3BE4}</Project>
       <Name>DataWF.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj">
+      <Project>{76A4B048-D827-4CC9-879E-BCAFE5C796CC}</Project>
+      <Name>DataWF.Module.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DataWF.Module.CommonGui\DataWF.Module.CommonGui.csproj">
+      <Project>{E17A78AE-28C2-4264-A36D-A7EBAFE7626D}</Project>
+      <Name>DataWF.Module.CommonGui</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DataWF.Module.Counterpart\DataWF.Module.Counterpart.csproj">
+      <Project>{D9D3537E-C1F9-4F59-AE2B-5098213FF747}</Project>
+      <Name>DataWF.Module.Counterpart</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DataWF.Module.Finance\DataWF.Module.Finance.csproj">
+      <Project>{89A2D4B4-6352-4193-BB62-12E9DEA49221}</Project>
+      <Name>DataWF.Module.Finance</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DataWF.Module.Flow\DataWF.Module.Flow.csproj">
+      <Project>{E5EFC9B0-AEE6-47B4-B553-37A241ADF976}</Project>
+      <Name>DataWF.Module.Flow</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DataWF.Module.FlowGui\DataWF.Module.FlowGui.csproj">
+      <Project>{EA38C2A9-BC62-419A-8385-2C72ECBBD5E7}</Project>
+      <Name>DataWF.Module.FlowGui</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

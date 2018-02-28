@@ -23,19 +23,31 @@ namespace DataWF.Data.Gui
         Procedure = 256,
         ProcedureParam = 512,
         CheckTableView = 1024,
-        CheckTableEdit = 2048
+        CheckTableAdmin = 2048
+    }
+
+    public class SchemaItemNode : Node, ILocalizable
+    {
+        public DBSchemaItem Item { get; set; }
+
+        public void Localize()
+        {
+            if (Item != null)
+            {
+                Text = Item.ToString();
+            }
+        }
     }
 
     public class DataTree : LayoutList
     {
         private ListChangedEventHandler schemaChanged;
-        private object datafilter = null;
+        private DBSchemaItem datafilter = null;
         DataTreeKeys dataKeys = DataTreeKeys.None;
         //TODO
         //private bool checkDelete = false;
 
-        public DataTree()
-            : base()
+        public DataTree() : base()
         {
             schemaChanged = new ListChangedEventHandler(OnItemsListChanged);
             base.ListSensetive = true;
@@ -55,27 +67,11 @@ namespace DataWF.Data.Gui
             }
         }
 
-        public override void Localize()
-        {
-            base.Localize();
-            LocalizeNodes();
-        }
-
-        public virtual void LocalizeNodes()
-        {
-            if (Nodes != null)
-                foreach (var node in Nodes)
-                {
-                    if (node.Tag is DBSchemaItem)
-                        node.Text = node.Tag.ToString();
-                }
-        }
-
         protected virtual void RefreshData()
         {
             if (datafilter != null)
             {
-                Nodes.Add(InitObject(datafilter));
+                Nodes.Add(Init(datafilter));
             }
             else
             {
@@ -83,7 +79,7 @@ namespace DataWF.Data.Gui
             }
         }
 
-        public object DataFilter
+        public DBSchemaItem DataFilter
         {
             get { return datafilter; }
             set
@@ -95,27 +91,6 @@ namespace DataWF.Data.Gui
                     RefreshData();
                 }
             }
-        }
-
-        private void InitSchems()
-        {
-            DBService.Schems.ListChanged -= schemaChanged;
-            if (ShowSchema)
-                DBService.Schems.ListChanged += schemaChanged;
-
-            Nodes.Sense = false;
-            foreach (DBSchema schema in DBService.Schems)
-            {
-                Node node = Find(schema);
-                if (ShowSchema)
-                {
-                    node = InitSchema(schema);
-                    Nodes.Add(node);
-                }
-                else if (node != null)
-                    node.Hide();
-            }
-            Nodes.Sense = true;
         }
 
         [DefaultValue(false)]
@@ -137,9 +112,9 @@ namespace DataWF.Data.Gui
         }
 
         [DefaultValue(false)]
-        public bool CheckTableEdit
+        public bool CheckTableAdmin
         {
-            get { return (dataKeys & DataTreeKeys.CheckTableEdit) == DataTreeKeys.CheckTableEdit; }
+            get { return (dataKeys & DataTreeKeys.CheckTableAdmin) == DataTreeKeys.CheckTableAdmin; }
         }
 
         [DefaultValue(false)]
@@ -204,10 +179,10 @@ namespace DataWF.Data.Gui
                 (arg.ListChangedType == ListChangedType.ItemDeleted && arg.NewIndex >= 0))
             {
                 var item = ((IList)sender)[arg.NewIndex] as DBSchemaItem;
-                var node = InitObject(item);
+                var node = Init(item);
                 if (arg.ListChangedType != ListChangedType.ItemDeleted)
                 {
-                    Node onode = item is IDBTableContent ? Find(((IDBTableContent)item).Table) : Find(item.Schema);
+                    Node onode = item is DBTableItem ? Find(((DBTableItem)item).Table) : Find(item.Schema);
                     if (item is DBTableGroup && ((DBTableGroup)item).Group != null && ShowTableGroup)
                         onode = Find(((DBTableGroup)item).Group);
                     else if (item is DBTable && ((DBTable)item).Group != null && ShowTableGroup)
@@ -223,67 +198,83 @@ namespace DataWF.Data.Gui
             }
         }
 
-        public Node Find(object obj)
+        public DBSchemaItem SelectedDBItem
         {
-            if (obj == null)
-                return null;
-            return Find(GetName(obj));
-        }
-
-        public Node Find(string name)
-        {
-            return Nodes.SelectOne("Name", CompareType.Equal, name);
-        }
-
-        public virtual Node InitObject(object obj)
-        {
-            Node node = null;
-            if (obj is DBSchema)
-                node = InitSchema((DBSchema)obj);
-            else if (obj is DBTableGroup)
-                node = InitTableGroup((DBTableGroup)obj);
-            else if (obj is DBTable)
-                node = InitTable((DBTable)obj);
-            else if (obj is DBColumnGroup)
-                node = InitColumnGroup((DBColumnGroup)obj);
-            else if (obj is DBColumn)
-                node = InitColumn((DBColumn)obj);
-            else
-                node = InitItem(obj);
-
-            return node;
-        }
-
-        public object SelectedObject
-        {
-            get { return SelectedNode?.Tag; }
+            get { return (SelectedNode as SchemaItemNode)?.Item; }
         }
 
         public DBSchema CurrentSchema
         {
             get
             {
-                return SelectedObject is DBSchema
-                ? (DBSchema)SelectedObject
-                : SelectedObject is DBSchemaItem
-                    ? ((DBSchemaItem)SelectedObject).Schema
-                    : null;
+                return SelectedDBItem == null ? null : SelectedDBItem is DBSchema
+                    ? (DBSchema)SelectedDBItem : SelectedDBItem.Schema;
             }
         }
 
-        public virtual string GetName(object obj)
+        public SchemaItemNode Find(object obj)
         {
-            string str = "";
-            if (obj != null)
-                str = obj.GetType().FullName + obj.GetHashCode();
+            return obj == null ? null : Find(GetName(obj));
+        }
 
-            return str;
+        public SchemaItemNode Find(string name)
+        {
+            return Nodes.SelectOne("Name", CompareType.Equal, name) as SchemaItemNode;
+        }
+
+        private void InitSchems()
+        {
+            DBService.Schems.ListChanged -= schemaChanged;
+            if (ShowSchema)
+                DBService.Schems.ListChanged += schemaChanged;
+
+            Nodes.Sense = false;
+            foreach (var schema in DBService.Schems)
+            {
+                CheckItem(schema, null, ShowSchema);
+            }
+            Nodes.Sense = true;
+        }
+
+        public virtual SchemaItemNode Init(DBSchemaItem item)
+        {
+            SchemaItemNode node = null;
+            if (item is DBSchema)
+                node = InitSchema((DBSchema)item);
+            else if (item is DBTableGroup)
+                node = InitTableGroup((DBTableGroup)item);
+            else if (item is DBTable)
+                node = InitTable((DBTable)item);
+            else if (item is DBColumnGroup)
+                node = InitColumnGroup((DBColumnGroup)item);
+            else if (item is DBColumn)
+                node = InitColumn((DBColumn)item);
+            else
+                node = InitItem(item);
+
+            return node;
+        }
+
+        public virtual SchemaItemNode CheckItem(DBSchemaItem item, SchemaItemNode group, bool show)
+        {
+            SchemaItemNode node = null;
+            if (show)
+            {
+                node = Init(item);
+                node.Group = group;
+            }
+            else
+            {
+                node = Find(item);
+                node?.Hide();
+            }
+            return node;
         }
 
 
-        public Node InitSchema(DBSchema schema)
+        public SchemaItemNode InitSchema(DBSchema schema)
         {
-            Node node = InitItem(schema);
+            var node = InitItem(schema);
 
             schema.TableGroups.ListChanged -= schemaChanged;
             schema.Tables.ListChanged -= schemaChanged;
@@ -296,71 +287,39 @@ namespace DataWF.Data.Gui
             if (ShowProcedures)
                 schema.Procedures.ListChanged += schemaChanged;
 
-            foreach (var tgoup in schema.TableGroups.GetTopParents())
+            foreach (var tgroup in schema.TableGroups.GetTopParents())
             {
-                Node gnode = Find(tgoup);
-                if (ShowTableGroup)
-                {
-                    gnode = InitTableGroup(tgoup);
-                    gnode.Group = node;
-                }
-                else if (gnode != null)
-                    gnode.Hide();
+                CheckItem(tgroup, node, ShowTableGroup);
             }
 
             foreach (var table in schema.Tables)
             {
                 if (table.Group != null && ShowTableGroup)
                     continue;
-                var tnode = Find(table);
-                if (ShowTable &&
+                CheckItem(table, node, ShowTable &&
                     (!CheckTableView || (CheckTableView && table.Access.View)) &&
-                    (!CheckTableEdit || (CheckTableEdit && table.Access.Admin)))
-                {
-                    tnode = InitTable(table);
-                    tnode.Group = node;
-                }
-                else if (tnode != null)
-                    tnode.Hide();
+                          (!CheckTableAdmin || (CheckTableAdmin && table.Access.Admin)));
             }
 
             foreach (var procedure in schema.Procedures.SelectByParent(null))
             {
-                Node gnode = Find(procedure);
-                if (ShowProcedures)
-                {
-                    gnode = InitProcedure(procedure);
-                    gnode.Group = node;
-                }
-                else if (gnode != null)
-                    gnode.Hide();
+                CheckItem(procedure, node, ShowProcedures);
             }
             return node;
         }
 
-        public void InitList<T>(IEnumerable<T> list, Node parentNode, bool show)
+        public void InitList<T>(IEnumerable<T> list, SchemaItemNode node, bool show) where T : DBSchemaItem
         {
             foreach (var item in list)
             {
-                if (show)
-                {
-                    var itemNode = InitItem(item);
-                    itemNode.Group = parentNode;
-                }
-                else
-                {
-                    var itemNode = Find(item);
-                    if (itemNode != null)
-                        itemNode.Hide();
-                }
+                CheckItem(item, node, show);
             }
         }
 
-        public Node InitProcedure(DBProcedure procedure)
+        public SchemaItemNode InitProcedure(DBProcedure procedure)
         {
-            Node node = InitItem(procedure);
-            var list = procedure.Parameters;
-            InitList<DBProcParameter>(list, node, ShowProcedureParam);
+            var node = InitItem(procedure);
+            InitList(procedure.Parameters, node, ShowProcedureParam);
             foreach (var sprocedure in procedure.Childs)
             {
                 InitProcedure(sprocedure).Group = node;
@@ -368,54 +327,52 @@ namespace DataWF.Data.Gui
             return node;
         }
 
-        public Node InitTableGroup(DBTableGroup tgroup)
+        public SchemaItemNode InitTableGroup(DBTableGroup tgroup)
         {
             var node = InitItem(tgroup);
 
-            foreach (var item in tgroup.Childs)
+            foreach (var item in tgroup.GetChilds())
             {
-                var gnode = Find(item);
-                if (ShowTableGroup)
-                {
-                    gnode = InitTableGroup(item);
-                    gnode.Group = node;
-                }
-                else if (gnode != null)
-                    gnode.Hide();
+                CheckItem(item, node, ShowTableGroup);
             }
 
-            var tables = tgroup.GetTables();
-
-            foreach (var table in tables)
+            foreach (var table in tgroup.GetTables())
             {
-                var tnode = Find(table);
-                if (ShowTable &&
+                CheckItem(table, node, ShowTable &&
                     (!CheckTableView || (CheckTableView && table.Access.View)) &&
-                    (!CheckTableEdit || (CheckTableEdit && table.Access.Admin)))
-                {
-                    tnode = InitTable(table);
-                    tnode.Group = node;
-                }
-                else if (tnode != null)
-                    tnode.Hide();
+                          (!CheckTableAdmin || (CheckTableAdmin && table.Access.Admin)));
             }
             return node;
         }
 
 
-        public Node InitTable(DBTable table)
+        public SchemaItemNode InitTable(DBTable table)
         {
-            Node node = InitItem(table);
-            InitColumnGroups(table, node);
-            InitColumns(table, node);
-            InitIndexes(table, node);
-            InitConstraints(table, node);
-            InitForeigns(table, node);
+            var node = InitItem(table);
+            InitColumnGroups(node);
+            InitColumns(node);
+            InitIndexes(node);
+            InitConstraints(node);
+            InitForeigns(node);
             return node;
         }
 
-        public void InitColumns(DBTable table, Node node)
+        public void InitColumnGroups(SchemaItemNode node)
         {
+            var table = (DBTable)node.Item;
+            table.ColumnGroups.ListChanged -= schemaChanged;
+            if (ShowColumnGroup)
+                table.ColumnGroups.ListChanged += schemaChanged;
+
+            foreach (DBColumnGroup columnGroup in table.ColumnGroups)
+            {
+                CheckItem(columnGroup, node, ShowColumnGroup);
+            }
+        }
+
+        public void InitColumns(SchemaItemNode node)
+        {
+            var table = (DBTable)node.Item;
             table.Columns.ListChanged -= schemaChanged;
             if (ShowColumn)
                 table.Columns.ListChanged += schemaChanged;
@@ -424,164 +381,103 @@ namespace DataWF.Data.Gui
             {
                 if (column.Group != null && ShowColumnGroup)
                     continue;
-                var cnode = Find(column);
-                if (ShowColumn && column.Access.View)
-                {
-                    if (cnode == null)
-                        cnode = InitColumn(column);
-                    else
-                        cnode.Visible = true;
-                    cnode.Group = node;
-                }
-                else if (cnode != null)
-                    cnode.Hide();
+                CheckItem(column, node, ShowColumn && column.Access.View);
             }
         }
 
-        public void InitIndexes(DBTable table, Node node)
+        public void InitIndexes(SchemaItemNode node)
         {
+            var table = (DBTable)node.Item;
             table.Indexes.ListChanged -= schemaChanged;
             if (ShowIndex)
                 table.Indexes.ListChanged += schemaChanged;
 
             foreach (var index in table.Indexes)
             {
-                var inode = Find(index);
-                if (ShowIndex)
-                {
-                    if (inode == null)
-                        inode = InitItem(index);
-                    else
-                        inode.Visible = true;
-                    inode.Group = node;
-                }
-                else if (inode != null)
-                    inode.Hide();
+                CheckItem(index, node, ShowIndex);
             }
         }
 
-        public void InitColumnGroups(DBTable table, Node node)
+        public void InitConstraints(SchemaItemNode node)
         {
-            table.ColumnGroups.ListChanged -= schemaChanged;
-            if (ShowColumnGroup)
-                table.ColumnGroups.ListChanged += schemaChanged;
-
-            foreach (DBColumnGroup columnGroup in table.ColumnGroups)
-            {
-                var gnode = Find(columnGroup);
-                if (ShowColumnGroup)
-                {
-                    gnode = InitColumnGroup(columnGroup);
-                    gnode.Group = node;
-                }
-                else if (gnode != null)
-                    gnode.Hide();
-            }
-        }
-
-        public Node InitColumnGroup(DBColumnGroup cgroup)
-        {
-            var node = InitItem(cgroup);
-            var columns = cgroup.GetColumns();
-            foreach (var column in columns)
-            {
-                var cnode = Find(column);
-                if (ShowColumn && column.Access.View)
-                {
-                    if (cnode == null)
-                        cnode = InitColumn(column);
-                    else
-                        cnode.Visible = true;
-                    cnode.Group = node;
-                }
-                else if (cnode != null)
-                    cnode.Hide();
-            }
-            return node;
-        }
-
-        public void InitConstraints(DBTable table, Node node)
-        {
+            var table = (DBTable)node.Item;
             table.Constraints.ListChanged -= schemaChanged;
-
             if (ShowConstraint)
                 table.Constraints.ListChanged += schemaChanged;
 
             foreach (var constr in table.Constraints)
             {
-                var inode = Find(constr);
-                if (ShowConstraint)
-                {
-                    if (inode == null)
-                        inode = InitItem(constr);
-                    else
-                        inode.Visible = true;
-                    inode.Group = node;
-                }
-                else if (inode != null)
-                    inode.Hide();
+                CheckItem(constr, node, ShowConstraint);
             }
         }
 
-        public void InitForeigns(DBTable table, Node node)
+        public void InitForeigns(SchemaItemNode node)
         {
+            var table = (DBTable)node.Item;
             table.Foreigns.ListChanged -= schemaChanged;
             if (ShowForeign)
                 table.Foreigns.ListChanged += schemaChanged;
 
             foreach (var constr in table.Foreigns)
             {
-                var inode = Find(constr);
-                if (ShowForeign)
-                {
-                    if (inode == null)
-                        inode = InitItem(constr);
-                    else
-                        inode.Visible = true;
-                    inode.Group = node;
-                }
-                else if (inode != null)
-                    inode.Hide();
+                CheckItem(constr, node, ShowForeign);
             }
         }
 
-        public Node InitColumn(DBColumn column)
+        public SchemaItemNode InitColumnGroup(DBColumnGroup cgroup)
         {
-            var node = InitItem(column);
+            var node = InitItem(cgroup);
+            foreach (var column in cgroup.GetColumns())
+            {
+                CheckItem(column, node, ShowColumn && column.Access.View);
+            }
             return node;
         }
 
-        private Node InitRelation(DBForeignKey relation)
+        public SchemaItemNode InitColumn(DBColumn column)
         {
-            Node node = InitItem(relation);
-            return node;
+            return InitItem(column);
         }
 
-        public Node InitItem(object obj)
+        private SchemaItemNode InitRelation(DBForeignKey relation)
         {
-            return InitItem(obj, GetName(obj));
+            return InitItem(relation);
         }
 
-        public Node InitItem(object obj, string name)
+        public SchemaItemNode InitItem(DBSchemaItem item)
         {
-            Node node = Find(name);
+            string name = GetName(item);
+            var node = Find(name);
             if (node == null)
-                node = new Node();
-            node.Glyph = Common.Locale.GetGlyph(obj.GetType().FullName, obj.GetType().Name);
+            {
+                node = new SchemaItemNode { Item = item, Name = name };
+            }
+            node.Glyph = Locale.GetGlyph(item.GetType().FullName, item.GetType().Name);
             if (node.Glyph == GlyphType.None)
             {
-                if (obj is DBSchema)
+                if (item is DBSchema)
                     node.Glyph = GlyphType.Database;
-                if (obj is DBTable)
+                else if (item is DBTableGroup)
+                    node.Glyph = GlyphType.FolderOTable;
+                else if (item is DBTable)
                     node.Glyph = GlyphType.Table;
-                if (obj is DBColumn)
+                else if (item is DBColumnGroup)
+                    node.Glyph = GlyphType.FolderOColumn;
+                else if (item is DBColumn)
                     node.Glyph = GlyphType.Columns;
             }
             node.Visible = true;
-            node.Tag = obj;
-            node.Name = name;
-            node.Text = obj.ToString();
+            node.Localize();
             return node;
+        }
+
+        public virtual string GetName(object obj)
+        {
+            string str = "";
+            if (obj != null)
+                str = obj.GetType().FullName + obj.GetHashCode();
+
+            return str;
         }
     }
 }

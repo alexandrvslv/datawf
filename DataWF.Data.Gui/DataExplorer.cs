@@ -201,7 +201,7 @@ namespace DataWF.Data.Gui
                 DataTreeKeys.ColumnGroup | DataTreeKeys.Column |
                 DataTreeKeys.Index | DataTreeKeys.Constraint | DataTreeKeys.Foreign;
             dataTree.CellMouseClick += DataTreeOnNodeMouseClick;
-            dataTree.CellDoubleClick += DataTreeOnNodeMouseDoubleClick;
+            dataTree.CellDoubleClick += DataTreeOnDoubleClick;
             dataTree.SelectionChanged += DataTreeOnAfterSelect;
             dataTree.Menu = contextMain;
 
@@ -331,9 +331,7 @@ namespace DataWF.Data.Gui
                 var item = Serialization.Deserialize(file);
                 if (item is DBTable)
                 {
-                    DBSchema schema = dataTree.SelectedNode.Tag as DBSchema;
-                    if (schema == null && dataTree.SelectedNode.Tag is DBSchemaItem)
-                        schema = ((DBSchemaItem)dataTree.SelectedNode.Tag).Schema;
+                    DBSchema schema = dataTree.CurrentSchema;
 
                     if (schema.Tables.Contains(((DBTable)item).Name))
                         schema.Tables.Remove(((DBTable)item).Name);
@@ -348,7 +346,7 @@ namespace DataWF.Data.Gui
                 }
                 else if (item is DBColumn)
                 {
-                    var table = dataTree.SelectedNode.Tag as DBTable;
+                    var table = dataTree.SelectedDBItem as DBTable;
                     if (table != null)
                         table.Columns.Add((DBColumn)item);
                 }
@@ -357,10 +355,10 @@ namespace DataWF.Data.Gui
                     var list = (SelectableList<DBSchemaItem>)item;
                     foreach (var i in list)
                     {
-                        if (i is DBColumn && dataTree.SelectedNode.Tag is DBTable)
-                            ((DBTable)dataTree.SelectedNode.Tag).Columns.Add((DBColumn)i);
-                        else if (i is DBTable && dataTree.SelectedNode.Tag is DBSchema)
-                            ((DBSchema)dataTree.SelectedNode.Tag).Tables.Add((DBTable)i);
+                        if (i is DBColumn && dataTree.SelectedDBItem is DBTable)
+                            ((DBTable)dataTree.SelectedDBItem).Columns.Add((DBColumn)i);
+                        else if (i is DBTable && dataTree.SelectedDBItem is DBSchema)
+                            ((DBSchema)dataTree.SelectedDBItem).Tables.Add((DBTable)i);
                     }
 
                 }
@@ -370,7 +368,7 @@ namespace DataWF.Data.Gui
 
         private void ToolSerializeOnClick(object sender, EventArgs e)
         {
-            if (this.dataTree.SelectedNode != null)
+            if (dataTree.SelectedNode != null)
             {
                 string file = null;
                 using (var dialog = new SaveFileDialog())
@@ -379,16 +377,16 @@ namespace DataWF.Data.Gui
                     if (dialog.Run(ParentWindow))
                     {
                         file = dialog.FileName;
-                        if (this.dataTree.Selection.Count > 1)
+                        if (dataTree.Selection.Count > 1)
                         {
-                            var nodes = this.dataTree.Selection.GetItems<Node>();
+                            var nodes = dataTree.Selection.GetItems<Node>();
                             var items = new SelectableList<DBSchemaItem>();
                             foreach (var node in nodes)
                                 items.Add((DBSchemaItem)node.Tag);
                             Serialization.Serialize(items, file);
                         }
                         else
-                            Serialization.Serialize(this.dataTree.SelectedNode.Tag, file);
+                            Serialization.Serialize(dataTree.SelectedDBItem, file);
                     }
                 }
             }
@@ -402,22 +400,22 @@ namespace DataWF.Data.Gui
 
         private void ToolChangesCommitOnClick(object sender, EventArgs e)
         {
-            StringBuilder sb = new StringBuilder();
+            var builder = new StringBuilder();
             foreach (var item in changes)
             {
                 string val = item.Generate();
                 if (item.Check && !string.IsNullOrEmpty(val))
                 {
-                    sb.Append("-- ");
-                    sb.AppendLine(item.ToString());
-                    sb.AppendLine(val);
-                    sb.AppendLine("go");
-                    sb.AppendLine();
+                    builder.Append("-- ");
+                    builder.AppendLine(item.ToString());
+                    builder.AppendLine(val);
+                    builder.AppendLine("go");
+                    builder.AppendLine();
                 }
                 item.Item.OldName = null;
             }
-            DataQuery query = new DataQuery();
-            query.Query = sb.ToString();
+            var query = new DataQuery();
+            query.Query = builder.ToString();
             query.ShowDialog(this);
 
             changes.Clear();
@@ -573,7 +571,7 @@ namespace DataWF.Data.Gui
 
         private void ToolDBGenerateClick(object sender, EventArgs e)
         {
-            if (dataTree.SelectedNode != null && dataTree.SelectedNode.Tag is DBSchema)
+            if (dataTree.SelectedDBItem is DBSchema)
             {
                 var list = new LayoutList();
                 list.ListSource = AppDomain.CurrentDomain.GetAssemblies();
@@ -614,19 +612,19 @@ namespace DataWF.Data.Gui
         {
             if (dataTree.SelectedNode == null)
                 return;
-            DBSchema schema = dataTree.SelectedNode.Tag as DBSchema;
+            var schema = dataTree.SelectedDBItem as DBSchema;
             if (schema != null)
             {
                 try
                 {
                     schema.Connection.CheckConnection();
-                    string message = Common.Locale.Get("DataExplorer", "Connection Test Complete!");
+                    string message = Locale.Get("DataExplorer", "Connection Test Complete!");
                     MessageDialog.ShowMessage(ParentWindow, message, "DB Manager");
                     GuiService.Main.SetStatus(new StateInfo("DB Manager", message, null, StatusType.Warning, schema));
                 }
                 catch (Exception exception)
                 {
-                    string message = Common.Locale.Get("DataExplorer", "Connection Test Fail!");
+                    string message = Locale.Get("DataExplorer", "Connection Test Fail!");
                     MessageDialog.ShowMessage(ParentWindow, message, "DB Manager");
                     GuiService.Main.SetStatus(new StateInfo("DB Manager", message + "\n" + exception.Message, null, StatusType.Error, schema));
                 }
@@ -635,7 +633,7 @@ namespace DataWF.Data.Gui
 
         private void ToolTableRefreshOnClick(object sender, EventArgs e)
         {
-            if (dataTree.SelectedObject is DBTable)
+            if (dataTree.SelectedDBItem is DBTable)
             {
                 //DBSystem.LoadColumns(.SelectedObject);
             }
@@ -643,18 +641,17 @@ namespace DataWF.Data.Gui
 
         private void ToolTableReportOnClick(object sender, EventArgs e)
         {
-            if (dataTree.SelectedObject is DBTable)
+            if (dataTree.SelectedDBItem is DBTable)
             {
             }
         }
 
         private void ToolExtractDDLOnClick(object sender, EventArgs e)
         {
-            var item = dataTree.SelectedObject as DBSchemaItem;
-            if (item != null)
+            if (dataTree.SelectedDBItem != null)
             {
-                DataQuery query = new DataQuery();
-                query.Query = item.FormatSql(DDLType.Create);
+                var query = new DataQuery();
+                query.Query = dataTree.SelectedDBItem.FormatSql(DDLType.Create);
                 GuiService.Main.DockPanel.Put(query);
             }
         }
@@ -682,17 +679,17 @@ namespace DataWF.Data.Gui
 
         public void AddTableGroup(DBSchema schema, DBTableGroup parent)
         {
-            DBTableGroup tg = new DBTableGroup();
-            tg.Name = "NewTableGroup";
-            tg.Group = parent;
-            tg.Schema = schema;
-            ShowNewItem(tg);
+            var tgroup = new DBTableGroup();
+            tgroup.Name = "newtablegroup";
+            tgroup.Group = parent;
+            tgroup.Schema = schema;
+            ShowNewItem(tgroup);
         }
 
         public void AddTable(DBSchema schema, DBTableGroup gp)
         {
             DBTable table = new DBTable<DBItem>();
-            table.Name = "NewTable";
+            table.Name = "newtable";
             table.Group = gp;
             table.Schema = schema;
             table.Columns.Add(new DBColumn()
@@ -736,7 +733,7 @@ namespace DataWF.Data.Gui
         {
             var item = new DBColumnGroup();
             item.Table = table;
-            item.Name = "NewColumnGroup";
+            item.Name = "newcolumngroup";
 
             ShowNewItem(item);
         }
@@ -746,7 +743,7 @@ namespace DataWF.Data.Gui
             var item = new DBColumn();
             item.Group = gp;
             item.Table = table;
-            item.Name = "NewColumn";
+            item.Name = "newcolumn";
 
             ShowNewItem(item);
         }
@@ -755,7 +752,7 @@ namespace DataWF.Data.Gui
         {
             var item = new DBIndex();
             item.Table = table;
-            item.Name = item.Table.Name + "NewIndex";
+            item.Name = item.Table.Name + "newindex";
             if (column != null)
                 item.Columns.Add(column);
 
@@ -803,13 +800,13 @@ namespace DataWF.Data.Gui
         {
             if (dataTree.SelectedNode == null)
                 return;
-            var text = Common.Locale.Get(base.Name, "Remove select items?");
+            var text = Locale.Get(base.Name, "Remove select items?");
             if (MessageDialog.AskQuestion("Confirmation", text, Command.No, Command.Yes) == Command.Yes)
             {
                 var items = dataTree.Selection.GetItems<Node>();
-                foreach (Node node in items)
+                foreach (SchemaItemNode node in items)
                 {
-                    var obj = node.Tag as DBSchemaItem;
+                    var obj = node.Item;
                     if (obj != null)
                         obj.Container.Remove(obj);
                 }
@@ -823,23 +820,23 @@ namespace DataWF.Data.Gui
 
         private void ToolDbEditClick(object sender, EventArgs e)
         {
-            if (dataTree.SelectedObject is DBSchema)
+            if (dataTree.SelectedDBItem is DBSchema)
             {
                 var editor = new ListExplorer();
-                editor.DataSource = dataTree.SelectedObject;
+                editor.DataSource = dataTree.SelectedDBItem;
                 editor.ShowDialog(this);
             }
         }
 
         private void ToolDBRefreshClick(object sender, EventArgs e)
         {
-            if (dataTree.SelectedObject is DBSchema)
+            if (dataTree.SelectedDBItem is DBSchema)
             {
                 ThreadPool.QueueUserWorkItem((o) =>
                 {
                     try
                     {
-                        var schema = (DBSchema)dataTree.SelectedObject;
+                        var schema = (DBSchema)dataTree.SelectedDBItem;
                         schema.GetTablesInfo();
                     }
                     catch (Exception ex)
@@ -853,46 +850,46 @@ namespace DataWF.Data.Gui
 
         private void ToolReportClick(object sender, EventArgs e)
         {
-            if (dataTree.SelectedObject is DBTable)
+            if (dataTree.SelectedDBItem is DBTable)
             {
-                ProjectHandler ph = new ProjectHandler();
-                ph.Project = new QQuery();
-                ((QQuery)ph.Project).Table = (DBTable)dataTree.SelectedObject;
-                GuiService.Main.CurrentProject = ph;
+                var projecth = new ProjectHandler();
+                projecth.Project = new QQuery();
+                ((QQuery)projecth.Project).Table = (DBTable)dataTree.SelectedDBItem;
+                GuiService.Main.CurrentProject = projecth;
             }
         }
 
         private void ToolAddTableGroupClick(object sender, EventArgs e)
         {
-            if (dataTree.SelectedObject is DBSchema)
-                AddTableGroup((DBSchema)dataTree.SelectedObject, null);
-            else if (dataTree.SelectedObject is DBTableGroup)
-                AddTableGroup(((DBTableGroup)dataTree.SelectedObject).Schema, (DBTableGroup)dataTree.SelectedObject);
+            if (dataTree.SelectedDBItem is DBSchema)
+                AddTableGroup((DBSchema)dataTree.SelectedDBItem, null);
+            else if (dataTree.SelectedDBItem is DBTableGroup)
+                AddTableGroup(((DBTableGroup)dataTree.SelectedDBItem).Schema, (DBTableGroup)dataTree.SelectedDBItem);
         }
 
         private void ToolAddTableClick(object sender, EventArgs e)
         {
-            if (dataTree.SelectedObject is DBSchema)
-                AddTable((DBSchema)dataTree.SelectedObject, null);
-            else if (dataTree.SelectedObject is DBTableGroup)
-                AddTable(((DBTableGroup)dataTree.SelectedObject).Schema, (DBTableGroup)dataTree.SelectedObject);
-            else if (dataTree.SelectedObject is DBTable)
-                AddTable(((DBTable)dataTree.SelectedObject).Schema, ((DBTable)dataTree.SelectedObject).Group);
+            if (dataTree.SelectedDBItem is DBSchema)
+                AddTable((DBSchema)dataTree.SelectedDBItem, null);
+            else if (dataTree.SelectedDBItem is DBTableGroup)
+                AddTable(((DBTableGroup)dataTree.SelectedDBItem).Schema, (DBTableGroup)dataTree.SelectedDBItem);
+            else if (dataTree.SelectedDBItem is DBTable)
+                AddTable(((DBTable)dataTree.SelectedDBItem).Schema, ((DBTable)dataTree.SelectedDBItem).Group);
         }
 
         private void ToolAddColumnGroupClick(object sender, EventArgs e)
         {
-            if (dataTree.SelectedObject is DBTable)
-                AddColumnGroup((DBTable)dataTree.SelectedObject);
-            else if (dataTree.SelectedObject is DBColumn)
-                AddColumnGroup(((DBColumn)dataTree.SelectedObject).Table);
-            else if (dataTree.SelectedObject is DBColumnGroup)
-                AddColumnGroup(((DBColumnGroup)dataTree.SelectedObject).Table);
+            if (dataTree.SelectedDBItem is DBTable)
+                AddColumnGroup((DBTable)dataTree.SelectedDBItem);
+            else if (dataTree.SelectedDBItem is DBColumn)
+                AddColumnGroup(((DBColumn)dataTree.SelectedDBItem).Table);
+            else if (dataTree.SelectedDBItem is DBColumnGroup)
+                AddColumnGroup(((DBColumnGroup)dataTree.SelectedDBItem).Table);
         }
 
         private void ToolAddColumnClick(object sender, EventArgs e)
         {
-            var obj = dataTree.SelectedObject;
+            var obj = dataTree.SelectedDBItem;
             if (obj is DBTable)
                 AddColumn((DBTable)obj, null);
             else if (obj is DBColumn)
@@ -903,7 +900,7 @@ namespace DataWF.Data.Gui
 
         private void ToolAddIndexClick(object sender, EventArgs e)
         {
-            var obj = dataTree.SelectedObject;
+            var obj = dataTree.SelectedDBItem;
             if (obj is DBTable)
                 AddIndex((DBTable)obj, null);
             else if (obj is DBColumn)
@@ -914,7 +911,7 @@ namespace DataWF.Data.Gui
 
         private void ToolAddConstraintClick(object sender, EventArgs e)
         {
-            var obj = dataTree.SelectedObject;
+            var obj = dataTree.SelectedDBItem;
             if (obj is DBTable)
                 AddConstraint((DBTable)obj, null);
             else if (obj is DBColumn)
@@ -925,7 +922,7 @@ namespace DataWF.Data.Gui
 
         private void ToolAddForeignClick(object sender, EventArgs e)
         {
-            var obj = dataTree.SelectedObject;
+            var obj = dataTree.SelectedDBItem;
             if (obj is DBTable)
                 AddForeign((DBTable)obj, null);
             else if (obj is DBColumn)
@@ -937,120 +934,122 @@ namespace DataWF.Data.Gui
         private void ToolAddProcedureClick(object sender, EventArgs e)
         {
             var row = new DBProcedure();
-            if (dataTree.SelectedObject is DBProcedure)
+            if (dataTree.SelectedDBItem is DBProcedure)
             {
-                ((DBProcedure)row).Parent = (DBProcedure)dataTree.SelectedObject;
+                ((DBProcedure)row).Parent = (DBProcedure)dataTree.SelectedDBItem;
             }
         }
 
         private void ToolAddProcedureParamClick(object sender, EventArgs e)
         {
             var row = new DBProcParameter();
-            if (dataTree.SelectedObject is DBProcedure)
+            if (dataTree.SelectedDBItem is DBProcedure)
             {
-                ((DBProcParameter)row).Procedure = (DBProcedure)dataTree.SelectedObject;
+                row.Procedure = (DBProcedure)dataTree.SelectedDBItem;
             }
         }
 
         private void ToolDBExportClick(object sender, EventArgs e)
         {
-            var schema = dataTree.SelectedObject as DBSchema;
+            var schema = dataTree.SelectedDBItem as DBSchema;
             if (schema != null)
             {
                 //var doc = new System.Xml.XmlDocument();
-                var stream = new System.IO.MemoryStream();
-                var writer = System.Xml.XmlWriter.Create(stream);
-                writer.WriteStartDocument(true);
-                writer.WriteStartElement("html");
-                writer.WriteElementString("title", schema.DisplayName);
-                writer.WriteStartElement("body");
-                writer.WriteElementString("H1", schema.DisplayName);
-                schema.Tables.Sort(new InvokerComparer<DBTable>("Code"));
-                foreach (var table in schema.Tables)
+                using (var stream = new MemoryStream())
+                using (var writer = System.Xml.XmlWriter.Create(stream))
                 {
-                    if (table.Type == DBTableType.Table)
+                    writer.WriteStartDocument(true);
+                    writer.WriteStartElement("html");
+                    writer.WriteElementString("title", schema.DisplayName);
+                    writer.WriteStartElement("body");
+                    writer.WriteElementString("H1", schema.DisplayName);
+                    schema.Tables.Sort(new InvokerComparer<DBTable>("Code"));
+                    foreach (var table in schema.Tables)
                     {
-                        writer.WriteElementString("H2", table.DisplayName + " (" + table.Name + ")");
-                        writer.WriteStartElement("table");
-                        writer.WriteAttributeString("border", "1");
-                        writer.WriteAttributeString("cellspacing", "0");
-                        writer.WriteAttributeString("cellpadding", "5");
-                        writer.WriteStartElement("tr");
-
-                        writer.WriteStartElement("th");
-                        writer.WriteElementString("p", "Code");
-                        writer.WriteEndElement();//th
-
-                        writer.WriteStartElement("th");
-                        writer.WriteElementString("p", "Name");
-                        writer.WriteEndElement();//th
-
-                        writer.WriteStartElement("th");
-                        writer.WriteElementString("p", "Type");
-                        writer.WriteEndElement();//th
-
-                        writer.WriteStartElement("th");
-                        writer.WriteElementString("p", "Size");
-                        writer.WriteEndElement();//th
-                        writer.WriteStartElement("th");
-                        writer.WriteElementString("p", "Prec");
-                        writer.WriteEndElement();//th
-
-                        writer.WriteStartElement("th");
-                        writer.WriteElementString("p", "Spec");
-                        writer.WriteEndElement();//th        
-
-                        writer.WriteStartElement("th");
-                        writer.WriteElementString("p", "Reference");
-                        writer.WriteEndElement();//th
-
-
-                        writer.WriteEndElement();//tr
-
-                        foreach (var column in table.Columns)
+                        if (table.Type == DBTableType.Table)
                         {
+                            writer.WriteElementString("H2", table.DisplayName + " (" + table.Name + ")");
+                            writer.WriteStartElement("table");
+                            writer.WriteAttributeString("border", "1");
+                            writer.WriteAttributeString("cellspacing", "0");
+                            writer.WriteAttributeString("cellpadding", "5");
                             writer.WriteStartElement("tr");
 
-                            writer.WriteStartElement("td");
-                            writer.WriteElementString("p", column.Name);
-                            writer.WriteEndElement();//td
+                            writer.WriteStartElement("th");
+                            writer.WriteElementString("p", "Code");
+                            writer.WriteEndElement();//th
 
-                            writer.WriteStartElement("td");
-                            writer.WriteElementString("p", column.Name);
-                            writer.WriteEndElement();//td
+                            writer.WriteStartElement("th");
+                            writer.WriteElementString("p", "Name");
+                            writer.WriteEndElement();//th
 
-                            writer.WriteStartElement("td");
-                            writer.WriteElementString("p", column.DBDataType.ToString());
-                            writer.WriteEndElement();//td
+                            writer.WriteStartElement("th");
+                            writer.WriteElementString("p", "Type");
+                            writer.WriteEndElement();//th
 
-                            writer.WriteStartElement("td");
-                            writer.WriteElementString("p", column.Size.ToString());
-                            writer.WriteEndElement();//td
+                            writer.WriteStartElement("th");
+                            writer.WriteElementString("p", "Size");
+                            writer.WriteEndElement();//th
+                            writer.WriteStartElement("th");
+                            writer.WriteElementString("p", "Prec");
+                            writer.WriteEndElement();//th
 
-                            writer.WriteStartElement("td");
-                            writer.WriteElementString("p", column.Scale.ToString());
-                            writer.WriteEndElement();//td
+                            writer.WriteStartElement("th");
+                            writer.WriteElementString("p", "Spec");
+                            writer.WriteEndElement();//th        
 
-                            writer.WriteStartElement("td");
-                            writer.WriteElementString("p", column.Keys.ToString());
-                            writer.WriteEndElement();//td
+                            writer.WriteStartElement("th");
+                            writer.WriteElementString("p", "Reference");
+                            writer.WriteEndElement();//th
 
-                            writer.WriteStartElement("td");
-                            writer.WriteElementString("p", column.ReferenceTable != null ? (column.ReferenceTable + " (" + column.ReferenceTable.Name + ")") : null);
-                            writer.WriteEndElement();//td
 
                             writer.WriteEndElement();//tr
+
+                            foreach (var column in table.Columns)
+                            {
+                                writer.WriteStartElement("tr");
+
+                                writer.WriteStartElement("td");
+                                writer.WriteElementString("p", column.Name);
+                                writer.WriteEndElement();//td
+
+                                writer.WriteStartElement("td");
+                                writer.WriteElementString("p", column.Name);
+                                writer.WriteEndElement();//td
+
+                                writer.WriteStartElement("td");
+                                writer.WriteElementString("p", column.DBDataType.ToString());
+                                writer.WriteEndElement();//td
+
+                                writer.WriteStartElement("td");
+                                writer.WriteElementString("p", column.Size.ToString());
+                                writer.WriteEndElement();//td
+
+                                writer.WriteStartElement("td");
+                                writer.WriteElementString("p", column.Scale.ToString());
+                                writer.WriteEndElement();//td
+
+                                writer.WriteStartElement("td");
+                                writer.WriteElementString("p", column.Keys.ToString());
+                                writer.WriteEndElement();//td
+
+                                writer.WriteStartElement("td");
+                                writer.WriteElementString("p", column.ReferenceTable != null ? (column.ReferenceTable + " (" + column.ReferenceTable.Name + ")") : null);
+                                writer.WriteEndElement();//td
+
+                                writer.WriteEndElement();//tr
+                            }
+                            writer.WriteEndElement();//table
                         }
-                        writer.WriteEndElement();//table
                     }
+
+                    writer.WriteEndElement();//body
+                    writer.WriteEndElement();//html
+                    writer.WriteEndDocument();
+                    writer.Flush();
+
+                    File.WriteAllBytes("temp.html", stream.ToArray());
                 }
-
-                writer.WriteEndElement();//body
-                writer.WriteEndElement();//html
-                writer.WriteEndDocument();
-                writer.Flush();
-
-                System.IO.File.WriteAllBytes("temp.html", stream.ToArray());
             }
             //ProjectHandler ph = new ProjectHandler();
             //ph.Project = new DBExport();
@@ -1062,42 +1061,42 @@ namespace DataWF.Data.Gui
 
         private void ToolTableExplorerOnClick(object sender, EventArgs e)
         {
-            if (dataTree.SelectedObject is DBTable)
+            if (dataTree.SelectedDBItem is DBTable)
             {
-                EditTableData((DBTable)dataTree.SelectedObject);
+                EditTableData((DBTable)dataTree.SelectedDBItem);
             }
         }
 
         private void ToolCopyClick(object sender, EventArgs e)
         {
-            var obj = dataTree.SelectedObject;
-            if (obj == null)
+            var dbItem = dataTree.SelectedDBItem;
+            if (dbItem == null)
                 return;
-            if (obj is DBTable)
+            if (dbItem is DBTable)
             {
-                DBTable newTable = (DBTable)((DBTable)obj).Clone();
+                DBTable newTable = (DBTable)((DBTable)dbItem).Clone();
                 ShowNewItem(newTable);
             }
-            else if (obj is DBColumn)
+            else if (dbItem is DBColumn)
             {
-                var selected = (DBColumn)obj;
+                var selected = (DBColumn)dbItem;
                 var column = (DBColumn)selected.Clone();
                 column.Table = selected.Table;
                 ShowNewItem(column);
             }
-            else if (obj is DBProcedure)
+            else if (dbItem is DBProcedure)
             {
-                var procedure = (DBProcedure)((DBProcedure)obj).Clone();
-                foreach (var par in ((DBProcedure)obj).Parameters)
+                var procedure = (DBProcedure)((DBProcedure)dbItem).Clone();
+                foreach (var par in ((DBProcedure)dbItem).Parameters)
                 {
                     var parameter = (DBProcParameter)par.Clone();
                     parameter.Procedure = procedure;
                     procedure.Parameters.Add(parameter);
                 }
             }
-            //dataTree.SelectedNode.Tag
-            //           if (dataTree.SelectedNode.Tag is DBSchema) {
-            //               DataEnvir.Schems.Remove (dataTree.SelectedNode.Tag as DBSchema);
+            //dataTree.SelectedDBItem
+            //           if (dataTree.SelectedDBItem is DBSchema) {
+            //               DataEnvir.Schems.Remove (dataTree.SelectedDBItem as DBSchema);
             //           } else if (dataTree.SelectedObject is DBTableGroup) {
             //               RemoveTableGroup ((DBTableGroup)dataTree.SelectedObject);
             //           } else if (dataTree.SelectedObject is DBTable) {
@@ -1118,7 +1117,7 @@ namespace DataWF.Data.Gui
         {
             if (dataTree.SelectedNode != null && e.HitTest.MouseButton == PointerButton.Right)
             {
-                if (dataTree.SelectedNode.Tag is DBSchema)
+                if (dataTree.SelectedDBItem is DBSchema)
                 {
                     //contextMain.Items.Add(toolMainAdd);
                 }
@@ -1130,21 +1129,21 @@ namespace DataWF.Data.Gui
         private void DataTreeOnAfterSelect(object sender, EventArgs e)
         {
             if (dataTree.SelectedNode != null)
-                GuiService.Main.ShowProperty(this, dataTree.SelectedObject, false);
+                GuiService.Main.ShowProperty(this, dataTree.SelectedDBItem, false);
         }
 
-        private void DataTreeOnNodeMouseDoubleClick(object sender, LayoutHitTestEventArgs e)
+        private void DataTreeOnDoubleClick(object sender, LayoutHitTestEventArgs e)
         {
-            if (dataTree.SelectedObject != null)
+            if (dataTree.SelectedDBItem != null)
             {
-                DBTable dt = dataTree.SelectedObject as DBTable;
-                if (dt != null)
+                DBTable table = dataTree.SelectedDBItem as DBTable;
+                if (table != null)
                 {
-                    EditTableData(dt);
+                    EditTableData(table);
                 }
-                else if (dataTree.SelectedObject is DBProcedure)
+                else if (dataTree.SelectedDBItem is DBProcedure)
                 {
-                    var procedure = (DBProcedure)dataTree.SelectedObject;
+                    var procedure = (DBProcedure)dataTree.SelectedDBItem;
                     var editor = GuiService.Main.DockPanel.Find(ProcedureEditor.GetName(procedure)) as ProcedureEditor;
                     if (editor == null)
                         editor = new ProcedureEditor() { Procedure = procedure };
@@ -1165,7 +1164,7 @@ namespace DataWF.Data.Gui
             {
                 foreach (string fileName in dialog.FileNames)
                 {
-                    string name = System.IO.Path.GetFileName(fileName);
+                    string name = Path.GetFileName(fileName);
                     var query = new Query(new[]
                         {
                         new QueryParameter(){
@@ -1183,10 +1182,10 @@ namespace DataWF.Data.Gui
                         procedire = new DBProcedure();
                         procedire.ProcedureType = ProcedureTypes.File;
                         procedire.DataName = name;
-                        procedire.Name = System.IO.Path.GetFileNameWithoutExtension(name);
+                        procedire.Name = Path.GetFileNameWithoutExtension(name);
                     }
-                    procedire.Data = System.IO.File.ReadAllBytes(fileName);
-                    procedire.Date = System.IO.File.GetLastWriteTime(fileName);
+                    procedire.Data = File.ReadAllBytes(fileName);
+                    procedire.Date = File.GetLastWriteTime(fileName);
                     procedire.Save();
                 }
                 MessageDialog.ShowMessage(ParentWindow, Common.Locale.Get("FlowExplorer", "Files load complete!"), "File Loader!");

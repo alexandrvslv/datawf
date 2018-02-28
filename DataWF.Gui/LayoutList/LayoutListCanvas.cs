@@ -74,15 +74,15 @@ namespace DataWF.Gui
         protected override Size OnGetPreferredSize(SizeConstraint widthConstraint, SizeConstraint heightConstraint)
         {
             var size = base.OnGetPreferredSize(widthConstraint, heightConstraint);
-            if (List.AutoSize && List.ListInfo != null)
-            {
-                if (List.ListInfo.Columns.Bound.Width == 0)
-                    List.ListInfo.GetColumnsBound(widthConstraint.AvailableSize, null, null);
-                var content = List.GetContentBound();
-                size = new Size(content.Width > MinWidth ? content.Width : MinWidth,
-                                content.Height > MinHeight ? content.Height : MinHeight);
-            }
-            else
+            //if (List.AutoSize && List.ListInfo != null)
+            //{
+            //    if (List.ListInfo.Columns.Bound.Width == 0)
+            //        List.ListInfo.GetColumnsBound(widthConstraint.AvailableSize, null, null);
+            //    var content = List.GetContentBound();
+            //    size = new Size(content.Width > MinWidth ? content.Width : MinWidth,
+            //                    content.Height > MinHeight ? content.Height : MinHeight);
+            //}
+            //else
             {
                 size = new Size(200, 100);
             }

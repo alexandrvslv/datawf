@@ -23,10 +23,8 @@ namespace DataWF.Gui
         public Rectangle Bound;
         public Size TextSize;
 
-
         public LayoutGroup()
-        {
-        }
+        { }
 
         public Dictionary<LayoutColumn, object> CollectedCache
         {

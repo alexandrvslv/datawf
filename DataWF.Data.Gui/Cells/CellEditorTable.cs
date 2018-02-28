@@ -152,7 +152,7 @@ namespace DataWF.Data.Gui
 
         public override Widget InitDropDownContent()
         {
-            var tableEditor = editor.GetCacheControl<TableEditor>("TableEditor");
+            var tableEditor = editor.GetCacheControl<TableEditor>();
 
             tableEditor.ReadOnly = ReadOnly;
             tableEditor.KeyPressed -= TextBoxKeyPress;

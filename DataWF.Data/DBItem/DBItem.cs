@@ -27,11 +27,11 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-
+using System.Text;
 
 namespace DataWF.Data
 {
-    public class DBItem : ICloneable, IComparable<DBItem>, IDisposable, IGroup, IAccessable, ICheck, INotifyPropertyChanged, IEditable, IStatus
+    public class DBItem : ICloneable, IComparable<DBItem>, IDisposable, IGroup, IAccessable, ICheck, INotifyPropertyChanged, IEditable, IStatus, IDBTableContent
     {
         public static readonly DBItem EmptyItem = new DBItem() { cacheToString = "Loading" };
         public object Tag;
@@ -763,7 +763,7 @@ namespace DataWF.Data
         public DBTable Table
         {
             get { return table; }
-            internal set
+            set
             {
                 table = value;
                 hindex = Pull.GetHIndex(++table.Hash, table.BlockSize);
@@ -1187,6 +1187,17 @@ namespace DataWF.Data
         {
             return obj == null ? 1 : obj.table == table ? hindex.CompareTo(obj.hindex) :
                 GetHashCode().CompareTo(obj.GetHashCode());
+        }
+
+        public string DMLPatch()
+        {
+            var rez = new StringBuilder();
+            rez.AppendLine(string.Format("if exists(select * from {0} where {1}={2})", Table.Name, Table.PrimaryKey.Name, PrimaryId));
+            rez.AppendLine("    " + Table.System.FormatCommand(Table, DBCommandTypes.Update, this) + ";");
+            rez.AppendLine("else");
+            rez.AppendLine("    " + Table.System.FormatCommand(Table, DBCommandTypes.Insert, this) + ";");
+            rez.AppendLine();
+            return rez.ToString();
         }
 
         public virtual void Dispose()

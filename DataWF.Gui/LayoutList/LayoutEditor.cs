@@ -337,6 +337,11 @@ namespace DataWF.Gui
             }
         }
 
+        public T GetCacheControl<T>()
+        {
+            return GetCacheControl<T>(typeof(T).Name);
+        }
+
         public T GetCacheControl<T>(string name)
         {
             object o;

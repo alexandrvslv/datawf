@@ -6,24 +6,21 @@ using DataWF.Common;
 using DataWF.Module.Common;
 using DataWF.Module.Flow;
 using Xwt;
-
+using DataWF.Module.CommonGui;
 
 namespace DataWF.Module.FlowGui
 {
-    public class CellEditorFlowTree : CellEditorDataTree
+    public class CellEditorFlowTree : CellEditorText
     {
-        FlowTreeKeys fkeys = FlowTreeKeys.None;
 
         public CellEditorFlowTree()
         {
             dropDownAutoHide = true;
         }
 
-        public FlowTreeKeys FlowKeys
-        {
-            get { return fkeys; }
-            set { fkeys = value; }
-        }
+        public FlowTreeKeys FlowKeys { get; set; }
+
+        public UserTreeKeys UserKeys { get; set; }
 
         public FlowTree FlowTree
         {
@@ -41,42 +38,39 @@ namespace DataWF.Module.FlowGui
                 if (DataType == typeof(DBSchema) || DataType == typeof(DBTable) || DataType == typeof(DBTableGroup) ||
                     DataType == typeof(DBColumn) || DataType == typeof(DBColumnGroup) || DataType == typeof(DBProcedure))
                 {
-                    fkeys = FlowTreeKeys.None;
+                    FlowKeys = FlowTreeKeys.None;
                 }
                 else if (DataType == typeof(Stage))
                 {
-                    fkeys = FlowTreeKeys.Work | FlowTreeKeys.Stage;
+                    FlowKeys = FlowTreeKeys.Work | FlowTreeKeys.Stage;
                 }
                 else if (DataType == typeof(Work))
                 {
-                    fkeys = FlowTreeKeys.Work;
+                    FlowKeys = FlowTreeKeys.Work;
                 }
                 else if (DataType == typeof(Template))
                 {
-                    fkeys = FlowTreeKeys.Template;
+                    FlowKeys = FlowTreeKeys.Template;
                 }
                 else if (DataType == typeof(User))
                 {
-                    fkeys = FlowTreeKeys.User;
+                    UserKeys = UserTreeKeys.User;
                 }
                 else if (DataType == typeof(UserGroup))
                 {
-                    fkeys = FlowTreeKeys.Group;
+                    UserKeys = UserTreeKeys.Group;
                 }
             }
         }
 
-
-        public override DataTree GetToolTarget()
-        {
-            return editor.GetCacheControl<FlowTree>("FlowTree");
-        }
+        public object DataFilter { get; set; }
 
         public override Widget InitDropDownContent()
         {
-            var tree = base.InitDropDownContent() as FlowTree;
-            tree.FlowKeys = fkeys;
-            tree.ExpandTop();
+            var tree = editor.GetCacheControl<FlowTree>();
+            tree.FlowKeys = FlowKeys;
+            tree.UserKeys = UserKeys;
+            tree.Nodes.ExpandTop();
             if (DataFilter != null)
                 tree.DataFilter = DataFilter;
             if (Value is DBItem)

@@ -36,7 +36,7 @@ namespace DataWF.Gui
         {
             if (listSource == null)
             {
-                var imgEditor = editor.GetCacheControl<ImageEditor>("ImageEditor");
+                var imgEditor = editor.GetCacheControl<ImageEditor>();
                 imgEditor.EditImage = FormatValue(Value) as Image;
                 return imgEditor;
             }

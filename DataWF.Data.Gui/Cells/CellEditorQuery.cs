@@ -14,7 +14,7 @@ namespace DataWF.Data.Gui
 
         public override Widget InitDropDownContent()
         {
-            var query = editor.GetCacheControl<QueryEditor>("Report");
+            var query = editor.GetCacheControl<QueryEditor>();
             query.Initialize(SearchState.Reference, Value as QQuery, EditItem as QParam, null);
             return query;
         }

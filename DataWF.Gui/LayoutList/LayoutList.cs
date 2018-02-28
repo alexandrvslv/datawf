@@ -995,7 +995,7 @@ namespace DataWF.Gui
 
         public void InvalidateRow(int index)
         {
-            if (index == -1)
+            if (index < 0)
                 return;
             bounds.Row = GetRowBound(index, GetRowGroup(index));
             QueueDraw(bounds.Row.X, bounds.Row.Y, bounds.Row.Width + 1, bounds.Row.Height + 1);
@@ -2790,8 +2790,8 @@ namespace DataWF.Gui
 
         protected void SetEditorBound()
         {
-            bounds.Editor = GetEditorBound();
-            if (bounds.Editor != editor.Bounds)
+            bounds.Editor = GetEditorBound().Round();
+            if (bounds.Editor != editor.ParentBounds)
             {
                 canvas.SetChildBounds(editor, bounds.Editor);
             }

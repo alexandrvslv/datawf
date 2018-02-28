@@ -8,10 +8,9 @@ using System.ComponentModel;
 using Xwt.Drawing;
 using System.Linq;
 using DataWF.Module.Common;
-using DataWF.Module.Flow;
 using Xwt;
 
-namespace DataWF.Module.FlowGui
+namespace DataWF.Module.CommonGui
 {
 
     public class DataLogView : VPanel, IDockContent
@@ -93,7 +92,7 @@ namespace DataWF.Module.FlowGui
         private ToolFieldEditor dateField = new ToolFieldEditor();
         private ToolFieldEditor dataField = new ToolFieldEditor();
         private LayoutDBTable detailList = new LayoutDBTable();
-        private PDocument detailRow = new PDocument();
+        private LayoutDBTable detailRow = new LayoutDBTable();
         private GroupBox map = new GroupBox();
 
         public DataLogView()
@@ -566,15 +565,7 @@ namespace DataWF.Module.FlowGui
             {
                 toolRollback.Visible = filter.Access.Edit;
                 this.filter = filter;
-                if (filter is Document)
-                {
-                    toolModeUser.Visible = false;
-                    toolModeGroup.Visible = false;
-                    toolModeTable.Visible = false;
-                    toolModeLogConfirm.Visible = false;
-                    SetMode(toolModeDocument);
-                }
-                else if (filter is User)
+                if (filter is User)
                 {
                     toolModeDocument.Visible = false;
                     toolModeGroup.Visible = false;
@@ -598,6 +589,14 @@ namespace DataWF.Module.FlowGui
                     toolModeGroup.Visible = false;
                     SetMode(((UserLog)filter).TextData.Equals("Accept", StringComparison.InvariantCultureIgnoreCase) ||
                         ((UserLog)filter).TextData.Equals("Reject", StringComparison.InvariantCultureIgnoreCase) ? toolModeLogConfirm : toolModeDefault);
+                }
+                else if (filter is DBItem)
+                {
+                    toolModeUser.Visible = false;
+                    toolModeGroup.Visible = false;
+                    toolModeTable.Visible = false;
+                    toolModeLogConfirm.Visible = false;
+                    SetMode(toolModeDocument);
                 }
                 else
                 {
@@ -669,10 +668,9 @@ namespace DataWF.Module.FlowGui
                 query.BuildPropertyParam(nameof(UserLog.TargetTable), CompareType.Equal, table.FullName);
             }
 
-            if (filter is Document && mode == DataLogMode.Document)
+            if (filter is DBItem && mode == DataLogMode.Document)
             {
                 query.BuildPropertyParam(nameof(UserLog.DocumentId), CompareType.Equal, filter.PrimaryId);
-                FlowEnvironment.CurrentDocument = (Document)filter;
             }
             else if (filter is User && mode == DataLogMode.User)
             {

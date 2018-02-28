@@ -147,7 +147,7 @@ namespace DataWF.Module.FlowGui
             qDocs.BuildPropertyParam(nameof(Document.Id), CompareType.In, qDocWorks);
 
             works = new DocumentWorkList(qWork.ToWhere(), DBViewKeys.Empty);
-            works.ListChanged += new ListChangedEventHandler(WorksListChanged);
+            works.ListChanged += WorksListChanged;
 
             documents = new DocumentList(Document.DBTable.ParseProperty(nameof(Document.WorkCurrent)).Name + " is not null",
             DBViewKeys.Access);

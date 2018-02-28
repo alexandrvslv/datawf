@@ -162,6 +162,13 @@ namespace DataWF.Gui
             return Select(nameof(Node.Group), CompareType.Equal, null);
         }
 
+        public void ExpandTop()
+        {
+            foreach (var node in GetTopLevel())
+            {
+                node.Expand = true;
+            }
+        }
     }
 }
 

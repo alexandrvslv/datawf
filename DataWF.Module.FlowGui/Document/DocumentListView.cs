@@ -8,6 +8,7 @@ using DataWF.Common;
 using DataWF.Module.Flow;
 
 using Xwt;
+using DataWF.Module.CommonGui;
 
 namespace DataWF.Module.FlowGui
 {
@@ -209,7 +210,7 @@ namespace DataWF.Module.FlowGui
                         FlowKeys = FlowTreeKeys.Stage | FlowTreeKeys.Work
                     });
                     toolFTemplate.Field.BindData(search, "Template", toolFTemplate.Field.CellEditor is CellEditorFlowTree ? toolFTemplate.Field.CellEditor : new CellEditorFlowTree() { FlowKeys = FlowTreeKeys.Template });
-                    toolFUser.Field.BindData(search, "User", toolFUser.Field.CellEditor is CellEditorFlowTree ? toolFUser.Field.CellEditor : new CellEditorFlowTree() { FlowKeys = FlowTreeKeys.User });
+                    toolFUser.Field.BindData(search, "User", toolFUser.Field.CellEditor is CellEditorFlowTree ? toolFUser.Field.CellEditor : new CellEditorFlowTree() { UserKeys = UserTreeKeys.User });
                     toolFWork.Field.BindData(search, "IsWork");
                     if (search != null)
                     {

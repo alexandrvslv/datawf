@@ -8,6 +8,7 @@ using DataWF.Common;
 using Xwt;
 using DataWF.Module.Flow;
 using DataWF.Module.Common;
+using DataWF.Module.CommonGui;
 
 namespace DataWF.Module.FlowGui
 {
@@ -18,10 +19,10 @@ namespace DataWF.Module.FlowGui
 
         public MessageExplorer()
         {
-            tree.Name = "flowTree1";
+            tree.Name = "tree";
             tree.ReadOnly = false;
-            tree.Text = "flowTree1";
-            tree.FlowKeys = FlowTreeKeys.User;
+            tree.Text = "User tree";
+            tree.UserKeys = UserTreeKeys.User;
             tree.CellDoubleClick += TreeCellDoubleClick;
             tree.ListInfo.HotTrackingCell = false;
 

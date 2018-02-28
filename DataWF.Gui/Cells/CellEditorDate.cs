@@ -48,7 +48,7 @@ namespace DataWF.Gui
 
         public override Widget InitDropDownContent()
         {
-            var interval = editor.GetCacheControl<IntervalSelector>("DateInterval");
+            var interval = editor.GetCacheControl<IntervalSelector>();
             interval.TwoDate = twoDate;
             interval.ValueChanged += PickerDateChanged;
             return interval;
