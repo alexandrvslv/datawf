@@ -56,7 +56,6 @@ namespace DataWF.Gui
         protected LayoutNodeInfo nodeInfo;
         protected LayoutSelection selection;
         protected LayoutGroupList groups;
-        protected bool caching = false;
         protected bool _gridMode = false;
         protected bool checkView = true;
         protected bool hideCollection = false;
@@ -73,7 +72,7 @@ namespace DataWF.Gui
         protected LayoutHitTestInfo hitt = new LayoutHitTestInfo();
         protected internal LayoutHitTestEventArgs cacheHitt = new LayoutHitTestEventArgs();
         protected internal LayoutListDrawArgs cacheDraw = new LayoutListDrawArgs();
-        private Dictionary<int, Dictionary<LayoutColumn, TextLayout>> cache = null;
+        private List<Dictionary<LayoutColumn, TextLayout>> cache = new List<Dictionary<LayoutColumn, TextLayout>>();
         private int gridCols = 1;
         private int gridRows = 1;
 
@@ -159,7 +158,7 @@ namespace DataWF.Gui
             canvas.MinWidth = 150;
             canvas.MinHeight = 50;
             canvas.AddChild(editor, 0, 0);
-            canvas.BackgroundColor = Colors.White;
+            canvas.BackgroundColor = Colors.Transparent;
 
             Content = canvas;
 
@@ -777,6 +776,22 @@ namespace DataWF.Gui
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
+            ClearCache();
+            void ClearCache()
+            {
+                if (cache != null)
+                {
+                    foreach (var cacheItem in cache)
+                    {
+                        foreach (var textLayout in cacheItem.Values)
+                        {
+                            if (textLayout != null)
+                                textLayout.Dispose();
+                        }
+                    }
+                    cache.Clear();
+                }
+            }
         }
 
         #endregion
@@ -999,7 +1014,6 @@ namespace DataWF.Gui
                 return;
             bounds.Row = GetRowBound(index, GetRowGroup(index));
             QueueDraw(bounds.Row.X, bounds.Row.Y, bounds.Row.Width + 1, bounds.Row.Height + 1);
-            //Debug.WriteLine($"Invalidate Row({index}) {recs.Row}");
         }
 
         protected LayoutHitTestInfo HitTest(double x, double y, PointerButton button, bool ctrl, bool shift)
@@ -1994,7 +2008,6 @@ namespace DataWF.Gui
 
                     GeneratingHeadColumn();
                     hitt.Location = LayoutHitTestLocation.None;
-                    ClearCache();
                     TreeMode = listInfo.Tree;
                 }
 
@@ -2099,7 +2112,6 @@ namespace DataWF.Gui
 
                 FieldType = fieldSource.GetType();
                 FieldInfo.SetSource(fieldSource);
-                ClearCache();
                 RefreshBounds(true);
             }
         }
@@ -3600,6 +3612,7 @@ namespace DataWF.Gui
                 else if (e.HitTest.Column != null)
                 {
                     listInfo.Columns.Move(selection.CurrentColumn, e.HitTest.Column, a, moveGroup);
+                    RefreshBounds(false);
                 }
                 //if (a == LayoutAlignType.Right && (crect.X - e.HitTest.Point.X) < 10 ||
                 //    a == LayoutAlignType.Left && (crect.Right - e.HitTest.Point.X) < 10 )
@@ -4194,12 +4207,13 @@ namespace DataWF.Gui
         protected virtual void OnDrawRows(LayoutListDrawArgs e, int indexFirst, int indexLast)
         {
             Debug.WriteLine($"LayoutList Draw Rows Index: {indexFirst}-{indexLast}");
-            for (int i = indexFirst; i <= indexLast; i++)
+            for (int i = indexFirst, dIndex = 0; i <= indexLast; i++, dIndex++)
             {
                 if (i < 0 || i >= listSource.Count)
                     break;
 
                 e.Index = i;
+                e.DisplayIndex = dIndex;
                 e.Item = listSource[i];
 
                 if (e.Group != null && !e.Group.IsExpand)
@@ -4344,9 +4358,12 @@ namespace DataWF.Gui
                 e.Column = column;
                 e.Bound = GetCellBound(column, e.Index, e.RowBound);
                 e.Value = ReadValue(e.Item, column);
-                e.Formated = ReadCache(e.Index, e.Item, e.Column);
-                e.Style = OnGetCellStyle(e.Item, e.Formated, e.Column);
-
+                e.Style = OnGetCellStyle(e.Item, e.Value, e.Column);
+                e.Formated = FormatValue(e.Item, e.Value, e.Column);
+                if (e.Formated is string)
+                {
+                    e.Formated = GetTextLayout(e);
+                }
                 OnDrawCell(e);
             }
 
@@ -4358,65 +4375,34 @@ namespace DataWF.Gui
             }
         }
 
-        [DefaultValue(false)]
-        public bool Caching
+        public TextLayout GetTextLayout(LayoutListDrawArgs e)
         {
-            get { return caching; }
-            set { caching = value; }
-        }
-
-        protected void ClearCache()
-        {
-            if (cache != null)
-            {
-                foreach (var cacheItem in cache.Values)
-                {
-                    foreach (var textLayout in cacheItem.Values)
-                    {
-                        if (textLayout != null)
-                            textLayout.Dispose();
-                    }
-                }
-                cache.Clear();
-            }
-        }
-
-        public object ReadCache(int index, object listItem, LayoutColumn column)
-        {
-            object formated = null;
+            TextLayout layout = null;
             Dictionary<LayoutColumn, TextLayout> cacheItem = null;
-            if (caching)
-            {
-                if (cache == null)
-                    cache = new Dictionary<int, Dictionary<LayoutColumn, TextLayout>>();
 
-                if (cache.TryGetValue(index, out cacheItem))
-                {
-                    if (cacheItem.TryGetValue(column, out var layout))
-                        return layout;
-                }
-                else
-                {
-                    cache[index] = cacheItem = new Dictionary<LayoutColumn, TextLayout>();
-                }
-            }
-            if (formated == null)
+            if (cache.Count > e.DisplayIndex)
             {
-                object value = ReadValue(listItem, column);
-                formated = FormatValue(listItem, value, column);
-                if (cacheItem != null && formated is string)
-                {
-                    var style = OnGetCellStyle(listItem, value, column);
-                    cacheItem[column] = formated == null ? null : new TextLayout()
-                    {
-                        Font = style.Font,
-                        Trimming = TextTrimming.WordElipsis,
-                        TextAlignment = style.Alignment,
-                        Text = (string)formated
-                    };
-                }
+                cacheItem = cache[e.DisplayIndex];
+                cacheItem.TryGetValue(e.Column, out layout);
             }
-            return formated;
+            else
+            {
+                cache.Add(cacheItem = new Dictionary<LayoutColumn, TextLayout>());
+            }
+            if (layout == null)
+            {
+                layout = cacheItem[e.Column] = new TextLayout(canvas)
+                {
+                    Font = e.Style.Font,
+                    Trimming = TextTrimming.WordElipsis,
+                    TextAlignment = e.Style.Alignment
+                };
+            }
+            if (!string.Equals(layout.Text, (string)e.Formated, StringComparison.Ordinal))
+            {
+                layout.Text = (string)e.Formated;
+            }
+            return layout;
         }
 
         protected virtual void OnDrawCell(LayoutListDrawArgs e)
@@ -4454,8 +4440,6 @@ namespace DataWF.Gui
         {
             if (fieldSource != null)
             {
-                ClearCache();
-
                 foreach (LayoutField field in listSource)
                 {
                     if (field.Name.IndexOf(e.PropertyName, StringComparison.OrdinalIgnoreCase) >= 0)
@@ -4743,8 +4727,6 @@ namespace DataWF.Gui
                     lg.CollectedCache.Clear();
                 }
             }
-            if (cache != null)
-                ClearCache();
             var e = arg as ListChangedEventArgs;
 
             if (e.ListChangedType == ListChangedType.ItemDeleted && e.NewIndex >= 0)

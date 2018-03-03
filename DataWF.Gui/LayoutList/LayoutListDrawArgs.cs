@@ -20,5 +20,6 @@ namespace DataWF.Gui
         public List<LayoutColumn> Columns;
         public CellStyle Style;
         public LayoutGroup Group;
+        public int DisplayIndex;
     }
 }
