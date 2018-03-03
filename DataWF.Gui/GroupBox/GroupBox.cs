@@ -9,7 +9,6 @@ namespace DataWF.Gui
     public class GroupBox : Canvas
     {
         private GroupBoxMap map;
-        private bool flag = false;
 
         public GroupBox()
         {
@@ -19,14 +18,8 @@ namespace DataWF.Gui
 
         public void ResizeLayout()
         {
-            flag = true;
-            foreach (ILayoutItem item in map.Items)
-            {
-                if (item is GroupBoxMap)
-                {
-                    ((GroupBoxMap)item).GroupBox.flag = true;
-                }
-            }
+            if (Parent == null)
+                return;
             map.Width = Size.Width;
             map.Height = Size.Height;
             map.GetBound();
@@ -36,12 +29,6 @@ namespace DataWF.Gui
                 item.CheckBounds();
             }
 
-            foreach (ILayoutItem item in map.Items)
-            {
-                if (item is GroupBoxMap)
-                    ((GroupBoxMap)item).GroupBox.flag = false;
-            }
-            flag = false;
             QueueDraw();
         }
 
@@ -136,7 +123,6 @@ namespace DataWF.Gui
                         if (box.GetExpandBound(box.Bound).Contains(args.X, args.Y))
                         {
                             box.Expand = !box.Expand;
-                            QueueForReallocate();
                         }
                     }
                 }
@@ -165,8 +151,7 @@ namespace DataWF.Gui
         protected override void OnReallocate()
         {
             base.OnReallocate();
-            if (!flag)
-                ResizeLayout();
+            ResizeLayout();
         }
 
         public bool Contains(ILayoutItem item)

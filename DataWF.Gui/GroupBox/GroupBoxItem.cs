@@ -105,6 +105,7 @@ namespace DataWF.Gui
                     expand = value;
                     if (control != null)
                         control.Visible = visible && expand;
+                    OnPropertyChanged(nameof(Expand));
                     //if (map != null)
                     //    map.ResizeLayout();
                 }
