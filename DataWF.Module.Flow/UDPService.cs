@@ -105,7 +105,7 @@ namespace DataWF.Module.Flow
             if (user.NetworkId.Length > 0 && user.NetworkId.IndexOf(';') < 0)
                 user.NetworkId = string.Empty;
 
-            string endpoint = localPoint.ToString() + ";";
+            string endpoint = localPoint + ";";
             if (user.NetworkId.IndexOf(endpoint, StringComparison.OrdinalIgnoreCase) < 0)
                 SaveEndPoint(user.NetworkId + endpoint);
 

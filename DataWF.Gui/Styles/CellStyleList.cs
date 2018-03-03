@@ -187,6 +187,7 @@ namespace DataWF.Gui
             this["Field"].BorderBrush.Color = Colors.Transparent;
             this["Node"].BorderBrush.Color = Colors.Transparent;
             this["Column"].BackBrush.Type = CellStyleBrushType.Gradient;
+            this["GroupBoxHeader"].BackBrush.Type = CellStyleBrushType.Gradient;
         }
 
         public CellStyle this[string param]

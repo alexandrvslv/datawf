@@ -27,6 +27,10 @@ namespace DataWF.Gui
         private ListEditor sorts = new ListEditor();
 
         public Menu MenuSubСolumns = new Menu();
+        private GroupBoxItem gProperties;
+        private GroupBoxItem gColumns;
+        private GroupBoxItem gFields;
+        private GroupBoxItem gSorters;
 
         public LayoutMenuEditor()
         {
@@ -35,7 +39,7 @@ namespace DataWF.Gui
 
             CellCheck.Click += OnMenuCellCheckClick;
             CellCheck.Glyph = GlyphType.CheckSquare;
-            
+
             ViewMode.Click += OnMenuViewModeClick;
             ViewMode.Glyph = GlyphType.PhotoAlias;
 
@@ -76,28 +80,32 @@ namespace DataWF.Gui
             sorts.List.ListInfo.Columns.Add(nameof(LayoutSort.Direction));
             sorts.List.ListInfo.Columns.Add(nameof(LayoutSort.IsGroup));
 
-            var gProperties = new GroupBoxItem()
+            gProperties = new GroupBoxItem()
             {
+                Name = "properties",
                 Widget = properties,
                 Text = "Properties",
                 FillHeight = true,
-                Width = 300
+                Width = 340
             };
-            var gColumns = new GroupBoxItem()
+            gColumns = new GroupBoxItem()
             {
+                Name = "columns",
                 Widget = columns,
                 Text = "Columns",
                 FillHeight = true
             };
-            var gFields = new GroupBoxItem()
+            gFields = new GroupBoxItem()
             {
+                Name = "fields",
                 Widget = fields,
                 Text = "Fields",
                 Row = 1,
                 FillHeight = true
             };
-            var gSorters = new GroupBoxItem()
+            gSorters = new GroupBoxItem()
             {
+                Name = "sorts",
                 Widget = sorts,
                 Text = "Sort",
                 Row = 2,
@@ -133,8 +141,10 @@ namespace DataWF.Gui
                 contextList = value;
                 properties.FieldSource = contextList?.ListInfo;
                 columns.DataSource = contextList?.ListInfo?.Columns.GetItems().Cast<LayoutColumn>().ToList();
-                fields.DataSource = contextList?.FieldInfo?.Nodes;
                 sorts.DataSource = contextList?.ListInfo?.Sorters;
+                fields.DataSource = contextList?.FieldInfo?.Nodes;
+                gFields.Visible = fields.DataSource != null;
+                gColumns.Expand = fields.DataSource == null;
             }
         }
 

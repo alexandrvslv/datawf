@@ -46,7 +46,7 @@ namespace DataWF.Module.FlowGui
             PackStart(barMain, false, false);
             PackStart(tree, true, true);
 
-            se.List.RetriveCellEditor += new PListGetEditorHandler(OptionsGetCellEditor);
+            se.List.RetriveCellEditor += OptionsGetCellEditor;
             ose.Target = se;
             ose.ButtonAcceptClick += AcceptOnActivated;
 

@@ -1,5 +1,6 @@
 ﻿using Xwt;
 using DataWF.Common;
+using Xwt.Drawing;
 
 namespace DataWF.Gui
 {
@@ -13,7 +14,7 @@ namespace DataWF.Gui
         public override void DrawCell(LayoutListDrawArgs e)
         {
             var layoutList = e.LayoutList;
-            
+
             IGroup gitem = e.Item as IGroup;
             IGlyph image = e.Item as IGlyph;
             int level = gitem == null ? -1 : GroupHelper.Level(gitem);
@@ -43,7 +44,10 @@ namespace DataWF.Gui
                 }
             }
             var textBound = layoutList.GetCellTextBound(e.Item, e.Column, e.Bound);
-            e.Context.DrawText(e.Style, (string)e.Formated, textBound, e.State);
+            if (e.Formated is string)
+                e.Context.DrawText(e.Style, (string)e.Formated, textBound, e.State);
+            else if (e.Formated is TextLayout)
+                e.Context.DrawText(e.Style, (TextLayout)e.Formated, textBound, e.State);
         }
     }
 }

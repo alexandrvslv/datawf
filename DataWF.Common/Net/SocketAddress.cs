@@ -21,15 +21,19 @@ namespace DataWF.Common
 
     public class SocketAddressList : SelectableList<SocketAddress>
     {
+        public SocketAddressList()
+        {
+            Indexes.Add(new Invoker<SocketAddress, string>("Point.ToString", item => item.Point.ToString()));
+        }
 
         public SocketAddress this[string point]
         {
-            get { return Find("Point.ToString", CompareType.Equal, point); }
+            get { return SelectOne("Point.ToString", CompareType.Equal, point); }
         }
 
         public SocketAddress this[IPEndPoint point]
         {
-            get { return Find("Point", CompareType.Equal, point); }
+            get { return this[point.ToString()]; }
         }
     }
 
