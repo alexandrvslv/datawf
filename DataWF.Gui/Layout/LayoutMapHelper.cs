@@ -598,17 +598,17 @@ namespace DataWF.Gui
             if (null != item.Map)
             {
                 ILayoutMap map = item.Map;
-                for (int i = map.Items.IndexOf(item) + 1; i < map.Items.Count; i++)
+                var buffer = map.Items.Where(element => (element.Row == item.Row && element.Col > item.Col) || element.Row > item.Row).ToArray();
+                var removeRow = !map.Items.Select(element => element.Row == item.Row).Any();
+                map.Items.Remove(item);
+                foreach (ILayoutItem it in buffer)
                 {
-                    ILayoutItem it = (ILayoutItem)map.Items[i];
                     if (it.Row == item.Row)
                         it.Col--;
-                    else if (it.Row > item.Row)
+                    else if (removeRow && it.Row > item.Row)
                         it.Row--;
-                    else
-                        break;
                 }
-                map.Items.Remove(item);
+
                 if (map.Map != null)
                 {
                     if (map.Items.Count == 1)
