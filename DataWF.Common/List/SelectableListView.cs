@@ -7,184 +7,179 @@ using System.ComponentModel;
 
 namespace DataWF.Common
 {
-    public class ListTreeView<T> : SelectableListView<T> where T : IGroup
-    {
-        QueryParameter groupParam;
+	public class ListTreeView<T> : SelectableListView<T> where T : IGroup
+	{
+		QueryParameter groupParam;
 
-        public ListTreeView()
-        {
-            groupParam = QueryParameter.CreateTreeFilter(typeof(T));
-            query.Parameters.Add(groupParam);
-        }
+		public ListTreeView()
+		{
+			groupParam = QueryParameter.CreateTreeFilter(typeof(T));
+			query.Parameters.Add(groupParam);
+		}
 
-        public ListTreeView(IList baseCollection)
-                : this()
-        {
-            SetCollection(baseCollection);
-        }
-    }
+		public ListTreeView(IList baseCollection)
+				: this()
+		{
+			SetCollection(baseCollection);
+		}
+	}
 
-    public class SelectableListView<T> : SelectableList<T>, IFilterable
-    {
-        [NonSerialized]
-        protected ListChangedEventHandler _listChangedHandler;
-        [NonSerialized]
-        protected List<InvokerComparer> _comparers;
-        [NonSerialized]
-        protected Query query = new Query();
+	public class SelectableListView<T> : SelectableList<T>, IFilterable
+	{
+		protected ListChangedEventHandler _listChangedHandler;
+		protected List<InvokerComparer> _comparers;
+		protected Query query = new Query();
 
-        [NonSerialized]
-        protected IList sourceList;
-        [NonSerialized]
-        protected ISelectable ssourceList;
+		protected IList sourceList;
+		protected ISelectable ssourceList;
 
-        public SelectableListView()
-        {
-            propertyHandler = null;
-            _listChangedHandler = new ListChangedEventHandler(SourceListChanged);
-        }
+		public SelectableListView()
+		{
+			propertyHandler = null;
+			_listChangedHandler = new ListChangedEventHandler(SourceListChanged);
+		}
 
-        public SelectableListView(IList baseCollection)
-            : this()
-        {
-            SetCollection(baseCollection);
-        }
+		public SelectableListView(IList baseCollection)
+			: this()
+		{
+			SetCollection(baseCollection);
+		}
 
-        public void SetCollection(IList baseCollection)
-        {
-            if (ssourceList != null)
-            {
-                ssourceList.ListChanged -= _listChangedHandler;
-            }
+		public void SetCollection(IList baseCollection)
+		{
+			if (ssourceList != null)
+			{
+				ssourceList.ListChanged -= _listChangedHandler;
+			}
 
-            sourceList = baseCollection;
-            ssourceList = baseCollection as ISelectable;
+			sourceList = baseCollection;
+			ssourceList = baseCollection as ISelectable;
 
-            if (ssourceList != null)
-            {
-                ssourceList.ListChanged += _listChangedHandler;
-            }
-            Update((IEnumerable<T>)sourceList);
-        }
+			if (ssourceList != null)
+			{
+				ssourceList.ListChanged += _listChangedHandler;
+			}
+			Update((IEnumerable<T>)sourceList);
+		}
 
-        ~SelectableListView()
-        {
-            if (ssourceList != null)
-                ssourceList.ListChanged -= _listChangedHandler;
-        }
+		~SelectableListView()
+		{
+			if (ssourceList != null)
+				ssourceList.ListChanged -= _listChangedHandler;
+		}
 
-        public override object NewItem()
-        {
-            return ssourceList?.NewItem() ?? base.NewItem();
-        }
+		public override object NewItem()
+		{
+			return ssourceList?.NewItem() ?? base.NewItem();
+		}
 
-        public override void Add(T item)
-        {
-            if (!sourceList.Contains(item))
-                sourceList.Add(item);
-            else
-                base.Add(item);
-        }
+		public override void Add(T item)
+		{
+			if (!sourceList.Contains(item))
+				sourceList.Add(item);
+			else
+				base.Add(item);
+		}
 
-        protected void Update(IEnumerable list)
-        {
-            ClearInternal();
+		protected void Update(IEnumerable list)
+		{
+			ClearInternal();
 
-            foreach (T item in list)
-                AddInternal(item);
+			foreach (T item in list)
+				InsertInternal(items.Count, item);
 
-            if (comparer != null)
-                ListHelper.QuickSort<T>(items, comparer);
+			if (comparer != null)
+				ListHelper.QuickSort<T>(items, comparer);
 
-            OnListChanged(ListChangedType.Reset, -1);
-        }
+			OnListChanged(ListChangedType.Reset, -1);
+		}
 
-        public virtual void UpdateFilter()
-        {
-            if (sourceList.Count == 0)
-            {
-                Clear();
-            }
-            else
-            {
-                Update(query.Parameters.Count > 0 ? (ssourceList != null ? ssourceList.Select(query) : ListHelper.Select<T>((IList<T>)sourceList, query, null)) : sourceList);
-            }
-        }
+		public virtual void UpdateFilter()
+		{
+			if (sourceList.Count == 0)
+			{
+				Clear();
+			}
+			else
+			{
+				Update(query.Parameters.Count > 0 ? (ssourceList != null ? ssourceList.Select(query) : ListHelper.Select<T>((IList<T>)sourceList, query, null)) : sourceList);
+			}
+		}
 
-        protected virtual void SourceListChanged(object sender, ListChangedEventArgs e)
-        {
-            T item = default(T);
-            switch (e.ListChangedType)
-            {
-                case ListChangedType.ItemChanged:
-                    item = (T)sourceList[e.NewIndex];
-                    int index = IndexOf(item);
-                    bool checkItem = ListHelper.CheckItem(item, query);
-                    if (index >= 0 && !checkItem)
-                    {
-                        this.Remove(item, index);
-                    }
-                    else if (checkItem)
-                    {
-                        if (index < 1)
-                            base.Add(item);
-                        else
-                        {
-                            if (comparer != null)
-                            {
-                                int newindex = GetIndexBySort(item);
-                                if (newindex != index)
-                                {
-                                    items.RemoveAt(index);
-                                    if (newindex > items.Count)
-                                        newindex = items.Count;
-                                    items.Insert(newindex, item);
-                                    OnListChanged(ListChangedType.ItemChanged, index);
-                                }
-                                OnListChanged(ListChangedType.ItemChanged, newindex);
-                            }
-                            else
-                                OnListChanged(ListChangedType.ItemChanged, index);
-                        }
-                    }
+		protected virtual void SourceListChanged(object sender, ListChangedEventArgs e)
+		{
+			T item = default(T);
+			switch (e.ListChangedType)
+			{
+				case ListChangedType.ItemChanged:
+					item = (T)sourceList[e.NewIndex];
+					int index = IndexOf(item);
+					bool checkItem = ListHelper.CheckItem(item, query);
+					if (index >= 0 && !checkItem)
+					{
+						this.Remove(item, index);
+					}
+					else if (checkItem)
+					{
+						if (index < 0)
+							base.Add(item);
+						else
+						{
+							if (comparer != null)
+							{
+								int newindex = GetIndexBySort(item);
+								if (newindex != index)
+								{
+									items.RemoveAt(index);
+									if (newindex > items.Count)
+										newindex = items.Count;
+									items.Insert(newindex, item);
+									OnListChanged(ListChangedType.ItemChanged, index);
+								}
+								OnListChanged(ListChangedType.ItemChanged, newindex);
+							}
+							else
+								OnListChanged(ListChangedType.ItemChanged, index);
+						}
+					}
 
-                    break;
-                case ListChangedType.ItemDeleted:
-                    if (e.NewIndex != -1)
-                    {
-                        Remove((T)sourceList[e.NewIndex]);
-                    }
-                    break;
-                case ListChangedType.ItemAdded:
-                    item = (T)sourceList[e.NewIndex];
+					break;
+				case ListChangedType.ItemDeleted:
+					if (e.NewIndex != -1)
+					{
+						Remove((T)sourceList[e.NewIndex]);
+					}
+					break;
+				case ListChangedType.ItemAdded:
+					item = (T)sourceList[e.NewIndex];
 
-                    if (ListHelper.CheckItem(item, query))
-                        base.Add(item);
-                    break;
-                case ListChangedType.Reset:
-                    UpdateFilter();
-                    break;
-            }
-        }
+					if (ListHelper.CheckItem(item, query))
+						base.Add(item);
+					break;
+				case ListChangedType.Reset:
+					UpdateFilter();
+					break;
+			}
+		}
 
-        public Query FilterQuery
-        {
-            get { return query; }
-        }
+		public Query FilterQuery
+		{
+			get { return query; }
+		}
 
-        public virtual void RemoveFilter()
-        {
-            if (query.Parameters.Count > 0)
-            {
-                query.Parameters.Clear();
-                Update(sourceList);
-            }
-        }
+		public virtual void RemoveFilter()
+		{
+			if (query.Parameters.Count > 0)
+			{
+				query.Parameters.Clear();
+				Update(sourceList);
+			}
+		}
 
-        public InvokerComparerList SortDescriptions
-        {
-            get { return null; }
-        }
+		public InvokerComparerList SortDescriptions
+		{
+			get { return null; }
+		}
 
-    }
+	}
 }
