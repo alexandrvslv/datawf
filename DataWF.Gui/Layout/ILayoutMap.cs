@@ -1,15 +1,22 @@
 ﻿namespace DataWF.Gui
 {
-    public interface ILayoutMap : ILayoutItem
-    {
-        LayoutItems Items { get; }
+	public interface ILayoutMap : ILayoutItem
+	{
+		LayoutItems Items { get; }
 
-        bool Contains(ILayoutItem item);
+		bool Contains(ILayoutItem item);
 
-        void Sort();
+		void Sort();
 
-        double Scale { get; set; }
-        double Indent { get; set; }
-    }
+		double Scale { get; set; }
+		double Indent { get; set; }
+	}
+
+	public enum LayoutGrowMode
+	{
+		Horizontal,
+		Vertical
+	}
+
 }
 

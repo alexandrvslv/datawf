@@ -8,301 +8,304 @@ using System.Collections;
 
 namespace DataWF.Gui
 {
-    public class LayoutMap : ILayoutMap, IComparable, IComparable<LayoutMap>, IComparable<ILayoutItem>, IEnumerable<ILayoutItem>
-    {
-        protected int row = 0;
-        protected int col = 0;
-        protected LayoutItems items = null;
-        private double scale = 1D;
-        private double indent = 0D;
+	public class LayoutMap : ILayoutMap, IComparable, IComparable<LayoutMap>, IComparable<ILayoutItem>, IEnumerable<ILayoutItem>
+	{
+		protected int row = 0;
+		protected int col = 0;
+		protected LayoutItems items = null;
+		private double scale = 1D;
+		private double indent = 0D;
 
-        public Func<ILayoutItem, double> CalcHeight;
-        public Func<ILayoutItem, double> CalcWidth;
-        protected Rectangle bound = new Rectangle();
-        private double maxHeight;
-        private double maxWidth;
+		public Func<ILayoutItem, double> CalcHeight;
+		public Func<ILayoutItem, double> CalcWidth;
+		protected Rectangle bound = new Rectangle();
+		private double maxHeight;
+		private double maxWidth;
 
-        public event PropertyChangedEventHandler PropertyChanged;
+		public event PropertyChangedEventHandler PropertyChanged;
 
-        public LayoutMap()
-        {
-            items = new LayoutItems(this);
-            items.ListChanged += OnItemsListChanged;
-        }
+		public LayoutMap()
+		{
+			items = new LayoutItems(this);
+			items.ListChanged += OnItemsListChanged;
+		}
 
-        ~LayoutMap()
-        {
-            items.ListChanged -= OnItemsListChanged;
-        }
+		~LayoutMap()
+		{
+			items.ListChanged -= OnItemsListChanged;
+		}
 
-        [XmlIgnore]
-        public Rectangle Bound
-        {
-            get { return bound; }
-            set { bound = value; }
-        }
+		[DefaultValue(LayoutGrowMode.Horizontal)]
+		public LayoutGrowMode GrowMode { get; set; }
 
-        public ILayoutMap TopMap
-        {
-            get { return LayoutMapHelper.GetTopMap(this); }
-        }
+		[XmlIgnore]
+		public Rectangle Bound
+		{
+			get { return bound; }
+			set { bound = value; }
+		}
 
-        public int Count
-        {
-            get { return items.Count; }
-        }
+		public ILayoutMap TopMap
+		{
+			get { return LayoutMapHelper.GetTopMap(this); }
+		}
 
-        public ILayoutItem this[string property]
-        {
-            get { return LayoutMapHelper.Get(this, property); }
-        }
+		public int Count
+		{
+			get { return items.Count; }
+		}
 
-        public ILayoutItem this[int index]
-        {
-            get { return items[index]; }
-        }
+		public ILayoutItem this[string property]
+		{
+			get { return LayoutMapHelper.Get(this, property); }
+		}
 
-        public ILayoutItem this[int rowIndex, int colIndex]
-        {
-            get { return LayoutMapHelper.Get(this, rowIndex, colIndex); }
-        }
+		public ILayoutItem this[int index]
+		{
+			get { return items[index]; }
+		}
 
-        public double Height
-        {
-            get { return LayoutMapHelper.GetHeight(this, maxHeight, CalcHeight); }
-            set { maxHeight = value; }
-        }
+		public ILayoutItem this[int rowIndex, int colIndex]
+		{
+			get { return LayoutMapHelper.Get(this, rowIndex, colIndex); }
+		}
 
-        public double Width
-        {
-            get { return LayoutMapHelper.GetWidth(this, maxWidth, CalcWidth); }
-            set { maxWidth = value; }
-        }
+		public double Height
+		{
+			get { return LayoutMapHelper.GetHeight(this, maxHeight, CalcHeight); }
+			set { maxHeight = value; }
+		}
 
-        public LayoutItems Items
-        {
-            get { return items; }
-            set { items = value; }
-        }
+		public double Width
+		{
+			get { return LayoutMapHelper.GetWidth(this, maxWidth, CalcWidth); }
+			set { maxWidth = value; }
+		}
 
-        public int Row
-        {
-            get { return row; }
-            set
-            {
-                if (row != value)
-                {
-                    row = value;
-                    OnPropertyChanged(nameof(Row));
-                }
-            }
-        }
+		public LayoutItems Items
+		{
+			get { return items; }
+			set { items = value; }
+		}
 
-        public int Col
-        {
-            get { return col; }
-            set
-            {
-                if (col != value)
-                {
-                    col = value;
-                    OnPropertyChanged(nameof(Col));
-                }
-            }
-        }
+		public int Row
+		{
+			get { return row; }
+			set
+			{
+				if (row != value)
+				{
+					row = value;
+					OnPropertyChanged(nameof(Row));
+				}
+			}
+		}
 
-        [XmlIgnore]
-        public bool Visible
-        {
-            get { return LayoutMapHelper.IsVisible(this); }
-            set { }
-        }
+		public int Col
+		{
+			get { return col; }
+			set
+			{
+				if (col != value)
+				{
+					col = value;
+					OnPropertyChanged(nameof(Col));
+				}
+			}
+		}
 
-        [XmlIgnore]
-        public bool FillWidth
-        {
-            get { return LayoutMapHelper.IsFillWidth(this); }
-            set { LayoutMapHelper.SetFillWidth(this, value); }
-        }
+		[XmlIgnore]
+		public bool Visible
+		{
+			get { return LayoutMapHelper.IsVisible(this); }
+			set { }
+		}
 
-        [XmlIgnore]
-        public bool FillHeight
-        {
-            get { return LayoutMapHelper.IsFillHeight(this); }
-            set { LayoutMapHelper.SetFillHeight(this, value); }
-        }
+		[XmlIgnore]
+		public bool FillWidth
+		{
+			get { return LayoutMapHelper.IsFillWidth(this); }
+			set { LayoutMapHelper.SetFillWidth(this, value); }
+		}
 
-        public string Name
-        {
-            get { return string.Empty; }
-            set { }
-        }
+		[XmlIgnore]
+		public bool FillHeight
+		{
+			get { return LayoutMapHelper.IsFillHeight(this); }
+			set { LayoutMapHelper.SetFillHeight(this, value); }
+		}
 
-        public ILayoutMap Map
-        {
-            get { return ((LayoutItems)Container)?.Map; }
-        }
+		public string Name
+		{
+			get { return string.Empty; }
+			set { }
+		}
 
-        public virtual double Scale
-        {
-            get { return Map?.Scale ?? scale; }
-            set { scale = value; }
-        }
+		public ILayoutMap Map
+		{
+			get { return ((LayoutItems)Container)?.Map; }
+		}
 
-        public virtual double Indent
-        {
-            get { return indent; }
-            set
-            {
-                if (indent != value)
-                {
-                    indent = value;
-                    OnPropertyChanged(nameof(Indent));
-                }
-            }
-        }
+		public virtual double Scale
+		{
+			get { return Map?.Scale ?? scale; }
+			set { scale = value; }
+		}
 
-        [XmlIgnore]
-        public INotifyListChanged Container { get; set; }
+		public virtual double Indent
+		{
+			get { return indent; }
+			set
+			{
+				if (indent != value)
+				{
+					indent = value;
+					OnPropertyChanged(nameof(Indent));
+				}
+			}
+		}
 
-        public bool Contains(string property)
-        {
-            return this[property] != null;
-        }
+		[XmlIgnore]
+		public INotifyListChanged Container { get; set; }
 
-        public void Sort()
-        {
-            items.Sort();
-        }
+		public bool Contains(string property)
+		{
+			return this[property] != null;
+		}
 
-        public bool Contains(ILayoutItem item)
-        {
-            return LayoutMapHelper.Contains(this, item);
-        }
+		public void Sort()
+		{
+			items.Sort();
+		}
 
-        public virtual Rectangle GetBound()
-        {
-            return GetBound(maxWidth, maxHeight);
-        }
+		public bool Contains(ILayoutItem item)
+		{
+			return LayoutMapHelper.Contains(this, item);
+		}
 
-        public virtual Rectangle GetBound(double maxWidth, double maxHeight)
-        {
-            LayoutMapHelper.GetBound(this, maxWidth, maxHeight, CalcWidth, CalcHeight);
-            return bound;
-        }
+		public virtual Rectangle GetBound()
+		{
+			return GetBound(maxWidth, maxHeight);
+		}
 
-        public virtual Rectangle GetBound(ILayoutItem item)
-        {
-            //maxWidth, maxHeight, 
-            LayoutMapHelper.GetBound(this, item, CalcWidth, CalcHeight);
-            return item.Bound;
-        }
+		public virtual Rectangle GetBound(double maxWidth, double maxHeight)
+		{
+			LayoutMapHelper.GetBound(this, maxWidth, maxHeight, CalcWidth, CalcHeight);
+			return bound;
+		}
 
-        public virtual void Clear()
-        {
-            items.Clear();
-        }
+		public virtual Rectangle GetBound(ILayoutItem item)
+		{
+			//maxWidth, maxHeight, 
+			LayoutMapHelper.GetBound(this, item, CalcWidth, CalcHeight);
+			return item.Bound;
+		}
 
-        public virtual void Replace(ILayoutItem oldColumn, ILayoutItem newColumn)
-        {
-            LayoutMapHelper.Replace(oldColumn, newColumn);
-        }
+		public virtual void Clear()
+		{
+			items.Clear();
+		}
 
-        public virtual void Grouping(ILayoutItem x, ILayoutItem y, LayoutAlignType type)
-        {
-            LayoutMapHelper.Grouping(x, y, type);
-        }
+		public virtual void Replace(ILayoutItem oldColumn, ILayoutItem newColumn)
+		{
+			LayoutMapHelper.Replace(oldColumn, newColumn);
+		}
 
-        public virtual void Move(ILayoutItem moved, ILayoutItem destination, LayoutAlignType anch, bool builGroup)
-        {
-            bound.Width = 0;
-            LayoutMapHelper.Move(moved, destination, anch, builGroup);
-        }
+		public virtual void Grouping(ILayoutItem x, ILayoutItem y, LayoutAlignType type)
+		{
+			LayoutMapHelper.Grouping(x, y, type);
+		}
 
-        public virtual void Add(ILayoutItem column)
-        {
-            LayoutMapHelper.Add(this, column);
-        }
+		public virtual void Move(ILayoutItem moved, ILayoutItem destination, LayoutAlignType anch, bool builGroup)
+		{
+			bound.Width = 0;
+			LayoutMapHelper.Move(moved, destination, anch, builGroup);
+		}
 
-        public virtual void Insert(int index, ILayoutItem item)
-        {
-            item.Col = index;
-            Insert(item, false);
-        }
+		public virtual void Add(ILayoutItem column)
+		{
+			LayoutMapHelper.Add(this, column, GrowMode);
+		}
 
-        public void InsertRow(int index, ILayoutItem item)
-        {
-            item.Row = index;
-            Insert(item, true);
-        }
+		public virtual void Insert(int index, ILayoutItem item)
+		{
+			item.Col = index;
+			Insert(item, false);
+		}
+
+		public void InsertRow(int index, ILayoutItem item)
+		{
+			item.Row = index;
+			Insert(item, true);
+		}
 
 
-        public virtual void Insert(ILayoutItem column, bool inserRow = false)
-        {
-            LayoutMapHelper.Insert(this, column, inserRow);
-        }
+		public virtual void Insert(ILayoutItem column, bool inserRow = false)
+		{
+			LayoutMapHelper.Insert(this, column, inserRow);
+		}
 
-        public virtual void InsertAfter(ILayoutItem column, ILayoutItem excolumn)
-        {
-            column.Row = excolumn.Row;
-            column.Col = excolumn.Col + 1;
-            Insert(column, false);
-        }
+		public virtual void InsertAfter(ILayoutItem column, ILayoutItem excolumn)
+		{
+			column.Row = excolumn.Row;
+			column.Col = excolumn.Col + 1;
+			Insert(column, false);
+		}
 
-        public virtual bool Remove(ILayoutItem column)
-        {
-            return LayoutMapHelper.Remove(column);
-        }
+		public virtual bool Remove(ILayoutItem column)
+		{
+			return LayoutMapHelper.Remove(column);
+		}
 
-        public virtual void Reset()
-        {
-            LayoutMapHelper.Reset(this);
-        }
+		public virtual void Reset()
+		{
+			LayoutMapHelper.Reset(this);
+		}
 
-        protected virtual void OnItemsListChanged(object sender, ListChangedEventArgs e)
-        {
-            if (Map is LayoutMap)
-            {
-                ((LayoutMap)Map).OnItemsListChanged(sender, e);
-            }
-        }
+		protected virtual void OnItemsListChanged(object sender, ListChangedEventArgs e)
+		{
+			if (Map is LayoutMap)
+			{
+				((LayoutMap)Map).OnItemsListChanged(sender, e);
+			}
+		}
 
-        protected virtual void OnPropertyChanged(string property)
-        {
-            var args = new PropertyChangedEventArgs(property);
-            PropertyChanged?.Invoke(this, args);
-            Container?.OnPropertyChanged(this, args);
-        }
+		protected virtual void OnPropertyChanged(string property)
+		{
+			var args = new PropertyChangedEventArgs(property);
+			PropertyChanged?.Invoke(this, args);
+			Container?.OnPropertyChanged(this, args);
+		}
 
-        public IEnumerable<ILayoutItem> GetItems()
-        {
-            return LayoutMapHelper.GetItems(this);
-        }
+		public IEnumerable<ILayoutItem> GetItems()
+		{
+			return LayoutMapHelper.GetItems(this);
+		}
 
-        public int CompareTo(LayoutMap other)
-        {
-            return LayoutMapHelper.Compare(this, other);
-        }
+		public int CompareTo(LayoutMap other)
+		{
+			return LayoutMapHelper.Compare(this, other);
+		}
 
-        public int CompareTo(ILayoutItem other)
-        {
-            return LayoutMapHelper.Compare(this, other);
-        }
+		public int CompareTo(ILayoutItem other)
+		{
+			return LayoutMapHelper.Compare(this, other);
+		}
 
-        public int CompareTo(object obj)
-        {
-            return LayoutMapHelper.Compare(this, obj as ILayoutItem);
-        }
+		public int CompareTo(object obj)
+		{
+			return LayoutMapHelper.Compare(this, obj as ILayoutItem);
+		}
 
-        public IEnumerator<ILayoutItem> GetEnumerator()
-        {
-            return items.GetEnumerator();
-        }
+		public IEnumerator<ILayoutItem> GetEnumerator()
+		{
+			return items.GetEnumerator();
+		}
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return items.GetEnumerator();
-        }
-    }
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return items.GetEnumerator();
+		}
+	}
 }
 
