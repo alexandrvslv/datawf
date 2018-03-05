@@ -43,7 +43,7 @@ namespace DataWF.Gui
                     e.Context.DrawGlyph(e.Style, imageBound, image.Glyph, e.State);
                 }
             }
-            var textBound = layoutList.GetCellTextBound(e.Item, e.Column, e.Bound);
+			var textBound = layoutList.GetCellTextBound(e);
             if (e.Formated is string)
                 e.Context.DrawText(e.Style, (string)e.Formated, textBound, e.State);
             else if (e.Formated is TextLayout)

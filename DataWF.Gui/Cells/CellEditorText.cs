@@ -367,7 +367,7 @@ namespace DataWF.Gui
 
         public virtual void DrawCell(LayoutListDrawArgs e)
         {
-            var textBound = e.LayoutList.GetCellTextBound(e.Item, e.Column, e.Bound);
+            var textBound = e.LayoutList.GetCellTextBound(e);
             e.Context.DrawCell(e.Style, e.Formated, e.Bound, textBound, e.State);
         }
     }
