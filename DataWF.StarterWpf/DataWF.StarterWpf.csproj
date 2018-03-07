@@ -1,0 +1,108 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{25F7A02C-C741-464F-9BB0-312B252575A0}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>DataWF.StarterWpf</RootNamespace>
+    <AssemblyName>DataWF.StarterWpf</AssemblyName>
+    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Xwt, Version=0.2.83.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\Xwt.0.2.83\lib\net40\Xwt.dll</HintPath>
+    </Reference>
+    <Reference Include="Xwt.WPF, Version=0.2.83.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\Xwt.WPF.0.2.83\lib\net40\Xwt.WPF.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj">
+      <Project>{32a948c0-5468-4392-a490-91947bfc3be4}</Project>
+      <Name>DataWF.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DataWF.Data.Gui\DataWF.Data.Gui.csproj">
+      <Project>{3ccbab5d-85ae-4de0-a20e-ad302af442a2}</Project>
+      <Name>DataWF.Data.Gui</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj">
+      <Project>{c982088f-82ec-4400-8d3c-bd76221c0c9c}</Project>
+      <Name>DataWF.Data</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DataWF.Gui\DataWF.Gui.csproj">
+      <Project>{337d88ba-7460-4c2a-b83d-6b27df626983}</Project>
+      <Name>DataWF.Gui</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DataWF.Module.CommonGui\DataWF.Module.CommonGui.csproj">
+      <Project>{e17a78ae-28c2-4264-a36d-a7ebafe7626d}</Project>
+      <Name>DataWF.Module.CommonGui</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj">
+      <Project>{76a4b048-d827-4cc9-879e-bcafe5c796cc}</Project>
+      <Name>DataWF.Module.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DataWF.Module.Counterpart\DataWF.Module.Counterpart.csproj">
+      <Project>{d9d3537e-c1f9-4f59-ae2b-5098213ff747}</Project>
+      <Name>DataWF.Module.Counterpart</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DataWF.Module.Finance\DataWF.Module.Finance.csproj">
+      <Project>{89a2d4b4-6352-4193-bb62-12e9dea49221}</Project>
+      <Name>DataWF.Module.Finance</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DataWF.Module.FlowGui\DataWF.Module.FlowGui.csproj">
+      <Project>{ea38c2a9-bc62-419a-8385-2c72ecbbd5e7}</Project>
+      <Name>DataWF.Module.FlowGui</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DataWF.Module.Flow\DataWF.Module.Flow.csproj">
+      <Project>{e5efc9b0-aee6-47b4-b553-37a241adf976}</Project>
+      <Name>DataWF.Module.Flow</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DataWF.Odf\DataWF.Odf.csproj">
+      <Project>{91e766b4-1057-4c16-aa5a-b4e26e91da7c}</Project>
+      <Name>DataWF.Odf</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
