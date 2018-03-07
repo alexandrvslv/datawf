@@ -125,10 +125,10 @@ namespace DataWF.Module.CommonGui
 
         public virtual void RefreshData()
         {
-            CheckDBView(User.DBTable.DefaultView, ShowUser);
-            CheckDBView(UserGroup.DBTable.DefaultView, ShowGroup);
-            CheckDBView(Scheduler.DBTable.DefaultView, ShowScheduler);
-            CheckDBView(GroupPermission.DBTable.DefaultView, ShowPermission);
+            CheckDBView(User.DBTable?.DefaultView, ShowUser);
+            CheckDBView(UserGroup.DBTable?.DefaultView, ShowGroup);
+            CheckDBView(Scheduler.DBTable?.DefaultView, ShowScheduler);
+            CheckDBView(GroupPermission.DBTable?.DefaultView, ShowPermission);
         }
 
         private void HandleViewListChanged(object sender, ListChangedEventArgs e)
@@ -217,6 +217,8 @@ namespace DataWF.Module.CommonGui
 
         public TableItemNode CheckDBView(IDBTableView item, bool show)
         {
+            if (item == null)
+                return null;
             TableItemNode node;
             if (show)
             {
@@ -343,10 +345,10 @@ namespace DataWF.Module.CommonGui
 
         protected override void Dispose(bool disposing)
         {
-            User.DBTable.DefaultView.ListChanged -= handler;
-            UserGroup.DBTable.DefaultView.ListChanged -= handler;
-            GroupPermission.DBTable.DefaultView.ListChanged -= handler;
-            Scheduler.DBTable.DefaultView.ListChanged -= handler;
+            //User.DBTable.DefaultView.ListChanged -= handler;
+            //UserGroup.DBTable.DefaultView.ListChanged -= handler;
+            //GroupPermission.DBTable.DefaultView.ListChanged -= handler;
+            //Scheduler.DBTable.DefaultView.ListChanged -= handler;
             base.Dispose(disposing);
         }
     }

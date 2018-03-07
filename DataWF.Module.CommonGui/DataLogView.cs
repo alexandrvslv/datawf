@@ -75,20 +75,20 @@ namespace DataWF.Module.CommonGui
         private ToolItem toolDetails = new ToolItem();
         private ToolTableLoader toolProgress = new ToolTableLoader();
         private ToolDropDown toolMode = new ToolDropDown();
-        private GlyphMenuItem toolModeDefault = new GlyphMenuItem();
-        private GlyphMenuItem toolModeDocument = new GlyphMenuItem();
-        private GlyphMenuItem toolModeUser = new GlyphMenuItem();
-        private GlyphMenuItem toolModeGroup = new GlyphMenuItem();
-        private GlyphMenuItem toolModeTable = new GlyphMenuItem();
-        private GlyphMenuItem toolModeLogConfirm = new GlyphMenuItem();
+        private ToolMenuItem toolModeDefault = new ToolMenuItem();
+        private ToolMenuItem toolModeDocument = new ToolMenuItem();
+        private ToolMenuItem toolModeUser = new ToolMenuItem();
+        private ToolMenuItem toolModeGroup = new ToolMenuItem();
+        private ToolMenuItem toolModeTable = new ToolMenuItem();
+        private ToolMenuItem toolModeLogConfirm = new ToolMenuItem();
         private ToolDropDown toolType = new ToolDropDown();
-        private GlyphMenuItem toolTypeAuthorization = new GlyphMenuItem();
-        private GlyphMenuItem toolTypePassword = new GlyphMenuItem();
-        private GlyphMenuItem toolTypeStart = new GlyphMenuItem();
-        private GlyphMenuItem toolTypeStop = new GlyphMenuItem();
-        private GlyphMenuItem toolTypeInsert = new GlyphMenuItem();
-        private GlyphMenuItem toolTypeUpdate = new GlyphMenuItem();
-        private GlyphMenuItem toolTypeDelete = new GlyphMenuItem();
+        private ToolMenuItem toolTypeAuthorization = new ToolMenuItem();
+        private ToolMenuItem toolTypePassword = new ToolMenuItem();
+        private ToolMenuItem toolTypeStart = new ToolMenuItem();
+        private ToolMenuItem toolTypeStop = new ToolMenuItem();
+        private ToolMenuItem toolTypeInsert = new ToolMenuItem();
+        private ToolMenuItem toolTypeUpdate = new ToolMenuItem();
+        private ToolMenuItem toolTypeDelete = new ToolMenuItem();
         private ToolFieldEditor dateField = new ToolFieldEditor();
         private ToolFieldEditor dataField = new ToolFieldEditor();
         private LayoutDBTable detailList = new LayoutDBTable();
@@ -190,7 +190,7 @@ namespace DataWF.Module.CommonGui
             toolType.DropDownItems.Add(toolTypePassword);
             toolType.DropDownItems.Add(toolTypeStart);
             toolType.DropDownItems.Add(toolTypeStop);
-            toolType.DropDownItems.Add(new SeparatorMenuItem());
+            toolType.DropDownItems.Add(new ToolSeparator());
             toolType.DropDownItems.Add(toolTypeInsert);
             toolType.DropDownItems.Add(toolTypeUpdate);
             toolType.DropDownItems.Add(toolTypeDelete);
@@ -401,7 +401,7 @@ namespace DataWF.Module.CommonGui
 
         }
 
-        private void SetMode(GlyphMenuItem item)
+        private void SetMode(ToolMenuItem item)
         {
             if (item == toolModeDefault)
                 Mode = DataLogMode.Default;
@@ -421,13 +421,13 @@ namespace DataWF.Module.CommonGui
 
         private void ToolModeClick(object sender, EventArgs e)
         {
-            var item = sender as GlyphMenuItem;
+            var item = sender as ToolMenuItem;
             SetMode(item);
         }
 
         private void ToolTypeItemClicked(object sender, EventArgs e)
         {
-            var item = sender as GlyphMenuItem;
+            var item = sender as ToolMenuItem;
 
             if (item != null)
             {

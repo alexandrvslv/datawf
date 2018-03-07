@@ -5,7 +5,7 @@ using Xwt.Drawing;
 
 namespace DataWF.Module.FlowGui
 {
-    public class MenuItemStage : GlyphMenuItem
+    public class MenuItemStage : ToolMenuItem
     {
         private Stage stage;
 

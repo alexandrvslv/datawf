@@ -102,7 +102,7 @@ namespace DataWF.Data.Gui
             tools.Items.Add(toolDelete);
             tools.Items.Add(toolUp);
             tools.Items.Add(toolDown);
-            tools.Items.Add(new SeparatorToolItem() { Visible = true });
+            tools.Items.Add(new ToolSeparator() { Visible = true });
             tools.Items.Add(tooSearch);
             tools.Items.Add(toolCount);
             tools.Items.Add(toolAddColumn);
@@ -401,7 +401,7 @@ namespace DataWF.Data.Gui
                         this.Text = "Query (" + table.ToString() + ")";
                         foreach (DBColumn item in value.Columns)
                         {
-                            var itemL = new GlyphMenuItem();
+                            var itemL = new ToolMenuItem();
                             itemL.Tag = item;
                             itemL.Text = item.ToString();
                             itemL.Click += ColumnItemClick;
@@ -436,9 +436,9 @@ namespace DataWF.Data.Gui
         //        }
         //}
 
-        protected GlyphMenuItem InitSchemaTool(DBSchema schema)
+        protected ToolMenuItem InitSchemaTool(DBSchema schema)
         {
-            var item = new GlyphMenuItem();
+            var item = new ToolMenuItem();
             item.Tag = schema;
             item.Name = schema.Name;
             item.Text = schema.ToString();
@@ -449,9 +449,9 @@ namespace DataWF.Data.Gui
             return item;
         }
 
-        private GlyphMenuItem InitColumnTool(DBColumn column)
+        private ToolMenuItem InitColumnTool(DBColumn column)
         {
-            return new GlyphMenuItem()
+            return new ToolMenuItem()
             {
                 Tag = column,
                 Name = column.Name,
@@ -459,9 +459,9 @@ namespace DataWF.Data.Gui
             };
         }
 
-        private GlyphMenuItem InitTableTool(DBTable table)
+        private ToolMenuItem InitTableTool(DBTable table)
         {
-            return new GlyphMenuItem(TableClick)
+            return new ToolMenuItem(TableClick)
             {
                 Tag = table,
                 Name = table.Name,
@@ -471,18 +471,18 @@ namespace DataWF.Data.Gui
 
         private void ColumnItemClick(object sender, EventArgs e)
         {
-            var column = ((GlyphMenuItem)sender).Tag as DBColumn;
+            var column = ((ToolMenuItem)sender).Tag as DBColumn;
             Query.Parameters.Add(new QParam(column.Name) { Logic = LogicType.And, Column = column });
         }
 
         private void TableClick(object sender, EventArgs e)
         {
-            Table = ((GlyphMenuItem)sender).Tag as DBTable;
+            Table = ((ToolMenuItem)sender).Tag as DBTable;
         }
 
-        private GlyphMenuItem InitQueryTool(QQuery query)
+        private ToolMenuItem InitQueryTool(QQuery query)
         {
-            var item = new GlyphMenuItem();
+            var item = new ToolMenuItem();
             item.Tag = query;
             item.Name = query.GetHashCode().ToString();
             item.Text = query.ToString();

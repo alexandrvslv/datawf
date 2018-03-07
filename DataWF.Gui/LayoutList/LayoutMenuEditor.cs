@@ -51,7 +51,7 @@ namespace DataWF.Gui
             bar.Add(ViewMode);
             bar.Add(Reset);
             bar.Add(Print);
-            bar.Add(new SeparatorToolItem());
+            bar.Add(new ToolSeparator());
             bar.Add(CellCopy);
             bar.Add(CellCheck);
 
@@ -246,7 +246,7 @@ namespace DataWF.Gui
 
         public void MenuSubColumnsItemClicked(object sender, EventArgs e)
         {
-            var item = sender as GlyphMenuItem;
+            var item = sender as ToolMenuItem;
             item.Checked = !item.Checked;
             LayoutColumn c = item.Tag as LayoutColumn;
             if (c != null)

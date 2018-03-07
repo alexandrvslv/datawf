@@ -41,10 +41,10 @@ namespace DataWF.Module.FlowGui
             list.CellDoubleClick += ListCellDoubleClick;
 
             tools.Items.Add(toolLoad);
-            tools.Items.Add(new SeparatorToolItem() { Visible = true });
+            tools.Items.Add(new ToolSeparator() { Visible = true });
             tools.Items.Add(toolInsert);
             tools.Items.Add(toolDelete);
-            tools.Items.Add(new SeparatorToolItem() { Visible = true });
+            tools.Items.Add(new ToolSeparator() { Visible = true });
             tools.Items.Add(toolView);
             tools.Items.Add(toolEdit);
             tools.Items.Add(toolTemplate);

@@ -68,7 +68,7 @@ namespace DataWF.Module.CommonGui
                 toolReject,
                 toolExport,
                 toolLogs,
-                new SeparatorToolItem{FillWidth = true},
+                new ToolSeparator{FillWidth = true},
                 toolFilterText
             });
 

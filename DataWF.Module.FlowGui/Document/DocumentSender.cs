@@ -27,13 +27,13 @@ namespace DataWF.Module.FlowGui
         private ToolItem toolSend = new ToolItem();
         private ToolItem toolPrint = new ToolItem();
         private ToolDropDown toolType = new ToolDropDown();
-        private GlyphMenuItem toolNext = new GlyphMenuItem();
-        private GlyphMenuItem toolReturn = new GlyphMenuItem();
-        private GlyphMenuItem toolComplete = new GlyphMenuItem();
-        private GlyphMenuItem toolForward = new GlyphMenuItem();
-        private GlyphMenuItem toolRecovery = new GlyphMenuItem();
+        private ToolMenuItem toolNext = new ToolMenuItem();
+        private ToolMenuItem toolReturn = new ToolMenuItem();
+        private ToolMenuItem toolComplete = new ToolMenuItem();
+        private ToolMenuItem toolForward = new ToolMenuItem();
+        private ToolMenuItem toolRecovery = new ToolMenuItem();
         private PDocument listDocuments = new PDocument();
-        private Menu cms = new Menu();
+        private Menubar cms = new Menubar();
         private ToolProgressBar toolProgress = new ToolProgressBar();
 
         private CellStyle styleDefault = new CellStyle();
@@ -388,11 +388,11 @@ namespace DataWF.Module.FlowGui
             }
         }
 
-        public Stage GetStage(GlyphMenuItem item)
+        public Stage GetStage(ToolMenuItem item)
         {
             while (item.Owner != null)
             {
-                item = item.Owner as GlyphMenuItem;
+                item = item.Owner as ToolMenuItem;
                 if (item == null)
                     break;
                 if (item.Tag is Stage)
@@ -409,7 +409,7 @@ namespace DataWF.Module.FlowGui
                 StageSender ss = new StageSender(item.OwnerStage.Stage, item.User);
                 stages.Add(ss);
             }
-            else if (((GlyphMenuItem)sender).Tag is DocumentWork)
+            else if (((ToolMenuItem)sender).Tag is DocumentWork)
             {
                 DocumentWork dw = (DocumentWork)item.Tag;
                 StageSender ss = new StageSender(dw.Stage, dw.User);

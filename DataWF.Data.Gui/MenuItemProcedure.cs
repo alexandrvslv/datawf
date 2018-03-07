@@ -5,7 +5,7 @@ using Xwt.Drawing;
 
 namespace DataWF.Data.Gui
 {
-    public class MenuItemProcedure : GlyphMenuItem
+    public class MenuItemProcedure : ToolMenuItem
     {
         private DBProcedure procedure;
 

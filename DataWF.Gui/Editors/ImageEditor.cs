@@ -245,7 +245,7 @@ namespace DataWF.Gui
             tools.Items.Add(toolOpen);
             tools.Items.Add(toolSave);
             tools.Items.Add(toolPrint);
-            tools.Items.Add(new SeparatorToolItem());
+            tools.Items.Add(new ToolSeparator());
             tools.Items.Add(toolEnlarge);
             tools.Items.Add(toolReduce);
             tools.Items.Add(toolRotate);

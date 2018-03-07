@@ -47,21 +47,21 @@ namespace DataWF.Gui
 
         public LayoutColumn ContextColumn { get => Editor.ContextColumn; set => Editor.ContextColumn = value; }
 
-        private static Dictionary<LayoutField, GlyphMenuItem> CacheMenuField = new Dictionary<LayoutField, GlyphMenuItem>();
-        internal static GlyphMenuItem GetCached(LayoutField field)
+        private static Dictionary<LayoutField, ToolMenuItem> CacheMenuField = new Dictionary<LayoutField, ToolMenuItem>();
+        internal static ToolMenuItem GetCached(LayoutField field)
         {
             return CacheMenuField.TryGetValue(field, out var menuItem) ? menuItem : null;
         }
 
-        private static Dictionary<LayoutColumn, GlyphMenuItem> CacheMenuColumn = new Dictionary<LayoutColumn, GlyphMenuItem>();
-        internal static GlyphMenuItem GetCached(LayoutColumn column)
+        private static Dictionary<LayoutColumn, ToolMenuItem> CacheMenuColumn = new Dictionary<LayoutColumn, ToolMenuItem>();
+        internal static ToolMenuItem GetCached(LayoutColumn column)
         {
             return CacheMenuColumn.TryGetValue(column, out var menuItem) ? menuItem : null;
         }
 
-        public static GlyphMenuItem BuildMenuItem(LayoutColumn column)
+        public static ToolMenuItem BuildMenuItem(LayoutColumn column)
         {
-            var item = new GlyphMenuItem()
+            var item = new ToolMenuItem()
             {
                 Text = column.Text,
                 Name = column.Name,
@@ -72,18 +72,18 @@ namespace DataWF.Gui
             return item;
         }
 
-        public static GlyphMenuItem BuilMenuItem(LayoutField f)
+        public static ToolMenuItem BuilMenuItem(LayoutField f)
         {
             var item = LayoutMenu.GetCached(f);
             if (item == null)
             {
-                item = new GlyphMenuItem();
+                item = new ToolMenuItem();
                 item.Name = f.Name;
                 item.Text = GroupHelper.GetFullName(f, " ");
                 item.Tag = f;
                 item.Click += (object sender, EventArgs e) =>
                 {
-                    var menuitem = (GlyphMenuItem)sender;
+                    var menuitem = (ToolMenuItem)sender;
                     ((LayoutField)menuitem.Tag).Visible = true;
                 };
             }

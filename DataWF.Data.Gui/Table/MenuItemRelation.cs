@@ -3,7 +3,7 @@ using DataWF.Data;
 
 namespace DataWF.Data.Gui
 {
-    public class MenuItemRelation : GlyphMenuItem
+    public class MenuItemRelation : ToolMenuItem
     {
         public MenuItemRelation()
         {

@@ -13,475 +13,393 @@ using DataWF.Module.CommonGui;
 
 namespace DataWF.Module.FlowGui
 {
-    [Module(true)]
-    public class FlowExplorer : VPanel, IDockContent
-    {
-        private ToolWindow ose = new ToolWindow();
-        private ListEditor se = new ListEditor();
-        private Toolsbar barMain = new Toolsbar();
-        private ToolItem toolMainCopy = new ToolItem();
-        private ToolDropDown toolMainAdd = new ToolDropDown();
-        private ToolItem toolMainRemove = new ToolItem();
-        private ToolDropDown toolMainTools = new ToolDropDown();
-        private ToolSearchEntry toolMainFilter = new ToolSearchEntry();
-        private Menu contextAdd = new Menu();
-        private GlyphMenuItem toolAddTemplate = new GlyphMenuItem();
-        private GlyphMenuItem toolAddTemplateParam = new GlyphMenuItem();
-        private GlyphMenuItem toolAddWork = new GlyphMenuItem();
-        private GlyphMenuItem toolAddStage = new GlyphMenuItem();
-        private GlyphMenuItem toolAddStageParam = new GlyphMenuItem();
-        private GlyphMenuItem toolAddUser = new GlyphMenuItem();
-        private GlyphMenuItem toolAddGroup = new GlyphMenuItem();
-        private GlyphMenuItem toolAddScheduler = new GlyphMenuItem();
-        private Menu contextTools = new Menu();
-        private GlyphMenuItem toolRefresh = new GlyphMenuItem();
-        private GlyphMenuItem toolGenerateDB = new GlyphMenuItem();
-        private GlyphMenuItem toolConfig = new GlyphMenuItem();
-        private GlyphMenuItem toolStat = new GlyphMenuItem();
-        private FlowTree tree = new FlowTree();
+	[Module(true)]
+	public class FlowExplorer : VPanel, IDockContent
+	{
+		private ToolWindow ose;
+		private ListEditor se;
+		private Toolsbar barMain;
+		private Menubar contextAdd;
+		private Menubar contextTools;
+		private FlowTree tree;
 
-        public FlowExplorer()
-            : base()
-        {
-            PackStart(barMain, false, false);
-            PackStart(tree, true, true);
+		public FlowExplorer()
+			: base()
+		{
+			contextTools = new Menubar(new ToolItem[]{
+				new ToolMenuItem(ToolMainRefreshClick) { Name = "Refresh", Glyph = GlyphType.Refresh },
+				new ToolMenuItem(ToolGenerateDBClick) { Name = "Generate database", Glyph = GlyphType.Database },
+				new ToolMenuItem(ToolStatClick) { Name = "Stats", Glyph = GlyphType.Link }})
+			{ Name = "FlowExplorer" };
 
-            se.List.RetriveCellEditor += OptionsGetCellEditor;
-            ose.Target = se;
-            ose.ButtonAcceptClick += AcceptOnActivated;
+			contextAdd = new Menubar(new ToolItem[]{
+				new ToolMenuItem { Name = "Template", Sensitive = Template.DBTable?.Access.Create ?? false, Glyph = GlyphType.Book },
+				new ToolMenuItem { Name = "Template Attribute", Sensitive = TemplateParam.DBTable?.Access.Create ?? false, Glyph = GlyphType.Columns },
+				new ToolMenuItem { Name = "Work", Sensitive = Work.DBTable?.Access.Create ?? false, Glyph =  GlyphType.Building},
+				new ToolMenuItem { Name = "Work Stage", Sensitive = Stage.DBTable?.Access.Create ?? false, Glyph = GlyphType.Flickr },
+				new ToolMenuItem { Name = "Stage Parameter", Sensitive = StageParam.DBTable?.Access.Create ?? false, Glyph =GlyphType.Columns  },
+				new ToolMenuItem { Name = "Group", Sensitive = UserGroup.DBTable?.Access.Create ?? false, Glyph =GlyphType.UserMd },
+				new ToolMenuItem { Name = "User", Sensitive = User.DBTable?.Access.Create ?? false, Glyph =  GlyphType.User },
+				new ToolMenuItem { Name = "Scheduler", Sensitive = Scheduler.DBTable?.Access.Create ?? false, Glyph = GlyphType.ClockO }})
+			{ Name = "FlowExplorer" };
 
-            DBService.DBSchemaChanged += OnDBSchemaChanged;
+			barMain = new Toolsbar(new[]{
+				new ToolDropDown { Name = "Add", ForeColor = Colors.DarkGreen, DropDown = contextAdd, Glyph =  GlyphType.PlusCircle},
+				new ToolItem(ToolMainRemoveClick) { Name = "Remove", ForeColor = Colors.DarkRed, Glyph = GlyphType.MinusCircle },
+				new ToolItem(ToolMainCopyClick) { Name = "Copy", Glyph = GlyphType.CopyAlias },
+				new ToolDropDown { Name = "Tools", DropDown = contextTools, Glyph =  GlyphType.Wrench},
+				new ToolSearchEntry(ToolFilterTextChanged) { Name = "toolFilterText", FillWidth = true}})
+			{ Name = "FlowExplorer" };
 
-            contextTools.Items.Add(toolRefresh);
-            contextTools.Items.Add(toolGenerateDB);
-            contextTools.Items.Add(toolConfig);
-            contextTools.Items.Add(toolStat);
+			DBService.DBSchemaChanged += OnDBSchemaChanged;
 
-            toolRefresh.Name = "toolfresh";
-            toolRefresh.Click += ToolMainRefreshClick;
+			se = new ListEditor();
+			se.List.RetriveCellEditor += OptionsGetCellEditor;
 
-            toolGenerateDB.Name = "toolGenerateFlowDB";
-            toolGenerateDB.Click += ToolGenerateDBClick;
+			ose = new ToolWindow { Target = se };
+			ose.ButtonAcceptClick += AcceptOnActivated;
 
-            toolStat.Name = "toolStat";
-            toolStat.Click += ToolStatClick;
+			var userKeys = UserTreeKeys.None;
+			if (User.DBTable?.Access.View ?? false) userKeys |= UserTreeKeys.User;
+			if (UserGroup.DBTable?.Access.View ?? false) userKeys |= UserTreeKeys.Group;
+			if (Scheduler.DBTable?.Access.View ?? false) userKeys |= UserTreeKeys.Scheduler;
+			var keys = FlowTreeKeys.None;
+			if (TemplateParam.DBTable?.Access.View ?? false) keys |= FlowTreeKeys.TemplateParam;
+			if (Template.DBTable?.Access.View ?? false) keys |= FlowTreeKeys.Template;
+			if (StageParam.DBTable?.Access.View ?? false) keys |= FlowTreeKeys.StageParam;
+			if (Stage.DBTable?.Access.View ?? false) keys |= FlowTreeKeys.Stage;
+			if (Work.DBTable?.Access.View ?? false) keys |= FlowTreeKeys.Work;
+			tree = new FlowTree { Status = DBStatus.Current, FlowKeys = keys, UserKeys = userKeys };
+			tree.ListInfo.HeaderVisible = true;
+			tree.ListInfo.HeaderWidth = 35;
+			tree.SelectionChanged += TreeAfterSelect;
+			tree.CellMouseClick += TreeNodeMouseClick;
+			tree.CellDoubleClick += TreeNodeMouseDoubleClick;
 
-            //
-            tree.SelectionChanged += TreeAfterSelect;
-            tree.CellMouseClick += TreeNodeMouseClick;
-            tree.CellDoubleClick += TreeNodeMouseDoubleClick;
-            tree.Visible = true;
-            tree.Status = DBStatus.Current;
-            var keys = FlowTreeKeys.None;
-            if (TemplateParam.DBTable.Access.View) keys |= FlowTreeKeys.TemplateParam;
-            if (Template.DBTable.Access.View) keys |= FlowTreeKeys.Template;
-            if (StageParam.DBTable.Access.View) keys |= FlowTreeKeys.StageParam;
-            if (Stage.DBTable.Access.View) keys |= FlowTreeKeys.Stage;
-            if (Work.DBTable.Access.View) keys |= FlowTreeKeys.Work;
-            tree.FlowKeys = keys;
+			Name = "FlowExplorer";
+			PackStart(barMain, false, false);
+			PackStart(tree, true, true);
 
-            var userKeys = UserTreeKeys.None;
-            if (User.DBTable.Access.View) userKeys |= UserTreeKeys.User;
-            if (UserGroup.DBTable.Access.View) userKeys |= UserTreeKeys.Group;
-            if (Scheduler.DBTable.Access.View) userKeys |= UserTreeKeys.Scheduler;
-            tree.UserKeys = userKeys;
+			Localize();
+		}
 
-            contextAdd.Items.Add(toolAddTemplate);
-            contextAdd.Items.Add(toolAddTemplateParam);
-            contextAdd.Items.Add(toolAddWork);
-            contextAdd.Items.Add(toolAddStage);
-            contextAdd.Items.Add(toolAddStageParam);
-            contextAdd.Items.Add(toolAddUser);
-            contextAdd.Items.Add(toolAddGroup);
-            contextAdd.Items.Add(toolAddScheduler);
+		private void OnDBSchemaChanged(object sender, DBSchemaChangedArgs e)
+		{
+			try
+			{
+				if (e.Type == DDLType.Create)
+				{
+					//List<int> groups = FlowEnvir.GetGroups(FlowEnvir.Personal.User);
 
-            toolAddTemplate.Sensitive = Template.DBTable.Access.Create;
-            toolAddTemplate.Name = "toolAddTemplate";
+					if (e.Item is DBTable && e.Item.Container != null)
+					{
+						var sgroup = GroupPermission.Get(null, e.Item.Schema);
+						var tgroup = GroupPermission.Get(sgroup, e.Item);
 
-            toolAddTemplateParam.Sensitive = TemplateParam.DBTable.Access.Create;
-            toolAddTemplateParam.Name = "toolAddTemplateAttribute";
+						foreach (DBColumn column in ((DBTable)e.Item).Columns)
+						{
+							GroupPermission.Get(tgroup, column);
+						}
+					}
+					if (e.Item is DBColumn && e.Item.Container != null && ((DBColumn)e.Item).Table.Container != null)
+					{
+						var sgroup = GroupPermission.Get(null, e.Item.Schema);
+						var tgroup = GroupPermission.Get(sgroup, ((DBColumn)e.Item).Table);
+						GroupPermission.Get(tgroup, e.Item);
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				Helper.OnException(ex);
+			}
+		}
 
-            toolAddWork.Name = "toolAddFlow";
-            toolAddStage.Name = "toolAddFlowStage";
+		private ILayoutCellEditor OptionsGetCellEditor(object sender, object listItem, ILayoutCell cell)
+		{
+			if (cell.CellEditor == null)
+				return PDocument.InitCellEditor(sender, listItem, cell);
+			else
+				return null;
+		}
 
-            toolAddGroup.Sensitive = UserGroup.DBTable.Access.Create;
-            toolAddGroup.Name = "toolAddGroup";
+		private void AcceptOnActivated(object sender, EventArgs e)
+		{
+			if (se.DataSource is DBItem)
+			{
+				((DBItem)se.DataSource).Save();
 
-            toolAddUser.Sensitive = User.DBTable.Access.Create;
-            toolAddUser.Name = "toolAddUser";
+			}
+		}
 
-            toolAddScheduler.Sensitive = Scheduler.DBTable.Access.Create;
-            toolAddStageParam.Sensitive = StageParam.DBTable.Access.Create;
-            toolAddStage.Sensitive = Stage.DBTable.Access.Create;
-            toolAddWork.Sensitive = Work.DBTable.Access.Create;
-            toolConfig.Sensitive = User.CurrentUser.Super.Value;
+		private void ToolFilterTextChanged(object sender, EventArgs e)
+		{
+			var entry = (TextEntry)sender;
+			tree.Nodes.DefaultView.FilterQuery.Parameters.Clear();
 
-            barMain.Add(toolMainAdd);
-            barMain.Add(toolMainRemove);
-            barMain.Add(toolMainCopy);
-            barMain.Add(toolMainTools);
-            barMain.Add(toolMainFilter);
+			if (entry.Text.Length != 0)
+				tree.Nodes.DefaultView.FilterQuery.Parameters.Add(typeof(Node), LogicType.And, "FullPath", CompareType.Like, entry.Text);
+			else
+				tree.Nodes.DefaultView.FilterQuery.Parameters.Add(typeof(Node), LogicType.And, "IsExpanded", CompareType.Equal, true);
+			tree.Nodes.DefaultView.UpdateFilter();
 
-            toolMainFilter.Name = "toolFilterText";
-            toolMainFilter.FillWidth = true;
-            toolMainFilter.EntryTextChanged += ToolFilterTextChanged;
+		}
 
-            toolMainCopy.Name = "toolMainCopy";
-            toolMainCopy.Click += ToolMainCopyClick;
+		private void ToolGenerateDBClick(object sender, EventArgs e)
+		{
+			if (tree.SelectedNode != null)
+			{
+				var query = new DataQuery();
+				query.Query = tree.GenereteExport();
+				query.ShowDialog(this);
+			}
+		}
 
-            toolMainAdd.Name = "toolMainAdd";
-            toolMainAdd.ForeColor = Colors.DarkGreen;
-            toolMainAdd.DropDown = contextAdd;
+		public class StatWindow : ToolWindow
+		{
+			LayoutList users = new LayoutList();
+			LayoutList stats = new LayoutList();
+			GroupBox map = new GroupBox();
 
-            toolMainRemove.Name = "toolMainRemove";
-            toolMainRemove.ForeColor = Colors.DarkRed;
-            toolMainRemove.Click += ToolMainRemoveClick;
+			public StatWindow()
+			{
+				Mode = ToolShowMode.Dialog;
+				ButtonClose.Visible = false;
 
-            toolMainTools.Name = "toolMainTools";
-            toolMainTools.DropDown = contextTools;
+				users.ListSource = UDPService.Default.List;
+				stats.ListSource = NetStat.Items;
 
-            Name = "FlowExplorer";
+				map.Add(new GroupBoxItem() { Widget = users, Text = "Users" });
+				map.Add(new GroupBoxItem() { Widget = stats, Text = "Statistic", Row = 1 });
+				Target = map;
+			}
 
-            tree.ListInfo.HeaderVisible = true;
-            tree.ListInfo.HeaderWidth = 35;
+		}
 
-            Localize();
-        }
+		private void ToolStatClick(object sender, EventArgs e)
+		{
+			if (UDPService.Default != null)
+			{
+				var window = new StatWindow();
+				window.Show(this, new Point());
+			}
+		}
 
-        private void OnDBSchemaChanged(object sender, DBSchemaChangedArgs e)
-        {
-            try
-            {
-                if (e.Type == DDLType.Create)
-                {
-                    //List<int> groups = FlowEnvir.GetGroups(FlowEnvir.Personal.User);
+		private void ContextAddItemClicked(object sender, ToolItemEventargs e)
+		{
+			var item = e.Item;
 
-                    if (e.Item is DBTable && e.Item.Container != null)
-                    {
-                        var sgroup = GroupPermission.Get(null, e.Item.Schema);
-                        var tgroup = GroupPermission.Get(sgroup, e.Item);
+			DBItem row = null;
+			object tag = tree.SelectedDBItem;
+			if (item.Name == "Work")
+			{
+				row = new Work();
+			}
+			else if (item.Name == "Work Stage")
+			{
+				row = new Stage();
+				if (tag is Work)
+					((Stage)row).Work = (Work)tag;
+			}
+			else if (item.Name == "Stage Parameter")
+			{
+				row = new StageParam();
+				if (tag is Stage)
+					((StageParam)row).Stage = (Stage)tag;
+			}
+			else if (item.Name == "Group")
+			{
+				row = new UserGroup();
+			}
+			else if (item.Name == "Template")
+			{
+				row = new Template();
+				if (tag is Template)
+					((Template)row).Parent = (Template)tag;
+			}
+			else if (item.Name == "Template Attribute")
+			{
+				row = new TemplateParam();
+				if (tag is Template)
+					((TemplateParam)row).Template = (Template)tag;
+			}
+			else if (item.Name == "User")
+			{
+				row = new User();
+				if (tag is User && ((User)tag).IsCompaund)
+					((User)row).Parent = (User)tag;
+				//row.Access.Create
+				for (int i = 0; i < row.Access.Items.Count; i++)
+				{
+					var access = row.Access.Items[i];
+					access.Create = false;
+					row.Access.Add(access);
+				}
+			}
+			else if (item.Name == "Scheduler")
+			{
+				row = new Scheduler();
+				if (tag is DBProcedure)
+					((Scheduler)row).Procedure = (DBProcedure)tag;
+			}
+			ShowItem(row);
+		}
 
-                        foreach (DBColumn column in ((DBTable)e.Item).Columns)
-                        {
-                            GroupPermission.Get(tgroup, column);
-                        }
-                    }
-                    if (e.Item is DBColumn && e.Item.Container != null && ((DBColumn)e.Item).Table.Container != null)
-                    {
-                        var sgroup = GroupPermission.Get(null, e.Item.Schema);
-                        var tgroup = GroupPermission.Get(sgroup, ((DBColumn)e.Item).Table);
-                        GroupPermission.Get(tgroup, e.Item);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Helper.OnException(ex);
-            }
-        }
+		private void ShowItem(DBItem item)
+		{
+			if (item is UserGroup)
+			{
+				var group = (UserGroup)item;
+				var editor = GuiService.Main.DockPanel.Find(PermissionEditor.GetName(group)) as PermissionEditor;
+				if (editor == null)
+					editor = new PermissionEditor() { Group = group };
+				GuiService.Main.DockPanel.Put(editor, DockType.Content);
+			}
+			else if (item is User)
+			{
+				if (item == User.CurrentUser && !((User)item).Super.Value)
+				{
+					MessageDialog.ShowMessage(ParentWindow, "Unable edit current user!", "Access");
+					return;
+				}
+				UserEditor editor = new UserEditor();
+				editor.User = (User)item;
+				editor.ShowWindow(this);
+			}
+			else if (item is DBItem)
+			{
+				se.DataSource = item;
+				se.List.EditState = item.Attached ? EditListState.Edit : EditListState.EditAny;
+				ose.Mode = ToolShowMode.Dialog;
+				ose.Show(this, new Point(0, 0));
+			}
+		}
 
-        private ILayoutCellEditor OptionsGetCellEditor(object sender, object listItem, ILayoutCell cell)
-        {
-            if (cell.CellEditor == null)
-                return PDocument.InitCellEditor(sender, listItem, cell);
-            else
-                return null;
-        }
+		private void ToolMainRefreshClick(object sender, EventArgs e)
+		{
+			FlowEnvironment.LoadBooks();
+		}
 
-        private void AcceptOnActivated(object sender, EventArgs e)
-        {
-            if (se.DataSource is DBItem)
-            {
-                ((DBItem)se.DataSource).Save();
+		private void ToolMainCopyClick(object sender, EventArgs e)
+		{
+			if (tree.SelectedNode == null)
+				return;
+			foreach (var s in tree.Selection)
+			{
+				Node tn = (Node)s.Item;
+				object obj = tn.Tag;
 
-            }
-        }
+				if (obj is DBItem)
+				{
+					var row = (DBItem)((DBItem)obj).Clone();
+					if (row is User)
+					{
+						((User)row).Super = false;
+					}
+					ShowItem(row);
+				}
+			}
+		}
 
-        private void ToolFilterTextChanged(object sender, EventArgs e)
-        {
-            tree.Nodes.DefaultView.FilterQuery.Parameters.Clear();
+		private void ToolMainRemoveClick(object sender, EventArgs e)
+		{
+			if (tree.SelectedNode == null)
+				return;
+			var question = new QuestionMessage("Deleting", "Delete selected items?");
+			question.Buttons.Add(Command.No);
+			question.Buttons.Add(Command.Yes);
+			if (MessageDialog.AskQuestion(ParentWindow, question) == Command.Yes)
+			{
+				var items = tree.Selection.GetItems<Node>();
+				foreach (Node tn in items)
+				{
+					object obj = tn.Tag;
 
-            if (toolMainFilter.Text.Length != 0)
-                tree.Nodes.DefaultView.FilterQuery.Parameters.Add(typeof(Node), LogicType.And, "FullPath", CompareType.Like, toolMainFilter.Text);
-            else
-                tree.Nodes.DefaultView.FilterQuery.Parameters.Add(typeof(Node), LogicType.And, "IsExpanded", CompareType.Equal, true);
-            tree.Nodes.DefaultView.UpdateFilter();
+					if (obj is DBItem)
+					{
+						((DBItem)obj).Delete();
+						((DBItem)obj).Save();
+					}
+				}
+			}
+		}
 
-        }
+		private void TreeAfterSelect(object sender, EventArgs e)
+		{
+			ShowNodeProperty();
+		}
 
-        private void ToolGenerateDBClick(object sender, EventArgs e)
-        {
-            if (tree.SelectedNode != null)
-            {
-                var query = new DataQuery();
-                query.Query = tree.GenereteExport();
-                query.ShowDialog(this);
-            }
-        }
+		private void TreeNodeMouseClick(object sender, EventArgs e)
+		{
+			ShowNodeProperty();
+		}
 
-        public class StatWindow : ToolWindow
-        {
-            LayoutList users = new LayoutList();
-            LayoutList stats = new LayoutList();
-            GroupBox map = new GroupBox();
+		private void TreeNodeMouseDoubleClick(object sender, EventArgs e)
+		{
+			if (tree.SelectedNode != null && tree.SelectedNode.Tag != null)
+			{
+				if (tree.SelectedNode.Tag is IList)
+				{
+					//FieldsEditor op = new FieldsEditor();
+					//op.Text = tree.SelectedNode.Header + (tree.SelectedNode.Group != null ? "(" + tree.SelectedNode.Group.ToString() + ")" : string.Empty);
+					//op.DataSource = (IList)tree.SelectedNode.Tag;
+					//op.GetCellEditor += OptionsGetCellEditor;
+					//op.DockType = tool.DockType.Content;
+					//GuiService.Main.DockPanel.Put(op, tool.DockType.Content);
+				}
+				else
+				{
+					var access = tree.SelectedNode.Tag as IAccessable;
+					if (access.Access.Edit)
+					{
+						ShowItem((DBItem)tree.SelectedNode.Tag);
+					}
+					else
+					{
+						MessageDialog.ShowMessage(ParentWindow, Locale.Get(base.Name, "Access denied!"), Locale.Get(base.Name, "Access."));
+					}
+				}
+			}
+		}
 
-            public StatWindow()
-            {
-                Mode = ToolShowMode.Dialog;
-                ButtonClose.Visible = false;
+		public void ShowNodeProperty()
+		{
+			var flag = true;
+			foreach (var select in tree.Selection)
+			{
+				var item = ((Node)select.Item).Tag as DBItem;
+				if (item == null || !item.Access.Delete)
+				{
+					flag = false;
+					break;
+				}
+			}
+			barMain["Remove"].Sensitive = flag;
 
-                users.ListSource = UDPService.Default.List;
-                stats.ListSource = NetStat.Items;
+			if (tree.SelectedNode != null && GuiService.Main != null && !(tree.SelectedNode.Tag is IDBTableView))
+				GuiService.Main.ShowProperty(this, tree.SelectedNode.Tag, false);
+		}
 
-                map.Add(new GroupBoxItem() { Widget = users, Text = "Users" });
-                map.Add(new GroupBoxItem() { Widget = stats, Text = "Statistic", Row = 1 });
-                Target = map;
-            }
+		public DockType DockType
+		{
+			get { return DockType.Left; }
+		}
 
-        }
+		public bool HideOnClose
+		{
+			get { return true; }
+		}
 
-        private void ToolStatClick(object sender, EventArgs e)
-        {
-            if (UDPService.Default != null)
-            {
-                var window = new StatWindow();
-                window.Show(this, new Point());
-            }
-        }
+		#region ILocalizable implementation
 
-        private void ContextAddItemClicked(object sender, EventArgs e)
-        {
-            var item = sender as GlyphMenuItem;
+		public void Localize()
+		{
+			barMain.Localize();
+			tree.Localize();
+			GuiService.Localize(this, Name, "Flow explorer", GlyphType.Wrench);
+		}
 
-            DBItem row = null;
-            object tag = tree.SelectedNode == null ? null : tree.SelectedNode.Tag;
-            if (item == toolAddWork)
-            {
-                row = new Work();
-            }
-            else if (item == toolAddStage)
-            {
-                row = new Stage();
-                if (tag is Work)
-                    ((Stage)row).Work = (Work)tag;
-            }
-            else if (item == toolAddStageParam)
-            {
-                row = new StageParam();
-                if (tag is Stage)
-                    ((StageParam)row).Stage = (Stage)tag;
-            }
-            else if (item == toolAddGroup)
-            {
-                row = new UserGroup();
-            }
-            else if (item == toolAddTemplate)
-            {
-                row = new Template();
-                if (tag is Template)
-                    ((Template)row).Parent = (Template)tag;
-            }
-            else if (item == toolAddTemplateParam)
-            {
-                row = new TemplateParam();
-                if (tag is Template)
-                    ((TemplateParam)row).Template = (Template)tag;
-            }
-            else if (item == toolAddUser)
-            {
-                row = new User();
-                if (tag is User && ((User)tag).IsCompaund)
-                    ((User)row).Parent = (User)tag;
-                //row.Access.Create
-                for (int i = 0; i < row.Access.Items.Count; i++)
-                {
-                    var access = row.Access.Items[i];
-                    access.Create = false;
-                    row.Access.Add(access);
-                }
-            }
-            else if (item == toolAddScheduler)
-            {
-                row = new Scheduler();
-                if (tag is DBProcedure)
-                    ((Scheduler)row).Procedure = (DBProcedure)tag;
-            }
-            ShowItem(row);
-        }
-
-        private void ShowItem(DBItem item)
-        {
-            if (item is UserGroup)
-            {
-                var group = (UserGroup)item;
-                var editor = GuiService.Main.DockPanel.Find(PermissionEditor.GetName(group)) as PermissionEditor;
-                if (editor == null)
-                    editor = new PermissionEditor() { Group = group };
-                GuiService.Main.DockPanel.Put(editor, DockType.Content);
-            }
-            else if (item is User)
-            {
-                if (item == User.CurrentUser && !((User)item).Super.Value)
-                {
-                    MessageDialog.ShowMessage(ParentWindow, "Unable edit current user!", "Access");
-                    return;
-                }
-                UserEditor editor = new UserEditor();
-                editor.User = (User)item;
-                editor.ShowWindow(this);
-            }
-            else if (item is DBItem)
-            {
-                se.DataSource = item;
-                se.List.EditState = item.Attached ? EditListState.Edit : EditListState.EditAny;
-                ose.Mode = ToolShowMode.Dialog;
-                ose.Show(this, new Point(0, 0));
-            }
-        }
-
-        private void ToolMainRefreshClick(object sender, EventArgs e)
-        {
-            FlowEnvironment.LoadBooks();
-        }
-
-        private void ToolMainCopyClick(object sender, EventArgs e)
-        {
-            if (tree.SelectedNode == null)
-                return;
-            foreach (var s in tree.Selection)
-            {
-                Node tn = (Node)s.Item;
-                object obj = tn.Tag;
-
-                if (obj is DBItem)
-                {
-                    var row = (DBItem)((DBItem)obj).Clone();
-                    if (row is User)
-                    {
-                        ((User)row).Super = false;
-                    }
-                    ShowItem(row);
-                }
-            }
-        }
-
-        private void ToolMainRemoveClick(object sender, EventArgs e)
-        {
-            if (tree.SelectedNode == null)
-                return;
-            var question = new QuestionMessage("Deleting", "Delete selected items?");
-            question.Buttons.Add(Command.No);
-            question.Buttons.Add(Command.Yes);
-            if (MessageDialog.AskQuestion(ParentWindow, question) == Command.Yes)
-            {
-                var items = tree.Selection.GetItems<Node>();
-                foreach (Node tn in items)
-                {
-                    object obj = tn.Tag;
-
-                    if (obj is DBItem)
-                    {
-                        ((DBItem)obj).Delete();
-                        ((DBItem)obj).Save();
-                    }
-                }
-            }
-        }
-
-        private void TreeAfterSelect(object sender, EventArgs e)
-        {
-            ShowNodeProperty();
-        }
-
-        private void TreeNodeMouseClick(object sender, EventArgs e)
-        {
-            ShowNodeProperty();
-        }
-
-        private void TreeNodeMouseDoubleClick(object sender, EventArgs e)
-        {
-            if (tree.SelectedNode != null && tree.SelectedNode.Tag != null)
-            {
-                if (tree.SelectedNode.Tag is IList)
-                {
-                    //FieldsEditor op = new FieldsEditor();
-                    //op.Text = tree.SelectedNode.Header + (tree.SelectedNode.Group != null ? "(" + tree.SelectedNode.Group.ToString() + ")" : string.Empty);
-                    //op.DataSource = (IList)tree.SelectedNode.Tag;
-                    //op.GetCellEditor += OptionsGetCellEditor;
-                    //op.DockType = tool.DockType.Content;
-                    //GuiService.Main.DockPanel.Put(op, tool.DockType.Content);
-                }
-                else
-                {
-                    var access = tree.SelectedNode.Tag as IAccessable;
-                    if (access.Access.Edit)
-                    {
-                        ShowItem((DBItem)tree.SelectedNode.Tag);
-                    }
-                    else
-                    {
-                        MessageDialog.ShowMessage(ParentWindow, Locale.Get(base.Name, "Access denied!"), Locale.Get(base.Name, "Access."));
-                    }
-                }
-            }
-        }
-
-        public void ShowNodeProperty()
-        {
-            var flag = true;
-            foreach (var select in tree.Selection)
-            {
-                var item = ((Node)select.Item).Tag as DBItem;
-                if (item == null || !item.Access.Delete)
-                {
-                    flag = false;
-                    break;
-                }
-            }
-            this.toolMainRemove.Sensitive = flag;
-
-            if (tree.SelectedNode != null && GuiService.Main != null && !(tree.SelectedNode.Tag is IDBTableView))
-                GuiService.Main.ShowProperty(this, tree.SelectedNode.Tag, false);
-        }
-
-        public DockType DockType
-        {
-            get { return DockType.Left; }
-        }
-
-        public bool HideOnClose
-        {
-            get { return true; }
-        }
-
-        #region ILocalizable implementation
-
-        public void Localize()
-        {
-            GuiService.Localize(toolRefresh, Name, "Refresh", GlyphType.Refresh);
-            GuiService.Localize(toolMainCopy, Name, "Copy", GlyphType.CopyAlias);
-            GuiService.Localize(toolMainAdd, Name, "Add", GlyphType.PlusCircle);
-            GuiService.Localize(toolMainRemove, Name, "Remove", GlyphType.MinusCircle);
-            GuiService.Localize(toolMainTools, Name, "Tools", GlyphType.Wrench);
-            GuiService.Localize(toolGenerateDB, Name, "Generate Flow DB", GlyphType.Database);
-            GuiService.Localize(toolConfig, Name, "Configuration", GlyphType.Tags);
-            GuiService.Localize(toolStat, Name, "Statistic", GlyphType.Link);
-
-            GuiService.Localize(toolAddTemplate, typeof(Template).FullName, "Template", GlyphType.Book);
-            GuiService.Localize(toolAddTemplateParam, typeof(TemplateParam).FullName, "TemplateParam", GlyphType.Columns);
-            GuiService.Localize(toolAddWork, typeof(Work).FullName, "Work", GlyphType.Building);
-            GuiService.Localize(toolAddStage, typeof(Stage).FullName, "Stage", GlyphType.Flickr);
-            GuiService.Localize(toolAddStageParam, typeof(StageParam).FullName, "StageParam", GlyphType.Columns);
-            GuiService.Localize(toolAddUser, typeof(User).FullName, "User", GlyphType.User);
-            GuiService.Localize(toolAddGroup, typeof(UserGroup).FullName, "Group", GlyphType.UserMd);
-            GuiService.Localize(toolAddScheduler, typeof(Scheduler).FullName, "Scheduler", GlyphType.ClockO);
-
-            GuiService.Localize(this, Name, "Flow explorer", GlyphType.Wrench);
-
-            tree.Localize();
-        }
-
-        #endregion
-    }
+		#endregion
+	}
 }
 

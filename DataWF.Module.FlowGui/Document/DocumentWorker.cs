@@ -297,9 +297,9 @@ namespace DataWF.Module.FlowGui
             dockList.LabelText = tree.SelectedNode.Text;
         }
 
-        public GlyphMenuItem InitTemplate(Template ts)
+        public ToolMenuItem InitTemplate(Template ts)
         {
-            var tsb = new GlyphMenuItem();
+            var tsb = new ToolMenuItem();
             tsb.Name = ts.Code.ToString();
             tsb.Text = ts.ToString();
             //tsb.Image = ts.Image;
@@ -488,9 +488,9 @@ namespace DataWF.Module.FlowGui
             return item;
         }
 
-        internal static GlyphMenuItem InitWork(DocumentWork d, EventHandler eh)
+        internal static ToolMenuItem InitWork(DocumentWork d, EventHandler eh)
         {
-            var item = new GlyphMenuItem();
+            var item = new ToolMenuItem();
             item.Tag = d;
             item.Name = d.Id.ToString();
             item.Text = string.Format("{0}-{1}", d.Stage, d.User);
@@ -501,7 +501,7 @@ namespace DataWF.Module.FlowGui
 
         private void TemplateItemClick(object sender, EventArgs e)
         {
-            var sen = sender as GlyphMenuItem;
+            var sen = sender as ToolMenuItem;
             if (sen.DropDown.Items.Count > 0)
                 return;
             Template template = sen.Tag as Template;

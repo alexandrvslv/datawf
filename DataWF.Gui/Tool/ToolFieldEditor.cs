@@ -7,7 +7,7 @@ namespace DataWF.Gui
 
         public ToolFieldEditor() : base(new FieldEditor())
         {
-            DisplayStyle = ToolItemDisplayStyle.None;
+            DisplayStyle = ToolItemDisplayStyle.Content;
         }
 
         public FieldEditor Field

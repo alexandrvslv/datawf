@@ -5,7 +5,7 @@ namespace DataWF.Gui
 {
     internal interface IToolItem
     {
-        Canvas Bar { get; set; }
+		Toolsbar Bar { get; set; }
 
         Widget Content { get; set; }
     }

@@ -45,7 +45,7 @@ namespace DataWF.Module.FlowGui
         {
             tools.Items.Add(toolFilter);
             tools.Items.Add(toolPreview);
-            tools.Items.Add(new SeparatorToolItem());
+            tools.Items.Add(new ToolSeparator());
             tools.Items.Add(toolCount);
             tools.Items.Add(toolView);
             tools.Items.Add(toolProgress);

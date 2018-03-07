@@ -214,12 +214,6 @@ namespace DataWF.Module.CommonGui
             toolDetails.Click += ToolDetailsClick;
 
 
-            listObjects.AllowCellSize = true;
-            listObjects.DataFilter = null;
-            listObjects.EditMode = EditModes.None;
-            listObjects.EditState = EditListState.Edit;
-            listObjects.FieldSource = null;
-            listObjects.Mode = LayoutListMode.List;
             listObjects.Name = "listObjects";
             listObjects.DataKeys = DataTreeKeys.CheckTableAdmin | DataTreeKeys.Table | DataTreeKeys.Schema;
             listObjects.ListInfo.Columns.Add("Count", 35);
@@ -228,7 +222,6 @@ namespace DataWF.Module.CommonGui
 
             listRows.EditMode = EditModes.None;
             listRows.EditState = EditListState.Edit;
-            listRows.FieldSource = null;
             listRows.GenerateColumns = false;
             listRows.GenerateToString = false;
             listRows.Mode = LayoutListMode.List;
@@ -240,7 +233,6 @@ namespace DataWF.Module.CommonGui
 
             listDiff.EditMode = EditModes.None;
             listDiff.EditState = EditListState.Edit;
-            listDiff.FieldSource = null;
             listDiff.GenerateColumns = false;
             listDiff.GenerateToString = false;
             listDiff.Mode = LayoutListMode.List;

@@ -92,6 +92,8 @@ namespace DataWF.Gui
             Name = "ToolWindow";
             Resizable = true;
             Size = new Size(360, 320);
+            ShowInTaskbar = false;
+            InitialLocation = WindowLocation.Manual;
             Padding = new WidgetSpacing(p, p, p, p);
 
             timerHide.Interval = 2000;

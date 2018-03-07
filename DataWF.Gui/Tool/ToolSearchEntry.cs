@@ -3,23 +3,31 @@ using Xwt;
 
 namespace DataWF.Gui
 {
-    public class ToolSearchEntry : ToolItem
-    {
-        public ToolSearchEntry() : base(new TextEntry())
-        {
-            DisplayStyle = ToolItemDisplayStyle.None;
-            FillWidth = true;
-        }
+	public class ToolSearchEntry : ToolItem
+	{
+		public ToolSearchEntry() : base(new TextEntry())
+		{
+			DisplayStyle = ToolItemDisplayStyle.Content;
+			FillWidth = true;
+		}
 
-        public TextEntry Entry
-        {
-            get { return content as TextEntry; }
-        }
+		public ToolSearchEntry(EventHandler textChenged) : base(new TextEntry())
+		{
+			EntryTextChanged += textChenged;
+		}
 
-        public event EventHandler EntryTextChanged
-        {
-            add { Entry.Changed += value; }
-            remove { Entry.Changed -= value; }
-        }
-    }
+		public TextEntry Entry
+		{
+			get { return content as TextEntry; }
+		}
+
+		public event EventHandler EntryTextChanged
+		{
+			add { Entry.Changed += value; }
+			remove { Entry.Changed -= value; }
+		}
+
+		public override void Localize()
+		{ }
+	}
 }

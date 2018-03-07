@@ -41,7 +41,7 @@ namespace DataWF.Gui
                 Text = "Save"
             };
 
-            Editor.Bar.Items.Add(new SeparatorToolItem());
+            Editor.Bar.Items.Add(new ToolSeparator());
             Editor.Bar.Items.Add(toolSave);
             Editor.Bar.Items.Add(toolImages);
             Editor.Bar.Items.Add(toolLoadImages);
