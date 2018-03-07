@@ -1779,14 +1779,14 @@ namespace Mono.TextEditor
                     double maxX = longestLineWidth;
                     if (maxX > Bounds.Width)
                         maxX += 2 * this.textViewMargin.CharWidth;
-                    double width = Bounds.Width - this.TextViewMargin.XOffset;
-                    var realMaxX = System.Math.Max(maxX, this.textEditorData.HAdjustment.Value + width);
+                    double width = Math.Abs(Bounds.Width - this.TextViewMargin.XOffset);
+                    var realMaxX = Math.Max(maxX, this.textEditorData.HAdjustment.Value + width);
 
                     foreach (var containerChild in editor.containerChildren.Concat(containerChildren))
                     {
                         if (containerChild.Child == this)
                             continue;
-                        realMaxX = System.Math.Max(realMaxX, containerChild.X + containerChild.Child.Size.Width);
+                        realMaxX = Math.Max(realMaxX, containerChild.X + containerChild.Child.Size.Width);
                     }
 
                     textEditorData.HAdjustment.LowerValue = 0;
