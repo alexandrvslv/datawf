@@ -32,8 +32,8 @@
     <Reference Include="System.Data" />
     <Reference Include="System" />
     <Reference Include="System.Xml" />
-    <Reference Include="Xwt">
-      <HintPath>..\packages\Xwt.0.2.78\lib\net40\Xwt.dll</HintPath>
+    <Reference Include="Xwt, Version=0.2.83.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\Xwt.0.2.83\lib\net40\Xwt.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -95,11 +95,11 @@
     <Compile Include="Misc\ToolTipControl.cs" />
     <Compile Include="Misc\ToolTipWindow.cs" />
     <Compile Include="Misc\ToolWindow.cs" />
-    <Compile Include="Tool\GlyphMenuItem.cs" />
+    <Compile Include="Tool\ToolMenuItem.cs" />
     <Compile Include="Tool\ToolDropDown.cs" />
     <Compile Include="Tool\ToolItem.cs" />
     <Compile Include="Tool\ToolSplit.cs" />
-    <Compile Include="Tool\SeparatorToolItem.cs" />
+    <Compile Include="Tool\ToolSeparator.cs" />
     <Compile Include="Tool\Toolsbar.cs" />
     <Compile Include="Tool\ToolTextEntry.cs" />
     <Compile Include="Dock\DockPageList.cs" />
@@ -164,6 +164,8 @@
     <Compile Include="Editors\StyleEditor.cs" />
     <Compile Include="Editors\ListEditorEventArgs.cs" />
     <Compile Include="Editors\ListExplorerNode.cs" />
+    <Compile Include="Tool\Menubar.cs" />
+    <Compile Include="Tool\ToolItemEventargs.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj">
@@ -171,10 +173,9 @@
       <Name>DataWF.Common</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
-  <ItemGroup />
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

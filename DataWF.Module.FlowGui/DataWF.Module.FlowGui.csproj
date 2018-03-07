@@ -63,8 +63,8 @@
     <Reference Include="Mono.Cecil.Rocks">
       <HintPath>..\packages\Mono.Cecil.0.9.6.4\lib\net45\Mono.Cecil.Rocks.dll</HintPath>
     </Reference>
-    <Reference Include="Xwt">
-      <HintPath>..\packages\Xwt.0.2.78\lib\net40\Xwt.dll</HintPath>
+    <Reference Include="Xwt, Version=0.2.83.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\Xwt.0.2.83\lib\net40\Xwt.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -148,8 +148,5 @@
     <None Include="Resources\empty.xlsx" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Cells\" />
-    <Folder Include="Document\" />
-  </ItemGroup>
+  <ItemGroup />
 </Project>
