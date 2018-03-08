@@ -4,21 +4,28 @@ using System.ComponentModel;
 
 namespace DataWF.Gui
 {
-    public class GroupBoxMap : LayoutMap
-    {
-        public GroupBoxMap(GroupBox groupBox)
-        {
-            GroupBox = groupBox;
-        }
+	public class GroupBoxMap : LayoutMap
+	{
+		public GroupBoxMap()
+		{ }
 
-        public GroupBox GroupBox { get; set; }
+		public GroupBoxMap(GroupBox groupBox)
+		{
+			GroupBox = groupBox;
+		}
 
-        protected override void OnItemsListChanged(object sender, ListChangedEventArgs e)
-        {
-            base.OnItemsListChanged(sender, e);
-            if (GroupBox != null)
-                GroupBox.ResizeLayout();
-        }
-    }
+		public GroupBoxMap(params ILayoutItem[] items)
+		{
+			AddRange(items);
+		}
+
+		public GroupBox GroupBox { get; set; }
+
+		protected override void OnItemsListChanged(object sender, ListChangedEventArgs e)
+		{
+			base.OnItemsListChanged(sender, e);
+			GroupBox?.ResizeLayout();
+		}
+	}
 }
 

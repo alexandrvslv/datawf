@@ -6,169 +6,187 @@ using Xwt;
 
 namespace DataWF.Gui
 {
-    public class GroupBoxItem : LayoutItem, IComparable, IDisposable
-    {
-        [NonSerialized()]
-        private Widget control;
-        private CellStyle styleHeader = null;
-        private CellStyle style = null;
-        private Rectangle rectExpand = new Rectangle();
-        private Rectangle rectHeader = new Rectangle();
-        private Rectangle rectGlyph = new Rectangle();
-        private Rectangle rectText = new Rectangle();
-        private bool expand = true;
-        private bool autos = true;
-        public int HeaderHeight = 21;
-        private int dHeight = 100;
-        public GlyphType Glyph = GlyphType.GearAlias;
-        public string Text;
+	public class GroupBoxItem : LayoutItem, IComparable, IDisposable, IText
+	{
+		private Widget control;
+		private CellStyle styleHeader = null;
+		private CellStyle style = null;
+		private Rectangle rectExpand = new Rectangle();
+		private Rectangle rectHeader = new Rectangle();
+		private Rectangle rectGlyph = new Rectangle();
+		private Rectangle rectText = new Rectangle();
+		private bool expand = true;
+		private bool autos = true;
+		public int HeaderHeight = 21;
+		private int dHeight = 100;
+		public GlyphType Glyph = GlyphType.GearAlias;
+		private string text;
 
-        public GroupBoxItem()
-        {
-            styleHeader = GuiEnvironment.StylesInfo["GroupBoxHeader"];
-            style = GuiEnvironment.StylesInfo["GroupBox"];
-        }
+		public event EventHandler TextChanged;
 
-        public void CheckBounds()
-        {
-            var top = TopMap as GroupBoxMap;
-            if (top == null)
-                return;
-            top.GetBound(this);
-            var bound = base.bound;
+		public GroupBoxItem()
+		{
+			styleHeader = GuiEnvironment.StylesInfo["GroupBoxHeader"];
+			style = GuiEnvironment.StylesInfo["GroupBox"];
+		}
 
-            if (!expand)
-                bound.Height = HeaderHeight + 5;
+		public void CheckBounds()
+		{
+			var top = TopMap as GroupBoxMap;
+			if (top == null)
+				return;
+			top.GetBound(this);
+			var bound = base.bound;
 
-            if (control != null && GroupBoxMap != null)
-            {
-                if (control.Visible)
-                {
-                    var rect = new Rectangle(bound.X + 5, bound.Y + HeaderHeight + 3,
-                        bound.Width - 10, bound.Height - (HeaderHeight + 6));
-                    if (rect.Width < 1)
-                        rect.Width = 1;
-                    if (rect.Height < 1)
-                        rect.Height = 1;
+			if (!expand)
+				bound.Height = HeaderHeight + 5;
 
-                    GroupBoxMap.GroupBox.SetChildBounds(control, rect);
-                }
-            }
-        }
+			if (control != null && GroupBoxMap != null)
+			{
+				if (control.Visible)
+				{
+					var rect = new Rectangle(bound.X + 5, bound.Y + HeaderHeight + 3,
+						bound.Width - 10, bound.Height - (HeaderHeight + 6));
+					if (rect.Width < 1)
+						rect.Width = 1;
+					if (rect.Height < 1)
+						rect.Height = 1;
 
-        public GroupBoxMap GroupBoxMap
-        {
-            get { return Map as GroupBoxMap; }
-        }
+					GroupBox.SetChildBounds(control, rect);
+				}
+			}
+		}
 
-        public bool Autosize
-        {
-            get { return autos; }
-            set
-            {
-                if (autos != value)
-                {
-                    autos = value;
-                }
-            }
-        }
+		public GroupBoxMap GroupBoxMap
+		{
+			get { return Map as GroupBoxMap; }
+		}
 
-        public Widget Widget
-        {
-            get { return control; }
-            set
-            {
-                if (control == value)
-                    return;
+		public GroupBox GroupBox
+		{
+			get { return GroupBoxMap?.GroupBox; }
+		}
 
-                control = value;
-                control.Visible = true;
-                if (GroupBoxMap != null)
-                    GroupBoxMap.GroupBox.AddChild(control);
-            }
-        }
+		public bool Autosize
+		{
+			get { return autos; }
+			set
+			{
+				if (autos != value)
+				{
+					autos = value;
+				}
+			}
+		}
 
-        public int DefaultHeight
-        {
-            get { return dHeight; }
-            set { dHeight = value; }
-        }
+		public Widget Widget
+		{
+			get { return control; }
+			set
+			{
+				if (control == value)
+					return;
 
-        [DefaultValue(true)]
-        public bool Expand
-        {
-            get { return expand; }
-            set
-            {
-                if (expand != value)
-                {
-                    expand = value;
-                    if (control != null)
-                        control.Visible = visible && expand;
-                    OnPropertyChanged(nameof(Expand));
-                    //if (map != null)
-                    //    map.ResizeLayout();
-                }
-            }
-        }
+				control = value;
+				control.Visible = true;
+				if (GroupBoxMap != null)
+					GroupBoxMap.GroupBox.AddChild(control);
+			}
+		}
 
-        public void Paint(GraphContext context)
-        {
-            context.DrawCell(style, null, bound, bound, CellDisplayState.Default);
+		public int DefaultHeight
+		{
+			get { return dHeight; }
+			set { dHeight = value; }
+		}
 
-            GetExpandBound(Bound);
+		[DefaultValue(true)]
+		public bool Expand
+		{
+			get { return expand; }
+			set
+			{
+				if (expand != value)
+				{
+					expand = value;
+					if (control != null)
+						control.Visible = visible && expand;
+					OnPropertyChanged(nameof(Expand));
+					//if (map != null)
+					//    map.ResizeLayout();
+				}
+			}
+		}
 
-            rectHeader = new Rectangle(Bound.X + 6, Bound.Y + 0, Bound.Width - 12, this.HeaderHeight);
-            rectGlyph = new Rectangle(Bound.X + 10, Bound.Y + 3, 15, 15);
-            rectText = new Rectangle(Bound.X + 30, Bound.Y + 3, Bound.Width - 40, rectHeader.Height - 5);
+		public void Paint(GraphContext context)
+		{
+			context.DrawCell(style, null, bound, bound, CellDisplayState.Default);
 
-            context.DrawCell(styleHeader, Text, rectHeader, rectText, CellDisplayState.Default);
-            context.DrawGlyph(styleHeader, rectGlyph, Glyph);
-            context.DrawGlyph(styleHeader, rectExpand, Expand ? GlyphType.ChevronDown : GlyphType.ChevronRight);
-        }
+			GetExpandBound(Bound);
 
-        public Rectangle GetExpandBound(Rectangle bound)
-        {
-            rectExpand = new Rectangle(bound.Right - 30, bound.Y + 4, 16, 16);
-            return rectExpand;
-        }
+			rectHeader = new Rectangle(Bound.X + 6, Bound.Y + 0, Bound.Width - 12, this.HeaderHeight);
+			rectGlyph = new Rectangle(Bound.X + 10, Bound.Y + 3, 15, 15);
+			rectText = new Rectangle(Bound.X + 30, Bound.Y + 3, Bound.Width - 40, rectHeader.Height - 5);
 
-        protected override void OnPropertyChanged(string property)
-        {
-            switch (property)
-            {
-                case nameof(Visible):
-                    if (control != null)
-                        control.Visible = visible && expand;
-                    break;
-                case nameof(Row):
-                case nameof(Col):
-                    if (Map != null)
-                        Map.Sort();
-                    break;
+			context.DrawCell(styleHeader, Text, rectHeader, rectText, CellDisplayState.Default);
+			context.DrawGlyph(styleHeader, rectGlyph, Glyph);
+			context.DrawGlyph(styleHeader, rectExpand, Expand ? GlyphType.ChevronDown : GlyphType.ChevronRight);
+		}
 
-            }
-            base.OnPropertyChanged(property);
-        }
+		public Rectangle GetExpandBound(Rectangle bound)
+		{
+			rectExpand = new Rectangle(bound.Right - 30, bound.Y + 4, 16, 16);
+			return rectExpand;
+		}
 
-        public override bool FillHeight
-        {
-            get { return base.FillHeight && expand; }
-            set { base.FillHeight = value; }
-        }
+		protected override void OnPropertyChanged(string property)
+		{
+			switch (property)
+			{
+				case nameof(Visible):
+					if (control != null)
+						control.Visible = visible && expand;
+					break;
+				case nameof(Row):
+				case nameof(Col):
+					if (Map != null)
+						Map.Sort();
+					break;
 
-        public void Dispose()
-        {
-            if (control != null)
-                control.Dispose();
-        }
+			}
+			base.OnPropertyChanged(property);
+		}
 
-        public void Localizing()
-        {
-            if (control is ILocalizable)
-                ((ILocalizable)control).Localize();
-        }
-    }
+		public override bool FillHeight
+		{
+			get { return base.FillHeight && expand; }
+			set { base.FillHeight = value; }
+		}
+
+		public string Text
+		{
+			get => text;
+			set
+			{
+				text = value;
+				TextChanged?.Invoke(this, EventArgs.Empty);
+			}
+		}
+
+		public void Dispose()
+		{
+			if (control != null)
+				control.Dispose();
+		}
+
+		public void Localize()
+		{
+			if (GroupBox != null)
+				GuiService.Localize(this, GroupBox.Name, name);
+			if (control is ILocalizable)
+				((ILocalizable)control).Localize();
+		}
+	}
 
 }
 
