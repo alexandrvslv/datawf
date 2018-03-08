@@ -17,7 +17,7 @@ namespace DataWF.Gui
 			items = new ToolLayoutMap() { Bar = this };
 		}
 
-		public Toolsbar(IEnumerable<ToolItem> items) : this()
+		public Toolsbar(params ToolItem[] items) : this()
 		{
 			Items.AddRange(items);
 		}
@@ -110,12 +110,12 @@ namespace DataWF.Gui
 				if (hitItem != null)
 				{
 					hitItem.OnMouseEntered(EventArgs.Empty);
-                    if (!hitItem.DisplayStyle.HasFlag(ToolItemDisplayStyle.Text))
-                    {
-                        TooltipText = hitItem.Text;
-                        //Debug.WriteLine($"Tooltip Text {TooltipText}");
-                    }
-                }
+					if (!hitItem.DisplayStyle.HasFlag(ToolItemDisplayStyle.Text))
+					{
+						TooltipText = hitItem.Text;
+						//Debug.WriteLine($"Tooltip Text {TooltipText}");
+					}
+				}
 				cacheHitItem = hitItem;
 			}
 		}

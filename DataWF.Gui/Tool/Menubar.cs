@@ -14,7 +14,7 @@ namespace DataWF.Gui
 			Bar.Items.GrowMode = LayoutGrowMode.Vertical;
 		}
 
-		public Menubar(IEnumerable<ToolItem> items) : this()
+		public Menubar(params ToolItem[] items) : this()
 		{
 			Items.AddRange(items);
 		}
