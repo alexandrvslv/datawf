@@ -222,9 +222,17 @@ namespace DataWF.Gui
 			LayoutMapHelper.Move(moved, destination, anch, builGroup);
 		}
 
-		public virtual void Add(ILayoutItem column)
+		public virtual void AddRange(IEnumerable<ILayoutItem> items)
 		{
-			LayoutMapHelper.Add(this, column, GrowMode);
+			foreach (var item in items)
+			{
+				Add(item);
+			}
+		}
+
+		public virtual void Add(ILayoutItem item)
+		{
+			LayoutMapHelper.Add(this, item, GrowMode);
 		}
 
 		public virtual void Insert(int index, ILayoutItem item)
