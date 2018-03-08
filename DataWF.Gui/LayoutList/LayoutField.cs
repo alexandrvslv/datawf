@@ -161,8 +161,8 @@ namespace DataWF.Gui
             owner = null;
             categoryName = null;
             invoker = null;
-            _childs.Clear();
-            _childs = null;
+            nodes.Clear();
+            nodes = null;
         }
 
         public object Clone()

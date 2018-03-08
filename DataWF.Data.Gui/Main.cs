@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Threading;
 using Xwt;
 using System.Linq;
+using Mono.Cecil;
 
 namespace DataWF.Data.Gui
 {
@@ -19,7 +20,7 @@ namespace DataWF.Data.Gui
 		private Menubar contextView;
 		private Menubar contextProjectCreate;
 		private StatusIcon icon;
-		private Toolsbar menuStrip;
+		private Toolsbar bar;
 		private ToolMenuItem menuProject;
 		private ToolMenuItem menuProjectProps;
 		private ToolMenuItem menuProjectCreate;
@@ -96,13 +97,18 @@ namespace DataWF.Data.Gui
 			string[] asseblies = Directory.GetFiles(Helper.GetDirectory(), "*.dll");
 			foreach (string dll in asseblies)
 			{
-				if (dll.Contains("Gui"))
+				AssemblyDefinition assemblyDefinition = null;
+				try { assemblyDefinition = AssemblyDefinition.ReadAssembly(dll); }
+				catch { continue; }
+				var moduleAttribute = assemblyDefinition.CustomAttributes
+														.Where(item => item.AttributeType.Name == nameof(AssemblyMetadataAttribute))
+														.Select(item => item.ConstructorArguments.Select(sitem => sitem.Value.ToString()).ToArray());
+				if (moduleAttribute.Any(item => item[0] == "gui"))
 				{
 					try
 					{
 						var assembly = Assembly.LoadFile(dll);
 						CheckAssembly(assembly);
-						menuView.DropDown.Items.Add(new ToolSeparator());
 					}
 					catch (Exception ex)
 					{
@@ -312,20 +318,22 @@ namespace DataWF.Data.Gui
 
 		private void CheckAssembly(Assembly assembly)
 		{
-			Type[] types = assembly.GetTypes();
+			var hasModule = false;
 			Helper.Logs.Add(new StateInfo("Main Form", "Assembly Loadind", assembly.FullName));
-			foreach (Type type in types)
+			foreach (Type type in assembly.GetExportedTypes())
 			{
 				if (TypeHelper.IsInterface(type, typeof(IDockContent)))
 				{
 					Helper.Logs.Add(new StateInfo("Main Form", "Module Initialize", type.FullName));
 					try
 					{
-						object[] attrs = type.GetCustomAttributes(typeof(ModuleAttribute), false);
-						if (attrs.Length > 0 && ((ModuleAttribute)attrs[0]).IsModule)
+						foreach (var attribute in type.GetCustomAttributes<ModuleAttribute>(false))
 						{
-							IDockContent newitem = (IDockContent)EmitInvoker.CreateObject(type, true);
-							AddModuleWidget(newitem);
+							if (attribute.IsModule)
+							{
+								AddModuleWidget((IDockContent)EmitInvoker.CreateObject(type, true));
+								hasModule = true;
+							}
 						}
 					}
 					catch (Exception ex)
@@ -337,8 +345,7 @@ namespace DataWF.Data.Gui
 				{
 					try
 					{
-						object[] attrs = type.GetCustomAttributes(typeof(ProjectAttribute), false);
-						foreach (ProjectAttribute attr in attrs)
+						foreach (ProjectAttribute attr in type.GetCustomAttributes<ProjectAttribute>(false))
 						{
 							ProjectType ptype = new ProjectType(type, attr);
 							contextProjectCreate.Items.Add(BuildButton(ptype));
@@ -350,6 +357,10 @@ namespace DataWF.Data.Gui
 						Helper.Logs.Add(new StateInfo("Main Form", ex.Message, ex.StackTrace, StatusType.Error));
 					}
 				}
+			}
+			if (hasModule)
+			{
+				menuView.DropDown.Items.Add(new ToolSeparator());
 			}
 		}
 
@@ -649,15 +660,6 @@ namespace DataWF.Data.Gui
 		/// </summary>
 		private void InitializeComponent()
 		{
-			contextView = new Menubar();
-			menuView = new ToolMenuItem();
-			contextProjectCreate = new Menubar();
-			menuProjectCreate = new ToolMenuItem();
-			menuStrip = new Toolsbar();
-			menuProject = new ToolMenuItem();
-			menuProjectOpen = new ToolMenuItem();
-			menuProjectProps = new ToolMenuItem();
-			menuProjectSave = new ToolMenuItem();
 			menuProjectSaveAs = new ToolMenuItem();
 			menuProjectRecent = new ToolMenuItem();
 			menuProjectClose = new ToolMenuItem();
@@ -680,44 +682,16 @@ namespace DataWF.Data.Gui
 			dock = new DockBox();
 			icon = Application.CreateStatusIcon();
 
-			contextView.Name = "contextView";
+			contextView = new Menubar { Name = "contextView" };
 
-			menuView.DropDown = contextView;
-			menuView.Name = "menuView";
+			menuView = new ToolMenuItem { DropDown = contextView, Name = "View" };
 
-			contextProjectCreate.Name = "contextProjectCreate";
+			contextProjectCreate = new Menubar { Name = "ProjectCreate" };
 
-			menuProjectCreate.DropDown = contextProjectCreate;
-			menuProjectCreate.Name = "menuProjectCreate";
-
-			menuStrip.Items.Add(menuProject);
-			menuStrip.Items.Add(menuEdit);
-			menuStrip.Items.Add(menuView);
-			menuStrip.Items.Add(menuWindow);
-			menuStrip.Items.Add(menuHelp);
-			menuStrip.Name = "menuStrip";
-
-			menuProject.DropDown.Items.Add(menuProjectCreate);
-			menuProject.DropDown.Items.Add(menuProjectOpen);
-			menuProject.DropDown.Items.Add(menuProjectProps);
-			menuProject.DropDown.Items.Add(menuProjectSave);
-			menuProject.DropDown.Items.Add(menuProjectSaveAs);
-			menuProject.DropDown.Items.Add(menuProjectRecent);
-			menuProject.DropDown.Items.Add(menuProjectClose);
-			menuProject.DropDown.Items.Add(menuProjectExit);
-			menuProject.Name = "menuProject";
-			menuProject.Text = "Project";
-
-			menuProjectOpen.Name = "menuProjectOpen";
-			menuProjectOpen.Text = "Open";
-			menuProjectOpen.Click += ToolProjectOpenOnClick;
-
-			menuProjectProps.Name = "menuProjectProps";
-			menuProjectProps.Click += ToolProjectPropsOnClick;
-
-			menuProjectSave.Name = "menuProjectSave";
-			menuProjectSave.Text = "Save";
-			menuProjectSave.Click += ToolProjectSaveOnClick;
+			menuProjectCreate = new ToolMenuItem { DropDown = contextProjectCreate, Name = "Create" };
+			menuProjectOpen = new ToolMenuItem(ToolProjectOpenOnClick) { Name = "Open" };
+			menuProjectProps = new ToolMenuItem(ToolProjectPropsOnClick) { Name = "Properties" };
+			menuProjectSave = new ToolMenuItem(ToolProjectSaveOnClick) { Name = "Save" };
 
 			menuProjectSaveAs.Name = "menuProjectSaveAs";
 			menuProjectSaveAs.Text = "SaveAs";
@@ -732,6 +706,31 @@ namespace DataWF.Data.Gui
 			menuProjectExit.Name = "menuProjectExit";
 			menuProjectExit.Text = "Exit";
 			menuProjectExit.Click += ToolExitOnClick;
+
+			menuProject = new ToolMenuItem
+			{
+				DropDown = new Menubar(
+					menuProjectCreate,
+					menuProjectOpen,
+					menuProjectProps,
+					menuProjectSave,
+					menuProjectSaveAs,
+					menuProjectRecent,
+					menuProjectClose,
+					menuProjectExit)
+				{
+					Name = "Project"
+				}
+			};
+
+			bar = new Toolsbar(
+				menuProject,
+				menuEdit,
+				menuView,
+				menuWindow,
+				menuHelp)
+			{ Name = "MainBar" };
+
 
 			menuEdit.DropDown.Items.Add(menuEditMain);
 			menuEdit.DropDown.Items.Add(menuEditLocalize);
@@ -790,7 +789,7 @@ namespace DataWF.Data.Gui
 			//icon.Image = Image.FromResource(GetType(), "datawf.ico"); ;
 
 			var vbox = new VBox();
-			vbox.PackStart(menuStrip, false, false);
+			vbox.PackStart(bar, false, false);
 			vbox.PackStart(dock, true, true);
 			vbox.PackStart(statusBar, false, false);
 			Content = vbox;

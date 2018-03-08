@@ -26,32 +26,30 @@ namespace DataWF.Module.FlowGui
 		public FlowExplorer()
 			: base()
 		{
-			contextTools = new Menubar(new ToolItem[]{
+			contextTools = new Menubar(
 				new ToolMenuItem(ToolMainRefreshClick) { Name = "Refresh", Glyph = GlyphType.Refresh },
 				new ToolMenuItem(ToolGenerateDBClick) { Name = "Generate database", Glyph = GlyphType.Database },
-				new ToolMenuItem(ToolStatClick) { Name = "Stats", Glyph = GlyphType.Link }})
+				new ToolMenuItem(ToolStatClick) { Name = "Stats", Glyph = GlyphType.Link })
 			{ Name = "FlowExplorer" };
 
-			contextAdd = new Menubar(new ToolItem[]{
+			contextAdd = new Menubar(
 				new ToolMenuItem { Name = "Template", Sensitive = Template.DBTable?.Access.Create ?? false, Glyph = GlyphType.Book },
 				new ToolMenuItem { Name = "Template Attribute", Sensitive = TemplateParam.DBTable?.Access.Create ?? false, Glyph = GlyphType.Columns },
-				new ToolMenuItem { Name = "Work", Sensitive = Work.DBTable?.Access.Create ?? false, Glyph =  GlyphType.Building},
+				new ToolMenuItem { Name = "Work", Sensitive = Work.DBTable?.Access.Create ?? false, Glyph = GlyphType.Building },
 				new ToolMenuItem { Name = "Work Stage", Sensitive = Stage.DBTable?.Access.Create ?? false, Glyph = GlyphType.Flickr },
-				new ToolMenuItem { Name = "Stage Parameter", Sensitive = StageParam.DBTable?.Access.Create ?? false, Glyph =GlyphType.Columns  },
-				new ToolMenuItem { Name = "Group", Sensitive = UserGroup.DBTable?.Access.Create ?? false, Glyph =GlyphType.UserMd },
-				new ToolMenuItem { Name = "User", Sensitive = User.DBTable?.Access.Create ?? false, Glyph =  GlyphType.User },
-				new ToolMenuItem { Name = "Scheduler", Sensitive = Scheduler.DBTable?.Access.Create ?? false, Glyph = GlyphType.ClockO }})
+				new ToolMenuItem { Name = "Stage Parameter", Sensitive = StageParam.DBTable?.Access.Create ?? false, Glyph = GlyphType.Columns },
+				new ToolMenuItem { Name = "Group", Sensitive = UserGroup.DBTable?.Access.Create ?? false, Glyph = GlyphType.UserMd },
+				new ToolMenuItem { Name = "User", Sensitive = User.DBTable?.Access.Create ?? false, Glyph = GlyphType.User },
+				new ToolMenuItem { Name = "Scheduler", Sensitive = Scheduler.DBTable?.Access.Create ?? false, Glyph = GlyphType.ClockO })
 			{ Name = "FlowExplorer" };
 
-			barMain = new Toolsbar(new[]{
-				new ToolDropDown { Name = "Add", ForeColor = Colors.DarkGreen, DropDown = contextAdd, Glyph =  GlyphType.PlusCircle},
+			barMain = new Toolsbar(
+				new ToolDropDown { Name = "Add", ForeColor = Colors.DarkGreen, DropDown = contextAdd, Glyph = GlyphType.PlusCircle },
 				new ToolItem(ToolMainRemoveClick) { Name = "Remove", ForeColor = Colors.DarkRed, Glyph = GlyphType.MinusCircle },
 				new ToolItem(ToolMainCopyClick) { Name = "Copy", Glyph = GlyphType.CopyAlias },
-				new ToolDropDown { Name = "Tools", DropDown = contextTools, Glyph =  GlyphType.Wrench},
-				new ToolSearchEntry(ToolFilterTextChanged) { Name = "toolFilterText", FillWidth = true}})
-			{ Name = "FlowExplorer" };
-
-			DBService.DBSchemaChanged += OnDBSchemaChanged;
+				new ToolDropDown { Name = "Tools", DropDown = contextTools, Glyph = GlyphType.Wrench },
+				new ToolSearchEntry(ToolFilterTextChanged) { Name = "toolFilterText", FillWidth = true })
+			{ Name = "FlowExplorer" };         
 
 			se = new ListEditor();
 			se.List.RetriveCellEditor += OptionsGetCellEditor;
@@ -83,37 +81,7 @@ namespace DataWF.Module.FlowGui
 			Localize();
 		}
 
-		private void OnDBSchemaChanged(object sender, DBSchemaChangedArgs e)
-		{
-			try
-			{
-				if (e.Type == DDLType.Create)
-				{
-					//List<int> groups = FlowEnvir.GetGroups(FlowEnvir.Personal.User);
 
-					if (e.Item is DBTable && e.Item.Container != null)
-					{
-						var sgroup = GroupPermission.Get(null, e.Item.Schema);
-						var tgroup = GroupPermission.Get(sgroup, e.Item);
-
-						foreach (DBColumn column in ((DBTable)e.Item).Columns)
-						{
-							GroupPermission.Get(tgroup, column);
-						}
-					}
-					if (e.Item is DBColumn && e.Item.Container != null && ((DBColumn)e.Item).Table.Container != null)
-					{
-						var sgroup = GroupPermission.Get(null, e.Item.Schema);
-						var tgroup = GroupPermission.Get(sgroup, ((DBColumn)e.Item).Table);
-						GroupPermission.Get(tgroup, e.Item);
-					}
-				}
-			}
-			catch (Exception ex)
-			{
-				Helper.OnException(ex);
-			}
-		}
 
 		private ILayoutCellEditor OptionsGetCellEditor(object sender, object listItem, ILayoutCell cell)
 		{

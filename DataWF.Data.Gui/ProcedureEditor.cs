@@ -159,8 +159,8 @@ namespace DataWF.Data.Gui
             GuiService.Localize(toolRun, "ProcedureEditor", "Run", GlyphType.Play);
             GuiService.Localize(toolExport, "ProcedureEditor", "Export", GlyphType.FileCodeO);
             GuiService.Localize(this, "ProcedureEditor", "Procedure Editor", GlyphType.PuzzlePiece);
-            groupAttributes.Localizing();
-            groupParams.Localizing();
+            groupAttributes.Localize();
+            groupParams.Localize();
         }
 
         private void CaretPositionChanged(object sender, EventArgs e)

@@ -2192,7 +2192,7 @@ namespace DataWF.Gui
 		public virtual void SetNull(LayoutField f)
 		{
 			f.WriteValue(fieldSource, null);
-			foreach (LayoutField ff in f.Childs)
+			foreach (LayoutField ff in f.Nodes)
 				SetNull(ff);
 		}
 
@@ -3842,7 +3842,7 @@ namespace DataWF.Gui
 			if (listMode == LayoutListMode.Fields)
 			{
 				LayoutField field = (LayoutField)listSource[e.HitTest.Index];
-				if (field.IsCompaund && field.Childs.Count == 0)
+				if (field.IsCompaund && field.Nodes.Count == 0)
 				{
 					var arg = new LayoutListPropertiesArgs() { Cell = field };
 					OnGetProperties(arg);

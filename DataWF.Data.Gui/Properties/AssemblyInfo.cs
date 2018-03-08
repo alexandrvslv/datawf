@@ -12,6 +12,7 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyCopyright("alexandr")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
+[assembly: AssemblyMetadata("gui", "data")]
 
 // The assembly version has the format "{Major}.{Minor}.{Build}.{Revision}".
 // The form "{Major}.{Minor}.*" will automatically update the build and revision,

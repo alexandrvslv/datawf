@@ -698,7 +698,7 @@ namespace DataWF.Module.FlowGui
 				editor.Text = param.Name == null || param.Name.Length == 0 ? foreign.Table.ToString() : param.Name;
 				editor.TableView = view;
 				editor.OwnerColumn = foreign.Column;
-				editor.OpenMode = TableFormMode.Referencing;
+				editor.OpenMode = TableEditorMode.Referencing;
 				//editor.ToolSave = false;
 				editor.SelectionChanged += OnReferenceTableRowSelected;
 

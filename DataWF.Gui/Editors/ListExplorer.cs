@@ -219,7 +219,7 @@ namespace DataWF.Gui
             {
                 e.Cancel = true;
 
-                foreach (ListExplorerNode node in Tree.SelectedNode.Childs)
+                foreach (ListExplorerNode node in Tree.SelectedNode.Nodes)
                 {
                     if (node.Tag == e.Item)
                     {

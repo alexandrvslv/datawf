@@ -24,16 +24,16 @@ namespace DataWF.Data.Gui
                 Name = info.Table.Name + info.Column?.Name + info.Item?.PrimaryId;
                 switch (info.Mode)
                 {
-                    case TableFormMode.Item:
+                    case TableEditorMode.Item:
                         Text = info.Item.ToString();
                         break;
-                    case TableFormMode.Table:
+                    case TableEditorMode.Table:
                         Text = info.Table.ToString();
                         break;
-                    case TableFormMode.Referencing:
+                    case TableEditorMode.Referencing:
                         Text = string.Format("{0}({1})", info.Table, info.Column);
                         break;
-                    case TableFormMode.Reference:
+                    case TableEditorMode.Reference:
                         Text = string.Format("{0}({1})", info.Table, info.Item);
                         break;
                 }

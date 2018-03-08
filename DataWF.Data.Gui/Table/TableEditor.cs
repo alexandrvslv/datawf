@@ -11,7 +11,7 @@ using System.Text;
 
 namespace DataWF.Data.Gui
 {
-	public enum TableControlStatus
+	public enum TableEditorStatus
 	{
 		Adding,
 		Clone,
@@ -19,7 +19,7 @@ namespace DataWF.Data.Gui
 		Default
 	}
 
-	public enum TableFormMode
+	public enum TableEditorMode
 	{
 		Table,
 		Item,
@@ -42,8 +42,8 @@ namespace DataWF.Data.Gui
 		private DBItem clonedRow = null;
 		private DBItem searchRow = null;
 		private DBItem newRow = null;
-		private TableControlStatus status = TableControlStatus.Default;
-		private TableFormMode mode = TableFormMode.Empty;
+		private TableEditorStatus status = TableEditorStatus.Default;
+		private TableEditorMode mode = TableEditorMode.Empty;
 		private bool _insert = false;
 		private bool _update = false;
 		private bool _delete = false;
@@ -134,7 +134,7 @@ namespace DataWF.Data.Gui
 				cont.Target = new TableEditor();
 				cont.Label.Text = column.ReferenceTable.ToString();
 				//cont.Closing += new ToolStripDropDownClosingEventHandler(cont_Closing);
-				((TableEditor)cont.Target).Initialize(column.ReferenceTable.CreateItemsView("", DBViewKeys.None, DBStatus.Current), null, column, TableFormMode.Reference, false);
+				((TableEditor)cont.Target).Initialize(column.ReferenceTable.CreateItemsView("", DBViewKeys.None, DBStatus.Current), null, column, TableEditorMode.Reference, false);
 				((TableEditor)cont.Target).ItemSelect += OnRowSelected;
 				((MenuItem)sender).Tag = cont;
 				//((ToolStripDropDownButton)e.ClickedItem).DropDown = e.ClickedItem.Tag as ToolForm;
@@ -208,7 +208,7 @@ namespace DataWF.Data.Gui
 			if (item is DBItem && ((DBItem)item).DBState == DBUpdateState.Default)
 			{
 				var explorer = new TableExplorer();
-				explorer.Initialize((DBItem)item, TableFormMode.Item, false);
+				explorer.Initialize((DBItem)item, TableEditorMode.Item, false);
 				explorer.ShowDialog(this);
 			}
 			else
@@ -219,7 +219,7 @@ namespace DataWF.Data.Gui
 
 		private void FieldsCellValueChanged(object sender, LayoutValueEventArgs e)
 		{
-			if (ListMode && Status != TableControlStatus.Default)
+			if (ListMode && Status != TableEditorStatus.Default)
 			{
 				LayoutList flist = (LayoutList)sender;
 				QQuery Expression = new QQuery(string.Empty, Table);
@@ -406,17 +406,17 @@ namespace DataWF.Data.Gui
 		}
 
 		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public TableControlStatus Status
+		public TableEditorStatus Status
 		{
 			get { return status; }
 			set
 			{
 				status = value;
-				if (value != TableControlStatus.Search)
+				if (value != TableEditorStatus.Search)
 					Updated?.Invoke(this, EventArgs.Empty);
 				switch (status)
 				{
-					case TableControlStatus.Adding:
+					case TableEditorStatus.Adding:
 						newRow = (DBItem)TableView.NewItem();
 						if (OwnerRow != null && baseColumn != null)
 						{
@@ -429,7 +429,7 @@ namespace DataWF.Data.Gui
 						((LayoutList)toolWindow.Target).FieldSource = newRow;
 						toolWindow.Show(bar, toolAdd.Bound.BottomLeft);
 						break;
-					case TableControlStatus.Clone:
+					case TableEditorStatus.Clone:
 						clonedRow = Selected;
 						if (newRow == null || newRow.Attached)
 						{
@@ -438,15 +438,15 @@ namespace DataWF.Data.Gui
 						((LayoutList)toolWindow.Target).FieldSource = newRow;
 						toolCopy.Sensitive = true;
 						break;
-					case TableControlStatus.Search:
+					case TableEditorStatus.Search:
 						if (searchRow == null)
 						{
 							searchRow = (DBItem)TableView.NewItem();
 						}
-						//rowControl.RowEditor.State = FeldEditorState.EditEmpty;                     
+						//rowControl.RowEditor.State = FeldEditorState.EditEmpty;
 						toolRemove.Sensitive = Table.Access.Delete;
 						break;
-					case TableControlStatus.Default:
+					case TableEditorStatus.Default:
 						OpenMode = OpenMode;
 						RowFilter = "";
 						break;
@@ -456,7 +456,7 @@ namespace DataWF.Data.Gui
 
 
 		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public TableFormMode OpenMode
+		public TableEditorMode OpenMode
 		{
 			get { return mode; }
 			set
@@ -465,10 +465,10 @@ namespace DataWF.Data.Gui
 				ReadOnly = ReadOnly;
 				switch (mode)
 				{
-					case TableFormMode.Table:
+					case TableEditorMode.Table:
 						ListMode = true;
 						break;
-					case TableFormMode.Item:
+					case TableEditorMode.Item:
 						ListMode = false;
 						foreach (MenuItemRelation item in refButton.DropDownItems)
 							item.Visible = false;
@@ -497,7 +497,7 @@ namespace DataWF.Data.Gui
 							}
 						}
 						break;
-					case TableFormMode.Referencing:
+					case TableEditorMode.Referencing:
 						ListMode = true;
 						list.AutoToStringSort = false;
 						if (baseColumn != null && baseRow != null)
@@ -505,7 +505,7 @@ namespace DataWF.Data.Gui
 							view.DefaultFilter = $"{baseColumn.Name} = {DBService.FormatToSqlText(baseRow.PrimaryId)}";
 						}
 						break;
-					case TableFormMode.Reference:
+					case TableEditorMode.Reference:
 						ListMode = true;
 						if (baseRow != null)
 						{
@@ -544,7 +544,7 @@ namespace DataWF.Data.Gui
 
 		public void Initialize(DBItem row, bool readOnly)
 		{
-			Initialize(null, row, null, TableFormMode.Item, readOnly);
+			Initialize(null, row, null, TableEditorMode.Item, readOnly);
 		}
 
 		public void Initialize(TableEditorInfo info)
@@ -552,13 +552,13 @@ namespace DataWF.Data.Gui
 			Initialize(info.TableView, info.Item, info.Column, info.Mode, info.ReadOnly);
 		}
 
-		public void Initialize(IDBTableView view, DBItem row, DBColumn ownColumn, TableFormMode openmode, bool readOnly)
+		public void Initialize(IDBTableView view, DBItem row, DBColumn ownColumn, TableEditorMode openmode, bool readOnly)
 		{
 			if (view != null)
 			{
 				switch (openmode)
 				{
-					case TableFormMode.Table:
+					case TableEditorMode.Table:
 						if (view.Table.IsCaching)
 							if (!view.Table.IsSynchronized)
 							{
@@ -566,7 +566,7 @@ namespace DataWF.Data.Gui
 								loader.Load(new QQuery(string.Empty, view.Table));
 							}
 						break;
-					case TableFormMode.Referencing:
+					case TableEditorMode.Referencing:
 						if (row == null)
 							view.Filter = view.Table.PrimaryKey.Name + "=0";
 						else
@@ -593,7 +593,7 @@ namespace DataWF.Data.Gui
 
 			// toolInsert.DropDownItems.Clear();
 
-			if (openmode == TableFormMode.Referencing)
+			if (openmode == TableEditorMode.Referencing)
 			{
 				for (int i = 0; i < Table.Columns.Count; i++)
 				{
@@ -619,19 +619,19 @@ namespace DataWF.Data.Gui
 
 			string selectdeRow = form.Selected == null ? "" : form.Selected.ToString();
 
-			if (form.OpenMode == TableFormMode.Table)
+			if (form.OpenMode == TableEditorMode.Table)
 				return name;
 
-			if (form.OpenMode == TableFormMode.Referencing)
+			if (form.OpenMode == TableEditorMode.Referencing)
 			{
 				string ownerColumnName = form.OwnerColumn.ToString();
 				return $"{name} ({ownerColumnName})";
 			}
 
-			if (form.OpenMode == TableFormMode.Reference)
+			if (form.OpenMode == TableEditorMode.Reference)
 				return $" ({name})";
 
-			if (form.OpenMode == TableFormMode.Item)
+			if (form.OpenMode == TableEditorMode.Item)
 				return $"{name} ({selectdeRow})";
 
 			return "";
@@ -663,7 +663,7 @@ namespace DataWF.Data.Gui
 
 		protected override void OnToolInsertClick(object sender, EventArgs e)
 		{
-			Status = TableControlStatus.Adding;
+			Status = TableEditorStatus.Adding;
 		}
 
 		protected override void OnToolRemovClick(object sender, EventArgs e)
@@ -681,7 +681,7 @@ namespace DataWF.Data.Gui
 			var window = new ToolWindow();
 			window.Target = text;
 			window.Mode = ToolShowMode.Dialog;
-			if (mode == TableFormMode.Referencing || mode == TableFormMode.Item)
+			if (mode == TableEditorMode.Referencing || mode == TableEditorMode.Item)
 			{
 				window.AddButton("Exclude", (object se, EventArgs arg) =>
 				{
@@ -743,7 +743,7 @@ namespace DataWF.Data.Gui
 		{
 			if (Selected == null)
 				return;
-			Status = TableControlStatus.Clone;
+			Status = TableEditorStatus.Clone;
 			toolWindow.Show(Bar, toolAdd.Bound.BottomLeft);
 		}
 
@@ -799,13 +799,13 @@ namespace DataWF.Data.Gui
 			{
 				question.SecondaryText = "Check";
 
-				if (Status == TableControlStatus.Search && list.ListSource.Count > 0)
+				if (Status == TableEditorStatus.Search && list.ListSource.Count > 0)
 				{
 					question.Text = Locale.Get("TableEditor", "Found duplicate records!\nContinee?");
 					if (MessageDialog.AskQuestion(ParentWindow, question) == Command.No)
 						return;
 				}
-				if (mode == TableFormMode.Referencing)
+				if (mode == TableEditorMode.Referencing)
 				{
 					if (bufRow[baseColumn].ToString() != OwnerRow.PrimaryId.ToString())
 					{
@@ -829,7 +829,7 @@ namespace DataWF.Data.Gui
 				if (bufRow.DBState != DBUpdateState.Default)
 					return;
 
-				if (status == TableControlStatus.Clone)
+				if (status == TableEditorStatus.Clone)
 				{
 					question.Text = Locale.Get("TableEditor", "Clone References?");
 					if (MessageDialog.AskQuestion(ParentWindow, question) == Command.Yes)
@@ -868,9 +868,9 @@ namespace DataWF.Data.Gui
 			//    if ((bufRow.DBState & DBRowState.Default) != DBRowState.Default)
 			//        return;
 			//}
-			Status = TableControlStatus.Default;
+			Status = TableEditorStatus.Default;
 			Selected = bufRow;
-			if (mode == TableFormMode.Reference)
+			if (mode == TableEditorMode.Reference)
 				OnItemSelect(new ListEditorEventArgs(bufRow));
 		}
 
@@ -950,7 +950,7 @@ namespace DataWF.Data.Gui
 		{
 			DBItem newRow = (DBItem)TableView.NewItem();
 			newRow.Status = DBStatus.New;
-			if (mode == TableFormMode.Referencing)
+			if (mode == TableEditorMode.Referencing)
 				newRow[baseColumn] = OwnerRow.PrimaryId;
 			TableView.ApplySort(null);
 			TableView.Add(newRow);

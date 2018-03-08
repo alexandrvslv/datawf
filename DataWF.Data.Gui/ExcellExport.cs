@@ -741,7 +741,7 @@ namespace DataWF.Data.Gui
                 if (listItem is Node && map != null)
                 {
                     var i = 0;
-                    foreach (var item in ((Node)listItem).Childs)
+                    foreach (var item in ((Node)listItem).Nodes)
                     {
                         WriteMapItem(map, i++, item, 0, 0, ref mr);
                     }

@@ -48,61 +48,18 @@ namespace DataWF.TestGui
 					e.Query,
 					e.Rezult is Exception ? StatusType.Error : StatusType.Information));
 			};
-			//Load();
-			// 
 
-			tools = new Toolsbar(new[] {
-				new ToolItem(FilesClick)
-				{
-					DisplayStyle = ToolItemDisplayStyle.Text,
-					Name = "Files"
-				},
-				new ToolItem(ListEditorClick)
-				{
-					DisplayStyle = ToolItemDisplayStyle.Text,
-					Name = "List Editor"
-				},
-				new ToolItem(ORMTestClick)
-				{
-					DisplayStyle = ToolItemDisplayStyle.Text,
-					Name = "ORM Test"
-				},
-				new ToolItem(TestInvokerClick)
-				{
-					DisplayStyle = ToolItemDisplayStyle.Text,
-					Name = "Test Invoker"
-				},
-				new ToolItem(LocalizeEditorClick)
-				{
-					DisplayStyle = ToolItemDisplayStyle.Text,
-					Name = "Localize Editor"
-				},
-				new ToolItem(SyntaxTextClick)
-				{
-					DisplayStyle = ToolItemDisplayStyle.Text,
-					Name = "Syntax Text"
-				},
-				new ToolItem(DiffTestClick)
-				{
-					DisplayStyle = ToolItemDisplayStyle.Text,
-					Name = "Diff Test"
-				},
-				new ToolItem(StyleEditorClick)
-				{
-					DisplayStyle = ToolItemDisplayStyle.Text,
-					Name = "StyleEditor"
-				},
-				new ToolItem(MonoTextEditorClick)
-				{
-					DisplayStyle = ToolItemDisplayStyle.Text,
-					Name = "MonoTextEditor"
-				},
-				new ToolItem(ODFClick)
-				{
-					DisplayStyle = ToolItemDisplayStyle.Text,
-					Name = "ODF"
-				}
-			})
+			tools = new Toolsbar(
+				new ToolItem(FilesClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Files" },
+				new ToolItem(ListEditorClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "List Editor" },
+				new ToolItem(ORMTestClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "ORM Test" },
+				new ToolItem(TestInvokerClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Test Invoker" },
+				new ToolItem(LocalizeEditorClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Localize Editor" },
+				new ToolItem(SyntaxTextClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Syntax Text" },
+				new ToolItem(DiffTestClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Diff Test" },
+				new ToolItem(StyleEditorClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "StyleEditor" },
+				new ToolItem(MonoTextEditorClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "MonoTextEditor" },
+				new ToolItem(ODFClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "ODF" })
 			{ Name = "FormTest" };
 
 			var logs = new LogExplorer();

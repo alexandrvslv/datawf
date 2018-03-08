@@ -156,7 +156,7 @@ namespace DataWF.TestGui
             ThreadPool.QueueUserWorkItem(p =>
             {
                 files.Clear();
-                foreach (var item in node.Childs)
+                foreach (var item in node.Nodes)
                     files.Add((FileItem)item.Tag);
 
                 var directory = (DirectoryInfo)((FileItem)node.Tag).Info;
@@ -183,9 +183,9 @@ namespace DataWF.TestGui
                                        Helper.LengthFormat(drive.TotalFreeSpace),
                                        Helper.LengthFormat(drive.TotalSize));
                         statusLablel.Text = text;
-                        for (int i = 0; i < current.Childs.Count; i++)
-                            if (!current.Childs[i].Check)
-                                CheckSubDirectory(current.Childs[i]);
+                        for (int i = 0; i < current.Nodes.Count; i++)
+                            if (!current.Nodes[i].Check)
+                                CheckSubDirectory(current.Nodes[i]);
 
                         LoadFolder(current);
                     }

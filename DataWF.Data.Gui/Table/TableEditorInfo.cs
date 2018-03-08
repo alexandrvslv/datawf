@@ -8,11 +8,11 @@
 
         public IDBTableView TableView { get; set; }
 
-        public TableFormMode Mode { get; set; }
+        public TableEditorMode Mode { get; set; }
 
         public bool ReadOnly { get; set; }
 
-        public TableControlStatus Status { get; set; }
+        public TableEditorStatus Status { get; set; }
 
         public DBTable Table { get; set; }
 

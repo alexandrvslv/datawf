@@ -35,7 +35,7 @@ namespace DataWF.Data.Gui
         {
             if (Current != null)
             {
-                foreach (TableExplorerNode table in Current.Childs)
+                foreach (TableExplorerNode table in Current.Nodes)
                 {
                     if (table.Name == e.Relation.Name)
                     {
@@ -46,18 +46,18 @@ namespace DataWF.Data.Gui
             }
         }
 
-        public void Initialize(DBItem row, TableFormMode openmode, bool readOnly)
+        public void Initialize(DBItem row, TableEditorMode openmode, bool readOnly)
         {
             Initialize(row.Table, row, null, openmode, readOnly);
         }
 
-        public void Initialize(DBTable table, DBItem row, DBColumn ownColumn, TableFormMode openmode, bool readOnly)
+        public void Initialize(DBTable table, DBItem row, DBColumn ownColumn, TableEditorMode openmode, bool readOnly)
         {
             if (Name == "")
                 Name = table.Name + ownColumn?.Name;
 
             TableExplorerNode node = null;
-            if (openmode == TableFormMode.Item)
+            if (openmode == TableEditorMode.Item)
             {
                 node = SelectRow(null, table, row, ownColumn, readOnly);
             }
@@ -69,7 +69,7 @@ namespace DataWF.Data.Gui
             Current = node;
         }
 
-        public TableExplorerNode InitToolTable(DBTable table, DBItem row, DBColumn ownColumn, TableFormMode openmode, bool readOnly)
+        public TableExplorerNode InitToolTable(DBTable table, DBItem row, DBColumn ownColumn, TableEditorMode openmode, bool readOnly)
         {
             TableExplorerNode node = Find(table, ownColumn, row);
             if (node == null)
@@ -79,7 +79,7 @@ namespace DataWF.Data.Gui
                     Info = new TableEditorInfo()
                     {
                         Table = table,
-                        TableView = openmode == TableFormMode.Item ? null : table.CreateItemsView("", DBViewKeys.None, DBStatus.Current),
+                        TableView = openmode == TableEditorMode.Item ? null : table.CreateItemsView("", DBViewKeys.None, DBStatus.Current),
                         Item = row,
                         Column = ownColumn,
                         Mode = openmode,
@@ -105,7 +105,7 @@ namespace DataWF.Data.Gui
             {
                 base.OnNodeCheck(node);
             }
-            else if (tableNode.Info.Mode == TableFormMode.Item)
+            else if (tableNode.Info.Mode == TableEditorMode.Item)
             {
                 int index = 0;
                 foreach (DBForeignKey key in tableNode.Info.Item.Table.GetChildRelations())
@@ -113,7 +113,7 @@ namespace DataWF.Data.Gui
                     var refNode = InitToolTable(key.Table,
                                                       tableNode.Info.Item,
                                                       key.Column,
-                                                      TableFormMode.Referencing,
+                                                      TableEditorMode.Referencing,
                                                       TableEditor.ReadOnly);
                     refNode.ToolParent = tableNode;
                     refNode.Index = index++;
@@ -125,11 +125,11 @@ namespace DataWF.Data.Gui
 
         public TableExplorerNode SelectRow(TableExplorerNode owner, DBTable table, DBItem row, DBColumn column, bool readOnly)
         {
-            var node = InitToolTable(table, row, column, TableFormMode.Item, readOnly);
+            var node = InitToolTable(table, row, column, TableEditorMode.Item, readOnly);
             if (node.ToolParent == null)
                 node.ToolParent = owner;
             if (owner != null)
-                node.Index = owner.Childs.Count - 1;
+                node.Index = owner.Nodes.Count - 1;
             Current = node;
             return node;
         }
@@ -179,7 +179,7 @@ namespace DataWF.Data.Gui
         {
             if (node == null)
                 return;
-            foreach (var child in node.Childs)
+            foreach (var child in node.Nodes)
                 DisposeNode(child as TableExplorerNode);
             node.Dispose();
         }
@@ -188,22 +188,22 @@ namespace DataWF.Data.Gui
         {
             if (node == null)
                 return false;
-            for (int i = 0; i < node.Childs.Count;)
+            for (int i = 0; i < node.Nodes.Count;)
             {
-                var tnch = node.Childs[i];
+                var tnch = node.Nodes[i];
                 if (!CloseNode(tnch as TableExplorerNode))
                     return false;
                 i++;
             }
             var info = node.Info;
-            if ((info.TableView != null && info.TableView.IsEdited) || (info.Mode == TableFormMode.Item && info.Item != null && info.Item.IsChanged))
+            if ((info.TableView != null && info.TableView.IsEdited) || (info.Mode == TableEditorMode.Item && info.Item != null && info.Item.IsChanged))
             {
                 var command = MessageDialog.AskQuestion("Closing", Locale.Get("TableEditor", "Data was changed! Save?"), Command.No, Command.Yes);
                 if (command == Command.Yes)
                 {
                     if (info.TableView != null)
                         info.TableView.Save();
-                    else if (info.Item != null && node.Info.Mode == TableFormMode.Item)
+                    else if (info.Item != null && node.Info.Mode == TableEditorMode.Item)
                         info.Item.Save();
                 }
                 else if (command != Command.No)

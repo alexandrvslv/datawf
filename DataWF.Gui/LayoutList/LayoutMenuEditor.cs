@@ -6,294 +6,287 @@ using Xwt;
 
 namespace DataWF.Gui
 {
-    public class LayoutMenuEditor : VPanel
-    {
-        private LayoutList contextList;
-        private LayoutColumn contextColumn;
-        private LayoutField contextField;
+	public class LayoutMenuEditor : VPanel
+	{
+		private LayoutList contextList;
+		private LayoutColumn contextColumn;
+		private LayoutField contextField;
 
-        public ToolItem CellCheck = new ToolItem();
-        public ToolItem CellCopy = new ToolItem();
-        private ToolItem Reset = new ToolItem();
-        private ToolItem ColumnsSub = new ToolItem();
-        private ToolItem ViewMode = new ToolItem();
-        private ToolItem Print = new ToolItem();
+		public ToolItem CellCheck;
+		public ToolItem CellCopy;
+		private ToolItem Reset;
+		private ToolItem ColumnsSub = new ToolItem();
+		private ToolItem ViewMode;
+		private ToolItem Print;
 
-        private Toolsbar bar = new Toolsbar();
-        private GroupBox map = new GroupBox();
-        private LayoutList properties = new LayoutList();
-        private ListEditor columns = new ListEditor();
-        private ListEditor fields = new ListEditor();
-        private ListEditor sorts = new ListEditor();
+		private Toolsbar bar;
+		private GroupBox map;
+		private LayoutList options;
+		private ListEditor columns;
+		private ListEditor fields;
+		private ListEditor sorts;
 
-        public Menu MenuSubСolumns = new Menu();
-        private GroupBoxItem gProperties;
-        private GroupBoxItem gColumns;
-        private GroupBoxItem gFields;
-        private GroupBoxItem gSorters;
+		public Menu MenuSubСolumns = new Menu();
+		private GroupBoxItem gOptions;
+		private GroupBoxItem gColumns;
+		private GroupBoxItem gFields;
+		private GroupBoxItem gSorters;
 
-        public LayoutMenuEditor()
-        {
-            CellCopy.Click += OnMenuCellCopyClick;
-            CellCopy.Glyph = GlyphType.CopyAlias;
+		public LayoutMenuEditor()
+		{
+			CellCopy = new ToolItem(OnMenuCellCopyClick) { Name = "Copy", Glyph = GlyphType.CopyAlias };
+			CellCheck = new ToolItem(OnMenuCellCheckClick) { Name = "Check All", Glyph = GlyphType.CheckSquare };
+			ViewMode = new ToolItem(OnMenuViewModeClick) { Name = "Grid View", Glyph = GlyphType.PhotoAlias };
+			Reset = new ToolItem(OnMenuResetColumnsClick) { Name = "Reset", Glyph = GlyphType.Refresh };
+			Print = new ToolItem() { Glyph = GlyphType.Print };
 
-            CellCheck.Click += OnMenuCellCheckClick;
-            CellCheck.Glyph = GlyphType.CheckSquare;
+			bar = new Toolsbar(
+				ViewMode,
+				Reset,
+				Print,
+				new ToolSeparator(),
+				CellCopy,
+				CellCheck)
+			{ Name = "PListContext" };
 
-            ViewMode.Click += OnMenuViewModeClick;
-            ViewMode.Glyph = GlyphType.PhotoAlias;
+			options = new LayoutList() { EditMode = EditModes.ByClick };
 
-            Reset.Click += OnMenuResetColumnsClick;
-            Reset.Glyph = GlyphType.Refresh;
+			columns = new ListEditor(new LayoutList
+			{
+				GenerateColumns = false,
+				GenerateToString = false,
+				EditMode = EditModes.ByClick,
+				ListInfo = new LayoutListInfo(
+					new LayoutColumn { Name = nameof(LayoutColumn.Name) },
+					new LayoutColumn { Name = nameof(LayoutColumn.Text), FillWidth = true },
+					new LayoutColumn { Name = nameof(LayoutColumn.Visible) },
+					new LayoutColumn { Name = nameof(LayoutColumn.Format) })
+			});
 
-            Print.Glyph = GlyphType.Print;
+			fields = new ListEditor(new LayoutList
+			{
+				GenerateColumns = false,
+				GenerateToString = false,
+				EditMode = EditModes.ByClick,
+				ListInfo = new LayoutListInfo(
+					new LayoutColumn { Name = nameof(LayoutField.Name) },
+					new LayoutColumn { Name = nameof(LayoutField.Text), FillWidth = true },
+					new LayoutColumn { Name = nameof(LayoutField.Visible) },
+					new LayoutColumn { Name = nameof(LayoutField.Format) })
+			});
 
-            bar.Add(ViewMode);
-            bar.Add(Reset);
-            bar.Add(Print);
-            bar.Add(new ToolSeparator());
-            bar.Add(CellCopy);
-            bar.Add(CellCheck);
+			sorts = new ListEditor(new LayoutList
+			{
+				GenerateColumns = false,
+				GenerateToString = false,
+				EditMode = EditModes.ByClick,
+				ListInfo = new LayoutListInfo(
+					new LayoutColumn { Name = nameof(LayoutSort.Column), FillWidth = true },
+					new LayoutColumn { Name = nameof(LayoutSort.Direction) },
+					new LayoutColumn { Name = nameof(LayoutSort.IsGroup) })
+			});
 
-            properties.EditMode = EditModes.ByClick;
+			gColumns = new GroupBoxItem()
+			{
+				Name = "columns",
+				Widget = columns,
+				Text = "Columns",
+				FillHeight = true
+			};
+			gFields = new GroupBoxItem()
+			{
+				Name = "fields",
+				Widget = fields,
+				Text = "Fields",
+				Row = 1,
+				FillHeight = true
+			};
+			gSorters = new GroupBoxItem()
+			{
+				Name = "sorts",
+				Widget = sorts,
+				Text = "Sort",
+				Row = 2,
+				FillHeight = true,
+				Expand = false
+			};
+			var mColumns = new GroupBoxMap(gColumns, gFields, gSorters)
+			{
+				GroupBox = map,
+				Col = 1,
+				FillWidth = true
+			};
 
-            columns.List.GenerateColumns = false;
-            columns.List.GenerateToString = false;
-            columns.List.EditMode = EditModes.ByClick;
-            columns.List.ListInfo.Columns.Add(nameof(LayoutColumn.Name));
-            columns.List.ListInfo.Columns.Add(nameof(LayoutColumn.Text)).FillWidth = true;
-            columns.List.ListInfo.Columns.Add(nameof(LayoutColumn.Visible));
-            columns.List.ListInfo.Columns.Add(nameof(LayoutColumn.Format));
+			gOptions = new GroupBoxItem()
+			{
+				Name = "properties",
+				Widget = options,
+				Text = "Properties",
+				FillHeight = true,
+				Width = 340
+			};
 
-            fields.List.GenerateColumns = false;
-            fields.List.GenerateToString = false;
-            fields.List.EditMode = EditModes.ByClick;
-            fields.List.ListInfo.Columns.Add(nameof(LayoutField.Name));
-            fields.List.ListInfo.Columns.Add(nameof(LayoutField.Text)).FillWidth = true;
-            fields.List.ListInfo.Columns.Add(nameof(LayoutField.Visible));
-            fields.List.ListInfo.Columns.Add(nameof(LayoutField.Format));
+			map = new GroupBox(gOptions, mColumns);
 
-            sorts.List.GenerateColumns = false;
-            sorts.List.GenerateToString = false;
-            sorts.List.EditMode = EditModes.ByClick;
-            sorts.List.ListInfo.Columns.Add(nameof(LayoutSort.Column)).FillWidth = true;
-            sorts.List.ListInfo.Columns.Add(nameof(LayoutSort.Direction));
-            sorts.List.ListInfo.Columns.Add(nameof(LayoutSort.IsGroup));
+			PackStart(bar, false, false);
+			PackStart(map, true, true);
+		}
 
-            gProperties = new GroupBoxItem()
-            {
-                Name = "properties",
-                Widget = properties,
-                Text = "Properties",
-                FillHeight = true,
-                Width = 340
-            };
-            gColumns = new GroupBoxItem()
-            {
-                Name = "columns",
-                Widget = columns,
-                Text = "Columns",
-                FillHeight = true
-            };
-            gFields = new GroupBoxItem()
-            {
-                Name = "fields",
-                Widget = fields,
-                Text = "Fields",
-                Row = 1,
-                FillHeight = true
-            };
-            gSorters = new GroupBoxItem()
-            {
-                Name = "sorts",
-                Widget = sorts,
-                Text = "Sort",
-                Row = 2,
-                FillHeight = true
-            };
-            var mColumns = new GroupBoxMap(map)
-            {
-                Col = 1
-            };
+		public Toolsbar Bar
+		{
+			get { return bar; }
+		}
 
-            mColumns.Add(gColumns);
-            mColumns.Add(gFields);
-            mColumns.Add(gSorters);
-            mColumns.FillWidth = true;
+		public LayoutList ContextList
+		{
+			get => contextList;
+			set
+			{
+				contextList = value;
+				options.FieldSource = contextList?.ListInfo;
+				columns.DataSource = contextList?.ListInfo?.Columns.GetItems().Cast<LayoutColumn>().ToList();
+				sorts.DataSource = contextList?.ListInfo?.Sorters;
+				fields.DataSource = contextList?.FieldInfo?.Nodes;
+				gFields.Visible = fields.DataSource != null;
+				gColumns.Expand = fields.DataSource == null;
+			}
+		}
 
-            map.Add(gProperties);
-            map.Add(mColumns);
+		public LayoutColumn ContextColumn
+		{
+			get => contextColumn;
+			set
+			{
+				contextColumn = value;
+				columns.List.SelectedItem = value;
+			}
+		}
 
-            PackStart(bar, false, false);
-            PackStart(map, true, true);
-        }
+		public LayoutField ContextField
+		{
+			get => contextField;
+			set
+			{
+				contextField = value;
+				fields.List.SelectedItem = value;
+			}
+		}
 
-        public Toolsbar Bar
-        {
-            get { return bar; }
-        }
+		public void Localizing()
+		{
+			bar.Localize();
+			map.Localize();
+		}
 
-        public LayoutList ContextList
-        {
-            get => contextList;
-            set
-            {
-                contextList = value;
-                properties.FieldSource = contextList?.ListInfo;
-                columns.DataSource = contextList?.ListInfo?.Columns.GetItems().Cast<LayoutColumn>().ToList();
-                sorts.DataSource = contextList?.ListInfo?.Sorters;
-                fields.DataSource = contextList?.FieldInfo?.Nodes;
-                gFields.Visible = fields.DataSource != null;
-                gColumns.Expand = fields.DataSource == null;
-            }
-        }
+		private void MenuFieldResetOnClick(object sender, EventArgs e)
+		{
+			ContextList.ResetFields();
+		}
 
-        public LayoutColumn ContextColumn
-        {
-            get => contextColumn;
-            set
-            {
-                contextColumn = value;
-                columns.List.SelectedItem = value;
-            }
-        }
+		private void OnMenuResetColumnsClick(object sender, EventArgs e)
+		{
+			ContextList.ResetColumns();
+		}
 
-        public LayoutField ContextField
-        {
-            get => contextField;
-            set
-            {
-                contextField = value;
-                fields.List.SelectedItem = value;
-            }
-        }
+		private void OnMenuCellCheckClick(object sender, EventArgs e)
+		{
+			if (ContextColumn != null)
+			{
+				var editor = ContextColumn.GetEditor(ContextList.cacheHitt.HitTest.Item) as CellEditorCheck;
+				var group = ContextList.cacheHitt.HitTest.Group;
+				for (int i = group == null ? 0 : group.IndexStart; i < (group == null ? ContextList.ListSource.Count : group.IndexEnd + 1); i++)
+				{
+					if (i >= ContextList.ListSource.Count)
+					{
+						continue;
+					}
+					object item = ContextList.ListSource[i];
+					if (editor != null)
+					{
+						object value = ContextList.ReadValue(item, ContextColumn);
+						object format = editor.FormatValue(value);
+						object valueToWrite = null;
+						if (format.Equals(CheckedState.Checked))
+							valueToWrite = editor.ValueFalse;
+						else if (format.Equals(CheckedState.Unchecked))
+							valueToWrite = editor.ValueTrue;
+						else if (format.Equals(CheckedState.Indeterminate))
+							valueToWrite = editor.ValueFalse;
 
-        public void Localizing()
-        {
-            CellCopy.Text = Locale.Get("PListContext", "Copy");
-            CellCheck.Text = Locale.Get("PListContext", "Check All");
+						ContextList.WriteValue(item, valueToWrite, ContextColumn);
+					}
+					else if (item is ICheck)
+					{
+						((ICheck)item).Check = !((ICheck)item).Check;
+					}
+					ContextList.RefreshBounds(false);
+				}
+			}
+		}
 
-            ColumnsSub.Text = Locale.Get("PListContext", "Sub Columns");
-            ViewMode.Text = Locale.Get("PListContext", "View Mode");
-            Print.Text = Locale.Get("PListContext", "Print");
-            Reset.Text = Locale.Get("PListContext", "Reset");
+		private void OnMenuCellCopyClick(object sender, EventArgs e)
+		{
+			if (ContextColumn != null)
+			{
+				ContextList.CopyToClipboard(ContextColumn);
+			}
+		}
 
-            //FieldColumns.Text = Localize.Get("PListContext", "Columns");
-            //FieldHided.Text = Localize.Get("PListContext", "Hided Fields");
-            //FieldHide.Text = Localize.Get("PListContext", "Hide Field");
-            //FieldClear.Text = Localize.Get("PListContext", "Clear Fields");
-            //FieldReset.Text = Localize.Get("PListContext", "Reset Fields");        
-        }
+		private void OnMenuViewModeClick(object sender, EventArgs e)
+		{
+			ContextList.Mode = LayoutListMode.Grid;
+		}
 
-        private void MenuFieldResetOnClick(object sender, EventArgs e)
-        {
-            ContextList.ResetFields();
-        }
+		public void MenuSubColumnsItemClicked(object sender, EventArgs e)
+		{
+			var item = sender as ToolMenuItem;
+			item.Checked = !item.Checked;
+			LayoutColumn c = item.Tag as LayoutColumn;
+			if (c != null)
+			{
+				if (c.Map == null)
+					((LayoutColumnMap)ContextColumn.Map).InsertAfter(c, ContextColumn);
+				else
+					c.Visible = item.Checked;
+			}
+		}
 
-        private void OnMenuResetColumnsClick(object sender, EventArgs e)
-        {
-            ContextList.ResetColumns();
-        }
+		private void MenuFieldClearOnClick(object sender, EventArgs e)
+		{
+			if (ContextField != null)
+			{
+				ContextList.SetNull(ContextField);
+			}
+		}
 
-        private void OnMenuCellCheckClick(object sender, EventArgs e)
-        {
-            if (ContextColumn != null)
-            {
-                var editor = ContextColumn.GetEditor(ContextList.cacheHitt.HitTest.Item) as CellEditorCheck;
-                var group = ContextList.cacheHitt.HitTest.Group;
-                for (int i = group == null ? 0 : group.IndexStart; i < (group == null ? ContextList.ListSource.Count : group.IndexEnd + 1); i++)
-                {
-                    if (i >= ContextList.ListSource.Count)
-                    {
-                        continue;
-                    }
-                    object item = ContextList.ListSource[i];
-                    if (editor != null)
-                    {
-                        object value = ContextList.ReadValue(item, ContextColumn);
-                        object format = editor.FormatValue(value);
-                        object valueToWrite = null;
-                        if (format.Equals(CheckedState.Checked))
-                            valueToWrite = editor.ValueFalse;
-                        else if (format.Equals(CheckedState.Unchecked))
-                            valueToWrite = editor.ValueTrue;
-                        else if (format.Equals(CheckedState.Indeterminate))
-                            valueToWrite = editor.ValueFalse;
+		private void MenuFieldHideOnClick(object sender, EventArgs e)
+		{
+			if (ContextField != null)
+			{
+				ContextField.Visible = false;
+			}
+		}
 
-                        ContextList.WriteValue(item, valueToWrite, ContextColumn);
-                    }
-                    else if (item is ICheck)
-                    {
-                        ((ICheck)item).Check = !((ICheck)item).Check;
-                    }
-                    ContextList.RefreshBounds(false);
-                }
-            }
-        }
+		private void OnMenuSortGroupClick(object sender, EventArgs e)
+		{
+			if (ContextColumn != null)
+			{
+				ContextList.OnColumnGrouping(ContextColumn, ListSortDirection.Ascending);
+			}
+		}
 
-        private void OnMenuCellCopyClick(object sender, EventArgs e)
-        {
-            if (ContextColumn != null)
-            {
-                ContextList.CopyToClipboard(ContextColumn);
-            }
-        }
-
-        private void OnMenuViewModeClick(object sender, EventArgs e)
-        {
-            ContextList.Mode = LayoutListMode.Grid;
-        }
-
-        public void MenuSubColumnsItemClicked(object sender, EventArgs e)
-        {
-            var item = sender as ToolMenuItem;
-            item.Checked = !item.Checked;
-            LayoutColumn c = item.Tag as LayoutColumn;
-            if (c != null)
-            {
-                if (c.Map == null)
-                    ((LayoutColumnMap)ContextColumn.Map).InsertAfter(c, ContextColumn);
-                else
-                    c.Visible = item.Checked;
-            }
-        }
-
-        private void MenuFieldClearOnClick(object sender, EventArgs e)
-        {
-            if (ContextField != null)
-            {
-                ContextList.SetNull(ContextField);
-            }
-        }
-
-        private void MenuFieldHideOnClick(object sender, EventArgs e)
-        {
-            if (ContextField != null)
-            {
-                ContextField.Visible = false;
-            }
-        }
-
-        private void OnMenuSortGroupClick(object sender, EventArgs e)
-        {
-            if (ContextColumn != null)
-            {
-                ContextList.OnColumnGrouping(ContextColumn, ListSortDirection.Ascending);
-            }
-        }
-
-        private void OnMenuSortRemoveClick(object sender, EventArgs e)
-        {
-            LayoutSort sort = ContextList.ListInfo.Sorters.Find("Name", CompareType.Equal, ContextColumn.Name);
-            if (sort != null)
-            {
-                ContextList.ListInfo.Sorters.Remove(sort);
-                sort = ContextList.ListInfo.Sorters.Count > 0 ? ContextList.ListInfo.Sorters[0] : null;
-                if (sort == null)
-                    ContextList.OnColumnSort(string.Empty, ListSortDirection.Ascending);
-                else
-                    ContextList.OnColumnSort(sort.ColumnName, sort.Direction);
-            }
-        }
-    }
+		private void OnMenuSortRemoveClick(object sender, EventArgs e)
+		{
+			LayoutSort sort = ContextList.ListInfo.Sorters.Find("Name", CompareType.Equal, ContextColumn.Name);
+			if (sort != null)
+			{
+				ContextList.ListInfo.Sorters.Remove(sort);
+				sort = ContextList.ListInfo.Sorters.Count > 0 ? ContextList.ListInfo.Sorters[0] : null;
+				if (sort == null)
+					ContextList.OnColumnSort(string.Empty, ListSortDirection.Ascending);
+				else
+					ContextList.OnColumnSort(sort.ColumnName, sort.Direction);
+			}
+		}
+	}
 }

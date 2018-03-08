@@ -40,6 +40,7 @@
     <Compile Include="DataLogView.cs" />
     <Compile Include="ChangeViewer.cs" />
     <Compile Include="UserEditor.cs" />
+    <Compile Include="LoginPage.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj">

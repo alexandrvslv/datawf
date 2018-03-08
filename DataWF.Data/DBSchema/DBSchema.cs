@@ -25,221 +25,319 @@ using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using System.Xml;
 using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    public class DBSchema : DBSchemaItem, IFileSerialize
-    {
-        protected string connectionName = "";
-        protected string dataBase = "";
-        protected string fileName = "";
-        protected DBConnection connection;
+	public class DBSchema : DBSchemaItem, IFileSerialize
+	{
+		protected string connectionName = "";
+		protected string dataBase = "";
+		protected string fileName = "";
+		protected DBConnection connection;
 
-        public DBSchema()
-            : this(null)
-        { }
+		public DBSchema()
+			: this(null)
+		{ }
 
-        public DBSchema(string name)
-            : base(name)
-        {
-            DataBase = name;
-            Sequences = new DBSequenceList(this);
-            Tables = new DBTableList(this);
-            TableGroups = new DBTableGroupList(this);
-            Procedures = new DBProcedureList(this);
-        }
+		public DBSchema(string name)
+			: base(name)
+		{
+			DataBase = name;
+			Sequences = new DBSequenceList(this);
+			Tables = new DBTableList(this);
+			TableGroups = new DBTableGroupList(this);
+			Procedures = new DBProcedureList(this);
+		}
 
-        public DBSchema(string name, string fileName)
-            : this(name)
-        {
-            //Init();
-            FileName = fileName;
-            Serialization.Deserialize(fileName, this);
-        }
+		public DBSchema(string name, string fileName)
+			: this(name)
+		{
+			//Init();
+			FileName = fileName;
+			Serialization.Deserialize(fileName, this);
+		}
 
-        public DBTable GenerateTable(string name)
-        {
-            DBTable table = null;
-            table = Tables[name];
-            if (table == null)
-            {
-                table = new DBTable<DBItem>(name);
-                Tables.Add(table);
-            }
-            return table;
-        }
+		public DBTable GenerateTable(string name)
+		{
+			DBTable table = null;
+			table = Tables[name];
+			if (table == null)
+			{
+				table = new DBTable<DBItem>(name);
+				Tables.Add(table);
+			}
+			return table;
+		}
 
-        public void GenerateTables(IEnumerable<DBTableInfo> tables)
-        {
-            foreach (var tableInfo in tables)
-            {
-                var table = GenerateTable(tableInfo.Name);
-                table.Type = tableInfo.View ? DBTableType.View : DBTableType.Table;
-                table.GenerateColumns(tableInfo);
-            }
-        }
+		public void GenerateTables(IEnumerable<DBTableInfo> tables)
+		{
+			foreach (var tableInfo in tables)
+			{
+				var table = GenerateTable(tableInfo.Name);
+				table.Type = tableInfo.View ? DBTableType.View : DBTableType.Table;
+				table.GenerateColumns(tableInfo);
+			}
+		}
 
-        #region IFileSerialize Members
+		#region IFileSerialize Members
 
-        public void Save(string file)
-        {
-            Serialization.Serialize(this, file);
-        }
+		public void Save(string file)
+		{
+			Serialization.Serialize(this, file);
+		}
 
-        public void Save()
-        {
-            Save(FileName);
-        }
+		public void Save()
+		{
+			Save(FileName);
+		}
 
-        public void Load(string file)
-        {
-            Serialization.Deserialize(file, this);
-        }
+		public void Load(string file)
+		{
+			Serialization.Deserialize(file, this);
+		}
 
-        public void Load()
-        {
-            Load(FileName);
-        }
+		public void Load()
+		{
+			Load(FileName);
+		}
 
-        [Browsable(false)]
-        public string FileName
-        {
-            get
-            {
-                if (name == null || name.Length == 0)
-                    name = "schema";
-                if (fileName == "")
-                    fileName = "schems" + Path.DirectorySeparatorChar + name + ".xml";
-                return fileName;
-            }
-            set { fileName = value; }
-        }
-        #endregion
+		[Browsable(false)]
+		public string FileName
+		{
+			get
+			{
+				if (name == null || name.Length == 0)
+					name = "schema";
+				if (fileName == "")
+					fileName = "schems" + Path.DirectorySeparatorChar + name + ".xml";
+				return fileName;
+			}
+			set { fileName = value; }
+		}
+		#endregion
 
-        [XmlIgnore]
-        public DBConnection Connection
-        {
-            get { return connection ?? (connection = DBService.Connections[connectionName]); }
-            set
-            {
-                connection = value;
-                connectionName = connection?.Name;
-                if (value != null && !DBService.Connections.Contains((value)))
-                {
-                    DBService.Connections.Add(value);
-                }
-            }
-        }
+		[XmlIgnore]
+		public DBConnection Connection
+		{
+			get { return connection ?? (connection = DBService.Connections[connectionName]); }
+			set
+			{
+				connection = value;
+				connectionName = connection?.Name;
+				if (value != null && !DBService.Connections.Contains((value)))
+				{
+					DBService.Connections.Add(value);
+				}
+			}
+		}
 
-        public DBSystem System
-        {
-            get { return Connection?.System; }
-        }
+		public DBSystem System
+		{
+			get { return Connection?.System; }
+		}
 
-        public DBTableList Tables { get; set; }
+		public DBTableList Tables { get; set; }
 
-        public DBTableGroupList TableGroups { get; set; }
+		public DBTableGroupList TableGroups { get; set; }
 
-        public DBProcedureList Procedures { get; set; }
+		public DBProcedureList Procedures { get; set; }
 
-        public DBSequenceList Sequences { get; set; }
+		public DBSequenceList Sequences { get; set; }
 
-        public override string Name
-        {
-            get { return base.Name; }
-            set
-            {
-                base.Name = value;
-                if (DataBase == null)
-                    DataBase = value;
-            }
-        }
+		public override string Name
+		{
+			get { return base.Name; }
+			set
+			{
+				base.Name = value;
+				if (DataBase == null)
+					DataBase = value;
+			}
+		}
 
-        public string DataBase
-        {
-            get { return dataBase; }
-            set
-            {
-                if (dataBase != value)
-                {
-                    dataBase = value;
-                    OnPropertyChanged(nameof(DataBase), false);
-                }
-            }
-        }
+		public string DataBase
+		{
+			get { return dataBase; }
+			set
+			{
+				if (dataBase != value)
+				{
+					dataBase = value;
+					OnPropertyChanged(nameof(DataBase), false);
+				}
+			}
+		}
 
-        public string FormatSql()
-        {
-            var ddl = new StringBuilder();
-            System?.Format(ddl, this);
-            return ddl.ToString();
-        }
+		public string FormatSql()
+		{
+			var ddl = new StringBuilder();
+			System?.Format(ddl, this);
+			return ddl.ToString();
+		}
 
-        public override string FormatSql(DDLType ddlType)
-        {
-            var ddl = new StringBuilder();
-            System?.Format(ddl, this, ddlType);
-            return ddl.ToString();
-        }
+		public override string FormatSql(DDLType ddlType)
+		{
+			var ddl = new StringBuilder();
+			System?.Format(ddl, this, ddlType);
+			return ddl.ToString();
+		}
 
-        public override object Clone()
-        {
-            throw new NotImplementedException();
-        }
+		public override object Clone()
+		{
+			throw new NotImplementedException();
+		}
 
-        public List<DBTableInfo> GetTablesInfo(string schemaName = null, string tableName = null)
-        {
-            return System.GetTablesInfo(Connection, schemaName, tableName);
-        }
+		public List<DBTableInfo> GetTablesInfo(string schemaName = null, string tableName = null)
+		{
+			return System.GetTablesInfo(Connection, schemaName, tableName);
+		}
 
-        public void CreateDatabase()
-        {
-            try { DBService.ExecuteQuery(Connection, FormatSql(DDLType.Drop), true, DBExecuteType.NoReader); }
-            catch (Exception ex) { Debug.WriteLine(ex); }
+		public void CreateDatabase()
+		{
+			try { DBService.ExecuteQuery(Connection, FormatSql(DDLType.Drop), true, DBExecuteType.NoReader); }
+			catch (Exception ex) { Debug.WriteLine(ex); }
 
-            DBService.ExecuteGoQuery(Connection, FormatSql(DDLType.Create), true);
+			DBService.ExecuteGoQuery(Connection, FormatSql(DDLType.Create), true);
 
-            if (Connection.Schema?.Length > 0)
-            {
-                if (Connection.System == DBSystem.Oracle)
-                {
-                    Connection.User = Name;
-                }
-                else if (Connection.System != DBSystem.SQLite)
-                {
-                    Connection.DataBase = Name;
-                }
-            }
+			if (Connection.Schema?.Length > 0)
+			{
+				if (Connection.System == DBSystem.Oracle)
+				{
+					Connection.User = Name;
+				}
+				else if (Connection.System != DBSystem.SQLite)
+				{
+					Connection.DataBase = Name;
+				}
+			}
 
-            DBService.ExecuteGoQuery(Connection, FormatSql(), true);
-        }
+			DBService.ExecuteGoQuery(Connection, FormatSql(), true);
+		}
 
-        internal IEnumerable<DBConstraint> GetConstraints()
-        {
-            foreach (var table in Tables)
-            {
-                foreach (var constraint in table.Constraints)
-                    yield return constraint;
-            }
-        }
+		internal IEnumerable<DBConstraint> GetConstraints()
+		{
+			foreach (var table in Tables)
+			{
+				foreach (var constraint in table.Constraints)
+					yield return constraint;
+			}
+		}
 
-        internal IEnumerable<DBForeignKey> GetForeigns()
-        {
-            foreach (var table in Tables)
-            {
-                foreach (var constraint in table.Foreigns)
-                    yield return constraint;
-            }
-        }
+		internal IEnumerable<DBForeignKey> GetForeigns()
+		{
+			foreach (var table in Tables)
+			{
+				foreach (var constraint in table.Foreigns)
+					yield return constraint;
+			}
+		}
 
-        internal IEnumerable<DBIndex> GetIndexes()
-        {
-            foreach (var table in Tables)
-            {
-                foreach (var index in table.Indexes)
-                    yield return index;
-            }
-        }
-    }
+		internal IEnumerable<DBIndex> GetIndexes()
+		{
+			foreach (var table in Tables)
+			{
+				foreach (var index in table.Indexes)
+					yield return index;
+			}
+		}
+
+		public void ExportXHTML(string filename)
+		{
+			//var doc = new System.Xml.XmlDocument();
+			using (var stream = new FileStream(filename, FileMode.Create, FileAccess.Write))
+			using (var writer = XmlWriter.Create(stream))
+			{
+				writer.WriteStartDocument(true);
+				writer.WriteStartElement("html");
+				writer.WriteElementString("title", schema.DisplayName);
+				writer.WriteStartElement("body");
+				writer.WriteElementString("H1", schema.DisplayName);
+				schema.Tables.Sort(new InvokerComparer<DBTable>("Code"));
+				foreach (var table in Tables)
+				{
+					if (table.Type == DBTableType.Table)
+					{
+						writer.WriteElementString("H2", table.DisplayName + " (" + table.Name + ")");
+						writer.WriteStartElement("table");
+						writer.WriteAttributeString("border", "1");
+						writer.WriteAttributeString("cellspacing", "0");
+						writer.WriteAttributeString("cellpadding", "5");
+						writer.WriteStartElement("tr");
+
+						writer.WriteStartElement("th");
+						writer.WriteElementString("p", "Code");
+						writer.WriteEndElement();//th
+
+						writer.WriteStartElement("th");
+						writer.WriteElementString("p", "Name");
+						writer.WriteEndElement();//th
+
+						writer.WriteStartElement("th");
+						writer.WriteElementString("p", "Type");
+						writer.WriteEndElement();//th
+
+						writer.WriteStartElement("th");
+						writer.WriteElementString("p", "Size");
+						writer.WriteEndElement();//th
+						writer.WriteStartElement("th");
+						writer.WriteElementString("p", "Prec");
+						writer.WriteEndElement();//th
+
+						writer.WriteStartElement("th");
+						writer.WriteElementString("p", "Spec");
+						writer.WriteEndElement();//th        
+
+						writer.WriteStartElement("th");
+						writer.WriteElementString("p", "Reference");
+						writer.WriteEndElement();//th
+
+
+						writer.WriteEndElement();//tr
+
+						foreach (var column in table.Columns)
+						{
+							writer.WriteStartElement("tr");
+
+							writer.WriteStartElement("td");
+							writer.WriteElementString("p", column.Name);
+							writer.WriteEndElement();//td
+
+							writer.WriteStartElement("td");
+							writer.WriteElementString("p", column.Name);
+							writer.WriteEndElement();//td
+
+							writer.WriteStartElement("td");
+							writer.WriteElementString("p", column.DBDataType.ToString());
+							writer.WriteEndElement();//td
+
+							writer.WriteStartElement("td");
+							writer.WriteElementString("p", column.Size.ToString());
+							writer.WriteEndElement();//td
+
+							writer.WriteStartElement("td");
+							writer.WriteElementString("p", column.Scale.ToString());
+							writer.WriteEndElement();//td
+
+							writer.WriteStartElement("td");
+							writer.WriteElementString("p", column.Keys.ToString());
+							writer.WriteEndElement();//td
+
+							writer.WriteStartElement("td");
+							writer.WriteElementString("p", column.ReferenceTable != null ? (column.ReferenceTable + " (" + column.ReferenceTable.Name + ")") : null);
+							writer.WriteEndElement();//td
+
+							writer.WriteEndElement();//tr
+						}
+						writer.WriteEndElement();//table
+					}
+				}
+
+				writer.WriteEndElement();//body
+				writer.WriteEndElement();//html
+				writer.WriteEndDocument();
+			}
+		}
+	}
 }
