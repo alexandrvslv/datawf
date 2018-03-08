@@ -1,59 +1,53 @@
 ﻿//using Xwt.Drawing.Drawing2D;
+using System.ComponentModel;
+using System.Security;
 using System.Text;
-using DataWF.Gui;
 using DataWF.Common;
+using DataWF.Gui;
+using DataWF.Module.Common;
 using Xwt;
 
-namespace DataWF.Data.Gui
+namespace DataWF.Data.CommonGui
 {
-    public class LoginPage : VPanel
-    {
-        private LayoutList listUser;
-        private Button buttonLogin;
+	public class LoginPage : VPanel
+	{
+		private LayoutList listUser;
+		private Button bLogin;
 
-        public LoginPage()
-        {
-            listUser = new LayoutList()
-            {
-                EditMode = EditModes.ByClick,
-                GenerateFields = false,
-                Mode = LayoutListMode.Fields,
-                FieldInfo = new LayoutFieldInfo(
-                    new LayoutField("Login"),
-                    new LayoutField("Password"))
-            };
+		public LoginPage()
+		{
+			listUser = new LayoutList()
+			{
+				EditMode = EditModes.ByClick,
+				GenerateFields = false,
+				Mode = LayoutListMode.Fields,
+				FieldInfo = new LayoutFieldInfo(
+					new LayoutField(nameof(User.Login)),
+					new LayoutField(nameof(User.Password)))
+			};
 
-            buttonLogin = new Button { Name = "buttonLogin", Label = "Login" };
+			bLogin = new Button { Name = "buttonLogin", Label = "Login" };
 
-            PackStart(listUser, true, true);
-            PackStart(buttonLogin, false, false);
-        }
+			PackStart(listUser, true, true);
+			PackStart(bLogin, false, false);
 
-        private static string GetString(byte[] data)
-        {
-            var builder = new StringBuilder();
+			User = new UserCredential();
+		}
 
-            for (int i = 0; i < data.Length; i++)
-                builder.Append(data[i].ToString("x2"));
+		public UserCredential User
+		{
+			get { return listUser.FieldSource as UserCredential; }
+			set { listUser.FieldSource = value; }
+		}
+	}
 
-            return builder.ToString();
-        }
+	public class UserCredential
+	{
 
-        private static string GetSha(string input)
-        {
-            if (input == null)
-                return null;
+		public string Login { get; set; }
 
-            return GetString(System.Security.Cryptography.SHA1.Create().ComputeHash(Encoding.Default.GetBytes(input)));
-        }
-
-        private static string GetMd5(string input)
-        {
-            if (input == null)
-                return null;
-
-            return GetString(System.Security.Cryptography.MD5.Create().ComputeHash(Encoding.Default.GetBytes(input)));
-        }
-    }
+		[PasswordPropertyText(true)]
+		public SecureString Password { get; set; }
+	}
 }
 
