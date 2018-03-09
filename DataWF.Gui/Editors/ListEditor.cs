@@ -87,7 +87,7 @@ namespace DataWF.Gui
             toolRefresh = new ToolItem(OnToolRefreshClick) { Name = "Refresh", Glyph = GlyphType.Refresh };
             toolSave = new ToolItem(OnToolSaveClick) { Name = "Save", ForeColor = Colors.DarkBlue, Glyph = GlyphType.SaveAlias };
             toolLoad = new ToolItem(OnToolLoadClick) { Name = "Load", Glyph = GlyphType.FolderOpen };
-            toolAdd = new ToolDropDown(new[] { toolInsert, toolCopy }) { Name = "Add", ForeColor = Colors.DarkGreen, Glyph = GlyphType.PlusCircle };
+            toolAdd = new ToolDropDown(toolInsert, toolCopy) { Name = "Add", ForeColor = Colors.DarkGreen, Glyph = GlyphType.PlusCircle };
             toolRemove = new ToolItem(OnToolRemovClick) { Name = "Remove", ForeColor = Colors.DarkRed, Glyph = GlyphType.MinusCircle };
             toolEdit = new ToolItem(OnToolEditClick) { Name = "Edit", ForeColor = Colors.SandyBrown.WithIncreasedLight(-0.2), Glyph = GlyphType.Pencil };
 

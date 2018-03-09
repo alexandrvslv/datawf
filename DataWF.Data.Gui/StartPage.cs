@@ -68,7 +68,7 @@ namespace DataWF.Data.Gui
 		{
 			box.Localize();
 			label.Text = Locale.Get("StartPage", "Data\\Document Workflow Solution");
-			GuiService.Localize(this, "StartPage", "Welcome");
+			GuiService.Localize(this, "StartPage", "Welcome", GlyphType.Home);
 		}
 
 		private void ListRecentCellMouseClick(object sender, LayoutHitTestEventArgs e)

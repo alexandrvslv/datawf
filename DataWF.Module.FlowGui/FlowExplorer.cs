@@ -153,7 +153,7 @@ namespace DataWF.Module.FlowGui
 			}
 		}
 
-		private void ContextAddItemClicked(object sender, ToolItemEventargs e)
+		private void ContextAddItemClicked(object sender, ToolItemEventArgs e)
 		{
 			var item = e.Item;
 

@@ -156,11 +156,11 @@ namespace DataWF.Gui
 				item.Localize();
 		}
 
-		public event EventHandler<ToolItemEventargs> ItemClick;
+		public event EventHandler<ToolItemEventArgs> ItemClick;
 
 		public void OnItemClick(ToolItem toolItem)
 		{
-			ItemClick?.Invoke(this, new ToolItemEventargs { Item = toolItem });
+			ItemClick?.Invoke(this, new ToolItemEventArgs { Item = toolItem });
 		}
 	}
 }

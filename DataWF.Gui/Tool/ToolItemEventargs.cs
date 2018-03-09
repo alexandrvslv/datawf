@@ -2,7 +2,7 @@
 
 namespace DataWF.Gui
 {
-    public class ToolItemEventargs : EventArgs
+    public class ToolItemEventArgs : EventArgs
     {
         public ToolItem Item { get; set; }
     }

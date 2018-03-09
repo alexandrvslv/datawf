@@ -64,7 +64,7 @@ namespace DataWF.Gui
 			Visible = false;
 		}
 
-		private void OnItemClick(object sender, ToolItemEventargs e)
+		private void OnItemClick(object sender, ToolItemEventArgs e)
 		{
 			if (e.Item is ToolDropDown && ((ToolDropDown)e.Item).HasDropDown)
 				return;
