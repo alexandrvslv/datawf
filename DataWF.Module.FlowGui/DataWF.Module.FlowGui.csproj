@@ -63,8 +63,8 @@
     <Reference Include="Mono.Cecil.Rocks">
       <HintPath>..\packages\Mono.Cecil.0.9.6.4\lib\net45\Mono.Cecil.Rocks.dll</HintPath>
     </Reference>
-    <Reference Include="Xwt, Version=0.2.83.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xwt.0.2.83\lib\net40\Xwt.dll</HintPath>
+    <Reference Include="Xwt">
+      <HintPath>..\packages\Xwt.0.2.85\lib\net40\Xwt.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -74,9 +74,6 @@
     <Compile Include="MenuItemStage.cs" />
     <Compile Include="MenuItemTemplate.cs" />
     <Compile Include="MenuItemUser.cs" />
-    <Compile Include="Messanger.cs" />
-    <Compile Include="MessengerExplorer.cs" />
-    <Compile Include="PMessage.cs" />
     <Compile Include="Cells\CellEditorFlowParameters.cs" />
     <Compile Include="Cells\CellEditorFlowTree.cs" />
     <Compile Include="Cells\CellEditorLogRow.cs" />
@@ -90,7 +87,7 @@
     <Compile Include="Document\DocumentRelations.cs" />
     <Compile Include="Document\DocumentSender.cs" />
     <Compile Include="Document\DocumentWorker.cs" />
-    <Compile Include="Document\PDocument.cs" />
+    <Compile Include="Document\DocumentLayoutList.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

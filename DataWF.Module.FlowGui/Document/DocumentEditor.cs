@@ -49,16 +49,14 @@ namespace DataWF.Module.FlowGui
 		private ToolDropDown toolProcedures = new ToolDropDown();
 		private DockPanel dock = new DockPanel();
 		private ToolLabel toolLabel = new ToolLabel();
-		private PDocument detail = new PDocument();
+		private DocumentLayoutList detail = new DocumentLayoutList();
 		private HPaned split = new HPaned();
 		private IEnumerable<ToolItem> toolsItems;
 
 		private DocumentHeader header = new DocumentHeader();
 		private DocumentRelations refers = new DocumentRelations();
-		private Messanger messages = new Messanger();
 		private DockPage pageRefers;
 		private DockPage pageHeader;
-		private DockPage pageMessage;
 
 		private List<Document> _list;
 		private Document document;
@@ -174,7 +172,6 @@ namespace DataWF.Module.FlowGui
 			dock.Pages.VisibleImage = false;
 			pageHeader = dock.AddPage(header);
 			pageRefers = dock.AddPage(refers);
-			pageMessage = dock.AddPage(messages);
 			dock.SelectPage(pageHeader);
 
 			Localize();
@@ -556,7 +553,6 @@ namespace DataWF.Module.FlowGui
 				}
 				pageHeader.Tag = document.Template;
 				pageRefers.Tag = document.Template;
-				pageMessage.Tag = document.Template;
 
 				bool from = false;
 				dock.PageSelected -= DockPageSelected;
@@ -591,7 +587,6 @@ namespace DataWF.Module.FlowGui
 				toolLogs.Sensitive = state != DocumentEditorState.Create;
 				toolBarCode.Sensitive = state != DocumentEditorState.Create;
 				pageRefers.Visible = state != DocumentEditorState.Create;
-				pageMessage.Visible = state != DocumentEditorState.Create;
 			}
 		}
 
@@ -967,8 +962,6 @@ namespace DataWF.Module.FlowGui
 				header.Dispose();
 			if (refers != null)
 				refers.Dispose();
-			if (messages != null)
-				messages.Dispose();
 			base.Dispose(disposing);
 		}
 

@@ -1,12 +1,12 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{E5EFC9B0-AEE6-47B4-B553-37A241ADF976}</ProjectGuid>
+    <ProjectGuid>{1B9CC5A9-6163-403C-9BEA-E44176676DDD}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>DataWF.Module.Flow</RootNamespace>
-    <AssemblyName>DataWF.Module.Flow</AssemblyName>
+    <RootNamespace>DataWF.Module.Messanger</RootNamespace>
+    <AssemblyName>DataWF.Module.Messanger</AssemblyName>
     <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -28,33 +28,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Data" />
-    <Reference Include="DocumentFormat.OpenXml">
-      <HintPath>..\dll\DocumentFormat.OpenXml.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="FlowEnvironment.cs" />
-    <Compile Include="ParamBase.cs" />
-    <Compile Include="UDPService.cs" />
-    <Compile Include="Document\Document.cs" />
-    <Compile Include="Document\DocumentCustomer.cs" />
-    <Compile Include="Document\DocumentData.cs" />
-    <Compile Include="Document\DocumentEvents.cs" />
-    <Compile Include="Document\DocumentHandler.cs" />
-    <Compile Include="Document\DocumentReference.cs" />
-    <Compile Include="Document\DocumentSearch.cs" />
-    <Compile Include="Document\DocumentTools.cs" />
-    <Compile Include="Document\DocumentWork.cs" />
-    <Compile Include="Template\Template.cs" />
-    <Compile Include="Template\TemplateParam.cs" />
-    <Compile Include="Work\Stage.cs" />
-    <Compile Include="Work\StageParam.cs" />
-    <Compile Include="Work\Work.cs" />
+    <Compile Include="Message.cs" />
+    <Compile Include="MessageAddress.cs" />
+    <Compile Include="MessageData.cs" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj">
       <Project>{32A948C0-5468-4392-A490-91947BFC3BE4}</Project>
@@ -64,21 +44,10 @@
       <Project>{C982088F-82EC-4400-8D3C-BD76221C0C9C}</Project>
       <Name>DataWF.Data</Name>
     </ProjectReference>
-    <ProjectReference Include="..\DataWF.Odf\DataWF.Odf.csproj">
-      <Project>{91E766B4-1057-4C16-AA5A-B4E26E91DA7C}</Project>
-      <Name>DataWF.Odf</Name>
-    </ProjectReference>
     <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj">
       <Project>{76A4B048-D827-4CC9-879E-BCAFE5C796CC}</Project>
       <Name>DataWF.Module.Common</Name>
     </ProjectReference>
-    <ProjectReference Include="..\DataWF.Module.Counterpart\DataWF.Module.Counterpart.csproj">
-      <Project>{D9D3537E-C1F9-4F59-AE2B-5098213FF747}</Project>
-      <Name>DataWF.Module.Counterpart</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

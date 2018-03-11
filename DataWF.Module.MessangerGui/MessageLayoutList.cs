@@ -1,6 +1,5 @@
 ﻿using DataWF.Data;
 using DataWF.Data.Gui;
-using DataWF.Module.Flow;
 using DataWF.Gui;
 using DataWF.Common;
 using System;
@@ -8,15 +7,16 @@ using System.ComponentModel;
 using Xwt;
 using Xwt.Drawing;
 using DataWF.Module.Common;
+using DataWF.Module.Messanger;
 
-namespace DataWF.Module.FlowGui
+namespace DataWF.Module.MessangerGui
 {
-    public class PMessage : LayoutDBTable
+    public class MessageLayoutList : TableLayoutList
     {
         //private static PCellStyle StyleOut;
         //private static PCellStyle StyleIn;
 
-        public PMessage()
+        public MessageLayoutList()
             : base()
         {
             GenerateColumns = false;

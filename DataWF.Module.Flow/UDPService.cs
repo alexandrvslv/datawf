@@ -166,7 +166,7 @@ namespace DataWF.Module.Flow
             var log = arg.Item;
 
             if (!(log is UserLog) && log.Table.Type == DBTableType.Table &&
-                (log.Table == DocumentWork.DBTable || log.Table == MessageAddress.DBTable || log.Table.IsLoging))
+                (log.Table == DocumentWork.DBTable || log.Table.IsLoging))
             {
                 UserLogType type = UserLogType.None;
                 if ((arg.State & DBUpdateState.Delete) == DBUpdateState.Delete)
