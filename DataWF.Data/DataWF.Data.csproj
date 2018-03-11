@@ -125,6 +125,7 @@
     <Compile Include="DBItem\DBLogItem.cs" />
     <Compile Include="DBTable\IDBVirtualTable.cs" />
     <Compile Include="DBColumn\DBLogColumn.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config">
