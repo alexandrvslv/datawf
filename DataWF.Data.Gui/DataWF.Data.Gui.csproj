@@ -148,8 +148,8 @@
       <HintPath>..\packages\DocumentFormat.OpenXml.2.8.1\lib\net46\DocumentFormat.OpenXml.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="Xwt, Version=0.2.83.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xwt.0.2.83\lib\net40\Xwt.dll</HintPath>
+    <Reference Include="Xwt">
+      <HintPath>..\packages\Xwt.0.2.85\lib\net40\Xwt.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -183,7 +183,7 @@
     <Compile Include="Table\TableEditorAcceptingEventArgs.cs" />
     <Compile Include="Table\TableEditorReferenceEventArgs.cs" />
     <Compile Include="Table\TableExplorer.cs" />
-    <Compile Include="Table\LayoutDBTable.cs" />
+    <Compile Include="Table\TableLayoutList.cs" />
     <Compile Include="Table\TableLoader.cs" />
     <Compile Include="Table\TableRowMerge.cs" />
     <Compile Include="Table\TableView.cs" />

@@ -38,7 +38,7 @@ namespace DataWF.Module.FlowGui
         private ToolItem toolPreview = new ToolItem();
         private ToolTableLoader toolProgress = new ToolTableLoader();
         private ToolDropDown toolParam = new ToolDropDown();
-        private PDocument list = new PDocument();
+        private DocumentLayoutList list = new DocumentLayoutList();
         private VPaned split = new VPaned();
 
         public DocumentListView()
@@ -360,7 +360,7 @@ namespace DataWF.Module.FlowGui
             }
         }
 
-        public PDocument List
+        public DocumentLayoutList List
         {
             get { return list; }
         }

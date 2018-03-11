@@ -34,7 +34,7 @@ namespace DataWF.Data.Gui
                 if (dcolumn != null)
                 {
                     Invoker = dcolumn;
-                    CellEditor = LayoutDBTable.InitCellEditor(dcolumn);
+                    CellEditor = TableLayoutList.InitCellEditor(dcolumn);
                     if (CellEditor is CellEditorTable && refer != null)
                     {
                         ((CellEditorTable)CellEditor).Table = refer;

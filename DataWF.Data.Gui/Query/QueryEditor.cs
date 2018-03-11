@@ -300,7 +300,7 @@ namespace DataWF.Data.Gui
                     }
                     else
                     {
-                        editor = LayoutDBTable.InitCellEditor(param.Column);
+                        editor = TableLayoutList.InitCellEditor(param.Column);
                         if (param.Column.DataType == typeof(DateTime) && param.Comparer.Equals(CompareType.Between))
                             ((CellEditorDate)editor).TwoDate = true;
                     }

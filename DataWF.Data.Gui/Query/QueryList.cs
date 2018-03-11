@@ -97,7 +97,7 @@ namespace DataWF.Data.Gui
                     }
                     else
                     {
-                        editor = LayoutDBTable.InitCellEditor(param.Column);
+                        editor = TableLayoutList.InitCellEditor(param.Column);
                     }
                     return editor;
                 }

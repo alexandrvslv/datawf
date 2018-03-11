@@ -86,7 +86,7 @@ namespace DataWF.Module.FlowGui
 		private ILayoutCellEditor OptionsGetCellEditor(object sender, object listItem, ILayoutCell cell)
 		{
 			if (cell.CellEditor == null)
-				return PDocument.InitCellEditor(sender, listItem, cell);
+				return DocumentLayoutList.InitCellEditor(sender, listItem, cell);
 			else
 				return null;
 		}

@@ -69,7 +69,7 @@ namespace DataWF.Module.CommonGui
         private TableLoader loader = new TableLoader();
         private Toolsbar bar = new Toolsbar();
         private ToolItem toolRollback = new ToolItem();
-        private LayoutDBTable list = new LayoutDBTable();
+        private TableLayoutList list = new TableLayoutList();
         private ToolItem toolAccept = new ToolItem();
         private ToolItem toolCheck = new ToolItem();
         private ToolItem toolDetails = new ToolItem();
@@ -91,8 +91,8 @@ namespace DataWF.Module.CommonGui
         private ToolMenuItem toolTypeDelete = new ToolMenuItem();
         private ToolFieldEditor dateField = new ToolFieldEditor();
         private ToolFieldEditor dataField = new ToolFieldEditor();
-        private LayoutDBTable detailList = new LayoutDBTable();
-        private LayoutDBTable detailRow = new LayoutDBTable();
+        private TableLayoutList detailList = new TableLayoutList();
+        private TableLayoutList detailRow = new TableLayoutList();
         private GroupBox map = new GroupBox();
 
         public DataLogView()

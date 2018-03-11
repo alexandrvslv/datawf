@@ -12,7 +12,7 @@ namespace DataWF.Data.Gui
 {
     public class TableView : VPanel, ILoader, IReadOnly
     {
-        private LayoutDBTable list = new LayoutDBTable();
+        private TableLayoutList list = new TableLayoutList();
         private Toolsbar tools = new Toolsbar();
         private ToolLabel lable = new ToolLabel();
         private ToolItem toolLoad = new ToolItem();
@@ -63,7 +63,7 @@ namespace DataWF.Data.Gui
             get { return tools; }
         }
 
-        public LayoutDBTable List
+        public TableLayoutList List
         {
             get { return list; }
         }

@@ -19,12 +19,12 @@ namespace DataWF.Data.Gui
         private ToolItem toolBuild = new ToolItem();
         private ToolItem toolRun = new ToolItem();
         private ToolItem toolExport = new ToolItem();
-        private LayoutDBTable parameterView = new LayoutDBTable();
+        private TableLayoutList parameterView = new TableLayoutList();
         private GroupBox groupMap = new GroupBox();
         private GroupBoxItem groupSource = new GroupBoxItem();
         private GroupBoxItem groupParams = new GroupBoxItem();
         private GroupBoxItem groupAttributes = new GroupBoxItem();
-        private LayoutDBTable fields = new LayoutDBTable();
+        private TableLayoutList fields = new TableLayoutList();
         private Mono.TextEditor.TextEditor source = new Mono.TextEditor.TextEditor();
         private ScrollView scroll = new ScrollView();
         private bool change = false;

@@ -17,7 +17,7 @@ namespace DataWF.Data.Gui
         private IAsyncResult current;
         private ExportEditorDelegate exp = null;
 
-        private LayoutDBTable setting = new LayoutDBTable();
+        private TableLayoutList setting = new TableLayoutList();
         private Toolsbar tools = new Toolsbar();
         private ToolItem toolInit = new ToolItem();
         private ToolItem toolSchema = new ToolItem();

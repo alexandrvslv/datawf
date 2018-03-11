@@ -106,7 +106,7 @@ namespace DataWF.Module.Flow
 
         public Template Template
         {
-            get { return Template.DBTable.LoadById(template); }
+            get { return Template.DBTable?.LoadById(template); }
             set
             {
                 string id = null;

@@ -29,8 +29,8 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
-    <Reference Include="Xwt, Version=0.2.83.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xwt.0.2.83\lib\net40\Xwt.dll</HintPath>
+    <Reference Include="Xwt">
+      <HintPath>..\packages\Xwt.0.2.85\lib\net40\Xwt.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -41,6 +41,7 @@
     <Compile Include="ChangeViewer.cs" />
     <Compile Include="UserEditor.cs" />
     <Compile Include="LoginPage.cs" />
+    <Compile Include="CellEditorUserTree.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj">

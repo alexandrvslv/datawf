@@ -17,7 +17,7 @@ using System.Threading;
 namespace DataWF.Data.Gui
 {
 
-    public class LayoutDBTable : LayoutList
+    public class TableLayoutList : LayoutList
     {
         public static ILayoutCellEditor InitCellEditor(object listItem, object value, ILayoutCell cell)
         {
@@ -130,7 +130,7 @@ namespace DataWF.Data.Gui
         private static ToolItem menuExportXlsx = new ToolItem();
         private static Menu contextStatusFilter = null;
 
-        public LayoutDBTable()
+        public TableLayoutList()
             : base()
         {
             if (contextStatusFilter == null)
@@ -186,8 +186,8 @@ namespace DataWF.Data.Gui
         {
             var item = (MenuItem)sender;
             var filter = (DBStatus)item.Tag;
-            if (defMenu.ContextList is LayoutDBTable && ((LayoutDBTable)defMenu.ContextList).View != null)
-                ((LayoutDBTable)defMenu.ContextList).View.StatusFilter = filter;
+            if (defMenu.ContextList is TableLayoutList && ((TableLayoutList)defMenu.ContextList).View != null)
+                ((TableLayoutList)defMenu.ContextList).View.StatusFilter = filter;
         }
 
         private static void MenuExportTxtClick(object sender, EventArgs e)

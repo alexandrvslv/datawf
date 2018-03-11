@@ -19,7 +19,7 @@ namespace DataWF.Module.FlowGui
         private GroupBox groupBoxMap = new GroupBox();
         private LayoutList works = new LayoutList();
         private DocumentFiles files = new DocumentFiles();
-        private ListEditor fields = new ListEditor(new PDocument());
+        private ListEditor fields = new ListEditor(new DocumentLayoutList());
         private DBTableView<DocumentWork> view;
         private bool synch = false;
         //private GroupBoxMap groupBoxMap2;

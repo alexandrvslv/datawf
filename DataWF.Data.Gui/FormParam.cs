@@ -64,7 +64,7 @@ namespace DataWF.Data.Gui
         }
 
         public Dictionary<string, object> localParameters = new Dictionary<string, object>();
-        private LayoutDBTable propertyes = new LayoutDBTable();
+        private TableLayoutList propertyes = new TableLayoutList();
 
         public FormParam()
         {

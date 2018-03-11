@@ -32,7 +32,7 @@ namespace DataWF.Module.FlowGui
         private ToolMenuItem toolComplete = new ToolMenuItem();
         private ToolMenuItem toolForward = new ToolMenuItem();
         private ToolMenuItem toolRecovery = new ToolMenuItem();
-        private PDocument listDocuments = new PDocument();
+        private DocumentLayoutList listDocuments = new DocumentLayoutList();
         private Menubar cms = new Menubar();
         private ToolProgressBar toolProgress = new ToolProgressBar();
 

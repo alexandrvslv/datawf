@@ -14,7 +14,7 @@ namespace DataWF.Module.FlowGui
     public class DocumentFiles : VPanel, ILocalizable, ISynch
     {
         private Document _document;
-        private LayoutDBTable list = new LayoutDBTable();
+        private TableLayoutList list = new TableLayoutList();
         private Toolsbar tools = new Toolsbar();
         private ToolItem toolInsert = new ToolItem();
         private ToolItem toolDelete = new ToolItem();

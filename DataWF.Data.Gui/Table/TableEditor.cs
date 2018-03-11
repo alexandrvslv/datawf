@@ -58,7 +58,7 @@ namespace DataWF.Data.Gui
 		private QuestionMessage question;
 
 		public TableEditor()
-			: base(new LayoutDBTable())
+			: base(new TableLayoutList())
 		{
 			toolProgress.Loader = loader;
 
@@ -156,9 +156,9 @@ namespace DataWF.Data.Gui
 			get { return loader; }
 		}
 
-		public LayoutDBTable DBList
+		public TableLayoutList DBList
 		{
-			get { return (LayoutDBTable)List; }
+			get { return (TableLayoutList)List; }
 		}
 
 		protected override void OnFilterChanging(object sender, EventArgs e)
@@ -787,14 +787,14 @@ namespace DataWF.Data.Gui
 		protected override void OnToolWindowCancelClick(object sender, EventArgs e)
 		{
 			base.OnToolWindowCancelClick(sender, e);
-			DBItem bufRow = ((LayoutDBTable)toolWindow.Target).FieldSource as DBItem;
+			DBItem bufRow = ((TableLayoutList)toolWindow.Target).FieldSource as DBItem;
 			RowFilter = string.Empty;
 			bufRow.Reject();
 		}
 
 		protected override void OnToolWindowAcceptClick(object sender, EventArgs e)
 		{
-			DBItem bufRow = ((LayoutDBTable)toolWindow.Target).FieldSource as DBItem;
+			DBItem bufRow = ((TableLayoutList)toolWindow.Target).FieldSource as DBItem;
 			if (!bufRow.Attached)
 			{
 				question.SecondaryText = "Check";

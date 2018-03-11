@@ -123,7 +123,7 @@ namespace DataWF.Data.Gui
 			PackStart(container, true, true);
 			Name = "DataExplorer";
 
-			listExplorer.GetCellEditor += LayoutDBTable.InitCellEditor;
+			listExplorer.GetCellEditor += TableLayoutList.InitCellEditor;
 			ose.Target = listExplorer;
 			ose.ButtonAcceptClick += AcceptOnActivated;
 
@@ -316,7 +316,8 @@ namespace DataWF.Data.Gui
 				GenerateToString = true,
 				GenerateColumns = false,
 				ListSource = new SelectableList<AsseblyCheck>(AppDomain.CurrentDomain.GetAssemblies()
-															  .Where(item => item.GetCustomAttribute<AssemblyMetadataAttribute>()?.Key == "module")
+															  .Where(item => item.GetCustomAttributes<AssemblyMetadataAttribute>().
+																	 Any(m => m.Key == "module"))
 															  .Select(item => new AsseblyCheck(item)))
 			};
 

@@ -16,7 +16,7 @@ using DataWF.Module.Counterpart;
 
 namespace DataWF.Module.FlowGui
 {
-    public class PDocument : LayoutDBTable
+    public class DocumentLayoutList : TableLayoutList
     {
         public new static ILayoutCellEditor InitCellEditor(object sender, object listItem, ILayoutCell cell)
         {
@@ -48,7 +48,7 @@ namespace DataWF.Module.FlowGui
                 else if (data is TemplateParam && c.Name == "Param")
                     ed = new CellEditorFlowParameters();
                 else
-                    ed = LayoutDBTable.InitCellEditor(listItem, cell);
+                    ed = TableLayoutList.InitCellEditor(listItem, cell);
 
                 if (ed.GetType() == typeof(CellEditorTable))
                 {
@@ -66,7 +66,7 @@ namespace DataWF.Module.FlowGui
         private Template viewmode;
         private CellStyle styleBold;
 
-        public PDocument()
+        public DocumentLayoutList()
             : base()
         {
             //this.Size = new Size(872, 454);

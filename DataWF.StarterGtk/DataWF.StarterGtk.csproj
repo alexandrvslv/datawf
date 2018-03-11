@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
-  <Import Project="..\packages\Xwt.Gtk.0.2.83\build\Xwt.Gtk.props" Condition="Exists('..\packages\Xwt.Gtk.0.2.83\build\Xwt.Gtk.props')" />
+  <Import Project="..\packages\Xwt.Gtk.0.2.85\build\Xwt.Gtk.props" Condition="Exists('..\packages\Xwt.Gtk.0.2.85\build\Xwt.Gtk.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -54,11 +54,11 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="Xwt, Version=0.2.83.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xwt.0.2.83\lib\net40\Xwt.dll</HintPath>
+    <Reference Include="Xwt">
+      <HintPath>..\packages\Xwt.0.2.85\lib\net40\Xwt.dll</HintPath>
     </Reference>
-    <Reference Include="Xwt.Gtk, Version=0.2.83.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xwt.Gtk.0.2.83\lib\net40\Xwt.Gtk.dll</HintPath>
+    <Reference Include="Xwt.Gtk">
+      <HintPath>..\packages\Xwt.Gtk.0.2.85\lib\net40\Xwt.Gtk.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -137,14 +137,16 @@
       <Project>{EA38C2A9-BC62-419A-8385-2C72ECBBD5E7}</Project>
       <Name>DataWF.Module.FlowGui</Name>
     </ProjectReference>
+    <ProjectReference Include="..\DataWF.Module.Messanger\DataWF.Module.Messanger.csproj">
+      <Project>{1B9CC5A9-6163-403C-9BEA-E44176676DDD}</Project>
+      <Name>DataWF.Module.Messanger</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DataWF.Module.MessangerGui\DataWF.Module.MessangerGui.csproj">
+      <Project>{42B8E03E-746D-443D-9226-F05EF3023ACF}</Project>
+      <Name>DataWF.Module.MessangerGui</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Remove="Properties\Resources.resx" />
   </ItemGroup>
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>Данный проект ссылается на пакеты NuGet, отсутствующие на этом компьютере. Используйте восстановление пакетов NuGet, чтобы скачать их.  Дополнительную информацию см. по адресу: http://go.microsoft.com/fwlink/?LinkID=322105. Отсутствует следующий файл: {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Xwt.Gtk.0.2.83\build\Xwt.Gtk.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Xwt.Gtk.0.2.83\build\Xwt.Gtk.props'))" />
-  </Target>
 </Project>

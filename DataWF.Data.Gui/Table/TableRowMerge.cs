@@ -9,7 +9,7 @@ namespace DataWF.Data.Gui
     public class TableRowMerge : Dialog
     {
         ToolItem toolMerge = new ToolItem();
-        LayoutDBTable list = new LayoutDBTable();
+        TableLayoutList list = new TableLayoutList();
         Toolsbar tools = new Toolsbar();
         List<DBItem> itemlist;
 

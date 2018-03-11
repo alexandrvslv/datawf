@@ -10,9 +10,8 @@ using DataWF.Module.CommonGui;
 
 namespace DataWF.Module.FlowGui
 {
-    public class CellEditorFlowTree : CellEditorText
+	public class CellEditorFlowTree : CellEditorText
     {
-
         public CellEditorFlowTree()
         {
             dropDownAutoHide = true;

@@ -130,7 +130,7 @@ namespace DataWF.Data.Gui
             menuView = new ToolDropDown(
                     BuildMenuItem(new LogExplorer()),
                     BuildMenuItem(new StartPage()),
-                    BuildMenuItem(new ListEditor(new LayoutDBTable())),
+                    BuildMenuItem(new ListEditor(new TableLayoutList())),
                     new ToolSeparator())
             { Name = "View", DisplayStyle = ToolItemDisplayStyle.Text };
 

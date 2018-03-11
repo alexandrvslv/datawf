@@ -31,7 +31,7 @@ namespace DataWF.Module.CommonGui
             info.Nodes.Add(new LayoutField("Name"));
             info.Nodes.Add(new LayoutField("EMail"));
 
-            var f = new LayoutDBTable();
+            var f = new TableLayoutList();
             f.AllowCellSize = true;
             f.CheckView = false;
             f.EditMode = EditModes.ByClick;

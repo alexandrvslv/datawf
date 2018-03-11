@@ -23,7 +23,7 @@ namespace DataWF.Data.Gui
 
 		private ToolWindow tw = new ToolWindow();
 		private ListEditor dfield = new ListEditor();
-		private LayoutDBTable list;
+		private TableLayoutList list;
 		private ToolItem toolSave;
 		private ToolItem toolLoad;
 		private ToolItem toolExecute;
@@ -95,7 +95,7 @@ namespace DataWF.Data.Gui
 
 			var scroll = new ScrollView() { Content = queryText };
 
-			list = new LayoutDBTable()
+			list = new TableLayoutList()
 			{
 				GenerateToString = false,
 				Visible = false
