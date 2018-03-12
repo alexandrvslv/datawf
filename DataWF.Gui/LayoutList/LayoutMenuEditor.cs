@@ -112,7 +112,6 @@ namespace DataWF.Gui
 			};
 			var mColumns = new GroupBoxMap(gColumns, gFields, gSorters)
 			{
-				GroupBox = map,
 				Col = 1,
 				FillWidth = true
 			};

@@ -112,6 +112,7 @@ namespace DataWF.Gui
 			else if (item is GroupBoxMap)
 			{
 				var box = ((GroupBoxMap)item);
+                box.GroupBox = this;				
 				if (box.GroupBox != null && box.GroupBox != this)
 				{
 					if (!Children.Contains(box.GroupBox))
