@@ -606,14 +606,20 @@ namespace DataWF.Data
 			return New(state, def);
 		}
 
-		public T New(DBUpdateState state = DBUpdateState.Insert, bool def = true)
+		public T New(DBUpdateState state = DBUpdateState.Insert, bool def = true, IDataReader reader = null)
 		{
-			T item = new T();
+            var type = GetItemType(reader);
+            T item = (T)EmitInvoker.CreateObject(type);
 			item.Build(this, state, def);
 			return item;
 		}
 
-		public override IEnumerable<DBItem> GetChangedItems()
+        public virtual Type GetItemType(IDataReader reader = null)
+        {
+            return ItemType;
+        }
+
+        public override IEnumerable<DBItem> GetChangedItems()
 		{
 			return GetChanged();
 		}

@@ -78,7 +78,7 @@ namespace DataWF.Module.Flow
         Customer
     }
 
-    [Table("flow", "ddocument", BlockSize = 2000)]
+    [Table("wf_flow", "ddocument", BlockSize = 2000)]
     public class Document : DBItem, IDisposable
     {
         public static DBTable<Document> DBTable
@@ -112,7 +112,7 @@ namespace DataWF.Module.Flow
 
         public static Document Create(Template template, Document parent, params string[] filenames)
         {
-            var document = new Document() { Template = template };
+            var document = template.CreateDocument();
             Create(document, parent, filenames, true);
             document.Template = template;
             return document;
@@ -306,7 +306,7 @@ namespace DataWF.Module.Flow
 
         public override AccessValue Access
         {
-            get { return Template == null ? base.Access : Template.Access; }
+            get { return Template?.Access ?? base.Access; }
         }
 
         [Browsable(false)]

@@ -237,7 +237,10 @@ namespace DataWF.Gui
         public virtual Widget InitDropDownContent()
         {
             var reachText = editor.GetCacheControl<RichTextView>();
-            reachText.ReadOnly = ReadOnly;
+            if (reachText.ReadOnly != ReadOnly)
+            {
+                reachText.ReadOnly = ReadOnly;
+            }
             return reachText;
         }
 
@@ -264,7 +267,8 @@ namespace DataWF.Gui
                 box.KeyPressed += TextBoxKeyPress;
                 box.KeyReleased += TextBoxKeyUp;
                 box.ShowFrame = false;
-                box.ReadOnly = ReadOnly;
+                if (box.ReadOnly != ReadOnly)
+                    box.ReadOnly = ReadOnly;
                 if (!ReadOnly && handleText)
                     box.Changed += OnControlValueChanged;
                 return box;
@@ -302,20 +306,17 @@ namespace DataWF.Gui
         protected virtual void TextBoxKeyUp(object sender, KeyEventArgs e)
         {
             var box = sender as TextEntry;
-            if (!box.MultiLine && DropDown?.Target != null)
+            if (e.Key == Key.Down)
             {
-                if (e.Key == Key.Down)
+                if (!DropDown.Visible && !e.Handled)
                 {
-                    if (!DropDown.Visible)
-                    {
-                        editor.ShowDropDown(ToolShowMode.Default);
-                    }
+                    editor.ShowDropDown(ToolShowMode.Default);
                 }
-                else if (e.Key == Key.Escape)
-                {
-                    if (DropDown.Visible)
-                        DropDown.Hide();
-                }
+            }
+            else if (e.Key == Key.Escape && DropDown?.Target != null)
+            {
+                if (DropDown.Visible)
+                    DropDown.Hide();
             }
         }
 

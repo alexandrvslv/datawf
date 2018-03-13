@@ -46,7 +46,7 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [Table("flow", "rtemplateparam", BlockSize = 1000)]
+    [Table("wf_flow", "rtemplateparam", BlockSize = 1000)]
     public class TemplateParam : ParamBase, IInvoker
     {
         public static DBTable<TemplateParam> DBTable

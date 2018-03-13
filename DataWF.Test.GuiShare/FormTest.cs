@@ -102,7 +102,7 @@ namespace DataWF.TestGui
 			{
 				var testOrm = new DataWF.Test.Data.TestORM();
 				testOrm.Setup();
-				testOrm.GeneratePostgres();
+				testOrm.GenerateSqlite();
 			});
 
 			var list = new DataExplorer();
@@ -112,7 +112,7 @@ namespace DataWF.TestGui
 		private void TestInvokerClick(object sender, EventArgs e)
 		{
 			int count = 1000000;
-			SelectableList<TestResult> list = TestResult.Test(count);
+			var list = TestResult.Test(count);
 
 			var plist = new LayoutList();
 			plist.Text += "Test<" + count.ToString("0,0") + ">\n";

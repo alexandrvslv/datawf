@@ -42,7 +42,7 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [Table("flow", "rstageparam", BlockSize = 500)]
+    [Table("wf_flow", "rstageparam", BlockSize = 500)]
     public class StageParam : ParamBase
     {
         public static DBTable<StageParam> DBTable

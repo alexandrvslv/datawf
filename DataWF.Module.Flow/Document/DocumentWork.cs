@@ -96,7 +96,7 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [Table("flow", "dwork", BlockSize = 2000)]
+    [Table("wf_flow", "dwork", BlockSize = 2000)]
     public class DocumentWork : DBItem
     {
         public static DBTable<DocumentWork> DBTable

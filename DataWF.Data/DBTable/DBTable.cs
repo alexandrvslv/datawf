@@ -34,6 +34,32 @@ using System.IO;
 
 namespace DataWF.Data
 {
+    public class DBItemTypeInfo
+    {
+        private Type type;
+
+        public DBItemTypeInfo()
+        {
+        }
+
+        public Type Type
+        {
+            get { return type; }
+            set
+            {
+                type = value;
+                Constructor = EmitInvoker.Initialize(type, Type.EmptyTypes, true);
+                Info = DBService.GetTableAttribute(type);
+            }
+        }
+
+        [XmlIgnore]
+        public EmitConstructor Constructor { get; set; }
+
+        [XmlIgnore]
+        public TableAttribute Info { get; set; }
+    }
+
     public abstract class DBTable : DBSchemaItem, ICollection<DBItem>, IComparable, IAccessable, IDisposable
     {
         protected DBCommand dmlInsert;
@@ -51,7 +77,6 @@ namespace DataWF.Data
         protected DBColumn stateKey = DBColumn.EmptyKey;
         protected DBColumn imageKey = DBColumn.EmptyKey;
 
-        private TableAttribute info;
         private DBSequence cacheSequence;
         public DBComparer DefaultComparer;
         public int Hash = -1;
@@ -64,11 +89,10 @@ namespace DataWF.Data
         protected string sequenceName;
         protected bool caching = false;
         protected DBTableType type = DBTableType.Table;
-        public Type itemType = typeof(DBItem);
         private int block = 1000;
         internal object locker = new object();
         protected List<IDBVirtualTable> virtualViews = new List<IDBVirtualTable>(0);
-
+        private DBItemTypeInfo itemType;
 
         protected DBTable(string name = null) : base(name)
         {
@@ -80,6 +104,7 @@ namespace DataWF.Data
             ItemType = ItemType;
         }
 
+        [Browsable(false)]
         public string LogTableName { get; set; }
 
         [XmlIgnore]
@@ -93,6 +118,7 @@ namespace DataWF.Data
             }
         }
 
+        [Browsable(false)]
         public object Lock
         {
             get { return locker; }
@@ -100,7 +126,7 @@ namespace DataWF.Data
 
         public TableAttribute Info
         {
-            get { return info; }
+            get { return itemType?.Info; }
         }
 
         public DBColumn ParseProperty(string property)
@@ -108,15 +134,13 @@ namespace DataWF.Data
             return Info?.GetColumnByProperty(property)?.Column;
         }
 
+        public Dictionary<int, DBItemTypeInfo> ItemTypes { get; set; } = new Dictionary<int, DBItemTypeInfo>();
+
         [XmlIgnore]
         public Type ItemType
         {
-            get { return itemType; }
-            set
-            {
-                itemType = value;
-                info = DBService.GetTableAttribute(itemType);
-            }
+            get { return itemType.Type?? (ItemTypes.TryGetValue(0, out itemType) ? itemType.Type : typeof(DBItem)); }
+            set { itemType = ItemTypes[0] = new DBItemTypeInfo { Type = value }; }
         }
 
         public override string FullName

@@ -109,28 +109,27 @@ namespace DataWF.Data
         {
             if (Table == null || Table.Table == null)
                 throw new Exception("Table Not Initialized!");
-            if (Column == null)
+            if (Column != null)
+                return Column;
+            if (!string.IsNullOrEmpty(GroupName))
             {
-                if (!string.IsNullOrEmpty(GroupName))
+                var cgroup = Table.Table.ColumnGroups[GroupName];
+                if (cgroup == null)
                 {
-                    var cgroup = Table.Table.ColumnGroups[GroupName];
-                    if (cgroup == null)
-                    {
-                        Table.Table.ColumnGroups.Add(new DBColumnGroup(GroupName));
-                    }
+                    Table.Table.ColumnGroups.Add(new DBColumnGroup(GroupName));
                 }
-                if ((Keys & DBColumnKeys.Culture) == DBColumnKeys.Culture)
+            }
+            if ((Keys & DBColumnKeys.Culture) == DBColumnKeys.Culture)
+            {
+                foreach (var culture in Locale.Instance.Cultures)
                 {
-                    foreach (var culture in Locale.Instance.Cultures)
-                    {
-                        GenerateCultureColumn(Table.Table, culture);
-                    }
+                    GenerateCultureColumn(Table.Table, culture);
                 }
-                else
-                {
-                    Column = CreateColumn(ColumnName);
-                    Table.Table.Columns.Add(Column);
-                }
+            }
+            else
+            {
+                Column = CreateColumn(ColumnName);
+                Table.Table.Columns.Add(Column);
             }
             return Column;
         }

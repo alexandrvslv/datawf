@@ -39,7 +39,7 @@ namespace DataWF.Module.Flow
         { }
 
     }
-    [Table("flow", "ddocustomer", BlockSize = 2000)]
+    [Table("wf_flow", "ddocustomer", BlockSize = 2000)]
     public class DocumentCustomer : DBItem
     {
         public static DBTable<DocumentCustomer> DBTable

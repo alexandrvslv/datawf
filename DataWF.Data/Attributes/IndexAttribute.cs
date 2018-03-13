@@ -62,20 +62,19 @@ namespace DataWF.Data
 
         public DBIndex Generate()
         {
-            if (Index == null)
+            if (Index != null)
+                return Index;
+            Index = new DBIndex()
             {
-                Index = new DBIndex()
-                {
-                    Name = IndexName,
-                    Unique = Unique,
-                    Table = Table.Table
-                };
-                foreach (var column in columns)
-                {
-                    Index.Columns.Add(column.Column);
-                }
-                Table.Table.Indexes.Add(Index);
+                Name = IndexName,
+                Unique = Unique,
+                Table = Table.Table
+            };
+            foreach (var column in columns)
+            {
+                Index.Columns.Add(column.Column);
             }
+            Table.Table.Indexes.Add(Index);
             return Index;
         }
     }

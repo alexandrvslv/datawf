@@ -72,7 +72,7 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [Table("flow", "rtemplate", BlockSize = 500)]
+    [Table("wf_flow", "rtemplate", BlockSize = 500)]
     public class Template : DBItem, IDisposable
     {
         public static DBTable<Template> DBTable
@@ -80,8 +80,8 @@ namespace DataWF.Module.Flow
             get { return DBService.GetTable<Template>(); }
         }
 
-        [NonSerialized()]
         private TemplateParamList allparams;
+        private object documentType;
 
         public Template()
         {
@@ -99,7 +99,11 @@ namespace DataWF.Module.Flow
         public string Code
         {
             get { return GetValue<string>(Table.CodeKey); }
-            set { SetValue(value, Table.CodeKey); }
+            set
+            {
+                SetValue(value, Table.CodeKey);
+                documentType = null;
+            }
         }
 
         [Browsable(false)]
@@ -148,30 +152,19 @@ namespace DataWF.Module.Flow
                 return allparams;
             }
         }
-        //        public TemplateType TemplateType
-        //        {
-        //            get
-        //            {
-        //                TemplateType t = TemplateType.OpenOfficeWriter;
-        //                string val = this[FlowEnvir.Setting.Template.Type.Column].ToString();
-        //                if (val == FlowEnvir.Setting.Template.TemplateTypeOpenOfficeCalc)
-        //                    t = TemplateType.OpenOfficeCalc;
-        //                else if (val == FlowEnvir.Setting.Template.TemplateTypeOfficeWord)
-        //                    t = TemplateType.OfficeWord;
-        //                else if (val == FlowEnvir.Setting.Template.TemplateTypeOfficeExcel)
-        //                    t = TemplateType.OfficeExcel;
-        //                return t;
-        //            }
-        //            set
-        //            {
-        //                string val = FlowEnvir.Setting.Template.TemplateTypeOpenOfficeWriter;
-        //                if (value == TemplateType.OpenOfficeCalc) val = FlowEnvir.Setting.Template.TemplateTypeOpenOfficeCalc;
-        //                else if (value == TemplateType.OfficeWord) val = FlowEnvir.Setting.Template.TemplateTypeOfficeWord;
-        //                else if (value == TemplateType.OfficeExcel) val = FlowEnvir.Setting.Template.TemplateTypeOfficeExcel;
-        //                this[FlowEnvir.Setting.Template.Type.Column] = val;
-        //            }
-        //        }
 
+        public Type DocumentType
+        {
+            get { return documentType ?? (documentType = TypeHelper.ParseType(Code)); }
+        }
+
+        public Document CreateDocument()
+        {
+            var document = (Document)EmitInvoker.CreateObject(DocumentType);
+            document.Template = this;
+            return document;
+        }
+     
         //[Editor(typeof(UIFileEditor), typeof(UITypeEditor))]
         [Column("data")]
         public byte[] Data
@@ -198,12 +191,12 @@ namespace DataWF.Module.Flow
         {
             get { return Path.GetExtension(DataName); }
         }
-        //        public bool BarCode
-        //        {
-        //            get { return DBService.GetBool(_row, FlowEnvir.Setting.Template.BarCode.Column); }
-        //            set { DBService.SetBool(_row, FlowEnvir.Setting.Template.BarCode.Column, value); }
-        //        }
 
+        //public bool BarCode
+        //{
+        // get { return DBService.GetBool(_row, FlowEnvir.Setting.Template.BarCode.Column); }
+        // set { DBService.SetBool(_row, FlowEnvir.Setting.Template.BarCode.Column, value); }
+        //}
 
         //public DBList<TemplateParam> GetAttributes()
         //{

@@ -151,6 +151,12 @@ namespace DataWF.Data
             cacheColumns.Clear();
             cacheReferences.Clear();
             cacheIndexes.Clear();
+            InitializeType(type);
+            cacheColumns.Sort((a, b) => a.Order.CompareTo(b.Order));
+        }
+
+        public void InitializeType(Type type)
+        {
             foreach (var property in TypeHelper.GetPropertyes(type, false))
             {
                 var column = DBService.GetColumnAttribute(property);
@@ -180,7 +186,6 @@ namespace DataWF.Data
                     cacheIndexes.Add(index);
                 }
             }
-            cacheColumns.Sort((a, b) => a.Order.CompareTo(b.Order));
         }
 
         public ColumnAttribute GetColumn(string name)

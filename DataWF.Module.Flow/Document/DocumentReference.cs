@@ -156,7 +156,7 @@ namespace DataWF.Module.Flow
         Answer
     }
 
-    [Table("flow", "ddreference", BlockSize = 2000)]
+    [Table("wf_flow", "ddreference", BlockSize = 2000)]
     public class DocumentReference : DBItem
     {
         public static DBTable<DocumentReference> DBTable
