@@ -110,8 +110,8 @@ namespace DataWF.Module.Common
 		[Column("typeid", Keys = DBColumnKeys.Type)]
 		public PermissionType? Type
 		{
-			get { return GetValue<PermissionType?>(Table.TypeKey); }
-			set { SetValue(value, Table.TypeKey); }
+			get { return GetValue<PermissionType?>(Table.ElementTypeKey); }
+			set { SetValue(value, Table.ElementTypeKey); }
 		}
 
 		[Column("code", 512, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing)]

@@ -27,8 +27,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Attributes\ItemTypeAttribute.cs" />
     <Compile Include="DBEnums.cs" />
     <Compile Include="DBService.cs" />
+    <Compile Include="DBTable\DBItemType.cs" />
     <Compile Include="DBTransaction.cs" />
     <Compile Include="Attributes\ColumnAttribute.cs" />
     <Compile Include="Attributes\ReferenceAttribute.cs" />
@@ -188,10 +190,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="DBSystem\" />
-    <Folder Include="Properties\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\System.Data.SQLite.Core.1.0.108.0\build\net46\System.Data.SQLite.Core.targets" Condition="Exists('..\packages\System.Data.SQLite.Core.1.0.108.0\build\net46\System.Data.SQLite.Core.targets')" />
 </Project>

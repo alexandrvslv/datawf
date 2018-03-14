@@ -50,15 +50,15 @@ namespace DataWF.Module.Common
         [Column("typeid", Keys = DBColumnKeys.Type)]
         public short? TypeId
         {
-            get { return GetValue<short?>(Table.TypeKey); }
-            set { SetValue(value, Table.TypeKey); }
+            get { return GetValue<short?>(Table.ElementTypeKey); }
+            set { SetValue(value, Table.ElementTypeKey); }
         }
 
         [Reference("rbook_typeid", nameof(TypeId))]
         public BookType Type
         {
-            get { return GetReference<BookType>(Table.TypeKey); }
-            set { SetReference(value, Table.TypeKey); }
+            get { return GetReference<BookType>(Table.ElementTypeKey); }
+            set { SetReference(value, Table.ElementTypeKey); }
         }
 
         [Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]

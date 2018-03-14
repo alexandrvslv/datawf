@@ -31,34 +31,10 @@ using System.Text;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.IO;
+using System.Globalization;
 
 namespace DataWF.Data
 {
-    public class DBItemTypeInfo
-    {
-        private Type type;
-
-        public DBItemTypeInfo()
-        {
-        }
-
-        public Type Type
-        {
-            get { return type; }
-            set
-            {
-                type = value;
-                Constructor = EmitInvoker.Initialize(type, Type.EmptyTypes, true);
-                Info = DBService.GetTableAttribute(type);
-            }
-        }
-
-        [XmlIgnore]
-        public EmitConstructor Constructor { get; set; }
-
-        [XmlIgnore]
-        public TableAttribute Info { get; set; }
-    }
 
     public abstract class DBTable : DBSchemaItem, ICollection<DBItem>, IComparable, IAccessable, IDisposable
     {
@@ -92,7 +68,8 @@ namespace DataWF.Data
         private int block = 1000;
         internal object locker = new object();
         protected List<IDBVirtualTable> virtualViews = new List<IDBVirtualTable>(0);
-        private DBItemTypeInfo itemType;
+        private DBItemType itemType;
+        private DBColumn itemTypeKey;
 
         protected DBTable(string name = null) : base(name)
         {
@@ -101,7 +78,6 @@ namespace DataWF.Data
             Indexes = new DBIndexList(this);
             Constraints = new DBConstraintList<DBConstraint>(this);
             Foreigns = new DBForeignList(this);
-            ItemType = ItemType;
         }
 
         [Browsable(false)]
@@ -124,23 +100,24 @@ namespace DataWF.Data
             get { return locker; }
         }
 
-        public TableAttribute Info
-        {
-            get { return itemType?.Info; }
-        }
+        [Browsable(false)]
+        public TableAttribute Info { get; protected set; }
 
         public DBColumn ParseProperty(string property)
         {
             return Info?.GetColumnByProperty(property)?.Column;
         }
 
-        public Dictionary<int, DBItemTypeInfo> ItemTypes { get; set; } = new Dictionary<int, DBItemTypeInfo>();
+        [Browsable(false)]
+        public Dictionary<int, DBItemType> ItemTypes { get; set; } = new Dictionary<int, DBItemType>();
 
         [XmlIgnore]
-        public Type ItemType
+        public DBItemType ItemType => itemType;
+
+        protected void SetItemType(Type type)
         {
-            get { return itemType.Type?? (ItemTypes.TryGetValue(0, out itemType) ? itemType.Type : typeof(DBItem)); }
-            set { itemType = ItemTypes[0] = new DBItemTypeInfo { Type = value }; }
+            itemType = ItemTypes[0] = new DBItemType { Type = type };
+            Info = DBService.GetTableAttribute(type);
         }
 
         public override string FullName
@@ -322,13 +299,13 @@ namespace DataWF.Data
         }
 
         [Category("Keys")]
-        public DBColumn TypeKey
+        public DBColumn ElementTypeKey
         {
             get
             {
                 if (typeKey == DBColumn.EmptyKey)
                 {
-                    typeKey = Columns.GetByKey(DBColumnKeys.Type);
+                    typeKey = Columns.GetByKey(DBColumnKeys.ElementType);
                 }
                 return typeKey;
             }
@@ -344,6 +321,19 @@ namespace DataWF.Data
                     stateKey = Columns.GetByKey(DBColumnKeys.State);
                 }
                 return stateKey;
+            }
+        }
+
+        [Category("Keys")]
+        public DBColumn ItemTypeKey
+        {
+            get
+            {
+                if (itemTypeKey == DBColumn.EmptyKey)
+                {
+                    itemTypeKey = Columns.GetByKey(DBColumnKeys.ItemType);
+                }
+                return itemTypeKey;
             }
         }
 

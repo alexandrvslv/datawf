@@ -180,8 +180,8 @@ namespace DataWF.Module.Common
         [Column("typeid", Keys = DBColumnKeys.Type)]
         public UserTypes? UserType
         {
-            get { return (UserTypes?)GetValue<int?>(Table.TypeKey); }
-            set { this[Table.TypeKey] = (int?)value; }
+            get { return (UserTypes?)GetValue<int?>(Table.ElementTypeKey); }
+            set { this[Table.ElementTypeKey] = (int?)value; }
         }
 
         [Column("login", 256, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing), Index("ruser_login", true)]

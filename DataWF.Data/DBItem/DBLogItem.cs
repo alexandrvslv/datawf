@@ -43,8 +43,8 @@ namespace DataWF.Data
 
         public DBLogType? LogType
         {
-            get { return GetValue<DBLogType?>(Table.TypeKey); }
-            set { SetValue(value, Table.TypeKey); }
+            get { return GetValue<DBLogType?>(Table.ElementTypeKey); }
+            set { SetValue(value, Table.ElementTypeKey); }
         }
 
         public object BaseId

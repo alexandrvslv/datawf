@@ -81,7 +81,7 @@ namespace DataWF.Module.Flow
         }
 
         private TemplateParamList allparams;
-        private object documentType;
+        private DBItemType documentType;
 
         public Template()
         {
@@ -95,7 +95,7 @@ namespace DataWF.Module.Flow
             set { SetValue(value, Table.PrimaryKey); }
         }
 
-        [Column("Code", Keys = DBColumnKeys.Code)]
+        [Column("Code", 250, Keys = DBColumnKeys.Code)]
         public string Code
         {
             get { return GetValue<string>(Table.CodeKey); }
@@ -104,6 +104,13 @@ namespace DataWF.Module.Flow
                 SetValue(value, Table.CodeKey);
                 documentType = null;
             }
+        }
+
+        [Column("document_type", 250, Keys = DBColumnKeys.Code)]
+        public int? DocumentType
+        {
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
         }
 
         [Browsable(false)]
@@ -125,8 +132,8 @@ namespace DataWF.Module.Flow
         [Column("workid")]
         public int? WorkId
         {
-            get { return GetProperty<int?>(nameof(WorkId)); }
-            set { SetProperty(value, nameof(WorkId)); }
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
         }
 
         [Reference("fk_template_workid", nameof(WorkId))]
@@ -153,18 +160,24 @@ namespace DataWF.Module.Flow
             }
         }
 
-        public Type DocumentType
+        public DBItemType DocumentTypeInfo
         {
-            get { return documentType ?? (documentType = TypeHelper.ParseType(Code)); }
+            get
+            {
+                return documentType ?? (documentType =
+                  DocumentType != null && Document.DBTable.ItemTypes.TryGetValue(DocumentType.Value, out var temp)
+                  ? temp
+                  : Document.DBTable.ItemType);
+            }
         }
 
         public Document CreateDocument()
         {
-            var document = (Document)EmitInvoker.CreateObject(DocumentType);
+            var document = (Document)DocumentTypeInfo.Constructor.Create();
             document.Template = this;
             return document;
         }
-     
+
         //[Editor(typeof(UIFileEditor), typeof(UITypeEditor))]
         [Column("data")]
         public byte[] Data

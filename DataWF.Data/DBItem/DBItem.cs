@@ -632,6 +632,13 @@ namespace DataWF.Data
             set { SetValue(value, Table.StatusKey); }
         }
 
+        [Browsable(false)]
+        [Column("item_type", GroupName = "system", Keys = DBColumnKeys.ItemType, Order = 98, Default = "0")]
+        public int ItemType
+        {
+            get { return Table.ItemTypeKey == null ? 0 : GetValue<int?>(Table.ItemTypeKey).Value; }
+            set { SetValue(value, Table.ItemTypeKey); }
+        }
 
         [Column("datecreate", GroupName = "system", Keys = DBColumnKeys.Date, Order = 100)]
         public DateTime? Date

@@ -39,7 +39,7 @@ namespace DataWF.Data
         Date = 1 << 3,
         Group = 1 << 4,
         Code = 1 << 5,
-        Type = 1 << 6,
+        ItemType = 1 << 6,
         Image = 1 << 7,
         System = 1 << 8,
         Unique = 1 << 9,
@@ -54,7 +54,8 @@ namespace DataWF.Data
         Password = 1 << 18,
         Reference = 1 << 19,
         TableReference = 1 << 20,
-        NoLog = 1 << 21
+        NoLog = 1 << 21,
+        ElementType = 1 << 22
     }
 
     public class DBColumn : DBTableItem, IComparable, IComparable<DBColumn>, ICloneable, IInvoker<DBItem, object>

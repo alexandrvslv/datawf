@@ -62,26 +62,26 @@ namespace DataWF.Module.Counterpart
         }
 
         [Browsable(false)]
-        [Column("typeid", Keys = DBColumnKeys.Type)]
+        [Column("typeid", Keys = DBColumnKeys.ElementType)]
         [Index("dcustomer_typeid")]
         public int? TypeId
         {
-            get { return GetValue<int?>(Table.TypeKey); }
-            set { SetValue(value, Table.TypeKey); }
+            get { return GetValue<int?>(Table.ElementTypeKey); }
+            set { SetValue(value, Table.ElementTypeKey); }
         }
 
         [Reference("fk_dcustomer_typeid", nameof(TypeId))]
         public Book Type
         {
-            get { return GetReference<Book>(Table.TypeKey); }
-            set { SetReference(value, Table.TypeKey); }
+            get { return GetReference<Book>(Table.ElementTypeKey); }
+            set { SetReference(value, Table.ElementTypeKey); }
         }
 
         [Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
         public override string Name
         {
-            get { return GetName("name"); }
-            set { SetName("name", value); }
+            get { return GetName(nameof(Name)); }
+            set { SetName(nameof(Name), value); }
         }
 
         [Column("login", 200)]

@@ -18,11 +18,13 @@ namespace DataWF.Data
 
 
 		public DBTable()
-		{ }
+		{
+            SetItemType(typeof(T));
+        }
 
 		public DBTable(string name) : base(name)
 		{
-			ItemType = typeof(T);
+			SetItemType(typeof(T));
 		}
 
 		[Browsable(false)]
@@ -609,12 +611,12 @@ namespace DataWF.Data
 		public T New(DBUpdateState state = DBUpdateState.Insert, bool def = true, IDataReader reader = null)
 		{
             var type = GetItemType(reader);
-            T item = (T)EmitInvoker.CreateObject(type);
+            T item = (T)type.Constructor.Create();
 			item.Build(this, state, def);
 			return item;
 		}
 
-        public virtual Type GetItemType(IDataReader reader = null)
+        public virtual DBItemType GetItemType(IDataReader reader = null)
         {
             return ItemType;
         }

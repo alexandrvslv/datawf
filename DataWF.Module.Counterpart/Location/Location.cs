@@ -66,8 +66,8 @@ namespace DataWF.Module.Counterpart
         [Column("typeid", Keys = DBColumnKeys.Type), Index("rlocation_typeid")]
         public LocationType? LocationType
         {
-            get { return (LocationType?)GetValue<int?>(Table.TypeKey); }
-            set { SetValue(value, Table.TypeKey); }
+            get { return (LocationType?)GetValue<int?>(Table.ElementTypeKey); }
+            set { SetValue(value, Table.ElementTypeKey); }
         }
 
         [Column("code", 40, Keys = DBColumnKeys.Code | DBColumnKeys.View), Index("rlocation_code", true)]

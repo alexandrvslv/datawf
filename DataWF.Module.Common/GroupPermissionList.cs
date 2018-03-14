@@ -41,7 +41,7 @@ namespace DataWF.Module.Common
         {
             var type = GroupPermission.GetPermissionType(obj, out string code);
 
-            string filter = $"{ GroupPermission.DBTable.CodeKey.Name}='{code}' and {GroupPermission.DBTable.TypeKey.Name}={type}";
+            string filter = $"{ GroupPermission.DBTable.CodeKey.Name}='{code}' and {GroupPermission.DBTable.ElementTypeKey.Name}={type}";
 
             GroupPermission permission = table.Select(filter).FirstOrDefault();
 

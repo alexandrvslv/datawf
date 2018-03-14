@@ -93,7 +93,6 @@ namespace DataWF.Data
             table.Name = TableName;
             table.Schema = Schema;
             table.Type = TableType;
-            table.ItemType = ItemType;
             table.BlockSize = BlockSize;
             table.DisplayName = ItemType.Name;
             table.Sequence = table.GenerateSequence(table);

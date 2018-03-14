@@ -85,7 +85,7 @@ namespace DataWF.Data
                 {
                     Name = "logtype",
                     DataType = typeof(DBLogType),
-                    Keys = DBColumnKeys.Type
+                    Keys = DBColumnKeys.ElementType
                 });
 
                 foreach (var column in value.Columns)
