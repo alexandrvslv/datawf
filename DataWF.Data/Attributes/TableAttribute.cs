@@ -24,23 +24,20 @@ using System.Globalization;
 using System.ComponentModel;
 using System.Collections.Generic;
 using System.Xml.Serialization;
+using System.Reflection;
 
 namespace DataWF.Data
 {
 
-    [AttributeUsage(AttributeTargets.Class)]
+    [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public class TableAttribute : Attribute
     {
-        [NonSerialized]
         private DBSchema cacheSchema;
-        [NonSerialized]
         private DBTable cacheTable;
-        [NonSerialized]
         SelectableList<ColumnAttribute> cacheColumns = new SelectableList<ColumnAttribute>();
-        [NonSerialized]
         SelectableList<ReferenceAttribute> cacheReferences = new SelectableList<ReferenceAttribute>();
-        [NonSerialized]
         SelectableList<IndexAttribute> cacheIndexes = new SelectableList<IndexAttribute>();
+        SelectableList<ItemTypeAttribute> cacheItemTypes = new SelectableList<ItemTypeAttribute>();
 
         public TableAttribute(string schema, string name)
         {
@@ -99,9 +96,8 @@ namespace DataWF.Data
             return table;
         }
 
-        public DBTable Generate(Type type, DBSchema schema)
+        public DBTable Generate(DBSchema schema)
         {
-            Initialize(type);
             if (Schema == null)
             {
                 if (schema != null)
@@ -119,8 +115,13 @@ namespace DataWF.Data
             if (Table == null)
             {
                 Table = CreateTable();
+                foreach (var itemType in cacheItemTypes)
+                {
+                    Table.ItemTypes[itemType.Id] = new DBItemType { Type = itemType.Type };
+                }
             }
 
+            cacheColumns.Sort((a, b) => a.Order.CompareTo(b.Order));
             foreach (var column in cacheColumns)
             {
                 column.Generate();
@@ -150,13 +151,23 @@ namespace DataWF.Data
             cacheColumns.Clear();
             cacheReferences.Clear();
             cacheIndexes.Clear();
-            InitializeType(type);
-            cacheColumns.Sort((a, b) => a.Order.CompareTo(b.Order));
+            var types = TypeHelper.GetTypeHierarchi(type);
+            foreach (var item in types)
+                InitializeType(item);
+            
+        }
+
+        public void InitializeItemType(ItemTypeAttribute itemType)
+        {
+            if (cacheItemTypes.Contains(itemType))
+                return;
+            cacheItemTypes.Add(itemType);
+            InitializeType(itemType.Type);
         }
 
         public void InitializeType(Type type)
         {
-            foreach (var property in TypeHelper.GetPropertyes(type, false))
+            foreach (var property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly))
             {
                 var column = DBService.GetColumnAttribute(property);
                 if (column != null)
@@ -165,18 +176,18 @@ namespace DataWF.Data
                     column.Property = property.Name;
                     if (column.DataType == null)
                         column.DataType = property.PropertyType;
-                    if (column.Order == -1)
+                    if (column.Order <= 0)
                         column.Order = cacheColumns.Count;
                     cacheColumns.Add(column);
                 }
-                var reference = (ReferenceAttribute)GetCustomAttribute(property, typeof(ReferenceAttribute));
+                var reference = property.GetCustomAttribute<ReferenceAttribute>();
                 if (reference != null)
                 {
                     reference.Table = this;
                     reference.ReferenceType = property.PropertyType;
                     cacheReferences.Add(reference);
                 }
-                var index = (IndexAttribute)GetCustomAttribute(property, typeof(IndexAttribute));
+                var index = property.GetCustomAttribute<IndexAttribute>();
                 if (index != null)
                 {
                     index = cacheIndexes.SelectOne(nameof(IndexAttribute.IndexName), index.IndexName) ?? index;

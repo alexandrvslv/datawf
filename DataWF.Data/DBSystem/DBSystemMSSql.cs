@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
+using System.IO;
 using System.Text;
 
 namespace DataWF.Data
@@ -87,6 +88,25 @@ namespace DataWF.Data
                 case DDLType.Drop:
                     ddl.AppendLine($"drop sequence {sequence.Name};");
                     break;
+            }
+        }
+
+        public override void Format(StringBuilder ddl, DBSchema schema, DDLType ddlType)
+        {            
+            if (ddlType == DDLType.Create)
+            {
+                var dataFile = Path.Combine(schema.Connection.Path, $"{schema.DataBase}.mdf");
+                ddl.AppendLine($"create database {schema.DataBase}");
+                ddl.AppendLine("on");
+                ddl.AppendLine($"(name = {schema.DataBase}_dat,");
+                ddl.AppendLine($"filename = '{dataFile}',");
+                ddl.AppendLine("size = 10, maxsize = unlimited, filegrowth = 5MB);");
+                ddl.AppendLine($"alter database {schema.DataBase} set recovery simple;");
+            }
+            else if (ddlType == DDLType.Drop)
+            {
+                //ddl.AppendLine($"alter database {schema.DataBase} remove file {schema.DataBase}_dat;");
+                ddl.AppendLine($"drop database {schema.DataBase};");                
             }
         }
 

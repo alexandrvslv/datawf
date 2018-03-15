@@ -625,14 +625,6 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
-        [Column("stateid", Default = "1", GroupName = "system", Keys = DBColumnKeys.State, Order = 99)]
-        public DBStatus Status
-        {
-            get { return Table.StatusKey == null ? DBStatus.Empty : GetValue<DBStatus?>(Table.StatusKey).GetValueOrDefault(); }
-            set { SetValue(value, Table.StatusKey); }
-        }
-
-        [Browsable(false)]
         [Column("item_type", GroupName = "system", Keys = DBColumnKeys.ItemType, Order = 98, Default = "0")]
         public int ItemType
         {
@@ -640,7 +632,15 @@ namespace DataWF.Data
             set { SetValue(value, Table.ItemTypeKey); }
         }
 
-        [Column("datecreate", GroupName = "system", Keys = DBColumnKeys.Date, Order = 100)]
+        [Browsable(false)]
+        [Column("status_id", Default = "1", GroupName = "system", Keys = DBColumnKeys.State, Order = 99)]
+        public DBStatus Status
+        {
+            get { return Table.StatusKey == null ? DBStatus.Empty : GetValue<DBStatus?>(Table.StatusKey).GetValueOrDefault(); }
+            set { SetValue(value, Table.StatusKey); }
+        }
+
+        [Column("date_create", GroupName = "system", Keys = DBColumnKeys.Date, Order = 100)]
         public DateTime? Date
         {
             get { return Table.DateKey == null ? null : GetValue<DateTime?>(Table.DateKey); }
@@ -648,7 +648,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
-        [Column("dateupdate", GroupName = "system", Keys = DBColumnKeys.Stamp | DBColumnKeys.NoLog, Order = 101)]
+        [Column("date_update", GroupName = "system", Keys = DBColumnKeys.Stamp | DBColumnKeys.NoLog, Order = 101)]
         public DateTime? Stamp
         {
             get { return Table.StampKey == null ? null : GetValue<DateTime?>(Table.StampKey); }
@@ -656,7 +656,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
-        [Column("gaccess", 512, DataType = typeof(byte[]), GroupName = "system", Keys = DBColumnKeys.Access, Order = 102)]
+        [Column("group_access", 512, DataType = typeof(byte[]), GroupName = "system", Keys = DBColumnKeys.Access, Order = 102)]
         public virtual AccessValue Access
         {
             get

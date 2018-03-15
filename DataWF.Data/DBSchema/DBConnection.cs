@@ -42,7 +42,7 @@ namespace DataWF.Data
         private string systemName;
         private DBSystem system;
         internal List<IDbConnection> Buffer = new List<IDbConnection>();
-
+        private string path;
 
         public DBConnection()
         { }
@@ -254,6 +254,20 @@ namespace DataWF.Data
                     return;
                 extend = value;
                 OnPropertyChanged(nameof(Extend));
+            }
+        }
+
+        [Category("3. Additional")]
+        public string Path
+        {
+            get { return path ?? Helper.GetDirectory(); }
+            set
+            {
+                if (path != value)
+                {
+                    path = value;
+                    OnPropertyChanged(nameof(Path));
+                }
             }
         }
 

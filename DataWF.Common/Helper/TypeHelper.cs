@@ -150,6 +150,19 @@ namespace DataWF.Common
             return type;
         }
 
+        public static List<Type> GetTypeHierarchi(Type type)
+        {
+            var buffer = new List<Type>();
+            buffer.Add(type);
+            while (type.BaseType != null)
+            {
+                type = type.BaseType;
+                if (type != null)
+                    buffer.Insert(0, type);
+            }
+            return buffer;
+        }
+
         public static TypeConverter GetTypeConverter(Type type)
         {
             if (!cacheTypeConverter.TryGetValue(type, out var converter))

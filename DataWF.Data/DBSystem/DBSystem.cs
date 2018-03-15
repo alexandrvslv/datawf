@@ -356,13 +356,19 @@ namespace DataWF.Data
                         {
                             foreach (var constraint in table.Constraints)
                             {
-                                ddl.Append(",");
-                                Format(ddl, constraint);
+                                if (constraint.Column.ColumnType == DBColumnTypes.Default)
+                                {
+                                    ddl.Append(",");
+                                    Format(ddl, constraint);
+                                }
                             }
                             foreach (var relation in table.Foreigns)
                             {
-                                ddl.Append(",");
-                                Format(ddl, relation);
+                                if (relation.Column.ColumnType == DBColumnTypes.Default)
+                                {
+                                    ddl.Append(",");
+                                    Format(ddl, relation);
+                                }
                             }
                         }
                         ddl.AppendLine(")");
@@ -434,7 +440,7 @@ namespace DataWF.Data
             {
                 foreach (var constraint in schema.GetConstraints())
                 {
-                    if (constraint.Table is IDBVirtualTable)
+                    if (constraint.Table is IDBVirtualTable || constraint.Column.ColumnType != DBColumnTypes.Default)
                         continue;
                     Format(ddl, constraint, DDLType.Create);
                     ddl.AppendLine("go");
@@ -442,7 +448,7 @@ namespace DataWF.Data
 
                 foreach (var foreign in schema.GetForeigns())
                 {
-                    if (foreign.Table is IDBVirtualTable)
+                    if (foreign.Table is IDBVirtualTable || foreign.Column.ColumnType!= DBColumnTypes.Default)
                         continue;
                     Format(ddl, foreign, DDLType.Create);
                     ddl.AppendLine("go");

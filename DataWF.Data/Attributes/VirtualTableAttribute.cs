@@ -49,7 +49,7 @@ namespace DataWF.Data
             }
             if (BaseTable.Table == null)
             {
-                BaseTable.Generate(BaseType, Schema);
+                BaseTable.Generate(Schema);
             }
             var table = (DBTable)EmitInvoker.CreateObject(typeof(DBVirtualTable<>).MakeGenericType(ItemType));
             table.Name = TableName;

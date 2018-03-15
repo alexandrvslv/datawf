@@ -21,6 +21,7 @@ using System;
 
 namespace DataWF.Data
 {
+    [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public class ItemTypeAttribute : Attribute
     {
         public ItemTypeAttribute(int id)
@@ -29,5 +30,25 @@ namespace DataWF.Data
         }
 
         public int Id { get; private set; }
+
+        public Type Type { get; private set; }
+
+        public TableAttribute Table { get; private set; }
+
+        public void Initialize(Type type)
+        {
+            Type = type;
+            do
+            {
+                type = type.BaseType;
+                Table = type == null ? null : DBService.GetTableAttribute(type);
+            }
+            while (Table == null && type != null);
+            if (Table == null)
+            {
+                throw new Exception($"Class with {nameof(ItemTypeAttribute)} must have are {nameof(Type.BaseType)} with {nameof(TableAttribute)}!");
+            }
+            Table.InitializeItemType(this);
+        }
     }
 }
