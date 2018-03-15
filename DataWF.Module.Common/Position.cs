@@ -42,8 +42,8 @@ namespace DataWF.Module.Common
             set { SetValue(value, Table.PrimaryKey); }
         }
 
-        [Column("positionnumber", 40, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing)]
-        [Index("rposition_positionnumber", true)]
+        [Column("position_number", 40, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing)]
+        [Index("rposition_position_number", true)]
         public string Number
         {
             get { return GetValue<string>(Table.CodeKey); }

@@ -31,7 +31,7 @@ namespace DataWF.Module.Counterpart
         }
     }
 
-    [Table("wf_customer", "creference")]
+    [Table("wf_customer", "dcustomer_reference")]
     public class CustomerReference : DBItem
     {
         public static DBTable<CustomerReference> DBTable
@@ -44,37 +44,22 @@ namespace DataWF.Module.Counterpart
             Build(DBTable);
         }
 
-        [Column("id", Keys = DBColumnKeys.Primary)]
+        [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
             set { SetValue(value, Table.PrimaryKey); }
-        }
+        }        
 
         [Browsable(false)]
-        [Column("typeid", Keys = DBColumnKeys.Type)]
-        public int? TypeId
-        {
-            get { return GetProperty<int?>(nameof(TypeId)); }
-            set { SetProperty(value, nameof(TypeId)); }
-        }
-
-        [Reference("fk_creference_typeid", nameof(TypeId))]
-        public Book Type
-        {
-            get { return GetPropertyReference<Book>(nameof(TypeId)); }
-            set { SetPropertyReference(value, nameof(TypeId)); }
-        }
-
-        [Browsable(false)]
-        [Column("customerid")]
+        [Column("customer_id")]
         public int? CustomerId
         {
             get { return GetProperty<int?>(nameof(CustomerId)); }
             set { SetProperty(value, nameof(CustomerId)); }
         }
 
-        [Reference("fk_creference_customerid", nameof(CustomerId))]
+        [Reference("fk_dcustomer_reference_customer_id", nameof(CustomerId))]
         public Customer Customer
         {
             get { return GetPropertyReference<Customer>(nameof(CustomerId)); }
@@ -82,14 +67,14 @@ namespace DataWF.Module.Counterpart
         }
 
         [Browsable(false)]
-        [Column("referenceid")]
+        [Column("reference_id")]
         public int? ReferenceId
         {
             get { return GetProperty<int?>(nameof(ReferenceId)); }
             set { SetProperty(value, nameof(ReferenceId)); }
         }
 
-        [Reference("fk_creference_referenceid", nameof(ReferenceId))]
+        [Reference("fk_dcustomer_reference_reference_id", nameof(ReferenceId))]
         public Customer Reference
         {
             get { return GetPropertyReference<Customer>(nameof(ReferenceId)); }

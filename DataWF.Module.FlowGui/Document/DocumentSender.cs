@@ -178,7 +178,7 @@ namespace DataWF.Module.FlowGui
             // Определение текущего этапа
 
             var work = current.GetWork();
-            var works = current.GetWorks().ToList();
+            var works = current.Works.ToList();
             if (current.WorkCurrent != null)
                 CurrentStage = current.WorkCurrent.Stage;
             if (CurrentStage == null && work != null)
@@ -187,7 +187,7 @@ namespace DataWF.Module.FlowGui
             // Построение списка документов
             foreach (Document document in documents)
             {
-                var dworks = document.GetWorks().ToList();
+                var dworks = document.Works.ToList();
                 if (dworks.Count == 0)
                     dworks = (List<DocumentWork>)document.Initialize(DocInitType.Workflow);
 
@@ -196,9 +196,9 @@ namespace DataWF.Module.FlowGui
                 {
 
                     foreach (var w in dworks)
-                        if (!w.IsComplete.Value && w != cwork && w.User == cwork.User)
+                        if (!w.IsComplete && w != cwork && w.User == cwork.User)
                         {
-                            w.IsComplete = true;
+                            w.DateComplete = DateTime.Now;
                             w.Save();
                         }
                 }
@@ -260,7 +260,7 @@ namespace DataWF.Module.FlowGui
             else
             {
                 foreach (var w in works)
-                    if (!w.IsComplete.Value && !w.User.IsCurrent)
+                    if (!w.IsComplete && !w.User.IsCurrent)
                     {
                         toolComplete.Sensitive = true;
                         break;
@@ -370,7 +370,7 @@ namespace DataWF.Module.FlowGui
         {
             DocumentSendItem item = listItem as DocumentSendItem;
             if (item != null && cell == null)
-                if (item.Work != null && item.Work.IsComplete.Value)
+                if (item.Work != null && item.Work.IsComplete)
                     return styleComplete;
                 else if (item.Message != null && item.Message.Length != 0)
                     return styleError;
@@ -457,7 +457,7 @@ namespace DataWF.Module.FlowGui
                         if (SendType == DocumentSendType.Complete)
                         {
                             if (sender.Work != null)
-                                sender.Work.IsComplete = true;
+                                sender.Work.DateComplete = DateTime.Now;
                         }
                         else
                         {

@@ -34,7 +34,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="TestORM.cs" />    
+    <Compile Include="TestORM.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj">
@@ -51,7 +51,11 @@
     <None Include="packages.config" />
     <None Include="connections.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </None>
-  </ItemGroup>  
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -45,7 +45,7 @@ namespace DataWF.Module.Flow
         }
 
         public DocumentList(Customer customer)
-            : this(Document.DBTable.ParseColumn(nameof(Document.Customer)).Name + "='" + customer.PrimaryId + "'", DBViewKeys.None)
+            : this($"{Document.DBTable.ParseProperty(nameof(Document.Customer)).Name}={customer.Id}", DBViewKeys.None)
         {
         }
 
@@ -58,8 +58,7 @@ namespace DataWF.Module.Flow
         {
             if (template == null)
                 return null;
-            string filter = Document.DBTable.ParseColumn(nameof(Document.Template)).Name + "=" + template.PrimaryId + " and " +
-                                    Document.DBTable.ParseColumn(nameof(Document.Customer)).Name + "=" + p + "";
+            string filter = $"{Document.DBTable.ParseProperty(nameof(Document.Template)).Name}={template.Id} and {Document.DBTable.ParseProperty(nameof(Document.Customer)).Name}={p}";
             return table.Load(filter, DBLoadParam.Load).FirstOrDefault();
         }
 
@@ -170,7 +169,7 @@ namespace DataWF.Module.Flow
             if (stage != null)
             {
                 DocumentWork oldWork = document.GetByStage(stage);
-                if (oldWork != null && oldWork != from && !oldWork.IsComplete.GetValueOrDefault()
+                if (oldWork != null && oldWork != from && !oldWork.IsComplete
                     && (oldWork.User == user || oldWork.User == user.Parent || oldWork.User.Parent == user))
                     return null;
                 object obj = ExecuteStageProcedure(new ExecuteArgs(document, transaction), ParamType.Check, callback);
@@ -183,16 +182,15 @@ namespace DataWF.Module.Flow
                 transaction.Rows.Add(result);
             if (from != null)
             {
-                from.IsComplete = true;
+                from.DateComplete = DateTime.Now;
                 if (transaction != null)
                     transaction.Rows.Add(from);
             }
-            if (result.IsComplete.GetValueOrDefault())
+            if (result.IsComplete)
             {
-                var works = document.GetWorks();
-                foreach (var iwork in works)
-                    if (!iwork.IsComplete.GetValueOrDefault())
-                        iwork.IsComplete = true;
+                foreach (var iwork in document.Works)
+                    if (!iwork.IsComplete)
+                        iwork.DateComplete = DateTime.Now; 
             }
             document.IsComplete = result.IsComplete;
 
@@ -242,7 +240,6 @@ namespace DataWF.Module.Flow
 
         //public static void Initialize(DocInitType type, Document document)
         //{
-
         //    //if (type == DocInitType.Logs)
         //    //     document.Logs.Fill(DBLoadParam.Synchronize);
         //    //if (type == DocInitType.Account)
@@ -276,7 +273,7 @@ namespace DataWF.Module.Flow
             if (item is DocumentWork)
             {
                 var work = (DocumentWork)item;
-                if (work.IsComplete.GetValueOrDefault() || work.DBState == DBUpdateState.Default)
+                if (work.IsComplete || work.DBState == DBUpdateState.Default)
                     RefreshCache();
             }
             else if (item is DocumentReference)
@@ -334,14 +331,15 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("templateid", Keys = DBColumnKeys.View)]
+        [Column("template_id", Keys = DBColumnKeys.View)]
+        [Index("ddocument_template_id", Unique = false)]
         public int? TemplateId
         {
-            get { return GetProperty<int?>(nameof(TemplateId)); }
-            set { SetProperty(value, nameof(TemplateId)); }
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
         }
 
-        [Reference("fk_ddocument_templateid", nameof(TemplateId))]
+        [Reference("fk_ddocument_template_id", nameof(TemplateId))]
         public Template Template
         {
             get { return GetPropertyReference<Template>(nameof(TemplateId)); }
@@ -349,25 +347,27 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("parentid", Keys = DBColumnKeys.Group)]
-        public int? ParentId
+        [Column("parent_id", Keys = DBColumnKeys.Group)]
+        public long? ParentId
         {
-            get { return GetProperty<int?>(nameof(ParentId)); }
-            set { SetProperty(value, nameof(ParentId)); }
+            get { return GetValue<long?>(Table.GroupKey); }
+            set { SetValue(value, Table.GroupKey); }
         }
 
-        [Reference("fk_ddocument_parentid", nameof(ParentId))]
+        [Reference("fk_ddocument_parent_id", nameof(ParentId))]
         public Document Parent
         {
             get
             {
                 Document parent = GetReference<Document>(Table.GroupKey);
                 if (parent == null)
-                    foreach (DocumentReference dw in GetRefing())
+                {
+                    foreach (var dreference in Refing)
                     {
-                        parent = dw.Document;
+                        parent = dreference.Document;
                         break;
                     }
+                }
                 return parent;
             }
             set { SetReference(value, Table.GroupKey); }
@@ -375,39 +375,40 @@ namespace DataWF.Module.Flow
 
         public DocumentWork GetWork()
         {
-            var works = GetWorks();
             DocumentWork workNow = null;
-            foreach (var work in works)
-                if (!work.IsComplete.GetValueOrDefault())
+            foreach (var work in Works)
+            {
+                if (!work.IsComplete)
                 {
                     workNow = work;
                     break;
                 }
+            }
             return workNow;
         }
 
-        [Column("workid", ColumnType = DBColumnTypes.Internal)]
+        [Column("work_id", ColumnType = DBColumnTypes.Internal)]
         public string WorkId
         {
             get { return GetProperty<string>(nameof(WorkId)); }
             set { SetProperty(value, nameof(WorkId)); }
         }
 
-        [Reference("", nameof(WorkId))]
+        [Reference("fk_ddocument_work_id", nameof(WorkId))]
         public DocumentWork WorkCurrent
         {
             get { return GetPropertyReference<DocumentWork>(nameof(WorkId)); }
             set { SetPropertyReference(value, nameof(WorkId)); }
         }
 
-        [Column("workuser", ColumnType = DBColumnTypes.Internal)]
+        [Column("work_user", ColumnType = DBColumnTypes.Internal)]
         public string WorkUser
         {
             get { return GetProperty<string>(nameof(WorkUser)); }
             set { SetProperty(value, nameof(WorkUser)); }
         }
 
-        [Column("workstage", ColumnType = DBColumnTypes.Internal)]
+        [Column("work_stage", ColumnType = DBColumnTypes.Internal)]
         public string WorkStage
         {
             get { return GetProperty<string>(nameof(WorkStage)); }
@@ -416,12 +417,11 @@ namespace DataWF.Module.Flow
 
         public string GetWorkFlow()
         {
-            var works = GetWorks();
             var workFlows = string.Empty;
-            foreach (DocumentWork work in works)
+            foreach (DocumentWork work in Works)
             {
                 string flow = work.Stage != null ? work.Stage.Work.Name : "<no name>";
-                if (!work.IsComplete.GetValueOrDefault()
+                if (!work.IsComplete
                     && (workFlows == null || workFlows.IndexOf(flow, StringComparison.Ordinal) < 0))
                     workFlows = workFlows + flow + " ";
             }
@@ -535,7 +535,8 @@ namespace DataWF.Module.Flow
             }
             if (stage != null)
             {
-                work.IsComplete = (stage.Keys & StageKey.IsStop) == StageKey.IsStop && (stage.Keys & StageKey.IsAutoComplete) == StageKey.IsAutoComplete;
+                if ((stage.Keys & StageKey.IsStop) == StageKey.IsStop && (stage.Keys & StageKey.IsAutoComplete) == StageKey.IsAutoComplete)
+                    work.DateComplete = DateTime.Now;
                 if (stage.TimeLimit != TimeSpan.Zero)
                     work.DateLimit = DateTime.Now + stage.TimeLimit;
             }
@@ -551,13 +552,13 @@ namespace DataWF.Module.Flow
             if (type == DocInitType.Default)
                 Save(transaction);
             else if (type == DocInitType.Refed)
-                DocumentReference.DBTable.Save(GetRefed().ToList(), transaction);
+                DocumentReference.DBTable.Save(Refed.ToList(), transaction);
             else if (type == DocInitType.Refing)
-                DocumentReference.DBTable.Save(GetRefing().ToList(), transaction);
+                DocumentReference.DBTable.Save(Refing.ToList(), transaction);
             else if (type == DocInitType.Data)
-                DocumentData.DBTable.Save(GetDatas().ToList(), transaction);
+                DocumentData.DBTable.Save(Datas.ToList(), transaction);
             else if (type == DocInitType.Workflow)
-                DocumentWork.DBTable.Save(GetWorks().ToList(), transaction);
+                DocumentWork.DBTable.Save(Works.ToList(), transaction);
         }
 
         public DocInitType IniType
@@ -620,13 +621,11 @@ namespace DataWF.Module.Flow
 
         public Document FindReference(Template t, bool create)
         {
-            var refed = GetRefed();
-            foreach (var refer in refed)
+            foreach (var refer in Refed)
                 if (refer.Reference.Template == t)
                     return refer.Reference;
 
-            var refing = GetRefing();
-            foreach (var refer in refing)
+            foreach (var refer in Refing)
                 if (refer.Document.Template == t)
                     return refer.Document;
 
@@ -650,7 +649,7 @@ namespace DataWF.Module.Flow
             var param = new ExecuteArgs(this, tempTRN);
             try
             {
-                var works = GetWorks().ToList();
+                var works = Works.ToList();
                 bool isnew = works.Count == 0 || (works.Count == 1 && works[0].DBState == DBUpdateState.Insert);
 
                 if (isnew && Number == null)
@@ -663,13 +662,13 @@ namespace DataWF.Module.Flow
                     Send(this, null, flow == null ? null : flow.GetStartStage(), User.CurrentUser, "Start stage", tempTRN, callback);
                     ExecuteStageProcedure(param, ParamType.Begin, callback);
                 }
-                works = GetWorks().ToList();
+                works = Works.ToList();
                 foreach (var work in works)
                 {
                     if (work.Stage != null && !work.IsResend)
                     {
                         param.Parameters.Add("stage", work.Stage);
-                        if (work.DBState == DBUpdateState.Update && work.IsComplete.GetValueOrDefault() &&
+                        if (work.DBState == DBUpdateState.Update && work.IsComplete &&
                             work.Changed(DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.IsComplete))))
                             ExecuteStageProcedure(param, ParamType.End, callback);
 
@@ -736,13 +735,11 @@ namespace DataWF.Module.Flow
 
         public DocumentReference FindReference(object id)
         {
-            var refed = GetRefed();
-            foreach (var item in refed)
+            foreach (var item in Refed)
                 if (item.ReferenceId.Equals(id))
                     return item;
 
-            var refing = GetRefing();
-            foreach (var item in refing)
+            foreach (var item in Refing)
                 if (item.DocumentId.Equals(id))
                     return item;
 
@@ -780,39 +777,51 @@ namespace DataWF.Module.Flow
         }
 
 
-        public IEnumerable<DocumentReference> GetRefed()
+        public IEnumerable<DocumentReference> Refed
         {
-            return GetReferencing<DocumentReference>(DocumentReference.DBTable,
-                                                     DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.DocumentId)),
-                                                     DBLoadParam.None);
+            get
+            {
+                return GetReferencing<DocumentReference>(DocumentReference.DBTable,
+                                                         DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.DocumentId)),
+                                                         DBLoadParam.None);
+            }
         }
 
-        public IEnumerable<DocumentReference> GetRefing()
+        public IEnumerable<DocumentReference> Refing
         {
-            return GetReferencing<DocumentReference>(DocumentReference.DBTable,
-                                                     DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.ReferenceId)),
-                                                     DBLoadParam.None);
+            get
+            {
+                return GetReferencing<DocumentReference>(DocumentReference.DBTable,
+                                                         DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.ReferenceId)),
+                                                         DBLoadParam.None);
+            }
         }
 
-        public IEnumerable<DocumentWork> GetWorks()
+        public IEnumerable<DocumentWork> Works
         {
-            return GetReferencing<DocumentWork>(DocumentWork.DBTable,
-                                                DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DocumentId)),
-                                                DBLoadParam.None);
+            get
+            {
+                return GetReferencing<DocumentWork>(DocumentWork.DBTable,
+                                                    DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DocumentId)),
+                                                    DBLoadParam.None);
+            }
         }
 
-        public IEnumerable<DocumentData> GetDatas()
+        public IEnumerable<DocumentData> Datas
         {
-            return GetReferencing<DocumentData>(DocumentData.DBTable,
-                                                DocumentData.DBTable.ParseProperty(nameof(DocumentData.DocumentId)),
-                                                DBLoadParam.None);
+            get
+            {
+                return GetReferencing<DocumentData>(DocumentData.DBTable,
+                                                    DocumentData.DBTable.ParseProperty(nameof(DocumentData.DocumentId)),
+                                                    DBLoadParam.None);
+            }
         }
 
         public DocumentData GetData(string p)
         {
             Initialize(DocInitType.Data);
-            foreach (var data in GetDatas())
-                if (data.DataName == p || data.DataName.EndsWith(p))
+            foreach (var data in Datas)
+                if (data.FileName == p || data.FileName.EndsWith(p))
                     return data;
             return null;
         }
@@ -824,7 +833,7 @@ namespace DataWF.Module.Flow
 
         public DocumentWork GetByStage(Stage stage)
         {
-            var works = GetWorks().ToList();
+            var works = Works.ToList();
             for (int i = works.Count - 1; i >= 0; i--)
             {
                 DocumentWork work = works[i];
@@ -834,27 +843,25 @@ namespace DataWF.Module.Flow
             return null;
         }
 
-        public List<DocumentWork> GetUnCompleteWorks(Stage filter)
+        public IEnumerable<DocumentWork> GetUnCompleteWorks(Stage filter)
         {
-            var works = GetWorks();
-            List<DocumentWork> bufList = new List<DocumentWork>();
-            foreach (DocumentWork work in works)
-                if (!work.IsComplete.GetValueOrDefault())
-                    if (filter == null || (filter != null && work.Stage == filter))
-                        bufList.Add(work);
-            return bufList;
+            foreach (DocumentWork work in Works)
+            {
+                if (!work.IsComplete && (filter == null || (filter != null && work.Stage == filter)))
+                {
+                    yield return work;
+                }
+            }
         }
 
         public DocumentWork GetLastWork()
         {
-            var works = GetWorks();
-            return works.FirstOrDefault();
+            return Works.FirstOrDefault();
         }
 
         public DocumentData GetTemplate()
         {
-            var datas = GetDatas();
-            foreach (DocumentData data in datas)
+            foreach (DocumentData data in Datas)
                 if (data.IsTemplate.GetValueOrDefault())
                     return data;
             return null;
@@ -865,13 +872,13 @@ namespace DataWF.Module.Flow
             string workUsers = string.Empty;
             string workStages = string.Empty;
             DocumentWork current = null;
-            var works = GetWorks().ToList();
+            var works = Works.ToList();
             for (int i = 0; i < works.Count; i++)
             {
                 DocumentWork dw = works[i];
                 var stage = dw.Stage == null ? "none" : dw.Stage.ToString();
 
-                if (!dw.IsComplete.GetValueOrDefault())
+                if (!dw.IsComplete)
                 {
                     if (workUsers.Length == 0 || workUsers.IndexOf(dw.User.Name, StringComparison.Ordinal) < 0)
                         workUsers = workUsers + dw.User.Name + " ";
@@ -897,42 +904,42 @@ namespace DataWF.Module.Flow
             //return (Template == null ? "" : Template.ToString() + " ") + " № " + Code;
         }
 
-        [Column("isimportant")]
+        [Column("is_important")]
         public bool? Important
         {
             get { return GetProperty<bool?>(nameof(Important)); }
             set { SetProperty(value, nameof(Important)); }
         }
 
-        [Column("iscomlete")]
+        [Column("is_comlete")]
         public bool? IsComplete
         {
             get { return GetProperty<bool?>(nameof(IsComplete)); }
             set { SetProperty(value, nameof(IsComplete)); }
         }
 
-        [Column("docdate")]
+        [Column("document_date")]
         public DateTime? DocumentDate
         {
             get { return GetProperty<DateTime?>(nameof(DocumentDate)); }
             set { SetProperty(value, nameof(DocumentDate)); }
         }
 
-        [Column("docnumber", 40, Keys = DBColumnKeys.Code), Index("ddocuument_docnumber")]
+        [Column("document_number", 40, Keys = DBColumnKeys.Code), Index("ddocuument_document_number")]
         public string Number
         {
             get { return GetProperty<string>(nameof(Number)); }
             set { SetProperty(value, nameof(Number)); }
         }
 
-        [Column("numinput", 40)]
+        [Column("number_input", 40)]
         public string NumberInput
         {
             get { return GetProperty<string>(nameof(NumberInput)); }
             set { SetProperty(value, nameof(NumberInput)); }
         }
 
-        [Column("numoutput", 40)]
+        [Column("number_utput", 40)]
         public string NumberOutput
         {
             get { return GetProperty<string>(nameof(NumberOutput)); }
@@ -940,14 +947,14 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("customerid")]
+        [Column("customer_id")]
         public int? CustomerId
         {
             get { return GetProperty<int?>(nameof(CustomerId)); }
             set { SetProperty(value, nameof(CustomerId)); }
         }
 
-        [Reference("fk_ddocument_customerid", nameof(CustomerId))]
+        [Reference("fk_ddocument_customer_id", nameof(CustomerId))]
         public Customer Customer
         {
             get { return GetPropertyReference<Customer>(nameof(CustomerId)); }
@@ -955,14 +962,14 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("addressid")]
+        [Column("address_id")]
         public int? AddressId
         {
             get { return GetProperty<int?>(nameof(AddressId)); }
             set { SetProperty(value, nameof(AddressId)); }
         }
 
-        [Reference("fk_ddocument_addressid", nameof(AddressId))]
+        [Reference("fk_ddocument_address_id", nameof(AddressId))]
         public Address Address
         {
             get { return GetPropertyReference<Address>(nameof(AddressId)); }
@@ -971,21 +978,21 @@ namespace DataWF.Module.Flow
 
         public void CheckComplete()
         {
-            var works = GetWorks();
-            foreach (var work in works)
-                if (!work.IsComplete.GetValueOrDefault())
+            foreach (var work in Works)
+            {
+                if (!work.IsComplete)
                 {
                     IsComplete = false;
                     return;
                 }
+            }
             IsComplete = true;
         }
 
         [Browsable(false)]
         public DocumentData GetData()
         {
-            var datas = GetDatas();
-            return datas.FirstOrDefault();
+            return Datas.FirstOrDefault();
         }
 
         public void LoadDocuments(User user)

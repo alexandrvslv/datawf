@@ -163,21 +163,21 @@ namespace DataWF.Module.Common
             set { this[Table.PrimaryKey] = value; }
         }
 
-        [Column("parentid", Keys = DBColumnKeys.Group), Index("ruser_parentid"), Browsable(false)]
+        [Column("parent_id", Keys = DBColumnKeys.Group), Index("ruser_parent_id"), Browsable(false)]
         public int? ParentId
         {
             get { return GetValue<int?>(Table.GroupKey); }
             set { this[Table.GroupKey] = value; }
         }
 
-        [Reference("fk_ruser_parentid", "ParentId")]
+        [Reference("fk_ruser_parent_id", nameof(ParentId))]
         public User Parent
         {
             get { return GetReference<User>(Table.GroupKey); }
             set { SetReference(value, Table.GroupKey); }
         }
 
-        [Column("typeid", Keys = DBColumnKeys.Type)]
+        [Column("type_id", Keys = DBColumnKeys.ElementType)]
         public UserTypes? UserType
         {
             get { return (UserTypes?)GetValue<int?>(Table.ElementTypeKey); }
@@ -198,14 +198,14 @@ namespace DataWF.Module.Common
             set { SetName("name", value); }
         }
 
-        [Column("positionid")]
+        [Column("position_id")]
         public int? PositionId
         {
             get { return GetProperty<int?>(nameof(PositionId)); }
             set { SetProperty(value, nameof(PositionId)); }
         }
 
-        [Reference("fk_ruser_positionid", nameof(PositionId))]
+        [Reference("fk_ruser_position_id", nameof(PositionId))]
         public Position Position
         {
             get { return GetPropertyReference<Position>(nameof(PositionId)); }
@@ -241,11 +241,11 @@ namespace DataWF.Module.Common
             set { SetProperty(value, nameof(EMail)); }
         }
 
-        [Column("networkid", 2048)]
-        public string NetworkId
+        [Column("network_address", 2048)]
+        public string NetworkAddress
         {
-            get { return GetProperty<string>(nameof(NetworkId)); }
-            set { SetProperty(value, nameof(NetworkId)); }
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
         }
 
         public bool IsBlock
@@ -266,8 +266,6 @@ namespace DataWF.Module.Common
                 SetProperty(GetSha(value), nameof(Password));
             }
         }
-
-
 
         #region IComparable Members
 

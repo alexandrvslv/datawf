@@ -65,8 +65,8 @@ namespace DataWF.Module.Flow
         [Column("name", Keys = DBColumnKeys.Culture)]
         public override string Name
         {
-            get { return GetName("name"); }
-            set { SetName("name", value); }
+            get { return GetName(nameof(Name)); }
+            set { SetName(nameof(Name), value); }
         }
 
         public List<Template> GetTemplates()

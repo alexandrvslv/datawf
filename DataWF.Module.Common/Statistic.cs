@@ -78,21 +78,21 @@ namespace DataWF.Module.Common
         //}
 
         [Browsable(false)]
-        [Column("schedulerid")]
+        [Column("scheduler_id")]
         public int? SchedulerId
         {
             get { return GetProperty<int?>(nameof(SchedulerId)); }
             set { SetProperty(value, nameof(SchedulerId)); }
         }
 
-        [Reference("fk_dstatistic_schedulerid", nameof(SchedulerId))]
+        [Reference("fk_dstats_scheduler_id", nameof(SchedulerId))]
         public Scheduler Scheduler
         {
             get { return GetPropertyReference<Scheduler>(nameof(SchedulerId)); }
             set { SetPropertyReference(value, nameof(SchedulerId)); }
         }
 
-        [Column("statresult")]
+        [Column("stat_result")]
         public decimal? Result
         {
             get { return GetProperty<decimal?>(); }

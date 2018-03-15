@@ -89,19 +89,19 @@ namespace DataWF.Module.Flow
         [Column("name", 512, Keys = DBColumnKeys.Culture)]
         public override string Name
         {
-            get { return GetName("name"); }
-            set { SetName("name", value); }
+            get { return GetName(nameof(Name)); }
+            set { SetName(nameof(Name), value); }
         }
 
         [Browsable(false)]
-        [Column("workid")]
+        [Column("work_id")]
         public int? WorkId
         {
-            get { return GetProperty<int?>(nameof(WorkId)); }
-            set { SetProperty(value, nameof(WorkId)); }
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
         }
 
-        [Reference("fk_rstage_workid", nameof(WorkId))]
+        [Reference("fk_rstage_work_id", nameof(WorkId))]
         public Work Work
         {
             get { return GetPropertyReference<Work>(nameof(WorkId)); }
@@ -111,15 +111,15 @@ namespace DataWF.Module.Flow
         [Column("keys")]
         public StageKey? Keys
         {
-            get { return GetProperty<StageKey?>(nameof(Keys)); }
-            set { SetProperty(value, nameof(Keys)); }
+            get { return GetProperty<StageKey?>(); }
+            set { SetProperty(value); }
         }
 
-        [Column("timelimit")]
+        [Column("time_limit")]
         public TimeSpan? TimeLimit
         {
-            get { return GetProperty<TimeSpan?>(nameof(TimeLimit)); }
-            set { SetProperty(value, nameof(TimeLimit)); }
+            get { return GetProperty<TimeSpan?>(); }
+            set { SetProperty(value); }
         }
 
         public IEnumerable<StageParam> GetParams()

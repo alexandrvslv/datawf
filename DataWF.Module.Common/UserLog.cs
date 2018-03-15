@@ -42,7 +42,7 @@ namespace DataWF.Module.Common
         Reject
     }
 
-    [Table("wf_common", "userlog", BlockSize = 2000, IsLoging = false)]
+    [Table("wf_common", "duser_log", BlockSize = 2000, IsLoging = false)]
     public class UserLog : DBItem, ICheck
     {
         [ThreadStatic]
@@ -91,7 +91,7 @@ namespace DataWF.Module.Common
             set { SetValue(value, Table.PrimaryKey); }
         }
 
-        [Column("typeid", Keys = DBColumnKeys.Type)]
+        [Column("type_id", Keys = DBColumnKeys.ElementType)]
         public UserLogType? LogType
         {
             get { return GetProperty<UserLogType?>(nameof(LogType)); }
@@ -137,14 +137,14 @@ namespace DataWF.Module.Common
         }
 
         [Browsable(false)]
-        [Column("parentid", Keys = DBColumnKeys.Group)]
+        [Column("parent_id", Keys = DBColumnKeys.Group)]
         public long? ParentId
         {
             get { return GetProperty<long?>(nameof(ParentId)); }
             set { SetProperty(value, nameof(ParentId)); }
         }
 
-        [Reference("fk_userlog_parentid", nameof(ParentId))]
+        [Reference("fk_duser_log_parent_id", nameof(ParentId))]
         public UserLog Parent
         {
             get { return GetPropertyReference<UserLog>(nameof(ParentId)); }
@@ -152,14 +152,14 @@ namespace DataWF.Module.Common
         }
 
         [Browsable(false)]
-        [Column("redoid", Keys = DBColumnKeys.Group)]
+        [Column("redo_id", Keys = DBColumnKeys.Group)]
         public long? RedoId
         {
             get { return GetProperty<long?>(nameof(RedoId)); }
             set { SetProperty(value, nameof(RedoId)); }
         }
 
-        [Reference("fk_userlog_redoid", nameof(RedoId))]
+        [Reference("fk_duser_log_redo_id", nameof(RedoId))]
         public UserLog Redo
         {
             get { return GetPropertyReference<UserLog>(nameof(RedoId)); }
@@ -184,7 +184,7 @@ namespace DataWF.Module.Common
             }
         }
 
-        [Column("targetid", 256)]
+        [Column("target_id", 256)]
         public string TargetId
         {
             get { return GetProperty<string>(nameof(TargetId)); }
@@ -208,7 +208,7 @@ namespace DataWF.Module.Common
             get { return TargetTable.LogTable; }
         }
 
-        [Column("logid")]
+        [Column("log_id")]
         public int? LogId
         {
             get { return GetProperty<int?>(nameof(LogId)); }
@@ -236,14 +236,14 @@ namespace DataWF.Module.Common
             set { SetProperty(value, nameof(TextData)); }
         }
 
-        [Column("userid")]
+        [Column("user_id")]
         public int? UserId
         {
             get { return GetProperty<int?>(nameof(UserId)); }
             set { SetProperty(value, nameof(UserId)); }
         }
 
-        [Reference("fk_ddoclog_userid", nameof(UserId))]
+        [Reference("fk_duser_log_user_id", nameof(UserId))]
         public User User
         {
             get { return GetPropertyReference<User>(nameof(UserId)); }

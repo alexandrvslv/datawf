@@ -39,7 +39,7 @@ namespace DataWF.Module.Flow
         { }
 
     }
-    [Table("wf_flow", "ddocustomer", BlockSize = 2000)]
+    [Table("wf_flow", "ddocument_customer", BlockSize = 2000)]
     public class DocumentCustomer : DBItem
     {
         public static DBTable<DocumentCustomer> DBTable
@@ -60,14 +60,14 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("documentid")]
+        [Column("document_id")]
         public long? DocumentId
         {
-            get { return GetProperty<long?>(nameof(DocumentId)); }
-            set { SetProperty(value, nameof(DocumentId)); }
+            get { return GetProperty<long?>(); }
+            set { SetProperty(value); }
         }
 
-        [Reference("fk_ddocustomer_documentid", nameof(DocumentId))]
+        [Reference("fk_ddocument_customer_documentid", nameof(DocumentId))]
         public Document Document
         {
             get { return GetPropertyReference<Document>(nameof(DocumentId)); }
@@ -75,18 +75,33 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("customerid")]
+        [Column("customer_id")]
         public int? CustomerId
         {
-            get { return GetProperty<int?>(nameof(CustomerId)); }
-            set { SetProperty(value, nameof(CustomerId)); }
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
         }
 
-        [Reference("fk_ddocustomer_customerid", nameof(CustomerId))]
+        [Reference("fk_ddocument_customer_customer_id", nameof(CustomerId))]
         public Customer Customer
         {
             get { return GetPropertyReference<Customer>(nameof(CustomerId)); }
             set { SetPropertyReference(value, nameof(CustomerId)); }
+        }
+
+        [Browsable(false)]
+        [Column("address_id")]
+        public int? AddressId
+        {
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
+        }
+
+        [Reference("fk_ddocument_customer_address_id", nameof(AddressId))]
+        public Address Address
+        {
+            get { return GetPropertyReference<Address>(nameof(AddressId)); }
+            set { SetPropertyReference(value, nameof(AddressId)); }
         }
     }
 }

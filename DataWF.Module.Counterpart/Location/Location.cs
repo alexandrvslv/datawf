@@ -63,7 +63,7 @@ namespace DataWF.Module.Counterpart
             set { SetValue(value, Table.PrimaryKey); }
         }
 
-        [Column("typeid", Keys = DBColumnKeys.Type), Index("rlocation_typeid")]
+        [Column("typeid", Keys = DBColumnKeys.ElementType), Index("rlocation_typeid")]
         public LocationType? LocationType
         {
             get { return (LocationType?)GetValue<int?>(Table.ElementTypeKey); }

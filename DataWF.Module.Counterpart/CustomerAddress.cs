@@ -17,7 +17,7 @@ namespace DataWF.Module.Counterpart
 
     }
 
-    [Table("wf_customer", "caddress", BlockSize = 2000)]
+    [Table("wf_customer", "dcustomer_address", BlockSize = 2000)]
     public class CustomerAddress : DBItem
     {
         public static DBTable<CustomerAddress> DBTable
@@ -30,7 +30,7 @@ namespace DataWF.Module.Counterpart
             Build(DBTable);
         }
 
-        [Column("id", Keys = DBColumnKeys.Primary)]
+        [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
@@ -38,29 +38,14 @@ namespace DataWF.Module.Counterpart
         }
 
         [Browsable(false)]
-        [Column("typeid", Keys = DBColumnKeys.Type)]
-        public int? TypeId
-        {
-            get { return GetProperty<int?>(nameof(TypeId)); }
-            set { SetProperty(value, nameof(TypeId)); }
-        }
-
-        [Reference("fk_caddress_typeid", nameof(TypeId))]
-        public Book Type
-        {
-            get { return GetPropertyReference<Book>(nameof(TypeId)); }
-            set { SetPropertyReference(value, nameof(TypeId)); }
-        }
-
-        [Browsable(false)]
-        [Column("customerid")]
+        [Column("customer_id")]
         public int? CustomerId
         {
             get { return GetValue<int?>(Table.ParseColumn(nameof(CustomerId))); }
             set { SetProperty(value, nameof(CustomerId)); }
         }
 
-        [Reference("dcaddress_customerid", nameof(CustomerId))]
+        [Reference("fk_dcustomer_address_customer_id", nameof(CustomerId))]
         public Customer Customer
         {
             get { return GetPropertyReference<Customer>(nameof(CustomerId)); }
@@ -68,14 +53,14 @@ namespace DataWF.Module.Counterpart
         }
 
         [Browsable(false)]
-        [Column("addressid")]
+        [Column("address_id")]
         public int? AddressId
         {
             get { return GetProperty<int?>(nameof(AddressId)); }
             set { SetProperty(value, nameof(AddressId)); }
         }
 
-        [Reference("dcaddress_customerid", nameof(CustomerId))]
+        [Reference("fk_dcustomer_address_address_id", nameof(CustomerId))]
         public Address Address
         {
             get { return GetPropertyReference<Address>(nameof(AddressId)); }

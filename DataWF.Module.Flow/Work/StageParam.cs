@@ -42,7 +42,7 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [Table("wf_flow", "rstageparam", BlockSize = 500)]
+    [Table("wf_flow", "rstage_param", BlockSize = 500)]
     public class StageParam : ParamBase
     {
         public static DBTable<StageParam> DBTable
@@ -69,14 +69,14 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("stageid")]
+        [Column("stage_id")]
         public int? StageId
         {
             get { return GetProperty<int?>(nameof(StageId)); }
             set { SetProperty(value, nameof(StageId)); }
         }
 
-        [Reference("fk_rstage_stageid", nameof(StageId))]
+        [Reference("fk_rstage_stage_id", nameof(StageId))]
         public Stage Stage
         {
             get { return GetPropertyReference<Stage>(nameof(StageId)); }

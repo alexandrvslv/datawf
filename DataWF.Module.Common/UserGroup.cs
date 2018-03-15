@@ -64,7 +64,7 @@ namespace DataWF.Module.Common
 
         int IAccessGroup.Id { get { return Id ?? -1; } }
 
-        [Column("groupnumber", Keys = DBColumnKeys.Code), Index("rgroup_number")]
+        [Column("group_number", 512, Keys = DBColumnKeys.Code), Index("rgroup_group_number")]
         public string Number
         {
             get { return GetValue<string>(Table.CodeKey); }

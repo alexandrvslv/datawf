@@ -46,7 +46,7 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [Table("wf_flow", "rtemplateparam", BlockSize = 1000)]
+    [Table("wf_flow", "rtemplate_param", BlockSize = 1000)]
     public class TemplateParam : ParamBase, IInvoker
     {
         public static DBTable<TemplateParam> DBTable
@@ -65,22 +65,22 @@ namespace DataWF.Module.Flow
             get { return Template; }
         }
 
-        [Column("code")]
+        [Column("code", Keys =  DBColumnKeys.Code)]
         public override string ParamCode
         {
-            get { return GetProperty<string>(nameof(ParamCode)); }
-            set { SetProperty(value, nameof(ParamCode)); }
+            get { return GetValue<string>(table.CodeKey); }
+            set { SetValue(value, table.CodeKey); }
         }
 
         [Browsable(false)]
-        [Column("templateid")]
+        [Column("template_id")]
         public int? TemplateId
         {
-            get { return GetProperty<int?>(nameof(TemplateId)); }
-            set { SetProperty(value, nameof(TemplateId)); }
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
         }
 
-        [Reference("fk_rtemplateparam_templateid", nameof(TemplateId))]
+        [Reference("fk_rtemplate_param_template_id", nameof(TemplateId))]
         public Template Template
         {
             get { return GetPropertyReference<Template>(nameof(TemplateId)); }

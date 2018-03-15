@@ -197,7 +197,7 @@ namespace DataWF.Module.FlowGui
                 {
                     try
                     {
-                        Current.Data = File.ReadAllBytes(fullpath);
+                        Current.FileData = File.ReadAllBytes(fullpath);
                         rez = Command.No;
                     }
                     catch
@@ -233,18 +233,18 @@ namespace DataWF.Module.FlowGui
 
         private void ToolViewClick(object sender, EventArgs e)
         {
-            if (Current == null || Current.Data == null)
+            if (Current == null || Current.FileData == null)
                 return;
             if (Current.IsText())
             {
                 var text = new RichTextView();
                 text.ReadOnly = true;
                 text.Font = Font.FromName("Courier, 10");
-                text.LoadText(Encoding.Default.GetString(Current.Data), Xwt.Formats.TextFormat.Plain);
+                text.LoadText(Encoding.Default.GetString(Current.FileData), Xwt.Formats.TextFormat.Plain);
 
                 var f = new ToolWindow();
                 f.Size = new Size(800, 600);
-                f.Title = Current.DataName;
+                f.Title = Current.FileName;
                 f.Target = text;
                 f.Show(this, Point.Zero);
                 //f.Dispose();
@@ -252,7 +252,7 @@ namespace DataWF.Module.FlowGui
             else if (Current.IsImage())
             {
                 var image = new ImageEditor();
-                image.LoadImage(Current.Data);
+                image.LoadImage(Current.FileData);
                 image.ShowDialog(this);
                 image.Dispose();
             }

@@ -210,6 +210,23 @@ namespace DataWF.Common
             return ascii[0];
         }
 
+        //http://stackoverflow.com/questions/210650/validate-image-from-file-in-c-sharp
+        public static bool IsImage(byte[] buf)
+        {
+            if (buf != null)
+            {
+                if (Encoding.ASCII.GetString(buf, 0, 2) == "BM" ||
+                    Encoding.ASCII.GetString(buf, 0, 3) == "GIF" ||
+                    (buf[0] == (byte)137 && buf[1] == (byte)80 && buf[2] == (byte)78 && buf[3] == (byte)71) || //png
+                    (buf[0] == (byte)73 && buf[1] == (byte)73 && buf[2] == (byte)42) || // TIFF
+                    (buf[0] == (byte)77 && buf[1] == (byte)77 && buf[2] == (byte)42) || // TIFF2
+                    (buf[0] == (byte)255 && buf[1] == (byte)216 && buf[2] == (byte)255 && buf[3] == (byte)224) || //jpeg
+                    (buf[0] == (byte)255 && buf[1] == (byte)216 && buf[2] == (byte)255 && buf[3] == (byte)225)) //jpeg canon
+                    return true;
+            }
+            return false;
+        }
+
         public static string GetDirectory(string sub = "")
         {
             return Path.Combine(Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory), sub);

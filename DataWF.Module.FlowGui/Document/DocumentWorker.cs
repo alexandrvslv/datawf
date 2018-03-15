@@ -364,7 +364,7 @@ namespace DataWF.Module.FlowGui
                     foreach (string fileName in ofDialog.FileNames)
                     {
                         string name = System.IO.Path.GetFileName(fileName);
-                        var drow = DocumentData.DBTable.LoadByCode(name, DocumentData.DBTable.ParseProperty(nameof(DocumentData.DataName)), DBLoadParam.Load);
+                        var drow = DocumentData.DBTable.LoadByCode(name, DocumentData.DBTable.ParseProperty(nameof(DocumentData.FileName)), DBLoadParam.Load);
                         if (drow != null)
                         {
                             if (dr == Command.Save)

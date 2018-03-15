@@ -47,14 +47,14 @@ namespace DataWF.Module.Common
             set { SetValue(value, Table.CodeKey); }
         }
 
-        [Column("typeid", Keys = DBColumnKeys.Type)]
+        [Column("type_id", Keys = DBColumnKeys.ElementType)]
         public short? TypeId
         {
             get { return GetValue<short?>(Table.ElementTypeKey); }
             set { SetValue(value, Table.ElementTypeKey); }
         }
 
-        [Reference("rbook_typeid", nameof(TypeId))]
+        [Reference("rbook_type_id", nameof(TypeId))]
         public BookType Type
         {
             get { return GetReference<BookType>(Table.ElementTypeKey); }

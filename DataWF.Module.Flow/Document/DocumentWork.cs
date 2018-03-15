@@ -96,7 +96,7 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [Table("wf_flow", "dwork", BlockSize = 2000)]
+    [Table("wf_flow", "ddocument_work", BlockSize = 2000)]
     public class DocumentWork : DBItem
     {
         public static DBTable<DocumentWork> DBTable
@@ -108,8 +108,7 @@ namespace DataWF.Module.Flow
 
         public DocumentWork()
         {
-            Build(DBTable);
-            IsComplete = false;
+            Build(DBTable);            
         }
 
         public override string ToString()
@@ -130,14 +129,14 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("documentid"), Index("dwork_documentid")]
+        [Column("document_id"), Index("ddocument_work_document_id")]
         public long? DocumentId
         {
             get { return GetProperty<long?>(nameof(DocumentId)); }
             set { SetProperty(value, nameof(DocumentId)); }
         }
 
-        [Reference("fk_dwork_documentid", nameof(DocumentId))]
+        [Reference("fk_ddocument_work_document_id", nameof(DocumentId))]
         public Document Document
         {
             get { return GetPropertyReference<Document>(nameof(DocumentId)); }
@@ -145,14 +144,14 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("stageid"), Index("dwork_stageid")]
+        [Column("stage_id"), Index("ddocument_work_stage_id")]
         public int? StageId
         {
             get { return GetProperty<int?>(nameof(StageId)); }
             set { SetProperty(value, nameof(StageId)); }
         }
 
-        [Reference("fk_dwork_stageid", nameof(StageId))]
+        [Reference("fk_ddocument_work_stage_id", nameof(StageId))]
         public Stage Stage
         {
             get { return GetPropertyReference<Stage>(nameof(StageId)); }
@@ -166,14 +165,14 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("userid"), Index("dwork_userid")]
+        [Column("user_id"), Index("ddocument_work_user_id")]
         public int? UserId
         {
-            get { return GetProperty<int?>(nameof(UserId)); }
-            set { SetProperty(value, nameof(UserId)); }
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
         }
 
-        [Reference("fk_dwork_userid", nameof(UserId))]
+        [Reference("fk_ddocument_work_userid", nameof(UserId))]
         public User User
         {
             get { return GetPropertyReference<User>(nameof(UserId)); }
@@ -181,14 +180,14 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("fromid")]
+        [Column("from_id")]
         public long? FromId
         {
             get { return GetProperty<long?>(nameof(FromId)); }
             set { SetProperty(value, nameof(FromId)); }
         }
 
-        [Reference("fk_dwork_fromid", nameof(FromId))]
+        [Reference("fk_ddocument_work_from_id", nameof(FromId))]
         public DocumentWork From
         {
             get { return GetPropertyReference<DocumentWork>(nameof(FromId)); }
@@ -196,70 +195,64 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("dateread")]
+        [Column("date_read")]
         public DateTime? DateRead
         {
-            get { return GetProperty<DateTime?>(nameof(DateRead)); }
-            set { SetProperty(value, nameof(DateRead)); }
+            get { return GetProperty<DateTime?>(); }
+            set { SetProperty(value); }
         }
 
-        [Column("iscomplete")]
-        public bool? IsComplete
-        {
-            get { return GetProperty<bool?>(nameof(IsComplete)); }
-            set
-            {
-                SetProperty(value, nameof(IsComplete));
-                if (value.GetValueOrDefault() && DateComplete == null)
-                    DateComplete = DateTime.Now;
-            }
-        }
-
-        [Column("issystem")]
-        public bool? IsSystem
-        {
-            get { return GetProperty<bool?>(nameof(IsSystem)); }
-            set { SetProperty(value, nameof(IsSystem)); }
-        }
-
-        [Column("isstart")]
-        public bool? IsStart
-        {
-            get { return GetProperty<bool?>(nameof(IsStart)); }
-            set { SetProperty(value, nameof(IsStart)); }
-        }
-
-        [Column("isstop")]
-        public bool? IsStop
-        {
-            get { return GetProperty<bool?>(nameof(IsStop)); }
-            set { SetProperty(value, nameof(IsStop)); }
-        }
-
-        [Column("datecomplete")]
+        [Column("date_complete")]
         public DateTime? DateComplete
         {
-            get { return GetProperty<DateTime?>(nameof(DateComplete)); }
-            set { SetProperty(value, nameof(DateComplete)); }
+            get { return GetProperty<DateTime?>(); }
+            set { SetProperty(value); }
         }
 
-        [Column("datelimit")]
+        [Column("date_limit")]
         public DateTime? DateLimit
         {
-            get { return GetProperty<DateTime?>(nameof(DateLimit)); }
-            set { SetProperty(value, nameof(DateLimit)); }
+            get { return GetProperty<DateTime?>(); }
+            set { SetProperty(value); }
+        }
+
+        [Column("is_complete")]
+        public bool IsComplete
+        {
+            get { return DateComplete != null; }
+        }
+
+        [Column("is_system")]
+        public bool? IsSystem
+        {
+            get { return GetProperty<bool?>(); }
+            set { SetProperty(value); }
+        }
+
+        [Column("is_start")]
+        public bool? IsStart
+        {
+            get { return GetProperty<bool?>(); }
+            set { SetProperty(value); }
+        }
+
+        [Column("is_stop")]
+        public bool? IsStop
+        {
+            get { return GetProperty<bool?>(); }
+            set { SetProperty(value); }
         }
 
         [Column("description", 2048)]
         public string Description
         {
-            get { return GetProperty<string>(nameof(Description)); }
-            set { SetProperty(value, nameof(Description)); }
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
         }
 
         public bool IsCurrent
         {
-            get { return !IsComplete.Value && (User == User.CurrentUser || GroupHelper.IsParent(User.CurrentUser, User)); }
+            get { return !IsComplete && (User == User.CurrentUser || GroupHelper.IsParent(User.CurrentUser, User)); }
         }
 
         public bool IsUser

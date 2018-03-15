@@ -37,7 +37,6 @@ namespace DataWF.Module.Flow
 
     public class TemplateList : DBTableView<Template>
     {
-        [NonSerialized()]
         TemplateList _cacheAllTemplates;
 
         public TemplateList(string filter, DBViewKeys mode = DBViewKeys.None, DBStatus status = DBStatus.Empty)
@@ -95,7 +94,7 @@ namespace DataWF.Module.Flow
             set { SetValue(value, Table.PrimaryKey); }
         }
 
-        [Column("Code", 250, Keys = DBColumnKeys.Code)]
+        [Column("code", 250, Keys = DBColumnKeys.Code)]
         public string Code
         {
             get { return GetValue<string>(Table.CodeKey); }
@@ -106,7 +105,7 @@ namespace DataWF.Module.Flow
             }
         }
 
-        [Column("document_type", 250, Keys = DBColumnKeys.Code)]
+        [Column("document_type", 250, Default = "0")]
         public int? DocumentType
         {
             get { return GetProperty<int?>(); }
@@ -114,29 +113,34 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("groupid", Keys = DBColumnKeys.Group)]
+        [Column("group_id", Keys = DBColumnKeys.Group)]
         public int? ParentId
         {
             get { return GetValue<int?>(Table.GroupKey); }
             set { SetValue(value, Table.GroupKey); }
         }
 
-        [Reference("fk_rtemplate_groupid", nameof(ParentId))]
+        [Reference("fk_rtemplate_group_id", nameof(ParentId))]
         public Template Parent
         {
             get { return GetReference<Template>(Table.GroupKey); }
-            set { SetReference(value, Table.GroupKey); }
+            set
+            {
+                SetReference(value, Table.GroupKey);
+                if (DocumentType == 0)
+                    DocumentType = value?.DocumentType ?? 0;
+            }
         }
 
         [Browsable(false)]
-        [Column("workid")]
+        [Column("work_id")]
         public int? WorkId
         {
             get { return GetProperty<int?>(); }
             set { SetProperty(value); }
         }
 
-        [Reference("fk_template_workid", nameof(WorkId))]
+        [Reference("fk_rtemplate_work_id", nameof(WorkId))]
         public Work Work
         {
             get { return GetPropertyReference<Work>(nameof(WorkId)); }
@@ -179,25 +183,25 @@ namespace DataWF.Module.Flow
         }
 
         //[Editor(typeof(UIFileEditor), typeof(UITypeEditor))]
-        [Column("data")]
+        [Column("template_file")]
         public byte[] Data
         {
-            get { return GetProperty<byte[]>(nameof(Data)); }
-            set { SetProperty(value, nameof(Data)); }
+            get { return GetProperty<byte[]>(); }
+            set { SetProperty(value); }
         }
 
-        [Column("dataname", 1024)]
+        [Column("template_file_name", 1024)]
         public string DataName
         {
-            get { return GetProperty<string>(nameof(DataName)); }
-            set { SetProperty(value, nameof(DataName)); }
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
         }
 
-        [Column("isfile")]
+        [Column("is_file")]
         public bool? IsFile
         {
-            get { return GetProperty<bool?>(nameof(IsFile)); }
-            set { SetProperty(value, nameof(IsFile)); }
+            get { return GetProperty<bool?>(); }
+            set { SetProperty(value); }
         }
 
         public string FileType

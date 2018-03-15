@@ -85,14 +85,14 @@ namespace DataWF.Module.Common
             set { SetProperty(value, nameof(Order)); }
         }
 
-        [Column("typeid", Keys = DBColumnKeys.Type)]
+        [Column("type_id", Keys = DBColumnKeys.ElementType)]
         public SchedulerType? Type
         {
             get { return GetProperty<SchedulerType?>(nameof(SchedulerType)); }
             set { SetProperty(value, nameof(SchedulerType)); }
         }
 
-        [Column("runinterval")]
+        [Column("run_interval")]
         public TimeSpan? Interval
         {
             get { return GetProperty<TimeSpan?>(nameof(Interval)); }
@@ -100,7 +100,7 @@ namespace DataWF.Module.Common
         }
 
         [Browsable(false)]
-        [Column("procedurename")]
+        [Column("procedure_name")]
         public string ProcedureName
         {
             get { return GetProperty<string>(nameof(ProcedureName)); }
@@ -113,7 +113,7 @@ namespace DataWF.Module.Common
             set { ProcedureName = value?.Name; }
         }
 
-        [Column("dateexecute")]
+        [Column("date_execute")]
         public DateTime? DateExecute
         {
             get { return GetProperty<DateTime?>(nameof(DateExecute)); }

@@ -29,7 +29,7 @@ namespace DataWF.Module.Flow
             set { SetProperty(value, nameof(Id)); }
         }
 
-        [Column("typeid")]
+        [Column("type_id")]
         public ParamType? Type
         {
             get { return GetProperty<ParamType?>(nameof(Type)); }

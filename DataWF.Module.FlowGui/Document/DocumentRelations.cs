@@ -136,7 +136,6 @@ namespace DataWF.Module.FlowGui
                     var refer = new DocumentReference();
                     refer.GenerateId();
                     refer.Document = document;
-                    refer.Type = DocumentReferenceType.Child;
                     refer.Reference = d;
                     refer.Attach();
                 }

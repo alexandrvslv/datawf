@@ -87,7 +87,7 @@ namespace DataWF.Module.Flow
         public void SaveEndPoint(string endpoint)
         {
             User.DBTable.IsLoging = false;
-            user.NetworkId = endpoint;
+            user.NetworkAddress = endpoint;
             user.Save();
             User.DBTable.IsLoging = true;
             //Send(user.NetworkId, null, SocketMessageType.Hello);
@@ -102,14 +102,14 @@ namespace DataWF.Module.Flow
 
             user = value;
 
-            if (user.NetworkId.Length > 0 && user.NetworkId.IndexOf(';') < 0)
-                user.NetworkId = string.Empty;
+            if (user.NetworkAddress.Length > 0 && user.NetworkAddress.IndexOf(';') < 0)
+                user.NetworkAddress = string.Empty;
 
             string endpoint = localPoint + ";";
-            if (user.NetworkId.IndexOf(endpoint, StringComparison.OrdinalIgnoreCase) < 0)
-                SaveEndPoint(user.NetworkId + endpoint);
+            if (user.NetworkAddress.IndexOf(endpoint, StringComparison.OrdinalIgnoreCase) < 0)
+                SaveEndPoint(user.NetworkAddress + endpoint);
 
-            Send(user.NetworkId, null, SocketMessageType.Login);
+            Send(user.NetworkAddress, null, SocketMessageType.Login);
 
             DBService.RowAccept += OnCommit;
             run = true;
@@ -139,9 +139,9 @@ namespace DataWF.Module.Flow
                 list.Clear();
                 User.DBTable.Load("", DBLoadParam.Synchronize);
                 foreach (User item in User.DBTable)
-                    if (item.NetworkId.Length > 0 && (address == null || item == address))
+                    if (item.NetworkAddress.Length > 0 && (address == null || item == address))
                     {
-                        string[] split = item.NetworkId.Split(';');
+                        string[] split = item.NetworkAddress.Split(';');
 
                         foreach (string point in split)
                         {
@@ -254,7 +254,7 @@ namespace DataWF.Module.Flow
                     break;
                 case (SocketMessageType.Login):
                     sender.Online = true;
-                    Send(user.NetworkId, sender, SocketMessageType.Hello);
+                    Send(user.NetworkAddress, sender, SocketMessageType.Hello);
                     break;
                 case (SocketMessageType.Logout):
                     sender.Online = false;

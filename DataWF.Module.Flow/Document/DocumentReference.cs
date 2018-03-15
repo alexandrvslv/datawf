@@ -149,14 +149,7 @@ namespace DataWF.Module.Flow
         }
     }
 
-    public enum DocumentReferenceType
-    {
-        None = 0,
-        Child,
-        Answer
-    }
-
-    [Table("wf_flow", "ddreference", BlockSize = 2000)]
+    [Table("wf_flow", "ddocument_reference", BlockSize = 2000)]
     public class DocumentReference : DBItem
     {
         public static DBTable<DocumentReference> DBTable
@@ -177,14 +170,14 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("documentid")]
+        [Column("document_id")]
         public long? DocumentId
         {
             get { return GetProperty<long?>(nameof(DocumentId)); }
             set { SetProperty(value, nameof(DocumentId)); }
         }
 
-        [Reference("fk_ddreference_documentid", nameof(DocumentId))]
+        [Reference("fk_ddocument_reference_documentid", nameof(DocumentId))]
         public Document Document
         {
             get { return GetPropertyReference<Document>(nameof(DocumentId)); }
@@ -192,25 +185,18 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("referenceid")]
+        [Column("reference_id")]
         public long? ReferenceId
         {
             get { return GetProperty<long?>(nameof(DocumentId)); }
             set { SetProperty(value, nameof(DocumentId)); }
         }
 
-        [Reference("fk_ddreference_referenceid", nameof(ReferenceId))]
+        [Reference("fk_ddocument_reference_reference_id", nameof(ReferenceId))]
         public Document Reference
         {
             get { return GetPropertyReference<Document>(nameof(DocumentId)); }
             set { SetPropertyReference(value, nameof(DocumentId)); }
-        }
-
-        [Column("typeif", Keys = DBColumnKeys.Type)]
-        public DocumentReferenceType? Type
-        {
-            get { return GetProperty<DocumentReferenceType?>(nameof(Type)); }
-            set { SetProperty(value, nameof(Type)); }
         }
 
         public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)

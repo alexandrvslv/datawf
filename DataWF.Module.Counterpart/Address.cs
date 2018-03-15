@@ -52,14 +52,14 @@ namespace DataWF.Module.Counterpart
         }
 
         [Browsable(false)]
-        [Column("locationid"), Index("daddress_locationid")]
+        [Column("location_id"), Index("daddress_location_id")]
         public int? LocationId
         {
             get { return GetProperty<int?>(nameof(LocationId)); }
             set { SetProperty(value, nameof(LocationId)); }
         }
 
-        [Reference("fk_daddress_locationid", nameof(LocationId))]
+        [Reference("fk_daddress_location_id", nameof(LocationId))]
         public Location Location
         {
             get { return GetReference<Location>(ParseProperty(nameof(LocationId))); }
@@ -73,7 +73,7 @@ namespace DataWF.Module.Counterpart
             }
         }
 
-        [Column("postindex", 20), Index("daddress_postindex")]
+        [Column("post_index", 20), Index("daddress_post_index")]
         public string PostIndex
         {
             get { return GetProperty<string>(nameof(PostIndex)); }

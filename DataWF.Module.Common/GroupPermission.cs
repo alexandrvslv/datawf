@@ -35,7 +35,7 @@ namespace DataWF.Module.Common
 		GTypeMember
 	}
 
-	[Table("wf_common", "rpermission", BlockSize = 2000)]
+	[Table("wf_common", "rgroup_permission", BlockSize = 2000)]
 	public class GroupPermission : DBItem
 	{
 		public static DBTable<GroupPermission> DBTable
@@ -93,21 +93,21 @@ namespace DataWF.Module.Common
 			set { SetValue(value, Table.PrimaryKey); }
 		}
 
-		[Column("parentid", Keys = DBColumnKeys.Group), Index("rpermission_parentid"), Browsable(false)]
+		[Column("parent_id", Keys = DBColumnKeys.Group), Index("rgroup_permission_parent_id"), Browsable(false)]
 		public int? ParentId
 		{
 			get { return GetValue<int?>(Table.GroupKey); }
 			set { SetValue(value, Table.GroupKey); }
 		}
 
-		[Reference("fk_rpermission_parentid", nameof(ParentId))]
+		[Reference("fk_rgroup_permission_parent_id", nameof(ParentId))]
 		public GroupPermission Parent
 		{
 			get { return GetReference<GroupPermission>(Table.GroupKey); }
 			set { SetReference(value, Table.GroupKey); }
 		}
 
-		[Column("typeid", Keys = DBColumnKeys.Type)]
+		[Column("type_id", Keys = DBColumnKeys.ElementType)]
 		public PermissionType? Type
 		{
 			get { return GetValue<PermissionType?>(Table.ElementTypeKey); }
@@ -115,7 +115,7 @@ namespace DataWF.Module.Common
 		}
 
 		[Column("code", 512, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing)]
-		[Index("rpermission_code", true)]
+		[Index("rgroup_permission_code", true)]
 		public string Code
 		{
 			get { return GetValue<string>(Table.CodeKey); }

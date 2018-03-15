@@ -61,22 +61,6 @@ namespace DataWF.Module.Counterpart
             set { SetValue(value, Table.CodeKey); }
         }
 
-        [Browsable(false)]
-        [Column("typeid", Keys = DBColumnKeys.ElementType)]
-        [Index("dcustomer_typeid")]
-        public int? TypeId
-        {
-            get { return GetValue<int?>(Table.ElementTypeKey); }
-            set { SetValue(value, Table.ElementTypeKey); }
-        }
-
-        [Reference("fk_dcustomer_typeid", nameof(TypeId))]
-        public Book Type
-        {
-            get { return GetReference<Book>(Table.ElementTypeKey); }
-            set { SetReference(value, Table.ElementTypeKey); }
-        }
-
         [Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
         public override string Name
         {
@@ -96,11 +80,11 @@ namespace DataWF.Module.Counterpart
         [Column("password", 200, Keys = DBColumnKeys.Password)]
         public string Password
         {
-            get { return GetProperty<string>(nameof(Password)); }
-            set { SetProperty(value, nameof(Password)); }
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
         }
 
-        [Column("key", 1024, Keys = DBColumnKeys.Password)]
+        [Column("sign_key", 1024, Keys = DBColumnKeys.Password)]
         public string Key
         {
             get { return GetProperty<string>(nameof(Key)); }
@@ -116,14 +100,14 @@ namespace DataWF.Module.Counterpart
         }
 
         [Browsable(false)]
-        [Column("countryid")]
+        [Column("country_id")]
         public int? CountryId
         {
             get { return GetProperty<int?>(nameof(CountryId)); }
             set { SetProperty(value, nameof(CountryId)); }
         }
 
-        [Reference("fk_dcustomer_countryid", nameof(CountryId))]
+        [Reference("fk_dcustomer_country_id", nameof(CountryId))]
         public Country Country
         {
             get { return GetPropertyReference<Country>(nameof(CountryId)); }
@@ -131,14 +115,14 @@ namespace DataWF.Module.Counterpart
         }
 
         [Browsable(false)]
-        [Column("addressid")]
+        [Column("address_id")]
         public int? AddressId
         {
             get { return GetValue<int?>(Table.ParseColumn(nameof(AddressId))); }
             set { this[Table.ParseColumn(nameof(AddressId))] = value; }
         }
 
-        [Reference("dcustomer_addressid", nameof(AddressId))]
+        [Reference("dcustomer_address_id", nameof(AddressId))]
         public Address Address
         {
             get { return GetPropertyReference<Address>(nameof(AddressId)); }

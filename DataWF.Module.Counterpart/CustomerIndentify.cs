@@ -53,7 +53,7 @@ namespace DataWF.Module.Counterpart
         }
     }
 
-    [Table("wf_customer", "cindentify", BlockSize = 2000)]
+    [Table("wf_customer", "dcustomer_indentify", BlockSize = 2000)]
     public class CustomerIdentify : DBItem
     {
         public static DBTable<CustomerIdentify> DBTable
@@ -66,7 +66,7 @@ namespace DataWF.Module.Counterpart
             Build(DBTable);
         }
 
-        [Column("id", Keys = DBColumnKeys.Primary)]
+        [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
@@ -74,57 +74,42 @@ namespace DataWF.Module.Counterpart
         }
 
         [Browsable(false)]
-        [Column("typeid", Keys = DBColumnKeys.Type)]
-        public int? TypeId
-        {
-            get { return GetProperty<int?>(nameof(TypeId)); }
-            set { SetProperty(value, nameof(TypeId)); }
-        }
-
-        [Reference("fk_cidentify_typeid", nameof(TypeId))]
-        public Book Type
-        {
-            get { return GetPropertyReference<Book>(nameof(TypeId)); }
-            set { SetPropertyReference(value, nameof(TypeId)); }
-        }
-
-        [Browsable(false)]
-        [Column("customerid")]
+        [Column("customer_id")]
         public int? CustomerId
         {
             get { return GetProperty<int?>(nameof(CustomerId)); }
             set { SetProperty(value, nameof(CustomerId)); }
         }
 
-        [Reference("fk_cidentify_customerid", nameof(CustomerId))]
+        [Reference("fk_dcustomer_indentify_customer_id", nameof(CustomerId))]
         public Customer Customer
         {
             get { return GetPropertyReference<Customer>(nameof(CustomerId)); }
             set { SetPropertyReference(value, nameof(CustomerId)); }
         }
 
-        [Column("identifynumber", 30)]
+        [Column("identify_number", 30)]
         public string Number
         {
             get { return GetProperty<string>(nameof(Number)); }
             set { SetProperty(value, nameof(Number)); }
         }
 
-        [Column("dateissue")]
+        [Column("date_issue")]
         public DateTime? DateIssue
         {
             get { return GetProperty<DateTime?>(nameof(DateIssue)); }
             set { SetProperty(value, nameof(DateIssue)); }
         }
 
-        [Column("dateexpire")]
+        [Column("date_expire")]
         public DateTime? DateExpire
         {
             get { return GetProperty<DateTime?>(nameof(DateExpire)); }
             set { SetProperty(value, nameof(DateExpire)); }
         }
 
-        [Column("issuedby")]
+        [Column("issued_by")]
         public string IssuedBy
         {
             get { return GetProperty<string>(nameof(IssuedBy)); }

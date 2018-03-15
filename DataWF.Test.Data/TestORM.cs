@@ -146,8 +146,8 @@ namespace DataWF.Test.Data
             Assert.AreEqual(employer.Salary, qresult.Get(0, "salary"), "Insert sql Fail Decimal");
             var lodar = qresult.Get(0, "lodar").ToString();
             Assert.IsTrue(lodar == "1" || lodar == "True", "Insert sql Fail Bool");
-            Assert.IsInstanceOf<byte[]>(qresult.Get(0, "gaccess"), "Insert sql Fail Byte Array");
-            var accessValue = new AccessValue((byte[])qresult.Get(0, "gaccess"));
+            Assert.IsInstanceOf<byte[]>(qresult.Get(0, "group_access"), "Insert sql Fail Byte Array");
+            var accessValue = new AccessValue((byte[])qresult.Get(0, "group_access"));
             Assert.AreEqual(3, accessValue.Items.Count, "Insert sql Fail Byte Array");
             Assert.AreEqual(true, accessValue.Items[0].View, "Insert sql Fail Byte Array");
             Assert.AreEqual(true, accessValue.Items[1].Admin, "Insert sql Fail Byte Array");
@@ -325,7 +325,7 @@ namespace DataWF.Test.Data
                 set { SetPropertyReference(value, nameof(PositionId)); }
             }
 
-            [Column("typeid", Keys = DBColumnKeys.Type, Default = "1")]
+            [Column("typeid", Keys = DBColumnKeys.ElementType, Default = "1")]
             public EmployerType? Type
             {
                 get { return GetProperty<EmployerType?>(nameof(Type)); }

@@ -83,7 +83,7 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [Table("wf_flow", "ddocdata", BlockSize = 2000)]
+    [Table("wf_flow", "ddocument_data", BlockSize = 2000)]
     public class DocumentData : DBItem
     {
         public static DBTable<DocumentData> DBTable
@@ -91,8 +91,8 @@ namespace DataWF.Module.Flow
             get { return DBService.GetTable<DocumentData>(); }
         }
 
-        [NonSerialized()]
         protected object templateDocument = null;
+        private byte[] buf;
 
         public DocumentData()
         {
@@ -107,38 +107,42 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("documentid")]
+        [Column("document_id")]
         public long? DocumentId
         {
-            get { return GetProperty<long?>(nameof(DocumentId)); }
-            set { SetProperty(value, nameof(DocumentId)); }
+            get { return GetProperty<long?>(); }
+            set { SetProperty(value); }
         }
 
-        [Reference("fk_ddocdata_documentid", nameof(DocumentId))]
+        [Reference("fk_ddocument_data_document_id", nameof(DocumentId))]
         public Document Document
         {
             get { return GetPropertyReference<Document>(nameof(DocumentId)); }
             set { SetPropertyReference(value, nameof(DocumentId)); }
         }
 
-        [Column("docdata")]
-        public byte[] Data
+        [Column("file_name", 1024)]
+        public string FileName
         {
-            get
-            {
-                var column = ParseProperty(nameof(Data));
-                byte[] buf = GetCache(column) as byte[];
-                if (buf == null)
-                {
-                    buf = DBService.GetZip(this, column);
-                    SetCache(column, buf);
-                }
-                return buf;
-            }
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
+        }
+
+        [Column("file_url", 1024)]
+        public string FileUrl
+        {
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
+        }
+
+        [Column("file_data")]
+        public byte[] FileData
+        {
+            get { return buf ?? (buf = DBService.GetZip(this, ParseProperty(nameof(FileData)))); }
             set
             {
-                var column = ParseProperty(nameof(Data));
-                SetCache(column, value);
+                var column = ParseProperty(nameof(FileData));
+                buf = value;
                 DBService.SetZip(this, column, value);
 
                 if (IsTemplate.GetValueOrDefault() && templateDocument != null)
@@ -150,11 +154,11 @@ namespace DataWF.Module.Flow
             }
         }
 
-        public string Size
+        public string FileSize
         {
             get
             {
-                float len = Data == null ? 0 : Data.Length;
+                float len = FileData?.Length ?? 0;
                 int i = 0;
                 while (len >= 1024 && i < 3)
                 {
@@ -164,18 +168,13 @@ namespace DataWF.Module.Flow
                 return string.Format("{0:0.00} {1}", len, i == 0 ? "B" : i == 1 ? "KB" : i == 2 ? "MB" : "GB");
             }
         }
-        [Column("dataname", 1024)]
-        public string DataName
-        {
-            get { return GetProperty<string>(nameof(DataName)); }
-            set { SetProperty(value, nameof(DataName)); }
-        }
 
-        [Column("istemplate")]
+
+        [Column("is_template")]
         public bool? IsTemplate
         {
-            get { return GetProperty<bool?>(nameof(IsTemplate)); }
-            set { SetProperty(value, nameof(IsTemplate)); }
+            get { return GetProperty<bool?>(); }
+            set { SetProperty(value); }
         }
 
         [XmlIgnore, Browsable(false)]
@@ -187,7 +186,7 @@ namespace DataWF.Module.Flow
 
         public string GetFullPath()
         {
-            return Path.Combine(Helper.GetDirectory(Environment.SpecialFolder.LocalApplicationData, true), "Temp", "Documents", DataName);
+            return Path.Combine(Helper.GetDirectory(Environment.SpecialFolder.LocalApplicationData, true), "Temp", "Documents", FileName);
         }
 
         public string SaveData()
@@ -197,7 +196,7 @@ namespace DataWF.Module.Flow
 
         public string SaveData(string fileName)
         {
-            return SaveData(fileName, Data);
+            return SaveData(fileName, FileData);
         }
 
         public string SaveData(string fileName, byte[] Data)
@@ -215,7 +214,7 @@ namespace DataWF.Module.Flow
             {
                 Execute(this, param);
             }
-            return Data;
+            return FileData;
         }
 
         public string Execute()
@@ -225,32 +224,19 @@ namespace DataWF.Module.Flow
 
         public string Execute(string file)
         {
-            file = SaveData(file, Data);
+            file = SaveData(file, FileData);
             System.Diagnostics.Process.Start(file);
             return file;
         }
-
-        //http://stackoverflow.com/questions/210650/validate-image-from-file-in-c-sharp
+        
         public bool IsImage()
         {
-            byte[] buf = Data;
-            if (buf != null)
-            {
-                if (Encoding.ASCII.GetString(buf, 0, 2) == "BM" ||
-                    Encoding.ASCII.GetString(buf, 0, 3) == "GIF" ||
-                    (buf[0] == (byte)137 && buf[1] == (byte)80 && buf[2] == (byte)78 && buf[3] == (byte)71) || //png
-                    (buf[0] == (byte)73 && buf[1] == (byte)73 && buf[2] == (byte)42) || // TIFF
-                    (buf[0] == (byte)77 && buf[1] == (byte)77 && buf[2] == (byte)42) || // TIFF2
-                    (buf[0] == (byte)255 && buf[1] == (byte)216 && buf[2] == (byte)255 && buf[3] == (byte)224) || //jpeg
-                    (buf[0] == (byte)255 && buf[1] == (byte)216 && buf[2] == (byte)255 && buf[3] == (byte)225)) //jpeg canon
-                    return true;
-            }
-            return false;
+            return Helper.IsImage(FileData);
         }
 
         public bool IsText()
         {
-            byte[] buf = Data;
+            byte[] buf = FileData;
             int c = 0;
             if (buf != null)
             {
@@ -270,14 +256,14 @@ namespace DataWF.Module.Flow
         public void RefreshByTemplate()
         {
             IsTemplate = true;
-            Data = (byte[])Document.Template.Data.Clone();
-            DataName = Document.Template.DataName.Replace(".", DateTime.Now.ToString("yyyyMMddHHmmss") + ".");
+            FileData = (byte[])Document.Template.Data.Clone();
+            FileName = Document.Template.DataName.Replace(".", DateTime.Now.ToString("yyyyMMddHHmmss") + ".");
         }
 
         public void Load(string p)
         {
-            Data = File.ReadAllBytes(p);
-            DataName = Path.GetFileName(p);
+            FileData = File.ReadAllBytes(p);
+            FileName = Path.GetFileName(p);
         }
 
         public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)
@@ -312,9 +298,9 @@ namespace DataWF.Module.Flow
 
         public static void Execute(DocumentData data, ExecuteArgs param)
         {
-            if (data.Data == null || data.Document.Template.Data == null)
+            if (data.FileData == null || data.Document.Template.Data == null)
                 return;
-            data.Data = null;//TODO Template.Parser.Execute(data.Data, data.DataName, param);
+            data.FileData = null;//TODO Template.Parser.Execute(data.Data, data.DataName, param);
         }
     }
 }
