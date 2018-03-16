@@ -100,7 +100,7 @@ namespace DataWF.Data
             get { return locker; }
         }
 
-        [Browsable(false)]
+        [Browsable(false), XmlIgnore]
         public TableAttribute Info { get; protected set; }
 
         public DBColumn ParseProperty(string property)

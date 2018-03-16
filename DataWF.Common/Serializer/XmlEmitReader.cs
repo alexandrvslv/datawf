@@ -2,6 +2,7 @@
 using System.Xml;
 using System.Collections;
 using System.IO;
+using System.Diagnostics;
 
 namespace DataWF.Common
 {
@@ -166,7 +167,7 @@ namespace DataWF.Common
                 if (Reader.NodeType == XmlNodeType.Element)
                 {
                     Read(item);
-                    dictionary.Add(item.Key, item.Value);
+                    dictionary[item.Key] = item.Value;
                     item.Reset();
                 }
             }
@@ -212,6 +213,7 @@ namespace DataWF.Common
             {
                 throw new ArgumentException("Element type can't be resolved!", nameof(element));
             }
+            //Debug.WriteLine($"Read {Reader.Name}");
             var info = Serializer.GetTypeInfo(type);
             if (info.IsAttribute)
             {

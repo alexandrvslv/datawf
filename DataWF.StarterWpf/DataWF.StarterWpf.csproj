@@ -43,11 +43,11 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
-    <Reference Include="Xwt">
-      <HintPath>..\packages\Xwt.0.2.85\lib\net40\Xwt.dll</HintPath>
+    <Reference Include="Xwt, Version=0.2.91.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\Xwt.0.2.91\lib\net40\Xwt.dll</HintPath>
     </Reference>
-    <Reference Include="Xwt.WPF">
-      <HintPath>..\packages\Xwt.WPF.0.2.85\lib\net40\Xwt.WPF.dll</HintPath>
+    <Reference Include="Xwt.WPF, Version=0.2.91.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\Xwt.WPF.0.2.91\lib\net40\Xwt.WPF.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

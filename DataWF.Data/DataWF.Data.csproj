@@ -1,5 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -7,15 +6,14 @@
     <OutputType>Library</OutputType>
     <RootNamespace>DataWF.Data</RootNamespace>
     <AssemblyName>DataWF.Data</AssemblyName>
-    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Platforms>AnyCPU;x86</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug</OutputPath>
+    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -41,172 +39,16 @@
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
+  </PropertyGroup>  
   <ItemGroup>
-    <Compile Include="Attributes\ItemTypeAttribute.cs" />
-    <Compile Include="DBEnums.cs" />
-    <Compile Include="DBService.cs" />
-    <Compile Include="DBTable\DBItemType.cs" />
-    <Compile Include="DBTransaction.cs" />
-    <Compile Include="Attributes\ColumnAttribute.cs" />
-    <Compile Include="Attributes\ReferenceAttribute.cs" />
-    <Compile Include="Attributes\TableAttribute.cs" />
-    <Compile Include="DBColumn\DBColumn.cs" />
-    <Compile Include="DBColumn\DBColumnGroup.cs" />
-    <Compile Include="DBColumn\DBColumnGroupList.cs" />
-    <Compile Include="DBColumn\DBColumnList.cs" />
-    <Compile Include="DBColumn\DBColumnReference.cs" />
-    <Compile Include="DBColumn\DBColumnReferenceList.cs" />
-    <Compile Include="DBCommand\DBCommand.cs" />
-    <Compile Include="DBCommand\DBCommandParameter.cs" />
-    <Compile Include="DBConstraint\DBConstraint.cs" />
-    <Compile Include="DBConstraint\DBConstraintList.cs" />
-    <Compile Include="DBConstraint\DBForeignKey.cs" />
-    <Compile Include="DBConstraint\DBForeignList.cs" />
-    <Compile Include="DBExport\DBEColumn.cs" />
-    <Compile Include="DBExport\DBEColumnList.cs" />
-    <Compile Include="DBExport\DBETable.cs" />
-    <Compile Include="DBExport\DBETableList.cs" />
-    <Compile Include="DBExport\DBExport.cs" />
-    <Compile Include="DBExport\DBExportProgressArgs.cs" />
-    <Compile Include="DBIndex\DBIndex.cs" />
-    <Compile Include="DBIndex\DBIndexList.cs" />
-    <Compile Include="DBItem\DBComparer.cs" />
-    <Compile Include="DBItem\DBGroup.cs" />
-    <Compile Include="DBItem\DBItem.cs" />
-    <Compile Include="DBItem\DBItemEventArgs.cs" />
-    <Compile Include="DBItem\DBComparerList.cs" />
-    <Compile Include="DBItem\DBPullIndex.cs" />
-    <Compile Include="DBQuery\QBetween.cs" />
-    <Compile Include="DBQuery\QColumn.cs" />
-    <Compile Include="DBQuery\QComparer.cs" />
-    <Compile Include="DBQuery\QFunc.cs" />
-    <Compile Include="DBQuery\QItem.cs" />
-    <Compile Include="DBQuery\QItemList.cs" />
-    <Compile Include="DBQuery\QOrder.cs" />
-    <Compile Include="DBQuery\QParam.cs" />
-    <Compile Include="DBQuery\QQuery.cs" />
-    <Compile Include="DBQuery\QQueryList.cs" />
-    <Compile Include="DBQuery\QReflection.cs" />
-    <Compile Include="DBQuery\QTable.cs" />
-    <Compile Include="DBQuery\QValue.cs" />
-    <Compile Include="DBSchema\DBConnection.cs" />
-    <Compile Include="DBSchema\DBSchema.cs" />
-    <Compile Include="DBSchema\DBSchemaItem.cs" />
-    <Compile Include="DBSchema\DBSchemaItemList.cs" />
-    <Compile Include="DBSchema\DBSchemaList.cs" />
-    <Compile Include="DBSchema\DBSequence.cs" />
-    <Compile Include="DBTable\DBLoadCompleteEventArgs.cs" />
-    <Compile Include="DBTable\DBLoadProgressEventArgs.cs" />
-    <Compile Include="DBTable\DBTable.cs" />
-    <Compile Include="DBTable\DBTableGroup.cs" />
-    <Compile Include="DBTable\DBTableGroupList.cs" />
-    <Compile Include="DBTable\DBTableItem.cs" />
-    <Compile Include="DBTable\DBTableList.cs" />
-    <Compile Include="DBQuery\QExpression.cs" />
-    <Compile Include="DBItem\DBVirtualItem.cs" />
-    <Compile Include="DBTable\DBVirtualTable.cs" />
-    <Compile Include="Attributes\IndexAttribute.cs" />
-    <Compile Include="DBColumn\DBVirtualColumn.cs" />
-    <Compile Include="SqlDocument.cs" />
-    <Compile Include="DBQuery\QEnum.cs" />
-    <Compile Include="DBQuery\QType.cs" />
-    <Compile Include="Attributes\VirtualColumnAttribute.cs" />
-    <Compile Include="Attributes\VirtualTableAttribute.cs" />
-    <Compile Include="DBItem\DBNullable.cs" />
-    <Compile Include="DBItem\DBNullableComparer.cs" />
-    <Compile Include="DBProcedure\DBProcedure.cs" />
-    <Compile Include="DBProcedure\DBProcedureList.cs" />
-    <Compile Include="DBProcedure\DBProcParameter.cs" />
-    <Compile Include="DBProcedure\DBProcParameterList.cs" />
-    <Compile Include="DBProcedure\ProcedureType.cs" />
-    <Compile Include="DBProcedure\ExecuteArgs.cs" />
-    <Compile Include="DBTable\DBTableItemList.cs" />
-    <Compile Include="DBTable\DBTableView.cs" />
-    <Compile Include="DBTable\IDBTableView.cs" />
-    <Compile Include="DBItem\DBItemBinarySerialize.cs" />
-    <Compile Include="DBSchema\DBSequenceList.cs" />
-    <Compile Include="DBSchema\DBSchemaChangedArgs.cs" />
-    <Compile Include="DBTable\DBTableT.cs" />
-    <Compile Include="DBSystem\DBSystem.cs" />
-    <Compile Include="DBSystem\DBSystemMSSql.cs" />
-    <Compile Include="DBSystem\DBSystemMySql.cs" />
-    <Compile Include="DBSystem\DBSystemOracle.cs" />
-    <Compile Include="DBSystem\DBSystemPostgres.cs" />
-    <Compile Include="DBSystem\DBSystemSQLite.cs" />
-    <Compile Include="DBSystem\DBColumnInfo.cs" />
-    <Compile Include="DBSystem\DBInformation.cs" />
-    <Compile Include="DBSystem\DBTableInfo.cs" />
-    <Compile Include="DBExport\DBExportEnvironment.cs" />
-    <Compile Include="DBTable\IDBTableContent.cs" />
-    <Compile Include="DBTable\DBLogTable.cs" />
-    <Compile Include="DBItem\DBLogItem.cs" />
-    <Compile Include="DBTable\IDBVirtualTable.cs" />
-    <Compile Include="DBColumn\DBLogColumn.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="2.0.1" />
+    <PackageReference Include="MySql.Data" Version="6.10.6" />
+    <PackageReference Include="Npgsql" Version="3.2.7" />
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.12.0-beta2" />
+    <PackageReference Include="System.CodeDom" Version="4.4.0" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.4.3" />
+  </ItemGroup>  
   <ItemGroup>
-    <None Include="packages.config">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="docs\MySqlTransaction.xml" />
-    <None Include="docs\MySqlParameterCollection.xml" />
-    <None Include="docs\MySqlParameter.xml" />
-    <None Include="docs\MySqlHelper.xml" />
-    <None Include="docs\MySqlException.xml" />
-    <None Include="docs\MySqlDataReader.xml" />
-    <None Include="docs\MySqlDataAdapter.xml" />
-    <None Include="docs\MySqlConnectionStringBuilder.xml" />
-    <None Include="docs\MySqlConnection.xml" />
-    <None Include="docs\MySqlCommandBuilder.xml" />
-    <None Include="docs\MySqlCommand.xml" />
-    <None Include="Properties\app.config" />
-    <None Include="..\dll\libSQLite.Interop.so">
-      <Link>libSQLite.Interop.so</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj">
-      <Project>{32A948C0-5468-4392-A490-91947BFC3BE4}</Project>
-      <Name>DataWF.Common</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="System.Xml" />
-    <Reference Include="System" />
-    <Reference Include="Oracle.ManagedDataAccess">
-      <HintPath>..\packages\Oracle.ManagedDataAccess.12.2.1100\lib\net40\Oracle.ManagedDataAccess.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Data" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.ComponentModel" />
-    <Reference Include="System.ComponentModel.DataAnnotations" />
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Configuration.Install" />
-    <Reference Include="System.Management" />
-    <Reference Include="System.Runtime" />
-    <Reference Include="System.Transactions" />
-    <Reference Include="MySql.Data">
-      <HintPath>..\packages\MySql.Data.6.10.6\lib\net452\MySql.Data.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Threading.Tasks.Extensions">
-      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.3.0\lib\portable-net45+win8+wp8+wpa81\System.Threading.Tasks.Extensions.dll</HintPath>
-    </Reference>
-    <Reference Include="Npgsql">
-      <HintPath>..\packages\Npgsql.3.2.7\lib\net451\Npgsql.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Data.SQLite">
-      <HintPath>..\packages\System.Data.SQLite.Core.1.0.108.0\lib\net46\System.Data.SQLite.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="..\dll\SQLite.Interop.dll">
-      <Link>SQLite.Interop.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <Import Project="..\packages\System.Data.SQLite.Core.1.0.108.0\build\net46\System.Data.SQLite.Core.targets" Condition="Exists('..\packages\System.Data.SQLite.Core.1.0.108.0\build\net46\System.Data.SQLite.Core.targets')" />
+    <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />
+  </ItemGroup>  
 </Project>

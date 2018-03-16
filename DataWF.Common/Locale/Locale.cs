@@ -9,7 +9,7 @@ namespace DataWF.Common
 {
     public class Locale : SelectableList<LocaleCategory>
     {
-        private CultureInfo culture = CultureInfo.GetCultureInfo("ru-RU");
+        private CultureInfo culture = CultureInfo.GetCultureInfo("en-US");
 
         public Locale()
         {

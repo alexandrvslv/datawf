@@ -93,7 +93,7 @@ namespace DataWF.Data
 
         public string CreateParameter(IDbCommand command, object value)
         {
-            string name = (command is System.Data.SqlClient.SqlCommand ? "@" : ":") + (Column == null ? "param" : Column.Name);
+            string name = (command is Microsoft.Data.Sqlite.SqliteCommand ? "@" : ":") + (Column == null ? "param" : Column.Name);
             //TODO optimise contains/duplicate
             int i = 0;
             string param = name + i;

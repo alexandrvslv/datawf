@@ -1,20 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{32A948C0-5468-4392-A490-91947BFC3BE4}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>DataWF.Common</RootNamespace>
     <AssemblyName>DataWF.Common</AssemblyName>
-    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
-    <TargetFrameworkProfile />
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Platforms>AnyCPU;x86</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug</OutputPath>
+    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -38,6 +37,7 @@
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <OutputPath>bin\x86\Release\</OutputPath>
@@ -46,111 +46,15 @@
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <ItemGroup>
-    <Compile Include="Comparer\InvokerComparer.cs" />
-    <Compile Include="Comparer\InvokerComparerList.cs" />
-    <Compile Include="Comparer\TreeComparer.cs" />
-    <Compile Include="List\CompareType.cs" />
-    <Compile Include="List\DiffResult.cs" />
-    <Compile Include="List\IFilterable.cs" />
-    <Compile Include="List\ISortable.cs" />
-    <Compile Include="List\ISelectable.cs" />
-    <Compile Include="List\SelectableList.cs" />
-    <Compile Include="List\ListPropertyChangedEventArgs.cs" />
-    <Compile Include="List\SelectableListView.cs" />
-    <Compile Include="List\ListIndex.cs" />
-    <Compile Include="List\Query.cs" />
-    <Compile Include="List\QueryItem.cs" />
-    <Compile Include="List\QueryItemList.cs" />
-    <Compile Include="List\QueryOrder.cs" />
-    <Compile Include="List\QueryParameter.cs" />
-    <Compile Include="List\QueryParameterList.cs" />
-    <Compile Include="List\LogicType.cs" />
-    <Compile Include="List\QResult.cs" />
-    <Compile Include="Locale\LocaleImage.cs" />
-    <Compile Include="Locale\LocaleImageList.cs" />
-    <Compile Include="Locale\LocaleString.cs" />
-    <Compile Include="Locale\Locale.cs" />
-    <Compile Include="Locale\LocaleItem.cs" />
-    <Compile Include="Log\ExceptionInfo.cs" />
-    <Compile Include="Log\StateInfo.cs" />
-    <Compile Include="Log\StateInfoEventArgs.cs" />
-    <Compile Include="Log\StateInfoList.cs" />
-    <Compile Include="Net\NetStat.cs" />
-    <Compile Include="Net\SocketAddress.cs" />
-    <Compile Include="Net\SocketMessage.cs" />
-    <Compile Include="Net\TcpExceptionEventArgs.cs" />
-    <Compile Include="Net\TcpServer.cs" />
-    <Compile Include="Net\TcpServerEventArgs.cs" />
-    <Compile Include="Net\TcpSocket.cs" />
-    <Compile Include="Net\TcpSocketEventArgs.cs" />
-    <Compile Include="Net\UdpServer.cs" />
-    <Compile Include="Project\IProjectEditor.cs" />
-    <Compile Include="Project\ModuleAttribute.cs" />
-    <Compile Include="Project\ProjectAttribute.cs" />
-    <Compile Include="Project\ProjectHandler.cs" />
-    <Compile Include="Project\ProjectType.cs" />
-    <Compile Include="Invoker\EmitInvoker.cs" />
-    <Compile Include="List\Pull.cs" />
-    <Compile Include="List\INotifyListChanged.cs" />
-    <Compile Include="Invoker\IInvoker.cs" />
-    <Compile Include="Invoker\Invoker.cs" />
-    <Compile Include="Invoker\FieldInvoker.cs" />
-    <Compile Include="Invoker\PropertyInvoker.cs" />
-    <Compile Include="Invoker\IndexPropertyInvoker.cs" />
-    <Compile Include="Invoker\MethodInvoker.cs" />
-    <Compile Include="Invoker\EmitConstructor.cs" />
-    <Compile Include="Invoker\ComplexInvoker.cs" />
-    <Compile Include="List\ListIndexes.cs" />
-    <Compile Include="List\IListIndexes.cs" />
-    <Compile Include="Invoker\IIndexInvoker.cs" />
-    <Compile Include="Invoker\IndexInvoker.cs" />
-    <Compile Include="Invoker\ToStringInvoker.cs" />
-    <Compile Include="Invoker\TreeInvoker.cs" />
-    <Compile Include="Invoker\RefPropertyInvoker.cs" />
-    <Compile Include="Invoker\ReflectionInvoker.cs" />
-    <Compile Include="List\ThreadSafeEnumerator.cs" />
-    <Compile Include="Access\Accessable.cs" />
-    <Compile Include="Access\AccessItem.cs" />
-    <Compile Include="Access\AccessValue.cs" />
-    <Compile Include="Project\WebLink.cs" />
-    <Compile Include="Helper\ListHelper.cs" />
-    <Compile Include="Helper\Helper.cs" />
-    <Compile Include="Helper\GroupHelper.cs" />
-    <Compile Include="Helper\TypeHelper.cs" />
-    <Compile Include="Helper\Calculator.cs" />
-    <Compile Include="Helper\DateInterval.cs" />
-    <Compile Include="Helper\DefaultFormat.cs" />
-    <Compile Include="Helper\GlyphType.cs" />
-    <Compile Include="Helper\Interfaces.cs" />
-    <Compile Include="Helper\Interval.cs" />
-    <Compile Include="Locale\LocaleCategory.cs" />
-    <Compile Include="Serializer\Serialization.cs" />
-    <Compile Include="Serializer\SerializationNotifyEventArgs.cs" />
-    <Compile Include="Serializer\XmlEmitReader.cs" />
-    <Compile Include="Serializer\XmlEmitWriter.cs" />
-    <Compile Include="Serializer\IDictionaryItem.cs" />
-    <Compile Include="Serializer\DictionaryItemT.cs" />
-    <Compile Include="Serializer\SerializeType.cs" />
-    <Compile Include="Serializer\DictionaryItem.cs" />
-    <Compile Include="Serializer\Serializer.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>  
   <ItemGroup>
     <None Include="fontawesome-webfont.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="ICSharpCode.SharpZipLib">
-      <HintPath>..\packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+    <PackageReference Include="SharpZipLib.NETStandard" Version="1.0.7" />
+    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
+  </ItemGroup>  
 </Project>

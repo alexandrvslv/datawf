@@ -561,7 +561,7 @@ namespace DataWF.Common
                 builder.Append(type.FullName);
             }
             var assemblyName = type.Assembly.GetName().Name;
-            if (assemblyName != "mscorlib")
+            if (assemblyName != "mscorlib" && assemblyName != "System.Private.CoreLib")
             {
                 builder.Append(", ");
                 builder.Append(assemblyName);

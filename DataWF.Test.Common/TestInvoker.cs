@@ -188,7 +188,7 @@ namespace DataWF.Test.Common
         }
 
         [Test()]
-        public void BenchmarkPreoprtyReflection()
+        public void BenchmarkPropertyReflection()
         {
             BenchmarkBoxing("Property", "Reflection", new ReflectionInvoker(typeof(TestClass), "X"));
         }

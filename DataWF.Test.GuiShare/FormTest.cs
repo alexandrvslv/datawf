@@ -4,6 +4,7 @@ using DataWF.Common;
 using DataWF.Data;
 using DataWF.Data.Gui;
 using DataWF.Gui;
+using DataWF.Module.Common;
 using Xwt;
 using Xwt.Drawing;
 
@@ -100,10 +101,16 @@ namespace DataWF.TestGui
 		{
 			await Task.Run(() =>
 			{
-				var testOrm = new DataWF.Test.Data.TestORM();
-				testOrm.Setup();
-				testOrm.GenerateSqlite();
-			});
+                var schema = DBService.Generate(typeof(User).Assembly);
+                schema.Connection = new DBConnection
+                {
+                    Name = "test.common",
+                    System = DBSystem.SQLite,
+                    Host = "test.common.sqlite"
+                };
+
+                schema.CreateDatabase();
+            });
 
 			var list = new DataExplorer();
 			dock.Put(list);

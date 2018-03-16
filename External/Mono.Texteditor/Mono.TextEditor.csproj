@@ -71,8 +71,8 @@
     <Reference Include="ICSharpCode.NRefactory.Xml">
       <HintPath>..\..\packages\JetBrains.ICSharpCode.NRefactory.5.5.1\lib\Net40\ICSharpCode.NRefactory.Xml.dll</HintPath>
     </Reference>
-    <Reference Include="Xwt, Version=0.2.83.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Xwt.0.2.83\lib\net40\Xwt.dll</HintPath>
+    <Reference Include="Xwt, Version=0.2.91.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Xwt.0.2.91\lib\net40\Xwt.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

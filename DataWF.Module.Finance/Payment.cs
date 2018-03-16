@@ -47,11 +47,11 @@ namespace DataWF.Module.Finance
         }
 
         [Browsable(false)]
-        [Column("typeid", Keys = DBColumnKeys.Type)]
+        [Column("typeid", Keys = DBColumnKeys.ElementType)]
         public int? TypeId
         {
-            get { return GetProperty<int?>(nameof(TypeId)); }
-            set { SetProperty(value, nameof(TypeId)); }
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
         }
 
         [Reference("fk_daccountpayment_typeid", nameof(TypeId))]

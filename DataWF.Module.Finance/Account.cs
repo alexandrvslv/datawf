@@ -79,18 +79,18 @@ namespace DataWF.Module.Finance
         }
 
         [Browsable(false)]
-        [Column("typeid", Keys = DBColumnKeys.Type), Index("daccount_numbertypeid", true)]
+        [Column("typeid", Keys = DBColumnKeys.ElementType), Index("daccount_numbertypeid", true)]
         public int? TypeId
         {
-            get { return GetValue<int?>(Table.TypeKey); }
-            set { SetValue(value, Table.TypeKey); }
+            get { return GetValue<int?>(Table.ElementTypeKey); }
+            set { SetValue(value, Table.ElementTypeKey); }
         }
 
         [Reference("fk_daccount_typeid", nameof(TypeId))]
         public Book Type
         {
-            get { return GetReference<Book>(Table.TypeKey); }
-            set { SetReference(value, Table.TypeKey); }
+            get { return GetReference<Book>(Table.ElementTypeKey); }
+            set { SetReference(value, Table.ElementTypeKey); }
         }
 
         [Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]

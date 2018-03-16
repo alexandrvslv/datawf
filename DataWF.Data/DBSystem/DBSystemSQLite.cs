@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Data.SQLite;
+using System.Globalization;
 using System.Text;
 using DataWF.Common;
+using Microsoft.Data.Sqlite;
 
 namespace DataWF.Data
 {
@@ -33,7 +34,7 @@ namespace DataWF.Data
 
         public override IDbConnection CreateConnection(DBConnection connection)
         {
-            return new SQLiteConnection(GetConnectionString(connection));
+            return new SqliteConnection(GetConnectionString(connection));
         }
 
         public override string GetConnectionString(DBConnection connection)
@@ -43,23 +44,23 @@ namespace DataWF.Data
 
         public override DbConnectionStringBuilder GetConnectionStringBuilder(DBConnection connection)
         {
-            var builder = new SQLiteConnectionStringBuilder();
+            var builder = new SqliteConnectionStringBuilder();
             builder.DataSource = connection.DataBase;
-            builder.Pooling = connection.Pool;
-            builder.DefaultTimeout = connection.TimeOut;
+            //builder.Pooling = connection.Pool;
+            //builder.Timeout = connection.TimeOut;
             //builder.Enlist = false;
             //((SqliteConnectionStringBuilder)builder).JournalMode = SQLiteJournalModeEnum.Off;
             //((SqliteConnectionStringBuilder)builder).SyncMode = SynchronizationModes.Off;
-            if (!string.IsNullOrEmpty(connection.Password))
-            {
-                builder.HexPassword = Encoding.UTF8.GetBytes(connection.Password);
-            }
+            //if (!string.IsNullOrEmpty(connection.Password))
+            //{
+            //    builder.HexPassword = Encoding.UTF8.GetBytes(connection.Password);
+            //}
             return builder;
         }
 
         public override DbProviderFactory GetFactory()
         {
-            return SQLiteFactory.Instance;
+            return SqliteFactory.Instance;
         }
 
         public override string SequenceCurrentValue(DBSequence sequence)
@@ -135,6 +136,8 @@ select seq from db_sequence where name = '{sequence.Name}';";
                         value = (short)(long)value;
                     else if (temp == typeof(byte))
                         value = (byte)(long)value;
+                    else if (temp == typeof(bool))
+                        value = (long)value == 1;
                     else
                         throw new InvalidCastException($"From {from} to {temp}");
                 }
@@ -151,8 +154,15 @@ select seq from db_sequence where name = '{sequence.Name}';";
                 {
                     if (temp == typeof(float))
                         value = (float)(double)value;
+                    else if(temp == typeof(decimal))
+                        value = (decimal)(double)value;
                     else
                         throw new InvalidCastException($"From {from} to {temp}");
+                }
+                else if (from == typeof(string))
+                {
+                    if (temp == typeof(DateTime))
+                        value = DateTime.TryParse((string)value, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)? (object)date: null;
                 }
                 else
                     throw new InvalidCastException($"From {from} to {temp}");

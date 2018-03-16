@@ -28,6 +28,17 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj">
       <Project>{32a948c0-5468-4392-a490-91947bfc3be4}</Project>
       <Name>DataWF.Common</Name>
@@ -41,40 +52,27 @@
       <Name>DataWF.Data</Name>
     </ProjectReference>
     <ProjectReference Include="..\DataWF.Gui\DataWF.Gui.csproj">
-      <Project>{337D88BA-7460-4C2A-B83D-6B27DF626983}</Project>
+      <Project>{337d88ba-7460-4c2a-b83d-6b27df626983}</Project>
       <Name>DataWF.Gui</Name>
     </ProjectReference>
+    <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj">
+      <Project>{76a4b048-d827-4cc9-879e-bcafe5c796cc}</Project>
+      <Name>DataWF.Module.Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DataWF.Odf\DataWF.Odf.csproj">
-      <Project>{91E766B4-1057-4C16-AA5A-B4E26E91DA7C}</Project>
+      <Project>{91e766b4-1057-4c16-aa5a-b4e26e91da7c}</Project>
       <Name>DataWF.Odf</Name>
     </ProjectReference>
-    <ProjectReference Include="..\DataWF.Test.Data\DataWF.Test.Data.csproj">
-      <Project>{a505feee-28a8-4d99-9e15-39ddd3f48f2d}</Project>
-      <Name>DataWF.Test.Data</Name>
-    </ProjectReference>
     <ProjectReference Include="..\External\Mono.Texteditor\Mono.TextEditor.csproj">
-      <Project>{A2329308-3751-4DBD-9A75-5F7B8B024625}</Project>
+      <Project>{a2329308-3751-4dbd-9a75-5f7b8b024625}</Project>
       <Name>Mono.TextEditor</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-    <Reference Include="Xwt">
-      <HintPath>..\packages\Xwt.0.2.85\lib\net40\Xwt.dll</HintPath>
-    </Reference>
-    <Reference Include="Xwt.WPF">
-      <HintPath>..\packages\Xwt.WPF.0.2.85\lib\net40\Xwt.WPF.dll</HintPath>
-    </Reference>
+    <PackageReference Include="Xwt.WPF">
+      <Version>0.2.91</Version>
+    </PackageReference>
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Program.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
-    <None Include="packages.config" />
-  </ItemGroup>
-  <Import Project="..\DataWF.Test.GuiShare\DataWF.Test.GuiShare.projitems" Label="Shared" Condition="Exists('..\DataWF.Test.GuiShare\DataWF.Test.GuiShare.projitems')" />
+  <Import Project="..\DataWF.Test.GuiShare\DataWF.Test.GuiShare.projitems" Label="Shared" />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
