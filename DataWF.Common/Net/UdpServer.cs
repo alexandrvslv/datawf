@@ -159,8 +159,9 @@ namespace DataWF.Common
         {
             if (online)
                 StopListener();
-            this.listener.Close();
-            this.sender.Close();
+            listener?.Dispose();
+            sender?.Dispose();
+            receiveEvent?.Dispose();
         }
     }
 }

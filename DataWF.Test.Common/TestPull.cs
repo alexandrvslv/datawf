@@ -28,7 +28,7 @@ namespace DataWF.Test.Common
 
             for (int i = 0; i < 100; i++)
             {
-                Assert.AreEqual(i, pull.GetValue(Pull.GetHIndex(i, blockSize)));
+                Assert.AreEqual(i, pull.GetValueInternal(Pull.GetHIndex(i, blockSize)));
             }
         }
     }

@@ -30,7 +30,7 @@ namespace DataWF.Common
             byte[] rez = null;
             try
             {
-                using (var stream = new MemoryStream())
+                var stream = new MemoryStream();
                 using (var writer = new BinaryWriter(stream))
                 {
                     writer.Write((int)message.Type);
@@ -54,7 +54,7 @@ namespace DataWF.Common
                 data = Helper.ReadGZip(data);
             try
             {
-                using (var stream = new MemoryStream(data))
+                var stream = new MemoryStream(data);
                 using (var reader = new BinaryReader(stream))
                 {
                     message.Type = (SocketMessageType)reader.ReadInt32();

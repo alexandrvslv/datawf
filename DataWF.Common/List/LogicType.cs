@@ -3,18 +3,29 @@
 namespace DataWF.Common
 {
     public struct LogicType
-    {
+    {        
         public static readonly LogicType Undefined = new LogicType(LogicTypes.Undefined);
         public static readonly LogicType And = new LogicType(LogicTypes.And);
         public static readonly LogicType AndNot = new LogicType(LogicTypes.And, true);
         public static readonly LogicType Or = new LogicType(LogicTypes.Or);
         public static readonly LogicType OrNot = new LogicType(LogicTypes.Or, true);
 
+        public static bool operator ==(LogicType x, LogicType y)
+        {
+            return x.Equals(y);
+        }
+
+        public static bool operator !=(LogicType x, LogicType y)
+        {
+            return !x.Equals(y);
+        }
+
         public LogicType(LogicTypes type = LogicTypes.Undefined, bool not = false)
         {
             Type = type;
             Not = not;
         }
+
         public LogicTypes Type;
         public bool Not;
 

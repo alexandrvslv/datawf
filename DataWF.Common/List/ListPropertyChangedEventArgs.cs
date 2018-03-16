@@ -2,6 +2,7 @@
 
 namespace DataWF.Common
 {
+    [System.Runtime.InteropServices.ComVisible(false)]
     public class ListPropertyChangedEventArgs : ListChangedEventArgs
     {
         private readonly string property;

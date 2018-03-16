@@ -84,7 +84,7 @@ namespace DataWF.Common
         public byte[] Write()
         {
             byte[] buffer = null;
-            using (var stream = new MemoryStream())
+            var stream = new MemoryStream();
             using (var writer = new BinaryWriter(stream))
             {
                 Write(writer);
@@ -108,7 +108,7 @@ namespace DataWF.Common
 
         public void Read(byte[] buffer)
         {
-            using (var stream = new MemoryStream(buffer))
+            var stream = new MemoryStream(buffer);
             using (var reader = new BinaryReader(stream))
             {
                 Read(reader, buffer);

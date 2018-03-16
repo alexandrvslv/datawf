@@ -333,6 +333,8 @@ namespace DataWF.Common
         {
             if (online)
                 StopListener();
+            acceptEvent?.Dispose();
+            timeoutEvent?.Dispose();
         }
 
     }

@@ -88,12 +88,12 @@ namespace DataWF.Common
 
         public T GetValue<T>(int index)
         {
-            return ((Pull<T>)this).GetValue(index);
+            return ((Pull<T>)this).GetValueInternal(index);
         }
 
         public void SetValue<T>(int index, T value)
         {
-            ((Pull<T>)this).SetValue(index, value);
+            ((Pull<T>)this).SetValueInternal(index, value);
         }
 
         public int Count { get; internal set; }
@@ -168,16 +168,15 @@ namespace DataWF.Common
 
         public override object Get(int index)
         {
-            return GetValue(index);
+            return GetValueInternal(index);
         }
 
         public override void Set(int index, object value)
         {
-
-            SetValue(index, (T)value);
+            SetValueInternal(index, (T)value);
         }
 
-        public T GetValue(int index)
+        public T GetValueInternal(int index)
         {
             GetBlockIndex(index, out short block, out short blockIndex);
             if (block >= array.Count || array[block] == null)
@@ -185,7 +184,7 @@ namespace DataWF.Common
             return array[block][blockIndex];
         }
 
-        public void SetValue(int index, T value)
+        public void SetValueInternal(int index, T value)
         {
             GetBlockIndex(index, out short block, out short blockIndex);
             while (block > array.Count)
@@ -208,7 +207,7 @@ namespace DataWF.Common
         {
             for (int i = 0; i < Count; i++)
             {
-                var item = GetValue(i);
+                var item = GetValueInternal(i);
                 if (item != null)
                 {
                     yield return item;

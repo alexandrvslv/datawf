@@ -21,14 +21,19 @@ namespace DataWF.Common
 
         public SelectableList()
         {
-            Initialize();
+            items = new List<T>();
+            type = typeof(T);
+            if (TypeHelper.IsInterface(type, typeof(INotifyPropertyChanged)))
+            {
+                propertyHandler = new PropertyChangedEventHandler(OnPropertyChanged);
+            }
         }
 
-        public SelectableList(IEnumerable<T> items, IComparer<T> comparer = null)
+        public SelectableList(IEnumerable<T> items, IComparer<T> comparer = null) : this()
         {
-            Initialize();
             this.comparer = comparer;
-            AddRange(items);
+            foreach (T item in items)
+                AddInternal(item);
         }
 
         [XmlIgnore, Browsable(false)]
@@ -156,16 +161,6 @@ namespace DataWF.Common
         public virtual object NewItem()
         {
             return TypeHelper.CreateObject(type);
-        }
-
-        private void Initialize()
-        {
-            items = new List<T>();
-            type = typeof(T);
-            if (TypeHelper.IsInterface(type, typeof(INotifyPropertyChanged)))
-            {
-                propertyHandler = new PropertyChangedEventHandler(OnPropertyChanged);
-            }
         }
 
         public virtual void Dispose()

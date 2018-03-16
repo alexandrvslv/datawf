@@ -8,8 +8,6 @@ namespace DataWF.Common
 {
     public class StateInfo
     {
-        private StringBuilder stackBuilder;
-
         public StateInfo()
         {
             Date = DateTime.UtcNow;

@@ -194,6 +194,10 @@ namespace DataWF.Common
         public void Dispose()
         {
             Disconnect(false);
+            connectEvent?.Dispose();
+            disconnectEvent?.Dispose();
+            loadEvent?.Dispose();
+            sendEvent?.Dispose();
         }
     }
 }
