@@ -2,29 +2,31 @@
 
 ## Overview
 
-Data/Document Work Flow is a set of .NET C# libraries to build simple cross-platform information system:
+Data/Document Work Flow is a set of C# libraries to build simple cross-platform IS:
 
-- DataWF.Common - collections, reflections, io and networks helpers
-- DataWF.Data - cross RDBMS ORM
+- DataWF.Common - .NETStandard collections, reflections, io and networks helpers
+- DataWF.Data - .NETStandard Cross RDBMS ORM
+- DataWF.Module.Common - Common models
+- DataWF.Module.Flow - Document Workflow models
 - DataWF.Gui - Xwt based desktop UI
 - DataWF.Data.Gui - Database desktop UI
-- DataWF.Module.Flow - Document work flow module
-- DataWF.Mudule.FlowGui - Configure, create, edit and send document throw the flow
+- DataWF.Module.CommonGui - Users Administator UI
+- DataWF.Mudule.FlowGui - Document Workflow UI
 
-Note: At this time, most of DataWF libraries is in developing stage and not ready for production!
+Note: most of DataWF UI libraries is in developing stage and not ready for production!
 
 ## Planing
 
 Implement RPC/REST Server with Desktop/Web UI.
-Avalonia UI and move project to .net standard
+Port to Avalonia UI
 
 ## DataWF.Data
 
 ORM based on ADO.NET drivers. Not use EF.
 
-Features: Code-first, Relational data managment, Caching large tables.
+Features: Code-first, Relational data managment, Formatting DDL and DML, Caching large tables
 
-Cover basic database objects by formatting DDL and DML: Schema, Table, View, Column, Constraints(Primary and Foreign Key), Index, Stored Procedure.
+Cover basic database objects: Schema, Table, View, Column, Constraints(Primary and Foreign Key), Index, Stored Procedure.
 
 Support several RDBMS(simply extendable):
 
@@ -37,9 +39,9 @@ Support several RDBMS(simply extendable):
 Limitation/Overhead:
 
 - One column Primary Key
-- System columns: Create date, Stamp date, Access binary
+- System columns: Create date, Stamp date, Access binary, Item Type identifier
 
-Note: sources compatible with .net standard 2.0
+Note: used beta version of ODP.NET for .netstandard compatibility
 
 Model example:
 
@@ -78,6 +80,24 @@ Connection example:
     var connection = new DBConnection("test") { System = DBSystem.SQLite, DataBase = "test.sqlite" };
     var qresult = DBService.ExecuteQResult(connection, $"select * from {SomeTableName}");
 
+## DataWF.Module.Common
+
+Common Models:
+
+- Group & Permission
+- User & User Group
+- User Log
+- Reference Book
+- Scheduler
+
+## DataWF.Module.Flow
+
+WorkFlow Models:
+
+- Work & Stage
+- Template & Attribute
+- Document & Relating Data
+
 ## DataWF.Gui
 
 Cross Platform Desktop UI, based on Xwt. Provide several widgets to build data navigation application
@@ -94,15 +114,16 @@ Note: Move UI from WinForm/Gtk# to Xwt is not compleate and little bugly.
 
 ## DataWF.Data.Gui
 
-- DB Configure
-- Database export utilite
-- Query tool
-- Report engeene
+- Database Administrator
+- Database Export utilite
+- Query Builder(not compleate)
+- Report engeene(planed)
 
-## DataWF.Module.Flow
+## DataWF.Module.CommonGUI
 
-WorkFlow manager (Users & User Group & Privileges, Flows, Stages, Templates, Attributes);
+- User&Group Administrator
 
 ## DataWF.Module.FlowGui
 
-Document editor (Create, Edit, Send document throw the flow);
+- Workflow Administrator
+- Document Editor (Create, Edit, Send document throw the flow);
