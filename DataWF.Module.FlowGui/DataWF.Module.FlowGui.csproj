@@ -1,14 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{EA38C2A9-BC62-419A-8385-2C72ECBBD5E7}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>DataWF.FlowGui</RootNamespace>
     <AssemblyName>DataWF.FlowGui</AssemblyName>
-    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
-    <TargetFrameworkProfile />
+    <TargetFrameworks>net47</TargetFrameworks>
+    <Platforms>AnyCPU;x86</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -48,118 +46,19 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-    <Reference Include="WindowsBase" />
-    <Reference Include="DocumentFormat.OpenXml">
-      <HintPath>..\dll\DocumentFormat.OpenXml.dll</HintPath>
-    </Reference>
-    <Reference Include="ICSharpCode.NRefactory.Cecil">
-      <HintPath>..\packages\ICSharpCode.NRefactory.5.5.1\lib\Net40\ICSharpCode.NRefactory.Cecil.dll</HintPath>
-    </Reference>
-    <Reference Include="ICSharpCode.NRefactory.CSharp">
-      <HintPath>..\packages\ICSharpCode.NRefactory.5.5.1\lib\Net40\ICSharpCode.NRefactory.CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="ICSharpCode.NRefactory">
-      <HintPath>..\packages\ICSharpCode.NRefactory.5.5.1\lib\Net40\ICSharpCode.NRefactory.dll</HintPath>
-    </Reference>
-    <Reference Include="ICSharpCode.NRefactory.Xml">
-      <HintPath>..\packages\ICSharpCode.NRefactory.5.5.1\lib\Net40\ICSharpCode.NRefactory.Xml.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Cecil">
-      <HintPath>..\packages\Mono.Cecil.0.9.6.4\lib\net45\Mono.Cecil.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Cecil.Mdb">
-      <HintPath>..\packages\Mono.Cecil.0.9.6.4\lib\net45\Mono.Cecil.Mdb.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Cecil.Pdb">
-      <HintPath>..\packages\Mono.Cecil.0.9.6.4\lib\net45\Mono.Cecil.Pdb.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Cecil.Rocks">
-      <HintPath>..\packages\Mono.Cecil.0.9.6.4\lib\net45\Mono.Cecil.Rocks.dll</HintPath>
-    </Reference>
-    <Reference Include="Xwt, Version=0.2.91.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xwt.0.2.91\lib\net40\Xwt.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />
+    <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj" />
+    <ProjectReference Include="..\DataWF.Data.Gui\DataWF.Data.Gui.csproj" />
+    <ProjectReference Include="..\DataWF.Gui\DataWF.Gui.csproj" />
+    <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj" />
+    <ProjectReference Include="..\DataWF.Module.CommonGui\DataWF.Module.CommonGui.csproj" />
+    <ProjectReference Include="..\DataWF.Module.Flow\DataWF.Module.Flow.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="FlowExplorer.cs" />
-    <Compile Include="FlowTree.cs" />
-    <Compile Include="MenuItemStage.cs" />
-    <Compile Include="MenuItemTemplate.cs" />
-    <Compile Include="MenuItemUser.cs" />
-    <Compile Include="Cells\CellEditorFlowParameters.cs" />
-    <Compile Include="Cells\CellEditorFlowTree.cs" />
-    <Compile Include="Cells\CellEditorLogRow.cs" />
-    <Compile Include="Cells\CellEditorLogTable.cs" />
-    <Compile Include="Document\DocumentEditor.cs" />
-    <Compile Include="Document\DocumentFiles.cs" />
-    <Compile Include="Document\DocumentFinder.cs" />
-    <Compile Include="Document\DocumentHeader.cs" />
-    <Compile Include="Document\DocumentListView.cs" />
-    <Compile Include="Document\DocumentMonitoring.cs" />
-    <Compile Include="Document\DocumentRelations.cs" />
-    <Compile Include="Document\DocumentSender.cs" />
-    <Compile Include="Document\DocumentWorker.cs" />
-    <Compile Include="Document\DocumentLayoutList.cs" />
+    <PackageReference Include="Xwt" Version="0.2.92" />
   </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <ItemGroup>
-    <ProjectReference Include="..\DataWF.Gui\DataWF.Gui.csproj">
-      <Project>{337D88BA-7460-4C2A-B83D-6B27DF626983}</Project>
-      <Name>DataWF.Gui</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\External\Mono.Texteditor\Mono.TextEditor.csproj">
-      <Project>{A2329308-3751-4DBD-9A75-5F7B8B024625}</Project>
-      <Name>Mono.TextEditor</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Odf\DataWF.Odf.csproj">
-      <Project>{91E766B4-1057-4C16-AA5A-B4E26E91DA7C}</Project>
-      <Name>DataWF.Odf</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj">
-      <Project>{32A948C0-5468-4392-A490-91947BFC3BE4}</Project>
-      <Name>DataWF.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj">
-      <Project>{C982088F-82EC-4400-8D3C-BD76221C0C9C}</Project>
-      <Name>DataWF.Data</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Module.Flow\DataWF.Module.Flow.csproj">
-      <Project>{E5EFC9B0-AEE6-47B4-B553-37A241ADF976}</Project>
-      <Name>DataWF.Module.Flow</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Data.Gui\DataWF.Data.Gui.csproj">
-      <Project>{3CCBAB5D-85AE-4DE0-A20E-AD302AF442A2}</Project>
-      <Name>DataWF.Data.Gui</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj">
-      <Project>{76A4B048-D827-4CC9-879E-BCAFE5C796CC}</Project>
-      <Name>DataWF.Module.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Module.Counterpart\DataWF.Module.Counterpart.csproj">
-      <Project>{D9D3537E-C1F9-4F59-AE2B-5098213FF747}</Project>
-      <Name>DataWF.Module.Counterpart</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Module.Finance\DataWF.Module.Finance.csproj">
-      <Project>{89A2D4B4-6352-4193-BB62-12E9DEA49221}</Project>
-      <Name>DataWF.Module.Finance</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Module.CommonGui\DataWF.Module.CommonGui.csproj">
-      <Project>{E17A78AE-28C2-4264-A36D-A7EBAFE7626D}</Project>
-      <Name>DataWF.Module.CommonGui</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <EmbeddedResource Include="Resources\default.odt" />
+    <EmbeddedResource Include="Resources\empty.xlsx" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
-    <None Include="Resources\empty.xlsx" />
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup />
 </Project>

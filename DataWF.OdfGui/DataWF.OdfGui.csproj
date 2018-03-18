@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <OutputType>Library</OutputType>
-    <RootNamespace>DataWF.Module.Messanger</RootNamespace>
-    <AssemblyName>DataWF.Module.Messanger</AssemblyName>
-    <TargetFrameworks>netstandard2.0;net47</TargetFrameworks>
+    <RootNamespace>DataWF.OdfGui</RootNamespace>
+    <AssemblyName>DataWF.OdfGui</AssemblyName>
+    <TargetFrameworks>net47</TargetFrameworks>
     <Platforms>AnyCPU;x86</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -24,10 +24,11 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
-  </PropertyGroup>  
+  </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />
-    <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj" />
-    <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj" />
+    <ProjectReference Include="..\DataWF.Odf\DataWF.Odf.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Xwt" Version="0.2.92" />
   </ItemGroup>
 </Project>

@@ -34,7 +34,7 @@ namespace DataWF.Module.Flow
         Data = 4,
         Workflow = 8,
         Customer = 16
-        //Logs,        
+        //Logs,
     }
 
     public delegate void DocumentDataLoadDelegate(object sender, DocumentEventArgs args);

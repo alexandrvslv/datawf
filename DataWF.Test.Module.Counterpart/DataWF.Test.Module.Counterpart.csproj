@@ -1,16 +1,11 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\NUnit.3.10.1\build\NUnit.props" Condition="Exists('..\packages\NUnit.3.10.1\build\NUnit.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{1CD6F41B-3619-4210-BCBD-4AD8DD55B00E}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>DataWF.Test.Module.Counterparty</RootNamespace>
     <AssemblyName>DataWF.Test.Module.Counterparty</AssemblyName>
-    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -28,43 +23,17 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="nunit.framework, Version=3.10.1.0, Culture=neutral, PublicKeyToken=2638cd05610744eb, processorArchitecture=MSIL">
-      <HintPath>..\packages\NUnit.3.10.1\lib\net45\nunit.framework.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
+    <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />
+    <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj" />
+    <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj" />
+    <ProjectReference Include="..\DataWF.Module.Counterpart\DataWF.Module.Counterpart.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Generate.cs" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.6.1" />
+    <PackageReference Include="NUnit" Version="3.10.1" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.10.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj">
-      <Project>{32A948C0-5468-4392-A490-91947BFC3BE4}</Project>
-      <Name>DataWF.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj">
-      <Project>{C982088F-82EC-4400-8D3C-BD76221C0C9C}</Project>
-      <Name>DataWF.Data</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj">
-      <Project>{76A4B048-D827-4CC9-879E-BCAFE5C796CC}</Project>
-      <Name>DataWF.Module.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Module.Counterpart\DataWF.Module.Counterpart.csproj">
-      <Project>{D9D3537E-C1F9-4F59-AE2B-5098213FF747}</Project>
-      <Name>DataWF.Module.Counterpart</Name>
-    </ProjectReference>
+    <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
   </ItemGroup>
-  <ItemGroup>
-    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\NUnit.3.10.1\build\NUnit.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\NUnit.3.10.1\build\NUnit.props'))" />
-  </Target>
 </Project>

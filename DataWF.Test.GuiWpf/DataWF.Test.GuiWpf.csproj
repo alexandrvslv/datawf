@@ -1,13 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{6DFEFA1C-CBC0-4EFC-BDAC-FF46BA86B9F3}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>DataWF.Test.GuiWpf</RootNamespace>
     <AssemblyName>DataWF.Test.GuiWpf</AssemblyName>
-    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
+    <TargetFrameworks>net47</TargetFrameworks>
+    <Platforms>AnyCPU;x86</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -24,55 +23,17 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
-  </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
+    <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />
+    <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj" />
+    <ProjectReference Include="..\DataWF.Data.Gui\DataWF.Data.Gui.csproj" />
+    <ProjectReference Include="..\DataWF.Gui\DataWF.Gui.csproj" />
+    <ProjectReference Include="..\DataWF.OdfGui\DataWF.OdfGui.csproj" />
+    <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.cs" />
+    <PackageReference Include="Xwt" Version="0.2.92" />
+    <PackageReference Include="Xwt.Wpf" Version="0.2.92" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj">
-      <Project>{32a948c0-5468-4392-a490-91947bfc3be4}</Project>
-      <Name>DataWF.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Data.Gui\DataWF.Data.Gui.csproj">
-      <Project>{3ccbab5d-85ae-4de0-a20e-ad302af442a2}</Project>
-      <Name>DataWF.Data.Gui</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj">
-      <Project>{c982088f-82ec-4400-8d3c-bd76221c0c9c}</Project>
-      <Name>DataWF.Data</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Gui\DataWF.Gui.csproj">
-      <Project>{337d88ba-7460-4c2a-b83d-6b27df626983}</Project>
-      <Name>DataWF.Gui</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj">
-      <Project>{76a4b048-d827-4cc9-879e-bcafe5c796cc}</Project>
-      <Name>DataWF.Module.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Odf\DataWF.Odf.csproj">
-      <Project>{91e766b4-1057-4c16-aa5a-b4e26e91da7c}</Project>
-      <Name>DataWF.Odf</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\External\Mono.Texteditor\Mono.TextEditor.csproj">
-      <Project>{a2329308-3751-4dbd-9a75-5f7b8b024625}</Project>
-      <Name>Mono.TextEditor</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Xwt.WPF">
-      <Version>0.2.91</Version>
-    </PackageReference>
-  </ItemGroup>
-  <Import Project="..\DataWF.Test.GuiShare\DataWF.Test.GuiShare.projitems" Label="Shared" />
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+   <Import Project="..\DataWF.Test.GuiShare\DataWF.Test.GuiShare.projitems" Label="Shared" />
 </Project>

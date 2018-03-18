@@ -2,11 +2,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{C982088F-82EC-4400-8D3C-BD76221C0C9C}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>DataWF.Data</RootNamespace>
     <AssemblyName>DataWF.Data</AssemblyName>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;net47</TargetFrameworks>
     <Platforms>AnyCPU;x86</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -47,6 +46,7 @@
     <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.12.0-beta2" />
     <PackageReference Include="System.CodeDom" Version="4.4.0" />
     <PackageReference Include="System.Data.SqlClient" Version="4.4.3" />
+    <PackageReference Include="System.ValueTuple" Version="4.4.0" />
   </ItemGroup>  
   <ItemGroup>
     <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />

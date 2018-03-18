@@ -1,13 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{D9D3537E-C1F9-4F59-AE2B-5098213FF747}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>DataWF.Module.Counterpart</RootNamespace>
     <AssemblyName>DataWF.Module.Counterpart</AssemblyName>
-    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
+    <TargetFrameworks>netstandard2.0;net47</TargetFrameworks>
+    <Platforms>AnyCPU;x86</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -43,34 +42,8 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Data" />
+    <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />
+    <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj" />
+    <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Customer.cs" />
-    <Compile Include="CustomerAddress.cs" />
-    <Compile Include="CustomerIndentify.cs" />
-    <Compile Include="CustomerReference.cs" />
-    <Compile Include="Location\Country.cs" />
-    <Compile Include="Location\Currency.cs" />
-    <Compile Include="Location\Location.cs" />
-    <Compile Include="Address.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj">
-      <Project>{32A948C0-5468-4392-A490-91947BFC3BE4}</Project>
-      <Name>DataWF.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj">
-      <Project>{C982088F-82EC-4400-8D3C-BD76221C0C9C}</Project>
-      <Name>DataWF.Data</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj">
-      <Project>{76A4B048-D827-4CC9-879E-BCAFE5C796CC}</Project>
-      <Name>DataWF.Module.Common</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

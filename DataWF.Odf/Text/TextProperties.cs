@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Xml;
-using Xwt.Drawing;
 
 namespace Doc.Odf
 {
@@ -175,48 +174,7 @@ namespace Doc.Odf
             set { Element.SetAttribute("fo:country", Service.nsFO, value); }
         }
 
-        protected Font _font;
-        public Font Font
-        {
-            get
-            {
-                if (_font == null && !string.IsNullOrEmpty(FontName))
-                {
-                    var fs = Xwt.Drawing.FontStyle.Normal;
-                    if (FontStyle == FontStyles.Italic)
-                        fs = Xwt.Drawing.FontStyle.Italic;
-                    else if (FontStyle == FontStyles.Oblique)
-                        fs = Xwt.Drawing.FontStyle.Oblique;
-
-                    var fw = Xwt.Drawing.FontWeight.Normal;
-                    if (FontWeight != FontWheights.wNormal)
-                        fw = Xwt.Drawing.FontWeight.Bold;
-
-                    FontFace ff = this.FontFace;
-                    Length l = new Length(this.FontSize, 0, LengthType.None);
-                    double size = l.Data == 0 ? 8D : (double)l.Data;
-                    if (l.Type == LengthType.Inch) size = size * 96;
-                    else if (l.Type == LengthType.Millimeter) size = (size / 25.4) * 96;
-                    else if (l.Type == LengthType.Percent)
-                    {
-                        var property = ParentProperty as TextProperties;
-                        while (property != null)
-                        {
-
-                            if (((Length)property.FontSize).Type != LengthType.Percent)
-                                break;
-                            else
-                                property = property.ParentProperty as TextProperties;
-                        }
-                        if (property != null)
-                            size = property.Font.Size * (l.Data / 100);
-                    }
-                    _font = Font.FromName(FontName == "" ? "Arial" : ff.Family)
-                                .WithSize(size).WithStyle(fs).WithWeight(fw);
-                }
-                return _font;
-            }
-        }
+        
 
         public void Dispose()
         {

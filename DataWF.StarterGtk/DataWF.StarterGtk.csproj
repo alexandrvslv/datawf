@@ -1,33 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
-  <Import Project="..\packages\Xwt.Gtk.0.2.91\build\Xwt.Gtk.props" Condition="Exists('..\packages\Xwt.Gtk.0.2.91\build\Xwt.Gtk.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{687DFE24-9DE0-4A3B-9854-CF41B8FDC134}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>DataWF.Starter</RootNamespace>
-    <StartupObject>DataWF.Starter.Program</StartupObject>
     <AssemblyName>DataWF.StarterGtk</AssemblyName>
-    <PublishUrl>publish\</PublishUrl>
-    <Install>true</Install>
-    <InstallFrom>Disk</InstallFrom>
-    <UpdateEnabled>false</UpdateEnabled>
-    <UpdateMode>Foreground</UpdateMode>
-    <UpdateInterval>7</UpdateInterval>
-    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
-    <UpdatePeriodically>false</UpdatePeriodically>
-    <UpdateRequired>false</UpdateRequired>
-    <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
-    <UseApplicationTrust>false</UseApplicationTrust>
-    <BootstrapperEnabled>true</BootstrapperEnabled>
-    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
-    <TargetFrameworkProfile />
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
+    <StartupObject>DataWF.Starter.Program</StartupObject>
+    <TargetFrameworks>net47</TargetFrameworks>
+    <Platforms>AnyCPU;x86</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -51,108 +31,21 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-    <Reference Include="Xwt, Version=0.2.91.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xwt.0.2.91\lib\net40\Xwt.dll</HintPath>
-    </Reference>
-    <Reference Include="Xwt.Gtk, Version=0.2.91.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
-      <HintPath>..\packages\Xwt.Gtk.0.2.91\lib\net40\Xwt.Gtk.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />
+    <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj" />
+    <ProjectReference Include="..\DataWF.Data.Gui\DataWF.Data.Gui.csproj" />
+    <ProjectReference Include="..\DataWF.Gui\DataWF.Gui.csproj" />
+    <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj" />
+    <ProjectReference Include="..\DataWF.Module.CommonGui\DataWF.Module.CommonGui.csproj" />
+    <ProjectReference Include="..\DataWF.Module.Counterpart\DataWF.Module.Counterpart.csproj" />
+    <ProjectReference Include="..\DataWF.Module.Finance\DataWF.Module.Finance.csproj" />
+    <ProjectReference Include="..\DataWF.Module.Messanger\DataWF.Module.Messanger.csproj" />
+    <ProjectReference Include="..\DataWF.Module.MessangerGui\DataWF.Module.MessangerGui.csproj" />
+    <ProjectReference Include="..\DataWF.Module.Flow\DataWF.Module.Flow.csproj" />
+    <ProjectReference Include="..\DataWF.Module.FlowGui\DataWF.Module.FlowGui.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <PackageReference Include="Xwt" Version="0.2.92" />
+    <PackageReference Include="Xwt.Gtk" Version="0.2.92" />
   </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <ItemGroup>
-    <BootstrapperPackage Include=".NETFramework,Version=v4.0">
-      <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4 %28x86 и x64%29</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
-      <Visible>False</Visible>
-      <ProductName>Клиентский профиль .NET Framework 3.5 SP1</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
-      <Visible>False</Visible>
-      <ProductName>Установщик Windows 3.1</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\DataWF.Odf\DataWF.Odf.csproj">
-      <Project>{91E766B4-1057-4C16-AA5A-B4E26E91DA7C}</Project>
-      <Name>DataWF.Odf</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Gui\DataWF.Gui.csproj">
-      <Project>{337D88BA-7460-4C2A-B83D-6B27DF626983}</Project>
-      <Name>DataWF.Gui</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj">
-      <Project>{C982088F-82EC-4400-8D3C-BD76221C0C9C}</Project>
-      <Name>DataWF.Data</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Data.Gui\DataWF.Data.Gui.csproj">
-      <Project>{3CCBAB5D-85AE-4DE0-A20E-AD302AF442A2}</Project>
-      <Name>DataWF.Data.Gui</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj">
-      <Project>{32A948C0-5468-4392-A490-91947BFC3BE4}</Project>
-      <Name>DataWF.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj">
-      <Project>{76A4B048-D827-4CC9-879E-BCAFE5C796CC}</Project>
-      <Name>DataWF.Module.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Module.CommonGui\DataWF.Module.CommonGui.csproj">
-      <Project>{E17A78AE-28C2-4264-A36D-A7EBAFE7626D}</Project>
-      <Name>DataWF.Module.CommonGui</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Module.Counterpart\DataWF.Module.Counterpart.csproj">
-      <Project>{D9D3537E-C1F9-4F59-AE2B-5098213FF747}</Project>
-      <Name>DataWF.Module.Counterpart</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Module.Finance\DataWF.Module.Finance.csproj">
-      <Project>{89A2D4B4-6352-4193-BB62-12E9DEA49221}</Project>
-      <Name>DataWF.Module.Finance</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Module.Flow\DataWF.Module.Flow.csproj">
-      <Project>{E5EFC9B0-AEE6-47B4-B553-37A241ADF976}</Project>
-      <Name>DataWF.Module.Flow</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Module.FlowGui\DataWF.Module.FlowGui.csproj">
-      <Project>{EA38C2A9-BC62-419A-8385-2C72ECBBD5E7}</Project>
-      <Name>DataWF.Module.FlowGui</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Module.Messanger\DataWF.Module.Messanger.csproj">
-      <Project>{1B9CC5A9-6163-403C-9BEA-E44176676DDD}</Project>
-      <Name>DataWF.Module.Messanger</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataWF.Module.MessangerGui\DataWF.Module.MessangerGui.csproj">
-      <Project>{42B8E03E-746D-443D-9226-F05EF3023ACF}</Project>
-      <Name>DataWF.Module.MessangerGui</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Remove="Properties\Resources.resx" />
-  </ItemGroup>
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Xwt.Gtk.0.2.91\build\Xwt.Gtk.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Xwt.Gtk.0.2.91\build\Xwt.Gtk.props'))" />
-  </Target>
 </Project>

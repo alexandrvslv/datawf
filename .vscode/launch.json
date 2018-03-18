@@ -8,28 +8,28 @@
             "name": "Launch StarterGtk",
             "type": "mono",
             "request": "launch",
-            "program": "${workspaceRoot}/DataWF.StarterGtk/bin/Debug/DataWF.StarterGtk.exe",
+            "program": "${workspaceRoot}/DataWF.StarterGtk/bin/Debug/net47/DataWF.StarterGtk.exe",
             "cwd": "${workspaceRoot}"
         },
         {
             "name": "Launch StarterWpf",
             "type": "mono",
             "request": "launch",
-            "program": "${workspaceRoot}/DataWF.StarterWpf/bin/Debug/DataWF.StarterWpf.exe",
+            "program": "${workspaceRoot}/DataWF.StarterWpf/bin/Debug/net47/DataWF.StarterWpf.exe",
             "cwd": "${workspaceRoot}"
         },
         {
             "name": "Launch TestGTK",
             "type": "mono",
             "request": "launch",
-            "program": "${workspaceRoot}/DataWF.Test.GuiGtk/bin/Debug/DataWF.Test.GuiGtk.exe",
+            "program": "${workspaceRoot}/DataWF.Test.GuiGtk/bin/Debug/net47/DataWF.Test.GuiGtk.exe",
             "cwd": "${workspaceRoot}"
         },
         {
             "name": "Launch TestWPF",
             "type": "mono",
             "request": "launch",
-            "program": "${workspaceRoot}/DataWF.Test.GuiWpf/bin/Debug/DataWF.Test.GuiWpf.exe",
+            "program": "${workspaceRoot}/DataWF.Test.GuiWpf/bin/Debug/net47/DataWF.Test.GuiWpf.exe",
             "cwd": "${workspaceRoot}"
         },
         {

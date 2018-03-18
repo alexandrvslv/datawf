@@ -12,7 +12,7 @@ using Xwt.Drawing;
 
 namespace DataWF.Module.MessangerGui
 {
-	[Module(true)]
+	[DataWF.Common.Module(true)]
 	public class MessageExplorer : VPanel, IDockContent
 	{
 		private UserTree tree;
