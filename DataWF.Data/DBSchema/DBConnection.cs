@@ -6,6 +6,7 @@ using System.Data;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 
 namespace DataWF.Data
@@ -399,6 +400,76 @@ namespace DataWF.Data
                 PropertyChanged(this, args);
         }
 
+        public DBTable<T> ExecuteTable<T>(string tableName, string query) where T : DBItem, new()
+        {
+            var table = new DBTable<T>(tableName);
+            table.Schema = DBService.DefaultSchema;
+            table.Load(query);
+            return table;
+        }
 
+        public QResult ExecuteQResult(string query, bool noTransaction = true)
+        {
+            using (var transaction = new DBTransaction(this, query, noTransaction))
+            {
+                return transaction.ExecuteQResult();
+            }
+        }
+
+        public List<List<KeyValuePair<string, object>>> ExecuteListPair(string query)
+        {
+            List<List<KeyValuePair<string, object>>> list = null;
+            using (var transaction = new DBTransaction(this, query))
+            {
+                list = new List<List<KeyValuePair<string, object>>>();
+                using (var reader = transaction.ExecuteQuery(DBExecuteType.Reader) as IDataReader)
+                {
+                    int fCount = reader.FieldCount;
+                    while (reader.Read())
+                    {
+                        var objects = new List<KeyValuePair<string, object>>(fCount);
+                        for (int i = 0; i < fCount; i++)
+                            objects.Add(new KeyValuePair<string, object>(reader.GetName(i), reader.GetValue(i)));
+                        list.Add(objects);
+                    }
+                    reader.Close();
+                }
+            }
+            return list;
+        }
+
+        public List<Dictionary<string, object>> ExecuteListDictionary(string query)
+        {
+            using (var transaction = new DBTransaction(this, query))
+                return transaction.ExecuteListDictionary();
+        }
+
+        public object ExecuteQuery(string query, bool noTransaction = false, DBExecuteType type = DBExecuteType.Scalar)
+        {
+            if (string.IsNullOrEmpty(query))
+                return null;
+            using (var transaction = new DBTransaction(this, query, noTransaction))
+            {
+                var result = transaction.ExecuteQuery(type);
+                transaction.Commit();
+                return result;
+            }
+        }
+
+        public List<object> ExecuteGoQuery(string query, bool noTransaction = true, DBExecuteType type = DBExecuteType.Scalar)
+        {
+            var regex = new Regex(@"\s*go\s*(\n|$)", RegexOptions.IgnoreCase);
+            var split = regex.Split(query);
+            var result = new List<object>(split.Length);
+            foreach (var go in split)
+            {
+                if (go.Trim().Length == 0)
+                {
+                    continue;
+                }
+                result.Add(ExecuteQuery(go, noTransaction, type));
+            }
+            return result;
+        }
     }
 }

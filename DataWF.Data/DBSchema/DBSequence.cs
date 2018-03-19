@@ -80,7 +80,7 @@ namespace DataWF.Data
             var temp = transaction ?? new DBTransaction(Schema?.Connection);
             try
             {
-                Current = result = Convert.ToInt64(DBService.ExecuteQuery(temp, temp.AddCommand(GenerateQuery)));
+                Current = result = Convert.ToInt64(temp.ExecuteQuery(temp.AddCommand(GenerateQuery)));
                 if (transaction == null)
                     temp.Commit();
             }

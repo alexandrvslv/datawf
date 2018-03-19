@@ -98,7 +98,7 @@ namespace DataWF.Data
             query.BuildParam(LogTable.BaseKey, CompareType.Equal, BaseId);
             query.Orders.Add(new QOrder(LogTable.PrimaryKey));
 
-            var id = DBService.ExecuteQuery(LogTable.Schema.Connection, query.ToWhere());
+            var id = LogTable.Schema.Connection.ExecuteQuery(query.ToWhere());
             return LogTable.LoadById(id);
         }
     }

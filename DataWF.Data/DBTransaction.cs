@@ -22,6 +22,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 
 namespace DataWF.Data
 {
@@ -290,6 +291,98 @@ namespace DataWF.Data
                     subTransaction.Cancel();
                 Rollback();
             }
+        }
+
+        public QResult ExecuteQResult()
+        {
+            var list = new QResult();
+            ExecuteQResult(list);
+            return list;
+        }
+
+        public void ExecuteQResult(QResult list)
+        {
+            list.Values.Clear();
+            list.Columns.Clear();
+            using (var reader = ExecuteQuery(DBExecuteType.Reader) as IDataReader)
+            {
+                int fCount = reader.FieldCount;
+                for (int i = 0; i < fCount; i++)
+                {
+                    var name = reader.GetName(i);
+                    list.Columns.Add(name, new QField { Index = i, Name = name, DataType = reader.GetFieldType(i) });
+                }
+                list.OnColumnsLoaded();
+                while (reader.Read())
+                {
+                    var objects = new object[fCount];
+                    reader.GetValues(objects);
+                    list.Values.Add(objects);
+                }
+                reader.Close();
+                list.OnLoaded();
+            }
+        }
+
+        public List<Dictionary<string, object>> ExecuteListDictionary()
+        {
+            var list = new List<Dictionary<string, object>>();
+            using (var reader = ExecuteQuery(DBExecuteType.Reader) as IDataReader)
+            {
+                int fCount = reader.FieldCount;
+                while (reader.Read())
+                {
+                    var objects = new Dictionary<string, object>(fCount, StringComparer.InvariantCultureIgnoreCase);
+                    for (int i = 0; i < fCount; i++)
+                        objects.Add(reader.GetName(i), reader.GetValue(i));
+                    list.Add(objects);
+                }
+                reader.Close();
+            }
+            return list;
+        }
+
+        public object ExecuteQuery(DBExecuteType type = DBExecuteType.Scalar)
+        {
+            return ExecuteQuery(Command, type);
+        }
+
+        public object ExecuteQuery(IDbCommand command, DBExecuteType type = DBExecuteType.Scalar)
+        {
+            object buf = null;
+            var watch = new Stopwatch();
+            try
+            {
+                Debug.WriteLine(command.CommandText);
+                watch.Start();
+                switch (type)
+                {
+                    case DBExecuteType.Scalar:
+                        buf = command.ExecuteScalar();
+                        break;
+                    case DBExecuteType.Reader:
+                        buf = command.ExecuteReader();
+                        break;
+                    case DBExecuteType.NoReader:
+                        buf = command.ExecuteNonQuery();
+                        break;
+                }
+
+                watch.Stop();
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                ex.HelpLink = Environment.StackTrace;
+                buf = ex;
+            }
+            finally
+            {
+                DBService.OnExecute(type, command.CommandText, watch.Elapsed, buf);
+                if (buf is Exception)
+                    throw (Exception)buf;
+            }
+            return buf;
         }
     }
 }

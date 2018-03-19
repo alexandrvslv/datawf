@@ -26,12 +26,8 @@ namespace DataWf.Test.Module.Counterparty
             schema.Connection = new DBConnection
             {
                 Name = "test.common",
-                Host = "localhost",
-                Port = 5432,
-                User = "test",
-                Password = "test",
-                System = DBSystem.Postgres,
-                Schema = "public"
+                DataBase = "test.common",
+                System = DBSystem.SQLite
             };
 
             schema.CreateDatabase();

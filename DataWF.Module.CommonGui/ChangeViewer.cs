@@ -296,7 +296,7 @@ namespace DataWF.Module.CommonGui
                     {
                         string filter = DBService.FormatStatusFilter(table, DBStatus.Accept);
                         command.CommandText = table.BuildQuery("where " + filter, null, "count(*)");
-                        object count = DBService.ExecuteQuery(transaction, command, DBExecuteType.Scalar);
+                        object count = transaction.ExecuteQuery(command, DBExecuteType.Scalar);
 
                         node["Count"] = int.Parse(count.ToString());
                         node.Visible = count.ToString() != "0";

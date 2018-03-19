@@ -47,7 +47,7 @@ namespace DataWF.Data
         {
             var tableFilter = !string.IsNullOrEmpty(tableName) ? $" and table_name = '{tableName}'" : string.Empty;
             var schemaFilter = !string.IsNullOrEmpty(schemaName) ? $" where table_schema = '{schemaName}'{tableFilter}" : string.Empty;
-            QResult list = DBService.ExecuteQResult(connection, $"select * from information_schema.tables{schemaFilter}");
+            QResult list = connection.ExecuteQResult($"select * from information_schema.tables{schemaFilter}");
             var infos = new List<DBTableInfo>();
             int iSchema = list.GetIndex("table_schema");
             int iName = list.GetIndex("table_name");
@@ -72,7 +72,7 @@ namespace DataWF.Data
             var query = string.Format("select * from information_schema.columns where table_name='{0}'{1} order by ordinal_position",
                                       tableInfo.Name,
                                       string.IsNullOrEmpty(tableInfo.Schema) ? null : $" and table_schema = '{tableInfo.Schema}'");
-            QResult list = DBService.ExecuteQResult(connection, query);
+            QResult list = connection.ExecuteQResult(query);
             var infos = new List<DBColumnInfo>();
             int iName = list.GetIndex("column_name");
             int iType = list.GetIndex("data_type");
@@ -142,6 +142,12 @@ namespace DataWF.Data
             {
                 ddl.Append(" not null");
             }
+        }
+
+        public virtual void DropDatabase(DBSchema schema)
+        {
+            try { schema.Connection.ExecuteQuery(schema.FormatSql(DDLType.Drop), true, DBExecuteType.NoReader); }
+            catch (Exception ex) { Helper.OnException(ex); }
         }
 
         public string FormatType(DBColumn column)

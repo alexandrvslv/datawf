@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Globalization;
+using System.IO;
 using System.Text;
 using DataWF.Common;
 using Microsoft.Data.Sqlite;
@@ -42,10 +43,21 @@ namespace DataWF.Data
             return GetConnectionStringBuilder(connection).ConnectionString;
         }
 
+        public override void DropDatabase(DBSchema schema)
+        {
+            var file = schema.Connection.DataBase;
+            if (File.Exists(file))
+            {
+                try { File.Delete(file); }
+                catch (Exception ex) { Helper.OnException(ex); }
+            }
+        }
+
         public override DbConnectionStringBuilder GetConnectionStringBuilder(DBConnection connection)
         {
             var builder = new SqliteConnectionStringBuilder();
             builder.DataSource = connection.DataBase;
+            builder.Cache = SqliteCacheMode.Shared;
             //builder.Pooling = connection.Pool;
             //builder.Timeout = connection.TimeOut;
             //builder.Enlist = false;
@@ -173,7 +185,7 @@ select seq from db_sequence where name = '{sequence.Name}';";
         public override List<DBTableInfo> GetTablesInfo(DBConnection connection, string schemaName = null, string tableName = null)
         {
             var filterTable = tableName != null ? $" and tbl_name = '{tableName}'" : "";
-            var list = DBService.ExecuteQResult(connection, $"select * from sqlite_master where type = 'table'{filterTable}");
+            var list = connection.ExecuteQResult($"select * from sqlite_master where type = 'table'{filterTable}");
             var infos = new List<DBTableInfo>();
             int iName = list.GetIndex("tbl_name");
             foreach (object[] item in list.Values)
@@ -191,7 +203,7 @@ select seq from db_sequence where name = '{sequence.Name}';";
 
         public override List<DBColumnInfo> GetColumnsInfo(DBConnection connection, DBTableInfo tableInfo)
         {
-            var list = DBService.ExecuteQResult(connection, $"PRAGMA table_info({tableInfo.Name})");
+            var list = connection.ExecuteQResult($"PRAGMA table_info({tableInfo.Name})");
             var infos = new List<DBColumnInfo>();
             int iName = list.GetIndex("name");
             int iType = list.GetIndex("type");

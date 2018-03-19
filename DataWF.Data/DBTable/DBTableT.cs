@@ -318,7 +318,7 @@ namespace DataWF.Data
 				if ((param & DBLoadParam.GetCount) == DBLoadParam.GetCount)
 				{
 					string w = whereInd == -1 ? string.Empty : command.CommandText.Substring(whereInd);
-					var val = DBService.ExecuteQuery(transaction, transaction.AddCommand(DBCommand.CloneCommand(command, BuildQuery(w, null, "count(*)"))), DBExecuteType.Scalar);
+					var val = transaction.ExecuteQuery(transaction.AddCommand(DBCommand.CloneCommand(command, BuildQuery(w, null, "count(*)"))), DBExecuteType.Scalar);
 					arg.TotalCount = val is Exception ? -1 : int.Parse(val.ToString());
 
 					if (arg.TotalCount < 0)
@@ -341,7 +341,7 @@ namespace DataWF.Data
 				{
 					return null;
 				}
-				using (var reader = DBService.ExecuteQuery(transaction, command, DBExecuteType.Reader) as IDataReader)
+				using (var reader = transaction.ExecuteQuery(command, DBExecuteType.Reader) as IDataReader)
 				{
 					buf = arg.TotalCount > 0 ? new List<T>(arg.TotalCount) : new List<T>();
 					var rcolumns = CheckColumns(reader, transaction.View);
@@ -532,7 +532,7 @@ namespace DataWF.Data
 			squery = DetectQuery(squery, synchCols);
 
 			int cur = 0;
-			var vals = DBService.ExecuteQResult(Schema.Connection, squery);
+			var vals = Schema.Connection.ExecuteQResult(squery);
 			//var e = new DBLoadProgressEventArgs(synch, vals.Values.Count, cur, null);
 
 			foreach (var val in vals.Values)

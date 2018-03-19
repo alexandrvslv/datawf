@@ -5,5 +5,5 @@
   <i DataBase="postgres" Host="localhost" IntegratedSecurity="False" IsolationLevel="ReadUncommitted" Name="TestPostgres" Password="test" Pool="False" Port="5432" Schema="public" SystemName="Postgres" TimeOut="80" User="test" />
   <i DataBase="XE" Host="localhost" IntegratedSecurity="False" IsolationLevel="ReadCommitted" Name="TestOracle" Password="test" Pool="False" Port="1521" Schema="test" SystemName="Oracle" TimeOut="80" User="system" />
   <i DataBase="" Host="localhost" IntegratedSecurity="False" IsolationLevel="ReadUncommitted" Name="TestMySql" Password="root" Pool="False" Port="3306" Schema="test" SystemName="MySql" TimeOut="80" User="root" />
-  <i DataBase="" Host="localhost" IntegratedSecurity="False" IsolationLevel="ReadUncommitted" Name="TestMSSql" Password="Mssql1Root2" Pool="False" Port="" Schema="dbo" SystemName="MSSql" TimeOut="5" User="sa" />
+  <i DataBase="" Host="localhost\SQLEXPRESS" IntegratedSecurity="False" IsolationLevel="ReadUncommitted" Name="TestMSSql" Password="Mssql1Root2" Pool="False" Port="" Schema="dbo" SystemName="MSSql" TimeOut="5" User="sa" />
 </e>

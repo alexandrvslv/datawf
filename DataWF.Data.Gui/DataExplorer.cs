@@ -216,9 +216,12 @@ namespace DataWF.Data.Gui
 
 		private void ToolChangesCommitClick(object sender, EventArgs e)
 		{
-			var query = new DataQuery();
-			query.Query = DBService.BuildChangesQuery();
-			query.ShowDialog(this);
+            var query = new DataQuery
+            {
+                Query = DBService.BuildChangesQuery(CurrentSchema),
+                CurrentSchema = CurrentSchema
+            };
+            query.ShowDialog(this);
 
 			HideChanges();
 		}

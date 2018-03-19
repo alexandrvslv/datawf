@@ -684,7 +684,7 @@ namespace DataWF.Data
                 var command = transaction.AddCommand(dmlCommand.Text, dmlCommand.Type);
                 dmlCommand.FillCommand(command, item);
 
-                var result = DBService.ExecuteQuery(transaction, command, dmlCommand == dmlInsertSequence ? DBExecuteType.Scalar : DBExecuteType.NoReader);
+                var result = transaction.ExecuteQuery(command, dmlCommand == dmlInsertSequence ? DBExecuteType.Scalar : DBExecuteType.NoReader);
                 if (!(result is Exception))
                 {
                     Schema.Connection.System.UploadCommand(item, command);
@@ -730,7 +730,7 @@ namespace DataWF.Data
         public int GetRowCount(DBTransaction transaction, string @where)
         {
             var command = transaction.AddCommand(BuildQuery(@where, null, "count(*)"));
-            object val = DBService.ExecuteQuery(transaction, command, DBExecuteType.Scalar);
+            object val = transaction.ExecuteQuery(command, DBExecuteType.Scalar);
             return val is Exception ? -1 : int.Parse(val.ToString());
         }
         #region IComparable Members

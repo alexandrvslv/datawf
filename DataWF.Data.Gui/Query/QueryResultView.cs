@@ -181,7 +181,7 @@ namespace DataWF.Data.Gui
                 using (var transaction = new DBTransaction(schema.Connection))
                 {
                     transaction.AddCommand(command);
-                    DBService.ExecuteQResult(transaction, Query);
+                    transaction.ExecuteQResult(Query);
                 }
             }
         }

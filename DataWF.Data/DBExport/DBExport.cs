@@ -408,7 +408,7 @@ namespace DataWF.Data
 					if (!Target.Tables.Contains(newTable))
 					{
 						string ddl = newTable.FormatSql(DDLType.Create);
-						DBService.ExecuteQuery(newTable.Schema.Connection, ddl);
+                        newTable.Schema.Connection.ExecuteQuery(ddl);
 						Target.Tables.Add(newTable);
 					}
 				}
@@ -467,7 +467,7 @@ namespace DataWF.Data
 					ea.Description = null;
 					OnExportProgress(ea);
 
-					using (var reader = DBService.ExecuteQuery(transacton, transacton.AddCommand(table.SourceTable.DetectQuery(table.Query, null)), DBExecuteType.Reader) as IDataReader)
+					using (var reader = transacton.ExecuteQuery( transacton.AddCommand(table.SourceTable.DetectQuery(table.Query, null)), DBExecuteType.Reader) as IDataReader)
 					{
 						var rcolumns = table.SourceTable.CheckColumns(reader, null);
 						while (reader.Read())

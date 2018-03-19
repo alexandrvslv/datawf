@@ -156,6 +156,14 @@ namespace DataWF.Data
             }
         }
 
+        public void Update()
+        {
+            foreach (var table in Tables)
+            {
+                table.Save();
+            }
+        }
+
         public string DataBase
         {
             get { return dataBase; }
@@ -195,10 +203,9 @@ namespace DataWF.Data
 
         public void CreateDatabase()
         {
-            try { DBService.ExecuteQuery(Connection, FormatSql(DDLType.Drop), true, DBExecuteType.NoReader); }
-            catch (Exception ex) { Debug.WriteLine(ex); }
+            Connection.System.DropDatabase(this);
 
-            DBService.ExecuteGoQuery(Connection, FormatSql(DDLType.Create), true);
+            Connection.ExecuteGoQuery(FormatSql(DDLType.Create), true);
 
             if (Connection.Schema?.Length > 0)
             {
@@ -207,12 +214,12 @@ namespace DataWF.Data
                     Connection.User = Name;
                 }
             }
-            if (string.IsNullOrEmpty(Connection.DataBase) && Connection.System != DBSystem.SQLite)
+            if (string.IsNullOrEmpty(Connection.DataBase))// Connection.System != DBSystem.SQLite
             {
                 Connection.DataBase = Name;
             }
 
-            DBService.ExecuteGoQuery(Connection, FormatSql(), true);
+            Connection.ExecuteGoQuery(FormatSql(), true);
         }
 
         internal IEnumerable<DBConstraint> GetConstraints()

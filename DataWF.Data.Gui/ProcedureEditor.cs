@@ -275,14 +275,14 @@ namespace DataWF.Data.Gui
             Procedure.Save();
             if (procedure.ProcedureType == ProcedureTypes.StoredFunction)
             {
-                DBService.ExecuteQuery(procedure.Schema.Connection, "drop function " + procedure.Name);
-                DBService.ExecuteQuery(procedure.Schema.Connection, procedure.Source);
+                procedure.Schema.Connection.ExecuteQuery("drop function " + procedure.Name);
+                procedure.Schema.Connection.ExecuteQuery(procedure.Source);
                 GuiService.Main.SetStatus(new StateInfo("Compiler", "Function compiler succesful!"));
             }
             else if (procedure.ProcedureType == ProcedureTypes.StoredProcedure)
             {
-                DBService.ExecuteQuery(procedure.Schema.Connection, "drop procedure " + procedure.Name);
-                DBService.ExecuteQuery(procedure.Schema.Connection, procedure.Source);
+                procedure.Schema.Connection.ExecuteQuery("drop procedure " + procedure.Name);
+                procedure.Schema.Connection.ExecuteQuery(procedure.Source);
                 GuiService.Main.SetStatus(new StateInfo("Compiler", "Procedure compiler succesful!"));
             }
             else if (procedure.ProcedureType == ProcedureTypes.Source)

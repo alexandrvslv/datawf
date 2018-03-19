@@ -235,7 +235,7 @@ namespace DataWF.Data.Gui
 						continue;
 					if (field == ff)
 						continue;
-					if (val.ToString() == "")
+					if (string.IsNullOrEmpty(val.ToString()))
 						continue;
 					Expression.BuildParam(field.Name, val, true);
 				}

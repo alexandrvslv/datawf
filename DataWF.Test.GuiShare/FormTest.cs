@@ -106,7 +106,7 @@ namespace DataWF.TestGui
                 {
                     Name = "test.common",
                     System = DBSystem.SQLite,
-                    Host = "test.common.sqlite"
+                    DataBase = "test.common.sqlite"
                 };
 
                 schema.CreateDatabase();

@@ -120,7 +120,7 @@ INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS KCU2
 
             public void Parse(DBSchema schema, DBTable table)
             {
-                QResult list = DBService.ExecuteQResult(schema.Connection, Filter);
+                QResult list = schema.Connection.ExecuteQResult(Filter);
 
                 int iName = list.GetIndex(Name);
                 int iSchema = list.GetIndex(Schema);

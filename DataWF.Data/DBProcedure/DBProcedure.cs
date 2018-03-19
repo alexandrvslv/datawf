@@ -485,7 +485,7 @@ namespace DataWF.Data
             {
                 temp.AddCommand(command);
                 //UpdateCommand(command, parameters);
-                DBService.ExecuteQuery(temp, command);
+                temp.ExecuteQuery(command);
                 foreach (IDataParameter par in command.Parameters)
                 {
                     if (par.Direction == ParameterDirection.InputOutput || par.Direction == ParameterDirection.Output)
@@ -510,7 +510,7 @@ namespace DataWF.Data
                 object bufer = null;
                 temp.AddCommand(command);
                 //UpdateCommand(command, parameters);
-                DBService.ExecuteQuery(temp, command);
+                temp.ExecuteQuery(command);
                 bufer = ((IDataParameter)command.Parameters[0]).Value;
                 if (transaction == null)
                     temp.Commit();
@@ -531,7 +531,7 @@ namespace DataWF.Data
             {
                 temp.AddCommand(command);
                 //UpdateCommand(command, parameters);
-                buf = DBService.ExecuteQResult(temp);
+                buf = temp.ExecuteQResult();
             }
             finally
             {
@@ -549,7 +549,7 @@ namespace DataWF.Data
             {
                 command = temp.AddCommand(Source);
                 //UpdateCommand(command, parameters);
-                buf = DBService.ExecuteListDictionary(temp);
+                buf = temp.ExecuteListDictionary();
             }
             finally
             {

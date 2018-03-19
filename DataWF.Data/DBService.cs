@@ -304,11 +304,18 @@ namespace DataWF.Data
             }
         }
 
-        public static string BuildChangesQuery()
+        public static void CommitChanges(DBSchema schema)
+        {
+            schema.Connection.ExecuteQuery(BuildChangesQuery(schema));
+        }
+
+        public static string BuildChangesQuery(DBSchema schema)
         {
             var builder = new StringBuilder();
             foreach (var item in Changes)
             {
+                if (schema != null && item.Item.Schema != schema)
+                    continue;
                 string val = item.Generate();
                 if (item.Check && !string.IsNullOrEmpty(val))
                 {
@@ -517,184 +524,7 @@ namespace DataWF.Data
             return cs;
         }
 
-        public static DBTable<T> ExecuteTable<T>(string tableName, string query) where T : DBItem, new()
-        {
-            var table = new DBTable<T>(tableName);
-            table.Schema = DefaultSchema;
-            table.Load(query);
-            return table;
-        }
-
-        public static QResult ExecuteQResult(DBConnection connection, string query, bool noTransaction = true)
-        {
-            using (var transaction = new DBTransaction(connection, query, noTransaction))
-            {
-                return ExecuteQResult(transaction);
-            }
-        }
-
-        public static QResult ExecuteQResult(DBTransaction transaction)
-        {
-            var list = new QResult();
-            ExecuteQResult(transaction, list);
-            return list;
-        }
-
-        public static void ExecuteQResult(DBTransaction transaction, QResult list)
-        {
-            list.Values.Clear();
-            list.Columns.Clear();
-            using (var reader = ExecuteQuery(transaction, DBExecuteType.Reader) as IDataReader)
-            {
-                int fCount = reader.FieldCount;
-                for (int i = 0; i < fCount; i++)
-                {
-                    var name = reader.GetName(i);
-                    list.Columns.Add(name, new QField { Index = i, Name = name, DataType = reader.GetFieldType(i) });
-                }
-                list.OnColumnsLoaded();
-                while (reader.Read())
-                {
-                    var objects = new object[fCount];
-                    reader.GetValues(objects);
-                    list.Values.Add(objects);
-                }
-                reader.Close();
-                list.OnLoaded();
-            }
-        }
-
-        internal static List<List<KeyValuePair<string, object>>> ExecuteListPair(DBConnection cs, string query)
-        {
-            List<List<KeyValuePair<string, object>>> list = null;
-
-            using (var transaction = new DBTransaction(cs, query))
-            {
-                list = new List<List<KeyValuePair<string, object>>>();
-                using (var reader = ExecuteQuery(transaction, DBExecuteType.Reader) as IDataReader)
-                {
-                    int fCount = reader.FieldCount;
-                    while (reader.Read())
-                    {
-                        var objects = new List<KeyValuePair<string, object>>(fCount);
-                        for (int i = 0; i < fCount; i++)
-                            objects.Add(new KeyValuePair<string, object>(reader.GetName(i), reader.GetValue(i)));
-                        list.Add(objects);
-                    }
-                    reader.Close();
-                }
-            }
-            return list;
-        }
-
-        public static List<Dictionary<string, object>> ExecuteListDictionary(DBConnection cs, string query)
-        {
-            using (var transaction = new DBTransaction(cs, query))
-                return ExecuteListDictionary(transaction);
-        }
-
-        public static List<Dictionary<string, object>> ExecuteListDictionary(DBTransaction transaction)
-        {
-            var list = new List<Dictionary<string, object>>();
-            using (var reader = ExecuteQuery(transaction, DBExecuteType.Reader) as IDataReader)
-            {
-                int fCount = reader.FieldCount;
-                while (reader.Read())
-                {
-                    var objects = new Dictionary<string, object>(fCount, StringComparer.InvariantCultureIgnoreCase);
-                    for (int i = 0; i < fCount; i++)
-                        objects.Add(reader.GetName(i), reader.GetValue(i));
-                    list.Add(objects);
-                }
-                reader.Close();
-            }
-            return list;
-        }
-
-        public static object ExecuteQuery(DBConnection connection, string query, bool noTransaction = false, DBExecuteType type = DBExecuteType.Scalar)
-        {
-            if (string.IsNullOrEmpty(query))
-                return null;
-            using (var transaction = new DBTransaction(connection, query, noTransaction))
-            {
-                var result = ExecuteQuery(transaction, type);
-                transaction.Commit();
-                return result;
-            }
-        }
-
-        public static List<object> ExecuteGoQuery(DBConnection config, string query, bool noTransaction = true, DBExecuteType type = DBExecuteType.Scalar)
-        {
-            var regex = new Regex(@"\s*go\s*(\n|$)", RegexOptions.IgnoreCase);
-            var split = regex.Split(query);
-            var result = new List<object>(split.Length);
-            foreach (var go in split)
-            {
-                if (go.Trim().Length == 0)
-                {
-                    continue;
-                }
-                result.Add(ExecuteQuery(config, go, noTransaction, type));
-            }
-            return result;
-
-        }
-
-        //public static FormatCommand(IDbCommand command)
-        //{
-        //if (command.Parameters.Count > 0)
-        //{
-        //    text += Environment.NewLine;
-        //    foreach (IDataParameter param in command.Parameters)
-        //    {
-        //        string ap = param.Value is string ? "'" : string.Empty;
-        //        string tex = param.Value == null || param.Value == DBNull.Value ? "null" : ap + param.Value.ToString() + ap;
-        //        text = text.Replace(param.ParameterName, tex);
-        //    }
-        //}
-        //}
-        public static object ExecuteQuery(DBTransaction transaction, DBExecuteType type = DBExecuteType.Scalar)
-        {
-            return ExecuteQuery(transaction, transaction.Command, type);
-        }
-
-        public static object ExecuteQuery(DBTransaction transaction, IDbCommand command, DBExecuteType type = DBExecuteType.Scalar)
-        {
-            object buf = null;
-            var watch = new Stopwatch();
-            try
-            {
-                Debug.WriteLine(command.CommandText);
-                watch.Start();
-                switch (type)
-                {
-                    case DBExecuteType.Scalar:
-                        buf = command.ExecuteScalar();
-                        break;
-                    case DBExecuteType.Reader:
-                        buf = command.ExecuteReader();
-                        break;
-                    case DBExecuteType.NoReader:
-                        buf = command.ExecuteNonQuery();
-                        break;
-                }
-
-                watch.Stop();
-            }
-            catch (Exception ex)
-            {
-                transaction.Rollback();
-                ex.HelpLink = Environment.StackTrace;
-                buf = ex;
-            }
-            finally
-            {
-                OnExecute(type, command.CommandText, watch.Elapsed, buf);
-                if (buf is Exception)
-                    throw (Exception)buf;
-            }
-            return buf;
-        }
+       
 
         public static void RefreshToString()
         {
@@ -836,127 +666,31 @@ namespace DataWF.Data
             return rowview;
         }
 
-        /// <summary>
-        /// Gets the row text.
-        /// </summary>
-        /// <returns>
-        /// The row column data in text.
-        /// </returns>
-        /// <param name='table'>
-        /// Table of schema
-        /// </param>
-        /// <param name='id'>
-        /// Identifier(by primary column)
-        /// </param>
         public static string GetRowText(DBTable table, object id)
         {
             return GetRowText(table, id, table.Columns.GetIsView());
         }
 
-        /// <summary>
-        /// Gets the row text.
-        /// </summary>
-        /// <returns>
-        /// The row text.
-        /// </returns>
-        /// <param name='table'>
-        /// Table of schema
-        /// </param>
-        /// <param name='id'>
-        /// Identifier (by primary column)
-        /// </param>
-        /// <param name='parameters'>
-        /// Parameters (collection of DBColumn)
-        /// </param>
         public static string GetRowText(DBTable table, object id, IEnumerable<DBColumn> parameters)
         {
             return GetRowText(table, id, parameters, false, " - ");
         }
 
-        /// <summary>
-        /// Gets the row text.
-        /// </summary>
-        /// <returns>
-        /// The row text.
-        /// </returns>
-        /// <param name='table'>
-        /// Table.
-        /// </param>
-        /// <param name='id'>
-        /// Identifier (by primary column)
-        /// </param>
-        /// <param name='parametrs'>
-        /// Parametrs (collection of DBColumn)
-        /// </param>
-        /// <param name='showColumn'>
-        /// Show column in result
-        /// </param>
-        /// <param name='separator'>
-        /// Separator(between pair of column-value)
-        /// </param>
         public static string GetRowText(DBTable table, object id, IEnumerable<DBColumn> parametrs, bool showColumn, string separator)
         {
             return GetRowText(table.LoadItemById(id), parametrs, showColumn, separator);
         }
 
-        /// <summary>
-        /// Gets the row text.
-        /// </summary>
-        /// <returns>
-        /// The row text.
-        /// </returns>
-        /// <param name='table'>
-        /// Table.
-        /// </param>
-        /// <param name='id'>
-        /// Identifier.
-        /// </param>
-        /// <param name='allColumns'>
-        /// All columns.
-        /// </param>
-        /// <param name='showColumn'>
-        /// Show column.
-        /// </param>
-        /// <param name='separator'>
-        /// Separator.
-        /// </param>
         public static string GetRowText(DBTable table, object id, bool allColumns, bool showColumn, string separator)
         {
             return GetRowText(table.LoadItemById(id), (allColumns ? (IEnumerable<DBColumn>)table.Columns : table.Columns.GetIsView()), showColumn, separator);
         }
 
-        /// <summary>
-        /// Gets the row text.
-        /// </summary>
-        /// <returns>
-        /// The row text.
-        /// </returns>
-        /// <param name='row'>
-        /// Row.
-        /// </param>
-        /// <param name='allColumns'>
-        /// All columns.
-        /// </param>
-        /// <param name='showColumn'>
-        /// Show column.
-        /// </param>
-        /// <param name='separator'>
-        /// Separator.
-        /// </param>
         public static string GetRowText(DBItem row, bool allColumns, bool showColumn, string separator)
         {
             return GetRowText(row, (allColumns ? (IEnumerable<DBColumn>)row.Table.Columns : row.Table.Columns.GetIsView()), showColumn, separator);
         }
 
-        /// <summary>
-        /// Gets the row text.
-        /// </summary>
-        /// <returns>
-        /// The row text.
-        /// </returns>
-        /// <param name='row'>
-        /// Row.
-        /// </param>
         public static string GetRowText(DBItem row)
         {
             if (row == null)
@@ -965,18 +699,6 @@ namespace DataWF.Data
             return GetRowText(row, row.Table.Columns.GetIsView(), false, " - ");
         }
 
-        /// <summary>
-        /// Gets the row text.
-        /// </summary>
-        /// <returns>
-        /// The row text.
-        /// </returns>
-        /// <param name='row'>
-        /// Row.
-        /// </param>
-        /// <param name='parameters'>
-        /// Parameters.
-        /// </param>
         public static string GetRowText(DBItem row, ICollection<DBColumn> parameters)
         {
             if (row == null)
@@ -984,24 +706,6 @@ namespace DataWF.Data
             return GetRowText(row, parameters, false, " - ");
         }
 
-        /// <summary>
-        /// Gets the row text.
-        /// </summary>
-        /// <returns>
-        /// The row text.
-        /// </returns>
-        /// <param name='row'>
-        /// Row.
-        /// </param>
-        /// <param name='parameters'>
-        /// Parameters.
-        /// </param>
-        /// <param name='showColumn'>
-        /// Show column.
-        /// </param>
-        /// <param name='separator'>
-        /// Separator.
-        /// </param>
         public static string GetRowText(DBItem row, IEnumerable<DBColumn> parameters, bool showColumn, string separator)
         {
             if (row == null)
@@ -1116,18 +820,6 @@ namespace DataWF.Data
             return val.ToString();
         }
 
-        /// <summary>
-        /// Parces the value.
-        /// </summary>
-        /// <returns>
-        /// The value.
-        /// </returns>
-        /// <param name='column'>
-        /// Cs.
-        /// </param>
-        /// <param name='value'>
-        /// Value.
-        /// </param>
         public static object ParseValue(DBColumn column, object value)
         {
             object buf = null;

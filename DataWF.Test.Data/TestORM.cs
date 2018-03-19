@@ -37,11 +37,6 @@ namespace DataWF.Test.Data
         [Test]
         public void GenerateSqlite()
         {
-            var dbName = "test.sqlite";
-            if (File.Exists(dbName))
-                File.Delete(dbName);
-            Debug.WriteLine($"Data Base {Path.GetFullPath(dbName)}");
-
             Generate(DBService.Connections["TestSqlLite"]);
         }
 

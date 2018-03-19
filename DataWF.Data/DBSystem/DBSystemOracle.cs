@@ -133,7 +133,7 @@ namespace DataWF.Data
         public override List<DBTableInfo> GetTablesInfo(DBConnection connection, string schemaName, string tableName = null)
         {
             var filter = schemaName != null ? $" where owner = '{schemaName.ToUpper()}'{(tableName != null ? $" and table_name = '{tableName.ToUpper()}'" : null)}" : null;
-            QResult list = DBService.ExecuteQResult(connection, $"select * from all_tables{filter}");
+            QResult list = connection.ExecuteQResult( $"select * from all_tables{filter}");
             var infos = new List<DBTableInfo>();
             int iSchema = list.GetIndex("owner");
             int iName = list.GetIndex("table_name");
@@ -156,7 +156,7 @@ namespace DataWF.Data
             var query = string.Format("select * from all_tab_cols where table_name = '{0}'{1} order by column_id",
                                       tableInfo.Name,
                                       string.IsNullOrEmpty(tableInfo.Schema) ? null : $" and owner = '{tableInfo.Schema}'");
-            QResult list = DBService.ExecuteQResult(connection, query);
+            QResult list = connection.ExecuteQResult(query);
             var infos = new List<DBColumnInfo>();
             int iName = list.GetIndex("column_name");
             int iType = list.GetIndex("data_type");
