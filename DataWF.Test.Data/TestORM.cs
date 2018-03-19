@@ -128,7 +128,7 @@ namespace DataWF.Test.Data
             Assert.NotNull(employer.Id, "Id Generator Fail");
 
             employer.Save();
-            var qresult = DBService.ExecuteQResult(schema.Connection, $"select * from {EmployerTableName}");
+            var qresult = schema.Connection.ExecuteQResult( $"select * from {EmployerTableName}");
             Assert.AreEqual(1, qresult.Values.Count, "Insert sql Fail");
             Assert.AreEqual(employer.Id, qresult.Get(0, "id"), "Insert sql Fail Int");
             Assert.AreEqual(employer.Identifier, qresult.Get(0, "identifier"), "Insert sql Fail String");
@@ -180,12 +180,11 @@ namespace DataWF.Test.Data
             employer.Position = position;
             employer.Save();
 
-            qresult = DBService.ExecuteQResult(schema.Connection, $"select * from {EmployerTableName}");
+            qresult = schema.Connection.ExecuteQResult($"select * from {EmployerTableName}");
             Assert.AreEqual(4, qresult.Get(0, "positionid"), "Update sql Fail");
 
 
-            DBService.ExecuteQuery(connection,
-                                   @"create table test_table(
+            connection.ExecuteQuery(@"create table test_table(
       id int primary key, 
       test_date date, 
       test_varchar varchar(512),
