@@ -60,7 +60,7 @@ namespace DataWF.Data
                 case DBDataType.ShortInt: DbType = DbType.Int16; break;
                 case DBDataType.Int: DbType = DbType.Int32; break;
                 case DBDataType.BigInt: DbType = DbType.Int64; break;
-                case DBDataType.TimeSpan: DbType = DbType.DateTimeOffset; break;
+                case DBDataType.TimeSpan: DbType = DbType.Int64; break;
                 case DBDataType.DateTime: DbType = DbType.DateTime; break;
                 case DBDataType.TimeStamp: DbType = DbType.DateTime2; break;
                 case DBDataType.Blob:
