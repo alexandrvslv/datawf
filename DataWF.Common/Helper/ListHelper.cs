@@ -614,15 +614,16 @@ namespace DataWF.Common
 
         public static bool Equal(object x, object y, bool hash)
         {
-            bool result = false;
             if (x == null || x == DBNull.Value)
             {
-                result = y == null || y == DBNull.Value;
+                return y == null || y == DBNull.Value;
             }
             else if (y == null || y == DBNull.Value)
             {
-                result = false;
+                return false;
             }
+            bool result = false;
+
             if (x.GetType().IsEnum)
                 x = (int)x;
             if (y.GetType().IsEnum)
