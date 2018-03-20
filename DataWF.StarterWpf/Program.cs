@@ -1,5 +1,4 @@
-﻿using DataWF.Common;
-using System;
+﻿using System;
 
 namespace DataWF.StarterWpf
 {

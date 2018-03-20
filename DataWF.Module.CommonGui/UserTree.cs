@@ -308,7 +308,7 @@ namespace DataWF.Module.CommonGui
                 }
                 if (node.Item is IDBTableView)
                 {
-                    string val = string.Format("({0})", ((IList)node.Tag).Count);
+                    string val = string.Format("({0})", ((IList)node.Item).Count);
                     e.Context.DrawCell(listInfo.StyleHeader, val, e.Bound, e.Bound, e.State);
                 }
             }
