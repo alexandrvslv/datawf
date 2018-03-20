@@ -810,7 +810,7 @@ namespace DataWF.Data
 
 		public override IEnumerable<DBItem> SelectItems(DBColumn column, object val, CompareType comparer)
 		{
-			return SelectItems(column, val, comparer);
+			return Select(column, val, comparer);
 		}
 
 		public IEnumerable<T> Select(DBColumn column, object val, CompareType comparer, IEnumerable<T> list = null)

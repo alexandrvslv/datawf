@@ -896,6 +896,10 @@ namespace DataWF.Data
         {
             if (item == null)
                 return false;
+            if (val1 == null)
+                return val2 == null;
+            else if (val2 == null)
+                return false;
             if (val1 is QQuery)
                 val1 = SelectQuery(item, (QQuery)val1, comparer);
             if (val2 is QQuery)
