@@ -135,10 +135,8 @@ namespace DataWF.Gui
 
         protected override void Dispose(bool disposing)
         {
-            if (toolWindow != null)
-                toolWindow.Dispose();
-            if (fields != null)
-                fields.Dispose();
+            toolWindow?.Dispose();
+            fields?.Dispose();
             base.Dispose(disposing);
         }
 

@@ -161,7 +161,7 @@ namespace Mono.TextEditor.Utils
                 rtf.Append(@"\fs");
                 rtf.Append(fontSize);
             }
-            catch (Exception) { };
+            catch (Exception e) { System.Diagnostics.Debug.WriteLine(e); }
             rtf.AppendLine(@"\cf1");
             rtf.Append(rtfText.ToString());
             rtf.Append("}");

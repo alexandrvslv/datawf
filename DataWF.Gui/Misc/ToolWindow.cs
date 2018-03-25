@@ -235,14 +235,16 @@ namespace DataWF.Gui
 			{
 				movePoint = Desktop.MouseLocation;
 				moveButton = e.Button;
-			}
+                Label.Cursor = CursorType.Move;
+            }
 		}
 
 		protected void OnContentMouseUp(object sender, ButtonEventArgs e)
 		{
 			moveButton = 0;
 			moveBounds = Location;
-		}
+            Label.Cursor = CursorType.Arrow;
+        }
 
 		private void OnContentMouseExited(object sender, EventArgs e)
 		{
@@ -293,11 +295,12 @@ namespace DataWF.Gui
 			}
 			Sender = sender;
 
-			CheckLocation(sender?.ConvertToScreenCoordinates(location) ?? location);
+            base.Show();
+
+            CheckLocation(sender?.ConvertToScreenCoordinates(location) ?? location);
 
 			//if (Owner != null) Owner.Show();
-			base.Show();//Position.Bottom, sender, ScreenBounds);
-
+			
 			if (mode == ToolShowMode.AutoHide || mode == ToolShowMode.ToolTip)
 			{
 				if (timerHide.Enabled)

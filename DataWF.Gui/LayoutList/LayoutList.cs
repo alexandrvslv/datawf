@@ -64,7 +64,6 @@ namespace DataWF.Gui
 		protected bool _hideEmpty = false;
 
 		private LayoutBoundsCache bounds = new LayoutBoundsCache();
-		protected object calcObject = null;
 		protected Interval<int> dIndex = new Interval<int>();
 		protected Interval<int> dgIndex = new Interval<int>();
 		protected Interval<int> tdIndex = new Interval<int>();
@@ -72,6 +71,7 @@ namespace DataWF.Gui
 		protected LayoutHitTestInfo hitt = new LayoutHitTestInfo();
 		protected internal LayoutHitTestEventArgs cacheHitt = new LayoutHitTestEventArgs();
 		protected internal LayoutListDrawArgs cacheDraw = new LayoutListDrawArgs();
+		protected internal LayoutListDrawArgs cacheCalc = new LayoutListDrawArgs();
 		private List<Dictionary<LayoutColumn, TextLayout>> cache = new List<Dictionary<LayoutColumn, TextLayout>>();
 		private int gridCols = 1;
 		private int gridRows = 1;
@@ -109,6 +109,7 @@ namespace DataWF.Gui
 		public event EventHandler<LayoutHitTestEventArgs> ColumnMouseDown;
 		public event EventHandler<LayoutHitTestEventArgs> ColumnMouseHover;
 		public event EventHandler<LayoutHitTestEventArgs> ColumnMouseClick;
+		public event EventHandler<LayoutHitTestEventArgs> ColumnDoubleClick;
 		public event EventHandler<LayoutHitTestEventArgs> ColumnSizing;
 		public event EventHandler<LayoutHitTestEventArgs> ColumnSized;
 		public event EventHandler<LayoutHitTestEventArgs> ColumnMoving;
@@ -212,7 +213,7 @@ namespace DataWF.Gui
 						canvas.ScrollVertical.PageSize =
 								   canvas.ScrollVertical.PageIncrement = bounds.Area.Height - bounds.Columns.Height;
 						canvas.ScrollVertical.StepIncrement = bounds.Columns.Height;
-						//vScroll.ScrollAdjustment.LargeChange = (this.Height - 20) / 4;                       
+						//vScroll.ScrollAdjustment.LargeChange = (this.Height - 20) / 4;
 					}
 					else
 					{
@@ -337,8 +338,10 @@ namespace DataWF.Gui
 
 				if (hInfo.Location == LayoutHitTestLocation.Cell)
 					OnCellDoubleClick(cacheHitt);
-				if (hInfo.Location == LayoutHitTestLocation.Header)
+				else if (hInfo.Location == LayoutHitTestLocation.Header)
 					OnHeaderDoubleClick(cacheHitt);
+				else if (hInfo.Location == LayoutHitTestLocation.Column)
+                    OnColumnDoubleClick(cacheHitt);
 			}
 		}
 
@@ -363,40 +366,36 @@ namespace DataWF.Gui
 				if (buf == LayoutListState.MoveColumn || buf == LayoutListState.Select)
 					RefreshBounds(false);
 			}
-			else
+			switch (hInfo.Location)
 			{
-				switch (hInfo.Location)
-				{
-					case LayoutHitTestLocation.Cell:
-						OnCellMouseUp(cacheHitt);
-						break;
-					case LayoutHitTestLocation.Column:
-						OnColumnMouseClick(cacheHitt);
-						break;
-					case LayoutHitTestLocation.Group:
-						OnGroupMouseUp(cacheHitt);
-						break;
-					case LayoutHitTestLocation.Header:
-						OnHeaderMouseUp(cacheHitt);
-						break;
-					case LayoutHitTestLocation.Aggregate:
-						OnAggregateMouseUp(cacheHitt);
-						break;
-					case LayoutHitTestLocation.Intermediate:
-						break;
-					default:
-						if (IsEditMode)
-						{
-							return;
-						}
-						CurrentCell = null;
-						if (e.Button == PointerButton.Right)
-						{
-							OnContextMenuShow(cacheHitt.HitTest);
-						}
-						break;
-				}
-
+				case LayoutHitTestLocation.Cell:
+					OnCellMouseUp(cacheHitt);
+					break;
+				case LayoutHitTestLocation.Column:
+					OnColumnMouseClick(cacheHitt);
+					break;
+				case LayoutHitTestLocation.Group:
+					OnGroupMouseUp(cacheHitt);
+					break;
+				case LayoutHitTestLocation.Header:
+					OnHeaderMouseUp(cacheHitt);
+					break;
+				case LayoutHitTestLocation.Aggregate:
+					OnAggregateMouseUp(cacheHitt);
+					break;
+				case LayoutHitTestLocation.Intermediate:
+					break;
+				default:
+					if (IsEditMode)
+					{
+						return;
+					}
+					CurrentCell = null;
+					if (e.Button == PointerButton.Right)
+					{
+						OnContextMenuShow(cacheHitt.HitTest);
+					}
+					break;
 			}
 		}
 
@@ -1310,7 +1309,7 @@ namespace DataWF.Gui
 				int count = ((eIndex - sIndex) + 1);
 				if (gridCols > 1)
 					count = count / gridCols;
-				return (double)count * (double)bounds.Columns.Height;
+				return (double)count * bounds.Columns.Height;
 			}
 		}
 
@@ -1323,7 +1322,9 @@ namespace DataWF.Gui
 
 			if (listInfo.CalcHeigh)
 			{
-				calcObject = listSource[index];
+				cacheCalc.Index = index;
+				cacheCalc.Item = listSource[index];
+
 				listInfo.GetColumnsBound(bounds.Area.Width, null, handleCalcHeigh);
 				h = listInfo.Columns.Bound.Height;
 			}
@@ -1334,72 +1335,52 @@ namespace DataWF.Gui
 		protected double CalculateHeight(ILayoutItem item)
 		{
 			double max = 300;
-
-			ILayoutCell cell = calcObject is ILayoutCell ? (ILayoutCell)calcObject : (ILayoutCell)item;
-			object v = ReadValue(calcObject, (ILayoutCell)item);
-			var style = OnGetCellStyle(calcObject, v, cell);
-			v = FormatValue(calcObject, v, (ILayoutCell)item);
 			double hh = 0;
 
-			if (v is string)
+			cacheCalc.Column = (LayoutColumn)item;
+			cacheCalc.Value = ReadValue(cacheCalc.Item, cacheCalc.Column);
+			cacheCalc.Style = OnGetCellStyle(cacheCalc.Item, cacheCalc.Value, cacheCalc.Column);
+			cacheCalc.Formated = FormatValue(cacheCalc.Item, cacheCalc.Value, cacheCalc.Column);
+
+			if (cacheCalc.Formated is string)
 			{
-				var width = item.Width;
-				if (item.FillWidth)
-				{
-					listInfo.GetBound((LayoutColumn)item, null, null);
-					width = item.Bound.Width;
-				}
-				hh = GraphContext.MeasureString(v.ToString(), style, width).Height + 4;
+				listInfo.GetBound((LayoutColumn)item, null, null);
+				cacheCalc.Bound = item.Bound;
+				cacheCalc.DisplayIndex = cacheCalc.Index;
+
+				hh = GetTextLayout(cacheCalc).Height + 4;
 			}
-			else if (v is Image)
+			else if (cacheCalc.Value is Image)
 			{
-				hh = ((Image)v).Height;
+				hh = ((Image)cacheCalc.Value).Height;
 			}
 
-			if (hh > max)
-				hh = max;
-			if (hh < item.Height)
-				hh = item.Height;
-			return hh;
+			return Math.Min(Math.Max(item.Height, hh), max);
 		}
 
 		public virtual double GetItemsWidth(LayoutColumn column, int sIndex, int eIndex)
 		{
-			var total = 0D;
+			var total = GraphContext.MeasureString(column.Text.ToString(), ListInfo.StyleColumn.Font, -1).Width;
 			for (int i = sIndex; i <= eIndex; i++)
 			{
-				var w = GetItemWidth(column, i);
+				cacheCalc.Index = i;
+				cacheCalc.Item = listSource[i];
+				var w = CalculateWidth(column);
 				if (w > total)
 					total = w;
 			}
-			return total;
-		}
-
-		public virtual double GetItemWidth(LayoutColumn column, int index)
-		{
-			if (index < 0 || index >= listSource.Count)
-				return 0;
-			calcObject = listSource[index];
-
-			ILayoutCell cell = calcObject is ILayoutCell ? (ILayoutCell)calcObject : column;
-			object v = ReadValue(calcObject, column);
-
-			return GraphContext.MeasureString(v.ToString(), cell.Style.Font, 0).Width + 5;
+			return total + 10;
 		}
 
 		protected double CalculateWidth(ILayoutItem item)
 		{
-			double max = 5000;
-			ILayoutCell cell = calcObject is ILayoutCell ? (ILayoutCell)calcObject : (ILayoutCell)item;
-			object v = ReadValue(calcObject, (ILayoutCell)item);
-			double ww = 0;
-			if (v is string)
-				ww = GraphContext.MeasureString((string)v, cell.Style.Font, 0).Width + 5;
-			if (ww > max)
-				ww = max;
-			if (ww < item.Width)
-				ww = item.Width;
-			return ww;
+			cacheCalc.Column = (LayoutColumn)item;
+			cacheCalc.Value = ReadValue(cacheCalc.Item, cacheCalc.Column);
+			cacheCalc.Formated = FormatValue(cacheCalc.Item, cacheCalc.Column);
+			cacheCalc.Style = OnGetCellStyle(cacheCalc.Item, cacheCalc.Value, cacheCalc.Column);
+			double max = 2000;
+			var ww = GraphContext.MeasureString(cacheCalc.Formated.ToString(), cacheCalc.Style.Font, -1).Width;
+			return Math.Min(max, ww);
 		}
 
 		public virtual LayoutGroup GetRowGroup(int rowIndex)
@@ -2574,8 +2555,9 @@ namespace DataWF.Gui
 
 		protected Rectangle GetRowBound(int index, LayoutGroup group)
 		{
+			var columns = bounds.Columns;
 			var bound = new Rectangle();
-			double top = bounds.Columns.Y;
+			double top = columns.Y;
 			//if (bcache.Index == index && group == bcache.Group)
 			//{
 			//    rec = bcache.Bound;
@@ -2598,7 +2580,7 @@ namespace DataWF.Gui
 					   ? count % gridCols
 					   : (count / (group != null ? group.GridRows : gridRows)) % gridCols;
 				}
-				bound.X = grid * (bounds.Columns.Width + listInfo.HeaderWidth);
+				bound.X = grid * (columns.Width + listInfo.HeaderWidth);
 				if (!listInfo.HeaderVisible)
 					bound.X += listInfo.Indent;
 				bound.Width = bounds.Columns.Width + listInfo.HeaderWidth - listInfo.Indent;
@@ -2609,7 +2591,7 @@ namespace DataWF.Gui
 					if (listInfo.GridOrientation == GridOrientation.Horizontal)
 						top += GetItemsHeight(group.IndexStart, index - 1);
 					else
-						top += (count % group.GridRows) * bounds.Columns.Height;
+						top += (count % group.GridRows) * columns.Height;
 				}
 				else
 				{
@@ -2617,7 +2599,7 @@ namespace DataWF.Gui
 					if (listInfo.GridOrientation == GridOrientation.Horizontal)
 						top += GetItemsHeight(0, index - 1);
 					else
-						top += (count % gridRows) * bounds.Columns.Height;
+						top += (count % gridRows) * columns.Height;
 				}
 			}
 
@@ -2635,7 +2617,8 @@ namespace DataWF.Gui
 		{
 			if (listInfo.CalcHeigh && index >= 0)
 			{
-				calcObject = listSource[index];
+				cacheCalc.Index = index;
+				cacheCalc.Item = listSource[index];
 				listInfo.GetBound(column, null, handleCalcHeigh);
 			}
 			else
@@ -2786,12 +2769,7 @@ namespace DataWF.Gui
 			if (e.Formated is TextLayout)
 			{
 				var textLayout = (TextLayout)e.Formated;
-				if (textLayout.Width != bound.Width)
-				{
-					textLayout.Width = bound.Width;
-					var size = textLayout.GetSize();
-					textLayout.Height = Math.Min(Math.Max(5, size.Height), e.Bound.Height);
-				}
+
 				bound.Height = textLayout.Height;
 				bound.Y = e.Bound.Y + (e.Bound.Height - bound.Height) / 2D;
 			}
@@ -2838,6 +2816,7 @@ namespace DataWF.Gui
 			if (listInfo.GroupVisible)
 				RefreshGroupsBound();
 			bounds.Index = -1;
+			bounds.TempColumns = Rectangle.Zero;
 			this.RefreshBounds(false);
 		}
 
@@ -3376,6 +3355,15 @@ namespace DataWF.Gui
 				SelectedNode.Expand = !SelectedNode.Expand;
 		}
 
+		protected virtual void OnColumnDoubleClick(LayoutHitTestEventArgs e)
+        {
+            ColumnDoubleClick?.Invoke(this, e);
+			if (e.HitTest.Anchor == LayoutAlignType.Right)
+            {
+                e.HitTest.Column.Width = GetItemsWidth(e.HitTest.Column, dIndex.First, dIndex.Last);
+            }
+        }
+
 		protected virtual void OnDataSourceChanged(EventArgs arg)
 		{
 			DataSourceChanged?.Invoke(this, arg);
@@ -3520,12 +3508,10 @@ namespace DataWF.Gui
 				if (e.HitTest.SubLocation == LayoutHitTestCellLocation.Sort)
 				{
 					ColumnSorting(e.HitTest.Column);
-					return;
 				}
-				if (e.HitTest.SubLocation == LayoutHitTestCellLocation.Filter)
+				else if (e.HitTest.SubLocation == LayoutHitTestCellLocation.Filter)
 				{
 					AddFilter(e.HitTest.Column);
-					return;
 				}
 			}
 		}
@@ -4366,14 +4352,6 @@ namespace DataWF.Gui
 			foreach (LayoutColumn column in e.Columns)
 			{
 				e.Column = column;
-				e.Bound = GetCellBound(column, e.Index, e.RowBound);
-				e.Value = ReadValue(e.Item, column);
-				e.Style = OnGetCellStyle(e.Item, e.Value, e.Column);
-				e.Formated = FormatValue(e.Item, e.Value, e.Column);
-				if (e.Formated is string)
-				{
-					e.Formated = GetTextLayout(e);
-				}
 				OnDrawCell(e);
 			}
 
@@ -4408,17 +4386,30 @@ namespace DataWF.Gui
 					TextAlignment = e.Style.Alignment
 				};
 			}
-			if (!string.Equals(layout.Text, (string)e.Formated, StringComparison.Ordinal))
+			if (!string.Equals(layout.Text, (string)e.Formated, StringComparison.Ordinal)
+				|| layout.Width != e.Bound.Width)
 			{
 				layout.Text = (string)e.Formated;
-				layout.Width = -1;
-
+				layout.Width = e.Bound.Width;
+				layout.Height = -1;
+				var size = layout.GetSize();
+				size.Height = Math.Max(12, size.Height);
+				layout.Height = Math.Min(size.Height, listInfo.CalcHeigh ? 300 : e.Bound.Height);
 			}
 			return layout;
 		}
 
 		protected virtual void OnDrawCell(LayoutListDrawArgs e)
 		{
+			e.Bound = GetCellBound(e.Column, e.Index, e.RowBound);
+			e.Value = ReadValue(e.Item, e.Column);
+			e.Style = OnGetCellStyle(e.Item, e.Value, e.Column);
+			e.Formated = FormatValue(e.Item, e.Value, e.Column);
+			if (e.Formated is string)
+			{
+				e.Formated = GetTextLayout(e);
+			}
+
 			if (!e.Context.Print)
 			{
 				var curr = selection.CurrentRow;
@@ -4537,7 +4528,7 @@ namespace DataWF.Gui
 
 			GetContentBound();
 
-			if (bounds.Area != bounds.TempArea || bounds.Columns != bounds.TempColumns || bounds.Content != bounds.TempContent)
+			if (bounds.Area != bounds.TempArea || bounds.Columns != bounds.TempColumns || bounds.Content != bounds.TempContent || buildgroup)
 			{
 				CheckScrolling();
 				var w = bounds.Columns.Width + listInfo.HeaderWidth;
@@ -4561,12 +4552,11 @@ namespace DataWF.Gui
 				bounds.TempArea = bounds.Area;
 				bounds.TempColumns = bounds.Columns;
 				bounds.TempContent = bounds.Content;
+
+				if (CurrentEditor != null)
+					SetEditorBound();
+				canvas.QueueDraw();
 			}
-
-			if (CurrentEditor != null)
-				SetEditorBound();
-
-			canvas.QueueDraw();
 		}
 
 		public LayoutGroupList Groups { get { return groups; } }

@@ -7,6 +7,7 @@ using DataWF.Gui;
 using DataWF.Common;
 using Xwt;
 using Xwt.Drawing;
+using System.Threading.Tasks;
 
 namespace DataWF.TestGui
 {
@@ -49,6 +50,9 @@ namespace DataWF.TestGui
             PackStart(split, true, true);
             PackStart(status, false, false);
             Text = "Files";
+
+            var task = new Task(CheckQueue, TaskCreationOptions.LongRunning);
+            task.Start();
 
             var drives = DriveInfo.GetDrives();
             foreach (var drive in drives)
@@ -101,54 +105,56 @@ namespace DataWF.TestGui
             if (!node.Check && !actions.Contains(node))
             {
                 actions.Enqueue(node);
-                ThreadPool.QueueUserWorkItem(o => CheckQueue());
+                flag.Set();
             }
         }
 
         private void CheckQueue()
         {
-            flag.WaitOne();
-            flag.Reset();
-            while (actions.Count > 0)
+            while (true)
             {
-                var check = actions.Dequeue();
-                if (check != null)
+                flag.WaitOne();
+                while (actions.Count > 0)
                 {
-                    check.Check = true;
-                    Application.Invoke(() =>
+                    var check = actions.Dequeue();
+                    if (check != null)
                     {
-                        statusLablel.Text = string.Format("Check: {0}", check.Name);
-                    });
-
-                    var directory = (DirectoryInfo)((FileItem)check.Tag).Info;
-                    try
-                    {
-                        var directories = directory.GetDirectories();
-                        foreach (var item in directories)
+                        check.Check = true;
+                        Application.Invoke(() =>
                         {
-                            if ((item.Attributes & FileAttributes.Hidden) != FileAttributes.Hidden &&
-                                                     (item.Attributes & FileAttributes.System) != FileAttributes.System)
+                            statusLablel.Text = string.Format("Check: {0}", check.Name);
+                        });
+
+                        var directory = (DirectoryInfo)((FileItem)check.Tag).Info;
+                        try
+                        {
+                            var directories = directory.GetDirectories();
+                            foreach (var item in directories)
                             {
-                                Node snode = InitDirectory(item);
-                                snode.Group = check;
-                                directoryTree.Nodes.Add(snode);
+                                if ((item.Attributes & FileAttributes.Hidden) != FileAttributes.Hidden &&
+                                                         (item.Attributes & FileAttributes.System) != FileAttributes.System)
+                                {
+                                    Node snode = InitDirectory(item);
+                                    snode.Group = check;
+                                    directoryTree.Nodes.Add(snode);
+                                }
                             }
                         }
+                        catch (Exception ex)
+                        {
+                            check.Text += ex.Message;
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        check.Text += ex.Message;
-                    }
-                }
 
-                Application.Invoke(() =>
-                {
-                    statusLablel.Text = string.Format("Nodes: {0} Queue: {1}",
-                                                      directoryTree.Nodes.Count,
-                                                     actions.Count);
-                });
+                    Application.Invoke(() =>
+                    {
+                        statusLablel.Text = string.Format("Nodes: {0} Queue: {1}",
+                                                          directoryTree.Nodes.Count,
+                                                         actions.Count);
+                    });
+                }
+                flag.Reset();
             }
-            flag.Set();
         }
 
         private void LoadFolder(Node node)

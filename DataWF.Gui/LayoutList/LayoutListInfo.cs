@@ -62,7 +62,7 @@ namespace DataWF.Gui
 			}
 		}
 
-		[XmlIgnore]
+		[XmlIgnore, Browsable(false)]
 		public bool CollectingRow
 		{
 			get { return (keys & LayoutListInfoKeys.CollectingRow) == LayoutListInfoKeys.CollectingRow; }
@@ -76,7 +76,7 @@ namespace DataWF.Gui
 			}
 		}
 
-		[XmlIgnore]
+		[XmlIgnore, Browsable(false)]
 		public bool HeaderVisible
 		{
 			get { return (keys & LayoutListInfoKeys.HeaderVisible) == LayoutListInfoKeys.HeaderVisible; }
@@ -90,7 +90,7 @@ namespace DataWF.Gui
 			}
 		}
 
-		[XmlIgnore]
+		[XmlIgnore, Browsable(false)]
 		public bool HeaderFrosen
 		{
 			get { return (keys & LayoutListInfoKeys.HeaderFrosen) == LayoutListInfoKeys.HeaderFrosen; }
@@ -103,7 +103,7 @@ namespace DataWF.Gui
 			}
 		}
 
-		[XmlIgnore]
+		[XmlIgnore, Browsable(false)]
 		public bool ColumnsVisible
 		{
 			get { return (keys & LayoutListInfoKeys.ColumnsVisible) == LayoutListInfoKeys.ColumnsVisible; }
@@ -117,7 +117,7 @@ namespace DataWF.Gui
 			}
 		}
 
-		[XmlIgnore]
+		[XmlIgnore, Browsable(false)]
 		public bool HotTrackingRow
 		{
 			get { return (keys & LayoutListInfoKeys.HotTrackingRow) == LayoutListInfoKeys.HotTrackingRow; }
@@ -130,7 +130,7 @@ namespace DataWF.Gui
 			}
 		}
 
-		[XmlIgnore]
+		[XmlIgnore, Browsable(false)]
 		public bool HotTrackingCell
 		{
 			get { return (keys & LayoutListInfoKeys.HotTrackingCell) == LayoutListInfoKeys.HotTrackingCell; }
@@ -143,7 +143,7 @@ namespace DataWF.Gui
 			}
 		}
 
-		[XmlIgnore]
+		[XmlIgnore, Browsable(false)]
 		public bool HotSelection
 		{
 			get { return (keys & LayoutListInfoKeys.HotSelectRow) == LayoutListInfoKeys.HotSelectRow; }
@@ -156,7 +156,7 @@ namespace DataWF.Gui
 			}
 		}
 
-		[XmlIgnore]
+		[XmlIgnore, Browsable(false)]
 		public bool ShowToolTip
 		{
 			get { return (keys & LayoutListInfoKeys.ShowToolTip) == LayoutListInfoKeys.ShowToolTip; }
@@ -169,7 +169,7 @@ namespace DataWF.Gui
 			}
 		}
 
-		[XmlIgnore]
+		[XmlIgnore, Browsable(false)]
 		public bool GroupName
 		{
 			get { return (keys & LayoutListInfoKeys.GroupName) == LayoutListInfoKeys.GroupName; }
@@ -182,7 +182,7 @@ namespace DataWF.Gui
 			}
 		}
 
-		[XmlIgnore]
+		[XmlIgnore, Browsable(false)]
 		public bool GroupCount
 		{
 			get { return (keys & LayoutListInfoKeys.GroupCount) == LayoutListInfoKeys.GroupCount; }
@@ -194,6 +194,58 @@ namespace DataWF.Gui
 					keys &= ~LayoutListInfoKeys.GroupCount;
 			}
 		}
+
+		[XmlIgnore, Browsable(false)]
+        public bool GridAuto
+        {
+            get { return (keys & LayoutListInfoKeys.GridAuto) == LayoutListInfoKeys.GridAuto; }
+            set
+            {
+                if (value)
+                    keys |= LayoutListInfoKeys.GridAuto;
+                else
+                    keys &= ~LayoutListInfoKeys.GridAuto;
+            }
+        }
+
+		[XmlIgnore, Browsable(false)]
+        public bool CalcHeigh
+        {
+            get { return (keys & LayoutListInfoKeys.CalcHeigh) == LayoutListInfoKeys.CalcHeigh; }
+            set
+            {
+                if (value)
+                    keys |= LayoutListInfoKeys.CalcHeigh;
+                else
+                    keys &= ~LayoutListInfoKeys.CalcHeigh;
+            }
+        }
+
+        [XmlIgnore, Browsable(false)]
+        public bool CalcWidth
+        {
+            get { return (keys & LayoutListInfoKeys.CalcWidth) == LayoutListInfoKeys.CalcWidth; }
+            set
+            {
+                if (value)
+                    keys |= LayoutListInfoKeys.CalcWidth;
+                else
+                    keys &= ~LayoutListInfoKeys.CalcWidth;
+            }
+        }
+
+        [XmlIgnore, Browsable(false)]
+        public bool GroupHeader
+        {
+            get { return (keys & LayoutListInfoKeys.GroupHeader) == LayoutListInfoKeys.GroupHeader; }
+            set
+            {
+                if (value)
+                    keys |= LayoutListInfoKeys.GroupHeader;
+                else
+                    keys &= ~LayoutListInfoKeys.GroupHeader;
+            }
+        }
 
 		[DefaultValue(GridOrientation.Horizontal)]
 		public GridOrientation GridOrientation
@@ -207,20 +259,7 @@ namespace DataWF.Gui
 					OnBoundChanged(EventArgs.Empty);
 				}
 			}
-		}
-
-		[XmlIgnore]
-		public bool GridAuto
-		{
-			get { return (keys & LayoutListInfoKeys.GridAuto) == LayoutListInfoKeys.GridAuto; }
-			set
-			{
-				if (value)
-					keys |= LayoutListInfoKeys.GridAuto;
-				else
-					keys &= ~LayoutListInfoKeys.GridAuto;
-			}
-		}
+		}      
 
 		[DefaultValue(1)]
 		public int GridCol
@@ -255,45 +294,6 @@ namespace DataWF.Gui
 					return;
 				scale = value;
 				OnBoundChanged(EventArgs.Empty);
-			}
-		}
-
-		[XmlIgnore]
-		public bool CalcHeigh
-		{
-			get { return (keys & LayoutListInfoKeys.CalcHeigh) == LayoutListInfoKeys.CalcHeigh; }
-			set
-			{
-				if (value)
-					keys |= LayoutListInfoKeys.CalcHeigh;
-				else
-					keys &= ~LayoutListInfoKeys.CalcHeigh;
-			}
-		}
-
-		[XmlIgnore]
-		public bool CalcWidth
-		{
-			get { return (keys & LayoutListInfoKeys.CalcWidth) == LayoutListInfoKeys.CalcWidth; }
-			set
-			{
-				if (value)
-					keys |= LayoutListInfoKeys.CalcWidth;
-				else
-					keys &= ~LayoutListInfoKeys.CalcWidth;
-			}
-		}
-
-		[XmlIgnore]
-		public bool GroupHeader
-		{
-			get { return (keys & LayoutListInfoKeys.GroupHeader) == LayoutListInfoKeys.GroupHeader; }
-			set
-			{
-				if (value)
-					keys |= LayoutListInfoKeys.GroupHeader;
-				else
-					keys &= ~LayoutListInfoKeys.GroupHeader;
 			}
 		}
 
@@ -379,9 +379,10 @@ namespace DataWF.Gui
 		{
 			columns.Bound = Rectangle.Zero;
 			foreach (var item in LayoutMapHelper.GetItems(columns))
+			{
 				item.Bound = Rectangle.Zero;
-			if (BoundChanged != null)
-				BoundChanged(this, e);
+			}
+			BoundChanged?.Invoke(this, e);
 		}
 
 		public string Filter
@@ -450,7 +451,7 @@ namespace DataWF.Gui
 
 		public void GetColumnsBound(double w, Func<ILayoutItem, double> wd, Func<ILayoutItem, double> hd)
 		{
-			if (Columns.Bound.Width.Equals(0) || wd != null || hd != null || Columns.FillWidth)
+			if (Columns.Bound.Width.Equals(0) || CalcWidth || CalcHeigh || Columns.FillWidth)
 			{
 				LayoutMapHelper.GetBound(columns, HeaderVisible ? w - headerWidth * scale : w, 0, wd, hd);
 
@@ -463,7 +464,7 @@ namespace DataWF.Gui
 
 		public void GetBound(ILayoutItem column, Func<ILayoutItem, double> wd, Func<ILayoutItem, double> hd)
 		{
-			if (column.Bound.Width.Equals(0) || wd != null || hd != null || columns.FillWidth)
+			if (column.Bound.Width.Equals(0) || CalcWidth || CalcHeigh || columns.FillWidth)
 			{
 				LayoutMapHelper.GetBound(columns, column, wd, hd);
 			}
@@ -471,13 +472,12 @@ namespace DataWF.Gui
 
 		public IEnumerable<LayoutColumn> GetDisplayed(double left, double right)
 		{
-			foreach (ILayoutItem col in LayoutMapHelper.GetItems(columns))
+			foreach (ILayoutItem column in LayoutMapHelper.GetVisibleItems(columns))
 			{
-				if (col.Visible)
+				GetBound(column, null, null);
+				if (column.Bound.Right > left && column.Bound.Left < right)
 				{
-					GetBound(col, null, null);
-					if (col.Bound.Right > left && col.Bound.Left < right)
-						yield return (LayoutColumn)col;
+					yield return (LayoutColumn)column;
 				}
 			}
 		}
@@ -499,8 +499,6 @@ namespace DataWF.Gui
 			foreach (LayoutColumn col in list)
 				col.Dispose();
 		}
-
-
 	}
 
 	public class StyleComparer

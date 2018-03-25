@@ -286,6 +286,11 @@ namespace Mono.TextEditor
         }
         #endregion
 
+        protected override void OnKeyPressed(KeyEventArgs args)
+        {
+            textArea.RaiseKeyPressed(args);
+        }
+
         #region Animated Widgets
         Stage<AnimatedWidget> stage = new Stage<AnimatedWidget>();
 
@@ -842,7 +847,7 @@ namespace Mono.TextEditor
                 if (Debugger.IsAttached)
                     Debugger.Break();
                 //TODO: we should really find a way to log this properly
-                Console.WriteLine("Error while executing " + action + " :" + e);
+                System.Diagnostics.Debug.WriteLine("Error while executing " + action + " :" + e);
             }
         }
 

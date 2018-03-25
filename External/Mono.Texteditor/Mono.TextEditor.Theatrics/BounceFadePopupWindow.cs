@@ -313,7 +313,7 @@ namespace Mono.TextEditor.Theatrics
             }
             catch (Exception e)
             {
-                Console.WriteLine("Exception in animation:" + e);
+                System.Diagnostics.Debug.WriteLine("Exception in animation:" + e);
             }
         }
 

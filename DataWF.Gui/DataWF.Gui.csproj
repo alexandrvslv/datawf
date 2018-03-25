@@ -3,9 +3,9 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <OutputType>Library</OutputType>
-    <RootNamespace>DataWF.GuiXwt</RootNamespace>
+    <RootNamespace>DataWF.Gui</RootNamespace>
     <AssemblyName>DataWF.Gui</AssemblyName>
-    <TargetFrameworks>net47</TargetFrameworks>
+    <TargetFramework>net47</TargetFramework>
     <Platforms>AnyCPU;x86</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -53,5 +53,8 @@
     <Content Include="fontawesome-webfont.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="fontawesome-webfont.ttf" />
   </ItemGroup>
 </Project>

@@ -10,6 +10,7 @@ using System.IO;
 using System.Reflection;
 using Xwt;
 using System.Linq;
+using Mono.Cecil;
 
 namespace DataWF.Data.Gui
 {
@@ -313,15 +314,30 @@ namespace DataWF.Data.Gui
 
 		private void ToolDBGenerateClick(object sender, EventArgs e)
 		{
-			var list = new LayoutList
-			{
-				AllowCheck = true,
-				GenerateToString = true,
+            var assemblyList = new SelectableList<AsseblyCheck>();
+            string[] asseblies = Directory.GetFiles(Helper.GetDirectory(), "*.dll");
+            foreach (string dll in asseblies)
+            {
+                AssemblyDefinition assemblyDefinition = null;
+                try { assemblyDefinition = AssemblyDefinition.ReadAssembly(dll); }
+                catch { continue; }
+
+                var moduleAttribute = assemblyDefinition.CustomAttributes
+                                                       .Where(item => item.AttributeType.Name == nameof(AssemblyMetadataAttribute))
+                                                       .Select(item => item.ConstructorArguments.Select(sitem => sitem.Value.ToString()).ToArray());
+                if (moduleAttribute.Any(item => item[0] == "module"))
+                {
+                    assemblyList.Add(new AsseblyCheck(Assembly.LoadFile(dll)));
+                }
+            }
+
+            var list = new LayoutList
+            {
+                AllowCheck = true,
+                AutoToStringFill = true,
+                GenerateToString = true,
 				GenerateColumns = false,
-				ListSource = new SelectableList<AsseblyCheck>(AppDomain.CurrentDomain.GetAssemblies()
-															  .Where(item => item.GetCustomAttributes<AssemblyMetadataAttribute>().
-																	 Any(m => m.Key == "module"))
-															  .Select(item => new AsseblyCheck(item)))
+				ListSource = assemblyList
 			};
 
 			var window = new ToolWindow

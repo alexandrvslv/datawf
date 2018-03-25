@@ -46,7 +46,7 @@ namespace Xwt
 
         internal void Dispose()
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
     }
 

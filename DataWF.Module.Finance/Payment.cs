@@ -46,6 +46,13 @@ namespace DataWF.Module.Finance
             Build(DBTable);
         }
 
+        [Column("unid", Keys = DBColumnKeys.Primary)]
+        public int? Id
+        {
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
+        }
+
         [Browsable(false)]
         [Column("typeid", Keys = DBColumnKeys.ElementType)]
         public int? TypeId

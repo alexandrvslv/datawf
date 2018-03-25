@@ -287,7 +287,7 @@ namespace Mono.TextEditor
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Got exception while search forward:" + ex);
+                    System.Diagnostics.Debug.WriteLine("Got exception while search forward:" + ex);
                     break;
                 }
                 if (worker.CancellationPending)
@@ -992,7 +992,7 @@ namespace Mono.TextEditor
                 }
                 catch
                 {
-                    Console.WriteLine(chunk);
+                    System.Diagnostics.Debug.WriteLine(chunk);
                 }
             }
             int lineOffset = line.Offset;
@@ -3455,8 +3455,9 @@ namespace Mono.TextEditor
             {
                 index = (int)TranslateToUTF8Index(wrapper.LineChars, System.Math.Min(System.Math.Max(0, column), wrapper.LineChars.Length), ref curIndex, ref byteIndex);
             }
-            catch
+            catch(Exception e)
             {
+                System.Diagnostics.Debug.WriteLine(e);
                 return 0;
             }
             var pos = wrapper.Layout.IndexToPos(index);
