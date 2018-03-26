@@ -35,7 +35,7 @@ namespace DataWF.Module.Flow
 
     }
 
-    [Table("wf_flow", "rwork", BlockSize = 20)]
+    [Table("wf_flow", "rwork", "Reference Book", BlockSize = 20)]
     public class Work : DBItem, IDisposable
     {
         public static DBTable<Work> DBTable

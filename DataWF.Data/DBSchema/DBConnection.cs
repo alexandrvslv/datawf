@@ -67,6 +67,7 @@ namespace DataWF.Data
             }
         }
 
+        [Browsable(false)]
         public string SystemName
         {
             get { return systemName; }

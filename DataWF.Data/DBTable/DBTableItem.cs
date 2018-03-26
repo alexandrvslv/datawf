@@ -27,7 +27,7 @@ namespace DataWF.Data
                 if (table != value)
                 {
                     table = value;
-                    LocaleInfo = null;
+                    litem = null;
                 }
             }
         }
@@ -38,5 +38,9 @@ namespace DataWF.Data
             get { return Table?.Schema; }
         }
 
+        public override string GetLocalizeCategory()
+        {
+            return Table?.FullName;
+        }
     }
 }

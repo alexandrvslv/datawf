@@ -77,7 +77,7 @@ namespace DataWF.Module.Flow
         Customer
     }
 
-    [Table("wf_flow", "ddocument", BlockSize = 2000)]
+    [Table("wf_flow", "ddocument", "Document", BlockSize = 2000)]
     public class Document : DBItem, IDisposable
     {
         public static DBTable<Document> DBTable
@@ -190,7 +190,7 @@ namespace DataWF.Module.Flow
             {
                 foreach (var iwork in document.Works)
                     if (!iwork.IsComplete)
-                        iwork.DateComplete = DateTime.Now; 
+                        iwork.DateComplete = DateTime.Now;
             }
             document.IsComplete = result.IsComplete;
 

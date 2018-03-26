@@ -207,7 +207,7 @@ namespace DataWF.Data
                 dparam.ParameterName = name;
                 ncommand.Parameters.Add(dparam);
             }
-            dparam.Value = value;
+            dparam.Value = value??DBNull.Value;
             return dparam;
         }
 

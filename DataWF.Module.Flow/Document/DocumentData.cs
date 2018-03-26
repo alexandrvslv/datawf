@@ -83,7 +83,7 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [Table("wf_flow", "ddocument_data", BlockSize = 2000)]
+    [Table("wf_flow", "ddocument_data", "Document", BlockSize = 2000)]
     public class DocumentData : DBItem
     {
         public static DBTable<DocumentData> DBTable

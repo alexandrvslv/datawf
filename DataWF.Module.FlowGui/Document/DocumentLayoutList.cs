@@ -17,7 +17,7 @@ namespace DataWF.Module.FlowGui
 {
 
     public class DocumentLayoutList : TableLayoutList
-    {        
+    {
         private Template viewmode;
         private CellStyle styleBold;
 
@@ -221,7 +221,7 @@ namespace DataWF.Module.FlowGui
                 name = name.Substring(index);
             }
             bool documented = GetIsDocument(cell, out var filter);
-            if (documented)
+            if (documented && filter != null)
             {
                 TemplateParam tparam = filter != null ? filter.GetAttribute(name) :
                     TemplateParam.DBTable.LoadByCode(name, TemplateParam.DBTable.ParseColumn(nameof(TemplateParam.ParamCode)), DBLoadParam.None);
@@ -257,7 +257,7 @@ namespace DataWF.Module.FlowGui
 
             return base.GetCellEditor(listItem, itemValue, cell);
         }
-       
+
         public override bool IsComplex(ILayoutCell cell)
         {
             if (cell?.Invoker is TemplateParam)

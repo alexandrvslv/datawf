@@ -12,19 +12,20 @@ namespace DataWF.Data.Gui
     public enum DataTreeKeys
     {
         None = 0,
-        Schema = 1,
-        TableGroup = 2,
-        Table = 4,
-        ColumnGroup = 8,
-        Column = 16,
-        Index = 32,
-        Constraint = 64,
-        Foreign = 128,
-        Procedure = 256,
-        ProcedureParam = 512,
-        CheckTableView = 1024,
-        CheckTableAdmin = 2048,
-        LogTable = 4096
+        Schema = 1 << 0,
+        TableGroup = 1 << 2,
+        Table = 1 << 3,
+        ColumnGroup = 1 << 4,
+        Column = 1 << 5,
+        Index = 1 << 6,
+        Constraint = 1 << 7,
+        Foreign = 1 << 8,
+        Procedure = 1 << 9,
+        ProcedureParam = 1 << 10,
+        Sequence = 1 << 11,
+        CheckTableView = 1 << 12,
+        CheckTableAdmin = 1 << 13,
+        LogTable = 1 << 14
     }
 
     public class SchemaItemNode : Node, ILocalizable
@@ -165,13 +166,18 @@ namespace DataWF.Data.Gui
         {
             get { return (dataKeys & DataTreeKeys.Procedure) == DataTreeKeys.Procedure; }
         }
-
+        
         [DefaultValue(false)]
         public bool ShowProcedureParam
         {
             get { return (dataKeys & DataTreeKeys.ProcedureParam) == DataTreeKeys.ProcedureParam; }
         }
 
+        [DefaultValue(true)]
+        public bool ShowSequences
+        {
+            get { return (dataKeys & DataTreeKeys.Sequence) == DataTreeKeys.Sequence; }
+        }
 
         public void OnItemsListChanged(object sender, ListChangedEventArgs arg)
         {
@@ -293,6 +299,7 @@ namespace DataWF.Data.Gui
             schema.TableGroups.ListChanged -= schemaChanged;
             schema.Tables.ListChanged -= schemaChanged;
             schema.Procedures.ListChanged -= schemaChanged;
+            schema.Sequences.ListChanged -= schemaChanged;
 
             if (ShowTableGroup)
                 schema.TableGroups.ListChanged += schemaChanged;
@@ -300,11 +307,11 @@ namespace DataWF.Data.Gui
                 schema.Tables.ListChanged += schemaChanged;
             if (ShowProcedures)
                 schema.Procedures.ListChanged += schemaChanged;
+            if (ShowSequences)
+                schema.Procedures.ListChanged += schemaChanged;
 
-            foreach (var tgroup in schema.TableGroups.GetTopParents())
-            {
-                CheckItem(tgroup, node, ShowTableGroup);
-            }
+            InitList(schema.TableGroups.GetTopParents(), node, ShowTableGroup);
+            
 
             foreach (var table in schema.Tables)
             {
@@ -316,15 +323,32 @@ namespace DataWF.Data.Gui
                     && (!(table is DBLogTable) || ShowLogTable));
             }
 
-            foreach (var procedure in schema.Procedures.SelectByParent(null))
-            {
-                CheckItem(procedure, node, ShowProcedures);
-            }
+            InitList(schema.Procedures.SelectByParent(null), node, ShowProcedures, "Procedures");
+            InitList(schema.Sequences, node, ShowSequences, "Sequences");
+
             return node;
         }
 
-        public void InitList<T>(IEnumerable<T> list, SchemaItemNode node, bool show) where T : DBSchemaItem
+        public void InitList<T>(IEnumerable<T> list, SchemaItemNode node, bool show, string nodeName = null) where T : DBSchemaItem
         {
+            if (!string.IsNullOrEmpty(nodeName))
+            {
+                var subNode = Find(node.Name + nodeName);
+                if (show)
+                {
+                    if (subNode == null)
+                    {
+                        subNode = new SchemaItemNode() { Name = node.Name + nodeName, Text = nodeName };                        
+                    }
+                    subNode.Group = node;
+                    node = subNode;
+                }
+                else
+                {
+                    subNode?.Hide();
+                    return;
+                }
+            }
             foreach (var item in list)
             {
                 CheckItem(item, node, show);
@@ -481,6 +505,8 @@ namespace DataWF.Data.Gui
                     node.Glyph = GlyphType.FolderOColumn;
                 else if (item is DBColumn)
                     node.Glyph = GlyphType.Columns;
+                else if (item is DBSequence)
+                    node.Glyph = GlyphType.Inr;
             }
             node.Visible = true;
             node.Localize();

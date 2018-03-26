@@ -43,7 +43,7 @@ namespace DataWF.Module.Counterpart
         { }
     }
 
-    [Table("wf_customer", "rlocation", BlockSize = 2000)]
+    [Table("wf_customer", "rlocation", "Reference Book", BlockSize = 2000)]
     public class Location : DBItem
     {
         public static DBTable<Location> DBTable

@@ -139,6 +139,7 @@ namespace DataWF.Data
             }
         }
 
+        [Browsable(false)]
         public DBSystem System
         {
             get { return Schema?.System; }
@@ -209,6 +210,7 @@ namespace DataWF.Data
             }
         }
 
+        [Browsable(false)]
         public string SequenceName
         {
             get { return sequenceName; }
@@ -1255,14 +1257,14 @@ namespace DataWF.Data
             //    GenerateRelation(stable, scolumn, view.PrimaryKey);
         }
 
-        public DBSequence GenerateSequence(DBTable table)
+        public DBSequence GenerateSequence()
         {
-            var sname = $"seq_{table.Name}";
-            var sequence = table.Schema.Sequences[sname];
+            var sname = $"seq_{Name}";
+            var sequence = Schema.Sequences[sname];
             if (sequence == null)
             {
                 sequence = new DBSequence(sname);
-                table.Schema.Sequences.Add(sequence);
+                Schema.Sequences.Add(sequence);
             }
             return sequence;
         }

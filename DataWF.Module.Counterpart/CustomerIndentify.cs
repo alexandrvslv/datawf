@@ -53,7 +53,7 @@ namespace DataWF.Module.Counterpart
         }
     }
 
-    [Table("wf_customer", "dcustomer_indentify", BlockSize = 2000)]
+    [Table("wf_customer", "dcustomer_indentify", "Customer", BlockSize = 2000)]
     public class CustomerIdentify : DBItem
     {
         public static DBTable<CustomerIdentify> DBTable

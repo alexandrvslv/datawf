@@ -136,12 +136,12 @@ namespace DataWF.Module.FlowGui
 
             qWork = new QQuery(string.Empty, DocumentWork.DBTable);
             qWork.BuildPropertyParam(nameof(DocumentWork.IsComplete), CompareType.Equal, false);
-            qWork.BuildPropertyParam(nameof(DocumentWork.UserId), CompareType.In, User.CurrentUser.GetParents<User>(true));
+            qWork.BuildPropertyParam(nameof(DocumentWork.UserId), CompareType.In, User.CurrentUser?.GetParents<User>(true));
 
             var qDocWorks = new QQuery(string.Empty, DocumentWork.DBTable);
             qDocWorks.Columns.Add(new QColumn(DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DocumentId))));
             qDocWorks.BuildPropertyParam(nameof(DocumentWork.IsComplete), CompareType.Equal, false);
-            qDocWorks.BuildPropertyParam(nameof(DocumentWork.UserId), CompareType.In, User.CurrentUser.GetParents<User>(true));
+            qDocWorks.BuildPropertyParam(nameof(DocumentWork.UserId), CompareType.In, User.CurrentUser?.GetParents<User>(true));
 
             qDocs = new QQuery(string.Empty, Document.DBTable);
             qDocs.BuildPropertyParam(nameof(Document.Id), CompareType.In, qDocWorks);
@@ -149,8 +149,7 @@ namespace DataWF.Module.FlowGui
             works = new DocumentWorkList(qWork.ToWhere(), DBViewKeys.Empty);
             works.ListChanged += WorksListChanged;
 
-            documents = new DocumentList(Document.DBTable.ParseProperty(nameof(Document.WorkCurrent)).Name + " is not null",
-            DBViewKeys.Access);
+            documents = new DocumentList(Document.DBTable.ParseProperty(nameof(Document.WorkId)).Name + " is not null", DBViewKeys.Access);
             dockList.Documents = documents;
             dockList.AllowPreview = true;
 

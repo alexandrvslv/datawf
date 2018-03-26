@@ -71,7 +71,7 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [Table("wf_flow", "rtemplate", BlockSize = 500)]
+    [Table("wf_flow", "rtemplate", "Reference Book", BlockSize = 500)]
     public class Template : DBItem, IDisposable
     {
         public static DBTable<Template> DBTable
@@ -103,6 +103,13 @@ namespace DataWF.Module.Flow
                 SetValue(value, Table.CodeKey);
                 documentType = null;
             }
+        }
+
+        [Column("name", 512, Keys = DBColumnKeys.Culture)]
+        public override string Name
+        {
+            get { return GetName(nameof(Name)); }
+            set { SetName(nameof(Name), value); }
         }
 
         [Column("document_type", 250, Default = "0")]

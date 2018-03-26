@@ -43,6 +43,8 @@ namespace DataWF.Data.Gui
                     key = DataTreeKeys.Schema;
                 else if (value == typeof(DBProcedure))
                     key = DataTreeKeys.Schema | DataTreeKeys.Procedure;
+                else if (value == typeof(DBSequence))
+                    key = DataTreeKeys.Schema | DataTreeKeys.Sequence;
                 else if (value == typeof(DBTableGroup))
                     key = DataTreeKeys.Schema | DataTreeKeys.TableGroup;
                 else if (value == typeof(DBTable))

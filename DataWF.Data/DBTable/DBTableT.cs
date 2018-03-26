@@ -459,7 +459,7 @@ namespace DataWF.Data
 		{
 			object val = DBService.ParseValue(PrimaryKey, id);
 
-			if (val == DBNull.Value || PrimaryKey == null)
+			if (val == null || PrimaryKey == null)
 				return null;
 
 			T row = SelectOne(PrimaryKey, val) as T;

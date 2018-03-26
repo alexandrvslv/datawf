@@ -40,6 +40,11 @@ namespace DataWF.Data.Gui
             get { return DropDown?.Target as TableEditor; }
         }
 
+        public override LayoutList List
+        {
+            get { return TableEditor.List; }           
+        }
+
         public DBTable Table
         {
             get { return table; }

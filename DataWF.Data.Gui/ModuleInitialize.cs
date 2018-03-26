@@ -27,6 +27,10 @@ namespace DataWF.Data.Gui
             {
                 return new CellEditorDataTree();
             };
+            GuiEnvironment.CellEditorFabric[typeof(DBSequence)] = (cell) =>
+            {
+                return new CellEditorDataTree();
+            };
             GuiEnvironment.CellEditorFabric[typeof(DBProcedure)] = (cell) =>
             {
                 return new CellEditorDataTree();

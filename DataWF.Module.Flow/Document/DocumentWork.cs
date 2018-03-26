@@ -96,7 +96,7 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [Table("wf_flow", "ddocument_work", BlockSize = 2000)]
+    [Table("wf_flow", "ddocument_work", "Document", BlockSize = 2000)]
     public class DocumentWork : DBItem
     {
         public static DBTable<DocumentWork> DBTable
@@ -108,7 +108,7 @@ namespace DataWF.Module.Flow
 
         public DocumentWork()
         {
-            Build(DBTable);            
+            Build(DBTable);
         }
 
         public override string ToString()

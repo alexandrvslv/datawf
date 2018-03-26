@@ -27,13 +27,18 @@ namespace DataWF.Data
     public class VirtualTableAttribute : TableAttribute
     {
         public VirtualTableAttribute(string schema, string name, Type baseType, string query)
-            : base(schema, name)
+            : base(schema, name, null)
         {
             BaseType = baseType;
             Query = query;
             BaseTable = DBService.GetTableAttribute(baseType);
         }
 
+        public override string GroupName
+        {
+            get { return BaseTable?.GroupName; }
+            set { base.GroupName = value; }
+        }
         public Type BaseType { get; set; }
 
         public string Query { get; set; }
@@ -55,6 +60,7 @@ namespace DataWF.Data
             table.Name = TableName;
             table.Schema = Schema;
             ((IDBVirtualTable)table).BaseTable = BaseTable.Table;
+            table.DisplayName = ItemType.Name;
             table.Query = Query;
             return table;
         }

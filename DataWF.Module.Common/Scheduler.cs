@@ -43,7 +43,7 @@ namespace DataWF.Module.Common
         }
     }
 
-    [Table("wf_common", "rscheduler", BlockSize = 20)]
+    [Table("wf_common", "rscheduler", "Reference Book", BlockSize = 20)]
     public class Scheduler : DBItem//, IComparable
     {
         public static DBTable<Scheduler> DBTable

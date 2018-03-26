@@ -66,6 +66,9 @@ namespace DataWF.Common
             get { return Locale.GetImage(image); }
         }
 
+        [Browsable(false)]
+        public LocaleCategory Category { get { return Container as LocaleCategory; } }
+
         [XmlIgnore, Browsable(false)]
         public INotifyListChanged Container { get; set; }
 

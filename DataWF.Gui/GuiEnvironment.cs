@@ -109,6 +109,28 @@ namespace DataWF.Gui
             {
                 return new CellEditorFont();
             };
+
+            AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
+
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                OnAssemblyLoad(null, new AssemblyLoadEventArgs(assembly));
+            }
+        }
+
+        private static void OnAssemblyLoad(object sender, AssemblyLoadEventArgs e)
+        {
+            if (e.LoadedAssembly.GetCustomAttributes<AssemblyMetadataAttribute>().Any(m => m.Key == "gui" || m.Key == "module"))
+            {
+                foreach (var item in e.LoadedAssembly?.GetExportedTypes())
+                {
+                    if (TypeHelper.IsInterface(item, typeof(IModuleInitialize)))
+                    {
+                        var imodule = (IModuleInitialize)EmitInvoker.CreateObject(item);
+                        imodule.Initialize();
+                    }
+                }
+            }
         }
 
         public static ILayoutCellEditor GetCellEditor(ILayoutCell cell)

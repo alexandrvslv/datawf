@@ -43,7 +43,7 @@ namespace DataWF.Module.Common
         }
     }
 
-    [Table("wf_common", "dstats")]
+    [Table("wf_common", "dstats", "Data")]
     public class Statistic : DBItem//, IComparable
     {
         public static DBTable<Statistic> DBTable

@@ -35,7 +35,7 @@ namespace DataWF.Module.Common
 		GTypeMember
 	}
 
-	[Table("wf_common", "rgroup_permission", BlockSize = 2000)]
+	[Table("wf_common", "rgroup_permission", "Reference Book", BlockSize = 2000)]
 	public class GroupPermission : DBItem
 	{
 		public static DBTable<GroupPermission> DBTable

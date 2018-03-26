@@ -106,7 +106,7 @@ namespace DataWF.Module.Flow
                 //TODO reference if (index >= 0)
                 //    result.Reference = ParamCode.Substring(index + 1);
 
-                result.LocaleInfo = (LocaleItem)column.LocaleInfo.Clone();
+                //result.LocaleInfo = (LocaleItem)column.LocaleInfo.Clone();
             }
             return result;
         }

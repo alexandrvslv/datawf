@@ -28,17 +28,11 @@ namespace DataWF.Data
     public abstract class DBSchemaItem : IContainerNotifyPropertyChanged, IComparable, ICloneable, IAccessable
     {
         protected string name;
-        [NonSerialized]
         protected string oldname;
-        [NonSerialized]
         protected DBSchema schema;
-        [NonSerialized]
-        private LocaleItem litem;
-        [NonSerialized]
+        protected LocaleItem litem;
         protected AccessValue access;
-        [NonSerialized]
         protected INotifyListChanged container;
-        [NonSerialized]
         private bool isSynchronized;
 
         public DBSchemaItem()
@@ -78,8 +72,7 @@ namespace DataWF.Data
 
         public override string ToString()
         {
-            var item = LocaleInfo;
-            return item == null || item.Count == 0 ? name : item.Value;
+            return LocaleInfo?.Value ?? name;
         }
 
         [Browsable(false), Category("Policy"), XmlIgnore]
@@ -109,14 +102,16 @@ namespace DataWF.Data
                 var locName = Name;
                 if (string.IsNullOrEmpty(locCategory) || string.IsNullOrEmpty(locName))
                     return null;
+                if (litem != null && (litem.Category.Name != locCategory || litem.Name != locName))
+                    litem = null;
                 return litem ?? (litem = Locale.GetItem(locCategory, locName));
             }
-            set
-            {
-                if (litem == value)
-                    return;
-                litem = value;
-            }
+            //set
+            //{
+            //    if (litem == value)
+            //        return;
+            //    litem = value;
+            //}
         }
 
         [Category("Naming"), XmlIgnore]
@@ -145,7 +140,7 @@ namespace DataWF.Data
                 name = value;
                 if (litem != null)
                 {
-                    litem.Name = FullName;
+                    litem.Name = Name;
                 }
                 OnPropertyChanged(nameof(Name), true);
             }

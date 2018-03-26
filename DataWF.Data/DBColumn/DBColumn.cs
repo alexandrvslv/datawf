@@ -555,12 +555,7 @@ namespace DataWF.Data
         public bool IsNotNull
         {
             get { return (Keys & DBColumnKeys.Notnull) == DBColumnKeys.Notnull; }
-        }
-
-        public override string GetLocalizeCategory()
-        {
-            return Table?.FullName;
-        }
+        }       
 
         #region IComparable Members
 

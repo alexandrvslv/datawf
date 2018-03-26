@@ -33,7 +33,7 @@ namespace DataWF.Module.Counterpart
         }
     }
 
-    [Table("wf_customer", "dcustomer", BlockSize = 5000)]
+    [Table("wf_customer", "dcustomer", "Customer", BlockSize = 5000)]
     public class Customer : DBItem, IDisposable
     {
         public static DBTable<Customer> DBTable

@@ -59,7 +59,7 @@ namespace DataWF.Module.Flow
         IsAutoComplete
     }
 
-    [Table("wf_flow", "rstage", BlockSize = 200)]
+    [Table("wf_flow", "rstage", "Reference Book", BlockSize = 200)]
     public class Stage : DBItem, IDisposable
     {
         public static DBTable<Stage> DBTable

@@ -17,7 +17,7 @@ namespace DataWF.Module.Counterpart
 
     }
 
-    [Table("wf_customer", "dcustomer_address", BlockSize = 2000)]
+    [Table("wf_customer", "dcustomer_address", "Customer", BlockSize = 2000)]
     public class CustomerAddress : DBItem
     {
         public static DBTable<CustomerAddress> DBTable

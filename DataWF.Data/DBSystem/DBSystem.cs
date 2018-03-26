@@ -130,6 +130,11 @@ namespace DataWF.Data
             return command;
         }
 
+        public override string ToString()
+        {
+            return Name ?? base.ToString();
+        }
+
         public abstract string SequenceInline(DBSequence sequence);
 
         public abstract string SequenceNextValue(DBSequence sequence);
@@ -459,7 +464,7 @@ namespace DataWF.Data
 
                 foreach (var foreign in schema.GetForeigns())
                 {
-                    if (foreign.Table is IDBVirtualTable || foreign.Column.ColumnType!= DBColumnTypes.Default)
+                    if (foreign.Table is IDBVirtualTable || foreign.Column.ColumnType != DBColumnTypes.Default)
                         continue;
                     Format(ddl, foreign, DDLType.Create);
                     ddl.AppendLine("go");

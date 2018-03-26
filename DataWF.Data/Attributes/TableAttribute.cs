@@ -34,23 +34,27 @@ namespace DataWF.Data
     {
         private DBSchema cacheSchema;
         private DBTable cacheTable;
-        SelectableList<ColumnAttribute> cacheColumns = new SelectableList<ColumnAttribute>();
-        SelectableList<ReferenceAttribute> cacheReferences = new SelectableList<ReferenceAttribute>();
-        SelectableList<IndexAttribute> cacheIndexes = new SelectableList<IndexAttribute>();
-        SelectableList<ItemTypeAttribute> cacheItemTypes = new SelectableList<ItemTypeAttribute>();
+        private DBTableGroup cacheGroup;
+        private SelectableList<ColumnAttribute> cacheColumns = new SelectableList<ColumnAttribute>();
+        private SelectableList<ReferenceAttribute> cacheReferences = new SelectableList<ReferenceAttribute>();
+        private SelectableList<IndexAttribute> cacheIndexes = new SelectableList<IndexAttribute>();
+        private SelectableList<ItemTypeAttribute> cacheItemTypes = new SelectableList<ItemTypeAttribute>();
 
-        public TableAttribute(string schema, string name)
+        public TableAttribute(string schema, string name, string groupName)
         {
             cacheColumns.Indexes.Add(new Invoker<ColumnAttribute, string>(nameof(ColumnAttribute.ColumnName), (item) => item.ColumnName));
             cacheColumns.Indexes.Add(new Invoker<ColumnAttribute, string>(nameof(ColumnAttribute.Property), (item) => item.Property));
             cacheIndexes.Indexes.Add(new Invoker<IndexAttribute, string>(nameof(IndexAttribute.IndexName), (item) => item.IndexName));
             SchemaName = schema;
             TableName = name;
+            GroupName = groupName ?? "Default";
         }
 
         protected string SchemaName { get; set; }
 
         public string TableName { get; set; }
+
+        public virtual string GroupName { get; set; }
 
         [DefaultValue(DBTableType.Table)]
         protected DBTableType TableType { get; set; } = DBTableType.Table;
@@ -73,6 +77,13 @@ namespace DataWF.Data
             internal set { cacheTable = value; }
         }
 
+        [XmlIgnore]
+        public DBTableGroup TableGroup
+        {
+            get { return cacheGroup ?? (cacheGroup = Schema?.TableGroups[GroupName]); }
+            internal set { cacheGroup = value; }
+        }
+
         public Type ItemType { get; internal set; }
 
         public IEnumerable<ColumnAttribute> Columns
@@ -92,7 +103,7 @@ namespace DataWF.Data
             table.Type = TableType;
             table.BlockSize = BlockSize;
             table.DisplayName = ItemType.Name;
-            table.Sequence = table.GenerateSequence(table);
+            table.Sequence = table.GenerateSequence();
             return table;
         }
 
@@ -120,6 +131,18 @@ namespace DataWF.Data
                     Table.ItemTypes[itemType.Id] = new DBItemType { Type = itemType.Type };
                 }
             }
+
+            if (TableGroup == null)
+            {
+                TableGroup = new DBTableGroup(GroupName)
+                {
+                    Schema = schema,
+                    DisplayName = GroupName
+                };
+                Schema.TableGroups.Add(TableGroup);
+            }
+
+            Table.Group = TableGroup;
 
             cacheColumns.Sort((a, b) => a.Order.CompareTo(b.Order));
             foreach (var column in cacheColumns)
@@ -154,7 +177,7 @@ namespace DataWF.Data
             var types = TypeHelper.GetTypeHierarchi(type);
             foreach (var item in types)
                 InitializeType(item);
-            
+
         }
 
         public void InitializeItemType(ItemTypeAttribute itemType)

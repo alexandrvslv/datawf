@@ -44,12 +44,7 @@ namespace DataWF.Data
         [Category("Naming")]
         public override string FullName
         {
-            get
-            {
-                return string.Format("{0}.{1}",
-                Schema == null ? string.Empty : Schema.Name,
-                name);
-            }
+            get { return $"{Schema?.Name}.{Name}"; }
         }
 
         [Browsable(false)]
@@ -118,6 +113,7 @@ namespace DataWF.Data
                 GroupName = GroupName
             };
         }
+
 
         #endregion
 

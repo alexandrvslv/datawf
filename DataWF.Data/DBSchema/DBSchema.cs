@@ -132,10 +132,8 @@ namespace DataWF.Data
             }
         }
 
-        public DBSystem System
-        {
-            get { return Connection?.System; }
-        }
+        [Browsable(false)]
+        public DBSystem System { get { return Connection?.System; } }
 
         public DBTableList Tables { get; set; }
 

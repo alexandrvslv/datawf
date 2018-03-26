@@ -25,7 +25,7 @@ using DataWF.Common;
 
 namespace DataWF.Module.Common
 {
-    [Table("wf_common", "rbook", BlockSize = 200)]
+    [Table("wf_common", "rbook", "Reference Book", BlockSize = 200)]
     public class Book : DBItem
     {
         public static DBTable<Book> DBTable

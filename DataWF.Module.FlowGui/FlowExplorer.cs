@@ -66,7 +66,7 @@ namespace DataWF.Module.FlowGui
             if (StageParam.DBTable?.Access.View ?? false) keys |= FlowTreeKeys.StageParam;
             if (Stage.DBTable?.Access.View ?? false) keys |= FlowTreeKeys.Stage;
             if (Work.DBTable?.Access.View ?? false) keys |= FlowTreeKeys.Work;
-            tree = new FlowTree { Status = DBStatus.Current, FlowKeys = keys, UserKeys = userKeys };
+            tree = new FlowTree { Status = DBStatus.Empty, FlowKeys = keys, UserKeys = userKeys };
             tree.ListInfo.HeaderVisible = true;
             tree.ListInfo.HeaderWidth = 35;
             tree.SelectionChanged += TreeAfterSelect;
