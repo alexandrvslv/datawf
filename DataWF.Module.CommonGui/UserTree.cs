@@ -133,44 +133,47 @@ namespace DataWF.Module.CommonGui
 
         private void HandleViewListChanged(object sender, ListChangedEventArgs e)
         {
-            IDBTableView view = (IDBTableView)sender;
-            string name = GetName(view);
-            var nodeParent = (TableItemNode)Nodes.Find(name);
-            if (e.ListChangedType == ListChangedType.Reset)
+            Application.Invoke(() =>
             {
-                InitItem(view);
-            }
-            else
-            {
-                TableItemNode node = null;
-                DBItem rowview = null;
+                IDBTableView view = (IDBTableView)sender;
+                string name = GetName(view);
+                var nodeParent = (TableItemNode)Nodes.Find(name);
+                if (e.ListChangedType == ListChangedType.Reset)
+                {
+                    InitItem(view);
+                }
+                else
+                {
+                    TableItemNode node = null;
+                    DBItem rowview = null;
 
-                if (e.NewIndex >= 0)
-                {
-                    rowview = (DBItem)view[e.NewIndex];
-                    if (rowview.PrimaryId == null)
-                        return;
-                    node = InitItem(rowview);
-                    if (rowview.Group != null)
-                        nodeParent = (TableItemNode)Nodes.Find(GetName(rowview.Group));
+                    if (e.NewIndex >= 0)
+                    {
+                        rowview = (DBItem)view[e.NewIndex];
+                        if (rowview.PrimaryId == null)
+                            return;
+                        node = InitItem(rowview);
+                        if (rowview.Group != null)
+                            nodeParent = (TableItemNode)Nodes.Find(GetName(rowview.Group));
 
-                    //if (nodeParent == null && rowview.Group!=null && node.Group != null && node.Group.Tag)
-                    //    nodeParent = node.Group;
+                        //if (nodeParent == null && rowview.Group!=null && node.Group != null && node.Group.Tag)
+                        //    nodeParent = node.Group;
+                    }
+                    if (e.ListChangedType == ListChangedType.ItemDeleted && rowview != null)
+                    {
+                        if (node.Group == nodeParent)
+                            Nodes.Remove(node);
+                        node = null;
+                    }
+                    if (node != null && nodeParent != null)
+                    {
+                        node.Group = nodeParent;
+                        Nodes.Add(node);
+                    }
+                    if (node != null)
+                        InvalidateRow(listSource.IndexOf(node));
                 }
-                if (e.ListChangedType == ListChangedType.ItemDeleted && rowview != null)
-                {
-                    if (node.Group == nodeParent)
-                        Nodes.Remove(node);
-                    node = null;
-                }
-                if (node != null && nodeParent != null)
-                {
-                    node.Group = nodeParent;
-                    Nodes.Add(node);
-                }
-                if (node != null)
-                    InvalidateRow(listSource.IndexOf(node));
-            }
+            });
         }
 
         public override CellStyle OnGetCellStyle(object listItem, object value, ILayoutCell col)
