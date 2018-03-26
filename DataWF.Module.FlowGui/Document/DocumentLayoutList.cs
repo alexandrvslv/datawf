@@ -3,7 +3,6 @@ using DataWF.Data.Gui;
 using DataWF.Module.Common;
 using DataWF.Module.Flow;
 using DataWF.Gui;
-using DataWF.Common;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -16,53 +15,9 @@ using DataWF.Module.Counterpart;
 
 namespace DataWF.Module.FlowGui
 {
+
     public class DocumentLayoutList : TableLayoutList
-    {
-        public new static ILayoutCellEditor InitCellEditor(object sender, object listItem, ILayoutCell cell)
-        {
-            ILayoutCell c = listItem is ILayoutCell && cell.Name == "Value" ? (ILayoutCell)listItem : cell;
-
-            object data = ((LayoutList)sender).FieldSource != null ? ((LayoutList)sender).FieldSource : listItem;
-            ILayoutCellEditor ed = null;
-            if (c.Invoker != null)
-            {
-                if (c.Invoker.DataType == typeof(Template) || c.Invoker.DataType == typeof(User) ||
-                    c.Invoker.DataType == typeof(Work) || c.Invoker.DataType == typeof(Stage) ||
-                    c.Invoker.DataType == typeof(UserGroup) || c.Invoker.DataType == typeof(DBProcedure))
-                {
-                    ed = new CellEditorFlowTree();
-                    ((CellEditorFlowTree)ed).DataType = c.Invoker.DataType;
-                }
-                else if (data is DocumentSearch && c.Invoker.DataType == typeof(DBItem))
-                {
-                    ed = new CellEditorFlowTree();
-                    ((CellEditorFlowTree)ed).DataType = c.Invoker.DataType;
-                    ((CellEditorFlowTree)ed).FlowKeys = FlowTreeKeys.Work | FlowTreeKeys.Stage | FlowTreeKeys.Template;
-                }
-                else if (data is User && c.Name == "Position")
-                    ed = new CellEditorList() { DataSource = Position.DBTable.DefaultView };
-                else if (data is GroupPermission && c.Name == "Permission")
-                    ed = new CellEditorFlowParameters();
-                else if (data is StageParam && c.Name == "Param")
-                    ed = new CellEditorFlowParameters();
-                else if (data is TemplateParam && c.Name == "Param")
-                    ed = new CellEditorFlowParameters();
-                else
-                    ed = TableLayoutList.InitCellEditor(listItem, cell);
-
-                if (ed.GetType() == typeof(CellEditorTable))
-                {
-                    if (c.Invoker.DataType == typeof(Customer))
-                        ((CellEditorTable)ed).Table = Customer.DBTable;
-                    if (c.Invoker.DataType == typeof(Address))
-                        ((CellEditorTable)ed).Table = Address.DBTable;
-                    if (c.Invoker.DataType == typeof(Location))
-                        ((CellEditorTable)ed).Table = Location.DBTable;
-                }
-            }
-
-            return ed;
-        }
+    {        
         private Template viewmode;
         private CellStyle styleBold;
 
@@ -278,20 +233,31 @@ namespace DataWF.Module.FlowGui
 
         protected override ILayoutCellEditor GetCellEditor(object listItem, object itemValue, ILayoutCell cell)
         {
-            ILayoutCell f = listItem is LayoutField && cell.Name == "Value" ? (ILayoutCell)listItem : cell;
-
-            if (f.CellEditor != null)
-                return f.CellEditor;
-
-            if (handleGetCellEditor != null)
+            ILayoutCellEditor ed = null;
+            if (cell.Invoker != null)
             {
-                f.CellEditor = handleGetCellEditor(this, listItem, cell);
-                if (f.CellEditor != null)
-                    return f.CellEditor;
-            }
-            return InitCellEditor(this, listItem, cell);
-        }
+                if (listItem is DocumentSearch && cell.Invoker.DataType == typeof(DBItem))
+                {
+                    ed = new CellEditorFlowTree();
+                    ((CellEditorFlowTree)ed).DataType = cell.Invoker.DataType;
+                    ((CellEditorFlowTree)ed).FlowKeys = FlowTreeKeys.Work | FlowTreeKeys.Stage | FlowTreeKeys.Template;
+                }
+                else if (listItem is User && cell.Name == "Position")
+                    ed = new CellEditorList() { DataSource = Position.DBTable.DefaultView };
+                else if (listItem is GroupPermission && cell.Name == "Permission")
+                    ed = new CellEditorFlowParameters();
+                else if (listItem is StageParam && cell.Name == "Param")
+                    ed = new CellEditorFlowParameters();
+                else if (listItem is TemplateParam && cell.Name == "Param")
+                    ed = new CellEditorFlowParameters();
 
+                if (ed != null)
+                    return ed;
+            }
+
+            return base.GetCellEditor(listItem, itemValue, cell);
+        }
+       
         public override bool IsComplex(ILayoutCell cell)
         {
             if (cell?.Invoker is TemplateParam)

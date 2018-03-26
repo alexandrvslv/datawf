@@ -174,7 +174,7 @@ namespace DataWF.Data
             if (subList == null)
                 return null;
             List<string> items = new List<string>();
-            string[] split = System.Text.RegularExpressions.Regex.Split(subList, "\n|\rn");
+            string[] split = System.Text.RegularExpressions.Regex.Split(subList, "\n|\rn|;");
             foreach (string s in split)
                 if (s.Trim().Length != 0)
                     items.Add(s.Trim());

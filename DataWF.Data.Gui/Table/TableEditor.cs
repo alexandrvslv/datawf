@@ -492,8 +492,8 @@ namespace DataWF.Data.Gui
 									itemRelation.Click += ToolReferencesClick;
 									refButton.DropDown.Items.Add(itemRelation);
 								}
-								if (TableView == null)
-									ToolReferencesClick(itemRelation, null);
+								//if (TableView == null)
+								//	ToolReferencesClick(itemRelation, null);
 							}
 						}
 						break;

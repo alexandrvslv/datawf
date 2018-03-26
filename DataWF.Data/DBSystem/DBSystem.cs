@@ -43,6 +43,11 @@ namespace DataWF.Data
             return command;
         }
 
+        public static IEnumerable<DBSystem> GetSystems()
+        {
+            return new[] { DBSystem.MSSql, DBSystem.MySql, DBSystem.Oracle, DBSystem.Postgres, DBSystem.SQLite };
+        }
+
         public virtual List<DBTableInfo> GetTablesInfo(DBConnection connection, string schemaName = null, string tableName = null)
         {
             var tableFilter = !string.IsNullOrEmpty(tableName) ? $" and table_name = '{tableName}'" : string.Empty;

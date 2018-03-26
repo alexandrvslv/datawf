@@ -32,10 +32,45 @@ namespace DataWF.Common
 
     public static class Helper
     {
-        public static string AppName = "dwf";
+        public static string AppName = "DataWF";
         private static object[] cacheObjectParam;
         private static Type[] cacheTypeParam;
         private static StateInfoList logs = new StateInfoList();
+
+        static Helper()
+        {
+            AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
+            {
+                if (e.ExceptionObject is Exception)
+                {
+                    Logs.Add(new StateInfo((Exception)e.ExceptionObject));
+                    SetDirectory(Environment.SpecialFolder.LocalApplicationData);
+                    Logs.Save("crush" + DateTime.Now.ToString("yyMMddhhmmss") + ".log");
+                }
+            };
+
+            AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
+
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                OnAssemblyLoad(null, new AssemblyLoadEventArgs(assembly));
+            }
+        }
+
+        private static void OnAssemblyLoad(object sender, AssemblyLoadEventArgs e)
+        {
+            if (e.LoadedAssembly.GetCustomAttributes<AssemblyMetadataAttribute>().Any(m => m.Key == "gui" || m.Key == "module"))
+            {
+                foreach (var item in e.LoadedAssembly.GetExportedTypes())
+                {
+                    if (TypeHelper.IsInterface(item, typeof(IModuleInitialize)))
+                    {
+                        var imodule = (IModuleInitialize)EmitInvoker.CreateObject(item);
+                        imodule.Initialize();
+                    }
+                }
+            }
+        }
 
         public static StateInfoList Logs
         {

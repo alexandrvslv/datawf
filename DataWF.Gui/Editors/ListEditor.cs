@@ -122,7 +122,7 @@ namespace DataWF.Gui
             PackStart(box, false, false);
             List = list;
 
-            fields = new LayoutList();
+            fields = (LayoutList)EmitInvoker.CreateObject(list.GetType());
             fields.EditMode = EditModes.ByClick;
             fields.RetriveCellEditor += handleGetEditor;
 

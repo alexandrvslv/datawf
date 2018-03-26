@@ -99,7 +99,7 @@ namespace DataWF.Gui
             {
                 this.property = property;
                 Invoker = EmitInvoker.Initialize(dataSource.GetType(), property);
-                CellEditor = custom ?? (cellEditor ?? LayoutList.InitCellEditor(this));
+                CellEditor = custom ?? (cellEditor ?? GuiEnvironment.GetCellEditor(this));
             }
             DataSource = dataSource;
             ReadValue();

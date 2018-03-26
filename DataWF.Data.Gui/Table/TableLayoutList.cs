@@ -16,108 +16,8 @@ using System.Threading;
 
 namespace DataWF.Data.Gui
 {
-
     public class TableLayoutList : LayoutList
-    {
-        public static ILayoutCellEditor InitCellEditor(object listItem, object value, ILayoutCell cell)
-        {
-            return InitCellEditor(listItem, cell);
-        }
-
-        public static ILayoutCellEditor InitCellEditor(object listItem, ILayoutCell cell)
-        {
-            if (cell.GetEditor(listItem) != null)
-                return cell.GetEditor(listItem);
-            cell = listItem is LayoutField ? (ILayoutCell)listItem : cell;
-
-            DBColumn column = cell.Invoker as DBColumn;
-            if (column != null)
-            {
-                return InitCellEditor(column);
-            }
-            //object data = ((PList)sender).FieldInfo != null ? ((PList)sender).FieldSource : listItem;
-
-            if (cell.Invoker != null)
-            {
-                if (cell.Invoker.DataType == typeof(DBSchema) || cell.Invoker.DataType == typeof(DBTableGroup) ||
-                    cell.Invoker.DataType == typeof(DBTable) || cell.Invoker.DataType == typeof(DBColumnGroup) ||
-                    cell.Invoker.DataType == typeof(DBColumn) || cell.Invoker.DataType == typeof(DBProcedure))
-                {
-                    return new CellEditorDataTree() { DataType = cell.Invoker.DataType };
-                }
-                else
-                {
-                    return LayoutList.InitCellEditor(cell);
-                }
-            }
-            return null;
-        }
-
-        public static ILayoutCellEditor InitCellEditor(DBColumn column)
-        {
-            ILayoutCellEditor editor = null;
-            if ((column.Keys & DBColumnKeys.Boolean) == DBColumnKeys.Boolean)
-            {
-                editor = new CellEditorCheck();
-
-                ((CellEditorCheck)editor).ValueNull = null;
-                ((CellEditorCheck)editor).ValueTrue = column.BoolTrue;
-                ((CellEditorCheck)editor).ValueFalse = column.BoolFalse;
-                ((CellEditorCheck)editor).TreeState = (column.Keys & DBColumnKeys.Notnull) != DBColumnKeys.Notnull;
-            }
-            else if (column.IsReference)
-            {
-                editor = new CellEditorTable();
-                ((CellEditorTable)editor).Table = column.ReferenceTable;
-                ((CellEditorTable)editor).Column = column;
-                ((CellEditorTable)editor).ViewFilter = column.Query;
-            }
-            else if (column.DataType == typeof(string))
-            {
-                if ((column.Keys & DBColumnKeys.Password) == DBColumnKeys.Password)
-                {
-                    editor = new CellEditorPassword();
-                }
-                if (column.SubList != null)
-                {
-                    editor = new CellEditorList();
-                    ((CellEditorList)editor).Format = column.Format;
-                    ((CellEditorList)editor).DataSource = column.GetSubList();
-                }
-                else
-                {
-                    editor = new CellEditorText();
-                    ((CellEditorText)editor).MultiLine = true;
-                    ((CellEditorText)editor).Format = column.Format;
-                    if (column.Format != null && column.Format.Length != 0)
-                        ((CellEditorText)editor).DropDownVisible = false;
-                }
-            }
-            else if (column.DataType == typeof(byte[]))
-            {
-                if ((column.Keys & DBColumnKeys.Access) == DBColumnKeys.Access)
-                    editor = new CellEditorAccess();
-                else if ((column.Keys & DBColumnKeys.Image) == DBColumnKeys.Image)
-                    editor = new CellEditorDBImage() { Column = column };
-                else
-                    editor = new CellEditorFile();
-            }
-            else if (column.DataType == typeof(DateTime))
-            {
-                editor = new CellEditorDate();
-                ((CellEditorDate)editor).Format = column.Format;
-            }
-            else
-            {
-                editor = new CellEditorText();
-                ((CellEditorText)editor).Format = column.Format;
-                ((CellEditorText)editor).MultiLine = false;
-                ((CellEditorText)editor).DropDownVisible = false;
-            }
-            editor.DataType = column.DataType;
-            return editor;
-        }
-
+    {   
         private string defaultFilter = string.Empty;
         private bool highLight = true;
         private static CellStyle DBIStyle;
@@ -564,22 +464,6 @@ namespace DataWF.Data.Gui
             return pcs;
         }
 
-        protected override ILayoutCellEditor GetCellEditor(object listItem, object itemValue, ILayoutCell cell)
-        {
-            ILayoutCellEditor cellEditor = handleGetCellEditor?.Invoke(listItem, itemValue, cell);
-
-            if (cellEditor != null)
-                return cellEditor;
-
-            cellEditor = cell.GetEditor(listItem);
-            if (cellEditor != null)
-                return cellEditor;
-
-            if (cell.Invoker == null)
-                return null;
-            return InitCellEditor(listItem, cell);
-        }
-
         public override bool IsComplex(ILayoutCell cell)
         {
             var dcolumn = cell.Invoker as DBColumn;
@@ -598,15 +482,15 @@ namespace DataWF.Data.Gui
                 DBColumn dbcolumn = ParseDBColumn(name);
                 if (dbcolumn != null)
                 {
-                    string pproperty = dbcolumn?.GroupName ?? "Misc";
-                    Category category = FieldInfo.Categories[pproperty];
+                    string groupName = dbcolumn?.GroupName ?? "Misc";
+                    Category category = FieldInfo.Categories[groupName];
                     if (category == null)
                     {
-                        category = new Category { Name = pproperty };
+                        category = new Category { Name = groupName };
                         FieldInfo.Categories.Add(category);
                     }
-                    var columngroup = dbcolumn.Table.ColumnGroups[pproperty];
-                    category.Header = columngroup?.ToString() ?? Locale.Get("Group", pproperty);
+                    var columngroup = dbcolumn.Table.ColumnGroups[groupName];
+                    category.Header = columngroup?.ToString() ?? Locale.Get("Group", groupName);
 
                     return new LayoutDBField()
                     {
@@ -655,6 +539,81 @@ namespace DataWF.Data.Gui
         protected virtual DBColumn ParseDBColumn(string name)
         {
             return Table?.ParseColumn(name);
+        }
+
+        public override ILayoutCellEditor InitCellEditor(ILayoutCell cell)
+        {
+            DBColumn column = cell.Invoker as DBColumn;
+            if (column != null)
+            {
+                return InitCellEditor(column);
+            }
+            return base.InitCellEditor(cell);
+        }
+
+        public static ILayoutCellEditor InitCellEditor(DBColumn column)
+        {
+            ILayoutCellEditor editor = null;
+            if ((column.Keys & DBColumnKeys.Boolean) == DBColumnKeys.Boolean)
+            {
+                editor = new CellEditorCheck();
+
+                ((CellEditorCheck)editor).ValueNull = null;
+                ((CellEditorCheck)editor).ValueTrue = column.BoolTrue;
+                ((CellEditorCheck)editor).ValueFalse = column.BoolFalse;
+                ((CellEditorCheck)editor).TreeState = (column.Keys & DBColumnKeys.Notnull) != DBColumnKeys.Notnull;
+            }
+            else if (column.IsReference)
+            {
+                editor = new CellEditorTable();
+                ((CellEditorTable)editor).Table = column.ReferenceTable;
+                ((CellEditorTable)editor).Column = column;
+                ((CellEditorTable)editor).ViewFilter = column.Query;
+            }
+            else if (column.DataType == typeof(string))
+            {
+                if ((column.Keys & DBColumnKeys.Password) == DBColumnKeys.Password)
+                {
+                    editor = new CellEditorPassword();
+                }
+                if (column.SubList != null)
+                {
+                    editor = new CellEditorList();
+                    ((CellEditorList)editor).Format = column.Format;
+                    ((CellEditorList)editor).DataSource = column.GetSubList();
+                }
+                else
+                {
+                    editor = new CellEditorText();
+                    ((CellEditorText)editor).MultiLine = true;
+                    ((CellEditorText)editor).Format = column.Format;
+                    if (column.Format != null && column.Format.Length != 0)
+                        ((CellEditorText)editor).DropDownVisible = false;
+                }
+            }
+            else if (column.DataType == typeof(byte[]))
+            {
+                if ((column.Keys & DBColumnKeys.Access) == DBColumnKeys.Access)
+                    editor = new CellEditorAccess();
+                else if ((column.Keys & DBColumnKeys.Image) == DBColumnKeys.Image)
+                    editor = new CellEditorDBImage() { Column = column };
+                else
+                    editor = new CellEditorFile();
+            }
+            else if (column.DataType == typeof(DateTime))
+            {
+                editor = new CellEditorDate();
+                ((CellEditorDate)editor).Format = column.Format;
+            }
+            else
+            {
+                editor = new CellEditorText();
+                ((CellEditorText)editor).Format = column.Format;
+                ((CellEditorText)editor).MultiLine = false;
+                ((CellEditorText)editor).DropDownVisible = false;
+            }
+            editor.DataType = column.DataType;
+            return editor;
         }
     }
 

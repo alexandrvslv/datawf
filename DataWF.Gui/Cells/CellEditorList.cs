@@ -8,12 +8,12 @@ using System.Linq;
 
 namespace DataWF.Gui
 {
+
     public class CellEditorList : CellEditorText
     {
         protected IList listSource;
 
-        public CellEditorList()
-            : base()
+        public CellEditorList() : base()
         {
             HandleTextChanged = false;
         }
@@ -28,7 +28,7 @@ namespace DataWF.Gui
             }
         }
 
-        public LayoutList List
+        public virtual LayoutList List
         {
             get { return DropDown?.Target as LayoutList; }
         }

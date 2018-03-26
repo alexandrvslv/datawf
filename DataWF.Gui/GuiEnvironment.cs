@@ -1,15 +1,123 @@
 ﻿using DataWF.Common;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 
 namespace DataWF.Gui
 {
     public class GuiEnvironment : IDisposable
     {
         private static GuiEnvironment instance = new GuiEnvironment();
+        public static Dictionary<Type, Func<ILayoutCell, ILayoutCellEditor>> CellEditorFabric = new Dictionary<Type, Func<ILayoutCell, ILayoutCellEditor>>();
+
         static GuiEnvironment()
         {
             Instance.Styles.GenerateDefault();
+
+            CellEditorFabric[typeof(string)] = cell =>
+            {
+                ILayoutCellEditor editor = null;
+                if (cell.Name == nameof(object.ToString))
+                {
+                    editor = new CellEditorHeader();
+                }
+                else if (cell.Format == "Path")
+                {
+                    editor = new CellEditorPath();
+                }
+                else if (cell.Password)
+                {
+                    editor = new CellEditorPassword();
+                }
+                else
+                {
+                    editor = new CellEditorText { MultiLine = true };
+                }
+                return editor;
+            };
+            CellEditorFabric[typeof(byte[])] = cell =>
+            {
+                var editor = new CellEditorFile();
+                string property = cell.Name;
+                int index = property.LastIndexOf(".", StringComparison.Ordinal);
+                if (index >= 0)
+                    property = property.Substring(index);
+                editor.PropertyFileName = property + "Name";
+                return editor;
+            };
+            CellEditorFabric[typeof(bool)] = cell =>
+            {
+                return new CellEditorCheck
+                {
+                    ValueTrue = true,
+                    ValueFalse = false,
+                    ValueNull = null,
+                    TreeState = false
+                };
+            };
+            CellEditorFabric[typeof(DateTime)] = cell =>
+            {
+                return new CellEditorDate() { Format = cell.Format };
+            };
+            CellEditorFabric[typeof(DateInterval)] = cell =>
+            {
+                return new CellEditorDate() { Format = cell.Format, TwoDate = true };
+            };
+            CellEditorFabric[typeof(Xwt.CheckBoxState)] = cell =>
+            {
+                return new CellEditorCheck
+                {
+                    ValueTrue = Xwt.CheckBoxState.On,
+                    ValueFalse = Xwt.CheckBoxState.Off,
+                    ValueNull = Xwt.CheckBoxState.Mixed,
+                    TreeState = true
+                };
+            };
+            CellEditorFabric[typeof(CheckedState)] = cell =>
+            {
+                return new CellEditorCheck
+                {
+                    ValueTrue = CheckedState.Checked,
+                    ValueFalse = CheckedState.Unchecked,
+                    ValueNull = CheckedState.Indeterminate,
+                    TreeState = true
+                };
+            };
+            CellEditorFabric[typeof(System.Net.IPAddress)] = cell =>
+            {
+                return new CellEditorNetTree();
+            };
+            CellEditorFabric[typeof(System.Globalization.CultureInfo)] = cell =>
+            {
+                return new CellEditorList { DataSource = Locale.Instance.Cultures };
+            };
+            CellEditorFabric[typeof(System.Text.EncodingInfo)] = cell =>
+            {
+                return new CellEditorList { DataSource = System.Text.Encoding.GetEncodings() };
+            };
+            CellEditorFabric[typeof(Xwt.Drawing.Image)] = cell =>
+            {
+                return new CellEditorImage();
+            };
+            CellEditorFabric[typeof(Xwt.Drawing.Color)] = cell =>
+            {
+                return new CellEditorColor();
+            };
+            CellEditorFabric[typeof(Xwt.Drawing.Font)] = cell =>
+            {
+                return new CellEditorFont();
+            };
+        }
+
+        public static ILayoutCellEditor GetCellEditor(ILayoutCell cell)
+        {
+            if (GuiEnvironment.CellEditorFabric.TryGetValue(cell?.Invoker?.DataType, out var generator))
+            {
+                return generator(cell);
+            }
+            return null;
         }
 
         public static GuiEnvironment Instance

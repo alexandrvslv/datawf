@@ -15,6 +15,7 @@ using Mono.Cecil;
 
 namespace DataWF.Data.Gui
 {
+
     public class Main : Window, IDockMain
     {
         public static void Start(string[] args, ToolkitType type)
@@ -23,18 +24,10 @@ namespace DataWF.Data.Gui
             GuiService.UIThread = Thread.CurrentThread;
             //exceptions
             Application.UnhandledException += (sender, e) =>
-                    {
-                        Helper.OnException(e.ErrorException);
-                    };
-            AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
-                    {
-                        if (e.ExceptionObject is Exception)
-                        {
-                            Helper.Logs.Add(new StateInfo((Exception)e.ExceptionObject));
-                            Helper.SetDirectory(Environment.SpecialFolder.LocalApplicationData);
-                            Helper.Logs.Save("crush" + DateTime.Now.ToString("yyMMddhhmmss") + ".log");
-                        }
-                    };
+            {
+                Helper.OnException(e.ErrorException);
+            };
+            
 
             //Load Configuration
             for (int i = 0; i < args.Length; i++)
@@ -130,7 +123,7 @@ namespace DataWF.Data.Gui
             menuView = new ToolDropDown(
                     BuildMenuItem(new LogExplorer()),
                     BuildMenuItem(new StartPage()),
-                    BuildMenuItem(new ListEditor(new TableLayoutList())),
+                    BuildMenuItem(new ListEditor()),
                     new ToolSeparator())
             { Name = "View", DisplayStyle = ToolItemDisplayStyle.Text };
 
