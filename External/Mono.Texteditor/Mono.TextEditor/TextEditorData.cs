@@ -1360,7 +1360,7 @@ namespace Mono.TextEditor
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("Text paste handler exception:" + e);
+                    System.Diagnostics.Debug.WriteLine("Text paste handler exception:" + e);
                     newText = text;
                 }
                 if (newText != text)

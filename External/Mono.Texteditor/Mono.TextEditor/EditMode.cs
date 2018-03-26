@@ -227,7 +227,7 @@ namespace Mono.TextEditor
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error while executing action " + action.ToString() + " :" + e);
+                System.Diagnostics.Debug.WriteLine("Error while executing action " + action.ToString() + " :" + e);
             }
         }
 
@@ -247,7 +247,7 @@ namespace Mono.TextEditor
                 var sb = new System.Text.StringBuilder("Error while executing actions ");
                 foreach (var action in actions)
                     sb.AppendFormat(" {0}", action);
-                Console.WriteLine(sb.ToString() + ": " + e);
+                System.Diagnostics.Debug.WriteLine(sb.ToString() + ": " + e);
             }
 
         }

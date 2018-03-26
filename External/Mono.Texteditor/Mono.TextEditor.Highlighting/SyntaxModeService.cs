@@ -178,7 +178,7 @@ namespace Mono.TextEditor.Highlighting
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
+                    System.Diagnostics.Debug.WriteLine(e);
                 }
                 syntaxModeLookup.Remove(mimeType);
             }
@@ -355,7 +355,7 @@ namespace Mono.TextEditor.Highlighting
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine("Syntax highlighting exception:" + e);
+                        System.Diagnostics.Debug.WriteLine("Syntax highlighting exception:" + e);
                     }
                     if (doUpdate)
                     {
@@ -411,7 +411,7 @@ namespace Mono.TextEditor.Highlighting
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine("Exception in syntax mode update thread:" + e);
+                        System.Diagnostics.Debug.WriteLine("Exception in syntax mode update thread:" + e);
                     }
                 }
                 queueSignal.WaitOne();
@@ -443,7 +443,7 @@ namespace Mono.TextEditor.Highlighting
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
+                    System.Diagnostics.Debug.WriteLine(e);
                 }
             }
         }
@@ -459,8 +459,8 @@ namespace Mono.TextEditor.Highlighting
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error while scanning xml:");
-                Console.WriteLine(e);
+                System.Diagnostics.Debug.WriteLine("Error while scanning xml:");
+                System.Diagnostics.Debug.WriteLine(e);
                 return null;
             }
         }
@@ -483,8 +483,9 @@ namespace Mono.TextEditor.Highlighting
                     return !String.IsNullOrEmpty(mimeTypes);
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                System.Diagnostics.Debug.WriteLine(e);
                 return false;
             }
         }
@@ -579,8 +580,8 @@ namespace Mono.TextEditor.Highlighting
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error while scanning json:");
-                Console.WriteLine(e);
+                System.Diagnostics.Debug.WriteLine("Error while scanning json:");
+                System.Diagnostics.Debug.WriteLine(e);
                 return null;
             }
         }

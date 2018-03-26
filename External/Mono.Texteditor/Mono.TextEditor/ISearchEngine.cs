@@ -294,8 +294,9 @@ namespace Mono.TextEditor
 				if (!searchRequest.CaseSensitive)
 					options |= RegexOptions.IgnoreCase;
 				regex = new Regex (searchRequest.SearchPattern, options);
-			} catch (Exception) {
-				regex = null;
+			} catch (Exception e) {
+                System.Diagnostics.Debug.WriteLine(e);
+                regex = null;
 			}
 		}
 
@@ -309,7 +310,8 @@ namespace Mono.TextEditor
 				var r = new Regex (searchRequest.SearchPattern, options);
 				return r != null;
 			} catch (Exception e) {
-				error = e.Message;
+                System.Diagnostics.Debug.WriteLine(e);
+                error = e.Message;
 				return false;
 			}
 		}

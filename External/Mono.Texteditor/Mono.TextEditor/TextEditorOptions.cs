@@ -400,7 +400,7 @@ namespace Mono.TextEditor
                     }
                     catch
                     {
-                        Console.WriteLine("Could not load font: {0}", FontName);
+                        System.Diagnostics.Debug.WriteLine("Could not load font: {0}", FontName);
                     }
                     if (font == null || String.IsNullOrEmpty(font.Family))
                         font = Font.FromName(DEFAULT_FONT);
@@ -438,7 +438,7 @@ namespace Mono.TextEditor
                     }
                     catch
                     {
-                        Console.WriteLine("Could not load gutter font: {0}", GutterFontName);
+                        System.Diagnostics.Debug.WriteLine("Could not load gutter font: {0}", GutterFontName);
                     }
                     if (gutterFont == null || String.IsNullOrEmpty(gutterFont.Family))
                         gutterFont = Font.WithSize(Font.Size * Zoom);

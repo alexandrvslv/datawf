@@ -264,9 +264,9 @@ namespace Mono.TextEditor.Utils
                 {
                     System.IO.File.Delete(tmpPath);
                 }
-                catch
+                catch(Exception e)
                 {
-                    // nothing
+                    System.Diagnostics.Debug.WriteLine(e);
                 }
                 throw;
             }
@@ -320,8 +320,9 @@ namespace Mono.TextEditor.Utils
                         if (wtmp != null)
                             File.Move(wtmp, destFile);
                     }
-                    catch
+                    catch(Exception e)
                     {
+                        System.Diagnostics.Debug.WriteLine(e);
                         wtmp = null;
                     }
                     throw;
@@ -334,8 +335,9 @@ namespace Mono.TextEditor.Utils
                         {
                             File.Delete(wtmp);
                         }
-                        catch
+                        catch(Exception e)
                         {
+                            System.Diagnostics.Debug.WriteLine(e);
                         }
                     }
                 }
@@ -488,7 +490,7 @@ namespace Mono.TextEditor.Utils
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                System.Diagnostics.Debug.WriteLine(e);
             }
             return Encoding.ASCII;
         }

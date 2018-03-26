@@ -48,13 +48,13 @@ namespace Mono.TextEditor
 		{
 			if (line != null) {
 				try {
-					var info = lineStates [line.LineNumber];
+                    var info = lineStates?[line.LineNumber];
 					if (info != null) {
 						return info.state;
 					}
-				} catch (Exception) {
-
-				}
+				} catch (Exception e) {
+                    System.Diagnostics.Debug.WriteLine(e);
+                }
 			}
 			return Mono.TextEditor.TextDocument.LineState.Unchanged;
 		}
@@ -97,7 +97,7 @@ namespace Mono.TextEditor
 				if (trackDocument != null)
 					trackDocument.CommitLineUpdate (lineNumber); 
 			} catch (Exception ex) {
-				Console.WriteLine ("error while DiffTracker.HandleLineChanged:" + ex);
+				System.Diagnostics.Debug.WriteLine ("error while DiffTracker.HandleLineChanged:" + ex);
 			}
 		}
 

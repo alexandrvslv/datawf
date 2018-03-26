@@ -181,7 +181,7 @@ namespace Mono.TextEditor
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine(ex);
+                        System.Diagnostics.Debug.WriteLine(ex);
                     }
                 }
             }
@@ -398,7 +398,7 @@ namespace Mono.TextEditor
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error while executing " + action + " :" + e);
+                System.Diagnostics.Debug.WriteLine("Error while executing " + action + " :" + e);
             }
         }
 
@@ -976,6 +976,11 @@ namespace Mono.TextEditor
         void SetCursor(CursorType cursor)
         {
             Cursor = currentCursor = cursor ?? CursorType.Arrow;
+        }
+
+        public void RaiseKeyPressed(KeyEventArgs evt)
+        {
+            OnKeyPressed(evt);
         }
 
         protected override void OnKeyPressed(KeyEventArgs evt)
@@ -1894,7 +1899,7 @@ namespace Mono.TextEditor
                     }
                     catch (Exception e)
                     {
-                        System.Console.WriteLine(e);
+                        System.Diagnostics.Debug.WriteLine(e);
                     }
                 }
                 // take the line real render width from the text view margin rendering (a line can consist of more than 
@@ -2841,8 +2846,8 @@ namespace Mono.TextEditor
                 }
                 catch (Exception e)
                 {
-                    System.Console.WriteLine("Exception in tooltip provider " + tp + " GetItem:");
-                    System.Console.WriteLine(e);
+                    System.Diagnostics.Debug.WriteLine("Exception in tooltip provider " + tp + " GetItem:");
+                    System.Diagnostics.Debug.WriteLine(e);
                 }
                 if (item != null)
                 {
@@ -2870,8 +2875,8 @@ namespace Mono.TextEditor
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("-------- Exception while creating tooltip:");
-                    Console.WriteLine(e);
+                    System.Diagnostics.Debug.WriteLine("-------- Exception while creating tooltip:");
+                    System.Diagnostics.Debug.WriteLine(e);
                 }
                 if (tw == tipWindow)
                     return false;

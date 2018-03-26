@@ -59,7 +59,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.OdfGui", "DataWF.Odf
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Odf", "DataWF.Odf\DataWF.Odf.csproj", "{E82E5D9B-4E63-4820-9EB3-383D1D5D4C66}"
 EndProject
-Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "DataWF.Module.Common", "DataWF.Module.Common\DataWF.Module.Common.csproj", "{0AB0FAC1-55E1-45D1-AAF5-CC6FCC8954D4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Module.Common", "DataWF.Module.Common\DataWF.Module.Common.csproj", "{0AB0FAC1-55E1-45D1-AAF5-CC6FCC8954D4}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
