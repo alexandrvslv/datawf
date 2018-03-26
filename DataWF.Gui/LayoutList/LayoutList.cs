@@ -4753,128 +4753,41 @@ namespace DataWF.Gui
 			}
 		}
 
-		public static ILayoutCellEditor InitCellEditor(ILayoutCell cell)
+		public virtual ILayoutCellEditor InitCellEditor(ILayoutCell cell)
 		{
 			Type type = cell.Invoker.DataType;
-			ILayoutCellEditor editor = null;
-			if (type == typeof(string))
-			{
-				if (cell.Name == nameof(object.ToString))
-				{
-					editor = new CellEditorHeader();
-				}
-				else if (cell.Format == "Path")
-				{
-					editor = new CellEditorPath();
-				}
-				else if (cell.Password)
-				{
-					editor = new CellEditorPassword();
-				}
-				else
-				{
-					editor = new CellEditorText { MultiLine = true };
-				}
-			}
-			else if (type == typeof(byte[]))
-			{
-				editor = new CellEditorFile();
-				string property = cell.Name;
-				int index = property.LastIndexOf(".", StringComparison.Ordinal);
-				if (index >= 0)
-					property = property.Substring(index);
-				((CellEditorFile)editor).PropertyFileName = property + "Name";
-			}
-			else if (type == typeof(bool))
-			{
-				editor = new CellEditorCheck
-				{
-					ValueTrue = true,
-					ValueFalse = false,
-					ValueNull = null,
-					TreeState = false
-				};
-			}
-			else if (type == typeof(CheckBoxState))
-			{
-				editor = new CellEditorCheck
-				{
-					ValueTrue = CheckBoxState.On,
-					ValueFalse = CheckBoxState.Off,
-					ValueNull = CheckBoxState.Mixed,
-					TreeState = true
-				};
-			}
-			else if (type == typeof(CheckedState))
-			{
-				editor = new CellEditorCheck
-				{
-					ValueTrue = CheckedState.Checked,
-					ValueFalse = CheckedState.Unchecked,
-					ValueNull = CheckedState.Indeterminate,
-					TreeState = true
-				};
-			}
-			else if (type == typeof(System.Net.IPAddress))
-			{
-				editor = new CellEditorNetTree();
-			}
-			else if (type == typeof(Image))
-			{
-				editor = new CellEditorImage();
-			}
-			else if (type == typeof(DateTime))
-			{
-				editor = new CellEditorDate() { Format = cell.Format };
-			}
-			else if (type == typeof(DateInterval))
-			{
-				editor = new CellEditorDate() { Format = cell.Format, TwoDate = true };
-			}
-			else if (type == typeof(System.Globalization.CultureInfo))
-			{
-				editor = new CellEditorList { DataSource = Locale.Instance.Cultures };
-			}
-			else if (type == typeof(EncodingInfo))
-			{
-				editor = new CellEditorList { DataSource = Encoding.GetEncodings() };
-			}
-			else if (type == typeof(Color))
-			{
-				editor = new CellEditorColor() { Format = cell.Format };
-			}
-			else if (type == typeof(Font))
-			{
-				editor = new CellEditorFont();
-			}
-			else if (type.IsEnum)
-			{
-				editor = new CellEditorEnum();
-			}
-			else if (TypeHelper.IsList(type))
-			{
-				editor = new CellEditorFields() { Header = type.Name };
-			}
-			else if (GuiService.IsCompound(type))
-			{
-				editor = new CellEditorFields() { Header = type.Name };
-			}
-			else
-			{
-				if (cell.Format == null)
-				{
-					if (type == typeof(decimal) || type == typeof(double) || type == typeof(float))
-						cell.Format = "0.00";
-					else if (type == typeof(int) || type == typeof(long) || type == typeof(short))
-						cell.Format = "########################";
-				}
-				editor = new CellEditorText()
-				{
-					Format = cell.Format,
-					MultiLine = false,
-					DropDownWindow = false
-				};
-			}
+            if (cell.Format == null)
+            {
+                if (type == typeof(decimal) || type == typeof(double) || type == typeof(float))
+                    cell.Format = "0.00";
+                else if (type == typeof(int) || type == typeof(long) || type == typeof(short))
+                    cell.Format = "########################";
+            }
+            ILayoutCellEditor editor = GuiEnvironment.GetCellEditor(cell);
+            if (editor == null)
+            {
+                if (type.IsEnum)
+                {
+                    editor = new CellEditorEnum();
+                }
+                else if (TypeHelper.IsList(type))
+                {
+                    editor = new CellEditorFields() { Header = type.Name };
+                }
+                else if (GuiService.IsCompound(type))
+                {
+                    editor = new CellEditorFields() { Header = type.Name };
+                }
+                else
+                {
+                    editor = new CellEditorText()
+                    {
+                        Format = cell.Format,
+                        MultiLine = false,
+                        DropDownWindow = false
+                    };
+                }
+            }
 			editor.DataType = type;
 			return editor;
 		}

@@ -124,7 +124,6 @@ namespace DataWF.Data.Gui
 			PackStart(container, true, true);
 			Name = "DataExplorer";
 
-			listExplorer.GetCellEditor += TableLayoutList.InitCellEditor;
 			ose.Target = listExplorer;
 			ose.ButtonAcceptClick += AcceptOnActivated;
 
@@ -450,11 +449,13 @@ namespace DataWF.Data.Gui
 
 		public void AddTable(DBSchema schema, DBTableGroup gp)
 		{
-			var table = new DBTable<DBItem>();
-			table.Name = "newtable";
-			table.Group = gp;
-			table.Schema = schema;
-			table.Columns.Add(new DBColumn()
+            var table = new DBTable<DBItem>
+            {
+                Name = "newtable",
+                Group = gp,
+                Schema = schema
+            };
+            table.Columns.Add(new DBColumn()
 			{
 				Name = "unid",
 				Keys = DBColumnKeys.Primary,
@@ -491,26 +492,30 @@ namespace DataWF.Data.Gui
 			ShowNewItem(table);
 		}
 
-		public void AddColumnGroup(DBTable table)
-		{
-			var item = new DBColumnGroup();
-			item.Table = table;
-			item.Name = "newcolumngroup";
+        public void AddColumnGroup(DBTable table)
+        {
+            var item = new DBColumnGroup()
+            {
+                Table = table,
+                Name = "newcolumngroup"
+            };
 
-			ShowNewItem(item);
-		}
+            ShowNewItem(item);
+        }
 
-		public void AddColumn(DBTable table, DBColumnGroup gp)
-		{
-			var item = new DBColumn();
-			item.Group = gp;
-			item.Table = table;
-			item.Name = "newcolumn";
+        public void AddColumn(DBTable table, DBColumnGroup gp)
+        {
+            var item = new DBColumn()
+            {
+                Group = gp,
+                Table = table,
+                Name = "newcolumn"
+            };
 
-			ShowNewItem(item);
-		}
+            ShowNewItem(item);
+        }
 
-		public void AddIndex(DBTable table, DBColumn column)
+        public void AddIndex(DBTable table, DBColumn column)
 		{
 			var item = new DBIndex();
 			item.Table = table;

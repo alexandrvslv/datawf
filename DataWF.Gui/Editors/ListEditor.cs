@@ -174,7 +174,12 @@ namespace DataWF.Gui
         protected virtual void OnListSelectionChanged(object sender, EventArgs e)
         {
             if (list.Mode != LayoutListMode.Fields && GuiService.Main != null && list.SelectedItem != null)
-                GuiService.Main.ShowProperty(this, list.SelectedItem, true);
+            {
+                if (AutoShowDetails)
+                {
+                    GuiService.Main.ShowProperty(this, list.SelectedItem, true);
+                }
+            }
         }
 
         public object DataSource
@@ -661,6 +666,9 @@ namespace DataWF.Gui
         {
             get { return true; }
         }
+
+        [DefaultValue(false)]
+        public bool AutoShowDetails { get; set; }
 
         #endregion
 

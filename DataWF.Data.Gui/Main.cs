@@ -178,7 +178,7 @@ namespace DataWF.Data.Gui
             dock.ContentFocus += DockOnContentFocus;
             //icon.Image = Image.FromResource(GetType(), "datawf.ico"); ;
 
-            var vbox = new VBox();
+            var vbox = new VBox() { Spacing = 0 };
             vbox.PackStart(bar, false, false);
             vbox.PackStart(dock, true, true);
             vbox.PackStart(statusBar, false, false);
