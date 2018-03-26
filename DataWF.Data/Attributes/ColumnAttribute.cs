@@ -146,6 +146,7 @@ namespace DataWF.Data
             if (!table.Columns.Contains(name))
             {
                 Column = CreateColumn(name);
+                Column.DisplayName = $"{Column.DisplayName} {culture.TwoLetterISOLanguageName.ToUpperInvariant()}";
                 Column.GroupName = ColumnName;
                 Column.Culture = culture;
                 Table.Table.Columns.Add(Column);
