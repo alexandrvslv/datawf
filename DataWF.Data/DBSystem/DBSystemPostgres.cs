@@ -95,6 +95,15 @@ namespace DataWF.Data
             }
         }
 
+        public override void WriteValue(DBColumn column, object value, IDataParameter parameter, IDbConnection connection)
+        {
+            base.WriteValue(column, value, parameter, connection);
+            if (column.DBDataType == DBDataType.TimeSpan)
+            {
+                parameter.DbType = DbType.Time;
+            }
+        }
+
         public override object ReadValue(DBColumn column, object value)
         {
             if (value == DBNull.Value)
