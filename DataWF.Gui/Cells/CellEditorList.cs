@@ -81,9 +81,9 @@ namespace DataWF.Gui
                     editor.Value = ParseValue(flist[0], EditItem, DataType);
                     string value = FormatValue(flist[0], EditItem, DataType) as string;
                     int index = value.IndexOf(filter, StringComparison.OrdinalIgnoreCase);
-                    TextControl.Text = value;
-                    TextControl.SelectionStart = index + filter.Length;
-                    TextControl.SelectionLength = value.Length - TextControl.SelectionStart;
+                    TextWidget.Text = value;
+                    TextWidget.SelectionStart = index + filter.Length;
+                    TextWidget.SelectionLength = value.Length - TextWidget.SelectionStart;
 
                     DropDown.Hide();
                     handleText = true;

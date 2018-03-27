@@ -160,7 +160,7 @@ namespace DataWF.Data.Gui
             var tableEditor = editor.GetCacheControl<TableEditor>();
 
             tableEditor.ReadOnly = ReadOnly;
-            tableEditor.KeyPressed -= TextBoxKeyPress;
+            tableEditor.KeyPressed -= OnTextKeyPressed;
 
             if (table != null)
             {
@@ -241,9 +241,9 @@ namespace DataWF.Data.Gui
             {
                 var item = (DBItem)e.Item;
                 Value = ParseValue(item);
-                ((TextEntry)editor.Widget).Changed -= OnControlValueChanged;
+                ((TextEntry)editor.Widget).Changed -= OnTextChanged;
                 ((TextEntry)editor.Widget).Text = item.ToString();
-                ((TextEntry)editor.Widget).Changed += OnControlValueChanged;
+                ((TextEntry)editor.Widget).Changed += OnTextChanged;
                 DropDown.Hide();
             }
         }

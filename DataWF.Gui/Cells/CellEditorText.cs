@@ -91,18 +91,15 @@ namespace DataWF.Gui
             }
         }
 
-        public string EditorText
+        public virtual string EditorText
         {
-            get
-            {
-                return (editor?.Widget as TextEntry)?.Text;
-            }
+            get { return TextWidget?.Text; }
             set
             {
                 bool flag = handleText;
                 handleText = false;
-                if (editor?.Widget is TextEntry)
-                    ((TextEntry)editor.Widget).Text = value;
+                if (TextWidget != null)
+                    TextWidget.Text = value;
                 if (DropDown != null && DropDown.Target is RichTextView)
                     ((RichTextView)DropDown.Target).LoadText(value ?? string.Empty, Xwt.Formats.TextFormat.Plain);
                 handleText = flag;
@@ -123,31 +120,30 @@ namespace DataWF.Gui
 
         public virtual object Value
         {
-            get { return editor?.Value; }
+            get { return Editor?.Value; }
             set
             {
-                if (editor != null)
-                    editor.Value = ParseValue(value, EditItem, DataType);
                 if (Editor != null)
                 {
+                    Editor.Value = ParseValue(value, EditItem, DataType);
                     EditorText = FormatValue(value) as string;
                 }
             }
         }
 
-        public TextEntry TextControl
+        public TextEntry TextWidget
         {
-            get { return editor.Widget as TextEntry; }
+            get { return Editor.Widget as TextEntry; }
         }
 
         protected virtual void SetFilter(string filter)
         { }
 
-        protected virtual void OnControlValueChanged(object sender, EventArgs e)
+        protected virtual void OnTextChanged(object sender, EventArgs e)
         {
             if (handleText)
             {
-                var text = sender is TextEntry ? ((TextEntry)sender).Text : sender is RichTextView ? ((RichTextView)sender).PlainText : string.Empty;
+                var text = sender == Editor.Widget ? EditorText : sender is RichTextView ? ((RichTextView)sender).PlainText : string.Empty;
                 handleText = false;
                 if (Filtering && !text.Equals(filter, StringComparison.OrdinalIgnoreCase))
                 {
@@ -157,7 +153,7 @@ namespace DataWF.Gui
                 try
                 {
                     if (sender != editor.Widget && EditorText != text)
-                        ((TextEntry)editor.Widget).Text = text;
+                        EditorText = text;
                     editor.Value = ParseValue(EditorText);
                 }
                 catch (Exception ex)
@@ -250,27 +246,27 @@ namespace DataWF.Gui
             {
                 var box = editor.GetCacheControl<TextEntry>();
                 box.MultiLine = MultiLine;
-                box.KeyPressed += TextBoxKeyPress;
-                box.KeyReleased += TextBoxKeyUp;
+                box.KeyPressed += OnTextKeyPressed;
+                box.KeyReleased += OnTextKeyReleased;
                 box.ShowFrame = false;
                 box.ReadOnly = ReadOnly;
                 //box.Mask = format;
                 //box.ValidatingType = type;
                 if (!ReadOnly && handleText)
-                    box.Changed += OnControlValueChanged;
+                    box.Changed += OnTextChanged;
                 return box;
             }
             else
             {
                 var box = editor.GetCacheControl<TextEntry>();
                 box.MultiLine = MultiLine;
-                box.KeyPressed += TextBoxKeyPress;
-                box.KeyReleased += TextBoxKeyUp;
+                box.KeyPressed += OnTextKeyPressed;
+                box.KeyReleased += OnTextKeyReleased;
                 box.ShowFrame = false;
                 if (box.ReadOnly != ReadOnly)
                     box.ReadOnly = ReadOnly;
                 if (!ReadOnly && handleText)
-                    box.Changed += OnControlValueChanged;
+                    box.Changed += OnTextChanged;
                 return box;
             }
         }
@@ -303,9 +299,8 @@ namespace DataWF.Gui
             return null;
         }
 
-        protected virtual void TextBoxKeyUp(object sender, KeyEventArgs e)
+        protected virtual void OnTextKeyReleased(object sender, KeyEventArgs e)
         {
-            var box = sender as TextEntry;
             if (e.Key == Key.Down)
             {
                 if (!DropDown.Visible && !e.Handled)
@@ -320,7 +315,7 @@ namespace DataWF.Gui
             }
         }
 
-        protected virtual void TextBoxKeyPress(object sender, KeyEventArgs e)
+        protected virtual void OnTextKeyPressed(object sender, KeyEventArgs e)
         {
             if (DataType.IsPrimitive || DataType == typeof(decimal))
             {
@@ -330,7 +325,7 @@ namespace DataWF.Gui
                 }
 
                 // only allow one decimal point
-                bool dpoint = (sender as TextEntry).Text.IndexOf('.') != -1 || (sender as TextEntry).Text.IndexOf(',') != -1;
+                bool dpoint = EditorText.IndexOf('.') != -1 || EditorText.IndexOf(',') != -1;
                 if (!dpoint && (e.Key == Key.Comma || e.Key == Key.Period))
                 {
                     e.Handled = false;
@@ -347,11 +342,11 @@ namespace DataWF.Gui
             }
             if (editor != null)
             {
-                if (editor.Widget is TextEntry)
+                if (TextWidget !=null)
                 {
-                    ((TextEntry)editor.Widget).Changed -= OnControlValueChanged;
-                    ((TextEntry)editor.Widget).KeyPressed -= TextBoxKeyPress;
-                    ((TextEntry)editor.Widget).KeyReleased -= TextBoxKeyUp;
+                    TextWidget.Changed -= OnTextChanged;
+                    TextWidget.KeyPressed -= OnTextKeyPressed;
+                    TextWidget.KeyReleased -= OnTextKeyReleased;
                 }
                 editor.Image = null;
                 editor.DropDown = null;

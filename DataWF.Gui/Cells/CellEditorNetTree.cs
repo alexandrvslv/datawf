@@ -52,9 +52,9 @@ namespace DataWF.Gui
 
                 string value = FormatValue(list[0].Tag, EditItem, DataType) as string;
                 int index = value.IndexOf(filter, StringComparison.OrdinalIgnoreCase);
-                TextControl.Text = value;
-                TextControl.SelectionStart = index + filter.Length;
-                TextControl.SelectionLength = value.Length - TextControl.SelectionStart;
+                TextWidget.Text = value;
+                TextWidget.SelectionStart = index + filter.Length;
+                TextWidget.SelectionLength = value.Length - TextWidget.SelectionStart;
 
                 editor.Value = list[0].Tag;
             }

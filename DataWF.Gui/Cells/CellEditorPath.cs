@@ -19,9 +19,9 @@ namespace DataWF.Gui
             if (picker.Run(editor.ParentWindow))
             {
                 editor.Value = picker.FileName;
-                ((TextEntry)editor.Widget).Changed -= OnControlValueChanged;
+                ((TextEntry)editor.Widget).Changed -= OnTextChanged;
                 ((TextEntry)editor.Widget).Text = picker.FileName;
-                ((TextEntry)editor.Widget).Changed += OnControlValueChanged;
+                ((TextEntry)editor.Widget).Changed += OnTextChanged;
             }
         }
 

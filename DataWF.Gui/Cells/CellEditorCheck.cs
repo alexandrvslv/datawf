@@ -22,7 +22,7 @@ namespace DataWF.Gui
 
         public object ValueNull { get; set; }
 
-        protected override void OnControlValueChanged(object sender, EventArgs e)
+        protected override void OnTextChanged(object sender, EventArgs e)
         {
             if (handleText)
                 Editor.Value = ParseValue(((CheckBox)sender).State, EditItem, DataType);
@@ -97,7 +97,7 @@ namespace DataWF.Gui
             if (!ReadOnly)
             {
                 box.Sensitive = true;
-                box.Toggled += OnControlValueChanged;
+                box.Toggled += OnTextChanged;
             }
             else
             {
@@ -122,7 +122,7 @@ namespace DataWF.Gui
         public override void FreeEditor()
         {
             if (editor?.Widget is CheckBox)
-                ((CheckBox)editor.Widget).Toggled -= OnControlValueChanged;
+                ((CheckBox)editor.Widget).Toggled -= OnTextChanged;
             base.FreeEditor();
         }
     }

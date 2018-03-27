@@ -17,15 +17,36 @@ namespace DataWF.Gui
             return "*******";
         }
 
+        public override string EditorText
+        {
+            get { return (Editor?.Widget as PasswordEntry)?.Password; }
+            set
+            {
+                bool flag = handleText;
+                handleText = false;
+                ((PasswordEntry)Editor.Widget).Password = value;
+                handleText = flag;
+            }
+        }
+
         public override Widget InitEditorContent()
         {
             var box = editor.GetCacheControl<PasswordEntry>();
-            box.KeyPressed += TextBoxKeyPress;
-            box.KeyReleased += TextBoxKeyUp;
+            box.KeyPressed += OnTextKeyPressed;
+            box.KeyReleased += OnTextKeyReleased;
             //box.Readonly = readOnly;
             if (!ReadOnly && handleText)
-                box.Changed += OnControlValueChanged;
+                box.Changed += OnTextChanged;
             return box;
+        }
+
+        public override void FreeEditor()
+        {
+            base.FreeEditor();
+            var password = editor.Widget as PasswordEntry;
+            password.KeyPressed -= OnTextKeyPressed;
+            password.KeyReleased -= OnTextKeyReleased;
+            password.Changed -= OnTextChanged;
         }
     }
 }

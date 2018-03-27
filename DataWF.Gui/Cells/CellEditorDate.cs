@@ -54,9 +54,9 @@ namespace DataWF.Gui
             return interval;
         }
 
-        protected override void TextBoxKeyPress(object sender, KeyEventArgs e)
+        protected override void OnTextKeyPressed(object sender, KeyEventArgs e)
         {
-            base.TextBoxKeyPress(sender, e);
+            base.OnTextKeyPressed(sender, e);
             //var box = sender as MaskedTextBox;
             if (e.Key == Key.BackSpace || e.Key == Key.Delete)
             {
