@@ -89,8 +89,16 @@ namespace DataWF.Module.Flow
 
         public static object DefaultGenerator(string name)
         {
+            var sequnce = DBTable.Schema.Sequences[name];
+            if (sequnce == null)
+            {
+                sequnce = new DBSequence(name) { };
+                DBTable.Schema.Sequences.Add(sequnce);
+                DBTable.Schema.Connection.ExecuteQuery(sequnce.FormatSql(DDLType.Create));
+            }
             //return DBService.ExecuteQuery(FlowEnvironment.Config.Schema, FlowEnvironment.Config.Schema.Sequence.Create(name, 0, 1));
-            throw new NotImplementedException();
+            var item = sequnce.NextValue();
+            return $"{item:,D8}";
         }
 
         public static object DefaultGenerator(Template template)
@@ -301,28 +309,7 @@ namespace DataWF.Module.Flow
             IsComplete = false;
         }
 
-        public override AccessValue Access
-        {
-            get { return Template?.Access ?? base.Access; }
-        }
-
-        [Browsable(false)]
-        public new bool IsChanged
-        {
-            get { return (DBState != DBUpdateState.Default) || changes != 0; }
-            set
-            {
-                if (!value)
-                    changes = 0;
-            }
-        }
-
-        public object this[TemplateParam attribute]
-        {
-            get { return this[attribute.Param as DBColumn]; }
-            set { this[attribute.Param as DBColumn] = value; }
-        }
-
+        
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
         {
@@ -331,14 +318,14 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("template_id", Keys = DBColumnKeys.View)]
-        [Index("ddocument_template_id", Unique = false)]
+        [Column("template_id", Keys = DBColumnKeys.View), Index("ddocument_template_id", Unique = false)]
         public int? TemplateId
         {
             get { return GetProperty<int?>(); }
             set { SetProperty(value); }
         }
 
+        [ReadOnly(true)]
         [Reference("fk_ddocument_template_id", nameof(TemplateId))]
         public Template Template
         {
@@ -373,6 +360,200 @@ namespace DataWF.Module.Flow
             set { SetReference(value, Table.GroupKey); }
         }
 
+        [Column("document_date")]
+        public DateTime? DocumentDate
+        {
+            get { return GetProperty<DateTime?>(nameof(DocumentDate)); }
+            set { SetProperty(value, nameof(DocumentDate)); }
+        }
+
+        [Column("document_number", 40, Keys = DBColumnKeys.Code), Index("ddocuument_document_number")]
+        public string Number
+        {
+            get { return GetProperty<string>(nameof(Number)); }
+            set { SetProperty(value, nameof(Number)); }
+        }
+
+        [Browsable(false)]
+        [Column("customer_id")]
+        public int? CustomerId
+        {
+            get { return GetProperty<int?>(nameof(CustomerId)); }
+            set { SetProperty(value, nameof(CustomerId)); }
+        }
+
+        [Reference("fk_ddocument_customer_id", nameof(CustomerId))]
+        public Customer Customer
+        {
+            get { return GetPropertyReference<Customer>(nameof(CustomerId)); }
+            set { SetPropertyReference(value, nameof(CustomerId)); }
+        }
+
+        [Browsable(false)]
+        [Column("address_id")]
+        public int? AddressId
+        {
+            get { return GetProperty<int?>(nameof(AddressId)); }
+            set { SetProperty(value, nameof(AddressId)); }
+        }
+
+        [Reference("fk_ddocument_address_id", nameof(AddressId))]
+        public Address Address
+        {
+            get { return GetPropertyReference<Address>(nameof(AddressId)); }
+            set { SetPropertyReference(value, nameof(AddressId)); }
+        }
+
+        [Browsable(false)]
+        [Column("work_id", ColumnType = DBColumnTypes.Internal)]
+        public string WorkId
+        {
+            get { return GetProperty<string>(nameof(WorkId)); }
+            set { SetProperty(value, nameof(WorkId)); }
+        }
+
+        [Category("Current State")]
+        [Reference("fk_ddocument_work_id", nameof(WorkId))]
+        public DocumentWork WorkCurrent
+        {
+            get { return GetPropertyReference<DocumentWork>(nameof(WorkId)); }
+            set { SetPropertyReference(value, nameof(WorkId)); }
+        }
+
+        [Category("Current State")]
+        [Column("work_user", ColumnType = DBColumnTypes.Internal)]
+        public string WorkUser
+        {
+            get { return GetProperty<string>(nameof(WorkUser)); }
+            set { SetProperty(value, nameof(WorkUser)); }
+        }
+
+        [Category("Current State")]
+        [Column("work_stage", ColumnType = DBColumnTypes.Internal)]
+        public string WorkStage
+        {
+            get { return GetProperty<string>(nameof(WorkStage)); }
+            set { SetProperty(value, nameof(WorkStage)); }
+        }
+
+        [Category("Current State")]
+        public DateTime? WorkDate
+        {
+            get { return WorkCurrent == null ? null : WorkCurrent.Date; }
+        }
+
+        [Category("Current State")]
+        public bool IsCurrent
+        {
+            get { return WorkCurrent != null; }
+        }
+
+        [Category("Current State")]
+        public bool IsWork
+        {
+            get { return WorkCurrent != null || GetWork() != null; }
+        }
+
+        [Browsable(false)]
+        public Work Work
+        {
+            get { return Template.Work; }
+        }        
+
+        [Browsable(false)]
+        public DocInitType IniType
+        {
+            get { return initype; }
+        }
+
+        [Column("is_important")]
+        public bool? Important
+        {
+            get { return GetProperty<bool?>(nameof(Important)); }
+            set { SetProperty(value, nameof(Important)); }
+        }
+
+        [Category("Current State")]
+        [Column("is_comlete")]
+        public bool? IsComplete
+        {
+            get { return GetProperty<bool?>(nameof(IsComplete)); }
+            set { SetProperty(value, nameof(IsComplete)); }
+        }
+
+        public event Action<Document, ListChangedType> RefChanged
+        {
+            add { _refChanged += value; }
+            remove { _refChanged -= value; }
+        }
+
+        [Browsable(false)]
+        public IEnumerable<DocumentReference> Refed
+        {
+            get
+            {
+                return GetReferencing<DocumentReference>(DocumentReference.DBTable,
+                                                         DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.DocumentId)),
+                                                         DBLoadParam.None);
+            }
+        }
+
+        [Browsable(false)]
+        public IEnumerable<DocumentReference> Refing
+        {
+            get
+            {
+                return GetReferencing<DocumentReference>(DocumentReference.DBTable,
+                                                         DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.ReferenceId)),
+                                                         DBLoadParam.None);
+            }
+        }
+
+        [Browsable(false)]
+        public IEnumerable<DocumentWork> Works
+        {
+            get
+            {
+                return GetReferencing<DocumentWork>(DocumentWork.DBTable,
+                                                    DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DocumentId)),
+                                                    DBLoadParam.None);
+            }
+        }
+
+        [Browsable(false)]
+        public IEnumerable<DocumentData> Datas
+        {
+            get
+            {
+                return GetReferencing<DocumentData>(DocumentData.DBTable,
+                                                    DocumentData.DBTable.ParseProperty(nameof(DocumentData.DocumentId)),
+                                                    DBLoadParam.None);
+            }
+        }
+
+        [Browsable(false)]
+        public override AccessValue Access
+        {
+            get { return Template?.Access ?? base.Access; }
+        }
+
+        [Browsable(false)]
+        public new bool IsChanged
+        {
+            get { return (DBState != DBUpdateState.Default) || changes != 0; }
+            set
+            {
+                if (!value)
+                    changes = 0;
+            }
+        }
+
+        public object this[TemplateParam attribute]
+        {
+            get { return this[attribute.Param as DBColumn]; }
+            set { this[attribute.Param as DBColumn] = value; }
+        }
+
         public DocumentWork GetWork()
         {
             DocumentWork workNow = null;
@@ -387,32 +568,46 @@ namespace DataWF.Module.Flow
             return workNow;
         }
 
-        [Column("work_id", ColumnType = DBColumnTypes.Internal)]
-        public string WorkId
+        public DocumentData GetData(string p)
         {
-            get { return GetProperty<string>(nameof(WorkId)); }
-            set { SetProperty(value, nameof(WorkId)); }
+            Initialize(DocInitType.Data);
+            foreach (var data in Datas)
+                if (data.FileName == p || data.FileName.EndsWith(p))
+                    return data;
+            return null;
         }
 
-        [Reference("fk_ddocument_work_id", nameof(WorkId))]
-        public DocumentWork WorkCurrent
+        public DocumentWork GetByStage(object stageId)
         {
-            get { return GetPropertyReference<DocumentWork>(nameof(WorkId)); }
-            set { SetPropertyReference(value, nameof(WorkId)); }
+            return GetByStage(Stage.DBTable.LoadById(stageId));
         }
 
-        [Column("work_user", ColumnType = DBColumnTypes.Internal)]
-        public string WorkUser
+        public DocumentWork GetByStage(Stage stage)
         {
-            get { return GetProperty<string>(nameof(WorkUser)); }
-            set { SetProperty(value, nameof(WorkUser)); }
+            var works = Works.ToList();
+            for (int i = works.Count - 1; i >= 0; i--)
+            {
+                DocumentWork work = works[i];
+                if (work.Stage == stage)
+                    return work;
+            }
+            return null;
         }
 
-        [Column("work_stage", ColumnType = DBColumnTypes.Internal)]
-        public string WorkStage
+        public IEnumerable<DocumentWork> GetUnCompleteWorks(Stage filter)
         {
-            get { return GetProperty<string>(nameof(WorkStage)); }
-            set { SetProperty(value, nameof(WorkStage)); }
+            foreach (DocumentWork work in Works)
+            {
+                if (!work.IsComplete && (filter == null || (filter != null && work.Stage == filter)))
+                {
+                    yield return work;
+                }
+            }
+        }
+
+        public DocumentWork GetLastWork()
+        {
+            return Works.FirstOrDefault();
         }
 
         public string GetWorkFlow()
@@ -435,68 +630,12 @@ namespace DataWF.Module.Flow
             return workFlows;
         }
 
-        public object WorkDate
+        public DocumentData GetTemplate()
         {
-            get { return WorkCurrent == null ? null : WorkCurrent.Date; }
-        }
-
-        //		public string WorkDescription {
-        //			get {
-        //				//string current = "";
-        //				foreach (DocumentWork dw in works)
-        //					if (dw.IsCurrent)
-        //						return dw.Description;// current += dw.Description + " ";
-        //				return "";
-        //			}
-        //			set {
-        //				foreach (DocumentWork dw in works)
-        //					if (dw.IsCurrent && dw.Description != value)
-        //						dw.Description = value;
-        //				//if (PropertyChangedHandler != null)
-        //				//     PropertyChangedHandler(this, new PropertyChangedEventArgs("WorkDescription"));
-        //			}
-        //		}
-        //		[DisplayName("Контрольный")]
-        //		public bool IsCheck {
-        //			get { return _row.GetBool (FlowEnvir.Setting.Document.IsCheck.Column); }
-        //			set { _row.SetBool (FlowEnvir.Setting.Document.IsCheck.Column, value); }
-        //		}
-        //
-        //		public bool IsCheckComplete {
-        //			get { return _row.GetBool (FlowEnvir.Setting.Document.IsCheckComplete.Column); }
-        //			set { _row.SetBool (FlowEnvir.Setting.Document.IsCheckComplete.Column, value); }
-        //		}
-        //
-        //		[DisplayName("Контрольная Дата")]
-        //		public DateTime CheckDate {
-        //			get { return _row.GetDate (FlowEnvir.Setting.Document.CheckDate.Column); }
-        //			set { _row.SetDate (FlowEnvir.Setting.Document.CheckDate.Column, value); }
-        //		}
-        //
-        //		[DisplayName("Контрольная Дата")]
-        //		public DateTime CheckCompleteDate {
-        //			get { return _row.GetDate (FlowEnvir.Setting.Document.CheckCompleteDate.Column); }
-        //			set { _row.SetDate (FlowEnvir.Setting.Document.CheckCompleteDate.Column, value); }
-        //		}
-        //		[DisplayName("Описание Контроля")]
-        //		public string CheckDescription {
-        //			get { return _row [FlowEnvir.Setting.Document.CheckDescription.Column].ToString (); }
-        //			set { _row [FlowEnvir.Setting.Document.CheckDescription.Column] = value; }
-        //		}
-
-        public bool IsCurrent
-        {
-            get { return WorkCurrent != null; }
-        }
-
-        public bool IsWork
-        {
-            get { return WorkCurrent != null || GetWork() != null; }
-        }
-
-        public Work Work
-        {
-            get { return Template.Work; }
+            foreach (DocumentData data in Datas)
+                if (data.IsTemplate.GetValueOrDefault())
+                    return data;
+            return null;
         }
 
         public override void Reject()
@@ -540,7 +679,7 @@ namespace DataWF.Module.Flow
                 if (stage.TimeLimit != TimeSpan.Zero)
                     work.DateLimit = DateTime.Now + stage.TimeLimit;
             }
-            if (user.IsCurrent)
+            if (user != null && user.IsCurrent)
                 work.DateRead = DateTime.Now;
 
             work.Attach();
@@ -559,11 +698,6 @@ namespace DataWF.Module.Flow
                 DocumentData.DBTable.Save(Datas.ToList(), transaction);
             else if (type == DocInitType.Workflow)
                 DocumentWork.DBTable.Save(Works.ToList(), transaction);
-        }
-
-        public DocInitType IniType
-        {
-            get { return initype; }
         }
 
         public IList Initialize(DocInitType type, DBTransaction transaction = null)
@@ -612,30 +746,6 @@ namespace DataWF.Module.Flow
                 initype = DocInitType.Default;
             }
             return buffer;
-        }
-
-        public Document FindReference(object tempalteid, bool create)
-        {
-            return FindReference(Template.DBTable.LoadById(tempalteid), create);
-        }
-
-        public Document FindReference(Template t, bool create)
-        {
-            foreach (var refer in Refed)
-                if (refer.Reference.Template == t)
-                    return refer.Reference;
-
-            foreach (var refer in Refing)
-                if (refer.Document.Template == t)
-                    return refer.Document;
-
-            if (create)
-            {
-                Document newdoc = Document.Create(t, this);
-                newdoc.Save(null);
-                return newdoc;
-            }
-            return null;
         }
 
         public void Save(DBTransaction transaction, ExecuteDocumentCallback callback = null)
@@ -733,6 +843,30 @@ namespace DataWF.Module.Flow
             return false;
         }
 
+        public Document FindReference(object tempalteid, bool create)
+        {
+            return FindReference(Template.DBTable.LoadById(tempalteid), create);
+        }
+
+        public Document FindReference(Template t, bool create)
+        {
+            foreach (var refer in Refed)
+                if (refer.Reference.Template == t)
+                    return refer.Reference;
+
+            foreach (var refer in Refing)
+                if (refer.Document.Template == t)
+                    return refer.Document;
+
+            if (create)
+            {
+                Document newdoc = Document.Create(t, this);
+                newdoc.Save(null);
+                return newdoc;
+            }
+            return null;
+        }
+
         public DocumentReference FindReference(object id)
         {
             foreach (var item in Refed)
@@ -749,122 +883,6 @@ namespace DataWF.Module.Flow
         public bool ContainsReference(object id)
         {
             return FindReference(id) != null;
-        }
-
-        [Browsable(false)]
-        public QParam CreateRefsFilter()
-        {
-            var qrefing = new QQuery(string.Format("select {0} from {1} where {2} = {3}",
-                                                   DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.DocumentId)).Name,
-                                                   DocumentReference.DBTable.Name,
-                                                   DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.ReferenceId)).Name, PrimaryId));
-            var qrefed = new QQuery(string.Format("select {2} from {1} where {0} = {3}",
-                                                  DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.DocumentId)).Name,
-                                                  DocumentReference.DBTable.Name,
-                                                  DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.ReferenceId)).Name, PrimaryId));
-
-            QParam param = new QParam();
-            param.Parameters.Add(QQuery.CreateParam(Table.PrimaryKey, qrefed, CompareType.In));
-            param.Parameters.Add(QQuery.CreateParam(Table.PrimaryKey, qrefing, CompareType.In, LogicType.Or));
-            return param;
-        }
-
-
-        public event Action<Document, ListChangedType> RefChanged
-        {
-            add { _refChanged += value; }
-            remove { _refChanged -= value; }
-        }
-
-
-        public IEnumerable<DocumentReference> Refed
-        {
-            get
-            {
-                return GetReferencing<DocumentReference>(DocumentReference.DBTable,
-                                                         DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.DocumentId)),
-                                                         DBLoadParam.None);
-            }
-        }
-
-        public IEnumerable<DocumentReference> Refing
-        {
-            get
-            {
-                return GetReferencing<DocumentReference>(DocumentReference.DBTable,
-                                                         DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.ReferenceId)),
-                                                         DBLoadParam.None);
-            }
-        }
-
-        public IEnumerable<DocumentWork> Works
-        {
-            get
-            {
-                return GetReferencing<DocumentWork>(DocumentWork.DBTable,
-                                                    DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DocumentId)),
-                                                    DBLoadParam.None);
-            }
-        }
-
-        public IEnumerable<DocumentData> Datas
-        {
-            get
-            {
-                return GetReferencing<DocumentData>(DocumentData.DBTable,
-                                                    DocumentData.DBTable.ParseProperty(nameof(DocumentData.DocumentId)),
-                                                    DBLoadParam.None);
-            }
-        }
-
-        public DocumentData GetData(string p)
-        {
-            Initialize(DocInitType.Data);
-            foreach (var data in Datas)
-                if (data.FileName == p || data.FileName.EndsWith(p))
-                    return data;
-            return null;
-        }
-
-        public DocumentWork GetByStage(object stageId)
-        {
-            return GetByStage(Stage.DBTable.LoadById(stageId));
-        }
-
-        public DocumentWork GetByStage(Stage stage)
-        {
-            var works = Works.ToList();
-            for (int i = works.Count - 1; i >= 0; i--)
-            {
-                DocumentWork work = works[i];
-                if (work.Stage == stage)
-                    return work;
-            }
-            return null;
-        }
-
-        public IEnumerable<DocumentWork> GetUnCompleteWorks(Stage filter)
-        {
-            foreach (DocumentWork work in Works)
-            {
-                if (!work.IsComplete && (filter == null || (filter != null && work.Stage == filter)))
-                {
-                    yield return work;
-                }
-            }
-        }
-
-        public DocumentWork GetLastWork()
-        {
-            return Works.FirstOrDefault();
-        }
-
-        public DocumentData GetTemplate()
-        {
-            foreach (DocumentData data in Datas)
-                if (data.IsTemplate.GetValueOrDefault())
-                    return data;
-            return null;
         }
 
         public void RefreshCache()
@@ -898,82 +916,27 @@ namespace DataWF.Module.Flow
             WorkCurrent = current;
         }
 
+        public QParam CreateRefsFilter()
+        {
+            var qrefing = new QQuery(string.Format("select {0} from {1} where {2} = {3}",
+                                                   DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.DocumentId)).Name,
+                                                   DocumentReference.DBTable.Name,
+                                                   DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.ReferenceId)).Name, PrimaryId));
+            var qrefed = new QQuery(string.Format("select {2} from {1} where {0} = {3}",
+                                                  DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.DocumentId)).Name,
+                                                  DocumentReference.DBTable.Name,
+                                                  DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.ReferenceId)).Name, PrimaryId));
+
+            QParam param = new QParam();
+            param.Parameters.Add(QQuery.CreateParam(Table.PrimaryKey, qrefed, CompareType.In));
+            param.Parameters.Add(QQuery.CreateParam(Table.PrimaryKey, qrefing, CompareType.In, LogicType.Or));
+            return param;
+        }
+
         public override string ToString()
         {
             return base.ToString();
             //return (Template == null ? "" : Template.ToString() + " ") + " № " + Code;
-        }
-
-        [Column("is_important")]
-        public bool? Important
-        {
-            get { return GetProperty<bool?>(nameof(Important)); }
-            set { SetProperty(value, nameof(Important)); }
-        }
-
-        [Column("is_comlete")]
-        public bool? IsComplete
-        {
-            get { return GetProperty<bool?>(nameof(IsComplete)); }
-            set { SetProperty(value, nameof(IsComplete)); }
-        }
-
-        [Column("document_date")]
-        public DateTime? DocumentDate
-        {
-            get { return GetProperty<DateTime?>(nameof(DocumentDate)); }
-            set { SetProperty(value, nameof(DocumentDate)); }
-        }
-
-        [Column("document_number", 40, Keys = DBColumnKeys.Code), Index("ddocuument_document_number")]
-        public string Number
-        {
-            get { return GetProperty<string>(nameof(Number)); }
-            set { SetProperty(value, nameof(Number)); }
-        }
-
-        [Column("number_input", 40)]
-        public string NumberInput
-        {
-            get { return GetProperty<string>(nameof(NumberInput)); }
-            set { SetProperty(value, nameof(NumberInput)); }
-        }
-
-        [Column("number_utput", 40)]
-        public string NumberOutput
-        {
-            get { return GetProperty<string>(nameof(NumberOutput)); }
-            set { SetProperty(value, nameof(NumberOutput)); }
-        }
-
-        [Browsable(false)]
-        [Column("customer_id")]
-        public int? CustomerId
-        {
-            get { return GetProperty<int?>(nameof(CustomerId)); }
-            set { SetProperty(value, nameof(CustomerId)); }
-        }
-
-        [Reference("fk_ddocument_customer_id", nameof(CustomerId))]
-        public Customer Customer
-        {
-            get { return GetPropertyReference<Customer>(nameof(CustomerId)); }
-            set { SetPropertyReference(value, nameof(CustomerId)); }
-        }
-
-        [Browsable(false)]
-        [Column("address_id")]
-        public int? AddressId
-        {
-            get { return GetProperty<int?>(nameof(AddressId)); }
-            set { SetProperty(value, nameof(AddressId)); }
-        }
-
-        [Reference("fk_ddocument_address_id", nameof(AddressId))]
-        public Address Address
-        {
-            get { return GetPropertyReference<Address>(nameof(AddressId)); }
-            set { SetPropertyReference(value, nameof(AddressId)); }
         }
 
         public void CheckComplete()

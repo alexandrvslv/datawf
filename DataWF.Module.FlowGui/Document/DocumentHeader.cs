@@ -17,9 +17,9 @@ namespace DataWF.Module.FlowGui
         private GroupBoxItem gWork;
         private GroupBoxItem gFiles;
         private GroupBox groupBox;
-        private LayoutList works = new LayoutList();
-        private DocumentFiles files = new DocumentFiles();
-        private ListEditor fields = new ListEditor(new DocumentLayoutList());
+        private LayoutList works;
+        private DocumentFiles files;
+        private ListEditor fields;
         private DBTableView<DocumentWork> view;
         private bool synch = false;
         //private GroupBoxMap groupBoxMap2;
@@ -31,35 +31,62 @@ namespace DataWF.Module.FlowGui
             view.ApplySortInternal(DocumentWork.DBTable.DefaultComparer);
             view.ListChanged += ContentListChanged;
 
-            works.AllowSort = false;
-            works.AutoToStringFill = true;
-            works.GenerateColumns = false;
-            works.Name = "works";
-            works.Text = "pList1";
-            works.ListInfo.ColumnsVisible = false;
-            works.ListInfo.Columns.Add("Date", 115);
-            works.ListInfo.Columns.Add("IsComplete", 20);
-            works.ListInfo.HeaderVisible = false;
-            works.ListSource = view;
+            works = new LayoutList()
+            {
+                AllowSort = false,
+                AutoToStringFill = true,
+                GenerateColumns = false,
+                Name = "works",
+                Text = "Works",
 
-            files.Current = null;
-            files.Name = "files";
-            files.ReadOnly = false;
+                ListInfo = new LayoutListInfo(
+                    new LayoutColumn() { Name = "ToString", FillWidth = true },
+                    new LayoutColumn() { Name = "Date", Width = 115 },
+                    new LayoutColumn() { Name = "IsComplete", Width = 20 })
+                {
+                    ColumnsVisible = false,
+                    HeaderVisible = false
+                },
+                ListSource = view
+            };
+
+            files = new DocumentFiles()
+            {
+                Current = null,
+                Name = "files",
+                ReadOnly = false,
+                AutoSize = true
+            };
             files.view.ListChanged += ContentListChanged;
+
+
+            fields = new ListEditor()
+            {
+                Name = "fields",
+                Text = "Document"
+            };
+            fields.Bar.Visible = false;
+            fields.List.AllowCellSize = true;
+            fields.List.EditMode = EditModes.ByClick;
+            fields.List.EditState = EditListState.Edit;
+            fields.List.GenerateColumns = false;
+            fields.List.GenerateToString = false;
+            fields.List.Grouping = false;
+            fields.List.GridMode = true;
 
             gWork = new GroupBoxItem()
             {
                 Row = 1,
                 Widget = works,
                 FillHeight = true,
-                Name = "groupWork",
+                Name = "Works",
                 Width = 380
             };
 
             gFiles = new GroupBoxItem()
             {
                 Widget = files,
-                Name = "groupFiles",
+                Name = "Files",
                 Width = 380
             };
 
@@ -68,34 +95,17 @@ namespace DataWF.Module.FlowGui
                 Widget = fields,
                 FillWidth = true,
                 FillHeight = true,
-                Name = "groupAttribute"
+                Name = "Attribute"
             };
 
-            var bufMap = new GroupBoxMap() { Col = 1 };
-            bufMap.Add(gFiles);
-            bufMap.Add(gWork);
-
-            groupBox = new GroupBox(gAttribute, bufMap) { Name = "panel1" };
-
-            fields.Bar.Visible = false;
-            fields.List.AllowCellSize = true;
-            fields.List.EditMode = EditModes.ByClick;
-            fields.List.EditState = EditListState.Edit;
-            fields.List.GenerateColumns = false;
-            fields.List.GenerateToString = false;
-            fields.List.Grouping = false;
-            //fields.Fields.HighLight = true;
-            fields.Name = "fields";
-            fields.Text = "pDocument1";
-            fields.List.GridMode = true;
-
-            files.Visible = true;
-            works.Visible = true;
-            this.Name = "DocumentHeader";
+            groupBox = new GroupBox(
+                gAttribute, 
+                new GroupBoxMap(gFiles, gWork) { Col = 1, FillWidth = true })
+            { Name = "panel1" };
 
             PackStart(groupBox, true, true);
+            Name = "DocumentHeader";
 
-            files.AutoSize = true;
             //SizeChanged += DocumentHeader_SizeChanged;
             Localize();
         }
