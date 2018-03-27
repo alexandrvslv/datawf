@@ -160,7 +160,7 @@ namespace DataWF.Module.FlowGui
                     //if (_document.Datas == null)
                     //    _document.Initialize(DocInitType.Data);
                     toolTemplate.Visible = _document.Template.Data != null;
-                    view.DefaultFilter = DocumentData.DBTable.ParseProperty(nameof(DocumentData.Document)).Name + "=" + _document.Id;
+                    view.DefaultFilter = DocumentData.DBTable.ParseProperty(nameof(DocumentData.DocumentId)).Name + "=" + _document.Id;
                 }
             }
         }

@@ -461,7 +461,7 @@ namespace DataWF.Data
                 query.BuildParam(column, CompareType.Equal, PrimaryId);
                 return GetReferencing<T>(query, param);
             }
-            return ((DBTable<T>)table).Select(column, PrimaryId, CompareType.Equal);
+            return (IEnumerable<T>)table.SelectItems(column, PrimaryId, CompareType.Equal);
         }
 
         public IEnumerable<T> GetReferencing<T>(string tableCode, string columnCode, DBLoadParam param) where T : DBItem, new()

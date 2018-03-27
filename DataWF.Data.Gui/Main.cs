@@ -464,8 +464,7 @@ namespace DataWF.Data.Gui
             };
             return item;
         }
-
-
+        
         public ToolWidgetHandler BuildMenuItem(Widget widget)
         {
             var item = new ToolWidgetHandler(MenuViewItemClick)
@@ -656,18 +655,21 @@ namespace DataWF.Data.Gui
                     toolLabel.Text = $"Execute ({task.Name})";
                 }
             }
-            toolTasks.Text = $"Task ({tasks.Count})";
-            if (tasks.Count > 0)
+            Application.Invoke(() =>
             {
-                toolProgress.ProgressBar.Indeterminate = true;
-                toolProgress.Visible = true;
-            }
-            else
-            {
-                toolProgress.ProgressBar.Indeterminate = false;
-                toolProgress.Visible = false;
-                toolLabel.Text = string.Empty;
-            }
+                toolTasks.Text = $"Task ({tasks.Count})";
+                if (tasks.Count > 0)
+                {
+                    toolProgress.ProgressBar.Indeterminate = true;
+                    toolProgress.Visible = true;
+                }
+                else
+                {
+                    toolProgress.ProgressBar.Indeterminate = false;
+                    toolProgress.Visible = false;
+                    toolLabel.Text = string.Empty;
+                }
+            });
         }
 
         private void TaskCallback(RProcedureEventArgs e)

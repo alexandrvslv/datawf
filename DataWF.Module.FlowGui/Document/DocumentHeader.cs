@@ -16,7 +16,7 @@ namespace DataWF.Module.FlowGui
         private GroupBoxItem gAttribute;
         private GroupBoxItem gWork;
         private GroupBoxItem gFiles;
-        private GroupBox groupBoxMap = new GroupBox();
+        private GroupBox groupBox;
         private LayoutList works = new LayoutList();
         private DocumentFiles files = new DocumentFiles();
         private ListEditor fields = new ListEditor(new DocumentLayoutList());
@@ -71,14 +71,11 @@ namespace DataWF.Module.FlowGui
                 Name = "groupAttribute"
             };
 
-            var bufMap = new GroupBox() { Col = 1 };
+            var bufMap = new GroupBoxMap() { Col = 1 };
             bufMap.Add(gFiles);
             bufMap.Add(gWork);
 
-            groupBoxMap.Add(gAttribute);
-            groupBoxMap.Add(bufMap.Map);
-            groupBoxMap.Name = "panel1";
-            groupBoxMap.Visible = true;
+            groupBox = new GroupBox(gAttribute, bufMap) { Name = "panel1" };
 
             fields.Bar.Visible = false;
             fields.List.AllowCellSize = true;
@@ -96,7 +93,7 @@ namespace DataWF.Module.FlowGui
             works.Visible = true;
             this.Name = "DocumentHeader";
 
-            PackStart(groupBoxMap, true, true);
+            PackStart(groupBox, true, true);
 
             files.AutoSize = true;
             //SizeChanged += DocumentHeader_SizeChanged;
@@ -142,7 +139,7 @@ namespace DataWF.Module.FlowGui
             //if (groupBoxMap.Width != width)
             //    groupBoxMap.Width = width;
             //else
-            groupBoxMap.ResizeLayout();
+            groupBox.ResizeLayout();
         }
 
         public Document Document
@@ -184,7 +181,7 @@ namespace DataWF.Module.FlowGui
             }
         }
 
-        DBItem IDocument.Document { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        DBItem IDocument.Document { get => Document; set => Document = (Document)value; }
 
         public void Localize()
         {

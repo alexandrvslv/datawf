@@ -204,7 +204,7 @@ namespace DataWF.Module.Flow
             set { SetProperty(value); }
         }
 
-        [Column("is_file")]
+        [Column("is_file", Default ="False")]
         public bool? IsFile
         {
             get { return GetProperty<bool?>(); }

@@ -156,13 +156,13 @@ namespace DataWF.Module.FlowGui
                 if (arg.Cell == null)
                 {
                     if (filter == null || filter.IsCompaund)
-                        arg.Properties.Add(Document.DBTable.ParseProperty(nameof(Document.Template)).Name);
+                        arg.Properties.Add(Document.DBTable.ParseProperty(nameof(Document.TemplateId)).Name);
                     if (Document == null)
                     {
                         arg.Properties.Add(Document.DBTable.ParseProperty(nameof(Document.Important)).Name);
                         arg.Properties.Add(Document.DBTable.ParseProperty(nameof(Document.WorkStage)).Name);
                         arg.Properties.Add(Document.DBTable.ParseProperty(nameof(Document.WorkUser)).Name);
-                        arg.Properties.Add(Document.DBTable.ParseProperty(nameof(Document.WorkCurrent)).Name);
+                        arg.Properties.Add(Document.DBTable.ParseProperty(nameof(Document.WorkId)).Name);
                     }
                     arg.Properties.Add(Document.DBTable.ParseProperty(nameof(Document.Id)).Name);
                     arg.Properties.Add(Document.DBTable.ParseProperty(nameof(Document.Date)).Name);

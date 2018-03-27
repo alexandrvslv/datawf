@@ -35,7 +35,7 @@ namespace DataWF.Module.Flow
         protected string stage;
         protected string user;
         protected string number;
-        protected DateInterval date;
+        protected DateInterval? date;
         protected DocumentSearchDate dtype = DocumentSearchDate.Create;
         protected string description;
 
@@ -44,7 +44,7 @@ namespace DataWF.Module.Flow
         {
         }
 
-        public DateInterval Date
+        public DateInterval? Date
         {
             get { return date; }
             set
@@ -238,7 +238,7 @@ namespace DataWF.Module.Flow
             ///exp.Results.Add(new QColumn(Config.Document.Table.StampKey.Code));
 
             QWork = new QQuery(string.Empty, DocumentWork.DBTable);
-            QWork.Columns.Add(new QColumn(DocumentWork.DBTable.ParseColumn(nameof(DocumentWork.DocumentId))));
+            QWork.Columns.Add(new QColumn(DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DocumentId))));
 
             if (IsCurrent)
                 QDoc.BuildPropertyParam(nameof(Document.WorkId), CompareType.IsNot, DBNull.Value);

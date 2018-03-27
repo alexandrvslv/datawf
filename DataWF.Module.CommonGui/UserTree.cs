@@ -38,10 +38,15 @@ namespace DataWF.Module.CommonGui
             set { (Item as IAccessable).Access = value; }
         }
 
+        public int Count { get; set; }
+
         public void Localize()
         {
-            Glyph = Locale.GetGlyph(Item.GetType().FullName, Item.GetType().Name);
-            Text = Item?.ToString();
+            if (Item != null)
+            {
+                Glyph = Locale.GetGlyph(Item.GetType().FullName, Item.GetType().Name);
+                Text = Item?.ToString();
+            }
         }
     }
 

@@ -755,13 +755,13 @@ namespace DataWF.Module.Flow
         public QParam CreateRefsFilter()
         {
             var qrefing = new QQuery(string.Format("select {0} from {1} where {2} = {3}",
-                                                   DocumentReference.DBTable.ParseColumn(nameof(DocumentReference.Document)).Name,
+                                                   DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.DocumentId)).Name,
                                                    DocumentReference.DBTable.Name,
-                                                   DocumentReference.DBTable.ParseColumn(nameof(DocumentReference.Reference)).Name, PrimaryId));
+                                                   DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.ReferenceId)).Name, PrimaryId));
             var qrefed = new QQuery(string.Format("select {2} from {1} where {0} = {3}",
-                                                  DocumentReference.DBTable.ParseColumn(nameof(DocumentReference.Document)).Name,
+                                                  DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.DocumentId)).Name,
                                                   DocumentReference.DBTable.Name,
-                                                  DocumentReference.DBTable.ParseColumn(nameof(DocumentReference.Reference)).Name, PrimaryId));
+                                                  DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.ReferenceId)).Name, PrimaryId));
 
             QParam param = new QParam();
             param.Parameters.Add(QQuery.CreateParam(Table.PrimaryKey, qrefed, CompareType.In));

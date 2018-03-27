@@ -55,7 +55,6 @@ namespace DataWF.Data.Gui
         {
             if (Name == "")
                 Name = table.Name + ownColumn?.Name;
-
             TableExplorerNode node = null;
             if (openmode == TableEditorMode.Item)
             {
@@ -96,6 +95,16 @@ namespace DataWF.Data.Gui
                 return null;
             string findParam = table.Name + column?.Name + row?.PrimaryId;
             return Tree.Nodes[findParam] as TableExplorerNode;
+        }
+
+        protected override void OnNodeSelect(ListExplorerNode node)
+        {
+            base.OnNodeSelect(node);
+            var tableNode = node as TableExplorerNode;
+            if (tableNode != null)
+            {
+                Text = $"{tableNode.Info.Table.DisplayName}{(tableNode.Info.Item == null ? string.Empty : " ")}{tableNode.Info.Item?.ToString()}";
+            }
         }
 
         protected override void OnNodeCheck(ListExplorerNode node)
@@ -219,7 +228,7 @@ namespace DataWF.Data.Gui
         public override void Localize()
         {
             base.Localize();
-            GuiService.Localize(this, "TableExplorer", "Table Explorer", GlyphType.Table);
+            //GuiService.Localize(this, "TableExplorer", "Table Explorer", GlyphType.Table);
         }
     }
 }

@@ -10,6 +10,7 @@ using DataWF.Gui;
 using DataWF.Common;
 using Xwt;
 using Xwt.Drawing;
+using System.Threading.Tasks;
 
 namespace DataWF.Module.FlowGui
 {
@@ -25,112 +26,85 @@ namespace DataWF.Module.FlowGui
         private List<Document> mdocuemnts = new List<Document>();
         private Stage mstage = null;
         private Template mtemplate = null;
-        private bool load = false;
+        private ManualResetEvent load = new ManualResetEvent(false);
         private DocumentSearch search = new DocumentSearch();
 
-        private FlowTree tree = new FlowTree();
-        private Toolsbar bar = new Toolsbar();
-        private ToolSearchEntry toolFilter = new ToolSearchEntry();
-        private ToolItem toolLoad = new ToolItem();
-        private ToolSplit toolCreate = new ToolSplit();
-        private VPanel panel = new VPanel();
+        private FlowTree tree;
+        private Toolsbar bar;
+        private ToolSearchEntry toolFilter;
+        private ToolItem toolLoad;
+        private ToolSplit toolCreate;
 
-
-        private DocumentListView dockList = new DocumentListView();
-        private static OpenFileDialog ofDialog = new OpenFileDialog();
+        private DocumentListView dockList;
+        private static OpenFileDialog ofDialog;
 
         private System.Timers.Timer mtimer = new System.Timers.Timer(20000);
-        private System.Timers.Timer timer = new System.Timers.Timer(20000);
+
 
         public DocumentWorker()
         {
-            toolFilter.EntryTextChanged += ToolFilterTextBoxTextChanged;
-            toolFilter.Name = "toolFilterText";
+            toolFilter = new ToolSearchEntry(ToolFilterTextBoxTextChanged) { Name = "toolFilterText" };
+            toolLoad = new ToolItem(ToolLoadOnClick) { Name = "toolLoad", ForeColor = Colors.DarkBlue };
 
-            bar.Items.Add(toolLoad);
-            bar.Items.Add(toolCreate);
-            bar.Items.Add(toolFilter);
-            bar.Name = "tools";
-
-            // toolLoad
-            toolLoad.Name = "toolLoad";
-            toolLoad.ForeColor = Colors.DarkBlue;
-            toolLoad.Click += ToolLoadOnClick;
-
-            toolCreate.Name = "toolCreate";
-            toolCreate.ForeColor = Colors.DarkGreen;
+            toolCreate = new ToolSplit { Name = "toolCreate", ForeColor = Colors.DarkGreen };
             toolCreate.ButtonClick += ToolCreateButtonClick;
-            toolCreate.DropDownItems.Clear();
+
             foreach (Template uts in Template.DBTable.DefaultView.SelectParents())
             {
                 if (uts.Access.Create)
                     toolCreate.DropDownItems.Add(InitTemplate(uts));
             }
 
-            // panel1
-            this.panel.Name = "panel1";
+            bar = new Toolsbar(toolLoad, toolCreate, toolFilter) { Name = "tools" };
 
-            // tree
-            tree.AllowCellSize = false;
-            tree.AutoToStringFill = false;
-            tree.AutoToStringSort = false;
-            tree.EditMode = EditModes.None;
-            tree.GenerateColumns = false;
-            tree.GenerateToString = false;
-            tree.FlowKeys = FlowTreeKeys.Template | FlowTreeKeys.Stage | FlowTreeKeys.Work;
-            tree.SelectionChanged += TreeAfterSelect;
-
-            tree.ListInfo.HotTrackingCell = false;
-            tree.ListInfo.Columns.Add(new LayoutColumn() { Name = "Count", Width = 35, Style = GuiEnvironment.StylesInfo["CellFar"] });
-
-            var send = new DocumentSearch()
-            {
-                User = User.CurrentUser,
-                DateType = DocumentSearchDate.WorkEnd,
-                Date = new DateInterval(DateTime.Today),
-                IsWork = CheckedState.Unchecked
-            };
-            var nodeSend = new Node()
+            var nodeSend = new CommonGui.TableItemNode()
             {
                 Name = "Send",
-                Tag = send
+                Tag = new DocumentSearch()
+                {
+                    User = User.CurrentUser,
+                    DateType = DocumentSearchDate.WorkEnd,
+                    Date = new DateInterval(DateTime.Today),
+                    IsWork = CheckedState.Unchecked
+                }
             };
             GuiService.Localize(nodeSend, "DocumentWorker", nodeSend.Name);
-            tree.Nodes.Add(nodeSend);
 
-            var recent = new DocumentSearch()
-            {
-                User = User.CurrentUser,
-                DateType = DocumentSearchDate.History,
-                Date = new DateInterval(DateTime.Today)
-            };
-            var nodeRecent = new Node()
+            var nodeRecent = new CommonGui.TableItemNode()
             {
                 Name = "Recent",
-                Tag = recent
+                Tag = new DocumentSearch()
+                {
+                    User = User.CurrentUser,
+                    DateType = DocumentSearchDate.History,
+                    Date = new DateInterval(DateTime.Today)
+                }
             };
             GuiService.Localize(nodeRecent, "DocumentWorker", nodeRecent.Name);
-            tree.Nodes.Add(nodeRecent);
 
-            var search = new DocumentSearch() { };
-            var nodeSearch = new Node()
+            var nodeSearch = new CommonGui.TableItemNode()
             {
                 Name = "Search",
-                Tag = search
+                Tag =  new DocumentSearch() { }
             };
             GuiService.Localize(nodeSearch, "DocumentWorker", nodeSearch.Name);
+
+
+            tree = new FlowTree
+            {
+                AllowCellSize = false,
+                AutoToStringFill = false,
+                AutoToStringSort = false,
+                FlowKeys = FlowTreeKeys.Template | FlowTreeKeys.Stage | FlowTreeKeys.Work
+            };
+            tree.SelectionChanged += TreeAfterSelect;
+            tree.ListInfo.HotTrackingCell = false;
+            tree.ListInfo.Columns.Add(new LayoutColumn() { Name = "Count", Width = 35, Style = GuiEnvironment.StylesInfo["CellFar"] });
+            tree.Nodes.Add(nodeSend);
+            tree.Nodes.Add(nodeRecent);
             tree.Nodes.Add(nodeSearch);
 
-            ofDialog.Multiselect = true;
-
-            this.Name = "DocumentWorker";
-
-            panel.PackStart(bar, false, false);
-            panel.PackStart(tree, true, true);
-            this.PackStart(panel, true, true);
-
-            timer.Interval = 200000;
-            timer.Elapsed += TimerTick;
+            ofDialog = new OpenFileDialog() { Multiselect = true };
 
             //mtimer.Elapsed += (object sender, System.Timers.ElapsedEventArgs asg) => { CheckNewDocument(null); mtimer.Stop(); };
 
@@ -150,14 +124,18 @@ namespace DataWF.Module.FlowGui
             works.ListChanged += WorksListChanged;
 
             documents = new DocumentList(Document.DBTable.ParseProperty(nameof(Document.WorkId)).Name + " is not null", DBViewKeys.Access);
-            dockList.Documents = documents;
-            dockList.AllowPreview = true;
+
+            dockList = new DocumentListView() { Documents = documents, AllowPreview = true };
 
             Worker = this;
 
+            PackStart(bar, false, false);
+            PackStart(tree, true, true);
+            Name = "DocumentWorker";
+
             Localize();
-            timer.Enabled = true;
-            ThreadPool.QueueUserWorkItem((o) =>
+
+            Task.Run(() =>
             {
                 try
                 {
@@ -173,6 +151,32 @@ namespace DataWF.Module.FlowGui
                 catch (Exception ex)
                 {
                     Helper.OnException(ex);
+                }
+            });
+
+            Task.Run(() =>
+            {
+                while (true)
+                {
+                    var task = new TaskExecutor();
+                    task.Name = "Load Documents";
+                    task.Action = () =>
+                    {
+                        try
+                        {
+                            Document.DBTable.Load(qDocs, DBLoadParam.Synchronize, null);
+                            DocumentWork.DBTable.Load(qWork, DBLoadParam.Synchronize, works);
+                            Helper.LogWorkingSet("Documents");
+                        }
+                        catch (Exception ex)
+                        {
+                            Helper.OnException(ex);
+                        }
+                        return null;
+                    };
+                    GuiService.Main.AddTask(this, task);
+                    load.Reset();
+                    load.WaitOne(200000);
                 }
             });
         }
@@ -422,7 +426,7 @@ namespace DataWF.Module.FlowGui
             {
                 DocumentList list = new DocumentList("", DBViewKeys.Static | DBViewKeys.Empty);
 
-                DocumentListView dlist = new DocumentListView();
+                var dlist = new DocumentListView();
                 dlist.List.GenerateColumns = false;
                 dlist.List.AutoToStringFill = true;
                 dlist.MainDock = false;
@@ -509,43 +513,12 @@ namespace DataWF.Module.FlowGui
 
         private void ToolLoadOnClick(object sender, EventArgs e)
         {
-            LoadDocs();
+            load.Set();
         }
 
         private void TreeNodeMouseClick(object sender, EventArgs e)
         {
             this.TreeAfterSelect(sender, e);
-        }
-
-        private void TimerTick(object sender, EventArgs e)
-        {
-            LoadDocs();
-        }
-
-        public void LoadDocs()
-        {
-            if (!load)
-            {
-                var task = new TaskExecutor();
-                task.Name = "Load Documents";
-                task.Action = () =>
-                {
-                    load = true;
-                    try
-                    {
-                        Document.DBTable.Load(qDocs, DBLoadParam.Synchronize, null);
-                        DocumentWork.DBTable.Load(qWork, DBLoadParam.Synchronize, works);
-                        Helper.LogWorkingSet("Documents");
-                    }
-                    catch (Exception ex)
-                    {
-                        Helper.OnException(ex);
-                    }
-                    load = false;
-                    return null;
-                };
-                GuiService.Main.AddTask(this, task);
-            }
         }
 
         private void ToolFilterTextBoxTextChanged(object sender, EventArgs e)
@@ -562,8 +535,11 @@ namespace DataWF.Module.FlowGui
 
         private void ToolCreateButtonClick(object sender, EventArgs e)
         {
-            var template = tree.SelectedNode.Tag as Template;
-            ViewDocuments(CreateDocuments(template, null));
+            var template = tree.SelectedDBItem as Template;
+            if (template != null)
+            {
+                ViewDocuments(CreateDocuments(template, null));
+            }
         }
 
         private void ToolFilterGoClick(object sender, EventArgs e)

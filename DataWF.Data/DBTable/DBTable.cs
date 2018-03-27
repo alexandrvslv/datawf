@@ -52,6 +52,7 @@ namespace DataWF.Data
         protected DBColumn groupKey = DBColumn.EmptyKey;
         protected DBColumn stateKey = DBColumn.EmptyKey;
         protected DBColumn imageKey = DBColumn.EmptyKey;
+        protected DBColumn itemTypeKey = DBColumn.EmptyKey;
 
         private DBSequence cacheSequence;
         public DBComparer DefaultComparer;
@@ -69,7 +70,6 @@ namespace DataWF.Data
         internal object locker = new object();
         protected List<IDBVirtualTable> virtualViews = new List<IDBVirtualTable>(0);
         private DBItemType itemType;
-        private DBColumn itemTypeKey;
 
         protected DBTable(string name = null) : base(name)
         {
