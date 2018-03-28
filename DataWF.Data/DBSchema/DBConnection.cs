@@ -404,8 +404,8 @@ namespace DataWF.Data
         public DBTable<T> ExecuteTable<T>(string tableName, string query) where T : DBItem, new()
         {
             var table = new DBTable<T>(tableName);
-            table.Schema = DBService.DefaultSchema;
-            table.Load(query);
+            using (var transaction = new DBTransaction(this, query, true))
+                table.Load(transaction, query);
             return table;
         }
 

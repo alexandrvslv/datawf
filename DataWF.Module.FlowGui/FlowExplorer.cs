@@ -183,8 +183,8 @@ namespace DataWF.Module.FlowGui
             else if (item.Name == "User")
             {
                 row = new User();
-                if (tag is User && ((User)tag).IsCompaund)
-                    ((User)row).Parent = (User)tag;
+                if (tag is Department)
+                    ((User)row).Department = (Department)tag;
                 //row.Access.Create
                 for (int i = 0; i < row.Access.Items.Count; i++)
                 {

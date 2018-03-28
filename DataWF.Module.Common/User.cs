@@ -31,56 +31,7 @@ using Novell.Directory.Ldap;
 using System.Diagnostics;
 
 namespace DataWF.Module.Common
-{    
-    [Table("wf_common", "rdepartment", "User", BlockSize = 100)]
-    public class Department : DBItem, IComparable, IDisposable
-    {
-        public static DBTable<Department> DBTable
-        {
-            get { return DBService.GetTable<Department>(); }
-        }
-
-        public Department()
-        {
-            Build(DBTable);
-        }
-
-        [Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
-        {
-            get { return GetValue<int?>(Table.PrimaryKey); }
-            set { SetValue(value, Table.PrimaryKey); }
-        }
-
-        [Column("parent_id", Keys = DBColumnKeys.Group), Index("rdepartment_parent_id"), Browsable(false)]
-        public int? ParentId
-        {
-            get { return GetValue<int?>(Table.GroupKey); }
-            set { this[Table.GroupKey] = value; }
-        }
-
-        [Reference("fk_rdepartment_parent_id", nameof(ParentId))]
-        public User Parent
-        {
-            get { return GetReference<User>(Table.GroupKey); }
-            set { SetReference(value, Table.GroupKey); }
-        }
-
-        [Column("code", 256, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing), Index("rdepartment_code", true)]
-        public string Code
-        {
-            get { return GetValue<string>(Table.CodeKey); }
-            set { this[Table.CodeKey] = value; }
-        }
-
-        [Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
-        public override string Name
-        {
-            get { return GetName(nameof(Name)); }
-            set { SetName(nameof(Name), value); }
-        }
-    }
-
+{
     [Table("wf_common", "ruser", "User", BlockSize = 100)]
     public class User : DBItem, IComparable, IDisposable
     {
@@ -128,7 +79,7 @@ namespace DataWF.Module.Common
                                     {
                                         position = new Position();
                                     }
-                                    position.Number = positionName;
+                                    position.Code = positionName;
                                     position.Name = positionName;
                                     position.Save();
                                 }
@@ -290,11 +241,25 @@ namespace DataWF.Module.Common
             set { SetName("name", value); }
         }
 
+        [Column("department_id"), Browsable(false)]
+        public int? DepartmentId
+        {
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
+        }
+
+        [Reference("fk_ruser_department_id", nameof(DepartmentId))]
+        public Department Department
+        {
+            get { return GetPropertyReference<Department>(nameof(DepartmentId)); }
+            set { SetPropertyReference(value, nameof(DepartmentId)); }
+        }
+
         [Column("position_id"), Browsable(false)]
         public int? PositionId
         {
-            get { return GetProperty<int?>(nameof(PositionId)); }
-            set { SetProperty(value, nameof(PositionId)); }
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
         }
 
         [Reference("fk_ruser_position_id", nameof(PositionId))]

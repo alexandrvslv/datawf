@@ -319,7 +319,7 @@ namespace DataWF.Module.FlowGui
                     allowStage.Add(stage);
                     if (stage == null)
                     {
-                        foreach (User d in User.CurrentUser.Parent.GetUsers())
+                        foreach (User d in User.CurrentUser.Department.GetUsers())
                             cms.Items.Add(DocumentWorker.InitUser(d, eh, false));
                     }
                     else

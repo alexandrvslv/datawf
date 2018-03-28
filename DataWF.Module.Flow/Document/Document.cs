@@ -178,7 +178,7 @@ namespace DataWF.Module.Flow
             {
                 DocumentWork oldWork = document.GetByStage(stage);
                 if (oldWork != null && oldWork != from && !oldWork.IsComplete
-                    && (oldWork.User == user || oldWork.User == user.Parent || oldWork.User.Parent == user))
+                    && (oldWork.User == user))
                     return null;
                 object obj = ExecuteStageProcedure(new ExecuteArgs(document, transaction), ParamType.Check, callback);
                 if (obj != null)

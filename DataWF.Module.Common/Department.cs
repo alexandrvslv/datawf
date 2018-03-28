@@ -18,20 +18,21 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Data;
-using DataWF.Common;
+using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 
 namespace DataWF.Module.Common
 {
-    [Table("wf_common", "rposition", "User")]
-    public class Position : DBItem
+    [Table("wf_common", "rdepartment", "User", BlockSize = 100)]
+    public class Department : DBItem, IComparable, IDisposable
     {
-        public static DBTable<Position> DBTable
+        public static DBTable<Department> DBTable
         {
-            get { return DBService.GetTable<Position>(); }
+            get { return DBService.GetTable<Department>(); }
         }
 
-        public Position()
+        public Department()
         {
             Build(DBTable);
         }
@@ -43,47 +44,37 @@ namespace DataWF.Module.Common
             set { SetValue(value, Table.PrimaryKey); }
         }
 
-        [Column("department_id", Keys = DBColumnKeys.Group), Index("rposition_department_id"), Browsable(false)]
-        public int? DepartmentId
-        {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
-        }
-
-        [Reference("fk_rposition_department_id", nameof(DepartmentId))]
-        public Department Department
-        {
-            get { return GetPropertyReference<Department>(nameof(DepartmentId)); }
-            set { SetPropertyReference(value, nameof(DepartmentId)); }
-        }
-
-        [Column("parent_id", Keys = DBColumnKeys.Group), Index("rposition_parent_id"), Browsable(false)]
+        [Column("parent_id", Keys = DBColumnKeys.Group), Index("rdepartment_parent_id"), Browsable(false)]
         public int? ParentId
         {
             get { return GetValue<int?>(Table.GroupKey); }
             set { this[Table.GroupKey] = value; }
         }
 
-        [Reference("fk_rposition_parent_id", nameof(ParentId))]
-        public Position Parent
+        [Reference("fk_rdepartment_parent_id", nameof(ParentId))]
+        public Department Parent
         {
-            get { return GetReference<Position>(Table.GroupKey); }
+            get { return GetReference<Department>(Table.GroupKey); }
             set { SetReference(value, Table.GroupKey); }
         }
 
-        [Column("code", 40, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing)]
-        [Index("rposition_code", true)]
+        [Column("code", 256, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing), Index("rdepartment_code", false)]
         public string Code
         {
             get { return GetValue<string>(Table.CodeKey); }
-            set { SetValue(value, Table.CodeKey); }
+            set { this[Table.CodeKey] = value; }
         }
 
         [Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
         public override string Name
         {
-            get { return GetName("name"); }
-            set { SetName("name", value); }
+            get { return GetName(nameof(Name)); }
+            set { SetName(nameof(Name), value); }
+        }
+
+        public IEnumerable<User> GetUsers()
+        {
+            return GetReferencing<User>(User.DBTable, User.DBTable.ParseProperty(nameof(User.DepartmentId)), DBLoadParam.None);
         }
     }
 }

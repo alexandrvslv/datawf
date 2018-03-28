@@ -372,7 +372,7 @@ namespace DataWF.Data
             }
             catch (Exception ex)
             {
-                transaction.Rollback();
+                transaction?.Rollback();
                 ex.HelpLink = Environment.StackTrace;
                 buf = ex;
             }

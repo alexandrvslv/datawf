@@ -505,16 +505,17 @@ namespace DataWF.Data
             return readerColumns;
         }
 
-        public virtual DBColumn CheckColumn(string name, Type t, ref bool newCol)
+        public virtual DBColumn CheckColumn(string name, Type type, ref bool newCol)
         {
             var column = Columns[name];
             if (column == null)
             {
                 column = new DBColumn(name);
+                column.DataType = type;
                 Columns.Add(column);
                 newCol = true;
             }
-            column.ReaderDataType = t;
+            column.ReaderDataType = type;
             return column;
         }
         public abstract DBItem this[int index] { get; }
@@ -635,7 +636,7 @@ namespace DataWF.Data
                 {
                     if (column.ColumnType == DBColumnTypes.Default)
                     {
-                        var refItem = item.GetCache(column) as DBItem;
+                        var refItem = item.GetReference(column) as DBItem;
                         if (refItem != null && refItem != item)
                         {
                             if (refItem.IsChanged)
