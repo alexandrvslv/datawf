@@ -22,7 +22,7 @@ using DataWF.Common;
 
 namespace DataWF.Module.Common
 {
-    [Table("wf_common", "rposition", "Reference Book")]
+    [Table("wf_common", "rposition", "User")]
     public class Position : DBItem
     {
         public static DBTable<Position> DBTable

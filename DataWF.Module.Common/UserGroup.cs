@@ -26,7 +26,7 @@ using DataWF.Common;
 namespace DataWF.Module.Common
 {
 
-    [Table("wf_common", "rgroup", "Reference Book", BlockSize = 10)]
+    [Table("wf_common", "rgroup", "User", BlockSize = 10)]
     public class UserGroup : DBItem, IDisposable, IAccessGroup
     {
         public static DBTable<UserGroup> DBTable

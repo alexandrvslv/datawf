@@ -42,7 +42,7 @@ namespace DataWF.Module.Common
         Reject
     }
 
-    [Table("wf_common", "duser_log", "Data", BlockSize = 2000, IsLoging = false)]
+    [Table("wf_common", "duser_log", "User", BlockSize = 2000, IsLoging = false)]
     public class UserLog : DBItem, ICheck
     {
         [ThreadStatic]

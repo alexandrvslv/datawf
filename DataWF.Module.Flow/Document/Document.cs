@@ -894,12 +894,12 @@ namespace DataWF.Module.Flow
             for (int i = 0; i < works.Count; i++)
             {
                 DocumentWork dw = works[i];
-                var stage = dw.Stage == null ? "none" : dw.Stage.ToString();
-
+                var stage = dw.Stage?.ToString()?? "none";
+                var user = dw.User?.Name ?? "empty";
                 if (!dw.IsComplete)
                 {
-                    if (workUsers.Length == 0 || workUsers.IndexOf(dw.User.Name, StringComparison.Ordinal) < 0)
-                        workUsers = workUsers + dw.User.Name + " ";
+                    if (workUsers.Length == 0 || workUsers.IndexOf(user, StringComparison.Ordinal) < 0)
+                        workUsers = workUsers + user + " ";
                     if (workStages.Length == 0 || workStages.IndexOf(stage, StringComparison.Ordinal) < 0)
                         workStages = workStages + stage + " ";
                     if (dw.IsCurrent)

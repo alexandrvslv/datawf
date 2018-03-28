@@ -77,6 +77,8 @@ namespace DataWF.Data
             }
         }
 
+
+        [Browsable(false)]
         public override bool IsLoging
         {
             get { return BaseTable.IsLoging; }

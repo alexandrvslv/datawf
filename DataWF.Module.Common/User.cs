@@ -27,23 +27,137 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using System.Linq;
+using Novell.Directory.Ldap;
+using System.Diagnostics;
 
 namespace DataWF.Module.Common
-{
-    public enum UserTypes
+{    
+    [Table("wf_common", "rdepartment", "User", BlockSize = 100)]
+    public class Department : DBItem, IComparable, IDisposable
     {
-        Persone,
-        Department,
-        Division
+        public static DBTable<Department> DBTable
+        {
+            get { return DBService.GetTable<Department>(); }
+        }
+
+        public Department()
+        {
+            Build(DBTable);
+        }
+
+        [Column("unid", Keys = DBColumnKeys.Primary)]
+        public int? Id
+        {
+            get { return GetValue<int?>(Table.PrimaryKey); }
+            set { SetValue(value, Table.PrimaryKey); }
+        }
+
+        [Column("parent_id", Keys = DBColumnKeys.Group), Index("rdepartment_parent_id"), Browsable(false)]
+        public int? ParentId
+        {
+            get { return GetValue<int?>(Table.GroupKey); }
+            set { this[Table.GroupKey] = value; }
+        }
+
+        [Reference("fk_rdepartment_parent_id", nameof(ParentId))]
+        public User Parent
+        {
+            get { return GetReference<User>(Table.GroupKey); }
+            set { SetReference(value, Table.GroupKey); }
+        }
+
+        [Column("code", 256, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing), Index("rdepartment_code", true)]
+        public string Code
+        {
+            get { return GetValue<string>(Table.CodeKey); }
+            set { this[Table.CodeKey] = value; }
+        }
+
+        [Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
+        public override string Name
+        {
+            get { return GetName(nameof(Name)); }
+            set { SetName(nameof(Name), value); }
+        }
     }
 
-    [Table("wf_common", "ruser", "Reference Book", BlockSize = 100)]
+    [Table("wf_common", "ruser", "User", BlockSize = 100)]
     public class User : DBItem, IComparable, IDisposable
     {
         public static void SetCurrent(string login, string password)
         {
             var user = GetUser(login, GetSha(password));
             CurrentUser = user ?? throw new Exception();
+        }
+
+        public static List<User> LoadADUsers(string userName, string password)
+        {
+            var users = new List<User>();
+            try
+            {
+                var domain = System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties().DomainName;
+                var domain1 = domain.Substring(0, domain.IndexOf('.'));
+                var domain2 = domain.Substring(domain.IndexOf('.') + 1);
+                var ldapDom = $"dc={domain1},dc={domain2}";
+                var userDN = $"{userName},{ldapDom}";//$"cn={userName},o={domain1}";
+                var attributes = new string[] { "cn", "company", "lastLongon", "lastLongoff", "mail", "mailNickname", "name", "title", "userPrincipalName" };
+                using (var conn = new LdapConnection())
+                {
+                    conn.Connect(domain, LdapConnection.DEFAULT_PORT);
+                    conn.Bind(userDN, password);
+                    var results = conn.Search(ldapDom, //search base
+                        LdapConnection.SCOPE_SUB, //scope 
+                        "(&(objectCategory=person)(objectClass=user)(!(userAccountControl:1.2.840.113556.1.4.803:=2)))", //filter
+                        attributes, //attributes 
+                        false); //types only 
+                    while (results.HasMore())
+                    {
+                        try
+                        {
+
+                            var resultRecord = results.Next();
+                            var attribute = resultRecord.getAttribute("mailNickname");
+                            if (attribute != null)
+                            {
+                                Position position = null;
+                                var positionName = resultRecord.getAttribute("title")?.StringValue;
+                                if (!string.IsNullOrEmpty(positionName))
+                                {
+                                    position = Position.DBTable.LoadByCode(positionName);
+                                    if (position == null)
+                                    {
+                                        position = new Position();
+                                    }
+                                    position.Number = positionName;
+                                    position.Name = positionName;
+                                    position.Save();
+                                }
+
+                                var user = User.DBTable.LoadByCode(attribute.StringValue, User.DBTable.ParseProperty(nameof(User.Login)), DBLoadParam.None);
+                                if (user == null)
+                                {
+                                    user = new User();
+                                }
+                                user.Position = position;
+                                user.Login = attribute.StringValue;
+                                user.EMail = resultRecord.getAttribute("mail")?.StringValue;
+                                user.Name = resultRecord.getAttribute("name")?.StringValue;
+                                user.Save();
+                            }
+
+                        }
+                        catch (LdapException e)
+                        {
+                            Debug.WriteLine(e.Message);
+                        }
+                    }
+                    conn.Disconnect();
+                }
+            }
+            catch (Exception ex)
+            {
+            }
+            return users;
         }
 
         public static User CurrentUser { get; internal set; }
@@ -151,7 +265,6 @@ namespace DataWF.Module.Common
         public User()
         {
             Build(DBTable);
-            UserType = UserTypes.Persone;
         }
 
         public UserLog LogStart;
@@ -161,28 +274,7 @@ namespace DataWF.Module.Common
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
             set { this[Table.PrimaryKey] = value; }
-        }
-
-        [Column("parent_id", Keys = DBColumnKeys.Group), Index("ruser_parent_id"), Browsable(false)]
-        public int? ParentId
-        {
-            get { return GetValue<int?>(Table.GroupKey); }
-            set { this[Table.GroupKey] = value; }
-        }
-
-        [Reference("fk_ruser_parent_id", nameof(ParentId))]
-        public User Parent
-        {
-            get { return GetReference<User>(Table.GroupKey); }
-            set { SetReference(value, Table.GroupKey); }
-        }
-
-        [Column("type_id", Keys = DBColumnKeys.ElementType)]
-        public UserTypes? UserType
-        {
-            get { return (UserTypes?)GetValue<int?>(Table.ElementTypeKey); }
-            set { this[Table.ElementTypeKey] = (int?)value; }
-        }
+        }        
 
         [Column("login", 256, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing), Index("ruser_login", true)]
         public string Login
@@ -198,7 +290,7 @@ namespace DataWF.Module.Common
             set { SetName("name", value); }
         }
 
-        [Column("position_id")]
+        [Column("position_id"), Browsable(false)]
         public int? PositionId
         {
             get { return GetProperty<int?>(nameof(PositionId)); }
@@ -234,7 +326,7 @@ namespace DataWF.Module.Common
             }
         }
 
-        [Column("email", 1024)]
+        [Column("email", 1024), Index("ruser_email", true)]
         public string EMail
         {
             get { return GetProperty<string>(nameof(EMail)); }

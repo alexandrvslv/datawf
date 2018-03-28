@@ -48,7 +48,6 @@ namespace DataWF.Test.Module.Common
 
             var user = new User()
             {
-                UserType = UserTypes.Persone,
                 Login = "test",
                 Name = "Test User",
                 Password = "UserCommon1!",
