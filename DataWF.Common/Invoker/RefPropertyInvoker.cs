@@ -12,7 +12,7 @@ namespace DataWF.Common
         public RefPropertyInvoker(PropertyInfo info)
         {
             Name = info.Name;
-            CanWrite = info.CanWrite;
+            CanWrite = info.CanWrite && info.GetSetMethod() != null;
             DataType = info.PropertyType;
             GetAction = GetInvokerGet(info.GetGetMethod());
             if (CanWrite)
