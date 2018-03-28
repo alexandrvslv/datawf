@@ -161,7 +161,7 @@ namespace DataWF.Gui
         public Pattern GetBrush(Rectangle rect, Color color)
         {
             Pattern _brush = null;
-            if (color != ColorEmpty && !dictBrush.TryGetValue(color, out _brush))
+            if (color != ColorEmpty)// && !dictBrush.TryGetValue(color, out _brush))
             {
                 switch (type)
                 {

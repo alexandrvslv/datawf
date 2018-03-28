@@ -135,9 +135,19 @@ namespace DataWF.Gui
 
         public static ILayoutCellEditor GetCellEditor(ILayoutCell cell)
         {
-            if (GuiEnvironment.CellEditorFabric.TryGetValue(cell?.Invoker?.DataType, out var generator))
+            var type = cell?.Invoker?.DataType;
+            if (type == null)
+                return null;
+            if (CellEditorFabric.TryGetValue(type, out var generator))
             {
                 return generator(cell);
+            }
+            foreach (var entry in CellEditorFabric)
+            {
+                if (TypeHelper.IsBaseType(type, entry.Key))
+                {
+                    return entry.Value(cell);
+                }
             }
             return null;
         }

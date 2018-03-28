@@ -43,7 +43,11 @@ namespace DataWF.Data.Gui
             {
                 return new CellEditorList() { DataSource = new SelectableList<DBSystem>(DBSystem.GetSystems()) };
             };
-
+            GuiEnvironment.CellEditorFabric[typeof(DBItem)] = (cell) =>
+            {
+                var table = DBService.GetTableAttribute(cell.Invoker.DataType, true);
+                return table == null? null: new CellEditorTable() { Table = table.Table };
+            };
         }
     }
 
