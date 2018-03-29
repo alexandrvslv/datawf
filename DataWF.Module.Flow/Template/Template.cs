@@ -128,7 +128,7 @@ namespace DataWF.Module.Flow
         }
 
         [Reference("fk_rtemplate_group_id", nameof(ParentId))]
-        public Template Parent
+        public virtual Template Parent
         {
             get { return GetReference<Template>(Table.GroupKey); }
             set
@@ -182,7 +182,7 @@ namespace DataWF.Module.Flow
             }
         }
 
-        public Document CreateDocument()
+        public virtual Document CreateDocument()
         {
             var document = (Document)DocumentTypeInfo.Constructor.Create();
             document.Template = this;
