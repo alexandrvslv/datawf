@@ -453,6 +453,12 @@ namespace DataWF.Data
             return GetReferencing<T>(new QQuery(query, table), param);
         }
 
+        public IEnumerable<T> GetReferencing<T>(string property, DBLoadParam param) where T : DBItem, new()
+        {
+            var table = DBService.GetTable<T>();
+            return GetReferencing<T>(table, table.ParseProperty(property), param);
+        }
+
         public IEnumerable<T> GetReferencing<T>(DBTable table, DBColumn column, DBLoadParam param) where T : DBItem, new()
         {
             if ((param & DBLoadParam.Load) == DBLoadParam.Load)

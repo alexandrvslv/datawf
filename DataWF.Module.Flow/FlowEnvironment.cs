@@ -95,8 +95,6 @@ namespace DataWF.Module.Flow
             Helper.Logs.Add(new StateInfo("Flow Synchronization", "Start", "", StatusType.Information));
             Stopwatch watch = new Stopwatch();
             watch.Start();
-            if (Config.Schema == null)
-                throw new Exception("Default schema not specified!");
             using (var transaction = new DBTransaction(Config.Schema.Connection))
             {
                 Book.DBTable.Load(transaction, "", DBLoadParam.Synchronize | DBLoadParam.CheckDeleted);

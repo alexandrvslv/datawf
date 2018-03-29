@@ -57,6 +57,7 @@ namespace DataWF.Module.FlowGui
             ose.ButtonAcceptClick += AcceptOnActivated;
 
             var userKeys = UserTreeKeys.None;
+            if (Department.DBTable?.Access.View ?? false) userKeys |= UserTreeKeys.Department;
             if (User.DBTable?.Access.View ?? false) userKeys |= UserTreeKeys.User;
             if (UserGroup.DBTable?.Access.View ?? false) userKeys |= UserTreeKeys.Group;
             if (Scheduler.DBTable?.Access.View ?? false) userKeys |= UserTreeKeys.Scheduler;
@@ -324,7 +325,7 @@ namespace DataWF.Module.FlowGui
             var flag = true;
             foreach (var select in tree.Selection)
             {
-                var item = ((Node)select.Item).Tag as DBItem;
+                var item = ((TableItemNode)select.Item).Item as DBItem;
                 if (item == null || !item.Access.Delete)
                 {
                     flag = false;
@@ -333,8 +334,8 @@ namespace DataWF.Module.FlowGui
             }
             barMain["Remove"].Sensitive = flag;
 
-            if (tree.SelectedNode != null && GuiService.Main != null && !(tree.SelectedNode.Tag is IDBTableView))
-                GuiService.Main.ShowProperty(this, tree.SelectedNode.Tag, false);
+            if (tree.SelectedDBItem != null && GuiService.Main != null)
+                GuiService.Main.ShowProperty(this, tree.SelectedDBItem, false);
         }
 
         public DockType DockType

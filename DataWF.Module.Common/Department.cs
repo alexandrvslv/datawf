@@ -72,9 +72,14 @@ namespace DataWF.Module.Common
             set { SetName(nameof(Name), value); }
         }
 
+        public IEnumerable<Position> GetPositions()
+        {
+            return GetReferencing<Position>(nameof(Position.DepartmentId), DBLoadParam.None);
+        }
+
         public IEnumerable<User> GetUsers()
         {
-            return GetReferencing<User>(User.DBTable, User.DBTable.ParseProperty(nameof(User.DepartmentId)), DBLoadParam.None);
+            return GetReferencing<User>(nameof(User.DepartmentId), DBLoadParam.None);
         }
     }
 }

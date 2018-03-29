@@ -227,7 +227,7 @@ namespace DataWF.Module.Common
             set { this[Table.PrimaryKey] = value; }
         }        
 
-        [Column("login", 256, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing), Index("ruser_login", true)]
+        [Column("login", 256, Keys = DBColumnKeys.Code | DBColumnKeys.Indexing), Index("ruser_login", true)]
         public string Login
         {
             get { return GetValue<string>(Table.CodeKey); }

@@ -124,7 +124,7 @@ namespace DataWF.Module.Flow
 
         public IEnumerable<StageParam> GetParams()
         {
-            var list = StageParam.DBTable.Select(StageParam.DBTable.ParseColumn(nameof(StageParam.Stage)), PrimaryId, CompareType.Equal).ToList();
+            var list = GetReferencing<StageParam>(nameof(StageParam.StageId), DBLoadParam.None).ToList();
             list.Sort(new DBComparer(StageParam.DBTable.PrimaryKey, ListSortDirection.Ascending));
             return list;
         }

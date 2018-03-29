@@ -16,38 +16,13 @@ namespace DataWF.Module.CommonGui
     public enum UserTreeKeys
     {
         None = 0,
-        User = 128,
-        Group = 256,
-        Permission = 512,
-        Scheduler = 1024,
-        Access = 2048
-    }
-
-    public class TableItemNode : Node, ILocalizable
-    {
-        public IDBTableContent Item { get; set; }
-
-        public string TableName
-        {
-            get { return Item?.Table.DisplayName; }
-        }
-
-        public AccessValue Access
-        {
-            get { return (Item as IAccessable)?.Access; }
-            set { (Item as IAccessable).Access = value; }
-        }
-
-        public int Count { get; set; }
-
-        public void Localize()
-        {
-            if (Item != null)
-            {
-                Glyph = Locale.GetGlyph(Item.GetType().FullName, Item.GetType().Name);
-                Text = Item?.ToString();
-            }
-        }
+        Department = 1 << 1,
+        Position = 1 << 2,
+        User = 1 << 3,
+        Group = 1 << 4,
+        Permission = 1 << 5,
+        Scheduler = 1 << 6,
+        Access = 1 << 7
     }
 
     public class UserTree : LayoutList
@@ -112,6 +87,18 @@ namespace DataWF.Module.CommonGui
         }
 
         [DefaultValue(false)]
+        public bool ShowDepartment
+        {
+            get { return (userKeys & UserTreeKeys.Department) == UserTreeKeys.Department; }
+        }
+
+        [DefaultValue(false)]
+        public bool ShowPosition
+        {
+            get { return (userKeys & UserTreeKeys.Position) == UserTreeKeys.Position; }
+        }
+
+        [DefaultValue(false)]
         public bool ShowGroup
         {
             get { return (userKeys & UserTreeKeys.Group) == UserTreeKeys.Group; }
@@ -130,7 +117,9 @@ namespace DataWF.Module.CommonGui
 
         public virtual void RefreshData()
         {
-            CheckDBView(User.DBTable?.DefaultView, ShowUser);
+            CheckDBView(Department.DBTable?.DefaultView, ShowDepartment);
+            //CheckDBView(Position.DBTable?.DefaultView, ShowPosition);
+            //CheckDBView(User.DBTable?.DefaultView, ShowUser);
             CheckDBView(UserGroup.DBTable?.DefaultView, ShowGroup);
             CheckDBView(Scheduler.DBTable?.DefaultView, ShowScheduler);
             CheckDBView(GroupPermission.DBTable?.DefaultView, ShowPermission);
@@ -223,28 +212,68 @@ namespace DataWF.Module.CommonGui
             return rez;
         }
 
-        public TableItemNode CheckDBView(IDBTableView item, bool show)
+        public TableItemNode CheckDBView(IDBTableView view, bool show)
         {
-            if (item == null)
+            if (view == null)
                 return null;
             TableItemNode node;
             if (show)
             {
-                item.ListChanged += handler;
-                node = InitItem(item);
+                view.ListChanged += handler;
+                node = InitItem(view);
                 Nodes.Add(node);
             }
             else
             {
-                item.ListChanged -= handler;
-                node = (TableItemNode)Nodes.Find(GetName(item));
+                view.ListChanged -= handler;
+                node = (TableItemNode)Nodes.Find(GetName(view));
                 if (node != null)
                     node.Hide();
             }
             return node;
         }
 
-        public virtual TableItemNode InitItem(IDBTableContent item)
+        public void InitItems(IEnumerable items, TableItemNode pnode, bool show)
+        {
+            foreach (DBItem item in items)
+            {
+                if (item == pnode.Item)
+                {
+                    Helper.OnException(new Exception($"Warning - self reference!({item})"));
+                }
+                if (show && (status == DBStatus.Empty || (status & item.Status) == status) && (!Access || item.Access.View))
+                {
+                    InitItem(item).Group = pnode;
+                }
+                else
+                {
+                    var node = Nodes.Find(GetName(item));
+                    if (node != null)
+                        node.Hide();
+                }
+            }
+        }
+
+        public virtual void CheckDBItem(TableItemNode node)
+        {
+            var item = (DBItem)node.Item;
+            if (item.Table.GroupKey != null && item.PrimaryId != null)
+            {
+                InitItems(item.Table.SelectItems(item.Table.GroupKey, item.PrimaryId, CompareType.Equal), node, node.Visible);
+            }
+            if (item is Department)
+            {
+                node.Glyph = GlyphType.Home;
+                InitItems(((Department)item).GetPositions(), node, ShowPosition);
+                InitItems(((Department)item).GetUsers(), node, ShowUser);
+            }
+            if (item is User)
+            {
+                node.Glyph = GlyphType.User;
+            }
+        }
+
+        public TableItemNode InitItem(IDBTableContent item)
         {
             var name = GetName(item);
             var node = Nodes.Find(name) as TableItemNode;
@@ -252,20 +281,9 @@ namespace DataWF.Module.CommonGui
             {
                 node = new TableItemNode { Name = name, Item = item };
             }
-            node.Localize();
             if (item is DBItem)
             {
-                var row = (DBItem)item;
-                if (item.Table.GroupKey != null && row.PrimaryId != null)
-                {
-                    foreach (var sitem in item.Table.SelectItems(item.Table.GroupKey, row.PrimaryId, CompareType.Equal))
-                    {
-                        if (sitem == item)
-                            Helper.OnException(new Exception($"Warning - self reference!({item})"));
-                        else if ((status == DBStatus.Empty || (status & sitem.Status) == status) && (!Access || sitem.Access.View))
-                            InitItem(sitem).Group = node;
-                    }
-                }
+                CheckDBItem(node);
             }
             else
             {
@@ -283,6 +301,8 @@ namespace DataWF.Module.CommonGui
                     }
                 }
             }
+            node.Localize();
+
             return node;
         }
 
@@ -328,7 +348,7 @@ namespace DataWF.Module.CommonGui
 
         public string GenereteExport()
         {
-            StringBuilder rez = new StringBuilder();
+            var rez = new StringBuilder();
 
             if (SelectedNode != null)
             {

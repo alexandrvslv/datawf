@@ -89,37 +89,29 @@ namespace DataWF.Module.FlowGui
 			CheckDBView(Work.DBTable?.DefaultView, ShowWork);
 		}
 
-		public void InitItems(IEnumerable items, TableItemNode pnode, bool show)
+		public override void CheckDBItem(TableItemNode node)
 		{
-			foreach (DBItem item in items)
-			{
-				if (show)
-					InitItem(item).Group = pnode;
-				else
-				{
-					var node = Nodes.Find(GetName(item));
-					if (node != null)
-						node.Hide();
-				}
-			}
-		}
-
-		public override TableItemNode InitItem(IDBTableContent item)
-		{
-			var node = base.InitItem(item);
+            base.CheckDBItem(node);
+            var item = node.Item as DBItem;
 			if (item is Template)
 			{
-				InitItems(((Template)item).GetParams(), node, ShowStage);
+                node.Glyph = GlyphType.Book;
+                InitItems(((Template)item).GetParams(), node, ShowStage);
 			}
 			else if (item is Work)
 			{
-				InitItems(((Work)item).GetStages(), node, ShowStage);
+                node.Glyph = GlyphType.GearsAlias;
+                InitItems(((Work)item).GetStages(), node, ShowStage);
 			}
 			else if (item is Stage)
 			{
-				InitItems(((Stage)item).GetParams(), node, ShowStageParam);
+                node.Glyph = GlyphType.EditAlias;
+                InitItems(((Stage)item).GetParams(), node, ShowStageParam);
 			}
-			return node;
+            else if (item is StageParam || item is TemplateParam)
+            {
+                node.Glyph = GlyphType.Code;
+            }            
 		}
 	}
 }
