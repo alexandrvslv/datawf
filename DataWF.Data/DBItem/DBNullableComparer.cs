@@ -27,7 +27,7 @@ namespace DataWF.Data
 
         public int GetHashCode(DBNullable<T> obj)
         {
-            return obj.NotNull.GetHashCode() ^ Comparer.GetHashCode(obj.Value);
+            return obj.NotNull.GetHashCode() ^ obj.Value?.GetHashCode() ?? 0;
         }
     }
 }
