@@ -54,18 +54,21 @@ namespace DataWF.TestGui
             var task = new Task(CheckQueue, TaskCreationOptions.LongRunning);
             task.Start();
 
-            var drives = DriveInfo.GetDrives();
-            foreach (var drive in drives)
-            {
-                try
+            Task.Run(() =>
                 {
-                    directoryTree.Nodes.Add(InitDrive(drive));
-                }
-                catch (Exception e)
-                {
-                    Helper.OnException(e);
-                }
-            }
+                    var drives = DriveInfo.GetDrives();
+                    foreach (var drive in drives)
+                    {
+                        try
+                        {
+                            directoryTree.Nodes.Add(InitDrive(drive));
+                        }
+                        catch (Exception e)
+                        {
+                            Helper.OnException(e);
+                        }
+                    }
+                });
 
             GuiService.Localize(this, "Files", "Files", GlyphType.FilesO);
         }
