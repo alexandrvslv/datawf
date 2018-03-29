@@ -110,6 +110,12 @@ namespace DataWF.Gui
                 return new CellEditorFont();
             };
 
+            LocaleImage.ImageCache += (item) =>
+            {
+                using (var stream = new MemoryStream(item.Data))
+                    return Xwt.Drawing.Image.FromStream(stream);
+            };
+
             AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
 
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
@@ -198,12 +204,7 @@ namespace DataWF.Gui
         }
 
         public static void Load(string name = "gui.xml")
-        {
-            LocaleImage.ImageCache += (item) =>
-            {
-                using (var stream = new MemoryStream(item.Data))
-                    return Xwt.Drawing.Image.FromStream(stream);
-            };
+        {            
             instance.LoadDirectory(Helper.GetDirectory(), name);
         }
 
@@ -214,7 +215,7 @@ namespace DataWF.Gui
 
         public void LoadFile(string file)
         {
-            Serialization.Deserialize(file, this);
+            Serialization.Deserialize(file, this, false);
         }
 
         public LayoutFieldInfoCache Fields { get; set; } = new LayoutFieldInfoCache();

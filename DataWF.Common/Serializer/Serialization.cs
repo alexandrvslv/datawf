@@ -17,10 +17,10 @@ namespace DataWF.Common
             return instance.Deserialize(stream, element);
         }
 
-        public static object Deserialize(string file, object element = null)
+        public static object Deserialize(string file, object element = null, bool saveIfNotExist = true)
         {
             OnNotify(element, SerializeType.Load, file);
-            return instance.Deserialize(file, element);
+            return instance.Deserialize(file, element, saveIfNotExist);
         }
 
         public static void Serialize(object element, string file)

@@ -36,11 +36,14 @@ namespace DataWF.Common
             return element;
         }
 
-        public object Deserialize(string file, object element = null)
+        public object Deserialize(string file, object element = null, bool saveIfNotExist = true)
         {
             if (!File.Exists(file))
             {
-                Serialize(element, file);
+                if (saveIfNotExist)
+                {
+                    Serialize(element, file);
+                }
                 return element;
             }
             try
