@@ -32,8 +32,7 @@ namespace DataWF.Common
         public SelectableList(IEnumerable<T> items, IComparer<T> comparer = null) : this()
         {
             this.comparer = comparer;
-            foreach (T item in items)
-                AddInternal(item);
+            AddRangeInternal(items);
         }
 
         [XmlIgnore, Browsable(false)]
@@ -205,7 +204,9 @@ namespace DataWF.Common
                 }
             }
             if (index >= 0)
+            {
                 OnListChanged(ListChangedType.ItemChanged, index, -1, e.PropertyName);
+            }
         }
 
         public bool IsFirst(T item)
@@ -469,7 +470,7 @@ namespace DataWF.Common
 
         public void SortInternal()
         {
-            ListHelper.QuickSort<T>(items, null);
+            ListHelper.QuickSort<T>(items, comparer);
         }
 
         public void Sort()
@@ -547,10 +548,15 @@ namespace DataWF.Common
             return items.GetEnumerator();
         }
 
-        public void AddRange(IEnumerable<T> list)
+        public void AddRangeInternal(IEnumerable<T> list)
         {
             foreach (T item in list)
                 AddInternal(item);
+        }
+
+        public void AddRange(IEnumerable<T> list)
+        {
+            AddRangeInternal(list);
             OnListChanged(ListChangedType.Reset, -1);
         }
     }
