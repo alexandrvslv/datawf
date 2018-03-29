@@ -636,7 +636,11 @@ namespace DataWF.Data
                 {
                     if (column.ColumnType == DBColumnTypes.Default)
                     {
-                        var refItem = item.GetReference(column) as DBItem;
+                        var refItem = item.GetCache(column) as DBItem;
+                        if (refItem == null && item.GetValue(column) != null)
+                        {
+                            refItem = item.GetReference(column) as DBItem;
+                        }
                         if (refItem != null && refItem != item)
                         {
                             if (refItem.IsChanged)
