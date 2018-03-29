@@ -15,18 +15,9 @@ namespace DataWF.Gui
     {
         private ToolItem toolLoadImages;
         private ToolItem toolSave;
-        private ToolItem toolImages;
-        private ToolWindow window;
 
         public LocalizeEditor()
         {
-            toolImages = new ToolItem(ToolImagesClick)
-            {
-                DisplayStyle = ToolItemDisplayStyle.Text,
-                Name = "toolImages",
-                Text = "Images"
-            };
-
             toolLoadImages = new ToolItem(ToolLoadImagesClick)
             {
                 DisplayStyle = ToolItemDisplayStyle.Text,
@@ -43,7 +34,6 @@ namespace DataWF.Gui
 
             Editor.Bar.Items.Add(new ToolSeparator());
             Editor.Bar.Items.Add(toolSave);
-            Editor.Bar.Items.Add(toolImages);
             Editor.Bar.Items.Add(toolLoadImages);
             Editor.ReadOnly = false;
             Editor.List.RetriveCellEditor += (object listItem, object value, ILayoutCell cell) =>
@@ -65,24 +55,16 @@ namespace DataWF.Gui
             images.List.ListInfo.HeaderVisible = false;
             images.DataSource = Locale.Instance.Images;
 
-            window = new ToolWindow { Target = images };
-
             Name = "LocalizeEditor";
-            Text = "LocalizeEditor";
         }
 
         public override void Localize()
         {
+            base.Localize();
             var name = GetType().Name;
             GuiService.Localize(this, name, "Localize Editor");
             GuiService.Localize(toolLoadImages, name, "Load Images");
-            GuiService.Localize(toolImages, name, "Images", GlyphType.PictureO);
             GuiService.Localize(toolSave, name, "Save", GlyphType.SaveAlias);
-        }
-
-        private void ToolImagesClick(object sender, EventArgs e)
-        {
-            window.Show(this, Point.Zero);
         }
 
         private void ToolLoadImagesClick(object sender, EventArgs e)

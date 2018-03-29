@@ -9,7 +9,8 @@ namespace DataWF.Gui
 	{
 		public Menubar() : base()
 		{
-			Content = Bar = new Toolsbar();
+            BackgroundColor = GuiEnvironment.StylesInfo["Window"].BaseColor;
+            Content = Bar = new Toolsbar();
 			Bar.ItemClick += OnItemClick;
 			Bar.Items.GrowMode = LayoutGrowMode.Vertical;
 		}

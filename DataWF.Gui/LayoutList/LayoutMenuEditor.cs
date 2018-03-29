@@ -129,6 +129,7 @@ namespace DataWF.Gui
 
 			PackStart(bar, false, false);
 			PackStart(map, true, true);
+            BackgroundColor = GuiEnvironment.StylesInfo["Page"].BaseColor;
 		}
 
 		public Toolsbar Bar

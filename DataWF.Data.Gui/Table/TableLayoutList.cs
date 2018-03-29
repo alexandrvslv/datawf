@@ -385,13 +385,6 @@ namespace DataWF.Data.Gui
             }
         }
 
-        protected override void OnCellGlyphClick(LayoutHitTestEventArgs e)
-        {
-            base.OnCellGlyphClick(e);
-            if (View != null)
-                View.UpdateFilter();
-        }
-
         protected override string GetCacheKey()
         {
             if (Table != null)

@@ -194,7 +194,7 @@ namespace DataWF.Data.Gui
             Title = "Main Form";
             Size = new Size(800, 600);
             task.TaskList = tasks;
-
+            BackgroundColor = GuiEnvironment.StylesInfo["Window"].BaseColor;
             Localize();
         }
 

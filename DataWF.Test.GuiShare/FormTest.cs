@@ -73,8 +73,8 @@ namespace DataWF.TestGui
 			box.PackStart(dock, true, true);
 
 			Content = box;
-			BackgroundColor = Colors.Gray.WithIncreasedLight(-0.2);
-			Name = "FormTest";
+            BackgroundColor = GuiEnvironment.StylesInfo["Window"].BaseColor;
+            Name = "FormTest";
 			Padding = new WidgetSpacing(5, 5, 5, 5);
 			Size = new Size(699, 470);
 			Title = "Test GUI";

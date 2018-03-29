@@ -16,17 +16,31 @@ namespace DataWF.Gui
 
         public void GenerateDefault()
         {
-            var defaultFont = Font.SystemMonospaceFont;
+            var defaultFont = Font.SystemSansSerifFont;
             if (Toolkit.CurrentEngine.Type == ToolkitType.Gtk)
                 defaultFont = defaultFont.WithSize(defaultFont.Size * 0.9);
 
             AddRange(new CellStyle[]{
                 new CellStyle()
                 {
+                    Name = "List",
+                    Font = defaultFont,
+                    Round = 0,
+                    BaseColor = Colors.LightGray
+                },
+                new CellStyle()
+                {
+                    Name = "Window",
+                    Font = defaultFont,
+                    Round = 0,
+                    BaseColor = Colors.LightGray.WithIncreasedLight(-0.1)
+                },
+                new CellStyle()
+                {
                     Name = "Row",
                     Font = defaultFont,
                     Round = 0,
-                    BaseColor = Colors.WhiteSmoke
+                    BaseColor = Colors.LightGray
                 },
                 new CellStyle()
                 {
@@ -82,13 +96,14 @@ namespace DataWF.Gui
                     Name = "Group",
                     Font = defaultFont.WithSize(defaultFont.Size+1).WithWeight(FontWeight.Semibold),
                     Round = 5,
-                    BaseColor = Colors.Gray.WithIncreasedLight(0.3)
+                    BaseColor = Colors.Gray.WithIncreasedLight(0.3).Invert()
                 },
                 new CellStyle()
                 {
                     Name = "Red",
                     Font = defaultFont,
                     Round = 0,
+                    Invert = false,
                     BaseColor = Colors.Red
                 },
                 new CellStyle()
@@ -116,13 +131,14 @@ namespace DataWF.Gui
                     Name = "DocumentDock",
                     Round = 4,
                     Font = defaultFont.WithSize(10),
+                    Invert = false,
                     BaseColor = Colors.LightBlue
                 },
                 new CellStyle()
                 {
                     Name = "Page",
                     Font = defaultFont.WithWeight(FontWeight.Semibold),
-                    BaseColor = Colors.Gray.WithIncreasedLight(-0.2)
+                    BaseColor = Colors.Gray.WithIncreasedLight(0.3)
                 },
                 new CellStyle()
                 {
@@ -182,11 +198,10 @@ namespace DataWF.Gui
                 }
             });
 
-            this["Cell"].BackBrush.Color = Colors.Transparent;
-            this["Row"].BorderBrush.Color = Colors.Transparent;
-            this["Field"].BorderBrush.Color = Colors.Transparent;
-            this["Node"].BorderBrush.Color = Colors.Transparent;
+            this["Row"].BackBrush.Color = this["Row"].BaseColor;
+            this["Column"].BackBrush.Color = this["Column"].BaseColor;
             this["Column"].BackBrush.Type = CellStyleBrushType.Gradient;
+            this["GroupBoxHeader"].BackBrush.Color = this["GroupBoxHeader"].BaseColor;
             this["GroupBoxHeader"].BackBrush.Type = CellStyleBrushType.Gradient;
         }
 

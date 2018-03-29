@@ -159,7 +159,7 @@ namespace DataWF.Gui
             canvas.MinWidth = 150;
             canvas.MinHeight = 50;
             canvas.AddChild(editor, 0, 0);
-            canvas.BackgroundColor = Colors.Transparent;
+            canvas.BackgroundColor = GuiEnvironment.StylesInfo["List"].BaseColor;
 
             Content = canvas;
 
@@ -4412,6 +4412,7 @@ namespace DataWF.Gui
                 e.Formated = GetTextLayout(e);
             }
 
+            e.State = CellDisplayState.Default;
             if (!e.Context.Print)
             {
                 var curr = selection.CurrentRow;
@@ -4427,7 +4428,7 @@ namespace DataWF.Gui
                 else if (hover != null && e.Index == hover.Index && e.Column == hover.Column)
                 {
                     e.State = CellDisplayState.Hover;
-                }
+                }                
             }
             e.Column.GetEditor(e.Item)?.DrawCell(e);
         }

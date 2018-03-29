@@ -25,32 +25,32 @@ namespace DataWF.Gui
             get { return baseColor; }
             set
             {
-                if (value == Colors.Transparent || value == baseColor)
-                    return;
-                var diff = 0.11D;
+                var diff = 0.09D;
+                if (Invert)
+                    value = value.Invert();
                 baseColor = value;
-                BackBrush.Color = value;
-                BorderBrush.Color = value.WithIncreasedLight(-diff);
+                BackBrush.Color = CellStyleBrush.ColorEmpty;
+                BorderBrush.Color = CellStyleBrush.ColorEmpty;// value.WithIncreasedLight(-diff);
                 FontBrush.Color = value.Invert().WithIncreasedContrast(diff);
 
-                value = baseColor.Invert().WithIncreasedLight(diff);
-                BackBrush.ColorSelect = value;
-                BorderBrush.ColorSelect = value.WithIncreasedLight(-diff);
-                FontBrush.ColorSelect = value.Invert().WithIncreasedContrast(diff);
-
-                value = value.WithIncreasedLight(diff);
+                value = baseColor.WithIncreasedLight(diff);
                 BackBrush.ColorHover = value;
-                BorderBrush.ColorHover = value.WithIncreasedLight(-diff);
+                BorderBrush.ColorHover = value.WithIncreasedLight(diff / 2.0);
                 FontBrush.ColorHover = FontBrush.Color;
 
-                value = baseColor.WithIncreasedContrast(0.1);
+                value = value.WithIncreasedLight(diff);
+                BackBrush.ColorSelect = value;
+                BorderBrush.ColorSelect = value.WithIncreasedLight(diff / 2.0);
+                FontBrush.ColorSelect = FontBrush.Color;
+
+                value = baseColor.WithIncreasedContrast(diff);
                 BackBrush.ColorPress = value;
-                BorderBrush.ColorPress = value.WithIncreasedLight(-diff);
+                BorderBrush.ColorPress = value.WithIncreasedLight(diff / 2.0);
                 FontBrush.ColorPress = value.Invert();
 
-                value = baseColor.WithIncreasedLight(diff);
+                value = baseColor.WithIncreasedLight(diff / 4.0D);
                 BackBrush.ColorAlternate = value;
-                BorderBrush.ColorAlternate = value.WithIncreasedLight(-diff);
+                BorderBrush.ColorAlternate = value.WithIncreasedLight(diff / 4.0D);
                 FontBrush.ColorAlternate = baseColor.Invert();
             }
         }
@@ -125,6 +125,8 @@ namespace DataWF.Gui
         }
 
         public Alignment Alignment { get; set; }
+
+        public bool Invert { get; set; } = true;
 
         public CellStyle Clone()
         {
