@@ -406,10 +406,10 @@ namespace DataWF.Module.Flow
 
         [Browsable(false)]
         [Column("work_id", ColumnType = DBColumnTypes.Internal)]
-        public string WorkId
+        public long? WorkId
         {
-            get { return GetProperty<string>(nameof(WorkId)); }
-            set { SetProperty(value, nameof(WorkId)); }
+            get { return GetProperty<long?>(); }
+            set { SetProperty(value); }
         }
 
         [Category("Current State")]
@@ -424,8 +424,8 @@ namespace DataWF.Module.Flow
         [Column("work_user", ColumnType = DBColumnTypes.Internal)]
         public string WorkUser
         {
-            get { return GetProperty<string>(nameof(WorkUser)); }
-            set { SetProperty(value, nameof(WorkUser)); }
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
         }
 
         [Category("Current State")]

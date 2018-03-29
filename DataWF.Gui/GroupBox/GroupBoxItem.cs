@@ -26,6 +26,8 @@ namespace DataWF.Gui
 
 		public GroupBoxItem()
 		{
+            Width = 200;
+            Height = 200;
 			styleHeader = GuiEnvironment.StylesInfo["GroupBoxHeader"];
 			style = GuiEnvironment.StylesInfo["GroupBox"];
 		}

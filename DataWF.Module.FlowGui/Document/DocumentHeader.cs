@@ -80,14 +80,12 @@ namespace DataWF.Module.FlowGui
                 Widget = works,
                 FillHeight = true,
                 Name = "Works",
-                Width = 380
             };
 
             gFiles = new GroupBoxItem()
             {
                 Widget = files,
                 Name = "Files",
-                Width = 380
             };
 
             gAttribute = new GroupBoxItem()

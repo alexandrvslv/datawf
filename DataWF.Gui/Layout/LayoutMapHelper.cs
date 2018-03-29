@@ -219,8 +219,8 @@ namespace DataWF.Gui
 				if (col.Visible && col.Row == rowIndex)
 				{
 					double hh = 0;
-					if (!col.FillHeight || calcFill)
-					{
+					if (!col.FillHeight || calcFill)//|| max<=0 
+                    {
 						hh = GetHeight(col, max, calc);
 					}
 					else

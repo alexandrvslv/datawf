@@ -27,7 +27,8 @@ namespace DataWF.Data.Gui
         private Menubar contextTools;
         private VPaned container;
         private LayoutList changesView;
-
+        private VPanel panel1;
+        private VPanel panel2;
 
         public DataExplorer()
         {
@@ -109,20 +110,18 @@ namespace DataWF.Data.Gui
             dataTree.CellDoubleClick += DataTreeOnDoubleClick;
             dataTree.SelectionChanged += DataTreeOnAfterSelect;
 
-            var panel1Box = new VPanel();
-            panel1Box.PackStart(barMain, false, false);
-            panel1Box.PackStart(dataTree, true, true);
+            panel1 = new VPanel();
+            panel1.PackStart(barMain, false, false);
+            panel1.PackStart(dataTree, true, true);
 
-            var panel2Box = new VPanel();
-            panel2Box.PackStart(barChanges, false, false);
-            panel2Box.PackStart(changesView, true, true);
-            panel2Box.Visible = false;
+            panel2 = new VPanel();
+            panel2.PackStart(barChanges, false, false);
+            panel2.PackStart(changesView, true, true);
 
             container = new VPaned();
-            container.Panel1.Content = panel1Box;
-            container.Panel2.Content = panel2Box;
+            container.Panel2.Content = panel2;
 
-            PackStart(container, true, true);
+            PackStart(panel1, true, true);
             Name = "DataExplorer";
 
             ose.Target = listExplorer;
@@ -171,7 +170,15 @@ namespace DataWF.Data.Gui
 
         private void OnDBSchemaChanged(object sender, DBSchemaChangedArgs e)
         {
-            Application.Invoke(() => container.Panel2.Content.Visible = true);
+            Application.Invoke(() =>
+            {
+                if (panel1.Parent == this)
+                {
+                    Remove(panel1);
+                    container.Panel1.Content = panel1;
+                    PackStart(container, true, true);
+                }
+            });
         }
 
         private void ToolDeserializeClick(object sender, EventArgs e)
@@ -230,8 +237,12 @@ namespace DataWF.Data.Gui
         public void HideChanges()
         {
             DBService.Changes.Clear();
-
-            container.Panel2.Content.Hide();
+            if (panel1.Parent != this)
+            {
+                container.Remove(panel1);
+                Remove(container);
+                PackStart(panel1, true, true);
+            }
         }
 
         private void ToolPatchLoadClick(object sender, EventArgs e)

@@ -300,19 +300,23 @@ namespace DataWF.Module.FlowGui
             dockList.LabelText = tree.SelectedNode.Text;
         }
 
-        public ToolMenuItem InitTemplate(Template ts)
+        public ToolMenuItem InitTemplate(Template template)
         {
-            var tsb = new ToolMenuItem();
-            tsb.Name = ts.Code.ToString();
-            tsb.Text = ts.ToString();
-            //tsb.Image = ts.Image;
-            tsb.Tag = ts;
-            var list = ts.GetSubGroups<Template>(DBLoadParam.None);
-            foreach (Template ps in list)
+            var item = new ToolMenuItem(TemplateItemClick)
+            {
+                Name = template.Code.ToString(),
+                Text = template.ToString(),
+                Glyph = GlyphType.Book,
+                Tag = template
+            };
+            foreach (Template ps in template.GetSubGroups<Template>(DBLoadParam.None))
+            {
                 if (ps.Access.Create)
-                    tsb.DropDown.Items.Add(InitTemplate(ps));
-            tsb.Click += TemplateItemClick;
-            return tsb;
+                {
+                    item.DropDown.Items.Add(InitTemplate(ps));
+                }
+            }
+            return item;
         }
 
         public static List<Document> CreateDocumentsFromList(Template template, List<Document> parents)
@@ -350,8 +354,8 @@ namespace DataWF.Module.FlowGui
 
         public static List<Document> CreateDocuments(Template template, Document parent)
         {
-            List<string> fileNames = new List<string>();
-            List<Document> documents = new List<Document>();
+            var fileNames = new List<string>();
+            var documents = new List<Document>();
             var question = new QuestionMessage();
             question.Buttons.Add(Command.No);
             question.Buttons.Add(Command.Yes);
@@ -436,11 +440,13 @@ namespace DataWF.Module.FlowGui
                 foreach (Document document in documents)
                     list.Add(document);
 
-                ToolWindow form = new ToolWindow();
-                form.Label.Text = "New Documents";
-                form.Mode = ToolShowMode.Dialog;
-                form.Size = new Size(800, 600);
-                form.Target = dlist;
+                var form = new ToolWindow
+                {
+                    Title = "New Documents",
+                    Mode = ToolShowMode.Dialog,
+                    Size = new Size(800, 600),
+                    Target = dlist
+                };
                 form.ButtonAcceptClick += (s, e) =>
                 {
                     foreach (Document document in documents)
@@ -504,10 +510,10 @@ namespace DataWF.Module.FlowGui
 
         private void TemplateItemClick(object sender, EventArgs e)
         {
-            var sen = sender as ToolMenuItem;
-            if (sen.DropDown.Items.Count > 0)
+            var item = sender as ToolMenuItem;
+            if (item.DropDown.Items.Count > 0)
                 return;
-            Template template = sen.Tag as Template;
+            Template template = item.Tag as Template;
             ViewDocuments(CreateDocuments(template, null));
         }
 

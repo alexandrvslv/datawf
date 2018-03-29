@@ -96,7 +96,7 @@ namespace DataWF.Gui
                     Name = "Group",
                     Font = defaultFont.WithSize(defaultFont.Size+1).WithWeight(FontWeight.Semibold),
                     Round = 5,
-                    BaseColor = Colors.Gray.WithIncreasedLight(0.3).Invert()
+                    BaseColor = Colors.Gray.WithIncreasedLight(0.3)
                 },
                 new CellStyle()
                 {
@@ -203,6 +203,8 @@ namespace DataWF.Gui
             this["Column"].BackBrush.Type = CellStyleBrushType.Gradient;
             this["GroupBoxHeader"].BackBrush.Color = this["GroupBoxHeader"].BaseColor;
             this["GroupBoxHeader"].BackBrush.Type = CellStyleBrushType.Gradient;
+            this["Group"].BackBrush.Color = this["Group"].BaseColor;
+            this["Group"].BackBrush.Type = CellStyleBrushType.Gradient;
         }
 
         public CellStyle this[string param]

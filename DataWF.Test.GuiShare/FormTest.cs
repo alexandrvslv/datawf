@@ -217,12 +217,12 @@ namespace ais.test
 
 		public void SetStatusAdd(string info)
 		{
-			throw new NotImplementedException();
+			//throw new NotImplementedException();
 		}
 
 		public void SetStatus(StateInfo info)
 		{
-			throw new NotImplementedException();
+			//throw new NotImplementedException();
 		}
 
 		public void ShowProperty(object sender, object item, bool onTop)
@@ -239,12 +239,12 @@ namespace ais.test
 
 		public void GenerateProject(object sender, object project, Type editor)
 		{
-			throw new NotImplementedException();
+			//throw new NotImplementedException();
 		}
 
 		public void AddTask(object sender, TaskExecutor task)
 		{
-			throw new NotImplementedException();
+            task.ExecuteAsynch();
 		}
 
 		public void Localize()

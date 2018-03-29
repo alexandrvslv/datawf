@@ -42,7 +42,7 @@ namespace DataWF.Data.Gui
 
         public override LayoutList List
         {
-            get { return TableEditor.List; }           
+            get { return TableEditor.List; }
         }
 
         public DBTable Table
@@ -91,7 +91,7 @@ namespace DataWF.Data.Gui
                 if (source is DBItem && column != null)
                 {
                     var row = (DBItem)source;
-                    if (row[column].Equals(obj))
+                    if (row[column]?.Equals(obj) ?? false)
                     {
                         obj = row.GetReference(column, DBLoadParam.None);
                         if (obj == null && row.GetCache(column) == null)
