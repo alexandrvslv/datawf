@@ -58,7 +58,7 @@ namespace DataWF.Data.Gui
                     //View = table.CreateView(viewFilter, DBViewInitMode.None, DBStatus.Current);
                     if (TableEditor != null)
                     {
-                        TableEditor.Initialize(View, EditItem is DBItem ? (DBItem)EditItem : null, column, TableEditorMode.Reference, false);
+                        TableEditor.Initialize(View, GetItem(Value), column, TableEditorMode.Reference, false);
                     }
                 }
             }
@@ -78,6 +78,11 @@ namespace DataWF.Data.Gui
                 if (View != null && View.Table != table)
                     table = View.Table;
             }
+        }
+
+        public DBItem GetItem(object obj)
+        {
+            return GetItem(obj, EditItem);
         }
 
         public DBItem GetItem(object obj, object source)
@@ -165,7 +170,7 @@ namespace DataWF.Data.Gui
             if (table != null)
             {
                 editor.DropDownExClick += OnDropDownExClick;
-                tableEditor.Initialize(View, EditItem is DBItem ? (DBItem)EditItem : null, column, TableEditorMode.Reference, false);
+                tableEditor.Initialize(View, GetItem(Value), column, TableEditorMode.Reference, false);
                 if (!ReadOnly)
                 {
                     tableEditor.ItemSelect += OnTableControlRowSelect;
