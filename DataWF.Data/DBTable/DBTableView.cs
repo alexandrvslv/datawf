@@ -44,6 +44,7 @@ namespace DataWF.Data
 
         public DBTableView(DBTable<T> table, string defaultFilter = "", DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
         {
+            propertyHandler = null;
             keys = mode;
             table.AddView(this);
             this.table = table;
@@ -347,16 +348,16 @@ namespace DataWF.Data
 
         public void UpdateFilter()
         {
+            ClearInternal();
             if (!query.IsEmpty())
             {
-                items = table.Select(query).ToList();
-                items.Sort();
+                AddRangeInternal(table.Select(query));                
             }
             else
             {
-                items.Clear();
-                items.AddRange(table);
+                AddRangeInternal(table);
             }
+            SortInternal();
             OnListChanged(ListChangedType.Reset, -1);
         }
 
