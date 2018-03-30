@@ -226,6 +226,8 @@ namespace DataWF.Data
         {
             Serialization.Serialize(connections, "connections.xml");
             Serialization.Serialize(schems, file);
+            if (DataProvider != null)
+                DataProvider.Save();
         }
 
         public static void Load()
@@ -237,6 +239,9 @@ namespace DataWF.Data
         {
             Serialization.Deserialize("connections.xml", connections);
             Serialization.Deserialize(file, schems);
+            Changes.Clear();
+            if (DataProvider != null)
+                DataProvider.Load();
         }
 
         public static DBConnectionList Connections
@@ -306,7 +311,10 @@ namespace DataWF.Data
 
         public static void CommitChanges(DBSchema schema)
         {
-            schema.Connection.ExecuteQuery(BuildChangesQuery(schema));
+            if (Changes.Count > 0)
+            {
+                schema.Connection.ExecuteQuery(BuildChangesQuery(schema));
+            }
         }
 
         public static string BuildChangesQuery(DBSchema schema)
@@ -1206,12 +1214,11 @@ namespace DataWF.Data
             cacheTables.Clear();
         }
 
-
-
         private static List<int> accessGroups = new List<int>();
 
         public static List<int> AccessGroups { get { return accessGroups; } }
 
+        public static IDataProvider DataProvider { get; set; }
     }
 
     public class DBSchemaChange : ICheck
