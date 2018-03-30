@@ -102,7 +102,7 @@ namespace DataWF.Data
 
             var index = base.AddInternal(item);
 
-            if (item.Index == null && (item.IsPrimaryKey || (item.Keys & DBColumnKeys.Indexing) == DBColumnKeys.Indexing))
+            if (item.Index == null && (item.IsPrimaryKey || (item.Keys & DBColumnKeys.Indexing) == DBColumnKeys.Indexing || (item.Keys & DBColumnKeys.Reference) == DBColumnKeys.Reference))
             {
                 item.Index = DBPullIndex.Fabric(item.DataType, Table, item);
             }
