@@ -55,7 +55,7 @@
     <ProjectReference Include="..\DataWF.Module.Flow\DataWF.Module.Flow.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Xwt" Version="0.2.92" />
+    <PackageReference Include="Xwt" Version="0.2.100" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\default.odt" />

@@ -45,7 +45,7 @@
     <ProjectReference Include="..\DataWF.Module.FlowGui\DataWF.Module.FlowGui.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Xwt" Version="0.2.92" />
-    <PackageReference Include="Xwt.Gtk" Version="0.2.92" />
+    <PackageReference Include="Xwt" Version="0.2.100" />
+    <PackageReference Include="Xwt.Gtk" Version="0.2.100" />
   </ItemGroup>
 </Project>

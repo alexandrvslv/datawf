@@ -32,8 +32,8 @@
     <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Xwt" Version="0.2.92" />
-    <PackageReference Include="Xwt.Wpf" Version="0.2.92" />
+    <PackageReference Include="Xwt" Version="0.2.100" />
+    <PackageReference Include="Xwt.Wpf" Version="0.2.100" />
   </ItemGroup>
    <Import Project="..\DataWF.Test.GuiShare\DataWF.Test.GuiShare.projitems" Label="Shared" />
 </Project>

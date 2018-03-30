@@ -49,6 +49,6 @@
     <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Xwt" Version="0.2.92" />
+    <PackageReference Include="Xwt" Version="0.2.100" />
   </ItemGroup>
 </Project>
