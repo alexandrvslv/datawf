@@ -44,7 +44,7 @@ namespace DataWF.Module.Common
             CurrentUser = user;
         }
 
-        internal static void SetCurrent(string login, string password)
+        public static void SetCurrent(string login, string password)
         {
             var user = GetUser(login, GetSha(password));
             CurrentUser = user ?? throw new Exception();

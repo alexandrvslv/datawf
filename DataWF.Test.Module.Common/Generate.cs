@@ -42,7 +42,7 @@ namespace DataWF.Test.Module.Common
 
             var position = new Position()
             {
-                Number = "PS1",
+                Code = "PS1",
                 Name = "Position"
             };
 

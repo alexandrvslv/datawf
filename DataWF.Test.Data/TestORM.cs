@@ -215,7 +215,7 @@ namespace DataWF.Test.Data
             Type3,
         }
 
-        [Table(SchemaName, PositionTableName)]
+        [Table(SchemaName, PositionTableName, "Default")]
         public class Position : DBItem
         {
             public static DBTable<Position> DBTable
@@ -277,7 +277,7 @@ namespace DataWF.Test.Data
 
         }
 
-        [Table(SchemaName, EmployerTableName)]
+        [Table(SchemaName, EmployerTableName, "Default")]
         public class Employer : DBItem
         {
             public static DBTable<Employer> DBTable
