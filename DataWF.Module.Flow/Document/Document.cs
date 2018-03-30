@@ -27,6 +27,7 @@ using System.Data;
 using System.Linq;
 using DataWF.Module.Common;
 using DataWF.Module.Counterpart;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Flow
 {
@@ -77,7 +78,7 @@ namespace DataWF.Module.Flow
         Customer
     }
 
-    [Table("wf_flow", "ddocument", "Document", BlockSize = 2000)]
+    [DataContract, Table("wf_flow", "ddocument", "Document", BlockSize = 2000)]
     public class Document : DBItem, IDisposable
     {
         public static DBTable<Document> DBTable
@@ -310,7 +311,7 @@ namespace DataWF.Module.Flow
         }
 
         
-        [Column("unid", Keys = DBColumnKeys.Primary)]
+        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
         {
             get { return GetValue<long?>(Table.PrimaryKey); }
@@ -318,7 +319,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("template_id", Keys = DBColumnKeys.View), Index("ddocument_template_id", Unique = false)]
+        [DataMember, Column("template_id", Keys = DBColumnKeys.View), Index("ddocument_template_id", Unique = false)]
         public int? TemplateId
         {
             get { return GetProperty<int?>(); }
@@ -334,7 +335,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("parent_id", Keys = DBColumnKeys.Group)]
+        [DataMember, Column("parent_id", Keys = DBColumnKeys.Group)]
         public long? ParentId
         {
             get { return GetValue<long?>(Table.GroupKey); }
@@ -360,14 +361,14 @@ namespace DataWF.Module.Flow
             set { SetReference(value, Table.GroupKey); }
         }
 
-        [Column("document_date")]
+        [DataMember, Column("document_date")]
         public DateTime? DocumentDate
         {
             get { return GetProperty<DateTime?>(nameof(DocumentDate)); }
             set { SetProperty(value, nameof(DocumentDate)); }
         }
 
-        [Column("document_number", 40, Keys = DBColumnKeys.Code), Index("ddocuument_document_number")]
+        [DataMember, Column("document_number", 40, Keys = DBColumnKeys.Code), Index("ddocuument_document_number")]
         public string Number
         {
             get { return GetProperty<string>(nameof(Number)); }
@@ -375,7 +376,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("customer_id")]
+        [DataMember, Column("customer_id")]
         public int? CustomerId
         {
             get { return GetProperty<int?>(nameof(CustomerId)); }
@@ -390,7 +391,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("address_id")]
+        [DataMember, Column("address_id")]
         public int? AddressId
         {
             get { return GetProperty<int?>(nameof(AddressId)); }
@@ -405,7 +406,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("work_id", ColumnType = DBColumnTypes.Internal)]
+        [DataMember, Column("work_id", ColumnType = DBColumnTypes.Internal)]
         public long? WorkId
         {
             get { return GetProperty<long?>(); }
@@ -421,7 +422,7 @@ namespace DataWF.Module.Flow
         }
 
         [Category("Current State")]
-        [Column("work_user", ColumnType = DBColumnTypes.Internal)]
+        [DataMember, Column("work_user", ColumnType = DBColumnTypes.Internal)]
         public string WorkUser
         {
             get { return GetProperty<string>(); }
@@ -429,7 +430,7 @@ namespace DataWF.Module.Flow
         }
 
         [Category("Current State")]
-        [Column("work_stage", ColumnType = DBColumnTypes.Internal)]
+        [DataMember, Column("work_stage", ColumnType = DBColumnTypes.Internal)]
         public string WorkStage
         {
             get { return GetProperty<string>(nameof(WorkStage)); }
@@ -466,7 +467,7 @@ namespace DataWF.Module.Flow
             get { return initype; }
         }
 
-        [Column("is_important")]
+        [DataMember, Column("is_important")]
         public bool? Important
         {
             get { return GetProperty<bool?>(nameof(Important)); }
@@ -474,7 +475,7 @@ namespace DataWF.Module.Flow
         }
 
         [Category("Current State")]
-        [Column("is_comlete")]
+        [DataMember, Column("is_comlete")]
         public bool? IsComplete
         {
             get { return GetProperty<bool?>(nameof(IsComplete)); }

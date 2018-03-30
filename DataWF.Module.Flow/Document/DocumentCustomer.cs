@@ -21,6 +21,7 @@
 using DataWF.Data;
 using System.ComponentModel;
 using DataWF.Module.Counterpart;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Flow
 {
@@ -39,7 +40,8 @@ namespace DataWF.Module.Flow
         { }
 
     }
-    [Table("wf_flow", "ddocument_customer", "Customer", BlockSize = 2000)]
+
+    [DataContract, Table("wf_flow", "ddocument_customer", "Customer", BlockSize = 2000)]
     public class DocumentCustomer : DBItem
     {
         public static DBTable<DocumentCustomer> DBTable
@@ -52,7 +54,7 @@ namespace DataWF.Module.Flow
             Build(DBTable);
         }
 
-        [Column("unid", Keys = DBColumnKeys.Primary)]
+        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
         {
             get { return GetValue<long?>(Table.PrimaryKey); }
@@ -60,7 +62,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("document_id")]
+        [DataMember, Column("document_id")]
         public long? DocumentId
         {
             get { return GetProperty<long?>(); }
@@ -75,7 +77,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("customer_id")]
+        [DataMember, Column("customer_id")]
         public int? CustomerId
         {
             get { return GetProperty<int?>(); }
@@ -90,7 +92,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("address_id")]
+        [DataMember, Column("address_id")]
         public int? AddressId
         {
             get { return GetProperty<int?>(); }

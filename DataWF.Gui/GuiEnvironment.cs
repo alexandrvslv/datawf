@@ -47,7 +47,7 @@ namespace DataWF.Gui
                 editor.PropertyFileName = property + "Name";
                 return editor;
             };
-            CellEditorFabric[typeof(bool)] = cell =>
+            CellEditorFabric[typeof(bool)] = CellEditorFabric[typeof(bool?)] = cell =>
             {
                 return new CellEditorCheck
                 {

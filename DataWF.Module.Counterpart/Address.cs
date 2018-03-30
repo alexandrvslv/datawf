@@ -21,6 +21,7 @@ using DataWF.Data;
 using System.ComponentModel;
 using DataWF.Common;
 using System;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Counterpart
 {
@@ -31,7 +32,7 @@ namespace DataWF.Module.Counterpart
         { }
     }
 
-    [Table("wf_customer", "daddress", "Customer", BlockSize = 2000)]
+    [DataContract, Table("wf_customer", "daddress", "Customer", BlockSize = 2000)]
     public class Address : DBItem
     {
         public static DBTable<Address> DBTable
@@ -44,7 +45,7 @@ namespace DataWF.Module.Counterpart
             Build(DBTable);
         }
 
-        [Column("unid", Keys = DBColumnKeys.Primary)]
+        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
@@ -52,7 +53,7 @@ namespace DataWF.Module.Counterpart
         }
 
         [Browsable(false)]
-        [Column("location_id"), Index("daddress_location_id")]
+        [DataMember, Column("location_id"), Index("daddress_location_id")]
         public int? LocationId
         {
             get { return GetProperty<int?>(nameof(LocationId)); }
@@ -73,14 +74,14 @@ namespace DataWF.Module.Counterpart
             }
         }
 
-        [Column("post_index", 20), Index("daddress_post_index")]
+        [DataMember, Column("post_index", 20), Index("daddress_post_index")]
         public string PostIndex
         {
             get { return GetProperty<string>(nameof(PostIndex)); }
             set { SetProperty(value, nameof(PostIndex)); }
         }
 
-        [Column("street", 1024, Keys = DBColumnKeys.Culture)]
+        [DataMember, Column("street", 1024, Keys = DBColumnKeys.Culture)]
         public string Street
         {
             get { return GetName("street"); }

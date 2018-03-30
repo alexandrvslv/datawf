@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using DataWF.Module.Common;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Flow
 {
@@ -96,7 +97,7 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [Table("wf_flow", "ddocument_work", "Document", BlockSize = 2000)]
+    [DataContract, Table("wf_flow", "ddocument_work", "Document", BlockSize = 2000)]
     public class DocumentWork : DBItem
     {
         public static DBTable<DocumentWork> DBTable
@@ -121,7 +122,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("unid", Keys = DBColumnKeys.Primary)]
+        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
         {
             get { return GetProperty<long?>(nameof(Id)); }
@@ -129,7 +130,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("document_id"), Index("ddocument_work_document_id")]
+        [DataMember, Column("document_id"), Index("ddocument_work_document_id")]
         public long? DocumentId
         {
             get { return GetProperty<long?>(nameof(DocumentId)); }
@@ -144,7 +145,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("stage_id"), Index("ddocument_work_stage_id")]
+        [DataMember, Column("stage_id"), Index("ddocument_work_stage_id")]
         public int? StageId
         {
             get { return GetProperty<int?>(nameof(StageId)); }
@@ -165,7 +166,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("user_id"), Index("ddocument_work_user_id")]
+        [DataMember, Column("user_id"), Index("ddocument_work_user_id")]
         public int? UserId
         {
             get { return GetProperty<int?>(); }
@@ -180,7 +181,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("from_id")]
+        [DataMember, Column("from_id")]
         public long? FromId
         {
             get { return GetProperty<long?>(nameof(FromId)); }
@@ -195,55 +196,55 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("date_read")]
+        [DataMember, Column("date_read")]
         public DateTime? DateRead
         {
             get { return GetProperty<DateTime?>(); }
             set { SetProperty(value); }
         }
 
-        [Column("date_complete")]
+        [DataMember, Column("date_complete")]
         public DateTime? DateComplete
         {
             get { return GetProperty<DateTime?>(); }
             set { SetProperty(value); }
         }
 
-        [Column("date_limit")]
+        [DataMember, Column("date_limit")]
         public DateTime? DateLimit
         {
             get { return GetProperty<DateTime?>(); }
             set { SetProperty(value); }
         }
 
-        [Column("is_complete")]
+        [DataMember, Column("is_complete")]
         public bool IsComplete
         {
             get { return DateComplete != null; }
         }
 
-        [Column("is_system")]
+        [DataMember, Column("is_system")]
         public bool? IsSystem
         {
             get { return GetProperty<bool?>(); }
             set { SetProperty(value); }
         }
 
-        [Column("is_start")]
+        [DataMember, Column("is_start")]
         public bool? IsStart
         {
             get { return GetProperty<bool?>(); }
             set { SetProperty(value); }
         }
 
-        [Column("is_stop")]
+        [DataMember, Column("is_stop")]
         public bool? IsStop
         {
             get { return GetProperty<bool?>(); }
             set { SetProperty(value); }
         }
 
-        [Column("description", 2048)]
+        [DataMember, Column("description", 2048)]
         public string Description
         {
             get { return GetProperty<string>(); }

@@ -3,6 +3,7 @@ using DataWF.Common;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Flow
 {
@@ -22,14 +23,14 @@ namespace DataWF.Module.Flow
     {
         protected object _cache;
 
-        [Column("unid", Keys = DBColumnKeys.Primary)]
+        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
             get { return GetProperty<int?>(nameof(Id)); }
             set { SetProperty(value, nameof(Id)); }
         }
 
-        [Column("type_id")]
+        [DataMember, Column("type_id")]
         public ParamType? Type
         {
             get { return GetProperty<ParamType?>(nameof(Type)); }

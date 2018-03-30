@@ -25,6 +25,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Text;
 using System.Xml.Serialization;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Flow
 {
@@ -83,7 +84,7 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [Table("wf_flow", "ddocument_data", "Document", BlockSize = 2000)]
+    [DataContract, Table("wf_flow", "ddocument_data", "Document", BlockSize = 2000)]
     public class DocumentData : DBItem
     {
         public static DBTable<DocumentData> DBTable
@@ -99,7 +100,7 @@ namespace DataWF.Module.Flow
             Build(DBTable);
         }
 
-        [Column("unid", Keys = DBColumnKeys.Primary)]
+        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
         {
             get { return GetProperty<long?>(nameof(Id)); }
@@ -107,7 +108,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("document_id")]
+        [DataMember, Column("document_id")]
         public long? DocumentId
         {
             get { return GetProperty<long?>(); }
@@ -121,21 +122,21 @@ namespace DataWF.Module.Flow
             set { SetPropertyReference(value, nameof(DocumentId)); }
         }
 
-        [Column("file_name", 1024)]
+        [DataMember, Column("file_name", 1024)]
         public string FileName
         {
             get { return GetProperty<string>(); }
             set { SetProperty(value); }
         }
 
-        [Column("file_url", 1024)]
+        [DataMember, Column("file_url", 1024)]
         public string FileUrl
         {
             get { return GetProperty<string>(); }
             set { SetProperty(value); }
         }
 
-        [Column("file_data")]
+        [DataMember, Column("file_data")]
         public byte[] FileData
         {
             get { return buf ?? (buf = DBService.GetZip(this, ParseProperty(nameof(FileData)))); }
@@ -170,7 +171,7 @@ namespace DataWF.Module.Flow
         }
 
 
-        [Column("is_template")]
+        [DataMember, Column("is_template")]
         public bool? IsTemplate
         {
             get { return GetProperty<bool?>(); }

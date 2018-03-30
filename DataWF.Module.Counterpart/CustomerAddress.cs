@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using DataWF.Data;
 using DataWF.Module.Common;
@@ -17,7 +18,7 @@ namespace DataWF.Module.Counterpart
 
     }
 
-    [Table("wf_customer", "dcustomer_address", "Customer", BlockSize = 2000)]
+    [DataContract, Table("wf_customer", "dcustomer_address", "Customer", BlockSize = 2000)]
     public class CustomerAddress : DBItem
     {
         public static DBTable<CustomerAddress> DBTable
@@ -30,7 +31,7 @@ namespace DataWF.Module.Counterpart
             Build(DBTable);
         }
 
-        [Column("unid", Keys = DBColumnKeys.Primary)]
+        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
@@ -38,7 +39,7 @@ namespace DataWF.Module.Counterpart
         }
 
         [Browsable(false)]
-        [Column("customer_id")]
+        [DataMember, Column("customer_id")]
         public int? CustomerId
         {
             get { return GetValue<int?>(Table.ParseColumn(nameof(CustomerId))); }
@@ -53,7 +54,7 @@ namespace DataWF.Module.Counterpart
         }
 
         [Browsable(false)]
-        [Column("address_id")]
+        [DataMember, Column("address_id")]
         public int? AddressId
         {
             get { return GetProperty<int?>(nameof(AddressId)); }

@@ -22,10 +22,11 @@
 using DataWF.Data;
 using System.ComponentModel;
 using DataWF.Common;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Common
 {
-    [Table("wf_common", "rbook", "Reference Book", BlockSize = 200)]
+    [DataContract, Table("wf_common", "rbook", "Reference Book", BlockSize = 200)]
     public class Book : DBItem
     {
         public static DBTable<Book> DBTable
@@ -33,21 +34,21 @@ namespace DataWF.Module.Common
             get { return DBService.GetTable<Book>(); }
         }
 
-        [Column("unid", Keys = DBColumnKeys.Primary)]
+        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
             set { SetValue(value, Table.PrimaryKey); }
         }
 
-        [Column("code", 40, Keys = DBColumnKeys.Code | DBColumnKeys.View)]
+        [DataMember, Column("code", 40, Keys = DBColumnKeys.Code | DBColumnKeys.View)]
         public string Code
         {
             get { return GetValue<string>(Table.CodeKey); }
             set { SetValue(value, Table.CodeKey); }
         }
 
-        [Column("type_id", Keys = DBColumnKeys.ElementType)]
+        [DataMember, Column("type_id", Keys = DBColumnKeys.ElementType)]
         public short? TypeId
         {
             get { return GetValue<short?>(Table.ElementTypeKey); }
@@ -61,7 +62,7 @@ namespace DataWF.Module.Common
             set { SetReference(value, Table.ElementTypeKey); }
         }
 
-        [Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
+        [DataMember, Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
         public override string Name
         {
             get { return GetName("name"); }

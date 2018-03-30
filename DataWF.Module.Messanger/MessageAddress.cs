@@ -43,7 +43,7 @@ namespace DataWF.Module.Messanger
 		{ }
 	}
 
-	[Table("wf_message", "dmessage_address")]
+	[Table("wf_message", "dmessage_address", "Message")]
 	public class MessageAddress : DBItem
 	{
 		public static DBTable<MessageAddress> DBTable

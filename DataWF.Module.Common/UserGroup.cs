@@ -22,22 +22,22 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using DataWF.Data;
 using DataWF.Common;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Common
 {
 
-    [Table("wf_common", "rgroup", "User", BlockSize = 10)]
+    [DataContract, Table("wf_common", "rgroup", "User", BlockSize = 10)]
     public class UserGroup : DBItem, IDisposable, IAccessGroup
     {
+        internal static void SetCurrent()
+        {
+            AccessValue.Groups = UserGroup.DBTable;
+        }
+
         public static DBTable<UserGroup> DBTable
         {
-            get
-            {
-                var table = DBService.GetTable<UserGroup>();
-                if (table != null && AccessValue.Groups != table)
-                    AccessValue.Groups = table;
-                return table;
-            }
+            get { return DBService.GetTable<UserGroup>(); }
         }
 
         public void AddUser(User user)
@@ -55,7 +55,7 @@ namespace DataWF.Module.Common
             Build(DBTable);
         }
 
-        [Column("unid", Keys = DBColumnKeys.Primary)]
+        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
@@ -64,14 +64,14 @@ namespace DataWF.Module.Common
 
         int IAccessGroup.Id { get { return Id ?? -1; } }
 
-        [Column("group_number", 512, Keys = DBColumnKeys.Code), Index("rgroup_group_number")]
+        [DataMember, Column("group_number", 512, Keys = DBColumnKeys.Code), Index("rgroup_group_number")]
         public string Number
         {
             get { return GetValue<string>(Table.CodeKey); }
             set { SetValue(value, Table.CodeKey); }
         }
 
-        [Column("name", Keys = DBColumnKeys.Culture)]
+        [DataMember, Column("name", Keys = DBColumnKeys.Culture)]
         public override string Name
         {
             get { return GetName("name"); }
@@ -111,5 +111,7 @@ namespace DataWF.Module.Common
             // if (_users != null)
             //     _users.Dispose();            
         }
+
+        
     }
 }

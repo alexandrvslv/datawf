@@ -21,10 +21,11 @@
 */
 using DataWF.Data;
 using DataWF.Common;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Common
 {
-    [Table("wf_common", "rbook_type", "Reference Book", BlockSize = 200)]
+    [DataContract, Table("wf_common", "rbook_type", "Reference Book", BlockSize = 200)]
     public class BookType : DBItem
     {
         public static DBTable<BookType> DBTable
@@ -32,21 +33,21 @@ namespace DataWF.Module.Common
             get { return DBService.GetTable<BookType>(); }
         }
 
-        [Column("unid", Keys = DBColumnKeys.Primary)]
+        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public short? Id
         {
             get { return GetValue<short?>(Table.PrimaryKey); }
             set { SetValue(value, Table.PrimaryKey); }
         }
 
-        [Column("code", 40, Keys = DBColumnKeys.Code | DBColumnKeys.View)]
+        [DataMember, Column("code", 40, Keys = DBColumnKeys.Code | DBColumnKeys.View)]
         public string Code
         {
             get { return GetValue<string>(Table.CodeKey); }
             set { SetValue(value, Table.CodeKey); }
         }
 
-        [Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
+        [DataMember, Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
         public override string Name
         {
             get { return GetName("name"); }

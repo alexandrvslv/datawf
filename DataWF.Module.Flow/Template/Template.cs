@@ -24,6 +24,7 @@ using System.ComponentModel;
 using System.IO;
 using DataWF.Data;
 using DataWF.Common;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Flow
 {
@@ -71,7 +72,7 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [Table("wf_flow", "rtemplate", "Reference Book", BlockSize = 500)]
+    [DataContract, Table("wf_flow", "rtemplate", "Reference Book", BlockSize = 500)]
     public class Template : DBItem, IDisposable
     {
         public static DBTable<Template> DBTable
@@ -87,14 +88,14 @@ namespace DataWF.Module.Flow
             Build(DBTable);
         }
 
-        [Column("unid", Keys = DBColumnKeys.Primary)]
+        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
             set { SetValue(value, Table.PrimaryKey); }
         }
 
-        [Column("code", 250, Keys = DBColumnKeys.Code)]
+        [DataMember, Column("code", 250, Keys = DBColumnKeys.Code)]
         public string Code
         {
             get { return GetValue<string>(Table.CodeKey); }
@@ -105,14 +106,14 @@ namespace DataWF.Module.Flow
             }
         }
 
-        [Column("name", 512, Keys = DBColumnKeys.Culture)]
+        [DataMember, Column("name", 512, Keys = DBColumnKeys.Culture)]
         public override string Name
         {
             get { return GetName(nameof(Name)); }
             set { SetName(nameof(Name), value); }
         }
 
-        [Column("document_type", 250, Default = "0")]
+        [DataMember, Column("document_type", 250, Default = "0")]
         public int? DocumentType
         {
             get { return GetProperty<int?>(); }
@@ -120,7 +121,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("group_id", Keys = DBColumnKeys.Group)]
+        [DataMember, Column("group_id", Keys = DBColumnKeys.Group)]
         public int? ParentId
         {
             get { return GetValue<int?>(Table.GroupKey); }
@@ -140,7 +141,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("work_id")]
+        [DataMember, Column("work_id")]
         public int? WorkId
         {
             get { return GetProperty<int?>(); }
@@ -190,21 +191,21 @@ namespace DataWF.Module.Flow
         }
 
         //[Editor(typeof(UIFileEditor), typeof(UITypeEditor))]
-        [Column("template_file")]
+        [DataMember, Column("template_file")]
         public byte[] Data
         {
             get { return GetProperty<byte[]>(); }
             set { SetProperty(value); }
         }
 
-        [Column("template_file_name", 1024)]
+        [DataMember, Column("template_file_name", 1024)]
         public string DataName
         {
             get { return GetProperty<string>(); }
             set { SetProperty(value); }
         }
 
-        [Column("is_file", Default ="False")]
+        [DataMember, Column("is_file", Default ="False")]
         public bool? IsFile
         {
             get { return GetProperty<bool?>(); }

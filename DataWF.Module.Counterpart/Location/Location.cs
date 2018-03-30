@@ -22,6 +22,7 @@ using System;
 using DataWF.Data;
 using System.ComponentModel;
 using DataWF.Common;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Counterpart
 {
@@ -43,7 +44,7 @@ namespace DataWF.Module.Counterpart
         { }
     }
 
-    [Table("wf_customer", "rlocation", "Reference Book", BlockSize = 2000)]
+    [DataContract, Table("wf_customer", "rlocation", "Reference Book", BlockSize = 2000)]
     public class Location : DBItem
     {
         public static DBTable<Location> DBTable
@@ -56,28 +57,28 @@ namespace DataWF.Module.Counterpart
             Build(DBTable);
         }
 
-        [Column("unid", Keys = DBColumnKeys.Primary)]
+        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
             set { SetValue(value, Table.PrimaryKey); }
         }
 
-        [Column("typeid", Keys = DBColumnKeys.ElementType), Index("rlocation_typeid")]
+        [DataMember, Column("typeid", Keys = DBColumnKeys.ElementType), Index("rlocation_typeid")]
         public LocationType? LocationType
         {
             get { return (LocationType?)GetValue<int?>(Table.ElementTypeKey); }
             set { SetValue(value, Table.ElementTypeKey); }
         }
 
-        [Column("code", 40, Keys = DBColumnKeys.Code | DBColumnKeys.View), Index("rlocation_code", true)]
+        [DataMember, Column("code", 40, Keys = DBColumnKeys.Code | DBColumnKeys.View), Index("rlocation_code", true)]
         public string Code
         {
             get { return GetValue<string>(Table.CodeKey); }
             set { SetValue(value, Table.CodeKey); }
         }
 
-        [Column("codei", 40, Keys = DBColumnKeys.View)]
+        [DataMember, Column("codei", 40, Keys = DBColumnKeys.View)]
         [Index("rlocation_codei")]
         public string CodeI
         {
@@ -86,7 +87,7 @@ namespace DataWF.Module.Counterpart
         }
 
         [Browsable(false)]
-        [Column("parentid", Keys = DBColumnKeys.Group)]
+        [DataMember, Column("parentid", Keys = DBColumnKeys.Group)]
         [Index("rlocation_parentid")]
         public int? ParentId
         {
@@ -101,7 +102,7 @@ namespace DataWF.Module.Counterpart
             set { SetReference(value, Table.GroupKey); }
         }
 
-        [Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
+        [DataMember, Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
         public override string Name
         {
             get { return GetName("name"); }

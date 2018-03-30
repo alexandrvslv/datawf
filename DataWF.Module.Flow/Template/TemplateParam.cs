@@ -23,6 +23,7 @@ using DataWF.Data;
 using DataWF.Common;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Flow
 {
@@ -46,7 +47,7 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [Table("wf_flow", "rtemplate_param", "Reference Book", BlockSize = 1000)]
+    [DataContract, Table("wf_flow", "rtemplate_param", "Reference Book", BlockSize = 1000)]
     public class TemplateParam : ParamBase, IInvoker
     {
         public static DBTable<TemplateParam> DBTable
@@ -65,7 +66,7 @@ namespace DataWF.Module.Flow
             get { return Template; }
         }
 
-        [Column("code", Keys =  DBColumnKeys.Code)]
+        [DataMember, Column("code", Keys =  DBColumnKeys.Code)]
         public override string ParamCode
         {
             get { return GetValue<string>(table.CodeKey); }
@@ -73,7 +74,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("template_id")]
+        [DataMember, Column("template_id")]
         public int? TemplateId
         {
             get { return GetProperty<int?>(); }
@@ -87,14 +88,14 @@ namespace DataWF.Module.Flow
             set { SetPropertyReference(value, nameof(TemplateId)); }
         }
 
-        [Column("orderid")]
+        [DataMember, Column("orderid")]
         public int? Order
         {
             get { return GetProperty<int>(nameof(Order)); }
             set { SetProperty(value, nameof(Order)); }
         }
 
-        [Column("default_value")]
+        [DataMember, Column("default_value")]
         public string Default
         {
             get { return GetProperty<string>(nameof(Default)); }

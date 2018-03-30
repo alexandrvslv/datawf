@@ -33,7 +33,7 @@ namespace DataWF.Module.Finance
         }
     }
 
-    [Table("flow", "dpayment", BlockSize = 5000)]
+    [Table("flow", "dpayment", "Finance", BlockSize = 5000)]
     public class Payment : DBItem
     {
         public static DBTable<Payment> DBTable

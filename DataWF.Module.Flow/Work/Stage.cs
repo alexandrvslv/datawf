@@ -26,6 +26,7 @@ using System.Linq;
 using DataWF.Data;
 using DataWF.Common;
 using DataWF.Module.Common;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Flow
 {
@@ -59,7 +60,7 @@ namespace DataWF.Module.Flow
         IsAutoComplete
     }
 
-    [Table("wf_flow", "rstage", "Reference Book", BlockSize = 200)]
+    [DataContract, Table("wf_flow", "rstage", "Reference Book", BlockSize = 200)]
     public class Stage : DBItem, IDisposable
     {
         public static DBTable<Stage> DBTable
@@ -72,21 +73,21 @@ namespace DataWF.Module.Flow
             Build(DBTable);
         }
 
-        [Column("unid", Keys = DBColumnKeys.Primary)]
+        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
             get { return GetProperty<int?>(nameof(Id)); }
             set { SetProperty(value, nameof(Id)); }
         }
 
-        [Column("code", Keys = DBColumnKeys.Code)]
+        [DataMember, Column("code", Keys = DBColumnKeys.Code)]
         public string Code
         {
             get { return GetValue<string>(Table.CodeKey); }
             set { SetValue(value, Table.CodeKey); }
         }
 
-        [Column("name", 512, Keys = DBColumnKeys.Culture)]
+        [DataMember, Column("name", 512, Keys = DBColumnKeys.Culture)]
         public override string Name
         {
             get { return GetName(nameof(Name)); }
@@ -94,7 +95,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("work_id")]
+        [DataMember, Column("work_id")]
         public int? WorkId
         {
             get { return GetProperty<int?>(); }
@@ -108,14 +109,14 @@ namespace DataWF.Module.Flow
             set { SetPropertyReference(value, nameof(WorkId)); }
         }
 
-        [Column("keys")]
+        [DataMember, Column("keys")]
         public StageKey? Keys
         {
             get { return GetProperty<StageKey?>(); }
             set { SetProperty(value); }
         }
 
-        [Column("time_limit")]
+        [DataMember, Column("time_limit")]
         public TimeSpan? TimeLimit
         {
             get { return GetProperty<TimeSpan?>(); }

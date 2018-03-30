@@ -55,7 +55,7 @@ namespace DataWF.Module.Messanger
 		{ }
 	}
 
-	[Table("wf_message", "dmessage")]
+	[Table("wf_message", "dmessage", "Message")]
 	public class Message : DBItem, IDisposable
 	{
 		public static DBTable<Message> DBTable
@@ -80,7 +80,7 @@ namespace DataWF.Module.Messanger
 			var group = UserGroup.DBTable.LoadById(to);
 			var users = group.GetUsers();
 			foreach (var user in users)
-				if (user.Status == DBStatus.Actual && user.UserType == UserTypes.Persone)
+				if (user.Status == DBStatus.Actual)
 				{
 					var address = new MessageAddress();
 					address.Message = message;
@@ -111,7 +111,7 @@ namespace DataWF.Module.Messanger
 			{
 				foreach (var user in address.User.GetSubGroups<User>(DBLoadParam.None))
 				{
-					if (user != message.User && user.Status == DBStatus.Actual && user.UserType == UserTypes.Persone)
+					if (user != message.User && user.Status == DBStatus.Actual)
 					{
 						var saddress = new MessageAddress()
 						{

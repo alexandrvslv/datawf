@@ -29,13 +29,22 @@ using System.Xml.Serialization;
 using System.Linq;
 using Novell.Directory.Ldap;
 using System.Diagnostics;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Common
 {
-    [Table("wf_common", "ruser", "User", BlockSize = 100)]
+    [DataContract, Table("wf_common", "ruser", "User", BlockSize = 100)]
     public class User : DBItem, IComparable, IDisposable
     {
-        public static void SetCurrent(string login, string password)
+        internal static void SetCurrent()
+        {
+            var user = DBTable.LoadByCode(Environment.UserName);
+            if (user != null)
+                UserLog.LogUser(user, UserLogType.Authorization, "GetUser");
+            CurrentUser = user;
+        }
+
+        internal static void SetCurrent(string login, string password)
         {
             var user = GetUser(login, GetSha(password));
             CurrentUser = user ?? throw new Exception();
@@ -210,7 +219,6 @@ namespace DataWF.Module.Common
             CurrentUser = user;
         }
 
-        [NonSerialized]
         protected bool online = false;
 
         public User()
@@ -220,34 +228,34 @@ namespace DataWF.Module.Common
 
         public UserLog LogStart;
 
-        [Column("unid", Keys = DBColumnKeys.Primary)]
+        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
             set { this[Table.PrimaryKey] = value; }
-        }        
+        }
 
-        [Column("login", 256, Keys = DBColumnKeys.Code | DBColumnKeys.Indexing), Index("ruser_login", true)]
+        [DataMember, Column("login", 256, Keys = DBColumnKeys.Code | DBColumnKeys.Indexing), Index("ruser_login", true)]
         public string Login
         {
             get { return GetValue<string>(Table.CodeKey); }
             set { this[Table.CodeKey] = value; }
         }
 
-        [Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
+        [DataMember, Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
         public override string Name
         {
             get { return GetName("name"); }
             set { SetName("name", value); }
         }
 
-        [Column("department_id"), Browsable(false)]
+        [DataMember, Column("department_id"), Browsable(false)]
         public int? DepartmentId
         {
             get { return GetProperty<int?>(); }
             set { SetProperty(value); }
         }
-
+        
         [Reference("fk_ruser_department_id", nameof(DepartmentId))]
         public Department Department
         {
@@ -255,13 +263,13 @@ namespace DataWF.Module.Common
             set { SetPropertyReference(value, nameof(DepartmentId)); }
         }
 
-        [Column("position_id"), Browsable(false)]
+        [DataMember, Column("position_id"), Browsable(false)]
         public int? PositionId
         {
             get { return GetProperty<int?>(); }
             set { SetProperty(value); }
         }
-
+        
         [Reference("fk_ruser_position_id", nameof(PositionId))]
         public Position Position
         {
@@ -270,7 +278,7 @@ namespace DataWF.Module.Common
         }
 
         [ReadOnly(true)]
-        [Column("super", Default = "false", Keys = DBColumnKeys.Notnull)]
+        [DataMember, Column("super", Default = "false", Keys = DBColumnKeys.Notnull)]
         public bool? Super
         {
             get { return GetValue<bool?>(ParseProperty(nameof(Super))); }
@@ -291,14 +299,14 @@ namespace DataWF.Module.Common
             }
         }
 
-        [Column("email", 1024), Index("ruser_email", true)]
+        [DataMember, Column("email", 1024), Index("ruser_email", true)]
         public string EMail
         {
             get { return GetProperty<string>(nameof(EMail)); }
             set { SetProperty(value, nameof(EMail)); }
         }
 
-        [Column("network_address", 2048)]
+        [DataMember, Column("network_address", 2048)]
         public string NetworkAddress
         {
             get { return GetProperty<string>(); }
@@ -311,7 +319,7 @@ namespace DataWF.Module.Common
             set { Status = value ? DBStatus.Actual : DBStatus.Error; }
         }
 
-        [Column("password", 256, Keys = DBColumnKeys.Password), PasswordPropertyText(true)]
+        [DataMember, Column("password", 256, Keys = DBColumnKeys.Password), PasswordPropertyText(true)]
         public string Password
         {
             get { return GetProperty<string>(nameof(Password)); }
@@ -348,5 +356,7 @@ namespace DataWF.Module.Common
         {
             base.Dispose();
         }
+
+
     }
 }

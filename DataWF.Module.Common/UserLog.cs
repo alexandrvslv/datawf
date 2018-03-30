@@ -25,6 +25,7 @@ using DataWF.Common;
 using System.ComponentModel;
 using System.Xml.Serialization;
 using System.Linq;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Common
 {
@@ -42,7 +43,7 @@ namespace DataWF.Module.Common
         Reject
     }
 
-    [Table("wf_common", "duser_log", "User", BlockSize = 2000, IsLoging = false)]
+    [DataContract, Table("wf_common", "duser_log", "User", BlockSize = 2000, IsLoging = false)]
     public class UserLog : DBItem, ICheck
     {
         [ThreadStatic]
@@ -84,14 +85,14 @@ namespace DataWF.Module.Common
             Build(DBTable);
         }
 
-        [Column("unid", Keys = DBColumnKeys.Primary)]
+        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
         {
             get { return GetValue<long?>(Table.PrimaryKey); }
             set { SetValue(value, Table.PrimaryKey); }
         }
 
-        [Column("type_id", Keys = DBColumnKeys.ElementType)]
+        [DataMember, Column("type_id", Keys = DBColumnKeys.ElementType)]
         public UserLogType? LogType
         {
             get { return GetProperty<UserLogType?>(nameof(LogType)); }
@@ -99,14 +100,14 @@ namespace DataWF.Module.Common
         }
 
         [Browsable(false)]
-        [Column("document_id", 256)]
+        [DataMember, Column("document_id", 256)]
         public string DocumentId
         {
             get { return GetProperty<string>(nameof(DocumentId)); }
             set { SetProperty(value, nameof(DocumentId)); }
         }
 
-        [Column("document_table", 512)]
+        [DataMember, Column("document_table", 512)]
         public string DocumentTableName
         {
             get { return GetProperty<string>(nameof(DocumentTableName)); }
@@ -137,7 +138,7 @@ namespace DataWF.Module.Common
         }
 
         [Browsable(false)]
-        [Column("parent_id", Keys = DBColumnKeys.Group)]
+        [DataMember, Column("parent_id", Keys = DBColumnKeys.Group)]
         public long? ParentId
         {
             get { return GetProperty<long?>(nameof(ParentId)); }
@@ -152,7 +153,7 @@ namespace DataWF.Module.Common
         }
 
         [Browsable(false)]
-        [Column("redo_id", Keys = DBColumnKeys.Group)]
+        [DataMember, Column("redo_id", Keys = DBColumnKeys.Group)]
         public long? RedoId
         {
             get { return GetProperty<long?>(nameof(RedoId)); }
@@ -166,7 +167,7 @@ namespace DataWF.Module.Common
             set { SetPropertyReference(value, nameof(RedoId)); }
         }
 
-        [Column("target_table", 512)]
+        [DataMember, Column("target_table", 512)]
         public string TargetTableName
         {
             get { return GetProperty<string>(nameof(TargetTableName)); }
@@ -184,7 +185,7 @@ namespace DataWF.Module.Common
             }
         }
 
-        [Column("target_id", 256)]
+        [DataMember, Column("target_id", 256)]
         public string TargetId
         {
             get { return GetProperty<string>(nameof(TargetId)); }
@@ -205,10 +206,10 @@ namespace DataWF.Module.Common
 
         public DBLogTable LogTable
         {
-            get { return TargetTable.LogTable; }
+            get { return TargetTable?.LogTable; }
         }
 
-        [Column("log_id")]
+        [DataMember, Column("log_id")]
         public int? LogId
         {
             get { return GetProperty<int?>(nameof(LogId)); }
@@ -229,14 +230,14 @@ namespace DataWF.Module.Common
             }
         }
 
-        [Column("text_data", ColumnType = DBColumnTypes.Internal)]
+        [DataMember, Column("text_data", ColumnType = DBColumnTypes.Internal)]
         public string TextData
         {
             get { return GetProperty<string>(nameof(TextData)); }
             set { SetProperty(value, nameof(TextData)); }
         }
 
-        [Column("user_id")]
+        [DataMember, Column("user_id")]
         public int? UserId
         {
             get { return GetProperty<int?>(nameof(UserId)); }

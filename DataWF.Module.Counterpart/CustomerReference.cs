@@ -18,6 +18,7 @@
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
 using System.ComponentModel;
+using System.Runtime.Serialization;
 using DataWF.Data;
 using DataWF.Module.Common;
 
@@ -31,7 +32,7 @@ namespace DataWF.Module.Counterpart
         }
     }
 
-    [Table("wf_customer", "dcustomer_reference", "Customer")]
+    [DataContract, Table("wf_customer", "dcustomer_reference", "Customer")]
     public class CustomerReference : DBItem
     {
         public static DBTable<CustomerReference> DBTable
@@ -44,7 +45,7 @@ namespace DataWF.Module.Counterpart
             Build(DBTable);
         }
 
-        [Column("unid", Keys = DBColumnKeys.Primary)]
+        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
@@ -52,7 +53,7 @@ namespace DataWF.Module.Counterpart
         }        
 
         [Browsable(false)]
-        [Column("customer_id")]
+        [DataMember, Column("customer_id")]
         public int? CustomerId
         {
             get { return GetProperty<int?>(nameof(CustomerId)); }
@@ -67,7 +68,7 @@ namespace DataWF.Module.Counterpart
         }
 
         [Browsable(false)]
-        [Column("reference_id")]
+        [DataMember, Column("reference_id")]
         public int? ReferenceId
         {
             get { return GetProperty<int?>(nameof(ReferenceId)); }

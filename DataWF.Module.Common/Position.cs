@@ -20,10 +20,11 @@
 using DataWF.Data;
 using DataWF.Common;
 using System.ComponentModel;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Common
 {
-    [Table("wf_common", "rposition", "User")]
+    [DataContract, Table("wf_common", "rposition", "User")]
     public class Position : DBItem
     {
         public static DBTable<Position> DBTable
@@ -36,14 +37,14 @@ namespace DataWF.Module.Common
             Build(DBTable);
         }
 
-        [Column("unid", Keys = DBColumnKeys.Primary)]
+        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
             set { SetValue(value, Table.PrimaryKey); }
         }
 
-        [Column("department_id", Keys = DBColumnKeys.Group), Index("rposition_department_id"), Browsable(false)]
+        [DataMember, Column("department_id", Keys = DBColumnKeys.Group), Index("rposition_department_id"), Browsable(false)]
         public int? DepartmentId
         {
             get { return GetProperty<int?>(); }
@@ -57,7 +58,7 @@ namespace DataWF.Module.Common
             set { SetPropertyReference(value, nameof(DepartmentId)); }
         }
 
-        [Column("parent_id", Keys = DBColumnKeys.Group), Index("rposition_parent_id"), Browsable(false)]
+        [DataMember, Column("parent_id", Keys = DBColumnKeys.Group), Index("rposition_parent_id"), Browsable(false)]
         public int? ParentId
         {
             get { return GetValue<int?>(Table.GroupKey); }
@@ -71,7 +72,7 @@ namespace DataWF.Module.Common
             set { SetReference(value, Table.GroupKey); }
         }
 
-        [Column("code", 40, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing)]
+        [DataMember, Column("code", 40, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing)]
         [Index("rposition_code", true)]
         public string Code
         {
@@ -79,7 +80,7 @@ namespace DataWF.Module.Common
             set { SetValue(value, Table.CodeKey); }
         }
 
-        [Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
+        [DataMember, Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
         public override string Name
         {
             get { return GetName("name"); }

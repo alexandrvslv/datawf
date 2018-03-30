@@ -22,6 +22,7 @@ using System.Linq;
 using DataWF.Data;
 using DataWF.Common;
 using DataWF.Module.Common;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Counterpart
 {
@@ -53,7 +54,7 @@ namespace DataWF.Module.Counterpart
         }
     }
 
-    [Table("wf_customer", "dcustomer_indentify", "Customer", BlockSize = 2000)]
+    [DataContract, Table("wf_customer", "dcustomer_indentify", "Customer", BlockSize = 2000)]
     public class CustomerIdentify : DBItem
     {
         public static DBTable<CustomerIdentify> DBTable
@@ -66,7 +67,7 @@ namespace DataWF.Module.Counterpart
             Build(DBTable);
         }
 
-        [Column("unid", Keys = DBColumnKeys.Primary)]
+        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
@@ -74,7 +75,7 @@ namespace DataWF.Module.Counterpart
         }
 
         [Browsable(false)]
-        [Column("customer_id")]
+        [DataMember, Column("customer_id")]
         public int? CustomerId
         {
             get { return GetProperty<int?>(nameof(CustomerId)); }
@@ -88,28 +89,28 @@ namespace DataWF.Module.Counterpart
             set { SetPropertyReference(value, nameof(CustomerId)); }
         }
 
-        [Column("identify_number", 30)]
+        [DataMember, Column("identify_number", 30)]
         public string Number
         {
             get { return GetProperty<string>(nameof(Number)); }
             set { SetProperty(value, nameof(Number)); }
         }
 
-        [Column("date_issue")]
+        [DataMember, Column("date_issue")]
         public DateTime? DateIssue
         {
             get { return GetProperty<DateTime?>(nameof(DateIssue)); }
             set { SetProperty(value, nameof(DateIssue)); }
         }
 
-        [Column("date_expire")]
+        [DataMember, Column("date_expire")]
         public DateTime? DateExpire
         {
             get { return GetProperty<DateTime?>(nameof(DateExpire)); }
             set { SetProperty(value, nameof(DateExpire)); }
         }
 
-        [Column("issued_by")]
+        [DataMember, Column("issued_by")]
         public string IssuedBy
         {
             get { return GetProperty<string>(nameof(IssuedBy)); }

@@ -26,6 +26,7 @@ using System.IO;
 using System.Reflection;
 using DataWF.Data;
 using DataWF.Common;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Common
 {
@@ -43,7 +44,7 @@ namespace DataWF.Module.Common
         }
     }
 
-    [Table("wf_common", "rscheduler", "Reference Book", BlockSize = 20)]
+    [DataContract, Table("wf_common", "rscheduler", "Reference Book", BlockSize = 20)]
     public class Scheduler : DBItem//, IComparable
     {
         public static DBTable<Scheduler> DBTable
@@ -57,42 +58,42 @@ namespace DataWF.Module.Common
             Type = SchedulerType.Interval;
         }
 
-        [Column("unid", Keys = DBColumnKeys.Primary)]
+        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
             set { SetValue(value, Table.PrimaryKey); }
         }
 
-        [Column("code", Keys = DBColumnKeys.Code)]
+        [DataMember, Column("code", Keys = DBColumnKeys.Code)]
         public string Code
         {
             get { return GetValue<string>(Table.CodeKey); }
             set { SetValue(value, Table.CodeKey); }
         }
 
-        [Column("name", Keys = DBColumnKeys.Culture)]
+        [DataMember, Column("name", Keys = DBColumnKeys.Culture)]
         public override string Name
         {
             get { return GetName("name"); }
             set { SetName("name", value); }
         }
 
-        [Column("orderid")]
+        [DataMember, Column("orderid")]
         public int? Order
         {
             get { return GetProperty<int?>(nameof(Order)); }
             set { SetProperty(value, nameof(Order)); }
         }
 
-        [Column("type_id", Keys = DBColumnKeys.ElementType)]
+        [DataMember, Column("type_id", Keys = DBColumnKeys.ElementType)]
         public SchedulerType? Type
         {
             get { return GetProperty<SchedulerType?>(nameof(SchedulerType)); }
             set { SetProperty(value, nameof(SchedulerType)); }
         }
 
-        [Column("run_interval")]
+        [DataMember, Column("run_interval")]
         public TimeSpan? Interval
         {
             get { return GetProperty<TimeSpan?>(nameof(Interval)); }
@@ -100,7 +101,7 @@ namespace DataWF.Module.Common
         }
 
         [Browsable(false)]
-        [Column("procedure_name")]
+        [DataMember, Column("procedure_name")]
         public string ProcedureName
         {
             get { return GetProperty<string>(nameof(ProcedureName)); }
@@ -113,7 +114,7 @@ namespace DataWF.Module.Common
             set { ProcedureName = value?.Name; }
         }
 
-        [Column("date_execute")]
+        [DataMember, Column("date_execute")]
         public DateTime? DateExecute
         {
             get { return GetProperty<DateTime?>(nameof(DateExecute)); }

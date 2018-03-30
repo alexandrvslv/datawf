@@ -26,6 +26,7 @@ using System.IO;
 using System.Reflection;
 using DataWF.Data;
 using DataWF.Common;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Common
 {
@@ -43,7 +44,7 @@ namespace DataWF.Module.Common
         }
     }
 
-    [Table("wf_common", "dstats", "Data")]
+    [DataContract, Table("wf_common", "dstats", "Data")]
     public class Statistic : DBItem//, IComparable
     {
         public static DBTable<Statistic> DBTable
@@ -56,21 +57,21 @@ namespace DataWF.Module.Common
             Build(DBTable);
         }
 
-        [Column("unid", Keys = DBColumnKeys.Primary)]
+        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
             set { SetValue(value, Table.PrimaryKey); }
         }
 
-        //[Column("code", Keys = DBColumnKeys.Code)]
+        //[DataMember, Column("code", Keys = DBColumnKeys.Code)]
         //public string Code
         //{
         //    get { return GetValue<string>(Table.CodeKey); }
         //    set { SetValue(value, Table.CodeKey); }
         //}
 
-        //[Column("name", Keys = DBColumnKeys.Culture)]
+        //[DataMember, Column("name", Keys = DBColumnKeys.Culture)]
         //public override string Name
         //{
         //    get { return GetName("name"); }
@@ -78,7 +79,7 @@ namespace DataWF.Module.Common
         //}
 
         [Browsable(false)]
-        [Column("scheduler_id")]
+        [DataMember, Column("scheduler_id")]
         public int? SchedulerId
         {
             get { return GetProperty<int?>(nameof(SchedulerId)); }
@@ -92,7 +93,7 @@ namespace DataWF.Module.Common
             set { SetPropertyReference(value, nameof(SchedulerId)); }
         }
 
-        [Column("stat_result")]
+        [DataMember, Column("stat_result")]
         public decimal? Result
         {
             get { return GetProperty<decimal?>(); }

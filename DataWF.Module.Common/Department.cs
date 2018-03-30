@@ -21,10 +21,11 @@ using DataWF.Data;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Common
 {
-    [Table("wf_common", "rdepartment", "User", BlockSize = 100)]
+    [DataContract, Table("wf_common", "rdepartment", "User", BlockSize = 100)]
     public class Department : DBItem, IComparable, IDisposable
     {
         public static DBTable<Department> DBTable
@@ -37,14 +38,14 @@ namespace DataWF.Module.Common
             Build(DBTable);
         }
 
-        [Column("unid", Keys = DBColumnKeys.Primary)]
+        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
             set { SetValue(value, Table.PrimaryKey); }
         }
 
-        [Column("parent_id", Keys = DBColumnKeys.Group), Index("rdepartment_parent_id"), Browsable(false)]
+        [DataMember, Column("parent_id", Keys = DBColumnKeys.Group), Index("rdepartment_parent_id"), Browsable(false)]
         public int? ParentId
         {
             get { return GetValue<int?>(Table.GroupKey); }
@@ -58,14 +59,14 @@ namespace DataWF.Module.Common
             set { SetReference(value, Table.GroupKey); }
         }
 
-        [Column("code", 256, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing), Index("rdepartment_code", false)]
+        [DataMember, Column("code", 256, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing), Index("rdepartment_code", false)]
         public string Code
         {
             get { return GetValue<string>(Table.CodeKey); }
             set { this[Table.CodeKey] = value; }
         }
 
-        [Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
+        [DataMember, Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
         public override string Name
         {
             get { return GetName(nameof(Name)); }

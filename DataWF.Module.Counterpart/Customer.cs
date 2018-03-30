@@ -22,6 +22,7 @@ using System.ComponentModel;
 using DataWF.Data;
 using DataWF.Common;
 using DataWF.Module.Common;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Counterpart
 {
@@ -33,7 +34,7 @@ namespace DataWF.Module.Counterpart
         }
     }
 
-    [Table("wf_customer", "dcustomer", "Customer", BlockSize = 5000)]
+    [DataContract, Table("wf_customer", "dcustomer", "Customer", BlockSize = 5000)]
     public class Customer : DBItem, IDisposable
     {
         public static DBTable<Customer> DBTable
@@ -46,14 +47,14 @@ namespace DataWF.Module.Counterpart
             Build(DBTable);
         }
 
-        [Column("unid", Keys = DBColumnKeys.Primary)]
+        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
             set { SetValue(value, Table.PrimaryKey); }
         }
 
-        [Column("innr", 40, Keys = DBColumnKeys.Code)]
+        [DataMember, Column("innr", 40, Keys = DBColumnKeys.Code)]
         [Index("dcustomer_inn", true)]
         public string INN
         {
@@ -61,14 +62,14 @@ namespace DataWF.Module.Counterpart
             set { SetValue(value, Table.CodeKey); }
         }
 
-        [Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
+        [DataMember, Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
         public override string Name
         {
             get { return GetName(nameof(Name)); }
             set { SetName(nameof(Name), value); }
         }
 
-        [Column("login", 200)]
+        [DataMember, Column("login", 200)]
         [Index("dcustomer_login", true)]
         public string Login
         {
@@ -77,21 +78,21 @@ namespace DataWF.Module.Counterpart
         }
 
         [PasswordPropertyText(true)]
-        [Column("password", 200, Keys = DBColumnKeys.Password)]
+        [DataMember, Column("password", 200, Keys = DBColumnKeys.Password)]
         public string Password
         {
             get { return GetProperty<string>(); }
             set { SetProperty(value); }
         }
 
-        [Column("sign_key", 1024, Keys = DBColumnKeys.Password)]
+        [DataMember, Column("sign_key", 1024, Keys = DBColumnKeys.Password)]
         public string Key
         {
             get { return GetProperty<string>(nameof(Key)); }
             set { SetProperty(value, nameof(Key)); }
         }
 
-        [Column("email", 1024)]
+        [DataMember, Column("email", 1024)]
         [Index("dcustomer_email", true)]
         public string EMail
         {
@@ -100,7 +101,7 @@ namespace DataWF.Module.Counterpart
         }
 
         [Browsable(false)]
-        [Column("country_id")]
+        [DataMember, Column("country_id")]
         public int? CountryId
         {
             get { return GetProperty<int?>(nameof(CountryId)); }
@@ -115,7 +116,7 @@ namespace DataWF.Module.Counterpart
         }
 
         [Browsable(false)]
-        [Column("address_id")]
+        [DataMember, Column("address_id")]
         public int? AddressId
         {
             get { return GetValue<int?>(Table.ParseColumn(nameof(AddressId))); }

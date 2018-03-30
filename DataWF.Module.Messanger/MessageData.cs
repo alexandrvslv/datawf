@@ -40,7 +40,7 @@ namespace DataWF.Module.Messanger
 		{ }
 	}
 
-	[Table("wf_message", "dmessage_data")]
+	[Table("wf_message", "dmessage_data", "Message")]
 	public class MessageData : DBItem
 	{
 		public static DBTable<MessageData> DBTable

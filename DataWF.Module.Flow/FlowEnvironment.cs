@@ -196,7 +196,6 @@ namespace DataWF.Module.Flow
             DBService.Execute += FlowEnvironment.OnDBServiceExecute;
             //TODO DBService.RowUpdated += FlowEnvironment.OnDBRowUpdated;
 
-            Serialization.Notify += Helper.OnSerializeNotify;
             FlowEnvironment.Config.LogUpdate = true;
 
             DBService.RowStateEdited += FlowEnvironment.OnDBRowChanged;
@@ -208,8 +207,6 @@ namespace DataWF.Module.Flow
         {
             DBService.Execute -= FlowEnvironment.OnDBServiceExecute;
             //TODO DBService.RowUpdated -= FlowEnvironment.OnDBRowUpdated;
-
-            Serialization.Notify -= Helper.OnSerializeNotify;
 
             DBService.RowStateEdited -= FlowEnvironment.OnDBRowChanged;
             //DBService.RowAdded -= FlowEnvir.OnDBRowChanged;

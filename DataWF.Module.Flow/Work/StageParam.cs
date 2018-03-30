@@ -20,6 +20,7 @@
 using DataWF.Data;
 using DataWF.Common;
 using System.ComponentModel;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Flow
 {
@@ -42,7 +43,7 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [Table("wf_flow", "rstage_param", "Reference Book", BlockSize = 500)]
+    [DataContract, Table("wf_flow", "rstage_param", "Reference Book", BlockSize = 500)]
     public class StageParam : ParamBase
     {
         public static DBTable<StageParam> DBTable
@@ -61,7 +62,7 @@ namespace DataWF.Module.Flow
             get { return Stage; }
         }
 
-        [Column("code")]
+        [DataMember, Column("code")]
         public override string ParamCode
         {
             get { return GetProperty<string>(nameof(ParamCode)); }
@@ -69,7 +70,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("stage_id")]
+        [DataMember, Column("stage_id")]
         public int? StageId
         {
             get { return GetProperty<int?>(nameof(StageId)); }

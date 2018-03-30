@@ -22,6 +22,7 @@ using System.ComponentModel;
 using DataWF.Data;
 using System.Collections.Generic;
 using DataWF.Common;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Flow
 {
@@ -35,7 +36,7 @@ namespace DataWF.Module.Flow
 
     }
 
-    [Table("wf_flow", "rwork", "Reference Book", BlockSize = 20)]
+    [DataContract, Table("wf_flow", "rwork", "Reference Book", BlockSize = 20)]
     public class Work : DBItem, IDisposable
     {
         public static DBTable<Work> DBTable
@@ -48,21 +49,21 @@ namespace DataWF.Module.Flow
             Build(DBTable);
         }
 
-        [Column("unid", Keys = DBColumnKeys.Primary)]
+        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
             set { SetValue(value, Table.PrimaryKey); }
         }
 
-        [Column("code", Keys = DBColumnKeys.Code)]
+        [DataMember, Column("code", Keys = DBColumnKeys.Code)]
         public string Code
         {
             get { return GetValue<string>(Table.CodeKey); }
             set { SetValue(value, Table.CodeKey); }
         }
 
-        [Column("name", Keys = DBColumnKeys.Culture)]
+        [DataMember, Column("name", Keys = DBColumnKeys.Culture)]
         public override string Name
         {
             get { return GetName(nameof(Name)); }

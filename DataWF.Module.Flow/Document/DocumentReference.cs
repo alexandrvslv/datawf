@@ -20,6 +20,7 @@
 using DataWF.Data;
 using DataWF.Common;
 using System.ComponentModel;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Flow
 {
@@ -149,7 +150,7 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [Table("wf_flow", "ddocument_reference", "Document", BlockSize = 2000)]
+    [DataContract, Table("wf_flow", "ddocument_reference", "Document", BlockSize = 2000)]
     public class DocumentReference : DBItem
     {
         public static DBTable<DocumentReference> DBTable
@@ -162,7 +163,7 @@ namespace DataWF.Module.Flow
             Build(DBTable);
         }
         [Browsable(false)]
-        [Column("unid", Keys = DBColumnKeys.Primary)]
+        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
         {
             get { return GetProperty<long?>(nameof(Id)); }
@@ -170,7 +171,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("document_id")]
+        [DataMember, Column("document_id")]
         public long? DocumentId
         {
             get { return GetProperty<long?>(nameof(DocumentId)); }
@@ -185,7 +186,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [Column("reference_id")]
+        [DataMember, Column("reference_id")]
         public long? ReferenceId
         {
             get { return GetProperty<long?>(nameof(DocumentId)); }

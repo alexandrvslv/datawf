@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.Linq;
 using DataWF.Data;
 using DataWF.Common;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Common
 {
@@ -35,7 +36,7 @@ namespace DataWF.Module.Common
 		GTypeMember
 	}
 
-	[Table("wf_common", "rgroup_permission", "User", BlockSize = 2000)]
+	[DataContract, Table("wf_common", "rgroup_permission", "User", BlockSize = 2000)]
 	public class GroupPermission : DBItem
 	{
 		public static DBTable<GroupPermission> DBTable
@@ -86,14 +87,14 @@ namespace DataWF.Module.Common
 			Type = PermissionType.GTable;
 		}
 
-		[Column("unid", Keys = DBColumnKeys.Primary)]
+		[DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
 		public int? Id
 		{
 			get { return GetValue<int?>(Table.PrimaryKey); }
 			set { SetValue(value, Table.PrimaryKey); }
 		}
 
-		[Column("parent_id", Keys = DBColumnKeys.Group), Index("rgroup_permission_parent_id"), Browsable(false)]
+		[DataMember, Column("parent_id", Keys = DBColumnKeys.Group), Index("rgroup_permission_parent_id"), Browsable(false)]
 		public int? ParentId
 		{
 			get { return GetValue<int?>(Table.GroupKey); }
@@ -107,14 +108,14 @@ namespace DataWF.Module.Common
 			set { SetReference(value, Table.GroupKey); }
 		}
 
-		[Column("type_id", Keys = DBColumnKeys.ElementType)]
+		[DataMember, Column("type_id", Keys = DBColumnKeys.ElementType)]
 		public PermissionType? Type
 		{
 			get { return GetValue<PermissionType?>(Table.ElementTypeKey); }
 			set { SetValue(value, Table.ElementTypeKey); }
 		}
 
-		[Column("code", 512, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing)]
+		[DataMember, Column("code", 512, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing)]
 		[Index("rgroup_permission_code", true)]
 		public string Code
 		{
