@@ -880,7 +880,7 @@ namespace DataWF.Data.Gui
             _currentControl = null;
         }
 
-        private void ToolLoadOnClick(object sender, EventArgs e)
+        protected override void OnToolLoadClick(object sender, EventArgs e)
         {
             if (view == null)
                 return;
@@ -890,7 +890,7 @@ namespace DataWF.Data.Gui
             else
                 loader.Cancel();
         }
-
+        
         private void ToolReportClick(object sender, EventArgs e)
         {
             var editor = new QueryEditor();

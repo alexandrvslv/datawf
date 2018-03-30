@@ -26,8 +26,7 @@ namespace DataWF.Gui
             set
             {
                 var diff = 0.09D;
-                if (Invert)
-                    value = value.Invert();
+                
                 baseColor = value;
                 BackBrush.Color = CellStyleBrush.ColorEmpty;
                 BorderBrush.Color = CellStyleBrush.ColorEmpty;// value.WithIncreasedLight(-diff);
@@ -125,8 +124,6 @@ namespace DataWF.Gui
         }
 
         public Alignment Alignment { get; set; }
-
-        public bool Invert { get; set; } = true;
 
         public CellStyle Clone()
         {

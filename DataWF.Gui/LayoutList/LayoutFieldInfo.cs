@@ -6,157 +6,157 @@ using DataWF.Common;
 
 namespace DataWF.Gui
 {
-	public class LayoutFieldColumn : LayoutColumn
-	{
-		public LayoutFieldColumn()
-		{
-		}
+    public class LayoutFieldColumn : LayoutColumn
+    {
+        public LayoutFieldColumn()
+        {
+        }
 
-		public override ILayoutCellEditor GetEditor(object source)
-		{
-			return (source as LayoutField)?.GetEditor(source) ?? base.GetEditor(source);
-		}
-	}
+        public override ILayoutCellEditor GetEditor(object source)
+        {
+            return (source as LayoutField)?.GetEditor(source) ?? base.GetEditor(source);
+        }
+    }
 
-	public class LayoutFieldList : LayoutNodeList<LayoutField>
-	{
-		public LayoutFieldList(CategoryList groups) : base(groups)
-		{
+    public class LayoutFieldList : LayoutNodeList<LayoutField>
+    {
+        public LayoutFieldList(CategoryList groups) : base(groups)
+        {
 
-		}
-	}
+        }
+    }
 
-	public class FieldValueInvoker : IInvoker<LayoutField, object>
-	{
-		public FieldValueInvoker()
-		{
-			DataType = typeof(object);
-			Name = "Value";
-		}
+    public class FieldValueInvoker : IInvoker<LayoutField, object>
+    {
+        public FieldValueInvoker()
+        {
+            DataType = typeof(object);
+            Name = "Value";
+        }
 
-		public object FieldSource { get; set; }
+        public object FieldSource { get; set; }
 
-		public bool CanWrite { get { return true; } }
+        public bool CanWrite { get { return true; } }
 
-		public Type DataType { get; set; }
+        public Type DataType { get; set; }
 
-		public Type TargetType { get { return typeof(LayoutField); } }
+        public Type TargetType { get { return typeof(LayoutField); } }
 
-		public string Name { get; set; }
+        public string Name { get; set; }
 
-		public object Get(LayoutField target)
-		{
-			return target.ReadValue(FieldSource);
-		}
+        public object Get(LayoutField target)
+        {
+            return FieldSource == null ? null : target.ReadValue(FieldSource);
+        }
 
-		public object Get(object target)
-		{
-			return Get((LayoutField)target);
-		}
+        public object Get(object target)
+        {
+            return Get((LayoutField)target);
+        }
 
-		public void Set(LayoutField target, object value)
-		{
-			target.WriteValue(FieldSource, value);
-		}
+        public void Set(LayoutField target, object value)
+        {
+            target.WriteValue(FieldSource, value);
+        }
 
-		public void Set(object target, object value)
-		{
-			Set((LayoutField)target, value);
-		}
-	}
+        public void Set(object target, object value)
+        {
+            Set((LayoutField)target, value);
+        }
+    }
 
-	public class LayoutFieldInfo : IDisposable
-	{
-		protected LayoutNodeList<LayoutField> nodes;
-		protected LayoutListInfo colums;
+    public class LayoutFieldInfo : IDisposable
+    {
+        protected LayoutNodeList<LayoutField> nodes;
+        protected LayoutListInfo colums;
 
-		public LayoutFieldInfo()
-		{
-			Nodes = new LayoutNodeList<LayoutField>();
-			Columns = new LayoutListInfo(
-				new LayoutColumn
-				{
-					Name = nameof(LayoutField.ToString),
-					Editable = false,
-					Width = 100,
-					Invoker = new ToStringInvoker()
-				},
-				new LayoutColumn
-				{
-					Name = nameof(LayoutField.Category),
-					Visible = false,
-					Invoker = new Invoker<LayoutField, Category>(nameof(LayoutField.Category),
-															 (item) => item.Category,
-															 (item, value) => item.Category = value)
-				},
-				new LayoutColumn
-				{
-					Name = nameof(LayoutField.Order),
-					Visible = false,
-					Invoker = new Invoker<LayoutField, int>(nameof(LayoutField.Order),
-														(item) => item.Order,
-														(item, value) => item.Order = value)
-				}
-			)
-			{
-				ColumnsVisible = false,
-				HeaderVisible = false,
-				Tree = true,
-				StyleRow = GuiEnvironment.StylesInfo["Field"]
-			};
+        public LayoutFieldInfo()
+        {
+            Nodes = new LayoutNodeList<LayoutField>();
+            Columns = new LayoutListInfo(
+                new LayoutColumn
+                {
+                    Name = nameof(LayoutField.ToString),
+                    Editable = false,
+                    Width = 100,
+                    Invoker = new ToStringInvoker()
+                },
+                new LayoutColumn
+                {
+                    Name = nameof(LayoutField.Category),
+                    Visible = false,
+                    Invoker = new Invoker<LayoutField, Category>(nameof(LayoutField.Category),
+                                                             (item) => item.Category,
+                                                             (item, value) => item.Category = value)
+                },
+                new LayoutColumn
+                {
+                    Name = nameof(LayoutField.Order),
+                    Visible = false,
+                    Invoker = new Invoker<LayoutField, int>(nameof(LayoutField.Order),
+                                                        (item) => item.Order,
+                                                        (item, value) => item.Order = value)
+                }
+            )
+            {
+                ColumnsVisible = false,
+                HeaderVisible = false,
+                Tree = true,
+                StyleRow = GuiEnvironment.StylesInfo["Field"]
+            };
 
-			ValueColumn = new LayoutFieldColumn()
-			{
-				Name = "Value",
-				FillWidth = true,
-				Style = GuiEnvironment.StylesInfo["Value"],
-				Invoker = new FieldValueInvoker()
-			};
-			colums.Columns.Add(ValueColumn);
-			colums.Sorters.Add(new LayoutSort(nameof(LayoutField.Order), ListSortDirection.Ascending, false));
-		}
+            ValueColumn = new LayoutFieldColumn()
+            {
+                Name = "Value",
+                FillWidth = true,
+                Style = GuiEnvironment.StylesInfo["Value"],
+                Invoker = new FieldValueInvoker()
+            };
+            colums.Columns.Add(ValueColumn);
+            colums.Sorters.Add(new LayoutSort(nameof(LayoutField.Order), ListSortDirection.Ascending, false));
+        }
 
-		public LayoutFieldInfo(params LayoutField[] items) : this()
-		{
-			Nodes.AddRange(items);
-		}
+        public LayoutFieldInfo(params LayoutField[] items) : this()
+        {
+            Nodes.AddRange(items);
+        }
 
-		public void SetSource(object source)
-		{
-			((FieldValueInvoker)ValueColumn.Invoker).FieldSource = source;
-		}
+        public void SetSource(object source)
+        {
+            ((FieldValueInvoker)ValueColumn.Invoker).FieldSource = source;
+        }
 
-		[XmlIgnore]
-		public LayoutFieldColumn ValueColumn { get; private set; }
+        [XmlIgnore]
+        public LayoutFieldColumn ValueColumn { get; private set; }
 
-		public CategoryList Categories { get; set; } = new CategoryList();
+        public CategoryList Categories { get; set; } = new CategoryList();
 
-		public LayoutNodeList<LayoutField> Nodes
-		{
-			get { return nodes; }
-			set
-			{
-				nodes = value;
-				nodes.Categories = Categories;
-			}
-		}
+        public LayoutNodeList<LayoutField> Nodes
+        {
+            get { return nodes; }
+            set
+            {
+                nodes = value;
+                nodes.Categories = Categories;
+            }
+        }
 
-		public CellStyle Style
-		{
-			get { return colums.StyleCell; }
-			//set {style = value;//}
-		}
+        public CellStyle Style
+        {
+            get { return colums.StyleCell; }
+            //set {style = value;//}
+        }
 
-		public LayoutListInfo Columns
-		{
-			get { return colums; }
-			set { colums = value; }
-		}
+        public LayoutListInfo Columns
+        {
+            get { return colums; }
+            set { colums = value; }
+        }
 
-		public virtual void Dispose()
-		{
-			colums.Dispose();
-		}
-	}
+        public virtual void Dispose()
+        {
+            colums.Dispose();
+        }
+    }
 }
 
