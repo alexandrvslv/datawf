@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace DataWF.Common
 {
-    public delegate V GetHandler<T, V>(ref T target);
+    public delegate V GetHandler<T, V>(T target);
     public delegate void SetHandler<T, V>(ref T target, V value);
 
     public class RefPropertyInvoker<T, V> : IInvoker// where T : struct
@@ -35,7 +35,7 @@ namespace DataWF.Common
 
         public V Get(ref T target)
         {
-            return GetAction(ref target);
+            return GetAction(target);
         }
 
         public object Get(object target)
@@ -60,7 +60,7 @@ namespace DataWF.Common
         {
             var method = new DynamicMethod(EmitInvoker.GetMethodName(info),
                                            typeof(V),
-                                           new Type[] { typeof(T).MakeByRefType() },
+                                           new Type[] { typeof(T) },
                                            true);
 
             ILGenerator il = method.GetILGenerator();
@@ -68,7 +68,7 @@ namespace DataWF.Common
             if (!info.IsStatic)
             {
                 il.Emit(OpCodes.Ldarga_S, 0);
-                il.Emit(OpCodes.Ldind_Ref);
+                //il.Emit(OpCodes.Ldind_Ref);
             }
             il.EmitCall(OpCodes.Call, info, null);
             il.Emit(OpCodes.Ret);

@@ -13,57 +13,61 @@ namespace DataWF.Module.CommonGui
     public class UserEditor : VPanel, IDockContent
     {
         private User user;
-        private GroupBoxItem groupAttributes = new GroupBoxItem();
-        private GroupBoxItem groupGroups = new GroupBoxItem();
-        private GroupBox groupMap = new GroupBox();
-        private ListEditor fields = new ListEditor();
-        private AccessEditor groups = new AccessEditor();
+        private GroupBoxItem groupAttributes;
+        private GroupBoxItem groupGroups;
+        private GroupBox groupMap;
+        private ListEditor fields;
+        private AccessEditor groups;
 
         public UserEditor()
         {
-            var info = new LayoutFieldInfo();
-            info.Columns.Indent = 6;
-            info.Nodes.Add(new LayoutField("UserType"));
-            info.Nodes.Add(new LayoutField("Parent"));
-            info.Nodes.Add(new LayoutField("Position"));
-            info.Nodes.Add(new LayoutField("Login"));
-            info.Nodes.Add(new LayoutField("Password"));
-            info.Nodes.Add(new LayoutField("Name"));
-            info.Nodes.Add(new LayoutField("EMail"));
+            //var info = new LayoutFieldInfo();
+            //info.Columns.Indent = 6;
+            //info.Nodes.Add(new LayoutField("UserType"));
+            //info.Nodes.Add(new LayoutField("Parent"));
+            //info.Nodes.Add(new LayoutField("Position"));
+            //info.Nodes.Add(new LayoutField("Login"));
+            //info.Nodes.Add(new LayoutField("Password"));
+            //info.Nodes.Add(new LayoutField("Name"));
+            //info.Nodes.Add(new LayoutField("EMail"));
 
-            var f = new TableLayoutList();
-            f.AllowCellSize = true;
-            f.CheckView = false;
-            f.EditMode = EditModes.ByClick;
-            f.EditState = EditListState.Edit;
-            f.GenerateColumns = false;
-            f.GenerateFields = false;
-            f.GenerateToString = false;
-            f.FieldInfo = info;
-            f.HighLight = true;
-            f.Mode = LayoutListMode.Fields;
-            f.Name = "fields";
-            f.Text = "Attributes";
+            var f = new LayoutList
+            {
+                AllowCellSize = true,
+                CheckView = false,
+                EditMode = EditModes.ByClick,
+                EditState = EditListState.Edit,
+                Mode = LayoutListMode.Fields,
+                Name = "fields",
+                Text = "Attributes"
+            };
 
-            fields.List = f;
+            fields = new ListEditor(f);
             fields.Saving += OnFieldsSaving;
-            groupAttributes.Widget = fields;
-            groupAttributes.FillWidth = true;
-            groupAttributes.FillHeight = true;
-            groupAttributes.Text = "Parameters";
 
-            groupGroups = new GroupBoxItem();
-            groupGroups.Col = 2;
-            groupGroups.Widget = groups;
-            groupGroups.Width = 252;
-            groupGroups.Text = "Groups";
+            groups = new AccessEditor()
+            {
+                Name = "Groups"
+            };
 
-            groupMap.Add(groupAttributes);
-            groupMap.Add(groupGroups);
+            groupAttributes = new GroupBoxItem
+            {
+                Widget = fields,
+                FillWidth = true,
+                FillHeight = true,
+                Name = "Parameters"
+            };
 
-            groups.Name = "groups";
-            groups.Text = "Groups";
+            groupGroups = new GroupBoxItem()
+            {
+                Col = 2,
+                Widget = groups,
+                Width = 252,
+                Name = "Groups"
+            };
 
+            groupMap = new GroupBox(groupAttributes, groupGroups);
+            
             Name = "UserEditor";
             Text = "User Editor";
             ((Box)fields.Bar.Parent).Remove(fields.Bar);
@@ -132,6 +136,7 @@ namespace DataWF.Module.CommonGui
         public void Localize()
         {
             GuiService.Localize(this, "UserEditor", "User");
+            groupMap.Localize();
         }
 
         protected override void Dispose(bool disposing)

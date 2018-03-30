@@ -14,7 +14,7 @@ namespace DataWF.Common
         {
             foreach (IAccessGroup group in Groups)
             {
-                if (group != null && group.IsCurrent)
+                if (group != null)
                     Add(new AccessItem(group, AccessType.View | AccessType.Edit | AccessType.Create | AccessType.Admin));
             }
         }
@@ -156,9 +156,13 @@ namespace DataWF.Common
         {
             int index = GetIndex(item.Group);
             if (index < 0)
+            {
                 Items.Add(item);
+            }
             else
+            {
                 Items[index] = item;
+            }
         }
 
         public IEnumerable<IAccessGroup> GetGroups(AccessType type)

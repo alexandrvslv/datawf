@@ -27,10 +27,12 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 using System.Text;
 
 namespace DataWF.Data
 {
+    [DataContract]
     public class DBItem : ICloneable, IComparable<DBItem>, IDisposable, IGroup, IAccessable, ICheck, INotifyPropertyChanged, IEditable, IStatus, IDBTableContent
     {
         public static readonly DBItem EmptyItem = new DBItem() { cacheToString = "Loading" };
@@ -631,7 +633,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
-        [Column("item_type", GroupName = "system", Keys = DBColumnKeys.ItemType | DBColumnKeys.System, Order = 98, Default = "0")]
+        [DataMember, Column("item_type", GroupName = "system", Keys = DBColumnKeys.ItemType | DBColumnKeys.System, Order = 98, Default = "0")]
         public int ItemType
         {
             get { return Table.ItemTypeKey == null ? 0 : GetValue<int?>(Table.ItemTypeKey).Value; }
@@ -639,14 +641,14 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
-        [Column("status_id", Default = "1", GroupName = "system", Keys = DBColumnKeys.State | DBColumnKeys.System, Order = 99)]
+        [DataMember, Column("status_id", Default = "1", GroupName = "system", Keys = DBColumnKeys.State | DBColumnKeys.System, Order = 99)]
         public DBStatus Status
         {
             get { return Table.StatusKey == null ? DBStatus.Empty : GetValue<DBStatus?>(Table.StatusKey).GetValueOrDefault(); }
             set { SetValue(value, Table.StatusKey); }
         }
 
-        [Column("date_create", GroupName = "system", Keys = DBColumnKeys.Date | DBColumnKeys.System, Order = 100)]
+        [DataMember, Column("date_create", GroupName = "system", Keys = DBColumnKeys.Date | DBColumnKeys.System, Order = 100)]
         public DateTime? Date
         {
             get { return Table.DateKey == null ? null : GetValue<DateTime?>(Table.DateKey); }
@@ -654,29 +656,37 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
-        [Column("date_update", GroupName = "system", Keys = DBColumnKeys.Stamp | DBColumnKeys.NoLog | DBColumnKeys.System, Order = 101)]
+        [DataMember, Column("date_update", GroupName = "system", Keys = DBColumnKeys.Stamp | DBColumnKeys.NoLog | DBColumnKeys.System, Order = 101)]
         public DateTime? Stamp
         {
             get { return Table.StampKey == null ? null : GetValue<DateTime?>(Table.StampKey); }
             set { SetValue(value, Table.StampKey); }
         }
 
-        [Browsable(false)]
-        [Column("group_access", 512, DataType = typeof(byte[]), GroupName = "system", Keys = DBColumnKeys.Access | DBColumnKeys.System, Order = 102)]
+        [NotMapped]
+        [DataMember, Column("group_access", 512, DataType = typeof(byte[]), GroupName = "system", Keys = DBColumnKeys.Access | DBColumnKeys.System, Order = 102)]
         public virtual AccessValue Access
         {
             get
             {
-                AccessValue access = Table.Access;
+                AccessValue access;
 
                 if (table.AccessKey != null && this[table.AccessKey] != null)
                 {
-                    access = GetCache(table.AccessKey) as AccessValue;
+                    access = GetCache(table.AccessKey) as AccessValue;                    
                     if (access == null)
                     {
-                        access = new AccessValue((byte[])this[table.AccessKey]);
+                        var accessData = GetValue<byte[]>(table.AccessKey);
+                        if (accessData == null)
+                            access = Table.Access.Clone();
+                        else
+                            access = new AccessValue(accessData);
                         SetCache(table.AccessKey, access);
                     }
+                }
+                else
+                {
+                    access = Table.Access;
                 }
                 return access;
             }
@@ -719,6 +729,7 @@ namespace DataWF.Data
             set { Group = value as DBItem; }
         }
 
+        [DataMember]
         public virtual string Name
         {
             get { return GetName("name"); }

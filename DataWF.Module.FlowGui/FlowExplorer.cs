@@ -294,28 +294,16 @@ namespace DataWF.Module.FlowGui
 
         private void TreeNodeMouseDoubleClick(object sender, EventArgs e)
         {
-            if (tree.SelectedNode != null && tree.SelectedNode.Tag != null)
+            if (tree.SelectedDBItem != null)
             {
-                if (tree.SelectedNode.Tag is IList)
+                var access = tree.SelectedDBItem as IAccessable;
+                if (access.Access.Edit)
                 {
-                    //FieldsEditor op = new FieldsEditor();
-                    //op.Text = tree.SelectedNode.Header + (tree.SelectedNode.Group != null ? "(" + tree.SelectedNode.Group.ToString() + ")" : string.Empty);
-                    //op.DataSource = (IList)tree.SelectedNode.Tag;
-                    //op.GetCellEditor += OptionsGetCellEditor;
-                    //op.DockType = tool.DockType.Content;
-                    //GuiService.Main.DockPanel.Put(op, tool.DockType.Content);
+                    ShowItem(tree.SelectedDBItem);
                 }
                 else
                 {
-                    var access = tree.SelectedNode.Tag as IAccessable;
-                    if (access.Access.Edit)
-                    {
-                        ShowItem((DBItem)tree.SelectedNode.Tag);
-                    }
-                    else
-                    {
-                        MessageDialog.ShowMessage(ParentWindow, Locale.Get(base.Name, "Access denied!"), Locale.Get(base.Name, "Access."));
-                    }
+                    MessageDialog.ShowMessage(ParentWindow, Locale.Get(base.Name, "Access denied!"), Locale.Get(base.Name, "Access."));
                 }
             }
         }

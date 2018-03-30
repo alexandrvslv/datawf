@@ -27,22 +27,6 @@ namespace DataWF.Module.CommonGui
 
         public PermissionEditor()
         {
-            map = new GroupBox();
-            map.Add(new GroupBoxItem()
-            {
-                Text = "Params",
-                Widget = list,
-                FillWidth = true
-            });
-            map.Add(new GroupBoxItem()
-            {
-                Text = "Permissions",
-                Widget = tree,
-                FillWidth = true,
-                FillHeight = true,
-                Row = 1
-            });
-
             toolLogs = new ToolItem(ToolLogsClick) { Name = "toolLogs" };
             toolSave = new ToolItem(ToolSaveClick) { Name = "toolSave", Sensitive = false };
             toolReject = new ToolItem(ToolCancelClick) { Name = "toolCancel" };
@@ -72,20 +56,25 @@ namespace DataWF.Module.CommonGui
                 toolFilterText
             });
 
-            var listInfo = new LayoutListInfo
-            {
-                ColumnsVisible = true,
-                HeaderVisible = true,
-                GroupCount = false
-            };
-            listInfo.Columns.Add(new LayoutColumn
-            {
-                Name = "View",
-                Width = 60,
-                Invoker = new Invoker<TableItemNode, bool?>("View",
-                                                            (item) => item.Access.Get(Group).View,
+            var listInfo = new LayoutListInfo(
+                new LayoutColumn
+                {
+                    Name = nameof(Node.ToString),
+                    Editable = false,
+                    Width = 120,
+                    FillWidth = true,
+                    Invoker = new ToStringInvoker()
+                },
+                new LayoutColumn
+                {
+                    Name = "View",
+                    Width = 60,
+                    Invoker = new Invoker<TableItemNode, bool?>("View",
+                                                            (item) => item.Access?.Get(Group).View,
                                                             (item, value) =>
                                                             {
+                                                                if (item.Access == null)
+                                                                    return;
                                                                 if (item.Access.View || item.Access.Admin)
                                                                 {
                                                                     var access = item.Access.Get(Group);
@@ -94,15 +83,17 @@ namespace DataWF.Module.CommonGui
                                                                     CheckSave(item.Item);
                                                                 }
                                                             })
-            });
-            listInfo.Columns.Add(new LayoutColumn
-            {
-                Name = "Edit",
-                Width = 60,
-                Invoker = new Invoker<TableItemNode, bool?>("Edit",
-                                                            (item) => item.Access.Get(Group).Edit,
+                },
+                new LayoutColumn
+                {
+                    Name = "Edit",
+                    Width = 60,
+                    Invoker = new Invoker<TableItemNode, bool?>("Edit",
+                                                            (item) => item.Access?.Get(Group).Edit,
                                                             (item, value) =>
                                                             {
+                                                                if (item.Access == null)
+                                                                    return;
                                                                 if (item.Access.Edit || item.Access.Admin)
                                                                 {
                                                                     var access = item.Access.Get(Group);
@@ -111,15 +102,17 @@ namespace DataWF.Module.CommonGui
                                                                     CheckSave(item.Item);
                                                                 }
                                                             })
-            });
-            listInfo.Columns.Add(new LayoutColumn
-            {
-                Name = "Create",
-                Width = 60,
-                Invoker = new Invoker<TableItemNode, bool?>("Create",
-                                                            (item) => item.Access.Get(Group).Create,
+                },
+                new LayoutColumn
+                {
+                    Name = "Create",
+                    Width = 60,
+                    Invoker = new Invoker<TableItemNode, bool?>("Create",
+                                                            (item) => item.Access?.Get(Group).Create,
                                                             (item, value) =>
                                                             {
+                                                                if (item.Access == null)
+                                                                    return;
                                                                 if (item.Access.Create || item.Access.Admin)
                                                                 {
                                                                     var access = item.Access.Get(Group);
@@ -128,15 +121,17 @@ namespace DataWF.Module.CommonGui
                                                                     CheckSave(item.Item);
                                                                 }
                                                             })
-            });
-            listInfo.Columns.Add(new LayoutColumn
-            {
-                Name = "Delete",
-                Width = 60,
-                Invoker = new Invoker<TableItemNode, bool?>("Delete",
-                                                            (item) => item.Access.Get(Group).Delete,
+                },
+                new LayoutColumn
+                {
+                    Name = "Delete",
+                    Width = 60,
+                    Invoker = new Invoker<TableItemNode, bool?>("Delete",
+                                                            (item) => item.Access?.Get(Group).Delete,
                                                             (item, value) =>
                                                             {
+                                                                if (item.Access == null)
+                                                                    return;
                                                                 if (item.Access.Delete || item.Access.Admin)
                                                                 {
                                                                     var access = item.Access.Get(Group);
@@ -145,15 +140,17 @@ namespace DataWF.Module.CommonGui
                                                                     CheckSave(item.Item);
                                                                 }
                                                             })
-            });
-            listInfo.Columns.Add(new LayoutColumn
-            {
-                Name = "Admin",
-                Width = 60,
-                Invoker = new Invoker<TableItemNode, bool?>("Admin",
-                                                            (item) => item.Access.Get(Group).Admin,
+                },
+                new LayoutColumn
+                {
+                    Name = "Admin",
+                    Width = 60,
+                    Invoker = new Invoker<TableItemNode, bool?>("Admin",
+                                                            (item) => item.Access?.Get(Group).Admin,
                                                             (item, value) =>
                                                             {
+                                                                if (item.Access == null)
+                                                                    return;
                                                                 if (item.Access.Admin || item.Access.Admin)
                                                                 {
                                                                     var access = item.Access.Get(Group);
@@ -162,15 +159,17 @@ namespace DataWF.Module.CommonGui
                                                                     CheckSave(item.Item);
                                                                 }
                                                             })
-            });
-            listInfo.Columns.Add(new LayoutColumn
-            {
-                Name = "Accept",
-                Width = 60,
-                Invoker = new Invoker<TableItemNode, bool?>("Accept",
-                                                            (item) => item.Access.Get(Group).Accept,
+                },
+                new LayoutColumn
+                {
+                    Name = "Accept",
+                    Width = 60,
+                    Invoker = new Invoker<TableItemNode, bool?>("Accept",
+                                                            (item) => item.Access?.Get(Group).Accept,
                                                             (item, value) =>
                                                             {
+                                                                if (item.Access == null)
+                                                                    return;
                                                                 if (item.Access.Accept || item.Access.Admin)
                                                                 {
                                                                     var access = item.Access.Get(Group);
@@ -179,20 +178,46 @@ namespace DataWF.Module.CommonGui
                                                                     CheckSave(item.Item);
                                                                 }
                                                             })
-            });
-            listInfo.Columns.Add("Table").Visible = false;
+                },
+                new LayoutColumn
+                {
+                    Name = "Table",
+                    Visible = false,
+                    Invoker = new PropertyInvoker<TableItemNode, string>("TableName")
+                })
+            {
+                Tree = true,
+                ColumnsVisible = true,
+                HeaderVisible = true,
+                GroupCount = false
+            };
             listInfo.Sorters.Add(new LayoutSort("Order"));
-
+            var nodeInfo = new LayoutNodeInfo { Columns = listInfo };
             tree = new UserTree
             {
-                Mode = LayoutListMode.Tree,
+                NodeInfo = nodeInfo,
                 Name = "tree",
                 EditState = EditListState.Edit,
                 EditMode = EditModes.ByF2,
-                ListInfo = listInfo
+                UserKeys = UserTreeKeys.Department | UserTreeKeys.User | UserTreeKeys.Group | UserTreeKeys.Permission
             };
             tree.SelectionChanged += TreeSelectionChanged;
-            tree.RefreshInfo();
+
+            map = new GroupBox(
+                new GroupBoxItem
+                {
+                    Text = "Params",
+                    Widget = list,
+                    FillWidth = true
+                },
+                new GroupBoxItem
+                {
+                    Text = "Permissions",
+                    Widget = tree,
+                    FillWidth = true,
+                    FillHeight = true,
+                    Row = 1
+                });
 
             Name = "PermissionEditor";
             Text = "Permissions";
