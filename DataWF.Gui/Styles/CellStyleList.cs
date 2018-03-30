@@ -19,33 +19,47 @@ namespace DataWF.Gui
             var defaultFont = Font.SystemSansSerifFont;
             if (Toolkit.CurrentEngine.Type == ToolkitType.Gtk)
                 defaultFont = defaultFont.WithSize(defaultFont.Size * 0.9);
+            var baseBackground = Color.FromBytes(80,80,80);
 
             AddRange(new CellStyle[]{
+                 new CellStyle()
+                {
+                    Name = "Window",
+                    Font = defaultFont,
+                    Round = 0,
+                    BaseColor = baseBackground
+                },
+                 new CellStyle()
+                {
+                    Name = "Page",
+                    Font = defaultFont.WithWeight(FontWeight.Semibold),
+                    BaseColor = baseBackground
+                },
+                new CellStyle()
+                {
+                    Name = "PageClose",
+                    Font = defaultFont,
+                    Round = 3,
+                    BaseColor = baseBackground.WithIncreasedLight(-0.05)
+                },
                 new CellStyle()
                 {
                     Name = "List",
                     Font = defaultFont,
                     Round = 0,
-                    BaseColor = Colors.LightGray
-                },
-                new CellStyle()
-                {
-                    Name = "Window",
-                    Font = defaultFont,
-                    Round = 0,
-                    BaseColor = Colors.LightGray.WithIncreasedLight(-0.1)
+                    BaseColor = baseBackground.WithIncreasedLight(-0.05)
                 },
                 new CellStyle()
                 {
                     Name = "Row",
                     Font = defaultFont,
                     Round = 0,
-                    BaseColor = Colors.LightGray
+                    BaseColor = Colors.LightGray.Invert()
                 },
                 new CellStyle()
                 {
                     Name = "ChangeRow",
-                    BaseColor = Colors.LightGray
+                    BaseColor = Colors.LightGray.Invert()
                 },
                 new CellStyle()
                 {
@@ -58,52 +72,51 @@ namespace DataWF.Gui
                     Alternate = false,
                     Font = defaultFont,
                     Round = 0,
-                    BaseColor = Colors.White
+                    BaseColor = Colors.Black.WithIncreasedLight(0.15)
                 },
                 new CellStyle()
                 {
                     Name = "Cell",
                     Font = defaultFont,
                     LineWidth = 0,
-                    BaseColor = Colors.WhiteSmoke
+                    BaseColor = Colors.LightGray.Invert()
                 },
                 new CellStyle()
                 {
                     Name = "Value",
                     Font = defaultFont,
-                    BaseColor = Colors.White
+                    BaseColor = Colors.LightGray.Invert()
                 },
                 new CellStyle()
                 {
                     Name = "CellCenter",
-                    BaseColor = Colors.White,
+                    BaseColor = Colors.LightGray.Invert(),
                     Alignment = Alignment.Center
                 },
                 new CellStyle()
                 {
                     Name = "CellFar",
-                    BaseColor = Colors.White,
+                    BaseColor = Colors.LightGray.Invert(),
                     Alignment = Alignment.End
                 },
                 new CellStyle()
                 {
                     Name = "Column",
                     Font = defaultFont.WithWeight(FontWeight.Semibold),
-                    BaseColor = Colors.Silver
+                    BaseColor = Colors.Silver.Invert()
                 },
                 new CellStyle()
                 {
                     Name = "Group",
                     Font = defaultFont.WithSize(defaultFont.Size+1).WithWeight(FontWeight.Semibold),
                     Round = 5,
-                    BaseColor = Colors.Gray.WithIncreasedLight(0.3)
+                    BaseColor = Colors.Gray.WithIncreasedLight(0.3).Invert()
                 },
                 new CellStyle()
                 {
                     Name = "Red",
                     Font = defaultFont,
                     Round = 0,
-                    Invert = false,
                     BaseColor = Colors.Red
                 },
                 new CellStyle()
@@ -111,59 +124,45 @@ namespace DataWF.Gui
                     Name = "Header",
                     Alternate = false,
                     Alignment = Alignment.End,
-                    BaseColor = Colors.Silver
+                    BaseColor = Colors.Silver.Invert()
                 },
                 new CellStyle()
                 {
                     Name = "Field",
                     Font = defaultFont,
                     Alternate = false,
-                    BaseColor = Colors.White
+                    BaseColor = Colors.Black.WithIncreasedLight(0.15)
                 },
                 new CellStyle()
                 {
                     Name = "Collect",
                     Font = defaultFont,
-                    BaseColor = Colors.LightGray
+                    BaseColor = Colors.DarkGray
                 },
                 new CellStyle()
                 {
                     Name = "DocumentDock",
                     Round = 4,
                     Font = defaultFont.WithSize(10),
-                    Invert = false,
                     BaseColor = Colors.LightBlue
-                },
-                new CellStyle()
-                {
-                    Name = "Page",
-                    Font = defaultFont.WithWeight(FontWeight.Semibold),
-                    BaseColor = Colors.Gray.WithIncreasedLight(0.3)
-                },
-                new CellStyle()
-                {
-                    Name = "PageClose",
-                    Font = defaultFont,
-                    Round = 3,
-                    BaseColor = Color.FromBytes(150, 150, 150)
                 },
                 new CellStyle()
                 {
                     Name = "GroupBoxHeader",
                     Round = 5,
                     Font = defaultFont.WithSize(defaultFont.Size).WithWeight(FontWeight.Bold),
-                    BaseColor = Colors.LightGray
+                    BaseColor = Colors.LightGray.Invert()
                 },
                 new CellStyle()
                 {
                     Name = "GroupBox",
                     Round = 4,
-                    BaseColor = Colors.Gray
+                    BaseColor = Colors.Gray.Invert()
                 },
                 new CellStyle()
                 {
                     Name = "Logs",
-                    BaseColor = Colors.DarkBlue
+                    BaseColor = Colors.DarkBlue.Invert()
                 },
                 new CellStyle()
                 {
@@ -194,10 +193,12 @@ namespace DataWF.Gui
                     Font = Font.SystemFont,
                     LineWidth = 1.5,
                     Round = 3,
-                    BaseColor = Colors.LightGray
+                    BaseColor = Colors.LightGray.Invert()
                 }
             });
 
+            this["Value"].BackBrush.Color = this["Value"].BaseColor;
+            this["Value"].BorderBrush.Color = this["Value"].BaseColor.WithIncreasedLight(0.1);
             this["Row"].BackBrush.Color = this["Row"].BaseColor;
             this["Column"].BackBrush.Color = this["Column"].BaseColor;
             this["Column"].BackBrush.Type = CellStyleBrushType.Gradient;
