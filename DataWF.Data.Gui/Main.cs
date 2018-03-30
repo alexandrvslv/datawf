@@ -494,8 +494,15 @@ namespace DataWF.Data.Gui
                 }
             }
             Splash.SaveConfiguration();
-            return base.OnCloseRequested();
+            return true;
         }
+
+        protected override void OnClosed()
+        {
+            base.OnClosed();
+            Application.Exit();
+        }
+
 
         public void SetStatusAdd(string message)
         {
