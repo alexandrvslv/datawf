@@ -13,7 +13,7 @@ namespace DataWF.Data
 {
     public class DBTable<T> : DBTable, ICollection<T> where T : DBItem, new()
     {
-        internal List<T> items = new List<T>();
+        protected List<T> items = new List<T>();
         protected List<DBTableView<T>> queryViews = new List<DBTableView<T>>(1);
 
 
@@ -175,17 +175,17 @@ namespace DataWF.Data
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return items.GetEnumerator();
+            return new ThreadSafeEnumerator<T>(items);
         }
 
         IEnumerator<T> IEnumerable<T>.GetEnumerator()
         {
-            return items.GetEnumerator();
+            return new ThreadSafeEnumerator<T>(items);
         }
 
         public override IEnumerator<DBItem> GetEnumerator()
         {
-            return items.GetEnumerator();
+            return new ThreadSafeEnumerator<T>(items);
         }
 
         #endregion
@@ -613,7 +613,7 @@ namespace DataWF.Data
         public T New(DBUpdateState state = DBUpdateState.Insert, bool def = true, IDataReader reader = null)
         {
             var type = GetItemType(reader);
-            T item = (T)type.Constructor.Create();
+            var item = (T)type.Constructor.Create();
             item.Build(this, state, def);
             return item;
         }
@@ -630,9 +630,8 @@ namespace DataWF.Data
 
         public IEnumerable<T> GetChanged()
         {
-            for (int i = 0; i < items.Count; i++)
+            foreach (var item in (ICollection<T>)this)
             {
-                var item = items[i];
                 if (item.IsChanged)
                     yield return item;
             }
@@ -728,7 +727,7 @@ namespace DataWF.Data
 
         public IEnumerable<T> Search(QParam param, IEnumerable<T> list = null)
         {
-            list = list ?? items;
+            list = list ?? this;
             foreach (T row in list)
             {
                 if (CheckItem(row, param.ValueLeft.GetValue(row), param.ValueRight.GetValue(row), param.Comparer))
@@ -787,7 +786,7 @@ namespace DataWF.Data
 
         public IEnumerable<T> Select(IInvoker invoker, object val, CompareType comparer, IEnumerable<T> list = null)
         {
-            list = list ?? items;
+            list = list ?? this;
             if (invoker == null)
                 yield break;
 
@@ -817,7 +816,7 @@ namespace DataWF.Data
 
         public IEnumerable<T> Select(DBColumn column, object val, CompareType comparer, IEnumerable<T> list = null)
         {
-            list = list ?? items;
+            list = list ?? this;
             if (column == null)
                 return list;
 
@@ -836,7 +835,7 @@ namespace DataWF.Data
 
         public IEnumerable<T> Search(DBColumn column, object val, CompareType comparer, IEnumerable<T> list)
         {
-            list = list ?? items;
+            list = list ?? this;
             foreach (T row in list)
             {
                 if (CheckItem(row, row[column], val, comparer))

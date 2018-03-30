@@ -540,12 +540,12 @@ namespace DataWF.Common
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return items.GetEnumerator();
+            return GetEnumerator();
         }
 
         public IEnumerator<T> GetEnumerator()
         {
-            return items.GetEnumerator();
+            return new ThreadSafeEnumerator<T>(items);
         }
 
         public void AddRangeInternal(IEnumerable<T> list)

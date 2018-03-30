@@ -17,30 +17,51 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace DataWF.Data
+namespace DataWF.Common
 {
+    public class ThreadSafeEnumerable<T> : IEnumerable<T>
+    {
+        private IList<T> items;
+
+        public ThreadSafeEnumerable(IList<T> items)
+        {
+            Items = items;
+        }
+
+        public IList<T> Items { get => items; set => items = value; }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            return new ThreadSafeEnumerator<T>(Items);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+    }
+
     public class ThreadSafeEnumerator<T> : IEnumerator<T>
     {
         private int i = -1;
-        private T curr;
         private IList<T> items;
 
-        ThreadSafeEnumerator(IList<T> items)
+        public ThreadSafeEnumerator(IList<T> items)
         {
             this.items = items;
         }
 
-        public T Current
-        {
-            get { return curr; }
-        }
+        public T Current { get; private set; }
 
         public void Dispose()
         {
+            Current = default(T);
             items = null;
+            i = -1;
         }
 
         object IEnumerator.Current
@@ -50,9 +71,18 @@ namespace DataWF.Data
 
         public bool MoveNext()
         {
-            if (items.Count > i + 1)
+            i++;
+            if (items.Count <= i || items.Count == 0)
+            {
+                Current = default(T);
                 return false;
-            curr = items[++i];
+            }
+            try
+            {
+                Current = items[i];
+            }
+            catch (Exception e)
+            { }
             return true;
         }
 
