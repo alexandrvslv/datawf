@@ -39,7 +39,9 @@ namespace DataWF.Common
 
         private static void OnNotify(object sender, SerializeType type, string file)
         {
-            Notify?.Invoke(sender, new SerializationNotifyEventArgs(sender, type, file));
+            var arg = new SerializationNotifyEventArgs(sender, type, file);
+            Notify?.Invoke(sender, arg);
+            Helper.OnSerializeNotify(sender, arg);
         }
 
         public int Level(XmlNode Node)
