@@ -321,7 +321,7 @@ namespace DataWF.Data
                 con.Dispose();
             }
             Buffer.Clear();
-            DBService.Connections.Remove(this);
+            //DBService.Connections.Remove(this);
             //if (cs.RDBMS == RDBMS..SqLite)
             //    SqliteConnection.ClearAllPools();
         }

@@ -33,7 +33,7 @@ namespace DataWF.Data
 {
     public class DBSchema : DBSchemaItem, IFileSerialize
     {
-        protected string connectionName = "";
+        private string connectionName = "";
         protected string dataBase = "";
         protected string fileName = "";
         protected DBConnection connection;
@@ -117,15 +117,18 @@ namespace DataWF.Data
         }
         #endregion
 
+        [Browsable(false)]
+        public string ConnectionName { get => connectionName; set => connectionName = value; }
+
         [XmlIgnore]
         public DBConnection Connection
         {
-            get { return connection ?? (connection = DBService.Connections[connectionName]); }
+            get { return connection ?? (connection = DBService.Connections[ConnectionName]); }
             set
             {
                 connection = value;
-                connectionName = connection?.Name;
-                if (value != null && !DBService.Connections.Contains((value)))
+                ConnectionName = connection?.Name;
+                if (value != null && !DBService.Connections.Contains(value))
                 {
                     DBService.Connections.Add(value);
                 }
@@ -174,6 +177,8 @@ namespace DataWF.Data
                 }
             }
         }
+
+        
 
         public string FormatSql()
         {
