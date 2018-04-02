@@ -85,7 +85,7 @@ namespace DataWF.Module.Flow
             int index = ParamCode.IndexOf(' ');
             string code = ParamCode.Substring(0, index < 0 ? ParamCode.Length : index);
 
-            DBColumn column = DBService.ParseColumn(code, FlowEnvironment.Config.Schema);
+            DBColumn column = DBService.ParseColumn(code, Table.Schema);
             //var result = new DBConstraintForeign() { Table = column.Table, Column = column, Value = column.Reference };
             //if (index >= 0) result.Value = ParamCode.Substring(index + 1);
             return column == null ? null : column.GetForeign();
@@ -97,7 +97,7 @@ namespace DataWF.Module.Flow
 
             int index = ParamCode.IndexOf(' ');
             string code = ParamCode.Substring(0, index < 0 ? ParamCode.Length : index);
-            DBColumn column = DBService.ParseColumn(code, FlowEnvironment.Config.Schema);
+            DBColumn column = DBService.ParseColumn(code, Table.Schema);
             if (column != null)
             {
                 result = new DBVirtualColumn(column);

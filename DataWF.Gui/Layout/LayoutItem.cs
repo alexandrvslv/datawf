@@ -103,7 +103,7 @@ namespace DataWF.Gui
             }
         }
 
-        [DefaultValue(false)]
+        //[DefaultValue(false)]
         public virtual bool FillWidth
         {
             get { return fillW; }
@@ -116,7 +116,7 @@ namespace DataWF.Gui
             }
         }
 
-        [DefaultValue(false)]
+       // [DefaultValue(false)]
         public virtual bool FillHeight
         {
             get { return fillH; }

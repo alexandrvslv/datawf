@@ -406,10 +406,10 @@ namespace DataWF.Module.FlowGui
                         foreach (var user in users)
                             if (user.Status != DBStatus.Archive && user.Status != DBStatus.Error && !user.IsCurrent)
                             {
-                                var item = menuForward.Items[user.Id.ToString()] as MenuItemUser;
+                                var item = menuForward.Items[user.Login] as MenuItemUser;
                                 if (item == null)
                                 {
-                                    item = DocumentWorker.InitUser(user, new EventHandler(ToolForwardItemClicked), stage == null);
+                                    item = DocumentWorker.InitUser(user, new EventHandler(ToolForwardItemClicked));
                                     menuForward.Items.Add(item);
                                 }
                                 item.Tag = stage;
@@ -603,7 +603,7 @@ namespace DataWF.Module.FlowGui
             var stage = param.Param as Stage;
             if (stage != null)
             {
-                var item = menuNext.Items[stage.Id.ToString()] as MenuItemStage;
+                var item = menuNext.Items[stage.Code] as MenuItemStage;
                 if (item == null)
                 {
                     item = DocumentWorker.InitStage(stage, new EventHandler(ToolNextItemClicked), true, true);

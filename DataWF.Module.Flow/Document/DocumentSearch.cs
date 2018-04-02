@@ -126,7 +126,7 @@ namespace DataWF.Module.Flow
                 if (stage == null)
                     return null;
                 int index = stage.IndexOf(':');
-                return FlowEnvironment.Config.Schema.Tables[stage.Substring(0, index)].LoadItemById(stage.Substring(index + 1));
+                return Document.DBTable.Schema.Tables[stage.Substring(0, index)].LoadItemById(stage.Substring(index + 1));
             }
             set
             {
@@ -192,7 +192,7 @@ namespace DataWF.Module.Flow
             stage = null;
             user = null;
             number = null;
-            date = new DateInterval();
+            date = null;
             dtype = DocumentSearchDate.Create;
             description = null;
             OnPropertyChanged(string.Empty);
@@ -299,17 +299,17 @@ namespace DataWF.Module.Flow
             }
 
 
-            if (User != null && !User.IsCurrent)
-                QWork.BuildPropertyParam(nameof(DocumentWork.UserId), CompareType.In, User.IsCompaund ? User.GetSubGroupFull<User>(true) : User.GetParents<User>(true));
+            if (User != null)// && !User.IsCurrent)
+                QWork.BuildPropertyParam(nameof(DocumentWork.UserId), CompareType.Equal, User.Id);
 
             if (QWork.Parameters.Count > 0)
             {
                 if (IsWork != CheckedState.Indeterminate && dtype != DocumentSearchDate.WorkEnd)
-                    QWork.BuildPropertyParam(nameof(DocumentWork.IsComplete), CompareType.Equal, IsWork == CheckedState.Checked);
+                    QWork.BuildPropertyParam(nameof(DocumentWork.IsComplete), CompareType.Equal, IsWork != CheckedState.Checked);
                 QDoc.BuildParam(Document.DBTable.PrimaryKey, QWork);
             }
             else if (IsWork != CheckedState.Indeterminate)
-                QDoc.BuildPropertyParam(nameof(Document.IsComplete), CompareType.Equal, IsWork == CheckedState.Checked);
+                QDoc.BuildPropertyParam(nameof(Document.IsComplete), CompareType.Equal, IsWork != CheckedState.Checked);
         }
 
         public bool IsEmpty

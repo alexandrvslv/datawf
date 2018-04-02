@@ -19,7 +19,7 @@ namespace DataWF.TestGui
         private HBox status = new HBox();
         private Label statusLablel = new Label();
 
-        private Node current;
+        private DirectoryNode current;
         private Queue<Node> actions = new Queue<Node>();
         private SelectableList<FileItem> files = new SelectableList<FileItem>();
         private EventWaitHandle flag = new EventWaitHandle(true, EventResetMode.ManualReset);
@@ -73,10 +73,10 @@ namespace DataWF.TestGui
             GuiService.Localize(this, "Files", "Files", GlyphType.FilesO);
         }
 
-        private Node InitDrive(DriveInfo drive)
+        private DirectoryNode InitDrive(DriveInfo drive)
         {
             var node = InitDirectory(drive.RootDirectory);
-            node["Drive"] = drive;
+            node.Drive = drive;
             node.Text = string.Format("{0} {1}", drive.Name, drive.VolumeLabel);
             if (drive.DriveType == DriveType.Fixed)
                 node.Glyph = Locale.GetGlyph(drive.DriveType.GetType().FullName, drive.DriveType.ToString(), GlyphType.HddO);
@@ -88,16 +88,16 @@ namespace DataWF.TestGui
             return node;
         }
 
-        private Node InitDirectory(DirectoryInfo directory)
+        private DirectoryNode InitDirectory(DirectoryInfo directory)
         {
-            Node node = directoryTree.Nodes.Find(directory.FullName);
+            var node = (DirectoryNode)directoryTree.Nodes.Find(directory.FullName);
             if (node == null)
-                node = new Node()
+                node = new DirectoryNode()
                 {
                     Name = directory.FullName,
                     Text = directory.Name,
                     Glyph = Locale.GetGlyph("Files", "Directory", GlyphType.Folder),
-                    Tag = new FileItem() { Info = directory }
+                    File = new FileItem() { Info = directory }
                 };
 
             return node;
@@ -177,7 +177,7 @@ namespace DataWF.TestGui
             //fList.ListSource = files;
         }
 
-        public Node Current
+        public DirectoryNode Current
         {
             get { return current; }
             set
@@ -187,7 +187,7 @@ namespace DataWF.TestGui
                     current = value;
                     if (current != null)
                     {
-                        var drive = current.Group == null ? (DriveInfo)current["Drive"] : null;
+                        var drive = current.Group == null ? current.Drive : null;
                         var text = drive == null ? ((FileItem)current.Tag).Info.FullName : string.Format("{0} free {1} of {2}", ((FileItem)current.Tag).Info.FullName,
                                        Helper.LengthFormat(drive.TotalFreeSpace),
                                        Helper.LengthFormat(drive.TotalSize));
@@ -209,8 +209,8 @@ namespace DataWF.TestGui
                 var ex = (ListPropertyChangedEventArgs)e;
                 if (ex.Property == "Expand")
                 {
-                    var node = directoryTree.Nodes[e.NewIndex];
-                    if (node["Drive"] == null)
+                    var node = directoryTree.Nodes[e.NewIndex] as DirectoryNode;
+                    if (node.Drive == null)
                         node.Glyph = node.Expand ? Locale.GetGlyph("Files", "DirectoryOpen", GlyphType.FolderOpen) :
                             Locale.GetGlyph("Files", "Directory", GlyphType.Folder);
                 }
@@ -220,7 +220,7 @@ namespace DataWF.TestGui
         private void DTreeSelectionChanged(object sender, LayoutSelectionEventArgs e)
         {
             if (e.Value is LayoutSelectionRow && e.Type != LayoutSelectionChange.Remove && e.Type != LayoutSelectionChange.Hover)
-                Current = ((LayoutSelectionRow)e.Value).Item as Node;
+                Current = ((LayoutSelectionRow)e.Value).Item as DirectoryNode;
         }
 
         private void FListCellDoubleClick(object sender, LayoutHitTestEventArgs e)
@@ -269,5 +269,11 @@ namespace DataWF.TestGui
             }
             base.Dispose(disposing);
         }
+    }
+
+    public class DirectoryNode : Node
+    {
+        public DriveInfo Drive { get; set; }
+        public FileItem File { get; set; }
     }
 }

@@ -289,7 +289,7 @@ namespace DataWF.Module.CommonGui
             using (var transaction = new DBTransaction())
             {
                 var command = transaction.AddCommand("");
-                foreach (Node node in listObjects.Nodes)
+                foreach (TableItemNode node in listObjects.Nodes)
                 {
                     DBTable table = node.Tag as DBTable;
                     if (table != null && table != UserLog.DBTable && table.IsLoging && table.StatusKey != null)
@@ -298,7 +298,7 @@ namespace DataWF.Module.CommonGui
                         command.CommandText = table.BuildQuery("where " + filter, null, "count(*)");
                         object count = transaction.ExecuteQuery(command, DBExecuteType.Scalar);
 
-                        node["Count"] = int.Parse(count.ToString());
+                        node.Count = int.Parse(count.ToString());
                         node.Visible = count.ToString() != "0";
                     }
                 }

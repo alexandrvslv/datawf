@@ -111,7 +111,6 @@ namespace DataWF.Module.FlowGui
             listDocuments.FieldSource = null;
             listDocuments.GenerateToString = false;
             listDocuments.Grouping = false;
-            listDocuments.HighLight = true;
             listDocuments.ListSource = null;
             listDocuments.Mode = LayoutListMode.List;
             listDocuments.Name = "listDocuments";
@@ -320,7 +319,7 @@ namespace DataWF.Module.FlowGui
                     if (stage == null)
                     {
                         foreach (User d in User.CurrentUser.Department.GetUsers())
-                            cms.Items.Add(DocumentWorker.InitUser(d, eh, false));
+                            cms.Items.Add(DocumentWorker.InitUser(d, eh));
                     }
                     else
                         cms.Items.Add(DocumentWorker.InitStage(stage, eh, true, WorkStage == null));

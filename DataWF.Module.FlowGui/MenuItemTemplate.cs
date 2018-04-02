@@ -11,7 +11,8 @@ namespace DataWF.Module.FlowGui
 
         public MenuItemTemplate(Template template)
         {
-            this.template = template;
+            Template = template;
+            Name = template.Code;
             Text = template.ToString();
             Image = (Image)Locale.GetImage("book");
         }

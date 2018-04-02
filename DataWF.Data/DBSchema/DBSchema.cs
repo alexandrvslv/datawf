@@ -206,6 +206,7 @@ namespace DataWF.Data
 
         public void CreateDatabase()
         {
+            Helper.Logs.Add(new StateInfo("Load", "Database", "Create Database"));
             Connection.System.DropDatabase(this);
 
             Connection.ExecuteGoQuery(FormatSql(DDLType.Create), true);

@@ -95,37 +95,37 @@ namespace DataWF.Module.Flow
             Helper.Logs.Add(new StateInfo("Flow Synchronization", "Start", "", StatusType.Information));
             Stopwatch watch = new Stopwatch();
             watch.Start();
-            using (var transaction = new DBTransaction(Config.Schema.Connection))
+            using (var transaction = new DBTransaction(Book.DBTable.Schema.Connection) { ReaderParam = DBLoadParam.Synchronize | DBLoadParam.CheckDeleted })
             {
-                Book.DBTable.Load(transaction, "", DBLoadParam.Synchronize | DBLoadParam.CheckDeleted);
+                Book.DBTable.Load(transaction, "");
                 //cache groups
-                UserGroup.DBTable.Load(transaction, "", DBLoadParam.Synchronize | DBLoadParam.CheckDeleted);
+                UserGroup.DBTable.Load(transaction, "");
 
-                AccessValue.Groups = new DBTableView<UserGroup>(UserGroup.DBTable, "", DBViewKeys.None, DBStatus.Current);
+                AccessValue.Groups = new DBTableView<UserGroup>(UserGroup.DBTable, "");
                 AccessItem.Default = false;
 
-                Location.DBTable.Load(transaction, "", DBLoadParam.Synchronize | DBLoadParam.CheckDeleted);
+                Location.DBTable.Load(transaction, "");
 
                 User.DBTable.DefaultComparer = new DBComparer(User.DBTable.CodeKey) { Hash = true };
-                User.DBTable.Load(transaction, "", DBLoadParam.Synchronize | DBLoadParam.CheckDeleted);
+                User.DBTable.Load(transaction, "");
 
                 Template.DBTable.DefaultComparer = new DBComparer(Template.DBTable.CodeKey) { Hash = true };
-                Template.DBTable.Load(transaction, "", DBLoadParam.Synchronize | DBLoadParam.CheckDeleted);
+                Template.DBTable.Load(transaction, "");
 
                 TemplateParam.DBTable.DefaultComparer = new DBComparer(TemplateParam.DBTable.ParseProperty(nameof(TemplateParam.Order))) { Hash = true };
-                TemplateParam.DBTable.Load(transaction, "", DBLoadParam.Synchronize | DBLoadParam.CheckDeleted);
+                TemplateParam.DBTable.Load(transaction, "");
 
                 Work.DBTable.DefaultComparer = new DBComparer(Work.DBTable.CodeKey) { Hash = true };
-                Work.DBTable.Load(transaction, "", DBLoadParam.Synchronize | DBLoadParam.CheckDeleted);
+                Work.DBTable.Load(transaction, "");
 
-                Stage.DBTable.Load(transaction, "", DBLoadParam.Synchronize | DBLoadParam.CheckDeleted);
+                Stage.DBTable.Load(transaction, "");
 
                 StageParam.DBTable.DefaultComparer = new DBComparer(StageParam.DBTable.PrimaryKey) { Hash = true };
-                StageParam.DBTable.Load(transaction, "", DBLoadParam.Synchronize | DBLoadParam.CheckDeleted);
+                StageParam.DBTable.Load(transaction, "");
 
-                GroupPermission.DBTable.Load(transaction, "", DBLoadParam.Synchronize | DBLoadParam.CheckDeleted);
+                GroupPermission.DBTable.Load(transaction, "");
 
-                Scheduler.DBTable.Load(transaction, "", DBLoadParam.Synchronize | DBLoadParam.CheckDeleted);
+                Scheduler.DBTable.Load(transaction, "");
             }
             watch.Stop();
 
@@ -219,11 +219,11 @@ namespace DataWF.Module.Flow
             set { schemaCode = value; }
         }
 
-        public DBSchema Schema
-        {
-            get { return DBService.Schems[schemaCode]; }
-            set { schemaCode = value == null ? null : value.Name; }
-        }
+        //public DBSchema Schema
+        //{
+        //    get { return DBService.Schems[schemaCode]; }
+        //    set { schemaCode = value == null ? null : value.Name; }
+        //}
 
         public static void CheckScheduler()
         {

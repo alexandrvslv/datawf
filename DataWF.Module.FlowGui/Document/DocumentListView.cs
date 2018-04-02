@@ -102,7 +102,6 @@ namespace DataWF.Module.FlowGui
             list.EditMode = EditModes.ByF2;
             list.EditState = EditListState.Edit;
             list.Grouping = false;
-            list.HighLight = true;
             list.Mode = LayoutListMode.List;
             list.Name = "list";
             list.ReadOnly = true;

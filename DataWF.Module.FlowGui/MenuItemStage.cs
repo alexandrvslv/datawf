@@ -12,7 +12,7 @@ namespace DataWF.Module.FlowGui
         public MenuItemStage(Stage stage)
         {
             Stage = stage;
-            Name = stage.Id.ToString();
+            Name = stage.Code;
             Text = stage.Name;
             Image = (Image)Locale.GetImage("FlowEnvir", "Stage");
         }

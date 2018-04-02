@@ -12,8 +12,9 @@ namespace DataWF.Module.FlowGui
         public MenuItemUser(User user)
         {
             this.user = user;
-            Name = user.Id.ToString();
+            Name = user.Login;
             Text = user.Name;
+            Glyph = GlyphType.User;
             Image = (Image)Locale.GetImage("FlowEnvir", "User");
         }
 

@@ -20,7 +20,6 @@ namespace DataWF.Gui
 		protected bool visible = true;
 		protected bool complex;
 		private GlyphType glyph = GlyphType.None;
-		protected Dictionary<string, object> attributes = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
 		protected List<Node> nodes = new List<Node>();
 		protected internal Node group;
 		protected internal Category category;
@@ -42,22 +41,6 @@ namespace DataWF.Gui
 			this.text = header;
 			this.check = check;
 			Tag = tag;
-		}
-
-		public object this[string key]
-		{
-			get
-			{
-				object value;
-				if (!attributes.TryGetValue(key, out value))
-					attributes[key] = null;
-				return value;
-			}
-			set
-			{
-				attributes[key] = value;
-				OnPropertyChanged(key);
-			}
 		}
 
 		public override string ToString()

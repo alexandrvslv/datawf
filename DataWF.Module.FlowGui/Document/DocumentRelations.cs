@@ -146,10 +146,10 @@ namespace DataWF.Module.FlowGui
 
         private void ToolDetachClick(object sender, EventArgs e)
         {
-            if (refs.List.SelectedRow == null)
+            if (refs.List.SelectedItem == null)
                 return;
-            Document dc = refs.List.SelectedRow as Document;
-            DocumentReference refer = document.FindReference(dc.Id);
+            var dc = refs.List.SelectedItem as Document;
+            var refer = document.FindReference(dc.Id);
             if (refer != null)
             {
                 refer.Delete();

@@ -145,7 +145,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [DataMember, Column("stage_id"), Index("ddocument_work_stage_id")]
+        [DataMember, Column("stage_id", Keys = DBColumnKeys.View), Index("ddocument_work_stage_id")]
         public int? StageId
         {
             get { return GetProperty<int?>(nameof(StageId)); }
@@ -166,7 +166,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [DataMember, Column("user_id"), Index("ddocument_work_user_id")]
+        [DataMember, Column("user_id", Keys = DBColumnKeys.View), Index("ddocument_work_user_id")]
         public int? UserId
         {
             get { return GetProperty<int?>(); }
@@ -217,7 +217,7 @@ namespace DataWF.Module.Flow
             set { SetProperty(value); }
         }
 
-        [DataMember, Column("is_complete")]
+        [DataMember, Column("is_complete", Default ="False")]
         public bool IsComplete
         {
             get { return DateComplete != null; }

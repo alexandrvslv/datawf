@@ -11,12 +11,13 @@ using System.Diagnostics;
 using Xwt.Drawing;
 using System.IO;
 using DataWF.Module.Counterpart;
+using DataWF.Common;
 //using System.Windows.Forms;
 
 namespace DataWF.Module.FlowGui
 {
 
-    public class DocumentLayoutList : TableLayoutList
+    public class DocumentLayoutList : LayoutList
     {
         private Template viewmode;
         private CellStyle styleBold;
@@ -35,32 +36,6 @@ namespace DataWF.Module.FlowGui
         public DocumentList Documents
         {
             get { return listSource as DocumentList; }
-        }
-
-        [DefaultValue(null)]
-        public override object FieldSource
-        {
-            get { return base.FieldSource; }
-            set
-            {
-                if (value is Document)
-                    viewmode = ((Document)value).Template;
-                else
-                    viewmode = null;
-                //if (value is DocumentSynchParam)
-                //    Table = FlowEnvir.Config.Document.Table;
-                base.FieldSource = value;
-            }
-        }
-
-        protected override string GetCacheKey()
-        {
-            if (viewmode != null)
-                return "Template" + viewmode.Id + (_gridMode ? "List" : "");
-            else if (ListType == typeof(Document))
-                return "TempateAll" + (_gridMode ? "List" : "");
-            else
-                return base.GetCacheKey();
         }
 
         //protected override void OnHeaderMouseUp(PListHitTestEventArgs e)
@@ -102,7 +77,10 @@ namespace DataWF.Module.FlowGui
                 if (viewmode == value)
                     return;
                 viewmode = value;
-                this.ListType = this.ListType;
+                if (Mode == LayoutListMode.List && TypeHelper.IsBaseType(ListType, typeof(Document)))
+                {
+                    ListType = viewmode?.DocumentTypeInfo?.Type ?? typeof(Document);
+                }
             }
         }
 
@@ -133,59 +111,6 @@ namespace DataWF.Module.FlowGui
             return style;
         }
 
-        public override bool GetCellReadOnly(object listItem, object itemValue, ILayoutCell cell)
-        {
-            if (cell?.Name == Document.DBTable.ParseColumn(nameof(Document.Important)).Name)
-            {
-                return false;
-            }
-            else if (cell != null && cell.Invoker != null && cell.Invoker is TemplateParam)
-            {
-                TemplateParam param = (TemplateParam)cell.Invoker;
-                return param.Access.Edit;
-            }
-            return base.GetCellReadOnly(listItem, itemValue, cell);
-        }
-
-        protected override void OnGetProperties(LayoutListPropertiesArgs arg)
-        {
-            bool documented = GetIsDocument(arg.Cell, out var filter);
-            if (documented)
-            {
-                arg.Properties = new List<string>();
-                if (arg.Cell == null)
-                {
-                    if (filter == null || filter.IsCompaund)
-                        arg.Properties.Add(Document.DBTable.ParseProperty(nameof(Document.TemplateId)).Name);
-                    if (Document == null)
-                    {
-                        arg.Properties.Add(Document.DBTable.ParseProperty(nameof(Document.Important)).Name);
-                        arg.Properties.Add(Document.DBTable.ParseProperty(nameof(Document.WorkStage)).Name);
-                        arg.Properties.Add(Document.DBTable.ParseProperty(nameof(Document.WorkUser)).Name);
-                        arg.Properties.Add(Document.DBTable.ParseProperty(nameof(Document.WorkId)).Name);
-                    }
-                    arg.Properties.Add(Document.DBTable.ParseProperty(nameof(Document.Id)).Name);
-                    arg.Properties.Add(Document.DBTable.ParseProperty(nameof(Document.Date)).Name);
-                }
-                if (filter == null)
-                {
-                    foreach (TemplateParam p in TemplateParam.DBTable.DefaultView)
-                        if (p.Type == ParamType.Column && p.Access.View && !arg.Properties.Contains(p.PrimaryCode))
-                            arg.Properties.Add((arg.Cell == null ? string.Empty : arg.Cell.Name + ".") + p.PrimaryCode);
-                }
-                else
-                {
-                    foreach (TemplateParam templateParam in filter.TemplateAllParams)
-                        if (templateParam.Type == ParamType.Column && templateParam.Access.View)
-                            arg.Properties.Add(templateParam.PrimaryCode);
-                }
-                //List<DBColumn> cols = FlowEnvir.Config.Document.Table.Columns.GetByGroup(FlowEnvir.Config.Document.Name);
-                //foreach (DBColumn col in cols)
-                //    arg.Properties.Add(col.Code);
-            }
-            base.OnGetProperties(arg);
-        }
-
         protected bool GetIsDocument(ILayoutCell cell, out Template filter)
         {
             filter = null;
@@ -209,71 +134,6 @@ namespace DataWF.Module.FlowGui
                 documented = true;
             }
             return documented;
-        }
-
-        protected override DBColumn ParseDBColumn(string name)
-        {
-            ILayoutCell cell = null;
-            int index = name.LastIndexOf('.');
-            if (index >= 0)
-            {
-                cell = ListInfo.Columns[name.Substring(0, index)] as ILayoutCell;
-                name = name.Substring(index);
-            }
-            bool documented = GetIsDocument(cell, out var filter);
-            if (documented && filter != null)
-            {
-                TemplateParam tparam = filter != null ? filter.GetAttribute(name) :
-                    TemplateParam.DBTable.LoadByCode(name, TemplateParam.DBTable.ParseColumn(nameof(TemplateParam.ParamCode)), DBLoadParam.None);
-                if (tparam?.Param is DBColumn)
-                    return (DBColumn)tparam.Param;
-            }
-            return base.ParseDBColumn(name);
-        }
-
-        protected override ILayoutCellEditor GetCellEditor(object listItem, object itemValue, ILayoutCell cell)
-        {
-            ILayoutCellEditor ed = null;
-            if (cell.Invoker != null)
-            {
-                if (listItem is DocumentSearch && cell.Invoker.DataType == typeof(DBItem))
-                {
-                    ed = new CellEditorFlowTree();
-                    ((CellEditorFlowTree)ed).DataType = cell.Invoker.DataType;
-                    ((CellEditorFlowTree)ed).FlowKeys = FlowTreeKeys.Work | FlowTreeKeys.Stage | FlowTreeKeys.Template;
-                }
-                else if (listItem is User && cell.Name == "Position")
-                    ed = new CellEditorList() { DataSource = Position.DBTable.DefaultView };
-                else if (listItem is GroupPermission && cell.Name == "Permission")
-                    ed = new CellEditorFlowParameters();
-                else if (listItem is StageParam && cell.Name == "Param")
-                    ed = new CellEditorFlowParameters();
-                else if (listItem is TemplateParam && cell.Name == "Param")
-                    ed = new CellEditorFlowParameters();
-
-                if (ed != null)
-                    return ed;
-            }
-
-            return base.GetCellEditor(listItem, itemValue, cell);
-        }
-
-        public override bool IsComplex(ILayoutCell cell)
-        {
-            if (cell?.Invoker is TemplateParam)
-            {
-                TemplateParam param = (TemplateParam)cell.Invoker;
-                return param.GetColumn().IsReference;
-            }
-            return base.IsComplex(cell);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-            }
-            base.Dispose(disposing);
         }
 
         /* public void PrintDoc(Template prm)

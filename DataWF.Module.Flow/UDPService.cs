@@ -281,7 +281,7 @@ namespace DataWF.Module.Flow
             {
                 lock (loadQueue)
                 {
-                    using (var transaction = new DBTransaction(FlowEnvironment.Config.Schema.Connection))
+                    using (var transaction = new DBTransaction(DBService.DefaultSchema.Connection))
                     {
                         while (loadQueue.Count > 0)
                         {
@@ -305,7 +305,7 @@ namespace DataWF.Module.Flow
                 {
                     string[] split = rec.Split(new char[] { ';' });
                     DBTable table = DBService.ParseTable(split[0]);
-                    if (table != null && table.Schema == FlowEnvironment.Config.Schema)
+                    if (table != null && table.Schema == DBService.DefaultSchema)
                     {
                         for (int i = 1; i < split.Length; i++)
                         {

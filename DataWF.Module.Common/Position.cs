@@ -44,7 +44,7 @@ namespace DataWF.Module.Common
             set { SetValue(value, Table.PrimaryKey); }
         }
 
-        [DataMember, Column("department_id", Keys = DBColumnKeys.Group), Index("rposition_department_id"), Browsable(false)]
+        [DataMember, Column("department_id"), Index("rposition_department_id"), Browsable(false)]
         public int? DepartmentId
         {
             get { return GetProperty<int?>(); }

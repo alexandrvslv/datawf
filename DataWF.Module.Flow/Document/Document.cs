@@ -368,7 +368,7 @@ namespace DataWF.Module.Flow
             set { SetProperty(value, nameof(DocumentDate)); }
         }
 
-        [DataMember, Column("document_number", 40, Keys = DBColumnKeys.Code), Index("ddocuument_document_number")]
+        [DataMember, Column("document_number", 40, Keys = DBColumnKeys.Code| DBColumnKeys.View), Index("ddocuument_document_number")]
         public string Number
         {
             get { return GetProperty<string>(nameof(Number)); }
@@ -475,7 +475,7 @@ namespace DataWF.Module.Flow
         }
 
         [Category("Current State")]
-        [DataMember, Column("is_comlete")]
+        [DataMember, Column("is_comlete", Default ="False")]
         public bool? IsComplete
         {
             get { return GetProperty<bool?>(nameof(IsComplete)); }
@@ -711,12 +711,12 @@ namespace DataWF.Module.Flow
                 {
                     Refresh();
                 }
-                var temp = transaction ?? new DBTransaction(FlowEnvironment.Config.Schema.Connection);
+                var temp = transaction ?? new DBTransaction(Table.Schema.Connection) { ReaderParam = DBLoadParam.Synchronize };
                 if ((type & DocInitType.Workflow) == DocInitType.Workflow)
                 {
                     var query = new QQuery("", DocumentWork.DBTable);
                     query.BuildPropertyParam(nameof(DocumentWork.DocumentId), CompareType.Equal, PrimaryId);
-                    buffer = DocumentWork.DBTable.Load(temp, query, DBLoadParam.Synchronize);
+                    buffer = DocumentWork.DBTable.Load(temp, query);
                 }
                 if ((type & DocInitType.Refed) == DocInitType.Refed || (type & DocInitType.Refing) == DocInitType.Refing)
                 {
@@ -725,19 +725,19 @@ namespace DataWF.Module.Flow
                         query.BuildPropertyParam(nameof(DocumentReference.DocumentId), CompareType.Equal, PrimaryId);
                     if ((type & DocInitType.Refing) == DocInitType.Refing)
                         query.BuildPropertyParam(nameof(DocumentReference.ReferenceId), CompareType.Equal, PrimaryId).Logic = LogicType.Or;
-                    buffer = DocumentReference.DBTable.Load(temp, query, DBLoadParam.Synchronize);
+                    buffer = DocumentReference.DBTable.Load(temp, query);
                 }
                 if ((type & DocInitType.Data) == DocInitType.Data)
                 {
                     var query = new QQuery("", DocumentData.DBTable);
                     query.BuildPropertyParam(nameof(DocumentData.DocumentId), CompareType.Equal, PrimaryId);
-                    buffer = DocumentData.DBTable.Load(temp, query, DBLoadParam.Synchronize);
+                    buffer = DocumentData.DBTable.Load(temp, query);
                 }
                 if ((type & DocInitType.Customer) == DocInitType.Customer)
                 {
                     var query = new QQuery("", DocumentCustomer.DBTable);
                     query.BuildPropertyParam(nameof(DocumentCustomer.DocumentId), CompareType.Equal, PrimaryId);
-                    buffer = DocumentCustomer.DBTable.Load(temp, query, DBLoadParam.Synchronize);
+                    buffer = DocumentCustomer.DBTable.Load(temp, query);
                 }
                 if (transaction == null)
                     temp.Dispose();

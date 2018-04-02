@@ -346,12 +346,6 @@ namespace DataWF.Module.Common
             get { return this == CurrentUser; }
         }
 
-
-        public IEnumerable<User> GetUsers()
-        {
-            return DBTable.Select(Table.GroupKey, PrimaryId, CompareType.Equal);
-        }
-
         public override void Dispose()
         {
             base.Dispose();

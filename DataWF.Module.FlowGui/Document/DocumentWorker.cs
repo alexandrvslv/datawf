@@ -11,6 +11,7 @@ using DataWF.Common;
 using Xwt;
 using Xwt.Drawing;
 using System.Threading.Tasks;
+using DataWF.Module.CommonGui;
 
 namespace DataWF.Module.FlowGui
 {
@@ -110,12 +111,12 @@ namespace DataWF.Module.FlowGui
 
             qWork = new QQuery(string.Empty, DocumentWork.DBTable);
             qWork.BuildPropertyParam(nameof(DocumentWork.IsComplete), CompareType.Equal, false);
-            qWork.BuildPropertyParam(nameof(DocumentWork.UserId), CompareType.In, User.CurrentUser?.GetParents<User>(true));
+            qWork.BuildPropertyParam(nameof(DocumentWork.UserId), CompareType.Equal, User.CurrentUser.Id);
 
             var qDocWorks = new QQuery(string.Empty, DocumentWork.DBTable);
             qDocWorks.Columns.Add(new QColumn(DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DocumentId))));
             qDocWorks.BuildPropertyParam(nameof(DocumentWork.IsComplete), CompareType.Equal, false);
-            qDocWorks.BuildPropertyParam(nameof(DocumentWork.UserId), CompareType.In, User.CurrentUser?.GetParents<User>(true));
+            qDocWorks.BuildPropertyParam(nameof(DocumentWork.UserId), CompareType.Equal, User.CurrentUser.Id);
 
             qDocs = new QQuery(string.Empty, Document.DBTable);
             qDocs.BuildPropertyParam(nameof(Document.Id), CompareType.In, qDocWorks);
@@ -210,14 +211,14 @@ namespace DataWF.Module.FlowGui
             }
         }
 
-        private void AddNode(Node node, int d)
+        private void AddNode(TableItemNode node, int d)
         {
             while (node != null)
             {
-                if (node["Count"] == null)
-                    node["Count"] = 0;
-                node["Count"] = (int)node["Count"] + d;
-                node = node.Group;
+                if (node.Count == null)
+                    node.Count = 0;
+                node.Count = (int)node.Count + d;
+                node = node.Group as TableItemNode;
             }
         }
 
@@ -288,9 +289,9 @@ namespace DataWF.Module.FlowGui
         {
             if (tree.SelectedNode == null)
                 return;
-            var filter = BuildFilter(tree.SelectedNode.Tag);
+            var filter = BuildFilter(tree.SelectedNode.Tag?? tree.SelectedDBItem);
             GuiService.Main.DockPanel.Put(dockList, DockType.Content);
-            var template = tree.SelectedNode.Tag as Template;
+            var template = tree.SelectedDBItem as Template;
             toolCreate.Sensitive = template != null && !template.IsCompaund && template.Access.Create;
             if (filter != search)
             {
@@ -478,20 +479,14 @@ namespace DataWF.Module.FlowGui
                 foreach (User user in stage.GetUsers())
                     if (user.Status != DBStatus.Error && user.Status != DBStatus.Archive)
                         if (!checkCurrent || !user.IsCurrent)
-                            item.DropDown.Items.Add(InitUser(user, ClickEH, false));
+                            item.DropDown.Items.Add(InitUser(user, ClickEH));
             }
             return item;
         }
 
-        public static MenuItemUser InitUser(User user, EventHandler ClickEH, bool sub)
+        public static MenuItemUser InitUser(User user, EventHandler ClickEH)
         {
             var item = new MenuItemUser(user);
-            if (sub)
-            {
-                foreach (User suser in user.GetUsers())
-                    if (suser.Status != DBStatus.Error && suser.Status != DBStatus.Archive)
-                        item.DropDown.Items.Add(InitUser(suser, ClickEH, sub));
-            }
             if (ClickEH != null)
                 item.Click += ClickEH;
             return item;
