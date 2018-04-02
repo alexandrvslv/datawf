@@ -539,8 +539,9 @@ namespace DataWF.Common
 
         public static string FormatType(Type type)
         {
-            var index = type.FullName.IndexOf('[');
-            return index < 0 ? type.FullName : type.FullName.Substring(0, index);
+            //var index = type.FullName.IndexOf('[');
+            //return index < 0 ? type.FullName : type.FullName.Substring(0, index);
+            return type.FullName;
         }
 
         public static string BinaryFormatType(Type type)
