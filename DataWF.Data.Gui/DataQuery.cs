@@ -235,11 +235,11 @@ namespace DataWF.Data.Gui
 					try
 					{
 						arg.Table.Access = null;
-						using (var reader = transaction.ExecuteQuery(command, DBExecuteType.Reader) as IDataReader)
+						using (transaction.Reader = transaction.ExecuteQuery(command, DBExecuteType.Reader) as IDataReader)
 						{
-							var rcolumns = arg.Table.CheckColumns(reader, null);
+                            transaction.ReaderColumns = arg.Table.CheckColumns(transaction);
 							Application.Invoke(() => list.ResetColumns());
-							while (reader.Read())
+							while (transaction.Reader.Read())
 							{
 								if (arg.Cancel)
 								{
@@ -248,16 +248,16 @@ namespace DataWF.Data.Gui
 								}
 								if (arg.Table != null)
 								{
-									arg.Table.Add(arg.Table.LoadItemFromReader(rcolumns, reader, DBLoadParam.None, DBUpdateState.Default));
+									arg.Table.Add(arg.Table.LoadItemFromReader(transaction));
 									flag = arg.Table.Count;
 								}
 								else
 								{
-									flag = reader.GetValue(0);
+									flag = transaction.Reader.GetValue(0);
 									break;
 								}
 							}
-							reader.Close();
+                            transaction.Reader.Close();
 						}
 						if (GuiService.Main != null)
 							GuiService.Main.SetStatus(new StateInfo("Data Query", "Execution complete!", s));

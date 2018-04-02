@@ -450,7 +450,7 @@ namespace DataWF.Data
             }
         }
 
-        public void FillReferenceBlock(DBTransaction transaction, DBLoadParam param = DBLoadParam.None)
+        public void FillReferenceBlock(DBTransaction transaction)
         {
             var command = transaction.Command;
             foreach (var column in Columns.GetIsReference())
@@ -461,7 +461,7 @@ namespace DataWF.Data
                                   column.ReferenceTable.PrimaryKey.Name,
                                   column.Name,
                                   command.CommandText.Substring(command.CommandText.IndexOf(" from ", StringComparison.OrdinalIgnoreCase))), null)));
-                    column.ReferenceTable.LoadItems(transaction, sub, param);
+                    column.ReferenceTable.LoadItems(transaction, sub);
                 }
             }
             transaction.AddCommand(command);
@@ -488,19 +488,19 @@ namespace DataWF.Data
             LoadColumns?.Invoke(this, arg);
         }
 
-        public List<DBColumn> CheckColumns(IDataReader reader, IDBTableView synch)
+        public List<DBColumn> CheckColumns(DBTransaction transaction)
         {
             bool newcol = false;
-            var readerColumns = new List<DBColumn>(reader.FieldCount);
-            for (int i = 0; i < reader.FieldCount; i++)
+            var readerColumns = new List<DBColumn>(transaction.Reader.FieldCount);
+            for (int i = 0; i < readerColumns.Capacity; i++)
             {
-                string fieldName = reader.GetName(i);
+                string fieldName = transaction.Reader.GetName(i);
                 if (fieldName.Length == 0)
                     fieldName = i.ToString();
-                readerColumns.Add(CheckColumn(fieldName, reader.GetFieldType(i), ref newcol));
+                readerColumns.Add(CheckColumn(fieldName, transaction.Reader.GetFieldType(i), ref newcol));
             }
             if (newcol)
-                RaiseLoadColumns(new DBLoadColumnsEventArgs(synch));
+                RaiseLoadColumns(new DBLoadColumnsEventArgs(transaction.View));
 
             return readerColumns;
         }
@@ -522,15 +522,15 @@ namespace DataWF.Data
 
         public abstract void Add(DBItem item);
 
-        public abstract DBItem LoadItemFromReader(List<DBColumn> columns, IDataReader reader, DBLoadParam param, DBUpdateState state);
+        public abstract DBItem LoadItemFromReader(DBTransaction transaction);
 
         public abstract IEnumerable<DBItem> LoadItems(QQuery query, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null);
 
         public abstract IEnumerable<DBItem> LoadItems(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable cols = null, IDBTableView synch = null);
 
-        public abstract IEnumerable<DBItem> LoadItems(DBTransaction transaction, QQuery query, DBLoadParam param = DBLoadParam.None);
+        public abstract IEnumerable<DBItem> LoadItems(DBTransaction transaction, QQuery query);
 
-        public abstract IEnumerable<DBItem> LoadItems(DBTransaction transaction, IDbCommand command, DBLoadParam param = DBLoadParam.None);
+        public abstract IEnumerable<DBItem> LoadItems(DBTransaction transaction, IDbCommand command);
 
         public abstract DBItem LoadItemByCode(string code, DBColumn column, DBLoadParam param, DBTransaction transaction = null);
 

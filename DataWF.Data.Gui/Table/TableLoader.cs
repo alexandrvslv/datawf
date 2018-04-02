@@ -130,10 +130,10 @@ namespace DataWF.Data.Gui
                 try
                 {
                     DBTableLoadProgress(view.Table, new DBLoadProgressEventArgs(view, 0, 0, null));
-                    using (var temp = new DBTransaction(view.Table.Schema.Connection) { View = view })
+                    using (var temp = new DBTransaction(view.Table.Schema.Connection) { View = view, ReaderParam = DBLoadParam.Synchronize })//DBLoadParam.GetCount | DBLoadParam.ReferenceRow
                     {
                         transaction = temp;
-                        View.Table.LoadItems(temp, query, DBLoadParam.Synchronize);//DBLoadParam.GetCount | DBLoadParam.ReferenceRow                                            
+                        View.Table.LoadItems(temp, query);
                     }
                 }
                 catch (Exception e)

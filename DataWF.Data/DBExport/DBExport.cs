@@ -467,17 +467,17 @@ namespace DataWF.Data
 					ea.Description = null;
 					OnExportProgress(ea);
 
-					using (var reader = transacton.ExecuteQuery( transacton.AddCommand(table.SourceTable.DetectQuery(table.Query, null)), DBExecuteType.Reader) as IDataReader)
+					using (transacton.Reader = transacton.ExecuteQuery( transacton.AddCommand(table.SourceTable.DetectQuery(table.Query, null)), DBExecuteType.Reader) as IDataReader)
 					{
-						var rcolumns = table.SourceTable.CheckColumns(reader, null);
-						while (reader.Read())
+                        transacton.ReaderColumns = table.SourceTable.CheckColumns(transacton);
+						while (transacton.Reader.Read())
 						{
 							if (ea.Cancel)
 							{
 								transacton.Cancel();
 								return;
 							}
-							var row = table.SourceTable.LoadItemFromReader(rcolumns, reader, DBLoadParam.None, DBUpdateState.Default);
+							var row = table.SourceTable.LoadItemFromReader(transacton);
 							var newRow = ExportRow(table, row);
 
 							table.TargetTable.SaveItem(newRow, dtransaction);
@@ -493,8 +493,7 @@ namespace DataWF.Data
 								table.TargetTable.Clear();
 							}
 						}
-						reader.Close();
-						reader.Dispose();
+                        transacton.Reader.Close();
 					}
 					dtransaction.Commit();
 				}

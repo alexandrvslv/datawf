@@ -46,15 +46,10 @@ namespace DataWF.Data
         public static EventHandler<DBTransactionEventArg> Commited;
         private List<IDbCommand> commands = new List<IDbCommand>();
         private IDbCommand command;
-        private IDbConnection connection;
-        private DBConnection dbConnection;
         private IDbTransaction transaction;
         private List<DBItem> rows = new List<DBItem>();
-        private bool reference = true;
         private bool cancel;
-        private object tag;
         private DBTransaction subTransaction;
-        private IDBTableView view;
 
         public DBTransaction()
             : this(DBService.DefaultSchema.Connection)
@@ -68,8 +63,8 @@ namespace DataWF.Data
 
         public DBTransaction(DBConnection config, IDbConnection connection, string text = "", bool noTransaction = false)
         {
-            this.dbConnection = config;
-            this.connection = connection;
+            DbConnection = config;
+            Connection = connection;
             if (!noTransaction)
                 transaction = connection.BeginTransaction(config.IsolationLevel);
             if (!string.IsNullOrEmpty(text))
@@ -81,17 +76,9 @@ namespace DataWF.Data
             get { return cancel; }
         }
 
-        public object Tag
-        {
-            get { return tag; }
-            set { tag = value; }
-        }
+        public object Tag { get; set; }
 
-        public bool Reference
-        {
-            get { return reference; }
-            set { reference = value; }
-        }
+        public bool Reference { get; set; } = true;
 
         public IDbCommand Command
         {
@@ -101,7 +88,7 @@ namespace DataWF.Data
 
         public string CommandText
         {
-            get { return command != null ? command.CommandText : null; }
+            get { return command?.CommandText; }
             set { AddCommand(value); }
         }
 
@@ -147,19 +134,33 @@ namespace DataWF.Data
                 subTransaction.Rollback();
         }
 
-        public IDbConnection Connection
-        {
-            get { return connection; }
-        }
-
         public IsolationLevel IsolationLevel
         {
-            get { return transaction == null ? dbConnection.IsolationLevel : transaction.IsolationLevel; }
+            get { return transaction == null ? DbConnection.IsolationLevel : transaction.IsolationLevel; }
         }
+
+        public DBTransaction SubTransaction
+        {
+            get { return subTransaction; }
+        }
+
+        public DBConnection DbConnection { get; private set; }
+
+        public IDbConnection Connection { get; private set; }
+
+        public IDataReader Reader { get; set; }
+
+        public List<DBColumn> ReaderColumns { get; set; }
+
+        public DBLoadParam ReaderParam { get; set; }
+
+        public DBUpdateState ReaderState { get; set; }
+
+        public IDBTableView View { get; set; }
 
         public void Dispose()
         {
-            if (connection != null)
+            if (Connection != null)
             {
                 try
                 {
@@ -180,11 +181,11 @@ namespace DataWF.Data
                 }
                 finally
                 {
-                    if (connection.State == ConnectionState.Open)
-                        connection.Close();
+                    if (Connection.State == ConnectionState.Open)
+                        Connection.Close();
 
                     transaction = null;
-                    connection = null;
+                    Connection = null;
                     command = null;
                     rows.Clear();
                 }
@@ -220,7 +221,7 @@ namespace DataWF.Data
                 if (!commands.Contains(ncommand))
                     commands.Add(ncommand);
                 command = ncommand;
-                command.Connection = connection;
+                command.Connection = Connection;
                 if (transaction != null)
                     command.Transaction = transaction;
             }
@@ -240,7 +241,7 @@ namespace DataWF.Data
                 }
             if (command == null)
             {
-                command = DBService.CreateCommand(connection, query, transaction);
+                command = DBService.CreateCommand(Connection, query, transaction);
                 commands.Add(command);
             }
             command.CommandType = commandType;
@@ -258,7 +259,7 @@ namespace DataWF.Data
 
         public void BeginSubTransaction()
         {
-            subTransaction = dbConnection.System == DBSystem.SQLite ? new DBTransaction(dbConnection, connection) : new DBTransaction(dbConnection);
+            subTransaction = DbConnection.System == DBSystem.SQLite ? new DBTransaction(DbConnection, Connection) : new DBTransaction(DbConnection);
         }
 
         public void BeginSubTransaction(DBSchema schema)
@@ -269,17 +270,6 @@ namespace DataWF.Data
         public void BeginSubTransaction(DBConnection config)
         {
             subTransaction = new DBTransaction(config);
-        }
-
-        public DBTransaction SubTransaction
-        {
-            get { return subTransaction; }
-        }
-
-        public IDBTableView View
-        {
-            get { return view; }
-            set { view = value; }
         }
 
         public void Cancel()
