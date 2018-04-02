@@ -67,7 +67,7 @@ namespace DataWF.Module.Counterpart
         [DataMember, Column("typeid", Keys = DBColumnKeys.ElementType), Index("rlocation_typeid")]
         public LocationType? LocationType
         {
-            get { return (LocationType?)GetValue<int?>(Table.ElementTypeKey); }
+            get { return GetValue<LocationType?>(Table.ElementTypeKey); }
             set { SetValue(value, Table.ElementTypeKey); }
         }
 
@@ -87,7 +87,7 @@ namespace DataWF.Module.Counterpart
         }
 
         [Browsable(false)]
-        [DataMember, Column("parentid", Keys = DBColumnKeys.Group)]
+        [DataMember, Column("parent_id", Keys = DBColumnKeys.Group)]
         [Index("rlocation_parentid")]
         public int? ParentId
         {
@@ -95,7 +95,7 @@ namespace DataWF.Module.Counterpart
             set { SetValue(value, Table.GroupKey); }
         }
 
-        [Reference("fk_rlocation_parentid", nameof(ParentId))]
+        [Reference("fk_rlocation_parent_id", nameof(ParentId))]
         public Location Parent
         {
             get { return GetReference<Location>(Table.GroupKey); }
@@ -105,8 +105,8 @@ namespace DataWF.Module.Counterpart
         [DataMember, Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
         public override string Name
         {
-            get { return GetName("name"); }
-            set { SetName("name", value); }
+            get { return GetName(nameof(Name)); }
+            set { SetName(nameof(Name), value); }
         }
 
         public Location GetParent(LocationType parenttype)

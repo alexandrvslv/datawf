@@ -31,7 +31,7 @@ namespace DataWF.Module.Counterpart
         {
             get { return (DBVirtualTable<Country>)DBService.GetTable<Country>(); }
         }
-
+        
         [VirtualColumn("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
@@ -54,7 +54,7 @@ namespace DataWF.Module.Counterpart
         }
 
         [Browsable(false)]
-        [VirtualColumn("parentid", Keys = DBColumnKeys.Group)]
+        [VirtualColumn("parent_id", Keys = DBColumnKeys.Group)]
         public int? ContinentId
         {
             get { return GetValue<int?>(Table.GroupKey); }

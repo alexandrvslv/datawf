@@ -90,8 +90,8 @@ namespace DataWF.Data
         [XmlIgnore]
         public override Pull Pull
         {
-            get { return BaseColumn?.Pull ?? base.Pull; }
-            internal set { base.Pull = value; }
+            get { return BaseColumn?.Pull ?? null; }
+            internal set { throw new Exception("No self pull on virtual column!"); }
         }
 
         public override string SqlName

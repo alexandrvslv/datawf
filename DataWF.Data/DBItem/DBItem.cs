@@ -351,12 +351,6 @@ namespace DataWF.Data
             if (!column.IsReference)
                 return null;
 
-            if (column is DBVirtualColumn && ((DBVirtualColumn)column).BaseColumn.IsReference)
-            {
-                var baseitem = GetReference<T>(((DBVirtualColumn)column).BaseColumn, param, transaction);
-                return baseitem == null ? null : baseitem.GetVirtual(column.ReferenceTable) as T;
-            }
-
             T item = GetTag(column) as T;
 
             if (item == null)
@@ -664,7 +658,7 @@ namespace DataWF.Data
             set { SetValue(value, Table.StampKey); }
         }
 
-        [NotMapped]
+        [NotMapped, Browsable(false)]
         [DataMember, Column("group_access", 512, DataType = typeof(byte[]), GroupName = "system", Keys = DBColumnKeys.Access | DBColumnKeys.System, Order = 102)]
         public virtual AccessValue Access
         {
@@ -672,7 +666,7 @@ namespace DataWF.Data
             {
                 AccessValue access;
 
-                if (table.AccessKey != null && this[table.AccessKey] != null)
+                if (table.AccessKey != null)
                 {
                     access = GetCache(table.AccessKey) as AccessValue;                    
                     if (access == null)
@@ -785,7 +779,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
-        public DBTable Table
+        public virtual DBTable Table
         {
             get { return table; }
             set

@@ -37,6 +37,13 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
+        public override DBTable Table
+        {
+            get { return base.Table; }
+            set { table = value; }
+        }
+
+        [Browsable(false)]
         public DBItem Main
         {
             get { return main; }
@@ -59,14 +66,13 @@ namespace DataWF.Data
 
         public override void Build(DBTable table, DBUpdateState state = DBUpdateState.Insert, bool def = true)
         {
-            Table = table;
-            if (main == null)
+            if (Main == null)
             {
-                Main = VirtualTable.BaseTable.NewItem(state, def);
+                Main = ((IDBVirtualTable)table).BaseTable.NewItem(state, def);
             }
-            else if (main.Table != VirtualTable.BaseTable)
+            else if (Main.Table != ((IDBVirtualTable)table).BaseTable)
             {
-                throw new Exception("Build ItemView Fail by wrong base specified");
+                throw new Exception("Build VirtualItem Fail! Main.Table != BaseTable");
             }
             base.Build(table, state, def);
         }

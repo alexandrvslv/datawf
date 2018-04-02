@@ -85,6 +85,8 @@ namespace DataWF.Data
         protected string cdefault;
         protected string query;
         protected string subList;
+        private Dictionary<int, object> tags;
+        private Dictionary<int, object> olds;
 
         #endregion
 
@@ -604,11 +606,7 @@ namespace DataWF.Data
             return ddl.ToString();
         }
 
-        [NonSerialized]
-        private Dictionary<int, object> tags;
-        [NonSerialized]
-        private Dictionary<int, object> olds;
-
+        
         public object GetTag(int hindex)
         {
             return tags == null ? null : tags.TryGetValue(hindex, out var obj) ? obj : null;

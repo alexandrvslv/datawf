@@ -54,7 +54,7 @@ namespace DataWF.Module.Counterpart
         }
 
         [Browsable(false)]
-        [VirtualColumn("parentid", Keys = DBColumnKeys.Group)]
+        [VirtualColumn("parent_id", Keys = DBColumnKeys.Group)]
         public int? CountryId
         {
             get { return GetValue<int?>(Table.GroupKey); }
