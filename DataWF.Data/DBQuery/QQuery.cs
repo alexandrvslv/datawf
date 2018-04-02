@@ -289,10 +289,12 @@ namespace DataWF.Data
                     }
                     else if (word.Equals("from", StringComparison.OrdinalIgnoreCase))
                     {
+                        prefix = null;
                         state = QParcerState.From;
                     }
                     else if (word.Equals("where", StringComparison.OrdinalIgnoreCase))
                     {
+                        prefix = null;
                         table = null;
                         state = QParcerState.Where;
                     }
@@ -378,6 +380,12 @@ namespace DataWF.Data
 
                                 break;
                             case QParcerState.From:
+                                {
+                                    if (word.Length > 0)
+                                    {
+
+                                    }
+                                }
                                 break;
                             case QParcerState.Where:
                                 if (word.Length > 0)

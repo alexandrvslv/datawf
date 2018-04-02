@@ -316,8 +316,12 @@ namespace DataWF.Data
                 return buf;
             }
             string v1 = FormatValue(ValueLeft, command);
+            if (v1.Length == 0)
+            {
+                return string.Empty;
+            }
             string v2 = FormatValue(ValueRight, command);
-            return v1.Length == 0 || v2.Length == 0 ? string.Empty : string.Format("{0} {1} {2}", v1, comparer.Format(), v2);
+            return v2.Length == 0 ? string.Empty : string.Format("{0} {1} {2}", v1, comparer.Format(), v2);
             //if (cs != null)
             //{
             //    object Value = this.Value;

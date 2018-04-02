@@ -83,7 +83,7 @@ namespace DataWF.Data
 
         public override string Format(IDbCommand command = null)
         {
-            return (command == null || Value == DBNull.Value) ? DBService.FormatToSqlText(Value) : CreateParameter(command, Value);
+            return (command == null || Value == null) ? DBService.FormatToSqlText(Value) : CreateParameter(command, Value);
         }
 
         public override object GetValue(DBItem row)
