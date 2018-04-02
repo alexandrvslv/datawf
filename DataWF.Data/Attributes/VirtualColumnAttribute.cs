@@ -56,7 +56,8 @@ namespace DataWF.Data
             return new DBVirtualColumn(baseColumn)
             {
                 Keys = Keys,
-                Table = Table.Table
+                Table = Table.Table,
+                DisplayName = Property
             };
         }
     }
