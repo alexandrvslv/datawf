@@ -45,19 +45,8 @@ namespace DataWF.Data
                 if (newIndex >= 0)
                 {
                     DBColumn column = this[newIndex];
-                    if (type == ListChangedType.ItemChanged && property == nameof(DBColumn.Keys))
-                    {
-                        if (column.Index == null && (column.IsPrimaryKey || (column.Keys & DBColumnKeys.Indexing) == DBColumnKeys.Indexing))
-                        {
-                            column.Index = DBPullIndex.Fabric(column.DataType, Table, column);
-                        }
-                        else if (column.Index != null)
-                        {
-                            column.Index.Dispose();
-                            column.Index = null;
-                        }
-                    }
-                    else if (type == ListChangedType.ItemDeleted && column.Index != null)
+
+                    if (type == ListChangedType.ItemDeleted && column.Index != null)
                     {
                         column.Clear();
                         column.Index.Dispose();
@@ -102,10 +91,7 @@ namespace DataWF.Data
 
             var index = base.AddInternal(item);
 
-            if (item.Index == null && (item.IsPrimaryKey || (item.Keys & DBColumnKeys.Indexing) == DBColumnKeys.Indexing || (item.Keys & DBColumnKeys.Reference) == DBColumnKeys.Reference))
-            {
-                item.Index = DBPullIndex.Fabric(item.DataType, Table, item);
-            }
+            item.CheckPull();
             if (item.IsPrimaryKey)
             {
                 DBConstraint primary = null;
@@ -117,7 +103,7 @@ namespace DataWF.Data
                         break;
                     }
                 }
-                if (primary == null)
+                if (primary == null && Table.PrimaryKey != null)
                 {
                     primary = new DBConstraint() { Column = Table.PrimaryKey, Type = DBConstaintType.Primary };
                     primary.GenerateName();

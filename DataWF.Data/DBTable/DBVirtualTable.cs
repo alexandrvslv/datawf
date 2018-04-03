@@ -77,6 +77,17 @@ namespace DataWF.Data
             }
         }
 
+        [XmlIgnore]
+        public override DBSchema Schema
+        {
+            get => base.Schema;
+            set
+            {
+                base.Schema = value;
+                foreach (var column in Columns)
+                    column.CheckPull();
+            }
+        }
 
         [XmlIgnore, Browsable(false)]
         public override bool IsLoging

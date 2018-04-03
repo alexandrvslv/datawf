@@ -125,17 +125,50 @@ namespace DataWF.Data
         public bool CanWrite { get { return true; } }
 
         [XmlIgnore, Browsable(false)]
-        public virtual Pull Pull
+        public Pull Pull
         {
-            get
-            {
-                if (pull == null && Table != null)
-                    pull = Pull.Fabric(DataType, Table.BlockSize);
-                return pull;
-            }
+            get { return pull; }
             internal set
             {
-                pull = value;
+                if (pull != value)
+                {
+                    pull = value;
+                    CheckIndex();
+                }
+            }
+        }
+
+        internal protected virtual void CheckPull()
+        {
+            if (Pull != null && Pull.ItemType != DataType)
+            {
+                Pull.Clear();
+                pull = null;
+            }
+            if (Pull == null && Table != null)
+            {
+                Pull = Pull.Fabric(DataType, Table.BlockSize);
+            }
+        }
+
+        protected void CheckIndex()
+        {
+            if (Index != null && Index.Pull != pull)
+            {
+                Index.Dispose();
+                index = null;
+            }
+
+            if (Index == null && pull != null && (IsPrimaryKey
+                || (Keys & DBColumnKeys.Indexing) == DBColumnKeys.Indexing
+                || (Keys & DBColumnKeys.Reference) == DBColumnKeys.Reference))
+            {
+                Index = DBPullIndex.Fabric(Table, this);
+            }
+            else if (Index != null)
+            {
+                Index.Dispose();
+                Index = null;
             }
         }
 
@@ -151,7 +184,6 @@ namespace DataWF.Data
         {
             get { return string.Format("{0}.{1}.{2}", Schema?.Name, Table?.Name, name); }
         }
-
 
 
         [XmlText, DefaultValue((string)null)]
@@ -264,6 +296,7 @@ namespace DataWF.Data
             set
             {
                 keys = value;
+                CheckIndex();
                 OnPropertyChanged(nameof(Keys), false);
             }
         }
@@ -398,7 +431,7 @@ namespace DataWF.Data
                         case DBDataType.TimeSpan: dataType = typeof(TimeSpan); break;
                         default: dataType = typeof(object); break;
                     }
-
+                CheckPull();
                 OnPropertyChanged(nameof(DBDataType), true);
             }
         }
@@ -557,7 +590,7 @@ namespace DataWF.Data
         public bool IsNotNull
         {
             get { return (Keys & DBColumnKeys.Notnull) == DBColumnKeys.Notnull; }
-        }       
+        }
 
         #region IComparable Members
 
@@ -606,7 +639,7 @@ namespace DataWF.Data
             return ddl.ToString();
         }
 
-        
+
         public object GetTag(int hindex)
         {
             return tags == null ? null : tags.TryGetValue(hindex, out var obj) ? obj : null;

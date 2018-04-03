@@ -12,12 +12,12 @@ namespace DataWF.Data
 
     public abstract class DBPullIndex : IDisposable
     {
-        public static DBPullIndex Fabric(Type type, DBTable list, DBColumn column)
+        public static DBPullIndex Fabric(DBTable list, DBColumn column)
         {
-            if (type == null)
+            if (column.DataType == null)
                 throw new ArgumentException($"Type is null on column {column.FullName}");
 
-            Type gtype = typeof(DBPullIndex<>).MakeGenericType(type);
+            Type gtype = typeof(DBPullIndex<>).MakeGenericType(column.DataType);
 
             return (DBPullIndex)EmitInvoker.CreateObject(gtype, new Type[] { typeof(DBTable), typeof(DBColumn) }, new object[] { list, column }, true);
         }
@@ -33,7 +33,7 @@ namespace DataWF.Data
         public abstract T SelectOne<T>(object value) where T : DBItem, new();
         public abstract void Clear();
         public abstract void Dispose();
-
+        public abstract Pull Pull { get; }
     }
 
     public class DBPullIndex<K> : DBPullIndex
@@ -60,6 +60,8 @@ namespace DataWF.Data
             }
             Refresh();
         }
+
+        public override Pull Pull { get { return pull; } }
 
         public override void Refresh(ListChangedType type, DBItem row)
         {
