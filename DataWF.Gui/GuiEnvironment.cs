@@ -109,6 +109,10 @@ namespace DataWF.Gui
             {
                 return new CellEditorFont();
             };
+            CellEditorFabric[typeof(Enum)] = cell =>
+            {
+                return new CellEditorEnum();
+            };
 
             LocaleImage.ImageCache += (item) =>
             {
@@ -144,18 +148,50 @@ namespace DataWF.Gui
             var type = cell?.Invoker?.DataType;
             if (type == null)
                 return null;
+            if (type.IsGenericType && type.IsValueType)
+                type = type.GetGenericArguments()?.FirstOrDefault();
+            ILayoutCellEditor editor = null;
             if (CellEditorFabric.TryGetValue(type, out var generator))
             {
-                return generator(cell);
+                editor = generator(cell);
             }
-            foreach (var entry in CellEditorFabric)
+            if (editor == null)
             {
-                if (TypeHelper.IsBaseType(type, entry.Key))
+                foreach (var entry in CellEditorFabric)
                 {
-                    return entry.Value(cell);
+                    if (TypeHelper.IsBaseType(type, entry.Key))
+                    {
+                        editor = entry.Value(cell);
+                    }
                 }
             }
-            return null;
+
+            //if (type.IsEnum)
+            //{
+            //    editor = new CellEditorEnum();
+            //}
+            if (editor == null)
+            {
+                if (TypeHelper.IsList(type))
+                {
+                    editor = new CellEditorFields() { Header = type.Name };
+                }
+                else if (GuiService.IsCompound(type))
+                {
+                    editor = new CellEditorFields() { Header = type.Name };
+                }
+                else
+                {
+                    editor = new CellEditorText()
+                    {
+                        Format = cell.Format,
+                        MultiLine = false,
+                        DropDownWindow = false
+                    };
+                }
+            }
+            editor.DataType = type;
+            return editor;
         }
 
         public static GuiEnvironment Instance
@@ -204,7 +240,7 @@ namespace DataWF.Gui
         }
 
         public static void Load(string name = "gui.xml")
-        {            
+        {
             instance.LoadDirectory(Helper.GetDirectory(), name);
         }
 

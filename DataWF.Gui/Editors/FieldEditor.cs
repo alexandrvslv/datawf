@@ -10,7 +10,7 @@ namespace DataWF.Gui
     {
         protected Label label;
         protected ILayoutCellEditor cellEditor;
-        protected string property;
+        private string property;
 
         public FieldEditor()
         {
@@ -95,9 +95,9 @@ namespace DataWF.Gui
         public void BindData(object dataSource, string property, ILayoutCellEditor custom = null)
         {
             Bind = true;
-            if (this.property != property && dataSource != null)
+            if (Property != property || dataSource != null)
             {
-                this.property = property;
+                Property = property;
                 Invoker = EmitInvoker.Initialize(dataSource.GetType(), property);
                 CellEditor = custom ?? (cellEditor ?? GuiEnvironment.GetCellEditor(this));
             }
@@ -202,6 +202,8 @@ namespace DataWF.Gui
             }
         }
 
+        protected string Property { get => property; set => property = value; }
+
         protected override void Dispose(bool disposing)
         {
             label?.Dispose();
@@ -237,7 +239,7 @@ namespace DataWF.Gui
 
         private void OnPropertyChanged(object obj, PropertyChangedEventArgs arg)
         {
-            if (Bind && !Initialize && (arg.PropertyName.Length == 0 || property.IndexOf(arg.PropertyName, StringComparison.OrdinalIgnoreCase) >= 0))
+            if (Bind && !Initialize && (arg.PropertyName.Length == 0 || Property.IndexOf(arg.PropertyName, StringComparison.OrdinalIgnoreCase) >= 0))
             {
                 ReadValue();
             }
@@ -245,9 +247,9 @@ namespace DataWF.Gui
 
         public virtual void Localize()
         {
-            if (DataSource != null && property != null && string.IsNullOrEmpty(label.Text))
+            if (DataSource != null && Property != null && string.IsNullOrEmpty(label.Text))
             {
-                Text = Locale.Get(DataSource.GetType(), property);
+                Text = Locale.Get(DataSource.GetType(), Property);
             }
         }
     }

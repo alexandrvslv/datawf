@@ -17,18 +17,18 @@ namespace DataWF.Data.Gui
 
         public override object ReadValue(object listItem)
         {
-            if (listItem is DBItem && property.IndexOf('.') >= 0)
+            if (listItem is DBItem && Property.IndexOf('.') >= 0)
             {
-                return ((DBItem)listItem)[property];
+                return ((DBItem)listItem)[Property];
             }
             return base.ReadValue(listItem);
         }
 
         public void BindData(DBItem dataSource, string column, DBTable refer = null)
         {
-            if (property != column && dataSource != null)
+            if (Property != column && dataSource != null)
             {
-                property = column;
+                Property = column;
                 Bind = true;
                 DBColumn dcolumn = dataSource == null ? null : dataSource.Table.ParseColumn(column);
                 if (dcolumn != null)

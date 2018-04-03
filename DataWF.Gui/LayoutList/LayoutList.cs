@@ -2515,7 +2515,7 @@ namespace DataWF.Gui
             if (group.IsExpand)
             {
                 if (listInfo.GridOrientation == GridOrientation.Vertical)
-                    group.GridRows = group.Count / gridCols + (group.Count % gridCols == 0 ? 0 : 1);
+                    group.GridRows = group.Count / gridCols + ((group.Count % gridCols) == 0 ? 0 : 1);
                 h += GetItemsHeight(group.IndexStart, group.IndexEnd);
                 if (gridCols > 0 && group.Count % gridCols > 0)
                     h += bounds.Columns.Height;
@@ -4381,7 +4381,7 @@ namespace DataWF.Gui
             }
             if (layout == null)
             {
-                layout = cacheItem[e.Column] = new TextLayout(canvas)
+                layout = cacheItem[e.Column] = new TextLayout()
                 {
                     Font = e.Style.Font,
                     //Trimming = TextTrimming.WordElipsis,
@@ -4543,6 +4543,7 @@ namespace DataWF.Gui
                 else
                 {
                     gridCols = listInfo.GridCol;
+                    gridRows = listSource.Count;
                 }
                 if (bounds.TempArea.X != bounds.Area.X || bounds.TempArea.Width != bounds.Area.Width || bounds.Columns != bounds.TempColumns)
                 {
@@ -4766,33 +4767,7 @@ namespace DataWF.Gui
                 else if (type == typeof(int) || type == typeof(long) || type == typeof(short))
                     cell.Format = "########################";
             }
-            ILayoutCellEditor editor = GuiEnvironment.GetCellEditor(cell);
-            if (editor == null)
-            {
-                if (type.IsEnum)
-                {
-                    editor = new CellEditorEnum();
-                }
-                else if (TypeHelper.IsList(type))
-                {
-                    editor = new CellEditorFields() { Header = type.Name };
-                }
-                else if (GuiService.IsCompound(type))
-                {
-                    editor = new CellEditorFields() { Header = type.Name };
-                }
-                else
-                {
-                    editor = new CellEditorText()
-                    {
-                        Format = cell.Format,
-                        MultiLine = false,
-                        DropDownWindow = false
-                    };
-                }
-            }
-            editor.DataType = type;
-            return editor;
+            return GuiEnvironment.GetCellEditor(cell);            
         }
     }
 

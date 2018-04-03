@@ -247,7 +247,7 @@ namespace DataWF.Gui
             }
         }
 
-		[DefaultValue(GridOrientation.Horizontal)]
+		//[DefaultValue(GridOrientation.Horizontal)]
 		public GridOrientation GridOrientation
 		{
 			get { return gridOrient; }
