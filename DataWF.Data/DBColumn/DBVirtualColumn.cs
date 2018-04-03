@@ -87,11 +87,9 @@ namespace DataWF.Data
             }
         }
 
-        [XmlIgnore]
-        public override Pull Pull
+        protected internal override void CheckPull()
         {
-            get { return BaseColumn?.Pull ?? null; }
-            internal set { throw new Exception("No self pull on virtual column!"); }
+            Pull = BaseColumn?.Pull;
         }
 
         public override string SqlName

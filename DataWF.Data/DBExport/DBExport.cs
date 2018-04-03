@@ -469,7 +469,7 @@ namespace DataWF.Data
 
 					using (transacton.Reader = transacton.ExecuteQuery( transacton.AddCommand(table.SourceTable.DetectQuery(table.Query, null)), DBExecuteType.Reader) as IDataReader)
 					{
-                        transacton.ReaderColumns = table.SourceTable.CheckColumns(transacton);
+                        table.SourceTable.CheckColumns(transacton);
 						while (transacton.Reader.Read())
 						{
 							if (ea.Cancel)

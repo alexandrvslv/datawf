@@ -344,7 +344,7 @@ namespace DataWF.Data
                 using (transaction.Reader = transaction.ExecuteQuery(command, DBExecuteType.Reader) as IDataReader)
                 {
                     buf = arg.TotalCount > 0 ? new List<T>(arg.TotalCount) : new List<T>();
-                    transaction.ReaderColumns = CheckColumns(transaction);
+                    CheckColumns(transaction);
                     while (!transaction.Canceled && transaction.Reader.Read())
                     {
                         T row = null;
@@ -577,25 +577,26 @@ namespace DataWF.Data
         public virtual T LoadFromReader(DBTransaction transaction)
         {
             T srow = null;
-            if (PrimaryKey != null)
+            if (transaction.ReaderPrimaryKey >=0)
             {
-                srow = SelectOne(PrimaryKey, transaction.Reader[PrimaryKey.Name]);
+                srow = SelectOne(PrimaryKey, transaction.Reader.GetValue(transaction.ReaderPrimaryKey));
             }
             if (srow == null)
             {
-                srow = New(transaction.ReaderState, false, transaction.Reader);
+                var typeIndex = 0;
+                if (transaction.ReaderItemTypeKey >=0)
+                    typeIndex = transaction.Reader.GetInt32(transaction.ReaderItemTypeKey);
+                srow = New(transaction.ReaderState, false, typeIndex);
             }
-            else if (StampKey != null && (transaction.ReaderParam & DBLoadParam.Synchronize) == DBLoadParam.Synchronize
-                     && ListHelper.Compare(srow.Stamp, transaction.Reader[StampKey.Name], null, false) >= 0)
+            else if (transaction.ReaderStampKey >= 0 && (transaction.ReaderParam & DBLoadParam.Synchronize) == DBLoadParam.Synchronize
+                     && srow.Stamp.Value.CompareTo(transaction.Reader.GetDateTime(transaction.ReaderStampKey)) >= 0)
             {
                 return srow;
             }
             for (int i = 0; i < transaction.ReaderColumns.Count; i++)
             {
-                DBColumn column = transaction.ReaderColumns[i];
-                object value = transaction.Reader.GetValue(i);
-
-                value = transaction.DbConnection.System.ReadValue(column, value);
+                var column = transaction.ReaderColumns[i];
+                var value = transaction.DbConnection.System.ReadValue(column, transaction.Reader.GetValue(i));
 
                 if (!srow.Attached || srow.DBState == DBUpdateState.Default || !srow.GetOld(column, out object oldValue))
                 {
@@ -610,17 +611,17 @@ namespace DataWF.Data
             return New(state, def);
         }
 
-        public T New(DBUpdateState state = DBUpdateState.Insert, bool def = true, IDataReader reader = null)
+        public T New(DBUpdateState state = DBUpdateState.Insert, bool def = true, int typeIndex = 0)
         {
-            var type = GetItemType(reader);
+            var type = GetItemType(typeIndex);
             var item = (T)type.Constructor.Create();
             item.Build(this, state, def);
             return item;
         }
 
-        public virtual DBItemType GetItemType(IDataReader reader = null)
+        public virtual DBItemType GetItemType(int typeIndex)
         {
-            return reader == null || ItemTypeKey == null ? ItemType : ItemTypes[reader.GetInt32(ItemTypeKey.Order)];
+            return typeIndex == 0 ? ItemType : ItemTypes[typeIndex];
         }
 
         public override IEnumerable<DBItem> GetChangedItems()

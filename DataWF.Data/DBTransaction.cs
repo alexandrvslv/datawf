@@ -156,6 +156,12 @@ namespace DataWF.Data
 
         public DBUpdateState ReaderState { get; set; }
 
+        public int ReaderPrimaryKey { get; internal set; } = -1;
+
+        public int ReaderStampKey { get; internal set; } = -1;
+
+        public int ReaderItemTypeKey { get; internal set; } = -1;
+
         public IDBTableView View { get; set; }
 
         public void Dispose()

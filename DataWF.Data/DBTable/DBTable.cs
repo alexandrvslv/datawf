@@ -488,21 +488,34 @@ namespace DataWF.Data
             LoadColumns?.Invoke(this, arg);
         }
 
-        public List<DBColumn> CheckColumns(DBTransaction transaction)
+        public void CheckColumns(DBTransaction transaction)
         {
             bool newcol = false;
-            var readerColumns = new List<DBColumn>(transaction.Reader.FieldCount);
-            for (int i = 0; i < readerColumns.Capacity; i++)
+            transaction.ReaderColumns = new List<DBColumn>(transaction.Reader.FieldCount);
+            for (int i = 0; i < transaction.ReaderColumns.Capacity; i++)
             {
                 string fieldName = transaction.Reader.GetName(i);
                 if (fieldName.Length == 0)
                     fieldName = i.ToString();
-                readerColumns.Add(CheckColumn(fieldName, transaction.Reader.GetFieldType(i), ref newcol));
+                var column = CheckColumn(fieldName, transaction.Reader.GetFieldType(i), ref newcol);
+                if (column.IsPrimaryKey)
+                {
+                    transaction.ReaderPrimaryKey = i;
+                }
+                if ((column.Keys & DBColumnKeys.Stamp) == DBColumnKeys.Stamp)
+                {
+                    transaction.ReaderStampKey = i;
+                }
+                if ((column.Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType)
+                {
+                    transaction.ReaderItemTypeKey = i;
+                }
+                transaction.ReaderColumns.Add(column);
             }
             if (newcol)
+            {
                 RaiseLoadColumns(new DBLoadColumnsEventArgs(transaction.View));
-
-            return readerColumns;
+            }
         }
 
         public virtual DBColumn CheckColumn(string name, Type type, ref bool newCol)
