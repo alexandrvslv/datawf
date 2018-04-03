@@ -187,7 +187,7 @@ namespace DataWF.Data.Gui
 
             //ShowControl(typeof(DocumentWorker).FullName);
             Padding = new WidgetSpacing(5, 5, 5, 5);
-            Icon = Image.FromResource(GetType(), "datawf.ico");
+            Icon = Image.FromResource(GetType(), "datawf.png");
             Content = vbox;
             Name = "Main";
             InitialLocation = WindowLocation.CenterScreen;

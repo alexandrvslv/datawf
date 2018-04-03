@@ -19,7 +19,7 @@ namespace DataWF.Gui
             var defaultFont = Font.SystemSansSerifFont;
             if (Toolkit.CurrentEngine.Type == ToolkitType.Gtk)
                 defaultFont = defaultFont.WithSize(defaultFont.Size * 0.9);
-            var baseBackground = Color.FromBytes(80,80,80);
+            var baseBackground = Color.FromBytes(80, 80, 80);
 
             AddRange(new CellStyle[]{
                  new CellStyle()
@@ -144,7 +144,7 @@ namespace DataWF.Gui
                     Name = "DocumentDock",
                     Round = 4,
                     Font = defaultFont.WithSize(10),
-                    BaseColor = Colors.LightBlue
+                    BaseColor = Color.FromBytes(5, 5, 9)
                 },
                 new CellStyle()
                 {
@@ -190,7 +190,7 @@ namespace DataWF.Gui
                 new CellStyle()
                 {
                     Name = "Tool",
-                    Font = Font.SystemFont,
+                    Font = defaultFont.WithSize(defaultFont.Size + 0.1),
                     LineWidth = 1.5,
                     Round = 3,
                     BaseColor = Colors.LightGray.Invert()

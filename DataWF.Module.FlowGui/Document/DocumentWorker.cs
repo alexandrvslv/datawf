@@ -44,10 +44,10 @@ namespace DataWF.Module.FlowGui
 
         public DocumentWorker()
         {
-            toolFilter = new ToolSearchEntry(ToolFilterTextBoxTextChanged) { Name = "toolFilterText" };
-            toolLoad = new ToolItem(ToolLoadOnClick) { Name = "toolLoad", ForeColor = Colors.DarkBlue };
+            toolFilter = new ToolSearchEntry(ToolFilterTextBoxTextChanged) { Name = "Filter", FillWidth = true };
+            toolLoad = new ToolItem(ToolLoadOnClick) { Name = "Load", ForeColor = Colors.DarkBlue };
 
-            toolCreate = new ToolSplit { Name = "toolCreate", ForeColor = Colors.DarkGreen };
+            toolCreate = new ToolSplit { Name = "Create", ForeColor = Colors.DarkGreen };
             toolCreate.ButtonClick += ToolCreateButtonClick;
 
             foreach (Template uts in Template.DBTable.DefaultView.SelectParents())
@@ -58,7 +58,7 @@ namespace DataWF.Module.FlowGui
 
             bar = new Toolsbar(toolLoad, toolCreate, toolFilter) { Name = "tools" };
 
-            var nodeSend = new CommonGui.TableItemNode()
+            var nodeSend = new TableItemNode()
             {
                 Name = "Send",
                 Tag = new DocumentSearch()
@@ -71,7 +71,7 @@ namespace DataWF.Module.FlowGui
             };
             GuiService.Localize(nodeSend, "DocumentWorker", nodeSend.Name);
 
-            var nodeRecent = new CommonGui.TableItemNode()
+            var nodeRecent = new TableItemNode()
             {
                 Name = "Recent",
                 Tag = new DocumentSearch()
@@ -83,13 +83,12 @@ namespace DataWF.Module.FlowGui
             };
             GuiService.Localize(nodeRecent, "DocumentWorker", nodeRecent.Name);
 
-            var nodeSearch = new CommonGui.TableItemNode()
+            var nodeSearch = new TableItemNode()
             {
                 Name = "Search",
                 Tag =  new DocumentSearch() { }
             };
             GuiService.Localize(nodeSearch, "DocumentWorker", nodeSearch.Name);
-
 
             tree = new FlowTree
             {
@@ -147,7 +146,9 @@ namespace DataWF.Module.FlowGui
                         return result == 0 ? x.Stage.Name.CompareTo(y.Stage.Name) : result;
                     });
                     foreach (var item in items)
+                    {
                         works.Add(item);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -195,7 +196,7 @@ namespace DataWF.Module.FlowGui
             int di = 0;
             if (e.ListChangedType == ListChangedType.ItemAdded)
                 di = 1;
-            else if (e.ListChangedType == System.ComponentModel.ListChangedType.ItemDeleted)
+            else if (e.ListChangedType == ListChangedType.ItemDeleted)
                 di = -1;
             if (document != null && work.IsUser)
             {
@@ -215,8 +216,6 @@ namespace DataWF.Module.FlowGui
         {
             while (node != null)
             {
-                if (node.Count == null)
-                    node.Count = 0;
                 node.Count = (int)node.Count + d;
                 node = node.Group as TableItemNode;
             }
@@ -301,15 +300,9 @@ namespace DataWF.Module.FlowGui
             dockList.LabelText = tree.SelectedNode.Text;
         }
 
-        public ToolMenuItem InitTemplate(Template template)
+        public TemplateMenuItem InitTemplate(Template template)
         {
-            var item = new ToolMenuItem(TemplateItemClick)
-            {
-                Name = template.Code.ToString(),
-                Text = template.ToString(),
-                Glyph = GlyphType.Book,
-                Tag = template
-            };
+            var item = new TemplateMenuItem(template, TemplateItemClick);
             foreach (Template ps in template.GetSubGroups<Template>(DBLoadParam.None))
             {
                 if (ps.Access.Create)
@@ -469,47 +462,25 @@ namespace DataWF.Module.FlowGui
                 form.Show(Worker, new Point(1, 1));
             }
         }
+        
 
-        public static MenuItemStage InitStage(Stage stage, EventHandler ClickEH, bool iniUsers, bool checkCurrent)
-        {
-            var item = new MenuItemStage(stage);
-            item.Click += ClickEH;
-            if (iniUsers)
-            {
-                foreach (User user in stage.GetUsers())
-                    if (user.Status != DBStatus.Error && user.Status != DBStatus.Archive)
-                        if (!checkCurrent || !user.IsCurrent)
-                            item.DropDown.Items.Add(InitUser(user, ClickEH));
-            }
-            return item;
-        }
-
-        public static MenuItemUser InitUser(User user, EventHandler ClickEH)
-        {
-            var item = new MenuItemUser(user);
-            if (ClickEH != null)
-                item.Click += ClickEH;
-            return item;
-        }
-
-        internal static ToolMenuItem InitWork(DocumentWork d, EventHandler eh)
+        internal static ToolMenuItem InitWork(DocumentWork d, EventHandler clickHandler)
         {
             var item = new ToolMenuItem();
             item.Tag = d;
             item.Name = d.Id.ToString();
             item.Text = string.Format("{0}-{1}", d.Stage, d.User);
-            if (eh != null)
-                item.Click += eh;
+            if (clickHandler != null)
+                item.Click += clickHandler;
             return item;
         }
 
         private void TemplateItemClick(object sender, EventArgs e)
         {
-            var item = sender as ToolMenuItem;
+            var item = sender as TemplateMenuItem;
             if (item.DropDown.Items.Count > 0)
                 return;
-            Template template = item.Tag as Template;
-            ViewDocuments(CreateDocuments(template, null));
+            ViewDocuments(CreateDocuments(item.Template, null));
         }
 
         private void ToolLoadOnClick(object sender, EventArgs e)

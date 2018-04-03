@@ -22,106 +22,87 @@ namespace DataWF.Module.FlowGui
         private DocumentSearch search;
         private DocumentList _documents;
         private TableLoader loader = new TableLoader();
-        private ToolFieldEditor toolFTemplate = new ToolFieldEditor();
-        private ToolFieldEditor toolFUser = new ToolFieldEditor();
-        private ToolFieldEditor toolFDateType = new ToolFieldEditor();
-        private ToolFieldEditor toolFDate = new ToolFieldEditor();
-        private ToolFieldEditor toolFNumber = new ToolFieldEditor();
-        private ToolFieldEditor toolFStage = new ToolFieldEditor();
-        private ToolFieldEditor toolFWork = new ToolFieldEditor();
-        private ToolItem toolLoad = new ToolItem();
-        private Toolsbar tools = new Toolsbar();
-        private Toolsbar toolsF = new Toolsbar();
-        private ToolLabel toolCount = new ToolLabel();
-        private ToolItem toolView = new ToolItem();
-        private ToolItem toolFilter = new ToolItem();
-        private ToolItem toolPreview = new ToolItem();
-        private ToolTableLoader toolProgress = new ToolTableLoader();
-        private ToolDropDown toolParam = new ToolDropDown();
-        private DocumentLayoutList list = new DocumentLayoutList();
-        private VPaned split = new VPaned();
+        private ToolFieldEditor toolFTemplate;
+        private ToolFieldEditor toolFUser;
+        private ToolFieldEditor toolFDateType;
+        private ToolFieldEditor toolFDate;
+        private ToolFieldEditor toolFNumber;
+        private ToolFieldEditor toolFStage;
+        private ToolFieldEditor toolFWork;
+        private ToolItem toolLoad;
+        private Toolsbar bar;
+        private Toolsbar barFilter;
+        private ToolLabel toolCount;
+        private ToolItem toolView;
+        private ToolItem toolFilter;
+        private ToolItem toolPreview;
+        private ToolTableLoader toolProgress;
+        private ToolDropDown toolParam;
+        private DocumentLayoutList list;
+        private VPaned split;
 
         public DocumentListView()
         {
-            tools.Items.Add(toolFilter);
-            tools.Items.Add(toolPreview);
-            tools.Items.Add(new ToolSeparator());
-            tools.Items.Add(toolCount);
-            tools.Items.Add(toolView);
-            tools.Items.Add(toolProgress);
-            tools.Name = "tools";
+            toolCount = new ToolLabel { Text = "0" };
+            toolPreview = new ToolItem(ToolPreviewClick) { CheckOnClick = true, Checked = true, Name = "Preview", Glyph = GlyphType.List };
+            toolView = new ToolItem(ToolViewClick) { Name = "View",Glyph = GlyphType.PictureO };
+            toolFilter = new ToolItem(ToolFilterClick) { Name = "Filter", CheckOnClick = true, Glyph = GlyphType.Filter };
+            toolParam = new ToolDropDown(ToolParamClick) { Name = "Parameters", Glyph = GlyphType.Spinner };
+            toolProgress = new ToolTableLoader { Loader = loader };
 
-            toolsF.Visible = false;
-            toolsF.Items.Add(toolFTemplate);
-            toolsF.Items.Add(toolFDateType);
-            toolsF.Items.Add(toolFDate);
-            toolsF.Items.Add(toolFNumber);
-            toolsF.Items.Add(toolFStage);
-            toolsF.Items.Add(toolFUser);
-            toolsF.Items.Add(toolFWork);
-            toolsF.Items.Add(toolLoad);
+            bar = new Toolsbar(
+                toolFilter,
+                toolPreview,
+                new ToolSeparator() { FillWidth = true },
+                toolCount,
+                toolView,
+                toolProgress)
+            {
+                Name = "DocumentListBar"
+            };
 
-            toolCount.Text = "0";
+            toolFNumber = new ToolFieldEditor { Name = "Number" };
+            toolFWork = new ToolFieldEditor { Name = "Work", FieldWidth = 60 };
+            toolFTemplate = new ToolFieldEditor { Name = "Template", FieldWidth = 160 };
+            toolFUser = new ToolFieldEditor { Name = "User" };
+            toolFStage = new ToolFieldEditor { Name = "Stage", FieldWidth = 140 };
+            toolFDate = new ToolFieldEditor { Name = "Date", FieldWidth = 140 };
+            toolFDateType = new ToolFieldEditor { Name = "Date Type", FieldWidth = 100 };
+            toolLoad = new ToolItem(ToolLoadClick) { Name = "Load", Glyph = GlyphType.Fire };
 
-            toolPreview.CheckOnClick = true;
-            toolPreview.Checked = true;
-            toolPreview.Name = "toolPreview";
-            toolPreview.Click += ToolPreviewClick;
+            barFilter = new Toolsbar(
+                toolFTemplate,
+                toolFDateType,
+                toolFDate,
+                toolFNumber,
+                toolFStage,
+                toolFUser,
+                toolFWork,
+                toolLoad)
+            { Name = "DocumentFilterBar", Visible = false };
 
-            toolView.Name = "toolView";
-            toolView.Click += ToolViewClick;
-
-            toolFilter.Name = "toolFilter";
-            toolFilter.CheckOnClick = true;
-            toolFilter.Click += ToolFilterClick;
-
-            toolLoad.Name = "toolLoad";
-            toolLoad.Click += ToolLoadClick;
-
-            toolFWork.Name = "toolFWork";
-            toolFWork.FieldWidth = 60;
-
-            toolFTemplate.Name = "toolFTemplate";
-            toolFTemplate.FieldWidth = 160;
-
-            toolFStage.Name = "toolFStage";
-            toolFStage.FieldWidth = 140;
-
-            toolFDate.Name = "toolFDate";
-            toolFDate.FieldWidth = 140;
-
-            toolFDateType.Name = "toolFDateType";
-            toolFDateType.FieldWidth = 100;
-
-            toolParam.Name = "toolParam";
-            toolParam.Text = "Parameters";
-            toolParam.Click += ToolParamClick;
-
-            toolProgress.Loader = loader;
-
-            list.EditMode = EditModes.ByF2;
-            list.EditState = EditListState.Edit;
-            list.Grouping = false;
-            list.Mode = LayoutListMode.List;
-            list.Name = "list";
-            list.ReadOnly = true;
+            list = new DocumentLayoutList()
+            {
+                EditMode = EditModes.ByF2,
+                EditState = EditListState.Edit,
+                Grouping = false,
+                Mode = LayoutListMode.List,
+                Name = "DocumentList",
+                ReadOnly = true
+            };
             list.CellDoubleClick += ListCellMouseDoubleClick;
             list.PositionChanged += ListOnPositionChanged;
             list.SelectionChanged += ListOnSelectionChanged;
             list.CellMouseClick += ListOnCellMouseClick;
 
-            split.Name = "split";
-            split.Visible = true;
-
-            this.Name = "DocumentListView";
-
+            split = new VPaned() { Name = "split", Visible = true };
             split.Panel1.Content = list;
-            PackStart(tools, false, false);
-            PackStart(toolsF, false, false);
+
+
+            PackStart(bar, false, false);
+            PackStart(barFilter, false, false);
             PackStart(split, true, true);
-            //toolCount.Alignment = ToolStripItemAlignment.Right;
-            //toolPreview.Alignment = ToolStripItemAlignment.Right;
-            //toolLoad.Alignment = ToolStripItemAlignment.Right;
+            Name = "DocumentListView";
 
             Localize();
 
@@ -153,7 +134,7 @@ namespace DataWF.Module.FlowGui
 
         public Toolsbar Tools
         {
-            get { return tools; }
+            get { return bar; }
         }
 
         [DefaultValue(true)]
@@ -170,19 +151,8 @@ namespace DataWF.Module.FlowGui
 
         public void Localize()
         {
-            GuiService.Localize(toolParam, NameL, "Parameters", GlyphType.Spinner);
-            GuiService.Localize(toolPreview, NameL, "Preview", GlyphType.List);
-            GuiService.Localize(toolFilter, NameL, "Filter", GlyphType.Filter);
-            GuiService.Localize(toolLoad, NameL, "Load", GlyphType.Fire);
-            GuiService.Localize(toolView, NameL, "View", GlyphType.PictureO);
-
-            GuiService.Localize(toolFTemplate, NameL, "Filter");
-            GuiService.Localize(toolFStage, NameL, "Stage");
-            GuiService.Localize(toolFUser, NameL, "User");
-            GuiService.Localize(toolFNumber, NameL, "Number");
-            GuiService.Localize(toolFWork, NameL, "Work");
-            GuiService.Localize(toolFDateType, NameL, "Date");
-            toolFDate.Text = "";
+            bar.Localize();
+            barFilter.Localize();
 
             GuiService.Localize(this, NameL, "Documents List");
             list.Localize();
@@ -201,16 +171,13 @@ namespace DataWF.Module.FlowGui
                     if (search != null)
                         search.PropertyChanged -= OnFilterPropertyChanged;
                     search = value;
-                    toolFDateType.Field.BindData(search, "DateType");
-                    toolFDate.Field.BindData(search, "Date");
-                    toolFNumber.Field.BindData(search, "Number");
-                    toolFStage.Field.BindData(search, "Stage", toolFStage.Field.CellEditor is CellEditorFlowTree ? toolFStage.Field.CellEditor : new CellEditorFlowTree()
-                    {
-                        FlowKeys = FlowTreeKeys.Stage | FlowTreeKeys.Work
-                    });
-                    toolFTemplate.Field.BindData(search, "Template", toolFTemplate.Field.CellEditor is CellEditorFlowTree ? toolFTemplate.Field.CellEditor : new CellEditorFlowTree() { FlowKeys = FlowTreeKeys.Template });
-                    toolFUser.Field.BindData(search, "User", toolFUser.Field.CellEditor is CellEditorFlowTree ? toolFUser.Field.CellEditor : new CellEditorFlowTree() { UserKeys = UserTreeKeys.User });
-                    toolFWork.Field.BindData(search, "IsWork");
+                    toolFDateType.Field.BindData(search, nameof(DocumentSearch.DateType));
+                    toolFDate.Field.BindData(search, nameof(DocumentSearch.Date));
+                    toolFNumber.Field.BindData(search, nameof(DocumentSearch.Number));
+                    toolFStage.Field.BindData(search, nameof(DocumentSearch.Stage));
+                    toolFTemplate.Field.BindData(search, nameof(DocumentSearch.Template));
+                    toolFUser.Field.BindData(search, nameof(DocumentSearch.User));
+                    toolFWork.Field.BindData(search, nameof(DocumentSearch.IsWork));
                     if (search != null)
                     {
                         search.PropertyChanged += OnFilterPropertyChanged;
@@ -432,7 +399,7 @@ namespace DataWF.Module.FlowGui
             get { return toolFilter.Checked; }
             set
             {
-                toolsF.Visible = value;
+                barFilter.Visible = value;
             }
         }
 
@@ -480,7 +447,7 @@ namespace DataWF.Module.FlowGui
             split.Panel2.Content = deditor;
 
             for (int i = 0; i < deditor.MainMenu.Items.Count;)
-                tools.Items.Add(deditor.MainMenu.Items[i]);
+                bar.Items.Add(deditor.MainMenu.Items[i]);
         }
 
         private void EditorSendComplete(object sender, EventArgs e)

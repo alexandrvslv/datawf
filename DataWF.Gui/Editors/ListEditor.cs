@@ -219,6 +219,7 @@ namespace DataWF.Gui
                     list.ListSource = null;
                 }
                 toolGroup.Visible = list.Mode == LayoutListMode.Fields || TypeHelper.IsInterface(list.ListType, typeof(IGroup));
+                toolGroup.Checked = list.Mode == LayoutListMode.Fields ? list.Grouping : list.TreeMode;
                 toolAdd.Visible =
                         toolCopy.Visible =
                         toolRemove.Visible =

@@ -1,4 +1,6 @@
-﻿namespace DataWF.Gui
+﻿using Xwt.Drawing;
+
+namespace DataWF.Gui
 {
 	public class ToolLabel : ToolItem
 	{
@@ -8,7 +10,9 @@
 			DisplayStyle = ToolItemDisplayStyle.Text;
 		}
 
-		public override void Localize()
+       
+
+        public override void Localize()
 		{
 		}
 	}

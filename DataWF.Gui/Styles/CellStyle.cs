@@ -26,7 +26,7 @@ namespace DataWF.Gui
             set
             {
                 var diff = 0.09D;
-                
+
                 baseColor = value;
                 BackBrush.Color = CellStyleBrush.ColorEmpty;
                 BorderBrush.Color = CellStyleBrush.ColorEmpty;// value.WithIncreasedLight(-diff);
@@ -42,10 +42,10 @@ namespace DataWF.Gui
                 BorderBrush.ColorSelect = value.WithIncreasedLight(diff / 2.0);
                 FontBrush.ColorSelect = FontBrush.Color;
 
-                value = baseColor.WithIncreasedContrast(diff);
+                value = value.WithIncreasedLight(diff);
                 BackBrush.ColorPress = value;
                 BorderBrush.ColorPress = value.WithIncreasedLight(diff / 2.0);
-                FontBrush.ColorPress = value.Invert();
+                FontBrush.ColorPress = FontBrush.Color;
 
                 value = baseColor.WithIncreasedLight(diff / 4.0D);
                 BackBrush.ColorAlternate = value;
@@ -127,15 +127,21 @@ namespace DataWF.Gui
 
         public CellStyle Clone()
         {
-            CellStyle style = new CellStyle();
+            CellStyle style = new CellStyle()
+            {
+                Alternate = Alternate,
+                Alignment = Alignment,
+                fontName = fontName,
+                baseColor = baseColor,
+                Round = Round
+            };
             if (back != null)
                 style.back = (CellStyleBrush)back.Clone();
             if (border != null)
                 style.border = (CellStyleBrush)border.Clone();
             if (text != null)
                 style.text = (CellStyleBrush)text.Clone();
-            style.fontName = fontName;
-            style.Round = Round;
+
             return style;
         }
 

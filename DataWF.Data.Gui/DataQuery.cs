@@ -237,7 +237,7 @@ namespace DataWF.Data.Gui
 						arg.Table.Access = null;
 						using (transaction.Reader = transaction.ExecuteQuery(command, DBExecuteType.Reader) as IDataReader)
 						{
-                            transaction.ReaderColumns = arg.Table.CheckColumns(transaction);
+                            arg.Table.CheckColumns(transaction);
 							Application.Invoke(() => list.ResetColumns());
 							while (transaction.Reader.Read())
 							{

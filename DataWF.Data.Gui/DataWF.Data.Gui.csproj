@@ -40,13 +40,13 @@
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>  
+  </PropertyGroup>
   <ItemGroup>
-    <EmbeddedResource Include="..\datawf.ico">
-      <Link>Properties\datawf.ico</Link>
-      <LogicalName>datawf.ico</LogicalName>
+    <EmbeddedResource Include="..\datawf.png">
+      <Link>Properties\datawf.png</Link>
+      <LogicalName>datawf.png</LogicalName>
     </EmbeddedResource>
-  </ItemGroup>  
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />
     <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj" />
@@ -58,5 +58,5 @@
     <PackageReference Include="Xwt" Version="0.2.100" />
     <PackageReference Include="DocumentFormat.OpenXml" Version="2.8.1" />
     <PackageReference Include="ICSharpCode.NRefactory" Version="5.5.1" />
-  </ItemGroup>
+  </ItemGroup>  
 </Project>

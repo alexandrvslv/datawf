@@ -45,7 +45,8 @@ namespace DataWF.Gui
             {
                 Name = "toolLabel",
                 Text = "Label",
-                Cursor = CursorType.Arrow
+                Cursor = CursorType.Arrow,
+                TextColor = GuiEnvironment.StylesInfo["Window"].BaseColor.Invert()
             };
             toolLabel.ButtonPressed += OnContentMouseDown;
             toolLabel.ButtonReleased += OnContentMouseUp;

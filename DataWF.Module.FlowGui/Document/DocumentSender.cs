@@ -298,7 +298,7 @@ namespace DataWF.Module.FlowGui
                             var next = sparam.Param as Stage;
                             if (next != null)
                             {
-                                cms.Items.Add(DocumentWorker.InitStage(next, eh, true, true));
+                                cms.Items.Add(StageMenuItem.Init(next, eh, true, true));
                                 allowStage.Add(next);
                             }
                         }
@@ -318,11 +318,13 @@ namespace DataWF.Module.FlowGui
                     allowStage.Add(stage);
                     if (stage == null)
                     {
-                        foreach (User d in User.CurrentUser.Department.GetUsers())
-                            cms.Items.Add(DocumentWorker.InitUser(d, eh));
+                        foreach (User user in User.CurrentUser.Department.GetUsers())
+                            cms.Items.Add(new UserMenuItem(user, eh));
                     }
                     else
-                        cms.Items.Add(DocumentWorker.InitStage(stage, eh, true, WorkStage == null));
+                    {
+                        cms.Items.Add(StageMenuItem.Init(stage, eh, true, WorkStage == null));
+                    }
                 }
                 else if (type == DocumentSendType.Recovery)
                 {
@@ -402,7 +404,7 @@ namespace DataWF.Module.FlowGui
 
         public void userClick(object sender, EventArgs e)
         {
-            var item = sender as MenuItemUser;
+            var item = sender as UserMenuItem;
             if (item != null)
             {
                 StageSender ss = new StageSender(item.OwnerStage.Stage, item.User);

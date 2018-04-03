@@ -406,10 +406,10 @@ namespace DataWF.Module.FlowGui
                         foreach (var user in users)
                             if (user.Status != DBStatus.Archive && user.Status != DBStatus.Error && !user.IsCurrent)
                             {
-                                var item = menuForward.Items[user.Login] as MenuItemUser;
+                                var item = menuForward.Items[user.Login] as UserMenuItem;
                                 if (item == null)
                                 {
-                                    item = DocumentWorker.InitUser(user, new EventHandler(ToolForwardItemClicked));
+                                    item = new UserMenuItem(user, ToolForwardItemClicked);
                                     menuForward.Items.Add(item);
                                 }
                                 item.Tag = stage;
@@ -428,11 +428,11 @@ namespace DataWF.Module.FlowGui
                     }
                     foreach (MenuItemProcedure item in toolProcedures.DropDownItems)
                         item.Visible = item.Tag == template || item.Tag == stage;
-                    foreach (MenuItemTemplate item in toolTemplates.DropDownItems)
+                    foreach (TemplateMenuItem item in toolTemplates.DropDownItems)
                         item.Visible = item.Tag == template || item.Tag == stage;
-                    foreach (MenuItemStage item in menuNext.Items)
+                    foreach (StageMenuItem item in menuNext.Items)
                         item.Visible = item.Tag == template || item.Tag == stage;
-                    foreach (MenuItemUser item in menuForward.Items)
+                    foreach (UserMenuItem item in menuForward.Items)
                         item.Visible = item.Tag == template || item.Tag == stage;
 
                     foreach (var page in dock.Pages.Items)
@@ -464,11 +464,11 @@ namespace DataWF.Module.FlowGui
                         }
                     foreach (MenuItemProcedure item in toolProcedures.DropDownItems)
                         item.Visible = item.Tag == template;
-                    foreach (MenuItemTemplate item in toolTemplates.DropDownItems)
+                    foreach (TemplateMenuItem item in toolTemplates.DropDownItems)
                         item.Visible = item.Tag == template;
-                    foreach (MenuItemStage item in menuNext.Items)
+                    foreach (StageMenuItem item in menuNext.Items)
                         item.Visible = item.Tag != template;
-                    foreach (MenuItemUser item in menuForward.Items)
+                    foreach (UserMenuItem item in menuForward.Items)
                         item.Visible = item.Tag == template;
 
                     foreach (DockPage dp in dock.Pages.Items)
@@ -546,11 +546,9 @@ namespace DataWF.Module.FlowGui
                 if (document == null)
                 {
                     foreach (var item in toolsItems)
-#if GTK
+                    {
                         item.Sensitive = false;
-#else
-                        item.Sensitive = false;
-#endif
+                    }
                     return;
                 }
                 if (document.Attached && document.GetLastWork() == null)
@@ -575,8 +573,6 @@ namespace DataWF.Module.FlowGui
                 toolDelete.Visible = document.Access.Delete;// works.Count == 0 || (works.Count == 1 && works[0].IsUser);
 
                 CheckState(DocumentEditorState.None);
-
-
             }
         }
 
@@ -603,10 +599,10 @@ namespace DataWF.Module.FlowGui
             var stage = param.Param as Stage;
             if (stage != null)
             {
-                var item = menuNext.Items[stage.Code] as MenuItemStage;
+                var item = menuNext.Items[stage.Code] as StageMenuItem;
                 if (item == null)
                 {
-                    item = DocumentWorker.InitStage(stage, new EventHandler(ToolNextItemClicked), true, true);
+                    item = StageMenuItem.Init(stage, ToolNextItemClicked, true, true);
                     menuNext.Items.Add(item);
                 }
                 item.Tag = owner;
@@ -714,10 +710,10 @@ namespace DataWF.Module.FlowGui
                 return null;
             string name = "template" + template.Id.ToString();
 
-            var item = menu[name] as MenuItemTemplate;
+            var item = menu[name] as TemplateMenuItem;
             if (item == null)
             {
-                item = new MenuItemTemplate(template);
+                item = new TemplateMenuItem(template);
                 item.Name = name;
                 menu.Add(item);
 
@@ -734,7 +730,7 @@ namespace DataWF.Module.FlowGui
 
         private void TemplateItemClick(object sender, EventArgs e)
         {
-            var t = sender as MenuItemTemplate;
+            var t = sender as TemplateMenuItem;
             var list = GetList();
             if (list.Count > 1)
                 DocumentWorker.ViewDocuments(DocumentWorker.CreateDocumentsFromList(t.Template, list));
@@ -923,14 +919,14 @@ namespace DataWF.Module.FlowGui
 
         private void ToolForwardItemClicked(object sender, EventArgs e)
         {
-            var item = sender as MenuItemUser;
+            var item = sender as UserMenuItem;
             var work = document.WorkCurrent;
             Send(work, work.Stage, item.User);
         }
 
         private void ToolNextItemClicked(object sender, EventArgs e)
         {
-            var item = sender as MenuItemUser;
+            var item = sender as UserMenuItem;
             if (item != null)
             {
                 Send(document.WorkCurrent, item.OwnerStage.Stage, item.User);

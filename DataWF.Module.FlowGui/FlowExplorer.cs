@@ -228,6 +228,7 @@ namespace DataWF.Module.FlowGui
             {
                 se.DataSource = item;
                 se.List.EditState = item.Attached ? EditListState.Edit : EditListState.EditAny;
+                ose.Title = $"{item.Table} ({item})";
                 ose.Mode = ToolShowMode.Dialog;
                 ose.Show(this, new Point(0, 0));
             }

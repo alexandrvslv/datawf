@@ -40,7 +40,9 @@ namespace DataWF.Data.Gui
                 dbItem = OwnerField.GetReference(dbItem);
             }
             if (dbItem != null)
-                dbItem.SetValue(value, Column);
+            {
+                dbItem[Column] = value;
+            }
         }
     }
 
