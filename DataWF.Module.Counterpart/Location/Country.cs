@@ -31,7 +31,7 @@ namespace DataWF.Module.Counterpart
         {
             get { return (DBVirtualTable<Country>)DBService.GetTable<Country>(); }
         }
-        
+
         [VirtualColumn("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
@@ -54,25 +54,25 @@ namespace DataWF.Module.Counterpart
         }
 
         [Browsable(false)]
-        [VirtualColumn("parent_id", Keys = DBColumnKeys.Group)]
+        [VirtualColumn("parent_id")]
         public int? ContinentId
         {
-            get { return GetValue<int?>(Table.GroupKey); }
-            set { SetValue(value, Table.GroupKey); }
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
         }
 
         [Reference("fk_rcountry_continent", nameof(ContinentId))]
         public Location Continent
         {
-            get { return GetReference<Location>(Table.GroupKey); }
-            set { SetReference(value, Table.GroupKey); }
+            get { return GetPropertyReference<Location>(nameof(ContinentId)); }
+            set { SetPropertyReference(value, nameof(ContinentId)); }
         }
 
         [VirtualColumn("name", Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
         public override string Name
         {
-            get { return GetName("name"); }
-            set { SetName("name", value); }
+            get { return GetName(nameof(Name)); }
+            set { SetName(nameof(Name), value); }
         }
 
     }

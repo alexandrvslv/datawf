@@ -162,6 +162,7 @@ namespace DataWF.Module.Flow
                 PrimaryId, CompareType.Equal);
         }
 
+        [Browsable(false)]
         public TemplateParamList TemplateAllParams
         {
             get
@@ -172,6 +173,7 @@ namespace DataWF.Module.Flow
             }
         }
 
+        [Browsable(false)]
         public DBItemType DocumentTypeInfo
         {
             get

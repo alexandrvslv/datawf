@@ -99,12 +99,12 @@ namespace DataWF.Module.Flow
             }
             //return DBService.ExecuteQuery(FlowEnvironment.Config.Schema, FlowEnvironment.Config.Schema.Sequence.Create(name, 0, 1));
             var item = sequnce.NextValue();
-            return $"{item:,D8}";
+            return item.ToString("D8");
         }
 
         public static object DefaultGenerator(Template template)
         {
-            return DefaultGenerator("template" + template.PrimaryId);
+            return template.Code + DefaultGenerator("template_" + template.Code);
         }
 
         public static event DocumentCreateDelegate Created;
@@ -310,7 +310,7 @@ namespace DataWF.Module.Flow
             IsComplete = false;
         }
 
-        
+
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
         {
@@ -368,7 +368,7 @@ namespace DataWF.Module.Flow
             set { SetProperty(value, nameof(DocumentDate)); }
         }
 
-        [DataMember, Column("document_number", 40, Keys = DBColumnKeys.Code| DBColumnKeys.View), Index("ddocuument_document_number")]
+        [DataMember, Column("document_number", 40, Keys = DBColumnKeys.Code | DBColumnKeys.View), Index("ddocuument_document_number")]
         public string Number
         {
             get { return GetProperty<string>(nameof(Number)); }
@@ -459,7 +459,7 @@ namespace DataWF.Module.Flow
         public Work Work
         {
             get { return Template.Work; }
-        }        
+        }
 
         [Browsable(false)]
         public DocInitType IniType
@@ -475,7 +475,7 @@ namespace DataWF.Module.Flow
         }
 
         [Category("Current State")]
-        [DataMember, Column("is_comlete", Default ="False")]
+        [DataMember, Column("is_comlete", Default = "False")]
         public bool? IsComplete
         {
             get { return GetProperty<bool?>(nameof(IsComplete)); }
@@ -895,7 +895,7 @@ namespace DataWF.Module.Flow
             for (int i = 0; i < works.Count; i++)
             {
                 DocumentWork dw = works[i];
-                var stage = dw.Stage?.ToString()?? "none";
+                var stage = dw.Stage?.ToString() ?? "none";
                 var user = dw.User?.Name ?? "empty";
                 if (!dw.IsComplete)
                 {

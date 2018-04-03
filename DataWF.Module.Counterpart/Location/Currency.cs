@@ -54,25 +54,25 @@ namespace DataWF.Module.Counterpart
         }
 
         [Browsable(false)]
-        [VirtualColumn("parent_id", Keys = DBColumnKeys.Group)]
+        [VirtualColumn("parent_id")]
         public int? CountryId
         {
-            get { return GetValue<int?>(Table.GroupKey); }
-            set { SetValue(value, Table.GroupKey); }
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
         }
 
         [Reference("fk_rcurrency_parentid", nameof(CountryId))]
         public Country Country
         {
-            get { return GetReference<Country>(Table.GroupKey); }
-            set { SetReference(value, Table.GroupKey); }
+            get { return GetPropertyReference<Country>(nameof(CountryId)); }
+            set { SetPropertyReference(value, nameof(CountryId)); }
         }
 
         [VirtualColumn("name", Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
         public override string Name
         {
-            get { return GetName("name"); }
-            set { SetName("name", value); }
+            get { return GetName(nameof(Name)); }
+            set { SetName(nameof(Name), value); }
         }
 
     }
