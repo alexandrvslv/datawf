@@ -161,7 +161,7 @@
     </EmbeddedResource>
   </ItemGroup>  
   <ItemGroup>
-    <PackageReference Include="Xwt" Version="0.2.92" />
+    <PackageReference Include="Xwt" Version="0.2.100" />
     <PackageReference Include="ICSharpCode.NRefactory" Version="5.5.1" />
   </ItemGroup>
 </Project>
