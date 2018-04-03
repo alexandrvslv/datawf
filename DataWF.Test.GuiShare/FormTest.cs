@@ -138,6 +138,11 @@ namespace DataWF.TestGui
 
 		private void SyntaxTextClick(object sender, EventArgs e)
 		{
+            CalendarEditor calendare = new CalendarEditor();
+            calendare.Text = "Calendar";
+            calendare.Value = DateTime.Now;
+            dock.Put(calendare);
+
 			SyntaxText st = new SyntaxText();
 			st.Text = @"using System;
 using System.Collections.Generic;
