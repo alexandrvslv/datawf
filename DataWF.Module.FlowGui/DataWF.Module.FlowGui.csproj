@@ -56,9 +56,6 @@
     <ProjectReference Include="..\External\xwt\Xwt\Xwt.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Xwt" Version="0.2.100" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="Resources\default.odt" />
     <EmbeddedResource Include="Resources\empty.xlsx" />
   </ItemGroup>
