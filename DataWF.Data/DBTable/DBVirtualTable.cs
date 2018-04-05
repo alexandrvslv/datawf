@@ -154,7 +154,7 @@ namespace DataWF.Data
                 BaseTable.Add(item.Main);
         }
 
-        public override void OnListChanged(DBItem item, string property, ListChangedType type)
+        public override void OnItemChanged(DBItem item, string property, ListChangedType type)
         {
             if (type == ListChangedType.ItemChanged && query.Contains(property))
             {
@@ -163,7 +163,7 @@ namespace DataWF.Data
                     Remove((T)item);
                 return;
             }
-            base.OnListChanged(item, property, type);
+            base.OnItemChanged(item, property, type);
         }
 
         public override void Dispose()

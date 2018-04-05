@@ -105,10 +105,10 @@ namespace DataWF.Data
             {
                 column.Index?.Add(item);
             }
-            item.State |= DBItemState.Attached;
-            OnListChanged(item, null, ListChangedType.ItemAdded);
+            item.OnAttached();
 
-            DBService.OnAdded(item);
+            OnItemChanged(item, null, ListChangedType.ItemAdded);
+
         }
 
         public override bool Remove(DBItem item)
@@ -121,16 +121,14 @@ namespace DataWF.Data
             if (!item.Attached)
                 return false;
 
-            OnListChanged(item, null, ListChangedType.ItemDeleted);
+            OnItemChanged(item, null, ListChangedType.ItemDeleted);
             foreach (var column in Columns)
             {
                 if (column.Index != null)
                     column.Index.Remove(item);
             }
             items.Remove(item);
-            item.State &= ~DBItemState.Attached;
-
-            DBService.OnRemoved(item);
+            item.OnDetached();
             return true;
         }
 
@@ -160,7 +158,7 @@ namespace DataWF.Data
                             column.Index.Clear();
                     }
                 }
-                OnListChanged(null, null, ListChangedType.Reset);
+                OnItemChanged(null, null, ListChangedType.Reset);
 
                 foreach (DBItem row in temp)
                 {
@@ -209,8 +207,12 @@ namespace DataWF.Data
             queryViews.Add(view);
         }
 
-        public override void OnListChanged(DBItem item, string property, ListChangedType type)
+        public override void OnItemChanged(DBItem item, string property, ListChangedType type)
         {
+            if (property == nameof(DBItem.Attached)
+                || property == nameof(DBItem.DBState))
+                return;
+
             foreach (var collection in virtualViews)
             {
                 if (type == ListChangedType.Reset)
@@ -223,12 +225,8 @@ namespace DataWF.Data
                 }
             }
 
-            if (property != nameof(DBItem.Attached)
-                && property != nameof(DBItem.DBState))
-            {
-                for (int i = 0; i < queryViews.Count; i++)
-                    queryViews[i].OnItemChanged(item, property, type);
-            }
+            for (int i = 0; i < queryViews.Count; i++)
+                queryViews[i].OnItemChanged(item, property, type);
         }
 
         public override IDBTableView CreateItemsView(string query, DBViewKeys mode, DBStatus filter)
@@ -352,11 +350,14 @@ namespace DataWF.Data
                         {
                             row = LoadFromReader(transaction);
 
-                            if (creference != null)
+                            if (transaction.SubTransaction != null)
+                            {
                                 foreach (var refer in creference)
+                                {
                                     if (refer.ReferenceTable != this)
                                         row.GetReference(refer, DBLoadParam.Load, transaction.SubTransaction);
-
+                                }
+                            }
                             if (!row.Attached && (transaction.ReaderParam & DBLoadParam.NoAttach) != DBLoadParam.NoAttach)
                                 Add(row);
                         }
@@ -577,14 +578,14 @@ namespace DataWF.Data
         public virtual T LoadFromReader(DBTransaction transaction)
         {
             T srow = null;
-            if (transaction.ReaderPrimaryKey >=0)
+            if (transaction.ReaderPrimaryKey >= 0)
             {
                 srow = SelectOne(PrimaryKey, transaction.Reader.GetValue(transaction.ReaderPrimaryKey));
             }
             if (srow == null)
             {
                 var typeIndex = 0;
-                if (transaction.ReaderItemTypeKey >=0)
+                if (transaction.ReaderItemTypeKey >= 0)
                     typeIndex = transaction.Reader.GetInt32(transaction.ReaderItemTypeKey);
                 srow = New(transaction.ReaderState, false, typeIndex);
             }

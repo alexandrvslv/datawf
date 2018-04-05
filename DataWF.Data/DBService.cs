@@ -224,6 +224,10 @@ namespace DataWF.Data
 
         public static void Save(string file)
         {
+            foreach (var schema in schems)
+            {
+                schema.Tables.ApplyDefaultSort();
+            }
             Serialization.Serialize(connections, "connections.xml");
             Serialization.Serialize(schems, file);
             if (DataProvider != null)
@@ -313,7 +317,7 @@ namespace DataWF.Data
         {
             if (Changes.Count > 0)
             {
-                schema.Connection.ExecuteQuery(BuildChangesQuery(schema));
+                schema.Connection.ExecuteGoQuery(BuildChangesQuery(schema));
             }
         }
 

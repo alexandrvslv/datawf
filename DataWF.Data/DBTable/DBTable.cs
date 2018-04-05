@@ -194,7 +194,7 @@ namespace DataWF.Data
             }
         }
 
-        [Category("Group")]
+        [XmlIgnore, Category("Group")]
         public DBTableGroup Group
         {
             get
@@ -440,7 +440,7 @@ namespace DataWF.Data
 
         public abstract void CopyTo(DBItem[] array, int arrayIndex);
 
-        public abstract void OnListChanged(DBItem item, string property, ListChangedType type);
+        public abstract void OnItemChanged(DBItem item, string property, ListChangedType type);
 
         public IEnumerable<DBTable> GetChilds()
         {
@@ -594,11 +594,10 @@ namespace DataWF.Data
 
         public event EventHandler<DBItemEventArgs> RowUpdated;
 
-        public bool OnUpdated(DBItemEventArgs e)
+        public void OnUpdated(DBItemEventArgs e)
         {
             DBService.OnUpdated(e);
             RowUpdated?.Invoke(this, e);
-            return !e.Cancel;
         }
 
         public void DeleteById(object id)
