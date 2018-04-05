@@ -17,7 +17,7 @@ using System.Threading;
 namespace DataWF.Data.Gui
 {
     public class TableLayoutList : LayoutList
-    {   
+    {
         private string defaultFilter = string.Empty;
         private bool highLight = true;
         private static CellStyle DBIStyle;
@@ -165,7 +165,7 @@ namespace DataWF.Data.Gui
                         Column = (DBColumn)pcolumn.Invoker,
                         Logic = filter.Logic,
                         Comparer = filter.Comparer,
-                        Value = filter.Comparer.Type != CompareTypes.Is ? filter.Value : DBNull.Value
+                        Value = filter.Comparer.Type != CompareTypes.Is ? filter.Value : null
                     };
                     if (param.Value is string && param.Comparer.Type == CompareTypes.Like)
                     {
@@ -470,10 +470,38 @@ namespace DataWF.Data.Gui
 
         public override LayoutField CreateField(string name)
         {
-            if (Table != null)
+            DBColumn dbcolumn = ParseDBColumn(name);
+            if (dbcolumn != null)
             {
-                DBColumn dbcolumn = ParseDBColumn(name);
-                if (dbcolumn != null)
+                return new LayoutDBField { Name = name };
+            }
+            return base.CreateField(name);
+        }
+
+        public override LayoutColumn CreateColumn(string name)
+        {
+            DBColumn dbcolumn = ParseDBColumn(name);
+            if (dbcolumn != null)
+            {
+                return new LayoutDBColumn { Name = name };
+            }
+            return base.CreateColumn(name);
+        }
+
+        public override void CheckMemeberInfo(ILayoutCell cell, Type type)
+        {
+            DBColumn dbcolumn = ParseDBColumn(cell.Name);
+            if (dbcolumn != null)
+            {
+                cell.Invoker = dbcolumn;
+                cell.ReadOnly = !dbcolumn.Access.Edit;
+                cell.Password = (dbcolumn.Keys & DBColumnKeys.Password) == DBColumnKeys.Password;
+                if (cell is LayoutDBColumn)
+                {
+                    ((LayoutColumn)cell).Collect = dbcolumn.DataType == typeof(decimal) && !dbcolumn.IsReference ? CollectedType.Sum : CollectedType.None;
+                    ((LayoutColumn)cell).View = dbcolumn.Access.View;
+                }
+                if (cell is LayoutDBField)
                 {
                     string groupName = dbcolumn?.GroupName ?? "Misc";
                     Category category = FieldInfo.Categories[groupName];
@@ -485,48 +513,19 @@ namespace DataWF.Data.Gui
                     var columngroup = dbcolumn.Table.ColumnGroups[groupName];
                     category.Header = columngroup?.ToString() ?? Locale.Get("Group", groupName);
 
-                    return new LayoutDBField()
-                    {
-                        Name = name,
-                        Invoker = dbcolumn,
-                        Category = category,
-                        View = dbcolumn.Access.View,
-                        ReadOnly = !dbcolumn.Access.Edit,
-                        Password = (dbcolumn.Keys & DBColumnKeys.Password) == DBColumnKeys.Password
-                    };
+                    ((LayoutDBField)cell).Category = category;
+                    ((LayoutDBField)cell).View = dbcolumn.Access.View;
                 }
             }
-            return base.CreateField(name);
-        }
-
-        public override LayoutColumn CreateColumn(string name)
-        {
-            if (Table != null)
+            else
             {
-                DBColumn dbcolumn = ParseDBColumn(name);
-                if (dbcolumn != null)
-                {
-                    return new LayoutDBColumn()
-                    {
-                        Name = name,
-                        Invoker = dbcolumn,
-                        Collect = dbcolumn.DataType == typeof(decimal) && !dbcolumn.IsReference ? CollectedType.Sum : CollectedType.None,
-                        View = dbcolumn.Access.View,
-                        ReadOnly = !dbcolumn.Access.Edit,
-                        Password = (dbcolumn.Keys & DBColumnKeys.Password) == DBColumnKeys.Password
-                    };
-                }
+                base.CheckMemeberInfo(cell, type);
             }
-            return base.CreateColumn(name);
         }
 
         public override string GetHeaderLocale(ILayoutCell cell)
         {
-            if (Table != null)
-            {
-                return Table.FullName;
-            }
-            return base.GetHeaderLocale(cell);
+            return Table?.FullName ?? base.GetHeaderLocale(cell);
         }
 
         protected virtual DBColumn ParseDBColumn(string name)
