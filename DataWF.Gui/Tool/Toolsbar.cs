@@ -36,6 +36,8 @@ namespace DataWF.Gui
             }
         }
 
+        public ToolItem Owner { get; set; }
+
         public ToolItem this[string name]
         {
             get { return (ToolItem)Items[name]; }

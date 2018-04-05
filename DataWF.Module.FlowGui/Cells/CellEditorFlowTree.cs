@@ -10,7 +10,7 @@ using DataWF.Module.CommonGui;
 
 namespace DataWF.Module.FlowGui
 {
-	public class CellEditorFlowTree : CellEditorText
+    public class CellEditorFlowTree : CellEditorList
     {
         public CellEditorFlowTree()
         {
@@ -18,8 +18,6 @@ namespace DataWF.Module.FlowGui
         }
 
         public FlowTreeKeys FlowKeys { get; set; }
-
-        public UserTreeKeys UserKeys { get; set; }
 
         public FlowTree FlowTree
         {
@@ -34,12 +32,7 @@ namespace DataWF.Module.FlowGui
                 if (DataType == value)
                     return;
                 base.DataType = value;
-                if (DataType == typeof(DBSchema) || DataType == typeof(DBTable) || DataType == typeof(DBTableGroup) ||
-                    DataType == typeof(DBColumn) || DataType == typeof(DBColumnGroup) || DataType == typeof(DBProcedure))
-                {
-                    FlowKeys = FlowTreeKeys.None;
-                }
-                else if (DataType == typeof(Stage))
+                if (DataType == typeof(Stage))
                 {
                     FlowKeys = FlowTreeKeys.Work | FlowTreeKeys.Stage;
                 }
@@ -51,14 +44,6 @@ namespace DataWF.Module.FlowGui
                 {
                     FlowKeys = FlowTreeKeys.Template;
                 }
-                else if (DataType == typeof(User))
-                {
-                    UserKeys = UserTreeKeys.User;
-                }
-                else if (DataType == typeof(UserGroup))
-                {
-                    UserKeys = UserTreeKeys.Group;
-                }
             }
         }
 
@@ -66,15 +51,43 @@ namespace DataWF.Module.FlowGui
 
         public override Widget InitDropDownContent()
         {
-            var tree = editor.GetCacheControl<FlowTree>();
+            var tree = editor.GetCached<FlowTree>();
             tree.FlowKeys = FlowKeys;
-            tree.UserKeys = UserKeys;
             tree.Nodes.ExpandTop();
             if (DataFilter != null)
                 tree.DataFilter = DataFilter;
-            if (Value is DBItem)
-                tree.SelectedNode = FlowTree.Nodes.Find(FlowTree.GetName((DBItem)Value));
+            if (!ReadOnly)
+            {
+                tree.CellDoubleClick += ListCellDoubleClick;
+                tree.KeyPressed += ListCellKeyDown;
+                //list.SelectionChanged += PListSelectionChanged;
+            }
             return tree;
+        }
+
+        public override object Value
+        {
+            get => base.Value;
+            set
+            {
+                base.Value = value;
+                if (Value is DBItem)
+                {
+                    FlowTree.SelectedDBItem = (DBItem)Value;
+                }
+            }
+        }
+
+        protected override object GetDropDownValue()
+        {
+            return FlowTree.SelectedDBItem;
+        }
+
+        public override void FreeEditor()
+        {
+            FlowTree.CellDoubleClick -= ListCellDoubleClick;
+            FlowTree.KeyPressed -= ListCellKeyDown;
+            base.FreeEditor();
         }
     }
 

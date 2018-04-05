@@ -36,6 +36,7 @@ namespace DataWF.Gui
                 if (menu != value)
                 {
                     menu = value;
+                    menu.OwnerItem = this;
                 }
             }
         }

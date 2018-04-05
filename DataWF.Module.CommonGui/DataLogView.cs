@@ -66,44 +66,37 @@ namespace DataWF.Module.CommonGui
         private HPaned split = new HPaned();
         private RichTextView detailText = new RichTextView();
 
-        private TableLoader loader = new TableLoader();
-        private Toolsbar bar = new Toolsbar();
-        private ToolItem toolRollback = new ToolItem();
-        private TableLayoutList list = new TableLayoutList();
-        private ToolItem toolAccept = new ToolItem();
-        private ToolItem toolCheck = new ToolItem();
-        private ToolItem toolDetails = new ToolItem();
-        private ToolTableLoader toolProgress = new ToolTableLoader();
-        private ToolDropDown toolMode = new ToolDropDown();
-        private ToolMenuItem toolModeDefault = new ToolMenuItem();
-        private ToolMenuItem toolModeDocument = new ToolMenuItem();
-        private ToolMenuItem toolModeUser = new ToolMenuItem();
-        private ToolMenuItem toolModeGroup = new ToolMenuItem();
-        private ToolMenuItem toolModeTable = new ToolMenuItem();
-        private ToolMenuItem toolModeLogConfirm = new ToolMenuItem();
-        private ToolDropDown toolType = new ToolDropDown();
-        private ToolMenuItem toolTypeAuthorization = new ToolMenuItem();
-        private ToolMenuItem toolTypePassword = new ToolMenuItem();
-        private ToolMenuItem toolTypeStart = new ToolMenuItem();
-        private ToolMenuItem toolTypeStop = new ToolMenuItem();
-        private ToolMenuItem toolTypeInsert = new ToolMenuItem();
-        private ToolMenuItem toolTypeUpdate = new ToolMenuItem();
-        private ToolMenuItem toolTypeDelete = new ToolMenuItem();
-        private ToolFieldEditor dateField = new ToolFieldEditor();
-        private ToolFieldEditor dataField = new ToolFieldEditor();
-        private TableLayoutList detailList = new TableLayoutList();
-        private TableLayoutList detailRow = new TableLayoutList();
-        private GroupBox map = new GroupBox();
+        private TableLoader loader;
+        private Toolsbar bar;
+        private ToolItem toolRollback;
+        private TableLayoutList list;
+        private ToolItem toolAccept;
+        private ToolItem toolCheck;
+        private ToolItem toolDetails;
+        private ToolTableLoader toolProgress;
+        private ToolDropDown toolMode;
+        private ToolMenuItem toolModeDefault;
+        private ToolMenuItem toolModeDocument;
+        private ToolMenuItem toolModeUser;
+        private ToolMenuItem toolModeGroup;
+        private ToolMenuItem toolModeTable;
+        private ToolMenuItem toolModeLogConfirm;
+        private ToolDropDown toolType;
+        private ToolMenuItem toolTypeAuthorization;
+        private ToolMenuItem toolTypePassword;
+        private ToolMenuItem toolTypeStart;
+        private ToolMenuItem toolTypeStop;
+        private ToolMenuItem toolTypeInsert;
+        private ToolMenuItem toolTypeUpdate;
+        private ToolMenuItem toolTypeDelete;
+        private ToolFieldEditor dateField;
+        private ToolFieldEditor dataField;
+        private TableLayoutList detailList;
+        private TableLayoutList detailRow;
+        private GroupBox map;
 
         public DataLogView()
         {
-            split.Panel1.Content = list;
-            split.Panel2.Content = map;
-
-            PackStart(bar, false, false);
-            PackStart(split, true, true);
-
-            list.Text = "pList1";
 
             //toolType.Alignment = ToolStripItemAlignment.Right;
             //toolMode.Alignment = ToolStripItemAlignment.Right;
@@ -111,147 +104,104 @@ namespace DataWF.Module.CommonGui
             //dateField.Alignment = ToolStripItemAlignment.Right;
             //toolType.DropDown.Closing += DropDown_Closing;
 
-            map.Visible = false;
+            logs = new DBTableView<UserLog>(UserLog.DBTable, string.Empty, DBViewKeys.Static);
+            logs.ListChanged += LogsListChanged;
 
-            bar.Items.Add(toolRollback);
-            //toolStrip1.Items.Add(tooAccept,
-            bar.Items.Add(toolMode);
-            bar.Items.Add(toolDetails);
-            bar.Items.Add(toolType);
-            bar.Items.Add(dateField);
-            bar.Items.Add(dataField);
-            bar.Items.Add(toolProgress);
-            bar.Name = "toolStrip1";
+            loader = new TableLoader() { View = logs };
 
-            toolMode.DisplayStyle = ToolItemDisplayStyle.Text;
-            toolMode.Name = "toolMode";
-            toolMode.Text = "Mode: Default";
-            toolMode.DropDownItems.Add(toolModeDefault);
-            toolMode.DropDownItems.Add(toolModeDocument);
-            toolMode.DropDownItems.Add(toolModeGroup);
-            toolMode.DropDownItems.Add(toolModeUser);
-            toolMode.DropDownItems.Add(toolModeTable);
-            toolMode.DropDownItems.Add(toolModeLogConfirm);
+            toolModeDefault = new ToolMenuItem(ToolModeClick) { Name = "Default" };
+            toolModeLogConfirm = new ToolMenuItem(ToolModeClick) { Name = "Log Confirmation" };
+            toolModeDocument = new ToolMenuItem(ToolModeClick) { Name = "Document" };
+            toolModeGroup = new ToolMenuItem(ToolModeClick) { Name = "Group" };
+            toolModeUser = new ToolMenuItem(ToolModeClick) { Name = "User" };
+            toolModeTable = new ToolMenuItem(ToolModeClick) { Name = "Table" };
 
-            toolModeDefault.Name = "toolModeDefault";
-            toolModeDefault.Text = "Default";
-            toolModeDefault.Click += ToolModeClick;
+            toolMode = new ToolDropDown(
+                toolModeDefault,
+                toolModeDocument,
+                toolModeGroup,
+                toolModeUser,
+                toolModeTable,
+                toolModeLogConfirm)
+            {
+                DisplayStyle = ToolItemDisplayStyle.Text,
+                Name = "LogMode",
+                Text = "Mode: Default"
+            };
 
-            toolModeLogConfirm.Name = "toolModeLogConfirm";
-            toolModeLogConfirm.Text = "Log Confirmation";
-            toolModeLogConfirm.Click += ToolModeClick;
 
-            toolModeDocument.Name = "toolModeDocument";
-            toolModeDocument.Text = "Document";
-            toolModeDocument.Click += ToolModeClick;
+            toolRollback = new ToolItem(ToolRollbackClick) { Name = "Rollback", DisplayStyle = ToolItemDisplayStyle.Text };
+            toolAccept = new ToolItem(ToolAcceptClick) { Name = "Accept", DisplayStyle = ToolItemDisplayStyle.Text };
+            toolCheck = new ToolItem() { Name = "Check", DisplayStyle = ToolItemDisplayStyle.Text };
+            toolDetails = new ToolItem(ToolDetailsClick) { Name = "Details", DisplayStyle = ToolItemDisplayStyle.Text };
 
-            toolModeGroup.Name = "toolModeGroup";
-            toolModeGroup.Text = "Group";
-            toolModeGroup.Click += ToolModeClick;
+            toolTypeAuthorization = new ToolMenuItem(ToolTypeItemClicked) { Checked = true, Name = "Authorization" };
+            toolTypePassword = new ToolMenuItem(ToolTypeItemClicked) { Checked = true, Name = "Password" };
+            toolTypeStart = new ToolMenuItem(ToolTypeItemClicked) { Checked = true, Name = "Start" };
+            toolTypeStop = new ToolMenuItem(ToolTypeItemClicked) { Checked = true, Name = "Stop" };
+            toolTypeInsert = new ToolMenuItem(ToolTypeItemClicked) { Checked = true, Name = "Insert" };
+            toolTypeUpdate = new ToolMenuItem(ToolTypeItemClicked) { Checked = true, Name = "Update" };
+            toolTypeDelete = new ToolMenuItem(ToolTypeItemClicked) { Checked = true, Name = "Delete" };
 
-            toolModeUser.Name = "toolModeUser";
-            toolModeUser.Text = "User";
-            toolModeUser.Click += ToolModeClick;
+            toolType = new ToolDropDown(
+                toolTypeAuthorization,
+                toolTypePassword,
+                toolTypeStart,
+                toolTypeStop,
+                new ToolSeparator(),
+                toolTypeInsert,
+                toolTypeUpdate,
+                toolTypeDelete)
+            { DisplayStyle = ToolItemDisplayStyle.Text, Name = "LogType" };
 
-            toolModeTable.Name = "toolModeTable";
-            toolModeTable.Text = "Table";
-            toolModeTable.Click += ToolModeClick;
-
-            toolRollback.Name = "toolRollback";
-            toolRollback.DisplayStyle = ToolItemDisplayStyle.Text;
-            toolRollback.Text = "Rollback";
-            toolRollback.Click += ToolRollbackClick;
-
-            toolAccept.Name = "tooAccept";
-            toolAccept.DisplayStyle = ToolItemDisplayStyle.Text;
-            toolAccept.Text = "Accept";
-            toolAccept.Click += ToolAcceptClick;
-
-            toolCheck.Name = "toolCheck";
-            toolCheck.DisplayStyle = ToolItemDisplayStyle.Text;
-            toolCheck.Text = "Check";
-
-            toolDetails.Text = "Details";
-            toolDetails.Name = "toolDetails";
-            toolDetails.DisplayStyle = ToolItemDisplayStyle.Text;
-            toolDetails.Click += ToolDetailsClick;
-
-            list.AllowEditColumn = false;
-            list.EditMode = EditModes.None;
-            list.EditState = EditListState.Edit;
-            list.FieldSource = null;
-            list.GenerateColumns = false;
-            list.GenerateToString = false;
-            list.Mode = LayoutListMode.List;
-            list.Name = "list";
-
-            toolType.DisplayStyle = ToolItemDisplayStyle.Text;
-            toolType.DropDownItems.Add(toolTypeAuthorization);
-            toolType.DropDownItems.Add(toolTypePassword);
-            toolType.DropDownItems.Add(toolTypeStart);
-            toolType.DropDownItems.Add(toolTypeStop);
-            toolType.DropDownItems.Add(new ToolSeparator());
-            toolType.DropDownItems.Add(toolTypeInsert);
-            toolType.DropDownItems.Add(toolTypeUpdate);
-            toolType.DropDownItems.Add(toolTypeDelete);
-            toolType.Name = "toolType";
-            toolType.Text = "Type";
-
-            toolTypeAuthorization.Checked = true;
-            toolTypeAuthorization.Name = "toolTypeAuthorization";
-            toolTypeAuthorization.Text = "Authorization";
-            toolTypeAuthorization.Click += ToolTypeItemClicked;
-
-            toolTypePassword.Checked = true;
-            toolTypePassword.Name = "toolTypePassword";
-            toolTypePassword.Text = "Password";
-            toolTypePassword.Click += ToolTypeItemClicked;
-
-            toolTypeStart.Checked = true;
-            toolTypeStart.Name = "toolTypeStart";
-            toolTypeStart.Text = "Start";
-            toolTypeStart.Click += ToolTypeItemClicked;
-
-            toolTypeStop.Checked = true;
-            toolTypeStop.Name = "toolTypeStop";
-            toolTypeStop.Text = "Stop";
-            toolTypeStop.Click += ToolTypeItemClicked;
-
-            toolTypeInsert.Checked = true;
-            toolTypeInsert.Name = "toolTypeInsert";
-            toolTypeInsert.Text = "Insert";
-            toolTypeInsert.Click += ToolTypeItemClicked;
-
-            toolTypeUpdate.Checked = true;
-            toolTypeUpdate.Name = "toolTypeUpdate";
-            toolTypeUpdate.Text = "Update";
-            toolTypeUpdate.Click += ToolTypeItemClicked;
-
-            toolTypeDelete.Checked = true;
-            toolTypeDelete.Name = "toolTypeDelete";
-            toolTypeDelete.Text = "Delete";
-            toolTypeDelete.Click += ToolTypeItemClicked;
-
-            this.Name = "DataLog";
-
-            var editorDate = new CellEditorDate();
-            editorDate.TwoDate = true;
-
-            var editorData = new CellEditorDataTree();
-            editorData.DataKeys = DataTreeKeys.Schema | DataTreeKeys.TableGroup | DataTreeKeys.Table;
-            editorData.DataType = typeof(DBTable);
-
-            dateField.Field.CellEditor = editorDate;
-            dateField.Field.DataValue = new DateInterval(DateTime.Today.AddMonths(-1), DateTime.Today);
+            dateField = new ToolFieldEditor()
+            {
+                Editor = new CellEditorDate { TwoDate = true, DataType = typeof(DateInterval) },
+                DataValue = new DateInterval(DateTime.Today.AddMonths(-1), DateTime.Today),
+                Name = "Date",
+                FieldWidth = 200
+            };
             dateField.Field.ValueChanged += DateValueChanged;
-            dateField.Text = Locale.Get("DataLog", "Date");
-            dateField.FieldWidth = 200;
 
-            dataField.Field.CellEditor = editorData;
-            dataField.Field.DataType = typeof(DBTable);
+            dataField = new ToolFieldEditor()
+            {
+                Editor = new CellEditorDataTree { DataType = typeof(DBTable) },
+                Name = "Table",
+                FieldWidth = 200
+            };
             dataField.Field.ValueChanged += DataValueChanged;
-            dataField.Text = Locale.Get("DataLog", "Table");
-            dataField.FieldWidth = 200;
+
+            toolProgress = new ToolTableLoader() { Loader = loader };
+
+            bar = new Toolsbar(
+               toolRollback,
+               toolMode,
+               toolDetails,
+               new ToolSeparator { FillWidth = true },
+               toolType,
+               dateField,
+               dataField,
+               toolProgress)
+            { Name = "BarLog" };
+
+            list = new TableLayoutList()
+            {
+                AllowEditColumn = false,
+                EditMode = EditModes.None,
+                EditState = EditListState.Edit,
+                GenerateColumns = false,
+                GenerateToString = false,
+                Mode = LayoutListMode.List,
+                Name = "list",
+                ListSource = logs
+            };
+            list.RetriveCellEditor += ListRetriveCellEditor;
+            list.GetProperties += list_GetProperties;
+            list.GenerateColumns = true;
+            list.CellMouseClick += ListCellMouseClick;
+            list.CellDoubleClick += ListCellDoubleClick;
+            list.SelectionChanged += ListSelectionChanged;
+            list.ColumnFilterChanged += ListOnFilterChanged;
 
             toolWindTree = new DataTree();
             toolWindTree.DataKeys = DataTreeKeys.Schema | DataTreeKeys.TableGroup | DataTreeKeys.Table;
@@ -262,63 +212,56 @@ namespace DataWF.Module.CommonGui
 
             //if (logs.Table != null)
             //    logs.ApplySort(new DBRowComparer(logs.Table.DateKey, ListSortDirection.Ascending));
+            detailList = new TableLayoutList()
+            {
+                GenerateToString = false,
+                GenerateColumns = false,
+                ReadOnly = true,
+                EditMode = EditModes.ByClick
+            };
             detailList.ListInfo.Columns.Add("Column", 120).Editable = false;
             detailList.ListInfo.Columns.Add("OldFormat", 100).FillWidth = true;
             detailList.ListInfo.Columns.Add("NewFormat", 100).FillWidth = true;
             detailList.ListInfo.StyleRow = GuiEnvironment.StylesInfo["ChangeRow"];
             detailList.ListInfo.HeaderVisible = false;
-            detailList.EditMode = EditModes.ByClick;
-            detailList.GenerateToString = false;
-            detailList.GenerateColumns = false;
-            detailList.ReadOnly = true;
-            detailList.RetriveCellEditor += DetailListRetriveCellEditor;
-            detailList.EditMode = EditModes.ByClick;
 
-            map.Visible = true;
-            map.Add(new GroupBoxItem()
-            {
-                Text = Locale.Get("DataLog", "Details"),
-                Widget = detailList,
-                Col = 0,
-                FillWidth = true,
-                FillHeight = true
-            });
-            map.Add(new GroupBoxItem()
-            {
-                Text = Locale.Get("DataLog", "Difference"),
-                Widget = detailText,
-                Col = 1,
-                FillWidth = true,
-                FillHeight = true
-            });
-            map.Add(new GroupBoxItem()
-            {
-                Text = Locale.Get("DataLog", "Record"),
-                Widget = detailRow,
-                Col = 2,
-                FillWidth = true,
-                FillHeight = true
-            });
+            detailRow = new TableLayoutList();
 
-
-            list.RetriveCellEditor += ListRetriveCellEditor;
-            list.GetProperties += list_GetProperties;
-            list.GenerateColumns = true;
-            list.CellMouseClick += ListCellMouseClick;
-            list.CellDoubleClick += ListCellDoubleClick;
-            list.SelectionChanged += ListSelectionChanged;
-            list.ColumnFilterChanged += ListOnFilterChanged;
+            map = new GroupBox(
+                new GroupBoxItem()
+                {
+                    Name = "Details",
+                    Widget = detailList,
+                    Col = 0,
+                    FillWidth = true,
+                    FillHeight = true
+                },
+                new GroupBoxItem()
+                {
+                    Name = "Difference",
+                    Widget = detailText,
+                    Col = 1,
+                    FillWidth = true,
+                    FillHeight = true
+                },
+                new GroupBoxItem()
+                {
+                    Name = "Record",
+                    Widget = detailRow,
+                    Col = 2,
+                    FillWidth = true,
+                    FillHeight = true
+                });
             //list.ListInfo.Columns.Add(list.BuildColumn(null, "Text"));
 
-            toolProgress.Loader = loader;
+            split.Panel1.Content = list;
+            split.Panel2.Content = map;
+
+            PackStart(bar, false, false);
+            PackStart(split, true, true);
+            Name = "DataLog";
 
             Localize();
-
-            logs = new DBTableView<UserLog>(UserLog.DBTable, string.Empty, DBViewKeys.Static);
-            logs.ListChanged += LogsListChanged;
-
-            loader.View = logs;
-            list.ListSource = logs;
         }
 
         //protected override void OnRealized()

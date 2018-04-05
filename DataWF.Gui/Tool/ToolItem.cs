@@ -233,6 +233,11 @@ namespace DataWF.Gui
             }
         }
 
+        public ToolItem Owner
+        {
+            get { return Bar?.Owner; }
+        }
+
         public override Rectangle Bound
         {
             get { return base.Bound; }

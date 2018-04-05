@@ -38,12 +38,10 @@ namespace DataWF.Gui
             {
                 BackgroundColor = GuiEnvironment.StylesInfo["Window"].BaseColor,
                 Content = widget,
-                Size = new Size(800, 600)  
+                Size = new Size(800, 600),
+                TransientFor = owner
             };
-            if (owner != null)
-            {
-                window.TransientFor = owner;
-            }
+            window.CloseRequested += (s, e) => ((Dialog)s).TransientFor = null;
             return window.Run(owner);
         }
 
@@ -64,12 +62,10 @@ namespace DataWF.Gui
                 InitialLocation = WindowLocation.CenterParent,
                 Title = widget is IText ? ((IText)widget).Text : widget.Name,
                 Padding = new WidgetSpacing(5, 5, 5, 5),
-                Size = new Size(800, 600)
+                Size = new Size(800, 600),
+                TransientFor = owner
             };
-            if (owner != null)
-            {
-                window.TransientFor = owner;
-            }
+            window.CloseRequested += (s, e) => ((Window)s).TransientFor = null;
             window.Show();
         }
 

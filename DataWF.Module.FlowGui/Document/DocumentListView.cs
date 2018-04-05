@@ -65,7 +65,7 @@ namespace DataWF.Module.FlowGui
             toolFWork = new ToolFieldEditor { Name = "Work", FieldWidth = 60 };
             toolFTemplate = new ToolFieldEditor { Name = "Template", FieldWidth = 160 };
             toolFUser = new ToolFieldEditor { Name = "User" };
-            toolFStage = new ToolFieldEditor { Name = "Stage", FieldWidth = 140 };
+            toolFStage = new ToolFieldEditor { Name = "Stage", FieldWidth = 140, Editor = new CellEditorFlowTree() { DataType = typeof(Stage)} };
             toolFDate = new ToolFieldEditor { Name = "Date", FieldWidth = 140 };
             toolFDateType = new ToolFieldEditor { Name = "Date Type", FieldWidth = 100 };
             toolLoad = new ToolItem(ToolLoadClick) { Name = "Load", Glyph = GlyphType.Fire };

@@ -27,7 +27,7 @@ namespace DataWF.Data.Gui
             {
                 Helper.OnException(e.ErrorException);
             };
-            
+
 
             //Load Configuration
             for (int i = 0; i < args.Length; i++)
@@ -362,6 +362,7 @@ namespace DataWF.Data.Gui
         private void CheckAssemblies()
         {
             CheckAssembly(Assembly.GetEntryAssembly());
+            var list = new List<Assembly>();
             string[] asseblies = Directory.GetFiles(Helper.GetDirectory(), "*.dll");
             foreach (string dll in asseblies)
             {
@@ -373,15 +374,20 @@ namespace DataWF.Data.Gui
                                                         .Select(item => item.ConstructorArguments.Select(sitem => sitem.Value.ToString()).ToArray());
                 if (moduleAttribute.Any(item => item[0] == "gui"))
                 {
-                    try
-                    {
-                        CheckAssembly(Assembly.LoadFile(dll));
-                    }
-                    catch (Exception ex)
-                    {
-                        Helper.OnException(ex);
-                        continue;
-                    }
+                    list.Add(Assembly.LoadFile(dll));
+                }
+            }
+
+            foreach (var assembly in list)
+            {
+                try
+                {
+                    CheckAssembly(assembly);
+                }
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
+                    continue;
                 }
             }
         }
@@ -464,7 +470,7 @@ namespace DataWF.Data.Gui
             };
             return item;
         }
-        
+
         public ToolWidgetHandler BuildMenuItem(Widget widget)
         {
             var item = new ToolWidgetHandler(MenuViewItemClick)

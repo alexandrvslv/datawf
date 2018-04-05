@@ -32,8 +32,9 @@ namespace DataWF.Module.CommonGui
         private DBStatus status = DBStatus.Empty;
         private Rectangle imgRect = new Rectangle();
         private Rectangle textRect = new Rectangle();
+        private TextEntry filterEntry;
 
-        CellStyle userStyle;
+        private CellStyle userStyle;
 
         public UserTree()
         {
@@ -369,6 +370,39 @@ namespace DataWF.Module.CommonGui
                 }
             }
             return rez.ToString();
+        }
+
+        public TextEntry FilterEntry
+        {
+            get { return filterEntry; }
+            set
+            {
+                if (filterEntry != null)
+                    filterEntry.Changed -= FilterEntryChanged;
+
+                filterEntry = value;
+
+                if (filterEntry != null)
+                    filterEntry.Changed += FilterEntryChanged;
+            }
+        }
+
+        private void FilterEntryChanged(object sender, EventArgs e)
+        {
+            var entry = (TextEntry)sender;
+            IFilterable list = listSource as IFilterable;
+            list.FilterQuery.Parameters.Clear();
+
+            if (entry.Text?.Length != 0)
+            {
+               // TreeMode = false;
+                list.FilterQuery.Parameters.Add(typeof(Node), LogicType.And, nameof(Node.FullPath), CompareType.Like, entry.Text);
+            }
+            else
+            {
+                TreeMode = true;
+            }
+            list.UpdateFilter();
         }
 
         protected override void Dispose(bool disposing)

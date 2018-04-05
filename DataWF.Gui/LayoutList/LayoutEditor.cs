@@ -16,7 +16,8 @@ namespace DataWF.Gui
     public class LayoutEditor : Canvas, ILayoutEditor
     {
         const int w = 16;
-        protected Dictionary<string, object> CacheControls = new Dictionary<string, object>();
+        private static Dictionary<string, object> GlobalCache = new Dictionary<string, object>(StringComparer.Ordinal);
+        protected Dictionary<string, object> Cache = new Dictionary<string, object>(StringComparer.Ordinal);
         protected ILayoutCellEditor currentEditor;
         protected bool changed;
         protected object value;
@@ -318,10 +319,10 @@ namespace DataWF.Gui
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
-            foreach (KeyValuePair<string, object> kv in CacheControls)
+            foreach (KeyValuePair<string, object> kv in Cache)
                 if (kv.Value is IDisposable)
                     ((IDisposable)kv.Value).Dispose();
-            CacheControls.Clear();
+            Cache.Clear();
         }
 
         public void ShowDropDown(ToolShowMode mode)
@@ -337,18 +338,26 @@ namespace DataWF.Gui
             }
         }
 
-        public T GetCacheControl<T>()
+        public T GetCached<T>()
         {
-            return GetCacheControl<T>(typeof(T).Name);
+            return GetCached<T>(typeof(T).Name);
         }
 
-        public T GetCacheControl<T>(string name)
+        public T GetCached<T>(string name)
         {
-            object o;
-            if (!CacheControls.TryGetValue(name, out o))
+            if (!Cache.TryGetValue(name, out object o))
             {
-                o = EmitInvoker.CreateObject(typeof(T), true);
-                CacheControls.Add(name, o);
+                Cache[name] = o = EmitInvoker.CreateObject(typeof(T), true);
+            }
+            return (T)o;
+        }
+
+        public T GetGlobalCached<T>()
+        {
+            var name = typeof(T).Name;
+            if (!GlobalCache.TryGetValue(name, out object o))
+            {
+                GlobalCache[name] = o = EmitInvoker.CreateObject(typeof(T), true);
             }
             return (T)o;
         }

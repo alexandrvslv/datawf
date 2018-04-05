@@ -5,14 +5,6 @@ namespace DataWF.Gui
 {
     public class LayoutHitTestInfo
     {
-        private PointerButton mouseButton;
-        private LayoutGroup gp;
-        private LayoutColumn column;
-        private int index;
-        private LayoutAlignType anchor;
-        private LayoutHitTestLocation location;
-        private LayoutHitTestCellLocation subLocation;
-
         public Rectangle RowBound = new Rectangle();
         public Rectangle ItemBound = new Rectangle();
         public Rectangle SubItemBound = new Rectangle();
@@ -26,54 +18,24 @@ namespace DataWF.Gui
 
         public bool KeyShift { get; set; }
 
-        public int Index
-        {
-            get { return index; }
-            set { index = value; }
-        }
+        public int Index { get; set; }
 
-        public object Item
-        {
-            get;
-            set;
-        }
+        public object Item { get; set; }
 
         public bool MouseDown { get; set; }
 
-        public PointerButton MouseButton
-        {
-            get { return mouseButton; }
-            set { mouseButton = value; }
-        }
+        public PointerButton MouseButton { get; set; }
 
-        public LayoutGroup Group
-        {
-            get { return gp; }
-            set { gp = value; }
-        }
+        public LayoutGroup Group { get; set; }
 
-        public LayoutColumn Column
-        {
-            get { return column; }
-            set { column = value; }
-        }
+        public LayoutColumn Column { get; set; }
 
-        public LayoutAlignType Anchor
-        {
-            get { return anchor; }
-            set { anchor = value; }
-        }
+        public LayoutAlignType Anchor { get; set; }
 
-        public LayoutHitTestLocation Location
-        {
-            get { return location; }
-            set { location = value; }
-        }
+        public LayoutHitTestLocation Location { get; set; }
 
-        public LayoutHitTestCellLocation SubLocation
-        {
-            get { return subLocation; }
-            set { subLocation = value; }
-        }
+        public LayoutHitTestCellLocation SubLocation { get; set; }
+
+        public int Clicks { get; set; }
     }
 }

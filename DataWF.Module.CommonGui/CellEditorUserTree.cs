@@ -29,9 +29,17 @@ namespace DataWF.Module.CommonGui
                 if (DataType == value)
                     return;
                 base.DataType = value;
-                if (DataType == typeof(User))
+                if (DataType == typeof(Department))
                 {
-                    UserKeys = UserTreeKeys.User;
+                    UserKeys = UserTreeKeys.Department;
+                }
+                else if (DataType == typeof(User))
+                {
+                    UserKeys = UserTreeKeys.Department | UserTreeKeys.User;
+                }
+                else if (DataType == typeof(Position))
+                {
+                    UserKeys = UserTreeKeys.Department | UserTreeKeys.Position;
                 }
                 else if (DataType == typeof(UserGroup))
                 {
@@ -42,7 +50,7 @@ namespace DataWF.Module.CommonGui
 
         public override Widget InitDropDownContent()
         {
-            var tree = editor.GetCacheControl<UserTree>();
+            var tree = editor.GetCached<UserTree>();
             tree.UserKeys = UserKeys;
             tree.Nodes.ExpandTop();
             if (Value is DBItem)

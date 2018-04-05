@@ -202,8 +202,8 @@ namespace DataWF.Data.Gui
                 Name = nameof(QParam.Query),
                 Visible = false,
                 Invoker = new Invoker<QParam, IQuery>(nameof(QParam.Query),
-                                                   (item) => item.Query,
-                                                   (item, value) => item.Query = value)
+                                                   (item) => item.Query)
+                //(item, value) => item.Query = value
             });
             listParams.ListInfo.Columns.Add(new LayoutColumn()
             {
@@ -442,8 +442,9 @@ namespace DataWF.Data.Gui
             item.Tag = schema;
             item.Name = schema.Name;
             item.Text = schema.ToString();
-            schema.Tables.ApplySortInternal("Name", ListSortDirection.Ascending);
-            foreach (DBTable ts in schema.Tables)
+            var list = new SelectableList<DBTable>(schema.Tables);
+            list.ApplySortInternal("Name", ListSortDirection.Ascending);
+            foreach (DBTable ts in list)
                 if (ts.Access.Admin)
                     item.DropDown.Items.Add(InitTableTool(ts));
             return item;
@@ -472,7 +473,7 @@ namespace DataWF.Data.Gui
         private void ColumnItemClick(object sender, EventArgs e)
         {
             var column = ((ToolMenuItem)sender).Tag as DBColumn;
-            Query.Parameters.Add(new QParam(column.Name) { Logic = LogicType.And, Column = column });
+            Query.Parameters.Add(new QParam(column) { Logic = LogicType.And });
         }
 
         private void TableClick(object sender, EventArgs e)

@@ -173,11 +173,13 @@ namespace DataWF.Gui
             handleProperty = OnPropertyChanged;
 
             cacheDraw.LayoutList = this;
+            cacheHitt.HitTest = hitt;
+
             ListInfo = new LayoutListInfo();
         }
 
         public string Text { get; set; }
-
+       
         //public Point ColumnsLocation
         //{
         //    get { return location; }
@@ -295,8 +297,9 @@ namespace DataWF.Gui
                                          Keyboard.CurrentModifiers == ModifierKeys.Control,
                                          Keyboard.CurrentModifiers == ModifierKeys.Shift);
             hInfo.MouseDown = true;
-            cacheHitt.HitTest = hInfo;
+            hInfo.Clicks = e.MultiplePress;
             cacheHitt.Cancel = false;
+
             if (e.Button == PointerButton.Left && e.MultiplePress <= 1)
             {
                 switch (hInfo.Location)
@@ -333,27 +336,17 @@ namespace DataWF.Gui
                         break;
                 }
             }
-            else if (e.MultiplePress == 2)
-            {
 
-                if (hInfo.Location == LayoutHitTestLocation.Cell)
-                    OnCellDoubleClick(cacheHitt);
-                else if (hInfo.Location == LayoutHitTestLocation.Header)
-                    OnHeaderDoubleClick(cacheHitt);
-                else if (hInfo.Location == LayoutHitTestLocation.Column)
-                    OnColumnDoubleClick(cacheHitt);
-            }
         }
 
         protected override void OnButtonReleased(ButtonEventArgs e)
         {
             base.OnButtonReleased(e);
             _cacheButton = 0;
-            LayoutHitTestInfo hInfo = HitTest(e.X, e.Y, e.Button,
-                                         Keyboard.CurrentModifiers == ModifierKeys.Control,
-                                         Keyboard.CurrentModifiers == ModifierKeys.Shift);
-            hInfo.MouseDown = false;
-            cacheHitt.HitTest = hInfo;
+            HitTest(e.X, e.Y, e.Button,
+                Keyboard.CurrentModifiers == ModifierKeys.Control,
+                Keyboard.CurrentModifiers == ModifierKeys.Shift);
+            hitt.MouseDown = false;
             cacheHitt.Cancel = false;
             if (UseState == LayoutListState.MoveColumn)
             {
@@ -366,19 +359,29 @@ namespace DataWF.Gui
                 if (buf == LayoutListState.MoveColumn || buf == LayoutListState.Select)
                     RefreshBounds(false);
             }
-            switch (hInfo.Location)
+            switch (hitt.Location)
             {
                 case LayoutHitTestLocation.Cell:
-                    OnCellMouseUp(cacheHitt);
+                    if (hitt.Clicks == 2)
+                        OnCellDoubleClick(cacheHitt);
+                    else
+                        OnCellMouseUp(cacheHitt);
                     break;
                 case LayoutHitTestLocation.Column:
-                    OnColumnMouseClick(cacheHitt);
+                    Debug.WriteLine($"Columns Clicks {e.MultiplePress}");
+                    if (hitt.Clicks == 2)
+                        OnColumnDoubleClick(cacheHitt);
+                    else
+                        OnColumnMouseClick(cacheHitt);
                     break;
                 case LayoutHitTestLocation.Group:
                     OnGroupMouseUp(cacheHitt);
                     break;
                 case LayoutHitTestLocation.Header:
-                    OnHeaderMouseUp(cacheHitt);
+                    if (hitt.Clicks == 2)
+                        OnHeaderDoubleClick(cacheHitt);
+                    else
+                        OnHeaderMouseUp(cacheHitt);
                     break;
                 case LayoutHitTestLocation.Aggregate:
                     OnAggregateMouseUp(cacheHitt);
@@ -402,10 +405,9 @@ namespace DataWF.Gui
         protected override void OnMouseMoved(MouseMovedEventArgs e)
         {
             base.OnMouseMoved(e);
-            LayoutHitTestInfo hInfo = HitTest(e.X, e.Y, _cacheButton,
+            HitTest(e.X, e.Y, _cacheButton,
                                          Keyboard.CurrentModifiers == ModifierKeys.Control,
                                          Keyboard.CurrentModifiers == ModifierKeys.Shift);
-            cacheHitt.HitTest = hInfo;
             cacheHitt.Cancel = false;
 
             switch (UseState)
@@ -423,7 +425,7 @@ namespace DataWF.Gui
                     OnHeaderSized(cacheHitt);
                     break;
                 case LayoutListState.MoveColumn:
-                    if (hInfo.Location == LayoutHitTestLocation.Column)
+                    if (hitt.Location == LayoutHitTestLocation.Column)
                     {
                         OnColumnMoved(cacheHitt);
                     }
@@ -432,7 +434,7 @@ namespace DataWF.Gui
                     OnSelectRectangle(cacheHitt);
                     break;
                 default:
-                    if (hInfo.Location == LayoutHitTestLocation.Group)
+                    if (hitt.Location == LayoutHitTestLocation.Group)
                     {
                         if (canvas.Cursor != CursorType.Arrow)
                             canvas.Cursor = CursorType.Arrow;
@@ -443,9 +445,9 @@ namespace DataWF.Gui
                         if (selection.HoverColumn != null)
                             OnColumnMouseLeave(cacheHitt);
 
-                        selection.SetHover(hInfo.Group);
+                        selection.SetHover(hitt.Group);
                     }
-                    else if (hInfo.Location == LayoutHitTestLocation.Aggregate)
+                    else if (hitt.Location == LayoutHitTestLocation.Aggregate)
                     {
                         if (canvas.Cursor != CursorType.Arrow)
                             canvas.Cursor = CursorType.Arrow;
@@ -456,9 +458,9 @@ namespace DataWF.Gui
                         if (selection.HoverColumn != null)
                             OnColumnMouseLeave(cacheHitt);
 
-                        selection.SetHover(new PSelectionAggregate() { Group = hInfo.Group, Column = hInfo.Column });
+                        selection.SetHover(new PSelectionAggregate() { Group = hitt.Group, Column = hitt.Column });
                     }
-                    else if (hInfo.Location == LayoutHitTestLocation.Header)
+                    else if (hitt.Location == LayoutHitTestLocation.Header)
                     {
                         if (selection.HoverRow != null)
                             OnCellMouseLeave(cacheHitt);
@@ -468,7 +470,7 @@ namespace DataWF.Gui
 
                         if (AllowHeaderSize)
                         {
-                            if (hInfo.Anchor == LayoutAlignType.Right)
+                            if (hitt.Anchor == LayoutAlignType.Right)
                             {
                                 canvas.Cursor = CursorType.ResizeLeftRight;
                             }
@@ -478,9 +480,9 @@ namespace DataWF.Gui
                             }
                         }
                     }
-                    else if (hInfo.Location == LayoutHitTestLocation.Column)
+                    else if (hitt.Location == LayoutHitTestLocation.Column)
                     {
-                        if (selection.HoverColumn != hInfo.Column)
+                        if (selection.HoverColumn != hitt.Column)
                         {
                             if (selection.HoverColumn != null)
                                 OnColumnMouseLeave(cacheHitt);
@@ -491,10 +493,10 @@ namespace DataWF.Gui
                             OnColumnMouseMove(cacheHitt);
                         }
                     }
-                    else if (hInfo.Location == LayoutHitTestLocation.Cell)
+                    else if (hitt.Location == LayoutHitTestLocation.Cell)
                     {
                         var item = selection.HoverValue;
-                        if (item == null || !(item is LayoutSelectionRow) || ((LayoutSelectionRow)item).Index != hInfo.Index || ((LayoutSelectionRow)item).Column != hInfo.Column)
+                        if (item == null || !(item is LayoutSelectionRow) || ((LayoutSelectionRow)item).Index != hitt.Index || ((LayoutSelectionRow)item).Column != hitt.Column)
                         {
                             if (item is LayoutSelectionRow)
                                 OnCellMouseLeave(cacheHitt);
@@ -508,11 +510,11 @@ namespace DataWF.Gui
                         }
                         if (AllowCellSize)
                         {
-                            if (hInfo.Anchor == LayoutAlignType.Bottom && hInfo.Index == 0)
+                            if (hitt.Anchor == LayoutAlignType.Bottom && hitt.Index == 0)
                             {
                                 canvas.Cursor = CursorType.ResizeUpDown;
                             }
-                            else if (hInfo.Anchor == LayoutAlignType.Right && !hInfo.Column.FillWidth)
+                            else if (hitt.Anchor == LayoutAlignType.Right && !hitt.Column.FillWidth)
                             {
                                 canvas.Cursor = CursorType.ResizeLeftRight;
                             }
@@ -685,8 +687,6 @@ namespace DataWF.Gui
                         IGroup group = (IGroup)item;
                         if (group.IsCompaund && group.Expand != flag)
                         {
-                            if (cacheHitt.HitTest == null)
-                                cacheHitt.HitTest = new LayoutHitTestInfo();
                             cacheHitt.HitTest.Index = listSource.IndexOf(item);
                             cacheHitt.HitTest.Item = item;
                             OnCellGlyphClick(cacheHitt);
@@ -4428,7 +4428,7 @@ namespace DataWF.Gui
                 else if (hover != null && e.Index == hover.Index && e.Column == hover.Column)
                 {
                     e.State = CellDisplayState.Hover;
-                }                
+                }
             }
             e.Column.GetEditor(e.Item)?.DrawCell(e);
         }
@@ -4767,7 +4767,7 @@ namespace DataWF.Gui
                 else if (type == typeof(int) || type == typeof(long) || type == typeof(short))
                     cell.Format = "########################";
             }
-            return GuiEnvironment.GetCellEditor(cell);            
+            return GuiEnvironment.GetCellEditor(cell);
         }
     }
 

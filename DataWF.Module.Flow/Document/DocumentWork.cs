@@ -217,7 +217,7 @@ namespace DataWF.Module.Flow
             set { SetProperty(value); }
         }
 
-        [DataMember, Column("is_complete", Default ="False")]
+        [DataMember, Column("is_complete", Default = "False")]
         public bool IsComplete
         {
             get { return DateComplete != null; }
@@ -253,12 +253,12 @@ namespace DataWF.Module.Flow
 
         public bool IsCurrent
         {
-            get { return !IsComplete && (User == User.CurrentUser || GroupHelper.IsParent(User.CurrentUser, User)); }
+            get { return !IsComplete && User == User.CurrentUser; }
         }
 
         public bool IsUser
         {
-            get { return User == null || (User == User.CurrentUser || GroupHelper.IsParent(User.CurrentUser, User)); }
+            get { return User == null || User == User.CurrentUser; }
         }
 
         public bool IsCheck
@@ -271,11 +271,10 @@ namespace DataWF.Module.Flow
         public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)
         {
             base.OnPropertyChanged(property, column, value);
-            if (Document != null)
+            if (Attached && Document != null)
             {
                 Document.OnReferenceChanged(this);
             }
         }
-
     }
 }

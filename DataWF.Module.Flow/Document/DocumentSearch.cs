@@ -265,18 +265,18 @@ namespace DataWF.Module.Flow
             if (Date != null)
             {
                 if (DateType == DocumentSearchDate.Document)
-                    QDoc.BuildPropertyParam(nameof(Document.DocumentDate), CompareType.Equal, Date);
+                    QDoc.BuildPropertyParam(nameof(Document.DocumentDate), CompareType.Between, Date);
                 else if (DateType == DocumentSearchDate.Create)
-                    QDoc.BuildPropertyParam(nameof(Document.Date), CompareType.Equal, Date);
+                    QDoc.BuildPropertyParam(nameof(Document.Date), CompareType.Between, Date);
                 else if (DateType == DocumentSearchDate.WorkBegin)
-                    QWork.BuildPropertyParam(nameof(DocumentWork.Date), CompareType.Equal, Date);
+                    QWork.BuildPropertyParam(nameof(DocumentWork.Date), CompareType.Between, Date);
                 else if (DateType == DocumentSearchDate.WorkEnd)
-                    QWork.BuildPropertyParam(nameof(DocumentWork.DateComplete), CompareType.Equal, Date);
+                    QWork.BuildPropertyParam(nameof(DocumentWork.DateComplete), CompareType.Between, Date);
                 else if (DateType == DocumentSearchDate.History)
                 {
                     var QLog = new QQuery("", UserLog.DBTable);
                     QLog.Columns.Add(new QColumn(UserLog.DBTable.ParseProperty(nameof(UserLog.DocumentId))));
-                    QLog.BuildPropertyParam(nameof(UserLog.Date), CompareType.Equal, Date);
+                    QLog.BuildPropertyParam(nameof(UserLog.Date), CompareType.Between, Date);
                     QLog.BuildPropertyParam(nameof(UserLog.UserId), CompareType.In, User.IsCompaund ? User.GetSubGroupFull<User>(true) : User.GetParents<User>(true));
                     QDoc.BuildParam(Document.DBTable.PrimaryKey, QLog);
                 }

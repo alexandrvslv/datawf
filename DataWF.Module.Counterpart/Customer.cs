@@ -62,29 +62,21 @@ namespace DataWF.Module.Counterpart
             set { SetValue(value, Table.CodeKey); }
         }
 
-        [DataMember, Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
+        [DataMember, Column("short_name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
+        public string ShortName
+        {
+            get { return GetName(nameof(ShortName)); }
+            set { SetName(nameof(ShortName), value); }
+        }
+
+        [DataMember, Column("name", 1024, Keys = DBColumnKeys.Culture)]
         public override string Name
         {
             get { return GetName(nameof(Name)); }
             set { SetName(nameof(Name), value); }
         }
 
-        [DataMember, Column("login", 200)]
-        [Index("dcustomer_login", true)]
-        public string Login
-        {
-            get { return GetProperty<string>(nameof(Login)); }
-            set { SetProperty(value, nameof(Login)); }
-        }
-
-        [PasswordPropertyText(true)]
-        [DataMember, Column("password", 200, Keys = DBColumnKeys.Password)]
-        public string Password
-        {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
-        }
-
+        [Browsable(false)]
         [DataMember, Column("sign_key", 1024, Keys = DBColumnKeys.Password)]
         public string Key
         {
@@ -96,16 +88,16 @@ namespace DataWF.Module.Counterpart
         [Index("dcustomer_email", true)]
         public string EMail
         {
-            get { return GetProperty<string>(nameof(EMail)); }
-            set { SetProperty(value, nameof(EMail)); }
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
         }
 
         [Browsable(false)]
         [DataMember, Column("country_id")]
         public int? CountryId
         {
-            get { return GetProperty<int?>(nameof(CountryId)); }
-            set { SetProperty(value, nameof(CountryId)); }
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
         }
 
         [Reference("fk_dcustomer_country_id", nameof(CountryId))]
@@ -119,8 +111,8 @@ namespace DataWF.Module.Counterpart
         [DataMember, Column("address_id")]
         public int? AddressId
         {
-            get { return GetValue<int?>(Table.ParseColumn(nameof(AddressId))); }
-            set { this[Table.ParseColumn(nameof(AddressId))] = value; }
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
         }
 
         [Reference("dcustomer_address_id", nameof(AddressId))]
@@ -128,6 +120,21 @@ namespace DataWF.Module.Counterpart
         {
             get { return GetPropertyReference<Address>(nameof(AddressId)); }
             set { SetPropertyReference(value, nameof(AddressId)); }
+        }
+
+        [Browsable(false)]
+        [DataMember, Column("user_id")]
+        public int? UserId
+        {
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
+        }
+
+        [Reference("dcustomer_user_id", nameof(UserId))]
+        public User User
+        {
+            get { return GetPropertyReference<User>(nameof(UserId)); }
+            set { SetPropertyReference(value, nameof(UserId)); }
         }
 
 

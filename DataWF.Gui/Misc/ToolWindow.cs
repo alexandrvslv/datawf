@@ -90,6 +90,7 @@ namespace DataWF.Gui
             Content = vbox;
             Decorated = false;
             Name = "ToolWindow";
+            Resizable = false;
             Resizable = true;
             Size = new Size(360, 320);
             ShowInTaskbar = false;
@@ -217,10 +218,7 @@ namespace DataWF.Gui
             set
             {
                 senderWindow = value;
-                if (value != null)
-                {
-                    TransientFor = value;
-                }
+                TransientFor = value;
             }
         }
 
@@ -346,10 +344,10 @@ namespace DataWF.Gui
         protected override void OnHidden()
         {
             base.OnHidden();
-            Visible = false;
-            moveButton = 0;
             var temp = Owner;
             Owner = null;
+
+            moveButton = 0;
 
             if (temp != null)
             {
@@ -358,14 +356,13 @@ namespace DataWF.Gui
                     if (!byDeactivate)
                         ((ToolWindow)temp).byDeactivate = true;
                 }
-                //owner.Show();
+                temp.Visible = true;
             }
-
-            Hide();
 
             if (timerHide.Enabled)
                 timerHide.Stop();
             byDeactivate = false;
+
         }
 
         protected void OnContentKeyPress(object sender, KeyEventArgs e)

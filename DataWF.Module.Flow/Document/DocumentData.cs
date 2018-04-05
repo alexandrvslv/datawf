@@ -122,7 +122,7 @@ namespace DataWF.Module.Flow
             set { SetPropertyReference(value, nameof(DocumentId)); }
         }
 
-        [DataMember, Column("file_name", 1024)]
+        [DataMember, Column("file_name", 1024, Keys = DBColumnKeys.View)]
         public string FileName
         {
             get { return GetProperty<string>(); }
