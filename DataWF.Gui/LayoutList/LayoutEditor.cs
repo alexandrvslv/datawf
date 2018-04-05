@@ -15,7 +15,7 @@ namespace DataWF.Gui
 
     public class LayoutEditor : Canvas, ILayoutEditor
     {
-        const int w = 16;
+        const int w = 17;
         private static Dictionary<string, object> GlobalCache = new Dictionary<string, object>(StringComparer.Ordinal);
         protected Dictionary<string, object> Cache = new Dictionary<string, object>(StringComparer.Ordinal);
         protected ILayoutCellEditor currentEditor;
@@ -33,14 +33,22 @@ namespace DataWF.Gui
         Rectangle rectd = new Rectangle();
         Rectangle rectg = new Rectangle();
         Rectangle recti = new Rectangle(0, 0, 18D, 18D);
+        private ILayoutCell cell;
 
         public LayoutEditor() : base()
         {
             pstyle = GuiEnvironment.StylesInfo["DropDown"];
-            BackgroundColor = Colors.White;
         }
 
-        public ILayoutCell Cell { get; set; }
+        public ILayoutCell Cell
+        {
+            get { return cell; }
+            set
+            {
+                cell = value;
+                Style = cell?.Style;
+            }
+        }
 
         public bool DropDownAutoHide { get; set; }
 
@@ -86,16 +94,13 @@ namespace DataWF.Gui
             }
         }
 
-        public CellStyle CellStyle
+        public virtual CellStyle Style
         {
             get { return style; }
             set
             {
                 style = value;
-                if (Widget != null)
-                {
-                    Widget.Font = style.Font;
-                }
+                BackgroundColor = style?.BaseColor ?? Colors.Transparent;
             }
         }
 

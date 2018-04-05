@@ -154,11 +154,11 @@ namespace DataWF.Gui
                 {
                     if (sender != editor.Widget && EditorText != text)
                         EditorText = text;
-                    editor.Value = ParseValue(EditorText);
+                    Editor.Value = ParseValue(EditorText);
                 }
                 catch (Exception ex)
                 {
-                    if (editor != null)
+                    if (Editor != null)
                     {
                         GuiService.ToolTip.LableText = "Input error";
                         GuiService.ToolTip.ContentText = ex.Message + "\n" + ex.StackTrace;
@@ -245,11 +245,18 @@ namespace DataWF.Gui
             if (Masked && Format != null)
             {
                 var box = editor.GetCached<TextEntry>();
-                box.MultiLine = MultiLine;
+                box.MultiLine = false;
                 box.KeyPressed += OnTextKeyPressed;
                 box.KeyReleased += OnTextKeyReleased;
                 box.ShowFrame = false;
                 box.ReadOnly = ReadOnly;
+                var style = Editor?.Cell?.Style;
+                if (style != null)
+                {
+                    box.Font = style.Font;
+                    box.BackgroundColor = style.BackBrush.ColorSelect;
+                    //box.
+                }
                 //box.Mask = format;
                 //box.ValidatingType = type;
                 if (!ReadOnly && handleText)
@@ -259,10 +266,17 @@ namespace DataWF.Gui
             else
             {
                 var box = editor.GetCached<TextEntry>();
-                box.MultiLine = MultiLine;
+                box.MultiLine = true;
                 box.KeyPressed += OnTextKeyPressed;
                 box.KeyReleased += OnTextKeyReleased;
                 box.ShowFrame = false;
+                var style = Editor?.Cell?.Style;
+                if (style != null)
+                {
+                    box.Font = style.Font;
+                    box.BackgroundColor = style.BackBrush.ColorSelect;
+                    //box.
+                }
                 if (box.ReadOnly != ReadOnly)
                     box.ReadOnly = ReadOnly;
                 if (!ReadOnly && handleText)
@@ -342,7 +356,7 @@ namespace DataWF.Gui
             }
             if (editor != null)
             {
-                if (TextWidget !=null)
+                if (TextWidget != null)
                 {
                     TextWidget.Changed -= OnTextChanged;
                     TextWidget.KeyPressed -= OnTextKeyPressed;
@@ -351,8 +365,8 @@ namespace DataWF.Gui
                 editor.Image = null;
                 editor.DropDown = null;
                 editor.CurrentEditor = null;
+                editor.ClearValue();
             }
-            editor.ClearValue();
             editor = null;
             EditItem = null;
         }

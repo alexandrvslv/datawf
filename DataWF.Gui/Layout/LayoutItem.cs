@@ -9,7 +9,7 @@ namespace DataWF.Gui
     public class LayoutItem : ILayoutItem, IComparable
     {
         private static readonly double min = 5;
-        protected double height = 20D;
+        protected double height = 22D;
         protected double width = 120D;
         protected int row;
         protected int col;

@@ -59,11 +59,18 @@ namespace DataWF.Gui
             }
         }
 
+        [Browsable(false)]
+        public string StyleName { get; set; } = "Field";
+
         [XmlIgnore]
         public CellStyle Style
         {
-            get { return style; }
-            set { style = value; }
+            get { return style ?? GuiEnvironment.StylesInfo[StyleName]; }
+            set
+            {
+                style = value;
+                StyleName = value?.Name;
+            }
         }
 
         [XmlIgnore]

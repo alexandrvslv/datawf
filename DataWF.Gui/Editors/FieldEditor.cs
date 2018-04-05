@@ -11,11 +11,13 @@ namespace DataWF.Gui
         protected Label label;
         protected ILayoutCellEditor cellEditor;
         private string property;
+        private CellStyle style;
 
         public FieldEditor()
         {
             DropDownExVisible = false;
             Name = "FieldEditor";
+            Cell = this;
         }
 
         public bool MultyLine
@@ -65,7 +67,17 @@ namespace DataWF.Gui
 
         public ILayoutCell Owner { get; set; }
 
-        public CellStyle Style { get; set; }
+        public string StyleName { get; private set; } = "Field";
+
+        public override CellStyle Style
+        {
+            get { return style ?? (style = GuiEnvironment.StylesInfo[StyleName]); }
+            set
+            {
+                style = value;
+                StyleName = value?.Name;
+            }
+        }
 
         public string Format
         {
@@ -203,6 +215,7 @@ namespace DataWF.Gui
         }
 
         protected string Property { get => property; set => property = value; }
+
 
         protected override void Dispose(bool disposing)
         {

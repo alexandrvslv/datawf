@@ -179,7 +179,7 @@ namespace DataWF.Gui
         }
 
         public string Text { get; set; }
-       
+
         //public Point ColumnsLocation
         //{
         //    get { return location; }
@@ -2300,7 +2300,7 @@ namespace DataWF.Gui
             return new LayoutColumn() { Name = name };
         }
 
-        public void CheckMemeberInfo(ILayoutCell cell, Type type)
+        public virtual void CheckMemeberInfo(ILayoutCell cell, Type type)
         {
             var info = TypeHelper.GetMemberInfo(type, cell.Name);
             if (info == null)
@@ -2877,7 +2877,7 @@ namespace DataWF.Gui
             editor.Cell = cell;
             cellEdit.ReadOnly = (cell.ReadOnly || editState == EditListState.ReadOnly) && editState != EditListState.EditAny;
             cellEdit.InitializeEditor(editor, val, item);
-            editor.CellStyle = OnGetCellStyle(item, val, cell);
+            editor.Style = OnGetCellStyle(item, val, cell);
             SetEditorBound();
             editor.Sensitive = true;
             editor.Visible = true;

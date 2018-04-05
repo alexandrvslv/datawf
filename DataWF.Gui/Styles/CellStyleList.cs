@@ -172,9 +172,8 @@ namespace DataWF.Gui
                 new CellStyle()
                 {
                     Name = "DropDown",
-                    Round = 4,
-                    BackBrush = new CellStyleBrush() { ColorHover = Colors.DarkGray },
-                    BorderBrush = new CellStyleBrush() { Color = Colors.SlateGray, ColorHover = Colors.DarkGray }
+                    Round = 4,                    
+                    BaseColor =  Colors.DarkGray
                 },
                 new CellStyle()
                 {
@@ -197,6 +196,7 @@ namespace DataWF.Gui
                 }
             });
 
+            this["Red"].BackBrush.Color = this["Red"].BaseColor;
             this["Value"].BackBrush.Color = this["Value"].BaseColor;
             this["Value"].BorderBrush.Color = this["Value"].BaseColor.WithIncreasedLight(0.1);
             this["Row"].BackBrush.Color = this["Row"].BaseColor;
@@ -206,6 +206,8 @@ namespace DataWF.Gui
             this["GroupBoxHeader"].BackBrush.Type = CellStyleBrushType.Gradient;
             this["Group"].BackBrush.Color = this["Group"].BaseColor;
             this["Group"].BackBrush.Type = CellStyleBrushType.Gradient;
+            this["DropDown"].BackBrush.Color = this["DropDown"].BaseColor;
+            this["DropDown"].BackBrush.Type = CellStyleBrushType.Gradient;
         }
 
         public CellStyle this[string param]
