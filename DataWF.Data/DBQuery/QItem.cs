@@ -25,17 +25,10 @@ using System.Data;
 
 namespace DataWF.Data
 {
-    public class QItem : IDisposable, INotifyPropertyChanged, IComparable
+    public class QItem : IDisposable, IContainerNotifyPropertyChanged, IComparable
     {
-        [NonSerialized]
-        protected IQItemList _list;
-        [NonSerialized()]
-        protected IQuery query;
-        [DefaultValue(-1)]
         protected int order = -1;
-        [DefaultValue(null)]
         protected string text;
-        [DefaultValue(null)]
         protected string alias;
 
         public QItem()
@@ -47,17 +40,23 @@ namespace DataWF.Data
             this.text = name;
         }
 
+        public INotifyListChanged Container { get; set; }
+
+
         [Browsable(false)]
         public IQItemList List
         {
-            get { return _list; }
-            set { _list = value; }
+            get { return Container as IQItemList; }
         }
 
         public int Order
         {
             get { return order; }
-            set { order = value; }
+            set
+            {
+                order = value;
+                OnPropertyChanged(nameof(Order));
+            }
         }
 
         public virtual string Text
@@ -86,22 +85,15 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
-        public IQuery Query
+        public virtual IQuery Query
         {
-            get { return query; }
-            set
-            {
-                if (query != value)
-                {
-                    query = value;
-                }
-            }
+            get { return List?.Query; }
         }
 
         [Browsable(false)]
         public virtual DBTable Table
         {
-            get { return query == null ? null : query.Table; }
+            get { return Query?.Table; }
             set { }
         }
 
@@ -117,7 +109,6 @@ namespace DataWF.Data
 
         public virtual void Dispose()
         {
-            query = null;
         }
 
         #region INotifyPropertyChanged Members
@@ -126,8 +117,9 @@ namespace DataWF.Data
 
         protected void OnPropertyChanged(string pname)
         {
-            if (PropertyChanged != null)
-                PropertyChanged(this, new PropertyChangedEventArgs(pname));
+            var args = new PropertyChangedEventArgs(pname);
+            PropertyChanged?.Invoke(this, args);
+            Container?.OnPropertyChanged(this, args);
         }
 
         #endregion

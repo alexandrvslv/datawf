@@ -22,39 +22,47 @@ using System.Collections;
 
 namespace DataWF.Data
 {
-    public class QEnum : QItem
+    public class QEnum : QItem, IQItemList
     {
-        protected QItemList<QItem> items = new QItemList<QItem>();
+        protected QItemList<QItem> items;
 
         public QEnum()
-        { }
+        {
+            Items = new QItemList<QItem>();
+        }
 
-        public QEnum(IList list, DBColumn column = null)
+        public QEnum(IList list, DBColumn column = null) : this()
         {
             foreach (var item in list)
             {
                 if (item is QItem)
                     items.Add((QItem)item);
                 else
-                    items.Add(new QValue(item, column));
+                    items.Add(QParam.Fabric(item, column));
             }
         }
 
         public QItemList<QItem> Items
         {
             get { return items; }
-            set { items = value; }
+            set
+            {
+                items = value;
+                items.Owner = this;
+            }
         }
+
+        public IQItemList Owner => null;
 
         public override object GetValue(DBItem row = null)
         {
-            return items;
+            return Items;
         }
 
         public override string Format(IDbCommand command = null)
         {
             string rez = string.Empty;
-            foreach (QItem item in items)
+            foreach (QItem item in Items)
             {
                 rez += item.Format(command);
                 if (!items.IsLast(item))
@@ -64,6 +72,11 @@ namespace DataWF.Data
                 rez = "(" + rez + ")";
             //DBService.FormatToSqlText(value)
             return rez;
+        }
+
+        public void Delete(QItem item)
+        {
+            Items.Delete(item);
         }
     }
 }

@@ -55,12 +55,12 @@ namespace DataWF.Data
 
         public override string Format(IDbCommand command = null)
         {
-            string f1 = value1 == null ? string.Empty : value1.Format(command);
-            string f2 = value2 == null ? string.Empty : value2.Format(command);
+            string f1 = value1?.Format(command) ?? string.Empty;
+            string f2 = value2?.Format(command) ?? string.Empty;
             if (f1.Length == 0 || f2.Length == 0)
                 return string.Empty;
 
-            if (Query?.Table?.Schema?.System == DBSystem.MSSql)
+            if (Query?.Table?.Schema?.System == DBSystem.MSSql || Query?.Table?.Schema?.System == DBSystem.Postgres)
                 return f1 + " and " + f2;
             else
                 return string.Format("({0}, {1})", f1, f2);

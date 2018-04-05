@@ -39,19 +39,17 @@ namespace DataWF.Data
         QItemList<QOrder> Orders { get; }
     }
 
-    public class QQuery : QItem, IQuery, IDisposable
+    public class QQuery : QItem, IQuery, IDisposable, IQItemList
     {
         public string CacheQuery;
-        [NonSerialized()]
         protected SelectableList<QParam> allParameters;
-
         protected QItemList<QParam> parameters;
         protected QItemList<QItem> columns;
         protected QItemList<QOrder> orders;
         protected QItemList<QColumn> groups;
         protected QItemList<QTable> tables;
-        [DefaultValue(false)]
-        private bool refmode = false;
+        private bool refmode;
+        private QQuery baseQuery;
 
         public QQuery()
             : base()
@@ -66,9 +64,9 @@ namespace DataWF.Data
             order = 0;
         }
 
-        public QQuery(Type type)
+        public QQuery(Type type) : this()
         {
-            var attribute = (TableAttribute)Attribute.GetCustomAttribute(type, typeof(TableAttribute));
+            var attribute = DBService.GetTableAttribute(type, true);
             if (attribute != null)
                 Table = attribute.Table;
         }
@@ -84,7 +82,7 @@ namespace DataWF.Data
         public QQuery(string query, DBTable table = null, IEnumerable cols = null, QQuery bquery = null)
             : this()
         {
-            Query = bquery;
+            baseQuery = bquery;
             if (bquery != null)
                 order = bquery.order + 1;
             Table = table;
@@ -94,11 +92,13 @@ namespace DataWF.Data
                     BuildColumn(col);
 
         }
+        public IQItemList Owner { get { return baseQuery ?? this; } }
+
+        public override IQuery Query { get { return Owner as IQuery; } }
 
         public QParam Add()
         {
-            QParam param = parameters.Add();
-            return param;
+            return parameters.Add();
         }
 
         public void SimpleFilter(object text)
@@ -442,7 +442,7 @@ namespace DataWF.Data
                                             {
                                                 if (parameter.Comparer.Type == CompareTypes.Between && lg == LogicTypes.And)
                                                 {
-                                                    QBetween between = new QBetween(parameter.ValueRight, null, column == null ? null : column.Column);
+                                                    var between = new QBetween(parameter.ValueRight, null, column?.Column);
                                                     parameter.ValueRight = between;
                                                 }
                                                 else
@@ -535,6 +535,12 @@ namespace DataWF.Data
                                             foreach (var s in split)
                                                 list.Items.Add(new QValue(s.Trim(' ', '\''), column != null ? column.Column : null));
                                             parameter.SetValue(list);
+                                            if (parameter.Comparer.Type == CompareTypes.Between && parameter.ValueRight is QEnum)
+                                            {
+                                                var qEnum = (QEnum)parameter.ValueRight;
+                                                var between = new QBetween(qEnum.Items[0], qEnum.Items[1], column?.Column);
+                                                parameter.ValueRight = between;
+                                            }
                                         }
                                         else
                                         {
@@ -931,7 +937,7 @@ namespace DataWF.Data
 
         public override DBTable Table
         {
-            get { return tables.Count == 0 ? null : tables[0].Table; }
+            get { return tables.FirstOrDefault()?.Table; }
             set
             {
                 if (value != Table)
@@ -1201,6 +1207,11 @@ namespace DataWF.Data
             QColumn column = new QColumn(dBColumn);
 
             columns.Add(column);
+        }
+
+        public void Delete(QItem item)
+        {
+            throw new NotImplementedException();
         }
     }
 

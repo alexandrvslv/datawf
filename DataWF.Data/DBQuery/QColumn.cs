@@ -26,23 +26,19 @@ namespace DataWF.Data
 {
     public class QColumn : QItem
     {
-        [NonSerialized]
-        protected DBColumn _columnn;
-        [NonSerialized]
+        protected DBColumn columnn;
         private object temp;
-        [DefaultValue(null)]
-        protected string column;
-        [DefaultValue(null)]
+        protected string columnName;
         private string prefix;
 
         public QColumn()
         {
         }
 
-        public QColumn(string code)
-            : base(code)
+        public QColumn(string name)
+            : base(name)
         {
-            column = code;
+            columnName = name;
         }
 
         public QColumn(DBColumn column)
@@ -51,17 +47,17 @@ namespace DataWF.Data
             Column = column;
         }
 
-        public string ColumnCode
+        public string ColumnName
         {
-            get { return column; }
+            get { return columnName; }
             set
             {
-                if (column != value)
+                if (columnName != value)
                 {
-                    column = value;
-                    _columnn = null;
+                    columnName = value;
+                    columnn = null;
                 }
-                OnPropertyChanged(nameof(ColumnCode));
+                OnPropertyChanged(nameof(ColumnName));
             }
         }
 
@@ -69,31 +65,31 @@ namespace DataWF.Data
         {
             get
             {
-                if (_columnn == null && column != null)
-                    _columnn = base.Table != null ? base.Table.ParseColumn(column) : DBService.ParseColumn(column);
-                return _columnn;
+                if (columnn == null && columnName != null)
+                    columnn = base.Table?.ParseColumn(columnName) ?? DBService.ParseColumn(columnName);
+                return columnn;
             }
             set
             {
                 if (Column != value)
                 {
-                    ColumnCode = value == null ? null : value.FullName;
-                    Text = value == null ? null : value.Name;
+                    ColumnName = value?.FullName;
+                    Text = value?.Name;
                     //prefix = value.Table.Code;
-                    _columnn = value;
+                    columnn = value;
                 }
             }
         }
 
         public override DBTable Table
         {
-            get { return Column == null ? base.Table : Column.Table; }
+            get { return Column.Table ?? base.Table; }
             set { }
         }
 
         public override void Dispose()
         {
-            _columnn = null;
+            columnn = null;
             base.Dispose();
         }
 

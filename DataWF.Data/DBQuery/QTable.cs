@@ -25,9 +25,7 @@ namespace DataWF.Data
 {
     public class QTable : QItem
     {
-        [NonSerialized()]
         protected DBTable _table;
-        [DefaultValue(null)]
         protected string table = null;
 
 

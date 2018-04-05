@@ -29,35 +29,35 @@ namespace DataWF.Data
     public interface IQItemList
     {
         IQuery Query { get; }
-
+        IQItemList Owner { get; }
         void Delete(QItem item);
     }
 
     public class QItemList<T> : SelectableList<T>, IQItemList where T : QItem, new()
     {
-        [NonSerialized()]
         protected IQuery query;
 
         public QItemList()
         {
             Indexes.Add(new Invoker<T, string>(nameof(QItem.Text), (item) => item.Text));
-            ApplySort(new InvokerComparer(typeof(T), "Order", ListSortDirection.Ascending));
+            ApplySort(new InvokerComparer(typeof(T), nameof(QItem.Order), ListSortDirection.Ascending));
         }
 
         public QItemList(IEnumerable<T> items) : this()
         {
-            AddRange(items);
+            AddRangeInternal(items);
         }
 
-        public QItemList(IQuery exp)
-            : this()
+        public QItemList(IQItemList owner) : this()
         {
-            query = exp;
+            Owner = owner;
         }
+
+        public IQItemList Owner { get; set; }
 
         public IQuery Query
         {
-            get { return query; }
+            get { return Owner.Query; }
         }
 
         public T this[string name]
@@ -76,18 +76,15 @@ namespace DataWF.Data
             {
                 if (item.List != null)
                     item.List.Delete(item);
-                item.Query = query;
                 if (item.Order == -1)
                     item.Order = Count;
-                item.List = this;
-                base.Add(item);
             }
+            base.Add(item);
         }
 
         public virtual T Add()
         {
-            T item = new T();
-            item.Text = "Param" + Count.ToString();
+            T item = new T() { Text = "Param" + Count.ToString() };
             Add(item);
             return item;
         }
