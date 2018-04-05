@@ -40,7 +40,7 @@ namespace DataWF.Gui
 
         public override Widget InitDropDownContent()
         {
-            var selector = editor.GetCacheControl<FontSelector>();
+            var selector = editor.GetCached<FontSelector>();
             selector.FontChanged += OnFontSelect;
             return selector;
         }

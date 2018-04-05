@@ -31,7 +31,7 @@ namespace DataWF.Gui
 
         public override Widget InitEditorContent()
         {
-            var box = editor.GetCacheControl<PasswordEntry>();
+            var box = editor.GetCached<PasswordEntry>();
             box.KeyPressed += OnTextKeyPressed;
             box.KeyReleased += OnTextKeyReleased;
             //box.Readonly = readOnly;

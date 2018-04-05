@@ -102,7 +102,7 @@ namespace DataWF.Gui
 
         public override Widget InitDropDownContent()
         {
-            var list = editor.GetCacheControl<LayoutList>();
+            var list = editor.GetCached<LayoutList>();
             list.AllowCheck = false;
             list.GenerateColumns = false;
             list.GenerateToString = false;
@@ -154,20 +154,20 @@ namespace DataWF.Gui
         {
             if (e.Key == Key.Return || e.Key == Key.NumPadEnter)
             {
-                Value = List.SelectedItem;
+                Value = GetDropDownValue();
                 DropDown.Hide();
             }
         }
 
         protected void ListCellDoubleClick(object sender, LayoutHitTestEventArgs e)
         {
-            Value = List.SelectedItem;
+            Value = GetDropDownValue();
             DropDown.Hide();
         }
 
         private void PListSelectionChanged(object sender, EventArgs e)
         {
-            Value = List.SelectedItem;
+            Value = GetDropDownValue();
         }
 
         public override void FreeEditor()

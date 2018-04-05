@@ -28,7 +28,7 @@ namespace DataWF.Gui
 
         public override Widget InitDropDownContent()
         {
-            var colors = editor.GetCacheControl<ColorSelector>();
+            var colors = editor.GetCached<ColorSelector>();
             colors.Sensitive = !ReadOnly;
             if (!ReadOnly && handleText)
                 colors.ColorChanged += OnColorChanged;

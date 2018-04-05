@@ -6,7 +6,7 @@ namespace DataWF.Gui
     {
         public override Widget InitDropDownContent()
         {
-            var list = editor.GetCacheControl<ListEditor>();
+            var list = editor.GetCached<ListEditor>();
             if (list.DataSource != listSource)
             {                
                 list.DataSource = listSource;                

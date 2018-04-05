@@ -86,7 +86,7 @@ namespace DataWF.Data.Gui
 
         public virtual DataTree GetToolTarget()
         {
-            return editor.GetCacheControl<DataTree>();
+            return editor.GetCached<DataTree>();
         }
 
         public override Widget InitDropDownContent()
@@ -143,24 +143,18 @@ namespace DataWF.Data.Gui
         {
             if (e.Key == Key.NumPadEnter || e.Key == Key.Return)
             {
-                Node node = ((LayoutList)sender).SelectedItem as Node;
-                Value = node.Tag;
+                Value = DataTree.SelectedDBItem;
                 DropDown.Hide();
             }
         }
 
         protected virtual void HandleAfterSelect(object sender, EventArgs e)
         {
-            if (sender is DataTree &&
-                ((DataTree)sender).SelectedNode != null &&
-                ((DataTree)sender).SelectedNode.Tag != null &&
-                (((DataTree)sender).SelectedNode.Tag.GetType() == DataType || DataType == null) &&
-                editor != null)
+            if (editor != null
+                && DataTree.SelectedDBItem != null
+                && (DataTree.SelectedDBItem.GetType() == DataType || DataType == null))
             {
-                editor.Value = ParseValue(((DataTree)sender).SelectedNode.Tag);
-                handleText = false;
-                EditorText = FormatValue(editor.Value) as string;
-                handleText = true;
+                Value = ParseValue(DataTree.SelectedDBItem);                
             }
         }
 

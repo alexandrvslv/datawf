@@ -67,7 +67,7 @@ namespace DataWF.Gui
 
         public override Widget InitDropDownContent()
         {
-            var tree = editor.GetCacheControl<NetTree>();
+            var tree = editor.GetCached<NetTree>();
 
             tree.Localize();
             foreach (Node n in tree.Nodes.GetTopLevel())

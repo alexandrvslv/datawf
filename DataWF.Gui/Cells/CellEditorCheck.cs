@@ -92,7 +92,7 @@ namespace DataWF.Gui
 
         public override Widget InitEditorContent()
         {
-            var box = editor.GetCacheControl<CheckBox>();
+            var box = editor.GetCached<CheckBox>();
             box.AllowMixed = _treeState;
             if (!ReadOnly)
             {

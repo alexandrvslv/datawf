@@ -222,7 +222,7 @@ namespace DataWF.Gui
 
         public virtual void InitDropDown()
         {
-            var tool = editor.GetCacheControl<ToolWindow>();
+            var tool = editor.GetCached<ToolWindow>();
             tool.HeaderVisible = headerVisible;
             tool.Label.Text = string.IsNullOrEmpty(Header) ? editor?.Cell?.Text : Header;
             tool.ButtonAcceptClick += OnDropDownAccept;
@@ -232,7 +232,7 @@ namespace DataWF.Gui
 
         public virtual Widget InitDropDownContent()
         {
-            var reachText = editor.GetCacheControl<RichTextView>();
+            var reachText = editor.GetCached<RichTextView>();
             if (reachText.ReadOnly != ReadOnly)
             {
                 reachText.ReadOnly = ReadOnly;
@@ -244,7 +244,7 @@ namespace DataWF.Gui
         {
             if (Masked && Format != null)
             {
-                var box = editor.GetCacheControl<TextEntry>();
+                var box = editor.GetCached<TextEntry>();
                 box.MultiLine = MultiLine;
                 box.KeyPressed += OnTextKeyPressed;
                 box.KeyReleased += OnTextKeyReleased;
@@ -258,7 +258,7 @@ namespace DataWF.Gui
             }
             else
             {
-                var box = editor.GetCacheControl<TextEntry>();
+                var box = editor.GetCached<TextEntry>();
                 box.MultiLine = MultiLine;
                 box.KeyPressed += OnTextKeyPressed;
                 box.KeyReleased += OnTextKeyReleased;
