@@ -16,8 +16,8 @@ namespace DataWF.Common
             Indexes.Add(new Invoker<LocaleCategory, string>(nameof(LocaleCategory.Name), item => item.Name));
             Cultures.Add(CultureInfo.GetCultureInfo("ru-RU"));
             Cultures.Add(CultureInfo.GetCultureInfo("en-US"));
-            try { Cultures.Add(CultureInfo.GetCultureInfo("kk-KZ")); }
-            catch (Exception ex) { Helper.OnException(ex); }
+            //try { Cultures.Add(CultureInfo.GetCultureInfo("kk-KZ")); }
+            //catch (Exception ex) { Helper.OnException(ex); }
         }
 
         public CultureInfo Culture
@@ -26,7 +26,6 @@ namespace DataWF.Common
             set { culture = value; }
         }
 
-        [Browsable(false)]
         public List<CultureInfo> Cultures { get; set; } = new List<CultureInfo>();
 
         public LocaleImageList Images { get; set; } = new LocaleImageList();

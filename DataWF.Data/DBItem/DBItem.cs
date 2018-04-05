@@ -488,9 +488,9 @@ namespace DataWF.Data
         public IEnumerable<DBItem> GetReferencing(QQuery query, DBLoadParam param)
         {
             if ((param & DBLoadParam.Load) == DBLoadParam.Load)
-                return table.LoadItems(query);
+                return query.Table.LoadItems(query);
             else
-                return table.SelectItems(query);
+                return query.Table.SelectItems(query);
         }
 
         public IEnumerable GetReferencing(DBForeignKey relation, DBLoadParam param)
@@ -668,7 +668,7 @@ namespace DataWF.Data
 
                 if (table.AccessKey != null)
                 {
-                    access = GetCache(table.AccessKey) as AccessValue;                    
+                    access = GetCache(table.AccessKey) as AccessValue;
                     if (access == null)
                     {
                         var accessData = GetValue<byte[]>(table.AccessKey);
@@ -831,7 +831,6 @@ namespace DataWF.Data
             }
         }
 
-
         public object this[DBColumn column]
         {
             get
@@ -854,6 +853,7 @@ namespace DataWF.Data
                          value as DBItem);
             }
         }
+
         [Browsable(false)]
         public DBItemState State
         {
@@ -1026,17 +1026,29 @@ namespace DataWF.Data
             if (!Attached)
             {
                 Table.Add(this);
-                OnPropertyChanged(nameof(Attached), null);
             }
         }
 
-        internal void Detach()
+        public void Detach()
         {
             if (Attached)
             {
                 Table.Remove(this);
-                OnPropertyChanged(nameof(Attached), null);
             }
+        }
+
+        public virtual void OnAttached()
+        {
+            State |= DBItemState.Attached;
+            OnPropertyChanged(nameof(Attached), null);
+            DBService.OnAdded(this);
+        }
+
+        public virtual void OnDetached()
+        {
+            State &= ~DBItemState.Attached;
+            OnPropertyChanged(nameof(Attached), null);
+            DBService.OnRemoved(this);
         }
 
         public virtual bool OnUpdating(DBItemEventArgs arg)
@@ -1044,9 +1056,9 @@ namespace DataWF.Data
             return Table.OnUpdating(arg);
         }
 
-        public virtual bool OnUpdated(DBItemEventArgs arg)
+        public virtual void OnUpdated(DBItemEventArgs arg)
         {
-            return Table.OnUpdated(arg);
+            Table.OnUpdated(arg);
         }
 
         #region INotifyPropertyChanged Members
@@ -1073,7 +1085,7 @@ namespace DataWF.Data
                 RemoveTag();
 
             if (Attached)
-                table.OnListChanged(this, property, ListChangedType.ItemChanged);
+                table.OnItemChanged(this, property, ListChangedType.ItemChanged);
             // raise events
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }

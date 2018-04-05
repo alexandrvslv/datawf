@@ -126,7 +126,7 @@ namespace DataWF.Data
         private void OnMainPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (Attached)
-                table.OnListChanged(this, e.PropertyName, ListChangedType.ItemChanged);
+                table.OnItemChanged(this, e.PropertyName, ListChangedType.ItemChanged);
             // raise events
             //TODO PropertyChanged?.Invoke(this, e);
         }

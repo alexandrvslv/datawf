@@ -395,7 +395,7 @@ namespace DataWF.Data
                     if (value)
                         Keys |= DBColumnKeys.Reference;
                     else
-                        Keys ^= ~DBColumnKeys.Reference;
+                        Keys &= ~DBColumnKeys.Reference;
                     OnPropertyChanged(nameof(IsReference), false);
                 }
             }
