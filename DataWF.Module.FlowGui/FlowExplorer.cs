@@ -48,7 +48,7 @@ namespace DataWF.Module.FlowGui
                 new ToolItem(ToolMainRemoveClick) { Name = "Remove", ForeColor = Colors.DarkRed, Glyph = GlyphType.MinusCircle },
                 new ToolItem(ToolMainCopyClick) { Name = "Copy", Glyph = GlyphType.CopyAlias },
                 new ToolDropDown { Name = "Tools", DropDown = contextTools, Glyph = GlyphType.Wrench },
-                new ToolSearchEntry(ToolFilterTextChanged) { Name = "toolFilterText", FillWidth = true })
+                new ToolSearchEntry() { Name = "FilterText", FillWidth = true })
             { Name = "FlowExplorer" };
 
             se = new ListEditor();
@@ -67,7 +67,13 @@ namespace DataWF.Module.FlowGui
             if (StageParam.DBTable?.Access.View ?? false) keys |= FlowTreeKeys.StageParam;
             if (Stage.DBTable?.Access.View ?? false) keys |= FlowTreeKeys.Stage;
             if (Work.DBTable?.Access.View ?? false) keys |= FlowTreeKeys.Work;
-            tree = new FlowTree { Status = DBStatus.Empty, FlowKeys = keys, UserKeys = userKeys };
+            tree = new FlowTree
+            {
+                Status = DBStatus.Empty,
+                FlowKeys = keys,
+                UserKeys = userKeys,
+                FilterEntry = ((ToolSearchEntry)barMain["FilterText"]).Entry
+            };
             tree.ListInfo.HeaderVisible = true;
             tree.ListInfo.HeaderWidth = 35;
             tree.SelectionChanged += TreeAfterSelect;
@@ -88,19 +94,6 @@ namespace DataWF.Module.FlowGui
                 ((DBItem)se.DataSource).Save();
 
             }
-        }
-
-        private void ToolFilterTextChanged(object sender, EventArgs e)
-        {
-            var entry = (TextEntry)sender;
-            tree.Nodes.DefaultView.FilterQuery.Parameters.Clear();
-
-            if (entry.Text.Length != 0)
-                tree.Nodes.DefaultView.FilterQuery.Parameters.Add(typeof(Node), LogicType.And, "FullPath", CompareType.Like, entry.Text);
-            else
-                tree.Nodes.DefaultView.FilterQuery.Parameters.Add(typeof(Node), LogicType.And, "IsExpanded", CompareType.Equal, true);
-            tree.Nodes.DefaultView.UpdateFilter();
-
         }
 
         private void ToolGenerateDBClick(object sender, EventArgs e)

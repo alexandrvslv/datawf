@@ -44,7 +44,7 @@ namespace DataWF.Module.FlowGui
 
         public DocumentWorker()
         {
-            toolFilter = new ToolSearchEntry(ToolFilterTextBoxTextChanged) { Name = "Filter", FillWidth = true };
+            toolFilter = new ToolSearchEntry() { Name = "Filter", FillWidth = true };
             toolLoad = new ToolItem(ToolLoadOnClick) { Name = "Load", ForeColor = Colors.DarkBlue };
 
             toolCreate = new ToolSplit { Name = "Create", ForeColor = Colors.DarkGreen };
@@ -86,7 +86,7 @@ namespace DataWF.Module.FlowGui
             var nodeSearch = new TableItemNode()
             {
                 Name = "Search",
-                Tag =  new DocumentSearch() { }
+                Tag = new DocumentSearch() { }
             };
             GuiService.Localize(nodeSearch, "DocumentWorker", nodeSearch.Name);
 
@@ -95,11 +95,19 @@ namespace DataWF.Module.FlowGui
                 AllowCellSize = false,
                 AutoToStringFill = false,
                 AutoToStringSort = false,
-                FlowKeys = FlowTreeKeys.Template | FlowTreeKeys.Stage | FlowTreeKeys.Work
+                FlowKeys = FlowTreeKeys.Template | FlowTreeKeys.Stage | FlowTreeKeys.Work,
+                UserKeys = UserTreeKeys.Department | UserTreeKeys.User,
+                FilterEntry = toolFilter.Entry
             };
             tree.SelectionChanged += TreeAfterSelect;
             tree.ListInfo.HotTrackingCell = false;
-            tree.ListInfo.Columns.Add(new LayoutColumn() { Name = "Count", Width = 35, Style = GuiEnvironment.StylesInfo["CellFar"] });
+            tree.ListInfo.Columns.Add(new LayoutColumn()
+            {
+                Name = nameof(TableItemNode.Count),
+                Width = 35,
+                Style = GuiEnvironment.StylesInfo["CellFar"],
+                Invoker = new Invoker<TableItemNode, int>(nameof(TableItemNode.Count), p => p.Count)
+            });
             tree.Nodes.Add(nodeSend);
             tree.Nodes.Add(nodeRecent);
             tree.Nodes.Add(nodeSearch);
@@ -192,7 +200,7 @@ namespace DataWF.Module.FlowGui
         private void WorksListChanged(object sender, ListChangedEventArgs e)
         {
             DocumentWork work = e.NewIndex >= 0 ? works[e.NewIndex] : null;
-            Document document = work != null ? work.Document : null;
+            Document document = work?.Document;
             int di = 0;
             if (e.ListChangedType == ListChangedType.ItemAdded)
                 di = 1;
@@ -205,14 +213,14 @@ namespace DataWF.Module.FlowGui
 
                 if (di != 0)
                 {
-                    AddNode(tree.Find(document.Template), di);
-                    AddNode(tree.Find(work.User), di);
-                    AddNode(tree.Find(work.Stage), di);
+                    IncrementNode(tree.Find(document.Template), di);
+                    IncrementNode(tree.Find(work.User), di);
+                    IncrementNode(tree.Find(work.Stage), di);
                 }
             }
         }
 
-        private void AddNode(TableItemNode node, int d)
+        private void IncrementNode(TableItemNode node, int d)
         {
             while (node != null)
             {
@@ -230,7 +238,7 @@ namespace DataWF.Module.FlowGui
             if (doc != null)
             {
                 var work = doc.WorkCurrent;
-                if (doc != null && work != null && work.DateRead == DateTime.MinValue)
+                if (work != null && work.DateRead == DateTime.MinValue)
                 {
                     stage = work.Stage;
                     template = doc.Template;
@@ -288,7 +296,7 @@ namespace DataWF.Module.FlowGui
         {
             if (tree.SelectedNode == null)
                 return;
-            var filter = BuildFilter(tree.SelectedNode.Tag?? tree.SelectedDBItem);
+            var filter = BuildFilter(tree.SelectedNode.Tag ?? tree.SelectedDBItem);
             GuiService.Main.DockPanel.Put(dockList, DockType.Content);
             var template = tree.SelectedDBItem as Template;
             toolCreate.Sensitive = template != null && !template.IsCompaund && template.Access.Create;
@@ -462,7 +470,7 @@ namespace DataWF.Module.FlowGui
                 form.Show(Worker, new Point(1, 1));
             }
         }
-        
+
 
         internal static ToolMenuItem InitWork(DocumentWork d, EventHandler clickHandler)
         {
@@ -491,18 +499,6 @@ namespace DataWF.Module.FlowGui
         private void TreeNodeMouseClick(object sender, EventArgs e)
         {
             this.TreeAfterSelect(sender, e);
-        }
-
-        private void ToolFilterTextBoxTextChanged(object sender, EventArgs e)
-        {
-            tree.Nodes.DefaultView.FilterQuery.Parameters.Clear();
-
-            if (toolFilter.Text.Length != 0)
-                tree.Nodes.DefaultView.FilterQuery.Parameters.Add(typeof(Node), LogicType.And, nameof(Node.FullPath), CompareType.Like, toolFilter.Text);
-            else
-                tree.Nodes.DefaultView.FilterQuery.Parameters.Add(typeof(Node), LogicType.And, nameof(Node.IsExpanded), CompareType.Equal, true);
-            tree.Nodes.DefaultView.UpdateFilter();
-            tree.Nodes.DefaultView.UpdateFilter();
         }
 
         private void ToolCreateButtonClick(object sender, EventArgs e)

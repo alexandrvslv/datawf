@@ -79,7 +79,7 @@ namespace DataWF.Data.Gui
                 new ToolItem(ToolRemoveClick) { Name = "Remove", ForeColor = Colors.DarkRed, Glyph = GlyphType.MinusCircle },
                 new ToolItem(ToolCopyClick) { Name = "Copy", Glyph = GlyphType.CopyAlias },
                 new ToolDropDown { Name = "Tools", DropDown = contextTools, Glyph = GlyphType.Wrench },
-                new ToolSearchEntry())
+                new ToolSearchEntry() { Name = "FilterText" })
             { Name = "Bar" };
 
             barChanges = new Toolsbar(
@@ -104,7 +104,8 @@ namespace DataWF.Data.Gui
                 DataTreeKeys.ColumnGroup | DataTreeKeys.Column |
                 DataTreeKeys.Index | DataTreeKeys.Constraint | DataTreeKeys.Foreign |
                 DataTreeKeys.Procedure | DataTreeKeys.ProcedureParam | DataTreeKeys.Sequence,
-                Menu = contextMain
+                Menu = contextMain,
+                FilterEntry = ((ToolSearchEntry)barMain["FilterText"]).Entry
             };
             dataTree.CellMouseClick += DataTreeOnNodeMouseClick;
             dataTree.CellDoubleClick += DataTreeOnDoubleClick;

@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.ComponentModel;
 using System.Collections.Generic;
+using Xwt;
 
 namespace DataWF.Data.Gui
 {
@@ -45,7 +46,9 @@ namespace DataWF.Data.Gui
     {
         private ListChangedEventHandler schemaChanged;
         private DBSchemaItem datafilter = null;
-        DataTreeKeys dataKeys = DataTreeKeys.None;
+        private DataTreeKeys dataKeys = DataTreeKeys.None;
+        private TextEntry filterEntry;
+
         //TODO
         //private bool checkDelete = false;
 
@@ -166,7 +169,7 @@ namespace DataWF.Data.Gui
         {
             get { return (dataKeys & DataTreeKeys.Procedure) == DataTreeKeys.Procedure; }
         }
-        
+
         [DefaultValue(false)]
         public bool ShowProcedureParam
         {
@@ -311,7 +314,7 @@ namespace DataWF.Data.Gui
                 schema.Procedures.ListChanged += schemaChanged;
 
             InitList(schema.TableGroups.GetTopParents(), node, ShowTableGroup);
-            
+
 
             foreach (var table in schema.Tables)
             {
@@ -338,7 +341,7 @@ namespace DataWF.Data.Gui
                 {
                     if (subNode == null)
                     {
-                        subNode = new SchemaItemNode() { Name = node.Name + nodeName, Text = nodeName };                        
+                        subNode = new SchemaItemNode() { Name = node.Name + nodeName, Text = nodeName };
                     }
                     subNode.Group = node;
                     node = subNode;
@@ -520,6 +523,39 @@ namespace DataWF.Data.Gui
                 str = obj.GetType().FullName + obj.GetHashCode();
 
             return str;
+        }
+
+        public TextEntry FilterEntry
+        {
+            get { return filterEntry; }
+            set
+            {
+                if (filterEntry != null)
+                    filterEntry.Changed -= FilterEntryChanged;
+
+                filterEntry = value;
+
+                if (filterEntry != null)
+                    filterEntry.Changed += FilterEntryChanged;
+            }
+        }
+
+        private void FilterEntryChanged(object sender, EventArgs e)
+        {
+            var entry = (TextEntry)sender;
+            IFilterable list = listSource as IFilterable;
+            list.FilterQuery.Parameters.Clear();
+
+            if (entry.Text?.Length != 0)
+            {
+                TreeMode = false;
+                list.FilterQuery.Parameters.Add(typeof(Node), LogicType.And, nameof(Node.FullPath), CompareType.Like, entry.Text);
+            }
+            else
+            {
+                TreeMode = true;
+            }
+            list.UpdateFilter();
         }
     }
 }
