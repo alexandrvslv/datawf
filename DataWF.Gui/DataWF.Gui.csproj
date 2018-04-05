@@ -45,9 +45,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Xwt" Version="0.2.100" />
+    <ProjectReference Include="..\External\xwt\Xwt\Xwt.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="fontawesome-webfont.ttf">

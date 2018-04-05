@@ -53,9 +53,9 @@
     <ProjectReference Include="..\DataWF.Gui\DataWF.Gui.csproj" />
     <ProjectReference Include="..\External\Mono.Texteditor\Mono.TextEditor.csproj" />
     <ProjectReference Include="..\DataWF.Odf\DataWF.Odf.csproj" />
+    <ProjectReference Include="..\External\xwt\Xwt\Xwt.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Xwt" Version="0.2.100" />
     <PackageReference Include="DocumentFormat.OpenXml" Version="2.8.1" />
     <PackageReference Include="ICSharpCode.NRefactory" Version="5.5.1" />
   </ItemGroup>  

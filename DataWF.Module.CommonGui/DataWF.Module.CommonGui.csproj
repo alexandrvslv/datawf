@@ -47,6 +47,7 @@
     <ProjectReference Include="..\DataWF.Data.Gui\DataWF.Data.Gui.csproj" />
     <ProjectReference Include="..\DataWF.Gui\DataWF.Gui.csproj" />
     <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj" />
+    <ProjectReference Include="..\External\xwt\Xwt\Xwt.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Xwt" Version="0.2.100" />

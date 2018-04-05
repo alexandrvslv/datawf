@@ -27,8 +27,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\DataWF.Odf\DataWF.Odf.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Xwt" Version="0.2.100" />
+    <ProjectReference Include="..\External\xwt\Xwt\Xwt.csproj" />
   </ItemGroup>
 </Project>

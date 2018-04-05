@@ -43,9 +43,10 @@
     <ProjectReference Include="..\DataWF.Module.MessangerGui\DataWF.Module.MessangerGui.csproj" />
     <ProjectReference Include="..\DataWF.Module.Flow\DataWF.Module.Flow.csproj" />
     <ProjectReference Include="..\DataWF.Module.FlowGui\DataWF.Module.FlowGui.csproj" />
+    <ProjectReference Include="..\External\xwt\Xwt.WPF\Xwt.WPF.csproj" />
+    <ProjectReference Include="..\External\xwt\Xwt\Xwt.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Xwt" Version="0.2.100" />
-    <PackageReference Include="Xwt.Wpf" Version="0.2.100" />
   </ItemGroup>
 </Project>

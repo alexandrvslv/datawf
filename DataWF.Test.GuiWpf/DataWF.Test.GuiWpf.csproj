@@ -30,10 +30,11 @@
     <ProjectReference Include="..\DataWF.Gui\DataWF.Gui.csproj" />
     <ProjectReference Include="..\DataWF.OdfGui\DataWF.OdfGui.csproj" />
     <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj" />
+    <ProjectReference Include="..\External\xwt\Xwt.WPF\Xwt.WPF.csproj" />
+    <ProjectReference Include="..\External\xwt\Xwt\Xwt.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Xwt" Version="0.2.100" />
-    <PackageReference Include="Xwt.Wpf" Version="0.2.100" />
   </ItemGroup>
    <Import Project="..\DataWF.Test.GuiShare\DataWF.Test.GuiShare.projitems" Label="Shared" />
 </Project>
