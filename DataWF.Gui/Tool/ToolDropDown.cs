@@ -51,6 +51,12 @@ namespace DataWF.Gui
             get { return menu?.Items.Count > 0; }
         }
 
+        public event EventHandler<ToolItemEventArgs> ItemClick
+        {
+            add { DropDownItems.Bar.ItemClick += value; }
+            remove { DropDownItems.Bar.ItemClick -= value; }
+        }
+
         public override void Localize()
         {
             base.Localize();
