@@ -57,7 +57,7 @@ namespace DataWF.Gui
 				GenerateToString = false,
 				EditMode = EditModes.ByClick,
 				ListInfo = new LayoutListInfo(
-					new LayoutColumn { Name = nameof(LayoutColumn.Name) },
+					new LayoutColumn { Name = nameof(LayoutColumn.ToString) },
 					new LayoutColumn { Name = nameof(LayoutColumn.Text), FillWidth = true },
 					new LayoutColumn { Name = nameof(LayoutColumn.Visible), Width = 50 },
 					new LayoutColumn { Name = nameof(LayoutColumn.Format) })
@@ -69,7 +69,7 @@ namespace DataWF.Gui
 				GenerateToString = false,
 				EditMode = EditModes.ByClick,
 				ListInfo = new LayoutListInfo(
-					new LayoutColumn { Name = nameof(LayoutField.Name) },
+					new LayoutColumn { Name = nameof(LayoutField.ToString) },
 					new LayoutColumn { Name = nameof(LayoutField.Text), FillWidth = true },
 					new LayoutColumn { Name = nameof(LayoutField.Visible), Width = 50 },
 					new LayoutColumn { Name = nameof(LayoutField.Format) })

@@ -14,7 +14,7 @@ using System.Diagnostics;
 namespace DataWF.Gui
 {
     [ToolboxItem(true)]
-    public partial class LayoutList : ScrollView, ILocalizable, ILayoutList
+    public partial class LayoutList : VBox, ILocalizable, ILayoutList
     {
         protected static LayoutMenu defMenu;
         protected LayoutListKeys keys = LayoutListKeys.AllowFilter |
@@ -43,7 +43,7 @@ namespace DataWF.Gui
         private bool post = false;
         protected Type listItemType;
         protected Type fieldType;
-        protected LayoutFilterWindow filterView;
+        protected LayoutFilterView filterView;
         protected IList listBackup;
         protected IList listSource;
         protected object fieldSource;
@@ -55,6 +55,7 @@ namespace DataWF.Gui
         protected LayoutFieldInfo fieldInfo;
         protected LayoutNodeInfo nodeInfo;
         protected LayoutSelection selection;
+        private ScrollView scroll;
         protected LayoutGroupList groups;
         protected bool _gridMode = false;
         protected bool checkView = true;
@@ -161,7 +162,9 @@ namespace DataWF.Gui
             canvas.AddChild(editor, 0, 0);
             canvas.BackgroundColor = GuiEnvironment.StylesInfo["List"].BaseColor;
 
-            Content = canvas;
+            scroll = new ScrollView() { Content = canvas };
+
+            PackStart(scroll, true, true);
 
             groups = new LayoutGroupList(this);
             Selection = new LayoutSelection();
@@ -287,9 +290,8 @@ namespace DataWF.Gui
         #region override
 
 
-        protected internal virtual void ButtonPress(ButtonEventArgs e)
+        protected internal virtual void CanvasButtonPress(ButtonEventArgs e)
         {
-            base.OnButtonPressed(e);
             if (!HasFocus)
                 SetFocus();
             _cacheButton = e.Button;
@@ -339,9 +341,8 @@ namespace DataWF.Gui
 
         }
 
-        protected override void OnButtonReleased(ButtonEventArgs e)
+        protected internal virtual void CanvasButtonReleased(ButtonEventArgs e)
         {
-            base.OnButtonReleased(e);
             _cacheButton = 0;
             HitTest(e.X, e.Y, e.Button,
                 Keyboard.CurrentModifiers == ModifierKeys.Control,
@@ -402,9 +403,8 @@ namespace DataWF.Gui
             }
         }
 
-        protected override void OnMouseMoved(MouseMovedEventArgs e)
+        protected internal virtual void CanvasMouseMoved(MouseMovedEventArgs e)
         {
-            base.OnMouseMoved(e);
             HitTest(e.X, e.Y, _cacheButton,
                                          Keyboard.CurrentModifiers == ModifierKeys.Control,
                                          Keyboard.CurrentModifiers == ModifierKeys.Shift);
@@ -543,9 +543,8 @@ namespace DataWF.Gui
             }
         }
 
-        protected override void OnMouseExited(EventArgs e)
+        protected internal virtual void CanvasMouseExited(EventArgs e)
         {
-            base.OnMouseExited(e);
             if (selection.HoverColumn != null)
                 OnColumnMouseLeave(EventArgs.Empty);
 
@@ -554,13 +553,12 @@ namespace DataWF.Gui
             //OnToolTipCancel(EventArgs.Empty);
         }
 
-        protected override void OnMouseScrolled(MouseScrolledEventArgs e)
+        protected internal virtual void CanvasMouseScrolled(MouseScrolledEventArgs e)
         {
-            base.OnMouseScrolled(e);
             canvas.QueueDraw();
         }
 
-        protected override void OnLostFocus(EventArgs e)
+        protected internal virtual void CanvasLostFocus(EventArgs e)
         {
             if (selection.HoverColumn != null)
                 OnColumnMouseLeave(e);
@@ -574,9 +572,8 @@ namespace DataWF.Gui
             base.OnLostFocus(e);
         }
 
-        protected override void OnKeyPressed(KeyEventArgs e)
+        protected internal virtual void CanvasKeyPressed(KeyEventArgs e)
         {
-            base.OnKeyPressed(e);
             if (editor.Visible)
             {
                 if (e.Key == Key.Escape)
@@ -1818,7 +1815,7 @@ namespace DataWF.Gui
                     var item = selection.Add(value, listSource.IndexOf(value));
                     selection.SetCurrent(item);
 
-                    if (base.VerticalScrollControl.UpperValue > 0)
+                    if (scroll.VerticalScrollControl.UpperValue > 0)
                         VScrollToItem(item.Item, item.Index);
                 }
             }
@@ -1843,7 +1840,7 @@ namespace DataWF.Gui
                 if (editor.Sensitive)
                     OnCellEditEnd(new CancelEventArgs());
 
-                if (base.HorizontalScrollControl.UpperValue > 0 && value != null)
+                if (scroll.HorizontalScrollControl.UpperValue > 0 && value != null)
                     HScrollToItem(value);
 
                 if (selection.CurrentRow != null)
@@ -3410,13 +3407,13 @@ namespace DataWF.Gui
         protected internal virtual void OnFilterChange()
         {
             var filtered = ListSource as IFilterable;
-            if (TreeMode || filterView?.FiltersCount > 0)
+            if (TreeMode || filterView?.Filters.Count > 0)
             {
                 if (filtered == null)
                 {
                     filtered = SetFilteredCollection();
                 }
-                if (filterView?.FiltersCount > 0)
+                if (filterView?.Filters.Count > 0)
                 {
                     ShowFilter();
                 }
@@ -3425,7 +3422,7 @@ namespace DataWF.Gui
                 if (TreeMode)
                     filtered.FilterQuery.Parameters.Add(QueryParameter.CreateTreeFilter(listItemType));
                 if (filterView != null)
-                    filtered.FilterQuery.Parameters.AddRange(filterView.FilterView.Filters.GetParameters());
+                    filtered.FilterQuery.Parameters.AddRange(filterView.Filters.GetParameters());
                 filtered.UpdateFilter();
             }
             else
@@ -4187,7 +4184,7 @@ namespace DataWF.Gui
             }
             else
             {
-                var parameter = filterView?.FilterView.Filters.SelectOne(nameof(LayoutFilter.Name), CompareType.Equal, e.Column.Name);
+                var parameter = filterView?.Filters.SelectOne(nameof(LayoutFilter.Name), CompareType.Equal, e.Column.Name);
                 if (parameter != null)
                 {
                     bounds.ColumnFilter = GetColumnFilterBound(e.Bound);
@@ -4456,21 +4453,31 @@ namespace DataWF.Gui
 
         public virtual void ClearFilter()
         {
-            filterView?.FilterView.Clear();
+            filterView?.Clear();
         }
 
         protected internal virtual void RemoveFilter(LayoutColumn column)
         {
-            filterView.FilterView.Remove(column);
+            filterView.Remove(column);
         }
 
         public void ShowFilter()
         {
             if (filterView == null)
             {
-                filterView = new LayoutFilterWindow(this);
+                filterView = new LayoutFilterView(this);
             }
-            filterView.Show(this, new Point(listInfo.HeaderWidth, bounds.Area.Height - 60));
+            if (filterView.Parent == null)
+            {
+                Remove(scroll);
+                var vpaned = new VPaned();
+                vpaned.Panel1.Content = filterView;
+                vpaned.Panel1.Resize = false;
+                vpaned.Panel1.Shrink = false;
+                vpaned.Panel2.Content = scroll;
+                PackStart(vpaned, true, true);
+                //filterView.Show(this, new Point(listInfo.HeaderWidth, bounds.Area.Height - 60));
+            }
         }
 
         public void HideFilter()
@@ -4479,13 +4486,18 @@ namespace DataWF.Gui
             {
                 return;
             }
-            filterView.Hide();
+            if (filterView.Parent != null)
+            {
+                ((VPaned)filterView.Parent).Remove(filterView);
+                ((VPaned)filterView.Parent).Remove(scroll);
+                PackStart(scroll, true, true);
+            }
         }
 
         protected internal void AddFilter(LayoutColumn column, object value = null)
         {
             ShowFilter();
-            filterView.FilterView.Add(column, value);
+            filterView.Add(column, value);
         }
 
         protected internal void ColumnSorting(LayoutColumn column)

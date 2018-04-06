@@ -147,7 +147,7 @@ namespace DataWF.Data.Gui
         public void BuildFilterByColumns(QQuery Expression)
         {
             Expression.Parameters.Clear();
-            foreach (var filter in filterView?.FilterView.Filters)
+            foreach (var filter in filterView?.Filters)
             {
                 var pcolumn = filter.Column;
                 if (!pcolumn.Visible || filter.Value == null || filter.Value == DBNull.Value || filter.Value.ToString().Length == 0)

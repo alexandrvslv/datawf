@@ -177,6 +177,11 @@ namespace DataWF.Gui
 				node.Expand = true;
 			}
 		}
-	}
+
+        public IEnumerable<T> GetChecked()
+        {
+            return Select(nameof(Node.Check), CompareType.Equal, true);
+        }
+    }
 }
 

@@ -14,6 +14,7 @@ namespace DataWF.Gui
         {
             Target = new LayoutFilterView(list);
             HeaderVisible = false;
+            Size = new Size(400, 300);
         }
 
         public LayoutFilterView FilterView
@@ -54,7 +55,6 @@ namespace DataWF.Gui
                     ColorHover = Colors.White
                 }
             };
-            canvas.BackgroundColor = Colors.Gray;
             AutoSize = true;
             AllowCellSize = true;
             AllowFilter = false;
@@ -62,52 +62,7 @@ namespace DataWF.Gui
             EditMode = EditModes.ByClick;
             GenerateColumns = false;
             GenerateToString = false;
-            var info = new LayoutListInfo();
-            info.Indent = 9;
-            info.StyleRow = new CellStyle()
-            {
-                Alternate = false,
-                Round = 6,
-                BackBrush = new CellStyleBrush()
-                {
-                    Color = Colors.White,
-                    ColorSelect = Colors.White,
-                    ColorHover = Colors.White
-                },
-                BorderBrush = new CellStyleBrush()
-                {
-                    Color = Colors.Gray,
-                    ColorSelect = Colors.Gray,
-                    ColorHover = Colors.Gray
-                }
-            };
-            info.ColumnsVisible = false;
-            info.GridMode = true;
-            info.GridAuto = true;
-            info.HeaderVisible = false;
-            info.Columns.Add(new LayoutColumn()
-            {
-                Name = nameof(LayoutFilter.Logic),
-                Width = 50,
-                Invoker = new Invoker<LayoutFilter, LogicType>(nameof(LayoutFilter.Logic),
-                                                               (item) => item.Logic,
-                                                               (item, value) => item.Logic = value)
-            });
-            info.Columns.Add(new LayoutColumn()
-            {
-                Name = nameof(LayoutFilter.Header),
-                Editable = false,
-                Invoker = new Invoker<LayoutFilter, string>(nameof(LayoutFilter.Header),
-                                                            (item) => item.Header)
-            });
-            info.Columns.Add(new LayoutColumn()
-            {
-                Name = nameof(LayoutFilter.Comparer),
-                Width = 50,
-                Invoker = new Invoker<LayoutFilter, CompareType>(nameof(LayoutFilter.Comparer),
-                                                                 (item) => item.Comparer,
-                                                                 (item, value) => item.Comparer = value)
-            });
+
             valueColumn = new LayoutColumn()
             {
                 Name = nameof(LayoutFilter.Value),
@@ -116,8 +71,56 @@ namespace DataWF.Gui
                                                                  (item) => item.Value,
                                                                  (item, value) => item.Value = value)
             };
-            info.Columns.Add(valueColumn);
-            ListInfo = info;
+            ListInfo = new LayoutListInfo(
+                new LayoutColumn()
+                {
+                    Name = nameof(LayoutFilter.Logic),
+                    Width = 50,
+                    Invoker = new Invoker<LayoutFilter, LogicType>(nameof(LayoutFilter.Logic),
+                                                               (item) => item.Logic,
+                                                               (item, value) => item.Logic = value)
+                },
+                new LayoutColumn()
+                {
+                    Name = nameof(LayoutFilter.Header),
+                    Editable = false,
+                    Invoker = new Invoker<LayoutFilter, string>(nameof(LayoutFilter.Header),
+                                                            (item) => item.Header)
+                },
+                new LayoutColumn()
+                {
+                    Name = nameof(LayoutFilter.Comparer),
+                    Width = 50,
+                    Invoker = new Invoker<LayoutFilter, CompareType>(nameof(LayoutFilter.Comparer),
+                                                                 (item) => item.Comparer,
+                                                                 (item, value) => item.Comparer = value)
+                },
+                valueColumn)
+            {
+                Indent = 9,
+                ColumnsVisible = false,
+                GridMode = true,
+                GridAuto = true,
+                HeaderVisible = false,
+                StyleRow = GuiEnvironment.StylesInfo["Field"]
+                //StyleRow = new CellStyle()
+                //{
+                //    Alternate = false,
+                //    Round = 6,
+                //    BackBrush = new CellStyleBrush()
+                //    {
+                //        Color = Colors.White,
+                //        ColorSelect = Colors.White,
+                //        ColorHover = Colors.White
+                //    },
+                //    BorderBrush = new CellStyleBrush()
+                //    {
+                //        Color = Colors.Gray,
+                //        ColorSelect = Colors.Gray,
+                //        ColorHover = Colors.Gray
+                //    }
+                //}
+            };
             ListSource = new LayoutFilterList(list);
             Filters.ListChanged += (sender, e) => { List.OnFilterChange(); };
         }
