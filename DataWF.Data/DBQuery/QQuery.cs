@@ -185,7 +185,7 @@ namespace DataWF.Data
                         return table.Table.ParseColumn(word);
             }
             var q = Query as QQuery;
-            while (q != null)
+            while (q != this)
             {
                 var column = q.ParseColumn(word);
                 if (column != null)

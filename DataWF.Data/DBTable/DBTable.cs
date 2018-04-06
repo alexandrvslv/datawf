@@ -916,17 +916,17 @@ namespace DataWF.Data
             if (item == null)
                 return false;
             if (val1 == null)
-                return val2 == null;
+                return comparer.Type == CompareTypes.Is ? !comparer.Not : val2 == null;
             else if (val2 == null)
-                return false;
+                return comparer.Type == CompareTypes.Is ? comparer.Not : false;
             if (val1 is QQuery)
                 val1 = SelectQuery(item, (QQuery)val1, comparer);
             if (val2 is QQuery)
                 val2 = SelectQuery(item, (QQuery)val2, comparer);
             switch (comparer.Type)
             {
-                case CompareTypes.Is:
-                    return val1.Equals(DBNull.Value) ? !comparer.Not : comparer.Not;
+                //case CompareTypes.Is:
+                //    return val1.Equals(DBNull.Value) ? !comparer.Not : comparer.Not;
                 case CompareTypes.Equal:
                     return ListHelper.Equal(val1, val2, false) ? !comparer.Not : comparer.Not;
                 case CompareTypes.Like:

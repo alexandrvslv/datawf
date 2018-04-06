@@ -149,8 +149,8 @@ namespace DataWF.Gui
                 panel.Content = target;
                 var size = target.Surface.GetPreferredSize();
                 if (size.Width > Size.Width || size.Height > Size.Height)
-                    Size = new Size(Math.Max(size.Width, Size.Width) + 35,
-                                   Math.Max(size.Height, Size.Width) + 70);
+                    Size = new Size(Math.Max(Size.Width, Math.Min(size.Width, 1024)) + 35,
+                                   Math.Max(Size.Height, Math.Min(size.Height, 768)) + 70);
             }
         }
 

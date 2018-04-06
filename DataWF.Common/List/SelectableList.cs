@@ -249,7 +249,7 @@ namespace DataWF.Common
             }
         }
 
-        public void InsertInternal(int index, T item)
+        public virtual void InsertInternal(int index, T item)
         {
             if (item == null)
                 return;

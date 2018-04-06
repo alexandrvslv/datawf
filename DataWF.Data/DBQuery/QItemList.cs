@@ -70,7 +70,7 @@ namespace DataWF.Data
             Remove((T)item);
         }
 
-        public override void Add(T item)
+        public override void InsertInternal(int index, T item)
         {
             if (item.List != this)
             {
@@ -79,7 +79,7 @@ namespace DataWF.Data
                 if (item.Order == -1)
                     item.Order = Count;
             }
-            base.Add(item);
+            base.InsertInternal(index, item);
         }
 
         public virtual T Add()

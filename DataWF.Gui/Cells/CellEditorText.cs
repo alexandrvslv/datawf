@@ -245,7 +245,7 @@ namespace DataWF.Gui
             if (Masked && Format != null)
             {
                 var box = editor.GetCached<TextEntry>();
-                box.MultiLine = false;
+                box.MultiLine = MultiLine;
                 box.KeyPressed += OnTextKeyPressed;
                 box.KeyReleased += OnTextKeyReleased;
                 box.ShowFrame = false;
@@ -266,7 +266,7 @@ namespace DataWF.Gui
             else
             {
                 var box = editor.GetCached<TextEntry>();
-                box.MultiLine = true;
+                box.MultiLine = MultiLine;
                 box.KeyPressed += OnTextKeyPressed;
                 box.KeyReleased += OnTextKeyReleased;
                 box.ShowFrame = false;
