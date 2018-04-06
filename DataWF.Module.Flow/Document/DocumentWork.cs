@@ -159,9 +159,9 @@ namespace DataWF.Module.Flow
             set
             {
                 SetPropertyReference(value, nameof(StageId));
-                IsSystem = (value?.Keys & StageKey.IsSystem) == StageKey.IsSystem;
-                IsStart = (value?.Keys & StageKey.IsStart) == StageKey.IsStart;
-                IsStop = (value?.Keys & StageKey.IsStop) == StageKey.IsStop;
+                IsSystem = value?.Keys != null && (value.Keys & StageKey.IsSystem) == StageKey.IsSystem;
+                IsStart = value?.Keys != null && (value.Keys & StageKey.IsStart) == StageKey.IsStart;
+                IsStop = value?.Keys != null && (value.Keys & StageKey.IsStop) == StageKey.IsStop;
             }
         }
 

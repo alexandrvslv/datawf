@@ -440,19 +440,13 @@ namespace DataWF.Module.Flow
         [Category("Current State")]
         public DateTime? WorkDate
         {
-            get { return WorkCurrent == null ? null : WorkCurrent.Date; }
+            get { return WorkCurrent?.Date; }
         }
 
         [Category("Current State")]
         public bool IsCurrent
         {
             get { return WorkCurrent != null; }
-        }
-
-        [Category("Current State")]
-        public bool IsWork
-        {
-            get { return WorkCurrent != null || GetWork() != null; }
         }
 
         [Browsable(false)]
@@ -675,7 +669,9 @@ namespace DataWF.Module.Flow
             }
             if (stage != null)
             {
-                if ((stage.Keys & StageKey.IsStop) == StageKey.IsStop && (stage.Keys & StageKey.IsAutoComplete) == StageKey.IsAutoComplete)
+                if (stage.Keys != null
+                    && (stage.Keys & StageKey.IsStop) == StageKey.IsStop
+                    && (stage.Keys & StageKey.IsAutoComplete) == StageKey.IsAutoComplete)
                     work.DateComplete = DateTime.Now;
                 if (stage.TimeLimit != TimeSpan.Zero)
                     work.DateLimit = DateTime.Now + stage.TimeLimit;
@@ -749,15 +745,21 @@ namespace DataWF.Module.Flow
             return buffer;
         }
 
+        public class DocumentExecuteArgs : ExecuteArgs
+        {
+            public DocumentWork Work { get; set; }
+            public Stage Stage { get; set; }
+        }
+
         public void Save(DBTransaction transaction, ExecuteDocumentCallback callback = null)
         {
             if (saving.Contains(this))//prevent recursion
                 return;
-            var temp = FlowEnvironment.CurrentDocument;
-            FlowEnvironment.CurrentDocument = this;
+            var temp = UserLog.CurrentDocument;
+            UserLog.CurrentDocument = this;
             saving.Add(this);
             var tempTRN = transaction ?? new DBTransaction(Table.Schema.Connection);
-            var param = new ExecuteArgs(this, tempTRN);
+            var param = new DocumentExecuteArgs() { Document = this, Transaction = tempTRN };
             try
             {
                 var works = Works.ToList();
@@ -770,17 +772,21 @@ namespace DataWF.Module.Flow
                 if (isnew)
                 {
                     var flow = Template.Work;
-                    Send(this, null, flow == null ? null : flow.GetStartStage(), User.CurrentUser, "Start stage", tempTRN, callback);
+                    var work = Send(this, null, flow?.GetStartStage(), User.CurrentUser, "Start stage", tempTRN, callback);
+                    param.Work = work;
+                    param.Stage = work.Stage;
                     ExecuteStageProcedure(param, ParamType.Begin, callback);
                 }
                 works = Works.ToList();
+                var stages = new List<Stage>();
                 foreach (var work in works)
                 {
-                    if (work.Stage != null && !work.IsResend)
+                    if (!work.IsResend && work.Stage != null && !stages.Contains(work.Stage))
                     {
-                        param.Parameters.Add("stage", work.Stage);
-                        if (work.DBState == DBUpdateState.Update && work.IsComplete &&
-                            work.Changed(DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.IsComplete))))
+                        param.Work = work;
+                        param.Stage = work.Stage;
+                        if (work.DBState == DBUpdateState.Update && work.IsComplete
+                            && work.Changed(DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.IsComplete))))
                             ExecuteStageProcedure(param, ParamType.End, callback);
 
                         if (work.DBState == DBUpdateState.Insert)
@@ -812,9 +818,11 @@ namespace DataWF.Module.Flow
                 }
                 Save(DocInitType.Data, tempTRN);
                 Saved?.Invoke(null, new DocumentEventArgs(this));
-                FlowEnvironment.CurrentDocument = temp;
+                UserLog.CurrentDocument = temp;
                 if (transaction == null)
+                {
                     tempTRN.Commit();
+                }
             }
             catch (Exception ex)
             {

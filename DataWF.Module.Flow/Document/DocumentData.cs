@@ -229,7 +229,7 @@ namespace DataWF.Module.Flow
             System.Diagnostics.Process.Start(file);
             return file;
         }
-        
+
         public bool IsImage()
         {
             return Helper.IsImage(FileData);

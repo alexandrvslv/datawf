@@ -37,7 +37,6 @@ namespace DataWF.Module.Flow
     public sealed class FlowEnvironment : IDisposable
     {
         private static FlowEnvironment instance = new FlowEnvironment();
-        public static Document CurrentDocument = null;
         private static DocumentList currentDocuments = null;
         private string schemaCode = "new";
         [NonSerialized()]
@@ -106,21 +105,17 @@ namespace DataWF.Module.Flow
 
                 Location.DBTable.Load(transaction, "");
 
-                User.DBTable.DefaultComparer = new DBComparer(User.DBTable.CodeKey) { Hash = true };
+
                 User.DBTable.Load(transaction, "");
 
-                Template.DBTable.DefaultComparer = new DBComparer(Template.DBTable.CodeKey) { Hash = true };
                 Template.DBTable.Load(transaction, "");
 
-                TemplateParam.DBTable.DefaultComparer = new DBComparer(TemplateParam.DBTable.ParseProperty(nameof(TemplateParam.Order))) { Hash = true };
                 TemplateParam.DBTable.Load(transaction, "");
 
-                Work.DBTable.DefaultComparer = new DBComparer(Work.DBTable.CodeKey) { Hash = true };
                 Work.DBTable.Load(transaction, "");
 
                 Stage.DBTable.Load(transaction, "");
 
-                StageParam.DBTable.DefaultComparer = new DBComparer(StageParam.DBTable.PrimaryKey) { Hash = true };
                 StageParam.DBTable.Load(transaction, "");
 
                 GroupPermission.DBTable.Load(transaction, "");
@@ -131,7 +126,6 @@ namespace DataWF.Module.Flow
 
             Helper.Logs.Add(new StateInfo("Flow Synchronization", "Complete", "in " + watch.ElapsedMilliseconds + " ms", StatusType.Information));
 
-            UserLog.DBTable.DefaultComparer = new DBComparer(UserLog.DBTable.PrimaryKey) { Hash = true };
             DocumentWork.DBTable.DefaultComparer = new DBComparer(DocumentWork.DBTable.PrimaryKey) { Hash = true };
             //Logs.Add(new StateInfo("Flow Check", "Config Falil", "AccountInfo", StatusType.Warning));
         }
