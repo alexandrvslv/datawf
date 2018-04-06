@@ -9,6 +9,7 @@ using DataWF.Module.Flow;
 
 using Xwt;
 using DataWF.Module.CommonGui;
+using System.Linq;
 
 namespace DataWF.Module.FlowGui
 {
@@ -45,7 +46,7 @@ namespace DataWF.Module.FlowGui
         {
             toolCount = new ToolLabel { Text = "0" };
             toolPreview = new ToolItem(ToolPreviewClick) { CheckOnClick = true, Checked = true, Name = "Preview", Glyph = GlyphType.List };
-            toolView = new ToolItem(ToolViewClick) { Name = "View",Glyph = GlyphType.PictureO };
+            toolView = new ToolItem(ToolViewClick) { Name = "View", Glyph = GlyphType.PictureO };
             toolFilter = new ToolItem(ToolFilterClick) { Name = "Filter", CheckOnClick = true, Glyph = GlyphType.Filter };
             toolParam = new ToolDropDown(ToolParamClick) { Name = "Parameters", Glyph = GlyphType.Spinner };
             toolProgress = new ToolTableLoader { Loader = loader };
@@ -65,7 +66,7 @@ namespace DataWF.Module.FlowGui
             toolFWork = new ToolFieldEditor { Name = "Work", FieldWidth = 60 };
             toolFTemplate = new ToolFieldEditor { Name = "Template", FieldWidth = 160 };
             toolFUser = new ToolFieldEditor { Name = "User" };
-            toolFStage = new ToolFieldEditor { Name = "Stage", FieldWidth = 140, Editor = new CellEditorFlowTree() { DataType = typeof(Stage)} };
+            toolFStage = new ToolFieldEditor { Name = "Stage", FieldWidth = 140, Editor = new CellEditorFlowTree() { DataType = typeof(Stage) } };
             toolFDate = new ToolFieldEditor { Name = "Date", FieldWidth = 140 };
             toolFDateType = new ToolFieldEditor { Name = "Date Type", FieldWidth = 100 };
             toolLoad = new ToolItem(ToolLoadClick) { Name = "Load", Glyph = GlyphType.Fire };
@@ -440,14 +441,15 @@ namespace DataWF.Module.FlowGui
 
         private void InitPreview()
         {
-            deditor = new DocumentEditor();
-            deditor.HideOnClose = true;
+            deditor = new DocumentEditor()
+            {
+                HideOnClose = true
+            };
             deditor.MainMenu.Visible = false;
             deditor.SendComplete += EditorSendComplete;
             split.Panel2.Content = deditor;
 
-            for (int i = 0; i < deditor.MainMenu.Items.Count;)
-                bar.Items.Add(deditor.MainMenu.Items[i]);
+            bar.Items.InsertAfter(toolPreview, deditor.MainMenu.Items.Items.ToList());
         }
 
         private void EditorSendComplete(object sender, EventArgs e)

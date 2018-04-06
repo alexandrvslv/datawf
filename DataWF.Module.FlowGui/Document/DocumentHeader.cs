@@ -85,6 +85,7 @@ namespace DataWF.Module.FlowGui
             gFiles = new GroupBoxItem()
             {
                 Widget = files,
+                FillHeight = true,
                 Name = "Files",
             };
 
@@ -97,7 +98,7 @@ namespace DataWF.Module.FlowGui
             };
 
             groupBox = new GroupBox(
-                gAttribute, 
+                gAttribute,
                 new GroupBoxMap(gFiles, gWork) { Col = 1, FillWidth = true })
             { Name = "panel1" };
 

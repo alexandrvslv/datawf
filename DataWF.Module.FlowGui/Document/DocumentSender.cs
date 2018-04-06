@@ -13,129 +13,37 @@ using DataWF.Module.Common;
 using DataWF.Module.Flow;
 using Xwt;
 using System.Linq;
+using DataWF.Module.CommonGui;
+using System.Threading.Tasks;
 
 namespace DataWF.Module.FlowGui
 {
     public class DocumentSender : ToolWindow, ILocalizable
     {
-        private LayoutList listUsers = new LayoutList();
-        private VPanel groupBox3 = new VPanel();
-        private Toolsbar toolsUser = new Toolsbar();
-        private ToolDropDown buttonAdd = new ToolDropDown();
-        private ToolItem buttonDelete = new ToolItem();
-        private Toolsbar tools = new Toolsbar();
-        private ToolItem toolSend = new ToolItem();
-        private ToolItem toolPrint = new ToolItem();
-        private ToolDropDown toolType = new ToolDropDown();
-        private ToolMenuItem toolNext = new ToolMenuItem();
-        private ToolMenuItem toolReturn = new ToolMenuItem();
-        private ToolMenuItem toolComplete = new ToolMenuItem();
-        private ToolMenuItem toolForward = new ToolMenuItem();
-        private ToolMenuItem toolRecovery = new ToolMenuItem();
-        private DocumentLayoutList listDocuments = new DocumentLayoutList();
-        private Menubar cms = new Menubar();
-        private ToolProgressBar toolProgress = new ToolProgressBar();
+        private FlowTree listUsers;
+        private Toolsbar tools;
+        private ToolItem toolSend;
+        private ToolItem toolPrint;
+        private ToolDropDown toolType;
+        private ToolMenuItem toolNext;
+        private ToolMenuItem toolReturn;
+        private ToolMenuItem toolComplete;
+        private ToolMenuItem toolForward;
+        private ToolMenuItem toolRecovery;
+        private DocumentLayoutList listDocuments;
+        private ToolProgressBar toolProgress;
 
         private CellStyle styleDefault = new CellStyle();
         private CellStyle styleComplete = new CellStyle();
         private CellStyle styleError = new CellStyle();
         private SelectableList<DocumentSendItem> items = new SelectableList<DocumentSendItem>();
-        private SelectableList<StageSender> stages = new SelectableList<StageSender>();
         private Stage CurrentStage = null;
         private Stage WorkStage = null;
         private Document current = null;
         private DocumentSendType type = DocumentSendType.Next;
-        private List<Stage> allowStage = new List<Stage>();
 
         public DocumentSender()
         {
-            buttonAdd.Name = "buttonAdd";
-            buttonAdd.DisplayStyle = ToolItemDisplayStyle.Text;
-            buttonAdd.DropDown = cms;
-
-            buttonDelete.Name = "buttonDelete";
-            buttonDelete.Click += ButtonRemoveClick;
-            buttonDelete.DisplayStyle = ToolItemDisplayStyle.Text;
-
-            listUsers.EditMode = EditModes.None;
-            listUsers.EditState = EditListState.ReadOnly;
-            listUsers.FieldSource = null;
-            listUsers.GenerateToString = false;
-            listUsers.Grouping = false;
-            listUsers.ListSource = null;
-            listUsers.Mode = LayoutListMode.List;
-            listUsers.Name = "listUsers";
-            listUsers.ReadOnly = true;
-
-            toolsUser.Items.Add(buttonAdd);
-            toolsUser.Items.Add(buttonDelete);
-
-            toolSend.Name = "toolSend";
-            toolSend.Text = "Отправка";
-            toolSend.DisplayStyle = ToolItemDisplayStyle.Text;
-            toolSend.Click += ToolSendClick;
-            // 
-            // tools
-            // 
-            tools.Items.Add(toolType);
-            tools.Items.Add(toolPrint);
-            tools.Items.Add(toolSend);
-            tools.Items.Add(toolProgress);
-            tools.Name = "tools";
-
-            toolPrint.Name = "toolPrint";
-            toolPrint.DisplayStyle = ToolItemDisplayStyle.Text;
-            toolPrint.Click += ToolPrintClick;
-
-            toolType.DropDown.Items.Add(toolNext);
-            toolType.DropDown.Items.Add(toolForward);
-            toolType.DropDown.Items.Add(toolReturn);
-            toolType.DropDown.Items.Add(toolComplete);
-            toolType.DropDown.Items.Add(toolRecovery);
-            toolType.Name = "toolType";
-            toolType.DisplayStyle = ToolItemDisplayStyle.Text;
-
-            toolNext.Name = "toolNext";
-            toolNext.Click += ToolTypeItemClicked;
-            toolForward.Name = "toolForward";
-            toolForward.Click += ToolTypeItemClicked;
-            toolReturn.Name = "toolReturn";
-            toolReturn.Click += ToolTypeItemClicked;
-            toolComplete.Name = "toolComplete";
-            toolComplete.Click += ToolTypeItemClicked;
-            toolRecovery.Name = "toolRecovery";
-            toolRecovery.Click += ToolTypeItemClicked;
-
-            listDocuments.EditMode = EditModes.None;
-            listDocuments.EditState = EditListState.ReadOnly;
-            listDocuments.FieldSource = null;
-            listDocuments.GenerateToString = false;
-            listDocuments.Grouping = false;
-            listDocuments.ListSource = null;
-            listDocuments.Mode = LayoutListMode.List;
-            listDocuments.Name = "listDocuments";
-            listDocuments.ReadOnly = true;
-            listDocuments.GetCellStyle += listDocuments_GetCellStyle;
-
-            toolProgress.Name = "toolProgress";
-            toolProgress.Visible = false;
-
-            groupBox3.Name = "groupBox3";
-
-            this.Name = "DocumentSender";
-
-            groupBox3.PackStart(toolsUser, false, false);
-            groupBox3.PackStart(listUsers, true, true);
-
-            VPanel box = new VPanel();
-            box.Visible = true;
-            box.PackStart(tools, false, false);
-            box.PackStart(listDocuments, true, true);
-            box.PackStart(groupBox3, true, false);
-            Target = box;
-
-            listUsers.ListSource = stages;
-
             styleComplete.Alternate = false;
             styleComplete.BackBrush.Color = Colors.Green.WithAlpha(80 / 255);
             styleComplete.BackBrush.ColorSelect = Colors.Green.WithAlpha(150 / 255);
@@ -148,22 +56,81 @@ namespace DataWF.Module.FlowGui
             styleError.BackBrush.Color = Colors.Red.WithAlpha(80 / 255);
             styleError.BackBrush.ColorSelect = Colors.Red.WithAlpha(150 / 255);
 
+            listUsers = new FlowTree()
+            {
+                AllowCheck = true
+            };
+
+            toolNext = new ToolMenuItem { Name = "Next" };
+            toolForward = new ToolMenuItem { Name = "Forward" };
+            toolReturn = new ToolMenuItem { Name = "Return" };
+            toolComplete = new ToolMenuItem { Name = "Complete" };
+            toolRecovery = new ToolMenuItem() { Name = "Recovery" };
+
+            toolType = new ToolDropDown(
+                toolNext,
+                toolForward,
+                toolReturn,
+                toolComplete,
+                toolRecovery)
+            {
+                Name = "Type",
+                DisplayStyle = ToolItemDisplayStyle.Text
+            };
+            toolType.ItemClick += ToolTypeItemClicked;
+
+            toolSend = new ToolItem(ToolSendClick) { Name = "Send", DisplayStyle = ToolItemDisplayStyle.Text };
+            toolPrint = new ToolItem(ToolPrintClick) { Name = "Print", DisplayStyle = ToolItemDisplayStyle.Text };
+
+            toolProgress = new ToolProgressBar() { Name = "Progress", Visible = false };
+
+            tools = new Toolsbar(
+                toolType,
+                toolPrint,
+                toolSend,
+                toolProgress)
+            { Name = "Bar" };
+
+            listDocuments = new DocumentLayoutList()
+            {
+                EditMode = EditModes.None,
+                EditState = EditListState.ReadOnly,
+                GenerateToString = false,
+                GenerateColumns = false,
+                Grouping = false,
+                Mode = LayoutListMode.List,
+                Name = "Documents",
+                ReadOnly = true,
+                ListInfo = new LayoutListInfo(
+                    new LayoutColumn() { Name = "Document", Width = 250 },
+                    new LayoutColumn() { Name = "Work", Width = 150 },
+                    new LayoutColumn() { Name = "Message", FillWidth = true })
+                { StyleRow = styleDefault },
+                ListSource = new SelectableListView<DocumentSendItem>(items)
+            };
+            listDocuments.GetCellStyle += listDocuments_GetCellStyle;
+
+            groupBox = new GroupBox(
+                new GroupBoxItem() { Widget = listDocuments, Name = "Documents", FillHeight = true, FillWidth = true },
+                new GroupBoxItem() { Widget = listUsers, Name = "Users", FillHeight = true, FillWidth = true, Row = 1 })
+            { Name = "GroupMap" };
+
+            var box = new VPanel();
+            box.PackStart(tools, false, false);
+            box.PackStart(groupBox, true, true);
+
+            Name = "DocumentSender";
+            Target = box;
+            Size = new Size(640, 640);
+
             Localize();
         }
 
         public void Localize()
         {
-            GuiService.Localize(buttonAdd, "DocumentSender", "Add");
-            GuiService.Localize(buttonDelete, "DocumentSender", "Delete");
-            GuiService.Localize(toolSend, "DocumentSender", "Send");
-            GuiService.Localize(toolPrint, "DocumentSender", "Print");
-            GuiService.Localize(toolType, "DocumentSender", "Type");
-            GuiService.Localize(toolNext, "DocumentSender", "Next");
-            GuiService.Localize(toolReturn, "DocumentSender", "Return");
-            GuiService.Localize(toolComplete, "DocumentSender", "Complete");
-            GuiService.Localize(toolForward, "DocumentSender", "Forward");
-            GuiService.Localize(toolRecovery, "DocumentSender", "Recovery");
-            this.Title = Locale.Get("DocumentSender", "Document Sender");
+            tools.Localize();
+            groupBox.Localize();
+            Title = Locale.Get("DocumentSender", "Document Sender");
         }
 
         public event EventHandler SendComplete;
@@ -211,9 +178,11 @@ namespace DataWF.Module.FlowGui
 
                 if (!items.Select("Document", CompareType.Equal, document).Any())
                 {
-                    DocumentSendItem item = new DocumentSendItem();
-                    item.Document = document;
-                    item.Work = document.WorkCurrent == null ? (dwork == null ? document.GetLastWork() : dwork) : document.WorkCurrent;
+                    var item = new DocumentSendItem()
+                    {
+                        Document = document,
+                        Work = document.WorkCurrent ?? dwork ?? document.GetLastWork()
+                    };
                     items.Add(item);
                 }
                 else
@@ -222,22 +191,10 @@ namespace DataWF.Module.FlowGui
                 }
             }
 
-            listDocuments.GenerateColumns = false;
-            listDocuments.ListInfo.StyleRow = styleDefault;
-            listDocuments.ListInfo.Columns.Add(new LayoutColumn() { Name = "Document", Width = 250 });
-            listDocuments.ListInfo.Columns.Add(new LayoutColumn() { Name = "Work", Width = 150 });
-            listDocuments.ListInfo.Columns.Add(new LayoutColumn() { Name = "Message", FillWidth = true });
-
-            listDocuments.ListSource = new SelectableListView<DocumentSendItem>(items);
-
             if (items.Count == 0)
                 return;
 
-            if (works.Count > 1)
-                toolReturn.Sensitive = true;
-            else
-                toolReturn.Sensitive = false;
-
+            toolReturn.Sensitive = works.Count > 1;
             toolRecovery.Sensitive = documents[0].Template.Access.Create;
             // Варианты отправки
             if (CurrentStage == null)
@@ -251,7 +208,7 @@ namespace DataWF.Module.FlowGui
                 else if (toolForward.Sensitive)
                     SendType = DocumentSendType.Forward;
             }
-            else if ((CurrentStage.Keys.Value & StageKey.IsStop) == StageKey.IsStop)
+            else if (CurrentStage.Keys != null && (CurrentStage.Keys.Value & StageKey.IsStop) == StageKey.IsStop)
             {
                 toolComplete.Sensitive = true;
                 SendType = DocumentSendType.Complete;
@@ -259,24 +216,40 @@ namespace DataWF.Module.FlowGui
             else
             {
                 foreach (var w in works)
+                {
                     if (!w.IsComplete && !w.User.IsCurrent)
                     {
                         toolComplete.Sensitive = true;
                         break;
                     }
+                }
                 SendType = DocumentSendType.Next;
             }
         }
 
-        public void Send(Stage s, User u, DocumentSendType type)
+        public void Send(Stage stage, User user, DocumentSendType type)
         {
-            groupBox3.Visible = false;
+            groupBox.Map["Users"].Visible = false;
             tools.Sensitive = false;
             SendType = type;
-            StageSender ss = new StageSender(s, u);
-            stages.Add(ss);
-
+            var stageNode = InitStage(stage, user);
             Send();
+        }
+
+        public TableItemNode InitStage(Stage stage, User user)
+        {
+            var stageNode = listUsers.InitItem(stage);
+            listUsers.InitItems(stage.GetUsers(), stageNode, true);
+            if (user != null)
+            {
+                var userNode = listUsers.InitItem(user);
+                userNode.Group = stageNode;
+                userNode.Check = true;
+            }
+            listUsers.Nodes.Add(stageNode);
+            if (user != null)
+                listUsers.SelectedDBItem = user;
+            return stageNode;
         }
 
         public DocumentSendType SendType
@@ -287,8 +260,9 @@ namespace DataWF.Module.FlowGui
                 type = value;
                 GuiService.Localize(toolType, "DocumentSender", value.ToString());
 
-                groupBox3.Visible = true;
-                EventHandler eh = new EventHandler(userClick);
+                groupBox.Map["Users"].Visible = true;
+
+                listUsers.Nodes.Clear();
 
                 if (type == DocumentSendType.Next)
                 {
@@ -298,14 +272,12 @@ namespace DataWF.Module.FlowGui
                             var next = sparam.Param as Stage;
                             if (next != null)
                             {
-                                cms.Items.Add(StageMenuItem.Init(next, eh, true, true));
-                                allowStage.Add(next);
+                                InitStage(next, null);
                             }
                         }
                 }
                 else if (type == DocumentSendType.Return)
                 {
-                    stages.Clear();
                     DocumentWork prev = items[0].Work.From;
                     //StageSender ss = new StageSender(prev.Stage, prev.User);
                     //stages.Add(ss);
@@ -315,46 +287,36 @@ namespace DataWF.Module.FlowGui
                     toolType.Tag = DocumentSendType.Forward;
                     Stage stage = CurrentStage == null ? WorkStage : CurrentStage;
 
-                    allowStage.Add(stage);
                     if (stage == null)
                     {
                         foreach (User user in User.CurrentUser.Department.GetUsers())
-                            cms.Items.Add(new UserMenuItem(user, eh));
+                            listUsers.Nodes.Add(listUsers.InitItem(user));
                     }
                     else
                     {
-                        cms.Items.Add(StageMenuItem.Init(stage, eh, true, WorkStage == null));
+                        InitStage(stage, null);
                     }
                 }
                 else if (type == DocumentSendType.Recovery)
                 {
-                    if (current.Template.Work == null)
-                        return;
-                    stages.Clear();
-                    foreach (var stage in current.Template.Work.GetStages())
+                    var stage = current.Template?.Work?.GetStartStage();
+                    if (stage != null)
                     {
-                        if ((stage.Keys.Value & StageKey.IsStart) == StageKey.IsStart)
-                        {
-                            StageSender ss = new StageSender(stage, User.CurrentUser);
-                            stages.Add(ss);
-                            break;
-                        }
+                        var stageNode = InitStage(stage, User.CurrentUser);
                     }
                 }
                 else if (type == DocumentSendType.Complete)
                 {
-                    groupBox3.Visible = false;
+                    groupBox.Map["Users"].Visible = false;
                 }
+
+                listUsers.Nodes.ExpandTop();
             }
         }
 
-        private void ToolTypeItemClicked(object sender, EventArgs e)
+        private void ToolTypeItemClicked(object sender, ToolItemEventArgs e)
         {
-            var item = sender;
-
-            allowStage.Clear();
-            cms.Items.Clear();
-
+            var item = e.Item;
             if (item == toolNext)
                 SendType = DocumentSendType.Next;
             else if (item == toolReturn)
@@ -379,16 +341,6 @@ namespace DataWF.Module.FlowGui
             return null;
         }
 
-        public StageSender CurrentSender
-        {
-            get
-            {
-                if (listUsers.SelectedItem == null)
-                    return null;
-                return listUsers.SelectedItem as StageSender;
-            }
-        }
-
         public Stage GetStage(ToolMenuItem item)
         {
             while (item.Owner != null)
@@ -400,28 +352,6 @@ namespace DataWF.Module.FlowGui
                     return (Stage)item.Tag;
             }
             return null;
-        }
-
-        public void userClick(object sender, EventArgs e)
-        {
-            var item = sender as UserMenuItem;
-            if (item != null)
-            {
-                StageSender ss = new StageSender(item.OwnerStage.Stage, item.User);
-                stages.Add(ss);
-            }
-            else if (((ToolMenuItem)sender).Tag is DocumentWork)
-            {
-                DocumentWork dw = (DocumentWork)item.Tag;
-                StageSender ss = new StageSender(dw.Stage, dw.User);
-                stages.Add(ss);
-            }
-        }
-
-        private void ButtonRemoveClick(object sender, EventArgs e)
-        {
-            StageSender sr = listUsers.SelectedItem as StageSender;
-            stages.Remove(sr);
         }
 
         protected string ExecuteProcedure(DBProcedure procedure, Document doc, Stage stage)
@@ -438,6 +368,7 @@ namespace DataWF.Module.FlowGui
         }
 
         private DocumentSendItem cuuItem = null;
+        private GroupBox groupBox;
 
         private void OnSend(ExecuteDocumentArg arg)
         {
@@ -449,6 +380,7 @@ namespace DataWF.Module.FlowGui
 
         public void SendBackground()
         {
+            var nodes = listUsers.Nodes.GetChecked().ToList();
             foreach (DocumentSendItem sender in items)
             {
                 using (var transaction = new DBTransaction())
@@ -464,9 +396,13 @@ namespace DataWF.Module.FlowGui
                         {
                             sender.Message = string.Empty;
                             cuuItem = sender;
-                            foreach (StageSender ss in stages)
+                            foreach (TableItemNode node in nodes)
                             {
-                                Document.Send(sender.Document, sender.Work, ss.Stage, ss.User, "", transaction, new ExecuteDocumentCallback(OnSend));
+                                if (node.Item is User)
+                                {
+                                    var stage = (node.Group as TableItemNode)?.Item as Stage;
+                                    Document.Send(sender.Document, sender.Work, stage, (User)node.Item, "", transaction, new ExecuteDocumentCallback(OnSend));
+                                }
                             }
                         }
 
@@ -480,7 +416,6 @@ namespace DataWF.Module.FlowGui
                     }
                 }
             }
-
         }
 
 
@@ -506,7 +441,8 @@ namespace DataWF.Module.FlowGui
 
         public void Send()
         {
-            if (stages.Count == 0 && SendType != DocumentSendType.Complete && SendType != DocumentSendType.Return)
+            var nodes = listUsers.Nodes.GetChecked().ToList();
+            if (nodes.Count == 0 && SendType != DocumentSendType.Complete && SendType != DocumentSendType.Return)
             {
                 MessageDialog.ShowMessage(this, Locale.Get("DocumentSender", "Select Stage!"));
                 return;
@@ -516,7 +452,7 @@ namespace DataWF.Module.FlowGui
             toolProgress.Visible = true;
             if (GuiService.Main == null)
             {
-                ThreadPool.QueueUserWorkItem((o) =>
+                Task.Run(() =>
                 {
                     try
                     {
@@ -579,14 +515,15 @@ namespace DataWF.Module.FlowGui
             DocumentWork firstDoc = (DocumentWork)listDocuments.ListSource[0];
             DateTime dt = DateTime.Now;
 
+            var nodes = listUsers.Nodes.GetChecked().ToList();
 
             elements.Add("Номер", firstDoc.Id);
 
             elements.Add("ДатаОтправки", dt.ToString("D", Locale.Instance.Culture));
 
             string departs = "";
-            foreach (StageSender ss in stages)
-                departs += ss.User.Group.Name + "; ";
+            foreach (TableItemNode ss in nodes)
+                departs += ((User)ss.Item).Department.Name + "; ";
             elements.Add("Департамент", departs);
 
             elements.Add("ВсегоДокументов", listDocuments.ListSource.Count);
@@ -594,8 +531,8 @@ namespace DataWF.Module.FlowGui
             elements.Add("Отправитель", User.CurrentUser);
 
             string users = "";
-            foreach (StageSender ss in stages)
-                users += ss.User.Name + "; ";
+            foreach (TableItemNode ss in nodes)
+                users += ((User)ss.Item).Name + "; ";
             elements.Add("Получатель", users);
 
             Dictionary<string, object> subparam = new Dictionary<string, object>();
@@ -617,75 +554,23 @@ namespace DataWF.Module.FlowGui
             File.WriteAllBytes(filename, td.UnLoad());
             //System.Diagnostics.Process p = 
             Process.Start(filename);
-
         }
-
 
         public class DocumentSendItem
         {
             private string message = string.Empty;
 
-            public Document Document
-            {
-                get;
-                set;
-            }
+            public Document Document { get; set; }
 
-            public DocumentWork Work
-            {
-                get;
-                set;
-            }
+            public DocumentWork Work { get; set; }
 
-            public string Message
-            {
-                get { return message; }
-                set { message = value; }
-            }
-        }
-
-        public class StageSender : ICheck
-        {
-            private Stage stage;
-            private bool check;
-            private User user;
-
-            public StageSender(Stage stage, User user)
-            {
-                this.stage = stage;
-                this.user = user;
-            }
-
-            public Stage Stage
-            {
-                get { return stage; }
-                set { stage = value; }
-            }
-
-            public User User
-            {
-                get { return user; }
-                set { user = value; }
-            }
-
-            [System.ComponentModel.Browsable(false)]
-            public bool Check
-            {
-                get { return check; }
-                set
-                {
-                    check = value;
-                }
-            }
-
-            public override string ToString()
-            {
-                return stage == null ? base.ToString() : stage.ToString();
-            }
+            public string Message { get { return message; } set { message = value; } }
         }
     }
+
     public enum DocumentSendType
     {
+        Undefined,
         Next,
         Forward,
         Return,

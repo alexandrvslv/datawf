@@ -14,7 +14,7 @@ namespace DataWF.Module.FlowGui
     public class DocumentFiles : VPanel, ILocalizable, ISynch
     {
         private Document _document;
-        private TableLayoutList list = new TableLayoutList();
+        private TableLayoutList list;
         private Toolsbar tools = new Toolsbar();
         private ToolItem toolInsert = new ToolItem();
         private ToolItem toolDelete = new ToolItem();
@@ -26,19 +26,6 @@ namespace DataWF.Module.FlowGui
 
         public DocumentFiles()
         {
-            list.EditMode = EditModes.None;
-            list.EditState = EditListState.Edit;
-            list.FieldSource = null;
-            list.GenerateColumns = false;
-            list.GenerateToString = false;
-            list.Grouping = false;
-            list.HighLight = true;
-            list.ListSource = null;
-            list.Mode = LayoutListMode.List;
-            list.Name = "list";
-            list.SelectedItem = null;
-            list.SelectedRow = null;
-            list.CellDoubleClick += ListCellDoubleClick;
 
             tools.Items.Add(toolLoad);
             tools.Items.Add(new ToolSeparator() { Visible = true });
@@ -71,23 +58,35 @@ namespace DataWF.Module.FlowGui
             toolTemplate.Name = "toolTemplate";
             toolTemplate.Click += ToolTemplateClick;
 
-            this.Name = "DocumentFiles";
 
+            view = new DBTableView<DocumentData>(DocumentData.DBTable, "", DBViewKeys.Empty);
+
+            list = new TableLayoutList()
+            {
+                //GenerateColumns = false,
+                //GenerateToString = false,
+                //ListInfo = new LayoutListInfo(
+                //    new LayoutColumn() { Name = nameof(DocumentData.FileName), Width = 100, FillWidth = true },
+                //    new LayoutColumn() { Name = nameof(DocumentData.FileSize), Width = 60 },
+                //    new LayoutColumn() { Name = nameof(DocumentData.Date), Width = 115 })
+                //{
+                //    ColumnsVisible = false,
+                //    ShowToolTip = true
+                //},
+                EditMode = EditModes.None,
+                EditState = EditListState.Edit,
+                Mode = LayoutListMode.List,
+                Name = "list",
+                ListSource = view
+            };
+            list.CellDoubleClick += ListCellDoubleClick;
+
+            Name = "DocumentFiles";
             PackStart(tools, false, false);
             PackStart(list, true, true);
             //list.SizeChanged += ListSizeChanged;
 
-
             Localize();
-
-            view = new DBTableView<DocumentData>(DocumentData.DBTable, "", DBViewKeys.Empty);
-
-            list.ListInfo.ColumnsVisible = false;
-            list.ListInfo.Columns.Add("DataName", 100).FillWidth = true;
-            list.ListInfo.Columns.Add("Size", 60);
-            list.ListInfo.Columns.Add("Date", 115);
-            list.ListInfo.ShowToolTip = true;
-            list.ListSource = view;
         }
 
         public void Localize()
@@ -101,7 +100,6 @@ namespace DataWF.Module.FlowGui
             GuiService.Localize(toolTemplate, "DocumentFiles", "Template", GlyphType.Book);
             list.Localize();
         }
-
 
         public bool AutoSize
         {
@@ -237,17 +235,16 @@ namespace DataWF.Module.FlowGui
                 return;
             if (Current.IsText())
             {
-                var text = new RichTextView();
-                text.ReadOnly = true;
-                text.Font = Font.FromName("Courier, 10");
-                text.LoadText(Encoding.Default.GetString(Current.FileData), Xwt.Formats.TextFormat.Plain);
+                var text = new RichTextView()
+                {
+                    ReadOnly = true,
+                    //Font = Font.FromName("Courier, 10"),
+                    Name = Path.GetFileNameWithoutExtension(Current.FileName)
+                };
+                text.LoadText(Encoding.UTF8.GetString(Current.FileData), Xwt.Formats.TextFormat.Plain);
 
-                var f = new ToolWindow();
-                f.Size = new Size(800, 600);
-                f.Title = Current.FileName;
-                f.Target = text;
-                f.Show(this, Point.Zero);
-                //f.Dispose();
+                var window = new ToolWindow() { Target = text };
+                window.Show(this, Point.Zero);
             }
             else if (Current.IsImage())
             {

@@ -41,10 +41,8 @@ namespace DataWF.Module.FlowGui
         private ToolItem toolBarCode;
         private ToolDropDown toolTemplates;
         private ToolItem toolReturn;
-        private ToolDropDown toolForward;
-        private ToolDropDown toolNext;
-        private Menubar menuForward;
-        private Menubar menuNext;
+        private ToolItem toolForward;
+        private ToolItem toolNext;
         private ToolDropDown toolProcedures;
         private DockPanel dock;
         private ToolLabel toolLabel = new ToolLabel();
@@ -64,14 +62,10 @@ namespace DataWF.Module.FlowGui
 
         private EventHandler procClick;
         private EventHandler tempClick;
-        private DocumentSendType sendType = DocumentSendType.Next;
         private DocumentEditorState state = DocumentEditorState.None;
 
         public DocumentEditor()
         {
-            menuForward = new Menubar() { Name = "contextForward" };
-            menuNext = new Menubar() { Name = "contextNext" };
-
             toolCopy = new ToolItem(ToolCopyClick) { Name = "Copy", Glyph = GlyphType.CopyAlias };
             toolProcedures = new ToolDropDown { Name = "Procedures", Glyph = GlyphType.PuzzlePiece };
             toolTemplates = new ToolDropDown { Name = "Templates", Glyph = GlyphType.Book };
@@ -82,10 +76,8 @@ namespace DataWF.Module.FlowGui
             toolBarCode = new ToolItem(ToolBarCodeClick) { Name = "BarCode", Glyph = GlyphType.Barcode };
             toolReturn = new ToolItem(ToolReturnClick) { Name = "Return", Glyph = GlyphType.StepBackward };
             toolSend = new ToolItem(ToolAcceptClick) { Name = "Send", Glyph = GlyphType.PlayCircle };
-            toolForward = new ToolDropDown { DropDown = menuForward, Name = "Forward", Glyph = GlyphType.StepForward };
-            toolForward.DropDownOpened += ToolForwardOpened;
-            toolNext = new ToolDropDown(ToolNextClick) { DropDown = menuNext, Name = "Next", Glyph = GlyphType.Forward };
-            toolNext.DropDownOpened += ToolNextOpened;
+            toolForward = new ToolItem(ToolForwardClick) { Name = "Forward", Glyph = GlyphType.StepForward };
+            toolNext = new ToolItem(ToolNextClick) { Name = "Next", Glyph = GlyphType.Forward };
 
             tools = new Toolsbar(
                toolProcedures,
@@ -402,23 +394,9 @@ namespace DataWF.Module.FlowGui
                     var stage = work.Stage;
                     if (stage != null)
                     {
-                        var users = stage.GetUsers();
-                        foreach (var user in users)
-                            if (user.Status != DBStatus.Archive && user.Status != DBStatus.Error && !user.IsCurrent)
-                            {
-                                var item = menuForward.Items[user.Login] as UserMenuItem;
-                                if (item == null)
-                                {
-                                    item = new UserMenuItem(user, ToolForwardItemClicked);
-                                    menuForward.Items.Add(item);
-                                }
-                                item.Tag = stage;
-                            }
                         foreach (var param in stage.GetParams())
                         {
-                            if (param.Type == ParamType.Relation)
-                                InitStage(stage, param);
-                            else if (param.Type == ParamType.Reference)
+                            if (param.Type == ParamType.Reference)
                                 InitReference(stage, param);
                             else if (param.Type == ParamType.Procedure)
                                 InitProcedure(stage, param);
@@ -430,11 +408,6 @@ namespace DataWF.Module.FlowGui
                         item.Visible = item.Tag == template || item.Tag == stage;
                     foreach (TemplateMenuItem item in toolTemplates.DropDownItems)
                         item.Visible = item.Tag == template || item.Tag == stage;
-                    foreach (StageMenuItem item in menuNext.Items)
-                        item.Visible = item.Tag == template || item.Tag == stage;
-                    foreach (UserMenuItem item in menuForward.Items)
-                        item.Visible = item.Tag == template || item.Tag == stage;
-
                     foreach (var page in dock.Pages.Items)
                         page.Visible = page.Tag == template || page.Tag == stage;
                 }
@@ -453,8 +426,6 @@ namespace DataWF.Module.FlowGui
                     if (template != null)
                         foreach (TemplateParam param in template.TemplateAllParams)
                         {
-                            if (param.Type == ParamType.Relation)
-                                InitStage(template, param);
                             if (param.Type == ParamType.Reference)
                                 InitReference(template, param);
                             else if (param.Type == ParamType.Procedure)
@@ -466,11 +437,6 @@ namespace DataWF.Module.FlowGui
                         item.Visible = item.Tag == template;
                     foreach (TemplateMenuItem item in toolTemplates.DropDownItems)
                         item.Visible = item.Tag == template;
-                    foreach (StageMenuItem item in menuNext.Items)
-                        item.Visible = item.Tag != template;
-                    foreach (UserMenuItem item in menuForward.Items)
-                        item.Visible = item.Tag == template;
-
                     foreach (DockPage dp in dock.Pages.Items)
                         dp.Visible = dp.Tag == template;
 
@@ -591,21 +557,6 @@ namespace DataWF.Module.FlowGui
                 var work = document.WorkCurrent;
                 EditorState = !document.Attached ? DocumentEditorState.Create : work != null && work.User.IsCurrent ? DocumentEditorState.Edit : DocumentEditorState.Readonly;
                 toolSave.Sensitive = document.IsChanged || state == DocumentEditorState.Create;
-            }
-        }
-
-        public void InitStage(DBItem owner, ParamBase param)
-        {
-            var stage = param.Param as Stage;
-            if (stage != null)
-            {
-                var item = menuNext.Items[stage.Code] as StageMenuItem;
-                if (item == null)
-                {
-                    item = StageMenuItem.Init(stage, ToolNextItemClicked, true, true);
-                    menuNext.Items.Add(item);
-                }
-                item.Tag = owner;
             }
         }
 
@@ -740,16 +691,6 @@ namespace DataWF.Module.FlowGui
 
         #endregion
 
-        private void ToolForwardOpened(object sender, EventArgs e)
-        {
-            sendType = DocumentSendType.Forward;
-        }
-
-        private void ToolNextOpened(object sender, EventArgs e)
-        {
-            sendType = DocumentSendType.Next;
-        }
-
         private void ToolCopyClick(object sender, EventArgs e)
         {
             DocumentWorker.ViewDocuments(DocumentWorker.CreateDocuments(document.Template, document));
@@ -836,7 +777,6 @@ namespace DataWF.Module.FlowGui
                     }
                     else
                     {
-                        sendType = DocumentSendType.Forward;
                         Send(work, work.Stage, User.CurrentUser);
                     }
                 }
@@ -910,51 +850,31 @@ namespace DataWF.Module.FlowGui
 
         private void ToolReturnClick(object sender, EventArgs e)
         {
-            sendType = DocumentSendType.Return;
-            var work = document.WorkCurrent != null ? document.WorkCurrent : document.GetWork();
-            if (work == null)
-                work = document.GetLastWork();
-            Send(work, work.From.Stage, work.From.User);
-        }
-
-        private void ToolForwardItemClicked(object sender, EventArgs e)
-        {
-            var item = sender as UserMenuItem;
-            var work = document.WorkCurrent;
-            Send(work, work.Stage, item.User);
-        }
-
-        private void ToolNextItemClicked(object sender, EventArgs e)
-        {
-            var item = sender as UserMenuItem;
-            if (item != null)
-            {
-                Send(document.WorkCurrent, item.OwnerStage.Stage, item.User);
-            }
+            var work = document.WorkCurrent ?? document.GetWork() ?? document.GetLastWork();
+            Send(work, work.From.Stage, work.From.User, DocumentSendType.Return);
         }
 
         private void ToolNextClick(object sender, EventArgs e)
         {
-            foreach (ToolMenuItem item in menuNext.Items)
-                if (item.Visible)
-                    return;
-            sendType = DocumentSendType.Complete;
-            Send(document.WorkCurrent, null, null);
+            Send(document.WorkCurrent, null, null, DocumentSendType.Next);
         }
 
-        private void Send(DocumentWork work, Stage stage, User user)
+        private void ToolForwardClick(object sender, EventArgs e)
         {
-            List<Document> documents = GetList();
+            Send(document.WorkCurrent, null, null, DocumentSendType.Forward);
+        }
+
+        private void Send(DocumentWork work, Stage stage, User user, DocumentSendType sendType = DocumentSendType.Next)
+        {
             state = DocumentEditorState.Send;
             var sender = new DocumentSender();
-            sender.Initialize(documents);
+            sender.Initialize(GetList());
+            sender.SendType = sendType;
             sender.SendComplete += SenderSendComplete;
             //sender.FormClosed += SenderFormClosed;
             if (stage != null && user != null)
                 sender.Send(stage, user, sendType);
-            sender.Show(this, Point.Zero);
-            //else
-            //    sender.Type = sendType;
+            sender.Show(toolSend.Bar, toolSend.Bound.Location);
         }
 
         public event EventHandler SendComplete;
