@@ -295,9 +295,11 @@ namespace DataWF.Data
             get { return keys; }
             set
             {
+                var isNotnull1 = (keys & DBColumnKeys.Notnull) == DBColumnKeys.Notnull;
                 keys = value;
+                var isNotnull2 = (keys & DBColumnKeys.Notnull) == DBColumnKeys.Notnull;
                 CheckIndex();
-                OnPropertyChanged(nameof(Keys), false);
+                OnPropertyChanged(nameof(Keys), isNotnull1 != isNotnull2);
             }
         }
 
