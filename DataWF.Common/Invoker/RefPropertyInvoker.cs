@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection.Emit;
 using System.Reflection;
+using System.Linq.Expressions;
 
 namespace DataWF.Common
 {
@@ -77,21 +78,28 @@ namespace DataWF.Common
 
         private SetHandler<T, V> GetInvokerSet(MethodInfo info)
         {
-            DynamicMethod method = new DynamicMethod(EmitInvoker.GetMethodName(info),
-                                                     typeof(void),
-                                                     new Type[] { typeof(T).MakeByRefType(), typeof(V) },
-                                                     true);
+            //DynamicMethod method = new DynamicMethod(EmitInvoker.GetMethodName(info),
+            //                                         typeof(void),
+            //                                         new Type[] { typeof(T).MakeByRefType(), typeof(V) },
+            //                                         true);
 
-            var il = method.GetILGenerator();
-            if (!info.IsStatic)
-            {
-                il.Emit(OpCodes.Ldarga_S, 0);
-                il.Emit(OpCodes.Ldind_Ref);
-            }
-            il.Emit(OpCodes.Ldarg_1);
-            il.EmitCall(OpCodes.Call, info, null);
-            il.Emit(OpCodes.Ret);
-            return (SetHandler<T, V>)method.CreateDelegate(typeof(SetHandler<T, V>));
+            //var il = method.GetILGenerator();
+            //if (!info.IsStatic)
+            //{
+            //    il.Emit(OpCodes.Ldarg_0);
+            //    //il.Emit(OpCodes.Ldind_Ref);
+            //}
+            //il.Emit(OpCodes.Ldarg_1);
+            //il.EmitCall(OpCodes.Call, info, null);
+            //il.Emit(OpCodes.Ret);
+            //return (SetHandler<T, V>)method.CreateDelegate(typeof(SetHandler<T, V>));
+
+            var par1 = Expression.Parameter(typeof(T).MakeByRefType());
+            var par2 = Expression.Parameter(typeof(V));
+            return Expression.Lambda<SetHandler<T, V>>(
+                Expression.Assign(Expression.Property(par1, info), par2),
+                par1, par2
+                ).Compile();
         }
     }
 
