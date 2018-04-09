@@ -67,7 +67,7 @@ namespace DataWF.Gui
 
         public ILayoutCell Owner { get; set; }
 
-        public string StyleName { get; private set; } = "Field";
+        public string StyleName { get; private set; } = "FieldEditor";
 
         public override CellStyle Style
         {

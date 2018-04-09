@@ -137,7 +137,7 @@ namespace DataWF.Gui
 
 		public Rectangle GetExpandBound(Rectangle bound)
 		{
-			rectExpand = new Rectangle(bound.Right - 30, bound.Y + 4, 16, 16);
+			rectExpand = new Rectangle(bound.Right - 30, bound.Y + 2, 16, 16);
 			return rectExpand;
 		}
 

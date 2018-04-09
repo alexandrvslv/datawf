@@ -31,6 +31,10 @@ namespace DataWF.Gui
         protected override void OnAcceptClick(object sender, EventArgs e)
         {
             base.OnAcceptClick(sender, e);
+            if (ContextList.TreeMode != ContextList.ListInfo.Tree)
+            {
+                ContextList.TreeMode = ContextList.ListInfo.Tree;
+            }
             ContextList.RefreshBounds(true);
         }
 

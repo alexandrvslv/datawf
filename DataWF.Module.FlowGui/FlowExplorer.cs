@@ -42,6 +42,7 @@ namespace DataWF.Module.FlowGui
                 new ToolMenuItem { Name = "User", Sensitive = User.DBTable?.Access.Create ?? false, Glyph = GlyphType.User },
                 new ToolMenuItem { Name = "Scheduler", Sensitive = Scheduler.DBTable?.Access.Create ?? false, Glyph = GlyphType.ClockO })
             { Name = "FlowExplorer" };
+            contextAdd.Bar.ItemClick += ContextAddItemClicked;
 
             barMain = new Toolsbar(
                 new ToolDropDown { Name = "Add", ForeColor = Colors.DarkGreen, DropDown = contextAdd, Glyph = GlyphType.PlusCircle },

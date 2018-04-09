@@ -135,6 +135,13 @@ namespace DataWF.Gui
                 },
                 new CellStyle()
                 {
+                    Name = "FieldEditor",
+                    Font = defaultFont,
+                    Alternate = false,
+                    BaseColor = Colors.Gray.WithIncreasedLight(0.15)
+                },
+                new CellStyle()
+                {
                     Name = "Collect",
                     Font = defaultFont,
                     BaseColor = Colors.DarkGray

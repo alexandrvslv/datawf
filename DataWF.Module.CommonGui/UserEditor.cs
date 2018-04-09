@@ -67,7 +67,7 @@ namespace DataWF.Module.CommonGui
             };
 
             groupMap = new GroupBox(groupAttributes, groupGroups);
-            
+
             Name = "UserEditor";
             Text = "User Editor";
             ((Box)fields.Bar.Parent).Remove(fields.Bar);
@@ -141,8 +141,8 @@ namespace DataWF.Module.CommonGui
 
         protected override void Dispose(bool disposing)
         {
-            groupAttributes.Dispose();
-            groupGroups.Dispose();
+            groupAttributes?.Dispose();
+            groupGroups?.Dispose();
             User.DBTable.RowUpdated -= OnRowUpdated;
             base.Dispose(disposing);
         }

@@ -60,10 +60,13 @@ namespace DataWF.Module.Common
 
         public static event EventHandler<DBItemEventArgs> RowLoged;
 
-        public static void OnDBRowUpdating(DBItemEventArgs arg)
+        public static void OnDBRowUpdate(DBItemEventArgs arg)
         {
+            if (arg.Item.Table == UserLog.DBTable
+                || arg.Item.Table is DBLogTable)
+                return;
             RowLoging?.Invoke(null, arg);
-            var log = UserLog.LogRow(arg.LogItem, arg.Transaction.Tag as UserLog);
+            var log = UserLog.LogRow(arg);
 
             if (arg.Transaction.SubTransaction == null)
             {
@@ -92,7 +95,21 @@ namespace DataWF.Module.Common
             set { SetValue(value, Table.PrimaryKey); }
         }
 
-        [DataMember, Column("type_id", Keys = DBColumnKeys.ElementType)]
+        [DataMember, Column("user_id", Keys = DBColumnKeys.View)]
+        public int? UserId
+        {
+            get { return GetProperty<int?>(nameof(UserId)); }
+            set { SetProperty(value, nameof(UserId)); }
+        }
+
+        [Reference("fk_duser_log_user_id", nameof(UserId))]
+        public User User
+        {
+            get { return GetPropertyReference<User>(nameof(UserId)); }
+            set { SetPropertyReference(value, nameof(UserId)); }
+        }
+
+        [DataMember, Column("type_id", Keys = DBColumnKeys.ElementType | DBColumnKeys.View)]
         public UserLogType? LogType
         {
             get { return GetProperty<UserLogType?>(nameof(LogType)); }
@@ -237,21 +254,6 @@ namespace DataWF.Module.Common
             set { SetProperty(value, nameof(TextData)); }
         }
 
-        [DataMember, Column("user_id")]
-        public int? UserId
-        {
-            get { return GetProperty<int?>(nameof(UserId)); }
-            set { SetProperty(value, nameof(UserId)); }
-        }
-
-        [Reference("fk_duser_log_user_id", nameof(UserId))]
-        public User User
-        {
-            get { return GetPropertyReference<User>(nameof(UserId)); }
-            set { SetPropertyReference(value, nameof(UserId)); }
-        }
-
-
         public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)
         {
             base.OnPropertyChanged(property, column, value);
@@ -366,7 +368,7 @@ namespace DataWF.Module.Common
             };
 
             string text = info;
-            if (type == UserLogType.Start)
+            if (type == UserLogType.Authorization)
             {
                 user.LogStart = newLog;
                 var prop = System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties();
@@ -382,26 +384,33 @@ namespace DataWF.Module.Common
             newLog.Save(false);
         }
 
-        public static UserLog LogRow(DBLogItem item, UserLog parent = null)
+        public static UserLog LogRow(DBItemEventArgs arg)
         {
-            var log = CurrentLog ?? new UserLog()
+            var parent = CurrentLog ?? arg.Transaction.Tag as UserLog ?? User.CurrentUser.LogStart;
+            var log = new UserLog()
             {
+                User = User.CurrentUser,
                 Parent = parent,
-
+                Document = CurrentDocument
             };
-            log.User = User.CurrentUser;
-            log.Parent = parent ?? User.CurrentUser.LogStart;
-            log.Document = CurrentDocument;
-            log.LogItem = item;
-            if (item.LogType == DBLogType.Insert)
+            if (arg.LogItem != null)
+            {
+                log.LogItem = arg.LogItem;
+            }
+            else
+            {
+                log.TargetItem = arg.Item;
+            }
+
+            if (arg.Item.UpdateState.HasFlag(DBUpdateState.Insert))
             {
                 log.LogType = UserLogType.Insert;
             }
-            else if (item.LogType == DBLogType.Delete)
+            else if (arg.Item.UpdateState.HasFlag(DBUpdateState.Delete))
             {
                 log.LogType = UserLogType.Delete;
             }
-            else if (item.LogType == DBLogType.Update)
+            else if (arg.Item.UpdateState.HasFlag(DBUpdateState.Update))
             {
                 log.LogType = UserLogType.Update;
             }
@@ -432,16 +441,16 @@ namespace DataWF.Module.Common
 
                 if (log.LogType == UserLogType.Insert)
                 {
-                    row.DBState |= DBUpdateState.Delete;
+                    row.UpdateState |= DBUpdateState.Delete;
                 }
                 else if (log.LogType == UserLogType.Delete)
                 {
-                    row.DBState |= DBUpdateState.Insert;
+                    row.UpdateState |= DBUpdateState.Insert;
                     log.TargetTable.Add(row);
                 }
                 else if (log.LogType == UserLogType.Update && row.GetIsChanged())
                 {
-                    row.DBState |= DBUpdateState.Update;
+                    row.UpdateState |= DBUpdateState.Update;
                 }
 
                 log.Status = DBStatus.Delete;

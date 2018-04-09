@@ -24,6 +24,7 @@ namespace DataWF.Module.Common
             User.SetCurrent();
 
             UserLog.DBTable.DefaultComparer = new DBComparer(UserLog.DBTable.PrimaryKey) { Hash = true };
+            DBService.RowUpdated += UserLog.OnDBRowUpdate;
 
             GroupPermission.DBTable.Load();
             GroupPermission.CachePermission();

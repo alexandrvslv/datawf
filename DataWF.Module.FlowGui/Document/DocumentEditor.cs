@@ -525,7 +525,7 @@ namespace DataWF.Module.FlowGui
                 if (document.IsCurrent)
                 {
                     var cwork = document.WorkCurrent;
-                    if (cwork.DBState == DBUpdateState.Default && cwork.DateRead == DateTime.MinValue)
+                    if (cwork.UpdateState == DBUpdateState.Default && cwork.DateRead == DateTime.MinValue)
                     {
                         cwork.DateRead = DateTime.Now;
                         cwork.Save();
@@ -735,7 +735,7 @@ namespace DataWF.Module.FlowGui
             deleter.Row = document;
             deleter.Show(this, Point.Zero);
             //deleter.Dispose();
-            if (document != null && (document.DBState & DBUpdateState.Delete) == DBUpdateState.Delete)
+            if (document != null && (document.UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete)
             {
                 Document = null;
             }
@@ -803,7 +803,7 @@ namespace DataWF.Module.FlowGui
         {
             e.Cancel = HideOnClose;
 
-            if (Document != null && (Document.DBState & DBUpdateState.Delete) != DBUpdateState.Delete && EditorState != DocumentEditorState.Readonly && Document.IsChanged)
+            if (Document != null && (Document.UpdateState & DBUpdateState.Delete) != DBUpdateState.Delete && EditorState != DocumentEditorState.Readonly && Document.IsChanged)
             {
                 var question = new QuestionMessage(Locale.Get("DocumentEditor", "On Close"), Locale.Get("DocumentEditor", "Save changes?"));
                 question.Buttons.Add(Command.No);

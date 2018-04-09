@@ -146,6 +146,7 @@ namespace DataWF.Gui
         private Menubar menu;
         //protected static PrintOperation print;
         public string Description;
+        private VBox filterBox;
 
         public LayoutList()
         {
@@ -771,8 +772,11 @@ namespace DataWF.Gui
 
         protected override void Dispose(bool disposing)
         {
-            base.Dispose(disposing);
             ClearCache();
+            ListSource = null;
+            ListInfo = null;
+            base.Dispose(disposing);
+
             void ClearCache()
             {
                 if (cache != null)
@@ -1282,7 +1286,10 @@ namespace DataWF.Gui
                 }
                 else
                 {
-                    bounds.Content.Height += GetItemsHeight(0, listSource.Count - 1);
+                    var height = GetItemsHeight(0, listSource.Count - 1);
+                    if (height == 0 && listSource.Count > 0)
+                        height = bounds.Columns.Height;
+                    bounds.Content.Height += height;
                     if (listInfo.CollectingRow)
                         bounds.Content.Height += bounds.Columns.Height;
                 }
@@ -1305,7 +1312,9 @@ namespace DataWF.Gui
             {
                 int count = ((eIndex - sIndex) + 1);
                 if (gridCols > 1)
+                {
                     count = count / gridCols;
+                }
                 return (double)count * bounds.Columns.Height;
             }
         }
@@ -4012,7 +4021,7 @@ namespace DataWF.Gui
             {
                 Nodes.Localize();
             }
-            if (listMode == LayoutListMode.Fields)
+            if (listMode == LayoutListMode.Fields && fieldInfo != null)
             {
                 foreach (LayoutField field in fieldInfo.Nodes)
                     if (field.Invoker != null)
@@ -4466,16 +4475,14 @@ namespace DataWF.Gui
             if (filterView == null)
             {
                 filterView = new LayoutFilterView(this);
+                filterBox = new VBox();
             }
-            if (filterView.Parent == null)
+            if (scroll.Parent == this)
             {
                 Remove(scroll);
-                var vpaned = new VPaned();
-                vpaned.Panel1.Content = filterView;
-                vpaned.Panel1.Resize = false;
-                vpaned.Panel1.Shrink = false;
-                vpaned.Panel2.Content = scroll;
-                PackStart(vpaned, true, true);
+                filterBox.PackStart(filterView, false, false);
+                filterBox.PackStart(scroll, true, true);
+                PackStart(filterBox, true, true);
                 //filterView.Show(this, new Point(listInfo.HeaderWidth, bounds.Area.Height - 60));
             }
         }
@@ -4486,10 +4493,11 @@ namespace DataWF.Gui
             {
                 return;
             }
-            if (filterView.Parent != null)
+            if (scroll.Parent != this)
             {
-                ((VPaned)filterView.Parent).Remove(filterView);
-                ((VPaned)filterView.Parent).Remove(scroll);
+                Remove(filterBox);
+                filterBox.Remove(filterView);
+                filterBox.Remove(scroll);
                 PackStart(scroll, true, true);
             }
         }

@@ -208,6 +208,7 @@ namespace DataWF.Gui
                 var cloreBound = GetRowCloseBound(i);
                 if (cloreBound.Contains(cacheHitt.HitTest.Point))
                 {
+                    OnCellEditEnd(new CancelEventArgs(true));
                     Filters.RemoveAt(i);
                     return;
                 }
@@ -223,6 +224,13 @@ namespace DataWF.Gui
         public Rectangle GetRowCloseBound(Rectangle bound)
         {
             return new Rectangle(bound.Right - 7, bound.Top - 7, 14, 14);
+        }
+
+        protected override Size OnGetPreferredSize(SizeConstraint widthConstraint, SizeConstraint heightConstraint)
+        {
+            var size = base.OnGetPreferredSize(widthConstraint, heightConstraint);
+            var content = GetContentBound();
+            return content.Size + new Size(10, 10);
         }
     }
 }

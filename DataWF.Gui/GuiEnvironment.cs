@@ -113,6 +113,10 @@ namespace DataWF.Gui
             {
                 return new CellEditorEnum();
             };
+            CellEditorFabric[typeof(CellStyle)] = cell =>
+            {
+                return new CellEditorListEditor() { DataSource = GuiEnvironment.StylesInfo };
+            };
 
             LocaleImage.ImageCache += (item) =>
             {

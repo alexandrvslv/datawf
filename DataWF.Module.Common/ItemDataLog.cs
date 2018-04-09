@@ -66,7 +66,7 @@ namespace DataWF.Module.Common
             QQuery query = new QQuery(string.Empty, UserLog.DBTable);
             query.BuildPropertyParam(nameof(UserLog.TargetTable), CompareType.Equal, row.Table.FullName);
             query.BuildPropertyParam(nameof(UserLog.TargetId), CompareType.Equal, row.PrimaryId);
-            query.BuildPropertyParam(nameof(UserLog.DBState), CompareType.Equal, DBStatus.New);
+            query.BuildPropertyParam(nameof(UserLog.UpdateState), CompareType.Equal, DBStatus.New);
             Logs.AddRange(UserLog.DBTable.Load(query, DBLoadParam.Load | DBLoadParam.Synchronize));
         }
 

@@ -155,7 +155,7 @@ namespace DataWF.Gui
 
             var node = new ListExplorerNode()
             {
-                Text = Common.Locale.Get(DataSource.GetType().FullName, DataSource.GetType().Name),
+                Text = Locale.Get(DataSource.GetType().FullName, DataSource.GetType().Name),
                 DataSource = DataSource
             };
             Tree.Nodes.Add(node);
@@ -166,7 +166,7 @@ namespace DataWF.Gui
         {
             return new ListExplorerNode()
             {
-                Text = Common.Locale.Get(info.DeclaringType.FullName, info.Name),
+                Text = Locale.Get(info.DeclaringType.FullName, info.Name),
                 Name = info.Name,
                 DataSource = data
             };
@@ -174,6 +174,7 @@ namespace DataWF.Gui
 
         protected virtual void OnNodeSelect(ListExplorerNode node)
         {
+            Text = node.ToString();
             Selection.Current = node;
             toolTree.Field.DropDown.Hide();
             toolTree.DataValue = node;
@@ -221,7 +222,7 @@ namespace DataWF.Gui
 
                 foreach (ListExplorerNode node in Tree.SelectedNode.Nodes)
                 {
-                    if (node.Tag == e.Item)
+                    if (node.DataSource == e.Item)
                     {
                         Current = node;
                         return;
@@ -229,6 +230,7 @@ namespace DataWF.Gui
                 }
                 var newNode = new ListExplorerNode(e.Item.ToString())
                 {
+                    Text = e.Item.ToString(),
                     DataSource = e.Item,
                     Group = Current
                 };
@@ -244,7 +246,6 @@ namespace DataWF.Gui
         {
             toolPrev.Text = Locale.Get("OptionEditor", "Prev");
             toolNext.Text = Locale.Get("OptionEditor", "Next");
-            Text = Locale.Get("OptionEditor", "Option Editor");
             Editor.Localize();
         }
     }

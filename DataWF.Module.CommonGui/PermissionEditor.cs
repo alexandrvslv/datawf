@@ -32,7 +32,6 @@ namespace DataWF.Module.CommonGui
             toolReject = new ToolItem(ToolCancelClick) { Name = "toolCancel" };
             toolExport = new ToolItem(ToolExportClick) { Name = "toolExport" };
             toolFilterText = new ToolTextEntry { Name = "toolFilterText" };
-            toolFilterText.TextChanged += ToolFilterTextChanged;
 
             list = new LayoutList()
             {
@@ -199,7 +198,8 @@ namespace DataWF.Module.CommonGui
                 Name = "tree",
                 EditState = EditListState.Edit,
                 EditMode = EditModes.ByF2,
-                UserKeys = UserTreeKeys.Department | UserTreeKeys.User | UserTreeKeys.Group | UserTreeKeys.Permission
+                UserKeys = UserTreeKeys.Department | UserTreeKeys.User | UserTreeKeys.Group | UserTreeKeys.Permission,
+                FilterEntry = toolFilterText.Entry
             };
             tree.SelectionChanged += TreeSelectionChanged;
 
@@ -270,28 +270,6 @@ namespace DataWF.Module.CommonGui
         public static string GetName(UserGroup p)
         {
             return "Group" + p.Id;
-        }
-
-        private void ToolFilterTextChanged(object sender, EventArgs e)
-        {
-            if (toolFilterText.Text.Length != 0)
-            {
-                tree.TreeMode = false;
-                tree.Nodes.DefaultView.FilterQuery.Parameters.Clear();
-                var p = new QueryParameter()
-                {
-                    Type = typeof(Node),
-                    Property = nameof(Node.Text),
-                    Comparer = CompareType.Like,
-                    Value = toolFilterText.Text
-                };
-                tree.Nodes.DefaultView.FilterQuery.Parameters.Add(p);
-            }
-            else
-            {
-                tree.TreeMode = true;
-            }
-            tree.Nodes.DefaultView.UpdateFilter();
         }
 
         private void TreeSelectionChanged(object sender, EventArgs e)

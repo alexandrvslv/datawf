@@ -282,7 +282,7 @@ namespace DataWF.Module.Flow
             if (item is DocumentWork)
             {
                 var work = (DocumentWork)item;
-                if (work.IsComplete || work.DBState == DBUpdateState.Default)
+                if (work.IsComplete || work.UpdateState == DBUpdateState.Default)
                     RefreshCache();
             }
             else if (item is DocumentReference)
@@ -291,9 +291,9 @@ namespace DataWF.Module.Flow
                 if (_refChanged != null && (initype & DocInitType.Refed) != DocInitType.Refed && (initype & DocInitType.Refing) != DocInitType.Refing)
                     _refChanged(this, ListChangedType.Reset);
             }
-            if (item.DBState != DBUpdateState.Default && (item.DBState & DBUpdateState.Commit) != DBUpdateState.Commit && item.Attached)
+            if (item.UpdateState != DBUpdateState.Default && (item.UpdateState & DBUpdateState.Commit) != DBUpdateState.Commit && item.Attached)
                 changes++;
-            else if (item.DBState == DBUpdateState.Default || !item.Attached)
+            else if (item.UpdateState == DBUpdateState.Default || !item.Attached)
                 changes--;
 
             ReferenceChanged?.Invoke(this, new DBItemEventArgs(item));
@@ -535,7 +535,7 @@ namespace DataWF.Module.Flow
         [Browsable(false)]
         public new bool IsChanged
         {
-            get { return (DBState != DBUpdateState.Default) || changes != 0; }
+            get { return (UpdateState != DBUpdateState.Default) || changes != 0; }
             set
             {
                 if (!value)
@@ -763,7 +763,7 @@ namespace DataWF.Module.Flow
             try
             {
                 var works = Works.ToList();
-                bool isnew = works.Count == 0 || (works.Count == 1 && works[0].DBState == DBUpdateState.Insert);
+                bool isnew = works.Count == 0 || (works.Count == 1 && works[0].UpdateState == DBUpdateState.Insert);
 
                 if (isnew && Number == null)
                     Number = DefaultGenerator(Template).ToString();
@@ -785,11 +785,11 @@ namespace DataWF.Module.Flow
                     {
                         param.Work = work;
                         param.Stage = work.Stage;
-                        if (work.DBState == DBUpdateState.Update && work.IsComplete
+                        if (work.UpdateState == DBUpdateState.Update && work.IsComplete
                             && work.Changed(DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.IsComplete))))
                             ExecuteStageProcedure(param, ParamType.End, callback);
 
-                        if (work.DBState == DBUpdateState.Insert)
+                        if (work.UpdateState == DBUpdateState.Insert)
                             ExecuteStageProcedure(param, ParamType.Begin, callback);
                     }
                     work.IsResend = false;
@@ -840,13 +840,13 @@ namespace DataWF.Module.Flow
 
         public bool IsEdited()
         {
-            if (DBState != DBUpdateState.Default)
+            if (UpdateState != DBUpdateState.Default)
                 return true;
             var relations = Document.DBTable.GetChildRelations();
             foreach (var relation in relations)
             {
                 foreach (DBItem row in GetReferencing(relation, DBLoadParam.None))
-                    if (row.DBState != DBUpdateState.Default)
+                    if (row.UpdateState != DBUpdateState.Default)
                         return true;
             }
             return false;

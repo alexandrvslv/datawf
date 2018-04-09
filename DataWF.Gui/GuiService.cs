@@ -41,7 +41,7 @@ namespace DataWF.Gui
                 Size = new Size(800, 600),
                 TransientFor = owner
             };
-            window.CloseRequested += (s, e) => ((Dialog)s).TransientFor = null;
+            //window.CloseRequested += (s, e) => ((Dialog)s).TransientFor = null;
             return window.Run(owner);
         }
 

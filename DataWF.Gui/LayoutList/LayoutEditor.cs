@@ -226,7 +226,7 @@ namespace DataWF.Gui
         {
             return new Rectangle(image != null ? 19 : 1,
                                  0,
-                                 Size.Width - (Size.Width - (int)rectd.Left + 1) - (image != null ? 19 : 1),
+                                 Size.Width - (Size.Width - (int)rectd.Left) - (image != null ? 19 : 1),
                                  Size.Height);
         }
 
