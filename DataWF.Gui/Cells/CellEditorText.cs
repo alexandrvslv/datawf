@@ -16,8 +16,6 @@ namespace DataWF.Gui
 
         protected bool headerVisible = true;
         protected bool dropDownWindow = true;
-        protected bool dropDownVisible = true;
-        protected bool dropDownExVisible;
         protected bool dropDownAutoHide;
         protected bool handleText = true;
         //protected bool dropDownByKey = true;
@@ -44,17 +42,9 @@ namespace DataWF.Gui
             set { DropDownVisible = dropDownWindow = value; }
         }
 
-        public bool DropDownVisible
-        {
-            get { return dropDownVisible; }
-            set { dropDownVisible = value; }
-        }
+        public bool DropDownVisible { get; set; } = true;
 
-        public bool DropDownExVisible
-        {
-            get { return dropDownExVisible; }
-            set { dropDownExVisible = value; }
-        }
+        public bool DropDownExVisible { get; set; }
 
         public string Header { get; set; }
 
@@ -101,7 +91,10 @@ namespace DataWF.Gui
                 if (TextWidget != null)
                     TextWidget.Text = value;
                 if (DropDown != null && DropDown.Target is RichTextView)
+                {
                     ((RichTextView)DropDown.Target).LoadText(value ?? string.Empty, Xwt.Formats.TextFormat.Plain);
+                    ((RichTextView)DropDown.Target).ReadOnly = ReadOnly;
+                }
                 handleText = flag;
             }
         }
@@ -233,10 +226,6 @@ namespace DataWF.Gui
         public virtual Widget InitDropDownContent()
         {
             var reachText = editor.GetCached<RichTextView>();
-            if (reachText.ReadOnly != ReadOnly)
-            {
-                reachText.ReadOnly = ReadOnly;
-            }
             return reachText;
         }
 
@@ -270,6 +259,7 @@ namespace DataWF.Gui
                 box.KeyPressed += OnTextKeyPressed;
                 box.KeyReleased += OnTextKeyReleased;
                 box.ShowFrame = false;
+                box.ReadOnly = ReadOnly;
                 var style = Editor?.Cell?.Style;
                 if (style != null)
                 {
@@ -277,8 +267,6 @@ namespace DataWF.Gui
                     box.BackgroundColor = style.BackBrush.ColorSelect;
                     //box.
                 }
-                if (box.ReadOnly != ReadOnly)
-                    box.ReadOnly = ReadOnly;
                 if (!ReadOnly && handleText)
                     box.Changed += OnTextChanged;
                 return box;
