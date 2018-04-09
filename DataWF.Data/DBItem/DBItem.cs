@@ -172,7 +172,7 @@ namespace DataWF.Data
 
         private void CheckState()
         {
-            var temp = DBState;
+            var temp = UpdateState;
             if (temp == DBUpdateState.Default || (temp & DBUpdateState.Commit) == DBUpdateState.Commit)
             {
                 temp &= ~DBUpdateState.Commit;
@@ -182,7 +182,7 @@ namespace DataWF.Data
             {
                 temp = DBUpdateState.Default;
             }
-            DBState = temp;
+            UpdateState = temp;
         }
 
         public void SetProperty(object value, [CallerMemberName] string property = null)
@@ -432,10 +432,10 @@ namespace DataWF.Data
 
         public void Delete()
         {
-            if ((DBState & DBUpdateState.Insert) == DBUpdateState.Insert)
+            if ((UpdateState & DBUpdateState.Insert) == DBUpdateState.Insert)
                 Detach();
             else
-                DBState |= DBUpdateState.Delete;
+                UpdateState |= DBUpdateState.Delete;
         }
 
         public IEnumerable<T> GetReferencing<T>(QQuery query, DBLoadParam param) where T : DBItem, new()
@@ -868,7 +868,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
-        public virtual DBUpdateState DBState
+        public virtual DBUpdateState UpdateState
         {
             get { return update; }
             set
@@ -877,7 +877,7 @@ namespace DataWF.Data
                 {
                     var arg = new DBItemEventArgs(this) { State = update };
                     update = value;
-                    OnPropertyChanged(nameof(DBState), null, value);
+                    OnPropertyChanged(nameof(UpdateState), null, value);
                     DBService.OnStateEdited(arg);
                 }
             }
@@ -895,16 +895,16 @@ namespace DataWF.Data
 
         public void Accept()
         {
-            if (IsChanged || (DBState & DBUpdateState.Commit) == DBUpdateState.Commit)
+            if (IsChanged || (UpdateState & DBUpdateState.Commit) == DBUpdateState.Commit)
             {
-                if ((DBState & DBUpdateState.Delete) == DBUpdateState.Delete)
+                if ((UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete)
                 {
                     Detach();
-                    DBState = DBUpdateState.Delete;
+                    UpdateState = DBUpdateState.Delete;
                 }
                 else
                 {
-                    DBState = DBUpdateState.Default;
+                    UpdateState = DBUpdateState.Default;
                 }
                 RemoveOld();
                 DBService.OnAccept(this);
@@ -929,12 +929,12 @@ namespace DataWF.Data
 
         public virtual void Reject()
         {
-            if (IsChanged || (DBState & DBUpdateState.Commit) == DBUpdateState.Commit)
+            if (IsChanged || (UpdateState & DBUpdateState.Commit) == DBUpdateState.Commit)
             {
-                if ((DBState & DBUpdateState.Insert) == DBUpdateState.Insert)
+                if ((UpdateState & DBUpdateState.Insert) == DBUpdateState.Insert)
                 {
                     Detach();
-                    DBState = DBUpdateState.Insert;
+                    UpdateState = DBUpdateState.Insert;
                 }
                 else
                 {
@@ -946,7 +946,7 @@ namespace DataWF.Data
                             RemoveOld(column);
                         }
                     }
-                    DBState = DBUpdateState.Default;
+                    UpdateState = DBUpdateState.Default;
                 }
                 DBService.OnReject(this);
             }
@@ -1115,7 +1115,7 @@ namespace DataWF.Data
         [Browsable(false)]
         public bool IsChanged
         {
-            get { return DBState != DBUpdateState.Default && (DBState & DBUpdateState.Commit) != DBUpdateState.Commit; }
+            get { return UpdateState != DBUpdateState.Default && (UpdateState & DBUpdateState.Commit) != DBUpdateState.Commit; }
         }
 
         [Browsable(false)]

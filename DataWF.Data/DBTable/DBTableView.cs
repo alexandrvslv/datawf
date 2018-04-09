@@ -366,7 +366,7 @@ namespace DataWF.Data
             var edited = GetEdited().ToList();
             foreach (T item in edited)
             {
-                if (IsStatic && (item.DBState & DBUpdateState.Delete) == DBUpdateState.Delete)
+                if (IsStatic && (item.UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete)
                     Remove(item);
                 item.Accept();
             }
@@ -377,7 +377,7 @@ namespace DataWF.Data
             var edited = GetEdited().ToList();
             foreach (T item in edited)
             {
-                if (IsStatic && (item.DBState & DBUpdateState.Insert) == DBUpdateState.Insert)
+                if (IsStatic && (item.UpdateState & DBUpdateState.Insert) == DBUpdateState.Insert)
                     Remove(item);
                 item.Reject();
             }
@@ -388,7 +388,7 @@ namespace DataWF.Data
             for (int i = 0; i < items.Count; i++)
             {
                 T view = items[i];
-                if (view != null && view.DBState != DBUpdateState.Default)
+                if (view != null && view.UpdateState != DBUpdateState.Default)
                     yield return view;
             }
         }

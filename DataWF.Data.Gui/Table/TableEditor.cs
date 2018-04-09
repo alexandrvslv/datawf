@@ -195,7 +195,7 @@ namespace DataWF.Data.Gui
 
         public override void ShowItemDialog(object item)
         {
-            if (item is DBItem && ((DBItem)item).DBState == DBUpdateState.Default)
+            if (item is DBItem && ((DBItem)item).UpdateState == DBUpdateState.Default)
             {
                 var explorer = new TableExplorer();
                 explorer.Initialize((DBItem)item, TableEditorMode.Item, false);
@@ -352,8 +352,8 @@ namespace DataWF.Data.Gui
                 baseRow = value;
                 if (view == null)
                     DataSource = value;
-                else if (baseColumn != null && view != null && value != null)
-                    view.DefaultFilter = $"{baseColumn.Name}={baseRow.PrimaryId}";
+                //else if (baseColumn != null && view != null && value != null)
+                //    view.DefaultFilter = $"{baseColumn.Name}={baseRow.PrimaryId}";
             }
         }
 
@@ -569,12 +569,12 @@ namespace DataWF.Data.Gui
                 }
             }
             TableView = view;
+            OwnerColumn = ownColumn;
             OwnerRow = row;
 
             if (Table == null)
                 return;
 
-            OwnerColumn = ownColumn;
             ReadOnly = readOnly;
             OpenMode = openmode;
 
@@ -816,7 +816,7 @@ namespace DataWF.Data.Gui
                     toolWindow.Visible = true;
                 }
 
-                if (bufRow.DBState != DBUpdateState.Default)
+                if (bufRow.UpdateState != DBUpdateState.Default)
                     return;
 
                 if (status == TableEditorStatus.Clone)
@@ -890,7 +890,7 @@ namespace DataWF.Data.Gui
             else
                 loader.Cancel();
         }
-        
+
         private void ToolReportClick(object sender, EventArgs e)
         {
             var editor = new QueryEditor();

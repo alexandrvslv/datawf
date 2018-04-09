@@ -19,6 +19,7 @@
 */
 
 using System;
+using System.ComponentModel;
 using DataWF.Common;
 
 namespace DataWF.Data
@@ -59,9 +60,9 @@ namespace DataWF.Data
             {
                 baseItem = value;
                 Build(value.Table.LogTable);
-                LogType = value.DBState.HasFlag(DBUpdateState.Insert)
-                              ? DBLogType.Insert : value.DBState.HasFlag(DBUpdateState.Update)
-                              ? DBLogType.Update : value.DBState.HasFlag(DBUpdateState.Delete)
+                LogType = value.UpdateState.HasFlag(DBUpdateState.Insert)
+                              ? DBLogType.Insert : value.UpdateState.HasFlag(DBUpdateState.Update)
+                              ? DBLogType.Update : value.UpdateState.HasFlag(DBUpdateState.Delete)
                               ? DBLogType.Delete : DBLogType.None;
                 foreach (var column in LogTable.GetLogColumns())
                 {
@@ -72,6 +73,7 @@ namespace DataWF.Data
 
         public DBTable BaseTable { get { return LogTable?.BaseTable; } }
 
+        [Browsable(false)]
         public DBLogTable LogTable { get { return (DBLogTable)Table; } }
 
         public void Upload()
@@ -100,6 +102,11 @@ namespace DataWF.Data
 
             var id = LogTable.Schema.Connection.ExecuteQuery(query.ToWhere());
             return LogTable.LoadById(id);
+        }
+
+        public override string ToString()
+        {
+            return $"{LogType} {BaseItem}";
         }
     }
 }

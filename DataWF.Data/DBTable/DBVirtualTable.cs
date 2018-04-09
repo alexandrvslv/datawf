@@ -200,7 +200,7 @@ namespace DataWF.Data
         {
             T row = new T();
             row.Main = main;
-            row.Build(this, main.DBState, false);
+            row.Build(this, main.UpdateState, false);
             return row;
         }
 

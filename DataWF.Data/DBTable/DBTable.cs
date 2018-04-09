@@ -611,14 +611,14 @@ namespace DataWF.Data
 
         public virtual bool SaveItem(DBItem item, DBTransaction transaction)
         {
-            if (item.DBState == DBUpdateState.Default || (item.DBState & DBUpdateState.Commit) == DBUpdateState.Commit)
+            if (item.UpdateState == DBUpdateState.Default || (item.UpdateState & DBUpdateState.Commit) == DBUpdateState.Commit)
             {
                 if (!item.Attached)
                     Add(item);
                 return false;
             }
 
-            if (item.DBState == DBUpdateState.Insert)
+            if (item.UpdateState == DBUpdateState.Insert)
             {
                 if (StampKey != null)
                     item.Stamp = DateTime.Now;
@@ -627,7 +627,7 @@ namespace DataWF.Data
                 if (IsLoging && StatusKey != null && item.GetType().Name != "DocumentLog")
                     item.Status = DBStatus.New;
             }
-            else if ((item.DBState & DBUpdateState.Update) == DBUpdateState.Update)
+            else if ((item.UpdateState & DBUpdateState.Update) == DBUpdateState.Update)
             {
                 if (StampKey != null)
                     item.Stamp = DateTime.Now;
@@ -642,7 +642,7 @@ namespace DataWF.Data
 
             var args = new DBItemEventArgs(item) { Transaction = transaction };
 
-            if (transaction.Reference && (item.DBState & DBUpdateState.Delete) != DBUpdateState.Delete)
+            if (transaction.Reference && (item.UpdateState & DBUpdateState.Delete) != DBUpdateState.Delete)
             {
                 foreach (var column in Columns.GetIsReference())
                 {
@@ -668,7 +668,7 @@ namespace DataWF.Data
             {
                 DBCommand dmlCommand = null;
 
-                if (item.DBState == DBUpdateState.Insert)
+                if (item.UpdateState == DBUpdateState.Insert)
                 {
                     if (PrimaryKey != null && item.PrimaryId == null && Schema.System != DBSystem.SQLite)
                     {
@@ -684,13 +684,13 @@ namespace DataWF.Data
                         dmlCommand = dmlInsert;
                     }
                 }
-                else if ((item.DBState & DBUpdateState.Delete) == DBUpdateState.Delete)
+                else if ((item.UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete)
                 {
                     if (dmlDelete == null)
                         dmlDelete = DBCommand.Build(this, comDelete, DBCommandTypes.Delete);
                     dmlCommand = dmlDelete;
                 }
-                else if ((item.DBState & DBUpdateState.Update) == DBUpdateState.Update)
+                else if ((item.UpdateState & DBUpdateState.Update) == DBUpdateState.Update)
                 {
                     //if (dmlUpdate == null)
                     dmlCommand = DBCommand.Build(this, comUpdate, DBCommandTypes.Update, args.Columns);
@@ -715,7 +715,7 @@ namespace DataWF.Data
                         args.LogItem.Save(transaction);
                     }
                     item.OnUpdated(args);
-                    item.DBState |= DBUpdateState.Commit;
+                    item.UpdateState |= DBUpdateState.Commit;
                     return true;
                 }
             }
@@ -729,7 +729,7 @@ namespace DataWF.Data
             if (rows.Count == 0)
                 return;
 
-            ListHelper.QuickSort(rows, new InvokerComparer(typeof(DBItem), "DBState"));
+            ListHelper.QuickSort(rows, new InvokerComparer(typeof(DBItem), nameof(DBItem.UpdateState)));
 
             var temp = transaction ?? new DBTransaction(Schema.Connection);
             try

@@ -58,10 +58,10 @@ namespace DataWF.Data
             }
         }
 
-        public override DBUpdateState DBState
+        public override DBUpdateState UpdateState
         {
-            get { return main.DBState; }
-            set { main.DBState = value; }
+            get { return main.UpdateState; }
+            set { main.UpdateState = value; }
         }
 
         public override void Build(DBTable table, DBUpdateState state = DBUpdateState.Insert, bool def = true)

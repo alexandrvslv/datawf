@@ -28,10 +28,10 @@ namespace DataWF.Data.Gui
             list.GenerateColumns = false;
             list.Name = "list";
             list.Text = "Reference List";
-            list.ListInfo.Columns.Add("Table", 100).Visible = false;
-            list.ListInfo.Columns.Add("Status", 100);
-            list.ListInfo.Columns.Add("DBState", 100);
-            list.ListInfo.Columns.Add("Attached", 30);
+            list.ListInfo.Columns.Add(nameof(DBItem.Table), 100).Visible = false;
+            list.ListInfo.Columns.Add(nameof(DBItem.Status), 100);
+            list.ListInfo.Columns.Add(nameof(DBItem.UpdateState), 100);
+            list.ListInfo.Columns.Add(nameof(DBItem.Attached), 30);
             list.ListInfo.ColumnsVisible = false;
             list.ListInfo.Sorters.Add(new LayoutSort("Table", ListSortDirection.Ascending, true));
             list.ListSource = rows;

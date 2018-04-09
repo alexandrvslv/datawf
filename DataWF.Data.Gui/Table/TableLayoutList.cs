@@ -216,6 +216,8 @@ namespace DataWF.Data.Gui
                 BuildFilterByColumns(Expression);
                 SetFilter(Expression.ToWhere());
                 base.filterChanged?.Invoke(this, EventArgs.Empty);
+                if (filterView?.Filters.Count == 0)
+                    HideFilter();
             }
             else
             {
@@ -367,7 +369,7 @@ namespace DataWF.Data.Gui
                 imgRect.Width = imgRect.Height = 14 * listInfo.Scale;
 
                 var textRect = new Rectangle(imgRect.Right + 3, imgRect.Top + 2, e.Bound.Width - (imgRect.Width + 6), e.Bound.Height - 3);
-                string val = (e.Index + 1).ToString() + (row.DBState != DBUpdateState.Default ? (" " + row.DBState.ToString()[0]) : "");
+                string val = (e.Index + 1).ToString() + (row.UpdateState != DBUpdateState.Default ? (" " + row.UpdateState.ToString()[0]) : "");
                 e.Context.DrawCell(listInfo.StyleHeader, val, e.Bound, textRect, e.State);
                 e.Context.DrawGlyph(color, imgRect, glyph);
             }

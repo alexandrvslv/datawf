@@ -1025,7 +1025,7 @@ namespace DataWF.Data
                         }
                     }
                 }
-                if ((row.DBState & DBUpdateState.Insert) == DBUpdateState.Insert)
+                if ((row.UpdateState & DBUpdateState.Insert) == DBUpdateState.Insert)
                     row.Table.Remove(row);
                 else
                 {
@@ -1049,7 +1049,7 @@ namespace DataWF.Data
                 {
                     rows.Add(item);
 
-                    item.DBState |= DBUpdateState.Delete;
+                    item.UpdateState |= DBUpdateState.Delete;
                     foreach (DBColumn column in item.Table.Columns)
                         if (main[column] == DBNull.Value && item[column] != DBNull.Value)
                             main[column] = item[column];

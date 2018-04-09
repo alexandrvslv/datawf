@@ -41,7 +41,7 @@ namespace DataWF.Data
         public DBItemEventArgs(DBItem item, DBColumn column = null, string property = null, object value = null)
         {
             Item = item;
-            State = item.DBState;
+            State = item.UpdateState;
             Column = column;
             Value = value;
             Property = property ?? string.Empty;
@@ -66,12 +66,12 @@ namespace DataWF.Data
 
         public bool StateAdded(DBUpdateState filter)
         {
-            return (State & filter) != filter && (Item.DBState & filter) == filter;
+            return (State & filter) != filter && (Item.UpdateState & filter) == filter;
         }
 
         public bool StateRemoved(DBUpdateState filter)
         {
-            return (State & filter) == filter && (Item.DBState & filter) != filter; ;
+            return (State & filter) == filter && (Item.UpdateState & filter) != filter; ;
         }
     }
 }

@@ -210,7 +210,7 @@ namespace DataWF.Data
         public override void OnItemChanged(DBItem item, string property, ListChangedType type)
         {
             if (property == nameof(DBItem.Attached)
-                || property == nameof(DBItem.DBState))
+                || property == nameof(DBItem.UpdateState))
                 return;
 
             foreach (var collection in virtualViews)
@@ -557,7 +557,7 @@ namespace DataWF.Data
             {
                 foreach (var item in list)
                 {
-                    if ((item.DBState & DBUpdateState.Insert) != DBUpdateState.Insert && !buf.Contains(item))
+                    if ((item.UpdateState & DBUpdateState.Insert) != DBUpdateState.Insert && !buf.Contains(item))
                     {
                         if (transcation.View != null && transcation.View.IsStatic)
                             transcation.View.Remove(item);
@@ -599,7 +599,7 @@ namespace DataWF.Data
                 var column = transaction.ReaderColumns[i];
                 var value = transaction.DbConnection.System.ReadValue(column, transaction.Reader.GetValue(i));
 
-                if (!srow.Attached || srow.DBState == DBUpdateState.Default || !srow.GetOld(column, out object oldValue))
+                if (!srow.Attached || srow.UpdateState == DBUpdateState.Default || !srow.GetOld(column, out object oldValue))
                 {
                     srow.SetValue(value, column, false);
                 }
@@ -732,6 +732,8 @@ namespace DataWF.Data
             list = list ?? this;
             foreach (T row in list)
             {
+                if (param.ValueLeft == null || param.ValueRight == null)
+                { }
                 if (CheckItem(row, param.ValueLeft.GetValue(row), param.ValueRight.GetValue(row), param.Comparer))
                     yield return row;
             }

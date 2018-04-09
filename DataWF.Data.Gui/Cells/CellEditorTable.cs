@@ -19,7 +19,7 @@ namespace DataWF.Data.Gui
         public CellEditorTable()
             : base()
         {
-            dropDownExVisible = true;
+            DropDownExVisible = true;
             dropDownAutoHide = true;
         }
 

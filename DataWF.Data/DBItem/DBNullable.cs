@@ -80,5 +80,10 @@ namespace DataWF.Data
                 result = ((IComparable<T>)value).CompareTo(other.value);
             return result;
         }
+
+        public override string ToString()
+        {
+            return notNull ? value.ToString() : string.Empty;
+        }
     }
 }
