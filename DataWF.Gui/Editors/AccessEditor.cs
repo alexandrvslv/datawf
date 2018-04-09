@@ -11,46 +11,96 @@ namespace DataWF.Gui
 
         public AccessEditor()
         {
-            this.alist = new LayoutList();
-            this.alist.GenerateColumns = false;
-            this.alist.GenerateToString = false;
-            this.alist.ListInfo.HeaderVisible = false;
-            this.alist.ListInfo.Columns.Add(new LayoutColumn() { Name = "Group", Width = 110, FillWidth = true, Editable = false });
-            this.alist.ListInfo.Columns.Add("View", 35);
-            this.alist.ListInfo.Columns.Add("Edit", 35);
-            this.alist.ListInfo.Columns.Add("Create", 35);
-            this.alist.ListInfo.Columns.Add("Delete", 35);
-            this.alist.ListInfo.Columns.Add("Admin", 35);
-            this.alist.ListInfo.Columns.Add("Accept", 35);
-
-            this.alist.ListInfo.Sorters.Add(new LayoutSort("Group"));
-            this.alist.CellValueChanged += CellValueChanged;
+            alist = new LayoutList()
+            {
+                GenerateColumns = false,
+                GenerateToString = false,
+                ListInfo = new LayoutListInfo(new[] {
+                    new LayoutColumn() { Name = nameof(AccessItem.Group), Width = 110, FillWidth = true, Editable = false },
+                    new LayoutColumn() { Name = nameof(AccessItem.View), Width = 35, Invoker = new Invoker<AccessItem, bool>(nameof(AccessItem.View),
+                                                            (item) => item.View,
+                                                            (item, value) =>
+                                                            {
+                                                                if (access == null)
+                                                                    return;
+                                                                if (access.Admin || access.Edit)
+                                                                {
+                                                                    item.View = value;
+                                                                    access.Add(item);
+                                                                }
+                                                            })},
+                    new LayoutColumn() { Name = nameof(AccessItem.Edit), Width = 35 , Invoker = new Invoker<AccessItem, bool>(nameof(AccessItem.Edit),
+                                                            (item) => item.Edit,
+                                                            (item, value) =>
+                                                            {
+                                                                if (access == null)
+                                                                    return;
+                                                                if (access.Admin || access.Edit)
+                                                                {
+                                                                    item.Edit = value;
+                                                                    access.Add(item);
+                                                                }
+                                                            })},
+                    new LayoutColumn() { Name = nameof(AccessItem.Create), Width = 35 , Invoker = new Invoker<AccessItem, bool>(nameof(AccessItem.Create),
+                                                            (item) => item.Create,
+                                                            (item, value) =>
+                                                            {
+                                                                if (access == null)
+                                                                    return;
+                                                                if (access.Admin || access.Edit)
+                                                                {
+                                                                    item.Create = value;
+                                                                    access.Add(item);
+                                                                }
+                                                            })},
+                    new LayoutColumn() { Name = nameof(AccessItem.Delete), Width = 35 , Invoker = new Invoker<AccessItem, bool>(nameof(AccessItem.Delete),
+                                                            (item) => item.Delete,
+                                                            (item, value) =>
+                                                            {
+                                                                if (access == null)
+                                                                    return;
+                                                                if (access.Admin || access.Edit)
+                                                                {
+                                                                    item.Delete = value;
+                                                                    access.Add(item);
+                                                                }
+                                                            })},
+                    new LayoutColumn() { Name = nameof(AccessItem.Admin), Width = 35, Invoker = new Invoker<AccessItem, bool>(nameof(AccessItem.Admin),
+                                                            (item) => item.Admin,
+                                                            (item, value) =>
+                                                            {
+                                                                if (access == null)
+                                                                    return;
+                                                                if (access.Admin || access.Edit)
+                                                                {
+                                                                    item.Admin = value;
+                                                                    access.Add(item);
+                                                                }
+                                                            })},
+                    new LayoutColumn() { Name = nameof(AccessItem.Accept), Width = 35, Invoker = new Invoker<AccessItem, bool>(nameof(AccessItem.Accept),
+                                                            (item) => item.Accept,
+                                                            (item, value) =>
+                                                            {
+                                                                if (access == null)
+                                                                    return;
+                                                                if (access.Admin || access.Edit)
+                                                                {
+                                                                    item.Accept = value;
+                                                                    access.Add(item);
+                                                                }
+                                                            })} },
+                    new[] { new LayoutSort("Group") })
+                {
+                    HeaderVisible = false
+                }
+            };
+            alist.CellValueChanged += CellValueChanged;
 
             PackStart(alist, true, true);
         }
 
         private void CellValueChanged(object sender, LayoutValueChangedEventArgs e)
         {
-            if (e != null && e.ListItem != null && e.Cell.Name != "Group")
-            {
-                SetAccess((AccessItem)e.ListItem, e.Cell.Name, (bool)e.Data);
-            }
-        }
-
-        private void SetAccess(AccessItem item, string name, bool flag)
-        {
-            //if (name == "View")
-            //    item.View = flag;
-            //else if (name == "Edit")
-            //    item.Edit = flag;
-            //else if (name == "Create")
-            //    item.Create = flag;
-            //else if (name == "Delete")
-            //    item.Delete = flag;
-            //else if (name == "Admin")
-            //    item.Admin = flag;
-
-            access.Add(item);
             if (accessable != null)
                 accessable.Access = access;
         }
