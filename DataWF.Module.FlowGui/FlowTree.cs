@@ -83,11 +83,10 @@ namespace DataWF.Module.FlowGui
             set { SelectedNode = Find(value); }
         }
 
-        public override void RefreshData()
+        private void RefreshData()
         {
-            base.RefreshData();
-            CheckDBView(Template.DBTable?.DefaultView, ShowTemplate);
-            CheckDBView(Work.DBTable?.DefaultView, ShowWork);
+            CheckDBView(Template.DBTable?.DefaultView, ShowTemplate, GlyphType.Book, Colors.LightBlue);
+            CheckDBView(Work.DBTable?.DefaultView, ShowWork, GlyphType.GearsAlias, Colors.Silver);
         }
 
         public override void CheckDBItem(TableItemNode node)
@@ -97,21 +96,25 @@ namespace DataWF.Module.FlowGui
             if (item is Template)
             {
                 node.Glyph = GlyphType.Book;
+                node.GlyphColor = Colors.LightBlue;
                 InitItems(((Template)item).GetParams(), node, ShowStage);
             }
             else if (item is Work)
             {
-                node.Glyph = GlyphType.GearsAlias;
+                node.Glyph = GlyphType.GearAlias;
+                node.GlyphColor = Colors.Silver;
                 InitItems(((Work)item).GetStages(), node, ShowStage);
             }
             else if (item is Stage)
             {
                 node.Glyph = GlyphType.EditAlias;
+                node.GlyphColor = Colors.LightGoldenrodYellow;
                 InitItems(((Stage)item).GetParams(), node, ShowStageParam);
             }
             else if (item is StageParam || item is TemplateParam)
             {
                 node.Glyph = GlyphType.Code;
+                node.GlyphColor = Colors.LimeGreen;
             }
         }
     }

@@ -1,6 +1,7 @@
 ﻿using DataWF.Data;
 using DataWF.Gui;
 using DataWF.Common;
+using Xwt.Drawing;
 
 namespace DataWF.Module.CommonGui
 {
@@ -19,7 +20,7 @@ namespace DataWF.Module.CommonGui
             set { (Item as IAccessable).Access = value; }
         }
 
-        public int Count { get; set; }
+        public int Count { get; set; }        
 
         public void Localize()
         {

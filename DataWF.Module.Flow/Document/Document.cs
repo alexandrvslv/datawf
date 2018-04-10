@@ -310,7 +310,6 @@ namespace DataWF.Module.Flow
             IsComplete = false;
         }
 
-
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
         {
@@ -459,6 +458,7 @@ namespace DataWF.Module.Flow
         public DocInitType IniType
         {
             get { return initype; }
+            set { initype = value; }
         }
 
         [DataMember, Column("is_important")]
@@ -487,9 +487,12 @@ namespace DataWF.Module.Flow
         {
             get
             {
-                return GetReferencing<DocumentReference>(DocumentReference.DBTable,
-                                                         DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.DocumentId)),
-                                                         DBLoadParam.None);
+                if ((initype & DocInitType.Refed) != DocInitType.Refed)
+                {
+                    initype |= DocInitType.Refed;
+                    return GetReferencing<DocumentReference>(nameof(DocumentReference.DocumentId), DBLoadParam.None);
+                }
+                return GetReferencing<DocumentReference>(nameof(DocumentReference.DocumentId), DBLoadParam.None);
             }
         }
 
@@ -498,9 +501,12 @@ namespace DataWF.Module.Flow
         {
             get
             {
-                return GetReferencing<DocumentReference>(DocumentReference.DBTable,
-                                                         DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.ReferenceId)),
-                                                         DBLoadParam.None);
+                if ((initype & DocInitType.Refing) != DocInitType.Refing)
+                {
+                    initype |= DocInitType.Refing;
+                    return GetReferencing<DocumentReference>(nameof(DocumentReference.ReferenceId), DBLoadParam.None);
+                }
+                return GetReferencing<DocumentReference>(nameof(DocumentReference.ReferenceId), DBLoadParam.None);
             }
         }
 
@@ -509,9 +515,13 @@ namespace DataWF.Module.Flow
         {
             get
             {
-                return GetReferencing<DocumentWork>(DocumentWork.DBTable,
-                                                    DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DocumentId)),
-                                                    DBLoadParam.None);
+                if ((initype & DocInitType.Workflow) != DocInitType.Workflow)
+                {
+                    initype |= DocInitType.Workflow;
+                    return GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), DBLoadParam.Load);
+                }
+
+                return GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), DBLoadParam.None);
             }
         }
 
@@ -520,9 +530,26 @@ namespace DataWF.Module.Flow
         {
             get
             {
-                return GetReferencing<DocumentData>(DocumentData.DBTable,
-                                                    DocumentData.DBTable.ParseProperty(nameof(DocumentData.DocumentId)),
-                                                    DBLoadParam.None);
+                if ((initype & DocInitType.Data) != DocInitType.Data)
+                {
+                    initype |= DocInitType.Data;
+                    return GetReferencing<DocumentData>(nameof(DocumentData.DocumentId), DBLoadParam.Load);
+                }
+                return GetReferencing<DocumentData>(nameof(DocumentData.DocumentId), DBLoadParam.None);
+            }
+        }
+
+        [Browsable(false)]
+        public IEnumerable<DocumentCustomer> Customers
+        {
+            get
+            {
+                if ((initype & DocInitType.Customer) != DocInitType.Customer)
+                {
+                    initype |= DocInitType.Customer;
+                    return GetReferencing<DocumentCustomer>(nameof(DocumentCustomer.DocumentId), DBLoadParam.Load);
+                }
+                return GetReferencing<DocumentCustomer>(nameof(DocumentCustomer.DocumentId), DBLoadParam.None);
             }
         }
 
@@ -565,7 +592,6 @@ namespace DataWF.Module.Flow
 
         public DocumentData GetData(string p)
         {
-            Initialize(DocInitType.Data);
             foreach (var data in Datas)
                 if (data.FileName == p || data.FileName.EndsWith(p))
                     return data;
@@ -695,54 +721,8 @@ namespace DataWF.Module.Flow
                 DocumentData.DBTable.Save(Datas.ToList(), transaction);
             else if (type == DocInitType.Workflow)
                 DocumentWork.DBTable.Save(Works.ToList(), transaction);
-        }
-
-        public IList Initialize(DocInitType type, DBTransaction transaction = null)
-        {
-            initype = type;
-            IList buffer = null;
-            try
-            {
-                if (type == DocInitType.Default)
-                {
-                    Refresh();
-                }
-                var temp = transaction ?? new DBTransaction(Table.Schema.Connection) { ReaderParam = DBLoadParam.Synchronize };
-                if ((type & DocInitType.Workflow) == DocInitType.Workflow)
-                {
-                    var query = new QQuery("", DocumentWork.DBTable);
-                    query.BuildPropertyParam(nameof(DocumentWork.DocumentId), CompareType.Equal, PrimaryId);
-                    buffer = DocumentWork.DBTable.Load(temp, query);
-                }
-                if ((type & DocInitType.Refed) == DocInitType.Refed || (type & DocInitType.Refing) == DocInitType.Refing)
-                {
-                    var query = new QQuery("", DocumentReference.DBTable);
-                    if ((type & DocInitType.Refed) == DocInitType.Refed)
-                        query.BuildPropertyParam(nameof(DocumentReference.DocumentId), CompareType.Equal, PrimaryId);
-                    if ((type & DocInitType.Refing) == DocInitType.Refing)
-                        query.BuildPropertyParam(nameof(DocumentReference.ReferenceId), CompareType.Equal, PrimaryId).Logic = LogicType.Or;
-                    buffer = DocumentReference.DBTable.Load(temp, query);
-                }
-                if ((type & DocInitType.Data) == DocInitType.Data)
-                {
-                    var query = new QQuery("", DocumentData.DBTable);
-                    query.BuildPropertyParam(nameof(DocumentData.DocumentId), CompareType.Equal, PrimaryId);
-                    buffer = DocumentData.DBTable.Load(temp, query);
-                }
-                if ((type & DocInitType.Customer) == DocInitType.Customer)
-                {
-                    var query = new QQuery("", DocumentCustomer.DBTable);
-                    query.BuildPropertyParam(nameof(DocumentCustomer.DocumentId), CompareType.Equal, PrimaryId);
-                    buffer = DocumentCustomer.DBTable.Load(temp, query);
-                }
-                if (transaction == null)
-                    temp.Dispose();
-            }
-            finally
-            {
-                initype = DocInitType.Default;
-            }
-            return buffer;
+            else if (type == DocInitType.Customer)
+                DocumentCustomer.DBTable.Save(Customers.ToList(), transaction);
         }
 
         public class DocumentExecuteArgs : ExecuteArgs

@@ -540,7 +540,9 @@ namespace DataWF.Data.Gui
             DBColumn column = cell.Invoker as DBColumn;
             if (column != null)
             {
-                return InitCellEditor(column);
+                var editor = InitCellEditor(column);
+                if (editor != null)
+                    return editor;
             }
             return base.InitCellEditor(cell);
         }
@@ -599,14 +601,10 @@ namespace DataWF.Data.Gui
                 editor = new CellEditorDate();
                 ((CellEditorDate)editor).Format = column.Format;
             }
-            else
+            if (editor != null)
             {
-                editor = new CellEditorText();
-                ((CellEditorText)editor).Format = column.Format;
-                ((CellEditorText)editor).MultiLine = false;
-                ((CellEditorText)editor).DropDownVisible = false;
+                editor.DataType = column.DataType;
             }
-            editor.DataType = column.DataType;
             return editor;
         }
     }

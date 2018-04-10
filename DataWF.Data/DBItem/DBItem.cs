@@ -452,7 +452,7 @@ namespace DataWF.Data
 
         public IEnumerable<T> GetReferencing<T>(string property, DBLoadParam param) where T : DBItem, new()
         {
-            var table = DBService.GetTable<T>();
+            var table = DBService.GetTableAttribute<T>(true)?.Table;
             return GetReferencing<T>(table, table.ParseProperty(property), param);
         }
 

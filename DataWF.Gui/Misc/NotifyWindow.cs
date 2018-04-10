@@ -123,7 +123,7 @@ namespace DataWF.Gui
 
             if (show)
             {
-                Point p = new Point(10, ScreenBounds.Height - (Height + 20));
+                Point p = new Point(Desktop.PrimaryScreen.VisibleBounds.Width - (Width + 20), Desktop.PrimaryScreen.VisibleBounds.Height - (Height + 20));
                 Mode = ToolShowMode.ToolTip;
                 Show(null, p);//(Control)GuiService.Main
             }

@@ -90,19 +90,7 @@ namespace DataWF.Data
 
         public virtual DBColumn CreateColumn(string name)
         {
-            var type = DataType;
-            if (DataType.IsGenericType)
-                type = DataType.GetGenericArguments()?.FirstOrDefault();
-            return new DBColumn(name, type, Size)
-            {
-                Scale = Scale,
-                ColumnType = ColumnType,
-                DefaultValue = Default,
-                Keys = Keys,
-                Table = Table.Table,
-                DisplayName = Property,
-                GroupName = GroupName
-            };
+            return new DBColumn(name) { };
         }
 
         public DBColumn Generate()
@@ -128,7 +116,26 @@ namespace DataWF.Data
             }
             else
             {
-                Column = CreateColumn(ColumnName);
+                Column = Table.Table.Columns[ColumnName];
+                if (Column == null)
+                {
+                    Column = CreateColumn(ColumnName);
+                }
+                var type = DataType;
+                if (DataType.IsGenericType)
+                    type = DataType.GetGenericArguments()?.FirstOrDefault();
+
+                Column.DataType = type;
+                Column.Size = Size;
+                Column.Scale = Scale;
+                Column.ColumnType = ColumnType;
+                Column.DefaultValue = Default;
+                Column.Keys = Keys;
+                Column.Table = Table.Table;
+                Column.Property = Property;
+                Column.DisplayName = Property;
+                Column.GroupName = GroupName;
+
                 Table.Table.Columns.Add(Column);
             }
             return Column;
@@ -147,10 +154,10 @@ namespace DataWF.Data
             {
                 Column = CreateColumn(name);
                 Column.DisplayName = $"{Column.DisplayName} {culture.TwoLetterISOLanguageName.ToUpperInvariant()}";
-                Column.GroupName = ColumnName;
-                Column.Culture = culture;
                 Table.Table.Columns.Add(Column);
             }
+            Column.GroupName = ColumnName;
+            Column.Culture = culture;
         }
     }
 }

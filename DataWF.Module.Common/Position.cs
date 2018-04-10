@@ -21,6 +21,9 @@ using DataWF.Data;
 using DataWF.Common;
 using System.ComponentModel;
 using System.Runtime.Serialization;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace DataWF.Module.Common
 {
@@ -85,6 +88,11 @@ namespace DataWF.Module.Common
         {
             get { return GetName("name"); }
             set { SetName("name", value); }
+        }
+
+        public IEnumerable<User> GetUsers()
+        {
+            return GetReferencing<User>(nameof(User.PositionId), DBLoadParam.None);
         }
     }
 }

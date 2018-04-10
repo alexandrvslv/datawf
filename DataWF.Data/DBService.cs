@@ -1109,6 +1109,11 @@ namespace DataWF.Data
 
         private static Dictionary<Type, ItemTypeAttribute> cacheItemTypes = new Dictionary<Type, ItemTypeAttribute>();
 
+        public static TableAttribute GetTableAttribute<T>(bool inherite = false)
+        {
+            return GetTableAttribute(typeof(T), inherite);
+        }
+
         public static TableAttribute GetTableAttribute(Type type, bool inherite = false)
         {
             if (!cacheTables.TryGetValue(type, out TableAttribute table))
@@ -1118,14 +1123,14 @@ namespace DataWF.Data
                 {
                     table = type.GetCustomAttribute<VirtualTableAttribute>();
                 }
+                if (table != null)
+                {
+                    table.Initialize(type);
+                }
                 if (table == null && inherite)
                 {
                     var itemType = GetItemTypeAttribute(type);
                     return itemType?.Table;
-                }
-                if (table != null)
-                {
-                    table.Initialize(type);
                 }
 
                 cacheTables[type] = table;

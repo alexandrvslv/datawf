@@ -59,7 +59,6 @@ namespace DataWF.Gui
         protected LayoutGroupList groups;
         protected bool _gridMode = false;
         protected bool checkView = true;
-        protected bool hideCollection = false;
         protected bool writeOnValueChanged = true;
         protected bool _listSensitive = true;
         protected bool _hideEmpty = false;
@@ -1427,11 +1426,7 @@ namespace DataWF.Gui
         }
 
         [DefaultValue(false)]
-        public bool HideCollection
-        {
-            get { return hideCollection; }
-            set { hideCollection = value; }
-        }
+        public bool HideCollections { get; set; }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public LayoutListState UseState
@@ -2013,6 +2008,7 @@ namespace DataWF.Gui
                 fieldInfo = value;
                 ListInfo = fieldInfo?.Columns;
                 ListSource = fieldInfo?.Nodes.DefaultView;
+                fieldInfo?.SetSource(fieldSource);
             }
         }
 
@@ -2100,7 +2096,6 @@ namespace DataWF.Gui
                     ((INotifyPropertyChanged)fieldSource).PropertyChanged += handleProperty;
 
                 FieldType = fieldSource.GetType();
-                FieldInfo.SetSource(fieldSource);
                 RefreshBounds(true);
             }
         }
@@ -2394,11 +2389,7 @@ namespace DataWF.Gui
 
         public bool GetVisible(ILayoutCell cell)
         {
-            if (hideCollection && TypeHelper.IsList(cell.Invoker.DataType))
-            {
-                return false;
-            }
-            return true;
+            return HideCollections && TypeHelper.IsEnumerable(cell.Invoker.DataType) ? false : true;
         }
 
         public virtual string GetHeaderLocale(ILayoutCell cell)
@@ -2432,7 +2423,7 @@ namespace DataWF.Gui
                 GetProperties(this, args);
         }
 
-        public static List<string> GetPropertiesByCell(ILayoutCell owner, Type basetype)
+        public List<string> GetPropertiesByCell(ILayoutCell owner, Type basetype)
         {
             List<string> strings = new List<string>();
             PropertyInfo[] pis = null;
@@ -2446,6 +2437,8 @@ namespace DataWF.Gui
             foreach (PropertyInfo p in pis)
             {
                 if (!p.CanRead || p.GetIndexParameters().Length > 0 || !TypeHelper.GetBrowsable(p))
+                    continue;
+                if (HideCollections && TypeHelper.IsEnumerable(p.PropertyType))
                     continue;
                 strings.Add((owner == null ? string.Empty : owner.Name + ".") + p.Name);
             }
@@ -3426,7 +3419,6 @@ namespace DataWF.Gui
                 {
                     ShowFilter();
                 }
-
                 filtered.FilterQuery.Parameters.Clear();
                 if (TreeMode)
                     filtered.FilterQuery.Parameters.Add(QueryParameter.CreateTreeFilter(listItemType));
@@ -3915,13 +3907,13 @@ namespace DataWF.Gui
                 return;
             if (!listInfo.GroupVisible)
             {
-                int start = listInfo.CalcHeigh ? 0 : (int)((bounds.Area.Top + clip.Y) * gridCols / bounds.Columns.Height);
+                int start = listInfo.CalcHeigh || listInfo.GridOrientation == GridOrientation.Vertical ? 0 : (int)((bounds.Area.Top + clip.Y) * gridCols / bounds.Columns.Height);
                 if (listInfo.Columns.Visible)
                     start--;
                 if (start < 0)
                     start = 0;
 
-                int end = listInfo.CalcHeigh ? listSource.Count - 1 : (int)((bounds.Area.Top + clip.Bottom) * gridCols / bounds.Columns.Height);
+                int end = listInfo.CalcHeigh || listInfo.GridOrientation == GridOrientation.Vertical ? listSource.Count - 1 : (int)((bounds.Area.Top + clip.Bottom) * gridCols / bounds.Columns.Height);
                 end += gridCols;
                 if (listInfo.Columns.Visible)
                     end--;

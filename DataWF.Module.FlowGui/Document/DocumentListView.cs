@@ -10,6 +10,7 @@ using DataWF.Module.Flow;
 using Xwt;
 using DataWF.Module.CommonGui;
 using System.Linq;
+using DataWF.Data;
 
 namespace DataWF.Module.FlowGui
 {
@@ -89,7 +90,8 @@ namespace DataWF.Module.FlowGui
                 Grouping = false,
                 Mode = LayoutListMode.List,
                 Name = "DocumentList",
-                ReadOnly = true
+                ReadOnly = true,
+                HideCollections = true
             };
             list.CellDoubleClick += ListCellMouseDoubleClick;
             list.PositionChanged += ListOnPositionChanged;
@@ -323,7 +325,7 @@ namespace DataWF.Module.FlowGui
             {
                 var document = _documents[e.NewIndex];
                 if (document.WorkStage == null || document.WorkStage.Length == 0)
-                    document.Initialize(DocInitType.Workflow);
+                    document.GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), DBLoadParam.Load);
             }
         }
 

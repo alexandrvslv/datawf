@@ -97,7 +97,7 @@ namespace DataWF.Gui
             InitialLocation = WindowLocation.Manual;
             Padding = new WidgetSpacing(p, p, p, p);
 
-            timerHide.Interval = 2000;
+            timerHide.Interval = 8000;
             timerHide.Elapsed += TimerHideTick;
 
             timerStart.Interval = 500;

@@ -40,10 +40,15 @@ namespace DataWF.Gui
                 }
                 else if (image.Glyph != GlyphType.None)
                 {
-                    e.Context.DrawGlyph(e.Style, imageBound, image.Glyph, e.State);
+                    var color = e.Style.FontBrush.GetColorByState(e.State);
+                    if (image is Node && ((Node)image).GlyphColor != CellStyleBrush.ColorEmpty)
+                    {
+                        color = ((Node)image).GlyphColor;
+                    }
+                    e.Context.DrawGlyph(color, imageBound, image.Glyph);
                 }
             }
-			var textBound = layoutList.GetCellTextBound(e);
+            var textBound = layoutList.GetCellTextBound(e);
             if (e.Formated is string)
                 e.Context.DrawText(e.Style, (string)e.Formated, textBound, e.State);
             else if (e.Formated is TextLayout)

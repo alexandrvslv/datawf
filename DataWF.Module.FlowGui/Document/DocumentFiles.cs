@@ -277,7 +277,7 @@ namespace DataWF.Module.FlowGui
 
         public void Synch()
         {
-            Document.Initialize(DocInitType.Data);
+            Document.GetReferencing<DocumentData>(nameof(DocumentData.DocumentId), DBLoadParam.Load);
         }
 
         protected override void Dispose(bool disp)

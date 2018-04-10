@@ -161,7 +161,7 @@ namespace DataWF.Data
             }
         }
 
-        public Query FilterQuery { get; set; }
+        public Query FilterQuery { get; set; } = new Query();
 
         public event EventHandler StatusFilterChanged;
 
@@ -351,7 +351,7 @@ namespace DataWF.Data
             ClearInternal();
             if (!query.IsEmpty())
             {
-                AddRangeInternal(table.Select(query));                
+                AddRangeInternal(table.Select(query));
             }
             else
             {

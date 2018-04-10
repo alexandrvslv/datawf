@@ -6,13 +6,14 @@ using System;
 using System.Threading;
 using DataWF.Module.Flow;
 using Xwt;
-
+using System.Threading.Tasks;
 
 namespace DataWF.Module.FlowGui
 {
     public class DocumentHeader : VPanel, IDocument, ISynch, ILocalizable, IReadOnly
     {
         private Document document;
+
         private GroupBoxItem gAttribute;
         private GroupBoxItem gWork;
         private GroupBoxItem gFiles;
@@ -22,6 +23,8 @@ namespace DataWF.Module.FlowGui
         private ListEditor fields;
         private DBTableView<DocumentWork> view;
         private bool synch = false;
+        private Type documentType;
+
         //private GroupBoxMap groupBoxMap2;
         //private VScrollBar vScroll;
 
@@ -69,10 +72,9 @@ namespace DataWF.Module.FlowGui
             fields.List.AllowCellSize = true;
             fields.List.EditMode = EditModes.ByClick;
             fields.List.EditState = EditListState.Edit;
-            fields.List.GenerateColumns = false;
-            fields.List.GenerateToString = false;
-            fields.List.Grouping = false;
+            fields.List.Grouping = true;
             fields.List.GridMode = true;
+            fields.List.HideCollections = true;
 
             gWork = new GroupBoxItem()
             {
@@ -112,15 +114,18 @@ namespace DataWF.Module.FlowGui
         public void Synch()
         {
             if (!synch)
-                ThreadPool.QueueUserWorkItem((o) =>
+            {
+                Task.Run(() =>
                     {
                         try
                         {
-                            document.Initialize(DocInitType.Data | DocInitType.Workflow);
+                            document.GetReferencing<DocumentData>(nameof(DocumentData.DocumentId), DBLoadParam.Load);
+                            document.GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), DBLoadParam.Load);
                             synch = true;
                         }
                         catch (Exception ex) { Helper.OnException(ex); }
                     });
+            }
         }
 
         public ListEditor Fields { get { return fields; } }
@@ -160,6 +165,7 @@ namespace DataWF.Module.FlowGui
                 {
                     synch = false;
                     document = value;
+                    DocumentType = document?.GetType();
                     fields.DataSource = document;
                     view.DefaultFilter = DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DocumentId)).Name + "=" + (document == null ? "0" : document.Id.ToString());
                     files.Document = document;
@@ -169,6 +175,22 @@ namespace DataWF.Module.FlowGui
                 }
             }
         }
+
+        public Type DocumentType
+        {
+            get { return documentType; }
+            private set
+            {
+                if (documentType != value)
+                {
+                    documentType = value;
+
+
+                }
+            }
+        }
+
+
 
         private void ContentListChanged(object sender, System.ComponentModel.ListChangedEventArgs e)
         {

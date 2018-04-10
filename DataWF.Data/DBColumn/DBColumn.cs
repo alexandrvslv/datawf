@@ -122,6 +122,9 @@ namespace DataWF.Data
             return base.ToString();
         }
 
+        [ReadOnly(true)]
+        public string Property { get; set; }
+
         public bool CanWrite { get { return true; } }
 
         [XmlIgnore, Browsable(false)]

@@ -35,10 +35,12 @@ namespace DataWF.Module.FlowGui
             contextAdd = new Menubar(
                 new ToolMenuItem { Name = "Template", Sensitive = Template.DBTable?.Access.Create ?? false, Glyph = GlyphType.Book },
                 new ToolMenuItem { Name = "Template Attribute", Sensitive = TemplateParam.DBTable?.Access.Create ?? false, Glyph = GlyphType.Columns },
-                new ToolMenuItem { Name = "Work", Sensitive = Work.DBTable?.Access.Create ?? false, Glyph = GlyphType.Building },
-                new ToolMenuItem { Name = "Work Stage", Sensitive = Stage.DBTable?.Access.Create ?? false, Glyph = GlyphType.Flickr },
+                new ToolMenuItem { Name = "Work", Sensitive = Work.DBTable?.Access.Create ?? false, Glyph = GlyphType.GearsAlias },
+                new ToolMenuItem { Name = "Work Stage", Sensitive = Stage.DBTable?.Access.Create ?? false, Glyph = GlyphType.EditAlias },
                 new ToolMenuItem { Name = "Stage Parameter", Sensitive = StageParam.DBTable?.Access.Create ?? false, Glyph = GlyphType.Columns },
-                new ToolMenuItem { Name = "Group", Sensitive = UserGroup.DBTable?.Access.Create ?? false, Glyph = GlyphType.UserMd },
+                new ToolMenuItem { Name = "Group", Sensitive = UserGroup.DBTable?.Access.Create ?? false, Glyph = GlyphType.Users },
+                new ToolMenuItem { Name = "Department", Sensitive = Department.DBTable?.Access.Create ?? false, Glyph = GlyphType.Home },
+                new ToolMenuItem { Name = "Position", Sensitive = Position.DBTable?.Access.Create ?? false, Glyph = GlyphType.UserMd },
                 new ToolMenuItem { Name = "User", Sensitive = User.DBTable?.Access.Create ?? false, Glyph = GlyphType.User },
                 new ToolMenuItem { Name = "Scheduler", Sensitive = Scheduler.DBTable?.Access.Create ?? false, Glyph = GlyphType.ClockO })
             { Name = "FlowExplorer" };
@@ -59,6 +61,7 @@ namespace DataWF.Module.FlowGui
 
             var userKeys = UserTreeKeys.None;
             if (Department.DBTable?.Access.View ?? false) userKeys |= UserTreeKeys.Department;
+            if (Position.DBTable?.Access.View ?? false) userKeys |= UserTreeKeys.Position;
             if (User.DBTable?.Access.View ?? false) userKeys |= UserTreeKeys.User;
             if (UserGroup.DBTable?.Access.View ?? false) userKeys |= UserTreeKeys.Group;
             if (Scheduler.DBTable?.Access.View ?? false) userKeys |= UserTreeKeys.Scheduler;

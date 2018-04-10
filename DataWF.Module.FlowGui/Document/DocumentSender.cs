@@ -155,7 +155,7 @@ namespace DataWF.Module.FlowGui
             {
                 var dworks = document.Works.ToList();
                 if (dworks.Count == 0)
-                    dworks = (List<DocumentWork>)document.Initialize(DocInitType.Workflow);
+                    dworks = document.GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), DBLoadParam.Load).ToList();
 
                 var cwork = document.WorkCurrent;
                 if (cwork != null)

@@ -268,7 +268,7 @@ namespace DataWF.Module.FlowGui
         {
             GuiService.Localize(toolLoad, Name, "Load", GlyphType.Refresh);
             GuiService.Localize(toolCreate, Name, "Create", GlyphType.PlusCircle);
-            GuiService.Localize(this, Name, "Document worker", GlyphType.Book);
+            GuiService.Localize(this, Name, "Documents", GlyphType.Book);
             tree.Localize();
             dockList.Localize();
         }

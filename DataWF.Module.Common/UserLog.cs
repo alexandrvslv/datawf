@@ -67,7 +67,7 @@ namespace DataWF.Module.Common
                 return;
             RowLoging?.Invoke(null, arg);
             var log = UserLog.LogRow(arg);
-
+            //if (transaction.DbConnection != DBTable.Schema.Connection)
             if (arg.Transaction.SubTransaction == null)
             {
                 arg.Transaction.BeginSubTransaction(UserLog.DBTable.Schema);
@@ -116,14 +116,6 @@ namespace DataWF.Module.Common
             set { SetProperty(value, nameof(LogType)); }
         }
 
-        [Browsable(false)]
-        [DataMember, Column("document_id", 256)]
-        public string DocumentId
-        {
-            get { return GetProperty<string>(nameof(DocumentId)); }
-            set { SetProperty(value, nameof(DocumentId)); }
-        }
-
         [DataMember, Column("document_table", 512)]
         public string DocumentTableName
         {
@@ -140,6 +132,14 @@ namespace DataWF.Module.Common
                 cacheDocumentTable = value;
                 DocumentTableName = value?.Name;
             }
+        }
+
+        [Browsable(false)]
+        [DataMember, Column("document_id", 256)]
+        public string DocumentId
+        {
+            get { return GetProperty<string>(nameof(DocumentId)); }
+            set { SetProperty(value, nameof(DocumentId)); }
         }
 
         [XmlIgnore]
@@ -218,6 +218,21 @@ namespace DataWF.Module.Common
                 cacheTarget = value;
                 TargetId = value?.PrimaryId.ToString();
                 TargetTable = value?.Table;
+
+                if (value == null)
+                    return;
+                if (value.UpdateState.HasFlag(DBUpdateState.Insert))
+                {
+                    LogType = UserLogType.Insert;
+                }
+                else if (value.UpdateState.HasFlag(DBUpdateState.Delete))
+                {
+                    LogType = UserLogType.Delete;
+                }
+                else if (value.UpdateState.HasFlag(DBUpdateState.Update))
+                {
+                    LogType = UserLogType.Update;
+                }
             }
         }
 
@@ -332,8 +347,6 @@ namespace DataWF.Module.Common
             SetProperty(_textCache, nameof(TextData));
         }
 
-
-
         //public SelectableList<LogChange> GetLogMapList()
         //{
         //    DBTable table = TargetTable;
@@ -400,19 +413,6 @@ namespace DataWF.Module.Common
             else
             {
                 log.TargetItem = arg.Item;
-            }
-
-            if (arg.Item.UpdateState.HasFlag(DBUpdateState.Insert))
-            {
-                log.LogType = UserLogType.Insert;
-            }
-            else if (arg.Item.UpdateState.HasFlag(DBUpdateState.Delete))
-            {
-                log.LogType = UserLogType.Delete;
-            }
-            else if (arg.Item.UpdateState.HasFlag(DBUpdateState.Update))
-            {
-                log.LogType = UserLogType.Update;
             }
             return log;
         }

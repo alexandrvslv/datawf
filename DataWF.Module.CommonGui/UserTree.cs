@@ -116,14 +116,14 @@ namespace DataWF.Module.CommonGui
             view.ListChanged += handler;
         }
 
-        public virtual void RefreshData()
+        private void RefreshData()
         {
-            CheckDBView(Department.DBTable?.DefaultView, ShowDepartment);
+            CheckDBView(Department.DBTable?.DefaultView, ShowDepartment, GlyphType.Home, Colors.SandyBrown);
             //CheckDBView(Position.DBTable?.DefaultView, ShowPosition);
             //CheckDBView(User.DBTable?.DefaultView, ShowUser);
-            CheckDBView(UserGroup.DBTable?.DefaultView, ShowGroup);
-            CheckDBView(Scheduler.DBTable?.DefaultView, ShowScheduler);
-            CheckDBView(GroupPermission.DBTable?.DefaultView, ShowPermission);
+            CheckDBView(UserGroup.DBTable?.DefaultView, ShowGroup, GlyphType.Users, Colors.LightSeaGreen);
+            CheckDBView(Scheduler.DBTable?.DefaultView, ShowScheduler, GlyphType.TimesCircle, Colors.LightPink);
+            CheckDBView(GroupPermission.DBTable?.DefaultView, ShowPermission, GlyphType.Database, Colors.LightSteelBlue);
         }
 
         private void HandleViewListChanged(object sender, ListChangedEventArgs e)
@@ -213,7 +213,7 @@ namespace DataWF.Module.CommonGui
             return rez;
         }
 
-        public TableItemNode CheckDBView(IDBTableView view, bool show)
+        public TableItemNode CheckDBView(IDBTableView view, bool show, GlyphType glyph, Color glyphColor)
         {
             if (view == null)
                 return null;
@@ -222,6 +222,8 @@ namespace DataWF.Module.CommonGui
             {
                 view.ListChanged += handler;
                 node = InitItem(view);
+                node.Glyph = glyph;
+                node.GlyphColor = glyphColor;
                 Nodes.Add(node);
             }
             else
@@ -258,19 +260,56 @@ namespace DataWF.Module.CommonGui
         public virtual void CheckDBItem(TableItemNode node)
         {
             var item = (DBItem)node.Item;
-            if (item.Table.GroupKey != null && item.PrimaryId != null)
+            if (item is Position)
+            {
+                node.Glyph = GlyphType.UserMd;
+                node.GlyphColor = Colors.PeachPuff;
+                InitItems(((Position)item).GetUsers(), node, ShowUser);
+            }
+            else if (item.Table.GroupKey != null && item.PrimaryId != null)
             {
                 InitItems(item.Table.SelectItems(item.Table.GroupKey, item.PrimaryId, CompareType.Equal), node, node.Visible);
             }
             if (item is Department)
             {
                 node.Glyph = GlyphType.Home;
+                node.GlyphColor = Colors.SandyBrown;
+                InitItems(((Department)item).GetUsers(), node, ShowUser && !ShowPosition);
                 InitItems(((Department)item).GetPositions(), node, ShowPosition);
-                InitItems(((Department)item).GetUsers(), node, ShowUser);
             }
-            if (item is User)
+            else if (item is User)
             {
                 node.Glyph = GlyphType.User;
+                node.GlyphColor = Colors.Violet;
+            }
+            else if (item is UserGroup)
+            {
+                node.Glyph = GlyphType.Users;
+                node.GlyphColor = Colors.LightSeaGreen;
+            }
+            else if (item is GroupPermission)
+            {
+                switch (((GroupPermission)item).Type)
+                {
+                    case PermissionType.GSchema:
+                        node.Glyph = GlyphType.Database;
+                        node.GlyphColor = Colors.Silver;
+                        break;
+                    case PermissionType.GBlock:
+                        node.Glyph = GlyphType.FolderOpen;
+                        node.GlyphColor = Colors.BurlyWood;
+                        break;
+                    case PermissionType.GTable:
+                        node.Glyph = GlyphType.Table;
+                        node.GlyphColor = Colors.LightSteelBlue;
+                        break;
+                    case PermissionType.GColumn:
+                        node.Glyph = GlyphType.Columns;
+                        node.GlyphColor = Colors.ForestGreen;
+                        break;
+                    default:
+                        break;
+                }
             }
         }
 
@@ -333,7 +372,7 @@ namespace DataWF.Module.CommonGui
                     textRect = new Rectangle(imgRect.Right, imgRect.Top, e.Bound.Width - imgRect.Width, e.Bound.Height);
                     //string val = (index + 1).ToString() + (row.DBState != DBUpdateState.Default ? (" " + row.DBState.ToString()[0]) : "");
                     e.Context.DrawCell(listInfo.StyleHeader, null, e.Bound, textRect, e.State);
-                    e.Context.DrawGlyph(listInfo.StyleHeader, imgRect, glyph);
+                    e.Context.DrawGlyph(color, imgRect, glyph);
                 }
                 if (node.Item is IDBTableView)
                 {
@@ -395,7 +434,7 @@ namespace DataWF.Module.CommonGui
 
             if (entry.Text?.Length != 0)
             {
-               // TreeMode = false;
+                // TreeMode = false;
                 list.FilterQuery.Parameters.Add(typeof(Node), LogicType.And, nameof(Node.FullPath), CompareType.Like, entry.Text);
             }
             else
@@ -407,6 +446,13 @@ namespace DataWF.Module.CommonGui
 
         protected override void Dispose(bool disposing)
         {
+            foreach (TableItemNode item in Nodes)
+            {
+                if (item.Item is IDBTableView)
+                {
+                    ((IDBTableView)item.Item).ListChanged -= handler;
+                }
+            }
             //User.DBTable.DefaultView.ListChanged -= handler;
             //UserGroup.DBTable.DefaultView.ListChanged -= handler;
             //GroupPermission.DBTable.DefaultView.ListChanged -= handler;

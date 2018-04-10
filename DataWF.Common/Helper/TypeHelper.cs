@@ -88,6 +88,11 @@ namespace DataWF.Common
             return IsInterface(type, typeof(IList)) && type != typeof(byte[]);
         }
 
+        public static bool IsEnumerable(Type type)
+        {
+            return IsInterface(type, typeof(IEnumerable)) && type != typeof(string) && type != typeof(byte[]);
+        }
+
         public static bool IsCollection(Type type)
         {
             return IsInterface(type, typeof(ICollection)) && type != typeof(byte[]);

@@ -302,9 +302,7 @@ namespace DataWF.Module.FlowGui
             CheckProcRezult(arg);
             if (arg.Procedure.ProcedureType == ProcedureTypes.StoredFunction || arg.Procedure.ProcedureType == ProcedureTypes.StoredProcedure)
             {
-                document.Initialize(DocInitType.Default);
-                document.Initialize(DocInitType.Refed);
-                document.Initialize(DocInitType.Refing);
+                document.IniType = DocInitType.Default;
             }
             CheckState(DocumentEditorState.None);
         }
@@ -518,7 +516,8 @@ namespace DataWF.Module.FlowGui
                     return;
                 }
                 if (document.Attached && document.GetLastWork() == null)
-                    document.Initialize(DocInitType.Workflow);
+                    document.GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), DBLoadParam.Load);
+
                 document.PropertyChanged += DocumentPropertyChanged;
                 document.ReferenceChanged += DocumentPropertyChanged;
 
@@ -721,10 +720,7 @@ namespace DataWF.Module.FlowGui
 
             document.Reject();
 
-            document.Initialize(DocInitType.Default);
-            document.Initialize(DocInitType.Refed);
-            document.Initialize(DocInitType.Refing);
-            document.Initialize(DocInitType.Workflow);
+            document.IniType = DocInitType.Default;
 
             CheckState(DocumentEditorState.None);
         }

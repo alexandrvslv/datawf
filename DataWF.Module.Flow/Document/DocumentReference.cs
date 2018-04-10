@@ -174,8 +174,8 @@ namespace DataWF.Module.Flow
         [DataMember, Column("document_id")]
         public long? DocumentId
         {
-            get { return GetProperty<long?>(nameof(DocumentId)); }
-            set { SetProperty(value, nameof(DocumentId)); }
+            get { return GetProperty<long?>(); }
+            set { SetProperty(value); }
         }
 
         [Reference("fk_ddocument_reference_documentid", nameof(DocumentId))]
@@ -189,15 +189,15 @@ namespace DataWF.Module.Flow
         [DataMember, Column("reference_id")]
         public long? ReferenceId
         {
-            get { return GetProperty<long?>(nameof(DocumentId)); }
-            set { SetProperty(value, nameof(DocumentId)); }
+            get { return GetProperty<long?>(); }
+            set { SetProperty(value); }
         }
 
         [Reference("fk_ddocument_reference_reference_id", nameof(ReferenceId))]
         public Document Reference
         {
-            get { return GetPropertyReference<Document>(nameof(DocumentId)); }
-            set { SetPropertyReference(value, nameof(DocumentId)); }
+            get { return GetPropertyReference<Document>(nameof(ReferenceId)); }
+            set { SetPropertyReference(value, nameof(ReferenceId)); }
         }
 
         public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)

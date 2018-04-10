@@ -136,14 +136,14 @@ namespace DataWF.Gui
 
         public bool Readonly
         {
-            get { return this.alist.ReadOnly; }
+            get { return alist.ReadOnly; }
             set
             {
-                this.alist.ReadOnly = value;
-                if (!this.alist.ReadOnly)
-                    this.alist.EditMode = EditModes.ByClick;
+                alist.ReadOnly = value;
+                if (!alist.ReadOnly)
+                    alist.EditMode = EditModes.ByClick;
                 else
-                    this.alist.EditMode = EditModes.None;
+                    alist.EditMode = EditModes.None;
             }
         }
     }

@@ -8,6 +8,7 @@ using DataWF.Module.Flow;
 using Xwt;
 using Xwt.Drawing;
 using DataWF.Data;
+using System.Threading.Tasks;
 
 namespace DataWF.Module.FlowGui
 {
@@ -107,11 +108,12 @@ namespace DataWF.Module.FlowGui
         public void Synch()
         {
             if (!synch)
-                ThreadPool.QueueUserWorkItem((o) =>
+                Task.Run(() =>
                 {
                     try
                     {
-                        document.Initialize(DocInitType.Refed | DocInitType.Refing);
+                        document.GetReferencing<DocumentReference>(nameof(DocumentReference.DocumentId), DBLoadParam.Load);
+                        document.GetReferencing<DocumentReference>(nameof(DocumentReference.ReferenceId), DBLoadParam.Load);
                         refs.Documents.UpdateFilter();
                         synch = true;
                     }

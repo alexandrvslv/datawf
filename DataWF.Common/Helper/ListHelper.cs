@@ -726,7 +726,7 @@ namespace DataWF.Common
                 result = string.Compare((string)x, y.ToString(), StringComparison.OrdinalIgnoreCase);
                 hash = false;
             }
-            else if (x is DateTime)
+            else if (x is DateTime && y is DateTime)
             {
                 var xd = (DateTime)x;
                 var yd = (DateTime)y;

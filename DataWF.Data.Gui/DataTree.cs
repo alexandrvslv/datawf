@@ -6,6 +6,7 @@ using System.Collections;
 using System.ComponentModel;
 using System.Collections.Generic;
 using Xwt;
+using Xwt.Drawing;
 
 namespace DataWF.Data.Gui
 {
@@ -499,17 +500,49 @@ namespace DataWF.Data.Gui
             if (node.Glyph == GlyphType.None)
             {
                 if (item is DBSchema)
+                {
                     node.Glyph = GlyphType.Database;
+                    node.GlyphColor = Colors.LightSteelBlue;
+                }
                 else if (item is DBTableGroup)
+                {
                     node.Glyph = GlyphType.FolderOTable;
+                    node.GlyphColor = Colors.BurlyWood;
+                }
                 else if (item is DBTable)
+                {
                     node.Glyph = GlyphType.Table;
+                    node.GlyphColor = Colors.LightSteelBlue;
+                }
                 else if (item is DBColumnGroup)
-                    node.Glyph = GlyphType.FolderOColumn;
+                {
+                    node.Glyph = GlyphType.Tags;
+                    node.GlyphColor = Colors.BurlyWood;
+                }
                 else if (item is DBColumn)
-                    node.Glyph = GlyphType.Columns;
+                {
+                    node.Glyph = GlyphType.Tag;
+                    node.GlyphColor = Colors.ForestGreen;
+                }
+                else if (item is DBIndex)
+                {
+                    node.Glyph = GlyphType.MapMarker;
+                    node.GlyphColor = Colors.Purple;
+                }
+                else if (item is DBForeignKey)
+                {
+                    node.Glyph = GlyphType.Link;
+                    node.GlyphColor = Colors.Orange;
+                }
+                else if (item is DBConstraint)
+                {
+                    node.Glyph = GlyphType.Key;
+                    node.GlyphColor = Colors.YellowGreen;
+                }
                 else if (item is DBSequence)
-                    node.Glyph = GlyphType.Inr;
+                {
+                    node.Glyph = GlyphType.Plus;
+                }
             }
             node.Visible = true;
             node.Localize();
