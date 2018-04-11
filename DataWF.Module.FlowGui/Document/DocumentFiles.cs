@@ -11,53 +11,37 @@ using Xwt.Drawing;
 
 namespace DataWF.Module.FlowGui
 {
-    public class DocumentFiles : VPanel, ILocalizable, ISynch
+    public class DocumentFiles : VPanel, ILocalizable, ISynch, IDocument
     {
         private Document _document;
         private TableLayoutList list;
-        private Toolsbar tools = new Toolsbar();
-        private ToolItem toolInsert = new ToolItem();
-        private ToolItem toolDelete = new ToolItem();
-        private ToolItem toolView = new ToolItem();
-        private ToolItem toolEdit = new ToolItem();
-        private ToolItem toolLoad = new ToolItem();
-        private ToolItem toolTemplate = new ToolItem();
+        private Toolsbar tools;
+        private ToolItem toolInsert;
+        private ToolItem toolDelete;
+        private ToolItem toolView;
+        private ToolItem toolEdit;
+        private ToolItem toolLoad;
+        private ToolItem toolTemplate;
         internal DBTableView<DocumentData> view;
 
         public DocumentFiles()
         {
+            toolLoad = new ToolItem(ToolLoadClick) { Name = "Load", Glyph = GlyphType.Refresh };
+            toolInsert = new ToolItem(ToolInsertClick) { Name = "Insert", ForeColor = Colors.DarkGreen, Glyph = GlyphType.PlusCircle };
+            toolDelete = new ToolItem(ToolDeleteClick) { Name = "Delete", ForeColor = Colors.DarkRed, Glyph = GlyphType.MinusCircle };
+            toolView = new ToolItem(ToolViewClick) { Name = "View", Glyph = GlyphType.PictureO };
+            toolEdit = new ToolItem(ToolEditClick) { Name = "Edit", ForeColor = Colors.DarkOrange, Glyph = GlyphType.EditAlias };
+            toolTemplate = new ToolItem(ToolTemplateClick) { Name = "Template", ForeColor = Colors.LightBlue, Glyph = GlyphType.Book };
 
-            tools.Items.Add(toolLoad);
-            tools.Items.Add(new ToolSeparator() { Visible = true });
-            tools.Items.Add(toolInsert);
-            tools.Items.Add(toolDelete);
-            tools.Items.Add(new ToolSeparator() { Visible = true });
-            tools.Items.Add(toolView);
-            tools.Items.Add(toolEdit);
-            tools.Items.Add(toolTemplate);
-            tools.Name = "tools";
-
-            toolLoad.Name = "toolLoad";
-            toolLoad.Click += ToolLoadClick;
-
-            toolInsert.Name = "toolInsert";
-            toolInsert.ForeColor = Colors.DarkGreen;
-            toolInsert.Click += ToolInsertClick;
-
-            toolDelete.Name = "toolDelete";
-            toolDelete.ForeColor = Colors.DarkRed;
-            toolDelete.Click += ToolDeleteClick;
-
-            toolView.Name = "toolView";
-            toolView.Click += ToolViewClick;
-
-            toolEdit.Name = "toolEdit";
-            toolEdit.ForeColor = Colors.DarkOrange;
-            toolEdit.Click += ToolEditClick;
-
-            toolTemplate.Name = "toolTemplate";
-            toolTemplate.Click += ToolTemplateClick;
-
+            tools = new Toolsbar(toolLoad,
+                new ToolSeparator(),
+                toolInsert,
+                toolDelete,
+                new ToolSeparator(),
+                toolView,
+                toolEdit,
+                toolTemplate)
+            { Name = "Bar" };
 
             view = new DBTableView<DocumentData>(DocumentData.DBTable, "", DBViewKeys.Empty);
 
@@ -92,12 +76,7 @@ namespace DataWF.Module.FlowGui
         public void Localize()
         {
             GuiService.Localize(this, "DocumentFiles", "Files");
-            GuiService.Localize(toolLoad, "DocumentFiles", "Load", GlyphType.Refresh);
-            GuiService.Localize(toolInsert, "DocumentFiles", "Insert", GlyphType.PlusCircle);
-            GuiService.Localize(toolDelete, "DocumentFiles", "Delete", GlyphType.MinusCircle);
-            GuiService.Localize(toolEdit, "DocumentFiles", "Edit", GlyphType.EditAlias);
-            GuiService.Localize(toolView, "DocumentFiles", "View", GlyphType.PictureO);
-            GuiService.Localize(toolTemplate, "DocumentFiles", "Template", GlyphType.Book);
+            tools.Localize();
             list.Localize();
         }
 
@@ -162,6 +141,8 @@ namespace DataWF.Module.FlowGui
                 }
             }
         }
+
+        DBItem IDocument.Document { get => Document; set => Document = (Document)value; }
 
         private void ToolInsertClick(object sender, EventArgs e)
         {

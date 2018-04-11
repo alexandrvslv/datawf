@@ -293,7 +293,7 @@ namespace DataWF.Data.Gui
             Title = Locale.Get("MainForm", "Data\\Document Work Flow");
             bar.Localize();
             statusBar.Localize();
-            dock.Localizing();
+            dock.Localize();
         }
 
         #endregion

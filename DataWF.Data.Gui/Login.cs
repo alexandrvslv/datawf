@@ -27,6 +27,10 @@ namespace DataWF.Data.Gui
 
                 AccessItem.Default = true;
             }
+            catch (Exception ex)
+            {
+                //ex
+            }
             finally
             {
                 Helper.SetDirectory();

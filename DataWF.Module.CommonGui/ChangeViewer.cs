@@ -294,7 +294,7 @@ namespace DataWF.Module.CommonGui
                     DBTable table = node.Tag as DBTable;
                     if (table != null && table != UserLog.DBTable && table.IsLoging && table.StatusKey != null)
                     {
-                        string filter = DBService.FormatStatusFilter(table, DBStatus.Accept);
+                        string filter = table.FormatStatusFilter(DBStatus.Accept);
                         command.CommandText = table.BuildQuery("where " + filter, null, "count(*)");
                         object count = transaction.ExecuteQuery(command, DBExecuteType.Scalar);
 
@@ -346,7 +346,7 @@ namespace DataWF.Module.CommonGui
         {
             rows.Clear();
             wait.Reset();
-            string filter = DBService.FormatStatusFilter(table, DBStatus.Accept);
+            string filter = table.FormatStatusFilter(DBStatus.Accept);
             var filtered = table.LoadItems("where " + filter);
             if (!wait.WaitOne(0))
                 foreach (DBItem row in filtered)

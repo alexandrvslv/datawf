@@ -44,11 +44,13 @@ namespace DataWF.Module.FlowGui
         private ToolItem toolForward;
         private ToolItem toolNext;
         private ToolDropDown toolProcedures;
-        private DockPanel dock;
+        private DockBox dock;
         private ToolLabel toolLabel = new ToolLabel();
         private IEnumerable<ToolItem> toolsItems;
 
         private DocumentHeader header = new DocumentHeader();
+        private DocumentWorks works = new DocumentWorks();
+        private DocumentFiles files = new DocumentFiles();
         private DocumentRelations refers = new DocumentRelations();
         private DockPage pageRefers;
         private DockPage pageHeader;
@@ -98,18 +100,21 @@ namespace DataWF.Module.FlowGui
             { Name = "tools" };
             toolsItems = tools.Items.Cast<ToolItem>();
 
-            dock = new DockPanel()
+            dock = new DockBox()
             {
-                MapItem = null,
                 Name = "dock",
-                PagesAlign = LayoutAlignType.Top
+                BackgroundColor = GuiEnvironment.StylesInfo["Page"].BaseColor
+
             };
-            dock.Pages.PageStyle = GuiEnvironment.StylesInfo["DocumentDock"];
-            dock.Pages.VisibleClose = false;
-            dock.Pages.VisibleImage = false;
-            pageHeader = dock.AddPage(header);
-            pageRefers = dock.AddPage(refers);
-            dock.SelectPage(pageHeader);
+            //dock.PageStyle = GuiEnvironment.StylesInfo["DocumentDock"];
+            pageHeader = dock.Put(header, DockType.Left);
+            pageHeader.Box.VisibleClose = false;
+
+            pageRefers = dock.Put(works, DockType.Content);
+            pageRefers = dock.Put(files, DockType.Content);
+
+            pageRefers = dock.Put(refers, DockType.Content);
+            pageRefers.Box.VisibleClose = false;
 
             Name = "DocumentEditor";
             Text = "Document";
@@ -406,7 +411,7 @@ namespace DataWF.Module.FlowGui
                         item.Visible = item.Tag == template || item.Tag == stage;
                     foreach (TemplateMenuItem item in toolTemplates.DropDownItems)
                         item.Visible = item.Tag == template || item.Tag == stage;
-                    foreach (var page in dock.Pages.Items)
+                    foreach (var page in dock.GetPages())
                         page.Visible = page.Tag == template || page.Tag == stage;
                 }
             }
@@ -435,7 +440,7 @@ namespace DataWF.Module.FlowGui
                         item.Visible = item.Tag == template;
                     foreach (TemplateMenuItem item in toolTemplates.DropDownItems)
                         item.Visible = item.Tag == template;
-                    foreach (DockPage dp in dock.Pages.Items)
+                    foreach (DockPage dp in dock.GetPages())
                         dp.Visible = dp.Tag == template;
 
                 }
@@ -472,10 +477,13 @@ namespace DataWF.Module.FlowGui
                 }
                 dock.PageSelected += DockPageSelected;
 
-                if (dock.CurrentPage == null)
-                    dock.SelectPage(pageHeader);
-                else// if(document.Attached)
-                    LoadPage(dock.CurrentPage);
+                foreach (var panel in dock.GetDockPanels())
+                {
+                    if (panel.CurrentPage == null)
+                        panel.SelectPage(panel.FirstOrDefault());
+
+                    LoadPage(panel.CurrentPage);
+                }
 
                 toolReturn.Sensitive = from;
                 toolSend.Sensitive = state != DocumentEditorState.Create;
@@ -566,22 +574,23 @@ namespace DataWF.Module.FlowGui
                 return null;
 
             var name = foreign.Table.Name + " (" + foreign.Column.Name + ")";
-            var page = dock.Pages.Items[name];
+            var page = dock.GetPage(name);
             if (page == null)
             {
                 IDBTableView view = foreign.Table.CreateItemsView("", DBViewKeys.None, DBStatus.Current);
 
-                TableEditor editor = new TableEditor();
-                editor.Name = name;
-                editor.Text = param.Name == null || param.Name.Length == 0 ? foreign.Table.ToString() : param.Name;
-                editor.TableView = view;
-                editor.OwnerColumn = foreign.Column;
-                editor.OpenMode = TableEditorMode.Referencing;
+                var editor = new TableEditor()
+                {
+                    Name = name,
+                    Text = param.Name == null || param.Name.Length == 0 ? foreign.Table.ToString() : param.Name,
+                    TableView = view,
+                    OwnerColumn = foreign.Column,
+                    OpenMode = TableEditorMode.Referencing
+                };
                 //editor.ToolSave = false;
                 editor.SelectionChanged += OnReferenceTableRowSelected;
 
-                page = DockBox.CreatePage(editor);
-                dock.Pages.Items.Add(page);
+                page = dock.Put(editor, DockType.Content);
             }
             page.Tag = owner;
             return page;
@@ -603,32 +612,29 @@ namespace DataWF.Module.FlowGui
 
             if (proc.ProcedureType == ProcedureTypes.Query)
             {
-                DockPage page = dock.Pages.Items[name];
+                DockPage page = dock.GetPage(name);
                 if (page == null)
                 {
-                    PQueryView qview = new PQueryView();
+                    var qview = new PQueryView();
                     qview.Name = name;
                     qview.Text = param.Name == null || param.Name.Length == 0 ? proc.ToString() : param.Name;
                     qview.Document = document;
                     qview.Procedure = proc;
-                    page = DockBox.CreatePage(qview);
-                    dock.Pages.Items.Add(page);
+                    page = dock.Put(qview, DockType.Content);
                 }
                 page.Tag = owner;
             }
             Type t = proc.ProcedureType == ProcedureTypes.Assembly || proc.ProcedureType == ProcedureTypes.Source ? proc.GetObjectType() : null;
             if (t != null && !TypeHelper.IsBaseType(t, typeof(Window)) && TypeHelper.IsBaseType(t, typeof(Widget)))
             {
-                DockPage page = dock.Pages.Items[name];
+                DockPage page = dock.GetPage(name);
                 if (page == null)
                 {
-
                     var control = (Widget)EmitInvoker.CreateObject(t, true);
                     control.Name = name;
                     if (control is IText)
                         ((IText)control).Text = param.Name == null || param.Name.Length == 0 ? proc.ToString() : param.Name;
-                    page = DockBox.CreatePage(control);
-                    dock.Pages.Items.Add(page);
+                    page = dock.Put(control, DockType.Content);
                 }
                 page.Tag = owner;
             }

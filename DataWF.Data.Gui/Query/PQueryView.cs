@@ -32,7 +32,7 @@ namespace DataWF.Data.Gui
 
                 }
                 if (fields.Count > 0)
-                    str += "  " + DBService.GetRowText((DBItem)fields[0].Field.DataSource, true, true, "  ");
+                    str += "  " + ((DBItem)fields[0].Field.DataSource)?.GetRowText(true, true, "  ");
                 List.Description = str;
                 //var parameters = ProcedureProgress.CreateParam(procedure, document);
                 procedure.UpdateCommand(command, parameters);

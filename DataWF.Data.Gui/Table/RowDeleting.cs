@@ -71,7 +71,7 @@ namespace DataWF.Data.Gui
                 {
                     try
                     {
-                        rowsDelete = DBService.GetChilds(row, 2, DBLoadParam.Load);
+                        rowsDelete = row.GetChilds(2, DBLoadParam.Load);
                         rows.Clear();
                         rows.AddRange(rowsDelete);
                         Callback();
