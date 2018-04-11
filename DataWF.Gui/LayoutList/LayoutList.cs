@@ -4020,7 +4020,6 @@ namespace DataWF.Gui
                         field.Text = GetHeader(field);
             }
             RefreshBounds(false);
-
         }
 
         #endregion

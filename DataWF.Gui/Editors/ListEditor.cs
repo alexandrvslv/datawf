@@ -212,6 +212,11 @@ namespace DataWF.Gui
                     list.Mode = LayoutListMode.Fields;
                     list.FieldSource = dataSource;
                     toolPosition.Visible = false;
+                    if (dataSource != null)
+                    {
+                        var dataType = DataSource.GetType();
+                        Text = $"{Locale.Get(dataType.FullName, dataType.Name)}({DataSource.ToString()})";
+                    }
                 }
                 else
                 {
@@ -243,6 +248,7 @@ namespace DataWF.Gui
                 }
                 toolAccess.Visible = value is IAccessable;
                 ViewAccess(toolAccess.Checked);
+
             }
         }
 

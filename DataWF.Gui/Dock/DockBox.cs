@@ -219,6 +219,16 @@ namespace DataWF.Gui
             }
         }
 
+        public void Localize()
+        {
+            foreach (Widget control in GetControls())
+            {
+                var loc = control as ILocalizable;
+                if (loc != null)
+                    loc.Localize();
+            }
+        }
+
         protected override Size OnGetPreferredSize(SizeConstraint widthConstraint, SizeConstraint heightConstraint)
         {
             base.OnGetPreferredSize(widthConstraint, heightConstraint);
@@ -275,16 +285,6 @@ namespace DataWF.Gui
 
             //cont.G.FillRectangle(SystemBrushes.WidgetDarkDark, rect);
             //}
-        }
-
-        public void Localizing()
-        {
-            foreach (Widget control in GetControls())
-            {
-                var loc = control as ILocalizable;
-                if (loc != null)
-                    loc.Localize();
-            }
         }
 
         public DockPage PickTool(Widget control)
@@ -382,7 +382,6 @@ namespace DataWF.Gui
 
         private void PanelTabSelected(object sender, DockPageEventArgs e)
         {
-
             if (e.Page == null)
             {
                 if (!((DockPanel)sender).MapItem.FillWidth)
@@ -397,8 +396,7 @@ namespace DataWF.Gui
                 QueueDraw();
             }
 
-            if (PageSelected != null)
-                PageSelected(this, e);
+            PageSelected?.Invoke(this, e);
         }
 
         private void OnPageDrag(object sender, DockPageEventArgs e)
@@ -432,13 +430,18 @@ namespace DataWF.Gui
 
         public DockMapItem CreateDockItem(string Name)
         {
-            var item = new DockMapItem();
-            item.Name = Name;
-            item.Visible = true;
-            item.Panel = new DockPanel();
-            item.Panel.PageSelected += PanelTabSelected;
-            item.Panel.Pages.PageClick += Pages_PageClick;
-            item.Panel.Pages.PageDrag += OnPageDrag;
+            var panel = new DockPanel();
+            panel.PageSelected += PanelTabSelected;
+            panel.Pages.PageClick += Pages_PageClick;
+            panel.Pages.PageDrag += OnPageDrag;
+
+            var item = new DockMapItem()
+            {
+                Name = Name,
+                Visible = true,
+                Panel = panel
+            };
+
             AddChild(item.Panel);
             return item;
         }
@@ -483,6 +486,19 @@ namespace DataWF.Gui
             }
         }
 
+        public DockPage GetPage(string name)
+        {
+            foreach (DockMapItem item in LayoutMapHelper.GetItems(map))
+            {
+                DockPage dp = item.Panel.GetPage(name);
+                if (dp != null)
+                {
+                    return dp;
+                }
+            }
+            return null;
+        }
+
         public DockPage GetPage(Widget c)
         {
             foreach (DockMapItem item in LayoutMapHelper.GetItems(map))
@@ -509,6 +525,14 @@ namespace DataWF.Gui
         }
 
         public IEnumerable<IDockContainer> GetDocks()
+        {
+            foreach (DockMapItem item in LayoutMapHelper.GetVisibleItems(map))
+            {
+                yield return item.Panel;
+            }
+        }
+
+        public IEnumerable<DockPanel> GetDockPanels()
         {
             foreach (DockMapItem item in LayoutMapHelper.GetVisibleItems(map))
             {
