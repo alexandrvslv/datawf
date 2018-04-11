@@ -71,6 +71,20 @@ namespace DataWF.Data
             }
         }
 
+        public override DBColumn Column
+        {
+            get => base.Column;
+            set
+            {
+                if (Column != value)
+                {
+                    ColumnName = value?.FullName;
+                    //prefix = value.Table.Code;
+                    columnn = value;
+                }
+            }
+        }
+
         public override string Text
         {
             get { return base.Text; }

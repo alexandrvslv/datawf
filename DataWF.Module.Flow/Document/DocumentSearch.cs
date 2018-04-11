@@ -241,7 +241,7 @@ namespace DataWF.Module.Flow
             QWork.Columns.Add(new QColumn(DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DocumentId))));
 
             if (IsCurrent)
-                QDoc.BuildPropertyParam(nameof(Document.WorkId), CompareType.IsNot, DBNull.Value);
+                QDoc.BuildPropertyParam(nameof(Document.WorkId), CompareType.IsNot, null);
 
 
             if (Number != null && Number.Length > 0)

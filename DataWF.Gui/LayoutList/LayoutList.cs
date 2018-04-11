@@ -772,8 +772,11 @@ namespace DataWF.Gui
         protected override void Dispose(bool disposing)
         {
             ClearCache();
-            ListSource = null;
-            ListInfo = null;
+            Application.Invoke(() =>
+            {
+                ListSource = null;
+                ListInfo = null;
+            });
             base.Dispose(disposing);
 
             void ClearCache()
@@ -1885,6 +1888,7 @@ namespace DataWF.Gui
                 }
 
                 listInfo = value;
+                bounds.Clear();
 
                 if (listInfo != null)
                 {

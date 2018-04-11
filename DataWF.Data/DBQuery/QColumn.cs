@@ -61,7 +61,7 @@ namespace DataWF.Data
             }
         }
 
-        public DBColumn Column
+        public virtual DBColumn Column
         {
             get
             {

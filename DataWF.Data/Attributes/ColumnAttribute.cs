@@ -133,18 +133,19 @@ namespace DataWF.Data
                 Column = CreateColumn(name);
                 Column.DisplayName = culture == null ? Property : $"{Property} {culture.TwoLetterISOLanguageName.ToUpperInvariant()}";
             }
-            Column.Keys = Keys;
             if (!(Column is DBVirtualColumn))
             {
                 Column.DataType = GetDataType();
                 Column.Size = Size;
                 Column.Scale = Scale;
                 Column.ColumnType = ColumnType;
-                Column.DefaultValue = Default;
-                Column.Property = Property;
-                Column.GroupName = groupName;
-                Column.Culture = culture;
             }
+            Column.Keys = Keys;
+            Column.Property = Property;
+            Column.DefaultValue = Default;
+            Column.Culture = culture;
+            Column.GroupName = groupName;
+
             if (!table.Columns.Contains(Column.Name))
             {
                 Table.Table.Columns.Add(Column);

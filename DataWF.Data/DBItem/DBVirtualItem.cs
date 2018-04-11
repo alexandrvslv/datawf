@@ -31,6 +31,7 @@ namespace DataWF.Data
         public DBVirtualItem()
         { }
 
+        [Browsable(false)]
         public IDBVirtualTable VirtualTable
         {
             get { return (IDBVirtualTable)Table; }

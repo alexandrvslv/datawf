@@ -80,6 +80,7 @@ namespace DataWF.Module.FlowGui
                 if (Mode == LayoutListMode.List && TypeHelper.IsBaseType(ListType, typeof(Document)))
                 {
                     ListType = viewmode?.DocumentTypeInfo?.Type ?? typeof(Document);
+                    RefreshBounds(true);
                 }
             }
         }
