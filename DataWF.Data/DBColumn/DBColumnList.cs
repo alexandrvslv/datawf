@@ -31,6 +31,7 @@ namespace DataWF.Data
             : base(table)
         {
             Indexes.Add(new Invoker<DBColumn, string>(nameof(DBColumn.GroupName), item => item.GroupName));
+            Indexes.Add(new Invoker<DBColumn, string>(nameof(DBColumn.Property), item => item.Property));
             Indexes.Add(new Invoker<DBColumn, bool>(nameof(DBColumn.IsView), item => item.IsView));
             Indexes.Add(new Invoker<DBColumn, bool>(nameof(DBColumn.IsReference), item => item.IsReference));
             Indexes.Add(new Invoker<DBColumn, DBTable>(nameof(DBColumn.ReferenceTable), item => item.ReferenceTable));
@@ -167,6 +168,11 @@ namespace DataWF.Data
         public IEnumerable<DBColumn> GetIsView()
         {
             return Select(nameof(DBColumn.IsView), CompareType.Equal, true);
+        }
+
+        public DBColumn GetByProperty(string property)
+        {
+            return SelectOne(nameof(DBColumn.Property), CompareType.Equal, property);
         }
 
         public DBColumn GetByKey(DBColumnKeys key)

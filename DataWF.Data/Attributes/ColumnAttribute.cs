@@ -87,77 +87,68 @@ namespace DataWF.Data
         [XmlIgnore]
         public Type DataType { get; set; }
 
+        public Type GetDataType()
+        {
+            var type = DataType;
+            if (DataType.IsGenericType)
+                type = DataType.GetGenericArguments()?.FirstOrDefault();
+            return type;
+        }
 
         public virtual DBColumn CreateColumn(string name)
         {
-            return new DBColumn(name) { };
+            return new DBColumn(name) { Table = Table.Table };
         }
 
         public DBColumn Generate()
         {
             if (Table == null || Table.Table == null)
                 throw new Exception("Table Not Initialized!");
-            if (Column != null)
-                return Column;
-            if (!string.IsNullOrEmpty(GroupName))
-            {
-                var cgroup = Table.Table.ColumnGroups[GroupName];
-                if (cgroup == null)
-                {
-                    Table.Table.ColumnGroups.Add(new DBColumnGroup(GroupName));
-                }
-            }
             if ((Keys & DBColumnKeys.Culture) == DBColumnKeys.Culture)
             {
+                Keys |= DBColumnKeys.View;
                 foreach (var culture in Locale.Instance.Cultures)
                 {
-                    GenerateCultureColumn(Table.Table, culture);
+                    GenerateCultureColumn(Table.Table, ColumnName, culture);
                 }
             }
             else
             {
-                Column = Table.Table.Columns[ColumnName];
-                if (Column == null)
-                {
-                    Column = CreateColumn(ColumnName);
-                }
-                var type = DataType;
-                if (DataType.IsGenericType)
-                    type = DataType.GetGenericArguments()?.FirstOrDefault();
-
-                Column.DataType = type;
-                Column.Size = Size;
-                Column.Scale = Scale;
-                Column.ColumnType = ColumnType;
-                Column.DefaultValue = Default;
-                Column.Keys = Keys;
-                Column.Table = Table.Table;
-                Column.Property = Property;
-                Column.DisplayName = Property;
-                Column.GroupName = GroupName;
-
-                Table.Table.Columns.Add(Column);
+                GenerateCultureColumn(Table.Table, GroupName, null);
             }
             return Column;
         }
 
-        public void GenerateCultureColumn(DBTable table, CultureInfo culture)
+        public void GenerateCultureColumn(DBTable table, string groupName, CultureInfo culture)
         {
-            if (table.ColumnGroups[ColumnName] == null)
+            if (!string.IsNullOrEmpty(groupName) && table.ColumnGroups[groupName] == null)
             {
-                var cgroup = new DBColumnGroup(ColumnName);
+                var cgroup = new DBColumnGroup(groupName);
                 table.ColumnGroups.Add(cgroup);
             }
-            string name = ColumnName + "_" + culture.TwoLetterISOLanguageName;
-
-            if (!table.Columns.Contains(name))
+            string name = culture == null ? ColumnName : $"{ColumnName}_{culture.TwoLetterISOLanguageName}";
+            Column = table.Columns[name];
+            if (Column == null)
             {
                 Column = CreateColumn(name);
-                Column.DisplayName = $"{Column.DisplayName} {culture.TwoLetterISOLanguageName.ToUpperInvariant()}";
+                Column.DisplayName = culture == null ? Property : $"{Property} {culture.TwoLetterISOLanguageName.ToUpperInvariant()}";
+            }
+            Column.Keys = Keys;
+            if (!(Column is DBVirtualColumn))
+            {
+                Column.DataType = GetDataType();
+                Column.Size = Size;
+                Column.Scale = Scale;
+                Column.ColumnType = ColumnType;
+                Column.DefaultValue = Default;
+                Column.Property = Property;
+                Column.GroupName = groupName;
+                Column.Culture = culture;
+            }
+            if (!table.Columns.Contains(Column.Name))
+            {
                 Table.Table.Columns.Add(Column);
             }
-            Column.GroupName = ColumnName;
-            Column.Culture = culture;
         }
     }
 }

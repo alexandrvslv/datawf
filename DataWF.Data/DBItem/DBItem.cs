@@ -501,13 +501,13 @@ namespace DataWF.Data
         public override string ToString()
         {
             if (cacheToString.Length == 0)
-                cacheToString = DBService.GetRowText(this);
+                cacheToString = GetRowText();
             return cacheToString;
         }
 
         public string Format(DBColumn column)
         {
-            return DBService.FormatValue(column, this[column]);
+            return column.FormatValue(GetValue(column));
         }
 
         public string Format(string code)
@@ -523,7 +523,7 @@ namespace DataWF.Data
                 foreach (DBColumn column in table.Columns)
                 {
                     if (column.DefaultValue != null)
-                        SetValue(DBService.ParseValue(column, column.DefaultValue), column, false);
+                        SetValue(column.ParseValue(column.DefaultValue), column, false);
                 }
             }
             update = state;
@@ -610,7 +610,7 @@ namespace DataWF.Data
 
         public DBColumn ParseProperty(string property)
         {
-            return Table.Info?.GetColumnByProperty(property)?.Column;
+            return Table.Columns.GetByProperty(property);
         }
 
         [Browsable(false)]
@@ -724,11 +724,11 @@ namespace DataWF.Data
             set { Group = value as DBItem; }
         }
 
-        [DataMember]
+        [DataMember, Browsable(false)]
         public virtual string Name
         {
-            get { return GetName("name"); }
-            set { SetName("name", value); }
+            get { return GetName(nameof(Name)); }
+            set { SetName(nameof(Name), value); }
         }
 
         [Browsable(false)]
@@ -847,7 +847,7 @@ namespace DataWF.Data
                 if (column == null)
                     return;
 
-                SetValue(DBService.ParseValue(column, value),
+                SetValue(column.ParseValue(value),
                          column,
                          column.ColumnType == DBColumnTypes.Default,
                          value as DBItem);
@@ -1234,6 +1234,145 @@ namespace DataWF.Data
         public virtual void Dispose()
         {
 
+        }
+
+        public string GetRowText(bool allColumns, bool showColumn, string separator)
+        {
+            return GetRowText((allColumns ? (IEnumerable<DBColumn>)Table.Columns : Table.Columns.GetIsView()), showColumn, separator);
+        }
+
+        public string GetRowText()
+        {
+            return GetRowText(Table.Columns.GetIsView(), false, " - ");
+        }
+
+        public string GetRowText(IEnumerable<DBColumn> parameters)
+        {
+            return GetRowText(parameters, false, " - ");
+        }
+
+        public string GetRowText(IEnumerable<DBColumn> parameters, bool showColumn, string separator)
+        {
+            if (!Access.View)
+                return "********";
+            var builder = new StringBuilder();
+            if (parameters == null)
+                parameters = Table.Columns;
+            //if (!parameters.Any())
+            //{
+            //    if (row.Table.CodeKey != null)
+            //        parameters.Add(row.Table.CodeKey);
+            //    else if (row.Table.PrimaryKey != null)
+            //        parameters.Add(row.Table.PrimaryKey);
+            //}
+            string c = string.Empty;
+            foreach (DBColumn column in parameters)
+            {
+                if (!column.Access.View)
+                {
+                    //bufRez += temprez;
+                    continue;
+                }
+                string header = "";
+                if (showColumn)
+                    header = $"{column}: ";
+                string value = column.FormatValue(GetValue(column));
+                if (column.IsCulture)
+                {
+                    if (column.Culture.TwoLetterISOLanguageName == Locale.Instance.Culture.TwoLetterISOLanguageName)
+                    {
+                        builder.Append(header);
+                        builder.Append(value);
+                        builder.Append(separator);
+                        if (value.Length != 0)
+                            c = null;
+                    }
+                    else if (c != null && c.Length == 0 && value.Length != 0)
+                        c = value;
+                }
+                else
+                {
+                    builder.Append(header);
+                    builder.Append(value);
+                    builder.Append(separator);
+                }
+            }
+            if (c != null)
+            {
+                builder.Append(c);
+            }
+            else
+            {
+                builder.Length = builder.Length - separator.Length;
+            }
+            return builder.ToString();
+        }
+
+        public void Delete(int recurs = 2, DBLoadParam param = DBLoadParam.None)
+        {
+            try
+            {
+                recurs--;
+                var relations = Table.GetChildRelations();
+                foreach (DBForeignKey relation in relations)
+                {
+                    if (relation.Table.Name.IndexOf("drlog", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        relation.Table.Type != DBTableType.Table ||
+                    relation.Column.ColumnType != DBColumnTypes.Default)
+                        continue;
+                    if (recurs >= 0 || relation.Table == Table)
+                    {
+                        var list = GetReferencing(relation, param);
+                        foreach (DBItem item in list)
+                        {
+                            if (item.Attached)
+                                item.Delete(recurs, param);
+                        }
+                    }
+                }
+                if ((UpdateState & DBUpdateState.Insert) == DBUpdateState.Insert)
+                    Table.Remove(this);
+                else
+                {
+                    Delete();
+                    Save();
+                }
+            }
+            catch (Exception ex)//TODO If Timeout Expired
+            {
+                Helper.OnException(ex);
+            }
+        }
+
+        public List<DBItem> GetChilds(int recurs = 2, DBLoadParam param = DBLoadParam.None)
+        {
+            var rows = new List<DBItem>();
+            recurs--;
+            var relations = Table.GetChildRelations();
+            foreach (DBForeignKey relation in relations)
+            {
+                if (relation.Table.Name.IndexOf("drlog", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    relation.Table.Type != DBTableType.Table ||
+                    relation.Column.ColumnType != DBColumnTypes.Default)
+                    continue;
+                if (recurs >= 0 || relation.Table == Table)
+                {
+                    var list = GetReferencing(relation, param);
+                    foreach (DBItem item in list)
+                    {
+                        if (item != this)
+                        {
+                            var childs = GetChilds(recurs, param);
+                            foreach (var child in childs)
+                                if (!rows.Contains(child))
+                                    rows.Add(child);
+                            if (!rows.Contains(item))
+                                rows.Add(item);
+                        }
+                    }
+                }
+            }
+            return rows;
         }
     }
 }

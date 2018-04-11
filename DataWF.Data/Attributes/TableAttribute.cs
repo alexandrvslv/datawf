@@ -207,6 +207,7 @@ namespace DataWF.Data
                 {
                     reference.Table = this;
                     reference.ReferenceType = property.PropertyType;
+                    reference.Column.Keys |= DBColumnKeys.Reference;
                     cacheReferences.Add(reference);
                 }
                 var index = property.GetCustomAttribute<IndexAttribute>();

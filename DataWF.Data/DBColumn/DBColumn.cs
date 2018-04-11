@@ -77,6 +77,7 @@ namespace DataWF.Data
         protected DBDataType type = DBDataType.String;
         protected DBColumnTypes ctype = DBColumnTypes.Default;
         protected string gname;
+        protected string property;
         protected string culture;
         protected string btrue;
         protected string bfalse;
@@ -123,7 +124,18 @@ namespace DataWF.Data
         }
 
         [ReadOnly(true)]
-        public string Property { get; set; }
+        public string Property
+        {
+            get { return property; }
+            set
+            {
+                if (property != value)
+                {
+                    property = value;
+                    OnPropertyChanged(nameof(Property), false);
+                }
+            }
+        }
 
         public bool CanWrite { get { return true; } }
 
@@ -248,7 +260,7 @@ namespace DataWF.Data
             {
                 if (value == cacheCulture)
                     return;
-                CultureCode = value != null ? value.Name : null;
+                CultureCode = value?.Name;
             }
         }
 
@@ -717,5 +729,156 @@ namespace DataWF.Data
         {
             Set((DBItem)target, value);
         }
+
+        public string FormatValue(object val)
+        {
+            //if value passed to format is null
+            if (val == null)
+                return "";
+            if ((Keys & DBColumnKeys.Boolean) == DBColumnKeys.Boolean)
+            {
+                if (val.ToString().Equals(BoolTrue))
+                    return "Check";
+                else
+                    return "Uncheck";
+            }
+            if (IsReference)
+            {
+                DBItem temp = ReferenceTable.LoadItemById(val);
+                return temp == null ? "<new or empty>" : temp.ToString();
+            }
+
+            if (DataType == typeof(string))
+                return val.ToString();
+
+            if (DataType == typeof(byte[]))
+            {
+                if ((Keys & DBColumnKeys.Access) == DBColumnKeys.Access)
+                {
+                    AccessValue cash = new AccessValue();
+                    cash.Read((byte[])val);
+                    string rez = string.Empty;
+                    foreach (var item in cash.Items)
+                    {
+                        rez += string.Format("{0}{1}", rez.Length > 0 ? "; " : string.Empty, item);
+                    }
+                    return rez;
+                }
+                else
+                    return Helper.LengthFormat(((byte[])val).LongLength);
+            }
+            if (Format != null)
+            {
+                var mi = val.GetType().GetMethod("ToString", new Type[] { typeof(string) });
+                if (Format.ToLower() == "p")
+                    if (val is decimal)
+                        return ((decimal)val * 100).ToString("N") + "%";
+                    else if (val is double)
+                        return ((double)val * 100).ToString("N") + "%";
+                    else if (val is float)
+                        return ((float)val * 100).ToString("N") + "%";
+                    else
+                        return (decimal.Parse(val.ToString()) * 100).ToString("N") + "%";
+                if (Format.ToLower() == "b" && DataType == typeof(string) && Size == 1)
+                    if (val.ToString() == "RowSetting")
+                        return "V";
+                    else
+                        return "X";
+                else if (mi != null)
+                    return EmitInvoker.Invoke(mi, val, Format) as string;
+            }
+
+            if (val is DateTime)
+            {
+                return val.Equals(((DateTime)val).Date) ? ((DateTime)val).ToString("yyyy.MM.dd") : val.ToString();
+            }
+            return val.ToString();
+        }
+
+        public object ParseValue(object value)
+        {
+            object buf = null;
+            if (value is bool && (Keys & DBColumnKeys.Boolean) == DBColumnKeys.Boolean && DataType != typeof(bool))
+                value = (bool)value ? BoolTrue : BoolFalse;
+            if (value == null || value == DBNull.Value)
+                buf = null;
+            else if (DataType == value.GetType())
+                buf = value;
+            else if (value is DBItem)
+                buf = ((DBItem)value).PrimaryId;
+            //else if (column.Pull.ItemType.IsG )
+            //buf = ((DBItem)value).PrimaryId;
+            else
+                buf = ParseValue(value.ToString());
+
+            if (buf is DateTime && buf.Equals(DateTime.MinValue))
+                buf = null;
+            return buf;
+        }
+
+        public object ParseValue(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return null;
+            object val = null;
+            var type = DataType;
+            if (type == typeof(decimal))
+            {
+                if (decimal.TryParse(value.Replace(",", "."), NumberStyles.Number, CultureInfo.InvariantCulture.NumberFormat, out var d))
+                    val = d;
+            }
+            else if (type == typeof(DateTime))
+            {
+                var index = value.IndexOf('|');
+                if (index >= 0)
+                    value = value.Substring(0, index);
+                DateTime date;
+                if (value.Equals("getdate()", StringComparison.OrdinalIgnoreCase) || value.Equals("current_timestamp", StringComparison.OrdinalIgnoreCase))
+                    val = DateTime.Now;
+                if (DateTime.TryParse(value, out date))
+                    val = date;
+                else if (DateTime.TryParseExact(value, new string[] { "yyyyMMdd", "yyyyMM" }, CultureInfo.InvariantCulture.DateTimeFormat, DateTimeStyles.None, out date))
+                    val = date;
+            }
+            else if (type == typeof(string))
+                val = value;
+            else if (type == typeof(int) || type.IsEnum)
+            {
+                if (int.TryParse(value, out int i))
+                    val = i;
+            }
+            else if (type == typeof(byte))
+            {
+                if (byte.TryParse(value, out byte i))
+                    val = i;
+            }
+            else if (type == typeof(TimeSpan))
+            {
+                val = TimeSpan.Parse(value);
+            }
+            else if (type == typeof(double))
+            {
+                if (double.TryParse(value, out double d))
+                    val = d;
+            }
+            else if (type == typeof(float))
+            {
+                if (float.TryParse(value, out float f))
+                    val = f;
+            }
+            else if (type == typeof(long))
+            {
+                if (long.TryParse(value, out long l))
+                    val = l;
+            }
+            else if (type == typeof(bool))
+            {
+                if (bool.TryParse(value, out bool l))
+                    val = l;
+            }
+            return val;
+        }
+
+
     }
 }

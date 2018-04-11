@@ -306,7 +306,7 @@ namespace DataWF.Data
                 return null;
             var whereInd = command.CommandText.IndexOf("where ", StringComparison.OrdinalIgnoreCase);
             var arg = new DBLoadProgressEventArgs(transaction.View, 0, 0, null);
-            var creference = Columns.GetIsReference();
+            IEnumerable<DBColumn> creference = null;
             List<T> buf = null;
 
             if (items.Count == 0)
@@ -333,6 +333,7 @@ namespace DataWF.Data
                 }
                 if ((transaction.ReaderParam & DBLoadParam.ReferenceRow) == DBLoadParam.ReferenceRow)
                 {
+                    creference = Columns.GetIsReference();
                     transaction.BeginSubTransaction();
                 }
                 if (transaction.Canceled)
@@ -458,7 +459,7 @@ namespace DataWF.Data
 
         public T LoadById(object id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null, IEnumerable cols = null, IDBTableView synch = null)
         {
-            object val = DBService.ParseValue(PrimaryKey, id);
+            object val = PrimaryKey?.ParseValue(id) ?? id;
 
             if (val == null || PrimaryKey == null)
                 return null;
@@ -805,7 +806,7 @@ namespace DataWF.Data
 
         public T SelectOne(DBColumn column, object val)
         {
-            var value = DBService.ParseValue(column, val);
+            var value = column.ParseValue(val);
             if (column.Index != null)
             {
                 return column.Index.SelectOne<T>(value);

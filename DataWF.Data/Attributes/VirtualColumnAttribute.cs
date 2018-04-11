@@ -51,14 +51,9 @@ namespace DataWF.Data
         {
             var baseColumn = TableView?.BaseTable?.Table.ParseColumn(name);
             if (baseColumn == null)
-                throw new InvalidOperationException("BaseColumn mast be availible!");
-            
-            return new DBVirtualColumn(baseColumn)
-            {
-                Keys = Keys,
-                Table = Table.Table,
-                DisplayName = Property
-            };
+                throw new InvalidOperationException("BaseColumn must be availible!");
+
+            return new DBVirtualColumn(baseColumn) { Table = Table.Table, };
         }
     }
 }

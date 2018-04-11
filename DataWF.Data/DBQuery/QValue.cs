@@ -43,7 +43,7 @@ namespace DataWF.Data
             get
             {
                 if (value == null && text != null)
-                    value = Column != null ? DBService.ParseValue(Column, text) : text;
+                    value = Column?.ParseValue(text) ?? text;
                 return value;
             }
             set
@@ -61,7 +61,7 @@ namespace DataWF.Data
 
                 }
                 else
-                    value = DBService.ParseValue(Column, value);
+                    value = Column.ParseValue(value);
                 if (this.value != value)
                 {
                     this.value = value;

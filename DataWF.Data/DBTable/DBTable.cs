@@ -100,12 +100,12 @@ namespace DataWF.Data
             get { return locker; }
         }
 
-        [Browsable(false), XmlIgnore]
-        public TableAttribute Info { get; protected set; }
+        //[Browsable(false), XmlIgnore]
+        //public TableAttribute Info { get; protected set; }
 
         public DBColumn ParseProperty(string property)
         {
-            return Info?.GetColumnByProperty(property)?.Column;
+            return Columns.GetByProperty(property);
         }
 
         [Browsable(false)]
@@ -117,7 +117,7 @@ namespace DataWF.Data
         protected void SetItemType(Type type)
         {
             itemType = ItemTypes[0] = new DBItemType { Type = type };
-            Info = DBService.GetTableAttribute(type);
+            // Info = DBService.GetTableAttribute(type);
         }
 
         public override string FullName
@@ -908,7 +908,7 @@ namespace DataWF.Data
                 val1 = EmitInvoker.GetValue(typeof(DBItem), column, item);
             else
                 val1 = item[dbColumn];
-            return CheckItem(item, val1, DBService.ParseValue(dbColumn, val), comparer);
+            return CheckItem(item, val1, dbColumn.ParseValue(val), comparer);
         }
 
         public bool CheckItem(DBItem item, object val1, object val2, CompareType comparer)
@@ -1291,7 +1291,7 @@ namespace DataWF.Data
             foreach (var columnInfo in tableInfo.Columns)
             {
                 string name = columnInfo.Name;
-                DBColumn column = DBService.InitColumn(this, columnInfo.Name);
+                DBColumn column = this.InitColumn(columnInfo.Name);
                 //if (col.Order == 1)
                 //    col.IsPrimaryKey = true;
                 if (name.Equals(Name, StringComparison.OrdinalIgnoreCase))
@@ -1346,6 +1346,80 @@ namespace DataWF.Data
                     }
                 }
             }
+        }
+
+        public string GetRowText(object id)
+        {
+            return GetRowText(id, Columns.GetIsView());
+        }
+
+        public string GetRowText(object id, IEnumerable<DBColumn> parameters)
+        {
+            return GetRowText(id, parameters, false, " - ");
+        }
+
+        public string GetRowText(object id, IEnumerable<DBColumn> parametrs, bool showColumn, string separator)
+        {
+            return LoadItemById(id)?.GetRowText(parametrs, showColumn, separator) ?? "<null>";
+        }
+
+        public string GetRowText(object id, bool allColumns, bool showColumn, string separator)
+        {
+            return LoadItemById(id)?.GetRowText((allColumns ? (IEnumerable<DBColumn>)Columns : Columns.GetIsView()), showColumn, separator);
+        }
+
+        public string FormatStatusFilter(DBStatus filter)
+        {
+            string rez = string.Empty;
+            if (StatusKey != null && filter != 0 && filter != DBStatus.Empty)
+            {
+                var qlist = new QEnum();
+                if ((filter & DBStatus.Actual) == DBStatus.Actual)
+                    qlist.Items.Add(new QValue((int)DBStatus.Actual));
+                if ((filter & DBStatus.New) == DBStatus.New)
+                    qlist.Items.Add(new QValue((int)DBStatus.New));
+                if ((filter & DBStatus.Edit) == DBStatus.Edit)
+                    qlist.Items.Add(new QValue((int)DBStatus.Edit));
+                if ((filter & DBStatus.Delete) == DBStatus.Delete)
+                    qlist.Items.Add(new QValue((int)DBStatus.Delete));
+                if ((filter & DBStatus.Archive) == DBStatus.Archive)
+                    qlist.Items.Add(new QValue((int)DBStatus.Archive));
+                if ((filter & DBStatus.Error) == DBStatus.Error)
+                    qlist.Items.Add(new QValue((int)DBStatus.Error));
+                var param = new QParam()
+                {
+                    ValueLeft = new QColumn(StatusKey),
+                    Comparer = CompareType.In,
+                    ValueRight = qlist
+                };
+
+                rez = param.Format();
+            }
+            return rez;
+        }
+
+        public DBColumnGroup InitColumnGroup(string code)
+        {
+            DBColumnGroup cs = null;
+            cs = ColumnGroups[code];
+            if (cs == null)
+            {
+                cs = new DBColumnGroup(code);
+                ColumnGroups.Add(cs);
+            }
+            return cs;
+        }
+
+        public DBColumn InitColumn(string code)
+        {
+            DBColumn cs = null;
+            cs = Columns[code];
+            if (cs == null)
+            {
+                cs = new DBColumn(code);
+                Columns.Add(cs);
+            }
+            return cs;
         }
     }
 }

@@ -425,7 +425,7 @@ namespace DataWF.Data
         {
             if (defaultFilter == null)
                 defaultFilter = string.Empty;
-            string stateFilter = DBService.FormatStatusFilter(Table, statusFilter);
+            string stateFilter = Table.FormatStatusFilter(statusFilter);
             string rezult = stateFilter;
             if (defaultFilter.Length != 0)
                 rezult = (stateFilter.Length != 0 ? stateFilter + " and " : string.Empty) + defaultFilter;
