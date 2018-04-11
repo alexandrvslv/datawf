@@ -106,7 +106,7 @@ namespace DataWF.Module.Flow
             }
         }
 
-        [DataMember, Column("name", 512, Keys = DBColumnKeys.Culture)]
+        [DataMember, Column("name", 512, Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
         public override string Name
         {
             get { return GetName(nameof(Name)); }
@@ -137,6 +137,8 @@ namespace DataWF.Module.Flow
                 SetReference(value, Table.GroupKey);
                 if (DocumentType == 0)
                     DocumentType = value?.DocumentType ?? 0;
+                if (Work == null)
+                    Work = value?.Work;
             }
         }
 
@@ -207,7 +209,7 @@ namespace DataWF.Module.Flow
             set { SetProperty(value); }
         }
 
-        [DataMember, Column("is_file", Default ="False")]
+        [DataMember, Column("is_file", Default = "False")]
         public bool? IsFile
         {
             get { return GetProperty<bool?>(); }

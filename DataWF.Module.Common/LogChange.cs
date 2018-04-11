@@ -58,13 +58,13 @@ namespace DataWF.Module.Common
 
         public object OldFormat
         {
-            get { return column.Access.View ? DBService.FormatValue(column, oldValue) : "*****"; }
+            get { return column.Access.View ? column.FormatValue(oldValue) : "*****"; }
             set { oldValue = value; }
         }
 
         public object NewFormat
         {
-            get { return column.Access.View ? DBService.FormatValue(column, newValue) : "*****"; }
+            get { return column.Access.View ? column.FormatValue(newValue) : "*****"; }
             set { newValue = value; }
         }
 

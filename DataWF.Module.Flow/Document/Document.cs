@@ -404,6 +404,13 @@ namespace DataWF.Module.Flow
             set { SetPropertyReference(value, nameof(AddressId)); }
         }
 
+        [DataMember, Column("title", Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
+        public string Title
+        {
+            get { return GetName(nameof(Title)); }
+            set { SetName(nameof(Title), value); }
+        }
+
         [Browsable(false)]
         [DataMember, Column("work_id", ColumnType = DBColumnTypes.Internal)]
         public long? WorkId

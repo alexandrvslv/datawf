@@ -310,7 +310,7 @@ namespace DataWF.Module.Flow
                         for (int i = 1; i < split.Length; i++)
                         {
                             var type = split[i][0];
-                            var id = DBService.ParseValue(table.PrimaryKey, split[i].Substring(1));
+                            var id = table.PrimaryKey.ParseValue(split[i].Substring(1));
                             if (type == 'I')
                             {
                                 loadQueue.Enqueue(new LoadTask() { Table = table, Refresh = false, Id = id });

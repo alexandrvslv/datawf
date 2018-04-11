@@ -289,8 +289,8 @@ namespace DataWF.Module.Common
                     var newValue = LogItem.GetValue(logColumn);
                     if (DBService.Equal(oldValue, newValue))
                         continue;
-                    var oldFormat = column.Access.View ? DBService.FormatValue(column, oldValue) : "*****";
-                    var newFormat = column.Access.View ? DBService.FormatValue(column, newValue) : "*****";
+                    var oldFormat = column.Access.View ? column.FormatValue(oldValue) : "*****";
+                    var newFormat = column.Access.View ? column.FormatValue(newValue) : "*****";
                     if (oldValue == null && newValue != null)
                         _textCache += string.Format("{0}: {1}\n", column, newFormat);
                     else if (oldValue != null && newValue == null)
@@ -429,7 +429,7 @@ namespace DataWF.Module.Common
                     if (log.LogType == UserLogType.Insert)
                         continue;
                     row = log.TargetTable.NewItem(DBUpdateState.Insert, false);
-                    row.SetValue(DBService.ParseValue(log.TargetTable.PrimaryKey, log.TargetId), log.TargetTable.PrimaryKey, false);
+                    row.SetValue(log.TargetTable.PrimaryKey.ParseValue(log.TargetId), log.TargetTable.PrimaryKey, false);
                 }
                 else if (log.LogType == UserLogType.Delete && !changed.ContainsKey(row))
                     continue;
