@@ -23,6 +23,8 @@ using DataWF.Data;
 using System.ComponentModel;
 using DataWF.Common;
 using System.Runtime.Serialization;
+using System.Globalization;
+using System.Collections.Generic;
 
 namespace DataWF.Module.Counterpart
 {
@@ -47,6 +49,78 @@ namespace DataWF.Module.Counterpart
     [DataContract, Table("wf_customer", "rlocation", "Reference Book", BlockSize = 2000)]
     public class Location : DBItem
     {
+        public static void Generate()
+        {
+            var euas = new Location { LocationType = Counterpart.LocationType.Continent, Code = "EUAS", Name = "Eurasia" }; euas.Attach();
+            new Location { LocationType = Counterpart.LocationType.Continent, Code = "AF", CodeI = "", Name = "Africa" }.Attach();
+            new Location { LocationType = Counterpart.LocationType.Continent, Code = "AN", Name = "Antarctica" }.Attach();
+            new Location { LocationType = Counterpart.LocationType.Continent, Code = "AS", Name = "Asia" }.Attach();
+            new Location { LocationType = Counterpart.LocationType.Continent, Code = "EU", Name = "Europa" }.Attach();
+            new Location { LocationType = Counterpart.LocationType.Continent, Code = "NA", Name = "North america" }.Attach();
+            new Location { LocationType = Counterpart.LocationType.Continent, Code = "OC", Name = "Oceania" }.Attach();
+            new Location { LocationType = Counterpart.LocationType.Continent, Code = "SA", Name = "South america" }.Attach();
+
+            CultureInfo.CurrentUICulture = CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("ru-RU");
+            var cultures = CultureInfo.GetCultures(CultureTypes.AllCultures & ~CultureTypes.NeutralCultures);
+            var cultureList = new List<string>();
+            foreach (CultureInfo culture in cultures)
+            {
+                //pass the current culture's Locale ID (http://msdn.microsoft.com/en-us/library/0h88fahh.aspx)
+                //to the RegionInfo contructor to gain access to the information for that culture
+                try
+                {
+                    RegionInfo region = new RegionInfo(culture.LCID);
+
+                    //make sure out generic list doesnt already
+                    //contain this country
+                    if (!(cultureList.Contains(region.EnglishName)))
+                    {
+                        //not there so add the EnglishName (http://msdn.microsoft.com/en-us/library/system.globalization.regioninfo.englishname.aspx)
+                        //value to our generic list
+                        cultureList.Add(region.EnglishName);
+                        var country = new Location
+                        {
+                            LocationType = Counterpart.LocationType.Country,
+                            Code = region.TwoLetterISORegionName,
+                            CodeI = region.ThreeLetterISORegionName
+                        };
+                        country["name_en"] = region.EnglishName;
+                        country["name_ru"] = region.DisplayName;
+                        country.Attach();
+                        var currency = DBTable.LoadByCode(region.ISOCurrencySymbol);
+                        if (currency == null)
+                        {
+                            currency = new Location
+                            {
+                                LocationType = Counterpart.LocationType.Currency,
+                                Parent = country,
+                                Code = region.ISOCurrencySymbol,
+                                CodeI = region.CurrencySymbol
+                            };
+                            currency["name_en"] = region.CurrencyEnglishName;
+                            //currency["name_ru"] = region.CurrencyNativeName;
+                            currency.Attach();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                { }
+            }
+
+            var russia = Location.DBTable.LoadByCode("RU");
+            russia.Parent = euas;
+
+            var kazakh = Location.DBTable.LoadByCode("KZ");
+            kazakh.Parent = euas;
+
+            new Location { LocationType = Counterpart.LocationType.City, Parent = russia, Code = "495", Name = "Moskow" }.Attach();
+            new Location { LocationType = Counterpart.LocationType.City, Parent = kazakh, Code = "727", Name = "Almaty" }.Attach();
+            new Location { LocationType = Counterpart.LocationType.City, Parent = kazakh, Code = "7172", Name = "Astana" }.Attach();
+            new Location { LocationType = Counterpart.LocationType.City, Parent = kazakh, Code = "7122", Name = "Atyrau" }.Attach();
+
+            Location.DBTable.Save();
+        }
+
         public static DBTable<Location> DBTable
         {
             get { return DBService.GetTable<Location>(); }
@@ -64,14 +138,14 @@ namespace DataWF.Module.Counterpart
             set { SetValue(value, Table.PrimaryKey); }
         }
 
-        [DataMember, Column("typeid", Keys = DBColumnKeys.ElementType), Index("rlocation_typeid")]
+        [DataMember, Column("typeid", Keys = DBColumnKeys.ElementType), Index("rlocation_typeid_code", true)]
         public LocationType? LocationType
         {
             get { return GetValue<LocationType?>(Table.ElementTypeKey); }
             set { SetValue(value, Table.ElementTypeKey); }
         }
 
-        [DataMember, Column("code", 40, Keys = DBColumnKeys.Code | DBColumnKeys.View), Index("rlocation_code", true)]
+        [DataMember, Column("code", 40, Keys = DBColumnKeys.Code | DBColumnKeys.View), Index("rlocation_typeid_code", true)]
         public string Code
         {
             get { return GetValue<string>(Table.CodeKey); }
