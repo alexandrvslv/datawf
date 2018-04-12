@@ -31,6 +31,7 @@ namespace DataWF.Gui
         private DockBoxHitTest hitRight = null;
         private DockBoxHitTest hitTop = null;
         private DockBoxHitTest hitBottom = null;
+        private bool visibleClose = true;
 
         public event EventHandler<DockPageEventArgs> PageSelected;
 
@@ -92,6 +93,19 @@ namespace DataWF.Gui
         public IDockContainer DockParent
         {
             get { return null; }
+        }
+
+        public bool VisibleClose
+        {
+            get { return visibleClose; }
+            set
+            {
+                visibleClose = value;
+                foreach (var panel in GetDockPanels())
+                {
+                    panel.Pages.VisibleClose = value;
+                }
+            }
         }
 
         protected override void OnButtonPressed(ButtonEventArgs args)
@@ -431,6 +445,7 @@ namespace DataWF.Gui
         public DockMapItem CreateDockItem(string Name)
         {
             var panel = new DockPanel();
+            panel.Pages.VisibleClose = VisibleClose;
             panel.PageSelected += PanelTabSelected;
             panel.Pages.PageClick += Pages_PageClick;
             panel.Pages.PageDrag += OnPageDrag;

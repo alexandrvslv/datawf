@@ -137,7 +137,7 @@ namespace DataWF.Module.FlowGui
                     //if (_document.Datas == null)
                     //    _document.Initialize(DocInitType.Data);
                     toolTemplate.Visible = _document.Template.Data != null;
-                    view.DefaultFilter = DocumentData.DBTable.ParseProperty(nameof(DocumentData.DocumentId)).Name + "=" + _document.Id;
+                    view.DefaultFilter = new QParam(LogicType.And, DocumentData.DBTable.ParseProperty(nameof(DocumentData.DocumentId)), CompareType.Equal, _document.Id);
                 }
             }
         }

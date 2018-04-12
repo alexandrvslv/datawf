@@ -48,10 +48,7 @@ namespace DataWF.Module.FlowGui
         private ToolLabel toolLabel = new ToolLabel();
         private IEnumerable<ToolItem> toolsItems;
 
-        private DocumentHeader header = new DocumentHeader();
-        private DocumentWorks works = new DocumentWorks();
-        private DocumentFiles files = new DocumentFiles();
-        private DocumentRelations refers = new DocumentRelations();
+
         private DockPage pageRefers;
         private DockPage pageHeader;
 
@@ -103,18 +100,15 @@ namespace DataWF.Module.FlowGui
             dock = new DockBox()
             {
                 Name = "dock",
-                BackgroundColor = GuiEnvironment.StylesInfo["Page"].BaseColor
-
+                BackgroundColor = GuiEnvironment.StylesInfo["Page"].BaseColor,
+                VisibleClose = false
             };
             //dock.PageStyle = GuiEnvironment.StylesInfo["DocumentDock"];
-            pageHeader = dock.Put(header, DockType.Left);
-            pageHeader.Box.VisibleClose = false;
-
-            pageRefers = dock.Put(works, DockType.Content);
-            pageRefers = dock.Put(files, DockType.Content);
-
-            pageRefers = dock.Put(refers, DockType.Content);
-            pageRefers.Box.VisibleClose = false;
+            pageHeader = dock.Put(new DocumentHeader(), DockType.Left);
+            pageHeader.Panel.MapItem.FillWidth = true;
+            pageRefers = dock.Put(new DocumentWorks(), DockType.Content);
+            pageRefers = dock.Put(new DocumentFiles(), DockType.Content);
+            pageRefers = dock.Put(new DocumentRelations(), DockType.Content);
 
             Name = "DocumentEditor";
             Text = "Document";
@@ -513,7 +507,6 @@ namespace DataWF.Module.FlowGui
                     document.ReferenceChanged -= DocumentPropertyChanged;
                 }
                 document = value;
-                header.Document = document;
                 toolLabel.Text = "";
                 if (document == null)
                 {
@@ -825,11 +818,11 @@ namespace DataWF.Module.FlowGui
 
         protected override void Dispose(bool disposing)
         {
-            Document = null;
-            if (header != null)
-                header.Dispose();
-            if (refers != null)
-                refers.Dispose();
+            if (disposing)
+            {
+                Document = null;
+                dock.Dispose();
+            }
             base.Dispose(disposing);
         }
 

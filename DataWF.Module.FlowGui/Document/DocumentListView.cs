@@ -199,7 +199,7 @@ namespace DataWF.Module.FlowGui
             {
                 TemplateFilter = search.Template;
                 search.Parse();
-                _documents.DefaultFilter = search.QDoc.ToWhere();
+                _documents.Query = search.QDoc;
                 OnSearchChanged();
             }
             catch (Exception ex)

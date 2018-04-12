@@ -24,7 +24,6 @@ namespace DataWF.Data.Gui
         private static CellStyle DBEStyle;
         private static CellStyle DBDStyle;
         private static CellStyle DBAStyle;
-        public QQuery Expression;
         private static ToolItem menuExportTxt = new ToolItem();
         private static ToolItem menuExportODS = new ToolItem();
         private static ToolItem menuExportXlsx = new ToolItem();
@@ -58,18 +57,6 @@ namespace DataWF.Data.Gui
                     defMenu.Editor.Bar.Items.Add(menuExportXlsx);
                     defMenu.Editor.Bar.Items.Add(menuExportTxt);
                 }
-            }
-        }
-
-        public string DefaultFilter
-        {
-            get { return defaultFilter; }
-            set
-            {
-                if (defaultFilter == value)
-                    return;
-                defaultFilter = value;
-                SetFilter(string.Empty);
             }
         }
 
@@ -138,102 +125,6 @@ namespace DataWF.Data.Gui
             System.Diagnostics.Process.Start(fileName);
         }
 
-        public override void ClearFilter()
-        {
-            SetFilter(string.Empty);
-            base.ClearFilter();
-        }
-
-        public void BuildFilterByColumns(QQuery Expression)
-        {
-            Expression.Parameters.Clear();
-            foreach (var filter in filterView?.Filters)
-            {
-                var pcolumn = filter.Column;
-                if (!pcolumn.Visible || filter.Value == null || filter.Value == DBNull.Value || filter.Value.ToString().Length == 0)
-                    if (filter.Comparer.Type != CompareTypes.Is)
-                        continue;
-                if (pcolumn.Name == nameof(Object.ToString))
-                {
-                    Expression.SimpleFilter(filter.Value as string);
-                }
-                else if (pcolumn.Invoker is DBColumn)
-                {
-                    string code = pcolumn.Name;
-                    QParam param = new QParam()
-                    {
-                        Column = (DBColumn)pcolumn.Invoker,
-                        Logic = filter.Logic,
-                        Comparer = filter.Comparer,
-                        Value = filter.Comparer.Type != CompareTypes.Is ? filter.Value : null
-                    };
-                    if (param.Value is string && param.Comparer.Type == CompareTypes.Like)
-                    {
-                        string s = (string)param.Value;
-                        if (s.IndexOf('%') < 0)
-                            param.Value = string.Format("%{0}%", s);
-                    }
-                    int i = code.IndexOf('.');
-                    if (i >= 0)
-                    {
-                        int s = 0;
-                        QQuery sexpression = Expression;
-                        QQuery newQuery = null;
-                        while (i > 0)
-                        {
-                            string iname = code.Substring(s, i - s);
-                            if (s == 0)
-                            {
-                                var pc = listInfo.Columns[iname] as LayoutColumn;
-                                if (pc != null && pc.Invoker is DBColumn)
-                                    iname = ((DBColumn)pc.Invoker).Name;
-                            }
-                            var c = sexpression.Table.Columns[iname];
-                            if (c.IsReference)
-                            {
-                                newQuery = new QQuery(string.Empty, c.ReferenceTable);
-                                sexpression.BuildParam(c, CompareType.In, newQuery);
-                                sexpression = newQuery;
-                            }
-                            s = i + 1;
-                            i = code.IndexOf('.', s);
-                        }
-                        newQuery.Parameters.Add(param);
-                    }
-                    else
-                        Expression.Parameters.Add(param);//.BuildParam(col, column.Value, true);
-                }
-            }
-        }
-
-        protected override void OnFilterChange()
-        {
-            if (Table != null && View != null && Mode != LayoutListMode.Fields)
-            {
-                base.filterChanging?.Invoke(this, EventArgs.Empty);
-                if (Expression == null || Expression.Table != Table)
-                    Expression = new QQuery(string.Empty, Table);
-                BuildFilterByColumns(Expression);
-                SetFilter(Expression.ToWhere());
-                base.filterChanged?.Invoke(this, EventArgs.Empty);
-                if (filterView?.Filters.Count == 0)
-                    HideFilter();
-            }
-            else
-            {
-                base.OnFilterChange();
-            }
-        }
-
-        public void SetFilter(string filter)
-        {
-            bool and = defaultFilter.Length > 0 && filter.Length > 0;
-            if (View != null)
-            {
-                View.Filter = $"{(and ? "(" : string.Empty)}{defaultFilter}{(and ? ")" : string.Empty)}{(and ? " and " : string.Empty)}{(and ? "(" : string.Empty)}{filter}{(and ? ")" : string.Empty)}";
-            }
-        }
-
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public DBItem SelectedRow
         {
@@ -285,35 +176,6 @@ namespace DataWF.Data.Gui
                 return new DBComparer(Table, columnName, direction);
             }
             return base.OnColumnCreateComparer(column, direction);
-        }
-
-        public override bool TreeMode
-        {
-            get { return base.TreeMode; }
-            set
-            {
-                if (View != null)
-                {
-                    listInfo.Tree = value;
-                    if (!value)
-                    {
-                        View.DefaultFilter = View.DefaultFilter.Replace(" and IsExpanded = True", "").Replace("IsExpanded = True", "");
-                    }
-                    else if (ListInfo.Tree && Table.GroupKey != null)
-                    {
-                        string f = "IsExpanded = True";
-                        View.DefaultFilter = View.DefaultFilter.Length == 0 ? f : View.DefaultFilter + " and " + f;
-                        //View.UpdateFilter();
-                        listInfo.Sorters.Clear();
-                        LayoutColumn column = listInfo.Columns["ToString"] as LayoutColumn;
-                        OnColumnSort(column, ListSortDirection.Ascending);
-                    }
-                }
-                else
-                {
-                    base.TreeMode = value;
-                }
-            }
         }
 
         public static object GetStatusImage(DBItem row)

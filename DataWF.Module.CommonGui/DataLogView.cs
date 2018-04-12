@@ -596,7 +596,9 @@ namespace DataWF.Module.CommonGui
             if (toolTypeDelete.Checked)
                 f.Add(UserLogType.Delete);
 
-            QQuery query = new QQuery(string.Empty, UserLog.DBTable);
+            logs.Clear();
+            logs.ClearFilter();
+            var query = logs.Query;
             query.BuildPropertyParam(nameof(UserLog.LogType), CompareType.In, f);
 
             if (dateField.DataValue != null)
@@ -650,8 +652,7 @@ namespace DataWF.Module.CommonGui
             //logs.IsStatic = true;
             loader.Cancel();
 
-            logs.DefaultFilter = query.ToWhere();
-            logs.Clear();
+
 
             loader.Load();// logs.FillAsynch(DBLoadParam.Synchronize);
         }

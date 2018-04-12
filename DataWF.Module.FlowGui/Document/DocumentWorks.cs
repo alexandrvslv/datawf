@@ -44,7 +44,7 @@ namespace DataWF.Module.FlowGui
             set
             {
                 document = value;
-                view.DefaultFilter = DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DocumentId)).Name + "=" + (document?.Id.ToString() ?? "0");
+                view.DefaultFilter = new QParam(LogicType.And, DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DocumentId)), CompareType.Equal, document?.Id ?? 0);
             }
         }
 

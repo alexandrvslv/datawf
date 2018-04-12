@@ -68,18 +68,7 @@ namespace DataWF.Module.FlowGui
                     Width = 60,
                     Invoker = new Invoker<TableItemNode, bool?>("View",
                                                             (item) => item.Access?.Get(Group).View,
-                                                            (item, value) =>
-                                                            {
-                                                                if (item.Access == null)
-                                                                    return;
-                                                                if (item.Access.View || item.Access.Admin)
-                                                                {
-                                                                    var access = item.Access.Get(Group);
-                                                                    access.View = value.Value;
-                                                                    item.Access.Add(access);
-                                                                    CheckSave(item.Item);
-                                                                }
-                                                            })
+                                                            (item, value) => CheckSave(item, AccessType.View, value))
                 },
                 new LayoutColumn
                 {
@@ -87,18 +76,7 @@ namespace DataWF.Module.FlowGui
                     Width = 60,
                     Invoker = new Invoker<TableItemNode, bool?>("Edit",
                                                             (item) => item.Access?.Get(Group).Edit,
-                                                            (item, value) =>
-                                                            {
-                                                                if (item.Access == null)
-                                                                    return;
-                                                                if (item.Access.Edit || item.Access.Admin)
-                                                                {
-                                                                    var access = item.Access.Get(Group);
-                                                                    access.Edit = value.Value;
-                                                                    item.Access.Add(access);
-                                                                    CheckSave(item.Item);
-                                                                }
-                                                            })
+                                                            (item, value) => CheckSave(item, AccessType.Edit, value))
                 },
                 new LayoutColumn
                 {
@@ -106,18 +84,7 @@ namespace DataWF.Module.FlowGui
                     Width = 60,
                     Invoker = new Invoker<TableItemNode, bool?>("Create",
                                                             (item) => item.Access?.Get(Group).Create,
-                                                            (item, value) =>
-                                                            {
-                                                                if (item.Access == null)
-                                                                    return;
-                                                                if (item.Access.Create || item.Access.Admin)
-                                                                {
-                                                                    var access = item.Access.Get(Group);
-                                                                    access.Create = value.Value;
-                                                                    item.Access.Add(access);
-                                                                    CheckSave(item.Item);
-                                                                }
-                                                            })
+                                                            (item, value) => CheckSave(item, AccessType.Create, value))
                 },
                 new LayoutColumn
                 {
@@ -125,18 +92,7 @@ namespace DataWF.Module.FlowGui
                     Width = 60,
                     Invoker = new Invoker<TableItemNode, bool?>("Delete",
                                                             (item) => item.Access?.Get(Group).Delete,
-                                                            (item, value) =>
-                                                            {
-                                                                if (item.Access == null)
-                                                                    return;
-                                                                if (item.Access.Delete || item.Access.Admin)
-                                                                {
-                                                                    var access = item.Access.Get(Group);
-                                                                    access.Delete = value.Value;
-                                                                    item.Access.Add(access);
-                                                                    CheckSave(item.Item);
-                                                                }
-                                                            })
+                                                            (item, value) => CheckSave(item, AccessType.Delete, value))
                 },
                 new LayoutColumn
                 {
@@ -144,18 +100,7 @@ namespace DataWF.Module.FlowGui
                     Width = 60,
                     Invoker = new Invoker<TableItemNode, bool?>("Admin",
                                                             (item) => item.Access?.Get(Group).Admin,
-                                                            (item, value) =>
-                                                            {
-                                                                if (item.Access == null)
-                                                                    return;
-                                                                if (item.Access.Admin || item.Access.Admin)
-                                                                {
-                                                                    var access = item.Access.Get(Group);
-                                                                    access.Admin = value.Value;
-                                                                    item.Access.Add(access);
-                                                                    CheckSave(item.Item);
-                                                                }
-                                                            })
+                                                            (item, value) => CheckSave(item, AccessType.Admin, value))
                 },
                 new LayoutColumn
                 {
@@ -163,18 +108,7 @@ namespace DataWF.Module.FlowGui
                     Width = 60,
                     Invoker = new Invoker<TableItemNode, bool?>("Accept",
                                                             (item) => item.Access?.Get(Group).Accept,
-                                                            (item, value) =>
-                                                            {
-                                                                if (item.Access == null)
-                                                                    return;
-                                                                if (item.Access.Accept || item.Access.Admin)
-                                                                {
-                                                                    var access = item.Access.Get(Group);
-                                                                    access.Accept = value.Value;
-                                                                    item.Access.Add(access);
-                                                                    CheckSave(item.Item);
-                                                                }
-                                                            })
+                                                            (item, value) => CheckSave(item, AccessType.Accept, value))
                 },
                 new LayoutColumn
                 {
@@ -240,12 +174,30 @@ namespace DataWF.Module.FlowGui
             }
         }
 
-        public void CheckSave(IDBTableContent item)
+        public void CheckSave(TableItemNode node, AccessType type, bool? value)
         {
+            if (node.Access == null)
+                return;
+            if (node.Access.Edit || node.Access.Admin)
+            {
+                var access = node.Access.Get(Group);
+                if (value.Value)
+                {
+                    access.Data |= type;
+                }
+                else
+                {
+                    access.Data &= ~type;
+                }
+                node.Access.Add(access);
+            }
+
+            var item = node.Item;
             var dbItem = item as DBItem;
             if (dbItem == null)
                 return;
-            dbItem.Access = dbItem.Access;
+
+            dbItem.Access = node.Access;
             if (dbItem.IsChanged)
             {
                 if (!changes.Contains(dbItem))
@@ -256,6 +208,11 @@ namespace DataWF.Module.FlowGui
                 changes.Remove(dbItem);
             }
             CheckSave();
+
+            foreach (TableItemNode subNode in node.Nodes)
+            {
+                CheckSave(subNode, type, value);
+            }
         }
 
         private void CheckSave()

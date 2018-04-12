@@ -151,31 +151,6 @@ namespace DataWF.Data.Gui
             get { return (TableLayoutList)List; }
         }
 
-        protected override void OnFilterChanging(object sender, EventArgs e)
-        {
-            loader.Cancel();
-        }
-
-        protected override void OnFilterChanged(object sender, EventArgs e)
-        {
-            if (DBList.Mode != LayoutListMode.Fields)
-            {
-                if (DBList.Expression?.Parameters.Count > 0)
-                    loader.Load(DBList.View.Query);
-                else
-                    loader.Cancel();
-            }
-        }
-
-        protected void ViewStatusFilterChanged(object sender, EventArgs e)
-        {
-            if (DBList.Expression?.Parameters.Count > 0)
-            {
-                DBList.SetFilter(DBList.Expression.ToWhere());
-                OnFilterChanged(sender, e);
-            }
-        }
-
         public override void OnItemSelect(ListEditorEventArgs ea)
         {
             var row = ea.Item as DBItem;
@@ -209,14 +184,14 @@ namespace DataWF.Data.Gui
 
         private void FieldsCellValueChanged(object sender, LayoutValueEventArgs e)
         {
-            if (ListMode && Status != TableEditorStatus.Default)
+            if (ListMode && Status == TableEditorStatus.Adding)
             {
                 LayoutList flist = (LayoutList)sender;
-                QQuery Expression = new QQuery(string.Empty, Table);
+                var query = DBList.View.Query;
 
                 LayoutField ff = (LayoutField)e.Cell;
                 if (e.Data != DBNull.Value)
-                    Expression.BuildParam(ff.Name, e.Data, true);
+                    query.BuildParam(ff.Name, e.Data, true);
 
                 foreach (LayoutField field in flist.Fields)
                 {
@@ -227,30 +202,24 @@ namespace DataWF.Data.Gui
                         continue;
                     if (string.IsNullOrEmpty(val.ToString()))
                         continue;
-                    Expression.BuildParam(field.Name, val, true);
+                    query.BuildParam(field.Name, val, true);
                 }
 
-                if (Expression.Parameters.Count == 0)
+                if (query.Parameters.Count == 0)
                 {
                     loader.Cancel();
                 }
                 else if (!Table.IsSynchronized)
-                    loader.Load(Expression);
-
-                DBList.View.Filter = Expression.ToWhere();
+                {
+                    loader.Load(query);
+                }
                 //list.View.UpdateFilter();
             }
         }
 
         public DBItem Selected
         {
-            get
-            {
-                if (ListMode)
-                    return DBList.SelectedRow as DBItem;
-                else
-                    return DBList.FieldSource as DBItem;
-            }
+            get { return ListMode ? DBList.SelectedRow as DBItem : DBList.FieldSource as DBItem; }
             set
             {
                 if (SelectionChanged != null)
@@ -286,9 +255,6 @@ namespace DataWF.Data.Gui
                 if (value == view)
                     return;
 
-                if (view != null)
-                    view.StatusFilterChanged -= ViewStatusFilterChanged;
-
                 view = value;
                 loader.View = view;
                 searchRow = null;
@@ -296,7 +262,6 @@ namespace DataWF.Data.Gui
 
                 if (view != null)
                 {
-                    view.StatusFilterChanged += ViewStatusFilterChanged;
                     toolGroup.Visible = view.Table.GroupKey != null;
                     DataSource = view;
                 }
@@ -363,17 +328,6 @@ namespace DataWF.Data.Gui
             set { baseColumn = value; }
         }
 
-        public string RowFilter
-        {
-            get { return view == null ? null : view.Filter; }
-            set
-            {
-                if (view == null)
-                    return;
-                view.Filter = value;
-            }
-        }
-
         public override bool ReadOnly
         {
             get { return base.ReadOnly; }
@@ -438,7 +392,7 @@ namespace DataWF.Data.Gui
                         break;
                     case TableEditorStatus.Default:
                         OpenMode = OpenMode;
-                        RowFilter = "";
+                        TableView.ResetFilter();
                         break;
                 }
             }
@@ -492,7 +446,7 @@ namespace DataWF.Data.Gui
                         list.AutoToStringSort = false;
                         if (baseColumn != null && baseRow != null)
                         {
-                            view.DefaultFilter = $"{baseColumn.Name} = {DBService.FormatToSqlText(baseRow.PrimaryId)}";
+                            view.DefaultFilter = new QParam(LogicType.And, baseColumn, CompareType.Equal, baseRow.PrimaryId);
                         }
                         break;
                     case TableEditorMode.Reference:
@@ -512,12 +466,11 @@ namespace DataWF.Data.Gui
             var tool = (MenuItemRelation)sender;
 
             refButton.Text = tool.Text;
-            string filter = string.Format("{0}={1}", tool.Relation.Column.Name, DBService.FormatToSqlText(OwnerRow.PrimaryId));
 
             if (tool.View == null)
-                tool.View = tool.Relation.Table.CreateItemsView(filter, DBViewKeys.None, DBStatus.Current);
-            else
-                tool.View.DefaultFilter = filter;
+                tool.View = tool.Relation.Table.CreateItemsView("", DBViewKeys.Empty, DBStatus.Current);
+
+            tool.View.DefaultFilter = new QParam(LogicType.And, tool.Relation.Column, CompareType.Equal, OwnerRow.PrimaryId);
             baseColumn = tool.Relation.Column;
             TableView = tool.View;
             loader.Load(tool.View.Query);
@@ -558,11 +511,13 @@ namespace DataWF.Data.Gui
                         break;
                     case TableEditorMode.Referencing:
                         if (row == null)
-                            view.Filter = view.Table.PrimaryKey.Name + "=0";
+                        {
+                            view.Query.BuildParam(view.Table.PrimaryKey, "0");
+                        }
                         else
                         {
                             loader.View = view;
-                            view.Filter = "";
+                            view.ResetFilter();
                             loader.Load(new QQuery($"where {ownColumn.Name} = {row.PrimaryId}", view.Table));
                         }
                         break;
@@ -778,8 +733,8 @@ namespace DataWF.Data.Gui
         {
             base.OnToolWindowCancelClick(sender, e);
             DBItem bufRow = ((TableLayoutList)toolWindow.Target).FieldSource as DBItem;
-            RowFilter = string.Empty;
             bufRow.Reject();
+            view.ResetFilter();
         }
 
         protected override void OnToolWindowAcceptClick(object sender, EventArgs e)
@@ -928,12 +883,6 @@ namespace DataWF.Data.Gui
 
                 merge.Run(ParentWindow);
             }
-        }
-
-
-        private void ToolClearFilterClick(object sender, EventArgs e)
-        {
-            RowFilter = "";
         }
 
         private void OnToolInsertLineClick(object sender, EventArgs e)

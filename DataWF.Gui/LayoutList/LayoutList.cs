@@ -14,7 +14,7 @@ using System.Diagnostics;
 namespace DataWF.Gui
 {
     [ToolboxItem(true)]
-    public partial class LayoutList : VBox, ILocalizable, ILayoutList
+    public partial class LayoutList : VPanel, ILocalizable, ILayoutList
     {
         protected static LayoutMenu defMenu;
         protected LayoutListKeys keys = LayoutListKeys.AllowFilter |
@@ -180,8 +180,6 @@ namespace DataWF.Gui
 
             ListInfo = new LayoutListInfo();
         }
-
-        public string Text { get; set; }
 
         //public Point ColumnsLocation
         //{
@@ -771,12 +769,16 @@ namespace DataWF.Gui
 
         protected override void Dispose(bool disposing)
         {
-            ClearCache();
-            Application.Invoke(() =>
+            if (disposing)
             {
-                ListSource = null;
-                ListInfo = null;
-            });
+                Application.Invoke(() =>
+                {
+                    ClearCache();
+                    ListSource = null;
+                    ListInfo = null;
+                });
+
+            }
             base.Dispose(disposing);
 
             void ClearCache()
@@ -2832,14 +2834,14 @@ namespace DataWF.Gui
             {
                 ListInfo.Tree = value;
 
+                OnFilterChange();
+
                 if (!value)
                 {
-                    OnFilterChange();
                     OnColumnSort((LayoutColumn)null, ListSortDirection.Ascending);
                 }
                 else if (TypeHelper.IsInterface(listItemType, typeof(IGroup)))
                 {
-                    OnFilterChange();
                     var sort = listInfo.Sorters.Count == 0 ? listInfo.Sorters.Add(nameof(object.ToString)) : listInfo.Sorters.GetLast();
                     OnColumnSort(sort.Column, sort.Direction);
                 }
@@ -3412,31 +3414,45 @@ namespace DataWF.Gui
 
         protected internal virtual void OnFilterChange()
         {
-            var filtered = ListSource as IFilterable;
-            if (TreeMode || filterView?.Filters.Count > 0)
+            if (filterView?.Filters.Count > 0)
             {
-                if (filtered == null)
-                {
-                    filtered = SetFilteredCollection();
-                }
-                if (filterView?.Filters.Count > 0)
-                {
-                    ShowFilter();
-                }
-                filtered.FilterQuery.Parameters.Clear();
-                if (TreeMode)
-                    filtered.FilterQuery.Parameters.Add(QueryParameter.CreateTreeFilter(listItemType));
-                if (filterView != null)
-                    filtered.FilterQuery.Parameters.AddRange(filterView.Filters.GetParameters());
-                filtered.UpdateFilter();
+                ShowFilter();
             }
             else
             {
                 HideFilter();
+            }
+            var filtered = ListSource as IFilterable;
+            if (filtered != null)
+            {
+                filtered.FilterQuery.Parameters.Clear();
+            }
+
+            if ((TreeMode && TypeHelper.IsInterface(listItemType, typeof(IGroup))) || filterView?.Filters.Count > 0)
+            {
+                if (filtered == null)
+                {
+                    filtered = SetFilteredCollection();
+                    filtered.FilterQuery.Parameters.Clear();
+                }
+
+                if (filterView?.Filters.Count > 0)
+                    filtered.FilterQuery.Parameters.AddRange(filterView.Filters.GetParameters());
+                else if (TreeMode && TypeHelper.IsInterface(listItemType, typeof(IGroup)))
+                    filtered.FilterQuery.Parameters.Add(QueryParameter.CreateTreeFilter(listItemType));
+            }
+            else
+            {
                 if (listBackup != null)
                 {
                     RevertFilteredCollection();
+                    filtered = null;
                 }
+            }
+
+            if (filtered != null)
+            {
+                filtered.UpdateFilter();
             }
             filterChanged?.Invoke(this, EventArgs.Empty);
         }

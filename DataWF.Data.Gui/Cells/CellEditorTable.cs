@@ -177,7 +177,7 @@ namespace DataWF.Data.Gui
                 }
                 if (viewFilter != null && viewFilter.Length > 0)
                 {
-                    View.DefaultFilter = viewFilter;
+                    View.DefaultFilter = new QParam(table, viewFilter);
                 }
             }
             return tableEditor;
@@ -198,7 +198,7 @@ namespace DataWF.Data.Gui
 
         protected override void ListReset()
         {
-            View.Filter = string.Empty;
+            View.ResetFilter();
         }
 
         protected override IEnumerable ListFind(string filter)
@@ -213,9 +213,7 @@ namespace DataWF.Data.Gui
             }
             if (list == null || list.Count == 0)
             {
-                var q = new QQuery(string.Empty, Table);
-                q.SimpleFilter(EditorText);
-                View.Filter = q.ToWhere();
+                View.Query.SimpleFilter(EditorText);
                 list = View;
             }
             return list;
