@@ -17,6 +17,7 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using DataWF.Common;
 using DataWF.Data;
 
 namespace DataWF.Module.Common
@@ -40,7 +41,7 @@ namespace DataWF.Module.Common
 
         public void FilterByDocument(DBItem document)
         {
-            Filter = UserLog.DBTable.ParseProperty(nameof(UserLog.DocumentId)).Name + "='" + document.PrimaryId + "'";
+            DefaultFilter = new QParam(LogicType.And, UserLog.DBTable.ParseProperty(nameof(UserLog.DocumentId)), CompareType.Equal, document.PrimaryId);
         }
     }
 }

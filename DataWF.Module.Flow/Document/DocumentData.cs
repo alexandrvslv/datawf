@@ -57,7 +57,7 @@ namespace DataWF.Module.Flow
 
         public void FilterByDocument(Document document)
         {
-            DefaultFilter = DocumentData.DBTable.ParseProperty(nameof(DocumentData.DocumentId)).Name + "=" + document.PrimaryId;
+            DefaultFilter = new QParam(LogicType.And, DocumentData.DBTable.ParseProperty(nameof(DocumentData.DocumentId)), CompareType.Equal, document.PrimaryId);
         }
     }
 

@@ -67,13 +67,9 @@ namespace DataWF.Module.Common
                 return;
             RowLoging?.Invoke(null, arg);
             var log = UserLog.LogRow(arg);
-            //if (transaction.DbConnection != DBTable.Schema.Connection)
-            if (arg.Transaction.SubTransaction == null)
-            {
-                arg.Transaction.BeginSubTransaction(UserLog.DBTable.Schema);
-                arg.Transaction.SubTransaction.Reference = false;
-            }
-            log.Save(arg.Transaction.SubTransaction);
+            var transaction = arg.Transaction.GetSubTransaction(DBTable.Schema, false);
+            transaction.Reference = false;
+            log.Save(transaction);
             RowLoged?.Invoke(log, arg);
         }
 
@@ -369,14 +365,13 @@ namespace DataWF.Module.Common
         //    return listmap;
         //}
 
-        public static void LogUser(User user, UserLogType type, string info, DBItem item = null)
+        public static void LogUser(User user, UserLogType type, string info)
         {
             var newLog = new UserLog()
             {
                 User = user,
                 LogType = type,
                 Parent = user.LogStart,
-                TargetItem = item,
                 Document = CurrentDocument
             };
 
@@ -460,43 +455,48 @@ namespace DataWF.Module.Common
 
                 list.Add(log);
             }
-            foreach (var entry in changed)
+            using (var transaction = new DBTransaction(DBTable.Schema.Connection))
             {
-                CurrentLog = new UserLog() { TextData = "Reject" };
-                entry.Key.Save();
-
-                foreach (var item in entry.Value)
+                foreach (var entry in changed)
                 {
-                    item.Redo = CurrentLog;
-                    item.Save();
-                }
+                    CurrentLog = new UserLog() { TextData = "Reject", Parent = User.CurrentUser.LogStart };
+                    CurrentLog.Save(transaction);
+                    entry.Key.Save(transaction);
 
+                    foreach (var item in entry.Value)
+                    {
+                        item.Redo = CurrentLog;
+                        item.Save(transaction);
+                    }
+
+                }
             }
             CurrentLog = null;
         }
 
-        public static UserLog Accept(DBItem row, IList<UserLog> logs)
+        public static void Accept(DBItem row, IList<UserLog> logs)
         {
             if (row.Status == DBStatus.Edit || row.Status == DBStatus.New || row.Status == DBStatus.Error)
                 row.Status = DBStatus.Actual;
             else if (row.Status == DBStatus.Delete)
                 row.Delete();
-
-            var log = CurrentLog = new UserLog { TextData = "Accept" };
-            row.Save();
-
-            foreach (UserLog item in logs)
+            using (var transaction = new DBTransaction(DBTable.Schema.Connection))
             {
-                if (item.Status == DBStatus.New)
-                {
-                    item.Redo = log;
-                    item.Status = DBStatus.Actual;
-                    item.Save();
-                }
-            }
-            CurrentLog = null;
+                CurrentLog = new UserLog { TextData = "Accept", Parent = User.CurrentUser.LogStart };
+                CurrentLog.Save(transaction);
+                row.Save(transaction);
 
-            return log;
+                foreach (UserLog item in logs)
+                {
+                    if (item.Status == DBStatus.New)
+                    {
+                        item.Redo = CurrentLog;
+                        item.Status = DBStatus.Actual;
+                        item.Save(transaction);
+                    }
+                }
+                CurrentLog = null;
+            }
         }
     }
 }

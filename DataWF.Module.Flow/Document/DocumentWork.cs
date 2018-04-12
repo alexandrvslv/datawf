@@ -52,12 +52,6 @@ namespace DataWF.Module.Flow
             return base.AddInternal(item);
         }
 
-        public void FilterByDocument(Document document)
-        {
-            Filter = DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DocumentId)).Name + "=" + document.PrimaryId;
-        }
-
-
         public override string ToString()
         {
             string s = "";

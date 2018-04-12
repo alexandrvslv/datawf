@@ -66,7 +66,7 @@ namespace DataWF.Module.Flow
             if (_cacheAllTemplates == null)
             {
                 _cacheAllTemplates = new TemplateList();
-                _cacheAllTemplates.Filter = Template.DBTable.ParseProperty(nameof(Template.ParentId)).Name + " in (" + template.GetSubGroupIds() + ")";
+                _cacheAllTemplates.Query.BuildParam(Template.DBTable.ParseProperty(nameof(Template.ParentId)), template.GetSubGroupIds());
             }
             return _cacheAllTemplates;
         }

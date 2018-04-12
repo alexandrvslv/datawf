@@ -62,15 +62,6 @@ namespace DataWF.Module.Flow
             string filter = $"{Document.DBTable.ParseProperty(nameof(Document.Template)).Name}={template.Id} and {Document.DBTable.ParseProperty(nameof(Document.Customer)).Name}={p}";
             return table.Load(filter, DBLoadParam.Load).FirstOrDefault();
         }
-
-        public override string DefaultFilter
-        {
-            get { return base.DefaultFilter; }
-            set
-            {
-                base.DefaultFilter = value;
-            }
-        }
     }
 
     public enum DocumentFindType
