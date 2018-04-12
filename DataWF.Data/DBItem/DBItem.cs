@@ -1273,7 +1273,7 @@ namespace DataWF.Data
                     //bufRez += temprez;
                     continue;
                 }
-                string header = "";
+                string header = string.Empty;
                 if (showColumn)
                     header = $"{column}: ";
                 string value = column.FormatValue(GetValue(column));
@@ -1290,7 +1290,7 @@ namespace DataWF.Data
                     else if (c != null && c.Length == 0 && value.Length != 0)
                         c = value;
                 }
-                else
+                else if (value.Length > 0)
                 {
                     builder.Append(header);
                     builder.Append(value);

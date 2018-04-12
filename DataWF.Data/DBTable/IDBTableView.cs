@@ -30,9 +30,7 @@ namespace DataWF.Data
     {
         IDbCommand Command { get; set; }
 
-        string DefaultFilter { get; set; }
-
-        string Filter { get; set; }
+        QParam DefaultFilter { get; set; }
 
         QQuery Query { get; set; }
 
@@ -59,5 +57,7 @@ namespace DataWF.Data
         void Save();
 
         IList ToList();
+
+        void ResetFilter();
     }
 }

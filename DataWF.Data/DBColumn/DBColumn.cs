@@ -734,7 +734,7 @@ namespace DataWF.Data
         {
             //if value passed to format is null
             if (val == null)
-                return "";
+                return string.Empty;
             if ((Keys & DBColumnKeys.Boolean) == DBColumnKeys.Boolean)
             {
                 if (val.ToString().Equals(BoolTrue))

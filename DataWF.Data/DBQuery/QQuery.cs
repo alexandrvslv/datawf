@@ -50,6 +50,7 @@ namespace DataWF.Data
         protected QItemList<QTable> tables;
         private bool refmode;
         private QQuery baseQuery;
+        private DBStatus status = DBStatus.Empty;
 
         public QQuery()
             : base()
@@ -95,6 +96,38 @@ namespace DataWF.Data
         public IQItemList Owner { get { return baseQuery ?? this; } }
 
         public override IQuery Query { get { return Owner as IQuery; } }
+
+        public DBStatus StatusFilter
+        {
+            get { return status; }
+            set
+            {
+                if (StatusFilter != value)
+                {
+                    status = value;
+                    var param = GetByColumn(Table.StatusKey);
+                    if (param == null)
+                    {
+                        param = Table.GetStatusParam(status);
+                        if (param != null)
+                        {
+                            parameters.Insert(0, param);
+                        }
+                    }
+                    else
+                    {
+                        if (status == DBStatus.Empty)
+                        {
+                            parameters.Remove(param);
+                        }
+                        else
+                        {
+                            param.ValueRight = Table.GetStatusEnum(status);
+                        }
+                    }
+                }
+            }
+        }
 
         public QParam Add()
         {
@@ -1153,12 +1186,17 @@ namespace DataWF.Data
             return columns.Select("Value1.Text", CompareType.Equal, column).Any();
         }
 
-        public bool Contains(DBColumn column)
+        public QParam GetByColumn(DBColumn column)
         {
             foreach (QParam p in parameters)
                 if (p.IsColumn(column))
-                    return true;
-            return false;
+                    return p;
+            return null;
+        }
+
+        public bool Contains(DBColumn column)
+        {
+            return GetByColumn(column) != null;
         }
 
         public void Remove(DBColumn column)

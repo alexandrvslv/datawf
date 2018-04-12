@@ -334,7 +334,6 @@ namespace DataWF.Data
                 if ((transaction.ReaderParam & DBLoadParam.ReferenceRow) == DBLoadParam.ReferenceRow)
                 {
                     creference = Columns.GetIsReference();
-                    transaction.BeginSubTransaction();
                 }
                 if (transaction.Canceled)
                 {
@@ -351,12 +350,14 @@ namespace DataWF.Data
                         {
                             row = LoadFromReader(transaction);
 
-                            if (transaction.SubTransaction != null)
+                            if (creference != null)
                             {
                                 foreach (var refer in creference)
                                 {
                                     if (refer.ReferenceTable != this)
-                                        row.GetReference(refer, DBLoadParam.Load, transaction.SubTransaction);
+                                    {
+                                        row.GetReference(refer, DBLoadParam.Load, transaction.GetSubTransaction(refer.ReferenceTable.Schema, false));
+                                    }
                                 }
                             }
                             if (!row.Attached && (transaction.ReaderParam & DBLoadParam.NoAttach) != DBLoadParam.NoAttach)

@@ -85,6 +85,14 @@ namespace DataWF.Data
             SetValue(Fabric(value, column));
         }
 
+        public QParam(DBTable table, string viewFilter)
+        {
+            using (var query = new QQuery(viewFilter, table))
+            {
+                Parameters.AddRange(query.Parameters);
+            }
+        }
+
         public void CheckGroupLogic()
         {
             if (Group != null)

@@ -49,7 +49,7 @@ namespace DataWF.Common
             }
         }
 
-        public AccessType Data { get; internal set; }
+        public AccessType Data { get; set; }
 
         public bool IsEmpty
         {

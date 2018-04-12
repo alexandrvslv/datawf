@@ -29,7 +29,8 @@ namespace DataWF.Data
         Empty = 4,
         Access = 8,
         NoAttach = 16,
-        Synch = 32
+        Synch = 32,
+        Lock = 64
     }
 
     public enum DDLType

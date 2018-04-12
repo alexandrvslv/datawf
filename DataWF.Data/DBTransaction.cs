@@ -49,7 +49,7 @@ namespace DataWF.Data
         private IDbTransaction transaction;
         private List<DBItem> rows = new List<DBItem>();
         private bool cancel;
-        private DBTransaction subTransaction;
+        private Dictionary<DBConnection, DBTransaction> subTransactions;
 
         public DBTransaction()
             : this(DBService.DefaultSchema.Connection)
@@ -108,13 +108,18 @@ namespace DataWF.Data
                     Helper.OnException(te);
                     return;
                 }
-            if (Commited != null)
-                Commited(this, new DBTransactionEventArg(rows));
+
+            Commited?.Invoke(this, new DBTransactionEventArg(rows));
             foreach (var row in rows)
                 row.Accept();
 
-            if (subTransaction != null)
-                subTransaction.Commit();
+            if (subTransactions != null)
+            {
+                foreach (var transaction in subTransactions.Values)
+                {
+                    transaction.Commit();
+                }
+            }
         }
 
         public void Rollback()
@@ -130,8 +135,13 @@ namespace DataWF.Data
                 row.Reject();
             rows.Clear();
 
-            if (subTransaction != null)
-                subTransaction.Rollback();
+            if (subTransactions != null)
+            {
+                foreach (var transaction in subTransactions.Values)
+                {
+                    transaction.Commit();
+                }
+            }
         }
 
         public IsolationLevel IsolationLevel
@@ -139,9 +149,9 @@ namespace DataWF.Data
             get { return transaction == null ? DbConnection.IsolationLevel : transaction.IsolationLevel; }
         }
 
-        public DBTransaction SubTransaction
+        public IEnumerable<DBTransaction> SubTransactions
         {
-            get { return subTransaction; }
+            get { return subTransactions.Values; }
         }
 
         public DBConnection DbConnection { get; private set; }
@@ -174,16 +184,23 @@ namespace DataWF.Data
                     {
                         item.Cancel();
                         foreach (IDataParameter param in item.Parameters)
+                        {
                             if (param.Value is IDisposable)
                                 ((IDisposable)param.Value).Dispose();
+                        }
                         item.Dispose();
                     }
                     commands.Clear();
 
                     if (transaction != null)
                         transaction.Dispose();
-                    if (subTransaction != null)
-                        subTransaction.Dispose();
+                    if (subTransactions != null)
+                    {
+                        foreach (var subTransaction in subTransactions.Values)
+                        {
+                            subTransaction.Dispose();
+                        }
+                    }
                 }
                 finally
                 {
@@ -214,7 +231,7 @@ namespace DataWF.Data
                 dparam.ParameterName = name;
                 ncommand.Parameters.Add(dparam);
             }
-            dparam.Value = value??DBNull.Value;
+            dparam.Value = value ?? DBNull.Value;
             return dparam;
         }
 
@@ -263,19 +280,30 @@ namespace DataWF.Data
                 command = commands.Count > 0 ? commands[0] : null;
         }
 
-        public void BeginSubTransaction()
+        public DBTransaction GetSubTransaction()
         {
-            subTransaction = DbConnection.System == DBSystem.SQLite ? new DBTransaction(DbConnection, Connection) : new DBTransaction(DbConnection);
+            return GetSubTransaction(DbConnection, false);
         }
 
-        public void BeginSubTransaction(DBSchema schema)
+        public DBTransaction GetSubTransaction(DBSchema schema, bool check = true)
         {
-            subTransaction = new DBTransaction(schema.Connection);
+            return GetSubTransaction(schema.Connection, check);
         }
 
-        public void BeginSubTransaction(DBConnection config)
+        public DBTransaction GetSubTransaction(DBConnection config, bool checkSelf = true)
         {
-            subTransaction = new DBTransaction(config);
+            if (checkSelf && config == DbConnection)
+                return this;
+            if (subTransactions == null)
+            {
+                subTransactions = new Dictionary<DBConnection, DBTransaction>();
+            }
+            else if (subTransactions.TryGetValue(config, out var subTransaction))
+            {
+                return subTransaction;
+            }
+            return subTransactions[config] = new DBTransaction(config);
+            //TODO Check several opened connections in sqlite config.System == DBSystem.SQLite && DbConnection.System == DBSystem.SQLite
         }
 
         public void Cancel()
@@ -283,8 +311,11 @@ namespace DataWF.Data
             if (!cancel)
             {
                 cancel = true;
-                if (subTransaction != null)
-                    subTransaction.Cancel();
+                if (subTransactions != null)
+                {
+                    foreach (var subTransaction in subTransactions.Values)
+                        subTransaction.Cancel();
+                }
                 Rollback();
             }
         }

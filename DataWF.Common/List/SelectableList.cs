@@ -375,8 +375,8 @@ namespace DataWF.Common
 
         public int IndexOf(T item)
         {
-            if (comparer != null)
-                return ListHelper.BinarySearch(items, item, comparer);
+            //if (comparer != null)
+            //    return ListHelper.BinarySearch(items, item, comparer);
             return items.IndexOf(item);
         }
 

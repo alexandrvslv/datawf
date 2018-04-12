@@ -639,10 +639,6 @@ namespace DataWF.Data
             if (!item.Attached)
                 Add(item);
 
-            transaction.Rows.Add(item);
-
-            var args = new DBItemEventArgs(item) { Transaction = transaction };
-
             if (transaction.Reference && (item.UpdateState & DBUpdateState.Delete) != DBUpdateState.Delete)
             {
                 foreach (var column in Columns.GetIsReference())
@@ -657,13 +653,16 @@ namespace DataWF.Data
                         if (refItem != null && refItem != item)
                         {
                             if (refItem.IsChanged)
-                                refItem.Save(transaction);
+                                refItem.Save(transaction.GetSubTransaction(refItem.Table.Schema.Connection));
                             if (item.GetValue(column) == null)
                                 item.SetValue(refItem.PrimaryId, column);
                         }
                     }
                 }
             }
+
+            transaction.Rows.Add(item);
+            var args = new DBItemEventArgs(item) { Transaction = transaction };
 
             if (item.OnUpdating(args))
             {
@@ -707,13 +706,14 @@ namespace DataWF.Data
                 var result = transaction.ExecuteQuery(command, dmlCommand == dmlInsertSequence ? DBExecuteType.Scalar : DBExecuteType.NoReader);
                 if (!(result is Exception))
                 {
-                    Schema.Connection.System.UploadCommand(item, command);
+                    transaction.DbConnection.System.UploadCommand(item, command);
                     if (PrimaryKey != null && item.PrimaryId == null)
                         item[PrimaryKey] = result;
                     if (LogTable != null)
                     {
+                        var subTransaction = transaction.GetSubTransaction(LogTable.Schema.Connection);
                         args.LogItem = new DBLogItem(item);
-                        args.LogItem.Save(transaction);
+                        args.LogItem.Save(subTransaction);
                     }
                     item.OnUpdated(args);
                     item.UpdateState |= DBUpdateState.Commit;
@@ -924,6 +924,10 @@ namespace DataWF.Data
                 val1 = SelectQuery(item, (QQuery)val1, comparer);
             if (val2 is QQuery)
                 val2 = SelectQuery(item, (QQuery)val2, comparer);
+            if (val1 is Enum)
+                val1 = (int)val1;
+            if (val2 is Enum)
+                val2 = (int)val1;
             switch (comparer.Type)
             {
                 //case CompareTypes.Is:
@@ -1369,34 +1373,39 @@ namespace DataWF.Data
             return LoadItemById(id)?.GetRowText((allColumns ? (IEnumerable<DBColumn>)Columns : Columns.GetIsView()), showColumn, separator);
         }
 
-        public string FormatStatusFilter(DBStatus filter)
+        public QEnum GetStatusEnum(DBStatus status)
+        {
+            var qlist = new QEnum();
+            if ((status & DBStatus.Actual) == DBStatus.Actual)
+                qlist.Items.Add(new QValue((int)DBStatus.Actual));
+            if ((status & DBStatus.New) == DBStatus.New)
+                qlist.Items.Add(new QValue((int)DBStatus.New));
+            if ((status & DBStatus.Edit) == DBStatus.Edit)
+                qlist.Items.Add(new QValue((int)DBStatus.Edit));
+            if ((status & DBStatus.Delete) == DBStatus.Delete)
+                qlist.Items.Add(new QValue((int)DBStatus.Delete));
+            if ((status & DBStatus.Archive) == DBStatus.Archive)
+                qlist.Items.Add(new QValue((int)DBStatus.Archive));
+            if ((status & DBStatus.Error) == DBStatus.Error)
+                qlist.Items.Add(new QValue((int)DBStatus.Error));
+
+            return qlist;
+        }
+
+        public QParam GetStatusParam(DBStatus status)
         {
             string rez = string.Empty;
-            if (StatusKey != null && filter != 0 && filter != DBStatus.Empty)
+            if (StatusKey != null && status != 0 && status != DBStatus.Empty)
             {
-                var qlist = new QEnum();
-                if ((filter & DBStatus.Actual) == DBStatus.Actual)
-                    qlist.Items.Add(new QValue((int)DBStatus.Actual));
-                if ((filter & DBStatus.New) == DBStatus.New)
-                    qlist.Items.Add(new QValue((int)DBStatus.New));
-                if ((filter & DBStatus.Edit) == DBStatus.Edit)
-                    qlist.Items.Add(new QValue((int)DBStatus.Edit));
-                if ((filter & DBStatus.Delete) == DBStatus.Delete)
-                    qlist.Items.Add(new QValue((int)DBStatus.Delete));
-                if ((filter & DBStatus.Archive) == DBStatus.Archive)
-                    qlist.Items.Add(new QValue((int)DBStatus.Archive));
-                if ((filter & DBStatus.Error) == DBStatus.Error)
-                    qlist.Items.Add(new QValue((int)DBStatus.Error));
-                var param = new QParam()
+                return new QParam()
                 {
                     ValueLeft = new QColumn(StatusKey),
                     Comparer = CompareType.In,
-                    ValueRight = qlist
+                    ValueRight = GetStatusEnum(status)
                 };
-
-                rez = param.Format();
+                //rez = param.Format();
             }
-            return rez;
+            return null;
         }
 
         public DBColumnGroup InitColumnGroup(string code)

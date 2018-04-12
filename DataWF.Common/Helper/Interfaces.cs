@@ -123,11 +123,11 @@ namespace DataWF.Common
         New = 2,
         Edit = 4,
         Error = 8,
-        Current = 16,
-        Delete = 32,
-        Accept = 64,
-        Archive = 128,
-        Old = 256
+        Delete = 16,
+        Archive = 32,
+        Accept = New | Edit | Delete,
+        Old = Archive | Delete,
+        Current = Actual | New | Edit | Error,
     }
 
 

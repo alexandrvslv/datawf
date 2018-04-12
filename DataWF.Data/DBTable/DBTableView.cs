@@ -34,25 +34,31 @@ namespace DataWF.Data
 
     public class DBTableView<T> : SelectableList<T>, IDBTableView where T : DBItem, new()
     {
-        protected DBViewKeys keys = DBViewKeys.None;
-        protected string defaultFilter = "";
-        protected DBStatus statusFilter = 0;
-        protected QQuery query = new QQuery();
+        protected DBViewKeys keys = DBViewKeys.Lock;
+        protected QParam defaultParam;
+        protected QQuery query;
 
         protected IDbCommand command;
         protected DBTable<T> table;
+        private Query filterQuery;
 
-        public DBTableView(DBTable<T> table, string defaultFilter = "", DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
+        public DBTableView(DBTable<T> table, string defaultFilter = null, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
         {
             propertyHandler = null;
-            keys = mode;
             table.AddView(this);
             this.table = table;
-            this.defaultFilter = defaultFilter ?? string.Empty;
-            this.statusFilter = statusFilter;
-            UpdateFilter(string.Empty);
+            FilterQuery = new Query();
+            Query = new QQuery();
+            if (!string.IsNullOrEmpty(defaultFilter))
+            {
+                DefaultFilter = new QParam(table, defaultFilter);
+            }
+            StatusFilter = statusFilter;
+            keys = mode;
             if ((keys & DBViewKeys.Empty) != DBViewKeys.Empty)
+            {
                 UpdateFilter();
+            }
         }
 
         ~DBTableView()
@@ -137,17 +143,6 @@ namespace DataWF.Data
             }
         }
 
-        public string Filter
-        {
-            get { return query.ToWhere(); }
-            set
-            {
-                keys &= ~DBViewKeys.Synch;
-                UpdateFilter(value);
-                UpdateFilter();
-            }
-        }
-
         public QQuery Query
         {
             get { return query; }
@@ -157,38 +152,59 @@ namespace DataWF.Data
                 {
                     query = value;
                     query.Table = table;
+                    UpdateFilter();
                 }
             }
         }
 
-        public Query FilterQuery { get; set; } = new Query();
+        public Query FilterQuery
+        {
+            get { return filterQuery; }
+            set
+            {
+                filterQuery = value;
+                filterQuery.Parameters.ListChanged += (s, e) =>
+                {
+                    CheckFilterQuery();
+                };
+            }
+        }
 
         public event EventHandler StatusFilterChanged;
 
         public DBStatus StatusFilter
         {
-            get { return statusFilter; }
+            get { return Query.StatusFilter; }
             set
             {
-                if (statusFilter == value)
+                if (Query.StatusFilter == value)
                     return;
-                statusFilter = value;
-                Filter = "";
+                Query.StatusFilter = value;
+
+                UpdateFilter();
                 StatusFilterChanged?.Invoke(this, EventArgs.Empty);
             }
         }
 
         public event EventHandler DefaultFilterChanged;
 
-        public virtual string DefaultFilter
+        public virtual QParam DefaultFilter
         {
-            get { return defaultFilter; }
+            get { return defaultParam; }
             set
             {
-                if (defaultFilter == value)
+                if (defaultParam == value)
                     return;
-                defaultFilter = value;
-                Filter = "";
+                if (defaultParam != null)
+                {
+                    Query.Parameters.Remove(defaultParam);
+                }
+                defaultParam = value;
+                if (defaultParam != null)
+                {
+                    Query.Parameters.Insert(0, defaultParam);
+                }
+                UpdateFilter();
                 DefaultFilterChanged?.Invoke(this, EventArgs.Empty);
             }
         }
@@ -348,6 +364,9 @@ namespace DataWF.Data
 
         public void UpdateFilter()
         {
+            if (keys == DBViewKeys.Lock)
+                return;
+
             ClearInternal();
             if (!query.IsEmpty())
             {
@@ -359,6 +378,83 @@ namespace DataWF.Data
             }
             SortInternal();
             OnListChanged(ListChangedType.Reset, -1);
+        }
+
+        private void CheckFilterQuery()
+        {
+            ClearFilter();
+
+            foreach (var filter in FilterQuery.Parameters)
+            {
+                if (filter.Invoker == null || filter.Value == null || filter.Value == DBNull.Value || filter.Value.ToString().Length == 0)
+                    if (filter.Comparer.Type != CompareTypes.Is)
+                        continue;
+                var pcolumn = filter.Invoker as DBColumn;
+
+                if (filter.Invoker.Name == nameof(Object.ToString))
+                {
+                    Query.SimpleFilter(filter.Value as string);
+                }
+                else if (pcolumn != null)
+                {
+                    string code = pcolumn.Name;
+                    QParam param = new QParam()
+                    {
+                        Column = pcolumn,
+                        Logic = filter.Logic,
+                        Comparer = filter.Comparer,
+                        Value = filter.Comparer.Type != CompareTypes.Is ? filter.Value : null
+                    };
+                    if (param.Value is string && param.Comparer.Type == CompareTypes.Like)
+                    {
+                        string s = (string)param.Value;
+                        if (s.IndexOf('%') < 0)
+                            param.Value = string.Format("%{0}%", s);
+                    }
+                    int i = code.IndexOf('.');
+                    if (i >= 0)
+                    {
+                        int s = 0;
+                        QQuery sexpression = Query;
+                        QQuery newQuery = null;
+                        while (i > 0)
+                        {
+                            string iname = code.Substring(s, i - s);
+                            if (s == 0)
+                            {
+                                var pc = table.Columns[iname];
+                                if (pc != null)
+                                    iname = pc.Name;
+                            }
+                            var c = sexpression.Table.Columns[iname];
+                            if (c.IsReference)
+                            {
+                                newQuery = new QQuery(string.Empty, c.ReferenceTable);
+                                sexpression.BuildParam(c, CompareType.In, newQuery);
+                                sexpression = newQuery;
+                            }
+                            s = i + 1;
+                            i = code.IndexOf('.', s);
+                        }
+                        newQuery.Parameters.Add(param);
+                    }
+                    else
+                    {
+                        Query.Parameters.Add(param);//.BuildParam(col, column.Value, true);
+                    }
+                }
+                else
+                {
+                    var param = new QParam()
+                    {
+                        ValueLeft = new QReflection(filter.Invoker),
+                        Logic = filter.Logic,
+                        Comparer = filter.Comparer,
+                        Value = filter.Comparer.Type != CompareTypes.Is ? filter.Value : null
+                    };
+                    Query.Parameters.Add(param);
+                }
+            }
         }
 
         public void Accept()
@@ -410,38 +506,27 @@ namespace DataWF.Data
             OnListChanged(ListChangedType.Reset, -1);
         }
 
-        public void UpdateFilter(string value)
+        public bool ClearFilter()
         {
-            query.Table = table;
-            string val = CheckDefaultFilter(value);
-            if (val == "" && query.Parameters.Count > 0)
-                query.CacheQuery = null;
-            if (query.CacheQuery == val)
-                return;
-            query.Parse(val);
+            var flag = false;
+            var statusParam = query.GetByColumn(Table.StatusKey);
+            foreach (var parameter in query.Parameters.ToList())
+            {
+                if (parameter != DefaultFilter && parameter != statusParam)
+                {
+                    flag = true;
+                    query.Parameters.Remove(parameter);
+                }
+            }
+            return flag;
         }
 
-        public string CheckDefaultFilter(string filter)
+        public void ResetFilter()
         {
-            if (defaultFilter == null)
-                defaultFilter = string.Empty;
-            string stateFilter = Table.FormatStatusFilter(statusFilter);
-            string rezult = stateFilter;
-            if (defaultFilter.Length != 0)
-                rezult = (stateFilter.Length != 0 ? stateFilter + " and " : string.Empty) + defaultFilter;
-
-            if (filter.Length != 0)
-                rezult = (stateFilter.Length != 0 ? stateFilter + " and " : string.Empty) +
-                    (defaultFilter.Length != 0 ? "(" + defaultFilter + ") and " : string.Empty) +
-                    filter;
-
-            return rezult;
-        }
-
-        public void RemoveFilter()
-        {
-            query.Parameters.Clear();
-            UpdateFilter();
+            if (ClearFilter())
+            {
+                UpdateFilter();
+            }
         }
 
         public override int AddInternal(T item)
