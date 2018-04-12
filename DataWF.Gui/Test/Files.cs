@@ -20,7 +20,7 @@ namespace DataWF.TestGui
         private Label statusLablel = new Label();
 
         private DirectoryNode current;
-        private Queue<Node> actions = new Queue<Node>();
+        private Queue<DirectoryNode> actions = new Queue<DirectoryNode>();
         private SelectableList<FileItem> files = new SelectableList<FileItem>();
         private EventWaitHandle flag = new EventWaitHandle(true, EventResetMode.ManualReset);
 
@@ -103,7 +103,7 @@ namespace DataWF.TestGui
             return node;
         }
 
-        private void CheckSubDirectory(Node node)
+        private void CheckSubDirectory(DirectoryNode node)
         {
             if (!node.Check && !actions.Contains(node))
             {
@@ -128,7 +128,7 @@ namespace DataWF.TestGui
                             statusLablel.Text = string.Format("Check: {0}", check.Name);
                         });
 
-                        var directory = (DirectoryInfo)((FileItem)check.Tag).Info;
+                        var directory = (DirectoryInfo)check.File.Info;
                         try
                         {
                             var directories = directory.GetDirectories();
@@ -160,15 +160,15 @@ namespace DataWF.TestGui
             }
         }
 
-        private void LoadFolder(Node node)
+        private void LoadFolder(DirectoryNode node)
         {
-            ThreadPool.QueueUserWorkItem(p =>
+            Task.Run(() =>
             {
                 files.Clear();
-                foreach (var item in node.Nodes)
-                    files.Add((FileItem)item.Tag);
+                foreach (DirectoryNode item in node.Nodes)
+                    files.Add(item.File);
 
-                var directory = (DirectoryInfo)((FileItem)node.Tag).Info;
+                var directory = (DirectoryInfo)node.File.Info;
                 var dfiles = directory.GetFiles();
                 foreach (var file in dfiles)
                     files.Add(new FileItem() { Info = file });
@@ -188,13 +188,13 @@ namespace DataWF.TestGui
                     if (current != null)
                     {
                         var drive = current.Group == null ? current.Drive : null;
-                        var text = drive == null ? ((FileItem)current.Tag).Info.FullName : string.Format("{0} free {1} of {2}", ((FileItem)current.Tag).Info.FullName,
+                        var text = drive == null ? current.File.Info.FullName : string.Format("{0} free {1} of {2}", current.File.Info.FullName,
                                        Helper.LengthFormat(drive.TotalFreeSpace),
                                        Helper.LengthFormat(drive.TotalSize));
                         statusLablel.Text = text;
                         for (int i = 0; i < current.Nodes.Count; i++)
                             if (!current.Nodes[i].Check)
-                                CheckSubDirectory(current.Nodes[i]);
+                                CheckSubDirectory((DirectoryNode)current.Nodes[i]);
 
                         LoadFolder(current);
                     }

@@ -10,6 +10,7 @@ using System.Linq;
 using Xwt;
 using Xwt.Drawing;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace DataWF.Gui
 {
@@ -4774,9 +4775,10 @@ namespace DataWF.Gui
                 if (!post)
                 {
                     post = true;
-                    ThreadPool.QueueUserWorkItem((o) =>
+                    Task.Run(() =>
                     {
-                        listEvent.WaitOne(200);
+                        //listEvent.WaitOne(400);
+                        Task.Delay(400);
                         Application.Invoke(() => OnListChangedApp(arg));
                         post = false;
                     });
