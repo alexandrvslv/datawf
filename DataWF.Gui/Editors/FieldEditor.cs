@@ -107,7 +107,7 @@ namespace DataWF.Gui
         public void BindData(object dataSource, string property, ILayoutCellEditor custom = null)
         {
             Bind = true;
-            if (Property != property || dataSource != null)
+            if (Property != property && dataSource != null)
             {
                 Property = property;
                 Invoker = EmitInvoker.Initialize(dataSource.GetType(), property);

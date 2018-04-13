@@ -5,6 +5,7 @@ using DataWF.Common;
 using DataWF.Data;
 using System.Collections.Concurrent;
 using Xwt;
+using System.Threading.Tasks;
 
 namespace DataWF.Data.Gui
 {
@@ -116,7 +117,7 @@ namespace DataWF.Data.Gui
             if (query != null && query.Table == view.Table)
             {
                 queries.Push(query);
-                ThreadPool.QueueUserWorkItem(p => Loader());
+                Task.Run(() => Loader());
             }
         }
 

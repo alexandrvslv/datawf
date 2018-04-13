@@ -344,6 +344,34 @@ namespace DataWF.Data
             }
         }
 
+        public virtual string FormatCreateView(string name)
+        {
+            return "create view " + name + " as";
+        }
+
+        public virtual void Format(StringBuilder ddl, IDBVirtualTable virtualTable, DDLType ddlType)
+        {
+            var table = virtualTable as DBTable;
+            if (ddlType == DDLType.Create)
+            {
+                ddl.AppendLine(FormatCreateView(table.Name));
+                ddl.Append("select ");
+                foreach (DBVirtualColumn column in table.Columns)
+                {
+                    if (column.ColumnType == DBColumnTypes.Default)
+                        ddl.Append(column.BaseName + " as " + column.Name);
+                    else if (column.ColumnType == DBColumnTypes.Query)
+                        ddl.Append(column.Query + " as " + column.Name);
+                    else
+                        continue;
+                    ddl.Append(", ");
+                }
+                ddl.Length -= 2;
+                ddl.AppendLine();
+                ddl.AppendLine($"from {table.SqlName} where {table.Query};");
+            }
+        }
+
         public virtual void Format(StringBuilder ddl, DBTable table, DDLType ddlType, bool constraints = true, bool indexes = true)
         {
             ddl.AppendLine($"-- -Generate {ddlType} for table {table.Name}");

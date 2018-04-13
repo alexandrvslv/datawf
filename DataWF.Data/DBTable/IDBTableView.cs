@@ -34,14 +34,19 @@ namespace DataWF.Data
 
         QQuery Query { get; set; }
 
+        DBStatus StatusFilter { get; set; }
+
+        bool ClearFilter();
+
+        void ResetFilter();
+
         bool IsEdited { get; }
 
         bool IsStatic { get; set; }
 
         new bool IsSynchronized { get; set; }
 
-        DBStatus StatusFilter { get; set; }
-
+        
         IEnumerable<DBItem> SelectParents();
 
         IEnumerable<DBItem> SelectChilds(DBItem item);
@@ -57,7 +62,5 @@ namespace DataWF.Data
         void Save();
 
         IList ToList();
-
-        void ResetFilter();
     }
 }

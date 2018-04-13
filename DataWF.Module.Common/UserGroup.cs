@@ -71,11 +71,11 @@ namespace DataWF.Module.Common
             set { SetValue(value, Table.CodeKey); }
         }
 
-        [DataMember, Column("name", Keys = DBColumnKeys.Culture)]
+        [DataMember, Column("name", Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
         public override string Name
         {
-            get { return GetName("name"); }
-            set { SetName("name", value); }
+            get { return GetName(nameof(Name)); }
+            set { SetName(nameof(Name), value); }
         }
 
         public IEnumerable<User> GetUsers()
@@ -112,6 +112,6 @@ namespace DataWF.Module.Common
             //     _users.Dispose();            
         }
 
-        
+
     }
 }

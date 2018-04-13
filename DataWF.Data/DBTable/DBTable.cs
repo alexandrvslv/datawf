@@ -233,6 +233,10 @@ namespace DataWF.Data
             {
                 cacheSequence = value;
                 SequenceName = value?.Name;
+                if (value != null && !Schema.Sequences.Contains(SequenceName))
+                {
+                    Schema.Sequences.Add(value);
+                }
             }
         }
 
@@ -1257,10 +1261,15 @@ namespace DataWF.Data
 
         public DBTable GenerateLogTable()
         {
-            if (LogTable != null)
-                return LogTable;
-            LogTable = new DBLogTable { BaseTable = this };
-            Schema.Tables.Add(logTable);
+            if (LogTable == null)
+            {
+                LogTable = new DBLogTable { BaseTable = this };
+                Schema.Tables.Add(logTable);
+            }
+            else
+            {
+                LogTable.BaseTable = this;
+            }
             return logTable;
         }
 
@@ -1285,8 +1294,7 @@ namespace DataWF.Data
             var sequence = Schema.Sequences[sname];
             if (sequence == null)
             {
-                sequence = new DBSequence(sname);
-                Schema.Sequences.Add(sequence);
+                sequence = new DBSequence(sname);                
             }
             return sequence;
         }

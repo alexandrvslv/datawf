@@ -89,12 +89,12 @@ namespace DataWF.Gui
 
         private void PickerDateChanged(object sender, EventArgs e)
         {
-            if (handleText)
+            if (HandleText)
             {
-                handleText = false;
+                HandleText = false;
                 Value = twoDate ? Selector.Value : (object)Selector.Value.Min;
                 EditorText = FormatValue(Value) as string;
-                handleText = true;
+                HandleText = true;
             }
         }
 
@@ -103,8 +103,8 @@ namespace DataWF.Gui
             get { return base.Value; }
             set
             {
-                bool flag = handleText;
-                handleText = false;
+                bool flag = HandleText;
+                HandleText = false;
                 if (twoDate)
                 {
                     if (value is DateTime)
@@ -122,7 +122,7 @@ namespace DataWF.Gui
                     if (Selector != null)
                         Selector.Value = new DateInterval(val);
                 }
-                handleText = flag;
+                HandleText = flag;
                 base.Value = value;
             }
         }

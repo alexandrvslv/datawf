@@ -274,5 +274,6 @@ namespace DataWF.Gui
         {
             invoker?.Set(listItem, value);
         }
+        
     }
 }

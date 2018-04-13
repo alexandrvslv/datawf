@@ -81,7 +81,7 @@ namespace DataWF.Data.Gui
             {
                 editor.ShowDropDown(ToolShowMode.AutoHide);
             }
-            handleText = true;
+            HandleText = true;
         }
 
         public virtual DataTree GetToolTarget()

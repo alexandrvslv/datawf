@@ -104,36 +104,6 @@ namespace DataWF.Data.Gui
             }
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                loader.Dispose();
-                if (view != null)
-                    view.Dispose();
-            }
-            base.Dispose(disposing);
-        }
-
-        private void OnToolInsertItemClicked(object sender, EventArgs e)
-        {
-            var column = ((MenuItem)sender).Tag as DBColumn;
-            if (column != null)
-            {
-                var cont = new ToolWindow();
-                cont.Target = new TableEditor();
-                cont.Label.Text = column.ReferenceTable.ToString();
-                //cont.Closing += new ToolStripDropDownClosingEventHandler(cont_Closing);
-                ((TableEditor)cont.Target).Initialize(column.ReferenceTable.CreateItemsView("", DBViewKeys.None, DBStatus.Current), null, column, TableEditorMode.Reference, false);
-                ((TableEditor)cont.Target).ItemSelect += OnRowSelected;
-                ((MenuItem)sender).Tag = cont;
-                //((ToolStripDropDownButton)e.ClickedItem).DropDown = e.ClickedItem.Tag as ToolForm;
-                //((ToolStripDropDownButton)e.ClickedItem).ShowDropDown();
-            }
-            _currentControl = ((MenuItem)sender).Tag as ToolWindow;
-            // _currentControl.Show();//sender as Control, new Point(toolStrip1.Left, toolStrip1.Height));
-        }
-
         [DefaultValue(false)]
         public bool ShowDetails
         {
@@ -149,72 +119,6 @@ namespace DataWF.Data.Gui
         public TableLayoutList DBList
         {
             get { return (TableLayoutList)List; }
-        }
-
-        public override void OnItemSelect(ListEditorEventArgs ea)
-        {
-            var row = ea.Item as DBItem;
-            if (List.Mode == LayoutListMode.Fields)
-            {
-                var field = List.SelectedItem as LayoutDBField;
-                var column = field.Invoker as DBColumn;
-                row = List.FieldSource as DBItem;
-                if (column != null && column.IsReference && column.ReferenceTable.Access.View)
-                {
-                    row = field.GetReference(row);
-                }
-            }
-            ea.Item = row;
-            base.OnItemSelect(ea);
-        }
-
-        public override void ShowItemDialog(object item)
-        {
-            if (item is DBItem && ((DBItem)item).UpdateState == DBUpdateState.Default)
-            {
-                var explorer = new TableExplorer();
-                explorer.Initialize((DBItem)item, TableEditorMode.Item, false);
-                explorer.ShowDialog(this);
-            }
-            else
-            {
-                base.ShowItemDialog(item);
-            }
-        }
-
-        private void FieldsCellValueChanged(object sender, LayoutValueEventArgs e)
-        {
-            if (ListMode && Status == TableEditorStatus.Adding)
-            {
-                LayoutList flist = (LayoutList)sender;
-                var query = DBList.View.Query;
-
-                LayoutField ff = (LayoutField)e.Cell;
-                if (e.Data != DBNull.Value)
-                    query.BuildParam(ff.Name, e.Data, true);
-
-                foreach (LayoutField field in flist.Fields)
-                {
-                    object val = flist.ReadValue(field, (LayoutColumn)flist.ListInfo.Columns["Value"]);
-                    if (!field.Visible || val == null || val == DBNull.Value || GroupHelper.Level(field) != 0)
-                        continue;
-                    if (field == ff)
-                        continue;
-                    if (string.IsNullOrEmpty(val.ToString()))
-                        continue;
-                    query.BuildParam(field.Name, val, true);
-                }
-
-                if (query.Parameters.Count == 0)
-                {
-                    loader.Cancel();
-                }
-                else if (!Table.IsSynchronized)
-                {
-                    loader.Load(query);
-                }
-                //list.View.UpdateFilter();
-            }
         }
 
         public DBItem Selected
@@ -588,6 +492,118 @@ namespace DataWF.Data.Gui
                 if (f.Invoker.Equals(p.Column))
                     return true;
             return false;
+        }
+
+        private void OnToolInsertItemClicked(object sender, EventArgs e)
+        {
+            var column = ((MenuItem)sender).Tag as DBColumn;
+            if (column != null)
+            {
+                var cont = new ToolWindow();
+                cont.Target = new TableEditor();
+                cont.Label.Text = column.ReferenceTable.ToString();
+                //cont.Closing += new ToolStripDropDownClosingEventHandler(cont_Closing);
+                ((TableEditor)cont.Target).Initialize(column.ReferenceTable.CreateItemsView("", DBViewKeys.None, DBStatus.Current), null, column, TableEditorMode.Reference, false);
+                ((TableEditor)cont.Target).ItemSelect += OnRowSelected;
+                ((MenuItem)sender).Tag = cont;
+                //((ToolStripDropDownButton)e.ClickedItem).DropDown = e.ClickedItem.Tag as ToolForm;
+                //((ToolStripDropDownButton)e.ClickedItem).ShowDropDown();
+            }
+            _currentControl = ((MenuItem)sender).Tag as ToolWindow;
+            // _currentControl.Show();//sender as Control, new Point(toolStrip1.Left, toolStrip1.Height));
+        }
+
+        public override void OnItemSelect(ListEditorEventArgs ea)
+        {
+            var row = ea.Item as DBItem;
+            if (List.Mode == LayoutListMode.Fields)
+            {
+                var field = List.SelectedItem as LayoutDBField;
+                var column = field.Invoker as DBColumn;
+                row = List.FieldSource as DBItem;
+                if (column != null && column.IsReference && column.ReferenceTable.Access.View)
+                {
+                    row = field.GetReference(row);
+                }
+            }
+            ea.Item = row;
+            base.OnItemSelect(ea);
+        }
+
+        public override void ShowItemDialog(object item)
+        {
+            if (item is DBItem && ((DBItem)item).UpdateState == DBUpdateState.Default)
+            {
+                var explorer = new TableExplorer();
+                explorer.Initialize((DBItem)item, TableEditorMode.Item, false);
+                explorer.ShowDialog(this);
+            }
+            else
+            {
+                base.ShowItemDialog(item);
+            }
+        }
+
+        protected override void OnFilterChanging(object sender, EventArgs e)
+        {
+            loader.Cancel();
+        }
+
+        protected override void OnFilterChanged(object sender, EventArgs e)
+        {
+            if (DBList.Mode != LayoutListMode.Fields)
+            {
+                if (List.FilterList?.Count > 0)
+                    loader.Load(DBList.View.Query);
+                else
+                    loader.Cancel();
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                loader.Dispose();
+                if (view != null)
+                    view.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        private void FieldsCellValueChanged(object sender, LayoutValueEventArgs e)
+        {
+            if (ListMode && Status == TableEditorStatus.Adding)
+            {
+                LayoutList flist = (LayoutList)sender;
+                var query = DBList.View.Query;
+
+                LayoutField ff = (LayoutField)e.Cell;
+                if (e.Data != DBNull.Value)
+                    query.BuildParam(ff.Name, e.Data, true);
+
+                foreach (LayoutField field in flist.Fields)
+                {
+                    object val = flist.ReadValue(field, (LayoutColumn)flist.ListInfo.Columns["Value"]);
+                    if (!field.Visible || val == null || val == DBNull.Value || GroupHelper.Level(field) != 0)
+                        continue;
+                    if (field == ff)
+                        continue;
+                    if (string.IsNullOrEmpty(val.ToString()))
+                        continue;
+                    query.BuildParam(field.Name, val, true);
+                }
+
+                if (query.Parameters.Count == 0)
+                {
+                    loader.Cancel();
+                }
+                else if (!Table.IsSynchronized)
+                {
+                    loader.Load(query);
+                }
+                //list.View.UpdateFilter();
+            }
         }
 
         protected override void OnListSelectionChanged(object sender, EventArgs e)

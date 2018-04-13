@@ -86,8 +86,8 @@ namespace DataWF.Module.Common
         [DataMember, Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
         public override string Name
         {
-            get { return GetName("name"); }
-            set { SetName("name", value); }
+            get { return GetName(nameof(Name)); }
+            set { SetName(nameof(Name), value); }
         }
 
         public IEnumerable<User> GetUsers()

@@ -2064,11 +2064,11 @@ namespace DataWF.Gui
                         BuildFieldList(null, arg.Properties);
                     }
 
-                    //var list = ListTool.Copy(temp.Nodes);
-                    foreach (LayoutField f in temp.Nodes)
-                        if (f.Invoker == null)
-                            BuildField(f.Group as LayoutField, f.Name);
-
+                    //Referesh
+                    foreach (LayoutField f in temp.Nodes.ToList())
+                    {
+                        BuildField(f);
+                    }
                 }
                 ListSensetive = true;
             }
@@ -2231,7 +2231,7 @@ namespace DataWF.Gui
                     ptype = parent.Invoker.DataType;
                 }
             }
-            LayoutField field = FieldInfo.Nodes[name] ?? CreateField(name);
+            var field = FieldInfo.Nodes[name] ?? CreateField(name);
             field.Group = parent;
             BuildField(field);
             return field;
@@ -2239,9 +2239,7 @@ namespace DataWF.Gui
 
         public virtual LayoutField CreateField(string name)
         {
-            var field = new LayoutField();
-            field.Name = name;
-            return field;
+            return new LayoutField() { Name = name };
         }
 
         public void BuildField(LayoutField field)
@@ -2251,6 +2249,12 @@ namespace DataWF.Gui
                 CheckMemeberInfo(field, FieldType);
                 field.CellEditor = GetCellEditor(field, null, field);
                 field.IsCompaund = IsComplex(field);
+                if (field.Invoker == null)
+                {
+                    Helper.Logs.Add(new StateInfo("LayoutList", "Remove unreferenced field", $"Field Name: {field.Name} ItemType: {fieldType}", StatusType.Warning));
+                    FieldInfo.Nodes.Remove(field);
+                    return;
+                }
             }
             field.Text = GetHeader(field);
         }
@@ -2360,6 +2364,12 @@ namespace DataWF.Gui
                 CheckMemeberInfo(column, ListType);
                 column.CellEditor = GetCellEditor(null, null, column);
                 column.Collect = GetCellCollect(column);
+                if (column.Invoker == null)
+                {
+                    Helper.Logs.Add(new StateInfo("LayoutList", "Remove unreferenced column", $"Column Name: {column.Name} ItemType: {listItemType}", StatusType.Warning));
+                    column.Remove();
+                    return;
+                }
             }
             //if (column.Header == null)
             column.Text = GetHeader(column);
@@ -2456,7 +2466,7 @@ namespace DataWF.Gui
         {
             listInfo.Columns.Bound = Rectangle.Zero;
             ClearFilter();
-            var list = LayoutMapHelper.GetItems(listInfo.Columns);
+            var list = LayoutMapHelper.GetItems(listInfo.Columns).ToList();
             foreach (LayoutColumn item in list)
             {
                 BuildColumn(item.Owner as LayoutColumn, item.Name);
@@ -2833,18 +2843,21 @@ namespace DataWF.Gui
             get { return ListInfo?.Tree ?? false; }
             set
             {
+                //if (TreeMode == value)
+                //    return;
                 ListInfo.Tree = value;
 
                 OnFilterChange();
 
                 if (!value)
                 {
-                    OnColumnSort((LayoutColumn)null, ListSortDirection.Ascending);
+                    OnColumnApplySort(OnColumnsCreateComparer());
                 }
                 else if (TypeHelper.IsInterface(listItemType, typeof(IGroup)))
                 {
-                    var sort = listInfo.Sorters.Count == 0 ? listInfo.Sorters.Add(nameof(object.ToString)) : listInfo.Sorters.GetLast();
-                    OnColumnSort(sort.Column, sort.Direction);
+                    if (ListInfo.Sorters.Count == 0)
+                        ListInfo.Sorters.Add(nameof(object.ToString));
+                    OnColumnApplySort(OnColumnsCreateComparer());
                 }
             }
         }
@@ -4462,7 +4475,7 @@ namespace DataWF.Gui
 
         protected virtual void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (fieldSource != null)
+            if (fieldSource != null && listSource != null)
             {
                 foreach (LayoutField field in listSource)
                 {
@@ -4471,6 +4484,8 @@ namespace DataWF.Gui
                 }
             }
         }
+
+        public LayoutFilterList FilterList { get { return filterView?.Filters; } }
 
         public virtual void ClearFilter()
         {

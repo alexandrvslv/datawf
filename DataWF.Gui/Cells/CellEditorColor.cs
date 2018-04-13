@@ -11,7 +11,7 @@ namespace DataWF.Gui
 
         public CellEditorColor() : base()
         {
-            handleText = true;
+            HandleText = true;
         }
 
         public ColorSelector Selector
@@ -30,7 +30,7 @@ namespace DataWF.Gui
         {
             var colors = editor.GetCached<ColorSelector>();
             colors.Sensitive = !ReadOnly;
-            if (!ReadOnly && handleText)
+            if (!ReadOnly && HandleText)
                 colors.ColorChanged += OnColorChanged;
             return colors;
         }

@@ -245,8 +245,8 @@ namespace DataWF.Module.Common
         [DataMember, Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
         public override string Name
         {
-            get { return GetName("name"); }
-            set { SetName("name", value); }
+            get { return GetName(nameof(Name)); }
+            set { SetName(nameof(Name), value); }
         }
 
         [DataMember, Column("department_id"), Browsable(false)]
@@ -255,7 +255,7 @@ namespace DataWF.Module.Common
             get { return GetProperty<int?>(); }
             set { SetProperty(value); }
         }
-        
+
         [Reference("fk_ruser_department_id", nameof(DepartmentId))]
         public Department Department
         {
@@ -269,7 +269,7 @@ namespace DataWF.Module.Common
             get { return GetProperty<int?>(); }
             set { SetProperty(value); }
         }
-        
+
         [Reference("fk_ruser_position_id", nameof(PositionId))]
         public Position Position
         {

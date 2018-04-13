@@ -39,7 +39,7 @@ namespace DataWF.Module.Counterpart
             set { SetValue(value, Table.PrimaryKey); }
         }
 
-        [VirtualColumn("code", Keys = DBColumnKeys.View | DBColumnKeys.Code)]
+        [VirtualColumn("code", Keys = DBColumnKeys.Code)]
         public string Code
         {
             get { return GetValue<string>(Table.CodeKey); }

@@ -21,6 +21,7 @@ namespace DataWF.Data.Gui
         {
             DropDownExVisible = true;
             dropDownAutoHide = true;
+            Filtering = true;
         }
 
         public string ViewFilter
@@ -42,7 +43,7 @@ namespace DataWF.Data.Gui
 
         public override LayoutList List
         {
-            get { return TableEditor.List; }
+            get { return TableEditor?.List; }
         }
 
         public DBTable Table
@@ -68,7 +69,7 @@ namespace DataWF.Data.Gui
         {
             get
             {
-                if (listSource == null && table != null)
+                if ((listSource == null || ((IDBTableView)listSource).Disposed) && table != null)
                     listSource = table.CreateItemsView(viewFilter, DBViewKeys.None, DBStatus.Current);
                 return listSource as IDBTableView;
             }
@@ -203,7 +204,7 @@ namespace DataWF.Data.Gui
 
         protected override IEnumerable ListFind(string filter)
         {
-            IList list = null;
+            IEnumerable list = null;
 
             if (Table.CodeKey != null)
             {
@@ -211,10 +212,12 @@ namespace DataWF.Data.Gui
                 if (item != null)
                     list = new object[] { item };
             }
-            if (list == null || list.Count == 0)
+            if (list == null)
             {
-                View.Query.SimpleFilter(EditorText);
-                list = View;
+                var query = new QQuery("", Table);
+                query.SimpleFilter(EditorText);
+                TableEditor.Loader.Load(query);
+                list = query.Select();
             }
             return list;
         }

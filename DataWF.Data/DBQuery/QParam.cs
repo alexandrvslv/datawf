@@ -85,11 +85,11 @@ namespace DataWF.Data
             SetValue(Fabric(value, column));
         }
 
-        public QParam(DBTable table, string viewFilter)
+        public QParam(DBTable table, string viewFilter) : this()
         {
             using (var query = new QQuery(viewFilter, table))
             {
-                Parameters.AddRange(query.Parameters);
+                Parameters.AddRange(query.Parameters.ToArray());
             }
         }
 

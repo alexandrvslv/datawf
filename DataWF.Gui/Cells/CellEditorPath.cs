@@ -11,7 +11,7 @@ namespace DataWF.Gui
         public CellEditorPath() : base()
         {
             DropDownWindow = false;
-            handleText = false;
+            HandleText = false;
         }
 
         private void OnDropDownClick(object sender, EventArgs e)

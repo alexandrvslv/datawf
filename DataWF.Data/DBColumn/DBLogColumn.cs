@@ -26,6 +26,11 @@ namespace DataWF.Data
 {
     public class DBLogColumn : DBColumn
     {
+        public static string GetName(DBColumn column)
+        {
+            return column.Name + "_log";
+        }
+
         private DBColumn baseColumn;
 
         public DBLogColumn()
@@ -52,7 +57,7 @@ namespace DataWF.Data
                 baseColumn = value;
                 BaseName = value.Name;
 
-                Name = value.Name + "_log";
+                Name = GetName(value);
                 DataType = value.DataType;
                 DBDataType = value.DBDataType;
                 Size = value.Size;

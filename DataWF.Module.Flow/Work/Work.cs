@@ -63,7 +63,7 @@ namespace DataWF.Module.Flow
             set { SetValue(value, Table.CodeKey); }
         }
 
-        [DataMember, Column("name", Keys = DBColumnKeys.Culture)]
+        [DataMember, Column("name", Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
         public override string Name
         {
             get { return GetName(nameof(Name)); }

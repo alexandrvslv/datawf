@@ -176,6 +176,11 @@ namespace DataWF.Common
             }
         }
 
+        public bool Disposed
+        {
+            get { return items == null; }
+        }
+
         public virtual void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, string property = null)
         {
             ListChanged?.Invoke(this, new ListPropertyChangedEventArgs(type, newIndex, oldIndex, property));

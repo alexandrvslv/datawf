@@ -18,6 +18,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using System;
+using System.Globalization;
 
 namespace DataWF.Data
 {
@@ -49,11 +50,24 @@ namespace DataWF.Data
 
         public override DBColumn CreateColumn(string name)
         {
-            var baseColumn = TableView?.BaseTable?.Table.ParseColumn(name);
+            return new DBVirtualColumn() { Table = Table.Table, };
+        }
+
+        public override void GenerateCultureColumn(DBTable table, string groupName, CultureInfo culture)
+        {
+            base.GenerateCultureColumn(table, groupName, culture);
+
+            if (TableView?.BaseTable?.Table == null)
+            {
+                TableView?.BaseTable?.Generate(Table.Schema);
+            }
+
+            string name = culture == null ? BaseName : $"{BaseName}_{culture.TwoLetterISOLanguageName}";
+            var baseColumn = TableView?.BaseTable?.Table?.ParseColumn(name);
             if (baseColumn == null)
                 throw new InvalidOperationException("BaseColumn must be availible!");
 
-            return new DBVirtualColumn(baseColumn) { Table = Table.Table, };
+            ((DBVirtualColumn)Column).BaseColumn = baseColumn;
         }
     }
 }

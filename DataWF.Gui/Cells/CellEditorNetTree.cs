@@ -62,7 +62,7 @@ namespace DataWF.Gui
             {
                 editor.ShowDropDown(ToolShowMode.AutoHide);
             }
-            handleText = true;
+            HandleText = true;
         }
 
         public override Widget InitDropDownContent()
@@ -103,9 +103,9 @@ namespace DataWF.Gui
                 (((NetTree)sender).SelectedNode.Tag.GetType() == typeof(IPAddress)))
             {
                 editor.Value = ParseValue(((NetTree)sender).SelectedNode.Tag);
-                handleText = false;
+                HandleText = false;
                 EditorText = FormatValue(editor.Value) as string;
-                handleText = true;
+                HandleText = true;
             }
         }
 

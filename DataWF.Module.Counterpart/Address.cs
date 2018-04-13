@@ -53,7 +53,7 @@ namespace DataWF.Module.Counterpart
         }
 
         [Browsable(false)]
-        [DataMember, Column("location_id"), Index("daddress_location_id")]
+        [DataMember, Column("location_id", Keys = DBColumnKeys.View), Index("daddress_location_id")]
         public int? LocationId
         {
             get { return GetProperty<int?>(nameof(LocationId)); }
@@ -74,18 +74,18 @@ namespace DataWF.Module.Counterpart
             }
         }
 
-        [DataMember, Column("post_index", 20), Index("daddress_post_index")]
+        [DataMember, Column("post_index", 20, Keys = DBColumnKeys.View), Index("daddress_post_index")]
         public string PostIndex
         {
             get { return GetProperty<string>(nameof(PostIndex)); }
             set { SetProperty(value, nameof(PostIndex)); }
         }
 
-        [DataMember, Column("street", 1024, Keys = DBColumnKeys.Culture)]
+        [DataMember, Column("street", 1024, Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
         public string Street
         {
-            get { return GetName("street"); }
-            set { SetName("street", value); }
+            get { return GetName(nameof(Street)); }
+            set { SetName(nameof(Street), value); }
         }
     }
 }

@@ -207,22 +207,7 @@ namespace DataWF.Data
         public override string FormatSql(DDLType ddlType)
         {
             var ddl = new StringBuilder();
-            ddl.AppendLine("create view " + Name + " as");
-            ddl.Append("select ");
-            foreach (DBVirtualColumn column in Columns)
-            {
-                if (column.ColumnType == DBColumnTypes.Default)
-                    ddl.Append(column.BaseName + " as " + column.Name);
-                else if (column.ColumnType == DBColumnTypes.Query)
-                    ddl.Append(column.Query + " as " + column.Name);
-                else
-                    continue;
-                ddl.Append(", ");
-            }
-            ddl.Remove(ddl.Length - 2, 2);
-            ddl.AppendLine();
-            ddl.AppendLine("from {SqlName} where {Query};");
-
+            Schema.System.Format(ddl, this, ddlType);
             return ddl.ToString();
         }
 

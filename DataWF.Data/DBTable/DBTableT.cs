@@ -498,7 +498,7 @@ namespace DataWF.Data
 
         public override DBItem LoadItemByCode(string code, DBColumn column, DBLoadParam param, DBTransaction transaction = null)
         {
-            return LoadItemByCode(code, column, param, transaction);
+            return LoadByCode(code, column, param, transaction);
         }
 
         public T LoadByCode(string code, DBColumn column, DBLoadParam param, DBTransaction transaction = null)
@@ -685,7 +685,7 @@ namespace DataWF.Data
             return buffer;
         }
 
-        public override IEnumerable<DBItem> SelectItems(QQuery qQuery)
+        public override IEnumerable<DBItem> SelectItems(QQuery query)
         {
             return Select(query);
         }

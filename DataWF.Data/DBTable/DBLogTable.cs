@@ -59,39 +59,42 @@ namespace DataWF.Data
             get { return baseTable ?? (baseTable = Schema?.Tables[BaseTableName]); }
             set
             {
-                if (BaseTable != null || value == null)
-                    throw new Exception("Log table Initialized!");
+                //if (BaseTable != null || value == null)
+                //    throw new Exception("Log table Initialized!");
                 baseTable = value;
                 BaseTableName = value.Name;
 
                 Name = value.Name + "_log";
                 Schema = value.Schema;
-                Sequence = new DBSequence() { Name = value.Sequence.Name + "_log" };
-                Schema.Sequences.Add(Sequence);
+                var seqName = value.SequenceName + "_log";
+                Sequence = value.Schema.Sequences[seqName] ?? new DBSequence() { Name = seqName };
 
-                Columns.Add(new DBColumn()
+                if (!Columns.Contains("logid"))
                 {
-                    Name = "logid",
-                    DataType = typeof(int),
-                    Keys = DBColumnKeys.Primary | DBColumnKeys.Notnull
-                });
-                Columns.Add(new DBColumn()
-                {
-                    Name = "datecreate",
-                    DataType = typeof(DateTime),
-                    Keys = DBColumnKeys.Date
-                });
-                Columns.Add(new DBColumn()
-                {
-                    Name = "logtype",
-                    DataType = typeof(DBLogType),
-                    Keys = DBColumnKeys.ElementType
-                });
-
+                    Columns.Add(new DBColumn()
+                    {
+                        Name = "logid",
+                        DataType = typeof(int),
+                        Keys = DBColumnKeys.Primary | DBColumnKeys.Notnull
+                    });
+                    Columns.Add(new DBColumn()
+                    {
+                        Name = "datecreate",
+                        DataType = typeof(DateTime),
+                        Keys = DBColumnKeys.Date
+                    });
+                    Columns.Add(new DBColumn()
+                    {
+                        Name = "logtype",
+                        DataType = typeof(DBLogType),
+                        Keys = DBColumnKeys.ElementType
+                    });
+                }
                 foreach (var column in value.Columns)
                 {
                     if (column.ColumnType == DBColumnTypes.Default
-                        && (column.Keys & DBColumnKeys.NoLog) != DBColumnKeys.NoLog)
+                        && (column.Keys & DBColumnKeys.NoLog) != DBColumnKeys.NoLog
+                        && !Columns.Contains(DBLogColumn.GetName(column)))
                     {
                         Columns.Add(new DBLogColumn(column));
                     }

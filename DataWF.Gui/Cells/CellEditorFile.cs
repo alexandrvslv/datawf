@@ -15,7 +15,7 @@ namespace DataWF.Gui
         public CellEditorFile()
             : base()
         {
-            HandleTextChanged = false;
+            HandleText = false;
             DropDownWindow = false;
             DropDownVisible = true;
             DropDownExVisible = true;

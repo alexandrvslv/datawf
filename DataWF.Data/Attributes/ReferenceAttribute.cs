@@ -69,7 +69,7 @@ namespace DataWF.Data
             {
 
                 Column.Column.IsReference = true;
-                var referenceTable = DBService.GetTable(ReferenceType, Table.Schema, true);
+                var referenceTable = DBService.GetTable(ReferenceType, Table.Schema, true, true);
                 if (referenceTable == null || referenceTable.PrimaryKey == null)
                 {
                     throw new Exception($"{nameof(ReferenceType)} table not found!");

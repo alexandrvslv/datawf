@@ -70,17 +70,19 @@ namespace DataWF.Data
             }
             set
             {
-                if (value == BaseColumn)
-                    return;
                 BaseName = value?.Name;
                 if (value != null)
                 {
-                    Name = value.Name;
+                    if (string.IsNullOrEmpty(Name))
+                    {
+                        Name = value.Name;
+                    }
                     Size = value.Size;
                     Scale = value.Scale;
                     IsReference = value.IsReference;
-                    DBDataType = value.DBDataType;
+                    DataType = value.DataType;
                     GroupName = value.GroupName;
+                    ColumnType = value.ColumnType;
                     //Keys = value.Keys;
                 }
                 cacheBaseColumn = value;

@@ -9,7 +9,7 @@ namespace DataWF.Gui
         public CellEditorFields()
             : base()
         {
-            HandleTextChanged = false;
+            HandleText = false;
         }
 
         public ListEditor ListEditor

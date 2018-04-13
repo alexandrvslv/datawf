@@ -758,13 +758,12 @@ namespace DataWF.Data
                 {
                     table.Initialize(type);
                 }
-                if (table == null && inherite)
-                {
-                    var itemType = GetItemTypeAttribute(type);
-                    return itemType?.Table;
-                }
-
                 cacheTables[type] = table;
+            }
+            if (table == null && inherite)
+            {
+                var itemType = GetItemTypeAttribute(type);
+                table = itemType?.Table;
             }
             return table;
         }
@@ -788,9 +787,9 @@ namespace DataWF.Data
             return (DBTable<T>)GetTable(typeof(T), schema, generate);
         }
 
-        public static DBTable GetTable(Type type, DBSchema schema = null, bool generate = false)
+        public static DBTable GetTable(Type type, DBSchema schema = null, bool generate = false, bool inherite = false)
         {
-            var config = GetTableAttribute(type);
+            var config = GetTableAttribute(type, inherite);
             if (config != null)
             {
                 if (config.Table == null && generate)

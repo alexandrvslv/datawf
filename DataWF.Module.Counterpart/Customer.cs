@@ -34,6 +34,13 @@ namespace DataWF.Module.Counterpart
         }
     }
 
+    public enum CustomerType
+    {
+        None = 0,
+        Company = 1,
+        Persone = 2,
+    }
+
     [DataContract, Table("wf_customer", "dcustomer", "Customer", BlockSize = 5000)]
     public class Customer : DBItem, IDisposable
     {
@@ -54,6 +61,13 @@ namespace DataWF.Module.Counterpart
             set { SetValue(value, Table.PrimaryKey); }
         }
 
+        //[DataMember, Column("typeid", Keys = DBColumnKeys.ElementType), Index("dcustomer_typeid")]
+        //public CustomerType? CustomerType
+        //{
+        //    get { return GetValue<CustomerType?>(Table.ElementTypeKey); }
+        //    set { SetValue(value, Table.ElementTypeKey); }
+        //}
+
         [DataMember, Column("innr", 40, Keys = DBColumnKeys.Code)]
         [Index("dcustomer_inn", true)]
         public string INN
@@ -62,7 +76,7 @@ namespace DataWF.Module.Counterpart
             set { SetValue(value, Table.CodeKey); }
         }
 
-        [DataMember, Column("short_name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
+        [DataMember, Column("shortname", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
         public string ShortName
         {
             get { return GetName(nameof(ShortName)); }
@@ -77,16 +91,22 @@ namespace DataWF.Module.Counterpart
         }
 
         [Browsable(false)]
-        [DataMember, Column("sign_key", 1024, Keys = DBColumnKeys.Password)]
+        [DataMember, Column("sign_key", 1024, Keys = DBColumnKeys.Password | DBColumnKeys.System)]
         public string Key
         {
             get { return GetProperty<string>(nameof(Key)); }
             set { SetProperty(value, nameof(Key)); }
         }
 
-        [DataMember, Column("email", 1024)]
-        [Index("dcustomer_email", true)]
+        [DataMember, Column("email", 1024), Index("dcustomer_email", true)]
         public string EMail
+        {
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
+        }
+
+        [DataMember, Column("phone", 1024)]
+        public string Phone
         {
             get { return GetProperty<string>(); }
             set { SetProperty(value); }

@@ -106,7 +106,6 @@ namespace DataWF.Data
                 throw new Exception("Table Not Initialized!");
             if ((Keys & DBColumnKeys.Culture) == DBColumnKeys.Culture)
             {
-                Keys |= DBColumnKeys.View;
                 foreach (var culture in Locale.Instance.Cultures)
                 {
                     GenerateCultureColumn(Table.Table, ColumnName, culture);
@@ -119,7 +118,7 @@ namespace DataWF.Data
             return Column;
         }
 
-        public void GenerateCultureColumn(DBTable table, string groupName, CultureInfo culture)
+        public virtual void GenerateCultureColumn(DBTable table, string groupName, CultureInfo culture)
         {
             if (!string.IsNullOrEmpty(groupName) && table.ColumnGroups[groupName] == null)
             {

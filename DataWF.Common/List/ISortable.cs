@@ -6,6 +6,8 @@ namespace DataWF.Common
 {
     public interface ISortable
     {
+        bool Disposed { get; }
+
         object NewItem();
 
         Type ItemType { get; }

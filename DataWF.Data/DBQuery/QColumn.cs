@@ -83,7 +83,7 @@ namespace DataWF.Data
 
         public override DBTable Table
         {
-            get { return Column.Table ?? base.Table; }
+            get { return Column?.Table ?? base.Table; }
             set { }
         }
 

@@ -22,10 +22,10 @@ namespace DataWF.Gui
             get { return (Editor?.Widget as PasswordEntry)?.Password; }
             set
             {
-                bool flag = handleText;
-                handleText = false;
+                bool flag = HandleText;
+                HandleText = false;
                 ((PasswordEntry)Editor.Widget).Password = value;
-                handleText = flag;
+                HandleText = flag;
             }
         }
 
@@ -35,7 +35,7 @@ namespace DataWF.Gui
             box.KeyPressed += OnTextKeyPressed;
             box.KeyReleased += OnTextKeyReleased;
             //box.Readonly = readOnly;
-            if (!ReadOnly && handleText)
+            if (!ReadOnly && HandleText)
                 box.Changed += OnTextChanged;
             return box;
         }

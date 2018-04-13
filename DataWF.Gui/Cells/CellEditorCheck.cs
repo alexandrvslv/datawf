@@ -24,7 +24,7 @@ namespace DataWF.Gui
 
         protected override void OnTextChanged(object sender, EventArgs e)
         {
-            if (handleText)
+            if (HandleText)
                 Editor.Value = ParseValue(((CheckBox)sender).State, EditItem, DataType);
         }
 
@@ -112,10 +112,10 @@ namespace DataWF.Gui
             get { return base.Value; }
             set
             {
-                bool flag = handleText;
-                handleText = false;
+                bool flag = HandleText;
+                HandleText = false;
                 ((CheckBox)editor.Widget).State = (CheckBoxState)(CheckedState)FormatValue(value);
-                handleText = flag;
+                HandleText = flag;
             }
         }
 

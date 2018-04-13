@@ -11,6 +11,7 @@ using Xwt;
 using DataWF.Module.CommonGui;
 using System.Linq;
 using DataWF.Data;
+using DataWF.Module.Common;
 
 namespace DataWF.Module.FlowGui
 {
@@ -66,7 +67,7 @@ namespace DataWF.Module.FlowGui
             toolFNumber = new ToolFieldEditor { Name = "Number" };
             toolFWork = new ToolFieldEditor { Name = "Work", FieldWidth = 60 };
             toolFTemplate = new ToolFieldEditor { Name = "Template", FieldWidth = 160 };
-            toolFUser = new ToolFieldEditor { Name = "User" };
+            toolFUser = new ToolFieldEditor { Name = "User", Editor = new CellEditorUserTree() { DataType = typeof(User) } };
             toolFStage = new ToolFieldEditor { Name = "Stage", FieldWidth = 140, Editor = new CellEditorFlowTree() { DataType = typeof(Stage) } };
             toolFDate = new ToolFieldEditor { Name = "Date", FieldWidth = 140 };
             toolFDateType = new ToolFieldEditor { Name = "Date Type", FieldWidth = 100 };

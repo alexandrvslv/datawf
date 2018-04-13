@@ -18,6 +18,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using System;
+using System.Reflection;
 using System.Xml.Serialization;
 using DataWF.Common;
 
@@ -63,6 +64,25 @@ namespace DataWF.Data
             table.DisplayName = ItemType.Name;
             table.Query = Query;
             return table;
+        }
+
+        public override ColumnAttribute InitializeColumn(PropertyInfo property)
+        {
+            var column = base.InitializeColumn(property);
+            if (column != null && !(column is VirtualColumnAttribute))
+            {
+                column = new VirtualColumnAttribute(column.ColumnName)
+                {
+                    Table = column.Table,
+                    Property = column.Property,
+                    Order = column.Order,
+                    Keys = column.Keys,
+                    DataType = column.DataType,
+                    Default = column.Default,
+                    GroupName = column.GroupName
+                };
+            }
+            return column;
         }
     }
 }

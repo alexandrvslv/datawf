@@ -50,36 +50,50 @@ namespace DataWF.Module.Counterpart
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
             set { SetValue(value, Table.PrimaryKey); }
-        }        
-
-        [Browsable(false)]
-        [DataMember, Column("customer_id")]
-        public int? CustomerId
-        {
-            get { return GetProperty<int?>(nameof(CustomerId)); }
-            set { SetProperty(value, nameof(CustomerId)); }
-        }
-
-        [Reference("fk_dcustomer_reference_customer_id", nameof(CustomerId))]
-        public Customer Customer
-        {
-            get { return GetPropertyReference<Customer>(nameof(CustomerId)); }
-            set { SetPropertyReference(value, nameof(CustomerId)); }
         }
 
         [Browsable(false)]
-        [DataMember, Column("reference_id")]
-        public int? ReferenceId
+        [DataMember, Column("company_id")]
+        public int? CompanyId
         {
-            get { return GetProperty<int?>(nameof(ReferenceId)); }
-            set { SetProperty(value, nameof(ReferenceId)); }
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
         }
 
-        [Reference("fk_dcustomer_reference_reference_id", nameof(ReferenceId))]
-        public Customer Reference
+        [Reference("fk_dcustomer_reference_company_id", nameof(CompanyId))]
+        public Company Company
         {
-            get { return GetPropertyReference<Customer>(nameof(ReferenceId)); }
-            set { SetPropertyReference(value, nameof(ReferenceId)); }
+            get { return GetPropertyReference<Company>(nameof(CompanyId)); }
+            set { SetPropertyReference(value, nameof(CompanyId)); }
+        }
+
+        [Browsable(false)]
+        [DataMember, Column("persone_id")]
+        public int? PersoneId
+        {
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
+        }
+
+        [Reference("fk_dcustomer_reference_persone_id", nameof(PersoneId))]
+        public Persone Persone
+        {
+            get { return GetPropertyReference<Persone>(nameof(PersoneId)); }
+            set { SetPropertyReference(value, nameof(PersoneId)); }
+        }
+
+        [DataMember, Column("email", 1024)]
+        public string EMail
+        {
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
+        }
+
+        [DataMember, Column("phone", 1024)]
+        public string Phone
+        {
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
         }
     }
 }

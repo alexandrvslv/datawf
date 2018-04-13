@@ -17,7 +17,6 @@ namespace DataWF.Gui
         protected bool headerVisible = true;
         protected bool dropDownWindow = true;
         protected bool dropDownAutoHide;
-        protected bool handleText = true;
         //protected bool dropDownByKey = true;
         protected LayoutEditor editor;
         protected Widget content;
@@ -52,12 +51,6 @@ namespace DataWF.Gui
 
         public bool ReadOnly { get; set; }
 
-        public bool HandleTextChanged
-        {
-            get { return handleText; }
-            set { handleText = value; }
-        }
-
         public ToolWindow DropDown
         {
             get { return editor?.DropDown; }
@@ -86,8 +79,8 @@ namespace DataWF.Gui
             get { return TextWidget?.Text; }
             set
             {
-                bool flag = handleText;
-                handleText = false;
+                bool flag = HandleText;
+                HandleText = false;
                 if (TextWidget != null)
                     TextWidget.Text = value;
                 if (DropDown != null && DropDown.Target is RichTextView)
@@ -95,7 +88,7 @@ namespace DataWF.Gui
                     ((RichTextView)DropDown.Target).LoadText(value ?? string.Empty, Xwt.Formats.TextFormat.Plain);
                     ((RichTextView)DropDown.Target).ReadOnly = ReadOnly;
                 }
-                handleText = flag;
+                HandleText = flag;
             }
         }
 
@@ -129,36 +122,41 @@ namespace DataWF.Gui
             get { return Editor.Widget as TextEntry; }
         }
 
+        protected bool HandleText { get; set; } = true;
+
         protected virtual void SetFilter(string filter)
         { }
 
         protected virtual void OnTextChanged(object sender, EventArgs e)
         {
-            if (handleText)
+            if (HandleText)
             {
                 var text = sender == Editor.Widget ? EditorText : sender is RichTextView ? ((RichTextView)sender).PlainText : string.Empty;
-                handleText = false;
+                HandleText = false;
                 if (Filtering && !text.Equals(filter, StringComparison.OrdinalIgnoreCase))
                 {
                     SetFilter(text.Replace("\r\n", "").Replace("\r", ""));
                 }
+                else
+                {
 
-                try
-                {
-                    if (sender != editor.Widget && EditorText != text)
-                        EditorText = text;
-                    Editor.Value = ParseValue(EditorText);
-                }
-                catch (Exception ex)
-                {
-                    if (Editor != null)
+                    try
                     {
-                        GuiService.ToolTip.LableText = "Input error";
-                        GuiService.ToolTip.ContentText = ex.Message + "\n" + ex.StackTrace;
-                        GuiService.ToolTip.Show(editor, new Point(0, editor.Size.Height));
+                        if (sender != editor.Widget && EditorText != text)
+                            EditorText = text;
+                        Editor.Value = ParseValue(EditorText);
+                    }
+                    catch (Exception ex)
+                    {
+                        if (Editor != null)
+                        {
+                            GuiService.ToolTip.LableText = "Input error";
+                            GuiService.ToolTip.ContentText = ex.Message + "\n" + ex.StackTrace;
+                            GuiService.ToolTip.Show(editor, new Point(0, editor.Size.Height));
+                        }
                     }
                 }
-                handleText = true;
+                HandleText = true;
             }
         }
 
@@ -248,7 +246,7 @@ namespace DataWF.Gui
                 }
                 //box.Mask = format;
                 //box.ValidatingType = type;
-                if (!ReadOnly && handleText)
+                if (!ReadOnly && HandleText)
                     box.Changed += OnTextChanged;
                 return box;
             }
@@ -267,7 +265,7 @@ namespace DataWF.Gui
                     box.BackgroundColor = style.BackBrush.ColorSelect;
                     //box.
                 }
-                if (!ReadOnly && handleText)
+                if (!ReadOnly && HandleText)
                     box.Changed += OnTextChanged;
                 return box;
             }

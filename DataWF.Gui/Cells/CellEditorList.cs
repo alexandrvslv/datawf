@@ -15,7 +15,7 @@ namespace DataWF.Gui
 
         public CellEditorList() : base()
         {
-            HandleTextChanged = false;
+            //HandleTextChanged = false;
         }
 
         public IList DataSource
@@ -73,25 +73,22 @@ namespace DataWF.Gui
             this.filter = filter;
             if (filter.Length != 0)
             {
-                var flist = new List<object>(ListFind(filter).Cast<object>());
+                var flist = ListFind(filter).Cast<object>();
                 ListSelect(flist);
-
-                if (flist.Count == 1)
+                var count = flist.Count();
+                if (count == 1)
                 {
-                    editor.Value = ParseValue(flist[0], EditItem, DataType);
-                    string value = FormatValue(flist[0], EditItem, DataType) as string;
+                    Value = ParseValue(flist.First(), EditItem, DataType);
+                    string value = TextWidget.Text;
                     int index = value.IndexOf(filter, StringComparison.OrdinalIgnoreCase);
-                    TextWidget.Text = value;
                     TextWidget.SelectionStart = index + filter.Length;
                     TextWidget.SelectionLength = value.Length - TextWidget.SelectionStart;
 
                     DropDown.Hide();
-                    handleText = true;
                 }
-                else if (flist.Count > 1)
+                else if (count > 1)
                 {
                     editor.ShowDropDown(ToolShowMode.AutoHide);
-                    handleText = true;
                 }
             }
             else

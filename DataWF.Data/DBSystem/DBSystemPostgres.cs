@@ -95,6 +95,11 @@ namespace DataWF.Data
             }
         }
 
+        public override string FormatCreateView(string name)
+        {
+            return "create or replace view " + Name + " as";
+        }
+
         public override void WriteValue(DBColumn column, object value, IDataParameter parameter, IDbConnection connection)
         {
             base.WriteValue(column, value, parameter, connection);

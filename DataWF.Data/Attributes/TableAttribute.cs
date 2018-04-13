@@ -25,6 +25,7 @@ using System.ComponentModel;
 using System.Collections.Generic;
 using System.Xml.Serialization;
 using System.Reflection;
+using System.Diagnostics;
 
 namespace DataWF.Data
 {
@@ -108,6 +109,7 @@ namespace DataWF.Data
 
         public DBTable Generate(DBSchema schema)
         {
+            Debug.WriteLine($"Generate {SchemaName}.{TableName}");
             if (Schema == null)
             {
                 if (schema != null)
@@ -125,10 +127,10 @@ namespace DataWF.Data
             if (Table == null)
             {
                 Table = CreateTable();
-                foreach (var itemType in cacheItemTypes)
-                {
-                    Table.ItemTypes[itemType.Id] = new DBItemType { Type = itemType.Type };
-                }
+            }
+            foreach (var itemType in cacheItemTypes)
+            {
+                Table.ItemTypes[itemType.Id] = new DBItemType { Type = itemType.Type };
             }
 
             if (TableGroup == null)
@@ -191,15 +193,9 @@ namespace DataWF.Data
         {
             foreach (var property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly))
             {
-                var column = DBService.GetColumnAttribute(property);
+                var column = InitializeColumn(property);
                 if (column != null)
                 {
-                    column.Table = this;
-                    column.Property = property.Name;
-                    if (column.DataType == null)
-                        column.DataType = property.PropertyType;
-                    if (column.Order <= 0)
-                        column.Order = cacheColumns.Count;
                     cacheColumns.Add(column);
                 }
                 var reference = property.GetCustomAttribute<ReferenceAttribute>();
@@ -219,6 +215,21 @@ namespace DataWF.Data
                     cacheIndexes.Add(index);
                 }
             }
+        }
+
+        public virtual ColumnAttribute InitializeColumn(PropertyInfo property)
+        {
+            var column = DBService.GetColumnAttribute(property);
+            if (column != null)
+            {
+                column.Table = this;
+                column.Property = property.Name;
+                if (column.DataType == null)
+                    column.DataType = property.PropertyType;
+                if (column.Order <= 0)
+                    column.Order = cacheColumns.Count;
+            }
+            return column;
         }
 
         public ColumnAttribute GetColumn(string name)
