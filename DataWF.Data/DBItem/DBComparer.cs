@@ -28,11 +28,11 @@ namespace DataWF.Data
     public class DBComparer : DBComparer<DBItem>
     {
         public DBComparer(DBColumn column, ListSortDirection direction = ListSortDirection.Ascending)
-            : this(column.Table, column.Name, direction)
+            : base(column, direction)
         { }
 
         public DBComparer(string table, string column, ListSortDirection direction = ListSortDirection.Ascending)
-            : this(DBService.ParseTable(table), column, direction)
+            : base(table, column, direction)
         { }
 
         public DBComparer(DBTable table, string column, ListSortDirection direction = ListSortDirection.Ascending)
@@ -53,8 +53,18 @@ namespace DataWF.Data
         private bool refernce;
         public bool Hash;
 
+        public DBComparer(DBTable table, DBColumn column, string proeprty, ListSortDirection direction = ListSortDirection.Ascending)
+        {
+            Table = table;
+            PropertyName = proeprty;
+            Direction = direction;
+            property = column;
+            buffered = property != null && property.Name == PropertyName;
+            refernce = property != null && property.IsReference;
+        }
+
         public DBComparer(DBColumn column, ListSortDirection direction = ListSortDirection.Ascending)
-            : this(column.Table, column.Name, direction)
+            : this(column.Table, column, column.Name, direction)
         { }
 
         public DBComparer(string table, string column, ListSortDirection direction = ListSortDirection.Ascending)
@@ -62,13 +72,8 @@ namespace DataWF.Data
         { }
 
         public DBComparer(DBTable table, string column, ListSortDirection direction = ListSortDirection.Ascending)
-        {
-            PropertyName = column;
-            Direction = direction;
-            property = table.ParseColumn(column);
-            buffered = property != null && property.Name == column;
-            refernce = property != null && property.IsReference;
-        }
+            : this(table, table.ParseColumn(column), column, direction)
+        { }
 
         #region IComparer
         public int Compare(T x, object key)
