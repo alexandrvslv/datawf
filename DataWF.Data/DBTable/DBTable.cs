@@ -542,13 +542,13 @@ namespace DataWF.Data
 
         public abstract DBItem LoadItemFromReader(DBTransaction transaction);
 
-        public abstract IEnumerable<DBItem> LoadItems(QQuery query, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null);
+        public abstract IEnumerable LoadItems(QQuery query, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null);
 
-        public abstract IEnumerable<DBItem> LoadItems(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable cols = null, IDBTableView synch = null);
+        public abstract IEnumerable LoadItems(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable cols = null, IDBTableView synch = null);
 
-        public abstract IEnumerable<DBItem> LoadItems(DBTransaction transaction, QQuery query);
+        public abstract IEnumerable LoadItems(DBTransaction transaction, QQuery query);
 
-        public abstract IEnumerable<DBItem> LoadItems(DBTransaction transaction, IDbCommand command);
+        public abstract IEnumerable LoadItems(DBTransaction transaction, IDbCommand command);
 
         public abstract DBItem LoadItemByCode(string code, DBColumn column, DBLoadParam param, DBTransaction transaction = null);
 
@@ -853,11 +853,11 @@ namespace DataWF.Data
                 }
             }
         }
-        public abstract IEnumerable<DBItem> SelectItems(DBColumn column, object val, CompareType comparer);
+        public abstract IEnumerable SelectItems(DBColumn column, object val, CompareType comparer);
 
-        public abstract IEnumerable<DBItem> SelectItems(string qQuery);
+        public abstract IEnumerable SelectItems(string qQuery);
 
-        public abstract IEnumerable<DBItem> SelectItems(QQuery qQuery);
+        public abstract IEnumerable SelectItems(QQuery qQuery);
 
         public bool CheckItem(DBItem item, QItemList<QParam> parameters)
         {
@@ -1294,7 +1294,7 @@ namespace DataWF.Data
             var sequence = Schema.Sequences[sname];
             if (sequence == null)
             {
-                sequence = new DBSequence(sname);                
+                sequence = new DBSequence(sname);
             }
             return sequence;
         }
@@ -1402,7 +1402,6 @@ namespace DataWF.Data
 
         public QParam GetStatusParam(DBStatus status)
         {
-            string rez = string.Empty;
             if (StatusKey != null && status != 0 && status != DBStatus.Empty)
             {
                 return new QParam()
@@ -1411,7 +1410,31 @@ namespace DataWF.Data
                     Comparer = CompareType.In,
                     ValueRight = GetStatusEnum(status)
                 };
-                //rez = param.Format();
+            }
+            return null;
+        }
+
+        public int GetTypeIndex(Type type)
+        {
+            foreach (var entry in ItemTypes)
+            {
+                if (entry.Value.Type == type)
+                    return entry.Key;
+            }
+            return -1;
+        }
+
+        public QParam GetTypeParam(Type type)
+        {
+            var typeIndex = GetTypeIndex(type);
+            if (ItemTypeKey != null && typeIndex > 0)
+            {
+                return new QParam()
+                {
+                    ValueLeft = new QColumn(ItemTypeKey),
+                    Comparer = CompareType.Equal,
+                    ValueRight = new QValue(typeIndex, ItemTypeKey)
+                };
             }
             return null;
         }

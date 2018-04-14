@@ -649,7 +649,7 @@ namespace DataWF.Data
 
         public string FormatInsert(DBTable table, bool fill)
         {
-            IList rows = fill ? table.LoadItems().ToList() : table.SelectItems("").ToList();
+            IList rows = fill ? table.LoadItems().Cast<DBItem>().ToList() : table.SelectItems("").Cast<DBItem>().ToList();
             if (table.GroupKey != null)
             {
                 ListHelper.QuickSort(rows, new TreeComparer(null));

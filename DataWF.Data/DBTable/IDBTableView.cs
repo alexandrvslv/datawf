@@ -30,11 +30,13 @@ namespace DataWF.Data
     {
         IDbCommand Command { get; set; }
 
-        QParam DefaultFilter { get; set; }
+        QParam DefaultParam { get; set; }
 
         QQuery Query { get; set; }
 
         DBStatus StatusFilter { get; set; }
+
+        Type TypeFilter { get; set; }
 
         bool ClearFilter();
 
@@ -46,7 +48,6 @@ namespace DataWF.Data
 
         new bool IsSynchronized { get; set; }
 
-        
         IEnumerable<DBItem> SelectParents();
 
         IEnumerable<DBItem> SelectChilds(DBItem item);
@@ -56,8 +57,6 @@ namespace DataWF.Data
         IEnumerable<DBItem> Load(DBLoadParam param = DBLoadParam.None);
 
         void LoadAsynch(DBLoadParam param = DBLoadParam.None);
-
-        event EventHandler StatusFilterChanged;
 
         void Save();
 

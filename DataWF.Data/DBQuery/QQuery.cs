@@ -51,6 +51,7 @@ namespace DataWF.Data
         private bool refmode;
         private QQuery baseQuery;
         private DBStatus status = DBStatus.Empty;
+        private Type type;
 
         public QQuery()
             : base()
@@ -96,6 +97,39 @@ namespace DataWF.Data
         public IQItemList Owner { get { return baseQuery ?? this; } }
 
         public override IQuery Query { get { return Owner as IQuery; } }
+
+        public Type TypeFilter
+        {
+            get { return type; }
+            set
+            {
+                if (TypeFilter != type)
+                {
+                    type = value;
+                    var param = GetByColumn(Table.ItemTypeKey);
+                    if (param == null)
+                    {
+                        param = Table.GetTypeParam(type);
+                        if (param != null)
+                        {
+                            parameters.Insert(0, param);
+                        }
+                    }
+                    else
+                    {
+                        var typeIndex = Table.GetTypeIndex(type);
+                        if (typeIndex <= 0)
+                        {
+                            parameters.Remove(param);
+                        }
+                        else
+                        {
+                            param.ValueRight = new QValue(typeIndex, Table.ItemTypeKey);
+                        }
+                    }
+                }
+            }
+        }
 
         public DBStatus StatusFilter
         {
@@ -619,11 +653,6 @@ namespace DataWF.Data
                 else
                     word += c;
             }
-        }
-
-        public IEnumerable<DBItem> Load(DBLoadParam param)
-        {
-            return Table.LoadItems(this, param);
         }
 
         //       public void ParseExpression(QParam param, string query)
@@ -1176,7 +1205,12 @@ namespace DataWF.Data
             return parameters.Count == 0;
         }
 
-        public IEnumerable<DBItem> Select()
+        public IEnumerable Load(DBLoadParam param = DBLoadParam.Load)
+        {
+            return Table.LoadItems(this, param);
+        }
+
+        public IEnumerable Select()
         {
             return Table.SelectItems(this);
         }
@@ -1239,6 +1273,8 @@ namespace DataWF.Data
             get { return refmode; }
             set { refmode = value; }
         }
+
+
 
         public void BuildColumn(DBColumn dBColumn)
         {

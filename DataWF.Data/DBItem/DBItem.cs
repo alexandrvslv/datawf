@@ -359,7 +359,7 @@ namespace DataWF.Data
                 if (value == null)
                     return null;
 
-                item = ((DBTable<T>)column.ReferenceTable).LoadById(value, param, transaction);
+                item = (T)column.ReferenceTable.LoadItemById(value, param, transaction);
                 SetTag(column, item);// item == null ? (object)DBNull.Value : item);             
             }
             return item;
@@ -440,9 +440,10 @@ namespace DataWF.Data
 
         public IEnumerable<T> GetReferencing<T>(QQuery query, DBLoadParam param) where T : DBItem, new()
         {
+            query.TypeFilter = typeof(T);
             if ((param & DBLoadParam.Load) == DBLoadParam.Load)
-                return ((DBTable<T>)query.Table).Load(query, param, null);
-            return ((DBTable<T>)query.Table).Select(query);
+                return (IEnumerable<T>)query.Load(param);
+            return (IEnumerable<T>)query.Select();
         }
 
         public IEnumerable<T> GetReferencing<T>(DBTable table, string query, DBLoadParam param) where T : DBItem, new()
@@ -458,13 +459,9 @@ namespace DataWF.Data
 
         public IEnumerable<T> GetReferencing<T>(DBTable table, DBColumn column, DBLoadParam param) where T : DBItem, new()
         {
-            if ((param & DBLoadParam.Load) == DBLoadParam.Load)
-            {
-                var query = new QQuery("", table);
-                query.BuildParam(column, CompareType.Equal, PrimaryId);
-                return GetReferencing<T>(query, param);
-            }
-            return (IEnumerable<T>)table.SelectItems(column, PrimaryId, CompareType.Equal);
+            var query = new QQuery("", table);
+            query.BuildParam(column, CompareType.Equal, PrimaryId);
+            return GetReferencing<T>(query, param);
         }
 
         public IEnumerable<T> GetReferencing<T>(string tableCode, string columnCode, DBLoadParam param) where T : DBItem, new()
@@ -488,9 +485,9 @@ namespace DataWF.Data
         public IEnumerable<DBItem> GetReferencing(QQuery query, DBLoadParam param)
         {
             if ((param & DBLoadParam.Load) == DBLoadParam.Load)
-                return query.Table.LoadItems(query);
+                return (IEnumerable<DBItem>)query.Load();
             else
-                return query.Table.SelectItems(query);
+                return (IEnumerable<DBItem>)query.Select();
         }
 
         public IEnumerable GetReferencing(DBForeignKey relation, DBLoadParam param)

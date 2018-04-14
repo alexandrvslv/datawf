@@ -239,7 +239,7 @@ namespace DataWF.Data
             return new DBTableView<T>(this, query, mode, filter);
         }
 
-        public override IEnumerable<DBItem> LoadItems(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable cols = null, IDBTableView synch = null)
+        public override IEnumerable LoadItems(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable cols = null, IDBTableView synch = null)
         {
             return Load(whereText, param, cols, synch);
         }
@@ -262,7 +262,7 @@ namespace DataWF.Data
             return Load(transaction, transaction.AddCommand(DetectQuery(whereText, cols)));
         }
 
-        public override IEnumerable<DBItem> LoadItems(QQuery query, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null)
+        public override IEnumerable LoadItems(QQuery query, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null)
         {
             return Load(query, param, synch);
         }
@@ -275,13 +275,15 @@ namespace DataWF.Data
             }
         }
 
-        public override IEnumerable<DBItem> LoadItems(DBTransaction transaction, QQuery query)
+        public override IEnumerable LoadItems(DBTransaction transaction, QQuery query)
         {
             return Load(transaction, query);
         }
 
         public List<T> Load(DBTransaction transaction, QQuery query)
         {
+            if (query.Table != this)
+                throw new ArgumentException(nameof(query));
             if (Count == 0)
                 transaction.ReaderParam &= ~DBLoadParam.CheckDeleted;
 
@@ -295,7 +297,7 @@ namespace DataWF.Data
             return buf;
         }
 
-        public override IEnumerable<DBItem> LoadItems(DBTransaction transaction, IDbCommand command)
+        public override IEnumerable LoadItems(DBTransaction transaction, IDbCommand command)
         {
             return Load(transaction, command);
         }
@@ -641,7 +643,7 @@ namespace DataWF.Data
             }
         }
 
-        public override IEnumerable<DBItem> SelectItems(string filter)
+        public override IEnumerable SelectItems(string filter)
         {
             return Select(filter);
         }
@@ -685,7 +687,7 @@ namespace DataWF.Data
             return buffer;
         }
 
-        public override IEnumerable<DBItem> SelectItems(QQuery query)
+        public override IEnumerable SelectItems(QQuery query)
         {
             return Select(query);
         }
@@ -815,7 +817,7 @@ namespace DataWF.Data
             return Select(column, value, CompareType.Equal).FirstOrDefault();
         }
 
-        public override IEnumerable<DBItem> SelectItems(DBColumn column, object val, CompareType comparer)
+        public override IEnumerable SelectItems(DBColumn column, object val, CompareType comparer)
         {
             return Select(column, val, comparer);
         }

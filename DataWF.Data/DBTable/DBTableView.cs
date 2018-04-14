@@ -39,19 +39,24 @@ namespace DataWF.Data
         protected QQuery query;
 
         protected IDbCommand command;
-        protected DBTable<T> table;
+        protected DBTable table;
         private Query filterQuery;
 
-        public DBTableView(DBTable<T> table, string defaultFilter = null, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
+        public DBTableView(string defaultFilter = null, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
+            : this(DBService.GetTable(typeof(T), null, false, true), defaultFilter, mode, statusFilter)
+        { }
+
+        public DBTableView(DBTable table, string defaultFilter = null, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
         {
             propertyHandler = null;
             table.AddView(this);
             this.table = table;
             FilterQuery = new Query();
             Query = new QQuery();
+            TypeFilter = typeof(T);
             if (!string.IsNullOrEmpty(defaultFilter))
             {
-                DefaultFilter = new QParam(table, defaultFilter);
+                DefaultParam = new QParam(table, defaultFilter);
             }
             StatusFilter = statusFilter;
             keys = mode;
@@ -139,7 +144,7 @@ namespace DataWF.Data
             {
                 if (table.CodeKey == null)
                     return null;
-                return table.LoadByCode(code);
+                return (T)table.LoadItemByCode(code, table.CodeKey, DBLoadParam.Load);
             }
         }
 
@@ -170,8 +175,6 @@ namespace DataWF.Data
             }
         }
 
-        public event EventHandler StatusFilterChanged;
-
         public DBStatus StatusFilter
         {
             get { return Query.StatusFilter; }
@@ -182,13 +185,25 @@ namespace DataWF.Data
                 Query.StatusFilter = value;
 
                 UpdateFilter();
-                StatusFilterChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        public Type TypeFilter
+        {
+            get { return Query.TypeFilter; }
+            set
+            {
+                if (Query.TypeFilter == value)
+                    return;
+                Query.TypeFilter = value;
+
+                UpdateFilter();
             }
         }
 
         public event EventHandler DefaultFilterChanged;
 
-        public virtual QParam DefaultFilter
+        public virtual QParam DefaultParam
         {
             get { return defaultParam; }
             set
@@ -272,12 +287,13 @@ namespace DataWF.Data
 
         public IEnumerable<T> Load(DBLoadParam param = DBLoadParam.None)
         {
-            return table.Load(Query, param, this);
+            return (IEnumerable<T>)table.LoadItems(Query, param, this);
         }
 
         public void LoadAsynch(DBLoadParam param = DBLoadParam.None)
         {
-            table.LoadAsync(Query, param, this);
+            throw new NotImplementedException();
+            //table.LoadAsync(Query, param, this);
         }
 
         public override void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -370,11 +386,11 @@ namespace DataWF.Data
             ClearInternal();
             if (!query.IsEmpty())
             {
-                AddRangeInternal(table.Select(query));
+                AddRangeInternal((IEnumerable<T>)table.SelectItems(query));
             }
             else
             {
-                AddRangeInternal(table);
+                AddRangeInternal((IEnumerable<T>)table);
             }
             SortInternal();
             OnListChanged(ListChangedType.Reset, -1);
@@ -510,9 +526,12 @@ namespace DataWF.Data
         {
             var flag = false;
             var statusParam = query.GetByColumn(Table.StatusKey);
+            var typeParam = query.GetByColumn(Table.ItemTypeKey);
             foreach (var parameter in query.Parameters.ToList())
             {
-                if (parameter != DefaultFilter && parameter != statusParam)
+                if (parameter != DefaultParam
+                    && parameter != statusParam
+                    && parameter != typeParam)
                 {
                     flag = true;
                     query.Parameters.Remove(parameter);
@@ -554,7 +573,7 @@ namespace DataWF.Data
 
         public IEnumerable<T> GetTop()
         {
-            return table.Select(Table.GroupKey.Name + " is null");
+            return (IEnumerable<T>)table.SelectItems(Table.GroupKey.Name + " is null");
         }
 
         public IEnumerable<T> GetItems()
