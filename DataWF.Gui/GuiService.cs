@@ -38,10 +38,24 @@ namespace DataWF.Gui
             {
                 BackgroundColor = GuiEnvironment.StylesInfo["Window"].BaseColor,
                 Content = widget,
+                Title = widget.Name,
+                Padding = new WidgetSpacing(5, 5, 5, 5),
                 Size = new Size(800, 600),
                 TransientFor = owner
             };
-            //window.CloseRequested += (s, e) => ((Dialog)s).TransientFor = null;
+            if (widget is IText)
+            {
+                window.Title = ((IText)widget).Text;
+                ((IText)widget).TextChanged += WindowContentTextChanged;
+            }
+            window.CloseRequested += (s, e) =>
+            {
+                //((Dialog)s).TransientFor = null;
+                if (widget is IText)
+                {
+                    ((IText)widget).TextChanged -= WindowContentTextChanged;
+                }
+            };
             return window.Run(owner);
         }
 
@@ -60,13 +74,30 @@ namespace DataWF.Gui
                 Content = vbox,
                 Resizable = true,
                 InitialLocation = WindowLocation.CenterParent,
-                Title = widget is IText ? ((IText)widget).Text : widget.Name,
+                Title = widget.Name,
                 Padding = new WidgetSpacing(5, 5, 5, 5),
                 Size = new Size(800, 600),
                 TransientFor = owner
             };
-            window.CloseRequested += (s, e) => ((Window)s).TransientFor = null;
+            if (widget is IText)
+            {
+                window.Title = ((IText)widget).Text;
+                ((IText)widget).TextChanged += WindowContentTextChanged;
+            }
+            window.CloseRequested += (s, e) =>
+            {
+                ((Window)s).TransientFor = null;
+                if (widget is IText)
+                {
+                    ((IText)widget).TextChanged -= WindowContentTextChanged;
+                }
+            };
             window.Show();
+        }
+
+        private static void WindowContentTextChanged(object sender, EventArgs arg)
+        {
+            ((Widget)sender).ParentWindow.Title = ((IText)sender).Text;
         }
 
         public static void Localize(object obj, string category, string name, GlyphType def = GlyphType.None)
