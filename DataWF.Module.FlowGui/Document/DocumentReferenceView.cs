@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace DataWF.Module.FlowGui
 {
-    public class DocumentRelations : VPanel, ISynch, IDocument, IReadOnly, ILocalizable
+    public class DocumentReferenceView : VPanel, ISynch, IDocument, IReadOnly, ILocalizable
     {
         private Document document;
         private DocumentSearch search = new DocumentSearch();
@@ -21,7 +21,7 @@ namespace DataWF.Module.FlowGui
         private ToolItem toolDetach = new ToolItem();
         private bool synch = false;
 
-        public DocumentRelations()
+        public DocumentReferenceView()
         {
             refs.LabelText = null;
             refs.MainDock = false;
@@ -68,7 +68,7 @@ namespace DataWF.Module.FlowGui
                             refs.Documents = new DocumentList();
                         refs.Search = null;
                         search.Clear();
-                        search.Attributes.Add(document.CreateRefsFilter());
+                        search.Attributes.Add(Document.CreateRefsParam(document.Id));
                         refs.Search = search;
                     }
                     refs.Preview = false;

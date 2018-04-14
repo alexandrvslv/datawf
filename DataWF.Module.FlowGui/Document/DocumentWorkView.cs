@@ -7,32 +7,33 @@ using System.Threading.Tasks;
 
 namespace DataWF.Module.FlowGui
 {
-    public class DocumentWorks : LayoutList, IDocument
+
+    public class DocumentWorkView : LayoutList, IDocument
     {
         private DBTableView<DocumentWork> view;
         private Document document;
         private bool synch;
 
-        public DocumentWorks()
+        public DocumentWorkView()
         {
-            view = new DBTableView<DocumentWork>(DocumentWork.DBTable, "", DBViewKeys.Empty);
+            view = new DBTableView<DocumentWork>("", DBViewKeys.Empty);
             view.ApplySortInternal(DocumentWork.DBTable.DefaultComparer);
 
 
             AllowSort = false;
-            AutoToStringFill = true;
-            GenerateColumns = false;
+            //AutoToStringFill = true;
+            //GenerateColumns = false;
             Name = "works";
             Text = "Works";
 
-            ListInfo = new LayoutListInfo(
-                new LayoutColumn() { Name = "ToString", FillWidth = true },
-                new LayoutColumn() { Name = "Date", Width = 115 },
-                new LayoutColumn() { Name = "IsComplete", Width = 20 })
-            {
-                ColumnsVisible = false,
-                HeaderVisible = false
-            };
+            //ListInfo = new LayoutListInfo(
+            //    new LayoutColumn() { Name = "ToString", FillWidth = true },
+            //    new LayoutColumn() { Name = "Date", Width = 115 },
+            //    new LayoutColumn() { Name = "IsComplete", Width = 20 })
+            //{
+            //    ColumnsVisible = false,
+            //    HeaderVisible = false
+            //};
             ListSource = view;
 
             Localize();
@@ -44,7 +45,7 @@ namespace DataWF.Module.FlowGui
             set
             {
                 document = value;
-                view.DefaultFilter = new QParam(LogicType.And, DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DocumentId)), CompareType.Equal, document?.Id ?? 0);
+                view.DefaultParam = new QParam(LogicType.And, DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DocumentId)), CompareType.Equal, document?.Id ?? 0);
             }
         }
 

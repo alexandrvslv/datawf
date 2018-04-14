@@ -68,7 +68,7 @@ namespace DataWF.Module.FlowGui
             toolCopy = new ToolItem(ToolCopyClick) { Name = "Copy", Glyph = GlyphType.CopyAlias };
             toolProcedures = new ToolDropDown { Name = "Procedures", Glyph = GlyphType.PuzzlePiece };
             toolTemplates = new ToolDropDown { Name = "Templates", Glyph = GlyphType.Book };
-            toolSave = new ToolItem(ToolSaveClick) { Name = "toolSave", Glyph = GlyphType.SaveAlias };
+            toolSave = new ToolItem(ToolSaveClick) { Name = "Save", Glyph = GlyphType.SaveAlias };
             toolRefresh = new ToolItem(ToolRefreshClick) { Name = "Refresh", Glyph = GlyphType.Refresh };
             toolDelete = new ToolItem(ToolDeleteClick) { Name = "Delete", Glyph = GlyphType.MinusSquare };
             toolLogs = new ToolItem(ToolLogsOnClick) { Name = "Logs", Glyph = GlyphType.History };
@@ -106,9 +106,10 @@ namespace DataWF.Module.FlowGui
             //dock.PageStyle = GuiEnvironment.StylesInfo["DocumentDock"];
             pageHeader = dock.Put(new DocumentHeader(), DockType.Left);
             pageHeader.Panel.MapItem.FillWidth = true;
-            pageRefers = dock.Put(new DocumentWorks(), DockType.Content);
-            pageRefers = dock.Put(new DocumentFiles(), DockType.Content);
-            pageRefers = dock.Put(new DocumentRelations(), DockType.Content);
+            pageRefers = dock.Put(new DocumentWorkView(), DockType.Content);
+            pageRefers = dock.Put(new DocumentDataView(), DockType.Content);
+            pageRefers = dock.Put(new DocumentCustomerView(), DockType.Content);
+            pageRefers = dock.Put(new DocumentReferenceView(), DockType.Content);
 
             Name = "DocumentEditor";
             Text = "Document";
@@ -332,7 +333,7 @@ namespace DataWF.Module.FlowGui
             else if (arg.Result is DocInitType)
             {
                 var ini = (DocInitType)arg.Result;
-                if (ini == DocInitType.Refed || ini == DocInitType.Refing)
+                if (ini == DocInitType.References)
                     pageRefers.Panel.SelectPage(pageRefers);
                 else if (ini == DocInitType.Data)
                     pageRefers.Panel.SelectPage(pageHeader);
