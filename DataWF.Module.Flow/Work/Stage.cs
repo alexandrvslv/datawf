@@ -33,7 +33,7 @@ namespace DataWF.Module.Flow
     public class StageList : DBTableView<Stage>
     {
         public StageList(string filter, DBViewKeys mode = DBViewKeys.None, DBStatus status = DBStatus.Empty)
-            : base(Stage.DBTable, filter, mode, status)
+            : base(filter, mode, status)
         {
             ApplySortInternal(new DBComparer(Stage.DBTable.CodeKey, ListSortDirection.Ascending));
         }

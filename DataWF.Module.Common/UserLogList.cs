@@ -41,7 +41,7 @@ namespace DataWF.Module.Common
 
         public void FilterByDocument(DBItem document)
         {
-            DefaultFilter = new QParam(LogicType.And, UserLog.DBTable.ParseProperty(nameof(UserLog.DocumentId)), CompareType.Equal, document.PrimaryId);
+            DefaultParam = new QParam(LogicType.And, UserLog.DBTable.ParseProperty(nameof(UserLog.DocumentId)), CompareType.Equal, document.PrimaryId);
         }
     }
 }

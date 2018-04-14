@@ -41,7 +41,7 @@ namespace DataWF.Module.Flow
         { }
 
         public DocumentReferenceList(string filter, DBViewKeys mode)
-            : base(DocumentReference.DBTable, filter, mode)
+            : base(filter, mode)
         {
         }
 
@@ -100,53 +100,6 @@ namespace DataWF.Module.Flow
             //}
 
             return flag;
-        }
-    }
-
-    public class ListDocumentReference : SelectableList<DocumentReference>
-    {
-        private Document document;
-        private DocumentReferenceMode mode;
-
-        public ListDocumentReference(Document document, DocumentReferenceMode mode)
-            : base(mode == DocumentReferenceMode.Refed
-                   ? DocumentReference.DBTable.Select(DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.DocumentId)),
-                                                                                                         document.PrimaryId, CompareType.Equal)
-                   : DocumentReference.DBTable.Select(DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.ReferenceId)),
-                                                                                                           document.PrimaryId, CompareType.Equal))
-        {
-            this.document = document;
-            this.mode = mode;
-        }
-
-        public override int AddInternal(DocumentReference item)
-        {
-            if (Contains(item))
-                return -1;
-            if (mode == DocumentReferenceMode.Refed && item.Document == null)
-                item.Document = document;
-            else if (mode == DocumentReferenceMode.Refing && item.Reference == null)
-                item.Reference = document;
-            var index = base.AddInternal(item);
-            item.Attach();
-            return index;
-        }
-
-        public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, string property = null)
-        {
-            base.OnListChanged(type, newIndex, oldIndex, property);
-            if (newIndex >= 0 && document != null)
-            {
-                if (document._refChanged != null)
-                {
-                    document._refChanged(document, type);
-                }
-            }
-        }
-
-        public override void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            base.OnPropertyChanged(sender, e);
         }
     }
 

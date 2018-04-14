@@ -100,7 +100,7 @@ namespace DataWF.Module.Flow
                 //cache groups
                 UserGroup.DBTable.Load(transaction, "");
 
-                AccessValue.Groups = new DBTableView<UserGroup>(UserGroup.DBTable, "");
+                AccessValue.Groups = new DBTableView<UserGroup>("");
                 AccessItem.Default = false;
 
                 Location.DBTable.Load(transaction, "");

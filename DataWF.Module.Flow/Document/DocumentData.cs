@@ -44,7 +44,7 @@ namespace DataWF.Module.Flow
         }
 
         public DocumentDataList(string filter, DBViewKeys mode)
-            : base(DocumentData.DBTable, filter, mode)
+            : base(filter, mode)
         {
         }
 
@@ -57,7 +57,7 @@ namespace DataWF.Module.Flow
 
         public void FilterByDocument(Document document)
         {
-            DefaultFilter = new QParam(LogicType.And, DocumentData.DBTable.ParseProperty(nameof(DocumentData.DocumentId)), CompareType.Equal, document.PrimaryId);
+            DefaultParam = new QParam(LogicType.And, DocumentData.DBTable.ParseProperty(nameof(DocumentData.DocumentId)), CompareType.Equal, document.PrimaryId);
         }
     }
 

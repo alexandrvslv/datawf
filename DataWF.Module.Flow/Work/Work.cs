@@ -29,7 +29,7 @@ namespace DataWF.Module.Flow
     public class WorkList : DBTableView<Work>
     {
         public WorkList(string filter = "", DBViewKeys mode = DBViewKeys.None, DBStatus status = DBStatus.Empty)
-            : base(Work.DBTable, filter, mode, status)
+            : base(filter, mode, status)
         {
             ApplySortInternal(new DBComparer<Work>(Work.DBTable.CodeKey, ListSortDirection.Ascending));
         }

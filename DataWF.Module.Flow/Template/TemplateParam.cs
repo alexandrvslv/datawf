@@ -30,7 +30,7 @@ namespace DataWF.Module.Flow
     public class TemplateParamList : DBTableView<TemplateParam>
     {
         public TemplateParamList(string filter, DBViewKeys mode = DBViewKeys.None, DBStatus status = DBStatus.Empty)
-            : base(TemplateParam.DBTable, filter, mode, status)
+            : base(filter, mode, status)
         {
             ApplySortInternal(new DBComparer(TemplateParam.DBTable.ParseProperty(nameof(TemplateParam.Order)), ListSortDirection.Ascending));
         }
@@ -66,7 +66,7 @@ namespace DataWF.Module.Flow
             get { return Template; }
         }
 
-        [DataMember, Column("code", Keys =  DBColumnKeys.Code)]
+        [DataMember, Column("code", Keys = DBColumnKeys.Code)]
         public override string ParamCode
         {
             get { return GetValue<string>(table.CodeKey); }
@@ -104,7 +104,7 @@ namespace DataWF.Module.Flow
 
         public Type DataType { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public Type TargetType { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        
+
         public bool CanWrite { get { return true; } }
 
         public object Get(Document document)

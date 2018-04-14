@@ -34,7 +34,7 @@ namespace DataWF.Module.Flow
         Document doc;
 
         public DocumentWorkList(string filter = "", DBViewKeys mode = DBViewKeys.None)
-            : base(DocumentWork.DBTable, filter, mode)
+            : base(filter, mode)
         {
             ApplySortInternal(new DBComparer<DocumentWork>(DocumentWork.DBTable.PrimaryKey, ListSortDirection.Ascending));
         }

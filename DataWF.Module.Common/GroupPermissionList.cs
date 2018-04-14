@@ -37,22 +37,6 @@ namespace DataWF.Module.Common
         {
         }
 
-        public GroupPermission Find(GroupPermission parent, object obj, bool generate)
-        {
-            var type = GroupPermission.GetPermissionType(obj, out string code);
-
-            string filter = $"{ GroupPermission.DBTable.CodeKey.Name}='{code}' and {GroupPermission.DBTable.ElementTypeKey.Name}={type}";
-
-            GroupPermission permission = table.Select(filter).FirstOrDefault();
-
-            if (permission == null && generate)
-            {
-                permission = new GroupPermission();
-                permission.Parent = parent;
-                permission.Permission = obj;
-                Add(permission);
-            }
-            return permission;
-        }
+        
     }
 }

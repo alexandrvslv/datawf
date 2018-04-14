@@ -29,8 +29,7 @@ namespace DataWF.Module.Flow
     public enum DocInitType
     {
         Default = 0,
-        Refed = 1,
-        Refing = 2,
+        References = 1,
         Data = 4,
         Workflow = 8,
         Customer = 16

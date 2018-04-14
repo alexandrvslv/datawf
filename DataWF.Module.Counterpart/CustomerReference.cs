@@ -26,8 +26,7 @@ namespace DataWF.Module.Counterpart
 {
     public class CustomerReferenceList : DBTableView<CustomerReference>
     {
-        public CustomerReferenceList()
-            : base(CustomerReference.DBTable)
+        public CustomerReferenceList() : base()
         {
         }
     }
@@ -79,7 +78,12 @@ namespace DataWF.Module.Counterpart
         public Persone Persone
         {
             get { return GetPropertyReference<Persone>(nameof(PersoneId)); }
-            set { SetPropertyReference(value, nameof(PersoneId)); }
+            set
+            {
+                SetPropertyReference(value, nameof(PersoneId));
+                EMail = Persone.EMail;
+                Phone = Persone.Phone;
+            }
         }
 
         [DataMember, Column("email", 1024)]

@@ -28,7 +28,7 @@ namespace DataWF.Module.Flow
     public class DocumentCustomerList : DBTableView<DocumentCustomer>
     {
         public DocumentCustomerList(string filter)
-            : base(DocumentCustomer.DBTable, filter)
+            : base(filter)
         { }
 
         public DocumentCustomerList()
@@ -88,7 +88,13 @@ namespace DataWF.Module.Flow
         public Customer Customer
         {
             get { return GetPropertyReference<Customer>(nameof(CustomerId)); }
-            set { SetPropertyReference(value, nameof(CustomerId)); }
+            set
+            {
+                SetPropertyReference(value, nameof(CustomerId));
+                Address = value?.Address;
+                EMail = value?.EMail;
+                Phone = value?.Phone;
+            }
         }
 
         [Browsable(false)]
@@ -104,6 +110,20 @@ namespace DataWF.Module.Flow
         {
             get { return GetPropertyReference<Address>(nameof(AddressId)); }
             set { SetPropertyReference(value, nameof(AddressId)); }
+        }
+
+        [DataMember, Column("email", 1024)]
+        public string EMail
+        {
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
+        }
+
+        [DataMember, Column("phone", 1024)]
+        public string Phone
+        {
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
         }
     }
 }

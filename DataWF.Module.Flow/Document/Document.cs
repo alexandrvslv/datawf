@@ -39,7 +39,7 @@ namespace DataWF.Module.Flow
         public long Stamp { get { return stamp; } }
 
         public DocumentList(string filter = "", DBViewKeys mode = DBViewKeys.None)
-            : base(Document.DBTable, filter, mode)
+            : base(filter, mode)
         {
             stampCache++;
             stamp = stampCache;
@@ -55,13 +55,7 @@ namespace DataWF.Module.Flow
         //    base.Insert(index, item);
         //}
 
-        public Document FindDocument(Template template, object p)
-        {
-            if (template == null)
-                return null;
-            string filter = $"{Document.DBTable.ParseProperty(nameof(Document.Template)).Name}={template.Id} and {Document.DBTable.ParseProperty(nameof(Document.Customer)).Name}={p}";
-            return table.Load(filter, DBLoadParam.Load).FirstOrDefault();
-        }
+
     }
 
     public enum DocumentFindType
@@ -75,6 +69,14 @@ namespace DataWF.Module.Flow
         public static DBTable<Document> DBTable
         {
             get { return DBService.GetTable<Document>(); }
+        }
+
+        public static Document FindDocument(Template template, object p)
+        {
+            if (template == null)
+                return null;
+            string filter = $"{DBTable.ParseProperty(nameof(Template)).Name}={template.Id} and {DBTable.ParseProperty(nameof(Customer)).Name}={p}";
+            return DBTable.Load(filter, DBLoadParam.Load).FirstOrDefault();
         }
 
         private static List<Document> saving = new List<Document>();
@@ -261,7 +263,6 @@ namespace DataWF.Module.Flow
         public static event DocumentSaveDelegate Saved;
 
         private DocInitType initype = DocInitType.Default;
-        internal Action<Document, ListChangedType> _refChanged;
         private int changes = 0;
 
         public event EventHandler<DBItemEventArgs> ReferenceChanged;
@@ -279,8 +280,7 @@ namespace DataWF.Module.Flow
             else if (item is DocumentReference)
             {
                 var reference = (DocumentReference)item;
-                if (_refChanged != null && (initype & DocInitType.Refed) != DocInitType.Refed && (initype & DocInitType.Refing) != DocInitType.Refing)
-                    _refChanged(this, ListChangedType.Reset);
+                RefChanged?.Invoke(this, ListChangedType.Reset);
             }
             if (item.UpdateState != DBUpdateState.Default && (item.UpdateState & DBUpdateState.Commit) != DBUpdateState.Commit && item.Attached)
                 changes++;
@@ -340,10 +340,13 @@ namespace DataWF.Module.Flow
                 Document parent = GetReference<Document>(Table.GroupKey);
                 if (parent == null)
                 {
-                    foreach (var dreference in Refing)
+                    foreach (var dreference in References)
                     {
-                        parent = dreference.Document;
-                        break;
+                        if (dreference.Document != this)
+                        {
+                            parent = dreference.Document;
+                            break;
+                        }
                     }
                 }
                 return parent;
@@ -474,37 +477,19 @@ namespace DataWF.Module.Flow
             set { SetProperty(value, nameof(IsComplete)); }
         }
 
-        public event Action<Document, ListChangedType> RefChanged
-        {
-            add { _refChanged += value; }
-            remove { _refChanged -= value; }
-        }
+        public event Action<Document, ListChangedType> RefChanged;
 
         [Browsable(false)]
-        public IEnumerable<DocumentReference> Refed
+        public IEnumerable<DocumentReference> References
         {
             get
             {
-                if ((initype & DocInitType.Refed) != DocInitType.Refed)
+                if ((initype & DocInitType.References) != DocInitType.References)
                 {
-                    initype |= DocInitType.Refed;
-                    return GetReferencing<DocumentReference>(nameof(DocumentReference.DocumentId), DBLoadParam.None);
+                    initype |= DocInitType.References;
+                    return DocumentReference.DBTable.Load(CreateRefsFilter(Id));
                 }
                 return GetReferencing<DocumentReference>(nameof(DocumentReference.DocumentId), DBLoadParam.None);
-            }
-        }
-
-        [Browsable(false)]
-        public IEnumerable<DocumentReference> Refing
-        {
-            get
-            {
-                if ((initype & DocInitType.Refing) != DocInitType.Refing)
-                {
-                    initype |= DocInitType.Refing;
-                    return GetReferencing<DocumentReference>(nameof(DocumentReference.ReferenceId), DBLoadParam.None);
-                }
-                return GetReferencing<DocumentReference>(nameof(DocumentReference.ReferenceId), DBLoadParam.None);
             }
         }
 
@@ -711,10 +696,8 @@ namespace DataWF.Module.Flow
         {
             if (type == DocInitType.Default)
                 Save(transaction);
-            else if (type == DocInitType.Refed)
-                DocumentReference.DBTable.Save(Refed.ToList(), transaction);
-            else if (type == DocInitType.Refing)
-                DocumentReference.DBTable.Save(Refing.ToList(), transaction);
+            else if (type == DocInitType.References)
+                DocumentReference.DBTable.Save(References.ToList(), transaction);
             else if (type == DocInitType.Data)
                 DocumentData.DBTable.Save(Datas.ToList(), transaction);
             else if (type == DocInitType.Workflow)
@@ -837,17 +820,15 @@ namespace DataWF.Module.Flow
 
         public Document FindReference(Template t, bool create)
         {
-            foreach (var refer in Refed)
-                if (refer.Reference.Template == t)
+            foreach (var refer in References)
+            {
+                if ((refer.Reference.Template == t && refer.Reference != this)
+                    || (refer.Document.Template == t && refer.Document != this))
                     return refer.Reference;
-
-            foreach (var refer in Refing)
-                if (refer.Document.Template == t)
-                    return refer.Document;
-
+            }
             if (create)
             {
-                Document newdoc = Document.Create(t, this);
+                var newdoc = Document.Create(t, this);
                 newdoc.Save(null);
                 return newdoc;
             }
@@ -856,12 +837,9 @@ namespace DataWF.Module.Flow
 
         public DocumentReference FindReference(object id)
         {
-            foreach (var item in Refed)
-                if (item.ReferenceId.Equals(id))
-                    return item;
-
-            foreach (var item in Refing)
-                if (item.DocumentId.Equals(id))
+            foreach (var item in References)
+                if ((item.ReferenceId.Equals(id) && !item.ReferenceId.Equals(this.Id))
+                    || (item.DocumentId.Equals(id) && !item.DocumentId.Equals(this.Id)))
                     return item;
 
             return null;
@@ -903,20 +881,27 @@ namespace DataWF.Module.Flow
             WorkCurrent = current;
         }
 
-        public QParam CreateRefsFilter()
+        public static QQuery CreateRefsFilter(object id)
+        {
+            var query = new QQuery("", DocumentReference.DBTable);
+            query.Parameters.Add(CreateRefsParam(id));
+            return query;
+        }
+
+        public static QParam CreateRefsParam(object id)
         {
             var qrefing = new QQuery(string.Format("select {0} from {1} where {2} = {3}",
                                                    DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.DocumentId)).Name,
                                                    DocumentReference.DBTable.Name,
-                                                   DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.ReferenceId)).Name, PrimaryId));
+                                                   DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.ReferenceId)).Name, id));
             var qrefed = new QQuery(string.Format("select {2} from {1} where {0} = {3}",
                                                   DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.DocumentId)).Name,
                                                   DocumentReference.DBTable.Name,
-                                                  DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.ReferenceId)).Name, PrimaryId));
+                                                  DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.ReferenceId)).Name, id));
 
-            QParam param = new QParam();
-            param.Parameters.Add(QQuery.CreateParam(Table.PrimaryKey, qrefed, CompareType.In));
-            param.Parameters.Add(QQuery.CreateParam(Table.PrimaryKey, qrefing, CompareType.In, LogicType.Or));
+            var param = new QParam();
+            param.Parameters.Add(QQuery.CreateParam(DBTable.PrimaryKey, qrefed, CompareType.In));
+            param.Parameters.Add(QQuery.CreateParam(DBTable.PrimaryKey, qrefing, CompareType.In, LogicType.Or));
             return param;
         }
 

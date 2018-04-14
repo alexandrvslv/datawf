@@ -50,6 +50,11 @@ namespace DataWF.Module.Common
             CurrentUser = user ?? throw new Exception();
         }
 
+        public static User GetByNetId(string netid)
+        {
+            return DBTable.Select($"{User.DBTable.ParseProperty(nameof(User.NetworkAddress)).Name} like '%{netid}%'").FirstOrDefault();
+        }
+
         public static List<User> LoadADUsers(string userName, string password)
         {
             var users = new List<User>();

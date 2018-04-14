@@ -23,13 +23,13 @@ using DataWF.Data;
 using DataWF.Common;
 using DataWF.Module.Common;
 using System.Runtime.Serialization;
+using System.Collections.Generic;
 
 namespace DataWF.Module.Counterpart
 {
     public class PersoneIdentifyList : DBTableView<PersoneIdentify>
     {
-        public PersoneIdentifyList()
-            : base(PersoneIdentify.DBTable, "")
+        public PersoneIdentifyList() : base("")
         {
 
         }
@@ -45,7 +45,7 @@ namespace DataWF.Module.Counterpart
                 return null;
             var filter = new QQuery("", PersoneIdentify.DBTable);
             filter.BuildPropertyParam(nameof(PersoneIdentify.PersoneId), CompareType.Equal, customer);
-            var list = table.Load(filter, DBLoadParam.Load).ToList();
+            var list = ((IEnumerable<PersoneIdentify>)table.LoadItems(filter, DBLoadParam.Load)).ToList();
             if (list.Count > 1)
             {
                 list.Sort(new DBComparer(Table.PrimaryKey, System.ComponentModel.ListSortDirection.Descending));

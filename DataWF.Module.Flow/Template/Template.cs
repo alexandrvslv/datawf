@@ -41,7 +41,7 @@ namespace DataWF.Module.Flow
         TemplateList _cacheAllTemplates;
 
         public TemplateList(string filter, DBViewKeys mode = DBViewKeys.None, DBStatus status = DBStatus.Empty)
-            : base(Template.DBTable, filter, mode, status)
+            : base(filter, mode, status)
         {
             ApplySortInternal(new DBComparer(Template.DBTable.CodeKey, ListSortDirection.Ascending));
         }

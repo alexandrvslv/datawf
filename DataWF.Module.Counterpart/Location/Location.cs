@@ -41,8 +41,7 @@ namespace DataWF.Module.Counterpart
 
     public class LocationList : DBTableView<Location>
     {
-        public LocationList()
-            : base(Location.DBTable)
+        public LocationList() : base()
         { }
     }
 

@@ -36,9 +36,6 @@ namespace DataWF.Module.Common
             : this(User.DBTable.GroupKey.Name + "=" + department.PrimaryId)
         { }
 
-        public User GetByNetId(string netid)
-        {
-            return table.Select($"{User.DBTable.ParseProperty(nameof(User.NetworkAddress)).Name} like '%{netid}%'").FirstOrDefault();
-        }
+       
     }
 }

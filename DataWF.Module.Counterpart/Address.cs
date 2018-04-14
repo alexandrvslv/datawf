@@ -27,8 +27,7 @@ namespace DataWF.Module.Counterpart
 {
     public class AddressList : DBTableView<Address>
     {
-        public AddressList()
-            : base(Address.DBTable)
+        public AddressList() : base()
         { }
     }
 
