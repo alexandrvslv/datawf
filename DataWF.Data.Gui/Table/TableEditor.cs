@@ -59,8 +59,9 @@ namespace DataWF.Data.Gui
 
         public TableEditor() : base(new TableLayoutList())
         {
-            toolInsertLine = new ToolMenuItem(OnToolInsertLineClick) { Name = "Insert Line", Glyph = GlyphType.ChevronCircleRight };
-            toolAdd.DropDownItems.Add(toolInsertLine);
+            toolInsert.Remove();
+            //toolInsertLine = new ToolMenuItem(OnToolInsertLineClick) { Name = "Insert Line", Glyph = GlyphType.ChevronCircleRight };
+            //toolAdd.DropDownItems.Add(toolInsertLine);
 
             refButton = new ToolDropDown() { Name = "References", DisplayStyle = ToolItemDisplayStyle.Text };
             toolMerge = new ToolItem(OnToolMergeClick) { Name = "Merge", Glyph = GlyphType.PaperPlane };
@@ -168,8 +169,33 @@ namespace DataWF.Data.Gui
                 {
                     toolGroup.Visible = view.Table.GroupKey != null;
                     DataSource = view;
-                }
 
+                    foreach (var item in toolAdd.DropDownItems)
+                    {
+                        if (item is ToolItemType)
+                        {
+                            item.Visible = true;
+                        }
+                    }
+
+                    foreach (var itemType in Table.ItemTypes.Values)
+                    {
+                        var toolItemType = toolAdd.DropDownItems[itemType.Type.FullName];
+                        if (toolItemType != null)
+                        {
+                            toolItemType.Visible = true;
+                        }
+                        else
+                        {
+                            toolAdd.DropDownItems.Add(new ToolItemType((s, e) => ShowNewItem((DBItem)((ToolItemType)s).ItemType.Constructor.Create()))
+                            {
+                                Name = itemType.Type.FullName,
+                                Text = itemType.Type.Name,
+                                ItemType = itemType
+                            });
+                        }
+                    }
+                }
             }
         }
 
@@ -190,9 +216,7 @@ namespace DataWF.Data.Gui
             set
             {
                 _insert = value;
-                toolInsert.Visible = value;
-                toolCopy.Visible = value;
-                toolInsertLine.Visible = value;
+                toolAdd.Sensitive = value;
             }
         }
 
@@ -265,17 +289,7 @@ namespace DataWF.Data.Gui
                 switch (status)
                 {
                     case TableEditorStatus.Adding:
-                        newRow = (DBItem)TableView.NewItem();
-                        if (OwnerRow != null && baseColumn != null)
-                        {
-                            newRow[baseColumn] = OwnerRow.PrimaryId;
-                        }
-                        if (Table.GroupKey != null && Selected != null && Selected.Table == Table)
-                        {
-                            newRow[Table.GroupKey] = Selected.PrimaryId;
-                        }
-                        ((LayoutList)toolWindow.Target).FieldSource = newRow;
-                        toolWindow.Show(bar, toolAdd.Bound.BottomLeft);
+                        ShowNewItem((DBItem)TableView.NewItem());
                         break;
                     case TableEditorStatus.Clone:
                         clonedRow = Selected;
@@ -302,6 +316,20 @@ namespace DataWF.Data.Gui
             }
         }
 
+        private void ShowNewItem(DBItem newRow)
+        {
+            this.newRow = newRow;
+            if (OwnerRow != null && baseColumn != null)
+            {
+                newRow[baseColumn] = OwnerRow.PrimaryId;
+            }
+            if (Table.GroupKey != null && Selected != null && Selected.Table == Table)
+            {
+                newRow[Table.GroupKey] = Selected.PrimaryId;
+            }
+            ((LayoutList)toolWindow.Target).FieldSource = newRow;
+            toolWindow.Show(bar, toolAdd.Bound.BottomLeft);
+        }
 
         [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public TableEditorMode OpenMode
@@ -350,7 +378,7 @@ namespace DataWF.Data.Gui
                         list.AutoToStringSort = false;
                         if (baseColumn != null && baseRow != null)
                         {
-                            view.DefaultFilter = new QParam(LogicType.And, baseColumn, CompareType.Equal, baseRow.PrimaryId);
+                            view.DefaultParam = new QParam(LogicType.And, baseColumn, CompareType.Equal, baseRow.PrimaryId);
                         }
                         break;
                     case TableEditorMode.Reference:
@@ -374,7 +402,7 @@ namespace DataWF.Data.Gui
             if (tool.View == null)
                 tool.View = tool.Relation.Table.CreateItemsView("", DBViewKeys.Empty, DBStatus.Current);
 
-            tool.View.DefaultFilter = new QParam(LogicType.And, tool.Relation.Column, CompareType.Equal, OwnerRow.PrimaryId);
+            tool.View.DefaultParam = new QParam(LogicType.And, tool.Relation.Column, CompareType.Equal, OwnerRow.PrimaryId);
             baseColumn = tool.Relation.Column;
             TableView = tool.View;
             loader.Load(tool.View.Query);
@@ -914,10 +942,26 @@ namespace DataWF.Data.Gui
         }
     }
 
+    public class ToolItemType : ToolMenuItem
+    {
+        public ToolItemType(EventHandler click) : base(click)
+        {
+            Glyph = GlyphType.Plus;
+        }
+
+        public DBItemType ItemType { get; set; }
+
+        public override void Localize()
+        {
+            //base.Localize();
+        }
+    }
+
     public delegate void Updated(object sender, EventArgs e);
 
     public delegate void Updating(object sender, EventArgs e);
 
     public delegate void ClosedControl(object sender, EventArgs e);
 
+    
 }

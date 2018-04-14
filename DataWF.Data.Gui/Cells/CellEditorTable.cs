@@ -178,7 +178,7 @@ namespace DataWF.Data.Gui
                 }
                 if (viewFilter != null && viewFilter.Length > 0)
                 {
-                    View.DefaultFilter = new QParam(table, viewFilter);
+                    View.DefaultParam = new QParam(table, viewFilter);
                 }
             }
             return tableEditor;
