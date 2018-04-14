@@ -662,6 +662,10 @@ namespace DataWF.Data
             {
                 if (x is byte[] && y is byte[])
                     equal = Helper.CompareByte((byte[])x, (byte[])y);
+                else if (x is Enum && y is int)
+                    equal = ((int)x).Equals(y);
+                else if (y is Enum && x is int)
+                    equal = ((int)y).Equals(x);
                 else if (x is string && y is string)
                     equal = string.Equals((string)x, (string)y, StringComparison.Ordinal);
                 else
