@@ -109,6 +109,7 @@ namespace DataWF.Data
                     primary = new DBConstraint() { Column = Table.PrimaryKey, Type = DBConstaintType.Primary };
                     primary.GenerateName();
                     Table.Constraints.Add(primary);
+                    Table.DefaultComparer = new DBComparer(Table.PrimaryKey) { Hash = true };
                 }
             }
             return index;
