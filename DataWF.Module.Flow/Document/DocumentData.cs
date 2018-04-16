@@ -261,10 +261,17 @@ namespace DataWF.Module.Flow
             FileName = Document.Template.DataName.Replace(".", DateTime.Now.ToString("yyyyMMddHHmmss") + ".");
         }
 
-        public void Load(string p)
+        public void Load(string path)
         {
-            FileData = File.ReadAllBytes(p);
-            FileName = Path.GetFileName(p);
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                using (var memory = new MemoryStream())
+                {
+                    stream.CopyTo(memory);
+                    FileData = memory.ToArray();// File.ReadAllBytes(path);
+                }
+            }
+            FileName = Path.GetFileName(path);
         }
 
         public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)

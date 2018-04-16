@@ -315,7 +315,7 @@ namespace DataWF.Data
                 lock (items)
                 {
                     int index = -1, newindex = -1;
-                    index = newindex = items.BinarySearch(item);
+                    index = newindex = items.BinarySearch(item, comparer);
                     if (index < 0)
                     {
                         newindex = (-index) - 1;

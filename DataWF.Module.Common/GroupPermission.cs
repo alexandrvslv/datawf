@@ -254,12 +254,7 @@ namespace DataWF.Module.Common
             string code = null;
             PermissionType type = GetPermissionType(item, out code);
 
-            var query = new QQuery(string.Empty, GroupPermission.DBTable);
-            //object typeid = FlowEnvir.Config.Permission.GetTypeId(type);
-            //query.BuildParam(FlowEnvir.Config.GroupPermission.Type.Column, CompareType.Equal, typeid);
-            query.BuildParam(DBTable.CodeKey, CompareType.Equal, code);
-
-            var list = DBTable.Select(query).ToList();
+            var list = DBTable.Select(DBTable.CodeKey, code, CompareType.Equal).ToList();
 
             var permission = list.FirstOrDefault();
             if (list.Count > 1)

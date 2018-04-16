@@ -144,14 +144,14 @@ namespace DataWF.Module.Counterpart
             set { SetValue(value, Table.ElementTypeKey); }
         }
 
-        [DataMember, Column("code", 40, Keys = DBColumnKeys.Code | DBColumnKeys.View), Index("rlocation_typeid_code", true)]
+        [DataMember, Column("code", 40, Keys = DBColumnKeys.Code), Index("rlocation_typeid_code", true)]
         public string Code
         {
             get { return GetValue<string>(Table.CodeKey); }
             set { SetValue(value, Table.CodeKey); }
         }
 
-        [DataMember, Column("codei", 40, Keys = DBColumnKeys.View)]
+        [DataMember, Column("codei", 40)]
         [Index("rlocation_codei")]
         public string CodeI
         {

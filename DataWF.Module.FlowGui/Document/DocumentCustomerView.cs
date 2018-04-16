@@ -16,7 +16,7 @@ namespace DataWF.Module.FlowGui
 
         public DocumentCustomerView() : base()
         {
-            view = new DBTableView<DocumentCustomer>("", DBViewKeys.Empty);
+            DataSource = view = new DBTableView<DocumentCustomer>("", DBViewKeys.Empty);
         }
 
         DBItem IDocument.Document { get => Document; set => Document = (Document)value; }

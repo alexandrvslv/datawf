@@ -1132,16 +1132,7 @@ namespace DataWF.Data
         [Browsable(false)]
         public bool IsExpanded
         {
-            get { return IsParentActive(this); }
-        }
-
-        public static bool IsParentActive(DBItem item)
-        {
-            if (item.Group == null)
-                return true;
-            if (!item.Group.Expand)
-                return false;
-            return IsParentActive(item.Group);
+            get { return GroupHelper.GetAllParentExpand(this); }
         }
 
         [Browsable(false)]

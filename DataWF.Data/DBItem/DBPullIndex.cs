@@ -249,7 +249,7 @@ namespace DataWF.Data
                 //&& value is IList
                 if (!compare.Not)
                 {
-                    foreach (var item in (IList)value)
+                    foreach (var item in (IEnumerable)value)
                     {
                         object comp = item;
                         if (comp is QItem)
@@ -272,7 +272,7 @@ namespace DataWF.Data
                 {
                     buf = Search<T>((item) =>
                     {
-                        foreach (var element in (IList)value)
+                        foreach (var element in (IEnumerable)value)
                         {
                             object comp = element;
                             if (comp is QItem)

@@ -58,7 +58,8 @@ namespace DataWF.Module.FlowGui
 
             listUsers = new FlowTree()
             {
-                AllowCheck = true
+                AllowCheck = true,
+                ShowUser = true
             };
 
             toolNext = new ToolMenuItem { Name = "Next" };
@@ -239,7 +240,7 @@ namespace DataWF.Module.FlowGui
         public TableItemNode InitStage(Stage stage, User user)
         {
             var stageNode = listUsers.InitItem(stage);
-            listUsers.InitItems(stage.GetUsers(), stageNode, true);
+            listUsers.InitItems(stage.GetPositions(), stageNode, true);
             if (user != null)
             {
                 var userNode = listUsers.InitItem(user);
@@ -331,7 +332,7 @@ namespace DataWF.Module.FlowGui
 
         private CellStyle listDocuments_GetCellStyle(object sender, object listItem, object value, ILayoutCell cell)
         {
-            DocumentSendItem item = listItem as DocumentSendItem;
+            var item = listItem as DocumentSendItem;
             if (item != null && cell == null)
                 if (item.Work != null && item.Work.IsComplete)
                     return styleComplete;

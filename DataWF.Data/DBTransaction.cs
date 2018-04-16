@@ -125,14 +125,18 @@ namespace DataWF.Data
         public void Rollback()
         {
             if (transaction != null && !cancel)
+            {
                 try
                 {
                     transaction.Rollback();
                     cancel = true;
                 }
                 catch (Exception te) { Helper.OnException(te); }
+            }
             foreach (var row in rows)
+            {
                 row.Reject();
+            }
             rows.Clear();
 
             if (subTransactions != null)

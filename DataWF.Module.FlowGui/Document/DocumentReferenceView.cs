@@ -114,7 +114,7 @@ namespace DataWF.Module.FlowGui
                     {
                         document.GetReferencing<DocumentReference>(nameof(DocumentReference.DocumentId), DBLoadParam.Load);
                         document.GetReferencing<DocumentReference>(nameof(DocumentReference.ReferenceId), DBLoadParam.Load);
-                        refs.Documents.UpdateFilter();
+                        //refs.Documents.UpdateFilter();
                         synch = true;
                     }
                     catch (Exception ex)

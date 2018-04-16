@@ -27,6 +27,7 @@ using DataWF.Data;
 using DataWF.Common;
 using DataWF.Module.Common;
 using System.Runtime.Serialization;
+using System.Collections;
 
 namespace DataWF.Module.Flow
 {
@@ -140,6 +141,21 @@ namespace DataWF.Module.Flow
                     {
                         if (user.Access.Get(access.Group).Create)
                             yield return user;
+                    }
+                }
+            }
+        }
+
+        public IEnumerable<Position> GetPositions()
+        {
+            foreach (var access in Access.Items)
+            {
+                if (access.Create)
+                {
+                    foreach (Position position in Position.DBTable)
+                    {
+                        if (position.Access.Get(access.Group).Create)
+                            yield return position;
                     }
                 }
             }

@@ -293,6 +293,8 @@ namespace DataWF.Gui
             }
             Sender = sender;
 
+            CheckLocation(sender?.ConvertToScreenCoordinates(location) ?? location);
+
             base.Show();
 
             CheckLocation(sender?.ConvertToScreenCoordinates(location) ?? location);
@@ -317,7 +319,7 @@ namespace DataWF.Gui
 
         private void CheckLocation(Point location)
         {
-            Rectangle screen = Desktop.PrimaryScreen.VisibleBounds;
+            Rectangle screen = (TransientFor?.Screen ?? Desktop.PrimaryScreen).VisibleBounds;
             if (location.Y + Height > screen.Height)
             {
                 location.Y -= (location.Y + Height) - screen.Height;

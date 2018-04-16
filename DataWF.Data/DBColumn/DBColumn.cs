@@ -173,14 +173,18 @@ namespace DataWF.Data
                 Index.Dispose();
                 index = null;
             }
-
-            if (Index == null && pull != null && (IsPrimaryKey
+            if (pull == null)
+            {
+                return;
+            }
+            var build = IsPrimaryKey
                 || (Keys & DBColumnKeys.Indexing) == DBColumnKeys.Indexing
-                || (Keys & DBColumnKeys.Reference) == DBColumnKeys.Reference))
+                || (Keys & DBColumnKeys.Reference) == DBColumnKeys.Reference;
+            if (Index == null && build)
             {
                 Index = DBPullIndex.Fabric(Table, this);
             }
-            else if (Index != null)
+            else if (Index != null && !build)
             {
                 Index.Dispose();
                 Index = null;

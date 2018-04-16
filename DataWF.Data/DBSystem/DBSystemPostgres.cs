@@ -15,7 +15,7 @@ namespace DataWF.Data
             DataTypeMap = new Dictionary<DBDataType, string>(){
                     {DBDataType.String, "varchar{0}"},
                     {DBDataType.Clob, "text"},
-                    {DBDataType.DateTime, "timestamp(6)"},
+                    {DBDataType.DateTime, "timestamp"},
                     {DBDataType.ByteArray, "bytea"},
                     {DBDataType.Blob, "bytea"},
                     {DBDataType.BigInt, "bigint"},
@@ -93,6 +93,18 @@ namespace DataWF.Data
                     ddl.AppendLine($"drop sequence {sequence.Name}");
                     break;
             }
+        }
+
+        public override void FormatAlter(StringBuilder ddl, DBColumn column)
+        {
+            ddl.Append($"alter table {column.Table.SqlName} alter column ");
+            ddl.Append($"{column.SqlName} TYPE ");
+            ddl.Append(FormatType(column));
+            if (column.IsNotNull || column.IsPrimaryKey)
+            {
+                ddl.Append(" not null");
+            }
+            ddl.AppendLine();
         }
 
         public override string FormatCreateView(string name)

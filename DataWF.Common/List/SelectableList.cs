@@ -426,7 +426,7 @@ namespace DataWF.Common
             ApplySortInternal(new InvokerComparer<T>(property, direction));
         }
 
-        public void ApplySortInternal(IComparer<T> comparer)
+        public virtual void ApplySortInternal(IComparer<T> comparer)
         {
             this.comparer = comparer;
             ListHelper.QuickSort<T>(items, this.comparer);

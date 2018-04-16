@@ -85,6 +85,17 @@ namespace DataWF.Module.CommonGui
         public bool ShowUser
         {
             get { return (userKeys & UserTreeKeys.User) == UserTreeKeys.User; }
+            set
+            {
+                if (value)
+                {
+                    userKeys |= UserTreeKeys.User;
+                }
+                else
+                {
+                    userKeys &= ~UserTreeKeys.User;
+                }
+            }
         }
 
         [DefaultValue(false)]

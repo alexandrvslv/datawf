@@ -269,7 +269,8 @@ namespace DataWF.Module.Flow
 
         internal void OnReferenceChanged(DBItem item)
         {
-            //(arg.State & DBRowState.Commit) == DBRowState.Commit ||
+            if (!item.Attached)
+                return;
 
             if (item is DocumentWork)
             {

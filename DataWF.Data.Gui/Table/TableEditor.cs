@@ -174,10 +174,9 @@ namespace DataWF.Data.Gui
                     {
                         if (item is ToolItemType)
                         {
-                            item.Visible = true;
+                            item.Visible = false;
                         }
                     }
-
                     foreach (var itemType in Table.ItemTypes.Values)
                     {
                         var toolItemType = toolAdd.DropDownItems[itemType.Type.FullName];
@@ -963,5 +962,5 @@ namespace DataWF.Data.Gui
 
     public delegate void ClosedControl(object sender, EventArgs e);
 
-    
+
 }
