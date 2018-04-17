@@ -482,6 +482,28 @@ namespace DataWF.Common
             return flist;
         }
 
+        public static Type GetItemType(Type type)
+        {
+            Type t = typeof(object);
+            if(type.IsGenericType)
+            {
+                t = type.GetGenericArguments().FirstOrDefault();
+            }
+            else if(type.BaseType?.IsGenericType ?? false)
+            {
+                t = type.BaseType.GetGenericArguments().FirstOrDefault();
+            }
+            else if(type.IsArray)
+            {
+                t = type.GetElementType();
+            }
+            else
+            {
+                t = type.GetProperty("Item", new Type[] { typeof(int) })?.PropertyType;
+            }
+            return t;
+        }
+
         public static Type GetItemType(ICollection collection, bool ignoreInteface = true)
         {
             Type t = typeof(object);
@@ -491,26 +513,8 @@ namespace DataWF.Common
                 if (!((ISortable)collection).ItemType.IsInterface || ignoreInteface)
                     return ((ISortable)collection).ItemType;
             }
-            if (collection is IList)
-            {
-                if (collection.GetType().IsGenericType)
-                {
-                    t = collection.GetType().GetGenericArguments().FirstOrDefault();
-                }
-                else if (collection.GetType().IsArray)
-                {
-                    t = collection.GetType().GetElementType();
-                }
-                else if (collection.Count != 0)
-                {
-                    t = ((IList)collection)[0].GetType();
-                }
-                else
-                {
-                    t = collection.GetType().GetProperty("Item", new Type[] { typeof(int) })?.PropertyType;
-                }
-            }
-            else
+            var typeType = GetItemType(collection.GetType());
+            if (typeType == t && collection.Count != 0)
             {
                 foreach (object o in collection)
                 {

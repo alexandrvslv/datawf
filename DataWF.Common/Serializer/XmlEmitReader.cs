@@ -56,8 +56,7 @@ namespace DataWF.Common
             if (member != null)
             {
                 mtype = mtype ?? member.PropertyType;
-                var mInfo = Serializer.GetTypeInfo(mtype);
-                if (member.IsText || mInfo.IsAttribute)
+                if (member.IsText || member.IsAttribute)
                 {
                     member.Invoker.Set(element, Helper.TextParse(Reader.ReadElementContentAsString(), mtype));
                 }
@@ -65,7 +64,10 @@ namespace DataWF.Common
                 {
                     object value = member.Invoker.Get(element);
                     if (value == null)
+                    {
+                        var mInfo = Serializer.GetTypeInfo(mtype);
                         value = mInfo.Constructor.Create();
+                    }
                     value = Read(value);
                     member.Invoker.Set(element, value);
                 }
@@ -96,21 +98,22 @@ namespace DataWF.Common
             }
             var list = (IList)element;
 
-            defaultType = defaultType ?? TypeHelper.GetItemType(list);
+            defaultType = defaultType ?? info.ListItemType;
             while (Reader.Read() && Reader.NodeType != XmlNodeType.EndElement)
             {
                 Type itemType = defaultType;
-                Type mtype = null;
+                TypeSerializationInfo itemInfo = null;
                 if (Reader.NodeType == XmlNodeType.Comment)
                 {
-                    mtype = itemType = ReadComment();
+                    itemType = ReadComment();
+                    itemInfo = Serializer.GetTypeInfo(itemType);
                 }
                 if (Reader.NodeType == XmlNodeType.Element)
                 {
                     if (Reader.Name == "i")
                     {
                         object newobj = null;
-                        if (TypeHelper.IsXmlAttribute(itemType))
+                        if (itemInfo?.IsAttribute ?? info.ListItemIsAttribute)
                         {
                             newobj = Helper.TextParse(Reader.ReadElementContentAsString(), itemType);
                         }
@@ -146,7 +149,7 @@ namespace DataWF.Common
                     }
                     else
                     {
-                        ReadElement(element, info, mtype);
+                        ReadElement(element, info, itemType);
                     }
                 }
             }
@@ -227,11 +230,11 @@ namespace DataWF.Common
             {
                 return ReadIFile(element, info);
             }
-            if (TypeHelper.IsDictionary(type))
+            if (info.IsDictionary)
             {
                 return ReadDictionary(element, info);
             }
-            if (TypeHelper.IsList(type))
+            if (info.IsList)
             {
                 return ReadCollection(element, info);
             }

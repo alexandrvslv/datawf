@@ -82,7 +82,9 @@ namespace DataWF.Common
                 Current = items[i];
             }
             catch (Exception e)
-            { }
+			{ 
+				Helper.OnException(e); 
+			}
             return true;
         }
 

@@ -17,21 +17,19 @@ namespace DataWF.Common
             Serializer = serializer;
         }
 
-        public void WriteNamedList(INamedList list, Type type)
+        public void WriteNamedList(INamedList list, TypeSerializationInfo type)
         {
-            var dtype = TypeHelper.GetItemType(list, false);
             foreach (object item in list)
             {
-                Write(item, "i", dtype != item.GetType());
+                Write(item, "i", type.ListItemType != item.GetType());
             }
         }
 
-        public void WriteCollection(ICollection collection, Type type)
+        public void WriteCollection(ICollection collection, TypeSerializationInfo type)
         {
-            var dtype = TypeHelper.GetItemType(collection, false);
             foreach (object item in collection)
             {
-                Write(item, "i", dtype != item.GetType());
+                Write(item, "i", type.ListItemType != item.GetType());
             }
         }
 
@@ -80,15 +78,12 @@ namespace DataWF.Common
             }
             else
             {
-                if (element is IList)
+                if (info.IsList)
                 {
-                    var dtype = TypeHelper.GetItemType(((IList)element), false);
                     Writer.WriteAttributeString("Count", Helper.TextBinaryFormat(((IList)element).Count));
-                    if (!info.Type.IsGenericType
-                        && (!(element is ISortable) || ((ISortable)element).ItemType.IsInterface)
-                        && dtype != typeof(object) && !info.Type.IsArray)
+                    if(info.ListDefaulType)
                     {
-                        Writer.WriteAttributeString("DT", Helper.TextBinaryFormat(dtype));
+                        Writer.WriteAttributeString("DT", Helper.TextBinaryFormat(info.ListDefaulType));
                     }
                 }
 
@@ -114,17 +109,17 @@ namespace DataWF.Common
                     }
                 }
 
-                if (element is IDictionary)
+                if (info.IsDictionary)
                 {
                     WriteDictionary((IEnumerable)element, info.Type);
                 }
                 else if (element is INamedList)
                 {
-                    WriteNamedList((INamedList)element, info.Type);
+                    WriteNamedList((INamedList)element, info);
                 }
-                else if (element is IList)
+                else if (info.IsList)
                 {
-                    WriteCollection((ICollection)element, info.Type);
+                    WriteCollection((ICollection)element, info);
                 }
             }
             Writer.WriteEndElement();

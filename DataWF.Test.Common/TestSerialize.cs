@@ -41,57 +41,7 @@ namespace DataWF.Test.Common
             Console.WriteLine($"Benchmark {stopwatch.ElapsedMilliseconds}");
         }
 
-        [Test()]
-        public void TestGenericList()
-        {
-            var list = new List<string> { "one", "two", "three" };
-            var serializer = new Serializer(typeof(List<string>));
-            TestGenericList(serializer, list);
-        }
-
-        public byte[] TestWrite(Serializer serializer, object list)
-        {
-            var buffer = (byte[])null;
-            using (var stream = new MemoryStream())
-            {
-                serializer.Serialize(list, stream);
-                buffer = stream.ToArray();
-            }
-            return buffer;
-        }
-
-        public void TestRead(Serializer serializer, byte[] buffer)
-        {
-            using (var stream = new MemoryStream(buffer))
-            {
-                var newList = serializer.Deserialize(stream);
-            }
-        }
-
-        public void TestGenericList(Serializer serializer, object list, bool print = true)
-        {
-            var buffer = (byte[])null;
-            using (var stream = new MemoryStream())
-            {
-                serializer.Serialize(list, stream);
-                buffer = stream.ToArray();
-            }
-            if (print)
-            {
-#if DEBUG
-                PrintBuffer(buffer);
-#endif
-            }
-            using (var stream = new MemoryStream(buffer))
-            {
-                var newList = serializer.Deserialize(stream);
-                Assert.IsInstanceOf<List<string>>(newList, "Deserialization Fail");
-                Assert.AreEqual(3, ((List<string>)newList).Count, "Deserialization Fail");
-                Assert.AreEqual("one", ((List<string>)newList)[0], "Deserialization Fail");
-            }
-        }
-
-        [Test()]
+		[Test()]
         public void BenchmarkWriteNative()
         {
             var list = new List<string> { "one", "two", "three" };
@@ -118,7 +68,26 @@ namespace DataWF.Test.Common
             Console.WriteLine($"Benchmark {stopwatch.ElapsedMilliseconds}");
         }
 
-        public byte[] TestWrite(XmlSerializer serializer, object list)
+        [Test()]
+        public void TestGenericList()
+        {
+            var list = new List<string> { "one", "two", "three" };
+            var serializer = new Serializer(typeof(List<string>));
+            TestGenericList(serializer, list);
+        }
+
+        public byte[] TestWrite(Serializer serializer, object list)
+        {
+            var buffer = (byte[])null;
+            using (var stream = new MemoryStream())
+            {
+                serializer.Serialize(list, stream);
+                buffer = stream.ToArray();
+            }
+            return buffer;
+        }
+
+		public byte[] TestWrite(XmlSerializer serializer, object list)
         {
             var buffer = (byte[])null;
             using (var stream = new MemoryStream())
@@ -129,11 +98,44 @@ namespace DataWF.Test.Common
             return buffer;
         }
 
-        public void TestRead(XmlSerializer serializer, byte[] buffer)
+        public void TestRead(Serializer serializer, byte[] buffer)
         {
             using (var stream = new MemoryStream(buffer))
             {
                 var newList = serializer.Deserialize(stream);
+            }
+        }
+
+		public void TestRead(XmlSerializer serializer, byte[] buffer)
+        {
+            using (var stream = new MemoryStream(buffer))
+            {
+                var newList = serializer.Deserialize(stream);
+            }
+        }
+
+        
+
+        public void TestGenericList(Serializer serializer, object list, bool print = true)
+        {
+            var buffer = (byte[])null;
+            using (var stream = new MemoryStream())
+            {
+                serializer.Serialize(list, stream);
+                buffer = stream.ToArray();
+            }
+            if (print)
+            {
+#if DEBUG
+                PrintBuffer(buffer);
+#endif
+            }
+            using (var stream = new MemoryStream(buffer))
+            {
+                var newList = serializer.Deserialize(stream);
+                Assert.IsInstanceOf<List<string>>(newList, "Deserialization Fail");
+                Assert.AreEqual(3, ((List<string>)newList).Count, "Deserialization Fail");
+                Assert.AreEqual("one", ((List<string>)newList)[0], "Deserialization Fail");
             }
         }
 
@@ -304,7 +306,7 @@ namespace DataWF.Test.Common
                 {
                     var line = reader.ReadLine();
                     if (line != null)
-                        Debug.WriteLine(line);
+                        Console.WriteLine(line);
                     else
                         break;
                 }

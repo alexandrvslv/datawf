@@ -114,7 +114,7 @@ namespace DataWF.Common
         public event EventHandler<TcpExceptionEventArgs> DataException;
         public event EventHandler Started;
         public event EventHandler Stopped;
-        private readonly bool logEvents;
+        private bool logEvents;
 
         public TcpServer()
         {
@@ -122,6 +122,12 @@ namespace DataWF.Common
                                                                      (item) => item.Point.ToString()));
             TimeOut = TimeSpan.MinValue;
         }
+
+        public bool LogEvents
+		{
+			get { return logEvents; }
+			set { logEvents = value; }
+		}
 
         [Browsable(false)]
         public TimeSpan TimeOut { get; set; }
