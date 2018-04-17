@@ -44,8 +44,7 @@ namespace DataWF.Data
             State = item.UpdateState;
             Column = column;
             Value = value;
-            Property = property ?? string.Empty;
-            Columns = item.GetChangeKeys().ToList();
+            Property = property ?? string.Empty;            
         }
 
         public DBUpdateState State { get; set; }

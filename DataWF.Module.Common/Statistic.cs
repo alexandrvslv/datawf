@@ -44,7 +44,7 @@ namespace DataWF.Module.Common
         }
     }
 
-    [DataContract, Table("wf_common", "dstats", "Data")]
+    [DataContract, Table("wf_common", "dstats", "Reference Book")]
     public class Statistic : DBItem//, IComparable
     {
         public static DBTable<Statistic> DBTable

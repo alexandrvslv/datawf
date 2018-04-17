@@ -67,36 +67,25 @@ namespace DataWF.Gui
 
     public class LayoutFieldInfo : IDisposable
     {
+        static readonly IInvoker categoryInvoker = new Invoker<LayoutField, Category>(nameof(LayoutField.Category),
+                                                             (item) => item.Category,
+                                                             (item, value) => item.Category = value);
+        static readonly IInvoker orderInvoker = new Invoker<LayoutField, int>(nameof(LayoutField.Order),
+                                                        (item) => item.Order,
+                                                        (item, value) => item.Order = value);
         protected LayoutNodeList<LayoutField> nodes;
         protected LayoutListInfo colums;
 
         public LayoutFieldInfo()
         {
             Nodes = new LayoutNodeList<LayoutField>();
+            ValueColumn = new LayoutFieldColumn() { Name = "Value", FillWidth = true, Style = GuiEnvironment.StylesInfo["Value"], Invoker = new FieldValueInvoker() };
+
             Columns = new LayoutListInfo(
-                new LayoutColumn
-                {
-                    Name = nameof(LayoutField.ToString),
-                    Editable = false,
-                    Width = 100,
-                    Invoker = new ToStringInvoker()
-                },
-                new LayoutColumn
-                {
-                    Name = nameof(LayoutField.Category),
-                    Visible = false,
-                    Invoker = new Invoker<LayoutField, Category>(nameof(LayoutField.Category),
-                                                             (item) => item.Category,
-                                                             (item, value) => item.Category = value)
-                },
-                new LayoutColumn
-                {
-                    Name = nameof(LayoutField.Order),
-                    Visible = false,
-                    Invoker = new Invoker<LayoutField, int>(nameof(LayoutField.Order),
-                                                        (item) => item.Order,
-                                                        (item, value) => item.Order = value)
-                }
+                new LayoutColumn { Name = nameof(LayoutField.ToString), Editable = false, Width = 100, Invoker = ToStringInvoker.Instance },
+                new LayoutColumn { Name = nameof(LayoutField.Category), Visible = false, Invoker = categoryInvoker },
+                new LayoutColumn { Name = nameof(LayoutField.Order), Visible = false, Invoker = orderInvoker },
+                ValueColumn
             )
             {
                 ColumnsVisible = false,
@@ -105,14 +94,6 @@ namespace DataWF.Gui
                 StyleRow = GuiEnvironment.StylesInfo["Field"]
             };
 
-            ValueColumn = new LayoutFieldColumn()
-            {
-                Name = "Value",
-                FillWidth = true,
-                Style = GuiEnvironment.StylesInfo["Value"],
-                Invoker = new FieldValueInvoker()
-            };
-            colums.Columns.Add(ValueColumn);
             colums.Sorters.Add(new LayoutSort(nameof(LayoutField.Order), ListSortDirection.Ascending, false));
         }
 

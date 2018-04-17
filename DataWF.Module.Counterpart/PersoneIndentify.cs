@@ -54,7 +54,7 @@ namespace DataWF.Module.Counterpart
         }
     }
 
-    [DataContract, Table("wf_customer", "dpersone_indentify", "Customer", BlockSize = 2000)]
+    [DataContract, Table("wf_customer", "dpersone_indentify", "Customer", BlockSize = 100)]
     public class PersoneIdentify : DBItem
     {
         public static DBTable<PersoneIdentify> DBTable

@@ -2,11 +2,12 @@
 {
     public class QueryItemList<T> : SelectableList<T> where T : QueryItem, new()
     {
+        static readonly Invoker<T, string> proeprtyInvoker = new Invoker<T, string>(nameof(QueryItem.Property), (item) => item.Property);
         private QueryParameter cacheParam;
 
         public QueryItemList()
         {
-            Indexes.Add(new Invoker<T, string>(nameof(QueryItem.Property), (item) => item.Property));
+            Indexes.Add(proeprtyInvoker);
             cacheParam = new QueryParameter
             {
                 Type = typeof(T),

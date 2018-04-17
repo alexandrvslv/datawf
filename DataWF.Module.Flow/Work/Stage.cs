@@ -61,7 +61,7 @@ namespace DataWF.Module.Flow
         IsAutoComplete
     }
 
-    [DataContract, Table("wf_flow", "rstage", "Reference Book", BlockSize = 200)]
+    [DataContract, Table("wf_flow", "rstage", "Template", BlockSize = 100)]
     public class Stage : DBItem, IDisposable
     {
         public static DBTable<Stage> DBTable
@@ -77,15 +77,15 @@ namespace DataWF.Module.Flow
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get { return GetProperty<int?>(nameof(Id)); }
-            set { SetProperty(value, nameof(Id)); }
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
         }
 
         [DataMember, Column("code", Keys = DBColumnKeys.Code)]
         public string Code
         {
-            get { return GetValue<string>(Table.CodeKey); }
-            set { SetValue(value, Table.CodeKey); }
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
         }
 
         [DataMember, Column("name", 512, Keys = DBColumnKeys.Culture | DBColumnKeys.View)]

@@ -6,11 +6,12 @@ namespace DataWF.Common
 {
     public class LocaleCategory : SelectableList<LocaleItem>, ICloneable, IContainerNotifyPropertyChanged
     {
+        static readonly Invoker<LocaleItem, string> nameInvoker = new Invoker<LocaleItem, string>(nameof(LocaleItem.Name), item => item.Name);
         private string name = "";
 
         public LocaleCategory()
         {
-            Indexes.Add(new Invoker<LocaleItem, string>(nameof(LocaleItem.Name), item => item.Name));
+            Indexes.Add(nameInvoker);
         }
 
         [ReadOnly(true), DefaultValue("")]

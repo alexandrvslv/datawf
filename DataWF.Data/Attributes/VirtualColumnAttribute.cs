@@ -50,7 +50,7 @@ namespace DataWF.Data
 
         public override DBColumn CreateColumn(string name)
         {
-            return new DBVirtualColumn() { Table = Table.Table, };
+            return new DBVirtualColumn(name) { Table = Table.Table, };
         }
 
         public override void GenerateCultureColumn(DBTable table, string groupName, CultureInfo culture)

@@ -45,7 +45,7 @@ namespace DataWF.Module.Counterpart
         { }
     }
 
-    [DataContract, Table("wf_customer", "rlocation", "Reference Book", BlockSize = 2000)]
+    [DataContract, Table("wf_customer", "rlocation", "Address", BlockSize = 100)]
     public class Location : DBItem
     {
         public static void Generate()
@@ -144,7 +144,7 @@ namespace DataWF.Module.Counterpart
             set { SetValue(value, Table.ElementTypeKey); }
         }
 
-        [DataMember, Column("code", 40, Keys = DBColumnKeys.Code), Index("rlocation_typeid_code", true)]
+        [DataMember, Column("code", 40, Keys = DBColumnKeys.Code | DBColumnKeys.Indexing), Index("rlocation_typeid_code", true)]
         public string Code
         {
             get { return GetValue<string>(Table.CodeKey); }

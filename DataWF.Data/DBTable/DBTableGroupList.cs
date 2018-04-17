@@ -24,9 +24,11 @@ namespace DataWF.Data
 {
     public class DBTableGroupList : DBSchemaItemList<DBTableGroup>
     {
+        static readonly Invoker<DBTableGroup, string> groupNameInvoker = new Invoker<DBTableGroup, string>(nameof(DBTableGroup.GroupName), (item) => item.GroupName);
+
         public DBTableGroupList(DBSchema schema) : base(schema)
         {
-            Indexes.Add(new Invoker<DBTableGroup, string>(nameof(DBTableGroup.GroupName), (item) => item.GroupName));
+            Indexes.Add(groupNameInvoker);
         }
 
         public IEnumerable<DBTableGroup> GetTopParents()

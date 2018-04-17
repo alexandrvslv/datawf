@@ -32,6 +32,10 @@ namespace DataWF.Data
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public class TableAttribute : Attribute
     {
+        static readonly Invoker<ColumnAttribute, string> columnNameInvoker = new Invoker<ColumnAttribute, string>(nameof(ColumnAttribute.ColumnName), (item) => item.ColumnName);
+        static readonly Invoker<ColumnAttribute, string> propertyInvoker = new Invoker<ColumnAttribute, string>(nameof(ColumnAttribute.Property), (item) => item.Property);
+        static readonly Invoker<IndexAttribute, string> IndexNameinvoker = new Invoker<IndexAttribute, string>(nameof(IndexAttribute.IndexName), (item) => item.IndexName);
+
         private DBSchema cacheSchema;
         private DBTable cacheTable;
         private DBTableGroup cacheGroup;
@@ -42,9 +46,9 @@ namespace DataWF.Data
 
         public TableAttribute(string schema, string name, string groupName)
         {
-            cacheColumns.Indexes.Add(new Invoker<ColumnAttribute, string>(nameof(ColumnAttribute.ColumnName), (item) => item.ColumnName));
-            cacheColumns.Indexes.Add(new Invoker<ColumnAttribute, string>(nameof(ColumnAttribute.Property), (item) => item.Property));
-            cacheIndexes.Indexes.Add(new Invoker<IndexAttribute, string>(nameof(IndexAttribute.IndexName), (item) => item.IndexName));
+            cacheColumns.Indexes.Add(columnNameInvoker);
+            cacheColumns.Indexes.Add(propertyInvoker);
+            cacheIndexes.Indexes.Add(IndexNameinvoker);
             SchemaName = schema;
             TableName = name;
             GroupName = groupName ?? "Default";
@@ -91,7 +95,7 @@ namespace DataWF.Data
             get { return cacheColumns; }
         }
 
-        public int BlockSize { get; set; } = 1000;
+        public int BlockSize { get; set; } = 200;
 
         public bool IsLoging { get; set; } = true;
 

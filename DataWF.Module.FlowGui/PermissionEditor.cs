@@ -60,7 +60,7 @@ namespace DataWF.Module.FlowGui
                     Editable = false,
                     Width = 120,
                     FillWidth = true,
-                    Invoker = new ToStringInvoker()
+                    Invoker = ToStringInvoker.Instance
                 },
                 new LayoutColumn
                 {

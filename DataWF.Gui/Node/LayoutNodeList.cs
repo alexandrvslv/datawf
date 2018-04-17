@@ -9,13 +9,15 @@ namespace DataWF.Gui
 {
 	public class LayoutNodeList<T> : SelectableList<T> where T : Node, new()
 	{
-		private int order;
+        static readonly Invoker<Node, string> nameInvoker = new Invoker<Node, string>(nameof(Node.Name), item => item.Name);
+        static readonly Invoker<Node, Node> groupInvoker = new Invoker<Node, Node>(nameof(Node.Group), item => item.Group);
+        private int order;
 		private bool sense = true;
 
 		public LayoutNodeList() : base()
 		{
-			Indexes.Add(new Invoker<Node, string>(nameof(Node.Name), item => item.Name));
-			Indexes.Add(new Invoker<Node, Node>(nameof(Node.Group), item => item.Group));
+            Indexes.Add(nameInvoker);
+            Indexes.Add(groupInvoker);
 			//this.Indexes.Add("Expand");
 			//this.Indexes.Add ("Visible");
 		}

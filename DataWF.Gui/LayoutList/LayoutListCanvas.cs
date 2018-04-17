@@ -12,8 +12,6 @@ namespace DataWF.Gui
         public LayoutListCanvas(LayoutList layoutList)
         {
             List = layoutList;
-            MinWidth = 100;
-            MinHeight = 100;
         }
 
         public LayoutList List { get; set; }
@@ -102,11 +100,11 @@ namespace DataWF.Gui
             List.CanvasLostFocus(args);
         }
 
-        protected override void OnKeyPressed(KeyEventArgs args)
-        {
-            base.OnKeyPressed(args);
-            List.CanvasKeyPressed(args);
-        }
+        //protected override void OnKeyPressed(KeyEventArgs args)
+        //{
+        //    base.OnKeyPressed(args);
+        //    List.CanvasKeyPressed(args);
+        //}
 
         protected override Size OnGetPreferredSize(SizeConstraint widthConstraint, SizeConstraint heightConstraint)
         {

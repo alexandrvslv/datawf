@@ -872,10 +872,10 @@ namespace DataWF.Data
             {
                 if (update != value)
                 {
-                    var arg = new DBItemEventArgs(this) { State = update };
                     update = value;
                     OnPropertyChanged(nameof(UpdateState), null, value);
-                    DBService.OnStateEdited(arg);
+                    //var arg = new DBItemEventArgs(this) { State = update };
+                    //DBService.OnStateEdited(arg);
                 }
             }
         }

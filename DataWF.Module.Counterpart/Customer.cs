@@ -40,7 +40,7 @@ namespace DataWF.Module.Counterpart
         Persone = 2,
     }
 
-    [DataContract, Table("wf_customer", "dcustomer", "Customer", BlockSize = 5000)]
+    [DataContract, Table("wf_customer", "dcustomer", "Customer", BlockSize = 100)]
     public class Customer : DBItem, IDisposable
     {
         public static DBTable<Customer> DBTable

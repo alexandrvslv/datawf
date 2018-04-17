@@ -25,7 +25,7 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Module.Common
 {
-    [DataContract, Table("wf_common", "rbook_type", "Reference Book", BlockSize = 200)]
+    [DataContract, Table("wf_common", "rbook_type", "Reference Book", BlockSize = 100)]
     public class BookType : DBItem
     {
         public static DBTable<BookType> DBTable

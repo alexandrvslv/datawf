@@ -192,7 +192,7 @@ namespace DataWF.Module.Flow
 
             FlowEnvironment.Config.LogUpdate = true;
 
-            DBService.RowStateEdited += FlowEnvironment.OnDBRowChanged;
+            //DBService.RowStateEdited += FlowEnvironment.OnDBRowChanged;
             //DBService.RowAdded += FlowEnvir.OnDBRowChanged;
             //DBService.RowRemoved += FlowEnvir.OnDBRowChanged;
         }
@@ -202,7 +202,7 @@ namespace DataWF.Module.Flow
             DBService.Execute -= FlowEnvironment.OnDBServiceExecute;
             //TODO DBService.RowUpdated -= FlowEnvironment.OnDBRowUpdated;
 
-            DBService.RowStateEdited -= FlowEnvironment.OnDBRowChanged;
+            //DBService.RowStateEdited -= FlowEnvironment.OnDBRowChanged;
             //DBService.RowAdded -= FlowEnvir.OnDBRowChanged;
             //DBService.RowRemoved -= FlowEnvir.OnDBRowChanged;
         }

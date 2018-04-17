@@ -27,14 +27,20 @@ namespace DataWF.Data
 {
     public class DBColumnList : DBTableItemList<DBColumn>
     {
+        static readonly Invoker<DBColumn, string> groupNameInvoker = new Invoker<DBColumn, string>(nameof(DBColumn.GroupName), item => item.GroupName);
+        static readonly Invoker<DBColumn, string> propertyInvoker = new Invoker<DBColumn, string>(nameof(DBColumn.Property), item => item.Property);
+        static readonly Invoker<DBColumn, bool> isViewInvoker = new Invoker<DBColumn, bool>(nameof(DBColumn.IsView), item => item.IsView);
+        static readonly Invoker<DBColumn, bool> isReferenceInvoker = new Invoker<DBColumn, bool>(nameof(DBColumn.IsReference), item => item.IsReference);
+        static readonly Invoker<DBColumn, DBTable> referenceTableInvoker = new Invoker<DBColumn, DBTable>(nameof(DBColumn.ReferenceTable), item => item.ReferenceTable);
+
         public DBColumnList(DBTable table)
             : base(table)
         {
-            Indexes.Add(new Invoker<DBColumn, string>(nameof(DBColumn.GroupName), item => item.GroupName));
-            Indexes.Add(new Invoker<DBColumn, string>(nameof(DBColumn.Property), item => item.Property));
-            Indexes.Add(new Invoker<DBColumn, bool>(nameof(DBColumn.IsView), item => item.IsView));
-            Indexes.Add(new Invoker<DBColumn, bool>(nameof(DBColumn.IsReference), item => item.IsReference));
-            Indexes.Add(new Invoker<DBColumn, DBTable>(nameof(DBColumn.ReferenceTable), item => item.ReferenceTable));
+            Indexes.Add(groupNameInvoker);
+            Indexes.Add(propertyInvoker);
+            Indexes.Add(isViewInvoker);
+            Indexes.Add(isReferenceInvoker);
+            Indexes.Add(referenceTableInvoker);
         }
 
         public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, string property = null)

@@ -33,8 +33,8 @@ namespace DataWF.Module.Flow
         [DataMember, Column("type_id")]
         public ParamType? Type
         {
-            get { return GetProperty<ParamType?>(nameof(Type)); }
-            set { SetProperty(value, nameof(Type)); }
+            get { return GetProperty<ParamType?>(); }
+            set { SetProperty(value); }
         }
 
         public abstract string ParamCode { get; set; }

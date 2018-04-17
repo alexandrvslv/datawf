@@ -19,6 +19,7 @@ namespace DataWF.Module.FlowGui
     public class DocumentWorker : VPanel, IDockContent
     {
         public static DocumentWorker Worker;
+        static readonly Invoker<TableItemNode, int> countInvoker = new Invoker<TableItemNode, int>(nameof(TableItemNode.Count), p => p.Count);
 
         private DocumentList documents;
         private DocumentWorkList works;
@@ -101,13 +102,7 @@ namespace DataWF.Module.FlowGui
             };
             tree.SelectionChanged += TreeAfterSelect;
             tree.ListInfo.HotTrackingCell = false;
-            tree.ListInfo.Columns.Add(new LayoutColumn()
-            {
-                Name = nameof(TableItemNode.Count),
-                Width = 35,
-                Style = GuiEnvironment.StylesInfo["CellFar"],
-                Invoker = new Invoker<TableItemNode, int>(nameof(TableItemNode.Count), p => p.Count)
-            });
+            tree.ListInfo.Columns.Add(new LayoutColumn { Name = nameof(TableItemNode.Count), Width = 35, Style = GuiEnvironment.StylesInfo["CellFar"], Invoker = countInvoker });
             tree.Nodes.Add(nodeSend);
             tree.Nodes.Add(nodeRecent);
             tree.Nodes.Add(nodeSearch);

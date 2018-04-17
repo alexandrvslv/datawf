@@ -63,7 +63,7 @@ namespace DataWF.Module.Flow
         Customer
     }
 
-    [DataContract, Table("wf_flow", "ddocument", "Document", BlockSize = 2000)]
+    [DataContract, Table("wf_flow", "ddocument", "Document", BlockSize = 200)]
     public class Document : DBItem, IDisposable
     {
         public static DBTable<Document> DBTable
@@ -264,6 +264,7 @@ namespace DataWF.Module.Flow
 
         private DocInitType initype = DocInitType.Default;
         private int changes = 0;
+        private DBItem parent = DBItem.EmptyItem;
 
         public event EventHandler<DBItemEventArgs> ReferenceChanged;
 
@@ -338,19 +339,22 @@ namespace DataWF.Module.Flow
         {
             get
             {
-                Document parent = GetReference<Document>(Table.GroupKey);
-                if (parent == null)
+                if (parent == DBItem.EmptyItem)
                 {
-                    foreach (var dreference in References)
+                    parent = GetReference<Document>(Table.GroupKey);
+                    if (parent == null)
                     {
-                        if (dreference.Document != this)
+                        foreach (var dreference in References)
                         {
-                            parent = dreference.Document;
-                            break;
+                            if (dreference.Document != this)
+                            {
+                                parent = dreference.Document;
+                                break;
+                            }
                         }
                     }
                 }
-                return parent;
+                return (Document)parent;
             }
             set { SetReference(value, Table.GroupKey); }
         }

@@ -31,7 +31,7 @@ namespace DataWF.Module.Counterpart
         { }
     }
 
-    [DataContract, Table("wf_customer", "daddress", "Customer", BlockSize = 2000)]
+    [DataContract, Table("wf_customer", "daddress", "Address", BlockSize = 100)]
     public class Address : DBItem
     {
         public static DBTable<Address> DBTable
@@ -55,19 +55,19 @@ namespace DataWF.Module.Counterpart
         [DataMember, Column("location_id", Keys = DBColumnKeys.View), Index("daddress_location_id")]
         public int? LocationId
         {
-            get { return GetProperty<int?>(nameof(LocationId)); }
-            set { SetProperty(value, nameof(LocationId)); }
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
         }
 
         [Reference("fk_daddress_location_id", nameof(LocationId))]
         public Location Location
         {
-            get { return GetReference<Location>(ParseProperty(nameof(LocationId))); }
+            get { return GetPropertyReference<Location>(nameof(LocationId)); }
             set
             {
-                if (value.LocationType != LocationType.Region ||
-                    value.LocationType != LocationType.City ||
-                    value.LocationType != LocationType.Vilage)
+                if (value?.LocationType != LocationType.Region
+                    && value?.LocationType != LocationType.City
+                    && value?.LocationType != LocationType.Vilage)
                     throw new ArgumentException("Location type mast be Region or Citi or Village");
                 SetPropertyReference(value, nameof(LocationId));
             }
@@ -76,8 +76,8 @@ namespace DataWF.Module.Counterpart
         [DataMember, Column("post_index", 20, Keys = DBColumnKeys.View), Index("daddress_post_index")]
         public string PostIndex
         {
-            get { return GetProperty<string>(nameof(PostIndex)); }
-            set { SetProperty(value, nameof(PostIndex)); }
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
         }
 
         [DataMember, Column("street", 1024, Keys = DBColumnKeys.Culture | DBColumnKeys.View)]

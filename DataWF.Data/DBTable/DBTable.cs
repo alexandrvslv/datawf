@@ -667,6 +667,7 @@ namespace DataWF.Data
 
             transaction.Rows.Add(item);
             var args = new DBItemEventArgs(item) { Transaction = transaction };
+            args.Columns = item.GetChangeKeys().ToList();
 
             if (item.OnUpdating(args))
             {

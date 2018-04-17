@@ -26,6 +26,8 @@ namespace DataWF.Data
 {
     public class DBSchemaItemList<T> : SelectableList<T> where T : DBSchemaItem
     {
+        static readonly Invoker<DBSchemaItem, string> ItemNameInvoker = new Invoker<DBSchemaItem, string>(nameof(DBSchemaItem.Name), (item) => item.Name);
+
         public DBSchemaItemList()
             : this(null)
         { }
@@ -33,7 +35,7 @@ namespace DataWF.Data
         public DBSchemaItemList(DBSchema schema)
             : base()
         {
-            Indexes.Add(new Invoker<DBSchemaItem, string>(nameof(DBSchemaItem.Name), (item) => item.Name));
+            Indexes.Add(ItemNameInvoker);
             Schema = schema;
         }
 

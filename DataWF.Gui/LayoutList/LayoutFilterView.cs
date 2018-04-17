@@ -27,6 +27,17 @@ namespace DataWF.Gui
 
     public class LayoutFilterView : LayoutList
     {
+        static readonly Invoker<LayoutFilter, object> valueInvoker = new Invoker<LayoutFilter, object>(nameof(LayoutFilter.Value),
+                                                                 (item) => item.Value,
+                                                                 (item, value) => item.Value = value);
+        static readonly Invoker<LayoutFilter, LogicType> logicInvoker = new Invoker<LayoutFilter, LogicType>(nameof(LayoutFilter.Logic),
+                                                               (item) => item.Logic,
+                                                               (item, value) => item.Logic = value);
+        static readonly Invoker<LayoutFilter, string> headerInvoker = new Invoker<LayoutFilter, string>(nameof(LayoutFilter.Header),
+                                                            (item) => item.Header);
+        static readonly Invoker<LayoutFilter, CompareType> comparerInvoker = new Invoker<LayoutFilter, CompareType>(nameof(LayoutFilter.Comparer),
+                                                                 (item) => item.Comparer,
+                                                                 (item, value) => item.Comparer = value);
         private LayoutColumn valueColumn;
         private CellStyle styleClose;
 
@@ -63,38 +74,14 @@ namespace DataWF.Gui
             GenerateColumns = false;
             GenerateToString = false;
 
-            valueColumn = new LayoutColumn()
-            {
-                Name = nameof(LayoutFilter.Value),
-                Width = 150,
-                Invoker = new Invoker<LayoutFilter, object>(nameof(LayoutFilter.Value),
-                                                                 (item) => item.Value,
-                                                                 (item, value) => item.Value = value)
-            };
+            valueColumn = new LayoutColumn { Name = nameof(LayoutFilter.Value), Width = 150, Invoker = valueInvoker };
+
+
+
             ListInfo = new LayoutListInfo(
-                new LayoutColumn()
-                {
-                    Name = nameof(LayoutFilter.Logic),
-                    Width = 50,
-                    Invoker = new Invoker<LayoutFilter, LogicType>(nameof(LayoutFilter.Logic),
-                                                               (item) => item.Logic,
-                                                               (item, value) => item.Logic = value)
-                },
-                new LayoutColumn()
-                {
-                    Name = nameof(LayoutFilter.Header),
-                    Editable = false,
-                    Invoker = new Invoker<LayoutFilter, string>(nameof(LayoutFilter.Header),
-                                                            (item) => item.Header)
-                },
-                new LayoutColumn()
-                {
-                    Name = nameof(LayoutFilter.Comparer),
-                    Width = 50,
-                    Invoker = new Invoker<LayoutFilter, CompareType>(nameof(LayoutFilter.Comparer),
-                                                                 (item) => item.Comparer,
-                                                                 (item, value) => item.Comparer = value)
-                },
+                new LayoutColumn { Name = nameof(LayoutFilter.Logic), Width = 50, Invoker = logicInvoker },
+                new LayoutColumn { Name = nameof(LayoutFilter.Header), Editable = false, Invoker = headerInvoker },
+                new LayoutColumn { Name = nameof(LayoutFilter.Comparer), Width = 50, Invoker = comparerInvoker },
                 valueColumn)
             {
                 Indent = 9,

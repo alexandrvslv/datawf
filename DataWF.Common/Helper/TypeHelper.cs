@@ -18,14 +18,14 @@ namespace DataWF.Common
     {
         private static Type[] typeOneArray = { typeof(string) };
         private static Dictionary<string, MemberInfo> casheNames = new Dictionary<string, MemberInfo>(200, StringComparer.Ordinal);
-        private static Dictionary<string, Type> cacheTypes = new Dictionary<string, Type>(500, StringComparer.Ordinal);
-        private static Dictionary<MemberInfo, bool> cacheIsXmlText = new Dictionary<MemberInfo, bool>(500);
-        private static Dictionary<Type, TypeConverter> cacheTypeConverter = new Dictionary<Type, TypeConverter>(500);
-        private static Dictionary<Type, List<PropertyInfo>> cacheTypeProperties = new Dictionary<Type, List<PropertyInfo>>(500);
-        private static Dictionary<MemberInfo, bool> cacheIsXmlAttribute = new Dictionary<MemberInfo, bool>(500);
-        private static Dictionary<Type, bool> cacheTypeIsXmlAttribute = new Dictionary<Type, bool>(500);
-        private static Dictionary<MemberInfo, bool> cacheIsXmlSerialize = new Dictionary<MemberInfo, bool>(500);
-        private static Dictionary<MemberInfo, object> cacheDefault = new Dictionary<MemberInfo, object>(500);
+        private static Dictionary<string, Type> cacheTypes = new Dictionary<string, Type>(200, StringComparer.Ordinal);
+        private static Dictionary<MemberInfo, bool> cacheIsXmlText = new Dictionary<MemberInfo, bool>(200);
+        private static Dictionary<Type, TypeConverter> cacheTypeConverter = new Dictionary<Type, TypeConverter>(200);
+        private static Dictionary<Type, PropertyInfo[]> cacheTypeProperties = new Dictionary<Type, PropertyInfo[]>(200);
+        private static Dictionary<MemberInfo, bool> cacheIsXmlAttribute = new Dictionary<MemberInfo, bool>(200);
+        private static Dictionary<Type, bool> cacheTypeIsXmlAttribute = new Dictionary<Type, bool>(200);
+        private static Dictionary<MemberInfo, bool> cacheIsXmlSerialize = new Dictionary<MemberInfo, bool>(200);
+        private static Dictionary<MemberInfo, object> cacheDefault = new Dictionary<MemberInfo, object>(200);
 
         public static PropertyInfo GetIndexProperty(Type itemType)
         {
@@ -233,7 +233,8 @@ namespace DataWF.Common
                 Type itemType = GetMemberType(info);
                 if (itemType.IsSubclassOf(typeof(Delegate))
                     || (itemType == info.DeclaringType && itemType.IsValueType)
-                    || (info is PropertyInfo && !((PropertyInfo)info).CanWrite))
+                    || (info is PropertyInfo && (!((PropertyInfo)info).CanWrite || IsIndex((PropertyInfo)info)))
+                    )
                     //!IsDictionary(itemType) && !IsCollection(itemType)
                     flag = true;
 
@@ -471,23 +472,11 @@ namespace DataWF.Common
             return attrs != null && attrs.IsModule;
         }
 
-        public static List<PropertyInfo> GetTypeProperties(Type type)
+        public static PropertyInfo[] GetTypeProperties(Type type)
         {
             if (!cacheTypeProperties.TryGetValue(type, out var flist))
             {
-                flist = GetPropertyes(type, false).ToList();
-                flist.Sort(delegate (PropertyInfo x, PropertyInfo y)
-                {
-                    if (IsXmlAttribute(x) && !IsXmlText(x))
-                    {
-                        if (IsXmlAttribute(y) && !IsXmlText(y))
-                            return string.Compare(x.Name, y.Name, StringComparison.Ordinal);
-                        return -1;
-                    }
-                    if (IsXmlAttribute(y) && !IsXmlText(y))
-                        return 1;
-                    return string.Compare(x.Name, y.Name, StringComparison.Ordinal);
-                });
+                flist = GetPropertyes(type, false);
                 cacheTypeProperties[type] = flist;
             }
             return flist;

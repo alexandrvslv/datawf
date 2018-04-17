@@ -70,6 +70,7 @@ namespace DataWF.Data
             }
             set
             {
+                cacheBaseColumn = value;
                 BaseName = value?.Name;
                 if (value != null)
                 {
@@ -85,7 +86,6 @@ namespace DataWF.Data
                     ColumnType = value.ColumnType;
                     //Keys = value.Keys;
                 }
-                cacheBaseColumn = value;
             }
         }
 

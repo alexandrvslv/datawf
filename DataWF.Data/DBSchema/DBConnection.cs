@@ -13,9 +13,11 @@ namespace DataWF.Data
 {
     public class DBConnectionList : SelectableList<DBConnection>
     {
+        static readonly Invoker<DBConnection, string> nameInvoker = new Invoker<DBConnection, string>(nameof(DBConnection.Name), (item) => item.Name);
+
         public DBConnectionList()
         {
-            Indexes.Add(new Invoker<DBConnection, string>(nameof(DBConnection.Name), (item) => item.Name));
+            Indexes.Add(nameInvoker);
         }
 
         public DBConnection this[string name]

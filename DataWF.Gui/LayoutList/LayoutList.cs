@@ -76,7 +76,7 @@ namespace DataWF.Gui
         private List<Dictionary<LayoutColumn, TextLayout>> cache = new List<Dictionary<LayoutColumn, TextLayout>>();
         private int gridCols = 1;
         private int gridRows = 1;
-
+        private CellStyle listStyle = GuiEnvironment.StylesInfo["List"];
         #region Events
         protected ListChangedEventHandler handleListChanged;
         protected PropertyChangedEventHandler handleProperty;
@@ -161,9 +161,8 @@ namespace DataWF.Gui
             canvas.MinWidth = 150;
             canvas.MinHeight = 50;
             canvas.AddChild(editor, 0, 0);
-            canvas.BackgroundColor = GuiEnvironment.StylesInfo["List"].BaseColor;
 
-            scroll = new ScrollView() { Content = canvas };
+            scroll = new ScrollView() { Content = canvas, BorderVisible = false };
 
             PackStart(scroll, true, true);
 
@@ -569,6 +568,12 @@ namespace DataWF.Gui
                 canvas.Cursor = CursorType.Arrow;
             OnToolTipCancel(EventArgs.Empty);
             base.OnLostFocus(e);
+        }
+
+        protected override void OnKeyPressed(KeyEventArgs args)
+        {
+            base.OnKeyPressed(args);
+            CanvasKeyPressed(args);
         }
 
         protected internal virtual void CanvasKeyPressed(KeyEventArgs e)
@@ -4064,8 +4069,11 @@ namespace DataWF.Gui
         {
             try
             {
+
                 bounds.Clip = clip;
-                context.Scale = ListInfo.Scale;
+                //context.Scale = ListInfo.Scale;
+
+                context.FillRectangle(listStyle.BaseColor, clip);
 
                 if (bounds.Clip.Width != bounds.Area.Width || bounds.Clip.Height != bounds.Area.Height)
                 {

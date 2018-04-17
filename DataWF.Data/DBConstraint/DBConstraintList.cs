@@ -24,9 +24,11 @@ namespace DataWF.Data
 {
     public class DBConstraintList<T> : DBTableItemList<T> where T : DBConstraint, new()
     {
+        static readonly Invoker<DBConstraint, string> columnNameInvoker = new Invoker<DBConstraint, string>(nameof(DBConstraint.ColumnName), (item) => item.ColumnName);
+
         public DBConstraintList(DBTable table) : base(table)
         {
-            Indexes.Add(new Invoker<DBConstraint, string>(nameof(DBConstraint.ColumnName), (item) => item.ColumnName));
+            Indexes.Add(columnNameInvoker);
         }
 
         public IEnumerable<T> GetByColumn(DBColumn column)

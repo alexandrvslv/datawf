@@ -153,7 +153,7 @@ namespace DataWF.Common
             {
                 if (info.Name == nameof(Object.ToString))
                 {
-                    result = new ToStringInvoker();
+                    result = ToStringInvoker.Instance;
                 }
                 else
                 {

@@ -147,7 +147,7 @@ namespace DataWF.Data
 
             if (!table.Columns.Contains(Column.Name))
             {
-                Table.Table.Columns.Add(Column);
+                table.Columns.Add(Column);
             }
         }
     }

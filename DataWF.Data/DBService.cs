@@ -154,18 +154,14 @@ namespace DataWF.Data
 
         internal static void OnAdded(DBItem e)
         {
-            var args = new DBItemEventArgs(e) { State = DBUpdateState.Insert };
-            OnStateEdited(args);
-            RowAdded?.Invoke(args);
+            RowAdded?.Invoke(new DBItemEventArgs(e) { State = DBUpdateState.Insert });
         }
 
         public static event DBItemEditEventHandler RowRemoved;
 
         internal static void OnRemoved(DBItem e)
         {
-            var args = new DBItemEventArgs(e) { State = DBUpdateState.Delete };
-            OnStateEdited(args);
-            RowRemoved?.Invoke(args);
+            RowRemoved?.Invoke(new DBItemEventArgs(e) { State = DBUpdateState.Delete });
         }
 
         public static event DBItemEditEventHandler RowEditing;
@@ -182,12 +178,12 @@ namespace DataWF.Data
             RowEdited?.Invoke(e);
         }
 
-        public static event DBItemEditEventHandler RowStateEdited;
+        //public static event DBItemEditEventHandler RowStateEdited;
 
-        internal static void OnStateEdited(DBItemEventArgs e)
-        {
-            RowStateEdited?.Invoke(e);
-        }
+        //internal static void OnStateEdited(DBItemEventArgs e)
+        //{
+        //    RowStateEdited?.Invoke(e);
+        //}
 
         public static event DBItemEditEventHandler RowUpdating;
 

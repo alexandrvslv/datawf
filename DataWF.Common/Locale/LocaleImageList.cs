@@ -10,12 +10,13 @@ namespace DataWF.Common
     /// </summary>
     public class LocaleImageList : SelectableList<LocaleImage>
     {
+        static readonly Invoker<LocaleImage, string> keyInvoker = new Invoker<LocaleImage, string>(nameof(LocaleImage.Key), items => items.Key);
         /// <summary>
         /// Initializes a new instance of the <see cref="Dwf.Tool.LocaleImageList"/> class.
         /// </summary>
         public LocaleImageList()
         {
-            Indexes.Add(new Invoker<LocaleImage, string>(nameof(LocaleImage.Key), items => items.Key));
+            Indexes.Add(keyInvoker);
         }
 
         public bool Contains(string name)

@@ -27,13 +27,15 @@ namespace DataWF.Data
 {
     public class DBVirtualTable<T> : DBTable<T>, IDBVirtualTable where T : DBVirtualItem, new()
     {
+        static readonly Invoker<DBVirtualColumn, string> baseNameInvoker = new Invoker<DBVirtualColumn, string>(nameof(DBVirtualColumn.BaseName), item => item.BaseName);
+
         private DBTable baseTable;
         protected string baseTableName;
         private QQuery filterQuery;
 
         public DBVirtualTable()
         {
-            Columns.Indexes.Add(new Invoker<DBVirtualColumn, string>(nameof(DBVirtualColumn.BaseName), item => item.BaseName));
+            Columns.Indexes.Add(baseNameInvoker);
         }
 
         [XmlIgnore, Browsable(false)]

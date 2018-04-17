@@ -34,16 +34,30 @@ namespace DataWF.Data
     {
         string Format(IDbCommand command);
         DBTable Table { get; }
-        QItemList<QParam> Parameters { get; }
+        QParamList Parameters { get; }
         QItemList<QItem> Columns { get; }
         QItemList<QOrder> Orders { get; }
+    }
+
+    public class QParamList : QItemList<QParam>
+    {
+        static readonly Invoker<QParam, QParam> groupInvoker = new Invoker<QParam, QParam>(nameof(QParam.Group), (item) => item.Group);
+
+        public QParamList()
+        {
+        }
+
+        public QParamList(IQItemList owner) : base(owner)
+        {
+            Indexes.Add(groupInvoker);
+        }
     }
 
     public class QQuery : QItem, IQuery, IDisposable, IQItemList
     {
         public string CacheQuery;
         protected SelectableList<QParam> allParameters;
-        protected QItemList<QParam> parameters;
+        protected QParamList parameters;
         protected QItemList<QItem> columns;
         protected QItemList<QOrder> orders;
         protected QItemList<QColumn> groups;
@@ -57,8 +71,7 @@ namespace DataWF.Data
             : base()
         {
             tables = new QItemList<QTable>(this);
-            parameters = new QItemList<QParam>(this);
-            parameters.Indexes.Add(new Invoker<QParam, QParam>(nameof(QParam.Group), (item) => item.Group));
+            parameters = new QParamList(this);
             parameters.ListChanged += OnParametersListChanged;
             columns = new QItemList<QItem>(this);
             orders = new QItemList<QOrder>(this);
@@ -1026,7 +1039,7 @@ namespace DataWF.Data
             get { return orders; }
         }
 
-        public QItemList<QParam> Parameters
+        public QParamList Parameters
         {
             get { return parameters; }
         }

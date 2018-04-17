@@ -14,9 +14,11 @@ namespace DataWF.Gui
             }
         }
 
+        static readonly Invoker<LayoutSort, string> columnNameInvoker = new Invoker<LayoutSort, string>(nameof(LayoutSort.ColumnName), (item) => item.ColumnName);
+
         public LayoutSortList()
         {
-            Indexes.Add(new Invoker<LayoutSort, string>(nameof(LayoutSort.ColumnName), (item) => item.ColumnName));
+            Indexes.Add(columnNameInvoker);
             ApplySortInternal(new LayoutSortComparer());
         }
 

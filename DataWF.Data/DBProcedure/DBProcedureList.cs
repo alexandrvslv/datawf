@@ -26,11 +26,15 @@ namespace DataWF.Data
 {
     public class DBProcedureList : DBSchemaItemList<DBProcedure>
     {
+        static readonly Invoker<DBProcedure, string> parentNameInvoker = new Invoker<DBProcedure, string>(nameof(DBProcedure.ParentName), (item) => item.ParentName);
+        static readonly Invoker<DBProcedure, string> dataNameInvoker = new Invoker<DBProcedure, string>(nameof(DBProcedure.DataName), (item) => item.DataName);
+        static readonly Invoker<DBProcedure, ProcedureTypes> typeInvoker = new Invoker<DBProcedure, ProcedureTypes>(nameof(DBProcedure.ProcedureType), (item) => item.ProcedureType);
+
         public DBProcedureList(DBSchema schema) : base(schema)
         {
-            Indexes.Add(new Invoker<DBProcedure, string>(nameof(DBProcedure.ParentName), (item) => item.ParentName));
-            Indexes.Add(new Invoker<DBProcedure, string>(nameof(DBProcedure.DataName), (item) => item.DataName));
-            Indexes.Add(new Invoker<DBProcedure, ProcedureTypes>(nameof(DBProcedure.ProcedureType), (item) => item.ProcedureType));
+            Indexes.Add(parentNameInvoker);            
+            Indexes.Add(dataNameInvoker);
+            Indexes.Add(typeInvoker);
         }
 
         public IEnumerable<DBProcedure> SelectByFile(string fileName)

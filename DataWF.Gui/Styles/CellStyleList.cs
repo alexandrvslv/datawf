@@ -9,9 +9,11 @@ namespace DataWF.Gui
 {
     public class CellStyleList : SelectableList<CellStyle>, INamedList
     {
+        static readonly Invoker<CellStyle, string> nameInvoker = new Invoker<CellStyle, string>(nameof(CellStyle.Name), (item) => item.Name);
+
         public CellStyleList()
         {
-            Indexes.Add(new Invoker<CellStyle, string>(nameof(CellStyle.Name), (item) => item.Name));
+            Indexes.Add(nameInvoker);
         }
 
         public void GenerateDefault()

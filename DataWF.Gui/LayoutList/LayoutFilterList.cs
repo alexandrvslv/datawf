@@ -5,9 +5,11 @@ namespace DataWF.Gui
 {
     public class LayoutFilterList : SelectableList<LayoutFilter>
     {
+        static readonly Invoker<LayoutFilter, string> nameInvoker = new Invoker<LayoutFilter, string>(nameof(LayoutFilter.Name), (item) => item.Name);
+
         public LayoutFilterList()
         {
-            Indexes.Add(new Invoker<LayoutFilter, string>(nameof(LayoutFilter.Name), (item) => item.Name));
+            Indexes.Add(nameInvoker);
         }
 
         public LayoutFilterList(LayoutList list) : this()

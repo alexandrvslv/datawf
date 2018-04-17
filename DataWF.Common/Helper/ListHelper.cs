@@ -624,11 +624,11 @@ namespace DataWF.Common
             }
             bool result = false;
 
-            if (x.GetType().IsEnum)
+            if (x is Enum)
                 x = (int)x;
-            if (y.GetType().IsEnum)
+            if (y is Enum)
                 y = (int)y;
-            else if (x.GetType() == y.GetType())
+            if (x.GetType() == y.GetType())
             {
                 if (x is string)
                     result = ((string)x).Equals((string)y, StringComparison.OrdinalIgnoreCase);

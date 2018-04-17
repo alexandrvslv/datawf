@@ -25,12 +25,14 @@ namespace DataWF.Data
 {
     public class DBTableList : DBSchemaItemList<DBTable>
     {
+        static readonly Invoker<DBTable, string> groupNameInvoker = new Invoker<DBTable, string>(nameof(DBTable.GroupName), (item) => item.GroupName);
+
         public DBTableList() : this(null)
         { }
 
         public DBTableList(DBSchema schema) : base(schema)
         {
-            Indexes.Add(new Invoker<DBTable, string>(nameof(DBTable.GroupName), (item) => item.GroupName));
+            Indexes.Add(groupNameInvoker);
             ApplyDefaultSort();
         }
 

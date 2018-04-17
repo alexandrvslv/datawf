@@ -47,7 +47,7 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [DataContract, Table("wf_flow", "rtemplate_param", "Reference Book", BlockSize = 1000)]
+    [DataContract, Table("wf_flow", "rtemplate_param", "Template", BlockSize = 200)]
     public class TemplateParam : ParamBase, IInvoker
     {
         public static DBTable<TemplateParam> DBTable
