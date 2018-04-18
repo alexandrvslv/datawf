@@ -10,16 +10,20 @@ namespace DataWF.Common
         {
             Type = type;
             TypeName = TypeHelper.BinaryFormatType(Type);
-            Constructor = EmitInvoker.Initialize(type, Type.EmptyTypes);
+            if (!Type.IsInterface)
+            {
+                Constructor = EmitInvoker.Initialize(type, Type.EmptyTypes);
+            }
             IsAttribute = TypeHelper.IsXmlAttribute(Type);
-            if(IsAttribute)
+            if (IsAttribute)
             {
                 return;
             }
 
-			IsList = TypeHelper.IsList(type);
-            if(IsList)
+            IsList = TypeHelper.IsList(type);
+            if (IsList)
             {
+                IsNamedList = TypeHelper.IsInterface(type, typeof(INamedList));
                 ListItemType = TypeHelper.GetItemType(type);
                 ListDefaulType = ListItemType != typeof(object)
                     && !ListItemType.IsInterface
@@ -27,6 +31,8 @@ namespace DataWF.Common
                     && !type.IsArray
                     && !TypeHelper.IsInterface(type, typeof(ISortable));
                 ListItemIsAttribute = TypeHelper.IsXmlAttribute(ListItemType);
+
+                ListConstructor = EmitInvoker.Initialize(type, new[] { typeof(int) });
             }
             IsDictionary = TypeHelper.IsDictionary(type);
 
@@ -61,17 +67,24 @@ namespace DataWF.Common
 
         public bool IsList { get; private set; }
 
+        public bool IsNamedList { get; internal set; }
+
         public Type ListItemType { get; private set; }
+
+        public TypeSerializationInfo ListItemTypeInfo { get; internal set; }
 
         public bool ListDefaulType { get; private set; }
 
         public bool ListItemIsAttribute { get; private set; }
+
+        public EmitConstructor ListConstructor { get; private set; }
 
         public bool IsAttribute { get; private set; }
 
         public bool IsDictionary { get; private set; }
 
         public SelectableList<PropertySerializationInfo> Properties { get; private set; }
+        
 
         internal PropertySerializationInfo GetProperty(string name)
         {

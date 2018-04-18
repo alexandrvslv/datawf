@@ -50,25 +50,30 @@ namespace DataWF.Common
             }
         }
 
+        public void ReadElement(object element, TypeSerializationInfo info)
+        {
+            Type mtype = null;
+            if (Reader.NodeType == XmlNodeType.Comment)
+            {
+                mtype = ReadComment();
+            }
+            ReadElement(element, info, mtype);
+        }
+
         public void ReadElement(object element, TypeSerializationInfo info, Type mtype)
         {
             var member = info.GetProperty(Reader.Name);
             if (member != null)
             {
-                mtype = mtype ?? member.PropertyType;
                 if (member.IsText || member.IsAttribute)
                 {
                     member.Invoker.Set(element, Helper.TextParse(Reader.ReadElementContentAsString(), mtype));
                 }
                 else
                 {
+                    var mInfo = Serializer.GetTypeInfo(mtype ?? member.PropertyType);
                     object value = member.Invoker.Get(element);
-                    if (value == null)
-                    {
-                        var mInfo = Serializer.GetTypeInfo(mtype);
-                        value = mInfo.Constructor.Create();
-                    }
-                    value = Read(value);
+                    value = Read(value, mInfo);
                     member.Invoker.Set(element, value);
                 }
             }
@@ -78,98 +83,91 @@ namespace DataWF.Common
             }
         }
 
-        public object ReadCollection(object element, TypeSerializationInfo info)
+        public void ReadElement(object element, TypeSerializationInfo info, ref int listIndex)
         {
-            Type defaultType = TypeHelper.ParseType(Reader.GetAttribute("DT"));
-            int.TryParse(Reader.GetAttribute(nameof(ICollection.Count)), out int count);
-            int i = 0;
-
-            if (element == null)
+            Type mtype = null;
+            if (Reader.NodeType == XmlNodeType.Comment)
             {
-                element = EmitInvoker.CreateObject(info.Type, new[] { typeof(int) }, new object[] { count }, true);
+                mtype = ReadComment();
+            }
+            if (Reader.Name == "i")
+            {
+                var itemInfo = mtype != null ? Serializer.GetTypeInfo(mtype) : info.ListItemTypeInfo;
+                var list = (IList)element;
+                object newobj = null;
+                if (itemInfo?.IsAttribute ?? info.ListItemIsAttribute)
+                {
+                    newobj = Helper.TextParse(Reader.ReadElementContentAsString(), itemInfo.Type);
+                }
+                else
+                {
+                    if (info.IsNamedList)
+                    {
+                        newobj = ((INamedList)list).Get(Reader.GetAttribute(nameof(INamed.Name)));
+                    }
+                    else if (listIndex < list.Count)
+                    {
+                        newobj = list[listIndex];
+                    }
+                    if (newobj == null)
+                    {
+                        newobj = itemInfo.Constructor.Create();
+                    }
+                    newobj = Read(newobj, itemInfo);
+                }
+                if (info.IsNamedList)
+                {
+                    ((INamedList)list).Set((INamed)newobj);
+                }
+                else if (listIndex < list.Count)
+                {
+                    list[listIndex] = newobj;
+                }
+                else
+                {
+                    list.Add(newobj);
+                }
+                listIndex++;
             }
             else
             {
-                ReadAttributes(element, info);
+                ReadElement(element, info, mtype);
             }
-            if (Reader.IsEmptyElement)
-            {
-                return element;
-            }
-            var list = (IList)element;
+        }
 
-            defaultType = defaultType ?? info.ListItemType;
+        public object ReadCollection(IList list, TypeSerializationInfo info)
+        {
+            info.ListItemTypeInfo = Serializer.GetTypeInfo(info.ListItemType);
+            if (info.ListDefaulType)
+            {
+                var type = TypeHelper.ParseType(Reader.GetAttribute("DT"));
+                if (type != null && type != info.ListItemType)
+                {
+                    info.ListItemTypeInfo = Serializer.GetTypeInfo(type);
+                }
+            }
+            var listIndex = 0;
             while (Reader.Read() && Reader.NodeType != XmlNodeType.EndElement)
             {
-                Type itemType = defaultType;
-                TypeSerializationInfo itemInfo = null;
-                if (Reader.NodeType == XmlNodeType.Comment)
+                if (Reader.NodeType == XmlNodeType.Element || Reader.NodeType == XmlNodeType.Comment)
                 {
-                    itemType = ReadComment();
-                    itemInfo = Serializer.GetTypeInfo(itemType);
-                }
-                if (Reader.NodeType == XmlNodeType.Element)
-                {
-                    if (Reader.Name == "i")
-                    {
-                        object newobj = null;
-                        if (itemInfo?.IsAttribute ?? info.ListItemIsAttribute)
-                        {
-                            newobj = Helper.TextParse(Reader.ReadElementContentAsString(), itemType);
-                        }
-                        else
-                        {
-                            if (list is INamedList)
-                            {
-                                newobj = ((INamedList)list).Get(Reader.GetAttribute(nameof(INamed.Name)));
-                            }
-                            else if (i < list.Count)
-                            {
-                                newobj = list[i];
-                            }
-                            if (newobj == null)
-                            {
-                                newobj = EmitInvoker.CreateObject(itemType, true);
-                            }
-                            newobj = Read(newobj);
-                        }
-                        if (list is INamedList)
-                        {
-                            ((INamedList)list).Set((INamed)newobj);
-                        }
-                        else if (i < list.Count)
-                        {
-                            list[i] = newobj;
-                        }
-                        else
-                        {
-                            list.Add(newobj);
-                        }
-                        i++;
-                    }
-                    else
-                    {
-                        ReadElement(element, info, itemType);
-                    }
+                    ReadElement(list, info, ref listIndex);
                 }
             }
 
-            return element;
+            return list;
         }
 
         public object ReadDictionary(object element, TypeSerializationInfo info)
         {
-            ReadAttributes(element, info);
-            if (Reader.IsEmptyElement)
-                return element;
             var dictionary = (IDictionary)element;
             var item = DictionaryItem.Create(info.Type);
-
+            var itemInfo = Serializer.GetTypeInfo(item.GetType());
             while (Reader.Read() && Reader.NodeType != XmlNodeType.EndElement)
             {
                 if (Reader.NodeType == XmlNodeType.Element)
                 {
-                    Read(item);
+                    Read(item, itemInfo);
                     dictionary[item.Key] = item.Value;
                     item.Reset();
                 }
@@ -194,41 +192,60 @@ namespace DataWF.Common
 
         public object BeginRead(object element)
         {
+            var info = element != null ? Serializer.GetTypeInfo(element.GetType()) : null;
             while (Reader.Read())
             {
                 if (Reader.NodeType == XmlNodeType.Element || Reader.NodeType == XmlNodeType.Comment)
                 {
-                    element = Read(element);
+                    element = Read(element, info);
                 }
             }
             return element;
         }
 
-        public object Read(object element)
+        public object Read(object element, TypeSerializationInfo info)
         {
-            Type type = element?.GetType();
-
             if (Reader.NodeType == XmlNodeType.Comment)
             {
-                type = ReadComment();
+                var type = ReadComment();
+                info = Serializer.GetTypeInfo(type);
             }
-            if (type == null)
+            if (info == null)
             {
                 throw new ArgumentException("Element type can't be resolved!", nameof(element));
             }
             //Debug.WriteLine($"Read {Reader.Name}");
-            var info = Serializer.GetTypeInfo(type);
             if (info.IsAttribute)
             {
-                return Helper.TextParse(Reader.ReadElementContentAsString(), type);
+                return Helper.TextParse(Reader.ReadElementContentAsString(), info.Type);
             }
-            if (element == null || element.GetType() != type)
+            if (element == null || element.GetType() != info.Type)
             {
                 element = info.Constructor?.Create();
+
+                if (element == null && info.IsList)
+                {
+                    int.TryParse(Reader.GetAttribute(nameof(ICollection.Count)), out int count);
+                    if (element == null)
+                    {
+                        element = info.ListConstructor.Create(count);
+                    }
+                }
             }
+
             if (Serializer.CheckIFile && element is IFileSerialize && Reader.Depth > 0)
             {
                 return ReadIFile(element, info);
+            }
+
+            if (Reader.HasAttributes)
+            {
+                ReadAttributes(element, info);
+            }
+
+            if (Reader.IsEmptyElement)
+            {
+                return element;
             }
             if (info.IsDictionary)
             {
@@ -236,30 +253,14 @@ namespace DataWF.Common
             }
             if (info.IsList)
             {
-                return ReadCollection(element, info);
+                return ReadCollection((IList)element, info);
             }
-            if (Reader.HasAttributes)
-            {
-                ReadAttributes(element, info);
-            }
-            if (Reader.IsEmptyElement)
-            {
-                return element;
-            }
+
             while (Reader.Read() && Reader.NodeType != XmlNodeType.EndElement)
             {
-                Type mtype = null;
-                if (Reader.NodeType == XmlNodeType.Comment)
+                if (Reader.NodeType == XmlNodeType.Element || Reader.NodeType == XmlNodeType.Comment)
                 {
-                    mtype = ReadComment();
-                }
-                if (Reader.NodeType == XmlNodeType.Element)
-                {
-                    ReadElement(element, info, mtype);
-                }
-                else if (Reader.NodeType == XmlNodeType.Text)
-                {
-                    Reader.Read();
+                    ReadElement(element, info);
                 }
             }
             return element;

@@ -10,7 +10,7 @@ namespace DataWF.Common
     public class Serialization
     {
         private static Serializer instance = new Serializer();
-
+        
         public static object Deserialize(Stream stream, object element = null)
         {
             OnNotify(null, SerializeType.Load, stream.ToString());

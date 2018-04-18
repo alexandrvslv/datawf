@@ -7,12 +7,18 @@ namespace DataWF.Common
 {
     public class Serializer
     {
+        public static TypeSerializationInfo DictionaryItemInfo = new TypeSerializationInfo(typeof(DictionaryItem));
+
         public Serializer()
         { }
 
         public Serializer(Type type)
         {
-            SerializationInfo.Add(type, new TypeSerializationInfo(type));
+            var info = SerializationInfo[type] = new TypeSerializationInfo(type);
+            if (info.IsList)
+            {
+                SerializationInfo[info.ListItemType] = new TypeSerializationInfo(info.ListItemType);
+            }
         }
 
         public bool CheckIFile { get; set; }

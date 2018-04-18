@@ -37,10 +37,11 @@ namespace DataWF.Common
         {
             //var dictionary = element as IEnumerable;
             var item = DictionaryItem.Create(type);
+            var itemInfo = Serializer.GetTypeInfo(item.GetType());
             foreach (var entry in dictionary)
             {
                 item.Fill(entry);
-                Write(item, "i", false);
+                Write(item, itemInfo, "i", false);
             }
         }
 
@@ -81,7 +82,7 @@ namespace DataWF.Common
                 if (info.IsList)
                 {
                     Writer.WriteAttributeString("Count", Helper.TextBinaryFormat(((IList)element).Count));
-                    if(info.ListDefaulType)
+                    if (info.ListDefaulType)
                     {
                         Writer.WriteAttributeString("DT", Helper.TextBinaryFormat(info.ListDefaulType));
                     }
