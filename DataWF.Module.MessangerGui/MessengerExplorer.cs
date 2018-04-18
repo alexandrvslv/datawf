@@ -55,7 +55,7 @@ namespace DataWF.Module.MessangerGui
 		{
 			if (item.Message != null && item.User != null && item.Message.User != null && !item.Message.User.IsCurrent && item.User.IsCurrent)
 			{
-				if (item.DBState == DBUpdateState.Default && item.DateRead == null)// && (md == null || !md.Visible))
+				if (item.UpdateState == DBUpdateState.Default && item.DateRead == null)// && (md == null || !md.Visible))
 				{
 					item.DateRead = DateTime.Now;
 					item.Save();

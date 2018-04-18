@@ -140,8 +140,15 @@ namespace DataWF.Gui
                 {
                     if (TypeHelper.IsInterface(item, typeof(IModuleInitialize)))
                     {
-                        var imodule = (IModuleInitialize)EmitInvoker.CreateObject(item);
-                        imodule.Initialize();
+                        try
+                        {
+                            var imodule = (IModuleInitialize)EmitInvoker.CreateObject(item);
+                            imodule.Initialize();
+                        }
+                        catch (Exception ex)
+                        {
+                            Helper.OnException(ex);
+                        }
                     }
                 }
             }

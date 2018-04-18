@@ -33,8 +33,6 @@
     <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj" />
     <ProjectReference Include="..\DataWF.Module.CommonGui\DataWF.Module.CommonGui.csproj" />
     <ProjectReference Include="..\DataWF.Module.Messanger\DataWF.Module.Messanger.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Xwt" Version="0.2.100" />
+    <ProjectReference Include="..\External\xwt\Xwt\Xwt.csproj" />
   </ItemGroup>
 </Project>

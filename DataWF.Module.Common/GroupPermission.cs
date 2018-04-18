@@ -1,5 +1,5 @@
 ﻿/*
- GroupBase.cs
+ GroupPermission.cs
  
  Author:
       Alexandr <alexandr_vslv@mail.ru>
@@ -269,13 +269,14 @@ namespace DataWF.Module.Common
                     Type = type,
                     Code = code
                 };
-                //permission.Access.Fill();
+                permission.Attach();
             }
             item.Access = permission.Access;
 
             if (group != null)
+            {
                 permission.Parent = group;
-            permission.Save();
+            }
 
             return permission;
         }
@@ -322,6 +323,7 @@ namespace DataWF.Module.Common
                         CachePermissionTable(permission, table);
                 }
             }
+            DBTable.Save();
         }
     }
 }
