@@ -107,7 +107,7 @@ namespace DataWF.Module.FlowGui
             pageHeader = dock.Put(new DocumentHeader(), DockType.Left);
             pageHeader.Panel.MapItem.FillWidth = true;
             pageRefers = dock.Put(new DocumentWorkView(), DockType.Content);
-            pageRefers = dock.Put(new DocumentDataView(), DockType.Content);
+            pageRefers = dock.Put(new DocumentDataView<DocumentData>(), DockType.Content);
             pageRefers = dock.Put(new DocumentCustomerView(), DockType.Content);
             pageRefers = dock.Put(new DocumentReferenceView(), DockType.Content);
 
@@ -153,7 +153,7 @@ namespace DataWF.Module.FlowGui
             LoadPage(e.Page);
         }
 
-        private void LoadPage(DockPage page)
+        private async void LoadPage(DockPage page)
         {
             if (page != null)
             {
@@ -174,9 +174,9 @@ namespace DataWF.Module.FlowGui
                 if (document.Attached)
                 {
                     if (page.Widget is ILoader)
-                        ((ILoader)page.Widget).Loader.Load();
-                    if (page.Widget is ISynch)
-                        ((ISynch)page.Widget).Synch();
+                        await ((ILoader)page.Widget).Loader.Load();
+                    if (page.Widget is ISync)
+                        await ((ISync)page.Widget).SyncAsync();
                 }
             }
         }

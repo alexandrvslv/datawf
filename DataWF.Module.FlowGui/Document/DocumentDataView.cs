@@ -8,158 +8,79 @@ using System.Text;
 using DataWF.Module.Flow;
 using Xwt;
 using Xwt.Drawing;
+using System.Linq;
 
 namespace DataWF.Module.FlowGui
 {
-    public class DocumentDataView : VPanel, ILocalizable, ISynch, IDocument
+    public class DocumentDataView<T> : DocumentDetailView<T> where T : DocumentData, new()
     {
-        private Document _document;
-        private TableLayoutList list;
-        private Toolsbar tools;
-        private ToolItem toolInsert;
-        private ToolItem toolDelete;
         private ToolItem toolView;
-        private ToolItem toolEdit;
-        private ToolItem toolLoad;
         private ToolItem toolTemplate;
-        internal DBTableView<DocumentData> view;
 
         public DocumentDataView()
         {
-            toolLoad = new ToolItem(ToolLoadClick) { Name = "Load", Glyph = GlyphType.Refresh };
-            toolInsert = new ToolItem(ToolInsertClick) { Name = "Insert", ForeColor = Colors.DarkGreen, Glyph = GlyphType.PlusCircle };
-            toolDelete = new ToolItem(ToolDeleteClick) { Name = "Delete", ForeColor = Colors.DarkRed, Glyph = GlyphType.MinusCircle };
             toolView = new ToolItem(ToolViewClick) { Name = "View", Glyph = GlyphType.PictureO };
-            toolEdit = new ToolItem(ToolEditClick) { Name = "Edit", ForeColor = Colors.DarkOrange, Glyph = GlyphType.EditAlias };
             toolTemplate = new ToolItem(ToolTemplateClick) { Name = "Template", ForeColor = Colors.LightBlue, Glyph = GlyphType.Book };
 
-            tools = new Toolsbar(toolLoad,
-                new ToolSeparator(),
-                toolInsert,
-                toolDelete,
-                new ToolSeparator(),
+            Bar.Items.InsertAfter(toolStatus, new[] {
                 toolView,
-                toolEdit,
-                toolTemplate)
-            { Name = "Bar" };
-
-            view = new DBTableView<DocumentData>("", DBViewKeys.Empty);
-
-            list = new TableLayoutList()
-            {
-                //GenerateColumns = false,
-                //GenerateToString = false,
-                //ListInfo = new LayoutListInfo(
-                //    new LayoutColumn() { Name = nameof(DocumentData.FileName), Width = 100, FillWidth = true },
-                //    new LayoutColumn() { Name = nameof(DocumentData.FileSize), Width = 60 },
-                //    new LayoutColumn() { Name = nameof(DocumentData.Date), Width = 115 })
-                //{
-                //    ColumnsVisible = false,
-                //    ShowToolTip = true
-                //},
-                EditMode = EditModes.None,
-                EditState = EditListState.Edit,
-                Mode = LayoutListMode.List,
-                Name = "list",
-                ListSource = view
-            };
-            list.CellDoubleClick += ListCellDoubleClick;
-
-            Name = "DocumentFiles";
-            PackStart(tools, false, false);
-            PackStart(list, true, true);
-            //list.SizeChanged += ListSizeChanged;
-
-            Localize();
+                toolTemplate
+            });
         }
 
-        public void Localize()
+        public override void Localize()
         {
-            GuiService.Localize(this, "DocumentFiles", "Files");
-            tools.Localize();
-            list.Localize();
+            base.Localize();
+            GuiService.Localize(this, "DocumentFiles", "Files", GlyphType.File);
         }
 
-        public bool AutoSize
+        public override Document Document
         {
-            get { return list.AutoSize; }
-            set { list.AutoSize = value; }
-        }
-
-        protected override Size OnGetPreferredSize(SizeConstraint width, SizeConstraint height)
-        {
-            var sizetool = tools.Surface.GetPreferredSize(width, height);
-            var size = list.Surface.GetPreferredSize(width, height);
-            size.Height += sizetool.Height;
-            // return base.GetPreferredSize(proposedSize);
-            return size;
-        }
-
-        public bool ReadOnly
-        {
-            get { return !toolInsert.Sensitive; }
+            get { return base.Document; }
             set
             {
-                toolInsert.Sensitive = !value;
-                toolEdit.Sensitive = !value;
-                toolDelete.Sensitive = !value;
-                toolTemplate.Sensitive = !value;
-            }
-        }
-
-        private void ToolDeleteClick(object sender, EventArgs e)
-        {
-            if (Current != null)
-            {
-                var items = list.Selection.GetItems<DocumentData>();
-                foreach (var data in items)
+                base.Document = value;
+                if (value != null)
                 {
-                    data.Delete();
-                }
-                //Document.Datas.Remove(Current);
-            }
-        }
-
-        public DocumentData Current
-        {
-            get { return list.SelectedItem == null ? null : (DocumentData)list.SelectedItem; }
-            set { list.SelectedItem = value; }
-        }
-
-        public Document Document
-        {
-            get { return _document; }
-            set
-            {
-                _document = value;
-                if (_document != null)
-                {
-                    //if (_document.Datas == null)
-                    //    _document.Initialize(DocInitType.Data);
-                    toolTemplate.Visible = _document.Template.Data != null;
-                    view.DefaultParam = new QParam(LogicType.And, DocumentData.DBTable.ParseProperty(nameof(DocumentData.DocumentId)), CompareType.Equal, _document.Id);
+                    toolTemplate.Visible = value.Template.Data != null;
                 }
             }
         }
 
-        DBItem IDocument.Document { get => Document; set => Document = (Document)value; }
-
-        private void ToolInsertClick(object sender, EventArgs e)
+        protected override void OnToolInsertClick(object sender, EventArgs e)
         {
             using (var dialog = new OpenFileDialog())
             {
                 dialog.Multiselect = true;
                 if (dialog.Run(ParentWindow))
                 {
-                    Document.CreateData(dialog.FileNames);
+                    var documents = Document.CreateData<T>(dialog.FileNames).ToList();
+                    ShowObject(documents.FirstOrDefault());
                 }
             }
         }
 
-        private void ToolEditClick(object sender, EventArgs e)
+        public override void OnItemSelect(ListEditorEventArgs ea)
+        {
+            if (ea.Item != null)
+            {
+                if (GuiService.Main != null)
+                {
+                    GuiService.Main?.ShowProperty(this, ea.Item, false);
+                }
+                else
+                {
+                    base.OnItemSelect(ea);
+                }
+            }
+        }
+
+        protected override void OnToolEditClick(object sender, EventArgs e)
         {
             if (Current == null)
                 return;
+
+            //base.OnToolEditClick(sender, e);
 
             string fullpath = Current.Execute();
             if (fullpath.Length == 0)
@@ -192,19 +113,19 @@ namespace DataWF.Module.FlowGui
 
         private void ToolTemplateClick(object sender, EventArgs e)
         {
-            if (_document.Template.Data != null)
+            if (Document.Template.Data != null)
             {
-                DocumentData data = _document.GetTemplate();
+                var data = Document.GetTemplate<T>();
 
                 if (data == null)
                 {
-                    data = new DocumentData();
+                    data = new T();
                     data.GenerateId();
-                    data.Document = _document;
+                    data.Document = Document;
                     data.Attach();
                 }
                 data.RefreshByTemplate();
-                data.Parse(new ExecuteArgs(_document));
+                data.Parse(new ExecuteArgs(Document));
                 Current = data;
                 Current.Execute();
             }
@@ -245,26 +166,6 @@ namespace DataWF.Module.FlowGui
             ToolViewClick(this, EventArgs.Empty);
         }
 
-        private void ListSizeChanged(object sender, EventArgs e)
-        {
-            //throw new NotImplementedException();
-            //this.Size = GetPreferredSize(this.Size);
-        }
-
-        private void ToolLoadClick(object sender, EventArgs e)
-        {
-            Synch();
-        }
-
-        public void Synch()
-        {
-            Document.GetReferencing<DocumentData>(nameof(DocumentData.DocumentId), DBLoadParam.Load);
-        }
-
-        protected override void Dispose(bool disp)
-        {
-            base.Dispose(disp);
-        }
 
     }
 }

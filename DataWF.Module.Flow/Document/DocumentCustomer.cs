@@ -42,7 +42,7 @@ namespace DataWF.Module.Flow
     }
 
     [DataContract, Table("wf_flow", "ddocument_customer", "Document", BlockSize = 400)]
-    public class DocumentCustomer : DBItem
+    public class DocumentCustomer : DocumentDetail
     {
         public static DBTable<DocumentCustomer> DBTable
         {
@@ -59,21 +59,6 @@ namespace DataWF.Module.Flow
         {
             get { return GetValue<long?>(Table.PrimaryKey); }
             set { SetValue(value, Table.PrimaryKey); }
-        }
-
-        [Browsable(false)]
-        [DataMember, Column("document_id")]
-        public long? DocumentId
-        {
-            get { return GetProperty<long?>(); }
-            set { SetProperty(value); }
-        }
-
-        [Reference("fk_ddocument_customer_documentid", nameof(DocumentId))]
-        public Document Document
-        {
-            get { return GetPropertyReference<Document>(nameof(DocumentId)); }
-            set { SetPropertyReference(value, nameof(DocumentId)); }
         }
 
         [Browsable(false)]

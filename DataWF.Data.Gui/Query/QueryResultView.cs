@@ -6,10 +6,11 @@ using System.Linq;
 using System.ComponentModel;
 using System.Data;
 using Xwt;
+using System.Threading.Tasks;
 
 namespace DataWF.Data.Gui
 {
-    public class QueryResultView : VPanel, ISynch, IReadOnly
+    public class QueryResultView : VPanel, ISync, IReadOnly
     {
         protected DBSchema schema;
         protected IDbCommand command;
@@ -141,9 +142,9 @@ namespace DataWF.Data.Gui
 
         //public event EventHandler<TableEditRowEventArgs> RowSelect;
 
-        protected virtual void ToolLoadClick(object sender, EventArgs e)
+        protected async virtual void ToolLoadClick(object sender, EventArgs e)
         {
-            Synch();
+            await SyncAsync();
         }
 
         protected virtual void ToolExportClick(object sender, EventArgs e)
@@ -172,7 +173,7 @@ namespace DataWF.Data.Gui
             this.lable.Text = text.Value;
         }
 
-        public void Synch()
+        public void Sync()
         {
             if (Query != null && command != null)
             {
@@ -184,6 +185,11 @@ namespace DataWF.Data.Gui
                     transaction.ExecuteQResult(Query);
                 }
             }
+        }
+
+        public async Task SyncAsync()
+        {
+            await Task.Run(() => Sync());
         }
 
         public bool ReadOnly

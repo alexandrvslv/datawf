@@ -84,8 +84,28 @@ namespace DataWF.Module.Flow
         }
     }
 
+    [DataContract]
+    public class DocumentDetail : DBItem
+    {
+        [Browsable(false)]
+        [DataMember, Column("document_id")]
+        public long? DocumentId
+        {
+            get { return GetProperty<long?>(); }
+            set { SetProperty(value); }
+        }
+
+        [Reference("", nameof(DocumentId))]
+        public Document Document
+        {
+            get { return GetPropertyReference<Document>(nameof(DocumentId)); }
+            set { SetPropertyReference(value, nameof(DocumentId)); }
+        }
+    }
+
+
     [DataContract, Table("wf_flow", "ddocument_data", "Document", BlockSize = 400)]
-    public class DocumentData : DBItem
+    public class DocumentData : DocumentDetail
     {
         public static DBTable<DocumentData> DBTable
         {
@@ -105,21 +125,6 @@ namespace DataWF.Module.Flow
         {
             get { return GetProperty<long?>(nameof(Id)); }
             set { SetProperty(value, nameof(Id)); }
-        }
-
-        [Browsable(false)]
-        [DataMember, Column("document_id")]
-        public long? DocumentId
-        {
-            get { return GetProperty<long?>(); }
-            set { SetProperty(value); }
-        }
-
-        [Reference("fk_ddocument_data_document_id", nameof(DocumentId))]
-        public Document Document
-        {
-            get { return GetPropertyReference<Document>(nameof(DocumentId)); }
-            set { SetPropertyReference(value, nameof(DocumentId)); }
         }
 
         [DataMember, Column("file_name", 1024, Keys = DBColumnKeys.View)]

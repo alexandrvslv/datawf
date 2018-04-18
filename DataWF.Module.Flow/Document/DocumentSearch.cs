@@ -252,7 +252,7 @@ namespace DataWF.Module.Flow
                     group = QDoc.Parameters.Add();
                     group.Parameters.Add(QQuery.CreateParam(Document.DBTable.PrimaryKey, Number));
                 }
-                var paramNumber = QQuery.CreateParam(Document.DBTable.CodeKey, Number, CompareType.Like, group != null ? LogicType.Or : LogicType.And);
+                var paramNumber = QQuery.CreateParam(group != null ? LogicType.Or : LogicType.And, Document.DBTable.CodeKey, CompareType.Like, Number);
                 if (group != null)
                     group.Parameters.Add(paramNumber);
                 else

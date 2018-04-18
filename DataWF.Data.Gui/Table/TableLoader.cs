@@ -111,13 +111,13 @@ namespace DataWF.Data.Gui
                 Application.Invoke(() => OnLoadColumns(arg));
         }
 
-        public void Load(QQuery query)
+        public async Task Load(QQuery query)
         {
             Cancel();
             if (query != null && query.Table == view.Table)
             {
                 queries.Push(query);
-                Task.Run(() => Loader());
+                await Task.Run(() => Loader());
             }
         }
 
@@ -150,11 +150,11 @@ namespace DataWF.Data.Gui
             }
         }
 
-        public void Load()
+        public async Task Load()
         {
             if (view == null || view.Table.IsSynchronized)
                 return;
-            Load(view.Query);
+            await Load(view.Query);
         }
 
         public bool IsLoad()
@@ -173,9 +173,10 @@ namespace DataWF.Data.Gui
         }
     }
 
-    public interface ISynch
+    public interface ISync
     {
-        void Synch();
+        void Sync();
+        Task SyncAsync();
     }
 
     public interface ILoader

@@ -92,7 +92,7 @@ namespace DataWF.Module.Flow
     }
 
     [DataContract, Table("wf_flow", "ddocument_work", "Document", BlockSize = 400)]
-    public class DocumentWork : DBItem
+    public class DocumentWork : DocumentDetail
     {
         public static DBTable<DocumentWork> DBTable
         {
@@ -106,36 +106,12 @@ namespace DataWF.Module.Flow
             Build(DBTable);
         }
 
-        public override string ToString()
-        {
-            //if (cacheToString.Length == 0)
-            //    cacheToString = string.Format("{0}-{1}",
-            //        Stage != null ? Stage.Code : string.Empty,
-            //        Stage != null ? Stage.Name : string.Empty);
-            return base.ToString();
-        }
-
         [Browsable(false)]
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
         {
             get { return GetProperty<long?>(nameof(Id)); }
             set { SetProperty(value, nameof(Id)); }
-        }
-
-        [Browsable(false)]
-        [DataMember, Column("document_id"), Index("ddocument_work_document_id")]
-        public long? DocumentId
-        {
-            get { return GetProperty<long?>(nameof(DocumentId)); }
-            set { SetProperty(value, nameof(DocumentId)); }
-        }
-
-        [Reference("fk_ddocument_work_document_id", nameof(DocumentId))]
-        public Document Document
-        {
-            get { return GetPropertyReference<Document>(nameof(DocumentId)); }
-            set { SetPropertyReference(value, nameof(DocumentId)); }
         }
 
         [Browsable(false)]
@@ -269,6 +245,15 @@ namespace DataWF.Module.Flow
             {
                 Document.OnReferenceChanged(this);
             }
+        }
+
+        public override string ToString()
+        {
+            //if (cacheToString.Length == 0)
+            //    cacheToString = string.Format("{0}-{1}",
+            //        Stage != null ? Stage.Code : string.Empty,
+            //        Stage != null ? Stage.Name : string.Empty);
+            return base.ToString();
         }
     }
 }

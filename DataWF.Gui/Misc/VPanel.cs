@@ -5,7 +5,7 @@ using Xwt.Drawing;
 
 namespace DataWF.Gui
 {
-    public class VPanel : VBox, IText
+    public class VPanel : VBox, IText, IGlyph
     {
         private string text;
         private Image image;

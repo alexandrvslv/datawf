@@ -393,9 +393,9 @@ namespace DataWF.Data
             return buf;
         }
 
-        public Task<IEnumerable<T>> LoadAsync(QQuery query, DBLoadParam param, IDBTableView synch)
+        public async Task<IEnumerable<T>> LoadAsync(QQuery query, DBLoadParam param, IDBTableView synch)
         {
-            return Task.Run<IEnumerable<T>>(() =>
+            return await Task.Run<IEnumerable<T>>(() =>
             {
                 try
                 {
@@ -409,25 +409,25 @@ namespace DataWF.Data
             });
         }
 
-        public Task<IEnumerable<T>> LoadAsync(DBTransaction transaction, IDbCommand command)
+        public async Task<IEnumerable<T>> LoadAsync(DBTransaction transaction, IDbCommand command)
         {
-            return Task.Run<IEnumerable<T>>(() =>
-            {
-                try
-                {
-                    return Load(transaction, command);
-                }
-                catch (Exception e)
-                {
-                    Helper.OnException(e);
-                    return null;
-                }
-            });
+            return await Task.Run<IEnumerable<T>>(() =>
+             {
+                 try
+                 {
+                     return Load(transaction, command);
+                 }
+                 catch (Exception e)
+                 {
+                     Helper.OnException(e);
+                     return null;
+                 }
+             });
         }
 
-        public Task<IEnumerable<T>> LoadAsync(string query, DBLoadParam param, IEnumerable columns, IDBTableView synch)
+        public async Task<IEnumerable<T>> LoadAsync(string query, DBLoadParam param, IEnumerable columns, IDBTableView synch)
         {
-            return Task.Run<IEnumerable<T>>(() =>
+            return await Task.Run<IEnumerable<T>>(() =>
             {
                 try
                 {
@@ -443,7 +443,16 @@ namespace DataWF.Data
 
         public override void ReloadItem(object id, DBTransaction transaction = null)
         {
-            LoadItem(transaction, id);
+            var temp = transaction ?? new DBTransaction(Schema.Connection);
+            try
+            {
+                LoadItem(temp, id);
+            }
+            finally
+            {
+                if (transaction == null)
+                    temp.Dispose();
+            }
         }
 
         public T LoadItem(DBTransaction transaction, object id, IEnumerable cols = null)
@@ -452,7 +461,7 @@ namespace DataWF.Data
             var command = transaction.AddCommand(DetectQuery(string.Format("where {0}={1}", PrimaryKey.Name, idName), cols));
             transaction.AddParameter(command, idName, id);
             var rows = Load(transaction, command);
-            return rows == null || rows.Count == 0 ? null : rows[0];
+            return rows?.FirstOrDefault();
         }
 
         public override DBItem LoadItemById(object id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null, IEnumerable cols = null, IDBTableView synch = null)

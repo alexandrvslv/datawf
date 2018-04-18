@@ -654,7 +654,7 @@ namespace DataWF.Data.Gui
             Status = TableEditorStatus.Adding;
         }
 
-        protected override void OnToolRemovClick(object sender, EventArgs e)
+        protected override void OnToolRemoveClick(object sender, EventArgs e)
         {
             if (Selected == null)
                 return;

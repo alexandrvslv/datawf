@@ -143,7 +143,7 @@ namespace DataWF.Module.Flow
                     document[prm] = prm.Default;
 
             if (fileNames != null)
-                document.CreateData(fileNames);
+                document.CreateData<DocumentData>(fileNames);
 
             Created?.Invoke(null, new DocumentCreateEventArgs() { Template = document.Template, Parent = parent, Document = document });
 
@@ -385,7 +385,11 @@ namespace DataWF.Module.Flow
         public Customer Customer
         {
             get { return GetPropertyReference<Customer>(nameof(CustomerId)); }
-            set { SetPropertyReference(value, nameof(CustomerId)); }
+            set
+            {
+                SetPropertyReference(value, nameof(CustomerId));
+                Address = Customer?.Address;
+            }
         }
 
         [Browsable(false)]
@@ -639,11 +643,16 @@ namespace DataWF.Module.Flow
             return workFlows;
         }
 
-        public DocumentData GetTemplate()
+        public virtual DocumentData GetTemplate()
+        {
+            return GetTemplate<DocumentData>();
+        }
+
+        public T GetTemplate<T>() where T : DocumentData, new()
         {
             foreach (DocumentData data in Datas)
-                if (data.IsTemplate.GetValueOrDefault())
-                    return data;
+                if (data.IsTemplate.GetValueOrDefault() && data is T)
+                    return (T)data;
             return null;
         }
 
@@ -652,14 +661,14 @@ namespace DataWF.Module.Flow
             base.Reject();
         }
 
-        public void CreateData(params string[] files)
+        public IEnumerable<T> CreateData<T>(params string[] files) where T : DocumentData, new()
         {
             foreach (var file in files)
             {
-                var data = new DocumentData();
-                data.Document = this;
+                var data = new T { Document = this };
                 data.Load(file);
                 data.Attach();
+                yield return data;
             }
         }
 
@@ -898,15 +907,17 @@ namespace DataWF.Module.Flow
             var qrefing = new QQuery(string.Format("select {0} from {1} where {2} = {3}",
                                                    DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.DocumentId)).Name,
                                                    DocumentReference.DBTable.Name,
-                                                   DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.ReferenceId)).Name, id));
+                                                   DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.ReferenceId)).Name,
+                                                   id));
             var qrefed = new QQuery(string.Format("select {2} from {1} where {0} = {3}",
                                                   DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.DocumentId)).Name,
                                                   DocumentReference.DBTable.Name,
-                                                  DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.ReferenceId)).Name, id));
+                                                  DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.ReferenceId)).Name,
+                                                  id));
 
             var param = new QParam();
-            param.Parameters.Add(QQuery.CreateParam(DBTable.PrimaryKey, qrefed, CompareType.In));
-            param.Parameters.Add(QQuery.CreateParam(DBTable.PrimaryKey, qrefing, CompareType.In, LogicType.Or));
+            param.Parameters.Add(QQuery.CreateParam(LogicType.And, DBTable.PrimaryKey, CompareType.In, qrefed));
+            param.Parameters.Add(QQuery.CreateParam(LogicType.Or, DBTable.PrimaryKey, CompareType.In, qrefing));
             return param;
         }
 

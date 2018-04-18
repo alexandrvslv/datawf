@@ -8,7 +8,7 @@ using Xwt.Drawing;
 
 namespace DataWF.Gui
 {
-    public class ListEditor : VPanel, IDockContent, IGlyph
+    public class ListEditor : VPanel, IDockContent, IReadOnly
     {
         private string lockName = "FieldsEditor";
 
@@ -88,7 +88,7 @@ namespace DataWF.Gui
             toolSave = new ToolItem(OnToolSaveClick) { Name = "Save", ForeColor = Colors.DarkBlue, Glyph = GlyphType.SaveAlias };
             toolLoad = new ToolItem(OnToolLoadClick) { Name = "Load", Glyph = GlyphType.FolderOpen };
             toolAdd = new ToolDropDown(toolInsert, toolCopy) { Name = "Add", ForeColor = Colors.DarkGreen, Glyph = GlyphType.PlusCircle };
-            toolRemove = new ToolItem(OnToolRemovClick) { Name = "Remove", ForeColor = Colors.DarkRed, Glyph = GlyphType.MinusCircle };
+            toolRemove = new ToolItem(OnToolRemoveClick) { Name = "Remove", ForeColor = Colors.DarkRed, Glyph = GlyphType.MinusCircle };
             toolEdit = new ToolItem(OnToolEditClick) { Name = "Edit", ForeColor = Colors.SandyBrown.WithIncreasedLight(-0.2), Glyph = GlyphType.Pencil };
 
             bar = new Toolsbar(
@@ -531,7 +531,7 @@ namespace DataWF.Gui
             //addToolForm.Close ();
         }
 
-        protected virtual void OnToolRemovClick(object sender, EventArgs e)
+        protected virtual void OnToolRemoveClick(object sender, EventArgs e)
         {
             if (list.Selection.Count == 0 || list.Mode == LayoutListMode.Fields)
                 return;
@@ -567,15 +567,19 @@ namespace DataWF.Gui
             }
         }
 
+        public void ShowObject(object obj)
+        {
+            fields.FieldSource = obj;
+            toolWindow.ButtonAcceptEnabled = true;
+            toolWindow.Label.Text = toolAdd.Text;
+            toolWindow.Show(bar, bar.Bounds.BottomLeft);
+        }
+
         protected virtual void OnToolInsertClick(object sender, EventArgs e)
         {
             if (list.ListSource == null || list.Mode == LayoutListMode.Fields)
                 return;
-            object newObject = list.ItemNew();
-            fields.FieldSource = newObject;
-            toolWindow.ButtonAcceptEnabled = true;
-            toolWindow.Label.Text = toolAdd.Text;
-            toolWindow.Show(bar, bar.Bounds.BottomLeft);
+            ShowObject(list.ItemNew());
         }
 
         protected virtual void OnToolCopyClick(object sender, EventArgs e)
@@ -584,11 +588,7 @@ namespace DataWF.Gui
                 || list.Mode == LayoutListMode.Fields
                 || list.SelectedItem == null && list.SelectedItem is ICloneable)
                 return;
-            object newObject = ((ICloneable)list.SelectedItem).Clone();
-            fields.FieldSource = newObject;
-            toolWindow.ButtonAcceptEnabled = true;
-            toolWindow.Label.Text = toolAdd.Text;
-            toolWindow.Show(bar, new Point(bar.Bounds.X, bar.Bounds.Bottom));
+            ShowObject(((ICloneable)list.SelectedItem).Clone());
         }
 
         protected virtual void OnToolEditClick(object sender, EventArgs e)

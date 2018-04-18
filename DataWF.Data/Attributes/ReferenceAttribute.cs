@@ -27,14 +27,27 @@ namespace DataWF.Data
     {
         private ColumnAttribute cacheColumn;
         private DBForeignKey cacheKey;
+        private string name;
 
         public ReferenceAttribute(string name, string property)
         {
-            Name = name;
+            this.name = name;
             Property = property;
         }
 
-        public string Name { get; set; }
+        public string Name
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(name) && Table != null && Column != null)
+                {
+                    name = $"fk_{Table.TableName}_{Column.ColumnName}";
+                }
+                return name;
+            }
+            set { name = value; }
+        }
+
 
         public string Property { get; set; }
 

@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace DataWF.Module.FlowGui
 {
-    public class DocumentReferenceView : VPanel, ISynch, IDocument, IReadOnly, ILocalizable
+    public class DocumentReferenceView : VPanel, ISync, IDocument, IReadOnly, ILocalizable
     {
         private Document document;
         private DocumentSearch search = new DocumentSearch();
@@ -83,7 +83,7 @@ namespace DataWF.Module.FlowGui
 
         public void Localize()
         {
-            GuiService.Localize(this, base.Name, "Relations");
+            GuiService.Localize(this, base.Name, "Relations", GlyphType.Link);
             GuiService.Localize(toolAttach, base.Name, "Attach");
             GuiService.Localize(toolDetach, base.Name, "Detach");
             refs.Localize();
@@ -105,23 +105,27 @@ namespace DataWF.Module.FlowGui
             set { Document = value as Document; }
         }
 
-        public void Synch()
+        public void Sync()
         {
             if (!synch)
-                Task.Run(() =>
+            {
+                try
                 {
-                    try
-                    {
-                        document.GetReferencing<DocumentReference>(nameof(DocumentReference.DocumentId), DBLoadParam.Load);
-                        document.GetReferencing<DocumentReference>(nameof(DocumentReference.ReferenceId), DBLoadParam.Load);
-                        //refs.Documents.UpdateFilter();
-                        synch = true;
-                    }
-                    catch (Exception ex)
-                    {
-                        Helper.OnException(ex);
-                    }
-                });
+                    document.GetReferencing<DocumentReference>(nameof(DocumentReference.DocumentId), DBLoadParam.Load);
+                    document.GetReferencing<DocumentReference>(nameof(DocumentReference.ReferenceId), DBLoadParam.Load);
+                    //refs.Documents.UpdateFilter();
+                    synch = true;
+                }
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
+                }
+            }
+        }
+
+        public async Task SyncAsync()
+        {
+            await Task.Run(() => Sync());
         }
 
         private void ToolAttachClick(object sender, EventArgs e)

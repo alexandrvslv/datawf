@@ -104,7 +104,7 @@ namespace DataWF.Module.Flow
     }
 
     [DataContract, Table("wf_flow", "ddocument_reference", "Document", BlockSize = 400)]
-    public class DocumentReference : DBItem
+    public class DocumentReference : DocumentDetail
     {
         public static DBTable<DocumentReference> DBTable
         {
@@ -121,21 +121,6 @@ namespace DataWF.Module.Flow
         {
             get { return GetProperty<long?>(nameof(Id)); }
             set { SetProperty(value, nameof(Id)); }
-        }
-
-        [Browsable(false)]
-        [DataMember, Column("document_id")]
-        public long? DocumentId
-        {
-            get { return GetProperty<long?>(); }
-            set { SetProperty(value); }
-        }
-
-        [Reference("fk_ddocument_reference_documentid", nameof(DocumentId))]
-        public Document Document
-        {
-            get { return GetPropertyReference<Document>(nameof(DocumentId)); }
-            set { SetPropertyReference(value, nameof(DocumentId)); }
         }
 
         [Browsable(false)]

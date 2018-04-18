@@ -285,9 +285,9 @@ namespace DataWF.Data
             else if (item is DBSchema)
             {
                 DBSchema schema = (DBSchema)item;
-                if (DBService.Schems.Contains(schema.Name))
+                if (Schems.Contains(schema.Name))
                     schema.Name = schema.Name + "1";
-                DBService.Schems.Add((DBSchema)item);
+                Schems.Add((DBSchema)item);
             }
             else if (item is DBColumn)
             {
@@ -314,6 +314,7 @@ namespace DataWF.Data
             if (Changes.Count > 0)
             {
                 schema.Connection.ExecuteGoQuery(BuildChangesQuery(schema));
+                Save();
             }
         }
 
@@ -377,7 +378,7 @@ namespace DataWF.Data
             int index = code.IndexOf('.');
             if (index >= 0)
             {
-                schema = DBService.Schems[code.Substring(0, index++)];
+                schema = Schems[code.Substring(0, index++)];
                 int sindex = code.IndexOf('.', index);
                 code = sindex < 0 ? code.Substring(index) : code.Substring(index, sindex - index);
             }
@@ -389,7 +390,7 @@ namespace DataWF.Data
             }
             else
             {
-                foreach (var sch in DBService.Schems)
+                foreach (var sch in Schems)
                 {
                     table = sch.Tables[code];
                     if (table != null)
@@ -409,7 +410,7 @@ namespace DataWF.Data
                 schema = s;
             else
             {
-                schema = DBService.Schems[code.Substring(0, index++)];
+                schema = Schems[code.Substring(0, index++)];
                 int sindex = code.IndexOf('.', index);
                 code = sindex < 0 ?
                     code.Substring(index) :
@@ -587,7 +588,7 @@ namespace DataWF.Data
                 return -1;
             else
             {
-                List<DBTable> merge = (List<DBTable>)ListHelper.AND(xpars, ypars, null);
+                var merge = (List<DBTable>)ListHelper.AND(xpars, ypars, null);
                 if (merge.Count > 0)
                 {
                     int r = xpars.Count.CompareTo(ypars.Count);
@@ -801,6 +802,7 @@ namespace DataWF.Data
 
         public static void Generate(IEnumerable<Assembly> assemblies, DBSchema schema)
         {
+            Helper.Logs.Add(new StateInfo("Load", "Database", "Generate Schema"));
             var attributes = new List<TableAttribute>();
             foreach (var assembly in assemblies)
             {

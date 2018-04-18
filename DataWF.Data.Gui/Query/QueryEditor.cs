@@ -527,7 +527,7 @@ namespace DataWF.Data.Gui
 
         }
 
-        private void TooSearchClick(object sender, EventArgs e)
+        private async void TooSearchClick(object sender, EventArgs e)
         {
             if (query == null || query.Table == null)
                 return;
@@ -539,7 +539,7 @@ namespace DataWF.Data.Gui
                 return;
             }
             viewResult.SetCommand(query.ToCommand(false), query.Table.Schema, query.Table.Name + query.Order.ToString());
-            viewResult.Synch();
+            await viewResult.SyncAsync();
             toolCount.Text = "<Executing>";
             gresult.Expand = true;
         }

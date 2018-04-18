@@ -832,23 +832,25 @@ namespace DataWF.Data
             return rez;
         }
 
-        public static QParam CreateParam(DBColumn col, object val)
+        public static QParam CreateParam(DBColumn column, object value)
         {
-            return CreateParam(col, val, CompareType.Equal, LogicType.And);
+            return CreateParam(LogicType.And, column, CompareType.Equal, value);
         }
 
-        public static QParam CreateParam(DBColumn col, object val, CompareType comp)
+        public static QParam CreateParam(DBColumn column, CompareType comp, object value)
         {
-            return CreateParam(col, val, comp, LogicType.And);
+            return CreateParam(LogicType.And, column, comp, value);
         }
 
-        public static QParam CreateParam(DBColumn col, object val, CompareType comp, LogicType logic)
+        public static QParam CreateParam(LogicType logic, DBColumn column, CompareType compare, object value)
         {
-            QParam param = new QParam();
-            param.ValueLeft = new QColumn(col);
-            param.Logic = logic;
-            param.Comparer = comp;
-            param.Value = val;
+            QParam param = new QParam
+            {
+                Logic = logic,
+                ValueLeft = new QColumn(column),
+                Comparer = compare,
+                Value = value
+            };
             return param;
         }
 
@@ -879,7 +881,7 @@ namespace DataWF.Data
                         ///q.Columns.Add(new QColumn(column.ReferenceTable.PrimaryKey.Code));
                         if (dbColumn.IsReference && i + 1 < split.Length)
                         {
-                            param = CreateParam(dbColumn, null, CompareType.In, LogicType.Undefined);
+                            param = CreateParam(LogicType.Undefined, dbColumn, CompareType.In, null);
                             q.Parameters.Add(param);
                             table = dbColumn.ReferenceTable;
                             q = new QQuery("", table);
@@ -942,7 +944,7 @@ namespace DataWF.Data
                 string like = autoLike ? "%" : "";
                 string[] split = value.ToString().Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
                 if (split.Length == 1)
-                    param = CreateParam(column, like + split[0].Trim() + like, comparer);
+                    param = CreateParam(column, comparer, like + split[0].Trim() + like);
                 else
                 {
                     param = parameters.Add();
@@ -952,14 +954,14 @@ namespace DataWF.Data
                         if (s.Trim().Length == 0)
                             continue;
 
-                        param.Parameters.Add(CreateParam(column, like + s.Trim() + like, comparer, i == 0 ? LogicType.And : LogicType.Or));
+                        param.Parameters.Add(CreateParam(i == 0 ? LogicType.And : LogicType.Or, column, comparer, like + s.Trim() + like));
                         i++;
                     }
                 }
             }
             else
             {
-                param = CreateParam(column, value, comparer);
+                param = CreateParam(column, comparer, value);
             }
 
             if (param != null && param.Query == null)
@@ -970,11 +972,11 @@ namespace DataWF.Data
 
         public QParam BuildParam(DBColumn parent, DBColumn column, object p, bool p_4)
         {
-            QQuery e = new QQuery("", column.Table);
-            e.Columns.Add(new QColumn(column.Table.PrimaryKey.Name));
-            e.Parameters.Remove(column);
-            e.BuildParam(column, p, p_4);
-            QParam param = CreateParam(parent, e, CompareType.In);
+            var query = new QQuery("", column.Table);
+            query.Columns.Add(new QColumn(column.Table.PrimaryKey.Name));
+            query.Parameters.Remove(column);
+            query.BuildParam(column, p, p_4);
+            QParam param = CreateParam(parent, CompareType.In, query);
             Parameters.Add(param);
             return param;
         }

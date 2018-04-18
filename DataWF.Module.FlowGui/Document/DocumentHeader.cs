@@ -5,10 +5,11 @@ using DataWF.Common;
 using System.Threading;
 using DataWF.Module.Flow;
 using Xwt;
+using System.Threading.Tasks;
 
 namespace DataWF.Module.FlowGui
 {
-    public class DocumentHeader : ListEditor, IDocument, ISynch, ILocalizable, IReadOnly
+    public class DocumentHeader : ListEditor, IDocument, ISync, ILocalizable, IReadOnly
     {
         private Document document;
         private bool synch = false;
@@ -26,14 +27,6 @@ namespace DataWF.Module.FlowGui
             List.HideCollections = true;
 
             Localize();
-        }
-
-        public void Synch()
-        {
-            if (!synch)
-            {
-                synch = true;
-            }
         }
 
         public Document Document
@@ -58,5 +51,19 @@ namespace DataWF.Module.FlowGui
             GuiService.Localize(this, "DocumentHeader", "Attributes");
         }
 
+        public void Sync()
+        {
+            if (!synch)
+            {
+                if (document != null && document.Id != null)
+                    Document.DBTable.ReloadItem(document.Id);
+                synch = true;
+            }
+        }
+
+        public async Task SyncAsync()
+        {
+            await Task.Run(() => Sync());
+        }
     }
 }
