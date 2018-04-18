@@ -48,6 +48,12 @@ namespace DataWF.Data
             set { SetValue(value, Table.ElementTypeKey); }
         }
 
+        public long? UserLogId
+        {
+            get { return GetValue<long?>(LogTable.UserLogKey); }
+            set { SetValue(value, LogTable.UserLogKey); }
+        }
+
         public object BaseId
         {
             get { return GetValue(LogTable.BaseKey); }

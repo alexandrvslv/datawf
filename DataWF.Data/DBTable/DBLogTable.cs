@@ -28,8 +28,10 @@ namespace DataWF.Data
 
     public class DBLogTable : DBTable<DBLogItem>
     {
+        public static readonly string UserLogName = "userlog_id";
         private DBTable baseTable;
         private DBColumn basekey = DBColumn.EmptyKey;
+        private DBColumn userLogkey = DBColumn.EmptyKey;
 
         public DBLogTable()
         { }
@@ -46,6 +48,18 @@ namespace DataWF.Data
                 if (basekey == DBColumn.EmptyKey && BaseTable != null)
                 {
                     basekey = GetLogColumn(BaseTable.PrimaryKey);
+                }
+                return basekey;
+            }
+        }
+
+        public DBColumn UserLogKey
+        {
+            get
+            {
+                if (userLogkey == DBColumn.EmptyKey)
+                {
+                    basekey = Columns[UserLogName];
                 }
                 return basekey;
             }
@@ -86,6 +100,12 @@ namespace DataWF.Data
                     Columns.Add(new DBColumn()
                     {
                         Name = "logtype",
+                        DataType = typeof(DBLogType),
+                        Keys = DBColumnKeys.ElementType
+                    });
+                    Columns.Add(new DBColumn()
+                    {
+                        Name = UserLogName,
                         DataType = typeof(DBLogType),
                         Keys = DBColumnKeys.ElementType
                     });

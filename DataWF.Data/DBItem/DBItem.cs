@@ -298,7 +298,6 @@ namespace DataWF.Data
             }
         }
 
-
         public DBItem GetReference(string code)
         {
             DBItem row = this;
@@ -360,7 +359,7 @@ namespace DataWF.Data
                     return null;
 
                 item = (T)column.ReferenceTable.LoadItemById(value, param, transaction);
-                SetTag(column, item);// item == null ? (object)DBNull.Value : item);             
+                SetTag(column, item);// item == null ? (object)DBNull.Value : item);
             }
             return item;
         }
