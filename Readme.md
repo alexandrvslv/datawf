@@ -53,16 +53,16 @@ Model example:
         public Employer() { Build(DBTable); }
 
         [Column("id", Keys = DBColumnKeys.Primary)]
-        public int? Id { get { return GetProperty<int?>(nameof(Id)); } set { SetProperty(value, nameof(Id)); } }
+        public int? Id { get { return GetProperty<int?>(); } set { SetProperty(value); } }
 
         [Column("inn", 20, Keys = DBColumnKeys.Code), Index("employerinn", true)]
-        public string INN { get { return GetProperty<string>(nameof(INN)); } set { SetProperty(value, nameof(INN)); } }
+        public string INN { get { return GetProperty<string>(); } set { SetProperty(value); } }
 
         [Column("name", 200, Keys = DBColumnKeys.Culture)]
-        public override string Name { get { return GetName("name"); } set { SetName("name", value); } }
+        public override string Name { get { return GetName(nameof(Name)); } set { SetName(nameof(Name), value); } }
 
         [Column("positionid")]
-        public int? PositionId { get { return GetProperty<int?>(nameof(PositionId)); } set { SetProperty(value, nameof(PositionId)); } }
+        public int? PositionId { get { return GetProperty<int?>(); } set { SetProperty(value); } }
 
         [Reference("fk_employer_positionid", nameof(PositionId))]
         public Position Position
@@ -72,7 +72,7 @@ Model example:
         }
 
         [Column("typeid", Keys = DBColumnKeys.Type, Default = "1")]
-        public EmployerType? Type { get { return GetProperty<EmployerType?>(nameof(Type)); } set { SetProperty(value, nameof(Type)); } }
+        public EmployerType? Type { get { return GetProperty<EmployerType?>(); } set { SetProperty(value); } }
     }
 
 Connection example:
@@ -105,7 +105,7 @@ Cross Platform Desktop UI, based on Xwt. Provide several widgets to build data n
 Main widgets:
 
 - LayoutList - universal widget, can be used like list view, tree view or property view. Support sorting, grouping, filtering and can construct from reflection
-- Toolsbar - buttons container(missed in Xwt)
+- Toolsbar - buttons container
 - GroupBox - widget layout container
 - DockBox - dock panel manager
 - ToolWindow - helper window
