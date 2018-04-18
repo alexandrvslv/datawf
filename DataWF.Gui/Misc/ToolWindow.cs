@@ -90,7 +90,7 @@ namespace DataWF.Gui
             Content = vbox;
             Decorated = false;
             Name = "ToolWindow";
-            Resizable = false;
+            //Resizable = false;
             Resizable = true;
             Size = new Size(360, 320);
             ShowInTaskbar = false;

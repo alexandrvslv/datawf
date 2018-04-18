@@ -306,7 +306,7 @@ namespace DataWF.Test.Common
                 {
                     var line = reader.ReadLine();
                     if (line != null)
-                        Console.WriteLine(line);
+                        Debug.WriteLine(line);
                     else
                         break;
                 }

@@ -116,7 +116,7 @@ namespace DataWF.Module.Counterpart
             new Location { LocationType = Counterpart.LocationType.City, Parent = kazakh, Code = "727", Name = "Almaty" }.Attach();
             new Location { LocationType = Counterpart.LocationType.City, Parent = kazakh, Code = "7172", Name = "Astana" }.Attach();
             new Location { LocationType = Counterpart.LocationType.City, Parent = kazakh, Code = "7122", Name = "Atyrau" }.Attach();
-
+            new Location { LocationType = Counterpart.LocationType.City, Parent = kazakh, Code = "7292", Name = "Aktau" }.Attach();
             Location.DBTable.Save();
         }
 

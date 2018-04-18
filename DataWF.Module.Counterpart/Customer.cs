@@ -97,7 +97,7 @@ namespace DataWF.Module.Counterpart
             set { SetProperty(value, nameof(Key)); }
         }
 
-        [DataMember, Column("email", 1024), Index("dcustomer_email", true)]
+        [DataMember, Column("email", 1024), Index("dcustomer_email")]
         public string EMail
         {
             get { return GetProperty<string>(); }
