@@ -25,80 +25,80 @@ using DataWF.Module.Common;
 
 namespace DataWF.Module.Messanger
 {
-	public class MessageAddressList : DBTableView<MessageAddress>
-	{
-		public MessageAddressList(string filter)
-			: base(MessageAddress.DBTable, filter)
-		{
-			//_ApplySort(new DBRowComparer(FlowEnvir.Config.StageParameter.Table, FlowEnvir.Config.StageParameter.Table.PrimaryKey.Code, ListSortDirection.Ascending));
-		}
+    public class MessageAddressList : DBTableView<MessageAddress>
+    {
+        public MessageAddressList(string filter)
+            : base(MessageAddress.DBTable, filter)
+        {
+            //_ApplySort(new DBRowComparer(FlowEnvir.Config.StageParameter.Table, FlowEnvir.Config.StageParameter.Table.PrimaryKey.Code, ListSortDirection.Ascending));
+        }
 
-		public MessageAddressList()
-			: this(string.Empty)
-		{ }
+        public MessageAddressList()
+            : this(string.Empty)
+        { }
 
-		public MessageAddressList(Message message)
-			: this(string.Format("({0} = {1}",
-								 MessageAddress.DBTable.ParseProperty(nameof(MessageAddress.MessageId)).Name, message.PrimaryId))
-		{ }
-	}
+        public MessageAddressList(Message message)
+            : this(string.Format("({0} = {1}",
+                                 MessageAddress.DBTable.ParseProperty(nameof(MessageAddress.MessageId)).Name, message.PrimaryId))
+        { }
+    }
 
-	[Table("wf_message", "dmessage_address", "Message")]
-	public class MessageAddress : DBItem
-	{
-		public static DBTable<MessageAddress> DBTable
-		{
-			get { return DBService.GetTable<MessageAddress>(); }
-		}
+    [Table("wf_message", "dmessage_address", "Message")]
+    public class MessageAddress : DBItem
+    {
+        public static DBTable<MessageAddress> DBTable
+        {
+            get { return DBService.GetTable<MessageAddress>(); }
+        }
 
-		public MessageAddress()
-		{
-			Build(DBTable);
-		}
+        public MessageAddress()
+        {
+            Build(DBTable);
+        }
 
-		[Column("unid", Keys = DBColumnKeys.Primary)]
-		public int? Id
-		{
-			get { return GetProperty<int?>(nameof(Id)); }
-			set { SetProperty(value, nameof(Id)); }
-		}
+        [Column("unid", Keys = DBColumnKeys.Primary)]
+        public int? Id
+        {
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
+        }
 
-		[Browsable(false)]
-		[Column("messageid")]
-		public int? MessageId
-		{
-			get { return GetProperty<int?>(nameof(MessageId)); }
-			set { SetProperty(value, nameof(MessageId)); }
-		}
+        [Browsable(false)]
+        [Column("messageid")]
+        public int? MessageId
+        {
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
+        }
 
-		[Reference("fk_maddress_messageid", nameof(MessageId))]
-		public Message Message
-		{
-			get { return GetPropertyReference<Message>(nameof(MessageId)); }
-			set { SetPropertyReference(value, nameof(MessageId)); }
-		}
+        [Reference(nameof(MessageId))]
+        public Message Message
+        {
+            get { return GetPropertyReference<Message>(); }
+            set { SetPropertyReference(value); }
+        }
 
-		[Browsable(false)]
-		[Column("userid")]
-		public int? UserId
-		{
-			get { return GetProperty<int?>(nameof(UserId)); }
-			set { SetProperty(value, nameof(UserId)); }
-		}
+        [Browsable(false)]
+        [Column("userid")]
+        public int? UserId
+        {
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
+        }
 
-		[Reference("fk_maddress_userid", nameof(UserId))]
-		public User User
-		{
-			get { return GetPropertyReference<User>(nameof(UserId)); }
-			set { SetPropertyReference(value, nameof(UserId)); }
-		}
+        [Reference(nameof(UserId))]
+        public User User
+        {
+            get { return GetPropertyReference<User>(); }
+            set { SetPropertyReference(value); }
+        }
 
-		[Column("dateread")]
-		public DateTime? DateRead
-		{
-			get { return GetProperty<DateTime?>(nameof(DateRead)); }
-			set { SetProperty(value, nameof(DateRead)); }
-		}
-	}
+        [Column("dateread")]
+        public DateTime? DateRead
+        {
+            get { return GetProperty<DateTime?>(); }
+            set { SetProperty(value); }
+        }
+    }
 
 }

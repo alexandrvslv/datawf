@@ -35,7 +35,7 @@ namespace DataWF.Gui
                 {
                     Name = "Page",
                     Font = defaultFont.WithWeight(FontWeight.Semibold),
-                    BaseColor = baseBackground
+                    BaseColor = baseBackground.WithIncreasedLight(-0.05)
                 },
                 new CellStyle()
                 {
@@ -49,7 +49,7 @@ namespace DataWF.Gui
                     Name = "List",
                     Font = defaultFont,
                     Round = 0,
-                    BaseColor = baseBackground.WithIncreasedLight(-0.05)
+                    BaseColor = baseBackground.WithIncreasedLight(-0.1)
                 },
                 new CellStyle()
                 {

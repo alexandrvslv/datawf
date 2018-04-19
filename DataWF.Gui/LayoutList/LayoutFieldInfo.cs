@@ -34,8 +34,6 @@ namespace DataWF.Gui
             Name = "Value";
         }
 
-        public object FieldSource { get; set; }
-
         public bool CanWrite { get { return true; } }
 
         public Type DataType { get; set; }
@@ -44,9 +42,11 @@ namespace DataWF.Gui
 
         public string Name { get; set; }
 
+        public object Source { get; set; }
+
         public object Get(LayoutField target)
         {
-            return FieldSource == null ? null : target.ReadValue(FieldSource);
+            return Source == null ? null : target.ReadValue(Source);
         }
 
         public object Get(object target)
@@ -56,7 +56,7 @@ namespace DataWF.Gui
 
         public void Set(LayoutField target, object value)
         {
-            target.WriteValue(FieldSource, value);
+            target.WriteValue(Source, value);
         }
 
         public void Set(object target, object value)
@@ -102,9 +102,10 @@ namespace DataWF.Gui
             Nodes.AddRange(items);
         }
 
-        public void SetSource(object source)
+        [XmlIgnore]
+        public FieldValueInvoker ValueInvoker
         {
-            ((FieldValueInvoker)ValueColumn.Invoker).FieldSource = source;
+            get { return (FieldValueInvoker)ValueColumn.Invoker; }
         }
 
         [XmlIgnore]
@@ -138,6 +139,11 @@ namespace DataWF.Gui
         {
             colums.Dispose();
         }
+    }
+
+    public class FieldSourceEventArgs : EventArgs
+    {
+        public object Source { get; set; }
     }
 }
 

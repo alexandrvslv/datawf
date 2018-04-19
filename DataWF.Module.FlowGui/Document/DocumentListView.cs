@@ -88,7 +88,6 @@ namespace DataWF.Module.FlowGui
             {
                 EditMode = EditModes.ByF2,
                 EditState = EditListState.Edit,
-                Grouping = false,
                 Mode = LayoutListMode.List,
                 Name = "DocumentList",
                 ReadOnly = true,
@@ -289,7 +288,7 @@ namespace DataWF.Module.FlowGui
             if (search != null && autoLoad && !search.IsCurrent && !search.IsEmpty)
             {
                 _documents.IsStatic = true;
-                loader.Load(search.QDoc);
+                loader.LoadAsync(search.QDoc);
             }
             else
                 _documents.IsStatic = false;
@@ -412,9 +411,9 @@ namespace DataWF.Module.FlowGui
             FilterVisible = toolFilter.Checked;
         }
 
-        private void ToolLoadClick(object sender, EventArgs e)
+        private async void ToolLoadClick(object sender, EventArgs e)
         {
-            loader.Load();
+            await loader.LoadAsync();
         }
 
         private void ToolPreviewClick(object sender, EventArgs e)
@@ -426,10 +425,7 @@ namespace DataWF.Module.FlowGui
         public bool AllowPreview
         {
             get { return toolPreview.Sensitive; }
-            set
-            {
-                toolPreview.Sensitive = value;
-            }
+            set { toolPreview.Sensitive = value; }
         }
 
         public bool Preview
@@ -437,8 +433,10 @@ namespace DataWF.Module.FlowGui
             get { return split.Panel2.Content != null && split.Panel2.Content.Visible; }
             set
             {
-                if (split.Panel2.Content != null)
-                    split.Panel2.Content.Visible = value;
+                if (value && split.Panel2.Content == null)
+                    split.Panel2.Content = deditor;
+                else if (!value && split.Panel2.Content != null)
+                    split.Panel2.Content = null;
             }
         }
 
@@ -450,7 +448,7 @@ namespace DataWF.Module.FlowGui
             };
             deditor.MainMenu.Visible = false;
             deditor.SendComplete += EditorSendComplete;
-            split.Panel2.Content = deditor;
+            Preview = true;
 
             bar.Items.InsertAfter(toolPreview, deditor.MainMenu.Items.Items.ToList());
         }

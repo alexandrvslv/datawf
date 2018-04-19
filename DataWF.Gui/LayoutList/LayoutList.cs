@@ -2017,10 +2017,11 @@ namespace DataWF.Gui
             get { return fieldInfo; }
             set
             {
+                if (fieldInfo == value)
+                    return;
                 fieldInfo = value;
                 ListInfo = fieldInfo?.Columns;
                 ListSource = fieldInfo?.Nodes.DefaultView;
-                fieldInfo?.SetSource(fieldSource);
             }
         }
 
@@ -2097,8 +2098,6 @@ namespace DataWF.Gui
 
                 if (fieldSource == null)
                 {
-                    if (FieldInfo != null)
-                        FieldInfo.SetSource(null);
                     return;
                 }
 
@@ -2988,9 +2987,13 @@ namespace DataWF.Gui
         public virtual object ReadValue(object listItem, ILayoutCell cell)
         {
             if (listItem == null || cell == null)
+            {
                 return null;
+            }
             try
             {
+                if (fieldInfo != null)
+                    fieldInfo.ValueInvoker.Source = FieldSource;
                 return cell.ReadValue(listItem);
             }
             catch (Exception ex)
@@ -3003,7 +3006,11 @@ namespace DataWF.Gui
         public virtual void WriteValue(object listItem, object value, ILayoutCell cell)
         {
             if (listItem == null || cell == null)
+            {
                 return;
+            }
+            if (fieldInfo != null)
+                fieldInfo.ValueInvoker.Source = FieldSource;
 
             cell.WriteValue(listItem, value);
             OnCellValueWrite(new LayoutValueEventArgs(listItem, value, cell));
@@ -4763,16 +4770,11 @@ namespace DataWF.Gui
         [DefaultValue(true)]
         public bool AutoSize { get; set; } = true;
 
-        protected virtual void OnListChangedApp(object state)
-        {
-            OnListChangedApp(ListSource, state as EventArgs);
-        }
-
         protected virtual void OnListChangedApp(object state, EventArgs arg)
         {
             if (_listSensitive)
             {
-                selection.RefreshIndex(false);
+                selection.RefreshIndex(true);
                 RefreshBounds(true);
             }
         }
@@ -4802,14 +4804,14 @@ namespace DataWF.Gui
                     {
                         //listEvent.WaitOne(400);
                         Task.Delay(400);
-                        Application.Invoke(() => OnListChangedApp(arg));
+                        Application.Invoke(() => OnListChangedApp(source, arg));
                         post = false;
                     });
                 }
             }
             else
             {
-                OnListChangedApp(arg);
+                OnListChangedApp(source, arg);
             }
         }
 

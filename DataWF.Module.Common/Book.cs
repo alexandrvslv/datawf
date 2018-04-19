@@ -55,7 +55,7 @@ namespace DataWF.Module.Common
             set { SetValue(value, Table.ElementTypeKey); }
         }
 
-        [Reference("rbook_type_id", nameof(TypeId))]
+        [Reference(nameof(TypeId))]
         public BookType Type
         {
             get { return GetReference<BookType>(Table.ElementTypeKey); }

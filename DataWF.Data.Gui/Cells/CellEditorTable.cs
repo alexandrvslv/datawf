@@ -216,7 +216,7 @@ namespace DataWF.Data.Gui
             {
                 var query = new QQuery("", Table);
                 query.SimpleFilter(EditorText);
-                TableEditor.Loader.Load(query);
+                TableEditor.Loader.LoadAsync(query);
                 list = query.Select();
             }
             return list;

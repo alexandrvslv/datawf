@@ -491,7 +491,7 @@ namespace DataWF.Module.CommonGui
         private void ToolLoadClick(object sender, EventArgs e)
         {
             if (!loader.IsLoad())
-                loader.Load();
+                loader.LoadAsync();
             else
                 loader.Cancel();
         }
@@ -654,7 +654,7 @@ namespace DataWF.Module.CommonGui
 
 
 
-            loader.Load();// logs.FillAsynch(DBLoadParam.Synchronize);
+            loader.LoadAsync();// logs.FillAsynch(DBLoadParam.Synchronize);
         }
 
         public DockType DockType

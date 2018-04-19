@@ -54,6 +54,12 @@ namespace DataWF.Data
             set { SetValue(value, LogTable.UserLogKey); }
         }
 
+        public DBItem UserLog
+        {
+            get { return DBLogTable.UserLogTable.LoadItemById(UserLogId); }
+            set { UserLogId = (long?)value?.PrimaryId; }
+        }
+
         public object BaseId
         {
             get { return GetValue(LogTable.BaseKey); }

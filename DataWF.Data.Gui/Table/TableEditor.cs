@@ -392,7 +392,7 @@ namespace DataWF.Data.Gui
             }
         }
 
-        private void ToolReferencesClick(object sender, EventArgs e)
+        private async void ToolReferencesClick(object sender, EventArgs e)
         {
             var tool = (MenuItemRelation)sender;
 
@@ -404,7 +404,7 @@ namespace DataWF.Data.Gui
             tool.View.DefaultParam = new QParam(LogicType.And, tool.Relation.Column, CompareType.Equal, OwnerRow.PrimaryId);
             baseColumn = tool.Relation.Column;
             TableView = tool.View;
-            loader.Load(tool.View.Query);
+            await loader.LoadAsync(tool.View.Query);
             //if (ReferenceClick != null)
             //    ReferenceClick(this, new TableEditReferenceEventArgs(relation));
             //else
@@ -437,7 +437,7 @@ namespace DataWF.Data.Gui
                             if (!view.Table.IsSynchronized)
                             {
                                 loader.View = view;
-                                loader.Load(new QQuery(string.Empty, view.Table));
+                                loader.LoadAsync(new QQuery(string.Empty, view.Table));
                             }
                         break;
                     case TableEditorMode.Referencing:
@@ -449,7 +449,7 @@ namespace DataWF.Data.Gui
                         {
                             loader.View = view;
                             view.ResetFilter();
-                            loader.Load(new QQuery($"where {ownColumn.Name} = {row.PrimaryId}", view.Table));
+                            loader.LoadAsync(new QQuery($"where {ownColumn.Name} = {row.PrimaryId}", view.Table));
                         }
                         break;
                 }
@@ -576,12 +576,12 @@ namespace DataWF.Data.Gui
             loader.Cancel();
         }
 
-        protected override void OnFilterChanged(object sender, EventArgs e)
+        protected async override void OnFilterChanged(object sender, EventArgs e)
         {
             if (DBList.Mode != LayoutListMode.Fields)
             {
                 if (List.FilterList?.Count > 0)
-                    loader.Load(DBList.View.Query);
+                    await loader.LoadAsync(DBList.View.Query);
                 else
                     loader.Cancel();
             }
@@ -627,7 +627,7 @@ namespace DataWF.Data.Gui
                 }
                 else if (!Table.IsSynchronized)
                 {
-                    loader.Load(query);
+                    loader.LoadAsync(query);
                 }
                 //list.View.UpdateFilter();
             }
@@ -878,13 +878,13 @@ namespace DataWF.Data.Gui
             _currentControl = null;
         }
 
-        protected override void OnToolLoadClick(object sender, EventArgs e)
+        protected async override void OnToolLoadClick(object sender, EventArgs e)
         {
             if (view == null)
                 return;
 
             if (!loader.IsLoad())
-                loader.Load();
+                await loader.LoadAsync();
             else
                 loader.Cancel();
         }

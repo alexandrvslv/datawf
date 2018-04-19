@@ -124,11 +124,11 @@ namespace DataWF.Module.Finance
             set { SetProperty(value, nameof(CustomerId)); }
         }
 
-        [Reference("fk_daccount_customerid", nameof(CustomerId))]
+        [Reference(nameof(CustomerId))]
         public Customer Customer
         {
-            get { return GetPropertyReference<Customer>(nameof(CustomerId)); }
-            set { SetPropertyReference(value, nameof(CustomerId)); }
+            get { return GetPropertyReference<Customer>(); }
+            set { SetPropertyReference(value); }
         }
 
         [Browsable(false)]
@@ -139,11 +139,11 @@ namespace DataWF.Module.Finance
             set { SetProperty(value, nameof(CurrencyId)); }
         }
 
-        [Reference("fk_daccount_currencyid", nameof(CurrencyId))]
+        [Reference(nameof(CurrencyId))]
         public Currency Currency
         {
-            get { return GetPropertyReference<Currency>(nameof(CurrencyId)); }
-            set { SetPropertyReference(value, nameof(CurrencyId)); }
+            get { return GetPropertyReference<Currency>(); }
+            set { SetPropertyReference(value); }
         }
 
         [Browsable(false)]
@@ -154,11 +154,11 @@ namespace DataWF.Module.Finance
             set { SetProperty(value, nameof(BankId)); }
         }
 
-        [Reference("fk_daccount_bankid", nameof(BankId))]
+        [Reference(nameof(BankId))]
         public Customer Bank
         {
-            get { return GetReference<Customer>(ParseProperty(nameof(BankId))); }
-            set { SetPropertyReference(value, nameof(BankId)); }
+            get { return GetPropertyReference<Customer>(); }
+            set { SetPropertyReference(value); }
         }
 
         public Balance GetBalance(object typeid)

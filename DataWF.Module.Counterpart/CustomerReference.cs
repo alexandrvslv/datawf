@@ -59,11 +59,11 @@ namespace DataWF.Module.Counterpart
             set { SetProperty(value); }
         }
 
-        [Reference("fk_dcustomer_reference_company_id", nameof(CompanyId))]
+        [Reference(nameof(CompanyId))]
         public Company Company
         {
-            get { return GetPropertyReference<Company>(nameof(CompanyId)); }
-            set { SetPropertyReference(value, nameof(CompanyId)); }
+            get { return GetPropertyReference<Company>(); }
+            set { SetPropertyReference(value); }
         }
 
         [Browsable(false)]
@@ -74,13 +74,13 @@ namespace DataWF.Module.Counterpart
             set { SetProperty(value); }
         }
 
-        [Reference("fk_dcustomer_reference_persone_id", nameof(PersoneId))]
+        [Reference(nameof(PersoneId))]
         public Persone Persone
         {
-            get { return GetPropertyReference<Persone>(nameof(PersoneId)); }
+            get { return GetPropertyReference<Persone>(); }
             set
             {
-                SetPropertyReference(value, nameof(PersoneId));
+                SetPropertyReference(value);
                 EMail = Persone.EMail;
                 Phone = Persone.Phone;
             }

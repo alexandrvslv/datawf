@@ -485,15 +485,15 @@ namespace DataWF.Common
         public static Type GetItemType(Type type)
         {
             Type t = typeof(object);
-            if(type.IsGenericType)
+            if (type.IsGenericType)
             {
                 t = type.GetGenericArguments().FirstOrDefault();
             }
-            else if(type.BaseType?.IsGenericType ?? false)
+            else if (type.BaseType?.IsGenericType ?? false)
             {
                 t = type.BaseType.GetGenericArguments().FirstOrDefault();
             }
-            else if(type.IsArray)
+            else if (type.IsArray)
             {
                 t = type.GetElementType();
             }
@@ -506,26 +506,24 @@ namespace DataWF.Common
 
         public static Type GetItemType(ICollection collection, bool ignoreInteface = true)
         {
-            Type t = typeof(object);
-
             if (collection is ISortable)
             {
                 if (!((ISortable)collection).ItemType.IsInterface || ignoreInteface)
                     return ((ISortable)collection).ItemType;
             }
             var typeType = GetItemType(collection.GetType());
-            if (typeType == t && collection.Count != 0)
+            if (typeType == typeof(object) && collection.Count != 0)
             {
                 foreach (object o in collection)
                 {
                     if (o != null)
                     {
-                        t = o.GetType();
-                        break;
+                        return o.GetType();
                     }
                 }
             }
-            return t;
+
+            return typeType;
         }
 
         public static bool IsStatic(MemberInfo mInfo)

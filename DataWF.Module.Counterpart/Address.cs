@@ -59,17 +59,17 @@ namespace DataWF.Module.Counterpart
             set { SetProperty(value); }
         }
 
-        [Reference("fk_daddress_location_id", nameof(LocationId))]
+        [Reference(nameof(LocationId))]
         public Location Location
         {
-            get { return GetPropertyReference<Location>(nameof(LocationId)); }
+            get { return GetPropertyReference<Location>(); }
             set
             {
                 if (value?.LocationType != LocationType.Region
                     && value?.LocationType != LocationType.City
                     && value?.LocationType != LocationType.Vilage)
                     throw new ArgumentException("Location type mast be Region or Citi or Village");
-                SetPropertyReference(value, nameof(LocationId));
+                SetPropertyReference(value);
             }
         }
 

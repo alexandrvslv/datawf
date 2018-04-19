@@ -29,10 +29,10 @@ namespace DataWF.Data
         private DBForeignKey cacheKey;
         private string name;
 
-        public ReferenceAttribute(string name, string property)
+        public ReferenceAttribute(string property, string name = null)
         {
+            ColumnProperty = property;
             this.name = name;
-            Property = property;
         }
 
         public string Name
@@ -49,7 +49,7 @@ namespace DataWF.Data
         }
 
 
-        public string Property { get; set; }
+        public string ColumnProperty { get; set; }
 
         [XmlIgnore]
         public Type ReferenceType { get; internal set; }
@@ -59,7 +59,7 @@ namespace DataWF.Data
 
         public ColumnAttribute Column
         {
-            get { return cacheColumn ?? (cacheColumn = Table?.GetColumnByProperty(Property)); }
+            get { return cacheColumn ?? (cacheColumn = Table?.GetColumnByProperty(ColumnProperty)); }
         }
 
         public DBForeignKey ForeignKey
@@ -67,6 +67,8 @@ namespace DataWF.Data
             get { return cacheKey ?? (cacheKey = Table?.Table?.Foreigns[Name]); }
             internal set { cacheKey = value; }
         }
+
+        public string Property { get; set; }
 
         public DBForeignKey Generate()
         {
@@ -80,7 +82,6 @@ namespace DataWF.Data
             }
             if (ForeignKey == null)
             {
-
                 Column.Column.IsReference = true;
                 var referenceTable = DBService.GetTable(ReferenceType, Table.Schema, true, true);
                 if (referenceTable == null || referenceTable.PrimaryKey == null)
@@ -96,6 +97,7 @@ namespace DataWF.Data
                 };
                 Table.Table.Foreigns.Add(ForeignKey);
             }
+            ForeignKey.Property = Property;
 
             return ForeignKey;
         }

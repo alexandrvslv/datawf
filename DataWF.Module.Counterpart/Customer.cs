@@ -119,11 +119,11 @@ namespace DataWF.Module.Counterpart
             set { SetProperty(value); }
         }
 
-        [Reference("fk_dcustomer_country_id", nameof(CountryId))]
+        [Reference(nameof(CountryId))]
         public Country Country
         {
-            get { return GetPropertyReference<Country>(nameof(CountryId)); }
-            set { SetPropertyReference(value, nameof(CountryId)); }
+            get { return GetPropertyReference<Country>(); }
+            set { SetPropertyReference(value); }
         }
 
         [Browsable(false)]
@@ -134,11 +134,11 @@ namespace DataWF.Module.Counterpart
             set { SetProperty(value); }
         }
 
-        [Reference("dcustomer_address_id", nameof(AddressId))]
+        [Reference(nameof(AddressId))]
         public Address Address
         {
-            get { return GetPropertyReference<Address>(nameof(AddressId)); }
-            set { SetPropertyReference(value, nameof(AddressId)); }
+            get { return GetPropertyReference<Address>(); }
+            set { SetPropertyReference(value); }
         }
 
         [Browsable(false)]
@@ -149,11 +149,11 @@ namespace DataWF.Module.Counterpart
             set { SetProperty(value); }
         }
 
-        [Reference("dcustomer_user_id", nameof(UserId))]
+        [Reference(nameof(UserId))]
         public User User
         {
-            get { return GetPropertyReference<User>(nameof(UserId)); }
-            set { SetPropertyReference(value, nameof(UserId)); }
+            get { return GetPropertyReference<User>(); }
+            set { SetPropertyReference(value); }
         }
 
 

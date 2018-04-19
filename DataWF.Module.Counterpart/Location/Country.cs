@@ -61,11 +61,11 @@ namespace DataWF.Module.Counterpart
             set { SetProperty(value); }
         }
 
-        [Reference("fk_rcountry_continent", nameof(ContinentId))]
+        [Reference(nameof(ContinentId))]
         public Location Continent
         {
-            get { return GetPropertyReference<Location>(nameof(ContinentId)); }
-            set { SetPropertyReference(value, nameof(ContinentId)); }
+            get { return GetPropertyReference<Location>(); }
+            set { SetPropertyReference(value); }
         }
 
         [VirtualColumn("name", Keys = DBColumnKeys.View | DBColumnKeys.Culture)]

@@ -9,6 +9,8 @@ namespace DataWF.Data
 {
     public class DBForeignKey : DBConstraint
     {
+        private string property;
+
         public DBForeignKey() : base()
         {
             Type = DBConstaintType.Foreign;
@@ -19,6 +21,19 @@ namespace DataWF.Data
         {
             Column = column;
             Reference = value.PrimaryKey;
+        }
+
+        public string Property
+        {
+            get { return property; }
+            set
+            {
+                if (property != value)
+                {
+                    property = value;
+                    OnPropertyChanged(nameof(Property), false);
+                }
+            }
         }
 
         public DBColumnReferenceList References { get; set; }

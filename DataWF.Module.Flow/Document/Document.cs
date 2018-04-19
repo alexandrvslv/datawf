@@ -88,7 +88,7 @@ namespace DataWF.Module.Flow
             {
                 sequnce = new DBSequence(name) { };
                 DBTable.Schema.Sequences.Add(sequnce);
-                DBTable.Schema.Connection.ExecuteQuery(sequnce.FormatSql(DDLType.Create));
+                DBService.CommitChanges(DBTable.Schema);
             }
             //return DBService.ExecuteQuery(FlowEnvironment.Config.Schema, FlowEnvironment.Config.Schema.Sequence.Create(name, 0, 1));
             var item = sequnce.NextValue();
@@ -319,11 +319,11 @@ namespace DataWF.Module.Flow
         }
 
         [ReadOnly(true)]
-        [Reference("fk_ddocument_template_id", nameof(TemplateId))]
+        [Reference(nameof(TemplateId))]
         public Template Template
         {
-            get { return GetPropertyReference<Template>(nameof(TemplateId)); }
-            set { SetPropertyReference(value, nameof(TemplateId)); }
+            get { return GetPropertyReference<Template>(); }
+            set { SetPropertyReference(value); }
         }
 
         [Browsable(false)]
@@ -334,29 +334,23 @@ namespace DataWF.Module.Flow
             set { SetValue(value, Table.GroupKey); }
         }
 
-        [Reference("fk_ddocument_parent_id", nameof(ParentId))]
+        [Reference(nameof(ParentId))]
         public Document Parent
         {
             get
             {
                 if (parent == DBItem.EmptyItem)
                 {
-                    parent = GetReference<Document>(Table.GroupKey);
-                    if (parent == null)
-                    {
-                        foreach (var dreference in References)
-                        {
-                            if (dreference.Document != this)
-                            {
-                                parent = dreference.Document;
-                                break;
-                            }
-                        }
-                    }
+                    parent = GetReference<Document>(Table.GroupKey) ??
+                        References.Where(p => p.Document != this).FirstOrDefault()?.Document;
                 }
                 return (Document)parent;
             }
-            set { SetReference(value, Table.GroupKey); }
+            set
+            {
+                SetReference(value, Table.GroupKey);
+                parent = value;
+            }
         }
 
         [DataMember, Column("document_date")]
@@ -381,13 +375,13 @@ namespace DataWF.Module.Flow
             set { SetProperty(value, nameof(CustomerId)); }
         }
 
-        [Reference("fk_ddocument_customer_id", nameof(CustomerId))]
+        [Reference(nameof(CustomerId))]
         public Customer Customer
         {
-            get { return GetPropertyReference<Customer>(nameof(CustomerId)); }
+            get { return GetPropertyReference<Customer>(); }
             set
             {
-                SetPropertyReference(value, nameof(CustomerId));
+                SetPropertyReference(value);
                 Address = Customer?.Address;
             }
         }
@@ -400,11 +394,11 @@ namespace DataWF.Module.Flow
             set { SetProperty(value, nameof(AddressId)); }
         }
 
-        [Reference("fk_ddocument_address_id", nameof(AddressId))]
+        [Reference(nameof(AddressId))]
         public Address Address
         {
-            get { return GetPropertyReference<Address>(nameof(AddressId)); }
-            set { SetPropertyReference(value, nameof(AddressId)); }
+            get { return GetPropertyReference<Address>(); }
+            set { SetPropertyReference(value); }
         }
 
         [DataMember, Column("title", Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
@@ -423,11 +417,11 @@ namespace DataWF.Module.Flow
         }
 
         [Category("Current State")]
-        [Reference("fk_ddocument_work_id", nameof(WorkId))]
+        [Reference(nameof(WorkId))]
         public DocumentWork WorkCurrent
         {
-            get { return GetPropertyReference<DocumentWork>(nameof(WorkId)); }
-            set { SetPropertyReference(value, nameof(WorkId)); }
+            get { return GetPropertyReference<DocumentWork>(); }
+            set { SetPropertyReference(value); }
         }
 
         [Category("Current State")]

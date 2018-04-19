@@ -128,7 +128,7 @@ namespace DataWF.Test.Data
             Assert.NotNull(employer.Id, "Id Generator Fail");
 
             employer.Save();
-            var qresult = schema.Connection.ExecuteQResult( $"select * from {EmployerTableName}");
+            var qresult = schema.Connection.ExecuteQResult($"select * from {EmployerTableName}");
             Assert.AreEqual(1, qresult.Values.Count, "Insert sql Fail");
             Assert.AreEqual(employer.Id, qresult.Get(0, "id"), "Insert sql Fail Int");
             Assert.AreEqual(employer.Identifier, qresult.Get(0, "identifier"), "Insert sql Fail String");
@@ -231,44 +231,44 @@ namespace DataWF.Test.Data
             [Column("id", Keys = DBColumnKeys.Primary)]
             public int? Id
             {
-                get { return GetProperty<int?>(nameof(Id)); }
-                set { SetProperty(value, nameof(Id)); }
+                get { return GetProperty<int?>(); }
+                set { SetProperty(value); }
             }
 
             [Column("code", 20, Keys = DBColumnKeys.Code | DBColumnKeys.Unique | DBColumnKeys.Indexing)]
             [Index("positioncode", true)]
             public string Code
             {
-                get { return GetProperty<string>(nameof(Code)); }
-                set { SetProperty(value, nameof(Code)); }
+                get { return GetProperty<string>(); }
+                set { SetProperty(value); }
             }
 
             [Column("parentid", Keys = DBColumnKeys.Group)]
             public int? ParentId
             {
-                get { return GetProperty<int?>(nameof(ParentId)); }
-                set { SetProperty(value, nameof(ParentId)); }
+                get { return GetProperty<int?>(); }
+                set { SetProperty(value); }
             }
 
-            [Reference("fk_position_positionid", nameof(ParentId))]
+            [Reference(nameof(ParentId))]
             public Position Parent
             {
-                get { return GetPropertyReference<Position>(nameof(ParentId)); }
-                set { SetPropertyReference(value, nameof(ParentId)); }
+                get { return GetPropertyReference<Position>(); }
+                set { SetPropertyReference(value); }
             }
 
             [Column("name", 200, Keys = DBColumnKeys.Culture)]
             public override string Name
             {
-                get { return GetName("name"); }
-                set { SetName("name", value); }
+                get { return GetName(nameof(Name)); }
+                set { SetName(nameof(Name), value); }
             }
 
             [Column("description")]
             public string Description
             {
-                get { return GetProperty<string>(nameof(Description)); }
-                set { SetProperty(value, nameof(Description)); }
+                get { return GetProperty<string>(); }
+                set { SetProperty(value); }
             }
         }
 
@@ -293,93 +293,93 @@ namespace DataWF.Test.Data
             [Column("id", Keys = DBColumnKeys.Primary)]
             public int? Id
             {
-                get { return GetProperty<int?>(nameof(Id)); }
-                set { SetProperty(value, nameof(Id)); }
+                get { return GetProperty<int?>(); }
+                set { SetProperty(value); }
             }
 
             [Column("identifier", 20, Keys = DBColumnKeys.Code)]
             [Index("employeridentifier", true)]
             public string Identifier
             {
-                get { return GetProperty<string>(nameof(Identifier)); }
-                set { SetProperty(value, nameof(Identifier)); }
+                get { return GetProperty<string>(); }
+                set { SetProperty(value); }
             }
 
             [Column("positionid")]
             public int? PositionId
             {
-                get { return GetProperty<int?>(nameof(PositionId)); }
-                set { SetProperty(value, nameof(PositionId)); }
+                get { return GetProperty<int?>(); }
+                set { SetProperty(value); }
             }
 
-            [Reference("fk_employer_positionid", nameof(PositionId))]
+            [Reference(nameof(PositionId))]
             public Position Position
             {
-                get { return GetPropertyReference<Position>(nameof(PositionId)); }
-                set { SetPropertyReference(value, nameof(PositionId)); }
+                get { return GetPropertyReference<Position>(); }
+                set { SetPropertyReference(value); }
             }
 
             [Column("typeid", Keys = DBColumnKeys.ElementType, Default = "1")]
             public EmployerType? Type
             {
-                get { return GetProperty<EmployerType?>(nameof(Type)); }
-                set { SetProperty(value, nameof(Type)); }
+                get { return GetProperty<EmployerType?>(); }
+                set { SetProperty(value); }
             }
 
             [Column("longid")]
             public long? LongId
             {
-                get { return GetProperty<long?>(nameof(LongId)); }
-                set { SetProperty(value, nameof(LongId)); }
+                get { return GetProperty<long?>(); }
+                set { SetProperty(value); }
             }
 
             [Column("height")]
             public short? Height
             {
-                get { return GetProperty<short?>(nameof(Height)); }
-                set { SetProperty(value, nameof(Height)); }
+                get { return GetProperty<short?>(); }
+                set { SetProperty(value); }
             }
 
             [Column("weight")]
             public float? Weight
             {
-                get { return GetProperty<float?>(nameof(Weight)); }
-                set { SetProperty(value, nameof(Weight)); }
+                get { return GetProperty<float?>(); }
+                set { SetProperty(value); }
             }
 
             [Column("dweight")]
             public double? DWeight
             {
-                get { return GetProperty<double?>(nameof(DWeight)); }
-                set { SetProperty(value, nameof(DWeight)); }
+                get { return GetProperty<double?>(); }
+                set { SetProperty(value); }
             }
 
             [Column("salary", 23, 3)]
             public decimal? Salary
             {
-                get { return GetProperty<decimal?>(nameof(Salary)); }
-                set { SetProperty(value, nameof(Salary)); }
+                get { return GetProperty<decimal?>(); }
+                set { SetProperty(value); }
             }
 
             [Column("age")]
             public byte? Age
             {
-                get { return GetProperty<byte?>(nameof(Age)); }
-                set { SetProperty(value, nameof(Age)); }
+                get { return GetProperty<byte?>(); }
+                set { SetProperty(value); }
             }
 
             [Column("lodar")]
             public bool? Lodar
             {
-                get { return GetProperty<bool?>(nameof(Lodar)); }
-                set { SetProperty(value, nameof(Lodar)); }
+                get { return GetProperty<bool?>(); }
+                set { SetProperty(value); }
             }
 
             [Column("name", 20, Keys = DBColumnKeys.Culture)]
             public override string Name
             {
-                get { return GetName("name"); }
-                set { SetName("name", value); }
+                get { return GetName(nameof(Name)); }
+                set { SetName(nameof(Name), value); }
             }
         }
     }

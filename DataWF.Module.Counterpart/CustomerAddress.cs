@@ -41,30 +41,30 @@ namespace DataWF.Module.Counterpart
         [DataMember, Column("customer_id")]
         public int? CustomerId
         {
-            get { return GetValue<int?>(Table.ParseColumn(nameof(CustomerId))); }
-            set { SetProperty(value, nameof(CustomerId)); }
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
         }
 
-        [Reference("fk_dcustomer_address_customer_id", nameof(CustomerId))]
+        [Reference(nameof(CustomerId))]
         public Customer Customer
         {
-            get { return GetPropertyReference<Customer>(nameof(CustomerId)); }
-            set { SetPropertyReference(value, nameof(CustomerId)); }
+            get { return GetPropertyReference<Customer>(); }
+            set { SetPropertyReference(value); }
         }
 
         [Browsable(false)]
         [DataMember, Column("address_id")]
         public int? AddressId
         {
-            get { return GetProperty<int?>(nameof(AddressId)); }
-            set { SetProperty(value, nameof(AddressId)); }
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
         }
 
-        [Reference("fk_dcustomer_address_address_id", nameof(CustomerId))]
+        [Reference(nameof(AddressId))]
         public Address Address
         {
-            get { return GetPropertyReference<Address>(nameof(AddressId)); }
-            set { SetPropertyReference(value, nameof(AddressId)); }
+            get { return GetPropertyReference<Address>(); }
+            set { SetPropertyReference(value); }
         }
     }
 }

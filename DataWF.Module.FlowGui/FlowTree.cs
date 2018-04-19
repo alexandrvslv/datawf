@@ -97,7 +97,7 @@ namespace DataWF.Module.FlowGui
             {
                 node.Glyph = GlyphType.Book;
                 node.GlyphColor = Colors.LightBlue;
-                InitItems(((Template)item).GetParams(), node, ShowStage);
+                InitItems(((Template)item).GetParams(), node, ShowTemplateParam);
             }
             else if (item is Work)
             {

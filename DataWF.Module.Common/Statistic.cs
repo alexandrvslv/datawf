@@ -86,11 +86,11 @@ namespace DataWF.Module.Common
             set { SetProperty(value, nameof(SchedulerId)); }
         }
 
-        [Reference("fk_dstats_scheduler_id", nameof(SchedulerId))]
+        [Reference(nameof(SchedulerId))]
         public Scheduler Scheduler
         {
-            get { return GetPropertyReference<Scheduler>(nameof(SchedulerId)); }
-            set { SetPropertyReference(value, nameof(SchedulerId)); }
+            get { return GetPropertyReference<Scheduler>(); }
+            set { SetPropertyReference(value); }
         }
 
         [DataMember, Column("stat_result")]

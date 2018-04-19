@@ -206,6 +206,7 @@ namespace DataWF.Data
                 if (reference != null)
                 {
                     reference.Table = this;
+                    reference.Property = property.Name;
                     reference.ReferenceType = property.PropertyType;
                     reference.Column.Keys |= DBColumnKeys.Reference;
                     cacheReferences.Add(reference);

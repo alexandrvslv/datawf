@@ -22,72 +22,72 @@ using System.ComponentModel;
 
 namespace DataWF.Module.Messanger
 {
-	public class MessageDataList : DBTableView<MessageAddress>
-	{
-		public MessageDataList(string filter)
-			: base(MessageAddress.DBTable, filter)
-		{
-			//_ApplySort(new DBRowComparer(FlowEnvir.Config.StageParameter.Table, FlowEnvir.Config.StageParameter.Table.PrimaryKey.Code, ListSortDirection.Ascending));
-		}
+    public class MessageDataList : DBTableView<MessageAddress>
+    {
+        public MessageDataList(string filter)
+            : base(MessageAddress.DBTable, filter)
+        {
+            //_ApplySort(new DBRowComparer(FlowEnvir.Config.StageParameter.Table, FlowEnvir.Config.StageParameter.Table.PrimaryKey.Code, ListSortDirection.Ascending));
+        }
 
-		public MessageDataList()
-			: this(string.Empty)
-		{ }
+        public MessageDataList()
+            : this(string.Empty)
+        { }
 
-		public MessageDataList(Message message)
-			: this(string.Format("({0} = {1}",
-								 MessageData.DBTable.ParseProperty(nameof(MessageData.MessageId)).Name, message.PrimaryId))
-		{ }
-	}
+        public MessageDataList(Message message)
+            : this(string.Format("({0} = {1}",
+                                 MessageData.DBTable.ParseProperty(nameof(MessageData.MessageId)).Name, message.PrimaryId))
+        { }
+    }
 
-	[Table("wf_message", "dmessage_data", "Message")]
-	public class MessageData : DBItem
-	{
-		public static DBTable<MessageData> DBTable
-		{
-			get { return DBService.GetTable<MessageData>(); }
-		}
+    [Table("wf_message", "dmessage_data", "Message")]
+    public class MessageData : DBItem
+    {
+        public static DBTable<MessageData> DBTable
+        {
+            get { return DBService.GetTable<MessageData>(); }
+        }
 
-		public MessageData()
-		{
-			Build(DBTable);
-		}
+        public MessageData()
+        {
+            Build(DBTable);
+        }
 
-		[Column("unid", Keys = DBColumnKeys.Primary)]
-		public int? Id
-		{
-			get { return GetProperty<int?>(nameof(Id)); }
-			set { SetProperty(value, nameof(Id)); }
-		}
+        [Column("unid", Keys = DBColumnKeys.Primary)]
+        public int? Id
+        {
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
+        }
 
-		[Browsable(false)]
-		[Column("messageid")]
-		public int? MessageId
-		{
-			get { return GetProperty<int?>(nameof(MessageId)); }
-			set { SetProperty(value, nameof(MessageId)); }
-		}
+        [Browsable(false)]
+        [Column("messageid")]
+        public int? MessageId
+        {
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
+        }
 
-		[Reference("fk_mdata_messageid", nameof(MessageId))]
-		public Message Message
-		{
-			get { return GetPropertyReference<Message>(nameof(MessageId)); }
-			set { SetPropertyReference(value, nameof(MessageId)); }
-		}
+        [Reference(nameof(MessageId))]
+        public Message Message
+        {
+            get { return GetPropertyReference<Message>(); }
+            set { SetPropertyReference(value); }
+        }
 
-		[Column("mdata_name")]
-		public string DataName
-		{
-			get { return GetProperty<string>(nameof(DataName)); }
-			set { SetProperty(value, nameof(DataName)); }
-		}
+        [Column("mdata_name")]
+        public string DataName
+        {
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
+        }
 
-		[Column("mdata")]
-		public byte[] Data
-		{
-			get { return GetProperty<byte[]>(nameof(DataName)); }
-			set { SetProperty(value, nameof(DataName)); }
-		}
-	}
+        [Column("mdata")]
+        public byte[] Data
+        {
+            get { return GetProperty<byte[]>(); }
+            set { SetProperty(value); }
+        }
+    }
 
 }

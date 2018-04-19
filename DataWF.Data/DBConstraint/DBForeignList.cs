@@ -26,6 +26,8 @@ namespace DataWF.Data
     {
         static readonly Invoker<DBForeignKey, string> referenceNameInvoker = new Invoker<DBForeignKey, string>(nameof(DBForeignKey.ReferenceName),
             (item) => item.ReferenceName);
+        static readonly Invoker<DBForeignKey, string> propertyInvoker = new Invoker<DBForeignKey, string>(nameof(DBForeignKey.Property),
+            (item) => item.Property);
         static readonly Invoker<DBForeignKey, string> referenceTableNameInvoker = new Invoker<DBForeignKey, string>(nameof(DBForeignKey.ReferenceTableName),
             (item) => item.ReferenceTableName);
 
@@ -33,6 +35,7 @@ namespace DataWF.Data
         {
             Indexes.Add(referenceNameInvoker);
             Indexes.Add(referenceTableNameInvoker);
+            Indexes.Add(propertyInvoker);
         }
 
         public DBForeignKey GetForeignByColumn(DBColumn column)
@@ -40,9 +43,14 @@ namespace DataWF.Data
             return SelectOne(nameof(DBForeignKey.ColumnName), CompareType.Equal, column.FullName);
         }
 
+        public DBForeignKey GetByProperty(string property)
+        {
+            return SelectOne(nameof(DBForeignKey.Property), CompareType.Equal, property);
+        }
+
         public IEnumerable<DBForeignKey> GetByReference(DBColumn reference)
         {
-            return Select(nameof(DBForeignKey.ReferenceName), CompareType.Equal, reference.FullName); ;
+            return Select(nameof(DBForeignKey.ReferenceName), CompareType.Equal, reference.FullName);
         }
 
         public IEnumerable<DBForeignKey> GetByReference(DBTable reference)

@@ -103,11 +103,11 @@ namespace DataWF.Module.Flow
             set { SetProperty(value); }
         }
 
-        [Reference("fk_rstage_work_id", nameof(WorkId))]
+        [Reference(nameof(WorkId))]
         public Work Work
         {
-            get { return GetPropertyReference<Work>(nameof(WorkId)); }
-            set { SetPropertyReference(value, nameof(WorkId)); }
+            get { return GetPropertyReference<Work>(); }
+            set { SetPropertyReference(value); }
         }
 
         [DataMember, Column("keys")]

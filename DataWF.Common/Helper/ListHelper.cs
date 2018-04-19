@@ -285,6 +285,14 @@ namespace DataWF.Common
             return result;
         }
 
+        public static IFilterable GetListView(object dataSource)
+        {
+            throw new NotImplementedException();
+            //dataSource as ;
+            //if (filterable == null && dataSource is ISelectable)
+            //    filterable = ((ISelectable)dataSource).
+        }
+
         public static IEnumerable Search(IList items, QueryParameter param)
         {
             for (int j = 0; j < items.Count; j++)

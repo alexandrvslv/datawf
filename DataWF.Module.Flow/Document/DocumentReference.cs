@@ -131,21 +131,17 @@ namespace DataWF.Module.Flow
             set { SetProperty(value); }
         }
 
-        [Reference("fk_ddocument_reference_reference_id", nameof(ReferenceId))]
+        [Reference(nameof(ReferenceId))]
         public Document Reference
         {
-            get { return GetPropertyReference<Document>(nameof(ReferenceId)); }
-            set { SetPropertyReference(value, nameof(ReferenceId)); }
+            get { return GetPropertyReference<Document>(); }
+            set { SetPropertyReference(value); }
         }
 
         public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)
         {
             base.OnPropertyChanged(property, column, value);
-            if (Document != null)
-            {
-                Document.OnReferenceChanged(this);
-            }
-            if (Reference != null)
+            if (Attached && Reference != null)
             {
                 Reference.OnReferenceChanged(this);
             }

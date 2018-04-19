@@ -152,7 +152,7 @@ namespace DataWF.Data
 
         public T GetProperty<T>([CallerMemberName] string property = null)
         {
-            return GetValue<T>(ParseProperty(property));
+            return GetValue<T>(Table.Columns.GetByProperty(property));
         }
 
         private void RefreshOld(DBColumn column, object value, object field)
@@ -187,7 +187,7 @@ namespace DataWF.Data
 
         public void SetProperty(object value, [CallerMemberName] string property = null)
         {
-            SetValue(value, ParseProperty(property));
+            SetValue(value, Table.Columns.GetByProperty(property));
         }
 
         public void SetValue(object value, DBColumn column)
@@ -336,9 +336,9 @@ namespace DataWF.Data
             return row.GetReference<T>(row.table.Columns[code.Substring(pi)], param, transaction);
         }
 
-        public T GetPropertyReference<T>(string property) where T : DBItem, new()
+        public T GetPropertyReference<T>([CallerMemberName] string property = null) where T : DBItem, new()
         {
-            return GetReference<T>(ParseProperty(property));
+            return GetReference<T>(Table.Foreigns.GetByProperty(property)?.Column);
         }
 
         public T GetReference<T>(DBColumn column, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null) where T : DBItem, new()
@@ -369,9 +369,9 @@ namespace DataWF.Data
             SetReference(value, Table.Columns[column]);
         }
 
-        public void SetPropertyReference(DBItem value, string property)
+        public void SetPropertyReference(DBItem value, [CallerMemberName] string property = null)
         {
-            SetReference(value, ParseProperty(property));
+            SetReference(value, Table.Foreigns.GetByProperty(property)?.Column);
         }
 
         public void SetReference(DBItem value, DBColumn column)
@@ -602,11 +602,6 @@ namespace DataWF.Data
                     break;
                 }
             }
-        }
-
-        public DBColumn ParseProperty(string property)
-        {
-            return Table.Columns.GetByProperty(property);
         }
 
         [Browsable(false)]
@@ -1303,9 +1298,9 @@ namespace DataWF.Data
                 var relations = Table.GetChildRelations();
                 foreach (DBForeignKey relation in relations)
                 {
-                    if (relation.Table.Name.IndexOf("drlog", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                        relation.Table.Type != DBTableType.Table ||
-                    relation.Column.ColumnType != DBColumnTypes.Default)
+                    if (relation.Table.Name.IndexOf("drlog", StringComparison.OrdinalIgnoreCase) >= 0
+                        || relation.Table.Type != DBTableType.Table
+                        || relation.Column.ColumnType != DBColumnTypes.Default)
                         continue;
                     if (recurs >= 0 || relation.Table == Table)
                     {

@@ -205,6 +205,7 @@ namespace DataWF.Gui
 
                 if (dataSource is IList)
                 {
+                    //TODO IFilterable filterable = ListHelper.GetListView(dataSource);                    
                     list.Mode = LayoutListMode.List;
                     list.ListSource = (IList)dataSource;
                     type = list.ListType;
@@ -342,7 +343,7 @@ namespace DataWF.Gui
                 }
                 list.ReadOnly = value;
                 toolCut.Sensitive = !value;
-                toolSave.Visible = !value;
+                toolSave.Sensitive = !value;
                 toolAdd.Sensitive = !value;
                 toolRemove.Sensitive = !value;
                 toolEdit.Sensitive = !value;
@@ -432,7 +433,7 @@ namespace DataWF.Gui
 
         public static event EventHandler<ListEditorEventArgs> LogClick;
 
-        private void OnToolLogClick(object sender, EventArgs e)
+        protected virtual void OnToolLogClick(object sender, EventArgs e)
         {
             if (LogClick != null && list.Mode == LayoutListMode.Fields)
                 LogClick(this, new ListEditorEventArgs() { Item = DataSource });

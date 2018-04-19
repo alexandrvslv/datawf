@@ -168,7 +168,7 @@ namespace DataWF.Module.Counterpart
             set { SetValue(value, Table.GroupKey); }
         }
 
-        [Reference("fk_rlocation_parent_id", nameof(ParentId))]
+        [Reference(nameof(ParentId))]
         public Location Parent
         {
             get { return GetReference<Location>(Table.GroupKey); }

@@ -14,7 +14,7 @@ namespace DataWF.Data.Gui
         private ManualResetEvent cancelEvent = new ManualResetEvent(true);
         private ManualResetEvent delayEvent = new ManualResetEvent(false);
         private ConcurrentStack<QQuery> queries = new ConcurrentStack<QQuery>();
-        private DateTime changeProgressSpeed = DateTime.Now;
+        private DateTime changeProgressSpeed = DateTime.UtcNow;
         private IDBTableView view;
         private DBTransaction transaction = null;
         // private EventHandler<DBLoadCompleteEventArgs> _handlerComplete = null;
@@ -80,11 +80,10 @@ namespace DataWF.Data.Gui
         {
             if (arg.Target == view)
             {
-                DateTime now = DateTime.Now;
-                TimeSpan ts = now - changeProgressSpeed;
+                TimeSpan ts = DateTime.UtcNow - changeProgressSpeed;
                 if (ts.TotalMilliseconds > 300)
                 {
-                    changeProgressSpeed = DateTime.Now;
+                    changeProgressSpeed = DateTime.UtcNow;
                     Application.Invoke(() => OnLoadProgress(arg));
                 }
             }
@@ -111,7 +110,7 @@ namespace DataWF.Data.Gui
                 Application.Invoke(() => OnLoadColumns(arg));
         }
 
-        public async Task Load(QQuery query)
+        public async Task LoadAsync(QQuery query)
         {
             Cancel();
             if (query != null && query.Table == view.Table)
@@ -150,11 +149,11 @@ namespace DataWF.Data.Gui
             }
         }
 
-        public async Task Load()
+        public async Task LoadAsync()
         {
             if (view == null || view.Table.IsSynchronized)
                 return;
-            await Load(view.Query);
+            await LoadAsync(view.Query);
         }
 
         public bool IsLoad()

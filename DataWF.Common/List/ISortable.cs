@@ -17,6 +17,8 @@ namespace DataWF.Common
         void ApplySort(IComparer comparer);
 
         void RemoveSort();
+
+        IFilterable DefaultView { get; }
     }
 
     public interface ISortable<T> : ISortable

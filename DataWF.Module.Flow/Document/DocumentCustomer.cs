@@ -62,20 +62,20 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [DataMember, Column("customer_id")]
+        [DataMember, Column("customer_id", Keys = DBColumnKeys.View)]
         public int? CustomerId
         {
             get { return GetProperty<int?>(); }
             set { SetProperty(value); }
         }
 
-        [Reference("fk_ddocument_customer_customer_id", nameof(CustomerId))]
+        [Reference(nameof(CustomerId))]
         public Customer Customer
         {
-            get { return GetPropertyReference<Customer>(nameof(CustomerId)); }
+            get { return GetPropertyReference<Customer>(); }
             set
             {
-                SetPropertyReference(value, nameof(CustomerId));
+                SetPropertyReference(value);
                 Address = value?.Address;
                 EMail = value?.EMail;
                 Phone = value?.Phone;
@@ -90,11 +90,11 @@ namespace DataWF.Module.Flow
             set { SetProperty(value); }
         }
 
-        [Reference("fk_ddocument_customer_address_id", nameof(AddressId))]
+        [Reference(nameof(AddressId))]
         public Address Address
         {
-            get { return GetPropertyReference<Address>(nameof(AddressId)); }
-            set { SetPropertyReference(value, nameof(AddressId)); }
+            get { return GetPropertyReference<Address>(); }
+            set { SetPropertyReference(value); }
         }
 
         [DataMember, Column("email", 1024)]

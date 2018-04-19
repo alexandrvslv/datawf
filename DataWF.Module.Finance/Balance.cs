@@ -29,7 +29,6 @@ namespace DataWF.Module.Finance
     public class BalanceList : DBTableView<Balance>
     {
         public BalanceList()
-            : base(Balance.DBTable)
         {
         }
     }
@@ -104,11 +103,11 @@ namespace DataWF.Module.Finance
             set { SetProperty(value, nameof(AccountId)); }
         }
 
-        [Reference("fk_daccountbalance_accountid", "AccountId")]
+        [Reference("AccountId")]
         public Account Account
         {
-            get { return GetPropertyReference<Account>(nameof(AccountId)); }
-            set { SetPropertyReference(value, nameof(AccountId)); }
+            get { return GetPropertyReference<Account>(); }
+            set { SetPropertyReference(value); }
         }
 
         [Column("amount")]
@@ -121,15 +120,15 @@ namespace DataWF.Module.Finance
         [Column("currencyid"), Index("daccountbalance_currencyid")]
         public int? CurrencyId
         {
-            get { return GetProperty<int?>(nameof(CurrencyId)); }
-            set { SetProperty(value, nameof(CurrencyId)); }
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
         }
 
-        [Reference("fk_daccountbalance_currencyid", "CurrencyId")]
+        [Reference(nameof(CurrencyId))]
         public Currency Currency
         {
-            get { return GetPropertyReference<Currency>(nameof(CurrencyId)); }
-            set { SetPropertyReference(value, nameof(CurrencyId)); }
+            get { return GetPropertyReference<Currency>(); }
+            set { SetPropertyReference(value); }
         }
     }
 }

@@ -261,11 +261,11 @@ namespace DataWF.Module.Common
             set { SetProperty(value); }
         }
 
-        [Reference("fk_ruser_department_id", nameof(DepartmentId))]
+        [Reference(nameof(DepartmentId))]
         public Department Department
         {
-            get { return GetPropertyReference<Department>(nameof(DepartmentId)); }
-            set { SetPropertyReference(value, nameof(DepartmentId)); }
+            get { return GetPropertyReference<Department>(); }
+            set { SetPropertyReference(value); }
         }
 
         [DataMember, Column("position_id"), Browsable(false)]
@@ -275,19 +275,19 @@ namespace DataWF.Module.Common
             set { SetProperty(value); }
         }
 
-        [Reference("fk_ruser_position_id", nameof(PositionId))]
+        [Reference(nameof(PositionId))]
         public Position Position
         {
-            get { return GetPropertyReference<Position>(nameof(PositionId)); }
-            set { SetPropertyReference(value, nameof(PositionId)); }
+            get { return GetPropertyReference<Position>(); }
+            set { SetPropertyReference(value); }
         }
 
         [ReadOnly(true)]
         [DataMember, Column("super", Default = "false", Keys = DBColumnKeys.Notnull)]
         public bool? Super
         {
-            get { return GetValue<bool?>(ParseProperty(nameof(Super))); }
-            set { SetProperty(value, nameof(Super)); }
+            get { return GetProperty<bool?>(); }
+            set { SetProperty(value); }
         }
 
         [Browsable(false)]

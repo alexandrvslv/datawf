@@ -20,7 +20,7 @@ namespace DataWf.Test.Module.Counterparty
             Assert.IsNotNull(Address.DBTable);
             Assert.IsNotNull(Customer.DBTable);
             Assert.IsNotNull(CustomerAddress.DBTable);
-            Assert.IsNotNull(CustomerIdentify.DBTable);
+            Assert.IsNotNull(PersoneIdentify.DBTable);
             Assert.IsNotNull(CustomerReference.DBTable);
             DBService.Save();
             schema.Connection = new DBConnection

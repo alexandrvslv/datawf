@@ -68,6 +68,11 @@ namespace DataWF.Common
             get { return comparer != null; }
         }
 
+        IFilterable ISortable.DefaultView
+        {
+            get { return DefaultView; }
+        }
+
         [XmlIgnore, Browsable(false)]
         public SelectableListView<T> DefaultView
         {

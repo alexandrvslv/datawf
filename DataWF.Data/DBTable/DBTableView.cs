@@ -28,10 +28,6 @@ using System.Linq;
 
 namespace DataWF.Data
 {
-    public interface IDBList : IList, IDBTableContent
-    {
-    }
-
     public class DBTableView<T> : SelectableList<T>, IDBTableView where T : DBItem, new()
     {
         protected DBViewKeys keys = DBViewKeys.Lock;
@@ -47,6 +43,10 @@ namespace DataWF.Data
         { }
 
         public DBTableView(DBTable table, string defaultFilter = null, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
+            : this(table, !string.IsNullOrEmpty(defaultFilter) ? new QParam(table, defaultFilter) : null, mode, statusFilter)
+        { }
+
+        public DBTableView(DBTable table, QParam defaultFilter = null, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
         {
             propertyHandler = null;
             table.AddView(this);
@@ -54,10 +54,7 @@ namespace DataWF.Data
             FilterQuery = new Query();
             Query = new QQuery();
             TypeFilter = typeof(T);
-            if (!string.IsNullOrEmpty(defaultFilter))
-            {
-                DefaultParam = new QParam(table, defaultFilter);
-            }
+            DefaultParam = defaultFilter;
             StatusFilter = statusFilter;
             keys = mode;
             if ((keys & DBViewKeys.Empty) != DBViewKeys.Empty)

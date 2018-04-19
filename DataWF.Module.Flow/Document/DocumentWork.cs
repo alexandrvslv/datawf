@@ -122,13 +122,13 @@ namespace DataWF.Module.Flow
             set { SetProperty(value, nameof(StageId)); }
         }
 
-        [Reference("fk_ddocument_work_stage_id", nameof(StageId))]
+        [Reference(nameof(StageId))]
         public Stage Stage
         {
-            get { return GetPropertyReference<Stage>(nameof(StageId)); }
+            get { return GetPropertyReference<Stage>(); }
             set
             {
-                SetPropertyReference(value, nameof(StageId));
+                SetPropertyReference(value);
                 IsSystem = value?.Keys != null && (value.Keys & StageKey.IsSystem) == StageKey.IsSystem;
                 IsStart = value?.Keys != null && (value.Keys & StageKey.IsStart) == StageKey.IsStart;
                 IsStop = value?.Keys != null && (value.Keys & StageKey.IsStop) == StageKey.IsStop;
@@ -143,11 +143,11 @@ namespace DataWF.Module.Flow
             set { SetProperty(value); }
         }
 
-        [Reference("fk_ddocument_work_userid", nameof(UserId))]
+        [Reference(nameof(UserId))]
         public User User
         {
-            get { return GetPropertyReference<User>(nameof(UserId)); }
-            set { SetPropertyReference(value, nameof(UserId)); }
+            get { return GetPropertyReference<User>(); }
+            set { SetPropertyReference(value); }
         }
 
         [Browsable(false)]
@@ -158,11 +158,11 @@ namespace DataWF.Module.Flow
             set { SetProperty(value, nameof(FromId)); }
         }
 
-        [Reference("fk_ddocument_work_from_id", nameof(FromId))]
+        [Reference(nameof(FromId))]
         public DocumentWork From
         {
-            get { return GetPropertyReference<DocumentWork>(nameof(FromId)); }
-            set { SetPropertyReference(value, nameof(FromId)); }
+            get { return GetPropertyReference<DocumentWork>(); }
+            set { SetPropertyReference(value); }
         }
 
         [Browsable(false)]
@@ -237,15 +237,6 @@ namespace DataWF.Module.Flow
         }
 
         public bool IsResend { get; set; }
-
-        public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)
-        {
-            base.OnPropertyChanged(property, column, value);
-            if (Attached && Document != null)
-            {
-                Document.OnReferenceChanged(this);
-            }
-        }
 
         public override string ToString()
         {

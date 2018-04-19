@@ -34,6 +34,10 @@ namespace DataWF.Gui
 
         public static Command ShowDialog(this Widget widget, WindowFrame owner)
         {
+            if (widget is ILocalizable)
+            {
+                ((ILocalizable)widget).Localize();
+            }
             var window = new Dialog
             {
                 BackgroundColor = GuiEnvironment.StylesInfo["Window"].BaseColor,
@@ -66,6 +70,10 @@ namespace DataWF.Gui
 
         public static void ShowWindow(this Widget widget, WindowFrame owner)
         {
+            if (widget is ILocalizable)
+            {
+                ((ILocalizable)widget).Localize();
+            }
             var vbox = new VBox();
             vbox.PackStart(widget, true, true);
             var window = new Window
@@ -81,7 +89,10 @@ namespace DataWF.Gui
             };
             if (widget is IText)
             {
-                window.Title = ((IText)widget).Text;
+                if (!string.IsNullOrEmpty(((IText)widget).Text))
+                {
+                    window.Title = ((IText)widget).Text;
+                }
                 ((IText)widget).TextChanged += WindowContentTextChanged;
             }
             window.CloseRequested += (s, e) =>

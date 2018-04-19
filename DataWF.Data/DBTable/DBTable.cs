@@ -106,7 +106,7 @@ namespace DataWF.Data
 
         public DBColumn ParseProperty(string property)
         {
-            return Columns.GetByProperty(property);
+            return Columns.GetByProperty(property) ?? Foreigns.GetByProperty(property)?.Column;
         }
 
         [Browsable(false)]

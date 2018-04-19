@@ -19,6 +19,7 @@ namespace DataWF.Module.FlowGui
             view.DefaultParam = new QParam(LogicType.And, Table.ParseProperty(nameof(DocumentDetail.DocumentId)), CompareType.Equal, 0);
             DataSource = view;
 
+            toolLog.Visible = Table.IsLoging;
             toolGroup.Visible = view.Table.GroupKey != null;
             toolRefresh.Visible =
                 toolSave.Visible =
@@ -69,7 +70,10 @@ namespace DataWF.Module.FlowGui
 
         public async Task SyncAsync()
         {
-            await Task.Run(() => Sync());
+            if (!view.IsSynchronized)
+            {
+                await Task.Run(() => Sync());
+            }
         }
 
         protected async override void OnToolLoadClick(object sender, EventArgs e)
@@ -94,12 +98,30 @@ namespace DataWF.Module.FlowGui
             }
         }
 
+        protected override void OnToolLogClick(object sender, EventArgs e)
+        {
+            if (Current == null)
+                return;
+            var param = new QParam()
+            {
+                Column = Table.LogTable.BaseKey,
+                Comparer = CompareType.Equal,
+                Value = Current.PrimaryId
+            };
+            var tableView = new TableView()
+            {
+                View = new DBTableView<DBLogItem>(Table.LogTable, param),
+                Text = $"{Table.DisplayName} Logs"
+            };
+            tableView.ShowWindow(ParentWindow);
+        }
+
         protected override void OnToolWindowAcceptClick(object sender, EventArgs e)
         {
             var item = fields.FieldSource as T;
             if (item != null)
             {
-                item.Save();
+                item.Attach();
             }
             if (view.IsStatic)
             {

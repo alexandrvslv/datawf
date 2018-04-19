@@ -84,25 +84,6 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [DataContract]
-    public class DocumentDetail : DBItem
-    {
-        [Browsable(false)]
-        [DataMember, Column("document_id")]
-        public long? DocumentId
-        {
-            get { return GetProperty<long?>(); }
-            set { SetProperty(value); }
-        }
-
-        [Reference("", nameof(DocumentId))]
-        public Document Document
-        {
-            get { return GetPropertyReference<Document>(nameof(DocumentId)); }
-            set { SetPropertyReference(value, nameof(DocumentId)); }
-        }
-    }
-
 
     [DataContract, Table("wf_flow", "ddocument_data", "Document", BlockSize = 400)]
     public class DocumentData : DocumentDetail
@@ -144,10 +125,10 @@ namespace DataWF.Module.Flow
         [DataMember, Column("file_data")]
         public byte[] FileData
         {
-            get { return buf ?? (buf = DBService.GetZip(this, ParseProperty(nameof(FileData)))); }
+            get { return buf ?? (buf = DBService.GetZip(this, Table.Columns.GetByProperty(nameof(FileData)))); }
             set
             {
-                var column = ParseProperty(nameof(FileData));
+                var column = Table.Columns.GetByProperty(nameof(FileData));
                 buf = value;
                 DBService.SetZip(this, column, value);
 
@@ -277,15 +258,6 @@ namespace DataWF.Module.Flow
                 }
             }
             FileName = Path.GetFileName(path);
-        }
-
-        public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)
-        {
-            base.OnPropertyChanged(property, column, value);
-            if (Document != null)
-            {
-                Document.OnReferenceChanged(this);
-            }
         }
 
         public static BackgroundWorker ExecuteAsync(DocumentData data, ExecuteArgs param)

@@ -29,6 +29,8 @@ namespace DataWF.Data
     public class DBLogTable : DBTable<DBLogItem>
     {
         public static readonly string UserLogName = "userlog_id";
+        public static DBTable UserLogTable { get; set; }
+
         private DBTable baseTable;
         private DBColumn basekey = DBColumn.EmptyKey;
         private DBColumn userLogkey = DBColumn.EmptyKey;
@@ -109,6 +111,12 @@ namespace DataWF.Data
                         DataType = typeof(DBLogType),
                         Keys = DBColumnKeys.ElementType
                     });
+                    Columns.Add(new DBColumn()
+                    {
+                        Name = "status_id",
+                        DataType = typeof(DBStatus),
+                        Keys = DBColumnKeys.Date
+                    });
                 }
                 foreach (var column in value.Columns)
                 {
@@ -128,6 +136,7 @@ namespace DataWF.Data
             get { return BaseTable.Access; }
             set { base.Access = value; }
         }
+
 
         private DBLogColumn GetLogColumn(DBColumn column)
         {

@@ -54,11 +54,11 @@ namespace DataWF.Module.Common
             set { SetProperty(value); }
         }
 
-        [Reference("fk_rposition_department_id", nameof(DepartmentId))]
+        [Reference(nameof(DepartmentId))]
         public Department Department
         {
-            get { return GetPropertyReference<Department>(nameof(DepartmentId)); }
-            set { SetPropertyReference(value, nameof(DepartmentId)); }
+            get { return GetPropertyReference<Department>(); }
+            set { SetPropertyReference(value); }
         }
 
         [DataMember, Column("parent_id", Keys = DBColumnKeys.Group), Index("rposition_parent_id"), Browsable(false)]
@@ -68,7 +68,7 @@ namespace DataWF.Module.Common
             set { this[Table.GroupKey] = value; }
         }
 
-        [Reference("fk_rposition_parent_id", nameof(ParentId))]
+        [Reference(nameof(ParentId))]
         public Position Parent
         {
             get { return GetReference<Position>(Table.GroupKey); }

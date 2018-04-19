@@ -77,11 +77,11 @@ namespace DataWF.Module.Flow
             set { SetProperty(value, nameof(StageId)); }
         }
 
-        [Reference("fk_rstage_stage_id", nameof(StageId))]
+        [Reference(nameof(StageId))]
         public Stage Stage
         {
-            get { return GetPropertyReference<Stage>(nameof(StageId)); }
-            set { SetPropertyReference(value, nameof(StageId)); }
+            get { return GetPropertyReference<Stage>(); }
+            set { SetPropertyReference(value); }
         }
     }
 }

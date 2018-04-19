@@ -52,7 +52,7 @@ namespace DataWF.Module.Common
             set { this[Table.GroupKey] = value; }
         }
 
-        [Reference("fk_rdepartment_parent_id", nameof(ParentId))]
+        [Reference(nameof(ParentId))]
         public Department Parent
         {
             get { return GetReference<Department>(Table.GroupKey); }

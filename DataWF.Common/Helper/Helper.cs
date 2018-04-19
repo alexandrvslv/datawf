@@ -948,6 +948,10 @@ namespace DataWF.Common
             {
                 result = ((TimeSpan)value).ToString();
             }
+            else if (value is IFormattable)
+            {
+                result = ((IFormattable)value).ToString(string.Empty, CultureInfo.InvariantCulture);
+            }
             else
             {
                 var typeConverter = TypeHelper.GetTypeConverter(value.GetType());
@@ -999,25 +1003,25 @@ namespace DataWF.Common
             else if (type == typeof(bool))
                 rez = bool.Parse(value);
             else if (type == typeof(int))
-                rez = value.Length == 0 ? 0 : int.Parse(value);
+                rez = value.Length == 0 ? 0 : int.Parse(value, CultureInfo.InvariantCulture);
             else if (type == typeof(uint))
-                rez = value.Length == 0 ? 0U : uint.Parse(value);
+                rez = value.Length == 0 ? 0U : uint.Parse(value, CultureInfo.InvariantCulture);
             else if (type == typeof(long))
-                rez = value.Length == 0 ? 0L : long.Parse(value);
+                rez = value.Length == 0 ? 0L : long.Parse(value, CultureInfo.InvariantCulture);
             else if (type == typeof(ulong))
-                rez = value.Length == 0 ? 0UL : ulong.Parse(value);
+                rez = value.Length == 0 ? 0UL : ulong.Parse(value, CultureInfo.InvariantCulture);
             else if (type == typeof(short))
-                rez = value.Length == 0 ? (short)0 : short.Parse(value);
+                rez = value.Length == 0 ? (short)0 : short.Parse(value, CultureInfo.InvariantCulture);
             else if (type == typeof(ushort))
-                rez = value.Length == 0 ? (ushort)0 : ushort.Parse(value);
+                rez = value.Length == 0 ? (ushort)0 : ushort.Parse(value, CultureInfo.InvariantCulture);
             else if (type == typeof(byte))
-                rez = value.Length == 0 ? (byte)0 : byte.Parse(value);
+                rez = value.Length == 0 ? (byte)0 : byte.Parse(value, CultureInfo.InvariantCulture);
             else if (type == typeof(sbyte))
-                rez = value.Length == 0 ? (sbyte)0 : sbyte.Parse(value);
+                rez = value.Length == 0 ? (sbyte)0 : sbyte.Parse(value, CultureInfo.InvariantCulture);
             else if (type == typeof(float))
-                rez = value.Length == 0 ? 0F : float.Parse(value);
+                rez = value.Length == 0 ? 0F : float.Parse(value, CultureInfo.InvariantCulture);
             else if (type == typeof(double))
-                rez = value.Length == 0 ? 0D : double.Parse(value);
+                rez = value.Length == 0 ? 0D : double.Parse(value, CultureInfo.InvariantCulture);
             else if (type == typeof(decimal))
             {
                 if (value.Length == 0)
@@ -1038,7 +1042,7 @@ namespace DataWF.Common
             else if (type == typeof(DateInterval))
                 rez = DateInterval.Parse(value);
             else if (type == typeof(TimeSpan))
-                rez = TimeSpan.Parse(value);
+                rez = TimeSpan.Parse(value, CultureInfo.InvariantCulture);
             else if (type.IsEnum)
                 rez = Enum.Parse(type, value);
             else if (type == typeof(DateTime))
@@ -1046,7 +1050,7 @@ namespace DataWF.Common
                 if (format == "binary")
                     rez = DateTime.FromBinary(long.Parse(value));
                 else
-                    rez = DateTime.Parse(value);
+                    rez = DateTime.Parse(value, CultureInfo.InvariantCulture);
             }
             else
             {

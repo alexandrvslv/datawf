@@ -78,15 +78,15 @@ namespace DataWF.Module.Counterpart
         [DataMember, Column("persone_id")]
         public int? PersoneId
         {
-            get { return GetProperty<int?>(nameof(PersoneId)); }
-            set { SetProperty(value, nameof(PersoneId)); }
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
         }
 
-        [Reference("fk_dcustomer_indentify_customer_id", nameof(PersoneId))]
+        [Reference(nameof(PersoneId))]
         public Persone Persone
         {
-            get { return GetPropertyReference<Persone>(nameof(PersoneId)); }
-            set { SetPropertyReference(value, nameof(PersoneId)); }
+            get { return GetPropertyReference<Persone>(); }
+            set { SetPropertyReference(value); }
         }
 
         [DataMember, Column("identify_number", 30)]

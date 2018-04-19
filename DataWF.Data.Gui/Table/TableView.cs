@@ -10,63 +10,62 @@ using Xwt;
 
 namespace DataWF.Data.Gui
 {
-    public class TableView : VPanel, ILoader, IReadOnly
+    public class TableView : VPanel, ILoader, IReadOnly, ILocalizable
     {
-        private TableLayoutList list = new TableLayoutList();
-        private Toolsbar tools = new Toolsbar();
-        private ToolLabel lable = new ToolLabel();
-        private ToolItem toolLoad = new ToolItem();
+        private TableLayoutList list;
+        private Toolsbar bar;
+        private ToolLabel lable;
+        private ToolItem toolLoad;
 
-        private ToolTableLoader toolProgress = new ToolTableLoader();
+        private ToolTableLoader toolProgress;
         private TableLoader loader = new TableLoader();
 
         public TableView()
             : base()
         {
-            list.EditState = EditListState.ReadOnly;
-            list.GenerateToString = false;
-            list.Name = "list";
+            list = new TableLayoutList()
+            {
+                EditState = EditListState.ReadOnly,
+                GenerateToString = false,
+                Name = "list"
+            };
             list.PositionChanged += OnNotifyPositionChangedEV;
             list.SelectionChanged += OnSelectionChanged;
             list.CellDoubleClick += TableViewCellDoubleClick;
 
-            tools.Items.Add(lable);
-            tools.Items.Add(toolLoad);
-            tools.Items.Add(toolProgress);
-            tools.Name = "tools";
+            lable = new ToolLabel { Name = "lable", Text = "_" };
 
-            lable.Name = "lable";
-            lable.Text = "_";
+            toolLoad = new ToolItem(ToolLoadClick)
+            {
+                DisplayStyle = ToolItemDisplayStyle.Text,
+                Name = "Load",
+                Text = "Load"
+            };
 
-            toolLoad.DisplayStyle = ToolItemDisplayStyle.Text;
-            toolLoad.Name = "toolLoad";
-            toolLoad.Text = "Load";
-            toolLoad.Click += ToolLoadClick;
+            toolProgress = new ToolTableLoader { Loader = loader };
 
-            this.Name = "TableViewForm";
+            bar = new Toolsbar(
+                lable,
+                toolLoad,
+                toolProgress)
+            { Name = "Bar" };
 
-            this.PackStart(tools, false, false);
-            this.PackStart(list, true, true);
-
-            toolProgress.Loader = loader;
-            Localizing();
+            Name = "TableView";
+            PackStart(bar, false, false);
+            PackStart(list, true, true);
         }
 
-        public void Localizing()
+        public void Localize()
         {
-            toolLoad.Text = Locale.Get("QueryView", "Load");
-            this.list.Localize();
+            bar.Localize();
+            list.Localize();
         }
 
-        public Toolsbar Tools
-        {
-            get { return tools; }
-        }
+        public Toolsbar Tools { get { return bar; } }
 
-        public TableLayoutList List
-        {
-            get { return list; }
-        }
+        public TableLayoutList List { get { return list; } }
+
+        public TableLoader Loader { get { return loader; } }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IDBTableView View
@@ -84,20 +83,11 @@ namespace DataWF.Data.Gui
             }
         }
 
-        public TableLoader Loader
-        {
-            get { return loader; }
-        }
+        public bool ReadOnly { get { return false; } set { } }
 
-        public bool ReadOnly
+        protected async virtual void ToolLoadClick(object sender, EventArgs e)
         {
-            get { return false; }
-            set { }
-        }
-
-        protected virtual void ToolLoadClick(object sender, EventArgs e)
-        {
-            loader.Load();
+            await loader.LoadAsync();
         }
 
         private void TableViewCellDoubleClick(object sender, LayoutHitTestEventArgs e)
@@ -111,6 +101,12 @@ namespace DataWF.Data.Gui
         private void OnNotifyPositionChangedEV(object sender, NotifyProperty text)
         {
             this.lable.Text = text.Value;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            View.Dispose();
         }
     }
 }

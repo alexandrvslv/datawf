@@ -98,11 +98,11 @@ namespace DataWF.Module.Common
             set { SetProperty(value, nameof(UserId)); }
         }
 
-        [Reference("fk_duser_log_user_id", nameof(UserId))]
+        [Reference(nameof(UserId))]
         public User User
         {
-            get { return GetPropertyReference<User>(nameof(UserId)); }
-            set { SetPropertyReference(value, nameof(UserId)); }
+            get { return GetPropertyReference<User>(); }
+            set { SetPropertyReference(value); }
         }
 
         [DataMember, Column("type_id", Keys = DBColumnKeys.ElementType | DBColumnKeys.View)]
@@ -158,11 +158,11 @@ namespace DataWF.Module.Common
             set { SetProperty(value, nameof(ParentId)); }
         }
 
-        [Reference("fk_duser_log_parent_id", nameof(ParentId))]
+        [Reference(nameof(ParentId))]
         public UserLog Parent
         {
-            get { return GetPropertyReference<UserLog>(nameof(ParentId)); }
-            set { SetPropertyReference(value, nameof(ParentId)); }
+            get { return GetPropertyReference<UserLog>(); }
+            set { SetPropertyReference(value); }
         }
 
         [Browsable(false)]
@@ -173,11 +173,11 @@ namespace DataWF.Module.Common
             set { SetProperty(value, nameof(RedoId)); }
         }
 
-        [Reference("fk_duser_log_redo_id", nameof(RedoId))]
+        [Reference(nameof(RedoId))]
         public UserLog Redo
         {
-            get { return GetPropertyReference<UserLog>(nameof(RedoId)); }
-            set { SetPropertyReference(value, nameof(RedoId)); }
+            get { return GetPropertyReference<UserLog>(); }
+            set { SetPropertyReference(value); }
         }
 
         [DataMember, Column("target_table", 512)]

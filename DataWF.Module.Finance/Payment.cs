@@ -26,9 +26,7 @@ namespace DataWF.Module.Finance
 {
     public class PaymentList : DBTableView<Payment>
     {
-
         public PaymentList()
-            : base(Payment.DBTable)
         {
         }
     }
@@ -61,50 +59,50 @@ namespace DataWF.Module.Finance
             set { SetProperty(value); }
         }
 
-        [Reference("fk_daccountpayment_typeid", nameof(TypeId))]
+        [Reference(nameof(TypeId))]
         public Book Type
         {
-            get { return GetPropertyReference<Book>(nameof(TypeId)); }
-            set { SetPropertyReference(value, nameof(TypeId)); }
+            get { return GetPropertyReference<Book>(); }
+            set { SetPropertyReference(value); }
         }
 
         [Browsable(false)]
         [Column("parentid", Keys = DBColumnKeys.Group)]
         public int? ParentId
         {
-            get { return GetProperty<int?>(nameof(ParentId)); }
-            set { SetProperty(value, nameof(ParentId)); }
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
         }
 
-        [Reference("fk_daccountpayment_parentid", nameof(ParentId))]
+        [Reference(nameof(ParentId))]
         public Payment Parent
         {
-            get { return GetPropertyReference<Payment>(nameof(ParentId)); }
-            set { SetPropertyReference(value, nameof(ParentId)); }
+            get { return GetPropertyReference<Payment>(); }
+            set { SetPropertyReference(value); }
         }
 
         [Column("paymentdate")]
         public DateTime? PaymentDate
         {
-            get { return GetProperty<DateTime?>(nameof(PaymentDate)); }
-            set { SetProperty(value, nameof(PaymentDate)); }
+            get { return GetProperty<DateTime?>(); }
+            set { SetProperty(value); }
         }
 
         [Browsable(false)]
         [Column("debitid")]
         public int? DebitId
         {
-            get { return GetProperty<int?>(nameof(DebitId)); }
-            set { SetProperty(value, nameof(DebitId)); }
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
         }
 
-        [Reference("fk_daccountpayment_debitid", nameof(DebitId))]
+        [Reference(nameof(DebitId))]
         public Account Debit
         {
-            get { return GetPropertyReference<Account>(nameof(DebitId)); }
+            get { return GetPropertyReference<Account>(); }
             set
             {
-                SetPropertyReference(value, nameof(DebitId));
+                SetPropertyReference(value);
                 if (value != null)
                     DebitCurrency = value.Currency;
             }
@@ -114,17 +112,17 @@ namespace DataWF.Module.Finance
         [Column("creditid")]
         public int? CreditId
         {
-            get { return GetProperty<int?>(nameof(CreditId)); }
-            set { SetProperty(value, nameof(CreditId)); }
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
         }
 
-        [Reference("fk_daccountpayment_creditid", nameof(CreditId))]
+        [Reference(nameof(CreditId))]
         public Account Credit
         {
-            get { return GetPropertyReference<Account>(nameof(CreditId)); }
+            get { return GetPropertyReference<Account>(); }
             set
             {
-                SetPropertyReference(value, nameof(CreditId));
+                SetPropertyReference(value);
                 if (value != null)
                     CreditCurrency = value.Currency;
             }
@@ -141,80 +139,80 @@ namespace DataWF.Module.Finance
         [Column("currencyid")]
         public int? CurrencyId
         {
-            get { return GetProperty<int?>(nameof(CurrencyId)); }
-            set { SetProperty(value, nameof(CurrencyId)); }
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
         }
 
-        [Reference("fk_daccountpayment_currencyid", nameof(CurrencyId))]
+        [Reference(nameof(CurrencyId))]
         public Currency Currency
         {
-            get { return GetPropertyReference<Currency>(nameof(CurrencyId)); }
-            set { SetPropertyReference(value, nameof(CurrencyId)); }
+            get { return GetPropertyReference<Currency>(); }
+            set { SetPropertyReference(value); }
         }
 
         [Column("debitrate")]
         public decimal? DebitRate
         {
-            get { return GetProperty<decimal?>(nameof(DebitRate)); }
-            set { SetProperty(value, nameof(DebitRate)); }
+            get { return GetProperty<decimal?>(); }
+            set { SetProperty(value); }
         }
 
         [Column("debitamount")]
         public decimal? DebitAmount
         {
-            get { return GetProperty<decimal?>(nameof(DebitAmount)); }
-            set { SetProperty(value, nameof(DebitAmount)); }
+            get { return GetProperty<decimal?>(); }
+            set { SetProperty(value); }
         }
 
         [Browsable(false)]
         [Column("debitcurrencyid")]
         public int? DebitCurrencyId
         {
-            get { return GetProperty<int?>(nameof(DebitCurrencyId)); }
-            set { SetProperty(value, nameof(DebitCurrencyId)); }
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
         }
 
-        [Reference("fk_daccountpayment_debitcurrencyid", nameof(DebitCurrencyId))]
+        [Reference(nameof(DebitCurrencyId))]
         public Currency DebitCurrency
         {
-            get { return GetPropertyReference<Currency>(nameof(DebitCurrencyId)); }
-            set { SetPropertyReference(value, nameof(DebitCurrencyId)); }
+            get { return GetPropertyReference<Currency>(); }
+            set { SetPropertyReference(value); }
         }
 
         [Column("creditrate")]
         public decimal? CreditRate
         {
-            get { return GetProperty<decimal?>(nameof(CreditRate)); }
-            set { SetProperty(value, nameof(CreditRate)); }
+            get { return GetProperty<decimal?>(); }
+            set { SetProperty(value); }
         }
 
         [Column("creditamount")]
         public decimal? CreditAmount
         {
-            get { return GetProperty<decimal?>(nameof(CreditAmount)); }
-            set { SetProperty(value, nameof(CreditAmount)); }
+            get { return GetProperty<decimal?>(); }
+            set { SetProperty(value); }
         }
 
         [Browsable(false)]
         [Column("creditcurrencyid")]
         public int? CreditCurrencyId
         {
-            get { return GetProperty<int?>(nameof(CreditCurrencyId)); }
-            set { SetProperty(value, nameof(CreditCurrencyId)); }
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
         }
 
-        [Reference("fk_daccountpayment_creditcurrencyid", nameof(DebitCurrencyId))]
+        [Reference(nameof(DebitCurrencyId))]
         public Currency CreditCurrency
         {
-            get { return GetPropertyReference<Currency>(nameof(CreditCurrencyId)); }
-            set { SetPropertyReference(value, nameof(CreditCurrencyId)); }
+            get { return GetPropertyReference<Currency>(); }
+            set { SetPropertyReference(value); }
         }
 
         [Column("description")]
         public string Description
         {
-            get { return GetProperty<string>(nameof(Description)); }
-            set { SetProperty(value, nameof(Description)); }
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
         }
     }
 }

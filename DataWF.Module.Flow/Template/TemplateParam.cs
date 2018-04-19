@@ -81,11 +81,11 @@ namespace DataWF.Module.Flow
             set { SetProperty(value); }
         }
 
-        [Reference("fk_rtemplate_param_template_id", nameof(TemplateId))]
+        [Reference(nameof(TemplateId))]
         public Template Template
         {
-            get { return GetPropertyReference<Template>(nameof(TemplateId)); }
-            set { SetPropertyReference(value, nameof(TemplateId)); }
+            get { return GetPropertyReference<Template>(); }
+            set { SetPropertyReference(value); }
         }
 
         [DataMember, Column("orderid")]

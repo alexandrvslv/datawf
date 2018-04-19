@@ -85,11 +85,12 @@ namespace DataWF.Module.MessangerGui
             //base.OnPaintHeader(context, index, dataSource, bound, state);
         }
 
-        protected override void OnListChangedApp(object arg)
+        protected override void OnListChangedApp(object sender, EventArgs arg)
         {
-            base.OnListChangedApp(arg);
             if (listSource.Count > 0)
                 SelectedItem = listSource[listSource.Count - 1];
+            base.OnListChangedApp(sender, arg);
+
         }
     }
 }

@@ -128,7 +128,7 @@ namespace DataWF.Module.Flow
             set { SetValue(value, Table.GroupKey); }
         }
 
-        [Reference("fk_rtemplate_group_id", nameof(ParentId))]
+        [Reference(nameof(ParentId))]
         public virtual Template Parent
         {
             get { return GetReference<Template>(Table.GroupKey); }
@@ -150,11 +150,11 @@ namespace DataWF.Module.Flow
             set { SetProperty(value); }
         }
 
-        [Reference("fk_rtemplate_work_id", nameof(WorkId))]
+        [Reference(nameof(WorkId))]
         public Work Work
         {
-            get { return GetPropertyReference<Work>(nameof(WorkId)); }
-            set { SetPropertyReference(value, nameof(WorkId)); }
+            get { return GetPropertyReference<Work>(); }
+            set { SetPropertyReference(value); }
         }
 
         public IEnumerable<TemplateParam> GetParams()

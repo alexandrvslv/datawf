@@ -2,6 +2,7 @@
 using DataWF.Common;
 using Xwt;
 using Xwt.Drawing;
+using System;
 
 namespace DataWF.Gui
 {
@@ -34,12 +35,11 @@ namespace DataWF.Gui
             }
         }
 
-        protected override void OnListChangedApp(object state)
+        protected override void OnListChangedApp(object state, EventArgs arg)
         {
-            base.OnListChangedApp(state);
             if (listSource.Count > 0)
                 SelectedItem = listSource[listSource.Count - 1];
-
+            base.OnListChangedApp(state, arg);
         }
     }
 }
