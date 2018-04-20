@@ -39,7 +39,7 @@ namespace DataWF.Data
             set
             {
                 type = value;
-                Constructor = EmitInvoker.Initialize(type, Type.EmptyTypes, true);                
+                Constructor = EmitInvoker.Initialize(type, Type.EmptyTypes, true);
             }
         }
 
@@ -62,7 +62,7 @@ namespace DataWF.Data
         public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
         {
             var type = TypeHelper.ParseType(value.ToString());
-            return new DBItemType { Type = type };
+            return type == null ? null : new DBItemType { Type = type };
         }
 
         public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)

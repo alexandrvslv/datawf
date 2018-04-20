@@ -350,6 +350,11 @@ namespace DataWF.Module.Flow
             {
                 SetReference(value, Table.GroupKey);
                 parent = value;
+                if (Customer == null)
+                {
+                    Customer = value?.Customer;
+                    Address = value?.Address;
+                }
             }
         }
 
@@ -465,6 +470,7 @@ namespace DataWF.Module.Flow
             set { initype = value; }
         }
 
+        [Browsable(false)]
         [DataMember, Column("is_important")]
         public bool? Important
         {
@@ -482,7 +488,6 @@ namespace DataWF.Module.Flow
 
         public event Action<Document, ListChangedType> RefChanged;
 
-        [Browsable(false)]
         public IEnumerable<DocumentReference> References
         {
             get
@@ -496,7 +501,6 @@ namespace DataWF.Module.Flow
             }
         }
 
-        [Browsable(false)]
         public IEnumerable<DocumentWork> Works
         {
             get
@@ -511,8 +515,7 @@ namespace DataWF.Module.Flow
             }
         }
 
-        [Browsable(false)]
-        public IEnumerable<DocumentData> Datas
+        public virtual IEnumerable<DocumentData> Datas
         {
             get
             {

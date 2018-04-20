@@ -374,11 +374,14 @@ namespace DataWF.Data
             if (t == null)
             {
                 foreach (Type tt in TempAssembly.GetTypes())
-                    if (tt.Name.Equals(Name, StringComparison.OrdinalIgnoreCase) || tt.FullName.Equals(Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (tt.Name.Equals(Name, StringComparison.OrdinalIgnoreCase)
+                        || tt.FullName.Equals(Name, StringComparison.OrdinalIgnoreCase))
                     {
                         t = tt;
                         break;
                     }
+                }
                 if (t == null)
                     throw new Exception("Нет Указанного Класса " + Name + " в сборке " + TempAssembly.FullName);
             }
@@ -618,15 +621,17 @@ namespace DataWF.Data
                 {
                     if (type.GetInterface("IDockContent") != null || TypeHelper.IsInterface(type, typeof(IProjectEditor)))
                     {
-                        DBProcedure procedure = Store[type.FullName];
+                        DBProcedure procedure = Store[TypeHelper.BinaryFormatType(type)];
                         if (procedure == null)
                         {
-                            procedure = new DBProcedure();
-                            procedure.ProcedureType = ProcedureTypes.Assembly;
-                            procedure.Name = type.FullName;
-                            procedure.DisplayName = Common.Locale.Get(type.FullName, type.Name);
-                            procedure.Parent = this;
-                            procedure.DataName = fileName;
+                            procedure = new DBProcedure()
+                            {
+                                ProcedureType = ProcedureTypes.Assembly,
+                                Name = TypeHelper.BinaryFormatType(type),
+                                DisplayName = Locale.Get(type),
+                                Parent = this,
+                                DataName = fileName
+                            };
                             Store.Add(procedure);
                         }
                     }

@@ -26,12 +26,13 @@ namespace DataWF.Module.FlowGui
                 toolView,
                 toolTemplate
             });
+            Glyph = GlyphType.File;
         }
 
         public override void Localize()
         {
             base.Localize();
-            GuiService.Localize(this, "DocumentFiles", "Files", GlyphType.File);
+            GuiService.Localize(this, nameof(DocumentDetailView<T>), "Files");
         }
 
         public override Document Document

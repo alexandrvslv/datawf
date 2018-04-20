@@ -496,7 +496,7 @@ namespace DataWF.Data.Gui
             {
                 node = new SchemaItemNode { Item = item, Name = name };
             }
-            node.Glyph = Locale.GetGlyph(item.GetType().FullName, item.GetType().Name);
+            node.Glyph = Locale.GetGlyph(item.GetType(), item.GetType().Name);
             if (node.Glyph == GlyphType.None)
             {
                 if (item is DBSchema)
@@ -553,7 +553,7 @@ namespace DataWF.Data.Gui
         {
             string str = "";
             if (obj != null)
-                str = obj.GetType().FullName + obj.GetHashCode();
+                str = Locale.GetTypeCategory(obj.GetType()) + obj.GetHashCode();
 
             return str;
         }

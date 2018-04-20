@@ -16,33 +16,30 @@ namespace DataWF.Module.FlowGui
     {
         private Document document;
         private DocumentSearch search = new DocumentSearch();
-        private DocumentListView refs = new DocumentListView();
-        private ToolItem toolAttach = new ToolItem();
-        private ToolItem toolDetach = new ToolItem();
+        private DocumentListView refs;
+        private ToolItem toolAttach;
+        private ToolItem toolDetach;
         private bool synch = false;
 
         public DocumentReferenceView()
         {
-            refs.LabelText = null;
-            refs.MainDock = false;
-            refs.Name = "documentListView1";
-            refs.TemplateFilter = null;
-
-            this.Name = "DocumentRelations";
-
-            PackStart(refs, true, true);
-
-            toolAttach.Click += ToolAttachClick;
-            toolAttach.Glyph = GlyphType.PlusCircle;
-
-            toolDetach.Click += ToolDetachClick;
-            toolDetach.Glyph = GlyphType.MinusCircle;
-
+            toolAttach = new ToolItem(ToolAttachClick) { Glyph = GlyphType.PlusCircle };
+            toolDetach = new ToolItem(ToolDetachClick) { Glyph = GlyphType.MinusCircle };
+            refs = new DocumentListView()
+            {
+                AllowPreview = false,
+                AutoLoad = false,
+                LabelText = null,
+                MainDock = false,
+                Name = "documentListView",
+                TemplateFilter = null
+            };
             refs.Tools.Items.Add(toolAttach);
             refs.Tools.Items.Add(toolDetach);
-            refs.AutoLoad = false;
-            //refs.AllowPreview = false;
-            Localize();
+
+            Name = "DocumentRelations";
+            PackStart(refs, true, true);
+
         }
 
         public DocumentListView Documents

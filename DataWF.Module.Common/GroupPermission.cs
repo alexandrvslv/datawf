@@ -238,12 +238,12 @@ namespace DataWF.Module.Common
             }
             else if (value is Type)
             {
-                key = Helper.TextBinaryFormat(((Type)value).FullName);
+                key = Helper.TextBinaryFormat(value);
                 type = PermissionType.GType;
             }
             else if (value is System.Reflection.MemberInfo)
             {
-                key = Helper.TextBinaryFormat(((Type)value).FullName);
+                key = Helper.TextBinaryFormat(value);
                 type = PermissionType.GTypeMember;
             }
             return type;

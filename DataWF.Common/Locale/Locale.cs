@@ -59,12 +59,22 @@ namespace DataWF.Common
             Serialization.Serialize(Instance, Path.Combine(Helper.GetDirectory(), "localize.xml"));
         }
 
+        public static string GetTypeCategory(Type type)
+        {
+            return $"{type.Namespace}.{type.Name}";
+        }
+
+        public static string Get(Type type)
+        {
+            return Get(GetTypeCategory(type), type.Name);
+        }
+
         public static string Get(Type type, string name, string separator = " ")
         {
             var builder = new StringBuilder();
             foreach (var info in TypeHelper.GetMemberInfoList(type, name))
             {
-                builder.Append(Get(info.DeclaringType.FullName, info.Name));
+                builder.Append(Get(GetTypeCategory(type), info.Name));
                 builder.Append(separator);
             }
             builder.Length -= separator.Length;
@@ -78,12 +88,22 @@ namespace DataWF.Common
 
         public static string Get(object obj)
         {
-            return Get(obj.GetType().FullName, obj.ToString());
+            return Get(GetTypeCategory(obj.GetType()), obj.ToString());
+        }
+
+        public static LocaleItem GetItem(Type category, string name)
+        {
+            return Instance.GetByName(GetTypeCategory(category)).GetByName(name);
         }
 
         public static LocaleItem GetItem(string category, string name)
         {
             return Instance.GetByName(category).GetByName(name);
+        }
+
+        public static GlyphType GetGlyph(Type category, string name, GlyphType def = GlyphType.None)
+        {
+            return GetGlyph(GetTypeCategory(category), name, def);
         }
 
         public static GlyphType GetGlyph(string category, string name, GlyphType def = GlyphType.None)

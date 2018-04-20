@@ -38,7 +38,11 @@ namespace DataWF.Data
         protected DBTable table;
         private Query filterQuery;
 
-        public DBTableView(string defaultFilter = null, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
+        public DBTableView(string defaultFilter, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
+            : this(DBService.GetTable(typeof(T), null, false, true), defaultFilter, mode, statusFilter)
+        { }
+
+        public DBTableView(QParam defaultFilter = null, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
             : this(DBService.GetTable(typeof(T), null, false, true), defaultFilter, mode, statusFilter)
         { }
 
@@ -284,7 +288,7 @@ namespace DataWF.Data
 
         public IEnumerable<T> Load(DBLoadParam param = DBLoadParam.None)
         {
-            return (IEnumerable<T>)table.LoadItems(Query, param, this);
+            return table.LoadItems(Query, param, this).Cast<T>();
         }
 
         public void LoadAsynch(DBLoadParam param = DBLoadParam.None)
@@ -365,7 +369,10 @@ namespace DataWF.Data
 
         public void OnItemChanged(DBItem item, string property, ListChangedType type)
         {
-            OnItemChanged((T)item, property, type);
+            if (item is T)
+            {
+                OnItemChanged((T)item, property, type);
+            }
         }
 
         private void SetItems(List<DBItem> list)
@@ -383,11 +390,11 @@ namespace DataWF.Data
             ClearInternal();
             if (!query.IsEmpty())
             {
-                AddRangeInternal((IEnumerable<T>)table.SelectItems(query));
+                AddRangeInternal(table.SelectItems(query).Cast<T>());
             }
             else
             {
-                AddRangeInternal((IEnumerable<T>)table);
+                AddRangeInternal(table.Cast<T>());
             }
             SortInternal();
             OnListChanged(ListChangedType.Reset, -1);

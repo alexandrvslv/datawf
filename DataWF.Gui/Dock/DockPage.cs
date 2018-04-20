@@ -174,7 +174,7 @@ namespace DataWF.Gui
             get { return visible; }
             set
             {
-                if (visible == value)
+                if (visible != value)
                 {
                     visible = value;
                     OnPropertyChanged(nameof(Visible));

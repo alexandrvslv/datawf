@@ -20,13 +20,13 @@ namespace DataWF.Module.CommonGui
             set { (Item as IAccessable).Access = value; }
         }
 
-        public int Count { get; set; }        
+        public int Count { get; set; }
 
         public void Localize()
         {
             if (Item != null)
             {
-                var locGlyph = Locale.GetGlyph(Item.GetType().FullName, Item.GetType().Name);
+                var locGlyph = Locale.GetGlyph(Locale.GetTypeCategory(Item.GetType()), Item.GetType().Name);
                 if (Glyph == GlyphType.None || locGlyph != GlyphType.None)
                     Glyph = locGlyph;
                 Text = Item?.ToString();

@@ -29,7 +29,7 @@ namespace DataWF.Common
 
         public string Name
         {
-            get { return Locale.Get(project.FullName, project.Name); }
+            get { return Locale.Get(project); }
         }
     }
 }

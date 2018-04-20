@@ -14,7 +14,7 @@ namespace DataWF.Data
     public class DBTable<T> : DBTable, ICollection<T> where T : DBItem, new()
     {
         protected List<T> items = new List<T>();
-        protected List<DBTableView<T>> queryViews = new List<DBTableView<T>>(1);
+        protected List<IDBTableView> queryViews = new List<IDBTableView>(1);
 
 
         public DBTable()
@@ -53,7 +53,7 @@ namespace DataWF.Data
             {
                 if (queryViews.Count == 0)
                     queryViews.Add(CreateView());
-                return queryViews.Count > 0 ? queryViews[0] : null;
+                return queryViews.Count > 0 ? (DBTableView<T>)queryViews[0] : null;
             }
         }
 
@@ -71,6 +71,11 @@ namespace DataWF.Data
         public override bool Contains(DBItem item)
         {
             return Contains((T)item);
+        }
+
+        public IEnumerable<T1> Select<T1>(QQuery query) where T1 : T
+        {
+            return Select(query).Cast<T1>();
         }
 
         public bool Contains(T item)
@@ -187,22 +192,13 @@ namespace DataWF.Data
         }
 
         #endregion
-        public override void RemoveView(IDBTableView view)
-        {
-            RemoveView((DBTableView<T>)view);
-        }
 
-        public void RemoveView(DBTableView<T> view)
+        public override void RemoveView(IDBTableView view)
         {
             queryViews.Remove(view);
         }
 
         public override void AddView(IDBTableView view)
-        {
-            AddView((DBTableView<T>)view);
-        }
-
-        public void AddView(DBTableView<T> view)
         {
             queryViews.Add(view);
         }

@@ -104,50 +104,39 @@ namespace DataWF.Data
             var table = (DBTable)EmitInvoker.CreateObject(typeof(DBTable<>).MakeGenericType(ItemType));
             table.Name = TableName;
             table.Schema = Schema;
-            table.Type = TableType;
-            table.BlockSize = BlockSize;
             table.DisplayName = ItemType.Name;
-            table.Sequence = table.GenerateSequence();
             return table;
         }
 
         public DBTable Generate(DBSchema schema)
         {
+            Schema = schema ?? throw new ArgumentNullException(nameof(schema));
+
             Debug.WriteLine($"Generate {SchemaName}.{TableName}");
-            if (Schema == null)
-            {
-                if (schema != null)
-                {
-                    if (string.IsNullOrEmpty(schema.Name))
-                        schema.Name = SchemaName;
-                    Schema = schema;
-                }
-                else
-                {
-                    Schema = new DBSchema(SchemaName);
-                    DBService.Schems.Add(Schema);
-                }
-            }
-            if (Table == null)
-            {
-                Table = CreateTable();
-            }
-            foreach (var itemType in cacheItemTypes)
-            {
-                Table.ItemTypes[itemType.Id] = new DBItemType { Type = itemType.Type };
-            }
 
             if (TableGroup == null)
             {
                 TableGroup = new DBTableGroup(GroupName)
                 {
-                    Schema = schema,
+                    Schema = Schema,
                     DisplayName = GroupName
                 };
                 Schema.TableGroups.Add(TableGroup);
             }
 
+            if (Table == null)
+            {
+                Table = CreateTable();
+            }
             Table.Group = TableGroup;
+            Table.Type = TableType;
+            Table.BlockSize = BlockSize;
+            Table.Sequence = Table.GenerateSequence();
+
+            foreach (var itemType in cacheItemTypes)
+            {
+                Table.ItemTypes[itemType.Id] = new DBItemType { Type = itemType.Type };
+            }
 
             cacheColumns.Sort((a, b) => a.Order.CompareTo(b.Order));
             foreach (var column in cacheColumns)
@@ -168,6 +157,7 @@ namespace DataWF.Data
                 Schema.Tables.Add(Table);
             }
             Table.IsLoging = IsLoging;
+
             return Table;
         }
 

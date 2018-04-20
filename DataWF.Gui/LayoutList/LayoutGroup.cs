@@ -15,7 +15,7 @@ namespace DataWF.Gui
         protected bool isExpand = true;
         protected bool visible = true;
         protected DateTime stamp;
-        private object text;
+        private string text;
         private TextLayout textLayout;
         protected Dictionary<LayoutColumn, object> cache = new Dictionary<LayoutColumn, object>();
         public LayoutListInfo Info;
@@ -45,7 +45,7 @@ namespace DataWF.Gui
 
         public object Value { get; set; } = string.Empty;
 
-        public object TextValue
+        public string TextValue
         {
             get { return text; }
             set

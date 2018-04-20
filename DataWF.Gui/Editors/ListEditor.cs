@@ -219,7 +219,7 @@ namespace DataWF.Gui
                     if (dataSource != null)
                     {
                         var dataType = DataSource.GetType();
-                        Text = $"{Locale.Get(dataType.FullName, dataType.Name)}({DataSource.ToString()})";
+                        Text = $"{Locale.Get(dataType)}({DataSource.ToString()})";
                     }
                 }
                 else

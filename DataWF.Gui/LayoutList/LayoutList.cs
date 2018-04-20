@@ -61,7 +61,7 @@ namespace DataWF.Gui
         protected bool _gridMode = false;
         protected bool checkView = true;
         protected bool writeOnValueChanged = true;
-        protected bool _listSensitive = true;
+        protected bool listSensitive = true;
         protected bool _hideEmpty = false;
 
         private LayoutBoundsCache bounds = new LayoutBoundsCache();
@@ -147,6 +147,7 @@ namespace DataWF.Gui
         //protected static PrintOperation print;
         public string Description;
         private VBox filterBox;
+        private bool treeMode;
 
         public LayoutList()
         {
@@ -780,6 +781,8 @@ namespace DataWF.Gui
                 Application.Invoke(() =>
                 {
                     ClearCache();
+                    FieldSource = null;
+                    FieldInfo = null;
                     ListSource = null;
                     ListInfo = null;
                 });
@@ -1425,12 +1428,12 @@ namespace DataWF.Gui
         [DefaultValue(true)]
         public bool ListSensetive
         {
-            get { return _listSensitive; }
+            get { return listSensitive; }
             set
             {
-                if (_listSensitive == value)
+                if (listSensitive == value)
                     return;
-                _listSensitive = value;
+                listSensitive = value;
                 if (value)
                     RefreshBounds(true);
             }
@@ -2351,7 +2354,7 @@ namespace DataWF.Gui
                     category.Name = name;
                     FieldInfo.Categories.Add(category);
                 }
-                category.Header = cell.Owner?.Text ?? Locale.Get(GetCacheKey(), name);
+                category.Header = cell.Owner?.Text ?? Locale.Get(GetHeaderLocale(cell), name);
                 ((LayoutField)cell).Category = category;
             }
         }
@@ -2405,7 +2408,7 @@ namespace DataWF.Gui
         protected virtual string GetCacheKey()
         {
             Type t = (listMode == LayoutListMode.Fields) ? fieldType : listItemType;
-            return (t == null ? string.Empty : TypeHelper.FormatType(t) + (_gridMode ? "List" : string.Empty));
+            return (t == null ? string.Empty : TypeHelper.BinaryFormatType(t) + (_gridMode ? "List" : string.Empty));
         }
 
         public bool GetVisible(ILayoutCell cell)
@@ -2416,8 +2419,8 @@ namespace DataWF.Gui
         public virtual string GetHeaderLocale(ILayoutCell cell)
         {
             return (cell.Owner != null && cell.Owner.Invoker != null)
-                ? TypeHelper.FormatType(cell.Owner.Invoker.DataType)
-                                : TypeHelper.FormatType(cell is LayoutField ? fieldType : listItemType);
+                ? Locale.GetTypeCategory(cell.Owner.Invoker.DataType)
+                                : Locale.GetTypeCategory(cell is LayoutField ? fieldType : listItemType);
         }
 
         public virtual string GetHeader(ILayoutCell cell)
@@ -2839,17 +2842,17 @@ namespace DataWF.Gui
                 RefreshGroupsBound();
             bounds.Index = -1;
             bounds.TempColumns = Rectangle.Zero;
-            this.RefreshBounds(false);
+            RefreshBounds(true);
         }
 
         public virtual bool TreeMode
         {
-            get { return ListInfo?.Tree ?? false; }
+            get { return treeMode; }
             set
             {
-                //if (TreeMode == value)
-                //    return;
-                ListInfo.Tree = value;
+                if (TreeMode == value)
+                    return;
+                treeMode = ListInfo.Tree = value;
 
                 OnFilterChange();
 
@@ -3051,12 +3054,11 @@ namespace DataWF.Gui
                 listInfo.Sorters.Clear();
                 if (listSource is ISortable)
                 {
+                    listSensitive = false;
                     ((ISortable)listSource).RemoveSort();
+                    listSensitive = true;
                 }
-                else
-                {
-                    RefreshBounds(true);
-                }
+                ListInfo.OnBoundChanged(EventArgs.Empty);
             }
             else
             {
@@ -3103,11 +3105,15 @@ namespace DataWF.Gui
             {
                 if (value)
                 {
-                    OnColumnGrouping(listInfo.Columns["Category"] as LayoutColumn, ListSortDirection.Ascending);
+                    if (Mode == LayoutListMode.Fields)
+                        TreeMode = false;
+                    OnColumnGrouping(listInfo.Columns[nameof(Node.Category)] as LayoutColumn, ListSortDirection.Ascending);
                 }
                 else
                 {
                     OnColumnGrouping(null, ListSortDirection.Ascending);
+                    if (Mode == LayoutListMode.Fields)
+                        TreeMode = true;
                 }
             }
         }
@@ -3146,13 +3152,15 @@ namespace DataWF.Gui
 
             if (listSource is ISortable)
             {
+                listSensitive = false;
                 ((ISortable)listSource).ApplySort(comparer);
+                listSensitive = true;
             }
             else if (listSource != null)
             {
                 ListHelper.QuickSort(listSource, comparer);
-                RefreshBounds(true);
             }
+            listInfo.OnBoundChanged(EventArgs.Empty);
         }
 
         public virtual CellStyle OnGetCellStyle(object listItem, object value, ILayoutCell col)
@@ -4587,8 +4595,7 @@ namespace DataWF.Gui
             {
                 if (buildgroup)
                     groups.RefreshGroup(0);
-                else
-                    RefreshGroupsBound();
+                RefreshGroupsBound();
             }
 
             GetContentBound();
@@ -4772,7 +4779,7 @@ namespace DataWF.Gui
 
         protected virtual void OnListChangedApp(object state, EventArgs arg)
         {
-            if (_listSensitive)
+            if (listSensitive)
             {
                 selection.RefreshIndex(true);
                 RefreshBounds(true);

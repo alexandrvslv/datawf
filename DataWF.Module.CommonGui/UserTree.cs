@@ -220,7 +220,7 @@ namespace DataWF.Module.CommonGui
             if (content != null)
                 rez = content.Table.FullName + (content is IDBTableView ? "view" : "item") + content.GetHashCode();
             else
-                rez = obj.GetType().FullName + obj.GetHashCode();
+                rez = Locale.GetTypeCategory(obj.GetType()) + obj.GetHashCode();
             return rez;
         }
 

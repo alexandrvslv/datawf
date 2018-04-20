@@ -401,7 +401,7 @@ namespace DataWF.Common
             return buf;
         }
 
-        public static PropertyInfo[] GetPropertyes(Type type, bool nonPublic)
+        public static PropertyInfo[] GetPropertyes(Type type, bool nonPublic = false)
         {
             BindingFlags flag = BindingFlags.Instance | BindingFlags.Public;
             if (nonPublic)
@@ -531,13 +531,6 @@ namespace DataWF.Common
             return ((mInfo.MemberType == MemberTypes.Method && ((MethodInfo)mInfo).IsStatic) ||
                 (mInfo.MemberType == MemberTypes.Property && ((PropertyInfo)mInfo).GetGetMethod().IsStatic) ||
                 (mInfo.MemberType == MemberTypes.Field && ((FieldInfo)mInfo).IsStatic));
-        }
-
-        public static string FormatType(Type type)
-        {
-            //var index = type.FullName.IndexOf('[');
-            //return index < 0 ? type.FullName : type.FullName.Substring(0, index);
-            return type.FullName;
         }
 
         public static string BinaryFormatType(Type type)

@@ -123,7 +123,7 @@ namespace DataWF.Module.Flow
         }
 
         [DataMember, Column("file_data")]
-        public byte[] FileData
+        public virtual byte[] FileData
         {
             get { return buf ?? (buf = DBService.GetZip(this, Table.Columns.GetByProperty(nameof(FileData)))); }
             set

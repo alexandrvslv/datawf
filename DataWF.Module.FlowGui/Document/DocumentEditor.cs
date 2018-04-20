@@ -31,6 +31,30 @@ namespace DataWF.Module.FlowGui
 
     public class DocumentEditor : VPanel, IDocked, IDockContent
     {
+        static Dictionary<Type, List<Type>> typesCache = new Dictionary<Type, List<Type>>();
+        static List<Type> GetTypes(Type documentType)
+        {
+            if (!typesCache.TryGetValue(documentType, out List<Type> types))
+            {
+                types = new List<Type>();
+                foreach (var property in TypeHelper.GetPropertyes(documentType))
+                {
+                    if (property.PropertyType.IsGenericType
+                        && TypeHelper.IsInterface(property.PropertyType, typeof(IEnumerable))
+                        && TypeHelper.GetBrowsable(property))
+                    {
+                        var type = property.PropertyType.GetGenericArguments().First();
+                        if (TypeHelper.IsBaseType(type, typeof(DocumentDetail)))
+                        {
+                            types.Add(type);
+                        }
+                    }
+                }
+                typesCache[documentType] = types;
+            }
+            return types;
+        }
+
         private Toolsbar tools;
         private ToolItem toolCopy;
         private ToolItem toolSave;
@@ -47,8 +71,7 @@ namespace DataWF.Module.FlowGui
         private DockBox dock;
         private ToolLabel toolLabel = new ToolLabel();
         private IEnumerable<ToolItem> toolsItems;
-
-
+        private DockPage pageWorks;
         private DockPage pageRefers;
         private DockPage pageHeader;
 
@@ -56,12 +79,11 @@ namespace DataWF.Module.FlowGui
         private Document document;
         private Template template;
         private DocumentWork work;
-        private bool hide = false;
-        private DockType dtype = DockType.Content;
 
         private EventHandler procClick;
         private EventHandler tempClick;
         private DocumentEditorState state = DocumentEditorState.None;
+        private Type documentType;
 
         public DocumentEditor()
         {
@@ -106,9 +128,9 @@ namespace DataWF.Module.FlowGui
             //dock.PageStyle = GuiEnvironment.StylesInfo["DocumentDock"];
             pageHeader = dock.Put(new DocumentHeader(), DockType.Left);
             pageHeader.Panel.MapItem.FillWidth = true;
-            pageRefers = dock.Put(new DocumentWorkView(), DockType.Content);
-            pageRefers = dock.Put(new DocumentDataView<DocumentData>(), DockType.Content);
-            pageRefers = dock.Put(new DocumentCustomerView(), DockType.Content);
+            pageWorks = dock.Put(new DocumentWorkView(), DockType.Content);
+            //pageDatas = dock.Put(new DocumentDataView<DocumentData>(), DockType.Content);
+            //pageRefers = dock.Put(new DocumentCustomerView(), DockType.Content);
             pageRefers = dock.Put(new DocumentReferenceView(), DockType.Content);
 
             Name = "DocumentEditor";
@@ -517,11 +539,14 @@ namespace DataWF.Module.FlowGui
                     }
                     return;
                 }
-                if (document.Attached && document.GetLastWork() == null)
-                    document.GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), DBLoadParam.Load);
+
+                DocumentType = document.GetType();
 
                 document.PropertyChanged += DocumentPropertyChanged;
                 document.ReferenceChanged += DocumentPropertyChanged;
+
+                if (document.Attached && document.UpdateState == DBUpdateState.Default && document.GetLastWork() == null)
+                    document.GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), DBLoadParam.Load);
 
                 if (document.IsCurrent)
                 {
@@ -534,7 +559,7 @@ namespace DataWF.Module.FlowGui
                 }
 
                 if (document.Id != null && document.Id != null)
-                    this.Name = "DocumentEditor" + document.Id.ToString();
+                    Name = "DocumentEditor" + document.Id.ToString();
 
                 //var works = document.GetWorks();
                 toolDelete.Visible = document.Access.Delete;// works.Count == 0 || (works.Count == 1 && works[0].IsUser);
@@ -542,6 +567,22 @@ namespace DataWF.Module.FlowGui
                 CheckState(DocumentEditorState.None);
             }
         }
+
+        public Type DocumentType
+        {
+            get { return documentType; }
+            set
+            {
+                if (documentType == value)
+                    return;
+                documentType = value;
+                GetPages(documentType).ForEach(p => p.Tag = Document.Template);
+            }
+        }
+
+        public DockType DockType { get; set; }
+
+        public bool HideOnClose { get; set; }
 
         private void DocumentPropertyChanged(object sender, EventArgs e)
         {
@@ -556,7 +597,11 @@ namespace DataWF.Module.FlowGui
             if (document != null)
             {
                 var work = document.WorkCurrent;
-                EditorState = !document.Attached ? DocumentEditorState.Create : work != null && work.User.IsCurrent ? DocumentEditorState.Edit : DocumentEditorState.Readonly;
+                EditorState = !document.Attached || document.UpdateState == DBUpdateState.Insert
+                    ? DocumentEditorState.Create
+                    : work != null && work.User.IsCurrent
+                    ? DocumentEditorState.Edit
+                    : DocumentEditorState.Readonly;
                 toolSave.Sensitive = document.IsChanged || state == DocumentEditorState.Create;
             }
         }
@@ -827,21 +872,32 @@ namespace DataWF.Module.FlowGui
             base.Dispose(disposing);
         }
 
-        public DockType DockType
+        public List<DockPage> GetPages(Type documentType)
         {
-            get { return dtype; }
-            set { dtype = value; }
-        }
-
-        public bool HideOnClose
-        {
-            get { return hide; }
-            set
+            var documentWidgets = new List<DockPage>();
+            foreach (var type in GetTypes(documentType))
             {
-                if (hide == value)
-                    return;
-                hide = value;
+                if (TypeHelper.IsBaseType(type, typeof(DocumentWork)))
+                    documentWidgets.Add(pageWorks);
+                else if (TypeHelper.IsBaseType(type, typeof(DocumentReference)))
+                    documentWidgets.Add(pageRefers);
+                else
+                {
+                    var name = type.Name;
+                    var page = dock.GetPage(name);
+                    if (page == null)
+                    {
+                        var widgetType = TypeHelper.IsBaseType(type, typeof(DocumentData))
+                            ? typeof(DocumentDataView<>).MakeGenericType(type)
+                            : typeof(DocumentDetailView<>).MakeGenericType(type);
+                        Widget widget = (Widget)EmitInvoker.CreateObject(widgetType);
+                        widget.Name = name;
+                        page = dock.Put(widget, DockType.Content);
+                    }
+                    documentWidgets.Add(page);
+                }
             }
+            return documentWidgets;
         }
 
         private void ToolReturnClick(object sender, EventArgs e)

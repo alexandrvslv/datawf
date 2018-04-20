@@ -400,7 +400,7 @@ namespace DataWF.Data.Gui
             {
                 if (TypeHelper.IsInterface(type, typeof(IDockContent)))
                 {
-                    Helper.Logs.Add(new StateInfo("Main Form", "Module Initialize", type.FullName));
+                    Helper.Logs.Add(new StateInfo("Main Form", "Module Initialize", Locale.Get(type)));
                     try
                     {
                         foreach (var attribute in type.GetCustomAttributes<ModuleAttribute>(false))
@@ -453,7 +453,7 @@ namespace DataWF.Data.Gui
         {
             var item = new ToolMenuItem()
             {
-                Name = type.Project.FullName,
+                Name = type.Project.Name,
                 Text = type.Name,
                 Tag = type
             };
@@ -464,8 +464,8 @@ namespace DataWF.Data.Gui
         {
             var item = new ToolMenuItem
             {
-                Name = type.FullName,
-                Text = Locale.Get(type.FullName, type.Name),
+                Name = Locale.GetTypeCategory(type),
+                Text = Locale.Get(type),
                 Tag = type
             };
             return item;

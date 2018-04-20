@@ -117,9 +117,7 @@ namespace DataWF.Data
 
         public static void OnDBSchemaChanged(DBSchemaItem item, DDLType type)
         {
-            if (item is DBTable && !DBService.Schems.Contains(((DBTable)item).Schema))
-                return;
-            if (item.Container == null)
+            if (item.Container == null || item.Schema == null || item.Schema.Container == null)
                 return;
             if (item is IDBTableContent)
             {
@@ -870,7 +868,7 @@ namespace DataWF.Data
 
         public string Type
         {
-            get { return item == null ? null : Locale.Get(item.GetType().FullName, item.GetType().Name); }
+            get { return item == null ? null : Locale.Get(item.GetType()); }
         }
 
         public DBSchemaItem Item

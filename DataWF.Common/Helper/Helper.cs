@@ -878,11 +878,11 @@ namespace DataWF.Common
                 result = ((CultureInfo)value).Name;
             else if (value is Type)
             {
-                result = ((Type)value).FullName;
+                result = Locale.Get((Type)value);
             }
             else if (value is MemberInfo)
             {
-                result = ((MemberInfo)value).DeclaringType.FullName + ";" + ((MemberInfo)value).Name;
+                result = Locale.Get(Locale.GetTypeCategory(((MemberInfo)value).DeclaringType), ((MemberInfo)value).Name);
             }
             else if (value is byte[])
             {

@@ -21,6 +21,7 @@ using System;
 using System.Data;
 using System.ComponentModel;
 using System.Xml.Serialization;
+using DataWF.Common;
 
 namespace DataWF.Data
 {
@@ -40,8 +41,8 @@ namespace DataWF.Data
         [XmlIgnore]
         public Type DataType
         {
-            get { return DataTypeName.Length == 0 ? typeof(string) : Type.GetType(DataTypeName); }
-            set { DataTypeName = value?.FullName; }
+            get { return DataTypeName.Length == 0 ? typeof(string) : TypeHelper.ParseType(DataTypeName); }
+            set { DataTypeName = TypeHelper.BinaryFormatType(value); }
         }
 
         public ParameterDirection Direction { get; set; }

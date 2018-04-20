@@ -15,8 +15,7 @@ namespace DataWF.Module.FlowGui
 
         public DocumentDetailView() : base()
         {
-            view = new DBTableView<T>("", DBViewKeys.Empty);
-            view.DefaultParam = new QParam(LogicType.And, Table.ParseProperty(nameof(DocumentDetail.DocumentId)), CompareType.Equal, 0);
+            view = new DBTableView<T>(Table, new QParam(LogicType.And, Table.ParseProperty(nameof(DocumentDetail.DocumentId)), CompareType.Equal, 0), DBViewKeys.Empty);
             DataSource = view;
 
             toolLog.Visible = Table.IsLoging;
@@ -31,7 +30,7 @@ namespace DataWF.Module.FlowGui
 
         public DBTable Table
         {
-            get { return view.Table; }
+            get { return DBService.GetTable(typeof(T), null, false, true); }
         }
 
         public virtual Document Document
@@ -83,7 +82,7 @@ namespace DataWF.Module.FlowGui
 
         protected override void OnToolInsertClick(object sender, EventArgs e)
         {
-            var newItem = (T)view.NewItem();
+            var newItem = new T();
             newItem.Document = Document;
             ShowObject(newItem);
         }
@@ -133,6 +132,12 @@ namespace DataWF.Module.FlowGui
         {
             base.Dispose(disposing);
             view.Dispose();
+        }
+
+        public override void Localize()
+        {
+            base.Localize();
+            GuiService.Localize(this, nameof(DocumentDetailView<T>), typeof(T).Name);
         }
     }
 }

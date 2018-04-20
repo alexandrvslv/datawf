@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System;
 using DataWF.Common;
+using System.Linq;
 
 namespace DataWF.Gui
 {
@@ -16,12 +17,15 @@ namespace DataWF.Gui
 
     public class LayoutGroupList : ICollection<LayoutGroup>
     {
-        private SelectableList<LayoutGroup> items = new SelectableList<LayoutGroup>();
+        static readonly Invoker<LayoutGroup, string> textValueInvoker = new Invoker<LayoutGroup, string>(nameof(LayoutGroup.TextValue), item => item.TextValue, (item, value) => item.TextValue = value);
+        private SelectableList<LayoutGroup> items;
         private ILayoutList list;
 
         public LayoutGroupList(ILayoutList list)
         {
             this.list = list;
+            items = new SelectableList<LayoutGroup>();
+            items.Indexes.Add(textValueInvoker);
             items.ApplySort(new PGroupComparer());
         }
 
@@ -58,111 +62,82 @@ namespace DataWF.Gui
 
         public void RefreshGroup(int starIndex)
         {
-            if (list == null || list.ListSource == null || list.ListInfo.Sorters.Count == 0)
+            var count = list?.ListSource?.Count ?? 0;
+            if (count == 0)
                 return;
+            var sorters = list.ListInfo.Sorters.Where(p => p.IsGroup).ToArray();
             string header = string.Empty;
-            foreach (var item in list.ListInfo.Sorters)
+            foreach (var item in sorters)
             {
-                if (item.IsGroup)
-                    header += item.Column.Text + " ";
-                else
-                    break;
+                header += item.Column.Text + " ";
             }
             if (header.Length == 0)
                 return;
 
-            LayoutGroup lg = null;
+            LayoutGroup lgroup = null;
             DateTime stamp = DateTime.Now;
             int j = 0;
-            for (int i = 0; i < list.ListSource.Count; i++)
+            for (int i = 0; i < count; i++)
             {
                 object litem = list.ListSource[i];
                 string format = null;
-                foreach (var item in list.ListInfo.Sorters)
+                foreach (var item in sorters)
                 {
-                    if (item.IsGroup)
-                    {
-                        object val = list.ReadValue(litem, item.Column);
-                        object f = list.FormatValue(litem, val, item.Column);
+                    object val = list.ReadValue(litem, item.Column);
+                    object f = list.FormatValue(litem, val, item.Column);
 
-                        //	string val = ;
-                        if (val is DateTime && ((string)f).Length > 10)
-                        {
-                            DateTime date = (DateTime)val;
-                            if (stamp.Year != date.Year)
-                                f = date.Year.ToString();
-                            else if (stamp.Month != date.Month)
-                                f = date.ToString("MMMM");
-                            else if (stamp.Day == date.Day)
-                                f = Locale.Get("DateComapre", "Today");
-                            else if (stamp.Day == date.Day + 1)
-                                f = Locale.Get("DateComapre", "Yestorday");
-                            else if (stamp.Day - (int)stamp.DayOfWeek < date.Day)
-                                f = Locale.Get("DateComapre", "This Week");
-                            else
-                                f = Locale.Get("DateComapre", "This Month");
-                        }
-                        format += f == null ? "" : (f.ToString() + " ");
+                    //	string val = ;
+                    if (val is DateTime && ((string)f).Length > 10)
+                    {
+                        DateTime date = (DateTime)val;
+                        if (stamp.Year != date.Year)
+                            f = date.Year.ToString();
+                        else if (stamp.Month != date.Month)
+                            f = date.ToString("MMMM");
+                        else if (stamp.Day == date.Day)
+                            f = Locale.Get("DateComapre", "Today");
+                        else if (stamp.Day == date.Day + 1)
+                            f = Locale.Get("DateComapre", "Yestorday");
+                        else if (stamp.Day - (int)stamp.DayOfWeek < date.Day)
+                            f = Locale.Get("DateComapre", "This Week");
+                        else
+                            f = Locale.Get("DateComapre", "This Month");
+                    }
+                    format += f == null ? "" : (f.ToString() + " ");
+                }
+                if (lgroup != null && !string.Equals(lgroup.TextValue, format, StringComparison.Ordinal))
+                {
+                    lgroup.IndexEnd = i - 1;
+                    lgroup = null;
+                }
+                if (lgroup == null)
+                {
+                    LayoutGroup exist = items.SelectOne(nameof(LayoutGroup.TextValue), format);
+                    if (exist != null)
+                    {
+                        lgroup = exist;
+                        lgroup.IndexStart = i;
+                        lgroup.Stamp = stamp;
                     }
                     else
-                        break;
-                }
-                if (lg != null)
-                {
-                    var comp = ListHelper.Compare(lg.TextValue, format, null, false);
-                    if (comp != 0)
                     {
-                        lg.IndexEnd = i - 1;
-                        lg = null;
-                    }
-                }
-                if (lg == null)
-                {
-
-                    for (; j < items.Count; j++)
-                    {
-                        LayoutGroup item = items[j];
-                        if (item == null)
+                        lgroup = new LayoutGroup()
                         {
-                            items.RemoveAt(j);
-                            j--;
-                        }
-                        else if (ListHelper.Compare(item.TextValue, format, null, false) == 0)
-                        {
-                            lg = item;
-                            lg.IndexStart = i;
-                            lg.Stamp = stamp;
-                            break;
-                        }
+                            Header = header,
+                            Value = format,
+                            TextValue = format,
+                            IndexStart = i,
+                            IndexEnd = i,
+                            Info = list.ListInfo,
+                            Stamp = stamp
+                        };
+                        items.Add(lgroup);
                     }
-                }
-
-                //if (lg != null)
-                //{
-                //    if (lg.IndexStart > i)
-                //        lg.IndexStart = i;
-                //    else if (lg.IndexEnd < i)
-                //        lg.IndexEnd = i;
-                //}
-                if (lg == null)
-                {
-                    lg = new LayoutGroup()
-                    {
-                        Header = header,
-                        Value = format,
-                        TextValue = format,
-                        IndexStart = i,
-                        IndexEnd = i,
-                        Info = list.ListInfo,
-                        Stamp = stamp
-                    };
-                    items.Add(lg);
-                    //index++;
                 }
             }
-            if (lg != null)
+            if (lgroup != null)
             {
-                lg.IndexEnd = list.ListSource.Count - 1;
+                lgroup.IndexEnd = list.ListSource.Count - 1;
             }
             for (int i = 0; i < items.Count; i++)
             {
@@ -172,7 +147,6 @@ namespace DataWF.Gui
                     i--;
                 }
             }
-            list.RefreshGroupsBound();
         }
 
         public void Clear()
@@ -186,7 +160,6 @@ namespace DataWF.Gui
         {
             return items.IndexOf(g);
         }
-
 
         public LayoutGroup this[int index]
         {
