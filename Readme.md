@@ -78,7 +78,7 @@ Model example:
 Connection example:
 
     var connection = new DBConnection("test") { System = DBSystem.SQLite, DataBase = "test.sqlite" };
-    var qresult = DBService.ExecuteQResult(connection, $"select * from {SomeTableName}");
+    var qresult = connection.ExecuteQResult( $"select * from {SomeTableName}");
 
 ## DataWF.Module.Common
 
