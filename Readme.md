@@ -45,7 +45,7 @@ Note: used beta version of ODP.NET for .netstandard compatibility
 
 Model example:
 
-    [Table("SchemaName", "TableName")]
+    [Table("employer_database", "employer_table")]
     public class Employer : DBItem
     {
         public static DBTable<Employer> DBTable { get { return DBService.GetTable<Employer>(); } }
@@ -53,13 +53,13 @@ Model example:
         public Employer() { Build(DBTable); }
 
         [Column("id", Keys = DBColumnKeys.Primary)]
-        public int? Id { get { return GetProperty<int?>(); } set { SetProperty(value); } }
+        public int? Id {  get { return GetProperty<int?>(); }  set { SetProperty(value); } }
 
         [Column("inn", 20, Keys = DBColumnKeys.Code), Index("employerinn", true)]
-        public string INN { get { return GetProperty<string>(); } set { SetProperty(value); } }
+        public string INN {  get { return GetProperty<string>(); }  set { SetProperty(value); } }
 
         [Column("name", 200, Keys = DBColumnKeys.Culture)]
-        public override string Name { get { return GetName(nameof(Name)); } set { SetName(nameof(Name), value); } }
+        public override string Name {  get { return GetName(nameof(Name)); }  set { SetName(nameof(Name), value); } }
 
         [Column("positionid")]
         public int? PositionId { get { return GetProperty<int?>(); } set { SetProperty(value); } }
@@ -67,12 +67,12 @@ Model example:
         [Reference("fk_employer_positionid", nameof(PositionId))]
         public Position Position
         {
-            get { return GetPropertyReference<Position>(nameof(PositionId)); }
-            set { SetPropertyReference(value, nameof(PositionId)); }
+            get { return GetPropertyReference<Position>(); }
+            set { SetPropertyReference(value); }
         }
 
         [Column("typeid", Keys = DBColumnKeys.Type, Default = "1")]
-        public EmployerType? Type { get { return GetProperty<EmployerType?>(); } set { SetProperty(value); } }
+        public EmployerType? Type {  get { return GetProperty<EmployerType?>(); }  set { SetProperty(value); } }
     }
 
 Connection example:
