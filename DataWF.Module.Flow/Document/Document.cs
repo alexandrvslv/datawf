@@ -63,7 +63,7 @@ namespace DataWF.Module.Flow
         Customer
     }
 
-    [DataContract, Table("wf_flow", "ddocument", "Document", BlockSize = 200)]
+    [DataContract, Table("ddocument", "Document", BlockSize = 200)]
     public class Document : DBItem, IDisposable
     {
         public static DBTable<Document> DBTable
@@ -255,8 +255,6 @@ namespace DataWF.Module.Flow
             document.Delete();
             Deleted?.Invoke(null, new DocumentEventArgs(document));
         }
-
-        public static event DocumentInitializeDelegate DocumentInitialize;
 
         public static event DocumentDeleteDelegate Deleted;
 

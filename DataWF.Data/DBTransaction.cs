@@ -384,7 +384,8 @@ namespace DataWF.Data
             var watch = new Stopwatch();
             try
             {
-                Debug.WriteLine(command.CommandText);
+				//Debug.WriteLine(command.Connection.ConnectionString);
+				Debug.WriteLine(command.CommandText);
                 watch.Start();
                 switch (type)
                 {

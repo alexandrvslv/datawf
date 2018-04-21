@@ -20,6 +20,7 @@
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
 using System.ComponentModel;
+using System.Runtime.Serialization;
 using DataWF.Data;
 using DataWF.Module.Common;
 using DataWF.Module.Counterpart;
@@ -33,7 +34,7 @@ namespace DataWF.Module.Finance
         }
     }
 
-    [Table("flow", "dbalance", "Finance", BlockSize = 5000)]
+    [DataContract, Table("dbalance", "Finance", BlockSize = 5000)]
     public class Balance : DBItem
     {
         public static DBTable<Balance> DBTable

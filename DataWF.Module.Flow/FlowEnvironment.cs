@@ -39,8 +39,6 @@ namespace DataWF.Module.Flow
         private static FlowEnvironment instance = new FlowEnvironment();
         private static DocumentList currentDocuments = null;
         private string schemaCode = "new";
-        [NonSerialized()]
-        private string fileName = "";
 
         public static DocumentList CurrentDocuments
         {

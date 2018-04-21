@@ -67,7 +67,7 @@ namespace DataWF.Test.Data
         [Test]
         public void SchemaSerialization()
         {
-            DBService.Generate(GetType().Assembly);
+			DBService.Generate(GetType().Assembly, SchemaName);
             var file = "data.xml";
             Serialization.Serialize(DBService.Schems, file);
             DBService.Schems.Clear();
@@ -86,9 +86,8 @@ namespace DataWF.Test.Data
         public void Generate(DBConnection connection)
         {
             connection.CheckConnection();
-            DBService.Generate(GetType().Assembly);
+			schema = DBService.Generate(GetType().Assembly, SchemaName);
 
-            schema = DBService.Schems[SchemaName];
             Assert.IsNotNull(schema, "Attribute Generator Fail. On Schema");
             Assert.IsNotNull(Employer.DBTable, "Attribute Generator Fail. On Employer Table");
             Assert.IsNotNull(Position.DBTable, "Attribute Generator Fail. On Position Table");
@@ -215,7 +214,7 @@ namespace DataWF.Test.Data
             Type3,
         }
 
-        [Table(SchemaName, PositionTableName, "Default")]
+        [Table(PositionTableName, "Default")]
         public class Position : DBItem
         {
             public static DBTable<Position> DBTable
@@ -277,7 +276,7 @@ namespace DataWF.Test.Data
 
         }
 
-        [Table(SchemaName, EmployerTableName, "Default")]
+        [Table(EmployerTableName, "Default")]
         public class Employer : DBItem
         {
             public static DBTable<Employer> DBTable
@@ -297,8 +296,7 @@ namespace DataWF.Test.Data
                 set { SetProperty(value); }
             }
 
-            [Column("identifier", 20, Keys = DBColumnKeys.Code)]
-            [Index("employeridentifier", true)]
+            [Column("identifier", 20, Keys = DBColumnKeys.Code), Index("employeridentifier", true)]
             public string Identifier
             {
                 get { return GetProperty<string>(); }

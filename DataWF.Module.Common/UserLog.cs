@@ -43,7 +43,7 @@ namespace DataWF.Module.Common
         Reject
     }
 
-    [DataContract, Table("wf_common", "duser_log", "User", BlockSize = 500, IsLoging = false)]
+    [DataContract, Table("duser_log", "User", BlockSize = 500, IsLoging = false)]
     public class UserLog : DBItem, ICheck
     {
         [ThreadStatic]

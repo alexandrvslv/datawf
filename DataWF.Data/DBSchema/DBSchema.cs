@@ -218,7 +218,7 @@ namespace DataWF.Data
                     Connection.User = Name;
                 }
             }
-            if (string.IsNullOrEmpty(Connection.DataBase))// Connection.System != DBSystem.SQLite
+			if (string.IsNullOrEmpty(Connection.DataBase) || Connection.System == DBSystem.Postgres)// Connection.System != DBSystem.SQLite
             {
                 Connection.DataBase = Name;
             }

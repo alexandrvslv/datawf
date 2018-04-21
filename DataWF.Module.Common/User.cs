@@ -33,7 +33,7 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Module.Common
 {
-    [DataContract, Table("wf_common", "ruser", "User", BlockSize = 100)]
+    [DataContract, Table("ruser", "User", BlockSize = 100)]
     public class User : DBItem, IComparable, IDisposable
     {
         internal static void SetCurrent()

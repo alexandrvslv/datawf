@@ -31,7 +31,7 @@ namespace DataWF.Module.Counterpart
         { }
     }
 
-    [DataContract, Table("wf_customer", "daddress", "Address", BlockSize = 100)]
+    [DataContract, Table("daddress", "Address", BlockSize = 100)]
     public class Address : DBItem
     {
         public static DBTable<Address> DBTable

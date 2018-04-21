@@ -27,7 +27,7 @@ using System.Collections.Generic;
 
 namespace DataWF.Module.Common
 {
-    [DataContract, Table("wf_common", "rposition", "User")]
+    [DataContract, Table("rposition", "User")]
     public class Position : DBItem
     {
         public static DBTable<Position> DBTable

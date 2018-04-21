@@ -45,7 +45,7 @@ namespace DataWF.Module.Counterpart
         { }
     }
 
-    [DataContract, Table("wf_customer", "rlocation", "Address", BlockSize = 100)]
+    [DataContract, Table("rlocation", "Address", BlockSize = 100)]
     public class Location : DBItem
     {
         public static void Generate()

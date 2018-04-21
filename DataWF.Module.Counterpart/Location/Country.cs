@@ -24,7 +24,7 @@ using DataWF.Common;
 
 namespace DataWF.Module.Counterpart
 {
-    [VirtualTable("wf_customer", "rcountry", typeof(Location), "typeid = 2")]
+    [VirtualTable("rcountry", typeof(Location), "typeid = 2")]
     public class Country : DBVirtualItem
     {
         public static DBVirtualTable<Country> DBTable

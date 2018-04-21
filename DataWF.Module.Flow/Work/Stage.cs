@@ -61,7 +61,7 @@ namespace DataWF.Module.Flow
         IsAutoComplete
     }
 
-    [DataContract, Table("wf_flow", "rstage", "Template", BlockSize = 100)]
+    [DataContract, Table("rstage", "Template", BlockSize = 100)]
     public class Stage : DBItem, IDisposable
     {
         public static DBTable<Stage> DBTable

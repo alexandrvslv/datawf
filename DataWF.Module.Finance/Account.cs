@@ -27,6 +27,7 @@ using DataWF.Data;
 using DataWF.Common;
 using DataWF.Module.Common;
 using DataWF.Module.Counterpart;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Finance
 {
@@ -42,7 +43,7 @@ namespace DataWF.Module.Finance
         }
     }
 
-    [Table("flow", "daccount", "Finance", BlockSize = 5000)]
+    [DataContract, Table("daccount", "Finance", BlockSize = 5000)]
     public class Account : DBItem
     {
         public static DBTable<Account> DBTable

@@ -31,7 +31,7 @@ namespace DataWF.Module.Counterpart
         }
     }
 
-    [DataContract, Table("wf_customer", "dcustomer_reference", "Customer")]
+    [DataContract, Table("dcustomer_reference", "Customer")]
     public class CustomerReference : DBItem
     {
         public static DBTable<CustomerReference> DBTable

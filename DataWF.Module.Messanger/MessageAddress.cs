@@ -22,6 +22,7 @@ using DataWF.Common;
 using System;
 using System.ComponentModel;
 using DataWF.Module.Common;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Messanger
 {
@@ -43,7 +44,7 @@ namespace DataWF.Module.Messanger
         { }
     }
 
-    [Table("wf_message", "dmessage_address", "Message")]
+    [DataContract, Table("dmessage_address", "Message")]
     public class MessageAddress : DBItem
     {
         public static DBTable<MessageAddress> DBTable

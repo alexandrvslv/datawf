@@ -72,7 +72,7 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [DataContract, Table("wf_flow", "rtemplate", "Template", BlockSize = 100)]
+    [DataContract, Table("rtemplate", "Template", BlockSize = 100)]
     public class Template : DBItem, IDisposable
     {
         public static DBTable<Template> DBTable

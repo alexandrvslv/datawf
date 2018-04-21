@@ -27,12 +27,11 @@ namespace DataWF.Data
     [AttributeUsage(AttributeTargets.Class)]
     public class VirtualTableAttribute : TableAttribute
     {
-        public VirtualTableAttribute(string schema, string name, Type baseType, string query)
-            : base(schema, name, null)
+        public VirtualTableAttribute(string name, Type baseType, string query)
+            : base(name, null)
         {
             BaseType = baseType;
-            Query = query;
-            BaseTable = DBService.GetTableAttribute(baseType);
+            Query = query;            
         }
 
         public override string GroupName
@@ -66,7 +65,13 @@ namespace DataWF.Data
             return table;
         }
 
-        public override ColumnAttribute InitializeColumn(PropertyInfo property)
+		public override void Initialize(Type type)
+		{
+			BaseTable = DBService.GetTableAttribute(BaseType);
+			base.Initialize(type);
+		}
+
+		public override ColumnAttribute InitializeColumn(PropertyInfo property)
         {
             var column = base.InitializeColumn(property);
             if (column != null && !(column is VirtualColumnAttribute))

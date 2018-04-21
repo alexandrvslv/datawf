@@ -25,7 +25,7 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Module.Common
 {
-    [DataContract, Table("wf_common", "rdepartment", "User", BlockSize = 100)]
+    [DataContract, Table("rdepartment", "User", BlockSize = 100)]
     public class Department : DBItem, IComparable, IDisposable
     {
         public static DBTable<Department> DBTable

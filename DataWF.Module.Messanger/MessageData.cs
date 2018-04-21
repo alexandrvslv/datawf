@@ -19,6 +19,7 @@
 */
 using DataWF.Data;
 using System.ComponentModel;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Messanger
 {
@@ -40,7 +41,7 @@ namespace DataWF.Module.Messanger
         { }
     }
 
-    [Table("wf_message", "dmessage_data", "Message")]
+    [DataContract, Table("dmessage_data", "Message")]
     public class MessageData : DBItem
     {
         public static DBTable<MessageData> DBTable

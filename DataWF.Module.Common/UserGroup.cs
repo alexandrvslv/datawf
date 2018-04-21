@@ -27,7 +27,7 @@ using System.Runtime.Serialization;
 namespace DataWF.Module.Common
 {
 
-    [DataContract, Table("wf_common", "rgroup", "User", BlockSize = 10)]
+    [DataContract, Table("rgroup", "User", BlockSize = 10)]
     public class UserGroup : DBItem, IDisposable, IAccessGroup
     {
         internal static void SetCurrent()
