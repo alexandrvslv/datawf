@@ -45,7 +45,7 @@ Note: used beta version of ODP.NET for .netstandard compatibility
 
 Model example:
 
-    [Table("employer_database", "employer_table")]
+    [Table("employer_table")]
     public class Employer : DBItem
     {
         public static DBTable<Employer> DBTable { get { return DBService.GetTable<Employer>(); } }
