@@ -64,7 +64,7 @@ Model example:
         [Column("positionid")]
         public int? PositionId { get { return GetProperty<int?>(); } set { SetProperty(value); } }
 
-        [Reference("fk_employer_positionid", nameof(PositionId))]
+        [Reference(nameof(PositionId))]
         public Position Position
         {
             get { return GetPropertyReference<Position>(); }
