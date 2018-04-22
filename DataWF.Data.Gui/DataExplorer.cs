@@ -360,25 +360,22 @@ namespace DataWF.Data.Gui
             window.Show(this, Point.Zero);
             window.ButtonAcceptClick += (s, a) =>
                   {
-                      foreach (AsseblyCheck assebly in list.ListSource)
+                      var schema = new DBSchema("NewSchema");
+                      DBService.Generate(assemblyList.Where(p => p.Check).Select(p => p.Assembly), schema);
+                      DBService.Schems.Add(schema);
+                      if (schema != null)
                       {
-                          if (assebly.Check)
-                          {
-                              var schema = DBService.Generate(assebly.Assembly);
-                              if (schema != null)
-                              {
-                                  var text = new StringBuilder();
-                                  text.AppendLine(schema.FormatSql(DDLType.Create));
-                                  text.AppendLine("go");
-                                  text.AppendLine(schema.FormatSql());
+                          var text = new StringBuilder();
+                          text.AppendLine(schema.FormatSql(DDLType.Create));
+                          text.AppendLine("go");
+                          text.AppendLine(schema.FormatSql());
 
-                                  var query = new DataQuery();
-                                  query.Query = text.ToString();
+                          var query = new DataQuery();
+                          query.Query = text.ToString();
 
-                                  GuiService.Main.DockPanel.Put(query);
-                              }
-                          }
+                          GuiService.Main.DockPanel.Put(query);
                       }
+
                   };
         }
 
@@ -812,7 +809,7 @@ namespace DataWF.Data.Gui
                     //contextMain.Items.Add(toolMainAdd);
                 }
 
-                contextMain.Popup(this, e.HitTest.ItemBound);
+                contextMain.Popup(this, e.HitTest.ItemBound.BottomLeft);
             }
         }
 
