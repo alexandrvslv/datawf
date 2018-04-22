@@ -101,7 +101,7 @@ namespace DataWF.TestGui
 		{
 			await Task.Run(() =>
 			{
-                var schema = DBService.Generate(typeof(User).Assembly);
+                var schema = DBService.Generate(typeof(User).Assembly, "common_data");
                 schema.Connection = new DBConnection
                 {
                     Name = "test.common",
