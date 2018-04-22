@@ -11,6 +11,7 @@ namespace DataWF.Gui
     {
         private ToolLayoutMap items;
         private ToolItem cacheHitItem;
+        private Menubar currentMenu;
 
         public Toolsbar()
         {
@@ -37,6 +38,32 @@ namespace DataWF.Gui
         }
 
         public ToolItem Owner { get; set; }
+
+        public Menubar CurrentMenubar
+        {
+            get { return currentMenu; }
+            internal set
+            {
+
+                if (currentMenu != null)
+                {
+                    ((ToolDropDown)currentMenu.OwnerItem).ShowMenu();
+                }
+
+                if (currentMenu == value)
+                {
+                    currentMenu = null;
+                    return;
+                }
+
+                currentMenu = value;
+
+                if (currentMenu != null)
+                {
+                    ((ToolDropDown)currentMenu.OwnerItem).ShowMenu();
+                }
+            }
+        }
 
         public ToolItem this[string name]
         {

@@ -21,10 +21,6 @@ namespace DataWF.Gui
 			indent = 0;
 		}
 
-		public ToolMenuItem Owner { get; set; }
-
-		public Font Font { get; set; }
-
 		public override void OnDraw(GraphContext context)
 		{
 			base.OnDraw(context);

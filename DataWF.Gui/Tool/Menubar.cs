@@ -5,14 +5,20 @@ using Xwt;
 
 namespace DataWF.Gui
 {
-    public class Menubar : Popover, ILocalizable
+    public class Menubar : PopupWindow, ILocalizable
     {
-        public Menubar() : base()
+        public Menubar() : base(PopupType.Menu)
         {
-            BackgroundColor = GuiEnvironment.StylesInfo["Window"].BaseColor;
-            Content = Bar = new Toolsbar();
+            Bar = new Toolsbar();
             Bar.ItemClick += OnItemClick;
             Bar.Items.GrowMode = LayoutGrowMode.Vertical;
+
+            BackgroundColor = GuiEnvironment.StylesInfo["Window"].BaseColor;
+            Content = Bar;
+            Decorated = false;
+            Padding = new WidgetSpacing(8, 8, 8, 8);
+            InitialLocation = WindowLocation.Manual;
+            ShowInTaskbar = false;
         }
 
         public Menubar(params ToolItem[] items) : this()
@@ -47,22 +53,22 @@ namespace DataWF.Gui
             }
         }
 
-        public bool Visible { get; internal set; }
-
         public void Localize()
         {
             Bar.Localize();
         }
 
-        public void Popup(Widget owner, Rectangle point)
+        public void Popup(Widget owner, Point point)
         {
             if (owner?.ParentWindow != null)
             {
-                Owner = owner.Container as Menubar;
+                Owner = owner.ParentWindow as Menubar;
+                TransientFor = owner.ParentWindow;
             }
-            //Location = owner?.ConvertToScreenCoordinates(point) ?? point;
-            Show(Position.Bottom, owner, point);
-            Visible = true;
+            Location = owner?.ConvertToScreenCoordinates(point) ?? point;
+            System.Diagnostics.Debug.WriteLine($"Menu before Location: {Location}");
+            Show();
+            System.Diagnostics.Debug.WriteLine($"Menu after Location: {Location}");
         }
 
         protected override void OnClosed()

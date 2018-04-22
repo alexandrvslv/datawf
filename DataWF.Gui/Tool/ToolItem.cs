@@ -330,22 +330,22 @@ namespace DataWF.Gui
             }
         }
 
-        protected internal void OnMouseEntered(EventArgs args)
+        protected virtual internal void OnMouseEntered(EventArgs args)
         {
             State = CellDisplayState.Hover;
         }
 
-        protected internal void OnMouseExited(EventArgs args)
+        protected virtual internal void OnMouseExited(EventArgs args)
         {
             State = CellDisplayState.Default;
         }
 
-        protected internal void OnButtonPressed(ButtonEventArgs args)
+        protected virtual internal void OnButtonPressed(ButtonEventArgs args)
         {
             State = CellDisplayState.Pressed;
         }
 
-        protected internal void OnButtonReleased(ButtonEventArgs args)
+        protected virtual internal void OnButtonReleased(ButtonEventArgs args)
         {
             State = CellDisplayState.Hover;
             if (args.MultiplePress <= 1 && Sensitive)
@@ -365,7 +365,6 @@ namespace DataWF.Gui
 
             Bar?.OnItemClick(this);
             Click?.Invoke(this, e);
-
         }
 
         protected virtual void OnTextChanged(EventArgs e)

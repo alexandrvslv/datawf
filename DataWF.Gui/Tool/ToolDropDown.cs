@@ -71,10 +71,13 @@ namespace DataWF.Gui
         protected override void OnClick(EventArgs e)
         {
             base.OnClick(e);
-            ShowMenu();
+            if (menu != null)
+            {
+                Bar.CurrentMenubar = menu;
+            }
         }
 
-        protected void ShowMenu()
+        public void ShowMenu()
         {
             if (menu != null)
             {
@@ -84,7 +87,7 @@ namespace DataWF.Gui
                 }
                 else
                 {
-                    menu.Popup(Bar, Bound);
+                    menu.Popup(Bar, Bound.BottomLeft);
                     DropDownOpened?.Invoke(this, EventArgs.Empty);
                 }
             }
