@@ -34,8 +34,5 @@
     <ProjectReference Include="..\External\xwt\Xwt.Gtk\Xwt.Gtk.csproj" />
     <ProjectReference Include="..\External\xwt\Xwt\Xwt.csproj" />    
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Xwt" Version="0.2.100" />
-  </ItemGroup>
    <Import Project="..\DataWF.Test.GuiShare\DataWF.Test.GuiShare.projitems" Label="Shared" />
 </Project>
