@@ -116,18 +116,15 @@ namespace DataWF.Module.FlowGui
         {
             if (Document.Template.Data != null)
             {
-                var data = Document.GetTemplate<T>();
+                var data = Document.GetTemplate();
 
                 if (data == null)
                 {
-                    data = new T();
-                    data.GenerateId();
-                    data.Document = Document;
+                    data = document.GenerateTemplate<T>();
                     data.Attach();
                 }
-                data.RefreshByTemplate();
                 data.Parse(new ExecuteArgs(Document));
-                Current = data;
+                Current = data as T;
                 Current.Execute();
             }
         }

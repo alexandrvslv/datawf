@@ -68,6 +68,17 @@ namespace DataWF.Module.FlowGui
         //    base.OnPaintHeader(context, index, dataSource, bound, state);
         //}
 
+        public override LayoutColumn CreateColumn(string name)
+        {
+            var column = base.CreateColumn(name);
+            if (column.Name != nameof(Object.ToString))
+            {
+                column.Visible = false;
+            }
+            
+            return column;
+        }
+
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Template ViewMode
         {
