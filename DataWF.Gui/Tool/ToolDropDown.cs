@@ -7,7 +7,8 @@ namespace DataWF.Gui
 {
     public class ToolDropDown : ToolItem
     {
-        private Menubar menu;
+        protected Menubar menu;
+        private LayoutAlignType menuAlign = LayoutAlignType.Bottom;
 
         public ToolDropDown()
         {
@@ -51,6 +52,8 @@ namespace DataWF.Gui
             get { return menu?.Items.Count > 0; }
         }
 
+        public LayoutAlignType MenuAlign { get => menuAlign; set => menuAlign = value; }
+
         public event EventHandler<ToolItemEventArgs> ItemClick
         {
             add { DropDownItems.Bar.ItemClick += value; }
@@ -73,22 +76,39 @@ namespace DataWF.Gui
             base.OnClick(e);
             if (menu != null)
             {
-                Bar.CurrentMenubar = menu;
+                Bar.CurrentMenubar = menu.Visible ? null : menu;
             }
         }
 
-        public void ShowMenu()
+        protected virtual void OnDropDownOpened()
+        {
+            DropDownOpened?.Invoke(this, EventArgs.Empty);
+        }
+
+        public virtual void ShowMenu()
+        {
+            if (menu != null)
+            {
+                if (!menu.Visible)
+                {
+                    var point = MenuAlign == LayoutAlignType.Left
+                        ? Bound.TopLeft
+                        : MenuAlign == LayoutAlignType.Right
+                        ? Bound.TopRight
+                        : Bound.BottomLeft;
+                    menu.Popup(Bar, point);
+                    OnDropDownOpened();
+                }
+            }
+        }
+
+        public void HideMenu()
         {
             if (menu != null)
             {
                 if (menu.Visible)
                 {
                     menu.Hide();
-                }
-                else
-                {
-                    menu.Popup(Bar, Bound.BottomLeft);
-                    DropDownOpened?.Invoke(this, EventArgs.Empty);
                 }
             }
         }

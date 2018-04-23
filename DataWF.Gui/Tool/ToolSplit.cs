@@ -26,7 +26,10 @@ namespace DataWF.Gui
 
         protected void OnClickSplit(object sender, EventArgs e)
         {
-            ShowMenu();
+            if (menu != null)
+            {
+                Bar.CurrentMenubar = menu.Visible ? null : menu;
+            }
         }
     }
 }

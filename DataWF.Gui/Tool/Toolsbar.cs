@@ -47,7 +47,7 @@ namespace DataWF.Gui
 
                 if (currentMenu != null)
                 {
-                    ((ToolDropDown)currentMenu.OwnerItem).ShowMenu();
+                    ((ToolDropDown)currentMenu.OwnerItem).HideMenu();
                 }
 
                 if (currentMenu == value)

@@ -63,25 +63,53 @@ namespace DataWF.Gui
             if (owner?.ParentWindow != null)
             {
                 Owner = owner.ParentWindow as Menubar;
+                if (TransientFor != null)
+                {
+                    ((Window)TransientFor).Hidden -= BaseGetFocus;
+                    ((Window)TransientFor).Content.GotFocus -= BaseGetFocus;
+                }
                 TransientFor = owner.ParentWindow;
+                if (TransientFor != null)
+                {
+                    ((Window)TransientFor).Hidden += BaseGetFocus;
+                    ((Window)TransientFor).Content.GotFocus += BaseGetFocus;
+                }
             }
             Location = owner?.ConvertToScreenCoordinates(point) ?? point;
             System.Diagnostics.Debug.WriteLine($"Menu before Location: {Location}");
             Show();
+            Location = owner?.ConvertToScreenCoordinates(point) ?? point;
             System.Diagnostics.Debug.WriteLine($"Menu after Location: {Location}");
+        }
+
+        private void BaseGetFocus(object sender, EventArgs e)
+        {
+            if (Visible)
+            {
+                if (OwnerItem != null)
+                {
+                    OwnerItem.Bar.CurrentMenubar = null;
+                }
+                else
+                {
+                    Hide();
+                }
+            }
         }
 
         protected override void OnClosed()
         {
-            base.OnClosed();
-            Visible = false;
+            BaseGetFocus(null, null);
         }
 
         private void OnItemClick(object sender, ToolItemEventArgs e)
         {
-            if (e.Item is ToolDropDown && ((ToolDropDown)e.Item).HasDropDown)
+            if (e.Item.CheckOnClick
+                || (e.Item is ToolDropDown && ((ToolDropDown)e.Item).HasDropDown))
+            {
                 return;
-            Hide();
+            }
+            BaseGetFocus(null, null);
         }
     }
 }

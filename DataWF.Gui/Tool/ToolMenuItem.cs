@@ -6,25 +6,29 @@ using Xwt.Drawing;
 namespace DataWF.Gui
 {
 
-	public class ToolMenuItem : ToolDropDown
-	{
+    public class ToolMenuItem : ToolDropDown
+    {
 
-		public ToolMenuItem() : base()
-		{
-			DisplayStyle = ToolItemDisplayStyle.ImageAndText;
-			indent = 0;
-		}
+        public ToolMenuItem() : base()
+        {
+            Initialize();
+        }
 
-		public ToolMenuItem(EventHandler click) : base(click)
-		{
-			DisplayStyle = ToolItemDisplayStyle.ImageAndText;
-			indent = 0;
-		}
+        public ToolMenuItem(EventHandler click) : base(click)
+        {
+            Initialize();
+        }
 
-		public override void OnDraw(GraphContext context)
-		{
-			base.OnDraw(context);
-		}
+        private void Initialize()
+        {
+            MenuAlign = LayoutAlignType.Right;
+            DisplayStyle = ToolItemDisplayStyle.ImageAndText;
+            indent = 0;
+        }
 
-	}
+        public override void OnDraw(GraphContext context)
+        {
+            base.OnDraw(context);
+        }
+    }
 }
