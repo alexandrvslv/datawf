@@ -231,6 +231,11 @@ namespace DataWF.Data
             }
         }
 
+        public bool IsChangedKey(DBColumn column)
+        {
+            return column.GetOld(hindex, out object value);
+        }
+
         public virtual bool GetIsChanged()
         {
             return GetChangeKeys().Any();

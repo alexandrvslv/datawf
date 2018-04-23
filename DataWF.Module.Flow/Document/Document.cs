@@ -28,6 +28,7 @@ using System.Linq;
 using DataWF.Module.Common;
 using DataWF.Module.Counterpart;
 using System.Runtime.Serialization;
+using System.IO;
 
 namespace DataWF.Module.Flow
 {
@@ -88,7 +89,12 @@ namespace DataWF.Module.Flow
             {
                 sequnce = new DBSequence(name) { };
                 DBTable.Schema.Sequences.Add(sequnce);
-                DBService.CommitChanges(DBTable.Schema);
+                try { DBService.CommitChanges(DBTable.Schema); }
+                catch (Exception)
+                {
+                    DBService.Changes.Clear();
+                    DBService.Save();
+                }
             }
             //return DBService.ExecuteQuery(FlowEnvironment.Config.Schema, FlowEnvironment.Config.Schema.Sequence.Create(name, 0, 1));
             var item = sequnce.NextValue();
@@ -127,8 +133,7 @@ namespace DataWF.Module.Flow
             document.DocumentDate = DateTime.Now;
             if (document.Template.Data != null)
             {
-                var data = new DocumentData() { Document = document };
-                data.RefreshByTemplate();
+                var data = document.GenerateTemplate();
                 data.Attach();
             }
 
@@ -367,7 +372,13 @@ namespace DataWF.Module.Flow
         public string Number
         {
             get { return GetProperty<string>(nameof(Number)); }
-            set { SetProperty(value, nameof(Number)); }
+            set
+            {
+                SetProperty(value, nameof(Number));
+                var data = GetTemplate();
+                if (data != null)
+                    data.RefreshName();
+            }
         }
 
         [Browsable(false)]
@@ -640,15 +651,27 @@ namespace DataWF.Module.Flow
 
         public virtual DocumentData GetTemplate()
         {
-            return GetTemplate<DocumentData>();
+            foreach (DocumentData data in Datas)
+                if (data.IsTemplate.GetValueOrDefault())
+                    return data;
+            return null;
         }
 
-        public T GetTemplate<T>() where T : DocumentData, new()
+        public virtual DocumentData GenerateTemplate()
         {
-            foreach (DocumentData data in Datas)
-                if (data.IsTemplate.GetValueOrDefault() && data is T)
-                    return (T)data;
-            return null;
+            return GenerateTemplate<DocumentData>();
+        }
+
+        public T GenerateTemplate<T>() where T : DocumentData, new()
+        {
+            var data = new T()
+            {
+                Document = this,
+                IsTemplate = true,
+                FileData = (byte[])Template.Data.Clone()
+            };
+            data.RefreshName();
+            return data;
         }
 
         public override void Reject()

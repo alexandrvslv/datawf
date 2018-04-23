@@ -240,13 +240,6 @@ namespace DataWF.Module.Flow
             return true;
         }
 
-        public void RefreshByTemplate()
-        {
-            IsTemplate = true;
-            FileData = (byte[])Document.Template.Data.Clone();
-            FileName = Document.Template.DataName.Replace(".", DateTime.Now.ToString("yyyyMMddHHmmss") + ".");
-        }
-
         public void Load(string path)
         {
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
@@ -285,7 +278,22 @@ namespace DataWF.Module.Flow
         {
             if (data.FileData == null || data.Document.Template.Data == null)
                 return;
-            data.FileData = null;//TODO Template.Parser.Execute(data.Data, data.DataName, param);
+            //data.FileData = data.Document.Template.Parser.Execute(data.FileData, data.FileName, param);
+        }
+
+        public void RefreshName()
+        {
+            if (IsTemplate.GetValueOrDefault() && Document?.Template?.DataName != null)
+            {
+                if (string.IsNullOrEmpty(Document.Number))
+                {
+                    FileName = $"{Path.GetFileNameWithoutExtension(Document.Template.DataName)}_{DateTime.Now.ToString("yyMMddhhmmss")}{Path.GetExtension(Document.Template.DataName)}";
+                }
+                else
+                {
+                    FileName = $"{Document.Number}.{Path.GetExtension(Document.Template.DataName)}";
+                }
+            }
         }
     }
 }

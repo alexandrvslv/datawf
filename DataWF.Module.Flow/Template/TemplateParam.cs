@@ -91,15 +91,15 @@ namespace DataWF.Module.Flow
         [DataMember, Column("orderid")]
         public int? Order
         {
-            get { return GetProperty<int>(nameof(Order)); }
-            set { SetProperty(value, nameof(Order)); }
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
         }
 
         [DataMember, Column("default_value")]
         public string Default
         {
-            get { return GetProperty<string>(nameof(Default)); }
-            set { SetProperty(value, nameof(Default)); }
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
         }
 
         public Type DataType { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
