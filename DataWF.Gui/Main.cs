@@ -1,5 +1,4 @@
-﻿using DataWF.Data;
-using DataWF.Gui;
+﻿using DataWF.Gui;
 using DataWF.Common;
 using System;
 using System.Collections.Generic;
@@ -11,47 +10,30 @@ using System.Reflection;
 using System.Threading;
 using Xwt;
 using System.Linq;
-using Mono.Cecil;
 
 namespace DataWF.Data.Gui
 {
 
-    public class Main : Window, IDockMain
+    public class MainWindow : Window, IDockMain
     {
-        
         private StatusIcon icon;
-        private Toolsbar bar;
-        private ToolDropDown menuProject;
-        private ToolMenuItem menuProjectProps;
-        private ToolMenuItem menuProjectCreate;
-        private ToolMenuItem menuProjectOpen;
-        private ToolMenuItem menuProjectSave;
-        private ToolMenuItem menuProjectSaveAs;
-        private ToolMenuItem menuProjectRecent;
-        private ToolMenuItem menuProjectClose;
-        private ToolMenuItem menuProjectExit;
-        private ToolDropDown menuEdit;
-        private ToolMenuItem menuEditUIEnvironment;
-        private ToolMenuItem menuEditLocalize;
-        private ToolDropDown menuView;
-        private ToolDropDown menuWindow;
-        private ToolDropDown menuHelp;
-        private ToolMenuItem menuHelpAbout;
-        private Toolsbar statusBar;
-        private ToolLabel toolLabel;
-        private DockBox dock;
-        private OpenFileDialog openFD;
-        private SaveFileDialog saveFD;
-        private Widget currentWidget;
-        private ToolMenuItem menuWindowlang;
-        private List<ProjectType> editors = new List<ProjectType>();
-        private ToolSplit toolTasks;
-        private ToolProgressBar toolProgress;
-        private SelectableList<TaskExecutor> tasks = new SelectableList<TaskExecutor>();
-        private NotifyWindow notify = new NotifyWindow();
-        private TaskWindow task = new TaskWindow();
+        protected Toolsbar bar;
+        protected Toolsbar statusBar;
+        protected ToolLabel toolLabel;
+        protected ToolDropDown menuWindow;
+        protected ToolMenuItem menuHelpAbout;
+        protected ToolDropDown menuHelp;
+        protected DockBox dock;
+        protected Widget currentWidget;
+        protected ToolMenuItem menuWindowlang;
+        protected List<ProjectType> editors = new List<ProjectType>();
+        protected ToolSplit toolTasks;
+        protected ToolProgressBar toolProgress;
+        protected SelectableList<TaskExecutor> tasks = new SelectableList<TaskExecutor>();
+        protected NotifyWindow notify = new NotifyWindow();
+        protected TaskWindow task = new TaskWindow();
 
-        public Main()
+        public MainWindow()
         {
             GuiService.Main = this;
             Helper.ThreadException += OnThreadException;
@@ -60,41 +42,6 @@ namespace DataWF.Data.Gui
             ListEditor.LogClick += FieldsEditorLogClick;
 
             icon = Application.CreateStatusIcon();
-
-            menuProjectCreate = new ToolMenuItem { Name = "Create" };
-            menuProjectCreate.DropDown.Bar.ItemClick += ToolProjectCreateItemClick;
-            menuProjectOpen = new ToolMenuItem(ToolProjectOpenClick) { Name = "Open" };
-            menuProjectProps = new ToolMenuItem(ToolProjectPropertiesClick) { Name = "Properties" };
-            menuProjectSave = new ToolMenuItem(ToolProjectSaveClick) { Name = "Save" };
-            menuProjectSaveAs = new ToolMenuItem(ToolProjectSaveAsClick) { Name = "SaveAs" };
-            menuProjectRecent = new ToolMenuItem() { Name = "Recent" };
-            menuProjectClose = new ToolMenuItem(ToolProjectCloseClick) { Name = "Close" };
-            menuProjectExit = new ToolMenuItem(ToolExitOnClick) { Name = "Exit" };
-
-            menuProject = new ToolDropDown(
-                    menuProjectCreate,
-                    menuProjectOpen,
-                    menuProjectProps,
-                    menuProjectSave,
-                    menuProjectSaveAs,
-                    menuProjectRecent,
-                    menuProjectClose,
-                    menuProjectExit)
-            { Name = "Project", DisplayStyle = ToolItemDisplayStyle.Text };
-            menuView = new ToolDropDown(
-                    BuildMenuItem(new LogExplorer()),
-                    BuildMenuItem(new StartPage()),
-                    BuildMenuItem(new ListEditor()),
-                    new ToolSeparator())
-            { Name = "View", DisplayStyle = ToolItemDisplayStyle.Text };
-
-            menuEditUIEnvironment = new ToolMenuItem(ToolEditUIEnvironment) { Name = "UI Environment" };
-            menuEditLocalize = new ToolMenuItem(ToolEditLocalizeClick) { Name = "Localize" };
-
-            menuEdit = new ToolDropDown(
-                menuEditUIEnvironment,
-                menuEditLocalize)
-            { Name = "Edit", DisplayStyle = ToolItemDisplayStyle.Text };
 
             menuWindowlang = new ToolMenuItem { Name = "Language" };
             foreach (CultureInfo info in Locale.Instance.Cultures)
@@ -108,21 +55,14 @@ namespace DataWF.Data.Gui
                 menuWindowlang.DropDown.Items.Add(menuItem);
             }
             menuWindow = new ToolDropDown(menuWindowlang) { Name = "Window", DisplayStyle = ToolItemDisplayStyle.Text };
-
             menuHelpAbout = new ToolMenuItem() { Name = "About" };
-
             menuHelp = new ToolDropDown(menuHelpAbout) { Name = "Help", DisplayStyle = ToolItemDisplayStyle.Text };
 
             bar = new Toolsbar(
-                menuProject,
-                menuEdit,
-                menuView,
+                new ToolSeparator { FillWidth = true },
                 menuWindow,
                 menuHelp)
             { Name = "MainBar" };
-
-            openFD = new OpenFileDialog() { Title = "Open File" };
-            saveFD = new SaveFileDialog();
 
             toolTasks = new ToolSplit { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Tasks" };
             toolProgress = new ToolProgressBar { Name = "Progress", Visible = false };
@@ -159,12 +99,12 @@ namespace DataWF.Data.Gui
             Localize();
         }
 
-        private void FieldsEditorLogClick(object sender, ListEditorEventArgs e)
+        protected virtual void FieldsEditorLogClick(object sender, ListEditorEventArgs e)
         {
 
         }
 
-        private void FieldsEditorStatusClick(object sender, ListEditorEventArgs e)
+        protected virtual void FieldsEditorStatusClick(object sender, ListEditorEventArgs e)
         {
 
         }
@@ -193,14 +133,14 @@ namespace DataWF.Data.Gui
             exceptionWindow.Show(null, Point.Zero);
         }
 
-        private void LangItemClick(object sender, EventArgs e)
+        protected void LangItemClick(object sender, EventArgs e)
         {
             var item = (ToolMenuItem)sender;
             if (Locale.Instance.Culture == (CultureInfo)item.Tag)
                 return;
             Locale.Instance.Culture = (CultureInfo)item.Tag;
             Localize();
-            DBService.RefreshToString();
+            //TODO DBService.RefreshToString();
         }
 
         public ListEditor Properties
@@ -211,11 +151,6 @@ namespace DataWF.Data.Gui
         public LogExplorer Logs
         {
             get { return (LogExplorer)GetControl(typeof(LogExplorer).Name); }
-        }
-
-        public StartPage StartPage
-        {
-            get { return (StartPage)GetControl(typeof(StartPage).Name); }
         }
 
         #region IAppMainForm implementation
@@ -259,7 +194,7 @@ namespace DataWF.Data.Gui
 
         #endregion
 
-        private void DockOnContentFocus(object sender, EventArgs e)
+        protected virtual void DockOnContentFocus(object sender, EventArgs e)
         {
             var widget = (Widget)sender;
             if (widget is DockPanel)
@@ -267,11 +202,6 @@ namespace DataWF.Data.Gui
             if (currentWidget != widget)
             {
                 currentWidget = widget;
-                bool flag = (currentWidget is IProjectEditor);
-                menuProjectProps.Sensitive = flag;
-                menuProjectSave.Sensitive = flag;
-                menuProjectSaveAs.Sensitive = flag;
-                menuProjectClose.Sensitive = flag;
             }
         }
 

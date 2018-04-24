@@ -604,8 +604,8 @@ namespace DataWF.Module.CommonGui
             if (dateField.DataValue != null)
             {
                 var interval = (DateInterval)dateField.DataValue;
-                query.BuildPropertyParam(nameof(UserLog.Date), CompareType.GreaterOrEqual, interval.Min);
-                query.BuildPropertyParam(nameof(UserLog.Date), CompareType.LessOrEqual, interval.Max.AddDays(1));
+                query.BuildPropertyParam(nameof(UserLog.DateCreate), CompareType.GreaterOrEqual, interval.Min);
+                query.BuildPropertyParam(nameof(UserLog.DateCreate), CompareType.LessOrEqual, interval.Max.AddDays(1));
             }
             if (dataField.DataValue != null)
             {

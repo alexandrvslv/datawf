@@ -253,6 +253,7 @@ namespace DataWF.Gui
         public static void Load(string name = "gui.xml")
         {
             instance.LoadDirectory(Helper.GetDirectory(), name);
+            Helper.LogWorkingSet("UI Info");
         }
 
         public void LoadDirectory(string path, string name = "gui.xml")

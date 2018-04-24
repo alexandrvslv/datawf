@@ -148,15 +148,15 @@ namespace DataWF.Data.Gui
         {
             if (value != null && (value.GetType() == valueType))
                 return value;
-            if (value is DBItem)
-            {
-                if (column != null || TypeHelper.IsBaseType(value.GetType(), valueType))
-                    return value;
-                return ((DBItem)value).PrimaryId;
-            }
             if (value is string)
             {
-                return table.LoadItemById(value, DBLoadParam.None);
+                value = table.LoadItemById(value, DBLoadParam.None);
+            }
+            if (value is DBItem)
+            {
+                if (TypeHelper.IsBaseType(value.GetType(), valueType))
+                    return value;
+                return ((DBItem)value).PrimaryId;
             }
             return base.ParseValue(value, dataSource, valueType);
         }

@@ -628,7 +628,7 @@ namespace DataWF.Data
                 if (StampKey != null)
                     item.Stamp = DateTime.Now;
                 if (DateKey != null)
-                    item.Date = DateTime.Now;
+                    item.DateCreate = DateTime.Now;
                 if (IsLoging && StatusKey != null && item.GetType().Name != "DocumentLog")
                     item.Status = DBStatus.New;
             }

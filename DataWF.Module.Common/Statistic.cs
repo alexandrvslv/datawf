@@ -35,7 +35,7 @@ namespace DataWF.Module.Common
         public StatisticList(string filter, DBViewKeys mode = DBViewKeys.None)
             : base(Statistic.DBTable, filter, mode)
         {
-            ApplySortInternal(new DBComparer(Statistic.DBTable.ParseProperty(nameof(Statistic.Date)), ListSortDirection.Ascending));
+            ApplySortInternal(new DBComparer(Statistic.DBTable.ParseProperty(nameof(Statistic.DateCreate)), ListSortDirection.Ascending));
         }
 
         public StatisticList()

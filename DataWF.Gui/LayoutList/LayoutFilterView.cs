@@ -148,7 +148,7 @@ namespace DataWF.Gui
             Filters.OnListChanged(ListChangedType.Reset);
         }
 
-        internal void Clear()
+        internal void ClearFilter()
         {
             Filters.Clear();
         }

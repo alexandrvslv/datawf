@@ -457,7 +457,7 @@ namespace DataWF.Module.Flow
         [Category("Current State")]
         public DateTime? WorkDate
         {
-            get { return WorkCurrent?.Date; }
+            get { return WorkCurrent?.DateCreate; }
         }
 
         [Category("Current State")]
@@ -697,7 +697,7 @@ namespace DataWF.Module.Flow
             work.Document = this;
             work.User = user;
             work.Description = descript;
-            work.Date = DateTime.Now;
+            work.DateCreate = DateTime.Now;
             work.Stage = stage;
             if (from != null)
             {
@@ -1002,7 +1002,6 @@ namespace DataWF.Module.Flow
         Create,
         Document,
         WorkBegin,
-        WorkEnd,
-        History
+        WorkEnd
     }
 }

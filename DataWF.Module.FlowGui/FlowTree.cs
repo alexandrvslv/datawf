@@ -77,12 +77,6 @@ namespace DataWF.Module.FlowGui
 
         public object DataFilter { get; internal set; }
 
-        public DBItem SelectedDBItem
-        {
-            get { return (SelectedNode as TableItemNode)?.Item as DBItem; }
-            set { SelectedNode = Find(value); }
-        }
-
         private void RefreshData()
         {
             CheckDBView(Template.DBTable?.DefaultView, ShowTemplate, GlyphType.Book, Colors.LightBlue);

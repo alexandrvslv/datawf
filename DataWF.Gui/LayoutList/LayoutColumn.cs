@@ -197,20 +197,6 @@ namespace DataWF.Gui
             set { editable = value; }
         }
 
-        [Browsable(false), DefaultValue(true)]
-        public bool View
-        {
-            get { return view; }
-            set
-            {
-                if (view != value)
-                {
-                    view = value;
-                    visible = view;
-                }
-            }
-        }
-
         [XmlIgnore]
         public bool Password
         {
@@ -254,7 +240,6 @@ namespace DataWF.Gui
                 ownerName = ownerName,
                 ReadOnly = ReadOnly,
                 StyleName = StyleName,
-                View = View,
                 Visible = Visible
             };
             return clone;

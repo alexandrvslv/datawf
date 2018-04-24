@@ -35,11 +35,19 @@ namespace DataWF.Module.CommonGui
         private TextEntry filterEntry;
 
         private CellStyle userStyle;
+        private object bindSource;
+        private IInvoker bindInvoker;
 
         public UserTree()
         {
             Mode = LayoutListMode.Tree;
             handler = new ListChangedEventHandler(HandleViewListChanged);
+        }
+
+        public DBItem SelectedDBItem
+        {
+            get { return (SelectedNode as TableItemNode)?.Item as DBItem; }
+            set { SelectedNode = value == null ? null : Find(value); }
         }
 
         public UserTreeKeys UserKeys
@@ -437,6 +445,8 @@ namespace DataWF.Module.CommonGui
             }
         }
 
+
+
         private void FilterEntryChanged(object sender, EventArgs e)
         {
             var entry = (TextEntry)sender;
@@ -464,11 +474,61 @@ namespace DataWF.Module.CommonGui
                     ((IDBTableView)item.Item).ListChanged -= handler;
                 }
             }
+            BindSource = null;
             //User.DBTable.DefaultView.ListChanged -= handler;
             //UserGroup.DBTable.DefaultView.ListChanged -= handler;
             //GroupPermission.DBTable.DefaultView.ListChanged -= handler;
             //Scheduler.DBTable.DefaultView.ListChanged -= handler;
             base.Dispose(disposing);
+        }
+
+
+        public object BindSource
+        {
+            get { return bindSource; }
+            set
+            {
+                if (bindSource == value)
+                    return;
+                if (bindSource is INotifyPropertyChanged)
+                {
+                    ((INotifyPropertyChanged)bindSource).PropertyChanged -= BindSourcePropertyChanged;
+                }
+                bindSource = null;
+                SelectedDBItem = BindInvoker?.Get(value) as DBItem;
+                bindSource = value;
+                if (bindSource is INotifyPropertyChanged)
+                {
+                    ((INotifyPropertyChanged)bindSource).PropertyChanged -= BindSourcePropertyChanged;
+                }
+            }
+        }
+
+        public IInvoker BindInvoker { get { return bindInvoker; } set { bindInvoker = value; } }
+
+        private void BindSourcePropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            SelectedDBItem = BindInvoker.Get(BindSource) as DBItem;
+        }
+
+        public void Bind(object bindSource, string bindProperty)
+        {
+            Bind(bindSource, EmitInvoker.Initialize(bindSource?.GetType(), bindProperty));
+        }
+
+        public void Bind(object bindSource, IInvoker bindInvoker)
+        {
+            BindInvoker = bindInvoker;
+            BindSource = bindSource;
+        }
+
+        protected override void OnSelectionChanged(object sender, LayoutSelectionEventArgs e)
+        {
+            base.OnSelectionChanged(sender, e);
+            if (BindSource != null && BindInvoker != null)
+            {
+                BindInvoker.Set(BindSource, SelectedDBItem);
+            }
         }
     }
 }

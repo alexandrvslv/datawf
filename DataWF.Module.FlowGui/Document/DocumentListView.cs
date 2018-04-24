@@ -6,56 +6,57 @@ using DataWF.Data.Gui;
 using DataWF.Gui;
 using DataWF.Common;
 using DataWF.Module.Flow;
-
 using Xwt;
-using DataWF.Module.CommonGui;
 using System.Linq;
 using DataWF.Data;
 using DataWF.Module.Common;
 
 namespace DataWF.Module.FlowGui
 {
+
     public class DocumentListView : VPanel, IDockContent, IReadOnly
     {
+        private OpenFileDialog ofDialog;
         private string label;
-        private string NameL = "DocumentListView";
         private bool mainDock = true;
         private bool autoLoad = true;
         private DocumentEditor deditor;
-        private DocumentSearch search;
-        private DocumentList _documents;
-        private TableLoader loader = new TableLoader();
-        private ToolFieldEditor toolFTemplate;
-        private ToolFieldEditor toolFUser;
-        private ToolFieldEditor toolFDateType;
-        private ToolFieldEditor toolFDate;
-        private ToolFieldEditor toolFNumber;
-        private ToolFieldEditor toolFStage;
-        private ToolFieldEditor toolFWork;
-        private ToolItem toolLoad;
-        private Toolsbar bar;
-        private Toolsbar barFilter;
-        private ToolLabel toolCount;
-        private ToolItem toolView;
-        private ToolItem toolFilter;
-        private ToolItem toolPreview;
-        private ToolTableLoader toolProgress;
-        private ToolDropDown toolParam;
+        private DocumentFilter filter;
+        private DocumentList documents;
+        protected DocumentFilterView filterView;
+        private TableLoader loader;
+        protected ToolItem toolLoad;
+        protected Toolsbar bar;
+        protected ToolLabel toolCount;
+        protected ToolItem toolCreate;
+        protected ToolItem toolView;
+        protected ToolItem toolFilter;
+        protected ToolItem toolPreview;
+        protected ToolTableLoader toolProgress;
+        protected ToolDropDown toolParam;
         private DocumentLayoutList list;
         private VPaned split;
 
         public DocumentListView()
         {
+            ofDialog = new OpenFileDialog() { Multiselect = true };
+
+            loader = new TableLoader();
+
             toolCount = new ToolLabel { Text = "0" };
             toolPreview = new ToolItem(ToolPreviewClick) { CheckOnClick = true, Checked = true, Name = "Preview", Glyph = GlyphType.List };
             toolView = new ToolItem(ToolViewClick) { Name = "View", Glyph = GlyphType.PictureO };
             toolFilter = new ToolItem(ToolFilterClick) { Name = "Filter", CheckOnClick = true, Glyph = GlyphType.Filter };
             toolParam = new ToolDropDown(ToolParamClick) { Name = "Parameters", Glyph = GlyphType.Spinner };
             toolProgress = new ToolTableLoader { Loader = loader };
+            toolCreate = new ToolItem(ToolCreateClick) { Name = "Create", ForeColor = Colors.DarkGreen };
+            toolLoad = new ToolItem(ToolLoadClick) { Name = "Lcoad", Glyph = GlyphType.Refresh };
 
             bar = new Toolsbar(
                 toolFilter,
                 toolPreview,
+                toolCreate,
+                toolLoad,
                 new ToolSeparator() { FillWidth = true },
                 toolCount,
                 toolView,
@@ -63,26 +64,6 @@ namespace DataWF.Module.FlowGui
             {
                 Name = "DocumentListBar"
             };
-
-            toolFNumber = new ToolFieldEditor { Name = "Number" };
-            toolFWork = new ToolFieldEditor { Name = "Work", FieldWidth = 60 };
-            toolFTemplate = new ToolFieldEditor { Name = "Template", FieldWidth = 160 };
-            toolFUser = new ToolFieldEditor { Name = "User", Editor = new CellEditorUserTree() { DataType = typeof(User) } };
-            toolFStage = new ToolFieldEditor { Name = "Stage", FieldWidth = 140, Editor = new CellEditorFlowTree() { DataType = typeof(Stage) } };
-            toolFDate = new ToolFieldEditor { Name = "Date", FieldWidth = 140 };
-            toolFDateType = new ToolFieldEditor { Name = "Date Type", FieldWidth = 100 };
-            toolLoad = new ToolItem(ToolLoadClick) { Name = "Load", Glyph = GlyphType.Fire };
-
-            barFilter = new Toolsbar(
-                toolFTemplate,
-                toolFDateType,
-                toolFDate,
-                toolFNumber,
-                toolFStage,
-                toolFUser,
-                toolFWork,
-                toolLoad)
-            { Name = "DocumentFilterBar", Visible = false };
 
             list = new DocumentLayoutList()
             {
@@ -98,18 +79,20 @@ namespace DataWF.Module.FlowGui
             list.SelectionChanged += ListOnSelectionChanged;
             list.CellMouseClick += ListOnCellMouseClick;
 
-            split = new VPaned() { Name = "split", Visible = true };
+            filterView = new DocumentFilterView() { Visible = false };
+
+            split = new VPaned() { Name = "split" };
             split.Panel1.Content = list;
 
+            var hbox = new HBox();
+            hbox.PackStart(filterView, false, false);
+            hbox.PackStart(split, true, true);
 
             PackStart(bar, false, false);
-            PackStart(barFilter, false, false);
-            PackStart(split, true, true);
+            PackStart(hbox, true, true);
+
             Name = "DocumentListView";
-
-            Localize();
-
-            Search = new DocumentSearch();
+            Filter = new DocumentFilter();
         }
 
         [DefaultValue(true)]
@@ -119,23 +102,9 @@ namespace DataWF.Module.FlowGui
             set { autoLoad = value; }
         }
 
-        public bool ReadOnly
-        {
-            get { return false; }
-            set { }
-        }
+        public virtual bool ReadOnly { get; set; }
 
-        private void Field_ValueChanged(object sender, EventArgs e)
-        {
-            //throw new NotImplementedException();
-        }
-
-        private void TemplateFieldValueChanged(object sender, EventArgs e)
-        {
-            TemplateFilter = this.toolFTemplate.DataValue as Template;
-        }
-
-        public Toolsbar Tools
+        public Toolsbar Bar
         {
             get { return bar; }
         }
@@ -152,40 +121,37 @@ namespace DataWF.Module.FlowGui
             get { return DockType.Content; }
         }
 
-        public void Localize()
+        public virtual void Localize()
         {
             bar.Localize();
-            barFilter.Localize();
-
-            GuiService.Localize(this, NameL, "Documents List");
             list.Localize();
+            filterView.Localize();
+            GuiService.Localize(this, nameof(DocumentListView), "Documents List");
+
             if (deditor != null)
+            {
                 deditor.Localize();
+            }
             //CheckDocumentTemplates();
         }
 
-        public DocumentSearch Search
+        public DocumentFilter Filter
         {
-            get { return search; }
+            get { return filter; }
             set
             {
-                if (search != value)
+                if (filter != value)
                 {
-                    if (search != null)
-                        search.PropertyChanged -= OnFilterPropertyChanged;
-                    search = value;
-                    toolFDateType.Field.BindData(search, nameof(DocumentSearch.DateType));
-                    toolFDate.Field.BindData(search, nameof(DocumentSearch.Date));
-                    toolFNumber.Field.BindData(search, nameof(DocumentSearch.Number));
-                    toolFStage.Field.BindData(search, nameof(DocumentSearch.Stage));
-                    toolFTemplate.Field.BindData(search, nameof(DocumentSearch.Template));
-                    toolFUser.Field.BindData(search, nameof(DocumentSearch.User));
-                    toolFWork.Field.BindData(search, nameof(DocumentSearch.IsWork));
-                    if (search != null)
+                    if (filter != null)
+                        filter.PropertyChanged -= OnFilterPropertyChanged;
+                    filter = value;
+                    filterView.Filter = value;
+                    if (filter != null)
                     {
-                        search.PropertyChanged += OnFilterPropertyChanged;
-                        if (_documents != null)
+                        filter.PropertyChanged += OnFilterPropertyChanged;
+                        if (documents != null)
                         {
+                            documents.Query = filter.QDoc;
                             OnFilterPropertyChanged(this, null);
                         }
                     }
@@ -193,13 +159,11 @@ namespace DataWF.Module.FlowGui
             }
         }
 
-        private void OnFilterPropertyChanged(object sender, PropertyChangedEventArgs e)
+        protected virtual void OnFilterPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             try
             {
-                TemplateFilter = search.Template;
-                search.Parse();
-                _documents.Query = search.QDoc;
+                TemplateFilter = Filter.Template;
                 OnSearchChanged();
             }
             catch (Exception ex)
@@ -256,12 +220,6 @@ namespace DataWF.Module.FlowGui
             toolCount.Text = text.Value;
         }
 
-        public void RemoveTemplateFilter()
-        {
-            toolFTemplate.Field.DataValue = null;
-            //ContextTemplateItemClicked(this, new ToolStripItemClickedEventArgs(menuAll));
-        }
-
         //private void ContextTemplateItemClicked(object sender, ToolStripItemClickedEventArgs e)
         //{
         //    TemplateFilter = e.ClickedItem.Tag as Template;
@@ -274,6 +232,7 @@ namespace DataWF.Module.FlowGui
             {
                 if (list.ViewMode == value)
                     return;
+                toolCreate.Sensitive = value != null && !value.IsCompaund && value.Access.Create;
                 list.ViewMode = value;
             }
         }
@@ -282,16 +241,17 @@ namespace DataWF.Module.FlowGui
 
         private void OnSearchChanged()
         {
-            if (SearchChanged != null)
-                SearchChanged(this, EventArgs.Empty);
+            SearchChanged?.Invoke(this, EventArgs.Empty);
 
-            if (search != null && autoLoad && !search.IsCurrent && !search.IsEmpty)
+            if (filter != null && autoLoad && !filter.IsCurrent && !filter.IsEmpty)
             {
-                _documents.IsStatic = true;
-                loader.LoadAsync(search.QDoc);
+                documents.IsStatic = true;
+                loader.LoadAsync(filter.QDoc);
             }
             else
-                _documents.IsStatic = false;
+            {
+                documents.IsStatic = false;
+            }
         }
 
         public TableLoader Loader
@@ -301,19 +261,19 @@ namespace DataWF.Module.FlowGui
 
         public DocumentList Documents
         {
-            get { return _documents; }
+            get { return documents; }
             set
             {
-                if (_documents == value)
+                if (documents == value)
                     return;
-                if (_documents != null)
-                    _documents.ListChanged -= DocumentsListChanged;
+                if (documents != null)
+                    documents.ListChanged -= DocumentsListChanged;
 
-                _documents = value;
-                list.ListSource = _documents;
-                loader.View = _documents;
+                documents = value;
+                list.ListSource = documents;
+                loader.View = documents;
 
-                _documents.ListChanged += DocumentsListChanged;
+                documents.ListChanged += DocumentsListChanged;
             }
         }
 
@@ -321,9 +281,9 @@ namespace DataWF.Module.FlowGui
         {
             if (e.ListChangedType == ListChangedType.Reset)
                 return;
-            if (e.ListChangedType == ListChangedType.ItemAdded && _documents.IsStatic)
+            if (e.ListChangedType == ListChangedType.ItemAdded && documents.IsStatic)
             {
-                var document = _documents[e.NewIndex];
+                var document = documents[e.NewIndex];
                 if (document.WorkStage == null || document.WorkStage.Length == 0)
                     document.GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), DBLoadParam.Load);
             }
@@ -341,7 +301,7 @@ namespace DataWF.Module.FlowGui
             {
                 label = value;
                 if (value != null)
-                    this.Text = "Список (" + value.Replace("\n", " ") + ")";
+                    this.Text = "List (" + value.Replace("\n", " ") + ")";
             }
         }
 
@@ -400,10 +360,7 @@ namespace DataWF.Module.FlowGui
         public bool FilterVisible
         {
             get { return toolFilter.Checked; }
-            set
-            {
-                barFilter.Visible = value;
-            }
+            set { filterView.Visible = value; }
         }
 
         private void ToolFilterClick(object sender, EventArgs e)
@@ -414,6 +371,15 @@ namespace DataWF.Module.FlowGui
         private async void ToolLoadClick(object sender, EventArgs e)
         {
             await loader.LoadAsync();
+        }
+
+        protected virtual void ToolCreateClick(object sender, EventArgs e)
+        {
+            var template = filterView.Templates.SelectedDBItem as Template;
+            if (template != null)
+            {
+                ViewDocuments(CreateDocuments(template, null));
+            }
         }
 
         private void ToolPreviewClick(object sender, EventArgs e)
@@ -461,7 +427,160 @@ namespace DataWF.Module.FlowGui
         protected override void Dispose(bool disposing)
         {
             loader.Dispose();
+            if (documents != null)
+                documents.Dispose();
             base.Dispose(disposing);
         }
+
+        public List<Document> CreateDocumentsFromList(Template template, List<Document> parents)
+        {
+            List<Document> documents = new List<Document>();
+            var question = new QuestionMessage("Templates", "Create " + parents.Count + " documents of " + template + "?");
+            question.Buttons.Add(Command.No);
+            question.Buttons.Add(Command.Yes);
+            question.Buttons.Add(Command.Cancel);
+            var command = Command.Yes;
+            if (parents.Count > 1)
+                command = MessageDialog.AskQuestion(ParentWindow, question);
+            if (command == Command.Cancel)
+                return documents;
+            else if (command == Command.Yes)
+            {
+                foreach (Document document in parents)
+                {
+                    documents.AddRange(CreateDocuments(template, document));
+                }
+            }
+            else
+            {
+                documents = CreateDocuments(template, null);
+                foreach (Document document in parents)
+                {
+                    foreach (Document doc in documents)
+                        if (!doc.ContainsReference(document.Id))
+                            Document.CreateReference(document, doc, false);
+                }
+
+            }
+            return documents;
+        }
+
+        public List<Document> CreateDocuments(Template template, Document parent)
+        {
+            var fileNames = new List<string>();
+            var documents = new List<Document>();
+            var question = new QuestionMessage();
+            question.Buttons.Add(Command.No);
+            question.Buttons.Add(Command.Yes);
+            question.Text = "New Document";
+            if (template.IsFile.Value)
+            {
+                ofDialog.Title = "New " + template.Name;
+                if (parent != null)
+                    ofDialog.Title += "(" + parent.Template.Name + " " + parent.Number + ")";
+                if (ofDialog.Run(ParentWindow))
+                {
+                    var dr = Command.Save;
+                    foreach (string fileName in ofDialog.FileNames)
+                    {
+                        string name = System.IO.Path.GetFileName(fileName);
+                        var drow = DocumentData.DBTable.LoadByCode(name, DocumentData.DBTable.ParseProperty(nameof(DocumentData.FileName)), DBLoadParam.Load);
+                        if (drow != null)
+                        {
+                            if (dr == Command.Save)
+                            {
+                                question.SecondaryText = "Document whith number '" + name + "' exist\nCreate new?";
+                                dr = MessageDialog.AskQuestion(ParentWindow, question);
+                            }
+                            if (dr == Command.Yes)
+                            {
+                                fileNames.Add(fileName);
+                            }
+                            else if (dr == Command.Cancel)
+                            {
+                                return documents;
+                            }
+                        }
+                        else
+                            fileNames.Add(fileName);
+                    }
+                }
+            }
+            if (fileNames != null && fileNames.Count > 1)
+            {
+                question.Buttons.Add(Command.Cancel);
+                question.SecondaryText = "Create " + fileNames.Count + "(Yes) or 1(No) documents?";
+                var dr = MessageDialog.AskQuestion(ParentWindow, question);
+                if (dr == Command.Cancel)
+                {
+                    return documents;
+                }
+                else if (dr == Command.Yes)
+                {
+                    foreach (string fileName in fileNames)
+                    {
+                        var document = Document.Create(template, parent, fileName);
+                        document.Number = fileName;
+                        documents.Add(document);
+                    }
+                    return documents;
+                }
+            }
+
+            documents.Add(Document.Create(template, parent, fileNames.ToArray()));
+            return documents;
+        }
+
+        public void ViewDocuments(List<Document> documents)
+        {
+            if (documents.Count == 1)
+            {
+                var editor = new DocumentEditor();
+                editor.Document = documents[0];
+                editor.ShowWindow(this);
+            }
+            else if (documents.Count > 1)
+            {
+                DocumentList list = new DocumentList("", DBViewKeys.Static | DBViewKeys.Empty);
+
+                var dlist = new DocumentListView();
+                dlist.List.GenerateColumns = false;
+                dlist.List.AutoToStringFill = true;
+                dlist.MainDock = false;
+                dlist.Documents = list;
+                dlist.TemplateFilter = documents[0].Template;
+
+                foreach (Document document in documents)
+                    list.Add(document);
+
+                var form = new ToolWindow
+                {
+                    Title = "New Documents",
+                    Mode = ToolShowMode.Dialog,
+                    Size = new Size(800, 600),
+                    Target = dlist
+                };
+                form.ButtonAcceptClick += (s, e) =>
+                {
+                    foreach (Document document in documents)
+                    {
+                        //if (GuiService.Main != null)
+                        //{
+                        //    TaskExecutor executor = new TaskExecutor();
+                        //    executor.Parameters = new object[] { document };
+                        //    executor.Procedure = ReflectionAccessor.InitAccessor(typeof(DocumentTool).GetMethod("SaveDocument", new Type[] { typeof(Document) }), false);
+                        //    executor.Name = "Save Document " + document.Id;
+                        //    GuiService.Main.AddTask(dlist, executor);
+                        //}
+                        //else
+                        //{
+                        document.Save(null, null);
+                        //}
+                    }
+                };
+                form.Show(this, new Point(1, 1));
+            }
+        }
+
     }
 }

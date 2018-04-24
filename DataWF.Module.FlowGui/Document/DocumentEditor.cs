@@ -63,7 +63,7 @@ namespace DataWF.Module.FlowGui
         private ToolItem toolLogs;
         private ToolItem toolDelete;
         private ToolItem toolBarCode;
-        private ToolDropDown toolTemplates;
+        //private ToolDropDown toolTemplates;
         private ToolItem toolReturn;
         private ToolItem toolForward;
         private ToolItem toolNext;
@@ -84,12 +84,13 @@ namespace DataWF.Module.FlowGui
         private EventHandler tempClick;
         private DocumentEditorState state = DocumentEditorState.None;
         private Type documentType;
+        private DocumentReferenceView references;
 
         public DocumentEditor()
         {
             toolCopy = new ToolItem(ToolCopyClick) { Name = "Copy", Glyph = GlyphType.CopyAlias };
             toolProcedures = new ToolDropDown { Name = "Procedures", Glyph = GlyphType.PuzzlePiece };
-            toolTemplates = new ToolDropDown { Name = "Templates", Glyph = GlyphType.Book };
+            //toolTemplates = new ToolDropDown { Name = "Templates", Glyph = GlyphType.Book };
             toolSave = new ToolItem(ToolSaveClick) { Name = "Save", Glyph = GlyphType.SaveAlias };
             toolRefresh = new ToolItem(ToolRefreshClick) { Name = "Refresh", Glyph = GlyphType.Refresh };
             toolDelete = new ToolItem(ToolDeleteClick) { Name = "Delete", Glyph = GlyphType.MinusSquare };
@@ -102,7 +103,7 @@ namespace DataWF.Module.FlowGui
 
             tools = new Toolsbar(
                toolProcedures,
-               toolTemplates,
+               //toolTemplates,
                toolCopy,
                toolSave,
                toolRefresh,
@@ -128,10 +129,9 @@ namespace DataWF.Module.FlowGui
             //dock.PageStyle = GuiEnvironment.StylesInfo["DocumentDock"];
             pageHeader = dock.Put(new DocumentHeader(), DockType.Left);
             pageHeader.Panel.MapItem.FillWidth = true;
+
             pageWorks = dock.Put(new DocumentWorkView(), DockType.Content);
-            //pageDatas = dock.Put(new DocumentDataView<DocumentData>(), DockType.Content);
-            //pageRefers = dock.Put(new DocumentCustomerView(), DockType.Content);
-            pageRefers = dock.Put(new DocumentReferenceView(), DockType.Content);
+            pageRefers = dock.Put((references = new DocumentReferenceView()), DockType.Content);
 
             Name = "DocumentEditor";
             Text = "Document";
@@ -420,14 +420,14 @@ namespace DataWF.Module.FlowGui
                                 InitReference(stage, param);
                             else if (param.Type == ParamType.Procedure)
                                 InitProcedure(stage, param);
-                            else if (param.Type == ParamType.Template)
-                                InitTemplate(stage, param.Param as Template, toolTemplates.DropDown.Items);
+                            //else if (param.Type == ParamType.Template)
+                            //    InitTemplate(stage, param.Param as Template, toolTemplates.DropDown.Items);
                         }
                     }
                     foreach (MenuItemProcedure item in toolProcedures.DropDownItems)
                         item.Visible = item.Tag == template || item.Tag == stage;
-                    foreach (TemplateMenuItem item in toolTemplates.DropDownItems)
-                        item.Visible = item.Tag == template || item.Tag == stage;
+                    //foreach (TemplateMenuItem item in toolTemplates.DropDownItems)
+                    //    item.Visible = item.Tag == template || item.Tag == stage;
                     foreach (var page in dock.GetPages())
                         page.Visible = page.Tag == template || page.Tag == stage;
                 }
@@ -450,13 +450,13 @@ namespace DataWF.Module.FlowGui
                                 InitReference(template, param);
                             else if (param.Type == ParamType.Procedure)
                                 InitProcedure(template, param);
-                            else if (param.Type == ParamType.Template)
-                                InitTemplate(template, param.Param as Template, toolTemplates.DropDownItems);
+                            //else if (param.Type == ParamType.Template)
+                            //    InitTemplate(template, param.Param as Template, toolTemplates.DropDownItems);
                         }
                     foreach (MenuItemProcedure item in toolProcedures.DropDownItems)
                         item.Visible = item.Tag == template;
-                    foreach (TemplateMenuItem item in toolTemplates.DropDownItems)
-                        item.Visible = item.Tag == template;
+                    //foreach (TemplateMenuItem item in toolTemplates.DropDownItems)
+                    //    item.Visible = item.Tag == template;
                     foreach (DockPage dp in dock.GetPages())
                         dp.Visible = dp.Tag == template;
 
@@ -507,7 +507,7 @@ namespace DataWF.Module.FlowGui
                 toolNext.Sensitive = state == DocumentEditorState.Edit;
                 toolForward.Sensitive = state == DocumentEditorState.Edit;
                 toolProcedures.Sensitive = state == DocumentEditorState.Edit;
-                toolTemplates.Sensitive = state != DocumentEditorState.Create;
+                //toolTemplates.Sensitive = state != DocumentEditorState.Create;
                 toolRefresh.Sensitive = state != DocumentEditorState.Create;
                 toolSave.Sensitive = state != DocumentEditorState.Readonly;
                 toolLogs.Sensitive = state != DocumentEditorState.Create;
@@ -728,16 +728,16 @@ namespace DataWF.Module.FlowGui
             var t = sender as TemplateMenuItem;
             var list = GetList();
             if (list.Count > 1)
-                DocumentWorker.ViewDocuments(DocumentWorker.CreateDocumentsFromList(t.Template, list));
+                references.ViewDocuments(references.CreateDocumentsFromList(t.Template, list));
             else
-                DocumentWorker.ViewDocuments(DocumentWorker.CreateDocuments(t.Template, document));
+                references.ViewDocuments(references.CreateDocuments(t.Template, document));
         }
 
         #endregion
 
         private void ToolCopyClick(object sender, EventArgs e)
         {
-            DocumentWorker.ViewDocuments(DocumentWorker.CreateDocuments(document.Template, document));
+            references.ViewDocuments(references.CreateDocuments(document.Template, document));
         }
 
         private void ToolSaveClick(object sender, EventArgs e)
@@ -892,7 +892,7 @@ namespace DataWF.Module.FlowGui
                             : typeof(DocumentDetailView<>).MakeGenericType(type);
                         Widget widget = (Widget)EmitInvoker.CreateObject(widgetType);
                         widget.Name = name;
-                        page = dock.Put(widget, DockType.Content);
+                        page = dock.Put(widget, TypeHelper.IsBaseType(type, typeof(DocumentData)) ? DockType.LeftBottom : DockType.Content);
                     }
                     documentWidgets.Add(page);
                 }

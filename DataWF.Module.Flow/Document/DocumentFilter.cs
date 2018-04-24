@@ -1,0 +1,465 @@
+﻿/*
+ Document.cs
+ 
+ Author:
+      Alexandr <alexandr_vslv@mail.ru>
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU Lesser General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU Lesser General Public License for more details.
+
+ You should have received a copy of the GNU Lesser General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+using System;
+using System.ComponentModel;
+using DataWF.Data;
+using DataWF.Common;
+using System.Collections.Generic;
+using System.Linq;
+using DataWF.Module.Common;
+using DataWF.Module.Counterpart;
+
+namespace DataWF.Module.Flow
+{
+    public class DocumentFilter : INotifyPropertyChanged, IDisposable
+    {
+        protected List<QParam> list = new List<QParam>();
+        protected CheckedState work = CheckedState.Indeterminate;
+        private DBItem cacheUser;
+        private DBItem cacheStage;
+        private Customer customerCache;
+        private string customer;
+        private Template cacheTemplate;
+        protected string template;
+        protected string stage;
+        protected string staff;
+        protected string id;
+        protected string number;
+        protected DateInterval? date;
+        protected DocumentSearchDate dtype = DocumentSearchDate.Create;
+        protected string description;
+        public QQuery QDoc;
+        public QQuery QWork;
+        private QParam paramCompleate;
+        private QParam paramWork;
+        private QParam paramWorkId;
+        private QParam paramId;
+        private QParam paramNumber;
+        private QParam paramTitle;
+        private QParam paramDate;
+        private QParam paramTemplate;
+        private QParam paramStage;
+        private QParam paramStaff;
+        private QParam paramCustomer;
+
+        public DocumentFilter()
+            : base()
+        {
+            QDoc = new QQuery(string.Empty, Document.DBTable);
+            QWork = new QQuery(string.Empty, DocumentWork.DBTable);
+            QWork.Columns.Add(new QColumn(DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DocumentId))));
+            paramWork = QQuery.CreateParam(Document.DBTable.PrimaryKey, QWork);
+            paramWorkId = QQuery.CreateParam(Document.DBTable.ParseProperty(nameof(Document.WorkId)), CompareType.IsNot, null);
+        }
+
+        public DocumentSearchDate DateType
+        {
+            get { return dtype; }
+            set
+            {
+                if (dtype == value)
+                    return;
+                dtype = value;
+
+                var temp = date;
+                date = null;
+                Date = temp;
+                OnPropertyChanged(nameof(DateType));
+            }
+        }
+
+        public DateInterval? Date
+        {
+            get { return date; }
+            set
+            {
+                if (date == value)
+                    return;
+                date = value;
+                if (date != null)
+                {
+                    if (paramDate == null)
+                    {
+                        paramDate = QDoc.BuildPropertyParam(nameof(Document.DocumentDate), CompareType.Between, Date);
+                    }
+                    else
+                    {
+                        switch (DateType)
+                        {
+                            case DocumentSearchDate.Document: paramDate.Column = Document.DBTable.ParseProperty(nameof(Document.DocumentDate)); break;
+                            case DocumentSearchDate.Create: paramDate.Column = Document.DBTable.ParseProperty(nameof(Document.DateCreate)); break;
+                            case DocumentSearchDate.WorkBegin: paramDate.Column = DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DateCreate)); break;
+                            case DocumentSearchDate.WorkEnd: paramDate.Column = DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DateComplete)); break;
+                        }
+                        paramDate.Value = Date;
+                    }
+                }
+                OnPropertyChanged(nameof(Date));
+            }
+        }
+
+        public CheckedState IsWork
+        {
+            get { return work; }
+            set
+            {
+                if (work == value)
+                    return;
+                work = value;
+                if (paramCompleate == null)
+                {
+                    paramCompleate = QDoc.BuildPropertyParam(nameof(Document.IsComplete), CompareType.Equal, IsWork != CheckedState.Checked);
+                }
+                else
+                {
+                    paramCompleate.Value = IsWork != CheckedState.Checked;
+                }
+                OnPropertyChanged(nameof(IsWork));
+            }
+        }
+
+        [Browsable(false)]
+        public bool IsCurrent
+        {
+            get { return Staff == User.CurrentUser && IsWork == CheckedState.Checked; }
+            set
+            {
+                Staff = User.CurrentUser;
+                IsWork = CheckedState.Checked;
+                // OnPropertyChanged(nameof(IsCurrent));
+            }
+        }
+
+        public Customer Customer
+        {
+            get { return customerCache ?? (customerCache = Customer.DBTable.LoadById(customer)); }
+            set
+            {
+                if (Customer == value)
+                {
+                    return;
+                }
+                customerCache = value;
+                customer = value?.PrimaryId.ToString();
+                if (value != null)
+                {
+                    if (paramCustomer == null)
+                    {
+                        paramCustomer = QQuery.CreateParam(Document.DBTable.ParseColumn(nameof(Document.Customer)), CompareType.Equal, value.Id);
+                    }
+                    else
+                    {
+                        paramCustomer.Value = value.Id;
+                    }
+                }
+                OnPropertyChanged(nameof(Customer));
+            }
+        }
+
+        public string Id
+        {
+            get { return id; }
+            set
+            {
+                if (id == value)
+                    return;
+                id = value;
+                if (value != null)
+                {
+                    if (paramId == null)
+                    {
+                        paramId = QQuery.CreateParam(Document.DBTable.PrimaryKey, Id);
+                    }
+                    else
+                    {
+                        paramId.Value = Id;
+                    }
+                }
+                OnPropertyChanged(nameof(Id));
+            }
+        }
+        public string Number
+        {
+            get { return number; }
+            set
+            {
+                if (value == number)
+                    return;
+                number = value;
+                if (value != null)
+                {
+                    if (paramNumber == null)
+                    {
+                        paramNumber = QQuery.CreateParam(Document.DBTable.CodeKey, CompareType.Like, Number);
+                    }
+                    else
+                    {
+                        paramNumber.Value = Number;
+                    }
+                }
+                OnPropertyChanged(nameof(Number));
+            }
+        }
+
+        public Template Template
+        {
+            get { return cacheTemplate ?? (cacheTemplate = Template.DBTable?.LoadById(template)); }
+            set
+            {
+                string id = value?.PrimaryId.ToString();
+                if (id == template)
+                    return;
+                template = id;
+                cacheTemplate = value;
+                if (value != null)
+                {
+                    if (paramTemplate == null)
+                    {
+                        paramTemplate = QQuery.CreateParam(Document.DBTable.ParseProperty(nameof(Document.TemplateId)), CompareType.In, Template.GetSubGroupFull<Template>(true));
+                    }
+                    else
+                    {
+                        paramTemplate.Value = Template.GetSubGroupFull<Template>(true);
+                    }
+                }
+                OnPropertyChanged(nameof(Template));
+            }
+        }
+
+        public DBItem Stage
+        {
+            get
+            {
+                if (stage == null)
+                    return null;
+                int index = stage.IndexOf(':');
+                return cacheStage ?? (cacheStage = Work.DBTable.Schema.Tables[stage.Substring(0, index)].LoadItemById(stage.Substring(index + 1)));
+            }
+            set
+            {
+                if (Stage == value)
+                    return;
+                cacheStage = value;
+                stage = $"{value?.Table.Name}:{ value?.PrimaryId}";
+
+                var column = Stage is Work
+                    ? DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.WorkId))
+                    : DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.StageId));
+                if (value != null)
+                {
+                    if (paramStage == null)
+                    {
+                        paramStage = QQuery.CreateParam(column, Stage.PrimaryId);
+                    }
+                    else
+                    {
+                        paramStage.Value = Stage.PrimaryId;
+                    }
+                }
+
+                OnPropertyChanged(nameof(Stage));
+            }
+        }
+
+        public DBItem Staff
+        {
+            get
+            {
+                if (staff == null)
+                    return null;
+                int index = staff.IndexOf(':');
+                return cacheUser ?? (cacheUser = UserGroup.DBTable.Schema.Tables[staff.Substring(0, index)].LoadItemById(staff.Substring(index + 1)));
+            }
+            set
+            {
+                if (Staff == value)
+                    return;
+                cacheUser = value;
+                staff = $"{value?.Table.Name}:{ value?.PrimaryId}";
+                var column = Stage is Department
+                    ? DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DepartmentId))
+                    : Stage is Position
+                    ? DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.PositionId))
+                    : DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.UserId));
+                if (value != null)
+                {
+                    if (paramStaff == null)
+                    {
+                        paramStaff = QQuery.CreateParam(column, Staff.PrimaryId);
+                    }
+                    else
+                    {
+                        paramStaff.Value = Staff.PrimaryId;
+                    }
+                }
+                OnPropertyChanged(nameof(Staff));
+            }
+        }
+
+        [Browsable(false)]
+        public bool StaffEmpty
+        {
+            get { return Staff == null; }
+        }
+
+        public string Title
+        {
+            get { return description; }
+            set
+            {
+                if (description == value)
+                    return;
+                description = value;
+                if (paramTitle == null)
+                {
+                    paramTitle = QDoc.BuildNameParam(nameof(Document.Title), CompareType.Like, Title);
+                }
+                else
+                {
+                    foreach (var param in paramTitle.Parameters)
+                    {
+                        param.Value = Title;
+                    }
+                }
+                OnPropertyChanged(nameof(Title));
+            }
+        }
+
+        //[Browsable(false)]
+        public List<QParam> Attributes
+        {
+            get { return list; }
+        }
+
+        public void Clear()
+        {
+            list.Clear();
+            work = CheckedState.Indeterminate;
+            template = null;
+            stage = null;
+            staff = null;
+            id = null;
+            number = null;
+            date = null;
+            dtype = DocumentSearchDate.Create;
+            description = null;
+            IsCurrent = true;
+            //OnPropertyChanged(string.Empty);
+        }
+
+        public void SetParam(DBItem value)
+        {
+            if (value == null)
+                return;
+            else if (value is Template)
+                Template = (Template)value;
+            else if (value is Stage || value is Work)
+                Stage = value;
+            else if (value is User || value is Department || value is Position)
+                Staff = value;
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void OnPropertyChanged(string property)
+        {
+            Parse();
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+        }
+
+        public void Dispose()
+        {
+            QDoc.Dispose();
+            QWork.Dispose();
+        }
+
+        private void Parse()
+        {
+            QDoc.Parameters.Clear();
+            foreach (var item in list)
+            {
+                QDoc.Parameters.Add(item);
+            }
+            QWork.Parameters.Clear();
+            if (IsCurrent)
+            {
+                QDoc.Parameters.Add(paramWorkId);
+            }
+            if (!string.IsNullOrEmpty(Id))
+            {
+                QDoc.Parameters.Add(paramId);
+            }
+            if (!string.IsNullOrEmpty(Number))
+            {
+                QDoc.Parameters.Add(paramNumber);
+            }
+            if (!string.IsNullOrEmpty(Title))
+            {
+                QDoc.Parameters.Add(paramTitle);
+            }
+            if (Template != null)
+            {
+                QDoc.Parameters.Add(paramTemplate);
+            }
+            if (Customer != null)
+            {
+                QDoc.Parameters.Add(paramCustomer);
+            }
+            if (Date != null)
+            {
+                if (DateType == DocumentSearchDate.Document || DateType == DocumentSearchDate.Create)
+                {
+                    QDoc.Parameters.Add(paramDate);
+                }
+                else
+                {
+                    QWork.Parameters.Add(paramDate);
+                }
+            }
+            if (Stage != null)
+            {
+                QWork.Parameters.Add(paramStage);
+            }
+            if (Staff != null && Staff != User.CurrentUser)
+            {
+                QWork.Parameters.Add(paramStaff);
+            }
+            if (IsWork != CheckedState.Indeterminate)
+            {
+                QDoc.Parameters.Add(paramCompleate);
+            }
+            if (QWork.Parameters.Count > 0)
+            {
+                QDoc.Parameters.Add(paramWork);
+            }
+        }
+
+        public bool IsEmpty
+        {
+            get
+            {
+                return list.Count == 0 && work == CheckedState.Indeterminate &&
+                template == null && stage == null && staff == null && number == null && date == null && description == null;
+            }
+        }
+
+
+    }
+}

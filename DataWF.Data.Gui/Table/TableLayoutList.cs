@@ -363,7 +363,7 @@ namespace DataWF.Data.Gui
                 if (cell is LayoutDBColumn)
                 {
                     ((LayoutColumn)cell).Collect = dbcolumn.DataType == typeof(decimal) && !dbcolumn.IsReference ? CollectedType.Sum : CollectedType.None;
-                    ((LayoutColumn)cell).View = dbcolumn.Access.View;
+                    ((LayoutColumn)cell).Visible = dbcolumn.Access.View;
                 }
                 if (cell is LayoutDBField)
                 {

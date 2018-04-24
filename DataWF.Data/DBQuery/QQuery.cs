@@ -859,6 +859,16 @@ namespace DataWF.Data
             return BuildParam(col, val, true);
         }
 
+        public QParam BuildNameParam(string property, CompareType comparer, object value)
+        {
+            var param = new QParam();
+            foreach (var item in Table.Columns.Select(nameof(DBColumn.Property), CompareType.Equal, value))
+            {
+                param.Parameters.Add(QQuery.CreateParam(LogicType.Or, item, comparer, value));
+            }
+            return param;
+        }
+
         public QParam BuildPropertyParam(string property, CompareType comparer, object value)
         {
             return BuildParam(Table.ParseProperty(property), comparer, value);

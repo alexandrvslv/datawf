@@ -1,36 +1,33 @@
 ﻿using System;
 using System.ComponentModel;
 using System.IO;
-using DataWF.Data;
 using DataWF.Gui;
 using DataWF.Common;
 using Xwt;
 using Xwt.Drawing;
 
-namespace DataWF.Data.Gui
+namespace DataWF.Gui
 {
     public class Splash : Dialog
     {
-        public static void LoadConfiguration()
+        public Action LoadAction;
+        public Action SaveAction;
+
+        public void LoadConfiguration()
         {
             Helper.SetDirectory();
             try
             {
-                Helper.LogWorkingSet("Start");
                 Locale.Load();
-                Helper.LogWorkingSet("Localization");
-                DBService.Load();
-                Helper.LogWorkingSet("DataBase Info");
+                LoadAction?.Invoke();
+                //DBService.Load();
+                //DBService.LoadCache();
                 GuiEnvironment.Load();
-                Helper.LogWorkingSet("UI Info");
-                DBService.LoadCache();
-                Helper.LogWorkingSet("Data Cache");
-
                 AccessItem.Default = true;
             }
             catch (Exception ex)
             {
-                //ex
+                Helper.OnException(ex);
             }
             finally
             {
@@ -38,13 +35,14 @@ namespace DataWF.Data.Gui
             }
         }
 
-        public static void SaveConfiguration()
+        public void SaveConfiguration()
         {
             Helper.SetDirectory();
             Locale.Save();
-            DBService.Save();
+            LoadAction?.Invoke();
+            //DBService.Save();
+            //DBService.SaveCache();
             GuiEnvironment.Save();
-            DBService.SaveCache();
         }
 
         private Label labelLabel;
@@ -76,7 +74,8 @@ namespace DataWF.Data.Gui
 
             Content = vbox;
             Name = "Splash";
-            Title = "Login";
+            Title = "Splash";
+            ShowInTaskbar = false;
             Decorated = false;
             Icon = Image.FromResource(GetType(), "datawf.png");
             Size = new Size(340, 220);
@@ -85,6 +84,8 @@ namespace DataWF.Data.Gui
             var initialize = new EventHandler(OnInitialize);
             initialize.BeginInvoke(this, EventArgs.Empty, new AsyncCallback(OnCallBackFinish), null);
         }
+
+        public string HeaderText { get { return labelLabel.Text; } set { labelLabel.Text = value; } }
 
         public Command DialogResult { get; private set; }
 

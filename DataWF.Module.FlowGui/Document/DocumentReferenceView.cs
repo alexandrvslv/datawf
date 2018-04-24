@@ -12,11 +12,10 @@ using System.Threading.Tasks;
 
 namespace DataWF.Module.FlowGui
 {
-    public class DocumentReferenceView : VPanel, ISync, IDocument, IReadOnly, ILocalizable
+    public class DocumentReferenceView : DocumentListView, ISync, IDocument, ILocalizable
     {
         private Document document;
-        private DocumentSearch search = new DocumentSearch();
-        private DocumentListView refs;
+        private DocumentFilter search = new DocumentFilter();
         private ToolItem toolAttach;
         private ToolItem toolDetach;
         private bool synch = false;
@@ -25,27 +24,20 @@ namespace DataWF.Module.FlowGui
         {
             toolAttach = new ToolItem(ToolAttachClick) { Glyph = GlyphType.PlusCircle };
             toolDetach = new ToolItem(ToolDetachClick) { Glyph = GlyphType.MinusCircle };
-            refs = new DocumentListView()
-            {
-                AllowPreview = false,
-                AutoLoad = false,
-                LabelText = null,
-                MainDock = false,
-                Name = "documentListView",
-                TemplateFilter = null
-            };
-            refs.Tools.Items.Add(toolAttach);
-            refs.Tools.Items.Add(toolDetach);
+
+            AllowPreview = false;
+            AutoLoad = false;
+            LabelText = null;
+            MainDock = false;
+            Preview = false;
+
+            Bar.Items.Add(toolAttach);
+            Bar.Items.Add(toolDetach);
 
             Name = "DocumentRelations";
-            PackStart(refs, true, true);
-
         }
 
-        public DocumentListView Documents
-        {
-            get { return refs; }
-        }
+        DBItem IDocument.Document { get { return Document; } set { Document = value as Document; } }
 
         public Document Document
         {
@@ -61,46 +53,40 @@ namespace DataWF.Module.FlowGui
                     if (document != null)
                     {
                         document.RefChanged += DocumentRefChanged;
-                        if (refs.Documents == null)
-                            refs.Documents = new DocumentList();
-                        refs.Search = null;
+                        if (Documents == null)
+                            Documents = new DocumentList();
+                        Filter = null;
                         search.Clear();
                         search.Attributes.Add(Document.CreateRefsParam(document.Id));
-                        refs.Search = search;
+                        Filter = search;
                     }
-                    refs.Preview = false;
+
                 }
             }
         }
 
         private void DocumentRefChanged(Document arg1, ListChangedType arg2)
         {
-            refs.Documents.UpdateFilter();
+            Documents.UpdateFilter();
         }
 
-        public void Localize()
+        public override void Localize()
         {
+            base.Localize();
             GuiService.Localize(this, base.Name, "Relations", GlyphType.Link);
-            GuiService.Localize(toolAttach, base.Name, "Attach");
-            GuiService.Localize(toolDetach, base.Name, "Detach");
-            refs.Localize();
         }
 
-        public bool ReadOnly
+        public override bool ReadOnly
         {
-            get { return !toolAttach.Sensitive; }
+            get { return base.ReadOnly; }
             set
             {
+                base.ReadOnly = value;
                 toolAttach.Sensitive = !value;
                 toolDetach.Sensitive = !value;
             }
         }
 
-        DBItem IDocument.Document
-        {
-            get { return Document; }
-            set { Document = value as Document; }
-        }
 
         public void Sync()
         {
@@ -149,9 +135,9 @@ namespace DataWF.Module.FlowGui
 
         private void ToolDetachClick(object sender, EventArgs e)
         {
-            if (refs.List.SelectedItem == null)
+            if (List.SelectedItem == null)
                 return;
-            var dc = refs.List.SelectedItem as Document;
+            var dc = List.SelectedItem as Document;
             var refer = document.FindReference(dc.Id);
             if (refer != null)
             {

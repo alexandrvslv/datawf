@@ -640,7 +640,7 @@ namespace DataWF.Data
         }
 
         [DataMember, Column("date_create", GroupName = "system", Keys = DBColumnKeys.Date | DBColumnKeys.System, Order = 100)]
-        public DateTime? Date
+        public DateTime? DateCreate
         {
             get { return Table.DateKey == null ? null : GetValue<DateTime?>(Table.DateKey); }
             set { SetValue(value, Table.DateKey); }

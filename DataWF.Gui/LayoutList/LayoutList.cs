@@ -2335,7 +2335,10 @@ namespace DataWF.Gui
 
             if (cell is LayoutColumn)
             {
-                ((LayoutColumn)cell).View = checkView && TypeHelper.GetBrowsable(info);
+                if (cell.Visible && checkView)
+                {
+                    ((LayoutColumn)cell).Visible = TypeHelper.GetBrowsable(info);
+                }
                 ((LayoutColumn)cell).Validate = TypeHelper.GetPassword(info);
                 if (((LayoutColumn)cell).Map == null && cell.Invoker.DataType.IsPrimitive)
                 {
@@ -2426,7 +2429,7 @@ namespace DataWF.Gui
         public virtual string GetHeader(ILayoutCell cell)
         {
             var index = cell.Name.LastIndexOf('.');
-            var name = index > 0 ? cell.Name.Substring(index + 1) : cell.Name;
+            var name = index > 0 ? cell.Name.Substring(index + 1) : cell.Name.Equals(nameof(ToString)) ? "Header" : cell.Name;
             return (listMode == LayoutListMode.List && cell.Owner != null ? cell.Owner.Text + " " : string.Empty) +
                 Locale.Get(GetHeaderLocale(cell), name);
         }
@@ -4512,7 +4515,7 @@ namespace DataWF.Gui
 
         public virtual void ClearFilter()
         {
-            filterView?.Clear();
+            filterView?.ClearFilter();
         }
 
         protected internal virtual void RemoveFilter(LayoutColumn column)

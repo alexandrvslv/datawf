@@ -50,11 +50,10 @@ namespace DataWF.Module.FlowGui
             if (schemaTree1.SelectedNode == null)
                 return;
             DBItem tag = schemaTree1.SelectedNode.Tag as DBItem;
-            var param = new DocumentSearch();
-            param.User = User.CurrentUser;
+            var param = new DocumentFilter();
+            param.Staff = User.CurrentUser;
             param.IsWork = CheckedState.Checked;
             param.SetParam(tag);
-            param.Parse();
             Document.DBTable.LoadAsync(param.QDoc, DBLoadParam.Synchronize | DBLoadParam.CheckDeleted, documents);
             dockList.LabelText = schemaTree1.SelectedNode.Text;
         }
