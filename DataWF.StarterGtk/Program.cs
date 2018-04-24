@@ -7,7 +7,7 @@ namespace DataWF.Starter
         [STAThread]
         static void Main(string[] args)
         {
-            DataWF.Data.Gui.Main.Start(args, Xwt.ToolkitType.Gtk);
+            DataWF.Gui.GuiService.Start(args, Xwt.ToolkitType.Gtk);
         }
     }
 }
