@@ -862,7 +862,7 @@ namespace DataWF.Data
         public QParam BuildNameParam(string property, CompareType comparer, object value)
         {
             var param = new QParam();
-            foreach (var item in Table.Columns.Select(nameof(DBColumn.Property), CompareType.Equal, value))
+            foreach (var item in Table.Columns.Select(nameof(DBColumn.Property), CompareType.Equal, property))
             {
                 param.Parameters.Add(QQuery.CreateParam(LogicType.Or, item, comparer, value));
             }

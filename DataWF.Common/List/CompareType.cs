@@ -2,23 +2,24 @@
 
 namespace DataWF.Common
 {
+
     public struct CompareType
     {
-        public static CompareType Undefined = new CompareType(CompareTypes.Undefined);
-        public static CompareType Like = new CompareType(CompareTypes.Like);
-        public static CompareType NotLike = new CompareType(CompareTypes.Like, true);
-        public static CompareType Equal = new CompareType(CompareTypes.Equal);
-        public static CompareType NotEqual = new CompareType(CompareTypes.Equal, true);
-        public static CompareType In = new CompareType(CompareTypes.In);
-        public static CompareType NotIn = new CompareType(CompareTypes.In, true);
-        public static CompareType Is = new CompareType(CompareTypes.Is);
-        public static CompareType IsNot = new CompareType(CompareTypes.Is, true);
-        public static CompareType GreaterOrEqual = new CompareType(CompareTypes.GreaterOrEqual);
-        public static CompareType Greater = new CompareType(CompareTypes.Greater);
-        public static CompareType LessOrEqual = new CompareType(CompareTypes.LessOrEqual);
-        public static CompareType Less = new CompareType(CompareTypes.Less);
-        public static CompareType Between = new CompareType(CompareTypes.Between);
-        public static CompareType NotBetween = new CompareType(CompareTypes.Between, true);
+        public static readonly CompareType Undefined = new CompareType(CompareTypes.Undefined);
+        public static readonly CompareType Like = new CompareType(CompareTypes.Like);
+        public static readonly CompareType NotLike = new CompareType(CompareTypes.Like, true);
+        public static readonly CompareType Equal = new CompareType(CompareTypes.Equal);
+        public static readonly CompareType NotEqual = new CompareType(CompareTypes.Equal, true);
+        public static readonly CompareType In = new CompareType(CompareTypes.In);
+        public static readonly CompareType NotIn = new CompareType(CompareTypes.In, true);
+        public static readonly CompareType Is = new CompareType(CompareTypes.Is);
+        public static readonly CompareType IsNot = new CompareType(CompareTypes.Is, true);
+        public static readonly CompareType GreaterOrEqual = new CompareType(CompareTypes.GreaterOrEqual);
+        public static readonly CompareType Greater = new CompareType(CompareTypes.Greater);
+        public static readonly CompareType LessOrEqual = new CompareType(CompareTypes.LessOrEqual);
+        public static readonly CompareType Less = new CompareType(CompareTypes.Less);
+        public static readonly CompareType Between = new CompareType(CompareTypes.Between);
+        public static readonly CompareType NotBetween = new CompareType(CompareTypes.Between, true);
 
         public static bool operator ==(CompareType typeLeft, CompareType typeRight)
         {

@@ -85,6 +85,16 @@ namespace DataWF.Common
         Using
     }
 
+    [Flags]
+    public enum JoinTypes
+    {
+        Undefined = 0,
+        Join = 1,
+        Left = 2,
+        Right = 4,
+        Outer = 8
+    }
+
     public enum EditListState
     {
         ReadOnly,

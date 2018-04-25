@@ -17,6 +17,7 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using DataWF.Common;
 using System;
 using System.ComponentModel;
 using System.Data;
@@ -25,9 +26,9 @@ namespace DataWF.Data
 {
     public class QTable : QItem
     {
-        protected DBTable _table;
-        protected string table = null;
-
+        protected JoinType join;
+        protected DBTable table;
+        protected string tableName = null;
 
         public QTable()
         { }
@@ -41,14 +42,27 @@ namespace DataWF.Data
 
         public string TableName
         {
-            get { return table; }
+            get { return tableName; }
             set
             {
-                if (table != value)
+                if (tableName != value)
                 {
-                    table = value;
-                    _table = null;
-                    OnPropertyChanged(TableName);
+                    tableName = value;
+                    table = null;
+                    OnPropertyChanged(nameof(TableName));
+                }
+            }
+        }
+
+        public JoinType Join
+        {
+            get { return join; }
+            set
+            {
+                if (join != value)
+                {
+                    join = value;
+                    OnPropertyChanged(nameof(Join));
                 }
             }
         }
@@ -58,9 +72,9 @@ namespace DataWF.Data
         {
             get
             {
-                if (_table == null)
-                    _table = DBService.ParseTable(table);
-                return _table;
+                if (table == null)
+                    table = DBService.ParseTable(tableName);
+                return table;
             }
             set
             {
@@ -68,7 +82,7 @@ namespace DataWF.Data
                 {
                     TableName = value?.FullName;
                     Text = value?.Name;
-                    _table = value;
+                    table = value;
                     OnPropertyChanged(nameof(Table));
                 }
             }
@@ -78,7 +92,7 @@ namespace DataWF.Data
         {
             var schema = Table.Schema.Connection.Schema;
 
-            return string.Format("{0}{1}{2}", Table != null && schema != null && schema.Length > 0 ? (schema + ".") : string.Empty,
+            return string.Format("{0}{1}{2}{3}", Join.Format(), Table != null && !string.IsNullOrEmpty(schema) ? (schema + ".") : string.Empty,
                                  command != null && Table is IDBVirtualTable ? Table.SqlName : text,
                 alias == null ? "" : " " + alias);
         }
