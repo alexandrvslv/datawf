@@ -13,7 +13,7 @@ namespace DataWF.Module.FlowGui
         protected Document document;
         protected DBTableView<T> view;
 
-        public DocumentDetailView() : base()
+        public DocumentDetailView() : base(new DocumentLayoutList())
         {
             view = new DBTableView<T>(Table, new QParam(LogicType.And, Table.ParseProperty(nameof(DocumentDetail.DocumentId)), CompareType.Equal, 0), DBViewKeys.Empty);
             DataSource = view;

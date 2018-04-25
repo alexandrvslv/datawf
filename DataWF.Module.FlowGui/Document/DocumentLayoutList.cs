@@ -25,6 +25,7 @@ namespace DataWF.Module.FlowGui
         public DocumentLayoutList()
             : base()
         {
+            HideCollections = true;
             //this.Size = new Size(872, 454);
         }
 
@@ -75,7 +76,11 @@ namespace DataWF.Module.FlowGui
             {
                 column.Visible = false;
             }
-            
+            else
+            {
+                column.Width += 200;
+            }
+
             return column;
         }
 

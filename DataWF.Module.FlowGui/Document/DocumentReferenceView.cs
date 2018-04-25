@@ -15,7 +15,6 @@ namespace DataWF.Module.FlowGui
     public class DocumentReferenceView : DocumentListView, ISync, IDocument, ILocalizable
     {
         private Document document;
-        private DocumentFilter search = new DocumentFilter();
         private ToolItem toolAttach;
         private ToolItem toolDetach;
         private bool synch = false;
@@ -26,6 +25,7 @@ namespace DataWF.Module.FlowGui
             toolDetach = new ToolItem(ToolDetachClick) { Glyph = GlyphType.MinusCircle };
 
             AllowPreview = false;
+            FilterVisible = true;
             AutoLoad = false;
             LabelText = null;
             MainDock = false;
@@ -53,12 +53,11 @@ namespace DataWF.Module.FlowGui
                     if (document != null)
                     {
                         document.RefChanged += DocumentRefChanged;
+                        Filter.Referencing = value;
                         if (Documents == null)
+                        {
                             Documents = new DocumentList();
-                        Filter = null;
-                        search.Clear();
-                        search.Attributes.Add(Document.CreateRefsParam(document.Id));
-                        Filter = search;
+                        }
                     }
 
                 }
@@ -113,12 +112,14 @@ namespace DataWF.Module.FlowGui
 
         private void ToolAttachClick(object sender, EventArgs e)
         {
-            var ds = new DocumentFinder();
-            ds.VisibleAccept = true;
-            ds.Size = new Size(800, 600);
-            ds.ButtonAcceptClick += (o, a) =>
+            var window = new DocumentFinder()
             {
-                foreach (Document d in ds.List.GetSelected())
+                VisibleAccept = true,
+                Size = new Size(800, 600)
+            };
+            window.ButtonAcceptClick += (o, a) =>
+            {
+                foreach (Document d in window.List.GetSelected())
                 {
                     if (document.ContainsReference(d.Id) || document == d)
                         continue;
@@ -128,9 +129,9 @@ namespace DataWF.Module.FlowGui
                     refer.Reference = d;
                     refer.Attach();
                 }
-                ds.Dispose();
+                window.Dispose();
             };
-            ds.Show(this, Point.Zero);
+            window.Show(this, Point.Zero);
         }
 
         private void ToolDetachClick(object sender, EventArgs e)

@@ -38,11 +38,14 @@ namespace DataWF.Module.FlowGui
 
             fields = new LayoutList()
             {
+                EditMode = EditModes.ByClick,
                 GenerateFields = false,
+                GenerateColumns = false,
                 FieldInfo = new LayoutFieldInfo(
-                    new LayoutField { Name = nameof(DocumentFilter.Number) },
                     new LayoutField { Name = nameof(DocumentFilter.IsWork) },
                     new LayoutField { Name = nameof(DocumentFilter.IsCurrent) },
+                    new LayoutField { Name = nameof(DocumentFilter.Number) },
+                    new LayoutField { Name = nameof(DocumentFilter.Title) },
                     new LayoutField { Name = nameof(DocumentFilter.Customer) },
                     new LayoutField { Name = nameof(DocumentFilter.DateType) },
                     new LayoutField { Name = nameof(DocumentFilter.Date) }
@@ -56,6 +59,7 @@ namespace DataWF.Module.FlowGui
                 Name = "Templates",
                 FilterEntry = toolFilter.Entry
             };
+            templates.Nodes.ExpandTop();
             templates.ListInfo.Columns.Add(
                 new LayoutColumn
                 {
@@ -69,6 +73,7 @@ namespace DataWF.Module.FlowGui
                 FlowKeys = FlowTreeKeys.Work | FlowTreeKeys.Stage,
                 Name = "Works_Stage"
             };
+            works.Nodes.ExpandTop();
             //dates = new VBox();
             //dates.PackStart(dateType)
 
@@ -77,18 +82,19 @@ namespace DataWF.Module.FlowGui
                 UserKeys = UserTreeKeys.Department | UserTreeKeys.Position | UserTreeKeys.User,
                 Name = "Users"
             };
-
+            users.Nodes.ExpandTop();
 
             map = new GroupBox(
-                        new GroupBoxItem { Widget = fields, Name = "Filter", FillWidth = true },
-                        new GroupBoxItem { Widget = templates, Row = 1, Name = "Templates", FillWidth = true, FillHeight = true },
-                        new GroupBoxItem { Widget = works, Row = 2, Name = "Works & Stage", FillWidth = true, Expand = false },
-                        new GroupBoxItem { Widget = users, Row = 3, Name = "Users", FillWidth = true, Expand = false }
+                        new GroupBoxItem { Widget = templates, Name = "Templates", FillWidth = true, FillHeight = true },
+                        new GroupBoxItem { Widget = fields, Row = 1, Name = "Parameters", FillWidth = true, Height = 160, Autosize = false, Expand = false },
+                        new GroupBoxItem { Widget = works, Row = 2, Name = "Works & Stage", FillWidth = true, FillHeight = true, Expand = false },
+                        new GroupBoxItem { Widget = users, Row = 3, Name = "Users", FillWidth = true, FillHeight = true, Expand = false }
                         )
             { Name = "Map" };
 
             PackStart(bar, false, false);
             PackStart(map, true, true);
+            MinWidth = 330;
 
             var nodeSend = new TableItemNode()
             {

@@ -97,7 +97,7 @@ namespace DataWF.Module.FlowGui
             toolLogs = new ToolItem(ToolLogsOnClick) { Name = "Logs", Glyph = GlyphType.History };
             toolBarCode = new ToolItem(ToolBarCodeClick) { Name = "BarCode", Glyph = GlyphType.Barcode };
             toolReturn = new ToolItem(ToolReturnClick) { Name = "Return", Glyph = GlyphType.StepBackward };
-            toolSend = new ToolItem(ToolAcceptClick) { Name = "Send", Glyph = GlyphType.PlayCircle };
+            toolSend = new ToolItem(ToolAcceptClick) { Name = "Send", Glyph = GlyphType.CheckCircle };
             toolForward = new ToolItem(ToolForwardClick) { Name = "Forward", Glyph = GlyphType.StepForward };
             toolNext = new ToolItem(ToolNextClick) { Name = "Next", Glyph = GlyphType.Forward };
 
@@ -112,10 +112,10 @@ namespace DataWF.Module.FlowGui
                toolLogs,
                toolBarCode,
                new ToolSeparator(),
-               toolReturn,
+               //toolReturn,
                toolSend,
-               toolForward,
-               toolNext,
+               //toolForward,
+               //toolNext,
                toolLabel)
             { Name = "tools" };
             toolsItems = tools.Items.Cast<ToolItem>();
@@ -425,11 +425,16 @@ namespace DataWF.Module.FlowGui
                         }
                     }
                     foreach (MenuItemProcedure item in toolProcedures.DropDownItems)
+                    {
                         item.Visible = item.Tag == template || item.Tag == stage;
+                    }
+                    foreach (var page in dock.GetPages())
+                    {
+                        page.Visible = page.Tag == null || page.Tag.Equals(template) || page.Tag.Equals(DocumentType);
+                    }
                     //foreach (TemplateMenuItem item in toolTemplates.DropDownItems)
                     //    item.Visible = item.Tag == template || item.Tag == stage;
-                    foreach (var page in dock.GetPages())
-                        page.Visible = page.Tag == template || page.Tag == stage;
+
                 }
             }
         }
@@ -454,12 +459,15 @@ namespace DataWF.Module.FlowGui
                             //    InitTemplate(template, param.Param as Template, toolTemplates.DropDownItems);
                         }
                     foreach (MenuItemProcedure item in toolProcedures.DropDownItems)
+                    {
                         item.Visible = item.Tag == template;
+                    }
+                    foreach (DockPage page in dock.GetPages())
+                    {
+                        page.Visible = page.Tag == null || page.Tag.Equals(template) || page.Tag.Equals(DocumentType);
+                    }
                     //foreach (TemplateMenuItem item in toolTemplates.DropDownItems)
                     //    item.Visible = item.Tag == template;
-                    foreach (DockPage dp in dock.GetPages())
-                        dp.Visible = dp.Tag == template;
-
                 }
             }
         }
@@ -576,7 +584,7 @@ namespace DataWF.Module.FlowGui
                 if (documentType == value)
                     return;
                 documentType = value;
-                GetPages(documentType).ForEach(p => p.Tag = Document.Template);
+                GetPages(documentType).ForEach(p => p.Tag = value);
             }
         }
 

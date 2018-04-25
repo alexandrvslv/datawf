@@ -35,7 +35,7 @@ namespace DataWF.Module.FlowGui
 
         public DocumentWorker()
         {
-            toolLoad = new ToolItem(ToolLoadOnClick) { Name = "Load", ForeColor = Colors.DarkBlue };
+            toolLoad = new ToolItem(ToolLoadOnClick) { Name = "Load", ForeColor = Colors.DarkBlue, Glyph = GlyphType.Download };
 
             //foreach (Template uts in Template.DBTable.DefaultView.SelectParents())
             //{
@@ -63,9 +63,11 @@ namespace DataWF.Module.FlowGui
             works.ListChanged += WorksListChanged;
 
             AllowPreview = true;
-            Documents = new DocumentList(Document.DBTable.ParseProperty(nameof(Document.WorkId)).Name + " is not null", DBViewKeys.Access);
-            Name = "DocumentWorker";
+            Filter.IsCurrent = true;
+            Documents = new DocumentList("", DBViewKeys.Access | DBViewKeys.Empty);
+            Name = "Documents";
             Worker = this;
+            FilterVisible = true;
 
             Task.Run(() =>
             {

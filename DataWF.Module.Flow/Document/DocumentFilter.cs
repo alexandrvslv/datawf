@@ -36,8 +36,10 @@ namespace DataWF.Module.Flow
         private DBItem cacheStage;
         private Customer customerCache;
         private string customer;
-        private Template cacheTemplate;
+        private Template templateCache;
         protected string template;
+        private Document referencingCache;
+        private string referencing;
         protected string stage;
         protected string staff;
         protected string id;
@@ -58,6 +60,7 @@ namespace DataWF.Module.Flow
         private QParam paramStage;
         private QParam paramStaff;
         private QParam paramCustomer;
+        private QParam paramReferencing;
 
         public DocumentFilter()
             : base()
@@ -125,7 +128,7 @@ namespace DataWF.Module.Flow
                 work = value;
                 if (paramCompleate == null)
                 {
-                    paramCompleate = QDoc.BuildPropertyParam(nameof(Document.IsComplete), CompareType.Equal, IsWork != CheckedState.Checked);
+                    paramCompleate = QQuery.CreateParam(Document.DBTable.ParseProperty(nameof(Document.IsComplete)), CompareType.Equal, IsWork != CheckedState.Checked);
                 }
                 else
                 {
@@ -135,14 +138,44 @@ namespace DataWF.Module.Flow
             }
         }
 
+        public Document Referencing
+        {
+            get { return referencingCache ?? (referencingCache = Document.DBTable.LoadById(referencing)); }
+            set
+            {
+                if (Referencing == value)
+                    return;
+                referencingCache = value;
+                referencing = value?.PrimaryId.ToString();
+                if (referencing != null)
+                {
+                    if (paramReferencing == null)
+                    {
+                        paramReferencing = Document.CreateRefsParam(value.Id);
+                    }
+                    else
+                    {
+                        foreach (var param in paramReferencing.Parameters)
+                        {
+                            ((QQuery)param.ValueRight).Parameters.First().Value = value.Id;
+                        }
+                    }
+                }
+                OnPropertyChanged(nameof(Referencing));
+            }
+        }
+
         [Browsable(false)]
         public bool IsCurrent
         {
             get { return Staff == User.CurrentUser && IsWork == CheckedState.Checked; }
             set
             {
-                Staff = User.CurrentUser;
-                IsWork = CheckedState.Checked;
+                Staff = value ? User.CurrentUser : null;
+                if (value)
+                {
+                    IsWork = CheckedState.Checked;
+                }
                 // OnPropertyChanged(nameof(IsCurrent));
             }
         }
@@ -162,7 +195,7 @@ namespace DataWF.Module.Flow
                 {
                     if (paramCustomer == null)
                     {
-                        paramCustomer = QQuery.CreateParam(Document.DBTable.ParseColumn(nameof(Document.Customer)), CompareType.Equal, value.Id);
+                        paramCustomer = QQuery.CreateParam(Document.DBTable.ParseProperty(nameof(Document.Customer)), CompareType.Equal, value.Id);
                     }
                     else
                     {
@@ -195,6 +228,7 @@ namespace DataWF.Module.Flow
                 OnPropertyChanged(nameof(Id));
             }
         }
+
         public string Number
         {
             get { return number; }
@@ -203,16 +237,21 @@ namespace DataWF.Module.Flow
                 if (value == number)
                     return;
                 number = value;
-                if (value != null)
+                if (!string.IsNullOrEmpty(value))
                 {
                     if (paramNumber == null)
                     {
-                        paramNumber = QQuery.CreateParam(Document.DBTable.CodeKey, CompareType.Like, Number);
+                        paramNumber = QQuery.CreateParam(Document.DBTable.CodeKey, CompareType.Like, $"%{Number}%");
                     }
                     else
                     {
-                        paramNumber.Value = Number;
+                        paramNumber.Value = $"%{Number}%";
                     }
+                    Customer = null;
+                    Staff = null;
+                    Stage = null;
+                    Template = null;
+                    Title = null;
                 }
                 OnPropertyChanged(nameof(Number));
             }
@@ -220,14 +259,14 @@ namespace DataWF.Module.Flow
 
         public Template Template
         {
-            get { return cacheTemplate ?? (cacheTemplate = Template.DBTable?.LoadById(template)); }
+            get { return templateCache ?? (templateCache = Template.DBTable?.LoadById(template)); }
             set
             {
                 string id = value?.PrimaryId.ToString();
                 if (id == template)
                     return;
                 template = id;
-                cacheTemplate = value;
+                templateCache = value;
                 if (value != null)
                 {
                     if (paramTemplate == null)
@@ -257,7 +296,7 @@ namespace DataWF.Module.Flow
                 if (Stage == value)
                     return;
                 cacheStage = value;
-                stage = $"{value?.Table.Name}:{ value?.PrimaryId}";
+                stage = value == null ? null : $"{value.Table.Name}:{ value.PrimaryId}";
 
                 var column = Stage is Work
                     ? DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.WorkId))
@@ -292,7 +331,7 @@ namespace DataWF.Module.Flow
                 if (Staff == value)
                     return;
                 cacheUser = value;
-                staff = $"{value?.Table.Name}:{ value?.PrimaryId}";
+                staff = value == null ? null : $"{value.Table.Name}:{ value.PrimaryId}";
                 var column = Stage is Department
                     ? DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DepartmentId))
                     : Stage is Position
@@ -313,12 +352,6 @@ namespace DataWF.Module.Flow
             }
         }
 
-        [Browsable(false)]
-        public bool StaffEmpty
-        {
-            get { return Staff == null; }
-        }
-
         public string Title
         {
             get { return description; }
@@ -327,16 +360,24 @@ namespace DataWF.Module.Flow
                 if (description == value)
                     return;
                 description = value;
-                if (paramTitle == null)
+                if (!string.IsNullOrEmpty(value))
                 {
-                    paramTitle = QDoc.BuildNameParam(nameof(Document.Title), CompareType.Like, Title);
-                }
-                else
-                {
-                    foreach (var param in paramTitle.Parameters)
+                    if (paramTitle == null)
                     {
-                        param.Value = Title;
+                        paramTitle = QDoc.BuildNameParam(nameof(Document.Title), CompareType.Like, $"%{Title}%");
                     }
+                    else
+                    {
+                        foreach (var param in paramTitle.Parameters)
+                        {
+                            param.Value = $"%{Title}%";
+                        }
+                    }
+                    Customer = null;
+                    Staff = null;
+                    Stage = null;
+                    Template = null;
+                    Title = null;
                 }
                 OnPropertyChanged(nameof(Title));
             }
@@ -441,9 +482,13 @@ namespace DataWF.Module.Flow
             {
                 QWork.Parameters.Add(paramStaff);
             }
-            if (IsWork != CheckedState.Indeterminate)
+            if (IsWork != CheckedState.Indeterminate && !IsCurrent)
             {
                 QDoc.Parameters.Add(paramCompleate);
+            }
+            if (Referencing != null)
+            {
+                QDoc.Parameters.Add(paramReferencing);
             }
             if (QWork.Parameters.Count > 0)
             {
@@ -453,11 +498,7 @@ namespace DataWF.Module.Flow
 
         public bool IsEmpty
         {
-            get
-            {
-                return list.Count == 0 && work == CheckedState.Indeterminate &&
-                template == null && stage == null && staff == null && number == null && date == null && description == null;
-            }
+            get { return QDoc.Parameters.Count == 0; }
         }
 
 

@@ -49,7 +49,7 @@ namespace DataWF.Module.FlowGui
             toolFilter = new ToolItem(ToolFilterClick) { Name = "Filter", CheckOnClick = true, Glyph = GlyphType.Filter };
             toolParam = new ToolDropDown(ToolParamClick) { Name = "Parameters", Glyph = GlyphType.Spinner };
             toolProgress = new ToolTableLoader { Loader = loader };
-            toolCreate = new ToolItem(ToolCreateClick) { Name = "Create", ForeColor = Colors.DarkGreen };
+            toolCreate = new ToolItem(ToolCreateClick) { Name = "Create", ForeColor = Colors.DarkGreen, Glyph = GlyphType.PlusCircle };
             toolLoad = new ToolItem(ToolLoadClick) { Name = "Lcoad", Glyph = GlyphType.Refresh };
 
             bar = new Toolsbar(
@@ -163,8 +163,26 @@ namespace DataWF.Module.FlowGui
         {
             try
             {
+                if (Documents != null)
+                {
+                    Documents.UpdateFilter();
+                }
                 TemplateFilter = Filter.Template;
-                OnSearchChanged();
+
+                FilterChanged?.Invoke(this, EventArgs.Empty);
+
+                if (Documents != null)
+                {
+                    if (filter != null && autoLoad && !filter.IsCurrent && !filter.IsEmpty)
+                    {
+                        documents.IsStatic = true;
+                        loader.LoadAsync(filter.QDoc);
+                    }
+                    else
+                    {
+                        documents.IsStatic = false;
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -237,22 +255,8 @@ namespace DataWF.Module.FlowGui
             }
         }
 
-        public event EventHandler SearchChanged;
+        public event EventHandler FilterChanged;
 
-        private void OnSearchChanged()
-        {
-            SearchChanged?.Invoke(this, EventArgs.Empty);
-
-            if (filter != null && autoLoad && !filter.IsCurrent && !filter.IsEmpty)
-            {
-                documents.IsStatic = true;
-                loader.LoadAsync(filter.QDoc);
-            }
-            else
-            {
-                documents.IsStatic = false;
-            }
-        }
 
         public TableLoader Loader
         {
@@ -273,7 +277,14 @@ namespace DataWF.Module.FlowGui
                 list.ListSource = documents;
                 loader.View = documents;
 
-                documents.ListChanged += DocumentsListChanged;
+                if (documents != null)
+                {
+                    documents.ListChanged += DocumentsListChanged;
+                    if (Filter != null)
+                    {
+                        documents.Query = filter.QDoc;
+                    }
+                }
             }
         }
 
@@ -322,12 +333,12 @@ namespace DataWF.Module.FlowGui
         {
             if (list.Selection.Count == 0)
                 return;
-            Document document = (Document)list.SelectedItem;
-            if (document == null)
-                return;
-            var v = new DocumentEditor();
-            v.Document = document;
-            v.ShowWindow(this);
+            var document = (Document)list.SelectedItem;
+            if (document != null)
+            {
+                var editor = new DocumentEditor { Document = document };
+                editor.ShowWindow(this);
+            }
         }
 
         public void ShowDocument(Document document)
@@ -360,7 +371,11 @@ namespace DataWF.Module.FlowGui
         public bool FilterVisible
         {
             get { return toolFilter.Checked; }
-            set { filterView.Visible = value; }
+            set
+            {
+                toolFilter.Checked = value;
+                filterView.Visible = value;
+            }
         }
 
         private void ToolFilterClick(object sender, EventArgs e)
@@ -378,7 +393,7 @@ namespace DataWF.Module.FlowGui
             var template = filterView.Templates.SelectedDBItem as Template;
             if (template != null)
             {
-                ViewDocuments(CreateDocuments(template, null));
+                ViewDocuments(CreateDocuments(template, Filter.Referencing));
             }
         }
 
@@ -402,7 +417,10 @@ namespace DataWF.Module.FlowGui
                 if (value && split.Panel2.Content == null)
                     split.Panel2.Content = deditor;
                 else if (!value && split.Panel2.Content != null)
+                {
                     split.Panel2.Content = null;
+                    this.QueueForReallocate();
+                }
             }
         }
 
@@ -416,7 +434,7 @@ namespace DataWF.Module.FlowGui
             deditor.SendComplete += EditorSendComplete;
             Preview = true;
 
-            bar.Items.InsertAfter(toolPreview, deditor.MainMenu.Items.Items.ToList());
+            bar.Items.InsertAfter(toolLoad, deditor.MainMenu.Items.Items.ToList());
         }
 
         private void EditorSendComplete(object sender, EventArgs e)
