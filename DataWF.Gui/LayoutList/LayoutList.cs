@@ -1821,20 +1821,25 @@ namespace DataWF.Gui
                     OnCellEditEnd(new CancelEventArgs());
 
                 if (selection.Count > 1)
+                {
                     selection.Clear();
+                }
                 else if (selection.Count == 1)
-                    selection.Remove(selection[0]);
-
+                {
+                    selection.Remove(selection[0], value == null || listSource == null);
+                }
                 if (value != null && listSource != null)
                 {
                     if (value is IGroup && ListInfo.Tree)
+                    {
                         GroupHelper.ExpandAll((IGroup)value, true);
-
+                    }
                     var item = selection.Add(value, listSource.IndexOf(value));
                     selection.SetCurrent(item);
-
                     if (scroll.VerticalScrollControl.UpperValue > 0)
+                    {
                         VScrollToItem(item.Item, item.Index);
+                    }
                 }
             }
         }
@@ -1939,7 +1944,7 @@ namespace DataWF.Gui
             var info = new LayoutListInfo();
             ListInfo = info;
 
-            var stostr = BuildColumn(null, nameof(object.ToString));
+            var stostr = BuildColumn(null, nameof(Object.ToString));
             if (stostr != null)
             {
                 stostr.Visible = GenerateToString || GridMode;
@@ -1966,7 +1971,6 @@ namespace DataWF.Gui
                     var column = BuildColumn(null, p);
                     if (column != null)
                     {
-                        column.Visible = !_gridMode;
                         info.Columns.Add(column);
                     }
                 }

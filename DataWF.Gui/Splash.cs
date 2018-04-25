@@ -45,7 +45,7 @@ namespace DataWF.Gui
 			Title = "Splash";
 			ShowInTaskbar = false;
 			Decorated = false;
-			Icon = Image.FromResource(GetType(), "datawf.png");
+			//Icon = Image.FromResource(GetType(), "datawf.png");
 			Size = new Size(340, 220);
 
 			Helper.Logs.ListChanged += OnLogListChanged;

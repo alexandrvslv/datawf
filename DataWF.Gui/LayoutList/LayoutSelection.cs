@@ -107,12 +107,7 @@ namespace DataWF.Gui
             {
                 if (GuiService.InvokeRequired)
                 {
-                    Xwt.Application.Invoke(() =>
-                    {
-                        cacheArg.Type = type;
-                        cacheArg.Value = item;
-                        SelectionChanged(this, cacheArg);
-                    });
+                    Xwt.Application.Invoke(() => OnSelectionChanged(type, item));
                 }
                 else
                 {

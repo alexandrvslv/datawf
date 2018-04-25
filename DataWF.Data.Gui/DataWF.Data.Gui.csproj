@@ -42,12 +42,6 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <EmbeddedResource Include="..\datawf.png">
-      <Link>Properties\datawf.png</Link>
-      <LogicalName>datawf.png</LogicalName>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />
     <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj" />
     <ProjectReference Include="..\DataWF.Gui\DataWF.Gui.csproj" />

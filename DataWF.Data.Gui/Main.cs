@@ -18,13 +18,10 @@ namespace DataWF.Data.Gui
 
 	public class Main : MainWindow
 	{
-
-
 		public Main()
 		{            
 			CheckAssemblies();
 		}
-
 
 		protected override void FieldsEditorLogClick(object sender, ListEditorEventArgs e)
 		{

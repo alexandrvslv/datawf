@@ -74,9 +74,9 @@ namespace DataWF.Gui
         {
             if (e.ListChangedType == ListChangedType.ItemAdded)
             {
-                if (mapItem != null && !mapItem.Visible)
+                if (MapItem != null && !MapItem.Visible)
                 {
-                    mapItem.Visible = true;
+                    MapItem.Visible = true;
                     //Parent.ResumeLayout(true);
                 }
                 DockPage page = this.pages.Items[e.NewIndex];
@@ -85,9 +85,13 @@ namespace DataWF.Gui
             else if (e.ListChangedType == ListChangedType.ItemChanged)
             {
                 DockPage page = this.pages.Items[e.NewIndex];
-                if (CurrentWidget == page.Widget && page.Visible == false)
+                if (CurrentWidget == page.Widget && !page.Visible)
                 {
                     RemovePage(page, false);
+                }
+                else if (CurrentWidget == null && page.Visible)
+                {
+                    SelectPage(page);
                 }
             }
             else if (e.ListChangedType == ListChangedType.ItemDeleted)
@@ -106,10 +110,10 @@ namespace DataWF.Gui
                     }
                     else
                     {
-                        if (mapItem != null && !mapItem.FillWidth)
+                        if (MapItem != null && !MapItem.FillWidth)
                         {
-                            mapItem.Visible = false;
-                            foreach (object item in mapItem.Map.Items)
+                            MapItem.Visible = false;
+                            foreach (object item in MapItem.Map.Items)
                             {
                                 if (item is DockMapItem)
                                 {
@@ -387,12 +391,12 @@ namespace DataWF.Gui
             base.Dispose(disposing);
         }
 
-        public IEnumerator GetEnumerator()
+        IEnumerator IEnumerable.GetEnumerator()
         {
             return pages.Items.GetEnumerator();
         }
 
-        IEnumerator<DockPage> IEnumerable<DockPage>.GetEnumerator()
+        public IEnumerator<DockPage> GetEnumerator()
         {
             return pages.Items.GetEnumerator();
         }

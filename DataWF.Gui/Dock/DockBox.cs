@@ -496,7 +496,7 @@ namespace DataWF.Gui
         {
             foreach (DockMapItem item in LayoutMapHelper.GetItems(map))
             {
-                foreach (var pageItem in item.Panel.Pages.Items)
+                foreach (var pageItem in item.Panel)
                     yield return pageItem;
             }
         }

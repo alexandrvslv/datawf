@@ -129,7 +129,6 @@ namespace DataWF.Data.Gui
             ose.ButtonAcceptClick += AcceptOnActivated;
 
             DBService.DBSchemaChanged += OnDBSchemaChanged;
-            Localize();
         }
 
         public DBSchema CurrentSchema
@@ -149,10 +148,10 @@ namespace DataWF.Data.Gui
             contextMain.Localize();
             contextAdd.Localize();
             contextTools.Localize();
-
-            GuiService.Localize(this, Name, "Data Explorer", GlyphType.Database);
-
             dataTree.Localize();
+
+            GuiService.Localize(this, Name, "Database", GlyphType.Database);
+
         }
 
         private void ShowNewItem(object item)

@@ -5,14 +5,13 @@ namespace DataWF.Gui
 {
     public class DockMapItem : LayoutItem, IDisposable
     {
-        [NonSerialized()]
         protected DockPanel panel;
         internal bool main = false;
 
         public DockMapItem()
         {
             height = 200D;
-            width = 260D;
+            width = 280D;
         }
 
         public DockPanel Panel
@@ -34,9 +33,9 @@ namespace DataWF.Gui
             {
                 if (main)
                     return;
-                
+
                 base.Visible = value;
-                
+
                 if (panel != null)
                     panel.Visible = value;
             }

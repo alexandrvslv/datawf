@@ -455,7 +455,7 @@ namespace DataWF.Module.CommonGui
 
             if (entry.Text?.Length != 0)
             {
-                // TreeMode = false;
+                TreeMode = false;
                 list.FilterQuery.Parameters.Add(typeof(Node), LogicType.And, nameof(Node.FullPath), CompareType.Like, entry.Text);
             }
             else
@@ -495,11 +495,14 @@ namespace DataWF.Module.CommonGui
                     ((INotifyPropertyChanged)bindSource).PropertyChanged -= BindSourcePropertyChanged;
                 }
                 bindSource = null;
-                SelectedDBItem = BindInvoker?.Get(value) as DBItem;
+                if (value != null)
+                {
+                    SelectedDBItem = BindInvoker?.Get(value) as DBItem;
+                }
                 bindSource = value;
                 if (bindSource is INotifyPropertyChanged)
                 {
-                    ((INotifyPropertyChanged)bindSource).PropertyChanged -= BindSourcePropertyChanged;
+                    ((INotifyPropertyChanged)bindSource).PropertyChanged += BindSourcePropertyChanged;
                 }
             }
         }
@@ -508,12 +511,15 @@ namespace DataWF.Module.CommonGui
 
         private void BindSourcePropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            SelectedDBItem = BindInvoker.Get(BindSource) as DBItem;
+            if (BindInvoker.Name == e.PropertyName)
+            {
+                SelectedDBItem = BindInvoker.Get(BindSource) as DBItem;
+            }
         }
 
         public void Bind(object bindSource, string bindProperty)
         {
-            Bind(bindSource, EmitInvoker.Initialize(bindSource?.GetType(), bindProperty));
+            Bind(bindSource, bindSource == null ? null : EmitInvoker.Initialize(bindSource.GetType(), bindProperty));
         }
 
         public void Bind(object bindSource, IInvoker bindInvoker)
@@ -525,7 +531,7 @@ namespace DataWF.Module.CommonGui
         protected override void OnSelectionChanged(object sender, LayoutSelectionEventArgs e)
         {
             base.OnSelectionChanged(sender, e);
-            if (BindSource != null && BindInvoker != null)
+            if (e.Type != LayoutSelectionChange.Hover && BindSource != null && BindInvoker != null)
             {
                 BindInvoker.Set(BindSource, SelectedDBItem);
             }

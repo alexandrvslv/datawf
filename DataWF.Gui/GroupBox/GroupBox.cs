@@ -87,7 +87,7 @@ namespace DataWF.Gui
 				}
 				else
 				{
-					height = box.HeaderHeight + 10;
+					height = box.HeaderHeight;
 				}
 				if (height > map.Bound.Height)
 					height = map.Bound.Height;

@@ -121,6 +121,7 @@ namespace DataWF.Data
                     keys |= DBViewKeys.Static;
                 else
                     keys &= ~DBViewKeys.Static;
+                Clear();
             }
         }
 
@@ -303,22 +304,23 @@ namespace DataWF.Data
         }
 
         public void OnItemChanged(T item, string property, ListChangedType type)
-        {
-            if ((keys & DBViewKeys.Static) == DBViewKeys.Static && type != ListChangedType.ItemChanged)
-            {
-                return;
-            }
+        {            
             if (type == ListChangedType.Reset)
             {
                 UpdateFilter();
             }
             else
+            {
                 lock (items)
                 {
                     int index = -1, newindex = -1;
                     index = newindex = items.BinarySearch(item, comparer);
                     if (index < 0)
                     {
+                        if ((keys & DBViewKeys.Static) == DBViewKeys.Static)
+                        {
+                            return;
+                        }
                         newindex = (-index) - 1;
                         if (newindex > items.Count)
                             newindex = items.Count;
@@ -365,6 +367,7 @@ namespace DataWF.Data
                             break;
                     }
                 }
+            }
         }
 
         public void OnItemChanged(DBItem item, string property, ListChangedType type)
