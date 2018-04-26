@@ -13,8 +13,6 @@ namespace DataWF.Data.Gui
         public TableExplorer() : base(new TableEditor())
         {
             TableEditor.ShowDetails = true;
-            TableEditor.Updating += TableUpdating;
-            TableEditor.Updated += TableUpdated;
 
             Name = "TableExplorer";
         }
@@ -144,14 +142,6 @@ namespace DataWF.Data.Gui
         }
 
         #region Universal Form Events
-
-        private void TableUpdated(object sender, EventArgs e)
-        {
-        }
-
-        private void TableUpdating(object sender, EventArgs e)
-        {
-        }
 
         protected override void OnEditorItemSelect(object sender, ListEditorEventArgs e)
         {

@@ -32,8 +32,6 @@ namespace DataWF.Data.Gui
     {
         public event EventHandler<ListEditorEventArgs> RowDeleting;
         public event EventHandler<ListEditorEventArgs> SelectionChanged;
-        public event Updating Updating;
-        public event Updated Updated;
 
         private bool showDetails;
         private IDBTableView view;
@@ -283,8 +281,6 @@ namespace DataWF.Data.Gui
             set
             {
                 status = value;
-                if (value != TableEditorStatus.Search)
-                    Updated?.Invoke(this, EventArgs.Empty);
                 switch (status)
                 {
                     case TableEditorStatus.Adding:
