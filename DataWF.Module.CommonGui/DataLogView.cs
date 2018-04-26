@@ -222,7 +222,7 @@ namespace DataWF.Module.CommonGui
             detailList.ListInfo.Columns.Add("Column", 120).Editable = false;
             detailList.ListInfo.Columns.Add("OldFormat", 100).FillWidth = true;
             detailList.ListInfo.Columns.Add("NewFormat", 100).FillWidth = true;
-            detailList.ListInfo.StyleRow = GuiEnvironment.StylesInfo["ChangeRow"];
+            detailList.ListInfo.StyleRow = GuiEnvironment.Theme["ChangeRow"];
             detailList.ListInfo.HeaderVisible = false;
 
             detailRow = new TableLayoutList();

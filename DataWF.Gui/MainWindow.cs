@@ -142,7 +142,7 @@ namespace DataWF.Gui
             Title = "Main Form";
             Size = new Size(1024, 768);
             task.TaskList = tasks;
-            BackgroundColor = GuiEnvironment.StylesInfo["Window"].BaseColor;
+            BackgroundColor = GuiEnvironment.Theme["Window"].BaseColor;
         }
 
         public void SaveConfiguration()

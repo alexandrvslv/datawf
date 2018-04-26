@@ -76,7 +76,7 @@ namespace DataWF.Gui
 
             LayoutGroup lgroup = null;
             DateTime stamp = DateTime.Now;
-            int j = 0;
+            //int j = 0;
             for (int i = 0; i < count; i++)
             {
                 object litem = list.ListSource[i];

@@ -67,7 +67,7 @@ namespace DataWF.Module.Flow
 
         public ListDocumentData(Document document)
             : base(DocumentData.DBTable.Select(
-                DocumentData.DBTable.ParseProperty(nameof(DocumentData.DocumentId)), document.PrimaryId, CompareType.Equal))
+                DocumentData.DBTable.ParseProperty(nameof(DocumentData.DocumentId)), CompareType.Equal, document.PrimaryId))
         {
             this.document = document;
         }

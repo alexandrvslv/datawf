@@ -22,10 +22,7 @@ namespace DataWF.Module.FlowGui
             toolView = new ToolItem(ToolViewClick) { Name = "View", Glyph = GlyphType.PictureO };
             toolTemplate = new ToolItem(ToolTemplateClick) { Name = "Template", ForeColor = Colors.LightBlue, Glyph = GlyphType.Book };
 
-            Bar.Items.InsertAfter(toolStatus, new[] {
-                toolView,
-                toolTemplate
-            });
+            toolStatus.InsertAfter(new[] { toolView, toolTemplate });
             Glyph = GlyphType.File;
         }
 

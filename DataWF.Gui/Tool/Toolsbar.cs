@@ -9,13 +9,13 @@ namespace DataWF.Gui
 {
     public class Toolsbar : Canvas, ILocalizable
     {
-        private ToolLayoutMap items;
+        private ToolItem items;
         private ToolItem cacheHitItem;
         private Menubar currentMenu;
 
         public Toolsbar()
         {
-            items = new ToolLayoutMap() { Bar = this };
+            items = new ToolItem() { Bar = this };
         }
 
         public Toolsbar(params ToolItem[] items) : this()
@@ -23,7 +23,7 @@ namespace DataWF.Gui
             Items.AddRange(items);
         }
 
-        public ToolLayoutMap Items
+        public ToolItem Items
         {
             get { return items; }
             set
@@ -74,11 +74,13 @@ namespace DataWF.Gui
         {
             var size = base.OnGetPreferredSize(widthConstraint, heightConstraint);
             items.GetBound(widthConstraint.AvailableSize, heightConstraint.AvailableSize);
-            foreach (ToolItem item in LayoutMapHelper.GetVisibleItems(items))
+            foreach (ToolItem item in items.GetVisibleItems())
             {
                 item.CheckSize(false);
                 items.GetBound(item);
             }
+            
+
             return items.Bound.Size;
         }
 
@@ -93,7 +95,7 @@ namespace DataWF.Gui
             base.OnReallocate();
 
             items.GetBound(Size.Width, Size.Height);
-            foreach (ToolItem item in LayoutMapHelper.GetVisibleItems(items))
+            foreach (ToolItem item in items.GetVisibleItems())
             {
                 items.GetBound(item);
                 if (item.Content != null && item.Content.Parent == this)
@@ -107,7 +109,7 @@ namespace DataWF.Gui
             base.OnDraw(ctx, dirtyRect);
             var context = GraphContext.Default;
             context.Context = ctx;
-            foreach (ToolItem item in LayoutMapHelper.GetVisibleItems(items))
+            foreach (ToolItem item in items.GetVisibleItems())
             {
                 item.OnDraw(context);
             }
@@ -121,7 +123,7 @@ namespace DataWF.Gui
 
         protected ToolItem HitTest(Point position)
         {
-            foreach (ToolItem item in LayoutMapHelper.GetVisibleItems(items))
+            foreach (ToolItem item in items.GetVisibleItems())
             {
                 if (item.Bound.Contains(position))
                 {
@@ -186,7 +188,7 @@ namespace DataWF.Gui
 
         public void Localize()
         {
-            foreach (ToolItem item in LayoutMapHelper.GetItems(Items))
+            foreach (ToolItem item in Items.GetItems())
                 item.Localize();
         }
 

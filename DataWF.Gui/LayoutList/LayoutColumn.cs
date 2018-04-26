@@ -5,10 +5,12 @@ using System.Xml.Serialization;
 using System.Reflection;
 using Xwt.Drawing;
 using Xwt;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace DataWF.Gui
 {
-    public class LayoutColumn : LayoutItem, ILayoutCell, IComparable<ILayoutMap>, IComparable, IDisposable, ICloneable
+    public class LayoutColumn : LayoutItem<LayoutColumn>, ILayoutCell, IComparable, IDisposable, ICloneable
     {
         protected CellStyle style;
         protected CellStyle columnStyle;
@@ -27,10 +29,66 @@ namespace DataWF.Gui
         private string description;
         private string text;
         public Size TextSize;
+        private LayoutListInfo info;
 
         public LayoutColumn()
         {
         }
+
+        public LayoutColumn(LayoutListInfo info)
+        {
+            Info = info;
+        }
+
+        [XmlIgnore, Browsable(false)]
+        public LayoutListInfo Info
+        {
+            get { return info ?? Map?.Info; }
+            set { info = value; }
+        }
+
+        public override double Scale
+        {
+            get { return Info?.Scale ?? base.Scale; }
+            set { base.Scale = value; }
+        }
+
+        public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, string property = null)
+        {
+            base.OnListChanged(type, newIndex, oldIndex, property);
+            bound.Width = 0;
+            if (Info != null)
+            {
+                Info.OnBoundChanged(EventArgs.Empty);
+            }
+        }
+
+        public LayoutColumn Add(string property, float width = 100, int row = 0, int col = 0)
+        {
+            var column = new LayoutColumn()
+            {
+                Name = property,
+                Width = width,
+                Row = row,
+                Col = col
+            };
+            Add(column);
+            return column;
+        }
+
+        public IEnumerable<LayoutColumn> GetVisible()
+        {
+            foreach (var item in GetVisibleItems())
+            {
+                yield return item;
+            }
+        }
+
+        object ICloneable.Clone()
+        {
+            return Clone();
+        }
+
 
         [XmlIgnore, Browsable(false)]
         public LayoutColumnList Columns
@@ -77,24 +135,18 @@ namespace DataWF.Gui
             }
         }
 
-        [XmlIgnore, Browsable(false)]
-        public LayoutListInfo Info
-        {
-            get { return ((LayoutColumnMap)((LayoutColumnMap)Map)?.TopMap)?.Info; }
-        }
-
         [DefaultValue("Column")]
         public string ColumnStyleName { get; set; } = "Column";
 
         [XmlIgnore]
         public CellStyle ColumnStyle
         {
-            get { return columnStyle ?? (columnStyle = GuiEnvironment.StylesInfo[ColumnStyleName]); }
+            get { return columnStyle ?? (columnStyle = GuiEnvironment.Theme[ColumnStyleName]); }
             set
             {
                 columnStyle = value;
                 ColumnStyleName = value?.Name;
-                GuiEnvironment.StylesInfo.Add(value);
+                GuiEnvironment.Theme.Add(value);
             }
         }
 
@@ -104,12 +156,12 @@ namespace DataWF.Gui
         [XmlIgnore]
         public CellStyle Style
         {
-            get { return style ?? (style = GuiEnvironment.StylesInfo[StyleName]); }
+            get { return style ?? (style = GuiEnvironment.Theme[StyleName]); }
             set
             {
                 style = value;
                 StyleName = value?.Name;
-                GuiEnvironment.StylesInfo.Add(value);
+                GuiEnvironment.Theme.Add(value);
             }
         }
 
@@ -210,13 +262,9 @@ namespace DataWF.Gui
             set { description = value; }
         }
 
-        public int CompareTo(ILayoutMap obj)
+        public override void Dispose()
         {
-            return base.CompareTo(obj);
-        }
-
-        public void Dispose()
-        {
+            base.Dispose();
             textLayout?.Dispose();
         }
 
@@ -240,14 +288,14 @@ namespace DataWF.Gui
                 ownerName = ownerName,
                 ReadOnly = ReadOnly,
                 StyleName = StyleName,
-                Visible = Visible
+                Visible = Visible,
+                Info = Info
             };
+            foreach (var item in items.Where(e => e is ICloneable))
+            {
+                clone.Add((LayoutColumn)item.Clone());
+            }
             return clone;
-        }
-
-        object ICloneable.Clone()
-        {
-            return Clone();
         }
 
         public virtual object ReadValue(object listItem)
@@ -259,6 +307,6 @@ namespace DataWF.Gui
         {
             invoker?.Set(listItem, value);
         }
-        
+
     }
 }

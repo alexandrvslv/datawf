@@ -46,7 +46,7 @@ namespace DataWF.Gui
                 Name = "toolLabel",
                 Text = "Label",
                 Cursor = CursorType.Arrow,
-                TextColor = GuiEnvironment.StylesInfo["Window"].BaseColor.Invert()
+                TextColor = GuiEnvironment.Theme["Window"].BaseColor.Invert()
             };
             toolLabel.ButtonPressed += OnContentMouseDown;
             toolLabel.ButtonReleased += OnContentMouseUp;
@@ -86,7 +86,7 @@ namespace DataWF.Gui
             vbox.KeyPressed += OnContentKeyPress;
 
 
-            BackgroundColor = GuiEnvironment.StylesInfo["Window"].BaseColor.WithIncreasedLight(0.1D);
+            BackgroundColor = GuiEnvironment.Theme["Window"].BaseColor.WithIncreasedLight(0.1D);
             Content = vbox;
             Decorated = false;
             Name = "ToolWindow";

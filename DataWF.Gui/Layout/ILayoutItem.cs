@@ -1,9 +1,10 @@
 ﻿using DataWF.Common;
+using System.Collections.Generic;
 using Xwt;
 
 namespace DataWF.Gui
 {
-    public interface ILayoutItem : IContainerNotifyPropertyChanged, INamed
+    public interface ILayoutItem : IContainerNotifyPropertyChanged, INamed, IEnumerable<ILayoutItem>
     {
         Rectangle Bound { get; set; }
 
@@ -21,7 +22,13 @@ namespace DataWF.Gui
 
         bool FillHeight { get; set; }
 
-        ILayoutMap Map { get; }
+        ILayoutItem Map { get; }
+
+        double Scale { get; set; }
+
+        double Indent { get; set; }
+
+        void Sort();
     }
 }
 

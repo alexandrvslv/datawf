@@ -73,14 +73,13 @@ namespace DataWF.Gui
         public StyleEditor()
         {
             list.Name = "listEditor1";
-            list.DataSource = GuiEnvironment.StylesInfo;
+            list.DataSource = GuiEnvironment.Theme;
             list.ReadOnly = false;
             list.List.SelectionChanged += ListItemSelect;
 
             details.EditMode = EditModes.ByClick;
 
-            var smap = new GroupBoxMap(map);
-            smap.Row = 1;
+            var smap = new GroupBoxItem(map) { Row = 1 };
             smap.Add(new GroupBoxItem() { Widget = details, Text = "Detail", FillWidth = true, Width = 230, Height = 60 });
             smap.Add(new GroupBoxItem() { Widget = preview, Text = "Preview", FillWidth = true, Width = 230, Height = 60 });
 

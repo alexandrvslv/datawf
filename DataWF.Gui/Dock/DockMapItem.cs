@@ -1,14 +1,15 @@
 ﻿using System;
 using DataWF.Common;
+using Xwt;
 
 namespace DataWF.Gui
 {
-    public class DockMapItem : LayoutItem, IDisposable
+    public class DockItem : LayoutItem<DockItem>, IDisposable
     {
         protected DockPanel panel;
         internal bool main = false;
 
-        public DockMapItem()
+        public DockItem()
         {
             height = 200D;
             width = 280D;
@@ -41,10 +42,21 @@ namespace DataWF.Gui
             }
         }
 
-        public void Dispose()
+        public DockItem Add(DockPanel panel)
         {
+            var item = new DockItem() { Name = panel.Name, Panel = panel };
+            Add(item);
+            return item;
+        }
+
+        public override void Dispose()
+        {
+            foreach (var item in this)
+                if (item is IDisposable)
+                    ((IDisposable)item).Dispose();
             panel.Dispose();
         }
+
     }
 }
 

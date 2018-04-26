@@ -26,7 +26,8 @@ namespace DSBarCode
         {
             headerFont = Font.FromName("Courier").WithSize(18);
             footerFont = Font.FromName("Courier").WithSize(8);
-            this.Name = "BarCodeCtrl";
+            BackgroundColor = Colors.White;
+            Name = "BarCodeCtrl";
         }
 
         public AlignType VertAlign

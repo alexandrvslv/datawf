@@ -123,10 +123,9 @@ namespace DataWF.Module.FlowGui
             dock = new DockBox()
             {
                 Name = "dock",
-                BackgroundColor = GuiEnvironment.StylesInfo["Page"].BaseColor,
+                BackgroundColor = GuiEnvironment.Theme["Page"].BaseColor,
                 VisibleClose = false
             };
-            //dock.PageStyle = GuiEnvironment.StylesInfo["DocumentDock"];
             pageHeader = dock.Put(new DocumentHeader(), DockType.Left);
             pageHeader.Panel.MapItem.FillWidth = true;
 
@@ -205,7 +204,7 @@ namespace DataWF.Module.FlowGui
 
         public void Localize()
         {
-            GuiService.Localize(this, "DocumentEditor", "Document Editor", GlyphType.Book);
+            Glyph = GlyphType.Book;
             tools.Localize();
             dock.Localize();
         }
@@ -480,7 +479,7 @@ namespace DataWF.Module.FlowGui
                 if (state == value)
                     return;
                 state = value;
-                this.Text = document.ToString();// +"(" + this.Tag.ToString() + ")";
+                Text = document.ToString();// +"(" + this.Tag.ToString() + ")";
 
                 pageHeader.Tag = document.Template;
                 pageRefers.Tag = document.Template;
@@ -699,15 +698,15 @@ namespace DataWF.Module.FlowGui
             }
         }
 
-        public static bool CheckVisible(ToolLayoutMap collection)
+        public static bool CheckVisible(ToolItem collection)
         {
-            foreach (MenuItem item in collection)
+            foreach (var item in collection)
                 if (!(item is SeparatorMenuItem) && item.Sensitive)
                     return true;
             return false;
         }
 
-        public ToolMenuItem InitTemplate(DBItem owner, Template template, ToolLayoutMap menu)
+        public ToolMenuItem InitTemplate(DBItem owner, Template template, ToolItem menu)
         {
             if (template == null)
                 return null;
@@ -770,18 +769,14 @@ namespace DataWF.Module.FlowGui
                 foreach (DBItem row in document.GetReferencing(relation, DBLoadParam.None))
                     row.Reject();
             }
-
             document.Reject();
-
             document.IniType = DocInitType.Default;
-
             CheckState(DocumentEditorState.None);
         }
 
         private void ToolDeleteClick(object sender, EventArgs e)
         {
-            RowDeleting deleter = new RowDeleting();
-            deleter.Row = document;
+            var deleter = new RowDeleting { Row = document };
             deleter.Show(this, Point.Zero);
             //deleter.Dispose();
             if (document != null && (document.UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete)
@@ -792,22 +787,27 @@ namespace DataWF.Module.FlowGui
 
         private void ToolBarCodeClick(object sender, EventArgs e)
         {
-            var control = new BarCodeCtrl();
-            //control.Size = new Size(170, 50);
-            control.ShowFooter = true;
-            //control.FooterFont = new Font (control.FooterFont.FontFamily, 8.0F);
-            control.BarCodeHeight = 25;
-            control.BarCode = document.Id.ToString();
-            control.Weight = BarCodeCtrl.BarCodeWeight.Small;
+            if (Document == null)
+                return;
+            var barcode = new BarCodeCtrl
+            {
+                ShowFooter = true,
+                //FooterFont = new Font (control.FooterFont.FontFamily, 8.0F),
+                BarCodeHeight = 25,
+                BarCode = document.Id.ToString(),
+                Weight = BarCodeCtrl.BarCodeWeight.Small
+            };
+            barcode.ShowWindow(ParentWindow, new Size(200, 100));
 
-            var stImage = new MemoryStream();
-            control.SaveImage(stImage);
-            var im = Image.FromStream(stImage);
-
-            ImageEditor ie = new ImageEditor();
-            ie.Image = im;
-            ie.Text = "Bar Code";
-            ie.ShowDialog(this);
+            //using (var stImage = new MemoryStream())
+            //{
+            //    barcode.SaveImage(stImage);
+            //    var im = Image.FromStream(stImage);
+            //    var editor = new ImageEditor();
+            //    editor.Image = im;
+            //    editor.Text = "Bar Code";
+            //    editor.ShowDialog(this);
+            //}
         }
 
         private void ToolAcceptClick(object sender, EventArgs e)
@@ -841,12 +841,6 @@ namespace DataWF.Module.FlowGui
 
             Send(null, null, null);
         }
-
-        //protected override void OnActivated(EventArgs e)
-        //{
-        //    FlowEnvir.CurrentDocument = document;
-        //    base.OnActivated(e);
-        //}
 
         protected void OnClosing(CancelEventArgs e)
         {
@@ -942,18 +936,7 @@ namespace DataWF.Module.FlowGui
         private void SenderSendComplete(object senderObj, EventArgs e)
         {
             CheckState(DocumentEditorState.None);
-            if (SendComplete != null)
-                SendComplete(this, e);
+            SendComplete?.Invoke(this, e);
         }
-
-        //private void Send(DocumentWork work, Stage stage, User user, Document document)
-        //{
-        //    state = DocumentEditorState.Send;
-        //    DocumentTool.Send(work, stage, user, null, new ExecuteDocumentCallback(CheckProcRezult));
-        //    DocumentTool.Save(document, null);
-        //    CheckState(DocumentEditorState.None);
-        //    if (SendComplete != null)
-        //        SendComplete(this, EventArgs.Empty);
-        //}
     }
 }

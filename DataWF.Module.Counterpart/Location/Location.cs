@@ -102,8 +102,7 @@ namespace DataWF.Module.Counterpart
                         }
                     }
                 }
-                catch (Exception ex)
-                { }
+                catch { }
             }
 
             var russia = Location.DBTable.LoadByCode("RU");

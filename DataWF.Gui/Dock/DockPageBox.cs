@@ -29,8 +29,8 @@ namespace DataWF.Gui
             items = new DockPageList(this);
             items.ListChanged += ListChanged;
 
-            style = GuiEnvironment.StylesInfo["Page"];
-            sclose = GuiEnvironment.StylesInfo["PageClose"];
+            style = GuiEnvironment.Theme["Page"];
+            sclose = GuiEnvironment.Theme["PageClose"];
         }
 
         public bool VisibleClose

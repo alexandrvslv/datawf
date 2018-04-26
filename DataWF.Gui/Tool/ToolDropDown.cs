@@ -42,7 +42,7 @@ namespace DataWF.Gui
             }
         }
 
-        public ToolLayoutMap DropDownItems
+        public ToolItem DropDownItems
         {
             get { return DropDown.Items; }
         }

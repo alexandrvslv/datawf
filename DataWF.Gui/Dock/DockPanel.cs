@@ -10,7 +10,7 @@ namespace DataWF.Gui
 {
     public class DockPanel : Canvas, IEnumerable, IEnumerable<DockPage>, IDockContainer, ILocalizable
     {
-        private DockMapItem mapItem;
+        private DockItem mapItem;
         private DockPage currentPage;
         private Menubar context = new Menubar();
         private ToolMenuItem toolHide = new ToolMenuItem();
@@ -79,12 +79,12 @@ namespace DataWF.Gui
                     MapItem.Visible = true;
                     //Parent.ResumeLayout(true);
                 }
-                DockPage page = this.pages.Items[e.NewIndex];
+                DockPage page = pages.Items[e.NewIndex];
                 SelectPage(page);
             }
             else if (e.ListChangedType == ListChangedType.ItemChanged)
             {
-                DockPage page = this.pages.Items[e.NewIndex];
+                DockPage page = pages.Items[e.NewIndex];
                 if (CurrentWidget == page.Widget && !page.Visible)
                 {
                     RemovePage(page, false);
@@ -98,26 +98,25 @@ namespace DataWF.Gui
             {
                 if (e.NewIndex >= 0)
                 {
-                    DockPage page = this.pages.Items[e.NewIndex];
+                    DockPage page = pages.Items[e.NewIndex];
                     RemovePage(page, true);
                 }
                 else
                 {
-                    if (this.pages.Items.Count > 0)
+                    if (pages.Items.Count > 0)
                     {
                         if (CurrentWidget == null)
-                            SelectPage(this.pages.Items[0]);
+                            SelectPage(pages.Items[0]);
                     }
                     else
                     {
                         if (MapItem != null && !MapItem.FillWidth)
                         {
                             MapItem.Visible = false;
-                            foreach (object item in MapItem.Map.Items)
+                            foreach (var mapItem in MapItem.Map)
                             {
-                                if (item is DockMapItem)
+                                if (mapItem.Count == 0)
                                 {
-                                    var mapItem = (DockMapItem)item;
                                     if (mapItem.Panel.Pages.Items.Count == 0)
                                         mapItem.Visible = false;
                                 }
@@ -160,7 +159,7 @@ namespace DataWF.Gui
 
         public LayoutAlignType PagesAlign
         {
-            get { return this.pagesAlign; }
+            get { return pagesAlign; }
             set
             {
                 if (pagesAlign == value)
@@ -221,7 +220,7 @@ namespace DataWF.Gui
             get { return pages; }
         }
 
-        public DockMapItem MapItem
+        public DockItem MapItem
         {
             get { return mapItem; }
             set { mapItem = value; }

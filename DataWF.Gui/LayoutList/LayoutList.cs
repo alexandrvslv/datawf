@@ -76,7 +76,7 @@ namespace DataWF.Gui
         private List<Dictionary<LayoutColumn, TextLayout>> cache = new List<Dictionary<LayoutColumn, TextLayout>>();
         private int gridCols = 1;
         private int gridRows = 1;
-        private CellStyle listStyle = GuiEnvironment.StylesInfo["List"];
+        private CellStyle listStyle = GuiEnvironment.Theme["List"];
         #region Events
         protected ListChangedEventHandler handleListChanged;
         protected PropertyChangedEventHandler handleProperty;
@@ -1954,7 +1954,7 @@ namespace DataWF.Gui
                     stostr.FillWidth = false;
                     stostr.Height = 60;
                     stostr.Width = 100;
-                    stostr.Style = GuiEnvironment.StylesInfo["CellCenter"];
+                    stostr.Style = GuiEnvironment.Theme["CellCenter"];
 
                     info.GridAuto = true;
                     info.Indent = 10;
@@ -2480,7 +2480,7 @@ namespace DataWF.Gui
         {
             listInfo.Columns.Bound = Rectangle.Zero;
             ClearFilter();
-            var list = LayoutMapHelper.GetItems(listInfo.Columns).ToList();
+            var list = listInfo.Columns.GetItems().ToList();
             foreach (LayoutColumn item in list)
             {
                 BuildColumn(item.Owner as LayoutColumn, item.Name);
@@ -3655,12 +3655,12 @@ namespace DataWF.Gui
                 return;
 
             bool moveGroup = true;
-            LayoutAlignType a = e.HitTest.Anchor;
-            if (a == LayoutAlignType.None)
-                a = HitTestGroupAnchor(e.HitTest);
+            var align = e.HitTest.Anchor;
+            if (align == LayoutAlignType.None)
+                align = HitTestGroupAnchor(e.HitTest);
             else
                 moveGroup = false;
-            if (a != LayoutAlignType.None)
+            if (align != LayoutAlignType.None)
             {
                 if (e.HitTest.MouseDown)
                 {
@@ -3668,7 +3668,7 @@ namespace DataWF.Gui
                 }
                 else if (e.HitTest.Column != null)
                 {
-                    listInfo.Columns.Move(selection.CurrentColumn, e.HitTest.Column, a, moveGroup);
+                    e.HitTest.Column.Move(selection.CurrentColumn, align, moveGroup);
                     RefreshBounds(false);
                 }
                 //if (a == LayoutAlignType.Right && (crect.X - e.HitTest.Point.X) < 10 ||
@@ -4091,7 +4091,6 @@ namespace DataWF.Gui
         {
             try
             {
-
                 bounds.Clip = clip;
                 //context.Scale = ListInfo.Scale;
 
@@ -4153,7 +4152,7 @@ namespace DataWF.Gui
 
         protected virtual void OnDrawSelectionRectangle(GraphContext context, Rectangle rect)
         {
-            var style = GuiEnvironment.StylesInfo["Selection"];
+            var style = GuiEnvironment.Theme["Selection"];
             context.FillRectangle(style, rect, CellDisplayState.Default);
             context.DrawRectangle(style, rect, CellDisplayState.Default);
         }
@@ -4199,7 +4198,7 @@ namespace DataWF.Gui
             }
             if (UseState == LayoutListState.MoveColumn)
             {
-                e.Context.FillRectangle(GuiEnvironment.StylesInfo["Red"], _recMove);
+                e.Context.FillRectangle(GuiEnvironment.Theme["Red"], _recMove);
             }
         }
 
@@ -4292,7 +4291,7 @@ namespace DataWF.Gui
 
         protected virtual void OnDrawAggreage(LayoutListDrawArgs e)
         {
-            var style = GuiEnvironment.StylesInfo["Collect"];
+            var style = GuiEnvironment.Theme["Collect"];
             e.Context.DrawCell(style, null, e.RowBound, Rectangle.Zero, CellDisplayState.Default);
             foreach (LayoutColumn column in e.Columns)
             {
@@ -4445,7 +4444,7 @@ namespace DataWF.Gui
                 layout = cacheItem[e.Column] = new TextLayout()
                 {
                     Font = e.Style.Font,
-                    //Trimming = TextTrimming.WordElipsis,
+                    Trimming = TextTrimming.WordElipsis,
                     TextAlignment = e.Style.Alignment
                 };
             }
@@ -4660,7 +4659,7 @@ namespace DataWF.Gui
         public StringBuilder ToTabbedList(IEnumerable items)
         {
             var sb = new StringBuilder();
-            var list = LayoutMapHelper.GetVisibleItems(listInfo.Columns).ToArray();
+            var list = listInfo.Columns.GetVisibleItems().ToArray();
             foreach (LayoutColumn column in list)
             {
                 sb.Append(column.Text + "\t");
@@ -4688,7 +4687,7 @@ namespace DataWF.Gui
 
             //  Load NumCells variable to write table 
             //  row properties
-            var lc = LayoutMapHelper.GetVisibleItems(listInfo.Columns).ToArray();
+            var lc = listInfo.Columns.GetVisibleItems().ToArray();
             int NumCells = lc.Length;
             //  load NumRows variable to set up table 
             //  contents loop for recordset

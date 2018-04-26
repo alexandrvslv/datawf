@@ -65,7 +65,7 @@ namespace DataWF.Gui
         [XmlIgnore]
         public CellStyle Style
         {
-            get { return style ?? GuiEnvironment.StylesInfo[StyleName]; }
+            get { return style ?? GuiEnvironment.Theme[StyleName]; }
             set
             {
                 style = value;

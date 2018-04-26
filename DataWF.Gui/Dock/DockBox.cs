@@ -19,10 +19,10 @@ namespace DataWF.Gui
 
     public class DockBox : Canvas, IDockContainer
     {
-        private DockMap map;
+        private DockItem map;
         private EventHandler childFocusHandler;
         private DockPage page = null;
-        private DockMapItem pContent;
+        private DockItem pContent;
         private DockBoxState state = DockBoxState.Default;
         private Point cach;
         private Rectangle stateMove;
@@ -38,7 +38,7 @@ namespace DataWF.Gui
         public DockBox()
             : base()
         {
-            Map = new DockMap();
+            Map = new DockItem() { };
             pContent = GetDockItem("Content", null, LayoutAlignType.None, false);
             pContent.FillWidth = true;
             pContent.FillHeight = true;
@@ -74,7 +74,7 @@ namespace DataWF.Gui
         }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public DockMap Map
+        public DockItem Map
         {
             get { return map; }
             set
@@ -85,7 +85,7 @@ namespace DataWF.Gui
             }
         }
 
-        public DockMapItem PContent
+        public DockItem PContent
         {
             get { return pContent; }
         }
@@ -161,7 +161,7 @@ namespace DataWF.Gui
                     }
                     else
                     {
-                        DockMapItem nitem = GetDockItem(htest.Item.Name + htest.Align.ToString(), htest.Item, htest.Align, true);
+                        DockItem nitem = GetDockItem(htest.Item.Name + htest.Align.ToString(), htest.Item, htest.Align, true);
                         nitem.Panel.Pages.Items.Add(page);
                     }
                     page = null;
@@ -246,7 +246,7 @@ namespace DataWF.Gui
         protected override Size OnGetPreferredSize(SizeConstraint widthConstraint, SizeConstraint heightConstraint)
         {
             base.OnGetPreferredSize(widthConstraint, heightConstraint);
-            foreach (DockMapItem item in LayoutMapHelper.GetVisibleItems(map))
+            foreach (DockItem item in map.GetVisibleItems())
             {
                 var size = item.Panel.Surface.GetPreferredSize();
                 item.Width = size.Width;
@@ -260,7 +260,7 @@ namespace DataWF.Gui
         {
             base.OnReallocate();
             map.GetBound(Size.Width, Size.Height);
-            foreach (DockMapItem item in LayoutMapHelper.GetVisibleItems(map))
+            foreach (DockItem item in map.GetVisibleItems())
             {
                 map.GetBound(item);
                 item.Bound = item.Bound.Inflate(-3, -3);
@@ -341,7 +341,7 @@ namespace DataWF.Gui
         public DockBoxHitTest DockHitTest(double x, double y, double size)
         {
             var htest = new DockBoxHitTest();
-            foreach (DockMapItem item in LayoutMapHelper.GetVisibleItems(map))
+            foreach (DockItem item in map.GetVisibleItems())
             {
                 if (item.Bound.Contains(x, y))
                 {
@@ -365,7 +365,7 @@ namespace DataWF.Gui
                 childFocusHandler(arg.Page.Widget, arg);
         }
 
-        public DockPage PickPage(int x, int y, DockMapItem item)
+        public DockPage PickPage(int x, int y, DockItem item)
         {
             foreach (DockPage itemPage in item.Panel.Pages.Items)
             {
@@ -418,14 +418,14 @@ namespace DataWF.Gui
             page = e.Page;
         }
 
-        public DockMapItem GetDockItem(string Name, LayoutAlignType type, bool gp)
+        public DockItem GetDockItem(string Name, LayoutAlignType type, bool gp)
         {
             return GetDockItem(Name, pContent, type, gp);
         }
 
-        public DockMapItem GetDockItem(string Name, DockMapItem exitem, LayoutAlignType type, bool gp)
+        public DockItem GetDockItem(string Name, DockItem exitem, LayoutAlignType type, bool gp)
         {
-            DockMapItem item = LayoutMapHelper.Get(map, Name) as DockMapItem;
+            DockItem item = map.GetRecursive(Name) as DockItem;
             if (item == null)
             {
                 item = CreateDockItem(Name);
@@ -434,15 +434,15 @@ namespace DataWF.Gui
                 if (Name == "Bottom")
                     item.Height = 200;
                 if (exitem == null)
-                    LayoutMapHelper.Add(map, item);
+                    map.Add(item);
                 else
-                    LayoutMapHelper.InsertWith(item, exitem, type, gp);
+                    exitem.InsertWith(item, type, gp);
 
             }
             return item;
         }
 
-        public DockMapItem CreateDockItem(string Name)
+        public DockItem CreateDockItem(string Name)
         {
             var panel = new DockPanel();
             panel.Pages.VisibleClose = VisibleClose;
@@ -450,7 +450,7 @@ namespace DataWF.Gui
             panel.Pages.PageClick += Pages_PageClick;
             panel.Pages.PageDrag += OnPageDrag;
 
-            var item = new DockMapItem()
+            var item = new DockItem()
             {
                 Name = Name,
                 Visible = true,
@@ -464,7 +464,7 @@ namespace DataWF.Gui
         #region Container
         public bool Contains(Widget c)
         {
-            foreach (DockMapItem item in LayoutMapHelper.GetItems(map))
+            foreach (DockItem item in map.GetItems())
                 if (item.Panel.Contains(c))
                     return true;
             return false;
@@ -472,7 +472,7 @@ namespace DataWF.Gui
 
         public bool Delete(Widget c)
         {
-            foreach (DockMapItem item in LayoutMapHelper.GetItems(map))
+            foreach (DockItem item in map.GetItems())
             {
                 if (item.Panel.Contains(c))
                 {
@@ -485,7 +485,7 @@ namespace DataWF.Gui
 
         public IEnumerable<Widget> GetControls()
         {
-            foreach (DockMapItem item in LayoutMapHelper.GetItems(map))
+            foreach (DockItem item in map.GetItems())
             {
                 foreach (var widget in item.Panel.GetControls())
                     yield return widget;
@@ -494,7 +494,7 @@ namespace DataWF.Gui
 
         public IEnumerable<DockPage> GetPages()
         {
-            foreach (DockMapItem item in LayoutMapHelper.GetItems(map))
+            foreach (DockItem item in map.GetItems())
             {
                 foreach (var pageItem in item.Panel)
                     yield return pageItem;
@@ -503,7 +503,7 @@ namespace DataWF.Gui
 
         public DockPage GetPage(string name)
         {
-            foreach (DockMapItem item in LayoutMapHelper.GetItems(map))
+            foreach (DockItem item in map.GetItems())
             {
                 DockPage dp = item.Panel.GetPage(name);
                 if (dp != null)
@@ -516,7 +516,7 @@ namespace DataWF.Gui
 
         public DockPage GetPage(Widget c)
         {
-            foreach (DockMapItem item in LayoutMapHelper.GetItems(map))
+            foreach (DockItem item in map.GetItems())
             {
                 DockPage dp = item.Panel.GetPage(c);
                 if (dp != null)
@@ -541,7 +541,7 @@ namespace DataWF.Gui
 
         public IEnumerable<IDockContainer> GetDocks()
         {
-            foreach (DockMapItem item in LayoutMapHelper.GetVisibleItems(map))
+            foreach (DockItem item in map.GetVisibleItems())
             {
                 yield return item.Panel;
             }
@@ -549,7 +549,7 @@ namespace DataWF.Gui
 
         public IEnumerable<DockPanel> GetDockPanels()
         {
-            foreach (DockMapItem item in LayoutMapHelper.GetVisibleItems(map))
+            foreach (DockItem item in map.GetVisibleItems())
             {
                 yield return item.Panel;
             }
@@ -572,7 +572,7 @@ namespace DataWF.Gui
             {
                 widget.GotFocus += ChildFocusInEvent;
 
-                DockMapItem item = null;
+                DockItem item = null;
                 if (type == DockType.Content)
                 {
                     item = pContent;
@@ -623,7 +623,7 @@ namespace DataWF.Gui
 
         protected override void Dispose(bool disposing)
         {
-            foreach (var item in map.Items)
+            foreach (var item in map)
                 if (item is IDisposable)
                     ((IDisposable)item).Dispose();
             base.Dispose(disposing);

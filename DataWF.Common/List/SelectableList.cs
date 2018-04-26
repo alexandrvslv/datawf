@@ -19,7 +19,7 @@ namespace DataWF.Common
         protected PropertyChangedEventHandler propertyHandler;
         protected SelectableListView<T> defaultView;
 
-        public SelectableList()
+        public SelectableList(int capacity)
         {
             items = new List<T>();
             type = typeof(T);
@@ -29,7 +29,10 @@ namespace DataWF.Common
             }
         }
 
-        public SelectableList(IEnumerable<T> items, IComparer<T> comparer = null) : this()
+        public SelectableList() : this(0)
+        { }
+
+        public SelectableList(IEnumerable<T> items, IComparer<T> comparer = null) : this(items.Count())
         {
             this.comparer = comparer;
             AddRangeInternal(items);
@@ -531,7 +534,7 @@ namespace DataWF.Common
             return Contains((T)item);
         }
 
-        public bool Contains(T item)
+        public virtual bool Contains(T item)
         {
             return items.Contains(item);
         }

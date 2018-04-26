@@ -28,14 +28,14 @@ namespace DataWF.Module.FlowGui
         private Template mtemplate = null;
         private ManualResetEvent load = new ManualResetEvent(false);
         private DocumentFilter search = new DocumentFilter();
-        private ToolItem toolLoad;
+        private ToolItem toolRefresh;
 
 
         private System.Timers.Timer mtimer = new System.Timers.Timer(20000);
 
         public DocumentWorker()
         {
-            toolLoad = new ToolItem(ToolLoadOnClick) { Name = "Load", ForeColor = Colors.DarkBlue, Glyph = GlyphType.Download };
+            toolRefresh = new ToolItem(ToolLoadOnClick) { Name = "Load", ForeColor = Colors.DarkBlue, Glyph = GlyphType.Download };
 
             //foreach (Template uts in Template.DBTable.DefaultView.SelectParents())
             //{
@@ -43,7 +43,7 @@ namespace DataWF.Module.FlowGui
             //        toolCreate.DropDownItems.Add(InitTemplate(uts));
             //}
 
-            Bar.Items.InsertAfter(toolPreview, new[] { toolLoad });
+            toolPreview.InsertAfter(new[] { toolRefresh });
 
             //mtimer.Elapsed += (object sender, System.Timers.ElapsedEventArgs asg) => { CheckNewDocument(null); mtimer.Stop(); };
 

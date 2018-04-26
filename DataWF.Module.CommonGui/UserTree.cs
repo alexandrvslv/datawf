@@ -130,6 +130,9 @@ namespace DataWF.Module.CommonGui
             get { return (userKeys & UserTreeKeys.Permission) == UserTreeKeys.Permission; }
         }
 
+        public bool ShowListNode { get; set; } = true;
+
+
         public void AddTableView(IDBTableView view)
         {
             view.ListChanged += handler;
@@ -137,12 +140,12 @@ namespace DataWF.Module.CommonGui
 
         private void RefreshData()
         {
-            CheckDBView(Department.DBTable?.DefaultView, ShowDepartment, GlyphType.Home, Colors.SandyBrown);
+            InitItem(Department.DBTable?.DefaultView, ShowDepartment, GlyphType.Home, Colors.SandyBrown);
             //CheckDBView(Position.DBTable?.DefaultView, ShowPosition);
             //CheckDBView(User.DBTable?.DefaultView, ShowUser);
-            CheckDBView(UserGroup.DBTable?.DefaultView, ShowGroup, GlyphType.Users, Colors.LightSeaGreen);
-            CheckDBView(Scheduler.DBTable?.DefaultView, ShowScheduler, GlyphType.TimesCircle, Colors.LightPink);
-            CheckDBView(GroupPermission.DBTable?.DefaultView, ShowPermission, GlyphType.Database, Colors.LightSteelBlue);
+            InitItem(UserGroup.DBTable?.DefaultView, ShowGroup, GlyphType.Users, Colors.LightSeaGreen);
+            InitItem(Scheduler.DBTable?.DefaultView, ShowScheduler, GlyphType.TimesCircle, Colors.LightPink);
+            InitItem(GroupPermission.DBTable?.DefaultView, ShowPermission, GlyphType.Database, Colors.LightSteelBlue);
         }
 
         private void HandleViewListChanged(object sender, ListChangedEventArgs e)
@@ -154,7 +157,7 @@ namespace DataWF.Module.CommonGui
                 var nodeParent = (TableItemNode)Nodes.Find(name);
                 if (e.ListChangedType == ListChangedType.Reset)
                 {
-                    InitItem(view);
+                    InitItem((IDBTableContent)view);
                 }
                 else
                 {
@@ -166,7 +169,7 @@ namespace DataWF.Module.CommonGui
                         rowview = (DBItem)view[e.NewIndex];
                         if (rowview.PrimaryId == null)
                             return;
-                        node = InitItem(rowview);
+                        node = InitItem((IDBTableContent)rowview);
                         if (rowview.Group != null)
                             nodeParent = (TableItemNode)Nodes.Find(GetName(rowview.Group));
 
@@ -199,13 +202,13 @@ namespace DataWF.Module.CommonGui
                 {
                     if (userStyle == null)
                     {
-                        userStyle = GuiEnvironment.StylesInfo["TreeUser"];
+                        userStyle = GuiEnvironment.Theme["TreeUser"];
                         if (userStyle == null)
                         {
                             userStyle = ListInfo.StyleCell.Clone();
                             userStyle.Name = "TreeUser";
                             userStyle.Font = userStyle.Font.WithStyle(FontStyle.Oblique);
-                            GuiEnvironment.StylesInfo.Add(userStyle);
+                            GuiEnvironment.Theme.Add(userStyle);
                         }
                     }
 
@@ -232,18 +235,45 @@ namespace DataWF.Module.CommonGui
             return rez;
         }
 
-        public TableItemNode CheckDBView(IDBTableView view, bool show, GlyphType glyph, Color glyphColor)
+        public void InitItem(IDBTableView view, bool show, GlyphType glyph, Color glyphColor)
         {
             if (view == null)
-                return null;
-            TableItemNode node;
+                return;
+            TableItemNode node = null;
             if (show)
             {
                 view.ListChanged += handler;
-                node = InitItem(view);
-                node.Glyph = glyph;
-                node.GlyphColor = glyphColor;
-                Nodes.Add(node);
+                if (ShowListNode)
+                {
+                    node = InitItem((IDBTableContent)view);
+                    node.Glyph = glyph;
+                    node.GlyphColor = glyphColor;
+                }
+                IEnumerable enumer = view;
+                if (view.Table.GroupKey != null)
+                {
+                    enumer = view.Table.SelectItems(view.Table.GroupKey, CompareType.Is, null);
+                }
+
+                foreach (DBItem item in enumer)
+                {
+                    if ((status == DBStatus.Empty || (status & item.Status) == status) && (!Access || item.Access.View))
+                    {
+                        var element = InitItem(item);
+                        if (ShowListNode)
+                        {
+                            element.Group = node;
+                        }
+                        else
+                        {
+                            Nodes.Add(element);
+                        }
+                    }
+                }
+                if (ShowListNode)
+                {
+                    Nodes.Add(node);
+                }
             }
             else
             {
@@ -252,7 +282,6 @@ namespace DataWF.Module.CommonGui
                 if (node != null)
                     node.Hide();
             }
-            return node;
         }
 
         public void InitItems(IEnumerable items, TableItemNode pnode, bool show)
@@ -276,9 +305,9 @@ namespace DataWF.Module.CommonGui
             }
         }
 
-        public virtual void CheckDBItem(TableItemNode node)
+        public virtual TableItemNode InitItem(DBItem item)
         {
-            var item = (DBItem)node.Item;
+            var node = InitItem((IDBTableContent)item);
             if (item is Position)
             {
                 node.Glyph = GlyphType.UserMd;
@@ -287,7 +316,7 @@ namespace DataWF.Module.CommonGui
             }
             else if (item.Table.GroupKey != null && item.PrimaryId != null)
             {
-                InitItems(item.Table.SelectItems(item.Table.GroupKey, item.PrimaryId, CompareType.Equal), node, node.Visible);
+                InitItems(item.Table.SelectItems(item.Table.GroupKey, CompareType.Equal, item.PrimaryId), node, node.Visible);
             }
             if (item is Department)
             {
@@ -330,6 +359,8 @@ namespace DataWF.Module.CommonGui
                         break;
                 }
             }
+            node.Localize();
+            return node;
         }
 
         public TableItemNode InitItem(IDBTableContent item)
@@ -340,28 +371,6 @@ namespace DataWF.Module.CommonGui
             {
                 node = new TableItemNode { Name = name, Item = item };
             }
-            if (item is DBItem)
-            {
-                CheckDBItem(node);
-            }
-            else
-            {
-                IEnumerable enumer = (IDBTableView)item;
-                if (item.Table.GroupKey != null)
-                {
-                    enumer = item.Table.SelectItems(item.Table.GroupKey, null, CompareType.Is);
-                }
-
-                foreach (DBItem sitem in enumer)
-                {
-                    if ((status == DBStatus.Empty || (status & sitem.Status) == status) && (!Access || sitem.Access.View))
-                    {
-                        InitItem(sitem).Group = node;
-                    }
-                }
-            }
-            node.Localize();
-
             return node;
         }
 
@@ -445,8 +454,6 @@ namespace DataWF.Module.CommonGui
             }
         }
 
-
-
         private void FilterEntryChanged(object sender, EventArgs e)
         {
             var entry = (TextEntry)sender;
@@ -482,6 +489,7 @@ namespace DataWF.Module.CommonGui
             base.Dispose(disposing);
         }
 
+        public IInvoker BindInvoker { get { return bindInvoker; } set { bindInvoker = value; } }
 
         public object BindSource
         {
@@ -507,7 +515,6 @@ namespace DataWF.Module.CommonGui
             }
         }
 
-        public IInvoker BindInvoker { get { return bindInvoker; } set { bindInvoker = value; } }
 
         private void BindSourcePropertyChanged(object sender, PropertyChangedEventArgs e)
         {

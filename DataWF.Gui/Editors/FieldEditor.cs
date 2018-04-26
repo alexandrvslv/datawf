@@ -71,7 +71,7 @@ namespace DataWF.Gui
 
         public override CellStyle Style
         {
-            get { return style ?? (style = GuiEnvironment.StylesInfo[StyleName]); }
+            get { return style ?? (style = GuiEnvironment.Theme[StyleName]); }
             set
             {
                 style = value;

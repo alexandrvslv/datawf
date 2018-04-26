@@ -68,11 +68,8 @@ namespace DataWF.Module.FlowGui
             list = new DocumentLayoutList()
             {
                 EditMode = EditModes.ByF2,
-                EditState = EditListState.Edit,
-                Mode = LayoutListMode.List,
                 Name = "DocumentList",
-                ReadOnly = true,
-                HideCollections = true
+                ReadOnly = true
             };
             list.CellDoubleClick += ListCellMouseDoubleClick;
             list.PositionChanged += ListOnPositionChanged;
@@ -245,13 +242,13 @@ namespace DataWF.Module.FlowGui
 
         public Template TemplateFilter
         {
-            get { return list.ViewMode; }
+            get { return list.Template; }
             set
             {
-                if (list.ViewMode == value)
+                if (list.Template == value)
                     return;
                 toolCreate.Sensitive = value != null && !value.IsCompaund && value.Access.Create;
-                list.ViewMode = value;
+                list.Template = value;
             }
         }
 
@@ -344,17 +341,23 @@ namespace DataWF.Module.FlowGui
         public void ShowDocument(Document document)
         {
             string name = "DocumentEditor" + document.Id.ToString();
-            var v = GuiService.Main != null ? GuiService.Main.DockPanel.Find(name) as DocumentEditor : null;
-            if (v == null)
+            var editor = GuiService.Main?.DockPanel.Find(name) as DocumentEditor;
+            if (editor == null)
             {
-                v = new DocumentEditor();
-                v.Name = name;
-                v.Document = document;
+                editor = new DocumentEditor()
+                {
+                    Name = name,
+                    Document = document
+                };
                 if (GuiService.Main == null || !mainDock)
-                    v.ShowWindow(this);
+                {
+                    editor.ShowWindow(this);
+                }
             }
             if (GuiService.Main != null && mainDock)
-                GuiService.Main.DockPanel.Put(v, DockType.Content);
+            {
+                GuiService.Main.DockPanel.Put(editor, DockType.Content);
+            }
         }
 
         private void ListCellMouseDoubleClick(object sender, LayoutHitTestEventArgs e)
@@ -434,7 +437,7 @@ namespace DataWF.Module.FlowGui
             deditor.SendComplete += EditorSendComplete;
             Preview = true;
 
-            bar.Items.InsertAfter(toolLoad, deditor.MainMenu.Items.Items.ToList());
+            toolLoad.InsertAfter(((IEnumerable<ToolItem>)deditor.MainMenu.Items).ToList());
         }
 
         private void EditorSendComplete(object sender, EventArgs e)

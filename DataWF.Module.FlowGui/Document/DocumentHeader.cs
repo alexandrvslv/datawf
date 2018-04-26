@@ -14,7 +14,7 @@ namespace DataWF.Module.FlowGui
         private Document document;
         private bool synch = false;
 
-        public DocumentHeader()
+        public DocumentHeader() : base(new DocumentLayoutList())
         {
             Name = "DocumentHeader";
             Text = "Document";
@@ -22,9 +22,8 @@ namespace DataWF.Module.FlowGui
             List.AllowCellSize = true;
             List.EditMode = EditModes.ByClick;
             List.EditState = EditListState.Edit;
-            List.Grouping = true;
+            //List.Grouping = true;
             List.GridMode = true;
-            List.HideCollections = true;
 
             Localize();
         }

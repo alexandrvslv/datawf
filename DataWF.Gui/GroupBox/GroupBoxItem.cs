@@ -6,7 +6,7 @@ using Xwt;
 
 namespace DataWF.Gui
 {
-    public class GroupBoxItem : LayoutItem, IComparable, IDisposable, IText
+    public class GroupBoxItem : LayoutItem<GroupBoxItem>, IComparable, IDisposable, IText
     {
         private Widget control;
         private CellStyle styleHeader = null;
@@ -21,6 +21,7 @@ namespace DataWF.Gui
         private int dHeight = 100;
         public GlyphType Glyph = GlyphType.GearAlias;
         private string text;
+        private GroupBox groupBox;
 
         public event EventHandler TextChanged;
 
@@ -28,13 +29,35 @@ namespace DataWF.Gui
         {
             Width = 200;
             Height = 200;
-            styleHeader = GuiEnvironment.StylesInfo["GroupBoxHeader"];
-            style = GuiEnvironment.StylesInfo["GroupBox"];
+            styleHeader = GuiEnvironment.Theme["GroupBoxHeader"];
+            style = GuiEnvironment.Theme["GroupBox"];
+        }
+
+        public GroupBoxItem(GroupBox groupBox)
+        {
+            GroupBox = groupBox;
+        }
+
+        public GroupBoxItem(params GroupBoxItem[] items)
+        {
+            AddRange(items);
+        }
+
+        public GroupBox GroupBox
+        {
+            get { return groupBox ?? Map?.GroupBox; }
+            set { groupBox = value; }
+        }
+
+        public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, string property = null)
+        {
+            base.OnListChanged(type, newIndex, oldIndex, property);
+            GroupBox?.ResizeLayout();
         }
 
         public void CheckBounds()
         {
-            var top = TopMap as GroupBoxMap;
+            var top = TopMap;
             if (top == null)
                 return;
             top.GetBound(this);
@@ -43,7 +66,7 @@ namespace DataWF.Gui
             if (!expand)
                 bound.Height = HeaderHeight + 5;
 
-            if (control != null && GroupBoxMap != null)
+            if (control != null && Map != null)
             {
                 if (control.Visible)
                 {
@@ -59,15 +82,6 @@ namespace DataWF.Gui
             }
         }
 
-        public GroupBoxMap GroupBoxMap
-        {
-            get { return Map as GroupBoxMap; }
-        }
-
-        public GroupBox GroupBox
-        {
-            get { return GroupBoxMap?.GroupBox; }
-        }
 
         public bool Autosize
         {
@@ -91,8 +105,8 @@ namespace DataWF.Gui
 
                 control = value;
                 control.Visible = true;
-                if (GroupBoxMap != null)
-                    GroupBoxMap.GroupBox.AddChild(control);
+                if (GroupBox != null)
+                    GroupBox.AddChild(control);
             }
         }
 

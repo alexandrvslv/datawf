@@ -110,7 +110,7 @@ namespace DataWF.Gui
                 FillHeight = true,
                 Expand = false
             };
-            var mColumns = new GroupBoxMap(gColumns, gFields, gSorters)
+            var mColumns = new GroupBoxItem(gColumns, gFields, gSorters)
             {
                 Col = 1,
                 FillWidth = true
@@ -129,7 +129,7 @@ namespace DataWF.Gui
 
             PackStart(bar, false, false);
             PackStart(map, true, true);
-            BackgroundColor = GuiEnvironment.StylesInfo["Page"].BaseColor;
+            BackgroundColor = GuiEnvironment.Theme["Page"].BaseColor;
         }
 
         public Toolsbar Bar
@@ -239,13 +239,13 @@ namespace DataWF.Gui
         {
             var item = sender as ToolMenuItem;
             item.Checked = !item.Checked;
-            LayoutColumn c = item.Tag as LayoutColumn;
-            if (c != null)
+            var column = item.Tag as LayoutColumn;
+            if (column != null)
             {
-                if (c.Map == null)
-                    ((LayoutColumnMap)ContextColumn.Map).InsertAfter(c, ContextColumn);
+                if (column.Map == null)
+                    ContextColumn.InsertAfter(column);
                 else
-                    c.Visible = item.Checked;
+                    column.Visible = item.Checked;
             }
         }
 

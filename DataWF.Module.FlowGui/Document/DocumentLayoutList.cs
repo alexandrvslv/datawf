@@ -19,13 +19,14 @@ namespace DataWF.Module.FlowGui
 
     public class DocumentLayoutList : LayoutList
     {
-        private Template viewmode;
+        private Template template;
         private CellStyle styleBold;
 
         public DocumentLayoutList()
             : base()
         {
             HideCollections = true;
+            AutoToStringFill = true;
             //this.Size = new Size(872, 454);
         }
 
@@ -85,17 +86,17 @@ namespace DataWF.Module.FlowGui
         }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public Template ViewMode
+        public Template Template
         {
-            get { return viewmode; }
+            get { return template; }
             set
             {
-                if (viewmode == value)
+                if (template == value)
                     return;
-                viewmode = value;
+                template = value;
                 if (Mode == LayoutListMode.List && TypeHelper.IsBaseType(ListType, typeof(Document)))
                 {
-                    ListType = viewmode?.DocumentTypeInfo?.Type ?? typeof(Document);
+                    ListType = template?.DocumentTypeInfo?.Type ?? typeof(Document);
                     //TreeMode = ListInfo.Tree;
                     RefreshBounds(true);
                 }
@@ -114,13 +115,13 @@ namespace DataWF.Module.FlowGui
                 {
                     if (styleBold == null)
                     {
-                        styleBold = GuiEnvironment.StylesInfo["DocumentBold"];
+                        styleBold = GuiEnvironment.Theme["DocumentBold"];
                         if (styleBold == null)
                         {
                             styleBold = style.Clone();
                             styleBold.Name = "DocumentBold";
                             styleBold.Font = style.Font.WithStyle(FontStyle.Oblique);
-                            GuiEnvironment.StylesInfo.Add(styleBold);
+                            GuiEnvironment.Theme.Add(styleBold);
                         }
                     }
                     style = styleBold;
@@ -138,7 +139,7 @@ namespace DataWF.Module.FlowGui
                 if (ListSource is DocumentList)
                 {
                     documented = true;
-                    filter = viewmode;
+                    filter = template;
                 }
                 else if (Document != null)
                 {

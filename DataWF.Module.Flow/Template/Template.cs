@@ -160,8 +160,7 @@ namespace DataWF.Module.Flow
         public IEnumerable<TemplateParam> GetParams()
         {
             return TemplateParam.DBTable.Select(
-                TemplateParam.DBTable.ParseProperty(nameof(TemplateParam.TemplateId)),
-                PrimaryId, CompareType.Equal);
+                TemplateParam.DBTable.ParseProperty(nameof(TemplateParam.TemplateId)), CompareType.Equal, PrimaryId);
         }
 
         [Browsable(false)]

@@ -66,7 +66,7 @@ namespace DataWF.Module.Flow
         private Document document;
 
         public ListDocumentWork(Document document)
-            : base(DocumentWork.DBTable.Select(DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DocumentId)), document.PrimaryId, CompareType.Equal),
+            : base(DocumentWork.DBTable.Select(DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DocumentId)), CompareType.Equal, document.PrimaryId),
                    new DBComparer(DocumentWork.DBTable.PrimaryKey))
         {
             this.document = document;

@@ -79,14 +79,13 @@ namespace DataWF.Module.FlowGui
 
         private void RefreshData()
         {
-            CheckDBView(Template.DBTable?.DefaultView, ShowTemplate, GlyphType.Book, Colors.LightBlue);
-            CheckDBView(Work.DBTable?.DefaultView, ShowWork, GlyphType.GearsAlias, Colors.Silver);
+            InitItem(Template.DBTable?.DefaultView, ShowTemplate, GlyphType.Book, Colors.LightBlue);
+            InitItem(Work.DBTable?.DefaultView, ShowWork, GlyphType.GearsAlias, Colors.Silver);
         }
 
-        public override void CheckDBItem(TableItemNode node)
+        public override TableItemNode InitItem(DBItem item)
         {
-            base.CheckDBItem(node);
-            var item = node.Item as DBItem;
+            var node = base.InitItem(item);
             if (item is Template)
             {
                 node.Glyph = GlyphType.Book;
@@ -110,6 +109,7 @@ namespace DataWF.Module.FlowGui
                 node.Glyph = GlyphType.Code;
                 node.GlyphColor = Colors.LimeGreen;
             }
+            return node;
         }
     }
 }

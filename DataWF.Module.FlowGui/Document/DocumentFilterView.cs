@@ -55,34 +55,34 @@ namespace DataWF.Module.FlowGui
 
             templates = new FlowTree
             {
+                ShowListNode = false,
                 FlowKeys = FlowTreeKeys.Template,
                 Name = "Templates",
                 FilterEntry = toolFilter.Entry
             };
-            templates.Nodes.ExpandTop();
             templates.ListInfo.Columns.Add(
                 new LayoutColumn
                 {
                     Name = nameof(TableItemNode.Count),
                     Width = 35,
-                    Style = GuiEnvironment.StylesInfo["CellFar"],
+                    Style = GuiEnvironment.Theme["CellFar"],
                     Invoker = countInvoker
                 });
             works = new FlowTree
             {
+                ShowListNode = false,
                 FlowKeys = FlowTreeKeys.Work | FlowTreeKeys.Stage,
                 Name = "Works_Stage"
             };
-            works.Nodes.ExpandTop();
             //dates = new VBox();
             //dates.PackStart(dateType)
 
             users = new UserTree()
             {
+                ShowListNode = false,
                 UserKeys = UserTreeKeys.Department | UserTreeKeys.Position | UserTreeKeys.User,
                 Name = "Users"
             };
-            users.Nodes.ExpandTop();
 
             map = new GroupBox(
                         new GroupBoxItem { Widget = templates, Name = "Templates", FillWidth = true, FillHeight = true },

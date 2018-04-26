@@ -12,7 +12,7 @@ namespace DataWF.Gui
         LayoutListInfoKeys keys = LayoutListInfoKeys.ColumnsVisible | LayoutListInfoKeys.HeaderVisible | LayoutListInfoKeys.GroupHeader | LayoutListInfoKeys.GroupCount | LayoutListInfoKeys.HotTrackingCell;
 
         protected string filter;
-        protected LayoutColumnMap columns;
+        protected LayoutColumn columns;
         protected LayoutSortList sorters;
 
         private CellStyle styleGroup;
@@ -31,7 +31,7 @@ namespace DataWF.Gui
 
         public LayoutListInfo()
         {
-            columns = new LayoutColumnMap(this);
+            columns = new LayoutColumn(this);
             sorters = new LayoutSortList(this);
         }
 
@@ -326,7 +326,7 @@ namespace DataWF.Gui
         [XmlIgnore]
         public CellStyle StyleCell
         {
-            get { return this.styleCell ?? (styleCell = GuiEnvironment.StylesInfo[StyleCellName]); }
+            get { return this.styleCell ?? (styleCell = GuiEnvironment.Theme[StyleCellName]); }
             set
             {
                 styleCell = value;
@@ -337,7 +337,7 @@ namespace DataWF.Gui
         [XmlIgnore]
         public CellStyle StyleRow
         {
-            get { return styleRow ?? (styleRow = GuiEnvironment.StylesInfo[StyleRowName]); }
+            get { return styleRow ?? (styleRow = GuiEnvironment.Theme[StyleRowName]); }
             set
             {
                 styleRow = value;
@@ -348,7 +348,7 @@ namespace DataWF.Gui
         [XmlIgnore]
         public CellStyle StyleColumn
         {
-            get { return styleColumn ?? (styleColumn = GuiEnvironment.StylesInfo[StyleColumnName]); }
+            get { return styleColumn ?? (styleColumn = GuiEnvironment.Theme[StyleColumnName]); }
             set
             {
                 styleColumn = value;
@@ -359,7 +359,7 @@ namespace DataWF.Gui
         [XmlIgnore]
         public CellStyle StyleGroup
         {
-            get { return styleGroup ?? (styleGroup = GuiEnvironment.StylesInfo[StyleGroupName]); }
+            get { return styleGroup ?? (styleGroup = GuiEnvironment.Theme[StyleGroupName]); }
             set
             {
                 styleGroup = value;
@@ -370,7 +370,7 @@ namespace DataWF.Gui
         [XmlIgnore]
         public CellStyle StyleHeader
         {
-            get { return styleHeader ?? (styleHeader = GuiEnvironment.StylesInfo[StyleHeaderName]); }
+            get { return styleHeader ?? (styleHeader = GuiEnvironment.Theme[StyleHeaderName]); }
             set
             {
                 styleHeader = value;
@@ -383,7 +383,7 @@ namespace DataWF.Gui
         public virtual void OnBoundChanged(EventArgs e)
         {
             columns.Bound = Rectangle.Zero;
-            foreach (var item in LayoutMapHelper.GetItems(columns))
+            foreach (var item in columns.GetItems())
             {
                 item.Bound = Rectangle.Zero;
             }
@@ -412,7 +412,7 @@ namespace DataWF.Gui
             }
         }
 
-        public LayoutColumnMap Columns
+        public LayoutColumn Columns
         {
             get { return columns; }
             set
@@ -463,7 +463,7 @@ namespace DataWF.Gui
         {
             if (Columns.Bound.Width.Equals(0) || CalcWidth || CalcHeigh || Columns.FillWidth)
             {
-                LayoutMapHelper.GetBound(columns, HeaderVisible ? w - headerWidth * scale : w, 0, wd, hd);
+                columns.GetBound(HeaderVisible ? w - headerWidth * scale : w, 0, wd, hd);
 
                 Columns.Bound = new Rectangle(Columns.Bound.X + HeaderWidth,
                                              Columns.Bound.Y,
@@ -472,22 +472,22 @@ namespace DataWF.Gui
             }
         }
 
-        public void GetBound(ILayoutItem column, Func<ILayoutItem, double> wd, Func<ILayoutItem, double> hd)
+        public void GetBound(LayoutColumn column, Func<ILayoutItem, double> wd, Func<ILayoutItem, double> hd)
         {
             if (column.Bound.Width.Equals(0) || CalcWidth || CalcHeigh || columns.FillWidth)
             {
-                LayoutMapHelper.GetBound(columns, column, wd, hd);
+                columns.GetBound(column, wd, hd);
             }
         }
 
         public IEnumerable<LayoutColumn> GetDisplayed(double left, double right)
         {
-            foreach (ILayoutItem column in LayoutMapHelper.GetVisibleItems(columns))
+            foreach (LayoutColumn column in columns.GetVisibleItems())
             {
                 GetBound(column, null, null);
                 if (column.Bound.Right > left && column.Bound.Left < right)
                 {
-                    yield return (LayoutColumn)column;
+                    yield return column;
                 }
             }
         }
@@ -505,7 +505,7 @@ namespace DataWF.Gui
 
         public void Dispose()
         {
-            var list = LayoutMapHelper.GetItems(columns);
+            var list = columns.GetItems();
             foreach (LayoutColumn col in list)
                 col.Dispose();
         }

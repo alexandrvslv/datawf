@@ -129,7 +129,7 @@ namespace DataWF.Gui
         public void SetType(AccessType type)
         {
             alist.ListInfo.ColumnsVisible = false;
-            foreach (var column in alist.ListInfo.Columns.Items)
+            foreach (var column in alist.ListInfo.Columns)
                 column.Visible = column.Name == "Group" || column.Name == type.ToString();
 
         }
