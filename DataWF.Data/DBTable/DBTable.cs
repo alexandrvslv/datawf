@@ -854,7 +854,7 @@ namespace DataWF.Data
                 }
             }
         }
-        public abstract IEnumerable SelectItems(DBColumn column, object val, CompareType comparer);
+        public abstract IEnumerable SelectItems(DBColumn column, CompareType comparer, object val);
 
         public abstract IEnumerable SelectItems(string qQuery);
 
