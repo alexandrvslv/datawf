@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Xml.Serialization;
 
 namespace DataWF.Gui
 {
@@ -14,7 +15,7 @@ namespace DataWF.Gui
 
         static GuiEnvironment()
         {
-            Instance.Styles.GenerateDefault();
+            Instance.Themes.GenerateDefault();
 
             CellEditorFabric[typeof(string)] = cell =>
             {
@@ -115,7 +116,7 @@ namespace DataWF.Gui
             };
             CellEditorFabric[typeof(CellStyle)] = cell =>
             {
-                return new CellEditorListEditor() { DataSource = GuiEnvironment.StylesInfo };
+                return new CellEditorListEditor() { DataSource = GuiEnvironment.Theme };
             };
 
             LocaleImage.ImageCache += (item) =>
@@ -225,9 +226,9 @@ namespace DataWF.Gui
             get { return instance.Projects; }
         }
 
-        public static CellStyleList StylesInfo
+        public static GuiTheme Theme
         {
-            get { return instance.Styles; }
+            get { return instance.CurrentTheme; }
         }
 
         public static WebLinkList WebLinks
@@ -238,6 +239,34 @@ namespace DataWF.Gui
         public static void Save(string name = "gui.xml")
         {
             instance.SaveDirectory(Helper.GetDirectory(), name);
+        }
+
+        private GuiTheme cacheTheme;
+
+        public LayoutFieldInfoCache Fields { get; set; } = new LayoutFieldInfoCache();
+
+        public LayoutListInfoCache Lists { get; set; } = new LayoutListInfoCache();
+
+        public ProjectHandleList Projects { get; set; } = new ProjectHandleList();
+
+        public WebLinkList Links { get; set; } = new WebLinkList();
+
+        public GuiThemeList Themes { get; set; } = new GuiThemeList();
+
+        public string ThemeName { get; set; } = "Light";
+
+        [XmlIgnore]
+        public GuiTheme CurrentTheme
+        {
+            get { return cacheTheme ?? (cacheTheme = Themes[ThemeName]); }
+            set
+            {
+                if (CurrentTheme != value)
+                {
+                    cacheTheme = value;
+                    ThemeName = value?.Name;
+                }
+            }
         }
 
         public void SaveDirectory(string path, string name = "gui.xml")
@@ -266,15 +295,9 @@ namespace DataWF.Gui
             Serialization.Deserialize(file, this, false);
         }
 
-        public LayoutFieldInfoCache Fields { get; set; } = new LayoutFieldInfoCache();
-        public LayoutListInfoCache Lists { get; set; } = new LayoutListInfoCache();
-        public ProjectHandleList Projects { get; set; } = new ProjectHandleList();
-        public CellStyleList Styles { get; set; } = new CellStyleList();
-        public WebLinkList Links { get; set; } = new WebLinkList();
-
         public void Dispose()
         {
-            Styles.Dispose();
+            CurrentTheme.Dispose();
         }
     }
 
