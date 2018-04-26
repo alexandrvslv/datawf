@@ -228,7 +228,7 @@ namespace DataWF.Gui
 
         public static GuiTheme Theme
         {
-            get { return instance.CurrentTheme; }
+            get { return instance.CurrentTheme; }            
         }
 
         public static WebLinkList WebLinks

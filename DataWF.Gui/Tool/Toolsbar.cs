@@ -79,8 +79,6 @@ namespace DataWF.Gui
                 item.CheckSize(false);
                 items.GetBound(item);
             }
-            
-
             return items.Bound.Size;
         }
 

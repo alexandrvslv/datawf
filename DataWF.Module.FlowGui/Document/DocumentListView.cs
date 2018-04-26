@@ -447,9 +447,8 @@ namespace DataWF.Module.FlowGui
 
         protected override void Dispose(bool disposing)
         {
-            loader.Dispose();
-            if (documents != null)
-                documents.Dispose();
+            loader?.Dispose();
+            documents?.Dispose();
             base.Dispose(disposing);
         }
 

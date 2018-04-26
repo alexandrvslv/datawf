@@ -60,8 +60,8 @@ namespace DataWF.Gui
             var top = TopMap;
             if (top == null)
                 return;
-            top.GetBound(this);
-            var bound = base.bound;
+            
+            var bound = top.GetBound(this);
 
             if (!expand)
                 bound.Height = HeaderHeight + 5;
@@ -189,10 +189,11 @@ namespace DataWF.Gui
             }
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             if (control != null)
                 control.Dispose();
+            base.Dispose();
         }
 
         public void Localize()

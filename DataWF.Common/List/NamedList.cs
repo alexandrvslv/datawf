@@ -20,9 +20,12 @@ namespace DataWF.Gui
             set
             {
                 var exists = this[param];
-                if (exists != null)
+                if (!value?.Equals(exists) ?? false)
                 {
-                    Remove(exists);
+                    if (exists != null)
+                    {
+                        Remove(exists);
+                    }
                     Add(value);
                 }
             }

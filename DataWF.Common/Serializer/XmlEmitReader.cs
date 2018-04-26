@@ -225,8 +225,7 @@ namespace DataWF.Common
 
                 if (element == null && info.IsList)
                 {
-                    int.TryParse(Reader.GetAttribute(nameof(ICollection.Count)), out int count);
-                    if (element == null)
+                    if (int.TryParse(Reader.GetAttribute(nameof(ICollection.Count)), out int count))
                     {
                         element = info.ListConstructor.Create(count);
                     }

@@ -22,7 +22,7 @@ namespace DataWF.Module.MessangerGui
             GenerateColumns = false;
             GenerateToString = false;
 
-            var style = GuiEnvironment.StylesInfo["MessageRow"];
+            var style = GuiEnvironment.Theme["MessageRow"];
 
 
             //var style = _listInfo.StyleCell.Clone();
@@ -32,11 +32,11 @@ namespace DataWF.Module.MessangerGui
             listInfo.ColumnsVisible = false;
             listInfo.HotTrackingCell = false;
 
-            listInfo.Columns.Add(new LayoutColumn() { Name = nameof(Message.Date), Width = 120, Row = 0, Col = 0, Editable = false });
+            listInfo.Columns.Add(new LayoutColumn() { Name = nameof(Message.DateCreate), Width = 120, Row = 0, Col = 0, Editable = false });
             listInfo.Columns.Add(new LayoutColumn() { Name = nameof(Message.User), Width = 120, Row = 0, Col = 0, Editable = false, FillWidth = true });
             listInfo.Columns.Add(new LayoutColumn() { Name = nameof(Message.Data), Width = 100, Row = 1, Col = 0, FillWidth = true });
 
-            listInfo.Sorters.Add(new LayoutSort() { ColumnName = nameof(Message.Date), IsGroup = true });
+            listInfo.Sorters.Add(new LayoutSort() { ColumnName = nameof(Message.DateCreate), IsGroup = true });
             listInfo.HeaderWidth = 20;
 
             //HighLight = false;

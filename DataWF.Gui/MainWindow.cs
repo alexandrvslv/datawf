@@ -21,11 +21,12 @@ namespace DataWF.Gui
         protected Toolsbar statusBar;
         protected ToolLabel toolLabel;
         protected ToolDropDown menuWindow;
+        protected ToolMenuItem menuWindowLang;
+        protected ToolMenuItem menuWindowTheme;
         protected ToolMenuItem menuHelpAbout;
         protected ToolDropDown menuHelp;
         protected DockBox dock;
         protected Widget currentWidget;
-        protected ToolMenuItem menuWindowlang;
         protected List<ProjectType> editors = new List<ProjectType>();
         protected ToolSplit toolTasks;
         protected ToolProgressBar toolProgress;
@@ -95,17 +96,34 @@ namespace DataWF.Gui
                 menuEditLocalize)
             { Name = "Edit", DisplayStyle = ToolItemDisplayStyle.Text };
 
-            menuWindowlang = new ToolMenuItem { Name = "Language" };
-            foreach (CultureInfo info in Locale.Instance.Cultures)
+            menuWindowLang = new ToolMenuItem { Name = "Language" };
+            foreach (var info in Locale.Instance.Cultures)
             {
-                menuWindowlang.DropDown.Items.Add(new ToolLangItem(LangItemClick)
+                menuWindowLang.DropDown.Items.Add(new ToolLangItem(LangItemClick)
                 {
                     Culture = info,
                     Name = info.Name,
                     Text = info.DisplayName,
                 });
             }
-            menuWindow = new ToolDropDown(menuWindowlang) { Name = "Window", DisplayStyle = ToolItemDisplayStyle.Text };
+            menuWindowTheme = new ToolMenuItem { Name = "Theme" };
+            foreach (var theme in GuiEnvironment.Instance.Themes)
+            {
+                menuWindowTheme.DropDown.Items.Add(new ToolThemeItem(ThemeItemClick)
+                {
+                    Theme = theme,
+                    Name = theme.Name,
+                    Text = theme.Name,
+                });
+            }
+            menuWindow = new ToolDropDown(
+                menuWindowLang,
+                menuWindowTheme
+                )
+            {
+                Name = "Window",
+                DisplayStyle = ToolItemDisplayStyle.Text
+            };
             menuHelpAbout = new ToolMenuItem() { Name = "About" };
             menuHelp = new ToolDropDown(menuHelpAbout) { Name = "Help", DisplayStyle = ToolItemDisplayStyle.Text };
 
@@ -199,6 +217,18 @@ namespace DataWF.Gui
             }
             Locale.Instance.Culture = item.Culture;
             Localize();
+            //TODO DBService.RefreshToString();
+        }
+
+        protected virtual void ThemeItemClick(object sender, EventArgs e)
+        {
+            var item = (ToolThemeItem)sender;
+            if (GuiEnvironment.Theme == item.Theme)
+            {
+                return;
+            }
+            GuiEnvironment.Instance.CurrentTheme = item.Theme;
+            dock.QueueForReallocate();
             //TODO DBService.RefreshToString();
         }
 
@@ -554,6 +584,14 @@ namespace DataWF.Gui
         { }
 
         public CultureInfo Culture { get; set; }
+    }
+
+    public class ToolThemeItem : ToolMenuItem
+    {
+        public ToolThemeItem(EventHandler click) : base(click)
+        { }
+
+        public GuiTheme Theme { get; set; }
     }
 
     public class ToolWidgetHandler : ToolItem

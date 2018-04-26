@@ -87,17 +87,26 @@ namespace DataWF.Gui
             }
             else if (type == ListChangedType.ItemDeleted && newIndex >= 0)
             {
-                var toolItem = items[newIndex] as IToolItem;
+                var toolItem = items[newIndex];
                 if (toolItem != null)
                 {
                     toolItem.Bar = null;
                 }
             }
-            //else if (e.ListChangedType == ListChangedType.Reset)
-            //{
-            //    if (items.Count == 0)
-            //        bar.Clear();
-            //}
+            else if (type == ListChangedType.Reset)
+            {
+                if (items.Count == 0 && bar != null)
+                {
+                    bar.Clear();
+                }
+                else
+                {
+                    foreach (var item in this)
+                    {
+                        item.Bar = bar;
+                    }
+                }
+            }
             else if (type == ListChangedType.ItemChanged)
             {
                 bar.QueueForReallocate();
@@ -146,11 +155,12 @@ namespace DataWF.Gui
             }
         }
 
-        public virtual void Dispose()
+        public override void Dispose()
         {
             text.Dispose();
             if (content != null)
-                Dispose();
+                content.Dispose();
+            base.Dispose();
         }
 
         public string Text
@@ -294,6 +304,11 @@ namespace DataWF.Gui
             get { return base.Bound; }
             set
             {
+                if (Count > 0)
+                {
+                    base.Bound = value;
+                    return;
+                }
                 var halfIndent = indent / 2D;
                 value = value.Inflate(-halfIndent, -halfIndent);
                 var imaged = DisplayStyle.HasFlag(ToolItemDisplayStyle.Image) && GetFormattedImage() != null;

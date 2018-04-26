@@ -45,14 +45,8 @@ namespace DataWF.Gui
         {
             get { return info ?? Map?.Info; }
             set { info = value; }
-        }
-
-        public override double Scale
-        {
-            get { return Info?.Scale ?? base.Scale; }
-            set { base.Scale = value; }
-        }
-
+        }                
+        
         public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, string property = null)
         {
             base.OnListChanged(type, newIndex, oldIndex, property);

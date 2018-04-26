@@ -29,7 +29,7 @@ namespace DataWF.Gui
 
         public LayoutItem() : base()
         {
-            ApplySort(new LayoutItemComparer<T>());
+            ApplySortInternal(new LayoutItemComparer<T>());
         }
 
         [XmlIgnore]
@@ -39,9 +39,10 @@ namespace DataWF.Gui
             set { bound = value; }
         }
 
+        [DefaultValue(1D)]
         public virtual double Scale
         {
-            get { return Map?.Scale ?? scale; }
+            get { return scale; }
             set { scale = value; }
         }
 
@@ -128,7 +129,7 @@ namespace DataWF.Gui
             }
         }
 
-        //[DefaultValue(false)]
+        [DefaultValue(false)]
         public virtual bool FillWidth
         {
             get { return fillW || IsFillWidth(); }
@@ -141,7 +142,7 @@ namespace DataWF.Gui
             }
         }
 
-        // [DefaultValue(false)]
+        [DefaultValue(false)]
         public virtual bool FillHeight
         {
             get { return fillH || IsFillHeight(); }
@@ -177,7 +178,7 @@ namespace DataWF.Gui
         [XmlIgnore]
         public T Map
         {
-            get { return Container as T; }
+            get { return (T)Container; }
         }
 
         [XmlIgnore, Browsable(false)]
@@ -204,6 +205,7 @@ namespace DataWF.Gui
             }
         }
 
+        [DefaultValue(0D)]
         public virtual double Indent
         {
             get { return indent; }
@@ -253,26 +255,25 @@ namespace DataWF.Gui
 
         public override int AddInternal(T item)
         {
+            if (Contains(item))
+                return IndexOf(item);
             if (string.IsNullOrEmpty(item.Name))
                 item.Name = "litem" + items.Count;
+            if (item.Col == 0 && item.Row == 0)
+            {
+                if (GrowMode == LayoutGrowMode.Vertical)
+                {
+                    item.Row = GetRowMaxIndex() + 1;
+                }
+                if (item.Col == 0)
+                {
+                    item.Col = GetRowColumnCount(item.Row);
+                }
+            }
             return base.AddInternal(item);
         }
 
-        public void Add(T item, LayoutGrowMode grow = LayoutGrowMode.Horizontal)
-        {
-            item.Remove();
-            if (grow == LayoutGrowMode.Vertical)
-            {
-                item.Row = GetRowMaxIndex() + 1;
-            }
-            if (item.Col == 0)
-            {
-                item.Col = GetRowColumnCount(item.Row);
-            }
-            Insert(item, false);
-        }
-
-        public override void Insert(int index, T item)
+        public void InsertCol(int index, T item)
         {
             item.Col = index;
             Insert(item, false);
@@ -305,8 +306,7 @@ namespace DataWF.Gui
 
         public void Insert(T item, bool inserRow)
         {
-            if (Contains(item))
-                return;
+            
             item.Remove();
             if (inserRow)
                 item.Col = 0;
@@ -325,7 +325,7 @@ namespace DataWF.Gui
                 }
             }
             base.Add(item);
-            Sort();
+            //Sort();
         }
 
         public void InsertWith(T newItem, LayoutAlignType type, bool grouping)
@@ -751,7 +751,7 @@ namespace DataWF.Gui
             {
                 height = calc == null ? Height : calc(this);
                 if (Map != null)
-                    height *= Map.Scale;
+                    height *= TopMap.Scale;
             }
             return height;
         }
@@ -781,11 +781,11 @@ namespace DataWF.Gui
             double width = 0;
             if (FillWidth && max > 0)
             {
-                double itemsW = GetWidth(0D, calc);
+                double itemsW = Map.GetWidth(0D, calc);
                 double itemW = max - itemsW;
                 itemW = itemW < 30 ? 30 : itemW;
                 int c = 0;
-                foreach (ILayoutItem sitem in Map)
+                foreach (var sitem in Map)
                     if (sitem.Visible && sitem.FillWidth && sitem.Row == Row)
                         c++;
                 width = itemW / c;
@@ -794,7 +794,7 @@ namespace DataWF.Gui
             {
                 width = calc == null ? Width : calc(this);
                 if (Map != null)
-                    width *= Map.Scale;
+                    width *= TopMap.Scale;
             }
 
             return width;
@@ -946,7 +946,6 @@ namespace DataWF.Gui
             }
         }
 
-
         public static int Compare(ILayoutItem x, ILayoutItem y)
         {
             int rez = 0;
@@ -986,6 +985,11 @@ namespace DataWF.Gui
         IEnumerator<ILayoutItem> IEnumerable<ILayoutItem>.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
         }
     }
 

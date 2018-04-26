@@ -262,8 +262,7 @@ namespace DataWF.Gui
             map.GetBound(Size.Width, Size.Height);
             foreach (DockItem item in map.GetVisibleItems())
             {
-                map.GetBound(item);
-                item.Bound = item.Bound.Inflate(-3, -3);
+                item.Bound = map.GetBound(item).Inflate(-3, -3);
                 if (item.Bound.Width > 0 && item.Bound.Height > 0)
                 {
                     SetChildBounds(item.Panel, item.Bound);

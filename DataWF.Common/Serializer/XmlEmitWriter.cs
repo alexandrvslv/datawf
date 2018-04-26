@@ -81,7 +81,10 @@ namespace DataWF.Common
             {
                 if (info.IsList)
                 {
-                    Writer.WriteAttributeString("Count", Helper.TextBinaryFormat(((IList)element).Count));
+                    if (((IList)element).Count > 0)
+                    {
+                        Writer.WriteAttributeString("Count", Helper.TextBinaryFormat(((IList)element).Count));
+                    }
                     if (info.ListDefaulType)
                     {
                         Writer.WriteAttributeString("DT", Helper.TextBinaryFormat(info.ListDefaulType));
