@@ -1136,7 +1136,7 @@ namespace DataWF.Data
                 var table = Table;
                 foreach (var col in table.Columns)
                 {
-                    string temp = table.BuildQueryColumn(col, "");
+                    string temp = table.FormatQColumn(col);
                     if (temp != null && temp.Length > 0)
                     {
                         if (!table.Columns.IsFirst(col))
@@ -1172,9 +1172,7 @@ namespace DataWF.Data
                 if (!tables.IsLast(table))
                     from.Append(", ");
             }
-            return string.Format("select {0} from {1} {2} {3} {4}", cols.ToString(), from,
-                whr.Length > 0 ? "where" : string.Empty, whr,
-                order.Length == 0 ? "" : "order by " + order);
+            return $"select {cols.ToString()}\n    from {from} {(whr.Length > 0 ? "\n    where " : string.Empty)}{whr}{(order.Length > 0 ? "\n    order by "  : string.Empty)}{order}";
         }
 
         public string ToWhere(IDbCommand command = null)

@@ -9,6 +9,53 @@ using DataWF.Common;
 
 namespace DataWF.Data
 {
+    public class DBDefaultSystem : DBSystem
+    {
+        public override IDbConnection CreateConnection(DBConnection connection)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Format(StringBuilder ddl, DBSequence sequence, DDLType ddlType)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void FormatInsertSequence(StringBuilder command, DBTable table, DBItem row)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override string GetConnectionString(DBConnection connection)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override DbConnectionStringBuilder GetConnectionStringBuilder(DBConnection connection)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override DbProviderFactory GetFactory()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override string SequenceCurrentValue(DBSequence sequence)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override string SequenceInline(DBSequence sequence)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override string SequenceNextValue(DBSequence sequence)
+        {
+            throw new NotImplementedException();
+        }
+    }
     public abstract class DBSystem
     {
         public static readonly DBSystem MSSql = new DBSystemMSSql();
@@ -16,6 +63,7 @@ namespace DataWF.Data
         public static readonly DBSystem Oracle = new DBSystemOracle();
         public static readonly DBSystem Postgres = new DBSystemPostgres();
         public static readonly DBSystem SQLite = new DBSystemSQLite();
+        public static readonly DBSystem Default = new DBDefaultSystem();
 
         public string Name { get; internal set; }
 
@@ -48,12 +96,11 @@ namespace DataWF.Data
             return new[] { DBSystem.MSSql, DBSystem.MySql, DBSystem.Oracle, DBSystem.Postgres, DBSystem.SQLite };
         }
 
-        public virtual List<DBTableInfo> GetTablesInfo(DBConnection connection, string schemaName = null, string tableName = null)
+        public virtual IEnumerable<DBTableInfo> GetTablesInfo(DBConnection connection, string schemaName = null, string tableName = null)
         {
             var tableFilter = !string.IsNullOrEmpty(tableName) ? $" and table_name = '{tableName}'" : string.Empty;
             var schemaFilter = !string.IsNullOrEmpty(schemaName) ? $" where table_schema = '{schemaName}'{tableFilter}" : string.Empty;
-            QResult list = connection.ExecuteQResult($"select * from information_schema.tables{schemaFilter}");
-            var infos = new List<DBTableInfo>();
+            QResult list = connection.ExecuteQResult($"select * from information_schema.tables{schemaFilter} order by table_name");
             int iSchema = list.GetIndex("table_schema");
             int iName = list.GetIndex("table_name");
             int iIndex = list.GetIndex("table_type");
@@ -66,10 +113,9 @@ namespace DataWF.Data
                     View = item[iIndex].ToString().IndexOf("view", StringComparison.OrdinalIgnoreCase) >= 0,
                 };
                 table.Columns = GetColumnsInfo(connection, table);
-                infos.Add(table);
+                table.Constraints = GetConstraintInfo(connection, table);
+                yield return table;
             }
-
-            return infos;
         }
 
         public virtual List<DBColumnInfo> GetColumnsInfo(DBConnection connection, DBTableInfo tableInfo)
@@ -98,6 +144,39 @@ namespace DataWF.Data
                     Length = item[iLeng].ToString(),
                     NotNull = iNull >= 0 && item[iNull].Equals("NO"),
                     Default = item[iDefault].ToString(),
+                });
+            }
+
+            return infos;
+        }
+
+        public virtual List<DBConstraintInfo> GetConstraintInfo(DBConnection connection, DBTableInfo tableInfo)
+        {
+            var query = string.Format(@"select a.constraint_schema
+,a.constraint_name
+,a.table_schema
+,a.table_name
+,a.constraint_type
+,b.column_name 
+from information_schema.table_constraints a
+  left join information_schema.constraint_column_usage b
+     on b.constraint_schema = a.constraint_schema
+	 and b.constraint_name = a.constraint_name where a.table_name='{0}'{1}",
+                                      tableInfo.Name,
+                                      string.IsNullOrEmpty(tableInfo.Schema) ? null : $" and a.table_schema = '{tableInfo.Schema}'");
+            QResult list = connection.ExecuteQResult(query);
+            var infos = new List<DBConstraintInfo>();
+            int iName = list.GetIndex("constraint_name");
+            int iType = list.GetIndex("constraint_type");
+            int iColu = list.GetIndex("column_name");
+
+            foreach (object[] item in list.Values)
+            {
+                infos.Add(new DBConstraintInfo()
+                {
+                    Name = item[iName].ToString(),
+                    Type = item[iType].ToString(),
+                    Column = item[iColu].ToString()
                 });
             }
 
@@ -725,5 +804,24 @@ namespace DataWF.Data
             return value;
         }
 
+        public virtual string FormatQColumn(DBColumn column)
+        {
+            if (column.ColumnType == DBColumnTypes.Internal || column.ColumnType == DBColumnTypes.Expression)
+                return string.Empty;
+            else if (column.ColumnType == DBColumnTypes.Query && column.Table.Type != DBTableType.View)
+                return string.Format("({0}) as \"{1}\"", column.Query, column.Name);
+            else
+                return column.SqlName;
+        }
+
+        public virtual string FormatQTable(DBTable table)
+        {
+            var schema = table.Schema?.Connection?.Schema;
+            if (!string.IsNullOrEmpty(schema))
+            {
+                return $"{schema}.{table.SqlName}";
+            }
+            return table.SqlName;
+        }
     }
 }

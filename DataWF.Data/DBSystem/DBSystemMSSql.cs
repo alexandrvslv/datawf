@@ -92,7 +92,7 @@ namespace DataWF.Data
         }
 
         public override void Format(StringBuilder ddl, DBSchema schema, DDLType ddlType)
-        {            
+        {
             if (ddlType == DDLType.Create)
             {
                 var dataFile = Path.Combine(schema.Connection.Path, $"{schema.DataBase}.mdf");
@@ -106,7 +106,7 @@ namespace DataWF.Data
             else if (ddlType == DDLType.Drop)
             {
                 //ddl.AppendLine($"alter database {schema.DataBase} remove file {schema.DataBase}_dat;");
-                ddl.AppendLine($"drop database {schema.DataBase};");                
+                ddl.AppendLine($"drop database {schema.DataBase};");
             }
         }
 
@@ -156,6 +156,26 @@ namespace DataWF.Data
                 parameter.Direction = ParameterDirection.Output;
             }
             base.WriteValue(column, value, parameter, connection);
+        }
+
+        public override string FormatQColumn(DBColumn column)
+        {
+            if (column.ColumnType == DBColumnTypes.Internal || column.ColumnType == DBColumnTypes.Expression)
+                return string.Empty;
+            else if (column.ColumnType == DBColumnTypes.Query && column.Table.Type != DBTableType.View)
+                return base.FormatQColumn(column);
+            else
+                return $"[{column.Name}]";
+        }
+
+        public override string FormatQTable(DBTable table)
+        {
+            var schema = table.Schema?.Connection?.Schema;
+            if (!string.IsNullOrEmpty(schema))
+            {
+                return $"[{schema}].[{table.SqlName}]";
+            }
+            return $"[{table.SqlName}]";
         }
     }
 }

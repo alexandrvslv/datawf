@@ -54,7 +54,7 @@ namespace DataWF.Gui
             foreach (var item in this)
                 if (item is IDisposable)
                     ((IDisposable)item).Dispose();
-            panel.Dispose();
+            panel?.Dispose();
         }
 
     }

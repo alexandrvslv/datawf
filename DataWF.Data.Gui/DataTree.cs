@@ -218,6 +218,7 @@ namespace DataWF.Data.Gui
         public DBSchemaItem SelectedDBItem
         {
             get { return (SelectedNode as SchemaItemNode)?.Item; }
+            set { SelectedNode = value == null ? null : Find(value); }
         }
 
         public DBSchema CurrentSchema
@@ -226,6 +227,15 @@ namespace DataWF.Data.Gui
             {
                 return SelectedDBItem == null ? null : SelectedDBItem is DBSchema
                     ? (DBSchema)SelectedDBItem : SelectedDBItem.Schema;
+            }
+        }
+
+        public DBTable CurrentTable
+        {
+            get
+            {
+                return SelectedDBItem == null ? null : SelectedDBItem is DBTable
+                    ? (DBTable)SelectedDBItem : (SelectedDBItem as IDBTableContent).Table;
             }
         }
 

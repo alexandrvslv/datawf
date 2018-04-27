@@ -4061,7 +4061,7 @@ namespace DataWF.Gui
             if (tdgIndex.Last < 0 && tdgIndex.First >= 0)
                 tdgIndex.Last = tdgIndex.First;
 
-            Debug.WriteLine($"LayoutList Calc Index { tdIndex }");
+            //Debug.WriteLine($"LayoutList Calc Index { tdIndex }");
         }
 
         #region ILocalizable implementation
@@ -4264,7 +4264,7 @@ namespace DataWF.Gui
 
         protected virtual void OnDrawRows(LayoutListDrawArgs e, int indexFirst, int indexLast)
         {
-            Debug.WriteLine($"LayoutList Draw Rows Index: {indexFirst}-{indexLast}");
+            //Debug.WriteLine($"LayoutList Draw Rows Index: {indexFirst}-{indexLast}");
             for (int i = indexFirst, dIndex = 0; i <= indexLast; i++, dIndex++)
             {
                 if (i < 0 || i >= listSource.Count)

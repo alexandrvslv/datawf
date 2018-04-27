@@ -31,5 +31,12 @@ namespace DataWF.Data
         public string Default { get; set; }
     }
 
+    public class DBConstraintInfo
+    {
+        public string Name { get; set; }
+        public string Column { get; set; }
+        public string Type { get; set; }        
+    }
+
 
 }

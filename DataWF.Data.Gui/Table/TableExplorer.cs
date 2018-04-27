@@ -12,8 +12,6 @@ namespace DataWF.Data.Gui
     {
         public TableExplorer() : base(new TableEditor())
         {
-            TableEditor.ShowDetails = true;
-
             Name = "TableExplorer";
         }
 

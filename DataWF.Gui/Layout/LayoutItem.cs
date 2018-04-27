@@ -257,8 +257,6 @@ namespace DataWF.Gui
         {
             if (Contains(item))
                 return IndexOf(item);
-            if (string.IsNullOrEmpty(item.Name))
-                item.Name = "litem" + items.Count;
             if (item.Col == 0 && item.Row == 0)
             {
                 if (GrowMode == LayoutGrowMode.Vertical)
@@ -276,20 +274,27 @@ namespace DataWF.Gui
         public void InsertCol(int index, T item)
         {
             item.Col = index;
-            Insert(item, false);
+            Map.Insert(item, false);
         }
 
         public void InsertRow(int index, T item)
         {
             item.Row = index;
-            Insert(item, true);
+            Map.Insert(item, true);
+        }
+
+        public virtual void InsertBefore(T column)
+        {
+            column.Row = Row;
+            column.Col = Col;
+            Map.Insert(column, false);
         }
 
         public virtual void InsertAfter(T column)
         {
             column.Row = Row;
             column.Col = Col + 1;
-            Insert(column, false);
+            Map.Insert(column, false);
         }
 
         public virtual void InsertAfter(IEnumerable<T> columns)
@@ -298,15 +303,23 @@ namespace DataWF.Gui
             var col = Col;
             foreach (var column in columns)
             {
+                if (GrowMode == LayoutGrowMode.Horizontal)
+                {
+                    col++;
+                }
+                else
+                {
+                    row++;
+                }
+
                 column.Row = row;
-                column.Col = ++col;
-                Insert(column, false);
+                column.Col = col;
+                Map.Insert(column, GrowMode == LayoutGrowMode.Vertical);
             }
         }
 
         public void Insert(T item, bool inserRow)
         {
-            
             item.Remove();
             if (inserRow)
                 item.Col = 0;
@@ -324,8 +337,11 @@ namespace DataWF.Gui
                         col.Col++;
                 }
             }
-            base.Add(item);
-            //Sort();
+            if (string.IsNullOrEmpty(item.Name))
+            {
+                item.Name = "litem" + items.Count;
+            }
+            Insert(GetIndexBySort(item), item);
         }
 
         public void InsertWith(T newItem, LayoutAlignType type, bool grouping)
@@ -432,11 +448,12 @@ namespace DataWF.Gui
 
         public void Replace(T newColumn)
         {
-            int index = Map.IndexOf(this);
+            var tempMap = Map;
+            int index = tempMap.IndexOf(this);
             newColumn.Row = Row;
             newColumn.Col = Col;
-            Map.Remove(this);
-            Map.Insert(index, newColumn);
+            tempMap.RemoveInternal((T)this, index);
+            tempMap.InsertInternal(index, newColumn);
         }
 
         public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, string property = null)

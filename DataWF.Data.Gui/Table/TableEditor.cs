@@ -460,7 +460,7 @@ namespace DataWF.Data.Gui
             ReadOnly = readOnly;
             OpenMode = openmode;
 
-            Name = Table.Name + ownColumn;
+            Name = Table.Name.Replace(" ", "_") + ownColumn;
             Text = GetText(this);
 
             // toolInsert.DropDownItems.Clear();

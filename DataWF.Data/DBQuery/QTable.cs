@@ -92,9 +92,7 @@ namespace DataWF.Data
         {
             var schema = Table.Schema.Connection.Schema;
 
-            return string.Format("{0}{1}{2}{3}", Join.Format(), Table != null && !string.IsNullOrEmpty(schema) ? (schema + ".") : string.Empty,
-                                 command != null && Table is IDBVirtualTable ? Table.SqlName : text,
-                alias == null ? "" : " " + alias);
+            return $"{Join.Format()} {Table?.FormatQTable() ?? text} {alias}";
         }
     }
 }

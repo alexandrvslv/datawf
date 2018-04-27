@@ -130,11 +130,10 @@ namespace DataWF.Data
             command.Append("end;");
         }
 
-        public override List<DBTableInfo> GetTablesInfo(DBConnection connection, string schemaName, string tableName = null)
+        public override IEnumerable<DBTableInfo> GetTablesInfo(DBConnection connection, string schemaName, string tableName = null)
         {
             var filter = schemaName != null ? $" where owner = '{schemaName.ToUpper()}'{(tableName != null ? $" and table_name = '{tableName.ToUpper()}'" : null)}" : null;
-            QResult list = connection.ExecuteQResult( $"select * from all_tables{filter}");
-            var infos = new List<DBTableInfo>();
+            QResult list = connection.ExecuteQResult($"select * from all_tables{filter}");
             int iSchema = list.GetIndex("owner");
             int iName = list.GetIndex("table_name");
             foreach (object[] item in list.Values)
@@ -145,10 +144,8 @@ namespace DataWF.Data
                     Name = item[iName].ToString(),
                 };
                 table.Columns = GetColumnsInfo(connection, table);
-                infos.Add(table);
+                yield return table;
             }
-
-            return infos;
         }
 
         public override List<DBColumnInfo> GetColumnsInfo(DBConnection connection, DBTableInfo tableInfo)

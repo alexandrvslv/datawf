@@ -118,7 +118,7 @@ namespace DataWF.Data
 
         public static void OnDBSchemaChanged(DBSchemaItem item, DDLType type)
         {
-            if (item.Container == null || item.Schema == null || item.Schema.Container == null)
+            if (item.Container == null || item.Schema == null || item.Schema.Container == null || item.Schema.IsSynchronizing)
                 return;
             if (item is IDBTableContent)
             {

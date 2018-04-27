@@ -48,6 +48,8 @@ namespace DataWF.Gui
         protected ToolDropDown menuView;
         protected OpenFileDialog openFD;
         protected SaveFileDialog saveFD;
+        private ListEditor properties;
+        private LogExplorer logs;
 
         public MainWindow()
         {
@@ -82,9 +84,13 @@ namespace DataWF.Gui
                     menuProjectClose,
                     menuProjectExit)
             { Name = "Project", DisplayStyle = ToolItemDisplayStyle.Text };
+
+            properties = new ListEditor();
+            logs = new LogExplorer();
+
             menuView = new ToolDropDown(
-                    BuildMenuItem(new LogExplorer()),
-                    BuildMenuItem(new ListEditor()),
+                    BuildMenuItem(properties),
+                    BuildMenuItem(logs),
                     new ToolSeparator())
             { Name = "View", DisplayStyle = ToolItemDisplayStyle.Text };
 
@@ -129,6 +135,7 @@ namespace DataWF.Gui
 
             bar = new Toolsbar(
                 new ToolSeparator { FillWidth = true },
+                menuView,
                 menuWindow,
                 menuHelp)
             { Name = "MainBar" };
@@ -234,12 +241,12 @@ namespace DataWF.Gui
 
         public ListEditor Properties
         {
-            get { return (ListEditor)GetControl(typeof(ListEditor).Name); }
+            get { return properties; }
         }
 
         public LogExplorer Logs
         {
-            get { return (LogExplorer)GetControl(typeof(LogExplorer).Name); }
+            get { return logs; }
         }
 
         #region IAppMainForm implementation

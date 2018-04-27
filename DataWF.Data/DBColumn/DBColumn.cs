@@ -235,7 +235,7 @@ namespace DataWF.Data
             return items;
         }
 
-        [Category("Add")]
+        [Browsable(false), Category("Add")]
         public string CultureCode
         {
             get { return culture; }
@@ -322,6 +322,7 @@ namespace DataWF.Data
             }
         }
 
+        [Browsable(false)]
         public string BoolTrue
         {
             get { return btrue; }
@@ -334,6 +335,7 @@ namespace DataWF.Data
             }
         }
 
+        [Browsable(false)]
         public string BoolFalse
         {
             get { return bfalse; }
@@ -357,7 +359,7 @@ namespace DataWF.Data
             }
         }
 
-        [Category("Database"), XmlIgnore]
+        [Browsable(false), Category("Database"), XmlIgnore]
         public int Order
         {
             get { return order; }
@@ -598,16 +600,19 @@ namespace DataWF.Data
             }
         }
 
+        [Browsable(false)]
         public virtual string SqlName
         {
             get { return Name; }
         }
 
+        [Browsable(false)]
         public bool IsPrimaryKey
         {
             get { return (Keys & DBColumnKeys.Primary) == DBColumnKeys.Primary; }
         }
 
+        [Browsable(false)]
         public bool IsNotNull
         {
             get { return (Keys & DBColumnKeys.Notnull) == DBColumnKeys.Notnull; }
