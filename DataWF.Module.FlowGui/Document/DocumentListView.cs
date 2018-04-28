@@ -28,7 +28,7 @@ namespace DataWF.Module.FlowGui
         protected ToolItem toolLoad;
         protected Toolsbar bar;
         protected ToolLabel toolCount;
-        protected ToolItem toolCreate;
+        protected ToolSplit toolCreate;
         protected ToolItem toolView;
         protected ToolItem toolFilter;
         protected ToolItem toolPreview;
@@ -43,13 +43,18 @@ namespace DataWF.Module.FlowGui
 
             loader = new TableLoader();
 
+            toolCreate = new ToolSplit(ToolCreateClick) { Name = "Create", ForeColor = Colors.DarkGreen, Glyph = GlyphType.PlusCircle };
+            foreach (Template template in Template.DBTable.DefaultView.SelectParents())
+            {
+                if (template.Access.Create)
+                    toolCreate.DropDownItems.Add(InitTemplate(template));
+            }
             toolCount = new ToolLabel { Text = "0" };
             toolPreview = new ToolItem(ToolPreviewClick) { CheckOnClick = true, Checked = true, Name = "Preview", Glyph = GlyphType.List };
             toolView = new ToolItem(ToolViewClick) { Name = "View", Glyph = GlyphType.PictureO };
             toolFilter = new ToolItem(ToolFilterClick) { Name = "Filter", CheckOnClick = true, Glyph = GlyphType.Filter };
             toolParam = new ToolDropDown(ToolParamClick) { Name = "Parameters", Glyph = GlyphType.Spinner };
             toolProgress = new ToolTableLoader { Loader = loader };
-            toolCreate = new ToolItem(ToolCreateClick) { Name = "Create", ForeColor = Colors.DarkGreen, Glyph = GlyphType.PlusCircle };
             toolLoad = new ToolItem(ToolLoadClick) { Name = "Lcoad", Glyph = GlyphType.Refresh };
 
             bar = new Toolsbar(
@@ -393,7 +398,7 @@ namespace DataWF.Module.FlowGui
 
         protected virtual void ToolCreateClick(object sender, EventArgs e)
         {
-            var template = filterView.Templates.SelectedDBItem as Template;
+            var template = Filter.Template;
             if (template != null)
             {
                 ViewDocuments(CreateDocuments(template, Filter.Referencing));
@@ -452,43 +457,88 @@ namespace DataWF.Module.FlowGui
             base.Dispose(disposing);
         }
 
-        public List<Document> CreateDocumentsFromList(Template template, List<Document> parents)
+        public ToolMenuItem InitTemplate(Template template)
         {
-            List<Document> documents = new List<Document>();
-            var question = new QuestionMessage("Templates", "Create " + parents.Count + " documents of " + template + "?");
-            question.Buttons.Add(Command.No);
-            question.Buttons.Add(Command.Yes);
-            question.Buttons.Add(Command.Cancel);
-            var command = Command.Yes;
-            if (parents.Count > 1)
-                command = MessageDialog.AskQuestion(ParentWindow, question);
-            if (command == Command.Cancel)
-                return documents;
-            else if (command == Command.Yes)
+            if (template == null)
+                return null;
+            string name = "template" + template.Id.ToString();
+
+            var item = toolCreate.DropDownItems[name] as TemplateMenuItem;
+            if (item == null)
             {
-                foreach (Document document in parents)
+                item = new TemplateMenuItem(template) { Name = name };
+
+                var list = template.GetSubGroups<Template>(DBLoadParam.None);
+                foreach (var subTemplate in list)
+                    item.DropDown.Items.Add(InitTemplate(subTemplate));
+
+                if (list.Count() == 0)
+                    item.Click += TemplateItemClick;
+            }
+            return item;
+        }
+
+        private void TemplateItemClick(object sender, EventArgs e)
+        {
+            var templateItem = sender as TemplateMenuItem;
+            ViewDocuments(CreateDocuments(templateItem.Template, Filter.Referencing, List.Selection.GetItems<Document>()));
+        }
+
+        public List<Document> CreateDocuments(Template template, Document parent, List<Document> references)
+        {
+            var documents = new List<Document>();
+            var commandCreateSeveral = new Command("Several", $"Create {references.Count}");
+            var commandCreateOne = new Command("One", $"Create One");
+            var command = commandCreateOne;
+            if (references.Count > 1)
+            {
+                var question = new QuestionMessage("New Document", $"Create Several or One {template}?");
+                question.Buttons.Add(commandCreateOne);
+                question.Buttons.Add(commandCreateSeveral);
+                question.Buttons.Add(Command.Cancel);
+                command = MessageDialog.AskQuestion(ParentWindow, question);
+            }
+            if (command == Command.Cancel)
+            {
+                return documents;
+            }
+            else if (command == commandCreateSeveral)
+            {
+                foreach (var reference in references)
                 {
-                    documents.AddRange(CreateDocuments(template, document));
+                    var buffer = CreateDocuments(template, parent ?? reference);
+                    if (parent != null)
+                    {
+                        foreach (var document in buffer)
+                        {
+                            document.CreateReference(reference, false);
+                        }
+                    }
+                    documents.AddRange(buffer);
                 }
             }
             else
             {
-                documents = CreateDocuments(template, null);
-                foreach (Document document in parents)
+                documents = CreateDocuments(template, parent);
+                foreach (var reference in references)
                 {
-                    foreach (Document doc in documents)
-                        if (!doc.ContainsReference(document.Id))
-                            Document.CreateReference(document, doc, false);
+                    foreach (var document in documents)
+                    {
+                        if (!document.ContainsReference(reference.Id))
+                        {
+                            document.CreateReference(reference, false);
+                        }
+                    }
                 }
-
             }
             return documents;
+
         }
 
         public List<Document> CreateDocuments(Template template, Document parent)
         {
-            var fileNames = new List<string>();
             var documents = new List<Document>();
+            var fileNames = new List<string>();
             var question = new QuestionMessage();
             question.Buttons.Add(Command.No);
             question.Buttons.Add(Command.Yes);
@@ -497,7 +547,9 @@ namespace DataWF.Module.FlowGui
             {
                 ofDialog.Title = "New " + template.Name;
                 if (parent != null)
-                    ofDialog.Title += "(" + parent.Template.Name + " " + parent.Number + ")";
+                {
+                    ofDialog.Title += $" ({parent})";
+                }
                 if (ofDialog.Run(ParentWindow))
                 {
                     var dr = Command.Save;
@@ -526,26 +578,7 @@ namespace DataWF.Module.FlowGui
                     }
                 }
             }
-            if (fileNames != null && fileNames.Count > 1)
-            {
-                question.Buttons.Add(Command.Cancel);
-                question.SecondaryText = "Create " + fileNames.Count + "(Yes) or 1(No) documents?";
-                var dr = MessageDialog.AskQuestion(ParentWindow, question);
-                if (dr == Command.Cancel)
-                {
-                    return documents;
-                }
-                else if (dr == Command.Yes)
-                {
-                    foreach (string fileName in fileNames)
-                    {
-                        var document = Document.Create(template, parent, fileName);
-                        document.Number = fileName;
-                        documents.Add(document);
-                    }
-                    return documents;
-                }
-            }
+
 
             documents.Add(Document.Create(template, parent, fileNames.ToArray()));
             return documents;

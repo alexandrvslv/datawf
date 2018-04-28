@@ -37,11 +37,7 @@ namespace DataWF.Module.FlowGui
         {
             toolRefresh = new ToolItem(ToolLoadOnClick) { Name = "Load", ForeColor = Colors.DarkBlue, Glyph = GlyphType.Download };
 
-            //foreach (Template uts in Template.DBTable.DefaultView.SelectParents())
-            //{
-            //    if (uts.Access.Create)
-            //        toolCreate.DropDownItems.Add(InitTemplate(uts));
-            //}
+            
 
             toolPreview.InsertAfter(new[] { toolRefresh });
 

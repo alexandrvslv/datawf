@@ -287,8 +287,8 @@ namespace DataWF.Gui
                 }
             }
         }
-
-        public Color GlyphColor { get; set; } = CellStyleBrush.ColorEmpty;
+        
+        public Color GlyphColor { get; set; }
 
         [XmlIgnore]
         public INotifyListChanged Container { get; set; }
@@ -317,7 +317,9 @@ namespace DataWF.Gui
         public void HideItems()
         {
             foreach (Node item in nodes)
+            {
                 item.Visible = false;
+            }
         }
     }
 }

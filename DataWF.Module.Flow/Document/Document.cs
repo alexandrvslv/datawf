@@ -140,7 +140,7 @@ namespace DataWF.Module.Flow
             if (parent != null)
             {
                 document.Parent = parent;
-                CreateReference(parent, document, copyAttr);
+                parent.CreateReference(document, copyAttr);
             }
 
             foreach (var prm in document.Template.TemplateAllParams)
@@ -224,22 +224,21 @@ namespace DataWF.Module.Flow
             return result;
         }
 
-        public static DocumentReference CreateReference(Document parent, Document document, bool attributes = false)
+        public DocumentReference CreateReference(Document document, bool attributes = false)
         {
-            if (parent == null || document == null)
+            if (document == null)
                 return null;
 
             if (attributes)
             {
                 foreach (var param in document.Template.TemplateAllParams)
                     if (param.Type == ParamType.Column) //document[ta] != DBNull.Value
-                        document[param] = parent[param];
-                document.Number = null;
+                        document[param] = this[param];
             }
 
             var reference = new DocumentReference();
+            reference.Document = this;
             reference.Reference = document;
-            reference.Document = parent;
             reference.Attach();
             return reference;
         }

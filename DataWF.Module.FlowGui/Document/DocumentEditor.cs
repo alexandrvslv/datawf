@@ -28,7 +28,6 @@ namespace DataWF.Module.FlowGui
         None
     }
 
-
     public class DocumentEditor : VPanel, IDocked, IDockContent
     {
         static Dictionary<Type, List<Type>> typesCache = new Dictionary<Type, List<Type>>();
@@ -80,8 +79,6 @@ namespace DataWF.Module.FlowGui
         private Template template;
         private DocumentWork work;
 
-        private EventHandler procClick;
-        private EventHandler tempClick;
         private DocumentEditorState state = DocumentEditorState.None;
         private Type documentType;
         private DocumentReferenceView references;
@@ -132,15 +129,13 @@ namespace DataWF.Module.FlowGui
             pageWorks = dock.Put(new DocumentWorkView(), DockType.Content);
             pageRefers = dock.Put((references = new DocumentReferenceView()), DockType.Content);
 
+            Glyph = GlyphType.Book;
             Name = "DocumentEditor";
             Text = "Document";
             Tag = "Document";
 
             PackStart(tools, false, false);
             PackStart(dock, true, true);
-
-            procClick = new EventHandler(ProcedureItemClick);
-            tempClick = new EventHandler(TemplateItemClick);
 
             Localize();
         }
@@ -204,7 +199,6 @@ namespace DataWF.Module.FlowGui
 
         public void Localize()
         {
-            Glyph = GlyphType.Book;
             tools.Localize();
             dock.Localize();
         }
@@ -691,7 +685,7 @@ namespace DataWF.Module.FlowGui
                 {
                     item = new MenuItemProcedure(proc);
                     item.Name = name;
-                    item.Click += procClick;
+                    item.Click += ProcedureItemClick;
                     toolProcedures.DropDown.Items.Add(item);
                 }
                 item.Tag = owner;
@@ -701,44 +695,13 @@ namespace DataWF.Module.FlowGui
         public static bool CheckVisible(ToolItem collection)
         {
             foreach (var item in collection)
-                if (!(item is SeparatorMenuItem) && item.Sensitive)
+            {
+                if (!(item is ToolSeparator) && item.Sensitive)
                     return true;
+            }
             return false;
         }
 
-        public ToolMenuItem InitTemplate(DBItem owner, Template template, ToolItem menu)
-        {
-            if (template == null)
-                return null;
-            string name = "template" + template.Id.ToString();
-
-            var item = menu[name] as TemplateMenuItem;
-            if (item == null)
-            {
-                item = new TemplateMenuItem(template);
-                item.Name = name;
-                menu.Add(item);
-
-                var list = template.GetSubGroups<Template>(DBLoadParam.None);
-                foreach (var t in list)
-                    item.DropDown.Items.Add(InitTemplate(owner, t, item.DropDown.Items));
-
-                if (list.Count() == 0)
-                    item.Click += tempClick;
-            }
-            item.Tag = owner;
-            return item;
-        }
-
-        private void TemplateItemClick(object sender, EventArgs e)
-        {
-            var t = sender as TemplateMenuItem;
-            var list = GetList();
-            if (list.Count > 1)
-                references.ViewDocuments(references.CreateDocumentsFromList(t.Template, list));
-            else
-                references.ViewDocuments(references.CreateDocuments(t.Template, document));
-        }
 
         #endregion
 

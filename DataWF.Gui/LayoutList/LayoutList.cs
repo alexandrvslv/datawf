@@ -2175,12 +2175,11 @@ namespace DataWF.Gui
                     column.Width += 40;
                     listInfo.Columns.Insert(column, false);
                     column.Visible = !AutoToStringHide;
+                    column.FillWidth = AutoToStringFill;
                 }
 
                 if (AutoToStringSort)
                     OnColumnSort(column, ListSortDirection.Ascending);
-
-                column.FillWidth = AutoToStringFill;
             }
         }
 
