@@ -768,7 +768,7 @@ namespace DataWF.Data
                             {
                                 throw new Exception(string.Format("Value {0} Table {1}", reference.Table, this));
                             }
-                            if (value != null)
+                            if (reference != null)
                             {
 
                                 var index = buf.BinarySearch(reference);
