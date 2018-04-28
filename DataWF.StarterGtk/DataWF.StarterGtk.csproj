@@ -6,7 +6,7 @@
     <RootNamespace>DataWF.Starter</RootNamespace>
     <AssemblyName>DataWF.StarterGtk</AssemblyName>
     <StartupObject>DataWF.Starter.Program</StartupObject>
-    <TargetFrameworks>net47</TargetFrameworks>
+    <TargetFrameworks>net461</TargetFrameworks>
     <Platforms>AnyCPU;x86</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">

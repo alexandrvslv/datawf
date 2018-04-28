@@ -5,7 +5,7 @@
     <OutputType>WinExe</OutputType>
     <RootNamespace>DataWF.StarterWpf</RootNamespace>
     <AssemblyName>DataWF.StarterWpf</AssemblyName>
-    <TargetFrameworks>net47</TargetFrameworks>
+    <TargetFrameworks>net461</TargetFrameworks>
     <Platforms>AnyCPU;x86</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
