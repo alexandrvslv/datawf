@@ -91,23 +91,20 @@ namespace DataWF.Data
 
         #endregion
 
-        public DBColumn()
+        public DBColumn() : this(null)
         {
         }
 
-        public DBColumn(string name)
-            : this(name, typeof(string))
+        public DBColumn(string name) : this(name, typeof(string))
         {
         }
 
-        public DBColumn(string name, Type type)
-            : base(name)
+        public DBColumn(string name, Type type) : base(name)
         {
             DataType = type;
         }
 
-        public DBColumn(string name, Type type, int size)
-            : this(name, type)
+        public DBColumn(string name, Type type, int size) : this(name, type)
         {
             Size = size;
         }
@@ -123,7 +120,7 @@ namespace DataWF.Data
             return base.ToString();
         }
 
-        [ReadOnly(true)]
+        [Browsable(false)]
         public string Property
         {
             get { return property; }
@@ -137,6 +134,7 @@ namespace DataWF.Data
             }
         }
 
+        [Browsable(false)]
         public bool CanWrite { get { return true; } }
 
         [XmlIgnore, Browsable(false)]
@@ -162,6 +160,8 @@ namespace DataWF.Data
             }
             if (Pull == null && Table != null)
             {
+                if (DataType == null)
+                    throw new InvalidOperationException($"{nameof(DataType)} must by specified!");
                 Pull = Pull.Fabric(DataType, Table.BlockSize);
             }
         }
@@ -516,7 +516,7 @@ namespace DataWF.Data
             }
         }
 
-        [XmlIgnore, ReadOnly(true)]
+        [Browsable(false), XmlIgnore]
         public Type ReaderDataType { get; set; }
 
         [Category("Database")]
