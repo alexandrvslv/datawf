@@ -18,101 +18,132 @@ namespace DataWF.Gui
 
         public string Name { get; set; }
 
-        public void Generate(Font defaultFont, Color baseBackground)
+        public CellStyle GenerateStyle(string name, Font font, Color value, 
+            double diff = 0.09D, 
+            int round = 0, 
+            bool alter = true, 
+            bool emptyBack = true, 
+            double lineWidth = 1, 
+            Alignment alignment = Alignment.Center,
+            CellStyleBrushType brushType = CellStyleBrushType.Gradient)
+        {
+            var baseColor = value;
+            var fontColor = value.Invert().WithIncreasedContrast(diff);
+            return new CellStyle
+            {
+                Name = name,
+                Font = font,
+                BaseColor = value,
+                Round = round,
+                Alternate = alter,
+                LineWidth = lineWidth,
+                Alignment = alignment,
+                BackBrush = new CellStyleBrush
+                {
+                    Type = brushType,
+                    Color = emptyBack ? CellStyleBrush.ColorEmpty : baseColor,
+                    ColorHover = baseColor.WithIncreasedLight(diff),
+                    ColorSelect = baseColor.WithIncreasedLight(diff * 2),
+                    ColorPress = baseColor.WithIncreasedLight(diff * 3),
+                    ColorAlternate = baseColor.WithIncreasedLight(diff / 3)
+                },
+                BorderBrush = new CellStyleBrush
+                {
+                    Color = emptyBack ? CellStyleBrush.ColorEmpty : baseColor.WithIncreasedContrast(diff),
+                    ColorHover = baseColor.WithIncreasedLight(diff).WithIncreasedContrast(diff),
+                    ColorSelect = baseColor.WithIncreasedLight(diff * 2).WithIncreasedContrast(diff),
+                    ColorPress = baseColor.WithIncreasedLight(diff * 3).WithIncreasedContrast(diff),
+                    ColorAlternate = baseColor.WithIncreasedLight(diff / 3).WithIncreasedContrast(diff)
+                },
+                FontBrush = new CellStyleBrush
+                {
+                    Color = fontColor,
+                    ColorHover = fontColor,
+                    ColorSelect = fontColor,
+                    ColorPress = fontColor,
+                    ColorAlternate = fontColor
+                }
+            };
+        }
+
+        public void Generate(Font defaultFont, Color baseBackground, double diff = -0.1)
         {
             if (Toolkit.CurrentEngine.Type == ToolkitType.Gtk)
             {
                 defaultFont = defaultFont.WithSize(defaultFont.Size * 0.9);
             }
+            else
+            {
+                defaultFont = defaultFont.WithSize(defaultFont.Size * 0.1);
+            }
 
             AddRange(new CellStyle[]{
-                 new CellStyle()
-                {
-                    Name = "Window",
-                    Font = defaultFont,
-                    Round = 0,
-                    BaseColor = baseBackground
-                },
-                 new CellStyle()
-                {
-                    Name = "Page",
-                    Font = defaultFont.WithWeight(FontWeight.Semibold),
-                    BaseColor = baseBackground.WithIncreasedLight(-0.05)
-                },
-                new CellStyle()
-                {
-                    Name = "PageClose",
-                    Font = defaultFont,
-                    Round = 3,
-                    BaseColor = baseBackground.WithIncreasedLight(-0.05)
-                },
-                new CellStyle()
-                {
-                    Name = "List",
-                    Font = defaultFont,
-                    Round = 0,
-                    BaseColor = baseBackground.WithIncreasedLight(-0.1)
-                },
-                new CellStyle()
-                {
-                    Name = "Row",
-                    Font = defaultFont,
-                    Round = 0,
-                    BaseColor = baseBackground.WithIncreasedLight(-0.1)
-                },
-                new CellStyle()
-                {
-                    Name = "ChangeRow",
-                    BaseColor = baseBackground.WithIncreasedLight(-0.1)
-                },
-                new CellStyle()
-                {
-                    Name = "MessageRow",
-                    Alternate = false
-                },
-                new CellStyle()
-                {
-                    Name = "Node",
-                    Alternate = false,
-                    Font = defaultFont,
-                    Round = 0,
-                    BaseColor = baseBackground.WithIncreasedLight(-0.2)
-                },
-                new CellStyle()
-                {
-                    Name = "Cell",
-                    Font = defaultFont,
-                    LineWidth = 0,
-                    BaseColor = baseBackground.WithIncreasedLight(-0.1)
-                },
-                new CellStyle()
-                {
-                    Name = "Value",
-                    Font = defaultFont,
-                    BaseColor = baseBackground.WithIncreasedLight(-0.1)
-                },
-                new CellStyle()
-                {
-                    Name = "CellCenter",
-                    Alignment = Alignment.Center,
-                    BaseColor = baseBackground.WithIncreasedLight(-0.1)
-                },
-                new CellStyle()
-                {
-                    Name = "CellFar",
-                    BaseColor = baseBackground.WithIncreasedLight(-0.1),
-                    Alignment = Alignment.End
-                },
-                new CellStyle()
-                {
-                    Name = "Column",
-                    Font = defaultFont.WithWeight(FontWeight.Semibold),
-                    BaseColor = baseBackground.WithIncreasedLight(0.1)
-                },
+                GenerateStyle("Window",
+                    defaultFont,
+                    baseBackground,
+                    diff ),
+                GenerateStyle("Page",
+                    defaultFont.WithWeight(FontWeight.Semibold),
+                    baseBackground.WithIncreasedLight(diff/2D),
+                    diff ),
+                GenerateStyle("PageClose",
+                    defaultFont,
+                    baseBackground.WithIncreasedLight(diff/2D),
+                    diff,
+                    3),
+                GenerateStyle("List",
+                    defaultFont,
+                    baseBackground.WithIncreasedLight(diff),
+                    diff ),
+                GenerateStyle("Row",
+                    defaultFont,
+                    baseBackground.WithIncreasedLight(diff),
+                    diff),
+                GenerateStyle("ChangeRow",
+                    defaultFont.WithStyle(FontStyle.Italic),
+                    baseBackground.WithIncreasedLight(diff),
+                    diff),
+                GenerateStyle("MessageRow",
+                    defaultFont,
+                    baseBackground.WithIncreasedLight(diff),
+                    diff,
+                    0,
+                    false),
+                GenerateStyle("Node",
+                    defaultFont,
+                    baseBackground.WithIncreasedLight(diff*2),
+                    diff,
+                    0,
+                    false),
+                GenerateStyle("Cell",
+                    defaultFont,
+                    baseBackground.WithIncreasedLight(diff),
+                    diff,
+                    lineWidth:0),
+                GenerateStyle("Value",
+                    defaultFont,
+                    baseBackground.WithIncreasedLight(diff*2),
+                    diff),
+                GenerateStyle("CellCenter",
+                    defaultFont,                    
+                    baseBackground.WithIncreasedLight(-0.1),
+                    diff,
+                    alignment:Alignment.Center),
+                GenerateStyle("CellFar",
+                    defaultFont,
+                    baseBackground.WithIncreasedLight(-0.1),
+                    diff,
+                    alignment:Alignment.End),
+                GenerateStyle("Column",
+                    defaultFont.WithWeight(FontWeight.Semibold),
+                    baseBackground.WithIncreasedLight(0.1),
+                    diff,
+                    emptyBack:false,
+                    brushType: CellStyleBrushType.Gradient),
                 new CellStyle()
                 {
                     Name = "Group",
-                    Font = defaultFont.WithSize(defaultFont.Size+1).WithWeight(FontWeight.Semibold),
+                    Font = defaultFont.WithSize(defaultFont.Size + 1).WithWeight(FontWeight.Semibold),
                     Round = 5,
                     BaseColor = baseBackground.WithIncreasedLight(0.1)
                 },
@@ -212,39 +243,39 @@ namespace DataWF.Gui
             this["Group"].BackBrush.Type = CellStyleBrushType.Gradient;
             this["DropDown"].BackBrush.Color = this["DropDown"].BaseColor;
             this["DropDown"].BackBrush.Type = CellStyleBrushType.Gradient;
-        }
+}
 
-        public override int AddInternal(CellStyle item)
+    public override int AddInternal(CellStyle item)
+    {
+        if (item == null)
+            throw new ArgumentException();
+        var exist = this[item.Name];
+        if (exist != item)
         {
-            if (item == null)
-                throw new ArgumentException();
-            var exist = this[item.Name];
-            if (exist != item)
-            {
-                if (exist != null)
-                    item.Name += "Clone";
-                return base.AddInternal(item);
-            }
-            return -1;
+            if (exist != null)
+                item.Name += "Clone";
+            return base.AddInternal(item);
         }
-
-        public bool Contains(string name)
-        {
-            return this[name] != null;
-        }
-
-        public bool Remove(string name)
-        {
-            return Remove(this[name]);
-        }
-
-        public override void Dispose()
-        {
-            foreach (var item in items)
-                item.Dispose();
-            base.Dispose();
-        }
+        return -1;
     }
+
+    public bool Contains(string name)
+    {
+        return this[name] != null;
+    }
+
+    public bool Remove(string name)
+    {
+        return Remove(this[name]);
+    }
+
+    public override void Dispose()
+    {
+        foreach (var item in items)
+            item.Dispose();
+        base.Dispose();
+    }
+}
 
 
 }
