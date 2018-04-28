@@ -14,7 +14,7 @@ namespace DataWF.Test.Module.Common
         public void Initialize()
         {
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            var schema = DBService.Generate(typeof(User).Assembly);
+            var schema = DBService.Generate(typeof(User).Assembly, "common_database");
             Assert.IsNotNull(schema);
             Assert.IsNotNull(BookType.DBTable);
             Assert.IsNotNull(Book.DBTable);
