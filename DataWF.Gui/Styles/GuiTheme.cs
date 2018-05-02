@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Xwt;
 using Xwt.Drawing;
+using static System.Math;
 
 namespace DataWF.Gui
 {
@@ -18,17 +19,15 @@ namespace DataWF.Gui
 
         public string Name { get; set; }
 
-        public CellStyle GenerateStyle(string name, Font font, Color value, 
-            double diff = 0.09D, 
-            int round = 0, 
-            bool alter = true, 
-            bool emptyBack = true, 
-            double lineWidth = 1, 
-            Alignment alignment = Alignment.Center,
-            CellStyleBrushType brushType = CellStyleBrushType.Gradient)
+        public CellStyle GenerateStyle(string name, Font font, Color value, double diff,
+            int round = 0,
+            bool alter = true,
+            bool emptyBack = true,
+            double lineWidth = 0.8,
+            Alignment alignment = Alignment.Start,
+            CellStyleBrushType brushType = CellStyleBrushType.Solid)
         {
-            var baseColor = value;
-            var fontColor = value.Invert().WithIncreasedContrast(diff);
+            var fontColor = value.WithIncreasedLight(diff).Invert();
             return new CellStyle
             {
                 Name = name,
@@ -41,19 +40,19 @@ namespace DataWF.Gui
                 BackBrush = new CellStyleBrush
                 {
                     Type = brushType,
-                    Color = emptyBack ? CellStyleBrush.ColorEmpty : baseColor,
-                    ColorHover = baseColor.WithIncreasedLight(diff),
-                    ColorSelect = baseColor.WithIncreasedLight(diff * 2),
-                    ColorPress = baseColor.WithIncreasedLight(diff * 3),
-                    ColorAlternate = baseColor.WithIncreasedLight(diff / 3)
+                    Color = emptyBack ? CellStyleBrush.ColorEmpty : value,
+                    ColorHover = value.WithIncreasedLight(diff),
+                    ColorSelect = value.WithIncreasedLight(diff * 2),
+                    ColorPress = value.WithIncreasedLight(diff * 3),
+                    ColorAlternate = value.WithIncreasedLight(diff / 4.0)
                 },
                 BorderBrush = new CellStyleBrush
                 {
-                    Color = emptyBack ? CellStyleBrush.ColorEmpty : baseColor.WithIncreasedContrast(diff),
-                    ColorHover = baseColor.WithIncreasedLight(diff).WithIncreasedContrast(diff),
-                    ColorSelect = baseColor.WithIncreasedLight(diff * 2).WithIncreasedContrast(diff),
-                    ColorPress = baseColor.WithIncreasedLight(diff * 3).WithIncreasedContrast(diff),
-                    ColorAlternate = baseColor.WithIncreasedLight(diff / 3).WithIncreasedContrast(diff)
+                    Color = emptyBack ? CellStyleBrush.ColorEmpty : value.WithIncreasedContrast(Abs(diff)),
+                    ColorHover = value.WithIncreasedLight(diff).WithIncreasedContrast(Abs(diff)),
+                    ColorSelect = value.WithIncreasedLight(diff * 2).WithIncreasedContrast(Abs(diff)),
+                    ColorPress = value.WithIncreasedLight(diff * 3).WithIncreasedContrast(Abs(diff)),
+                    ColorAlternate = value.WithIncreasedLight(diff / 4.0).WithIncreasedContrast(Abs(diff))
                 },
                 FontBrush = new CellStyleBrush
                 {
@@ -74,7 +73,7 @@ namespace DataWF.Gui
             }
             else
             {
-                defaultFont = defaultFont.WithSize(defaultFont.Size * 0.1);
+                defaultFont = defaultFont.WithSize(defaultFont.Size);
             }
 
             AddRange(new CellStyle[]{
@@ -84,21 +83,22 @@ namespace DataWF.Gui
                     diff ),
                 GenerateStyle("Page",
                     defaultFont.WithWeight(FontWeight.Semibold),
-                    baseBackground.WithIncreasedLight(diff/2D),
+                    baseBackground,
                     diff ),
                 GenerateStyle("PageClose",
                     defaultFont,
-                    baseBackground.WithIncreasedLight(diff/2D),
+                    baseBackground.WithIncreasedLight(-diff/2D),
                     diff,
                     3),
                 GenerateStyle("List",
                     defaultFont,
-                    baseBackground.WithIncreasedLight(diff),
+                    baseBackground.WithIncreasedLight(diff*4),
                     diff ),
                 GenerateStyle("Row",
                     defaultFont,
-                    baseBackground.WithIncreasedLight(diff),
-                    diff),
+                    baseBackground.WithIncreasedLight(diff*4),
+                    -diff*2,
+                    emptyBack:false),
                 GenerateStyle("ChangeRow",
                     defaultFont.WithStyle(FontStyle.Italic),
                     baseBackground.WithIncreasedLight(diff),
@@ -107,175 +107,146 @@ namespace DataWF.Gui
                     defaultFont,
                     baseBackground.WithIncreasedLight(diff),
                     diff,
-                    0,
-                    false),
+                    alter:false),
                 GenerateStyle("Node",
                     defaultFont,
-                    baseBackground.WithIncreasedLight(diff*2),
-                    diff,
-                    0,
-                    false),
+                    baseBackground.WithIncreasedLight(diff*4),
+                    -diff*2,
+                    alter:false),
                 GenerateStyle("Cell",
                     defaultFont,
-                    baseBackground.WithIncreasedLight(diff),
-                    diff,
+                    baseBackground.WithIncreasedLight(diff*3),
+                    -diff,
                     lineWidth:0),
                 GenerateStyle("Value",
                     defaultFont,
-                    baseBackground.WithIncreasedLight(diff*2),
-                    diff),
+                    baseBackground.WithIncreasedLight(diff*3),
+                    diff,
+                    emptyBack:false),
                 GenerateStyle("CellCenter",
-                    defaultFont,                    
-                    baseBackground.WithIncreasedLight(-0.1),
+                    defaultFont,
+                    baseBackground.WithIncreasedLight(diff*3),
                     diff,
                     alignment:Alignment.Center),
                 GenerateStyle("CellFar",
                     defaultFont,
-                    baseBackground.WithIncreasedLight(-0.1),
+                    baseBackground.WithIncreasedLight(diff*3),
                     diff,
                     alignment:Alignment.End),
                 GenerateStyle("Column",
                     defaultFont.WithWeight(FontWeight.Semibold),
-                    baseBackground.WithIncreasedLight(0.1),
+                    baseBackground.WithIncreasedLight(diff),
                     diff,
                     emptyBack:false,
+                    brushType: CellStyleBrushType.Gradient,
+                    lineWidth:0.5),
+                GenerateStyle("Group",
+                    defaultFont.WithSize(defaultFont.Size + 1).WithWeight(FontWeight.Semibold),
+                    baseBackground.WithIncreasedLight(diff),
+                    diff,
+                    round:5,
+                    emptyBack:false,
+                    brushType: CellStyleBrushType.Gradient ),
+                GenerateStyle("Red",
+                    defaultFont,
+                    Colors.Red,
+                    diff,
+                    emptyBack:false),
+                GenerateStyle("Header",
+                    defaultFont,
+                    baseBackground.WithIncreasedLight(diff),
+                    diff,
+                    alter:false,
+                    alignment:Alignment.End),
+                GenerateStyle("Field",
+                    defaultFont,
+                    baseBackground.WithIncreasedLight(diff*3),
+                    diff,
+                    alter:false),
+                GenerateStyle("FieldEditor",
+                    defaultFont,
+                    baseBackground.WithIncreasedLight(diff*3),
+                    diff,
+                    alter:false),
+                GenerateStyle("Collect",
+                    defaultFont,
+                    baseBackground.WithIncreasedLight(diff*2),
+                    diff),
+                GenerateStyle("GroupBoxHeader",
+                    defaultFont.WithSize(defaultFont.Size).WithWeight(FontWeight.Bold),
+                    baseBackground.WithIncreasedLight(diff*3),
+                    diff,
+                    round:5,
+                    emptyBack:false,
                     brushType: CellStyleBrushType.Gradient),
-                new CellStyle()
-                {
-                    Name = "Group",
-                    Font = defaultFont.WithSize(defaultFont.Size + 1).WithWeight(FontWeight.Semibold),
-                    Round = 5,
-                    BaseColor = baseBackground.WithIncreasedLight(0.1)
-                },
-                new CellStyle()
-                {
-                    Name = "Red",
-                    Font = defaultFont,
-                    Round = 0,
-                    BaseColor = Colors.Red
-                },
-                new CellStyle()
-                {
-                    Name = "Header",
-                    Alternate = false,
-                    Alignment = Alignment.End,
-                    BaseColor = baseBackground.WithIncreasedLight(0.1)
-                },
-                new CellStyle()
-                {
-                    Name = "Field",
-                    Font = defaultFont,
-                    Alternate = false,
-                    BaseColor = baseBackground.WithIncreasedLight(-0.1)
-                },
-                new CellStyle()
-                {
-                    Name = "FieldEditor",
-                    Font = defaultFont,
-                    Alternate = false,
-                    BaseColor = baseBackground.WithIncreasedLight(0.2)
-                },
-                new CellStyle()
-                {
-                    Name = "Collect",
-                    Font = defaultFont,
-                    BaseColor = baseBackground.WithIncreasedLight(0.2)
-                },
-                new CellStyle()
-                {
-                    Name = "GroupBoxHeader",
-                    Round = 5,
-                    Font = defaultFont.WithSize(defaultFont.Size).WithWeight(FontWeight.Bold),
-                    BaseColor = baseBackground.WithIncreasedLight(0.3)
-                },
-                new CellStyle()
-                {
-                    Name = "GroupBox",
-                    Round = 4,
-                    BaseColor = baseBackground.WithIncreasedLight(0.1)
-                },
-                new CellStyle()
-                {
-                    Name = "Logs",
-                    BaseColor = Colors.DarkBlue
-                },
-                new CellStyle()
-                {
-                    Name = "Notify",
-                    Font = defaultFont.WithSize(defaultFont.Size + 1).WithWeight(FontWeight.Bold)
-                },
-                new CellStyle()
-                {
-                    Name = "DropDown",
-                    Round = 4,
-                    BaseColor = baseBackground.WithIncreasedLight(0.1)
-                },
-                new CellStyle()
-                {
-                    Name = "Glyph",
-                    FontBrush = new CellStyleBrush() { ColorHover = Colors.LightGray }
-                },
-                new CellStyle()
-                {
-                    Name = "Selection",
-                    BackBrush = new CellStyleBrush() { Color = Colors.LightSkyBlue.WithAlpha(0.5) },
-                    BorderBrush = new CellStyleBrush() { Color = Colors.SkyBlue.WithAlpha(0.5) }
-                },
-                new CellStyle()
-                {
-                    Name = "Tool",
-                    Font = defaultFont.WithSize(defaultFont.Size + 0.1),
-                    LineWidth = 1.5,
-                    Round = 3,
-                    BaseColor = baseBackground.WithIncreasedLight(0.2)
-                }
+                GenerateStyle("GroupBox",
+                    defaultFont,
+                    baseBackground.WithIncreasedLight(diff),
+                    diff,
+                    round:4),
+                GenerateStyle("Logs",
+                    defaultFont,
+                    Colors.DarkBlue,
+                    diff),
+                GenerateStyle("Notify",
+                    defaultFont.WithSize(defaultFont.Size + 1).WithWeight(FontWeight.Bold),
+                    baseBackground.WithIncreasedLight(diff),
+                    diff),
+                GenerateStyle("DropDown",
+                    defaultFont,
+                    baseBackground.WithIncreasedLight(diff),
+                    diff,
+                    round:4,
+                    emptyBack:false,
+                    brushType: CellStyleBrushType.Gradient),
+                GenerateStyle("Glyph",
+                    defaultFont,
+                    Colors.LightGray,
+                    diff),
+                GenerateStyle("Selection",
+                    defaultFont,
+                    Colors.SkyBlue.WithAlpha(0.5),
+                    diff),
+                GenerateStyle("Tool",
+                    defaultFont.WithSize(defaultFont.Size + 0.1),
+                    baseBackground.WithIncreasedLight(diff),
+                    diff,
+                    lineWidth:1.5,
+                    round:3)
             });
-
-            this["Red"].BackBrush.Color = this["Red"].BaseColor;
-            this["Value"].BackBrush.Color = this["Value"].BaseColor;
-            this["Value"].BorderBrush.Color = this["Value"].BaseColor.WithIncreasedLight(0.1);
-            this["Row"].BackBrush.Color = this["Row"].BaseColor;
-            this["Column"].BackBrush.Color = this["Column"].BaseColor;
-            this["Column"].BackBrush.Type = CellStyleBrushType.Gradient;
-            this["GroupBoxHeader"].BackBrush.Color = this["GroupBoxHeader"].BaseColor;
-            this["GroupBoxHeader"].BackBrush.Type = CellStyleBrushType.Gradient;
-            this["Group"].BackBrush.Color = this["Group"].BaseColor;
-            this["Group"].BackBrush.Type = CellStyleBrushType.Gradient;
-            this["DropDown"].BackBrush.Color = this["DropDown"].BaseColor;
-            this["DropDown"].BackBrush.Type = CellStyleBrushType.Gradient;
-}
-
-    public override int AddInternal(CellStyle item)
-    {
-        if (item == null)
-            throw new ArgumentException();
-        var exist = this[item.Name];
-        if (exist != item)
-        {
-            if (exist != null)
-                item.Name += "Clone";
-            return base.AddInternal(item);
         }
-        return -1;
-    }
 
-    public bool Contains(string name)
-    {
-        return this[name] != null;
-    }
+        public override int AddInternal(CellStyle item)
+        {
+            if (item == null)
+                throw new ArgumentException();
+            var exist = this[item.Name];
+            if (exist != item)
+            {
+                if (exist != null)
+                    item.Name += "Clone";
+                return base.AddInternal(item);
+            }
+            return -1;
+        }
 
-    public bool Remove(string name)
-    {
-        return Remove(this[name]);
-    }
+        public bool Contains(string name)
+        {
+            return this[name] != null;
+        }
 
-    public override void Dispose()
-    {
-        foreach (var item in items)
-            item.Dispose();
-        base.Dispose();
+        public bool Remove(string name)
+        {
+            return Remove(this[name]);
+        }
+
+        public override void Dispose()
+        {
+            foreach (var item in items)
+                item.Dispose();
+            base.Dispose();
+        }
     }
-}
 
 
 }

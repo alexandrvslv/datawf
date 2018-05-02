@@ -7,10 +7,10 @@ namespace DataWF.Gui
         public void GenerateDefault()
         {
             var dark = new GuiTheme { Name = "Dark" };
-            dark.Generate(Font.SystemSansSerifFont, Color.FromBytes(80, 80, 80));
+            dark.Generate(Font.SystemSansSerifFont, Color.FromBytes(80, 80, 80), -0.06);
             Add(dark);
             var light = new GuiTheme { Name = "Light" };
-            light.Generate(Font.SystemSansSerifFont, Color.FromBytes(190, 190, 190));
+            light.Generate(Font.SystemSansSerifFont, Color.FromBytes(190, 190, 190), 0.06);
             Add(light);
         }
     }

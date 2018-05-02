@@ -133,7 +133,7 @@ namespace DataWF.Module.Flow
             document.DocumentDate = DateTime.Now;
             if (document.Template.Data != null)
             {
-                var data = document.GenerateTemplate();
+                var data = document.GenerateFromTemplate();
                 data.Attach();
             }
 
@@ -656,12 +656,12 @@ namespace DataWF.Module.Flow
             return null;
         }
 
-        public virtual DocumentData GenerateTemplate()
+        public virtual DocumentData GenerateFromTemplate()
         {
-            return GenerateTemplate<DocumentData>();
+            return GenerateFromTemplate<DocumentData>();
         }
 
-        public T GenerateTemplate<T>() where T : DocumentData, new()
+        public T GenerateFromTemplate<T>() where T : DocumentData, new()
         {
             var data = new T()
             {

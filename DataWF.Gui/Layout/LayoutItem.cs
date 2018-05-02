@@ -106,7 +106,7 @@ namespace DataWF.Gui
         [DefaultValue(120D)]
         public double Width
         {
-            get { return Count > 0 ? GetHeight(width, CalcWidth) : width; }
+            get { return Count > 0 ? GetWidth(width, CalcWidth) : width; }
             set
             {
                 if (value.Equals(width) || value < min)
@@ -288,6 +288,26 @@ namespace DataWF.Gui
             column.Row = Row;
             column.Col = Col;
             Map.Insert(column, false);
+        }
+
+        public virtual void InsertBefore(IEnumerable<T> columns)
+        {
+            var row = Row;
+            var col = Col;
+            foreach (var column in columns)
+            {
+                column.Row = row;
+                column.Col = col;
+                Map.Insert(column, GrowMode == LayoutGrowMode.Vertical);
+                if (GrowMode == LayoutGrowMode.Horizontal)
+                {
+                    col++;
+                }
+                else
+                {
+                    row++;
+                }
+            }
         }
 
         public virtual void InsertAfter(T column)

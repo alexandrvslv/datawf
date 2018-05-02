@@ -225,23 +225,7 @@ namespace DataWF.Data
         public void CreateDatabase()
         {
             Helper.Logs.Add(new StateInfo("Load", "Database", "Create Database"));
-            Connection.System.DropDatabase(this);
-
-            Connection.ExecuteGoQuery(FormatSql(DDLType.Create), true);
-
-            if (Connection.Schema?.Length > 0)
-            {
-                if (Connection.System == DBSystem.Oracle)
-                {
-                    Connection.User = Name;
-                }
-            }
-            if (string.IsNullOrEmpty(Connection.DataBase) || Connection.System == DBSystem.Postgres)// Connection.System != DBSystem.SQLite
-            {
-                Connection.DataBase = Name;
-            }
-
-            Connection.ExecuteGoQuery(FormatSql(), true);
+            System.CreateDatabase(this, Connection);
         }
 
         internal IEnumerable<DBConstraint> GetConstraints()

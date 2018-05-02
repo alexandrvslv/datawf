@@ -8,21 +8,18 @@ namespace DataWF.Module.FlowGui
 {
     public class DocumentFinder : ToolWindow
     {
-        private DocumentList _collection = new DocumentList("", DBViewKeys.Static | DBViewKeys.Access);
         private DocumentListView list = new DocumentListView();
 
         public DocumentFinder()
         {
-            this.list.AllowPreview = false;
-            this.list.Documents = null;
-            this.list.LabelText = "rezult";
-            this.list.Name = "list";
-            this.list.Preview = false;
-            this.list.TemplateFilter = null;
+            list.AllowPreview = false;
+            list.LabelText = "rezult";
+            list.Name = "list";
+            list.Preview = false;
+            list.Documents.IsStatic = true;
 
             Localizing();
 
-            list.Documents = _collection;
             Target = list;
             Mode = ToolShowMode.Dialog;
             //Param = new DocumentSearch();
@@ -42,8 +39,8 @@ namespace DataWF.Module.FlowGui
 
         public void Localizing()
         {
-            this.Label.Text = this.Title = Locale.Get("DocumentFinder", "Finder");
-            this.list.Localize();
+            Title = Locale.Get("DocumentFinder", "Finder");
+            list.Localize();
         }
 
         //public object Picture

@@ -117,7 +117,7 @@ namespace DataWF.Module.FlowGui
 
                 if (data == null)
                 {
-                    data = document.GenerateTemplate<T>();
+                    data = document.GenerateFromTemplate<T>();
                     data.Attach();
                 }
                 data.Parse(new ExecuteArgs(Document));

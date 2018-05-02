@@ -52,15 +52,12 @@ namespace DataWF.Data.Gui
             set
             {
                 table = value;
-                if (View != null && View.Table != table)
+                if (TableEditor != null && listSource is IDBTableView && ((IDBTableView)listSource).Table != table)
                 {
                     View.Dispose();
                     listSource = null;
                     //View = table.CreateView(viewFilter, DBViewInitMode.None, DBStatus.Current);
-                    if (TableEditor != null)
-                    {
-                        TableEditor.Initialize(View, GetItem(Value), column, TableEditorMode.Reference, false);
-                    }
+                    TableEditor.Initialize(View, GetItem(Value), column, TableEditorMode.Reference, false);
                 }
             }
         }
@@ -76,7 +73,7 @@ namespace DataWF.Data.Gui
             set
             {
                 listSource = value;
-                if (View != null && View.Table != table)
+                if (listSource is IDBTableView && ((IDBTableView)listSource).Table != table)
                     table = View.Table;
             }
         }

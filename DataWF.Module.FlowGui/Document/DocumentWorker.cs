@@ -36,9 +36,6 @@ namespace DataWF.Module.FlowGui
         public DocumentWorker()
         {
             toolRefresh = new ToolItem(ToolLoadOnClick) { Name = "Load", ForeColor = Colors.DarkBlue, Glyph = GlyphType.Download };
-
-            
-
             toolPreview.InsertAfter(new[] { toolRefresh });
 
             //mtimer.Elapsed += (object sender, System.Timers.ElapsedEventArgs asg) => { CheckNewDocument(null); mtimer.Stop(); };
@@ -60,7 +57,6 @@ namespace DataWF.Module.FlowGui
 
             AllowPreview = true;
             Filter.IsCurrent = true;
-            Documents = new DocumentList("", DBViewKeys.Access | DBViewKeys.Empty);
             Name = "Documents";
             Worker = this;
             FilterVisible = true;

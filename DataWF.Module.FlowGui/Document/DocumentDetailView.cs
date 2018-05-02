@@ -20,7 +20,8 @@ namespace DataWF.Module.FlowGui
 
             toolLog.Visible = Table.IsLoging;
             toolGroup.Visible = view.Table.GroupKey != null;
-            toolRefresh.Visible =
+            toolLoad.Visible =
+                toolRefresh.Visible =
                 toolSave.Visible =
                 toolStatus.Visible =
                 toolSort.Visible = false;

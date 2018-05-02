@@ -58,6 +58,28 @@ namespace DataWF.Data
             return OracleClientFactory.Instance;
         }
 
+        public override void CreateDatabase(DBSchema schema, DBConnection connection)
+        {
+            DropDatabase(schema);
+
+            var ddl = new StringBuilder();
+            Format(ddl, schema, DDLType.Create);
+            connection.ExecuteGoQuery(ddl.ToString(), true);
+
+            if (connection.Schema?.Length > 0)
+            {
+                connection.User = schema.Name;
+            }
+            if (string.IsNullOrEmpty(connection.DataBase))
+            {
+                connection.DataBase = schema.Name;
+            }
+
+            ddl.Clear();
+            Format(ddl, schema);
+            connection.ExecuteGoQuery(ddl.ToString(), true);
+        }
+
         public override void Format(StringBuilder ddl, DBSchema schema, DDLType ddlType)
         {
             string tsname = $"ts{schema.Name}";

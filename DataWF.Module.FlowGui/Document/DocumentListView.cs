@@ -18,8 +18,6 @@ namespace DataWF.Module.FlowGui
     {
         private OpenFileDialog ofDialog;
         private string label;
-        private bool mainDock = true;
-        private bool autoLoad = true;
         private DocumentEditor deditor;
         private DocumentFilter filter;
         private DocumentList documents;
@@ -29,6 +27,7 @@ namespace DataWF.Module.FlowGui
         protected Toolsbar bar;
         protected ToolLabel toolCount;
         protected ToolSplit toolCreate;
+        protected ToolItem toolCopy;
         protected ToolItem toolView;
         protected ToolItem toolFilter;
         protected ToolItem toolPreview;
@@ -44,6 +43,8 @@ namespace DataWF.Module.FlowGui
             loader = new TableLoader();
 
             toolCreate = new ToolSplit(ToolCreateClick) { Name = "Create", ForeColor = Colors.DarkGreen, Glyph = GlyphType.PlusCircle };
+            toolCopy = new ToolItem(ToolCopyClick) { Name = "Copy", Glyph = GlyphType.CopyAlias };
+
             foreach (Template template in Template.DBTable.DefaultView.SelectParents())
             {
                 if (template.Access.Create)
@@ -61,14 +62,13 @@ namespace DataWF.Module.FlowGui
                 toolFilter,
                 toolPreview,
                 toolCreate,
+                toolCopy,
                 toolLoad,
                 new ToolSeparator() { FillWidth = true },
                 toolCount,
                 toolView,
                 toolProgress)
-            {
-                Name = "DocumentListBar"
-            };
+            { Name = "DocumentListBar" };
 
             list = new DocumentLayoutList()
             {
@@ -95,33 +95,20 @@ namespace DataWF.Module.FlowGui
 
             Name = "DocumentListView";
             Filter = new DocumentFilter();
+            Documents = new DocumentList();
         }
 
         [DefaultValue(true)]
-        public bool AutoLoad
-        {
-            get { return autoLoad; }
-            set { autoLoad = value; }
-        }
+        public bool AutoLoad { get; set; } = true;
 
         public virtual bool ReadOnly { get; set; }
 
-        public Toolsbar Bar
-        {
-            get { return bar; }
-        }
+        public Toolsbar Bar { get { return bar; } }
 
         [DefaultValue(true)]
-        public bool MainDock
-        {
-            get { return mainDock; }
-            set { mainDock = value; }
-        }
+        public bool MainDock { get; set; } = true;
 
-        public DockType DockType
-        {
-            get { return DockType.Content; }
-        }
+        public DockType DockType { get { return DockType.Content; } }
 
         public virtual void Localize()
         {
@@ -137,6 +124,11 @@ namespace DataWF.Module.FlowGui
             //CheckDocumentTemplates();
         }
 
+        public DocumentFilterView FilterView
+        {
+            get { return filterView; }
+        }
+
         public DocumentFilter Filter
         {
             get { return filter; }
@@ -145,7 +137,9 @@ namespace DataWF.Module.FlowGui
                 if (filter != value)
                 {
                     if (filter != null)
+                    {
                         filter.PropertyChanged -= OnFilterPropertyChanged;
+                    }
                     filter = value;
                     filterView.Filter = value;
                     if (filter != null)
@@ -161,6 +155,63 @@ namespace DataWF.Module.FlowGui
             }
         }
 
+        public TableLoader Loader
+        {
+            get { return loader; }
+        }
+
+        public DocumentList Documents
+        {
+            get { return documents; }
+            set
+            {
+                if (documents == value)
+                    return;
+                if (documents != null)
+                    documents.ListChanged -= DocumentsListChanged;
+
+                documents = value;
+                list.ListSource = documents;
+                loader.View = documents;
+
+                if (documents != null)
+                {
+                    documents.ListChanged += DocumentsListChanged;
+                    if (Filter != null)
+                    {
+                        documents.Query = filter.QDoc;
+                    }
+                }
+            }
+        }
+
+        public DocumentLayoutList List
+        {
+            get { return list; }
+        }
+
+        public string LabelText
+        {
+            get { return label; }
+            set
+            {
+                label = value;
+                if (value != null)
+                    this.Text = "List (" + value.Replace("\n", " ") + ")";
+            }
+        }
+
+        public Document CurrentDocument
+        {
+            get { return list.SelectedItem as Document; }
+        }
+
+        public virtual Template FilterTemplate
+        {
+            get { return filter?.Template; }
+            set { filter.Template = value; }
+        }
+
         protected virtual void OnFilterPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             try
@@ -169,13 +220,15 @@ namespace DataWF.Module.FlowGui
                 {
                     Documents.UpdateFilter();
                 }
-                TemplateFilter = Filter.Template;
+
+                toolCreate.Sensitive = FilterTemplate != null && !FilterTemplate.IsCompaund && FilterTemplate.Access.Create;
+                list.Template = FilterTemplate;
 
                 FilterChanged?.Invoke(this, EventArgs.Empty);
 
                 if (Documents != null)
                 {
-                    if (filter != null && autoLoad && !filter.IsCurrent && !filter.IsEmpty)
+                    if (AutoLoad && !filter.IsCurrent && !filter.IsEmpty)
                     {
                         documents.IsStatic = true;
                         loader.LoadAsync(filter.QDoc);
@@ -192,6 +245,18 @@ namespace DataWF.Module.FlowGui
             }
         }
 
+        //public Template TemplateFilter
+        //{
+        //    get { return list.Template; }
+        //    set
+        //    {
+        //        if (list.Template == value)
+        //            return;
+        //        toolCreate.Sensitive = value != null && !value.IsCompaund && value.Access.Create;
+        //        list.Template = value;
+        //    }
+        //}
+
         public bool HideOnClose
         {
             get { return true; }
@@ -206,7 +271,7 @@ namespace DataWF.Module.FlowGui
                 if (deditor.EditorState != DocumentEditorState.Send)
                 {
                     deditor.SetList(list.Selection.GetItems<Document>());
-                    deditor.Document = list.Selection.CurrentRow != null ? (Document)list.Selection.CurrentRow.Item : list.Selection.Count > 0 ? (Document)list.Selection[0].Item : null;
+                    deditor.Document = CurrentDocument;
 
                     if (e.Type != LayoutSelectionChange.Remove)
                     {
@@ -245,50 +310,9 @@ namespace DataWF.Module.FlowGui
         //    TemplateFilter = e.ClickedItem.Tag as Template;
         //}
 
-        public Template TemplateFilter
-        {
-            get { return list.Template; }
-            set
-            {
-                if (list.Template == value)
-                    return;
-                toolCreate.Sensitive = value != null && !value.IsCompaund && value.Access.Create;
-                list.Template = value;
-            }
-        }
+
 
         public event EventHandler FilterChanged;
-
-
-        public TableLoader Loader
-        {
-            get { return loader; }
-        }
-
-        public DocumentList Documents
-        {
-            get { return documents; }
-            set
-            {
-                if (documents == value)
-                    return;
-                if (documents != null)
-                    documents.ListChanged -= DocumentsListChanged;
-
-                documents = value;
-                list.ListSource = documents;
-                loader.View = documents;
-
-                if (documents != null)
-                {
-                    documents.ListChanged += DocumentsListChanged;
-                    if (Filter != null)
-                    {
-                        documents.Query = filter.QDoc;
-                    }
-                }
-            }
-        }
 
         private void DocumentsListChanged(object sender, ListChangedEventArgs e)
         {
@@ -299,22 +323,6 @@ namespace DataWF.Module.FlowGui
                 var document = documents[e.NewIndex];
                 if (document.WorkStage == null || document.WorkStage.Length == 0)
                     document.GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), DBLoadParam.Load);
-            }
-        }
-
-        public DocumentLayoutList List
-        {
-            get { return list; }
-        }
-
-        public string LabelText
-        {
-            get { return label; }
-            set
-            {
-                label = value;
-                if (value != null)
-                    this.Text = "List (" + value.Replace("\n", " ") + ")";
             }
         }
 
@@ -354,12 +362,12 @@ namespace DataWF.Module.FlowGui
                     Name = name,
                     Document = document
                 };
-                if (GuiService.Main == null || !mainDock)
+                if (GuiService.Main == null || !MainDock)
                 {
                     editor.ShowWindow(this);
                 }
             }
-            if (GuiService.Main != null && mainDock)
+            if (GuiService.Main != null && MainDock)
             {
                 GuiService.Main.DockPanel.Put(editor, DockType.Content);
             }
@@ -398,11 +406,18 @@ namespace DataWF.Module.FlowGui
 
         protected virtual void ToolCreateClick(object sender, EventArgs e)
         {
-            var template = Filter.Template;
+            var template = FilterTemplate;
             if (template != null)
             {
                 ViewDocuments(CreateDocuments(template, Filter.Referencing));
             }
+        }
+
+        protected void ToolCopyClick(object sender, EventArgs e)
+        {
+            if (CurrentDocument == null)
+                return;
+            ViewDocuments(new List<Document>(new[] { (Document)CurrentDocument.Clone() }));
         }
 
         private void ToolPreviewClick(object sender, EventArgs e)
@@ -423,7 +438,9 @@ namespace DataWF.Module.FlowGui
             set
             {
                 if (value && split.Panel2.Content == null)
+                {
                     split.Panel2.Content = deditor;
+                }
                 else if (!value && split.Panel2.Content != null)
                 {
                     split.Panel2.Content = null;
@@ -438,11 +455,11 @@ namespace DataWF.Module.FlowGui
             {
                 HideOnClose = true
             };
-            deditor.MainMenu.Visible = false;
+            //deditor.MainMenu.Visible = false;
             deditor.SendComplete += EditorSendComplete;
             Preview = true;
 
-            toolLoad.InsertAfter(((IEnumerable<ToolItem>)deditor.MainMenu.Items).ToList());
+            //toolLoad.InsertAfter(((IEnumerable<ToolItem>)deditor.MainMenu.Items).ToList());
         }
 
         private void EditorSendComplete(object sender, EventArgs e)
@@ -594,17 +611,15 @@ namespace DataWF.Module.FlowGui
             }
             else if (documents.Count > 1)
             {
-                DocumentList list = new DocumentList("", DBViewKeys.Static | DBViewKeys.Empty);
+                var list = new DocumentList("", DBViewKeys.Static | DBViewKeys.Empty);
+                list.AddRange(documents);
 
                 var dlist = new DocumentListView();
                 dlist.List.GenerateColumns = false;
                 dlist.List.AutoToStringFill = true;
                 dlist.MainDock = false;
+                dlist.Filter.Template = documents[0].Template;
                 dlist.Documents = list;
-                dlist.TemplateFilter = documents[0].Template;
-
-                foreach (Document document in documents)
-                    list.Add(document);
 
                 var form = new ToolWindow
                 {

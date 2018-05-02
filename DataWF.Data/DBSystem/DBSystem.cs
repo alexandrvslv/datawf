@@ -183,6 +183,24 @@ from information_schema.table_constraints a
             return infos;
         }
 
+        public virtual void CreateDatabase(DBSchema schema, DBConnection connection)
+        {
+            DropDatabase(schema);
+
+            var ddl = new StringBuilder();
+            Format(ddl, schema, DDLType.Create);
+            connection.ExecuteGoQuery(ddl.ToString(), true);
+
+            if (string.IsNullOrEmpty(connection.DataBase))
+            {
+                connection.DataBase = schema.Name;
+            }
+
+            ddl.Clear();
+            Format(ddl, schema);
+            connection.ExecuteGoQuery(ddl.ToString(), true);
+        }
+
         public IDbDataParameter CreateParameter()
         {
             return GetFactory().CreateParameter();
@@ -235,7 +253,10 @@ from information_schema.table_constraints a
 
         public virtual void DropDatabase(DBSchema schema)
         {
-            try { schema.Connection.ExecuteQuery(schema.FormatSql(DDLType.Drop), true, DBExecuteType.NoReader); }
+            try
+            {
+                schema.Connection.ExecuteQuery(schema.FormatSql(DDLType.Drop), true, DBExecuteType.NoReader);
+            }
             catch (Exception ex) { Helper.OnException(ex); }
         }
 

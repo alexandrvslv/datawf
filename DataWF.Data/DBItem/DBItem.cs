@@ -630,8 +630,7 @@ namespace DataWF.Data
             get { return Table.ItemTypeKey == null ? 0 : GetValue<int?>(Table.ItemTypeKey).Value; }
             set { SetValue(value, Table.ItemTypeKey); }
         }
-
-        [Browsable(false)]
+                
         [DataMember, Column("status_id", Default = "1", GroupName = "system", Keys = DBColumnKeys.State | DBColumnKeys.System, Order = 99)]
         public DBStatus Status
         {

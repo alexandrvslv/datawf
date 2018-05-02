@@ -42,6 +42,14 @@ namespace DataWF.Data.Gui
             }
         }
 
+        public DBTable Table
+        {
+            set
+            {
+                Initialize(value, null, null, TableEditorMode.Table, false);
+            }
+        }
+
         public void Initialize(DBItem row, TableEditorMode openmode, bool readOnly)
         {
             Initialize(row.Table, row, null, openmode, readOnly);

@@ -21,7 +21,7 @@ namespace DataWF.Module.FlowGui
 
         public DocumentReferenceView()
         {
-            toolAttach = new ToolItem(ToolAttachClick) { Glyph = GlyphType.PlusCircle };
+            toolAttach = new ToolItem(ToolAttachClick) { Glyph = GlyphType.CartPlus };
             toolDetach = new ToolItem(ToolDetachClick) { Glyph = GlyphType.MinusCircle };
 
             AllowPreview = false;
@@ -53,11 +53,7 @@ namespace DataWF.Module.FlowGui
                     if (document != null)
                     {
                         document.RefChanged += DocumentRefChanged;
-                        Filter.Referencing = value;
-                        if (Documents == null)
-                        {
-                            Documents = new DocumentList();
-                        }
+                        Filter.Referencing = value;                        
                     }
 
                 }

@@ -54,15 +54,13 @@ namespace DataWF.Module.FlowGui
             return types;
         }
 
-        private Toolsbar tools;
-        private ToolItem toolCopy;
+        private Toolsbar tools;        
         private ToolItem toolSave;
         private ToolItem toolRefresh;
         private ToolItem toolSend;
         private ToolItem toolLogs;
         private ToolItem toolDelete;
         private ToolItem toolBarCode;
-        //private ToolDropDown toolTemplates;
         private ToolItem toolReturn;
         private ToolItem toolForward;
         private ToolItem toolNext;
@@ -85,9 +83,7 @@ namespace DataWF.Module.FlowGui
 
         public DocumentEditor()
         {
-            toolCopy = new ToolItem(ToolCopyClick) { Name = "Copy", Glyph = GlyphType.CopyAlias };
             toolProcedures = new ToolDropDown { Name = "Procedures", Glyph = GlyphType.PuzzlePiece };
-            //toolTemplates = new ToolDropDown { Name = "Templates", Glyph = GlyphType.Book };
             toolSave = new ToolItem(ToolSaveClick) { Name = "Save", Glyph = GlyphType.SaveAlias };
             toolRefresh = new ToolItem(ToolRefreshClick) { Name = "Refresh", Glyph = GlyphType.Refresh };
             toolDelete = new ToolItem(ToolDeleteClick) { Name = "Delete", Glyph = GlyphType.MinusSquare };
@@ -100,8 +96,6 @@ namespace DataWF.Module.FlowGui
 
             tools = new Toolsbar(
                toolProcedures,
-               //toolTemplates,
-               toolCopy,
                toolSave,
                toolRefresh,
                toolDelete,
@@ -124,7 +118,7 @@ namespace DataWF.Module.FlowGui
                 VisibleClose = false
             };
             pageHeader = dock.Put(new DocumentHeader(), DockType.Left);
-            pageHeader.Panel.MapItem.FillWidth = true;
+            //pageHeader.Panel.MapItem.FillWidth = true;
 
             pageWorks = dock.Put(new DocumentWorkView(), DockType.Content);
             pageRefers = dock.Put((references = new DocumentReferenceView()), DockType.Content);
@@ -703,12 +697,7 @@ namespace DataWF.Module.FlowGui
         }
 
 
-        #endregion
-
-        private void ToolCopyClick(object sender, EventArgs e)
-        {
-            references.ViewDocuments(references.CreateDocuments(document.Template, document));
-        }
+        #endregion        
 
         private void ToolSaveClick(object sender, EventArgs e)
         {

@@ -27,7 +27,7 @@ namespace DataWF.Module.FlowGui
         //private FieldEditor dateType;
         //private CalendarEditor date;
 
-        GroupBox map;
+        GroupBox box;
         private DocumentFilter filter;
 
         public DocumentFilterView()
@@ -84,7 +84,7 @@ namespace DataWF.Module.FlowGui
                 Name = "Users"
             };
 
-            map = new GroupBox(
+            box = new GroupBox(
                         new GroupBoxItem { Widget = templates, Name = "Templates", FillWidth = true, FillHeight = true },
                         new GroupBoxItem { Widget = fields, Row = 1, Name = "Parameters", FillWidth = true, Height = 160, Autosize = false, Expand = false },
                         new GroupBoxItem { Widget = works, Row = 2, Name = "Works & Stage", FillWidth = true, FillHeight = true, Expand = false },
@@ -93,7 +93,7 @@ namespace DataWF.Module.FlowGui
             { Name = "Map" };
 
             PackStart(bar, false, false);
-            PackStart(map, true, true);
+            PackStart(box, true, true);
             MinWidth = 330;
 
             var nodeSend = new TableItemNode()
@@ -128,11 +128,35 @@ namespace DataWF.Module.FlowGui
             };
             GuiService.Localize(nodeSearch, "DocumentWorker", nodeSearch.Name);
         }
+        public DocumentFilter Filter
+        {
+            get => filter;
+            set
+            {
+                if (filter != value)
+                {
+                    filter = value;
+                    fields.FieldSource = value;
+
+                    templates.Bind(filter, nameof(DocumentFilter.Template));
+                    works.Bind(filter, nameof(DocumentFilter.Stage));
+                    users.Bind(filter, nameof(DocumentFilter.Staff));
+                }
+            }
+        }
+
+        public FlowTree Templates { get => templates; }
+
+        public FlowTree Works { get => works; }
+
+        public UserTree Users { get => users; }
+
+        public GroupBox Box { get => box; }
 
         public void Localize()
         {
             bar.Localize();
-            map.Localize();
+            box.Localize();
         }
 
         private void WorksSelectionChanged(object sender, LayoutSelectionEventArgs e)
@@ -164,28 +188,7 @@ namespace DataWF.Module.FlowGui
             Filter?.Clear();
         }
 
-        public DocumentFilter Filter
-        {
-            get => filter;
-            set
-            {
-                if (filter != value)
-                {
-                    filter = value;
-                    fields.FieldSource = value;
 
-                    templates.Bind(filter, nameof(DocumentFilter.Template));
-                    works.Bind(filter, nameof(DocumentFilter.Stage));
-                    users.Bind(filter, nameof(DocumentFilter.Staff));
-                }
-            }
-        }
-
-        public FlowTree Templates { get => templates; }
-
-        public FlowTree Works { get => works; }
-
-        public UserTree Users { get => users; }
 
         protected override void Dispose(bool disposing)
         {

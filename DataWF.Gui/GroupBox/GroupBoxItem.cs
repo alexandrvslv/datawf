@@ -8,7 +8,7 @@ namespace DataWF.Gui
 {
     public class GroupBoxItem : LayoutItem<GroupBoxItem>, IComparable, IDisposable, IText
     {
-        private Widget control;
+        private Widget widget;
         private CellStyle styleHeader = null;
         private CellStyle style = null;
         private Rectangle rectExpand = new Rectangle();
@@ -17,7 +17,7 @@ namespace DataWF.Gui
         private Rectangle rectText = new Rectangle();
         private bool expand = true;
         private bool autos = true;
-        public int HeaderHeight = 21;
+        public int HeaderHeight = 23;
         private int dHeight = 100;
         public GlyphType Glyph = GlyphType.GearAlias;
         private string text;
@@ -60,15 +60,15 @@ namespace DataWF.Gui
             var top = TopMap;
             if (top == null)
                 return;
-            
+
             var bound = top.GetBound(this);
 
             if (!expand)
                 bound.Height = HeaderHeight + 5;
 
-            if (control != null && Map != null)
+            if (widget != null && Map != null)
             {
-                if (control.Visible)
+                if (widget.Visible)
                 {
                     var rect = new Rectangle(bound.X + 5, bound.Y + HeaderHeight,
                         bound.Width - 10, bound.Height - (HeaderHeight + 5));
@@ -77,7 +77,7 @@ namespace DataWF.Gui
                     if (rect.Height < 1)
                         rect.Height = 1;
 
-                    GroupBox.SetChildBounds(control, rect);
+                    GroupBox.SetChildBounds(widget, rect);
                 }
             }
         }
@@ -95,18 +95,37 @@ namespace DataWF.Gui
             }
         }
 
-        public Widget Widget
+        public override bool Visible
         {
-            get { return control; }
+            get => base.Visible;
             set
             {
-                if (control == value)
-                    return;
+                if (Visible != value)
+                {
+                    base.Visible = value;
 
-                control = value;
-                control.Visible = true;
-                if (GroupBox != null)
-                    GroupBox.AddChild(control);
+                }
+            }
+        }
+
+        public Widget Widget
+        {
+            get { return widget; }
+            set
+            {
+                if (widget == value)
+                    return;
+                if (widget != null && GroupBox != null)
+                {
+                    GroupBox.RemoveChild(widget);
+                }
+                widget = value;
+                if (widget != null)
+                {
+                    widget.Visible = Visible;
+                    if (GroupBox != null)
+                        GroupBox.AddChild(widget);
+                }
             }
         }
 
@@ -125,8 +144,8 @@ namespace DataWF.Gui
                 if (expand != value)
                 {
                     expand = value;
-                    if (control != null)
-                        control.Visible = visible && expand;
+                    if (widget != null)
+                        widget.Visible = visible && expand;
                     OnPropertyChanged(nameof(Expand));
                     //if (map != null)
                     //    map.ResizeLayout();
@@ -160,8 +179,8 @@ namespace DataWF.Gui
             switch (property)
             {
                 case nameof(Visible):
-                    if (control != null)
-                        control.Visible = visible && expand;
+                    if (widget != null)
+                        widget.Visible = visible && expand;
                     break;
                 case nameof(Row):
                 case nameof(Col):
@@ -191,8 +210,8 @@ namespace DataWF.Gui
 
         public override void Dispose()
         {
-            if (control != null)
-                control.Dispose();
+            if (widget != null)
+                widget.Dispose();
             base.Dispose();
         }
 
@@ -200,8 +219,8 @@ namespace DataWF.Gui
         {
             if (GroupBox != null)
                 GuiService.Localize(this, GroupBox.Name, name);
-            if (control is ILocalizable)
-                ((ILocalizable)control).Localize();
+            if (widget is ILocalizable)
+                ((ILocalizable)widget).Localize();
         }
     }
 
