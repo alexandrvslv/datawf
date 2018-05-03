@@ -54,7 +54,7 @@ namespace DataWF.Module.FlowGui
             return types;
         }
 
-        private Toolsbar tools;        
+        private Toolsbar tools;
         private ToolItem toolSave;
         private ToolItem toolRefresh;
         private ToolItem toolSend;
@@ -84,18 +84,18 @@ namespace DataWF.Module.FlowGui
         public DocumentEditor()
         {
             toolProcedures = new ToolDropDown { Name = "Procedures", Glyph = GlyphType.PuzzlePiece };
-            toolSave = new ToolItem(ToolSaveClick) { Name = "Save", Glyph = GlyphType.SaveAlias };
-            toolRefresh = new ToolItem(ToolRefreshClick) { Name = "Refresh", Glyph = GlyphType.Refresh };
-            toolDelete = new ToolItem(ToolDeleteClick) { Name = "Delete", Glyph = GlyphType.MinusSquare };
-            toolLogs = new ToolItem(ToolLogsOnClick) { Name = "Logs", Glyph = GlyphType.History };
-            toolBarCode = new ToolItem(ToolBarCodeClick) { Name = "BarCode", Glyph = GlyphType.Barcode };
-            toolReturn = new ToolItem(ToolReturnClick) { Name = "Return", Glyph = GlyphType.StepBackward };
-            toolSend = new ToolItem(ToolAcceptClick) { Name = "Send", Glyph = GlyphType.CheckCircle };
-            toolForward = new ToolItem(ToolForwardClick) { Name = "Forward", Glyph = GlyphType.StepForward };
-            toolNext = new ToolItem(ToolNextClick) { Name = "Next", Glyph = GlyphType.Forward };
+            toolSave = new ToolItem(ToolSaveClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Save", Glyph = GlyphType.SaveAlias };
+            toolRefresh = new ToolItem(ToolRefreshClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Refresh", Glyph = GlyphType.Refresh };
+            toolDelete = new ToolItem(ToolDeleteClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Delete", Glyph = GlyphType.MinusSquare };
+            toolLogs = new ToolItem(ToolLogsOnClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Logs", Glyph = GlyphType.History };
+            toolBarCode = new ToolItem(ToolBarCodeClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "BarCode", Glyph = GlyphType.Barcode };
+            toolReturn = new ToolItem(ToolReturnClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Return", Glyph = GlyphType.StepBackward };
+            toolSend = new ToolItem(ToolAcceptClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Send/Accept", Glyph = GlyphType.CheckCircle };
+            toolForward = new ToolItem(ToolForwardClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Forward", Glyph = GlyphType.StepForward };
+            toolNext = new ToolItem(ToolNextClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Next", Glyph = GlyphType.Forward };
 
             tools = new Toolsbar(
-               toolProcedures,
+               //toolProcedures,
                toolSave,
                toolRefresh,
                toolDelete,
@@ -104,10 +104,11 @@ namespace DataWF.Module.FlowGui
                toolBarCode,
                new ToolSeparator(),
                //toolReturn,
-               toolSend,
+               toolSend
                //toolForward,
                //toolNext,
-               toolLabel)
+               //toolLabel
+               )
             { Name = "tools" };
             toolsItems = tools.Items.Cast<ToolItem>();
 
@@ -118,9 +119,8 @@ namespace DataWF.Module.FlowGui
                 VisibleClose = false
             };
             pageHeader = dock.Put(new DocumentHeader(), DockType.Left);
-            //pageHeader.Panel.MapItem.FillWidth = true;
-
-            pageWorks = dock.Put(new DocumentWorkView(), DockType.Content);
+            pageHeader.Panel.MapItem.Width = 350;//pageHeader.Panel.MapItem.FillWidth = true;
+            pageWorks = dock.Put(new DocumentWorkView(), DockType.LeftBottom);
             pageRefers = dock.Put((references = new DocumentReferenceView()), DockType.Content);
 
             Glyph = GlyphType.Book;

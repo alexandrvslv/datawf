@@ -15,7 +15,7 @@ namespace DataWF.Module.FlowGui
             list.AllowPreview = false;
             list.LabelText = "rezult";
             list.Name = "list";
-            list.Preview = false;
+            list.ShowPreview = false;
             list.Documents.IsStatic = true;
 
             Localizing();

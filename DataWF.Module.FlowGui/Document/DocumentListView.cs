@@ -26,7 +26,8 @@ namespace DataWF.Module.FlowGui
         protected ToolItem toolLoad;
         protected Toolsbar bar;
         protected ToolLabel toolCount;
-        protected ToolSplit toolCreate;
+        protected ToolItem toolCreate;
+        protected ToolDropDown toolCreateFrom;
         protected ToolItem toolCopy;
         protected ToolItem toolView;
         protected ToolItem toolFilter;
@@ -42,13 +43,15 @@ namespace DataWF.Module.FlowGui
 
             loader = new TableLoader();
 
-            toolCreate = new ToolSplit(ToolCreateClick) { Name = "Create", ForeColor = Colors.DarkGreen, Glyph = GlyphType.PlusCircle };
-            toolCopy = new ToolItem(ToolCopyClick) { Name = "Copy", Glyph = GlyphType.CopyAlias };
+            toolCreate = new ToolItem(ToolCreateClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Create", ForeColor = Colors.DarkGreen, Glyph = GlyphType.PlusCircle };
+            toolCreateFrom = new ToolDropDown() { DisplayStyle = ToolItemDisplayStyle.Text, Name = "CreateFrom", ForeColor = Colors.DarkGreen, Glyph = GlyphType.PlusCircle };
+            toolCopy = new ToolItem(ToolCopyClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Copy", Glyph = GlyphType.CopyAlias };
+            toolLoad = new ToolItem(ToolLoadClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Load", Glyph = GlyphType.Download };
 
             foreach (Template template in Template.DBTable.DefaultView.SelectParents())
             {
                 if (template.Access.Create)
-                    toolCreate.DropDownItems.Add(InitTemplate(template));
+                    toolCreateFrom.DropDownItems.Add(InitTemplate(template));
             }
             toolCount = new ToolLabel { Text = "0" };
             toolPreview = new ToolItem(ToolPreviewClick) { CheckOnClick = true, Checked = true, Name = "Preview", Glyph = GlyphType.List };
@@ -56,16 +59,16 @@ namespace DataWF.Module.FlowGui
             toolFilter = new ToolItem(ToolFilterClick) { Name = "Filter", CheckOnClick = true, Glyph = GlyphType.Filter };
             toolParam = new ToolDropDown(ToolParamClick) { Name = "Parameters", Glyph = GlyphType.Spinner };
             toolProgress = new ToolTableLoader { Loader = loader };
-            toolLoad = new ToolItem(ToolLoadClick) { Name = "Lcoad", Glyph = GlyphType.Refresh };
 
             bar = new Toolsbar(
-                toolFilter,
-                toolPreview,
                 toolCreate,
+                toolCreateFrom,
                 toolCopy,
                 toolLoad,
                 new ToolSeparator() { FillWidth = true },
                 toolCount,
+                toolFilter,
+                toolPreview,
                 toolView,
                 toolProgress)
             { Name = "DocumentListBar" };
@@ -264,20 +267,33 @@ namespace DataWF.Module.FlowGui
 
         private void ListOnSelectionChanged(object sender, LayoutSelectionEventArgs e)
         {
+            if (deditor == null)
+                InitPreview();
+
+            if (deditor.EditorState != DocumentEditorState.Send)
+            {
+                deditor.SetList(GetSelected());
+                deditor.Document = CurrentDocument;
+
+                if (e.Type != LayoutSelectionChange.Remove)
+                {
+                    ShowProperty(list.Selection.CurrentRow != null && list.Selection.Count == 1 ? list.Selection.CurrentRow.Item : null);
+                }
+            }
             if (AllowPreview)
             {
-                if (deditor == null)
-                    InitPreview();
-                if (deditor.EditorState != DocumentEditorState.Send)
-                {
-                    deditor.SetList(list.Selection.GetItems<Document>());
-                    deditor.Document = CurrentDocument;
+                ShowPreview = true;
+            }
 
-                    if (e.Type != LayoutSelectionChange.Remove)
-                    {
-                        ShowProperty(list.Selection.CurrentRow != null && list.Selection.Count == 1 ? list.Selection.CurrentRow.Item : null);
-                    }
-                }
+            void InitPreview()
+            {
+                deditor = new DocumentEditor()
+                {
+                    HideOnClose = true
+                };
+                deditor.MainMenu.Visible = false;
+                toolLoad.InsertAfter(((IEnumerable<ToolItem>)deditor.MainMenu.Items).ToList());
+                deditor.SendComplete += EditorSendComplete;
             }
         }
 
@@ -291,12 +307,12 @@ namespace DataWF.Module.FlowGui
         {
             if (AllowPreview && toolPreview.Checked && document != null)
             {
-                Preview = true;
+                ShowPreview = true;
                 deditor.Document = (Document)document;
             }
             else
             {
-                Preview = false;
+                ShowPreview = false;
             }
         }
 
@@ -309,8 +325,6 @@ namespace DataWF.Module.FlowGui
         //{
         //    TemplateFilter = e.ClickedItem.Tag as Template;
         //}
-
-
 
         public event EventHandler FilterChanged;
 
@@ -328,27 +342,15 @@ namespace DataWF.Module.FlowGui
 
         public List<Document> GetSelected()
         {
-            //List<Document> buf = new List<Document>();
-            //foreach (var orow in list.Selection.Items)
-            //{
-            //    Document doc = orow.Item as Document;
-            //    if (doc == null || doc.Id == DBNull.Value) 
-            //        continue;
-            //    buf.Add(doc);
-            //}
             return list.Selection.GetItems<Document>();
         }
 
         private void ToolViewClick(object sender, EventArgs e)
         {
-            if (list.Selection.Count == 0)
+            if (CurrentDocument == null)
                 return;
-            var document = (Document)list.SelectedItem;
-            if (document != null)
-            {
-                var editor = new DocumentEditor { Document = document };
-                editor.ShowWindow(this);
-            }
+            var editor = new DocumentEditor { Document = CurrentDocument };
+            editor.ShowWindow(this);
         }
 
         public void ShowDocument(Document document)
@@ -378,6 +380,7 @@ namespace DataWF.Module.FlowGui
             if (e.HitTest.Index >= 0)
                 ShowDocument(list.SelectedItem as Document);
         }
+
 
         private void ToolParamClick(object sender, EventArgs e)
         {
@@ -422,8 +425,8 @@ namespace DataWF.Module.FlowGui
 
         private void ToolPreviewClick(object sender, EventArgs e)
         {
-            Preview = toolPreview.Checked;
-            ShowProperty(Preview ? list.SelectedItem : null);
+            ShowPreview = toolPreview.Checked;
+            ShowProperty(ShowPreview ? list.SelectedItem : null);
         }
 
         public bool AllowPreview
@@ -432,7 +435,7 @@ namespace DataWF.Module.FlowGui
             set { toolPreview.Sensitive = value; }
         }
 
-        public bool Preview
+        public bool ShowPreview
         {
             get { return split.Panel2.Content != null && split.Panel2.Content.Visible; }
             set
@@ -444,22 +447,9 @@ namespace DataWF.Module.FlowGui
                 else if (!value && split.Panel2.Content != null)
                 {
                     split.Panel2.Content = null;
-                    this.QueueForReallocate();
+                    QueueForReallocate();
                 }
             }
-        }
-
-        private void InitPreview()
-        {
-            deditor = new DocumentEditor()
-            {
-                HideOnClose = true
-            };
-            //deditor.MainMenu.Visible = false;
-            deditor.SendComplete += EditorSendComplete;
-            Preview = true;
-
-            //toolLoad.InsertAfter(((IEnumerable<ToolItem>)deditor.MainMenu.Items).ToList());
         }
 
         private void EditorSendComplete(object sender, EventArgs e)
@@ -480,7 +470,7 @@ namespace DataWF.Module.FlowGui
                 return null;
             string name = "template" + template.Id.ToString();
 
-            var item = toolCreate.DropDownItems[name] as TemplateMenuItem;
+            var item = toolCreateFrom.DropDownItems[name] as TemplateMenuItem;
             if (item == null)
             {
                 item = new TemplateMenuItem(template) { Name = name };

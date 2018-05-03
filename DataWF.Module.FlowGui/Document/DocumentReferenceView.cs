@@ -21,15 +21,15 @@ namespace DataWF.Module.FlowGui
 
         public DocumentReferenceView()
         {
-            toolAttach = new ToolItem(ToolAttachClick) { Glyph = GlyphType.CartPlus };
-            toolDetach = new ToolItem(ToolDetachClick) { Glyph = GlyphType.MinusCircle };
+            toolAttach = new ToolItem(ToolAttachClick) { Glyph = GlyphType.PlusSquareO };
+            toolDetach = new ToolItem(ToolDetachClick) { Glyph = GlyphType.MinusSquareO };
 
             AllowPreview = false;
-            FilterVisible = true;
             AutoLoad = false;
+            FilterVisible = true;
             LabelText = null;
             MainDock = true;
-            Preview = false;
+            ShowPreview = false;
 
             Bar.Items.Add(toolAttach);
             Bar.Items.Add(toolDetach);
