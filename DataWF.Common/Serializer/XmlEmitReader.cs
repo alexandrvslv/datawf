@@ -72,7 +72,7 @@ namespace DataWF.Common
             {
                 if (member.IsText || member.IsAttribute)
                 {
-                    member.Invoker.Set(element, Helper.TextParse(Reader.ReadElementContentAsString(), mtype));
+                    member.Invoker.Set(element, Helper.TextParse(Reader.ReadElementContentAsString(), mtype ?? member.PropertyType));
                 }
                 else
                 {
@@ -134,7 +134,7 @@ namespace DataWF.Common
                 }
                 listIndex++;
             }
-            else if (mtype != null)
+            else// if (mtype != null)
             {
                 ReadElement(element, info, mtype);
             }
