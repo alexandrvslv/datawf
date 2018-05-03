@@ -52,22 +52,6 @@ namespace DataWF.Gui
 
         public GroupBoxItem Map { get { return map; } }
 
-        public void ResizeLayout()
-        {
-            if (Parent == null)
-                return;
-            map.Width = Size.Width;
-            map.Height = Size.Height;
-            map.GetBound();
-
-            foreach (GroupBoxItem item in map.GetItems())
-            {
-                item.CheckBounds();
-            }
-
-            QueueDraw();
-        }
-
         protected double CalcHeight(ILayoutItem item)
         {
             if (item is GroupBoxItem)
@@ -89,8 +73,8 @@ namespace DataWF.Gui
                 {
                     height = box.HeaderHeight;
                 }
-                if (height > map.Bound.Height)
-                    height = map.Bound.Height;
+                //if (height > map.Bound.Height)
+                //    height = map.Bound.Height;
                 return height;
             }
             return item.Height;
@@ -143,13 +127,17 @@ namespace DataWF.Gui
             //    }
             //}
             map.GetBound(widthConstraint.AvailableSize, heightConstraint.AvailableSize);
+            foreach (GroupBoxItem item in map.GetVisibleItems())
+            {
+                item.Widget.Surface.GetPreferredSize();
+            }
             return map.Bound.Size;
         }
 
         protected override void OnButtonReleased(ButtonEventArgs args)
         {
             base.OnButtonReleased(args);
-            foreach (GroupBoxItem box in map.GetItems())
+            foreach (GroupBoxItem box in map.GetVisibleItems())
             {
                 if (box.Visible)
                 {
@@ -186,7 +174,15 @@ namespace DataWF.Gui
         protected override void OnReallocate()
         {
             base.OnReallocate();
-            ResizeLayout();
+            map.Width = Size.Width;
+            map.Height = Size.Height;
+            map.GetBound();
+
+            foreach (GroupBoxItem item in map.GetVisibleItems())
+            {
+                item.CheckBounds();
+            }
+            QueueDraw();
         }
 
         public bool Contains(ILayoutItem item)

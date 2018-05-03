@@ -52,7 +52,7 @@ namespace DataWF.Gui
         public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, string property = null)
         {
             base.OnListChanged(type, newIndex, oldIndex, property);
-            GroupBox?.ResizeLayout();
+            GroupBox?.QueueForReallocate();
         }
 
         public void CheckBounds()
@@ -63,8 +63,8 @@ namespace DataWF.Gui
 
             var bound = top.GetBound(this);
 
-            if (!expand)
-                bound.Height = HeaderHeight + 5;
+            //if (!expand)
+            //    bound.Height = HeaderHeight + 5;
 
             if (widget != null && Map != null)
             {
@@ -147,6 +147,7 @@ namespace DataWF.Gui
                     if (widget != null)
                         widget.Visible = visible && expand;
                     OnPropertyChanged(nameof(Expand));
+                    GroupBox?.QueueDraw();
                     //if (map != null)
                     //    map.ResizeLayout();
                 }
