@@ -273,7 +273,7 @@ namespace DataWF.Module.Common
         public void RefereshText()
         {
             string _textCache = GetProperty<string>(nameof(TextData));
-            if (_textCache.Length == 0 && LogItem != null)
+            if (_textCache?.Length == 0 && LogItem != null)
             {
                 var logPrevius = LogItem.GetPrevius();
                 foreach (var logColumn in LogTable.GetLogColumns())
