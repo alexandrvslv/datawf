@@ -306,7 +306,8 @@ namespace DataWF.Data
             var arg = new DBLoadProgressEventArgs(transaction.View, 0, 0, null);
             IEnumerable<DBColumn> creference = null;
             List<T> buf = null;
-
+            if (transaction.View != null && transaction.View.Table == this && transaction.View.IsStatic)
+                transaction.View.Clear();
             if (items.Count == 0)
                 transaction.ReaderParam &= ~DBLoadParam.Synchronize;
             try
