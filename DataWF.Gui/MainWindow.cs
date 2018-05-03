@@ -606,7 +606,7 @@ namespace DataWF.Gui
         public ToolWidgetHandler(EventHandler click) : base(click)
         {
             DisplayStyle = ToolItemDisplayStyle.ImageAndText;
-            indent = 0;
+            indent = 6;
         }
 
         public Widget Widget { get; set; }

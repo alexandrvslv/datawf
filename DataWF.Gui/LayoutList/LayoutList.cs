@@ -554,6 +554,7 @@ namespace DataWF.Gui
 
         protected internal virtual void CanvasMouseScrolled(MouseScrolledEventArgs e)
         {
+            CanvasMouseMoved(new MouseMovedEventArgs(e.Timestamp, e.X, e.Y));
             canvas.QueueDraw();
         }
 

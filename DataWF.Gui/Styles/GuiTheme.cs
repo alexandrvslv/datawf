@@ -73,7 +73,7 @@ namespace DataWF.Gui
             }
             else
             {
-                defaultFont = defaultFont.WithSize(defaultFont.Size);
+                defaultFont = defaultFont.WithSize(defaultFont.Size * 1.08);
             }
 
             AddRange(new CellStyle[]{
@@ -208,7 +208,7 @@ namespace DataWF.Gui
                     Colors.SkyBlue.WithAlpha(0.5),
                     diff),
                 GenerateStyle("Tool",
-                    defaultFont.WithSize(defaultFont.Size + 0.1),
+                    defaultFont.WithSize(defaultFont.Size * 1.08).WithWeight(FontWeight.Semibold),
                     baseBackground.WithIncreasedLight(diff),
                     diff,
                     lineWidth:1.5,

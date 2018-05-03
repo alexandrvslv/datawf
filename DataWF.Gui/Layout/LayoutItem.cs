@@ -853,7 +853,7 @@ namespace DataWF.Gui
                     if (ww > w && !fill)
                         w = ww;
                 }
-                if (!fill && item.FillWidth)
+                if (!fill && item.Visible && item.FillWidth)
                     fill = true;
                 if (r == GetRowMaxIndex())
                     break;
