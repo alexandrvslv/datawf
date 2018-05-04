@@ -256,32 +256,6 @@ namespace DataWF.Data
             set { table = value as DBTable<T>; }
         }
 
-        IEnumerable<DBItem> IDBTableView.SelectChilds(DBItem item)
-        {
-            return SelectChilds(item);
-        }
-
-        public IEnumerable<T> SelectChilds(DBItem group)
-        {
-            foreach (var item in items)
-                if (item.Group == group)
-                    yield return item;
-        }
-
-        IEnumerable<DBItem> IDBTableView.SelectParents()
-        {
-            return SelectParents();
-        }
-
-        public IEnumerable<T> SelectParents()
-        {
-            foreach (var item in items)
-            {
-                if (item.Group == null)
-                    yield return item;
-            }
-        }
-
         IEnumerable<DBItem> IDBTableView.Load(DBLoadParam param)
         {
             return Load(param);
@@ -304,7 +278,7 @@ namespace DataWF.Data
         }
 
         public void OnItemChanged(T item, string property, ListChangedType type)
-        {            
+        {
             if (type == ListChangedType.Reset)
             {
                 UpdateFilter();
@@ -580,7 +554,7 @@ namespace DataWF.Data
 
         public IEnumerable<T> GetTop()
         {
-            return (IEnumerable<T>)table.SelectItems(Table.GroupKey.Name + " is null");
+            return (IEnumerable<T>)table.SelectItems(Table.GroupKey, CompareType.Is, null);
         }
 
         public IEnumerable<T> GetItems()

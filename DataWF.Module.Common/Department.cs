@@ -26,7 +26,7 @@ using System.Runtime.Serialization;
 namespace DataWF.Module.Common
 {
     [DataContract, Table("rdepartment", "User", BlockSize = 100)]
-    public class Department : DBItem, IComparable, IDisposable
+    public class Department : DBGroupItem, IComparable, IDisposable
     {
         public static DBTable<Department> DBTable
         {
@@ -48,15 +48,15 @@ namespace DataWF.Module.Common
         [DataMember, Column("parent_id", Keys = DBColumnKeys.Group), Index("rdepartment_parent_id"), Browsable(false)]
         public int? ParentId
         {
-            get { return GetValue<int?>(Table.GroupKey); }
-            set { this[Table.GroupKey] = value; }
+            get { return GetGroupValue<int?>(); }
+            set { SetGroupValue(value); }
         }
 
         [Reference(nameof(ParentId))]
         public Department Parent
         {
-            get { return GetReference<Department>(Table.GroupKey); }
-            set { SetReference(value, Table.GroupKey); }
+            get { return GetGroupReference<Department>(); }
+            set { SetGroupReference(value); }
         }
 
         [DataMember, Column("code", 256, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing), Index("rdepartment_code", false)]

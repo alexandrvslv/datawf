@@ -9,6 +9,7 @@ using Xwt;
 using Xwt.Drawing;
 using DataWF.Module.Common;
 using System.Text;
+using System.Collections.Generic;
 
 namespace DataWF.Module.CommonGui
 {
@@ -27,8 +28,9 @@ namespace DataWF.Module.CommonGui
 
     public class UserTree : LayoutList
     {
+        private List<IDBTableView> views = new List<IDBTableView>();
         private UserTreeKeys userKeys;
-        private ListChangedEventHandler handler;
+        //private ListChangedEventHandler handler;
         private DBStatus status = DBStatus.Empty;
         private Rectangle imgRect = new Rectangle();
         private Rectangle textRect = new Rectangle();
@@ -41,7 +43,7 @@ namespace DataWF.Module.CommonGui
         public UserTree()
         {
             Mode = LayoutListMode.Tree;
-            handler = new ListChangedEventHandler(HandleViewListChanged);
+            //handler = new ListChangedEventHandler();
         }
 
         public DBItem SelectedDBItem
@@ -133,11 +135,6 @@ namespace DataWF.Module.CommonGui
         public bool ShowListNode { get; set; } = true;
 
 
-        public void AddTableView(IDBTableView view)
-        {
-            view.ListChanged += handler;
-        }
-
         private void RefreshData()
         {
             InitItem(Department.DBTable?.DefaultView, ShowDepartment, GlyphType.Home, Colors.SandyBrown);
@@ -150,6 +147,10 @@ namespace DataWF.Module.CommonGui
 
         private void HandleViewListChanged(object sender, ListChangedEventArgs e)
         {
+            if (listSource == null)
+            {
+                return;
+            }
             Application.Invoke(() =>
             {
                 IDBTableView view = (IDBTableView)sender;
@@ -162,21 +163,21 @@ namespace DataWF.Module.CommonGui
                 else
                 {
                     TableItemNode node = null;
-                    DBItem rowview = null;
+                    DBItem item = null;
 
                     if (e.NewIndex >= 0)
                     {
-                        rowview = (DBItem)view[e.NewIndex];
-                        if (rowview.PrimaryId == null)
+                        item = (DBItem)view[e.NewIndex];
+                        if (item.PrimaryId == null)
                             return;
-                        node = InitItem((IDBTableContent)rowview);
-                        if (rowview.Group != null)
-                            nodeParent = (TableItemNode)Nodes.Find(GetName(rowview.Group));
+                        node = InitItem((IDBTableContent)item);
+                        if (item is DBGroupItem && ((DBGroupItem)item).Group != null)
+                            nodeParent = (TableItemNode)Nodes.Find(GetName(((DBGroupItem)item).Group));
 
                         //if (nodeParent == null && rowview.Group!=null && node.Group != null && node.Group.Tag)
                         //    nodeParent = node.Group;
                     }
-                    if (e.ListChangedType == ListChangedType.ItemDeleted && rowview != null)
+                    if (e.ListChangedType == ListChangedType.ItemDeleted && item != null)
                     {
                         if (node.Group == nodeParent)
                             Nodes.Remove(node);
@@ -242,7 +243,8 @@ namespace DataWF.Module.CommonGui
             TableItemNode node = null;
             if (show)
             {
-                view.ListChanged += handler;
+                view.ListChanged += HandleViewListChanged;
+                views.Add(view);
                 if (ShowListNode)
                 {
                     node = InitItem((IDBTableContent)view);
@@ -277,7 +279,8 @@ namespace DataWF.Module.CommonGui
             }
             else
             {
-                view.ListChanged -= handler;
+                views.Remove(view);
+                view.ListChanged -= HandleViewListChanged;
                 node = (TableItemNode)Nodes.Find(GetName(view));
                 if (node != null)
                     node.Hide();
@@ -474,18 +477,11 @@ namespace DataWF.Module.CommonGui
 
         protected override void Dispose(bool disposing)
         {
-            foreach (TableItemNode item in Nodes)
+            foreach (var view in views)
             {
-                if (item.Item is IDBTableView)
-                {
-                    ((IDBTableView)item.Item).ListChanged -= handler;
-                }
+                view.ListChanged -= HandleViewListChanged;
             }
             BindSource = null;
-            //User.DBTable.DefaultView.ListChanged -= handler;
-            //UserGroup.DBTable.DefaultView.ListChanged -= handler;
-            //GroupPermission.DBTable.DefaultView.ListChanged -= handler;
-            //Scheduler.DBTable.DefaultView.ListChanged -= handler;
             base.Dispose(disposing);
         }
 

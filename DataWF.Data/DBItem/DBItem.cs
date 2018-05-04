@@ -34,7 +34,7 @@ using System.Text;
 namespace DataWF.Data
 {
     [DataContract]
-    public class DBItem : ICloneable, IComparable<DBItem>, IDisposable, IGroup, IAccessable, ICheck, INotifyPropertyChanged, IEditable, IStatus, IDBTableContent
+    public class DBItem : ICloneable, IComparable<DBItem>, IDisposable, IAccessable, ICheck, INotifyPropertyChanged, IEditable, IStatus, IDBTableContent
     {
         public static readonly DBItem EmptyItem = new DBItem() { cacheToString = "Loading" };
         public object Tag;
@@ -321,8 +321,18 @@ namespace DataWF.Data
 
         public DBItem GetReference(DBColumn column, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null)
         {
-            object value = GetValue(column);
-            return value == null ? null : column.ReferenceTable.LoadItemById(value, param, transaction);
+            var item = GetTag(column) as DBItem;
+
+            if (item == null)
+            {
+                object value = GetValue(column);
+                if (value == null)
+                    return null;
+
+                item = column.ReferenceTable.LoadItemById(value, param, transaction);
+                SetTag(column, item);
+            }
+            return item;
         }
 
         public T GetReference<T>(string code, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null) where T : DBItem, new()
@@ -630,8 +640,8 @@ namespace DataWF.Data
             get { return Table.ItemTypeKey == null ? 0 : GetValue<int?>(Table.ItemTypeKey).Value; }
             set { SetValue(value, Table.ItemTypeKey); }
         }
-                
-        [DataMember, Column("status_id", Default = "1", GroupName = "system", Keys = DBColumnKeys.State | DBColumnKeys.System, Order = 99)]
+
+        [DataMember, Column("status_id", Default = "1", GroupName = "system", Keys = DBColumnKeys.State | DBColumnKeys.System | DBColumnKeys.Indexing, Order = 99)]
         public DBStatus Status
         {
             get { return Table.StatusKey == null ? DBStatus.Empty : GetValue<DBStatus?>(Table.StatusKey).GetValueOrDefault(); }
@@ -693,32 +703,6 @@ namespace DataWF.Data
             }
         }
 
-        [Browsable(false)]
-        public object GroupId
-        {
-            get { return table.GroupKey == null ? null : this[table.GroupKey]; }
-            set { SetValue(value, table.GroupKey); }
-        }
-
-        [Browsable(false)]
-        public DBItem Group
-        {
-            get { return table.GroupKey == null ? null : GetReference(table.GroupKey); }
-            set
-            {
-                if (value == null || (value.GroupId != PrimaryId && value.PrimaryId != PrimaryId))
-                {
-                    SetReference(value, Table.GroupKey);
-                }
-            }
-        }
-
-        IGroup IGroup.Group
-        {
-            get { return Group; }
-            set { Group = value as DBItem; }
-        }
-
         [DataMember, Browsable(false)]
         public virtual string Name
         {
@@ -727,60 +711,16 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
-        public string FullName
-        {
-            get
-            {
-                char separator = Path.PathSeparator;
-                string buf = string.Empty;
-                DBItem row = this;
-                while (row != null)
-                {
-                    buf = row.Name + (buf.Length == 0 ? string.Empty : (separator + buf));
-                    row = row.Group;
-                }
-                return buf;
-            }
-        }
-
-        public IEnumerable<DBItem> GetGroups()
-        {
-            if (Group == null)
-                yield break;
-            yield return Group;
-
-            var g = Group;
-            while (g.Group != null)
-            {
-                yield return g.Group;
-                g = g.Group;
-            }
-        }
-
-        public bool AllParentExpand()
-        {
-            return GroupHelper.IsExpand(this);
-        }
-
-        public bool GroupCompare(string column, string value)
-        {
-            DBColumn col = table.Columns[column];
-            foreach (DBItem g in GetGroups())
-            {
-                if (!g[col].ToString().Equals(value, StringComparison.OrdinalIgnoreCase))
-                    return false;
-            }
-            return true;
-        }
-
-        [Browsable(false)]
         public virtual DBTable Table
         {
             get { return table; }
             set
             {
-                table = value;
-                hindex = Pull.GetHIndex(++table.Hash, table.BlockSize);
+                if (table != value)
+                {
+                    table = value;
+                    hindex = Pull.GetHIndexUnsafe(++table.Hash, table.BlockSize);
+                }
             }
         }
 
@@ -965,50 +905,7 @@ namespace DataWF.Data
             return item;
         }
 
-        #endregion
-        public IEnumerable<T> GetSubGroups<T>(DBLoadParam param) where T : DBItem, new()
-        {
-            if (PrimaryId == null)
-                return new List<T>(0);
-            return GetReferencing<T>(Table, Table.GroupKey, param);
-        }
-
-        public List<T> GetSubGroupFull<T>(bool addCurrent = false) where T : DBItem, new()
-        {
-            var buf = GetSubGroups<T>(DBLoadParam.None);
-            var rez = new List<T>();
-            if (addCurrent)
-                rez.Add((T)this);
-            rez.AddRange(buf);
-            foreach (var row in buf)
-                rez.AddRange(row.GetSubGroupFull<T>());
-            return rez;
-        }
-
-        public string GetSubGroupIds()
-        {
-            string rez = "";
-            rez = PrimaryId.ToString();
-            foreach (DBItem row in GetSubGroupFull<DBItem>())
-                rez += "," + row.PrimaryId;
-            return rez;
-        }
-
-        public IEnumerable<T> GetParents<T>(bool addCurrent = false)
-        {
-            return GroupHelper.GetAllParent<T>(this, addCurrent);
-        }
-
-        public string GetParentIds()
-        {
-            string rez = "";
-            rez = PrimaryId.ToString();
-            foreach (DBItem row in GroupHelper.GetAllParent<DBItem>(this))
-            {
-                rez += "," + row.PrimaryId;
-            }
-            return rez;
-        }
+        #endregion        
 
         [Browsable(false)]
         public bool Attached
@@ -1125,39 +1022,7 @@ namespace DataWF.Data
             }
         }
 
-        #region IGroupable implementation
 
-        [Browsable(false)]
-        public bool IsExpanded
-        {
-            get { return GroupHelper.GetAllParentExpand(this); }
-        }
-
-        [Browsable(false)]
-        public bool Expand
-        {
-            get { return (state & DBItemState.Expand) == DBItemState.Expand; }
-            set
-            {
-                if (Expand != value)
-                {
-                    state = value ? state | DBItemState.Expand : state & ~DBItemState.Expand;
-                    OnPropertyChanged(nameof(Expand), null);
-                }
-            }
-        }
-
-        [Browsable(false)]
-        public bool IsCompaund
-        {
-            get
-            {
-                if (table.GroupKey == null)
-                    return false;
-                return GetSubGroups<DBItem>(DBLoadParam.None).Any();
-            }
-        }
-        #endregion
 
         public void Save()
         {

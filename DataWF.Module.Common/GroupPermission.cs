@@ -37,7 +37,7 @@ namespace DataWF.Module.Common
     }
 
     [DataContract, Table("rgroup_permission", "User", BlockSize = 500)]
-    public class GroupPermission : DBItem
+    public class GroupPermission : DBGroupItem
     {
         public static DBTable<GroupPermission> DBTable
         {
@@ -117,15 +117,15 @@ namespace DataWF.Module.Common
         [DataMember, Column("parent_id", Keys = DBColumnKeys.Group), Index("rgroup_permission_parent_id"), Browsable(false)]
         public int? ParentId
         {
-            get { return GetValue<int?>(Table.GroupKey); }
-            set { SetValue(value, Table.GroupKey); }
+            get { return GetGroupValue<int?>(); }
+            set { SetGroupValue(value); }
         }
 
         [Reference(nameof(ParentId))]
         public GroupPermission Parent
         {
-            get { return GetReference<GroupPermission>(Table.GroupKey); }
-            set { SetReference(value, Table.GroupKey); }
+            get { return GetGroupReference<GroupPermission>(); }
+            set { SetGroupReference(value); }
         }
 
         [DataMember, Column("type_id", Keys = DBColumnKeys.ElementType)]

@@ -174,6 +174,16 @@ namespace DataWF.Data
             IsSynchronized = false;
         }
 
+        //public IEnumerable<T> SelectParents() where T : DBGroupItem
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        public IEnumerable<T> SelectParents()
+        {
+            return Select(GroupKey, CompareType.Is, null);
+        }
+
         #region IEnumerable Members
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -854,7 +864,7 @@ namespace DataWF.Data
             list = list ?? this;
             foreach (T row in list)
             {
-                if (CheckItem(row, row[column], value, comparer))
+                if (CheckItem(row, row.GetValue(column), value, comparer))
                     yield return row;
             }
         }

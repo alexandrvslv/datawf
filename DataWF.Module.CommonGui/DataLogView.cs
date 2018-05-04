@@ -595,10 +595,7 @@ namespace DataWF.Module.CommonGui
             }
             else if (filter is User && mode == DataLogMode.User)
             {
-                if (filter.IsCompaund)
-                    query.BuildPropertyParam(nameof(UserLog.UserId), CompareType.In, filter.GetSubGroupFull<User>(true));
-                else
-                    query.BuildPropertyParam(nameof(UserLog.UserId), CompareType.Equal, filter.PrimaryId);
+                query.BuildPropertyParam(nameof(UserLog.UserId), CompareType.Equal, filter.PrimaryId);
             }
             else if (filter is UserGroup && mode == DataLogMode.Group)
             {

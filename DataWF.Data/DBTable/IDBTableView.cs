@@ -48,10 +48,6 @@ namespace DataWF.Data
 
         new bool IsSynchronized { get; set; }
 
-        IEnumerable<DBItem> SelectParents();
-
-        IEnumerable<DBItem> SelectChilds(DBItem item);
-
         void OnItemChanged(DBItem item, string property, ListChangedType type);
 
         IEnumerable<DBItem> Load(DBLoadParam param = DBLoadParam.None);

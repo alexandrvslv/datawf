@@ -917,9 +917,9 @@ namespace DataWF.Data
                 comparer = CompareType.In;
             else if (value is DBItem)
             {
-                if (((DBItem)value).Table.GroupKey != null)
+                if (value is DBGroupItem)
                 {
-                    value = ((DBItem)value).GetSubGroupFull<DBItem>(true);
+                    value = ((DBGroupItem)value).GetSubGroupFull<DBGroupItem>(true);
                     comparer = CompareType.In;
                 }
                 else
@@ -1172,7 +1172,7 @@ namespace DataWF.Data
                 if (!tables.IsLast(table))
                     from.Append(", ");
             }
-            return $"select {cols.ToString()}\n    from {from} {(whr.Length > 0 ? "\n    where " : string.Empty)}{whr}{(order.Length > 0 ? "\n    order by "  : string.Empty)}{order}";
+            return $"select {cols.ToString()}\n    from {from} {(whr.Length > 0 ? "\n    where " : string.Empty)}{whr}{(order.Length > 0 ? "\n    order by " : string.Empty)}{order}";
         }
 
         public string ToWhere(IDbCommand command = null)

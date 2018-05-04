@@ -66,14 +66,14 @@ namespace DataWF.Module.Flow
             if (_cacheAllTemplates == null)
             {
                 _cacheAllTemplates = new TemplateList();
-                _cacheAllTemplates.Query.BuildParam(Template.DBTable.ParseProperty(nameof(Template.ParentId)), template.GetSubGroupIds());
+                _cacheAllTemplates.Query.BuildParam(Template.DBTable.ParseProperty(nameof(Template.ParentId)), template.GetSubGroupFullIds());
             }
             return _cacheAllTemplates;
         }
     }
 
     [DataContract, Table("rtemplate", "Template", BlockSize = 100)]
-    public class Template : DBItem, IDisposable
+    public class Template : DBGroupItem, IDisposable
     {
         public static DBTable<Template> DBTable
         {
@@ -124,17 +124,17 @@ namespace DataWF.Module.Flow
         [DataMember, Column("group_id", Keys = DBColumnKeys.Group)]
         public int? ParentId
         {
-            get { return GetValue<int?>(Table.GroupKey); }
-            set { SetValue(value, Table.GroupKey); }
+            get { return GetGroupValue<int?>(); }
+            set { SetGroupValue(value); }
         }
 
         [Reference(nameof(ParentId))]
         public virtual Template Parent
         {
-            get { return GetReference<Template>(Table.GroupKey); }
+            get { return GetGroupReference<Template>(); }
             set
             {
-                SetReference(value, Table.GroupKey);
+                SetGroupReference(value);
                 if (DocumentType == 0)
                     DocumentType = value?.DocumentType ?? 0;
                 if (Work == null)

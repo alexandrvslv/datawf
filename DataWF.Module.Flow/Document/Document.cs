@@ -65,7 +65,7 @@ namespace DataWF.Module.Flow
     }
 
     [DataContract, Table("ddocument", "Document", BlockSize = 200)]
-    public class Document : DBItem, IDisposable
+    public class Document : DBGroupItem, IDisposable
     {
         public static DBTable<Document> DBTable
         {
@@ -266,7 +266,7 @@ namespace DataWF.Module.Flow
 
         private DocInitType initype = DocInitType.Default;
         private int changes = 0;
-        private DBItem parent = DBItem.EmptyItem;
+        //private DBItem parent = DBItem.EmptyItem;
 
         public event EventHandler<DBItemEventArgs> ReferenceChanged;
 
@@ -332,26 +332,17 @@ namespace DataWF.Module.Flow
         [DataMember, Column("parent_id", Keys = DBColumnKeys.Group)]
         public long? ParentId
         {
-            get { return GetValue<long?>(Table.GroupKey); }
-            set { SetValue(value, Table.GroupKey); }
+            get { return GetGroupValue<long?>(); }
+            set { SetGroupValue(value); }
         }
 
         [Reference(nameof(ParentId))]
         public Document Parent
         {
-            get
-            {
-                if (parent == DBItem.EmptyItem)
-                {
-                    parent = GetReference<Document>(Table.GroupKey) ??
-                        References.Where(p => p.Document != this).FirstOrDefault()?.Document;
-                }
-                return (Document)parent;
-            }
+            get { return GetGroupReference<Document>(); }
             set
             {
-                SetReference(value, Table.GroupKey);
-                parent = value;
+                SetGroupReference(value);
                 if (Customer == null)
                 {
                     Customer = value?.Customer;
@@ -968,7 +959,7 @@ namespace DataWF.Module.Flow
             var qWork = new QQuery(string.Empty, DocumentWork.DBTable);
             qWork.Columns.Add(new QColumn(nameof(DocumentWork.Document)));
             qWork.BuildPropertyParam(nameof(DocumentWork.IsComplete), CompareType.Equal, false);
-            qWork.BuildPropertyParam(nameof(DocumentWork.UserId), CompareType.In, user.GetParents<User>(true));
+            qWork.BuildPropertyParam(nameof(DocumentWork.UserId), CompareType.Equal, user);
 
             var qDocs = new QQuery(string.Empty, Document.DBTable);
             qDocs.BuildPropertyParam(nameof(Document.Id), CompareType.In, qWork);
