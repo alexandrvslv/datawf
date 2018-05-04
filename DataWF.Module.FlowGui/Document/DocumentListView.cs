@@ -34,13 +34,52 @@ namespace DataWF.Module.FlowGui
         protected ToolItem toolPreview;
         protected ToolTableLoader toolProgress;
         protected ToolDropDown toolParam;
+
+        protected Toolsbar filterBar;
+        protected ToolItem filterWork;
+        protected ToolItem filterCurrent;
+        protected ToolItem filterClear;
+
+        protected ToolFieldEditor filterCustomer;
+        protected ToolFieldEditor filterNumber;
+        protected ToolFieldEditor filterTitle;
+        protected ToolFieldEditor filterDate;
         private DocumentLayoutList list;
-        private VPaned split;
+        private VPaned vSplit;
+        private HBox hSplit;
 
         public DocumentListView()
         {
-            ofDialog = new OpenFileDialog() { Multiselect = true };
+            filterClear = new ToolItem(FilterClearClick) { Name = "Clear", Glyph = GlyphType.Eraser };
+            filterWork = new ToolItem((s, e) =>
+            {
+                Filter.IsWork = filterWork.Checked ? CheckedState.Checked : CheckedState.Indeterminate;
+            })
+            { Name = "IsWork", DisplayStyle = ToolItemDisplayStyle.Text, CheckOnClick = true };
+            filterCurrent = new ToolItem((s, e) =>
+            {
+                Filter.IsCurrent = filterCurrent.Checked;
+            })
+            { Name = "IsCurrent", DisplayStyle = ToolItemDisplayStyle.Text, CheckOnClick = true };
+            filterCustomer = new ToolFieldEditor { FillWidth = true, Name = nameof(DocumentFilter.Customer), DisplayStyle = ToolItemDisplayStyle.Text };
+            filterNumber = new ToolFieldEditor { FillWidth = true, Name = nameof(DocumentFilter.Number), DisplayStyle = ToolItemDisplayStyle.Text };
+            filterTitle = new ToolFieldEditor { FillWidth = true, Name = nameof(DocumentFilter.Title), DisplayStyle = ToolItemDisplayStyle.Text };
+            filterDate = new ToolFieldEditor { FillWidth = true, Name = nameof(DocumentFilter.Date), DisplayStyle = ToolItemDisplayStyle.Text };
 
+            filterBar = new Toolsbar(new ToolItem[]
+            {
+                filterCustomer,
+                filterNumber,
+                filterTitle,
+                filterDate,
+                new ToolSeparator { Width = 20 },
+                filterWork,
+                filterCurrent,
+                filterClear
+            })
+            { Name = "FilterBar" };
+
+            ofDialog = new OpenFileDialog() { Multiselect = true };
             loader = new TableLoader();
 
             toolCreate = new ToolItem(ToolCreateClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Create", ForeColor = Colors.DarkGreen, Glyph = GlyphType.PlusCircle };
@@ -48,7 +87,7 @@ namespace DataWF.Module.FlowGui
             toolCopy = new ToolItem(ToolCopyClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Copy", Glyph = GlyphType.CopyAlias };
             toolLoad = new ToolItem(ToolLoadClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Load", Glyph = GlyphType.Download };
 
-            foreach (Template template in Template.DBTable.DefaultView.SelectParents())
+            foreach (Template template in Template.DBTable.SelectParents())
             {
                 if (template.Access.Create)
                     toolCreateFrom.DropDownItems.Add(InitTemplate(template));
@@ -65,7 +104,7 @@ namespace DataWF.Module.FlowGui
                 toolCreateFrom,
                 toolCopy,
                 toolLoad,
-                new ToolSeparator() { FillWidth = true },
+                new ToolSeparator { FillWidth = true },
                 toolCount,
                 toolFilter,
                 toolPreview,
@@ -86,16 +125,19 @@ namespace DataWF.Module.FlowGui
 
             filterView = new DocumentFilterView() { Visible = false };
 
-            split = new VPaned() { Name = "split" };
-            split.Panel1.Content = list;
+            vSplit = new VPaned() { Name = "split" };
+            vSplit.Panel1.Content = list;
 
-            var hbox = new HBox();
-            hbox.PackStart(filterView, false, false);
-            hbox.PackStart(split, true, true);
+            hSplit = new HBox();
+            hSplit.PackStart(filterView, false, false);
+            hSplit.PackStart(vSplit, true, true);
+            //hSplit.Panel1.Resize = false;
+            //hSplit.Panel2.Resize = true;
+            //hSplit.Panel2.Content = vSplit;
 
             PackStart(bar, false, false);
-            PackStart(hbox, true, true);
-
+            PackStart(filterBar, false, false);
+            PackStart(hSplit, true, true);
             Name = "DocumentListView";
             Filter = new DocumentFilter();
             Documents = new DocumentList();
@@ -116,6 +158,7 @@ namespace DataWF.Module.FlowGui
         public virtual void Localize()
         {
             bar.Localize();
+            filterBar.Localize();
             list.Localize();
             filterView.Localize();
             GuiService.Localize(this, nameof(DocumentListView), "Documents List");
@@ -145,6 +188,12 @@ namespace DataWF.Module.FlowGui
                     }
                     filter = value;
                     filterView.Filter = value;
+
+                    filterCustomer.Field.BindData(filter, nameof(DocumentFilter.Customer));
+                    filterNumber.Field.BindData(filter, nameof(DocumentFilter.Number));
+                    filterTitle.Field.BindData(filter, nameof(DocumentFilter.Title));
+                    filterDate.Field.BindData(filter, nameof(DocumentFilter.Date));
+
                     if (filter != null)
                     {
                         filter.PropertyChanged += OnFilterPropertyChanged;
@@ -209,6 +258,17 @@ namespace DataWF.Module.FlowGui
             get { return list.SelectedItem as Document; }
         }
 
+        public bool FilterVisible
+        {
+            get { return toolFilter.Checked; }
+            set
+            {
+                filterView.Visible = toolFilter.Checked = value;
+                //hSplit.Panel1.Content = value ? filterView : null;
+                //QueueForReallocate();
+            }
+        }
+
         public virtual Template FilterTemplate
         {
             get { return filter?.Template; }
@@ -225,6 +285,9 @@ namespace DataWF.Module.FlowGui
                 }
 
                 toolCreate.Sensitive = FilterTemplate != null && !FilterTemplate.IsCompaund && FilterTemplate.Access.Create;
+                filterWork.Checked = filter?.IsWork == CheckedState.Checked;
+                filterCurrent.Checked = filter?.IsCurrent ?? false;
+
                 list.Template = FilterTemplate;
 
                 FilterChanged?.Invoke(this, EventArgs.Empty);
@@ -233,12 +296,7 @@ namespace DataWF.Module.FlowGui
                 {
                     if (AutoLoad && !filter.IsCurrent && !filter.IsEmpty)
                     {
-                        documents.IsStatic = true;
                         loader.LoadAsync(filter.QDoc);
-                    }
-                    else
-                    {
-                        documents.IsStatic = false;
                     }
                 }
             }
@@ -332,7 +390,7 @@ namespace DataWF.Module.FlowGui
         {
             if (e.ListChangedType == ListChangedType.Reset)
                 return;
-            if (e.ListChangedType == ListChangedType.ItemAdded && documents.IsStatic)
+            if (e.ListChangedType == ListChangedType.ItemAdded)
             {
                 var document = documents[e.NewIndex];
                 if (document.WorkStage == null || document.WorkStage.Length == 0)
@@ -387,14 +445,9 @@ namespace DataWF.Module.FlowGui
             //toolParam.DropDown = list.ContextMenu;
         }
 
-        public bool FilterVisible
+        protected virtual void FilterClearClick(object sender, EventArgs e)
         {
-            get { return toolFilter.Checked; }
-            set
-            {
-                toolFilter.Checked = value;
-                filterView.Visible = value;
-            }
+            Filter?.Clear();
         }
 
         private void ToolFilterClick(object sender, EventArgs e)
@@ -437,16 +490,16 @@ namespace DataWF.Module.FlowGui
 
         public bool ShowPreview
         {
-            get { return split.Panel2.Content != null && split.Panel2.Content.Visible; }
+            get { return vSplit.Panel2.Content != null && vSplit.Panel2.Content.Visible; }
             set
             {
-                if (value && split.Panel2.Content == null)
+                if (value && vSplit.Panel2.Content == null)
                 {
-                    split.Panel2.Content = deditor;
+                    vSplit.Panel2.Content = deditor;
                 }
-                else if (!value && split.Panel2.Content != null)
+                else if (!value && vSplit.Panel2.Content != null)
                 {
-                    split.Panel2.Content = null;
+                    vSplit.Panel2.Content = null;
                     QueueForReallocate();
                 }
             }
@@ -499,7 +552,7 @@ namespace DataWF.Module.FlowGui
             var command = commandCreateOne;
             if (references.Count > 1)
             {
-                var question = new QuestionMessage("New Document", $"Create Several or One {template}?");
+                var question = new QuestionMessage("New Document", $"Create one {template} or several?");
                 question.Buttons.Add(commandCreateOne);
                 question.Buttons.Add(commandCreateSeveral);
                 question.Buttons.Add(Command.Cancel);

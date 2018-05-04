@@ -13,9 +13,7 @@ namespace DataWF.Module.FlowGui
     {
         static readonly Invoker<TableItemNode, int> countInvoker = new Invoker<TableItemNode, int>(nameof(TableItemNode.Count), p => p.Count);
 
-        private ToolSearchEntry toolFilter;
-        private ToolItem toolClear;
-        private Toolsbar bar;
+        private ToolSearchEntry toolFilter;        
 
         private LayoutList fields;
 
@@ -33,9 +31,7 @@ namespace DataWF.Module.FlowGui
         public DocumentFilterView()
         {
             toolFilter = new ToolSearchEntry() { Name = "Filter", FillWidth = true };
-            toolClear = new ToolItem(ToolClearClick) { Name = "Clear", Glyph = GlyphType.Eraser };
-            bar = new Toolsbar(toolClear, toolFilter);
-
+           
             fields = new LayoutList()
             {
                 EditMode = EditModes.ByClick,
@@ -85,14 +81,12 @@ namespace DataWF.Module.FlowGui
             };
 
             box = new GroupBox(
-                        new GroupBoxItem { Widget = templates, Name = "Templates", FillWidth = true, FillHeight = true },
-                        new GroupBoxItem { Widget = fields, Row = 1, Name = "Parameters", FillWidth = true, Height = 160, Autosize = false, Expand = false },
-                        new GroupBoxItem { Widget = works, Row = 2, Name = "Works & Stage", FillWidth = true, FillHeight = true, Expand = false },
-                        new GroupBoxItem { Widget = users, Row = 3, Name = "Users", FillWidth = true, FillHeight = true, Expand = false }
-                        )
+                new GroupBoxItem { Widget = templates, Name = "Document Type", FillWidth = true, FillHeight = true },
+                //new GroupBoxItem { Widget = fields, Row = 1, Name = "Parameters", FillWidth = true, Height = 160, Autosize = false, Expand = false },
+                new GroupBoxItem { Widget = works, Row = 2, Name = "Workflow & Stage", FillWidth = true, FillHeight = true, Expand = false },
+                new GroupBoxItem { Widget = users, Row = 3, Name = "Staff", FillWidth = true, FillHeight = true, Expand = false })
             { Name = "Map" };
 
-            PackStart(bar, false, false);
             PackStart(box, true, true);
             MinWidth = 330;
 
@@ -136,8 +130,7 @@ namespace DataWF.Module.FlowGui
                 if (filter != value)
                 {
                     filter = value;
-                    fields.FieldSource = value;
-
+                    //fields.FieldSource = value;
                     templates.Bind(filter, nameof(DocumentFilter.Template));
                     works.Bind(filter, nameof(DocumentFilter.Stage));
                     users.Bind(filter, nameof(DocumentFilter.Staff));
@@ -155,7 +148,6 @@ namespace DataWF.Module.FlowGui
 
         public void Localize()
         {
-            bar.Localize();
             box.Localize();
         }
 
@@ -182,13 +174,6 @@ namespace DataWF.Module.FlowGui
                 filter.Template = (Template)templates.SelectedDBItem;
             }
         }
-
-        private void ToolClearClick(object sender, EventArgs e)
-        {
-            Filter?.Clear();
-        }
-
-
 
         protected override void Dispose(bool disposing)
         {

@@ -46,7 +46,7 @@ namespace DataWF.Module.Flow
         protected string number;
         protected DateInterval? date;
         protected DocumentSearchDate dtype = DocumentSearchDate.Create;
-        protected string description;
+        protected string title;
         public QQuery QDoc;
         public QQuery QWork;
         private QParam paramCompleate;
@@ -68,7 +68,7 @@ namespace DataWF.Module.Flow
             QDoc = new QQuery(string.Empty, Document.DBTable);
             QWork = new QQuery(string.Empty, DocumentWork.DBTable);
             QWork.Columns.Add(new QColumn(DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DocumentId))));
-            paramWork = QQuery.CreateParam(Document.DBTable.PrimaryKey, QWork);
+            paramWork = QQuery.CreateParam(Document.DBTable.PrimaryKey, CompareType.In, QWork);
             paramWorkId = QQuery.CreateParam(Document.DBTable.ParseProperty(nameof(Document.WorkId)), CompareType.IsNot, null);
         }
 
@@ -247,11 +247,10 @@ namespace DataWF.Module.Flow
                     {
                         paramNumber.Value = $"%{Number}%";
                     }
-                    Customer = null;
-                    Staff = null;
-                    Stage = null;
-                    Template = null;
-                    Title = null;
+                    customer = null;
+                    staff = null;
+                    stage = null;
+                    title = null;
                 }
                 OnPropertyChanged(nameof(Number));
             }
@@ -354,12 +353,12 @@ namespace DataWF.Module.Flow
 
         public string Title
         {
-            get { return description; }
+            get { return title; }
             set
             {
-                if (description == value)
+                if (title == value)
                     return;
-                description = value;
+                title = value;
                 if (!string.IsNullOrEmpty(value))
                 {
                     if (paramTitle == null)
@@ -373,11 +372,10 @@ namespace DataWF.Module.Flow
                             param.Value = $"%{Title}%";
                         }
                     }
-                    Customer = null;
-                    Staff = null;
-                    Stage = null;
-                    Template = null;
-                    Title = null;
+                    customer = null;
+                    staff = null;
+                    stage = null;
+                    number = null;
                 }
                 OnPropertyChanged(nameof(Title));
             }
@@ -400,9 +398,9 @@ namespace DataWF.Module.Flow
             number = null;
             date = null;
             dtype = DocumentSearchDate.Create;
-            description = null;
-            IsCurrent = true;
-            //OnPropertyChanged(string.Empty);
+            title = null;
+            //IsCurrent = true;
+            OnPropertyChanged(string.Empty);
         }
 
         public void SetParam(DBItem value)
