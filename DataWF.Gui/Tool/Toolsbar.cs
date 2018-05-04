@@ -76,8 +76,7 @@ namespace DataWF.Gui
             items.GetBound(widthConstraint.AvailableSize, heightConstraint.AvailableSize);
             foreach (ToolItem item in items.GetVisibleItems())
             {
-                item.CheckSize(false);
-                items.GetBound(item);
+                item.Content?.Surface.GetPreferredSize();
             }
             return items.Bound.Size;
         }
@@ -91,8 +90,9 @@ namespace DataWF.Gui
         protected override void OnReallocate()
         {
             base.OnReallocate();
-
-            items.GetBound(Size.Width, Size.Height);
+            items.Width = Size.Width;
+            items.Height = Size.Height;
+            items.GetBound();
             foreach (ToolItem item in items.GetVisibleItems())
             {
                 items.GetBound(item);
