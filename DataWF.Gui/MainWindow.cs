@@ -42,7 +42,6 @@ namespace DataWF.Gui
         protected ToolMenuItem menuProjectRecent;
         protected ToolMenuItem menuProjectClose;
         protected ToolMenuItem menuProjectExit;
-        protected ToolDropDown menuEdit;
         protected ToolMenuItem menuEditUIEnvironment;
         protected ToolMenuItem menuEditLocalize;
         protected ToolDropDown menuView;
@@ -97,11 +96,6 @@ namespace DataWF.Gui
             menuEditUIEnvironment = new ToolMenuItem(ToolEditUIEnvironment) { Name = "UI Environment" };
             menuEditLocalize = new ToolMenuItem(ToolEditLocalizeClick) { Name = "Localize" };
 
-            menuEdit = new ToolDropDown(
-                menuEditUIEnvironment,
-                menuEditLocalize)
-            { Name = "Edit", DisplayStyle = ToolItemDisplayStyle.Text };
-
             menuWindowLang = new ToolMenuItem { Name = "Language" };
             foreach (var info in Locale.Instance.Cultures)
             {
@@ -123,9 +117,11 @@ namespace DataWF.Gui
                 });
             }
             menuWindow = new ToolDropDown(
+                menuEditUIEnvironment,
+                menuEditLocalize,
+                new ToolSeparator(),
                 menuWindowLang,
-                menuWindowTheme
-                )
+                menuWindowTheme)
             {
                 Name = "Window",
                 DisplayStyle = ToolItemDisplayStyle.Text

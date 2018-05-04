@@ -165,29 +165,28 @@ namespace DataWF.Module.FlowGui
 
         private async void LoadPage(DockPage page)
         {
-            if (page != null)
+            if (page == null || document == null)
+                return;
+            if (page.Widget is IReadOnly)
             {
-                if (page.Widget is IReadOnly)
-                {
-                    ((IReadOnly)page.Widget).ReadOnly = state == DocumentEditorState.Readonly || !document.Access.Edit;
-                }
-                else
-                {
-                    page.Widget.Sensitive = state == DocumentEditorState.Edit && document.Access.Edit;
-                }
-                if (page.Widget is IDocument)
-                    ((IDocument)page.Widget).Document = document;
-                if (page.Widget is IExecutable)
-                    ((IExecutable)page.Widget).Execute(new ExecuteArgs(document));
-                if (page.Widget is TableEditor)
-                    ((TableEditor)page.Widget).OwnerRow = document;
-                if (document.Attached)
-                {
-                    if (page.Widget is ILoader)
-                        await ((ILoader)page.Widget).Loader.LoadAsync();
-                    if (page.Widget is ISync)
-                        await ((ISync)page.Widget).SyncAsync();
-                }
+                ((IReadOnly)page.Widget).ReadOnly = state == DocumentEditorState.Readonly || !document.Access.Edit;
+            }
+            else
+            {
+                page.Widget.Sensitive = state == DocumentEditorState.Edit && document.Access.Edit;
+            }
+            if (page.Widget is IDocument)
+                ((IDocument)page.Widget).Document = document;
+            if (page.Widget is IExecutable)
+                ((IExecutable)page.Widget).Execute(new ExecuteArgs(document));
+            if (page.Widget is TableEditor)
+                ((TableEditor)page.Widget).OwnerRow = document;
+            if (document.Attached)
+            {
+                if (page.Widget is ILoader)
+                    await ((ILoader)page.Widget).Loader.LoadAsync();
+                if (page.Widget is ISync)
+                    await ((ISync)page.Widget).SyncAsync();
             }
         }
 

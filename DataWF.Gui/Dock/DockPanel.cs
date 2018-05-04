@@ -38,10 +38,9 @@ namespace DataWF.Gui
             pages.Items.ListChanged += PageListOnChange;
 
             panel.Visible = true;
+            panel.Margin = new WidgetSpacing(6, 0, 6, 6);
 
-            this.Name = "DocTabControl";
-
-            this.Visible = true;
+            Name = "DocTabControl";
             AddChild(pages);
             AddChild(panel);
 
