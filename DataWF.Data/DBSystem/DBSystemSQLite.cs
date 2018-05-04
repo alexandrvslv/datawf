@@ -166,7 +166,7 @@ select seq from db_sequence where name = '{sequence.Name}';";
                 {
                     if (temp == typeof(float))
                         value = (float)(double)value;
-                    else if(temp == typeof(decimal))
+                    else if (temp == typeof(decimal))
                         value = (decimal)(double)value;
                     else
                         throw new InvalidCastException($"From {from} to {temp}");
@@ -174,7 +174,7 @@ select seq from db_sequence where name = '{sequence.Name}';";
                 else if (from == typeof(string))
                 {
                     if (temp == typeof(DateTime))
-                        value = DateTime.TryParse((string)value, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)? (object)date: null;
+                        value = DateTime.TryParse((string)value, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date) ? (object)date : null;
                 }
                 else
                     throw new InvalidCastException($"From {from} to {temp}");
@@ -182,11 +182,10 @@ select seq from db_sequence where name = '{sequence.Name}';";
             return value;
         }
 
-        public override List<DBTableInfo> GetTablesInfo(DBConnection connection, string schemaName = null, string tableName = null)
+        public override IEnumerable<DBTableInfo> GetTablesInfo(DBConnection connection, string schemaName = null, string tableName = null)
         {
             var filterTable = tableName != null ? $" and tbl_name = '{tableName}'" : "";
             var list = connection.ExecuteQResult($"select * from sqlite_master where type = 'table'{filterTable}");
-            var infos = new List<DBTableInfo>();
             int iName = list.GetIndex("tbl_name");
             foreach (object[] item in list.Values)
             {
@@ -195,10 +194,8 @@ select seq from db_sequence where name = '{sequence.Name}';";
                     Name = item[iName].ToString(),
                 };
                 table.Columns = GetColumnsInfo(connection, table);
-                infos.Add(table);
+                yield return table;
             }
-
-            return infos;
         }
 
         public override List<DBColumnInfo> GetColumnsInfo(DBConnection connection, DBTableInfo tableInfo)

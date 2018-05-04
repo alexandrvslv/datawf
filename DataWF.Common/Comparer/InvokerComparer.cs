@@ -112,8 +112,8 @@ namespace DataWF.Common
         {
             if (_comparer != null)
                 return _comparer.Compare(x, y);
-            object xValue = invoker.Get(x);
-            object yValue = invoker.Get(y);
+            object xValue = x == null ? null : invoker.Get(x);
+            object yValue = y == null ? null : invoker.Get(y);
             int rez = ListHelper.Compare(xValue, yValue, null, _direction, false);
             //if (hash && rez == 0 && xWord != null && yWord != null)
             //    rez = xWord.GetHashCode().CompareTo(yWord.GetHashCode());

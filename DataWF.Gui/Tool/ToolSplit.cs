@@ -11,6 +11,11 @@ namespace DataWF.Gui
             ToolItem.Click += OnClickSplit;
         }
 
+        public ToolSplit(EventHandler click) : this()
+        {
+            ButtonClick += click;
+        }
+
         public ToolItem ToolItem
         {
             get { return ((ToolItemWidget)content).Tool; }

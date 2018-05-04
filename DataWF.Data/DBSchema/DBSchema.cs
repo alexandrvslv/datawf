@@ -26,6 +26,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
 
@@ -60,23 +61,18 @@ namespace DataWF.Data
 
         public DBTable GenerateTable(string name)
         {
-            DBTable table = null;
-            table = Tables[name];
-            if (table == null)
-            {
-                table = new DBTable<DBItem>(name);
-                Tables.Add(table);
-            }
-            return table;
+            return Tables[name] ?? new DBTable<DBItem>(name) { Schema = this };
         }
 
-        public void GenerateTables(IEnumerable<DBTableInfo> tables)
+        public void GenerateTablesInfo(IEnumerable<DBTableInfo> tables)
         {
             foreach (var tableInfo in tables)
             {
                 var table = GenerateTable(tableInfo.Name);
                 table.Type = tableInfo.View ? DBTableType.View : DBTableType.Table;
-                table.GenerateColumns(tableInfo);
+                table.Generate(tableInfo);
+                if (table.Container == null)
+                    Tables.Add(table);
             }
         }
 
@@ -136,7 +132,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
-        public DBSystem System { get { return Connection?.System; } }
+        public DBSystem System { get { return Connection?.System ?? DBSystem.Default; } }
 
         public DBTableList Tables { get; set; }
 
@@ -178,7 +174,8 @@ namespace DataWF.Data
             }
         }
 
-        
+        [XmlIgnore]
+        public bool IsSynchronizing { get; internal set; }
 
         public string FormatSql()
         {
@@ -199,7 +196,28 @@ namespace DataWF.Data
             throw new NotImplementedException();
         }
 
-        public List<DBTableInfo> GetTablesInfo(string schemaName = null, string tableName = null)
+        public void LoadTablesInfo()
+        {
+            try
+            {
+                IsSynchronizing = true;
+
+                foreach (var tableInfo in GetTablesInfo())
+                {
+                    var table = GenerateTable(tableInfo.Name);
+                    table.Type = tableInfo.View ? DBTableType.View : DBTableType.Table;
+                    table.Generate(tableInfo);
+                    if (table.Container == null)
+                        Tables.Add(table);
+                }
+            }
+            finally
+            {
+                IsSynchronizing = false;
+            }
+        }
+
+        public IEnumerable<DBTableInfo> GetTablesInfo(string schemaName = null, string tableName = null)
         {
             return System.GetTablesInfo(Connection, schemaName, tableName);
         }
@@ -207,23 +225,7 @@ namespace DataWF.Data
         public void CreateDatabase()
         {
             Helper.Logs.Add(new StateInfo("Load", "Database", "Create Database"));
-            Connection.System.DropDatabase(this);
-
-            Connection.ExecuteGoQuery(FormatSql(DDLType.Create), true);
-
-            if (Connection.Schema?.Length > 0)
-            {
-                if (Connection.System == DBSystem.Oracle)
-                {
-                    Connection.User = Name;
-                }
-            }
-			if (string.IsNullOrEmpty(Connection.DataBase) || Connection.System == DBSystem.Postgres)// Connection.System != DBSystem.SQLite
-            {
-                Connection.DataBase = Name;
-            }
-
-            Connection.ExecuteGoQuery(FormatSql(), true);
+            System.CreateDatabase(this, Connection);
         }
 
         internal IEnumerable<DBConstraint> GetConstraints()
@@ -349,6 +351,21 @@ namespace DataWF.Data
                 writer.WriteEndElement();//html
                 writer.WriteEndDocument();
             }
+        }
+
+        public Task LoadTablesInfoAsync()
+        {
+            return Task.Run(() =>
+            {
+                try
+                {
+                    LoadTablesInfo();
+                }
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
+                }
+            });
         }
     }
 }

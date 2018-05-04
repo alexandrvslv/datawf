@@ -51,7 +51,9 @@ namespace DataWF.Common
 
         public static void Load()
         {
+            Helper.LogWorkingSet("Start");
             Serialization.Deserialize(Path.Combine(Helper.GetDirectory(), "localize.xml"), Instance);
+            Helper.LogWorkingSet("Localization");
         }
 
         public static void Save()

@@ -94,12 +94,9 @@ namespace DataWF.Module.FlowGui
 
             listDocuments = new DocumentLayoutList()
             {
-                EditMode = EditModes.None,
                 EditState = EditListState.ReadOnly,
                 GenerateToString = false,
                 GenerateColumns = false,
-                Grouping = false,
-                Mode = LayoutListMode.List,
                 Name = "Documents",
                 ReadOnly = true,
                 ListInfo = new LayoutListInfo(
@@ -239,11 +236,11 @@ namespace DataWF.Module.FlowGui
 
         public TableItemNode InitStage(Stage stage, User user)
         {
-            var stageNode = listUsers.InitItem(stage);
+            var stageNode = listUsers.InitItem((IDBTableContent)stage);
             listUsers.InitItems(stage.GetPositions(), stageNode, true);
             if (user != null)
             {
-                var userNode = listUsers.InitItem(user);
+                var userNode = listUsers.InitItem((IDBTableContent)user);
                 userNode.Group = stageNode;
                 userNode.Check = true;
             }
@@ -291,7 +288,7 @@ namespace DataWF.Module.FlowGui
                     if (stage == null)
                     {
                         foreach (User user in User.CurrentUser.Department.GetUsers())
-                            listUsers.Nodes.Add(listUsers.InitItem(user));
+                            listUsers.Nodes.Add(listUsers.InitItem((IDBTableContent)user));
                     }
                     else
                     {

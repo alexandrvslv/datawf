@@ -24,6 +24,8 @@ namespace DataWF.Gui
 
         bool Editable { get; set; }
 
+        bool Visible { get; set; }
+
         bool Validate { get; set; }
 
         bool Password { get; set; }

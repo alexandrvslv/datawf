@@ -99,9 +99,9 @@ namespace DataWF.Test.Data
             schema.CreateDatabase();
 
             var result = schema.GetTablesInfo(connection.Schema, EmployerTableName);
-            Assert.IsTrue(result.Count == 1, "Generate Sql Table / Get Information Fail.");
+            Assert.IsTrue(result.Count() == 1, "Generate Sql Table / Get Information Fail.");
             result = schema.GetTablesInfo(connection.Schema, PositionTableName);
-            Assert.IsTrue(result.Count == 1, "Generate Sql Table / Get Information Fail.");
+            Assert.IsTrue(result.Count() == 1, "Generate Sql Table / Get Information Fail.");
             //Insert
             var employer = new Employer()
             {
@@ -162,7 +162,7 @@ namespace DataWF.Test.Data
             Position.DBTable.Add(new Position() { Code = "t1", Name = "Null Index" });
             Position.DBTable.Add(new Position() { Code = "t2", Name = "Null Index" });
             Position.DBTable.Add(new Position() { Code = "t3", Name = "Null Index" });
-            var nullIds = Position.DBTable.Select(Position.DBTable.PrimaryKey, null, CompareType.Is).ToList();
+            var nullIds = Position.DBTable.Select(Position.DBTable.PrimaryKey, CompareType.Is, null).ToList();
             Assert.AreEqual(6, nullIds.Count, "Select by null Fail");
 
             Position.DBTable.Save();
@@ -190,7 +190,7 @@ namespace DataWF.Test.Data
       test_numeric numeric(20,10))");
 
             result = schema.GetTablesInfo(connection.Schema, "test_table");
-            schema.GenerateTables(result);
+            schema.GenerateTablesInfo(result);
             var table = schema.Tables["test_table"] as DBTable<DBItem>;
             Assert.IsNotNull(table, "DBInformation Load Fail");
 

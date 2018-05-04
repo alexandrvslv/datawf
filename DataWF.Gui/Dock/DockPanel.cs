@@ -10,7 +10,7 @@ namespace DataWF.Gui
 {
     public class DockPanel : Canvas, IEnumerable, IEnumerable<DockPage>, IDockContainer, ILocalizable
     {
-        private DockMapItem mapItem;
+        private DockItem mapItem;
         private DockPage currentPage;
         private Menubar context = new Menubar();
         private ToolMenuItem toolHide = new ToolMenuItem();
@@ -38,10 +38,9 @@ namespace DataWF.Gui
             pages.Items.ListChanged += PageListOnChange;
 
             panel.Visible = true;
+            panel.Margin = new WidgetSpacing(6, 0, 6, 6);
 
-            this.Name = "DocTabControl";
-
-            this.Visible = true;
+            Name = "DocTabControl";
             AddChild(pages);
             AddChild(panel);
 
@@ -74,46 +73,49 @@ namespace DataWF.Gui
         {
             if (e.ListChangedType == ListChangedType.ItemAdded)
             {
-                if (mapItem != null && !mapItem.Visible)
+                if (MapItem != null && !MapItem.Visible)
                 {
-                    mapItem.Visible = true;
+                    MapItem.Visible = true;
                     //Parent.ResumeLayout(true);
                 }
-                DockPage page = this.pages.Items[e.NewIndex];
+                DockPage page = pages.Items[e.NewIndex];
                 SelectPage(page);
             }
             else if (e.ListChangedType == ListChangedType.ItemChanged)
             {
-                DockPage page = this.pages.Items[e.NewIndex];
-                if (CurrentWidget == page.Widget && page.Visible == false)
+                DockPage page = pages.Items[e.NewIndex];
+                if (CurrentWidget == page.Widget && !page.Visible)
                 {
                     RemovePage(page, false);
+                }
+                else if (CurrentWidget == null && page.Visible)
+                {
+                    SelectPage(page);
                 }
             }
             else if (e.ListChangedType == ListChangedType.ItemDeleted)
             {
                 if (e.NewIndex >= 0)
                 {
-                    DockPage page = this.pages.Items[e.NewIndex];
+                    DockPage page = pages.Items[e.NewIndex];
                     RemovePage(page, true);
                 }
                 else
                 {
-                    if (this.pages.Items.Count > 0)
+                    if (pages.Items.Count > 0)
                     {
                         if (CurrentWidget == null)
-                            SelectPage(this.pages.Items[0]);
+                            SelectPage(pages.Items[0]);
                     }
                     else
                     {
-                        if (mapItem != null && !mapItem.FillWidth)
+                        if (MapItem != null && !MapItem.FillWidth)
                         {
-                            mapItem.Visible = false;
-                            foreach (object item in mapItem.Map.Items)
+                            MapItem.Visible = false;
+                            foreach (var mapItem in MapItem.Map)
                             {
-                                if (item is DockMapItem)
+                                if (mapItem.Count == 0)
                                 {
-                                    var mapItem = (DockMapItem)item;
                                     if (mapItem.Panel.Pages.Items.Count == 0)
                                         mapItem.Visible = false;
                                 }
@@ -156,7 +158,7 @@ namespace DataWF.Gui
 
         public LayoutAlignType PagesAlign
         {
-            get { return this.pagesAlign; }
+            get { return pagesAlign; }
             set
             {
                 if (pagesAlign == value)
@@ -217,7 +219,7 @@ namespace DataWF.Gui
             get { return pages; }
         }
 
-        public DockMapItem MapItem
+        public DockItem MapItem
         {
             get { return mapItem; }
             set { mapItem = value; }
@@ -387,12 +389,12 @@ namespace DataWF.Gui
             base.Dispose(disposing);
         }
 
-        public IEnumerator GetEnumerator()
+        IEnumerator IEnumerable.GetEnumerator()
         {
             return pages.Items.GetEnumerator();
         }
 
-        IEnumerator<DockPage> IEnumerable<DockPage>.GetEnumerator()
+        public IEnumerator<DockPage> GetEnumerator()
         {
             return pages.Items.GetEnumerator();
         }

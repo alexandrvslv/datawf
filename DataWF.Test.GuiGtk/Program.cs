@@ -12,15 +12,9 @@ namespace DataWF.TestGui
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
+        static void Main(string[] args)
         {
-            Application.Initialize(ToolkitType.Gtk);
-            using (var window = new FormTest())
-            {
-                window.Show();
-                Application.Run();
-            }
-            Application.Dispose();
+            GuiService.Start(args, ToolkitType.Gtk, typeof(Splash), typeof(TestWindow));
         }
     }
 }

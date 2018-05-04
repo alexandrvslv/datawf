@@ -121,6 +121,7 @@ namespace DataWF.Module.Common
             }
             catch (Exception ex)
             {
+                Helper.OnException(ex);
             }
             return users;
         }

@@ -19,16 +19,36 @@ namespace DataWF.Test.Common
             var pull = new Pull<int>(blockSize);
             for (int i = 0; i < 100; i++)
             {
-                var index = Pull.GetHIndex(i, blockSize);
-                char* left = (char*)&index;
-                char* right = left + 1;
-                Debug.WriteLine($"pull index {i} = {index} left {(int)*left} right {(int)*right}");
+                var index = Pull.GetHIndexUnsafe(i, blockSize);
+                short* left = (short*)&index;
+                short* right = left + 1;
+                Debug.WriteLine($"pull index {i} = {index} left {*left} right {*right}");
                 pull.SetValue(index, i);
             }
 
             for (int i = 0; i < 100; i++)
             {
-                Assert.AreEqual(i, pull.GetValueInternal(Pull.GetHIndex(i, blockSize)));
+                Assert.AreEqual(i, pull.GetValueInternal(Pull.GetHIndexUnsafe(i, blockSize)));
+            }
+        }
+
+        [Test]
+        public unsafe void NullablePullIndex()
+        {
+            var blockSize = 50;
+            var pull = new NullablePull<int>(blockSize);
+            for (int i = 0; i < 100; i++)
+            {
+                var index = Pull.GetHIndexUnsafe(i, blockSize);
+                short* left = (short*)&index;
+                short* right = left + 1;
+                Debug.WriteLine($"pull index {i} = {index} left {*left} right {*right}");
+                pull.SetValue<int?>(index, i);
+            }
+
+            for (int i = 0; i < 100; i++)
+            {
+                Assert.AreEqual(i, pull.GetValueInternal(Pull.GetHIndexUnsafe(i, blockSize)));
             }
         }
     }

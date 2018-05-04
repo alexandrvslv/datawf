@@ -13,7 +13,7 @@ namespace DataWF.Gui
             Bar.ItemClick += OnItemClick;
             Bar.Items.GrowMode = LayoutGrowMode.Vertical;
 
-            BackgroundColor = GuiEnvironment.StylesInfo["Window"].BaseColor;
+            BackgroundColor = GuiEnvironment.Theme["Window"].BaseColor;
             Content = Bar;
             Decorated = false;
             Padding = new WidgetSpacing(8, 8, 8, 8);
@@ -28,7 +28,7 @@ namespace DataWF.Gui
 
         public Toolsbar Bar { get; set; }
 
-        public ToolLayoutMap Items { get { return Bar.Items; } }
+        public ToolItem Items { get { return Bar.Items; } }
 
         public ToolItem this[string name]
         {

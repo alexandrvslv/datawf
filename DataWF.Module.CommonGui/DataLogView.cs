@@ -63,13 +63,13 @@ namespace DataWF.Module.CommonGui
         private DataLogMode mode = DataLogMode.Default;
         private DBTableView<UserLog> logs;
         private DBTable table = null;
-        private HPaned split = new HPaned();
+        private VPaned split;
         private RichTextView detailText = new RichTextView();
 
         private TableLoader loader;
         private Toolsbar bar;
         private ToolItem toolRollback;
-        private TableLayoutList list;
+        private LayoutList list;
         private ToolItem toolAccept;
         private ToolItem toolCheck;
         private ToolItem toolDetails;
@@ -184,12 +184,11 @@ namespace DataWF.Module.CommonGui
                toolProgress)
             { Name = "BarLog" };
 
-            list = new TableLayoutList()
+            list = new LayoutList()
             {
                 AllowEditColumn = false,
                 EditMode = EditModes.None,
                 EditState = EditListState.Edit,
-                GenerateColumns = false,
                 GenerateToString = false,
                 Mode = LayoutListMode.List,
                 Name = "list",
@@ -222,40 +221,20 @@ namespace DataWF.Module.CommonGui
             detailList.ListInfo.Columns.Add("Column", 120).Editable = false;
             detailList.ListInfo.Columns.Add("OldFormat", 100).FillWidth = true;
             detailList.ListInfo.Columns.Add("NewFormat", 100).FillWidth = true;
-            detailList.ListInfo.StyleRow = GuiEnvironment.StylesInfo["ChangeRow"];
+            detailList.ListInfo.StyleRow = GuiEnvironment.Theme["ChangeRow"];
             detailList.ListInfo.HeaderVisible = false;
 
             detailRow = new TableLayoutList();
 
             map = new GroupBox(
-                new GroupBoxItem()
-                {
-                    Name = "Details",
-                    Widget = detailList,
-                    Col = 0,
-                    FillWidth = true,
-                    FillHeight = true
-                },
-                new GroupBoxItem()
-                {
-                    Name = "Difference",
-                    Widget = detailText,
-                    Col = 1,
-                    FillWidth = true,
-                    FillHeight = true
-                },
-                new GroupBoxItem()
-                {
-                    Name = "Record",
-                    Widget = detailRow,
-                    Col = 2,
-                    FillWidth = true,
-                    FillHeight = true
-                });
+                new GroupBoxItem { Name = "Details", Widget = detailList, Col = 0, FillWidth = true, FillHeight = true },
+                //new GroupBoxItem { Name = "Difference", Widget = detailText, Col = 1, FillWidth = true, FillHeight = true },
+                new GroupBoxItem { Name = "Record", Widget = detailRow, Col = 2, FillWidth = true, FillHeight = true });
             //list.ListInfo.Columns.Add(list.BuildColumn(null, "Text"));
 
+            split = new VPaned();
             split.Panel1.Content = list;
-            split.Panel2.Content = map;
+            //split.Panel2.Content = map;
 
             PackStart(bar, false, false);
             PackStart(split, true, true);
@@ -439,10 +418,8 @@ namespace DataWF.Module.CommonGui
 
         public void Localize()
         {
-            GuiService.Localize(toolRollback, "DataLog", "Rollback", GlyphType.Undo);
-            GuiService.Localize(toolAccept, "DataLog", "Accept", GlyphType.Check);
-            GuiService.Localize(toolDetails, "DataLog", "Details", GlyphType.Tag);
             GuiService.Localize(this, "DataLog", "Redo Logs");
+            bar.Localize();
             list.Localize();
             detailList.Localize();
         }
@@ -454,7 +431,7 @@ namespace DataWF.Module.CommonGui
             {
                 detailList.FieldSource = log.LogItem;
                 detailRow.FieldSource = log.TargetItem;
-                detailText.LoadText(log.TextData, Xwt.Formats.TextFormat.Plain);
+                detailText.LoadText(log.TextData ?? string.Empty, Xwt.Formats.TextFormat.Plain);
             }
             else
             {
@@ -530,8 +507,7 @@ namespace DataWF.Module.CommonGui
                     toolModeUser.Visible = false;
                     toolModeTable.Visible = false;
                     toolModeGroup.Visible = false;
-                    SetMode(((UserLog)filter).TextData.Equals("Accept", StringComparison.InvariantCultureIgnoreCase) ||
-                        ((UserLog)filter).TextData.Equals("Reject", StringComparison.InvariantCultureIgnoreCase) ? toolModeLogConfirm : toolModeDefault);
+                    SetMode(toolModeLogConfirm);
                 }
                 else if (filter is DBItem)
                 {
@@ -582,19 +558,19 @@ namespace DataWF.Module.CommonGui
         {
             var f = new List<object>();
             if (toolTypeAuthorization.Checked)
-                f.Add(UserLogType.Authorization);
+                f.Add((int)UserLogType.Authorization);
             if (toolTypePassword.Checked)
-                f.Add(UserLogType.Password);
+                f.Add((int)UserLogType.Password);
             if (toolTypeStart.Checked)
-                f.Add(UserLogType.Start);
+                f.Add((int)UserLogType.Start);
             if (toolTypeStop.Checked)
-                f.Add(UserLogType.Stop);
+                f.Add((int)UserLogType.Stop);
             if (toolTypeInsert.Checked)
-                f.Add(UserLogType.Insert);
+                f.Add((int)UserLogType.Insert);
             if (toolTypeUpdate.Checked)
-                f.Add(UserLogType.Update);
+                f.Add((int)UserLogType.Update);
             if (toolTypeDelete.Checked)
-                f.Add(UserLogType.Delete);
+                f.Add((int)UserLogType.Delete);
 
             logs.Clear();
             logs.ClearFilter();
@@ -604,8 +580,8 @@ namespace DataWF.Module.CommonGui
             if (dateField.DataValue != null)
             {
                 var interval = (DateInterval)dateField.DataValue;
-                query.BuildPropertyParam(nameof(UserLog.Date), CompareType.GreaterOrEqual, interval.Min);
-                query.BuildPropertyParam(nameof(UserLog.Date), CompareType.LessOrEqual, interval.Max.AddDays(1));
+                query.BuildPropertyParam(nameof(UserLog.DateCreate), CompareType.GreaterOrEqual, interval.Min);
+                query.BuildPropertyParam(nameof(UserLog.DateCreate), CompareType.LessOrEqual, interval.Max.AddDays(1));
             }
             if (dataField.DataValue != null)
             {
@@ -619,10 +595,7 @@ namespace DataWF.Module.CommonGui
             }
             else if (filter is User && mode == DataLogMode.User)
             {
-                if (filter.IsCompaund)
-                    query.BuildPropertyParam(nameof(UserLog.UserId), CompareType.In, filter.GetSubGroupFull<User>(true));
-                else
-                    query.BuildPropertyParam(nameof(UserLog.UserId), CompareType.Equal, filter.PrimaryId);
+                query.BuildPropertyParam(nameof(UserLog.UserId), CompareType.Equal, filter.PrimaryId);
             }
             else if (filter is UserGroup && mode == DataLogMode.Group)
             {
@@ -670,7 +643,15 @@ namespace DataWF.Module.CommonGui
         private void ToolDetailsClick(object sender, EventArgs e)
         {
             toolDetails.Checked = !toolDetails.Checked;
-            this.map.Visible = toolDetails.Checked;
+            if (toolDetails.Checked)
+            {
+                split.Panel2.Content = map;
+            }
+            else
+            {
+                split.Panel2.Content = null;
+            }
+            this.QueueForReallocate();
         }
 
         private void ToolRollbackClick(object sender, EventArgs e)

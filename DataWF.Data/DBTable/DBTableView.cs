@@ -121,6 +121,7 @@ namespace DataWF.Data
                     keys |= DBViewKeys.Static;
                 else
                     keys &= ~DBViewKeys.Static;
+                Clear();
             }
         }
 
@@ -255,32 +256,6 @@ namespace DataWF.Data
             set { table = value as DBTable<T>; }
         }
 
-        IEnumerable<DBItem> IDBTableView.SelectChilds(DBItem item)
-        {
-            return SelectChilds(item);
-        }
-
-        public IEnumerable<T> SelectChilds(DBItem group)
-        {
-            foreach (var item in items)
-                if (item.Group == group)
-                    yield return item;
-        }
-
-        IEnumerable<DBItem> IDBTableView.SelectParents()
-        {
-            return SelectParents();
-        }
-
-        public IEnumerable<T> SelectParents()
-        {
-            foreach (var item in items)
-            {
-                if (item.Group == null)
-                    yield return item;
-            }
-        }
-
         IEnumerable<DBItem> IDBTableView.Load(DBLoadParam param)
         {
             return Load(param);
@@ -304,21 +279,22 @@ namespace DataWF.Data
 
         public void OnItemChanged(T item, string property, ListChangedType type)
         {
-            if ((keys & DBViewKeys.Static) == DBViewKeys.Static && type != ListChangedType.ItemChanged)
-            {
-                return;
-            }
             if (type == ListChangedType.Reset)
             {
                 UpdateFilter();
             }
             else
+            {
                 lock (items)
                 {
                     int index = -1, newindex = -1;
                     index = newindex = items.BinarySearch(item, comparer);
                     if (index < 0)
                     {
+                        if ((keys & DBViewKeys.Static) == DBViewKeys.Static)
+                        {
+                            return;
+                        }
                         newindex = (-index) - 1;
                         if (newindex > items.Count)
                             newindex = items.Count;
@@ -365,6 +341,7 @@ namespace DataWF.Data
                             break;
                     }
                 }
+            }
         }
 
         public void OnItemChanged(DBItem item, string property, ListChangedType type)
@@ -577,7 +554,7 @@ namespace DataWF.Data
 
         public IEnumerable<T> GetTop()
         {
-            return (IEnumerable<T>)table.SelectItems(Table.GroupKey.Name + " is null");
+            return (IEnumerable<T>)table.SelectItems(Table.GroupKey, CompareType.Is, null);
         }
 
         public IEnumerable<T> GetItems()

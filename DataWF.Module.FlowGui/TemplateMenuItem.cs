@@ -22,10 +22,15 @@ namespace DataWF.Module.FlowGui
             {
                 template = value;
                 Name = template.Code;
-                Text = template.ToString();
                 Glyph = GlyphType.Book;
                 Image = (Image)Locale.GetImage("book");
             }
+        }
+
+        public override void Localize()
+        {
+            base.Localize();
+            Text = template?.ToString();
         }
 
     }

@@ -29,7 +29,7 @@ namespace DataWF.Gui
                 ColumnsVisible = false,
                 Tree = true,
                 HeaderVisible = false,
-                StyleRow = GuiEnvironment.StylesInfo["Node"]
+                StyleRow = GuiEnvironment.Theme["Node"]
             };
 
             columns.Sorters.Add(new LayoutSort(nameof(Node.Order), ListSortDirection.Ascending, false));

@@ -1,5 +1,6 @@
 ﻿using System;
 using DataWF.Data;
+using DataWF.Gui;
 using Xwt;
 
 namespace DataWF.Data.Gui

@@ -13,14 +13,15 @@ namespace DataWF.Module.FlowGui
         protected Document document;
         protected DBTableView<T> view;
 
-        public DocumentDetailView() : base()
+        public DocumentDetailView() : base(new DocumentLayoutList())
         {
             view = new DBTableView<T>(Table, new QParam(LogicType.And, Table.ParseProperty(nameof(DocumentDetail.DocumentId)), CompareType.Equal, 0), DBViewKeys.Empty);
             DataSource = view;
 
             toolLog.Visible = Table.IsLoging;
             toolGroup.Visible = view.Table.GroupKey != null;
-            toolRefresh.Visible =
+            toolLoad.Visible =
+                toolRefresh.Visible =
                 toolSave.Visible =
                 toolStatus.Visible =
                 toolSort.Visible = false;

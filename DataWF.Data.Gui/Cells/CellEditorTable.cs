@@ -52,15 +52,12 @@ namespace DataWF.Data.Gui
             set
             {
                 table = value;
-                if (View != null && View.Table != table)
+                if (TableEditor != null && listSource is IDBTableView && ((IDBTableView)listSource).Table != table)
                 {
                     View.Dispose();
                     listSource = null;
                     //View = table.CreateView(viewFilter, DBViewInitMode.None, DBStatus.Current);
-                    if (TableEditor != null)
-                    {
-                        TableEditor.Initialize(View, GetItem(Value), column, TableEditorMode.Reference, false);
-                    }
+                    TableEditor.Initialize(View, GetItem(Value), column, TableEditorMode.Reference, false);
                 }
             }
         }
@@ -76,7 +73,7 @@ namespace DataWF.Data.Gui
             set
             {
                 listSource = value;
-                if (View != null && View.Table != table)
+                if (listSource is IDBTableView && ((IDBTableView)listSource).Table != table)
                     table = View.Table;
             }
         }
@@ -148,15 +145,15 @@ namespace DataWF.Data.Gui
         {
             if (value != null && (value.GetType() == valueType))
                 return value;
-            if (value is DBItem)
-            {
-                if (column != null || TypeHelper.IsBaseType(value.GetType(), valueType))
-                    return value;
-                return ((DBItem)value).PrimaryId;
-            }
             if (value is string)
             {
-                return table.LoadItemById(value, DBLoadParam.None);
+                value = table.LoadItemById(value, DBLoadParam.None);
+            }
+            if (value is DBItem)
+            {
+                if (TypeHelper.IsBaseType(value.GetType(), valueType))
+                    return value;
+                return ((DBItem)value).PrimaryId;
             }
             return base.ParseValue(value, dataSource, valueType);
         }

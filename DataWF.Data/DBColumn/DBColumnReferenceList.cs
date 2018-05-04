@@ -1,5 +1,6 @@
 ﻿using DataWF.Common;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Xml.Serialization;
@@ -11,6 +12,11 @@ namespace DataWF.Data
         public DBColumnReferenceList()
         {
             //Indexes.Add("Column");
+        }
+
+        public DBColumnReferenceList(IEnumerable<DBColumn> columns) : this()
+        {
+            AddRangeInternal(columns.Select(p => new DBColumnReference { Column = p }));
         }
 
         [XmlIgnore]

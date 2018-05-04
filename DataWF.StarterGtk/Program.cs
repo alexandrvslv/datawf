@@ -1,4 +1,6 @@
-﻿using System;
+﻿using DataWF.Data.Gui;
+using DataWF.Gui;
+using System;
 
 namespace DataWF.Starter
 {
@@ -7,7 +9,7 @@ namespace DataWF.Starter
         [STAThread]
         static void Main(string[] args)
         {
-            DataWF.Data.Gui.Main.Start(args, Xwt.ToolkitType.Gtk);
+            DataWF.Gui.GuiService.Start(args, Xwt.ToolkitType.Gtk, typeof(Splash), typeof(Main));
         }
     }
 }

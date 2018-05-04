@@ -66,7 +66,7 @@ namespace DataWF.Module.Flow
         private Document document;
 
         public ListDocumentWork(Document document)
-            : base(DocumentWork.DBTable.Select(DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DocumentId)), document.PrimaryId, CompareType.Equal),
+            : base(DocumentWork.DBTable.Select(DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DocumentId)), CompareType.Equal, document.PrimaryId),
                    new DBComparer(DocumentWork.DBTable.PrimaryKey))
         {
             this.document = document;
@@ -118,8 +118,8 @@ namespace DataWF.Module.Flow
         [DataMember, Column("stage_id", Keys = DBColumnKeys.View), Index("ddocument_work_stage_id")]
         public int? StageId
         {
-            get { return GetProperty<int?>(nameof(StageId)); }
-            set { SetProperty(value, nameof(StageId)); }
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
         }
 
         [Reference(nameof(StageId))]
@@ -129,10 +129,26 @@ namespace DataWF.Module.Flow
             set
             {
                 SetPropertyReference(value);
+                Work = value?.Work;
                 IsSystem = value?.Keys != null && (value.Keys & StageKey.IsSystem) == StageKey.IsSystem;
                 IsStart = value?.Keys != null && (value.Keys & StageKey.IsStart) == StageKey.IsStart;
                 IsStop = value?.Keys != null && (value.Keys & StageKey.IsStop) == StageKey.IsStop;
             }
+        }
+
+        [Browsable(false)]
+        [DataMember, Column("work_id", Keys = DBColumnKeys.View), Index("ddocument_work_work_id")]
+        public int? WorkId
+        {
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
+        }
+
+        [Reference(nameof(WorkId))]
+        public Work Work
+        {
+            get { return GetPropertyReference<Work>(); }
+            set { SetPropertyReference(value); }
         }
 
         [Browsable(false)]
@@ -147,6 +163,41 @@ namespace DataWF.Module.Flow
         public User User
         {
             get { return GetPropertyReference<User>(); }
+            set
+            {
+                SetPropertyReference(value);
+                Position = value?.Position;
+                Department = value?.Department;
+            }
+        }
+
+        [Browsable(false)]
+        [DataMember, Column("position_id", Keys = DBColumnKeys.View), Index("ddocument_work_position_id")]
+        public int? PositionId
+        {
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
+        }
+
+        [Reference(nameof(PositionId))]
+        public Position Position
+        {
+            get { return GetPropertyReference<Position>(); }
+            set { SetPropertyReference(value); }
+        }
+
+        [Browsable(false)]
+        [DataMember, Column("department_id", Keys = DBColumnKeys.View), Index("ddocument_work_department_id")]
+        public int? DepartmentId
+        {
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
+        }
+
+        [Reference(nameof(DepartmentId))]
+        public Department Department
+        {
+            get { return GetPropertyReference<Department>(); }
             set { SetPropertyReference(value); }
         }
 
@@ -193,6 +244,7 @@ namespace DataWF.Module.Flow
             get { return DateComplete != null; }
         }
 
+        [Browsable(false)]
         [DataMember, Column("is_system")]
         public bool? IsSystem
         {
@@ -221,21 +273,25 @@ namespace DataWF.Module.Flow
             set { SetProperty(value); }
         }
 
+        [Browsable(false)]
         public bool IsCurrent
         {
             get { return !IsComplete && User == User.CurrentUser; }
         }
 
+        [Browsable(false)]
         public bool IsUser
         {
             get { return User == null || User == User.CurrentUser; }
         }
 
+        [Browsable(false)]
         public bool IsCheck
         {
             get { return DateLimit != null; }
         }
 
+        [Browsable(false)]
         public bool IsResend { get; set; }
 
         public override string ToString()

@@ -37,7 +37,7 @@ namespace DataWF.Gui
 
         public LayoutEditor() : base()
         {
-            pstyle = GuiEnvironment.StylesInfo["DropDown"];
+            pstyle = GuiEnvironment.Theme["DropDown"];
         }
 
         public ILayoutCell Cell

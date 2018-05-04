@@ -24,33 +24,8 @@ namespace DataWF.Gui
         {
             get { return baseColor; }
             set
-            {
-                var diff = 0.09D;
-
-                baseColor = value;
-                BackBrush.Color = CellStyleBrush.ColorEmpty;
-                BorderBrush.Color = CellStyleBrush.ColorEmpty;// value.WithIncreasedLight(-diff);
-                FontBrush.Color = value.Invert().WithIncreasedContrast(diff);
-
-                value = baseColor.WithIncreasedLight(diff);
-                BackBrush.ColorHover = value;
-                BorderBrush.ColorHover = value.WithIncreasedLight(diff / 2.0);
-                FontBrush.ColorHover = FontBrush.Color;
-
-                value = value.WithIncreasedLight(diff);
-                BackBrush.ColorSelect = value;
-                BorderBrush.ColorSelect = value.WithIncreasedLight(diff / 2.0);
-                FontBrush.ColorSelect = FontBrush.Color;
-
-                value = value.WithIncreasedLight(diff);
-                BackBrush.ColorPress = value;
-                BorderBrush.ColorPress = value.WithIncreasedLight(diff / 2.0);
-                FontBrush.ColorPress = FontBrush.Color;
-
-                value = baseColor.WithIncreasedLight(diff / 4.0D);
-                BackBrush.ColorAlternate = value;
-                BorderBrush.ColorAlternate = value.WithIncreasedLight(diff / 4.0D);
-                FontBrush.ColorAlternate = baseColor.Invert();
+            {                
+                baseColor = value;                
             }
         }
 

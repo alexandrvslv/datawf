@@ -79,7 +79,7 @@ namespace DataWF.Gui
         public LayoutFieldInfo()
         {
             Nodes = new LayoutNodeList<LayoutField>();
-            ValueColumn = new LayoutFieldColumn() { Name = "Value", FillWidth = true, Style = GuiEnvironment.StylesInfo["Value"], Invoker = new FieldValueInvoker() };
+            ValueColumn = new LayoutFieldColumn() { Name = "Value", FillWidth = true, Style = GuiEnvironment.Theme["Value"], Invoker = new FieldValueInvoker() };
 
             Columns = new LayoutListInfo(
                 new LayoutColumn { Name = nameof(LayoutField.ToString), Editable = false, Width = 100, Invoker = ToStringInvoker.Instance },
@@ -91,7 +91,7 @@ namespace DataWF.Gui
                 ColumnsVisible = false,
                 HeaderVisible = false,
                 Tree = true,
-                StyleRow = GuiEnvironment.StylesInfo["Field"]
+                StyleRow = GuiEnvironment.Theme["Field"]
             };
 
             colums.Sorters.Add(new LayoutSort(nameof(LayoutField.Order), ListSortDirection.Ascending, false));

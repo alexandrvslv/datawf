@@ -46,7 +46,7 @@ namespace DataWF.Module.Counterpart
     }
 
     [DataContract, Table("rlocation", "Address", BlockSize = 100)]
-    public class Location : DBItem
+    public class Location : DBGroupItem
     {
         public static void Generate()
         {
@@ -102,8 +102,7 @@ namespace DataWF.Module.Counterpart
                         }
                     }
                 }
-                catch (Exception ex)
-                { }
+                catch { }
             }
 
             var russia = Location.DBTable.LoadByCode("RU");
@@ -160,19 +159,18 @@ namespace DataWF.Module.Counterpart
         }
 
         [Browsable(false)]
-        [DataMember, Column("parent_id", Keys = DBColumnKeys.Group)]
-        [Index("rlocation_parentid")]
+        [DataMember, Column("parent_id", Keys = DBColumnKeys.Group), Index("rlocation_parentid")]
         public int? ParentId
         {
-            get { return GetValue<int?>(Table.GroupKey); }
-            set { SetValue(value, Table.GroupKey); }
+            get { return GetGroupValue<int?>(); }
+            set { SetGroupValue(value); }
         }
 
         [Reference(nameof(ParentId))]
         public Location Parent
         {
-            get { return GetReference<Location>(Table.GroupKey); }
-            set { SetReference(value, Table.GroupKey); }
+            get { return GetGroupReference<Location>(); }
+            set { SetGroupReference(value); }
         }
 
         [DataMember, Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]

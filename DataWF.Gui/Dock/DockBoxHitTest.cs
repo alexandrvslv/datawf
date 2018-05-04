@@ -6,12 +6,12 @@ namespace DataWF.Gui
 {
     public class DockBoxHitTest
     {
-        DockMapItem item;
+        DockItem item;
         LayoutAlignType align;
         Rectangle alignBound;
 
 
-        public DockMapItem Item
+        public DockItem Item
         {
             get { return item; }
             set { item = value; }

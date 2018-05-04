@@ -1,7 +1,6 @@
-﻿using DataWF.Gui;
-using Xwt;
+﻿using Xwt;
 
-namespace DataWF.Data.Gui
+namespace DataWF.Gui
 {
     public class ToolProgressBar : ToolItem
     {

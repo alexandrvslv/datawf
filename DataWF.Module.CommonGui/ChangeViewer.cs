@@ -35,7 +35,7 @@ namespace DataWF.Module.CommonGui
             listRows.ListInfo.Columns.Add("User", 120);
             listRows.ListInfo.Columns.Add("Row.Status", 60);
             listRows.ListInfo.Columns.Add("Row", 150).FillWidth = true;
-            listRows.ListInfo.StyleRow = GuiEnvironment.StylesInfo["ChangeRow"];
+            listRows.ListInfo.StyleRow = GuiEnvironment.Theme["ChangeRow"];
             listRows.ListInfo.HeaderVisible = false;
 
             listDiff.EditMode = EditModes.ByClick;
@@ -49,7 +49,7 @@ namespace DataWF.Module.CommonGui
             listDiff.ListInfo.Columns.Add(new LayoutColumn() { Name = "Column", Width = 120, Editable = false });
             listDiff.ListInfo.Columns.Add(new LayoutColumn() { Name = "OldFormat", Width = 150, FillWidth = true });
             listDiff.ListInfo.Columns.Add(new LayoutColumn() { Name = "NewFormat", Width = 150, FillWidth = true });
-            listDiff.ListInfo.StyleRow = GuiEnvironment.StylesInfo["ChangeRow"];
+            listDiff.ListInfo.StyleRow = GuiEnvironment.Theme["ChangeRow"];
             listDiff.ListInfo.HeaderVisible = false;
 
             listChilds.GenerateColumns = false;
@@ -241,7 +241,7 @@ namespace DataWF.Module.CommonGui
             listDiff.ListInfo.Columns.Add("Column", 120);
             listDiff.ListInfo.Columns.Add("OldFormat", 150).FillWidth = true;
             listDiff.ListInfo.Columns.Add("NewFormat", 150).FillWidth = true;
-            listDiff.ListInfo.StyleRow = GuiEnvironment.StylesInfo["ChangeRow"];
+            listDiff.ListInfo.StyleRow = GuiEnvironment.Theme["ChangeRow"];
             listDiff.ListInfo.HeaderVisible = false;
 
             this.Name = "ChangeViewer";

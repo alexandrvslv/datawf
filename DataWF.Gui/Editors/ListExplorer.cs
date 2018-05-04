@@ -36,7 +36,7 @@ namespace DataWF.Gui
             toolPrev = new ToolItem(ToolPrevClick) { Glyph = GlyphType.ArrowLeft };
             toolNext = new ToolItem(ToolNextClick) { Glyph = GlyphType.ArrowRight };
 
-            var group = new ToolLayoutMap();
+            var group = new ToolItem();
             group.Add(toolPrev);
             group.Add(toolNext);
             group.Add(toolTree);

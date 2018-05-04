@@ -219,27 +219,27 @@ namespace DataWF.Data.Gui
             return row;
         }
 
-        public static void ExpMapLayout(Doc.Odf.Table sheetData, ILayoutMap map, int scol, int srow, out int mcol, out int mrow, LayoutList list, object listItem)
+        public static void ExpMapLayout(Doc.Odf.Table sheetData, LayoutColumn map, int scol, int srow, out int mcol, out int mrow, LayoutList list, object listItem)
         {
-            int tws = LayoutMapHelper.GetWithdSpan(map);
+            int tws = map.GetWithdSpan();
             //int ths = tool.LayoutMapTool.GetHeightSpan(map);
             mrow = srow;
             mcol = scol;
             Doc.Odf.Row temp = null;
-            for (int i = 0; i < map.Items.Count; i++)
+            for (int i = 0; i < map.Count; i++)
             {
-                ILayoutItem item = map.Items[i];
+                var item = map[i];
                 if (!item.Visible)
                     continue;
 
                 int cc = 0;
                 int rr = 0;
-                LayoutMapHelper.GetVisibleIndex(map, item, out cc, out rr);
+                map.GetVisibleIndex(item, out cc, out rr);
                 int c = cc + scol;
                 int r = rr + srow;
-                if (item is ILayoutMap)
+                if (item.Count > 0)
                 {
-                    ExpMapLayout(sheetData, (ILayoutMap)item, c, r, out c, out r, list, listItem);
+                    ExpMapLayout(sheetData, item, c, r, out c, out r, list, listItem);
                 }
                 else
                 {
@@ -253,7 +253,7 @@ namespace DataWF.Data.Gui
                     else
                     {
                         cell.StyleName = "ce1";
-                        cell.Val = ((LayoutColumn)item).Text;
+                        cell.Val = item.Text;
                         GetColumn(sheetData, c + 1, item.Width);
                     }
                     if (temp == null || temp.Index != r)
@@ -270,7 +270,7 @@ namespace DataWF.Data.Gui
 
                     temp.Add(cell);
 
-                    int ws = LayoutMapHelper.GetRowWidthSpan(map, item.Row);
+                    int ws = map.GetRowWidthSpan(item.Row);
                     if (tws > ws)
                     {
                         cell.NumberColumnsSpanned = ((tws - ws) + 1).ToString();
@@ -279,7 +279,7 @@ namespace DataWF.Data.Gui
                         ccell.ColumnsRepeatedCount = (tws - ws).ToString();
                         temp.Add(ccell);
                     }
-                    int hs = LayoutMapHelper.GetRowHeightSpan(map, item.Row, true);
+                    int hs = map.GetRowHeightSpan(item.Row, true);
                     if (hs > 1)
                     {
                         cell.NumberRowsSpanned = (hs).ToString();
@@ -302,27 +302,27 @@ namespace DataWF.Data.Gui
             }
         }
 
-        public static void ExpMapLayout(SheetData sheetData, ILayoutMap map, int scol, int srow, out int mcol, out int mrow, LayoutList list, object listItem)
+        public static void ExpMapLayout(SheetData sheetData, LayoutColumn map, int scol, int srow, out int mcol, out int mrow, LayoutList list, object listItem)
         {
-            int tws = LayoutMapHelper.GetWithdSpan(map);
+            int tws = map.GetWithdSpan();
             //int ths = tool.LayoutMapTool.GetHeightSpan(map);
             mrow = srow;
             mcol = scol;
             Row temp = null;
-            for (int i = 0; i < map.Items.Count; i++)
+            for (int i = 0; i < map.Count; i++)
             {
-                ILayoutItem item = map.Items[i];
+                var item = map[i];
                 if (!item.Visible)
                     continue;
 
                 int c = 0;
                 int r = 0;
-                LayoutMapHelper.GetVisibleIndex(map, item, out c, out r);
+                map.GetVisibleIndex(item, out c, out r);
                 c += scol;
                 r += srow;
-                if (item is ILayoutMap)
+                if (item.Count > 0)
                 {
-                    ExpMapLayout(sheetData, (ILayoutMap)item, c, r, out c, out r, list, listItem);
+                    ExpMapLayout(sheetData, item, c, r, out c, out r, list, listItem);
                 }
                 else
                 {
@@ -350,13 +350,13 @@ namespace DataWF.Data.Gui
 
                     temp.Append(cell);
 
-                    int ws = LayoutMapHelper.GetRowWidthSpan(map, item.Row);
+                    int ws = map.GetRowWidthSpan(item.Row);
                     if (tws > ws)
                     {
                         MergeCell mcell = new MergeCell() { Reference = new StringValue(Helper.GetReference(c, r, c + tws - ws, r)) };
                         GetMergeCells(sheetData.Parent).Append(mcell);
                     }
-                    int hs = LayoutMapHelper.GetRowHeightSpan(map, item.Row, true);
+                    int hs = map.GetRowHeightSpan(item.Row, true);
                     if (hs > 1)
                     {
                         MergeCell mcell = new MergeCell() { Reference = new StringValue(Helper.GetReference(c, r, c, r + hs - 1)) };
@@ -637,9 +637,9 @@ namespace DataWF.Data.Gui
             }
         }
 
-        public void WriteMapItem(ILayoutMap map, int listIndex, object listItem, int sc, int sr, ref int mr, List<Row> prows = null)
+        public void WriteMapItem(LayoutColumn map, int listIndex, object listItem, int sc, int sr, ref int mr, List<Row> prows = null)
         {
-            int tws = LayoutMapHelper.GetWithdSpan(map);
+            int tws = map.GetWithdSpan();
             Row row = null;
             var rows = prows;
             if (prows == null)
@@ -653,16 +653,16 @@ namespace DataWF.Data.Gui
             }
             var nr = mr;
 
-            foreach (ILayoutItem item in map.Items)
+            foreach (var item in map)
             {
                 if (item.Visible)
                 {
                     int c, r;
-                    LayoutMapHelper.GetVisibleIndex(map, item, out c, out r);
+                    map.GetVisibleIndex(item, out c, out r);
                     c += sc; r += sr;
-                    if (item is ILayoutMap)
+                    if (item.Count > 0)
                     {
-                        WriteMapItem((ILayoutMap)item, listIndex, listItem, c, r, ref mr, rows);
+                        WriteMapItem(item, listIndex, listItem, c, r, ref mr, rows);
                     }
                     else
                     {
@@ -699,8 +699,8 @@ namespace DataWF.Data.Gui
                         if (celldata is decimal)
                             cellc.StyleIndex = 3;
 
-                        int ws = LayoutMapHelper.GetRowWidthSpan(map, item.Row);
-                        int hs = LayoutMapHelper.GetRowHeightSpan(map, item.Row, true);
+                        int ws = map.GetRowWidthSpan(item.Row);
+                        int hs = map.GetRowHeightSpan(item.Row, true);
                         if (tws > ws && hs > 1)
                         {
                             mcells.Add(new MergeCell() { Reference = Helper.GetReference(c, rr, c + tws - ws, rr + hs - 1) });
@@ -749,23 +749,23 @@ namespace DataWF.Data.Gui
             }
         }
 
-        public void WriteMapColumns(ILayoutMap map, int sc, int sr)
+        public void WriteMapColumns(LayoutColumn map, int sc, int sr)
         {
             mc++;
             if (sc == 0)
                 writer.WriteElement(new Column() { Min = (uint)mc, Max = (uint)mc, Width = 8, CustomWidth = true });
             sc++;
-            foreach (ILayoutItem column in map.Items)
+            foreach (var column in map)
             {
                 if (column.Visible)
                 {
                     int c, r;
-                    LayoutMapHelper.GetVisibleIndex(map, column, out c, out r);
+                    map.GetVisibleIndex(column, out c, out r);
                     c += sc; r += sr;
 
-                    if (column is ILayoutMap)
+                    if (column.Count > 0)
                     {
-                        WriteMapColumns((ILayoutMap)column, c, r);
+                        WriteMapColumns(column, c, r);
                     }
                     else if (c >= mc)
                     {

@@ -87,8 +87,6 @@ namespace DataWF.Module.FlowGui
             Name = "FlowExplorer";
             PackStart(barMain, false, false);
             PackStart(tree, true, true);
-
-            Localize();
         }
 
         private void AcceptOnActivated(object sender, EventArgs e)
@@ -340,7 +338,7 @@ namespace DataWF.Module.FlowGui
         {
             barMain.Localize();
             tree.Localize();
-            GuiService.Localize(this, Name, "Flow explorer", GlyphType.Wrench);
+            GuiService.Localize(this, Name, "Flow Config", GlyphType.Wrench);
         }
 
         #endregion

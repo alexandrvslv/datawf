@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using DataWF.Common;
 using Xwt;
 using Xwt.Drawing;
@@ -8,7 +9,49 @@ namespace DataWF.Gui
 {
     public static class GuiService
     {
-        public static System.Threading.Thread UIThread;
+        public static Thread UIThread;
+
+        public static void Start(string[] args, ToolkitType type, Type splashType, Type mainType)
+        {
+            Application.Initialize(type);
+            GuiService.UIThread = Thread.CurrentThread;
+            //exceptions
+            Application.UnhandledException += (sender, e) =>
+            {
+                Helper.OnException(e.ErrorException);
+            };
+
+
+            //Load Configuration
+            for (int i = 0; i < args.Length; i++)
+            {
+                string s = args[i];
+                if (s.Equals("-config"))
+                {
+                    var obj = Serialization.Deserialize(args[++i]);
+                    using (var op = new ListExplorer())
+                    {
+                        op.DataSource = obj;
+                        op.ShowWindow((WindowFrame)null);
+                    }
+                    Application.Run();
+                    Serialization.Serialize(obj, args[i]);
+                    return;
+                }
+            }
+            using (var splash = (Splash)EmitInvoker.CreateObject(splashType))
+            {
+                splash.Run();
+            }
+
+            using (var main = (MainWindow)EmitInvoker.CreateObject(mainType))
+            {
+                main.Localize();
+                main.Show();
+                Application.Run();
+            }
+            Application.Dispose();
+        }
 
         public static bool InvokeRequired { get { return UIThread != System.Threading.Thread.CurrentThread; } }
 
@@ -40,7 +83,7 @@ namespace DataWF.Gui
             }
             var window = new Dialog
             {
-                BackgroundColor = GuiEnvironment.StylesInfo["Window"].BaseColor,
+                BackgroundColor = GuiEnvironment.Theme["Window"].BaseColor,
                 Content = widget,
                 Title = widget.Name,
                 Padding = new WidgetSpacing(5, 5, 5, 5),
@@ -70,6 +113,11 @@ namespace DataWF.Gui
 
         public static void ShowWindow(this Widget widget, WindowFrame owner)
         {
+            ShowWindow(widget, owner, new Size(800, 600));
+        }
+
+        public static void ShowWindow(this Widget widget, WindowFrame owner, Size size)
+        {
             if (widget is ILocalizable)
             {
                 ((ILocalizable)widget).Localize();
@@ -78,13 +126,13 @@ namespace DataWF.Gui
             vbox.PackStart(widget, true, true);
             var window = new Window
             {
-                BackgroundColor = GuiEnvironment.StylesInfo["Window"].BaseColor,
+                BackgroundColor = GuiEnvironment.Theme["Window"].BaseColor,
                 Content = vbox,
                 Resizable = true,
                 InitialLocation = WindowLocation.CenterParent,
                 Title = widget.Name,
                 Padding = new WidgetSpacing(5, 5, 5, 5),
-                Size = new Size(800, 600),
+                Size = size,
                 TransientFor = owner
             };
             if (widget is IText)

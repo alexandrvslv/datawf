@@ -174,6 +174,16 @@ namespace DataWF.Data
             IsSynchronized = false;
         }
 
+        //public IEnumerable<T> SelectParents() where T : DBGroupItem
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        public IEnumerable<T> SelectParents()
+        {
+            return Select(GroupKey, CompareType.Is, null);
+        }
+
         #region IEnumerable Members
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -306,7 +316,8 @@ namespace DataWF.Data
             var arg = new DBLoadProgressEventArgs(transaction.View, 0, 0, null);
             IEnumerable<DBColumn> creference = null;
             List<T> buf = null;
-
+            if (transaction.View != null && transaction.View.Table == this && transaction.View.IsStatic)
+                transaction.View.Clear();
             if (items.Count == 0)
                 transaction.ReaderParam &= ~DBLoadParam.Synchronize;
             try
@@ -722,11 +733,11 @@ namespace DataWF.Data
             {
                 if (param.ValueLeft is QColumn)
                 {
-                    buf = Select(param.Column, param.Value, param.Comparer, list);
+                    buf = Select(param.Column, param.Comparer, param.Value, list);
                 }
                 else if (param.ValueLeft is QReflection)
                 {
-                    buf = Select(((QReflection)param.ValueLeft).Invoker, param.Value, param.Comparer, list);
+                    buf = Select(((QReflection)param.ValueLeft).Invoker, param.Comparer, param.Value, list);
                 }
                 else
                 {
@@ -748,66 +759,68 @@ namespace DataWF.Data
             }
         }
 
-        public object Optimisation(DBColumn column, object val, CompareType comparer)
+        public object Optimisation(DBColumn column, CompareType comparer, object value)
         {
-            if (val == null)
-                return val;
-            if (val is QQuery)
+            if (value == null)
+                return value;
+            if (value is QQuery)
             {
                 if (column.IsPrimaryKey)
                 {
-                    var query = (QQuery)val;
+                    var query = (QQuery)value;
                     var qcolumn = query.Columns[0] as QColumn;
                     if (qcolumn != null && !query.IsRefence)
                     {
                         var buf = new List<T>();
                         foreach (DBItem item in query.Select())
                         {
-                            var value = item.GetReference<T>(qcolumn.Column, DBLoadParam.None);
-                            if (value != null && value.Table != this)
+                            var reference = item.GetReference<T>(qcolumn.Column, DBLoadParam.None);
+                            if (reference != null && reference.Table != this)
                             {
-                                throw new Exception(string.Format("Value {0} Table {1}", value.Table, this));
+                                throw new Exception(string.Format("Value {0} Table {1}", reference.Table, this));
                             }
-                            if (value != null)
+                            if (reference != null)
                             {
 
-                                var index = buf.BinarySearch(value);
+                                var index = buf.BinarySearch(reference);
                                 if (index < 0)
-                                    buf.Insert(-index - 1, value);
+                                    buf.Insert(-index - 1, reference);
                             }
                         }
-                        val = buf;
+                        value = buf;
                     }
                 }
                 else
-                    val = SelectQuery(null, (QQuery)val, comparer);
+                {
+                    value = SelectQuery(null, (QQuery)value, comparer);
+                }
             }
-            else if (val.GetType() == typeof(QEnum))
+            else if (value.GetType() == typeof(QEnum))
             {
-                val = ((QEnum)val).Items;
+                value = ((QEnum)value).Items;
             }
-            else if (comparer.Type == CompareTypes.In && val is string)
+            else if (comparer.Type == CompareTypes.In && value is string)
             {
-                val = val.ToString().Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                value = value.ToString().Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
             }
             else if (comparer.Type == CompareTypes.Like)
             {
-                val = Helper.BuildLike(val == null ? string.Empty : val.ToString());
+                value = Helper.BuildLike(value == null ? string.Empty : value.ToString());
             }
-            return val;
+            return value;
         }
 
-        public IEnumerable<T> Select(IInvoker invoker, object val, CompareType comparer, IEnumerable<T> list = null)
+        public IEnumerable<T> Select(IInvoker invoker, CompareType comparer, object value, IEnumerable<T> list = null)
         {
             list = list ?? this;
             if (invoker == null)
                 yield break;
 
-            val = Optimisation(null, val, comparer);
+            value = Optimisation(null, comparer, value);
 
             foreach (T row in list)
             {
-                if (CheckItem(row, invoker.Get(row), val, comparer))
+                if (CheckItem(row, invoker.Get(row), value, comparer))
                     yield return row;
             }
         }
@@ -819,46 +832,46 @@ namespace DataWF.Data
             {
                 return column.Index.SelectOne<T>(value);
             }
-            return Select(column, value, CompareType.Equal).FirstOrDefault();
+            return Select(column, CompareType.Equal, value).FirstOrDefault();
         }
 
-        public override IEnumerable SelectItems(DBColumn column, object val, CompareType comparer)
+        public override IEnumerable SelectItems(DBColumn column, CompareType comparer, object val)
         {
-            return Select(column, val, comparer);
+            return Select(column, comparer, val);
         }
 
-        public IEnumerable<T> Select(DBColumn column, object val, CompareType comparer, IEnumerable<T> list = null)
+        public IEnumerable<T> Select(DBColumn column, CompareType comparer, object value, IEnumerable<T> list = null)
         {
             list = list ?? this;
             if (column == null)
                 return list;
 
-            val = Optimisation(column, val, comparer);
-            if (val is IEnumerable<T>)
+            value = Optimisation(column, comparer, value);
+            if (value is IEnumerable<T>)
             {
-                return (IEnumerable<T>)val;
+                return (IEnumerable<T>)value;
             }
 
             if (column.Index != null)
             {
-                return column.Index.Select<T>(val, comparer);
+                return column.Index.Select<T>(value, comparer);
             }
-            return Search(column, val, comparer, list);
+            return Search(column, comparer, value, list);
         }
 
-        public IEnumerable<T> Search(DBColumn column, object val, CompareType comparer, IEnumerable<T> list)
+        public IEnumerable<T> Search(DBColumn column, CompareType comparer, object value, IEnumerable<T> list)
         {
             list = list ?? this;
             foreach (T row in list)
             {
-                if (CheckItem(row, row[column], val, comparer))
+                if (CheckItem(row, row.GetValue(column), value, comparer))
                     yield return row;
             }
         }
 
-        public T SelectRow(DBColumn column, object val, CompareType comparer, IEnumerable<T> list = null)
+        public T SelectRow(DBColumn column, CompareType comparer, object value, IEnumerable<T> list = null)
         {
-            return Select(column, val, comparer, list).FirstOrDefault();
+            return Select(column, comparer, value, list).FirstOrDefault();
         }
 
         public override void Dispose()

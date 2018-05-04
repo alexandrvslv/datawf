@@ -5,7 +5,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>DataWF.OdfGui</RootNamespace>
     <AssemblyName>DataWF.OdfGui</AssemblyName>
-    <TargetFrameworks>net47</TargetFrameworks>
+    <TargetFrameworks>net461</TargetFrameworks>
     <Platforms>AnyCPU;x86</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">

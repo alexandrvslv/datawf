@@ -112,7 +112,7 @@ namespace DataWF.Data
         [Browsable(false)]
         public Dictionary<int, DBItemType> ItemTypes { get; set; } = new Dictionary<int, DBItemType>();
 
-        [XmlIgnore]
+        [Browsable(false), XmlIgnore]
         public DBItemType ItemType => itemType;
 
         protected void SetItemType(Type type)
@@ -143,9 +143,10 @@ namespace DataWF.Data
         [Browsable(false)]
         public DBSystem System
         {
-            get { return Schema?.System; }
+            get { return Schema?.System ?? DBSystem.Default; }
         }
 
+        [Browsable(false)]
         public int BlockSize
         {
             get { return block; }
@@ -160,21 +161,21 @@ namespace DataWF.Data
         [Browsable(false)]
         public abstract bool IsEdited { get; }
 
-        [Category("Database")]
+        [Browsable(false), Category("Database")]
         public string ComInsert
         {
             get { return comInsert; }
             set { comInsert = value; }
         }
 
-        [Category("Database")]
+        [Browsable(false), Category("Database")]
         public string ComUpdate
         {
             get { return comUpdate; }
             set { comUpdate = value; }
         }
 
-        [Category("Database")]
+        [Browsable(false), Category("Database")]
         public string ComDelete
         {
             get { return comDelete; }
@@ -240,7 +241,7 @@ namespace DataWF.Data
             }
         }
 
-        [Category("Keys")]
+        [Browsable(false), Category("Keys")]
         public DBColumn AccessKey
         {
             get
@@ -253,7 +254,7 @@ namespace DataWF.Data
             }
         }
 
-        [Category("Keys")]
+        [Browsable(false), Category("Keys")]
         public DBColumn PrimaryKey
         {
             get
@@ -266,7 +267,7 @@ namespace DataWF.Data
             }
         }
 
-        [Category("Keys")]
+        [Browsable(false), Category("Keys")]
         public DBColumn StampKey
         {
             get
@@ -279,7 +280,7 @@ namespace DataWF.Data
             }
         }
 
-        [Category("Keys")]
+        [Browsable(false), Category("Keys")]
         public DBColumn DateKey
         {
             get
@@ -292,7 +293,7 @@ namespace DataWF.Data
             }
         }
 
-        [Category("Keys")]
+        [Browsable(false), Category("Keys")]
         public DBColumn GroupKey
         {
             get
@@ -305,7 +306,7 @@ namespace DataWF.Data
             }
         }
 
-        [Category("Keys")]
+        [Browsable(false), Category("Keys")]
         public DBColumn ElementTypeKey
         {
             get
@@ -318,7 +319,7 @@ namespace DataWF.Data
             }
         }
 
-        [Category("Keys")]
+        [Browsable(false), Category("Keys")]
         public DBColumn StatusKey
         {
             get
@@ -331,7 +332,7 @@ namespace DataWF.Data
             }
         }
 
-        [Category("Keys")]
+        [Browsable(false), Category("Keys")]
         public DBColumn ItemTypeKey
         {
             get
@@ -344,7 +345,7 @@ namespace DataWF.Data
             }
         }
 
-        [Category("Keys")]
+        [Browsable(false), Category("Keys")]
         public DBColumn CodeKey
         {
             get
@@ -427,6 +428,7 @@ namespace DataWF.Data
 
         public abstract int Count { get; }
 
+        [Browsable(false)]
         public bool IsReadOnly
         {
             get { return false; }
@@ -628,7 +630,7 @@ namespace DataWF.Data
                 if (StampKey != null)
                     item.Stamp = DateTime.Now;
                 if (DateKey != null)
-                    item.Date = DateTime.Now;
+                    item.DateCreate = DateTime.Now;
                 if (IsLoging && StatusKey != null && item.GetType().Name != "DocumentLog")
                     item.Status = DBStatus.New;
             }
@@ -854,7 +856,7 @@ namespace DataWF.Data
                 }
             }
         }
-        public abstract IEnumerable SelectItems(DBColumn column, object val, CompareType comparer);
+        public abstract IEnumerable SelectItems(DBColumn column, CompareType comparer, object val);
 
         public abstract IEnumerable SelectItems(string qQuery);
 
@@ -1065,18 +1067,6 @@ namespace DataWF.Data
         {
         }
 
-        /// <summary>
-        /// Builds the query.
-        /// </summary>
-        /// <returns>
-        /// The query.
-        /// </returns>
-        /// <param name='whereFilter'>
-        /// Where filter.
-        /// </param>
-        /// <param name='cols'>
-        /// Cols.
-        /// </param>
         public string BuildQuery(string whereFilter, IEnumerable cols, string function = null)
         {
             var select = new StringBuilder("select ");
@@ -1091,9 +1081,9 @@ namespace DataWF.Data
                     cols = Columns;// query += "*";// cols = this.columns as IEnumerable;
 
                 bool f = false;
-                foreach (DBColumn cs in cols)
+                foreach (DBColumn column in cols)
                 {
-                    string temp = BuildQueryColumn(cs, "");
+                    string temp = FormatQColumn(column);
                     if (!string.IsNullOrEmpty(temp))
                     {
                         if (f)
@@ -1116,23 +1106,21 @@ namespace DataWF.Data
                     vquery = (whereFilter.Length != 0 ? " and (" : " where ") + vquery + (whereFilter.Length != 0 ? ")" : string.Empty);
             }
             select.Append(" from ");
-            if (!string.IsNullOrEmpty(Schema?.Connection?.Schema))
-                select.Append(Schema.Connection.Schema + ".");
-            select.Append(SqlName);
+            select.Append(FormatQTable());
             select.Append(" ");
             select.Append(whereFilter);
             select.Append(vquery);
             return select.ToString();
         }
 
-        public string BuildQueryColumn(DBColumn cs, string seporator)
+        public string FormatQColumn(DBColumn column)
         {
-            if (cs.ColumnType == DBColumnTypes.Internal || cs.ColumnType == DBColumnTypes.Expression)
-                return string.Empty;
-            else if (cs.ColumnType == DBColumnTypes.Query && cs.Table.Type != DBTableType.View)
-                return string.Format("({0}) as {1} {2}", cs.Query, cs.Name, seporator);
-            else
-                return cs.Name + seporator;
+            return System?.FormatQColumn(column);
+        }
+
+        public string FormatQTable()
+        {
+            return System?.FormatQTable(this);
         }
 
         public string DetectQuery(string whereText, IEnumerable cols = null)
@@ -1300,12 +1288,12 @@ namespace DataWF.Data
             return sequence;
         }
 
-        public void GenerateColumns(DBTableInfo tableInfo)
+        public void Generate(DBTableInfo tableInfo)
         {
             foreach (var columnInfo in tableInfo.Columns)
             {
                 string name = columnInfo.Name;
-                DBColumn column = this.InitColumn(columnInfo.Name);
+                var column = InitColumn(columnInfo.Name);
                 //if (col.Order == 1)
                 //    col.IsPrimaryKey = true;
                 if (name.Equals(Name, StringComparison.OrdinalIgnoreCase))
@@ -1359,8 +1347,32 @@ namespace DataWF.Data
                         column.DBDataType = DBDataType.String;
                     }
                 }
+                if (column.Container == null)
+                    Columns.Add(column);
+            }
+
+            foreach (var constraintInfo in tableInfo.Constraints)
+            {
+                string name = constraintInfo.Name;
+                var constraint = InitConstraint(name);
+                //if (col.Order == 1)
+                //    col.IsPrimaryKey = true;
+                var column = Columns[constraintInfo.Column];
+                if (column == null)
+                    continue;
+                constraint.Column = column;
+                if (constraintInfo.Type.Equals("PRIMARY KEY", StringComparison.OrdinalIgnoreCase))
+                {
+                    constraint.Type = DBConstaintType.Primary;
+                    column.Keys |= DBColumnKeys.Primary;
+                }
+
+                if (constraint.Container == null)
+                    Constraints.Add(constraint);
             }
         }
+
+
 
         public string GetRowText(object id)
         {
@@ -1454,14 +1466,23 @@ namespace DataWF.Data
 
         public DBColumn InitColumn(string code)
         {
-            DBColumn cs = null;
-            cs = Columns[code];
-            if (cs == null)
-            {
-                cs = new DBColumn(code);
-                Columns.Add(cs);
-            }
-            return cs;
+            return Columns[code] ?? new DBColumn(code) { Table = this };
+        }
+
+        private DBConstraint InitConstraint(string name)
+        {
+            return Constraints[name] ?? new DBConstraint() { Table = this, Name = name };
+        }
+
+        public void GenerateDefaultColumns()
+        {
+            Columns.AddRange(new[]{
+                new DBColumn { Name = "unid", Keys = DBColumnKeys.Primary, DBDataType = DBDataType.Int },
+                new DBColumn { Name = "datec", Keys = DBColumnKeys.Date, DBDataType = DBDataType.DateTime },
+                new DBColumn { Name = "dateu", Keys = DBColumnKeys.Stamp, DBDataType = DBDataType.DateTime },
+                new DBColumn { Name = "stateid", Keys = DBColumnKeys.State, DBDataType = DBDataType.Decimal, Size = 28 },
+                new DBColumn { Name = "access", Keys = DBColumnKeys.Access, DBDataType = DBDataType.Blob, Size = 2000 }
+            });
         }
     }
 }

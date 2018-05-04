@@ -89,7 +89,7 @@ namespace DataWF.Gui
                 GridMode = true,
                 GridAuto = true,
                 HeaderVisible = false,
-                StyleRow = GuiEnvironment.StylesInfo["Field"]
+                StyleRow = GuiEnvironment.Theme["Field"]
                 //StyleRow = new CellStyle()
                 //{
                 //    Alternate = false,
@@ -148,7 +148,7 @@ namespace DataWF.Gui
             Filters.OnListChanged(ListChangedType.Reset);
         }
 
-        internal void Clear()
+        internal void ClearFilter()
         {
             Filters.Clear();
         }

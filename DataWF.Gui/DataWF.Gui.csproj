@@ -5,7 +5,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>DataWF.Gui</RootNamespace>
     <AssemblyName>DataWF.Gui</AssemblyName>
-    <TargetFramework>net47</TargetFramework>
+    <TargetFramework>net461</TargetFramework>
     <Platforms>AnyCPU;x86</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -54,5 +54,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Remove="fontawesome-webfont.ttf" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\datawf.png" Link="datawf.png">
+      <LogicalName>datawf.png</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>

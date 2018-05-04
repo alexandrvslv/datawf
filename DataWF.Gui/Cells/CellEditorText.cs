@@ -131,7 +131,7 @@ namespace DataWF.Gui
         {
             if (HandleText)
             {
-                var text = sender == Editor.Widget ? EditorText : sender is RichTextView ? ((RichTextView)sender).PlainText : string.Empty;
+                var text = sender == Editor.Widget ? EditorText : sender is RichTextView ? ((RichTextView)sender).PlainText.TrimEnd() : string.Empty;
                 HandleText = false;
                 if (Filtering && !text.Equals(filter, StringComparison.OrdinalIgnoreCase))
                 {

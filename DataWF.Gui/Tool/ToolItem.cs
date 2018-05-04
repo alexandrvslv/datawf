@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Xml.Serialization;
 using DataWF.Common;
 using Xwt;
 using Xwt.Drawing;
 
 namespace DataWF.Gui
 {
-    public class ToolItem : LayoutItem, IGlyph, IText, IDisposable, IToolItem, ILocalizable
+    public class ToolItem : LayoutItem<ToolItem>, IGlyph, IText, IDisposable, IToolItem, ILocalizable
     {
         protected CellStyle style;
         protected GlyphType glyph;
@@ -27,7 +30,7 @@ namespace DataWF.Gui
         public ToolItem()
         {
             var baseColor = Colors.Silver;
-            style = GuiEnvironment.StylesInfo["Tool"];
+            style = GuiEnvironment.Theme["Tool"];
         }
 
         public ToolItem(EventHandler click) : this()
@@ -38,6 +41,77 @@ namespace DataWF.Gui
         public ToolItem(Widget content) : this()
         {
             Content = content;
+        }
+
+        [XmlIgnore]
+        public Toolsbar Bar
+        {
+            get { return bar; }
+            set
+            {
+                if (bar != value)
+                {
+                    if (bar != null)
+                    {
+                        foreach (var item in this)
+                        {
+                            item.Bar = null;
+                        }
+                        if (Content != null)
+                            bar.RemoveChild(Content);
+                    }
+                    bar = value;
+                    if (bar != null)
+                    {
+                        foreach (var item in this)
+                        {
+                            item.Bar = value;
+                        }
+                        if (Content != null)
+                            bar.AddChild(Content);
+                    }
+                }
+            }
+        }
+
+        public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, string property = null)
+        {
+            base.OnListChanged(type, newIndex, oldIndex, property);
+            if (type == ListChangedType.ItemAdded)
+            {
+                var toolItem = items[newIndex] as IToolItem;
+                if (toolItem != null)
+                {
+                    toolItem.Bar = bar;
+                }
+            }
+            else if (type == ListChangedType.ItemDeleted && newIndex >= 0)
+            {
+                var toolItem = items[newIndex];
+                if (toolItem != null)
+                {
+                    toolItem.Bar = null;
+                }
+            }
+            else if (type == ListChangedType.Reset)
+            {
+                if (items.Count == 0 && bar != null)
+                {
+                    bar.Clear();
+                }
+                else
+                {
+                    foreach (var item in this)
+                    {
+                        item.Bar = bar;
+                    }
+                }
+            }
+            else if (type == ListChangedType.ItemChanged)
+            {
+                bar.QueueForReallocate();
+                bar.QueueDraw();
+            }
         }
 
         public override bool Visible
@@ -81,11 +155,12 @@ namespace DataWF.Gui
             }
         }
 
-        public virtual void Dispose()
+        public override void Dispose()
         {
             text.Dispose();
             if (content != null)
-                Dispose();
+                content.Dispose();
+            base.Dispose();
         }
 
         public string Text
@@ -129,7 +204,7 @@ namespace DataWF.Gui
             get { return style.FontBrush.Color; }
             set
             {
-                style = GuiEnvironment.StylesInfo["Tool"] == style ? style.Clone() : style;
+                style = GuiEnvironment.Theme["Tool"] == style ? style.Clone() : style;
                 style.FontBrush.Color = value.BlendWith(style.FontBrush.Color, 0.6);
                 Bar?.QueueDraw();
             }
@@ -217,21 +292,7 @@ namespace DataWF.Gui
 
         public double MinWidth { get; set; } = 28;
 
-        public Toolsbar Bar
-        {
-            get { return bar; }
-            set
-            {
-                if (bar != value)
-                {
-                    if (bar != null && Content != null)
-                        bar.RemoveChild(Content);
-                    bar = value;
-                    if (bar != null && Content != null)
-                        bar.AddChild(Content);
-                }
-            }
-        }
+
 
         public ToolItem Owner
         {
@@ -243,6 +304,11 @@ namespace DataWF.Gui
             get { return base.Bound; }
             set
             {
+                if (Count > 0)
+                {
+                    base.Bound = value;
+                    return;
+                }
                 var halfIndent = indent / 2D;
                 value = value.Inflate(-halfIndent, -halfIndent);
                 var imaged = DisplayStyle.HasFlag(ToolItemDisplayStyle.Image) && GetFormattedImage() != null;

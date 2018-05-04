@@ -123,7 +123,7 @@ namespace DataWF.Data.Gui
 
         private void OnColumnsLoaded()
         {
-            if (LayoutMapHelper.GetItems(list.ListInfo.Columns).Count() <= 1)
+            if (list.ListInfo.Columns.GetItems().Count() <= 1)
                 list.ResetColumns();
             else// if (list.ListInfo.Columns.Count > 1 && list.ListInfo.Columns[1].A)
                 list.RefreshInfo();

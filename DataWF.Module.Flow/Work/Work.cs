@@ -72,14 +72,14 @@ namespace DataWF.Module.Flow
 
         public List<Template> GetTemplates()
         {
-            var list = new List<Template>(Template.DBTable.Select(Template.DBTable.ParseProperty(nameof(Template.WorkId)), PrimaryId, CompareType.Equal));
+            var list = new List<Template>(Template.DBTable.Select(Template.DBTable.ParseProperty(nameof(Template.WorkId)), CompareType.Equal, PrimaryId));
             list.Sort(new DBComparer<Template>(Template.DBTable.CodeKey, ListSortDirection.Ascending));
             return list;
         }
 
         public List<Stage> GetStages()
         {
-            var list = new List<Stage>(Stage.DBTable.Select(Stage.DBTable.ParseProperty(nameof(Stage.WorkId)), PrimaryId, CompareType.Equal));
+            var list = new List<Stage>(Stage.DBTable.Select(Stage.DBTable.ParseProperty(nameof(Stage.WorkId)), CompareType.Equal, PrimaryId));
             list.Sort(new DBComparer<Stage>(Stage.DBTable.CodeKey, ListSortDirection.Ascending));
             return list;
         }

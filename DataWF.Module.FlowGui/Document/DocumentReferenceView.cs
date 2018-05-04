@@ -12,40 +12,32 @@ using System.Threading.Tasks;
 
 namespace DataWF.Module.FlowGui
 {
-    public class DocumentReferenceView : VPanel, ISync, IDocument, IReadOnly, ILocalizable
+    public class DocumentReferenceView : DocumentListView, ISync, IDocument, ILocalizable
     {
         private Document document;
-        private DocumentSearch search = new DocumentSearch();
-        private DocumentListView refs;
         private ToolItem toolAttach;
         private ToolItem toolDetach;
         private bool synch = false;
 
         public DocumentReferenceView()
         {
-            toolAttach = new ToolItem(ToolAttachClick) { Glyph = GlyphType.PlusCircle };
-            toolDetach = new ToolItem(ToolDetachClick) { Glyph = GlyphType.MinusCircle };
-            refs = new DocumentListView()
-            {
-                AllowPreview = false,
-                AutoLoad = false,
-                LabelText = null,
-                MainDock = false,
-                Name = "documentListView",
-                TemplateFilter = null
-            };
-            refs.Tools.Items.Add(toolAttach);
-            refs.Tools.Items.Add(toolDetach);
+            toolAttach = new ToolItem(ToolAttachClick) { Glyph = GlyphType.PlusSquareO };
+            toolDetach = new ToolItem(ToolDetachClick) { Glyph = GlyphType.MinusSquareO };
+
+            AllowPreview = false;
+            AutoLoad = false;
+            FilterVisible = true;
+            LabelText = null;
+            MainDock = true;
+            ShowPreview = false;
+
+            Bar.Items.Add(toolAttach);
+            Bar.Items.Add(toolDetach);
 
             Name = "DocumentRelations";
-            PackStart(refs, true, true);
-
         }
 
-        public DocumentListView Documents
-        {
-            get { return refs; }
-        }
+        DBItem IDocument.Document { get { return Document; } set { Document = value as Document; } }
 
         public Document Document
         {
@@ -61,46 +53,35 @@ namespace DataWF.Module.FlowGui
                     if (document != null)
                     {
                         document.RefChanged += DocumentRefChanged;
-                        if (refs.Documents == null)
-                            refs.Documents = new DocumentList();
-                        refs.Search = null;
-                        search.Clear();
-                        search.Attributes.Add(Document.CreateRefsParam(document.Id));
-                        refs.Search = search;
+                        Filter.Referencing = value;                        
                     }
-                    refs.Preview = false;
+
                 }
             }
         }
 
         private void DocumentRefChanged(Document arg1, ListChangedType arg2)
         {
-            refs.Documents.UpdateFilter();
+            Documents.UpdateFilter();
         }
 
-        public void Localize()
+        public override void Localize()
         {
+            base.Localize();
             GuiService.Localize(this, base.Name, "Relations", GlyphType.Link);
-            GuiService.Localize(toolAttach, base.Name, "Attach");
-            GuiService.Localize(toolDetach, base.Name, "Detach");
-            refs.Localize();
         }
 
-        public bool ReadOnly
+        public override bool ReadOnly
         {
-            get { return !toolAttach.Sensitive; }
+            get { return base.ReadOnly; }
             set
             {
+                base.ReadOnly = value;
                 toolAttach.Sensitive = !value;
                 toolDetach.Sensitive = !value;
             }
         }
 
-        DBItem IDocument.Document
-        {
-            get { return Document; }
-            set { Document = value as Document; }
-        }
 
         public void Sync()
         {
@@ -127,12 +108,14 @@ namespace DataWF.Module.FlowGui
 
         private void ToolAttachClick(object sender, EventArgs e)
         {
-            var ds = new DocumentFinder();
-            ds.VisibleAccept = true;
-            ds.Size = new Size(800, 600);
-            ds.ButtonAcceptClick += (o, a) =>
+            var window = new DocumentFinder()
             {
-                foreach (Document d in ds.List.GetSelected())
+                VisibleAccept = true,
+                Size = new Size(800, 600)
+            };
+            window.ButtonAcceptClick += (o, a) =>
+            {
+                foreach (Document d in window.List.GetSelected())
                 {
                     if (document.ContainsReference(d.Id) || document == d)
                         continue;
@@ -142,16 +125,16 @@ namespace DataWF.Module.FlowGui
                     refer.Reference = d;
                     refer.Attach();
                 }
-                ds.Dispose();
+                window.Dispose();
             };
-            ds.Show(this, Point.Zero);
+            window.Show(this, Point.Zero);
         }
 
         private void ToolDetachClick(object sender, EventArgs e)
         {
-            if (refs.List.SelectedItem == null)
+            if (List.SelectedItem == null)
                 return;
-            var dc = refs.List.SelectedItem as Document;
+            var dc = List.SelectedItem as Document;
             var refer = document.FindReference(dc.Id);
             if (refer != null)
             {

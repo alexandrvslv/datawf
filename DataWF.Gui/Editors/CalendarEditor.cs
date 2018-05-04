@@ -18,7 +18,7 @@ namespace DataWF.Gui
         {
             month = new Month();
 
-            var style = GuiEnvironment.StylesInfo["CellCenter"].Clone();
+            var style = GuiEnvironment.Theme["CellCenter"].Clone();
             style.BackBrush.Color = style.BackBrush.ColorHover.WithIncreasedLight(-0.1);
             var bar = new Toolsbar(
                 lable = new ToolLabel()
@@ -37,7 +37,7 @@ namespace DataWF.Gui
                 ListInfo = new LayoutListInfo(new LayoutColumn() { Name = "Number", Width = 50, Height = 50, Style = style })
                 {
                     Indent = 4,
-                    StyleRow = GuiEnvironment.StylesInfo["Node"],
+                    StyleRow = GuiEnvironment.Theme["Node"],
                     GridCol = 7,
                     ColumnsVisible = false,
                     HeaderVisible = false

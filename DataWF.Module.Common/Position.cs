@@ -28,7 +28,7 @@ using System.Collections.Generic;
 namespace DataWF.Module.Common
 {
     [DataContract, Table("rposition", "User")]
-    public class Position : DBItem
+    public class Position : DBGroupItem
     {
         public static DBTable<Position> DBTable
         {
@@ -64,15 +64,15 @@ namespace DataWF.Module.Common
         [DataMember, Column("parent_id", Keys = DBColumnKeys.Group), Index("rposition_parent_id"), Browsable(false)]
         public int? ParentId
         {
-            get { return GetValue<int?>(Table.GroupKey); }
-            set { this[Table.GroupKey] = value; }
+            get { return GetGroupValue<int?>(); }
+            set { SetGroupValue(value); }
         }
 
         [Reference(nameof(ParentId))]
         public Position Parent
         {
-            get { return GetReference<Position>(Table.GroupKey); }
-            set { SetReference(value, Table.GroupKey); }
+            get { return GetGroupReference<Position>(); }
+            set { SetGroupReference(value); }
         }
 
         [DataMember, Column("code", 40, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing)]

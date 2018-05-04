@@ -28,7 +28,6 @@ namespace DataWF.Module.FlowGui
         None
     }
 
-
     public class DocumentEditor : VPanel, IDocked, IDockContent
     {
         static Dictionary<Type, List<Type>> typesCache = new Dictionary<Type, List<Type>>();
@@ -56,14 +55,12 @@ namespace DataWF.Module.FlowGui
         }
 
         private Toolsbar tools;
-        private ToolItem toolCopy;
         private ToolItem toolSave;
         private ToolItem toolRefresh;
         private ToolItem toolSend;
         private ToolItem toolLogs;
         private ToolItem toolDelete;
         private ToolItem toolBarCode;
-        private ToolDropDown toolTemplates;
         private ToolItem toolReturn;
         private ToolItem toolForward;
         private ToolItem toolNext;
@@ -80,30 +77,25 @@ namespace DataWF.Module.FlowGui
         private Template template;
         private DocumentWork work;
 
-        private EventHandler procClick;
-        private EventHandler tempClick;
         private DocumentEditorState state = DocumentEditorState.None;
         private Type documentType;
+        private DocumentReferenceView references;
 
         public DocumentEditor()
         {
-            toolCopy = new ToolItem(ToolCopyClick) { Name = "Copy", Glyph = GlyphType.CopyAlias };
             toolProcedures = new ToolDropDown { Name = "Procedures", Glyph = GlyphType.PuzzlePiece };
-            toolTemplates = new ToolDropDown { Name = "Templates", Glyph = GlyphType.Book };
-            toolSave = new ToolItem(ToolSaveClick) { Name = "Save", Glyph = GlyphType.SaveAlias };
-            toolRefresh = new ToolItem(ToolRefreshClick) { Name = "Refresh", Glyph = GlyphType.Refresh };
-            toolDelete = new ToolItem(ToolDeleteClick) { Name = "Delete", Glyph = GlyphType.MinusSquare };
-            toolLogs = new ToolItem(ToolLogsOnClick) { Name = "Logs", Glyph = GlyphType.History };
-            toolBarCode = new ToolItem(ToolBarCodeClick) { Name = "BarCode", Glyph = GlyphType.Barcode };
-            toolReturn = new ToolItem(ToolReturnClick) { Name = "Return", Glyph = GlyphType.StepBackward };
-            toolSend = new ToolItem(ToolAcceptClick) { Name = "Send", Glyph = GlyphType.PlayCircle };
-            toolForward = new ToolItem(ToolForwardClick) { Name = "Forward", Glyph = GlyphType.StepForward };
-            toolNext = new ToolItem(ToolNextClick) { Name = "Next", Glyph = GlyphType.Forward };
+            toolSave = new ToolItem(ToolSaveClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Save", Glyph = GlyphType.SaveAlias };
+            toolRefresh = new ToolItem(ToolRefreshClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Refresh", Glyph = GlyphType.Refresh };
+            toolDelete = new ToolItem(ToolDeleteClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Delete", Glyph = GlyphType.MinusSquare };
+            toolLogs = new ToolItem(ToolLogsOnClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Logs", Glyph = GlyphType.History };
+            toolBarCode = new ToolItem(ToolBarCodeClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "BarCode", Glyph = GlyphType.Barcode };
+            toolReturn = new ToolItem(ToolReturnClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Return", Glyph = GlyphType.StepBackward };
+            toolSend = new ToolItem(ToolAcceptClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Send/Accept", Glyph = GlyphType.CheckCircle };
+            toolForward = new ToolItem(ToolForwardClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Forward", Glyph = GlyphType.StepForward };
+            toolNext = new ToolItem(ToolNextClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Next", Glyph = GlyphType.Forward };
 
             tools = new Toolsbar(
-               toolProcedures,
-               toolTemplates,
-               toolCopy,
+               //toolProcedures,
                toolSave,
                toolRefresh,
                toolDelete,
@@ -111,37 +103,33 @@ namespace DataWF.Module.FlowGui
                toolLogs,
                toolBarCode,
                new ToolSeparator(),
-               toolReturn,
-               toolSend,
-               toolForward,
-               toolNext,
-               toolLabel)
+               //toolReturn,
+               toolSend
+               //toolForward,
+               //toolNext,
+               //toolLabel
+               )
             { Name = "tools" };
             toolsItems = tools.Items.Cast<ToolItem>();
 
             dock = new DockBox()
             {
                 Name = "dock",
-                BackgroundColor = GuiEnvironment.StylesInfo["Page"].BaseColor,
+                BackgroundColor = GuiEnvironment.Theme["Page"].BaseColor,
                 VisibleClose = false
             };
-            //dock.PageStyle = GuiEnvironment.StylesInfo["DocumentDock"];
             pageHeader = dock.Put(new DocumentHeader(), DockType.Left);
-            pageHeader.Panel.MapItem.FillWidth = true;
-            pageWorks = dock.Put(new DocumentWorkView(), DockType.Content);
-            //pageDatas = dock.Put(new DocumentDataView<DocumentData>(), DockType.Content);
-            //pageRefers = dock.Put(new DocumentCustomerView(), DockType.Content);
-            pageRefers = dock.Put(new DocumentReferenceView(), DockType.Content);
+            pageHeader.Panel.MapItem.Width = 350;//pageHeader.Panel.MapItem.FillWidth = true;
+            pageWorks = dock.Put(new DocumentWorkView(), DockType.LeftBottom);
+            pageRefers = dock.Put((references = new DocumentReferenceView()), DockType.Content);
 
+            Glyph = GlyphType.Book;
             Name = "DocumentEditor";
             Text = "Document";
             Tag = "Document";
 
             PackStart(tools, false, false);
             PackStart(dock, true, true);
-
-            procClick = new EventHandler(ProcedureItemClick);
-            tempClick = new EventHandler(TemplateItemClick);
 
             Localize();
         }
@@ -177,35 +165,33 @@ namespace DataWF.Module.FlowGui
 
         private async void LoadPage(DockPage page)
         {
-            if (page != null)
+            if (page == null || document == null)
+                return;
+            if (page.Widget is IReadOnly)
             {
-                if (page.Widget is IReadOnly)
-                {
-                    ((IReadOnly)page.Widget).ReadOnly = state == DocumentEditorState.Readonly || !document.Access.Edit;
-                }
-                else
-                {
-                    page.Widget.Sensitive = state == DocumentEditorState.Edit && document.Access.Edit;
-                }
-                if (page.Widget is IDocument)
-                    ((IDocument)page.Widget).Document = document;
-                if (page.Widget is IExecutable)
-                    ((IExecutable)page.Widget).Execute(new ExecuteArgs(document));
-                if (page.Widget is TableEditor)
-                    ((TableEditor)page.Widget).OwnerRow = document;
-                if (document.Attached)
-                {
-                    if (page.Widget is ILoader)
-                        await ((ILoader)page.Widget).Loader.LoadAsync();
-                    if (page.Widget is ISync)
-                        await ((ISync)page.Widget).SyncAsync();
-                }
+                ((IReadOnly)page.Widget).ReadOnly = state == DocumentEditorState.Readonly || !document.Access.Edit;
+            }
+            else
+            {
+                page.Widget.Sensitive = state == DocumentEditorState.Edit && document.Access.Edit;
+            }
+            if (page.Widget is IDocument)
+                ((IDocument)page.Widget).Document = document;
+            if (page.Widget is IExecutable)
+                ((IExecutable)page.Widget).Execute(new ExecuteArgs(document));
+            if (page.Widget is TableEditor)
+                ((TableEditor)page.Widget).OwnerRow = document;
+            if (document.Attached)
+            {
+                if (page.Widget is ILoader)
+                    await ((ILoader)page.Widget).Loader.LoadAsync();
+                if (page.Widget is ISync)
+                    await ((ISync)page.Widget).SyncAsync();
             }
         }
 
         public void Localize()
         {
-            GuiService.Localize(this, "DocumentEditor", "Document Editor", GlyphType.Book);
             tools.Localize();
             dock.Localize();
         }
@@ -420,16 +406,21 @@ namespace DataWF.Module.FlowGui
                                 InitReference(stage, param);
                             else if (param.Type == ParamType.Procedure)
                                 InitProcedure(stage, param);
-                            else if (param.Type == ParamType.Template)
-                                InitTemplate(stage, param.Param as Template, toolTemplates.DropDown.Items);
+                            //else if (param.Type == ParamType.Template)
+                            //    InitTemplate(stage, param.Param as Template, toolTemplates.DropDown.Items);
                         }
                     }
                     foreach (MenuItemProcedure item in toolProcedures.DropDownItems)
+                    {
                         item.Visible = item.Tag == template || item.Tag == stage;
-                    foreach (TemplateMenuItem item in toolTemplates.DropDownItems)
-                        item.Visible = item.Tag == template || item.Tag == stage;
+                    }
                     foreach (var page in dock.GetPages())
-                        page.Visible = page.Tag == template || page.Tag == stage;
+                    {
+                        page.Visible = page.Tag == null || page.Tag.Equals(template) || page.Tag.Equals(DocumentType);
+                    }
+                    //foreach (TemplateMenuItem item in toolTemplates.DropDownItems)
+                    //    item.Visible = item.Tag == template || item.Tag == stage;
+
                 }
             }
         }
@@ -450,16 +441,19 @@ namespace DataWF.Module.FlowGui
                                 InitReference(template, param);
                             else if (param.Type == ParamType.Procedure)
                                 InitProcedure(template, param);
-                            else if (param.Type == ParamType.Template)
-                                InitTemplate(template, param.Param as Template, toolTemplates.DropDownItems);
+                            //else if (param.Type == ParamType.Template)
+                            //    InitTemplate(template, param.Param as Template, toolTemplates.DropDownItems);
                         }
                     foreach (MenuItemProcedure item in toolProcedures.DropDownItems)
+                    {
                         item.Visible = item.Tag == template;
-                    foreach (TemplateMenuItem item in toolTemplates.DropDownItems)
-                        item.Visible = item.Tag == template;
-                    foreach (DockPage dp in dock.GetPages())
-                        dp.Visible = dp.Tag == template;
-
+                    }
+                    foreach (DockPage page in dock.GetPages())
+                    {
+                        page.Visible = page.Tag == null || page.Tag.Equals(template) || page.Tag.Equals(DocumentType);
+                    }
+                    //foreach (TemplateMenuItem item in toolTemplates.DropDownItems)
+                    //    item.Visible = item.Tag == template;
                 }
             }
         }
@@ -472,7 +466,7 @@ namespace DataWF.Module.FlowGui
                 if (state == value)
                     return;
                 state = value;
-                this.Text = document.ToString();// +"(" + this.Tag.ToString() + ")";
+                Text = document.ToString();// +"(" + this.Tag.ToString() + ")";
 
                 pageHeader.Tag = document.Template;
                 pageRefers.Tag = document.Template;
@@ -507,7 +501,7 @@ namespace DataWF.Module.FlowGui
                 toolNext.Sensitive = state == DocumentEditorState.Edit;
                 toolForward.Sensitive = state == DocumentEditorState.Edit;
                 toolProcedures.Sensitive = state == DocumentEditorState.Edit;
-                toolTemplates.Sensitive = state != DocumentEditorState.Create;
+                //toolTemplates.Sensitive = state != DocumentEditorState.Create;
                 toolRefresh.Sensitive = state != DocumentEditorState.Create;
                 toolSave.Sensitive = state != DocumentEditorState.Readonly;
                 toolLogs.Sensitive = state != DocumentEditorState.Create;
@@ -576,7 +570,7 @@ namespace DataWF.Module.FlowGui
                 if (documentType == value)
                     return;
                 documentType = value;
-                GetPages(documentType).ForEach(p => p.Tag = Document.Template);
+                GetPages(documentType).ForEach(p => p.Tag = value);
             }
         }
 
@@ -684,61 +678,25 @@ namespace DataWF.Module.FlowGui
                 {
                     item = new MenuItemProcedure(proc);
                     item.Name = name;
-                    item.Click += procClick;
+                    item.Click += ProcedureItemClick;
                     toolProcedures.DropDown.Items.Add(item);
                 }
                 item.Tag = owner;
             }
         }
 
-        public static bool CheckVisible(ToolLayoutMap collection)
+        public static bool CheckVisible(ToolItem collection)
         {
-            foreach (MenuItem item in collection)
-                if (!(item is SeparatorMenuItem) && item.Sensitive)
+            foreach (var item in collection)
+            {
+                if (!(item is ToolSeparator) && item.Sensitive)
                     return true;
+            }
             return false;
         }
 
-        public ToolMenuItem InitTemplate(DBItem owner, Template template, ToolLayoutMap menu)
-        {
-            if (template == null)
-                return null;
-            string name = "template" + template.Id.ToString();
 
-            var item = menu[name] as TemplateMenuItem;
-            if (item == null)
-            {
-                item = new TemplateMenuItem(template);
-                item.Name = name;
-                menu.Add(item);
-
-                var list = template.GetSubGroups<Template>(DBLoadParam.None);
-                foreach (var t in list)
-                    item.DropDown.Items.Add(InitTemplate(owner, t, item.DropDown.Items));
-
-                if (list.Count() == 0)
-                    item.Click += tempClick;
-            }
-            item.Tag = owner;
-            return item;
-        }
-
-        private void TemplateItemClick(object sender, EventArgs e)
-        {
-            var t = sender as TemplateMenuItem;
-            var list = GetList();
-            if (list.Count > 1)
-                DocumentWorker.ViewDocuments(DocumentWorker.CreateDocumentsFromList(t.Template, list));
-            else
-                DocumentWorker.ViewDocuments(DocumentWorker.CreateDocuments(t.Template, document));
-        }
-
-        #endregion
-
-        private void ToolCopyClick(object sender, EventArgs e)
-        {
-            DocumentWorker.ViewDocuments(DocumentWorker.CreateDocuments(document.Template, document));
-        }
+        #endregion        
 
         private void ToolSaveClick(object sender, EventArgs e)
         {
@@ -762,18 +720,14 @@ namespace DataWF.Module.FlowGui
                 foreach (DBItem row in document.GetReferencing(relation, DBLoadParam.None))
                     row.Reject();
             }
-
             document.Reject();
-
             document.IniType = DocInitType.Default;
-
             CheckState(DocumentEditorState.None);
         }
 
         private void ToolDeleteClick(object sender, EventArgs e)
         {
-            RowDeleting deleter = new RowDeleting();
-            deleter.Row = document;
+            var deleter = new RowDeleting { Row = document };
             deleter.Show(this, Point.Zero);
             //deleter.Dispose();
             if (document != null && (document.UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete)
@@ -784,22 +738,27 @@ namespace DataWF.Module.FlowGui
 
         private void ToolBarCodeClick(object sender, EventArgs e)
         {
-            var control = new BarCodeCtrl();
-            //control.Size = new Size(170, 50);
-            control.ShowFooter = true;
-            //control.FooterFont = new Font (control.FooterFont.FontFamily, 8.0F);
-            control.BarCodeHeight = 25;
-            control.BarCode = document.Id.ToString();
-            control.Weight = BarCodeCtrl.BarCodeWeight.Small;
+            if (Document == null)
+                return;
+            var barcode = new BarCodeCtrl
+            {
+                ShowFooter = true,
+                //FooterFont = new Font (control.FooterFont.FontFamily, 8.0F),
+                BarCodeHeight = 25,
+                BarCode = document.Id.ToString(),
+                Weight = BarCodeCtrl.BarCodeWeight.Small
+            };
+            barcode.ShowWindow(ParentWindow, new Size(200, 100));
 
-            var stImage = new MemoryStream();
-            control.SaveImage(stImage);
-            var im = Image.FromStream(stImage);
-
-            ImageEditor ie = new ImageEditor();
-            ie.Image = im;
-            ie.Text = "Bar Code";
-            ie.ShowDialog(this);
+            //using (var stImage = new MemoryStream())
+            //{
+            //    barcode.SaveImage(stImage);
+            //    var im = Image.FromStream(stImage);
+            //    var editor = new ImageEditor();
+            //    editor.Image = im;
+            //    editor.Text = "Bar Code";
+            //    editor.ShowDialog(this);
+            //}
         }
 
         private void ToolAcceptClick(object sender, EventArgs e)
@@ -833,12 +792,6 @@ namespace DataWF.Module.FlowGui
 
             Send(null, null, null);
         }
-
-        //protected override void OnActivated(EventArgs e)
-        //{
-        //    FlowEnvir.CurrentDocument = document;
-        //    base.OnActivated(e);
-        //}
 
         protected void OnClosing(CancelEventArgs e)
         {
@@ -892,7 +845,7 @@ namespace DataWF.Module.FlowGui
                             : typeof(DocumentDetailView<>).MakeGenericType(type);
                         Widget widget = (Widget)EmitInvoker.CreateObject(widgetType);
                         widget.Name = name;
-                        page = dock.Put(widget, DockType.Content);
+                        page = dock.Put(widget, TypeHelper.IsBaseType(type, typeof(DocumentData)) ? DockType.LeftBottom : DockType.Content);
                     }
                     documentWidgets.Add(page);
                 }
@@ -934,18 +887,7 @@ namespace DataWF.Module.FlowGui
         private void SenderSendComplete(object senderObj, EventArgs e)
         {
             CheckState(DocumentEditorState.None);
-            if (SendComplete != null)
-                SendComplete(this, e);
+            SendComplete?.Invoke(this, e);
         }
-
-        //private void Send(DocumentWork work, Stage stage, User user, Document document)
-        //{
-        //    state = DocumentEditorState.Send;
-        //    DocumentTool.Send(work, stage, user, null, new ExecuteDocumentCallback(CheckProcRezult));
-        //    DocumentTool.Save(document, null);
-        //    CheckState(DocumentEditorState.None);
-        //    if (SendComplete != null)
-        //        SendComplete(this, EventArgs.Empty);
-        //}
     }
 }

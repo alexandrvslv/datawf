@@ -120,6 +120,13 @@ namespace DataWF.Data.Gui
             }
         }
 
+        public async Task LoadAsync()
+        {
+            if (view == null || view.Table.IsSynchronized)
+                return;
+            await LoadAsync(view.Query);
+        }
+
         private void Loader()
         {
             delayEvent.WaitOne(500);
@@ -147,13 +154,6 @@ namespace DataWF.Data.Gui
                     DBTableLoadComplete(this, EventArgs.Empty);
                 }
             }
-        }
-
-        public async Task LoadAsync()
-        {
-            if (view == null || view.Table.IsSynchronized)
-                return;
-            await LoadAsync(view.Query);
         }
 
         public bool IsLoad()

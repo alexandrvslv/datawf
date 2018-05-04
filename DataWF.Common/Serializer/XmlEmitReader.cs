@@ -22,10 +22,15 @@ namespace DataWF.Common
             var type = TypeHelper.ParseType(Reader.Value);
             if (type == null)
             {
-                throw new Exception(string.Format("Type: {0} Not Found!", Reader.Value));
+                //throw new Exception(string.Format("Type: {0} Not Found!", Reader.Value));
             }
-            while (Reader.NodeType != XmlNodeType.Element)
-                Reader.Read();
+            while (Reader.Read())
+            {
+                if (Reader.NodeType == XmlNodeType.Element)
+                    break;
+                else if (Reader.NodeType == XmlNodeType.EndElement)
+                    break;
+            }
             return type;
         }
 
@@ -67,7 +72,7 @@ namespace DataWF.Common
             {
                 if (member.IsText || member.IsAttribute)
                 {
-                    member.Invoker.Set(element, Helper.TextParse(Reader.ReadElementContentAsString(), mtype));
+                    member.Invoker.Set(element, Helper.TextParse(Reader.ReadElementContentAsString(), mtype ?? member.PropertyType));
                 }
                 else
                 {
@@ -129,7 +134,7 @@ namespace DataWF.Common
                 }
                 listIndex++;
             }
-            else
+            else// if (mtype != null)
             {
                 ReadElement(element, info, mtype);
             }
@@ -225,8 +230,7 @@ namespace DataWF.Common
 
                 if (element == null && info.IsList)
                 {
-                    int.TryParse(Reader.GetAttribute(nameof(ICollection.Count)), out int count);
-                    if (element == null)
+                    if (int.TryParse(Reader.GetAttribute(nameof(ICollection.Count)), out int count))
                     {
                         element = info.ListConstructor.Create(count);
                     }

@@ -1,18 +1,18 @@
 ﻿using System;
 using DataWF.Common;
+using Xwt;
 
 namespace DataWF.Gui
 {
-    public class DockMapItem : LayoutItem, IDisposable
+    public class DockItem : LayoutItem<DockItem>, IDisposable
     {
-        [NonSerialized()]
         protected DockPanel panel;
         internal bool main = false;
 
-        public DockMapItem()
+        public DockItem()
         {
             height = 200D;
-            width = 260D;
+            width = 280D;
         }
 
         public DockPanel Panel
@@ -34,18 +34,29 @@ namespace DataWF.Gui
             {
                 if (main)
                     return;
-                
+
                 base.Visible = value;
-                
+
                 if (panel != null)
                     panel.Visible = value;
             }
         }
 
-        public void Dispose()
+        public DockItem Add(DockPanel panel)
         {
-            panel.Dispose();
+            var item = new DockItem() { Name = panel.Name, Panel = panel };
+            Add(item);
+            return item;
         }
+
+        public override void Dispose()
+        {
+            foreach (var item in this)
+                if (item is IDisposable)
+                    ((IDisposable)item).Dispose();
+            panel?.Dispose();
+        }
+
     }
 }
 

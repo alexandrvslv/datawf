@@ -26,6 +26,7 @@ namespace DataWF.Common
         private static Dictionary<Type, bool> cacheTypeIsXmlAttribute = new Dictionary<Type, bool>(200);
         private static Dictionary<MemberInfo, bool> cacheIsXmlSerialize = new Dictionary<MemberInfo, bool>(200);
         private static Dictionary<MemberInfo, object> cacheDefault = new Dictionary<MemberInfo, object>(200);
+        private static Dictionary<Type, object> cacheTypeDefault = new Dictionary<Type, object>(200);
 
         public static PropertyInfo GetIndexProperty(Type itemType)
         {
@@ -255,12 +256,22 @@ namespace DataWF.Common
             return flag;
         }
 
+        public static object GetDefault(Type type)
+        {
+            object defaultValue = null;
+            if (type.IsValueType && !cacheTypeDefault.TryGetValue(type, out defaultValue))
+            {
+                defaultValue = cacheTypeDefault[type] = Activator.CreateInstance(type);
+            }
+            return defaultValue;
+        }
+
         public static object GetDefault(MemberInfo info)
         {
             if (!cacheDefault.TryGetValue(info, out object defaultValue))
             {
-                var defaultAttribute = (DefaultValueAttribute)info.GetCustomAttribute(typeof(DefaultValueAttribute), false);
-                defaultValue = cacheDefault[info] = defaultAttribute == null ? null : defaultAttribute.Value;
+                var defaultAttribute = info.GetCustomAttribute<DefaultValueAttribute>(false);
+                cacheDefault[info] = defaultValue = defaultAttribute?.Value ?? GetDefault(GetMemberType(info));
             }
             return defaultValue;
         }

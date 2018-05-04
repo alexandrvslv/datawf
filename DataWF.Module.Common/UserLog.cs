@@ -44,7 +44,7 @@ namespace DataWF.Module.Common
     }
 
     [DataContract, Table("duser_log", "User", BlockSize = 500, IsLoging = false)]
-    public class UserLog : DBItem, ICheck
+    public class UserLog : DBGroupItem, ICheck
     {
         [ThreadStatic]
         public static DBItem CurrentDocument;
@@ -154,19 +154,19 @@ namespace DataWF.Module.Common
         [DataMember, Column("parent_id", Keys = DBColumnKeys.Group)]
         public long? ParentId
         {
-            get { return GetProperty<long?>(nameof(ParentId)); }
-            set { SetProperty(value, nameof(ParentId)); }
+            get { return GetGroupValue<long?>(); }
+            set { SetGroupValue(value); }
         }
 
         [Reference(nameof(ParentId))]
         public UserLog Parent
         {
-            get { return GetPropertyReference<UserLog>(); }
-            set { SetPropertyReference(value); }
+            get { return GetGroupReference<UserLog>(); }
+            set { SetGroupReference(value); }
         }
 
         [Browsable(false)]
-        [DataMember, Column("redo_id", Keys = DBColumnKeys.Group)]
+        [DataMember, Column("redo_id")]
         public long? RedoId
         {
             get { return GetProperty<long?>(nameof(RedoId)); }
@@ -273,7 +273,7 @@ namespace DataWF.Module.Common
         public void RefereshText()
         {
             string _textCache = GetProperty<string>(nameof(TextData));
-            if (_textCache.Length == 0 && LogItem != null)
+            if (_textCache?.Length == 0 && LogItem != null)
             {
                 var logPrevius = LogItem.GetPrevius();
                 foreach (var logColumn in LogTable.GetLogColumns())

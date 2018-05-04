@@ -37,7 +37,7 @@ namespace DataWF.Module.Flow
 
         public TemplateParamList(Template template)
             : this(TemplateParam.DBTable.ParseProperty(nameof(TemplateParam.TemplateId)).Name + " in (" + template.GetParentIds() + ")" +
-                   (template.IsCompaund ? " or " + TemplateParam.DBTable.ParseProperty(nameof(TemplateParam.TemplateId)).Name + " in (" + template.GetSubGroupIds() + ")" : string.Empty))
+                   (template.IsCompaund ? " or " + TemplateParam.DBTable.ParseProperty(nameof(TemplateParam.TemplateId)).Name + " in (" + template.GetSubGroupFullIds() + ")" : string.Empty))
         {
         }
 

@@ -71,7 +71,7 @@ namespace DataWF.Module.Messanger
 		{
 			var message = new Message
 			{
-				Date = DateTime.Now,
+				DateCreate = DateTime.Now,
 				UserId = from,
 				Data = data,
 				Document = document
@@ -95,7 +95,7 @@ namespace DataWF.Module.Messanger
 		{
 			var message = new Message()
 			{
-				Date = DateTime.Now,
+				DateCreate = DateTime.Now,
 				UserId = from,
 				Data = data,
 				Document = document

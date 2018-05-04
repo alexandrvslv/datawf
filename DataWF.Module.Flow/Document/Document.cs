@@ -65,7 +65,7 @@ namespace DataWF.Module.Flow
     }
 
     [DataContract, Table("ddocument", "Document", BlockSize = 200)]
-    public class Document : DBItem, IDisposable
+    public class Document : DBGroupItem, IDisposable
     {
         public static DBTable<Document> DBTable
         {
@@ -133,14 +133,14 @@ namespace DataWF.Module.Flow
             document.DocumentDate = DateTime.Now;
             if (document.Template.Data != null)
             {
-                var data = document.GenerateTemplate();
+                var data = document.GenerateFromTemplate();
                 data.Attach();
             }
 
             if (parent != null)
             {
                 document.Parent = parent;
-                CreateReference(parent, document, copyAttr);
+                parent.CreateReference(document, copyAttr);
             }
 
             foreach (var prm in document.Template.TemplateAllParams)
@@ -224,22 +224,21 @@ namespace DataWF.Module.Flow
             return result;
         }
 
-        public static DocumentReference CreateReference(Document parent, Document document, bool attributes = false)
+        public DocumentReference CreateReference(Document document, bool attributes = false)
         {
-            if (parent == null || document == null)
+            if (document == null)
                 return null;
 
             if (attributes)
             {
                 foreach (var param in document.Template.TemplateAllParams)
                     if (param.Type == ParamType.Column) //document[ta] != DBNull.Value
-                        document[param] = parent[param];
-                document.Number = null;
+                        document[param] = this[param];
             }
 
             var reference = new DocumentReference();
+            reference.Document = this;
             reference.Reference = document;
-            reference.Document = parent;
             reference.Attach();
             return reference;
         }
@@ -267,7 +266,7 @@ namespace DataWF.Module.Flow
 
         private DocInitType initype = DocInitType.Default;
         private int changes = 0;
-        private DBItem parent = DBItem.EmptyItem;
+        //private DBItem parent = DBItem.EmptyItem;
 
         public event EventHandler<DBItemEventArgs> ReferenceChanged;
 
@@ -333,26 +332,17 @@ namespace DataWF.Module.Flow
         [DataMember, Column("parent_id", Keys = DBColumnKeys.Group)]
         public long? ParentId
         {
-            get { return GetValue<long?>(Table.GroupKey); }
-            set { SetValue(value, Table.GroupKey); }
+            get { return GetGroupValue<long?>(); }
+            set { SetGroupValue(value); }
         }
 
         [Reference(nameof(ParentId))]
         public Document Parent
         {
-            get
-            {
-                if (parent == DBItem.EmptyItem)
-                {
-                    parent = GetReference<Document>(Table.GroupKey) ??
-                        References.Where(p => p.Document != this).FirstOrDefault()?.Document;
-                }
-                return (Document)parent;
-            }
+            get { return GetGroupReference<Document>(); }
             set
             {
-                SetReference(value, Table.GroupKey);
-                parent = value;
+                SetGroupReference(value);
                 if (Customer == null)
                 {
                     Customer = value?.Customer;
@@ -457,7 +447,7 @@ namespace DataWF.Module.Flow
         [Category("Current State")]
         public DateTime? WorkDate
         {
-            get { return WorkCurrent?.Date; }
+            get { return WorkCurrent?.DateCreate; }
         }
 
         [Category("Current State")]
@@ -657,12 +647,12 @@ namespace DataWF.Module.Flow
             return null;
         }
 
-        public virtual DocumentData GenerateTemplate()
+        public virtual DocumentData GenerateFromTemplate()
         {
-            return GenerateTemplate<DocumentData>();
+            return GenerateFromTemplate<DocumentData>();
         }
 
-        public T GenerateTemplate<T>() where T : DocumentData, new()
+        public T GenerateFromTemplate<T>() where T : DocumentData, new()
         {
             var data = new T()
             {
@@ -697,7 +687,7 @@ namespace DataWF.Module.Flow
             work.Document = this;
             work.User = user;
             work.Description = descript;
-            work.Date = DateTime.Now;
+            work.DateCreate = DateTime.Now;
             work.Stage = stage;
             if (from != null)
             {
@@ -969,7 +959,7 @@ namespace DataWF.Module.Flow
             var qWork = new QQuery(string.Empty, DocumentWork.DBTable);
             qWork.Columns.Add(new QColumn(nameof(DocumentWork.Document)));
             qWork.BuildPropertyParam(nameof(DocumentWork.IsComplete), CompareType.Equal, false);
-            qWork.BuildPropertyParam(nameof(DocumentWork.UserId), CompareType.In, user.GetParents<User>(true));
+            qWork.BuildPropertyParam(nameof(DocumentWork.UserId), CompareType.Equal, user);
 
             var qDocs = new QQuery(string.Empty, Document.DBTable);
             qDocs.BuildPropertyParam(nameof(Document.Id), CompareType.In, qWork);
@@ -1002,7 +992,6 @@ namespace DataWF.Module.Flow
         Create,
         Document,
         WorkBegin,
-        WorkEnd,
-        History
+        WorkEnd
     }
 }

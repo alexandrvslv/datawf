@@ -1,12 +1,18 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 
 namespace DataWF.Gui
 {
-    public class LayoutItemComparer : IComparer<ILayoutItem>
+    public class LayoutItemComparer<T> : IComparer<T> where T : LayoutItem<T>, new()
     {
-        public int Compare(ILayoutItem x, ILayoutItem y)
+        public int Compare(T x, T y)
         {
-            return LayoutMapHelper.Compare(x, y);
+            return LayoutItem<T>.Compare(x, y);
+        }
+
+        public int Compare(object x, object y)
+        {
+            return Compare((ILayoutItem)x, (ILayoutItem)y);
         }
     }
 }

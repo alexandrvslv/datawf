@@ -11,13 +11,14 @@ using System.Reflection;
 using Xwt;
 using System.Linq;
 using Mono.Cecil;
+using System.Threading.Tasks;
 
 namespace DataWF.Data.Gui
 {
     [Module(true)]
     public class DataExplorer : VPanel, IDockContent, IGlyph
     {
-        private ToolWindow ose = new ToolWindow();
+        private ToolWindow itemWindow = new ToolWindow();
         private ListExplorer listExplorer = new ListExplorer();
         private DataTree dataTree;
         private Toolsbar barMain;
@@ -53,14 +54,16 @@ namespace DataWF.Data.Gui
             { Name = "DataExplorer" };
 
             contextAdd = new Menubar(
-                new ToolMenuItem(ToolAddDBClick) { Name = "Schema", Glyph = GlyphType.Database },
-                new ToolMenuItem(ToolAddTableGroupClick) { Name = "Table Group", Glyph = GlyphType.FolderOTable },
+                new ToolMenuItem(ToolAddConnectionClick) { Name = "Connection", Glyph = GlyphType.Connectdevelop },
+                new ToolMenuItem(ToolAddSchemaClick) { Name = "Schema", Glyph = GlyphType.Database },
+                new ToolMenuItem(ToolAddTableGroupClick) { Name = "TableGroup", Glyph = GlyphType.FolderOTable },
                 new ToolMenuItem(ToolAddTableClick) { Name = "Table", Glyph = GlyphType.Table },
-                new ToolMenuItem(ToolAddColumnGroupClick) { Name = "Column Group", Glyph = GlyphType.FolderOColumn },
+                new ToolMenuItem(ToolAddColumnGroupClick) { Name = "ColumnGroup", Glyph = GlyphType.FolderOColumn },
                 new ToolMenuItem(ToolAddColumnClick) { Name = "Column", Glyph = GlyphType.Columns },
                 new ToolMenuItem(ToolAddIndexClick) { Name = "Index", Glyph = GlyphType.Anchor },
                 new ToolMenuItem(ToolAddConstraintClick) { Name = "Constraint", Glyph = GlyphType.Check },
                 new ToolMenuItem(ToolAddForeignClick) { Name = "Foreign", Glyph = GlyphType.Link },
+                new ToolMenuItem(ToolAddSequenceClick) { Name = "Sequence", Glyph = GlyphType.Plus },
                 new ToolMenuItem(ToolAddProcedureClick) { Name = "Procedure", Glyph = GlyphType.GearAlias },
                 new ToolMenuItem(ToolAddProcedureParamClick) { Name = "Procedure Parameter", Glyph = GlyphType.Columns })
             { Name = "DBSchema" };
@@ -125,11 +128,10 @@ namespace DataWF.Data.Gui
             PackStart(panel1, true, true);
             Name = "DataExplorer";
 
-            ose.Target = listExplorer;
-            ose.ButtonAcceptClick += AcceptOnActivated;
+            itemWindow.Target = listExplorer;
+            itemWindow.ButtonAcceptClick += AcceptOnActivated;
 
             DBService.DBSchemaChanged += OnDBSchemaChanged;
-            Localize();
         }
 
         public DBSchema CurrentSchema
@@ -149,17 +151,16 @@ namespace DataWF.Data.Gui
             contextMain.Localize();
             contextAdd.Localize();
             contextTools.Localize();
-
-            GuiService.Localize(this, Name, "Data Explorer", GlyphType.Database);
-
             dataTree.Localize();
+
+            GuiService.Localize(this, Name, "Database", GlyphType.Database);
         }
 
         private void ShowNewItem(object item)
         {
             listExplorer.Value = item;
-            ose.Mode = ToolShowMode.Dialog;
-            ose.Show(this, new Point(0, 0));
+            itemWindow.Mode = ToolShowMode.Dialog;
+            itemWindow.Show(this, new Point(0, 0));
         }
 
         private class PatchParam
@@ -287,24 +288,71 @@ namespace DataWF.Data.Gui
             editor.Initialise();
         }
 
-        private void AcceptOnActivated(object sender, EventArgs e)
+        private async void AcceptOnActivated(object sender, EventArgs e)
         {
-            if (listExplorer.Value is DBSchema)
-                DBService.Schems.Add((DBSchema)listExplorer.Value);
-            else if (listExplorer.Value is DBTable)
-                ((DBTable)listExplorer.Value).Schema.Tables.Add((DBTable)listExplorer.Value);
-            else if (listExplorer.Value is DBTableGroup)
-                ((DBTableGroup)listExplorer.Value).Schema.TableGroups.Add((DBTableGroup)listExplorer.Value);
-            else if (listExplorer.Value is DBColumnGroup)
-                ((DBColumnGroup)listExplorer.Value).Table.ColumnGroups.Add((DBColumnGroup)listExplorer.Value);
-            else if (listExplorer.Value is DBColumn)
-                ((DBColumn)listExplorer.Value).Table.Columns.Add((DBColumn)listExplorer.Value);
-            else if (listExplorer.Value is DBIndex)
-                ((DBIndex)listExplorer.Value).Table.Indexes.Add((DBIndex)listExplorer.Value);
-            else if (listExplorer.Value is DBForeignKey)
-                ((DBForeignKey)listExplorer.Value).Table.Foreigns.Add((DBForeignKey)listExplorer.Value);
-            else if (listExplorer.Value is DBConstraint)
-                ((DBConstraint)listExplorer.Value).Table.Constraints.Add((DBConstraint)listExplorer.Value);
+            var value = listExplorer.Value;
+            if (value is DBSchema)
+            {
+                DBService.Schems.Add((DBSchema)value);
+            }
+            else if (value is DBConnection)
+            {
+                var connection = (DBConnection)value;
+                var schema = new DBSchema
+                {
+                    Name = connection.Name,
+                    Connection = connection
+                };
+                value = schema;
+                DBService.Schems.Add(schema);
+            }
+            else if (value is DBSequence)
+            {
+                ((DBSequence)value).Schema.Sequences.Add((DBSequence)value);
+            }
+            else if (value is DBProcedure)
+            {
+                ((DBProcedure)value).Schema.Procedures.Add((DBProcedure)value);
+            }
+            else if (value is DBProcParameter)
+            {
+                ((DBProcParameter)value).Procedure.Parameters.Add((DBProcParameter)value);
+            }
+            else if (value is DBTable)
+            {
+                ((DBTable)value).Schema.Tables.Add((DBTable)value);
+            }
+            else if (value is DBTableGroup)
+            {
+                ((DBTableGroup)value).Schema.TableGroups.Add((DBTableGroup)value);
+            }
+            else if (value is DBColumnGroup)
+            {
+                ((DBColumnGroup)value).Table.ColumnGroups.Add((DBColumnGroup)value);
+            }
+            else if (value is DBColumn)
+            {
+                ((DBColumn)value).Table.Columns.Add((DBColumn)value);
+            }
+            else if (value is DBIndex)
+            {
+                ((DBIndex)value).Table.Indexes.Add((DBIndex)value);
+            }
+            else if (value is DBForeignKey)
+            {
+                ((DBForeignKey)value).Table.Foreigns.Add((DBForeignKey)value);
+            }
+            else if (value is DBConstraint)
+            {
+                ((DBConstraint)value).Table.Constraints.Add((DBConstraint)value);
+            }
+
+            dataTree.SelectedDBItem = value as DBSchemaItem;
+
+            if (value is DBSchema)
+            {
+                await ((DBSchema)value).LoadTablesInfoAsync();
+            }
         }
 
         public class AsseblyCheck : ICheck
@@ -436,128 +484,6 @@ namespace DataWF.Data.Gui
             GuiService.Main.DockPanel.Put(cont, DockType.Content);
         }
 
-        private void AddSchema()
-        {
-            var connection = new DBConnection();
-            connection.Name = "nc" + DBService.Connections.Count;
-            DBService.Connections.Add(connection);
-
-            var schema = new DBSchema();
-            schema.Connection = connection;
-            schema.Name = "new";
-            ShowNewItem(schema);
-        }
-
-        public void AddTableGroup(DBSchema schema, DBTableGroup parent)
-        {
-            var tgroup = new DBTableGroup();
-            tgroup.Name = "newtablegroup";
-            tgroup.Group = parent;
-            tgroup.Schema = schema;
-            ShowNewItem(tgroup);
-        }
-
-        public void AddTable(DBSchema schema, DBTableGroup gp)
-        {
-            var table = new DBTable<DBItem>
-            {
-                Name = "newtable",
-                Group = gp,
-                Schema = schema
-            };
-            table.Columns.Add(new DBColumn()
-            {
-                Name = "unid",
-                Keys = DBColumnKeys.Primary,
-                DBDataType = DBDataType.Decimal,
-                Size = 28
-            });
-            table.Columns.Add(new DBColumn()
-            {
-                Name = "datec",
-                Keys = DBColumnKeys.Date,
-                DBDataType = DBDataType.DateTime
-            });
-            table.Columns.Add(new DBColumn()
-            {
-                Name = "dateu",
-                Keys = DBColumnKeys.Stamp,
-                DBDataType = DBDataType.DateTime
-            });
-            table.Columns.Add(new DBColumn()
-            {
-                Name = "stateid",
-                Keys = DBColumnKeys.State,
-                DBDataType = DBDataType.Decimal,
-                Size = 28
-            });
-            table.Columns.Add(new DBColumn()
-            {
-                Name = "access",
-                Keys = DBColumnKeys.Access,
-                DBDataType = DBDataType.Blob,
-                Size = 2000
-            });
-
-            ShowNewItem(table);
-        }
-
-        public void AddColumnGroup(DBTable table)
-        {
-            var item = new DBColumnGroup()
-            {
-                Table = table,
-                Name = "newcolumngroup"
-            };
-
-            ShowNewItem(item);
-        }
-
-        public void AddColumn(DBTable table, DBColumnGroup gp)
-        {
-            var item = new DBColumn()
-            {
-                Group = gp,
-                Table = table,
-                Name = "newcolumn"
-            };
-
-            ShowNewItem(item);
-        }
-
-        public void AddIndex(DBTable table, DBColumn column)
-        {
-            var item = new DBIndex();
-            item.Table = table;
-            item.Name = item.Table.Name + "newindex";
-            if (column != null)
-                item.Columns.Add(column);
-
-            ShowNewItem(item);
-        }
-
-        public void AddConstraint(DBTable table, DBColumn column)
-        {
-            var item = new DBConstraint();
-            item.Table = table;
-            if (column != null)
-                item.Columns.Add(column);
-            item.GenerateName();
-
-            ShowNewItem(item);
-        }
-
-        public void AddForeign(DBTable table, DBColumn column)
-        {
-            var item = new DBForeignKey();
-            item.Table = table;
-            if (column != null)
-                item.Columns.Add(column);
-            item.GenerateName();
-
-            ShowNewItem(item);
-        }
-
         public DockType DockType
         {
             get { return DockType.Left; }
@@ -590,11 +516,6 @@ namespace DataWF.Data.Gui
             }
         }
 
-        private void ToolAddDBClick(object sender, EventArgs e)
-        {
-            AddSchema();
-        }
-
         private void ToolDbEditClick(object sender, EventArgs e)
         {
             if (dataTree.SelectedDBItem is DBSchema)
@@ -609,21 +530,9 @@ namespace DataWF.Data.Gui
         {
             if (dataTree.SelectedDBItem is DBSchema)
             {
-                ThreadPool.QueueUserWorkItem((o) =>
-                {
-                    try
-                    {
-                        var schema = (DBSchema)dataTree.SelectedDBItem;
-                        schema.GetTablesInfo();
-                    }
-                    catch (Exception ex)
-                    {
-                        Helper.OnException(ex);
-                    }
-                });
+                ((DBSchema)dataTree.SelectedDBItem).LoadTablesInfoAsync();
             }
         }
-
 
         private void ToolReportClick(object sender, EventArgs e)
         {
@@ -636,94 +545,227 @@ namespace DataWF.Data.Gui
             }
         }
 
+        private void ToolAddSchemaClick(object sender, EventArgs e)
+        {
+            ShowNewItem(new DBSchema()
+            {
+                Connection = new DBConnection() { Name = "nc" + DBService.Connections.Count },
+                Name = "new"
+            });
+        }
+
+        private void ToolAddConnectionClick(object sender, EventArgs e)
+        {
+            ShowNewItem(new DBConnection() { Name = "nc" + DBService.Connections.Count });
+        }
+
         private void ToolAddTableGroupClick(object sender, EventArgs e)
         {
-            if (dataTree.SelectedDBItem is DBSchema)
-                AddTableGroup((DBSchema)dataTree.SelectedDBItem, null);
-            else if (dataTree.SelectedDBItem is DBTableGroup)
-                AddTableGroup(((DBTableGroup)dataTree.SelectedDBItem).Schema, (DBTableGroup)dataTree.SelectedDBItem);
+            var schema = dataTree.SelectedDBItem.Schema;
+            var group = dataTree.SelectedDBItem as DBTableGroup;
+
+            if (schema == null)
+                return;
+
+            ShowNewItem(new DBTableGroup()
+            {
+                Name = "new_group",
+                Group = group,
+                Schema = schema
+            });
         }
 
         private void ToolAddTableClick(object sender, EventArgs e)
         {
-            if (dataTree.SelectedDBItem is DBSchema)
-                AddTable((DBSchema)dataTree.SelectedDBItem, null);
-            else if (dataTree.SelectedDBItem is DBTableGroup)
-                AddTable(((DBTableGroup)dataTree.SelectedDBItem).Schema, (DBTableGroup)dataTree.SelectedDBItem);
-            else if (dataTree.SelectedDBItem is DBTable)
-                AddTable(((DBTable)dataTree.SelectedDBItem).Schema, ((DBTable)dataTree.SelectedDBItem).Group);
+            var schema = dataTree.SelectedDBItem.Schema as DBSchema;
+            var group = dataTree.SelectedDBItem as DBTableGroup;
+            if (dataTree.SelectedDBItem is DBTable)
+            {
+                group = ((DBTable)dataTree.SelectedDBItem).Group;
+            }
+
+            if (schema == null)
+                return;
+
+            ShowNewItem(new DBTable<DBItem>
+            {
+                Name = "new_table",
+                Schema = schema,
+                Group = group
+            });
         }
 
         private void ToolAddColumnGroupClick(object sender, EventArgs e)
         {
-            if (dataTree.SelectedDBItem is DBTable)
-                AddColumnGroup((DBTable)dataTree.SelectedDBItem);
-            else if (dataTree.SelectedDBItem is DBColumn)
-                AddColumnGroup(((DBColumn)dataTree.SelectedDBItem).Table);
-            else if (dataTree.SelectedDBItem is DBColumnGroup)
-                AddColumnGroup(((DBColumnGroup)dataTree.SelectedDBItem).Table);
+            var table = dataTree.SelectedDBItem as DBTable;
+            if (dataTree.SelectedDBItem is IDBTableContent)
+            {
+                table = ((IDBTableContent)dataTree.SelectedDBItem).Table;
+            }
+
+            if (table == null)
+                return;
+
+            ShowNewItem(new DBColumnGroup()
+            {
+                Table = table,
+                Name = "new_group"
+            });
         }
 
         private void ToolAddColumnClick(object sender, EventArgs e)
         {
-            var obj = dataTree.SelectedDBItem;
-            if (obj is DBTable)
-                AddColumn((DBTable)obj, null);
-            else if (obj is DBColumn)
-                AddColumn(((DBColumn)obj).Table, ((DBColumn)obj).Group);
-            else if (obj is DBColumnGroup)
-                AddColumn(((DBColumnGroup)obj).Table, (DBColumnGroup)obj);
+            var table = dataTree.SelectedDBItem as DBTable;
+            var group = dataTree.SelectedDBItem as DBColumnGroup;
+            if (dataTree.SelectedDBItem is IDBTableContent)
+            {
+                table = ((IDBTableContent)dataTree.SelectedDBItem).Table;
+            }
+
+            if (table == null)
+                return;
+
+            if (dataTree.SelectedDBItem is DBColumn)
+            {
+                group = ((DBColumn)dataTree.SelectedDBItem).Group;
+            }
+            ShowNewItem(new DBColumn()
+            {
+                Table = table,
+                Group = group,
+                Name = "new_column"
+            });
         }
 
         private void ToolAddIndexClick(object sender, EventArgs e)
         {
-            var obj = dataTree.SelectedDBItem;
-            if (obj is DBTable)
-                AddIndex((DBTable)obj, null);
-            else if (obj is DBColumn)
-                AddIndex(((DBColumn)obj).Table, (DBColumn)obj);
-            else if (obj is DBColumnGroup)
-                AddIndex(((DBColumnGroup)obj).Table, null);
+            var table = dataTree.SelectedDBItem as DBTable;
+            var column = dataTree.SelectedDBItem as DBColumn;
+            if (dataTree.SelectedDBItem is IDBTableContent)
+            {
+                table = ((IDBTableContent)dataTree.SelectedDBItem).Table;
+            }
+
+            if (table == null)
+                return;
+
+            var columns = new List<DBColumn>();
+            if (column != null)
+            {
+                columns.Add(column);
+            }
+            else if (dataTree.SelectedDBItem is DBColumnGroup)
+            {
+                columns.AddRange(((DBColumnGroup)dataTree.SelectedDBItem).GetColumns());
+            }
+            ShowNewItem(new DBIndex
+            {
+                Table = table,
+                Name = table.Name + "_new_index",
+                Columns = new DBColumnReferenceList(columns)
+            });
         }
 
         private void ToolAddConstraintClick(object sender, EventArgs e)
         {
-            var obj = dataTree.SelectedDBItem;
-            if (obj is DBTable)
-                AddConstraint((DBTable)obj, null);
-            else if (obj is DBColumn)
-                AddConstraint(((DBColumn)obj).Table, (DBColumn)obj);
-            else if (obj is DBColumnGroup)
-                AddConstraint(((DBColumnGroup)obj).Table, null);
+            var table = dataTree.SelectedDBItem as DBTable;
+            var column = dataTree.SelectedDBItem as DBColumn;
+            if (dataTree.SelectedDBItem is IDBTableContent)
+            {
+                table = ((IDBTableContent)dataTree.SelectedDBItem).Table;
+            }
+
+            if (table == null)
+                return;
+
+            var columns = new List<DBColumn>();
+            if (column != null)
+            {
+                columns.Add(column);
+            }
+            else if (dataTree.SelectedDBItem is DBColumnGroup)
+            {
+                columns.AddRange(((DBColumnGroup)dataTree.SelectedDBItem).GetColumns());
+            }
+
+            ShowNewItem(new DBConstraint
+            {
+                Table = table,
+                Columns = new DBColumnReferenceList(columns)
+            });
         }
 
         private void ToolAddForeignClick(object sender, EventArgs e)
         {
-            var obj = dataTree.SelectedDBItem;
-            if (obj is DBTable)
-                AddForeign((DBTable)obj, null);
-            else if (obj is DBColumn)
-                AddForeign(((DBColumn)obj).Table, (DBColumn)obj);
-            else if (obj is DBColumnGroup)
-                AddForeign(((DBColumnGroup)obj).Table, null);
+            var table = dataTree.SelectedDBItem as DBTable;
+            var column = dataTree.SelectedDBItem as DBColumn;
+            if (dataTree.SelectedDBItem is IDBTableContent)
+            {
+                table = ((IDBTableContent)dataTree.SelectedDBItem).Table;
+            }
+
+            if (table == null)
+                return;
+
+            var columns = new List<DBColumn>();
+            if (column != null)
+            {
+                columns.Add(column);
+            }
+
+            ShowNewItem(new DBForeignKey
+            {
+                Table = table,
+                Columns = new DBColumnReferenceList(columns)
+            });
+        }
+
+        private void ToolAddSequenceClick(object sender, EventArgs e)
+        {
+            var schema = dataTree.SelectedDBItem.Schema as DBSchema;
+
+            if (schema == null)
+                return;
+
+            ShowNewItem(new DBSequence
+            {
+                Name = "new_sequence",
+                Schema = schema
+            });
         }
 
         private void ToolAddProcedureClick(object sender, EventArgs e)
         {
-            var row = new DBProcedure();
-            if (dataTree.SelectedDBItem is DBProcedure)
+            var schema = dataTree.SelectedDBItem.Schema as DBSchema;
+            var group = dataTree.SelectedDBItem as DBProcedure;
+
+            if (schema == null)
+                return;
+
+            ShowNewItem(new DBProcedure
             {
-                ((DBProcedure)row).Parent = (DBProcedure)dataTree.SelectedDBItem;
-            }
+                Name = "new_procedure",
+                Schema = schema,
+                Group = group
+            });
         }
 
         private void ToolAddProcedureParamClick(object sender, EventArgs e)
         {
-            var row = new DBProcParameter();
-            if (dataTree.SelectedDBItem is DBProcedure)
+            var procedure = dataTree.SelectedDBItem as DBProcedure;
+            var group = dataTree.SelectedDBItem as DBProcParameter;
+            if (group != null)
             {
-                row.Procedure = (DBProcedure)dataTree.SelectedDBItem;
+                procedure = group.Procedure;
             }
+
+            if (procedure == null)
+                return;
+            ShowNewItem(new DBProcParameter()
+            {
+                Procedure = procedure,
+                Name = "new_parameter"
+            });
         }
 
         private void ToolDBExportClick(object sender, EventArgs e)
@@ -744,7 +786,6 @@ namespace DataWF.Data.Gui
             //    ((DBExport)ph.Project).SourceSchema = schema;
             //GuiService.Main.CurrentProject = ph;
         }
-
 
         private void ToolTableExplorerOnClick(object sender, EventArgs e)
         {

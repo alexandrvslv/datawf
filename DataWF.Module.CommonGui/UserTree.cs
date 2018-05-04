@@ -9,6 +9,7 @@ using Xwt;
 using Xwt.Drawing;
 using DataWF.Module.Common;
 using System.Text;
+using System.Collections.Generic;
 
 namespace DataWF.Module.CommonGui
 {
@@ -27,19 +28,28 @@ namespace DataWF.Module.CommonGui
 
     public class UserTree : LayoutList
     {
+        private List<IDBTableView> views = new List<IDBTableView>();
         private UserTreeKeys userKeys;
-        private ListChangedEventHandler handler;
+        //private ListChangedEventHandler handler;
         private DBStatus status = DBStatus.Empty;
         private Rectangle imgRect = new Rectangle();
         private Rectangle textRect = new Rectangle();
         private TextEntry filterEntry;
 
         private CellStyle userStyle;
+        private object bindSource;
+        private IInvoker bindInvoker;
 
         public UserTree()
         {
             Mode = LayoutListMode.Tree;
-            handler = new ListChangedEventHandler(HandleViewListChanged);
+            //handler = new ListChangedEventHandler();
+        }
+
+        public DBItem SelectedDBItem
+        {
+            get { return (SelectedNode as TableItemNode)?.Item as DBItem; }
+            set { SelectedNode = value == null ? null : Find(value); }
         }
 
         public UserTreeKeys UserKeys
@@ -122,23 +132,25 @@ namespace DataWF.Module.CommonGui
             get { return (userKeys & UserTreeKeys.Permission) == UserTreeKeys.Permission; }
         }
 
-        public void AddTableView(IDBTableView view)
-        {
-            view.ListChanged += handler;
-        }
+        public bool ShowListNode { get; set; } = true;
+
 
         private void RefreshData()
         {
-            CheckDBView(Department.DBTable?.DefaultView, ShowDepartment, GlyphType.Home, Colors.SandyBrown);
+            InitItem(Department.DBTable?.DefaultView, ShowDepartment, GlyphType.Home, Colors.SandyBrown);
             //CheckDBView(Position.DBTable?.DefaultView, ShowPosition);
             //CheckDBView(User.DBTable?.DefaultView, ShowUser);
-            CheckDBView(UserGroup.DBTable?.DefaultView, ShowGroup, GlyphType.Users, Colors.LightSeaGreen);
-            CheckDBView(Scheduler.DBTable?.DefaultView, ShowScheduler, GlyphType.TimesCircle, Colors.LightPink);
-            CheckDBView(GroupPermission.DBTable?.DefaultView, ShowPermission, GlyphType.Database, Colors.LightSteelBlue);
+            InitItem(UserGroup.DBTable?.DefaultView, ShowGroup, GlyphType.Users, Colors.LightSeaGreen);
+            InitItem(Scheduler.DBTable?.DefaultView, ShowScheduler, GlyphType.TimesCircle, Colors.LightPink);
+            InitItem(GroupPermission.DBTable?.DefaultView, ShowPermission, GlyphType.Database, Colors.LightSteelBlue);
         }
 
         private void HandleViewListChanged(object sender, ListChangedEventArgs e)
         {
+            if (listSource == null)
+            {
+                return;
+            }
             Application.Invoke(() =>
             {
                 IDBTableView view = (IDBTableView)sender;
@@ -146,26 +158,26 @@ namespace DataWF.Module.CommonGui
                 var nodeParent = (TableItemNode)Nodes.Find(name);
                 if (e.ListChangedType == ListChangedType.Reset)
                 {
-                    InitItem(view);
+                    InitItem((IDBTableContent)view);
                 }
                 else
                 {
                     TableItemNode node = null;
-                    DBItem rowview = null;
+                    DBItem item = null;
 
                     if (e.NewIndex >= 0)
                     {
-                        rowview = (DBItem)view[e.NewIndex];
-                        if (rowview.PrimaryId == null)
+                        item = (DBItem)view[e.NewIndex];
+                        if (item.PrimaryId == null)
                             return;
-                        node = InitItem(rowview);
-                        if (rowview.Group != null)
-                            nodeParent = (TableItemNode)Nodes.Find(GetName(rowview.Group));
+                        node = InitItem((IDBTableContent)item);
+                        if (item is DBGroupItem && ((DBGroupItem)item).Group != null)
+                            nodeParent = (TableItemNode)Nodes.Find(GetName(((DBGroupItem)item).Group));
 
                         //if (nodeParent == null && rowview.Group!=null && node.Group != null && node.Group.Tag)
                         //    nodeParent = node.Group;
                     }
-                    if (e.ListChangedType == ListChangedType.ItemDeleted && rowview != null)
+                    if (e.ListChangedType == ListChangedType.ItemDeleted && item != null)
                     {
                         if (node.Group == nodeParent)
                             Nodes.Remove(node);
@@ -191,13 +203,13 @@ namespace DataWF.Module.CommonGui
                 {
                     if (userStyle == null)
                     {
-                        userStyle = GuiEnvironment.StylesInfo["TreeUser"];
+                        userStyle = GuiEnvironment.Theme["TreeUser"];
                         if (userStyle == null)
                         {
                             userStyle = ListInfo.StyleCell.Clone();
                             userStyle.Name = "TreeUser";
                             userStyle.Font = userStyle.Font.WithStyle(FontStyle.Oblique);
-                            GuiEnvironment.StylesInfo.Add(userStyle);
+                            GuiEnvironment.Theme.Add(userStyle);
                         }
                     }
 
@@ -224,27 +236,55 @@ namespace DataWF.Module.CommonGui
             return rez;
         }
 
-        public TableItemNode CheckDBView(IDBTableView view, bool show, GlyphType glyph, Color glyphColor)
+        public void InitItem(IDBTableView view, bool show, GlyphType glyph, Color glyphColor)
         {
             if (view == null)
-                return null;
-            TableItemNode node;
+                return;
+            TableItemNode node = null;
             if (show)
             {
-                view.ListChanged += handler;
-                node = InitItem(view);
-                node.Glyph = glyph;
-                node.GlyphColor = glyphColor;
-                Nodes.Add(node);
+                view.ListChanged += HandleViewListChanged;
+                views.Add(view);
+                if (ShowListNode)
+                {
+                    node = InitItem((IDBTableContent)view);
+                    node.Glyph = glyph;
+                    node.GlyphColor = glyphColor;
+                }
+                IEnumerable enumer = view;
+                if (view.Table.GroupKey != null)
+                {
+                    enumer = view.Table.SelectItems(view.Table.GroupKey, CompareType.Is, null);
+                }
+
+                foreach (DBItem item in enumer)
+                {
+                    if ((status == DBStatus.Empty || (status & item.Status) == status) && (!Access || item.Access.View))
+                    {
+                        var element = InitItem(item);
+                        if (ShowListNode)
+                        {
+                            element.Group = node;
+                        }
+                        else
+                        {
+                            Nodes.Add(element);
+                        }
+                    }
+                }
+                if (ShowListNode)
+                {
+                    Nodes.Add(node);
+                }
             }
             else
             {
-                view.ListChanged -= handler;
+                views.Remove(view);
+                view.ListChanged -= HandleViewListChanged;
                 node = (TableItemNode)Nodes.Find(GetName(view));
                 if (node != null)
                     node.Hide();
             }
-            return node;
         }
 
         public void InitItems(IEnumerable items, TableItemNode pnode, bool show)
@@ -268,9 +308,9 @@ namespace DataWF.Module.CommonGui
             }
         }
 
-        public virtual void CheckDBItem(TableItemNode node)
+        public virtual TableItemNode InitItem(DBItem item)
         {
-            var item = (DBItem)node.Item;
+            var node = InitItem((IDBTableContent)item);
             if (item is Position)
             {
                 node.Glyph = GlyphType.UserMd;
@@ -279,7 +319,7 @@ namespace DataWF.Module.CommonGui
             }
             else if (item.Table.GroupKey != null && item.PrimaryId != null)
             {
-                InitItems(item.Table.SelectItems(item.Table.GroupKey, item.PrimaryId, CompareType.Equal), node, node.Visible);
+                InitItems(item.Table.SelectItems(item.Table.GroupKey, CompareType.Equal, item.PrimaryId), node, node.Visible);
             }
             if (item is Department)
             {
@@ -322,6 +362,8 @@ namespace DataWF.Module.CommonGui
                         break;
                 }
             }
+            node.Localize();
+            return node;
         }
 
         public TableItemNode InitItem(IDBTableContent item)
@@ -332,28 +374,6 @@ namespace DataWF.Module.CommonGui
             {
                 node = new TableItemNode { Name = name, Item = item };
             }
-            if (item is DBItem)
-            {
-                CheckDBItem(node);
-            }
-            else
-            {
-                IEnumerable enumer = (IDBTableView)item;
-                if (item.Table.GroupKey != null)
-                {
-                    enumer = item.Table.SelectItems(item.Table.GroupKey, null, CompareType.Is);
-                }
-
-                foreach (DBItem sitem in enumer)
-                {
-                    if ((status == DBStatus.Empty || (status & sitem.Status) == status) && (!Access || sitem.Access.View))
-                    {
-                        InitItem(sitem).Group = node;
-                    }
-                }
-            }
-            node.Localize();
-
             return node;
         }
 
@@ -445,7 +465,7 @@ namespace DataWF.Module.CommonGui
 
             if (entry.Text?.Length != 0)
             {
-                // TreeMode = false;
+                TreeMode = false;
                 list.FilterQuery.Parameters.Add(typeof(Node), LogicType.And, nameof(Node.FullPath), CompareType.Like, entry.Text);
             }
             else
@@ -457,18 +477,67 @@ namespace DataWF.Module.CommonGui
 
         protected override void Dispose(bool disposing)
         {
-            foreach (TableItemNode item in Nodes)
+            foreach (var view in views)
             {
-                if (item.Item is IDBTableView)
+                view.ListChanged -= HandleViewListChanged;
+            }
+            BindSource = null;
+            base.Dispose(disposing);
+        }
+
+        public IInvoker BindInvoker { get { return bindInvoker; } set { bindInvoker = value; } }
+
+        public object BindSource
+        {
+            get { return bindSource; }
+            set
+            {
+                if (bindSource == value)
+                    return;
+                if (bindSource is INotifyPropertyChanged)
                 {
-                    ((IDBTableView)item.Item).ListChanged -= handler;
+                    ((INotifyPropertyChanged)bindSource).PropertyChanged -= BindSourcePropertyChanged;
+                }
+                bindSource = null;
+                if (value != null)
+                {
+                    SelectedDBItem = BindInvoker?.Get(value) as DBItem;
+                }
+                bindSource = value;
+                if (bindSource is INotifyPropertyChanged)
+                {
+                    ((INotifyPropertyChanged)bindSource).PropertyChanged += BindSourcePropertyChanged;
                 }
             }
-            //User.DBTable.DefaultView.ListChanged -= handler;
-            //UserGroup.DBTable.DefaultView.ListChanged -= handler;
-            //GroupPermission.DBTable.DefaultView.ListChanged -= handler;
-            //Scheduler.DBTable.DefaultView.ListChanged -= handler;
-            base.Dispose(disposing);
+        }
+
+
+        private void BindSourcePropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (BindInvoker.Name == e.PropertyName)
+            {
+                SelectedDBItem = BindInvoker.Get(BindSource) as DBItem;
+            }
+        }
+
+        public void Bind(object bindSource, string bindProperty)
+        {
+            Bind(bindSource, bindSource == null ? null : EmitInvoker.Initialize(bindSource.GetType(), bindProperty));
+        }
+
+        public void Bind(object bindSource, IInvoker bindInvoker)
+        {
+            BindInvoker = bindInvoker;
+            BindSource = bindSource;
+        }
+
+        protected override void OnSelectionChanged(object sender, LayoutSelectionEventArgs e)
+        {
+            base.OnSelectionChanged(sender, e);
+            if (e.Type != LayoutSelectionChange.Hover && BindSource != null && BindInvoker != null)
+            {
+                BindInvoker.Set(BindSource, SelectedDBItem);
+            }
         }
     }
 }
