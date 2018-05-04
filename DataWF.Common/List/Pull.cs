@@ -67,10 +67,26 @@ namespace DataWF.Common
             return (a << 16) | (b & 0xFFFF);
         }
 
+        public unsafe static int GetHIndexUnsafe(int index, int blockSize)
+        {
+            int result = 0;
+            short* p = (short*)&result;
+            *p = (short)(index % blockSize);
+            *(p + 1) = (short)(index / blockSize);
+            return result;
+        }
+
         public static void GetBlockIndex(int index, out short block, out short blockIndex)
         {
             block = (short)(index >> 16);
             blockIndex = (short)(index & 0xFFFF);
+        }
+
+        public unsafe static void GetBlockIndexUnsafe(int index, out short block, out short blockIndex)
+        {
+            short* p = (short*)&index;
+            blockIndex = (*p);
+            block = (*(p + 1));
         }
 
         protected int blockSize;
@@ -178,7 +194,7 @@ namespace DataWF.Common
 
         public T GetValueInternal(int index)
         {
-            GetBlockIndex(index, out short block, out short blockIndex);
+            GetBlockIndexUnsafe(index, out short block, out short blockIndex);
             if (block >= array.Count || array[block] == null)
                 return default(T);
             return array[block][blockIndex];
@@ -186,7 +202,7 @@ namespace DataWF.Common
 
         public void SetValueInternal(int index, T value)
         {
-            GetBlockIndex(index, out short block, out short blockIndex);
+            GetBlockIndexUnsafe(index, out short block, out short blockIndex);
             while (block > array.Count)
                 array.Add(null);
             if (block == array.Count)
