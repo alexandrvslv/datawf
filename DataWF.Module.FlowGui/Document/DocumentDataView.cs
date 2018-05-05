@@ -40,7 +40,7 @@ namespace DataWF.Module.FlowGui
                 base.Document = value;
                 if (value != null)
                 {
-                    toolTemplate.Visible = value.Template.Data != null;
+                    toolTemplate.Visible = value.Template.GetDatas().Any();
                 }
             }
         }
@@ -111,19 +111,16 @@ namespace DataWF.Module.FlowGui
 
         private void ToolTemplateClick(object sender, EventArgs e)
         {
-            if (Document.Template.Data != null)
-            {
-                var data = Document.GetTemplate();
+            var data = Document.GetTemplated();
 
-                if (data == null)
-                {
-                    data = document.GenerateFromTemplate<T>();
-                    data.Attach();
-                }
-                data.Parse(new ExecuteArgs(Document));
-                Current = data as T;
-                Current.Execute();
+            if (data == null)
+            {
+                data = document.GenerateFromTemplate();
+                data.Attach();
             }
+            data.Parse(new ExecuteArgs(Document));
+            Current = data as T;
+            Current.Execute();
         }
 
         private void ToolViewClick(object sender, EventArgs e)

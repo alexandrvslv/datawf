@@ -123,9 +123,9 @@ namespace DataWF.Data.Gui
             panel2.PackStart(changesView, true, true);
 
             container = new VPaned();
-            container.Panel2.Content = panel2;
+            container.Panel1.Content = panel1;
 
-            PackStart(panel1, true, true);
+            PackStart(container, true, true);
             Name = "DataExplorer";
 
             itemWindow.Target = listExplorer;
@@ -144,14 +144,17 @@ namespace DataWF.Data.Gui
             get { return true; }
         }
 
-        public void Localize()
+        public override void Localize()
         {
-            barChanges.Localize();
-            barMain.Localize();
-            contextMain.Localize();
-            contextAdd.Localize();
-            contextTools.Localize();
-            dataTree.Localize();
+            base.Localize();
+            panel1.Localize();
+            panel2.Localize();
+            //barChanges.Localize();
+            //barMain.Localize();
+            //contextMain.Localize();
+            //contextAdd.Localize();
+            //contextTools.Localize();
+            //dataTree.Localize();
 
             GuiService.Localize(this, Name, "Database", GlyphType.Database);
         }
@@ -174,12 +177,7 @@ namespace DataWF.Data.Gui
         {
             Application.Invoke(() =>
             {
-                if (panel1.Parent == this)
-                {
-                    Remove(panel1);
-                    container.Panel1.Content = panel1;
-                    PackStart(container, true, true);
-                }
+                ChangesVisible = true;
             });
         }
 
@@ -236,15 +234,23 @@ namespace DataWF.Data.Gui
             HideChanges();
         }
 
+        public bool ChangesVisible
+        {
+            get { return container.Panel2 != null; }
+            set
+            {
+                if (ChangesVisible != value)
+                {
+                    container.Panel2.Content = value ? panel2 : null;
+                    QueueForReallocate();
+                }
+            }
+        }
+
         public void HideChanges()
         {
             DBService.Changes.Clear();
-            if (panel1.Parent != this)
-            {
-                container.Remove(panel1);
-                Remove(container);
-                PackStart(panel1, true, true);
-            }
+            ChangesVisible = false;
         }
 
         private void ToolPatchLoadClick(object sender, EventArgs e)
@@ -492,7 +498,9 @@ namespace DataWF.Data.Gui
         protected void ShowItem(Widget editor)
         {
             if (GuiService.Main != null)
+            {
                 GuiService.Main.DockPanel.Put(editor, DockType.Content);
+            }
             else
             {
                 editor.ShowWindow(this);

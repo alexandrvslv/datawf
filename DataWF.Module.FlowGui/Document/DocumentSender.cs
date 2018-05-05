@@ -265,7 +265,7 @@ namespace DataWF.Module.FlowGui
                 if (type == DocumentSendType.Next)
                 {
                     foreach (var sparam in CurrentStage.GetParams())
-                        if (sparam.Type == ParamType.Relation)
+                        if (sparam.ItemType == (int)ParamType.Relation)
                         {
                             var next = sparam.Param as Stage;
                             if (next != null)

@@ -120,18 +120,18 @@ namespace DataWF.Module.Flow
         public static Document Create(Template template, Document parent, params string[] filenames)
         {
             var document = template.CreateDocument();
-            Create(document, parent, filenames, true);
+            Create(document, parent, filenames);
             document.Template = template;
             return document;
         }
 
-        public static Document Create(Document document, Document parent, string[] fileNames, bool copyAttr)
+        public static Document Create(Document document, Document parent, string[] fileNames)
         {
             if (document.Attached)
                 return document;
             document.GenerateId();
             document.DocumentDate = DateTime.Now;
-            if (document.Template.Data != null)
+            if (document.Template.GetDatas().Any())
             {
                 var data = document.GenerateFromTemplate();
                 data.Attach();
@@ -140,12 +140,8 @@ namespace DataWF.Module.Flow
             if (parent != null)
             {
                 document.Parent = parent;
-                parent.CreateReference(document, copyAttr);
+                parent.CreateReference(document);
             }
-
-            foreach (var prm in document.Template.TemplateAllParams)
-                if (prm.Type == ParamType.Column && prm.Default != null && document[prm] == DBNull.Value)
-                    document[prm] = prm.Default;
 
             if (fileNames != null)
                 document.CreateData<DocumentData>(fileNames);
@@ -179,7 +175,8 @@ namespace DataWF.Module.Flow
                 if (oldWork != null && oldWork != from && !oldWork.IsComplete
                     && (oldWork.User == user))
                     return null;
-                object obj = ExecuteStageProcedure(new ExecuteArgs(document, transaction), ParamType.Check, callback);
+                var enumer = stage.GetParams().Where(p => p is StageProcedure && ((StageProcedure)p).ProcedureType == ParamProcudureType.Check).Cast<StageProcedure>();
+                object obj = ExecuteStageProcedure(new ExecuteArgs(document, transaction), enumer, callback);
                 if (obj != null)
                     return null;
             }
@@ -206,35 +203,26 @@ namespace DataWF.Module.Flow
             return result;
         }
 
-        public static object ExecuteStageProcedure(ExecuteArgs param, ParamType type, ExecuteDocumentCallback callback = null)
+        public static object ExecuteStageProcedure(ExecuteArgs param, IEnumerable<StageProcedure> enumer, ExecuteDocumentCallback callback = null)
         {
             object result = null;
-            var enumer = (IEnumerable)((Document)param.Document).Template.TemplateAllParams;
-            foreach (ParamBase item in enumer)
+            foreach (var item in enumer)
             {
-                if (item.Type == type && item.Param is DBProcedure)
+                if (item.Procedure == null)
                 {
-                    var procedure = (DBProcedure)item.Param;
-                    result = procedure.Execute(param);
-                    if (callback != null)
-                        callback(new ExecuteDocumentArg((Document)param.Document, procedure, result, null));
+                    throw new ArgumentNullException($"{nameof(StageProcedure)}.{nameof(StageProcedure.Procedure)} not defined!");
                 }
+                result = item.Procedure.Execute(param);
+                callback?.Invoke(new ExecuteDocumentArg((Document)param.Document, item.Procedure, result, param));
             }
 
             return result;
         }
 
-        public DocumentReference CreateReference(Document document, bool attributes = false)
+        public DocumentReference CreateReference(Document document)
         {
             if (document == null)
                 return null;
-
-            if (attributes)
-            {
-                foreach (var param in document.Template.TemplateAllParams)
-                    if (param.Type == ParamType.Column) //document[ta] != DBNull.Value
-                        document[param] = this[param];
-            }
 
             var reference = new DocumentReference();
             reference.Document = this;
@@ -365,7 +353,7 @@ namespace DataWF.Module.Flow
             set
             {
                 SetProperty(value, nameof(Number));
-                var data = GetTemplate();
+                var data = GetTemplated();
                 if (data != null)
                     data.RefreshName();
             }
@@ -380,7 +368,7 @@ namespace DataWF.Module.Flow
         }
 
         [Reference(nameof(CustomerId))]
-        public Customer Customer
+        public virtual Customer Customer
         {
             get { return GetPropertyReference<Customer>(); }
             set
@@ -558,11 +546,11 @@ namespace DataWF.Module.Flow
             }
         }
 
-        public object this[TemplateParam attribute]
-        {
-            get { return this[attribute.Param as DBColumn]; }
-            set { this[attribute.Param as DBColumn] = value; }
-        }
+        //public object this[TemplateParam attribute]
+        //{
+        //    get { return this[attribute.Param as DBColumn]; }
+        //    set { this[attribute.Param as DBColumn] = value; }
+        //}
 
         public DocumentWork GetWork()
         {
@@ -639,29 +627,30 @@ namespace DataWF.Module.Flow
             return workFlows;
         }
 
-        public virtual DocumentData GetTemplate()
+        public virtual DocumentData GetTemplated()
         {
             foreach (DocumentData data in Datas)
-                if (data.IsTemplate.GetValueOrDefault())
+                if (data.IsTemplate)
                     return data;
             return null;
         }
 
         public virtual DocumentData GenerateFromTemplate()
         {
-            return GenerateFromTemplate<DocumentData>();
+            return GenerateFromTemplate<DocumentData>(Template.GetDatas().FirstOrDefault());
         }
 
-        public T GenerateFromTemplate<T>() where T : DocumentData, new()
+        public T GenerateFromTemplate<T>(TemplateData templateData) where T : DocumentData, new()
         {
-            var data = new T()
+            if (templateData == null)
+            {
+                return null;
+            }
+            return new T()
             {
                 Document = this,
-                IsTemplate = true,
-                FileData = (byte[])Template.Data.Clone()
+                TemplateData = templateData
             };
-            data.RefreshName();
-            return data;
         }
 
         public override void Reject()
@@ -758,7 +747,8 @@ namespace DataWF.Module.Flow
                     var work = Send(this, null, flow?.GetStartStage(), User.CurrentUser, "Start stage", tempTRN, callback);
                     param.Work = work;
                     param.Stage = work.Stage;
-                    ExecuteStageProcedure(param, ParamType.Begin, callback);
+                    var enumer = work.Stage.GetParams().Where(p => p is StageProcedure && ((StageProcedure)p).ProcedureType == ParamProcudureType.OnStart).Cast<StageProcedure>();
+                    ExecuteStageProcedure(param, enumer, callback);
                 }
                 works = Works.ToList();
                 var stages = new List<Stage>();
@@ -770,10 +760,16 @@ namespace DataWF.Module.Flow
                         param.Stage = work.Stage;
                         if (work.UpdateState == DBUpdateState.Update && work.IsComplete
                             && work.Changed(DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.IsComplete))))
-                            ExecuteStageProcedure(param, ParamType.End, callback);
+                        {
+                            var enumer = work.Stage.GetParams().Where(p => p is StageProcedure && ((StageProcedure)p).ProcedureType == ParamProcudureType.OnFinish).Cast<StageProcedure>();
+                            ExecuteStageProcedure(param, enumer, callback);
+                        }
 
                         if (work.UpdateState == DBUpdateState.Insert)
-                            ExecuteStageProcedure(param, ParamType.Begin, callback);
+                        {
+                            var enumer = work.Stage.GetParams().Where(p => p is StageProcedure && ((StageProcedure)p).ProcedureType == ParamProcudureType.OnStart).Cast<StageProcedure>();
+                            ExecuteStageProcedure(param, enumer, callback);
+                        }
                     }
                     work.IsResend = false;
                 }
@@ -795,7 +791,7 @@ namespace DataWF.Module.Flow
                 }
                 if (isnew)//Templating
                 {
-                    var data = GetTemplate();
+                    var data = GetTemplated();
                     if (data != null)
                         data.Parse(param);
                 }

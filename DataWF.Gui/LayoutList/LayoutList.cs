@@ -4066,7 +4066,7 @@ namespace DataWF.Gui
 
         #region ILocalizable implementation
 
-        public virtual void Localize()
+        public override void Localize()
         {
             if (listSource != null)
                 RefreshInfo();

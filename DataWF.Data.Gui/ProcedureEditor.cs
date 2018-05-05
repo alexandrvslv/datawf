@@ -152,7 +152,7 @@ namespace DataWF.Data.Gui
             Localize();
         }
 
-        public void Localize()
+        public override void Localize()
         {
             GuiService.Localize(toolSave, "ProcedureEditor", "Save", GlyphType.SaveAlias);
             GuiService.Localize(toolBuild, "ProcedureEditor", "Build", GlyphType.Wrench);

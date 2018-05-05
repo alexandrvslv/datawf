@@ -133,10 +133,10 @@ namespace DataWF.Module.CommonGui
             get { return false; }
         }
 
-        public void Localize()
+        public override void Localize()
         {
+            base.Localize();
             GuiService.Localize(this, "UserEditor", "User");
-            groupMap.Localize();
         }
 
         protected override void Dispose(bool disposing)

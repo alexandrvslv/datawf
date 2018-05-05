@@ -28,26 +28,26 @@ namespace DataWF.Module.FlowGui
                     DataType = typeof(DBColumn);
                 }
             }
-            if (dataSource is ParamBase)
+            if (dataSource is StageParam)
             {
-                ParamBase gp = (ParamBase)dataSource;
-                if (gp.Type == ParamType.Begin || gp.Type == ParamType.End || gp.Type == ParamType.Procedure || gp.Type == ParamType.Check)
+                var gp = (StageParam)dataSource;
+                if (gp.ItemType == (int)ParamType.Procedure)
                 {
                     DataType = typeof(DBProcedure);
                 }
-                else if (gp.Type == ParamType.Relation)
+                else if (gp.ItemType == (int)ParamType.Relation)
                 {
                     DataType = typeof(Stage);
                 }
-                else if (gp.Type == ParamType.Template)
+                else if (gp.ItemType == (int)ParamType.Template)
                 {
                     DataType = typeof(Template);
                 }
-                else if (gp.Type == ParamType.Reference)
+                else if (gp.ItemType == (int)ParamType.Reference)
                 {
                     DataType = typeof(DBColumn);
                 }
-                else if (gp.Type == ParamType.Column)
+                else if (gp.ItemType == (int)ParamType.Column)
                 {
                     DataType = typeof(DBColumn);
                     DataFilter = Document.DBTable;

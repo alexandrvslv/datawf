@@ -662,7 +662,7 @@ namespace DataWF.Gui
             set { dockType = value; }
         }
 
-        public virtual void Localize()
+        public override void Localize()
         {
             bar.Localize();
             if (fields != null)

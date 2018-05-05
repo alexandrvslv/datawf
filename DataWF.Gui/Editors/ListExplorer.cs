@@ -242,11 +242,11 @@ namespace DataWF.Gui
         {
         }
 
-        public virtual void Localize()
+        public override void Localize()
         {
+            base.Localize();
             toolPrev.Text = Locale.Get("OptionEditor", "Prev");
             toolNext.Text = Locale.Get("OptionEditor", "Next");
-            Editor.Localize();
         }
     }
 

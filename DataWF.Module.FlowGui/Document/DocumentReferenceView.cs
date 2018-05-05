@@ -53,7 +53,7 @@ namespace DataWF.Module.FlowGui
                     if (document != null)
                     {
                         document.RefChanged += DocumentRefChanged;
-                        Filter.Referencing = value;                        
+                        Filter.Referencing = value;
                     }
 
                 }
@@ -148,6 +148,7 @@ namespace DataWF.Module.FlowGui
 
         protected override void Dispose(bool disp)
         {
+            Document = null;
             base.Dispose(disp);
         }
 

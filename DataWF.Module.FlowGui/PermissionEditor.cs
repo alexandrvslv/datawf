@@ -131,7 +131,7 @@ namespace DataWF.Module.FlowGui
                 EditState = EditListState.Edit,
                 EditMode = EditModes.ByF2,
                 UserKeys = UserTreeKeys.Department | UserTreeKeys.User | UserTreeKeys.Group | UserTreeKeys.Permission,
-                FlowKeys = FlowTreeKeys.Template | FlowTreeKeys.TemplateParam | FlowTreeKeys.Work | FlowTreeKeys.Stage | FlowTreeKeys.StageParam,
+                FlowKeys = FlowTreeKeys.Template | FlowTreeKeys.TemplateData | FlowTreeKeys.Work | FlowTreeKeys.Stage | FlowTreeKeys.StageParam,
                 FilterEntry = toolFilterText.Entry
             };
             tree.SelectionChanged += TreeSelectionChanged;
@@ -307,9 +307,9 @@ namespace DataWF.Module.FlowGui
             //tree.Refresh();
         }
 
-        public void Localize()
+        public override void Localize()
         {
-            bar.Localize();
+            base.Localize();
             GuiService.Localize(this, "PermissionEditor", "Permissions");
 
         }

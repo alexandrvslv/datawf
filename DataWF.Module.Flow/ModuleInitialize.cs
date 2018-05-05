@@ -21,8 +21,8 @@ namespace DataWF.Module.Flow
             Template.DBTable.DefaultComparer = new DBComparer(Template.DBTable.CodeKey) { Hash = true };
             Template.DBTable.Load();
 
-            TemplateParam.DBTable.DefaultComparer = new DBComparer(TemplateParam.DBTable.ParseProperty(nameof(TemplateParam.Order))) { Hash = true };
-            TemplateParam.DBTable.Load();
+            TemplateData.DBTable.DefaultComparer = new DBComparer(TemplateData.DBTable.PrimaryKey) { Hash = true };
+            TemplateData.DBTable.Load();
         }
     }
 }

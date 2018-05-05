@@ -35,14 +35,22 @@ namespace DataWF.Gui
 
         public event EventHandler<DockPageEventArgs> PageSelected;
 
-        public DockBox()
-            : base()
+        public DockBox() : base()
         {
             Map = new DockItem() { };
             pContent = GetDockItem("Content", null, LayoutAlignType.None, false);
             pContent.FillWidth = true;
             pContent.FillHeight = true;
             pContent.main = true;
+        }
+
+        public DockBox(params DockItem[] items) : base()
+        {
+            Map = new DockItem() { };
+            foreach (var item in items)
+            {
+                Add(item);
+            }
         }
 
         public DockBoxState State
@@ -320,16 +328,17 @@ namespace DataWF.Gui
             return null;
         }
 
-        public static DockPage CreatePage(Widget control)
+        public static DockPage CreatePage(Widget widget)
         {
-            var page = new DockPage();
+            if (widget is ILocalizable)
+                ((ILocalizable)widget).Localize();
 
-            if (control is IDockContent)
-                page.HideOnClose = ((IDockContent)control).HideOnClose;
-
-            page.Name = control.Name;
-            page.Widget = control;
-            return page;
+            return new DockPage
+            {
+                Name = widget.Name,
+                Widget = widget,
+                HideOnClose = widget is IDockContent ? ((IDockContent)widget).HideOnClose : false
+            };
         }
 
         public DockBoxHitTest DockHitTest(double x, double y)
@@ -417,47 +426,53 @@ namespace DataWF.Gui
             page = e.Page;
         }
 
-        public DockItem GetDockItem(string Name, LayoutAlignType type, bool gp)
+        public DockItem GetDockItem(string name, LayoutAlignType type, bool gp)
         {
-            return GetDockItem(Name, pContent, type, gp);
+            return GetDockItem(name, pContent, type, gp);
         }
 
-        public DockItem GetDockItem(string Name, DockItem exitem, LayoutAlignType type, bool gp)
+        public DockItem GetDockItem(string name, DockItem exist, LayoutAlignType type, bool gp)
         {
-            DockItem item = map.GetRecursive(Name) as DockItem;
+            DockItem item = map.GetRecursive(name) as DockItem;
             if (item == null)
             {
-                item = CreateDockItem(Name);
-                if (Name == "Right" || Name == "Left")
-                    item.FillHeight = true;
-                if (Name == "Bottom")
-                    item.Height = 200;
-                if (exitem == null)
-                    map.Add(item);
-                else
-                    exitem.InsertWith(item, type, gp);
-
+                item = CreateDockItem(name, exist, type, gp);
+                Add(item, exist, type, gp);
             }
             return item;
         }
 
-        public DockItem CreateDockItem(string Name)
+        public DockItem CreateDockItem(string name, DockItem exist, LayoutAlignType type, bool gp)
         {
-            var panel = new DockPanel();
-            panel.Pages.VisibleClose = VisibleClose;
-            panel.PageSelected += PanelTabSelected;
-            panel.Pages.PageClick += Pages_PageClick;
-            panel.Pages.PageDrag += OnPageDrag;
-
             var item = new DockItem()
             {
-                Name = Name,
+                Name = name,
                 Visible = true,
-                Panel = panel
+                FillHeight = name == "Right" || name == "Left",
+                Panel = new DockPanel()
             };
+            if (name == "Bottom")
+                item.Height = 200;
+            return item;
+        }
+
+        public void Add(DockItem item, DockItem exist = null, LayoutAlignType type = LayoutAlignType.None, bool gp = false)
+        {
+            item.Panel.PageSelected += PanelTabSelected;
+            item.Panel.Pages.VisibleClose = VisibleClose;
+            item.Panel.Pages.PageClick += Pages_PageClick;
+            item.Panel.Pages.PageDrag += OnPageDrag;
+
+            if (exist == null)
+            {
+                map.Add(item);
+            }
+            else
+            {
+                exist.InsertWith(item, type, gp);
+            }
 
             AddChild(item.Panel);
-            return item;
         }
 
         #region Container

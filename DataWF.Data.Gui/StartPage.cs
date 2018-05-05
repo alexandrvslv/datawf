@@ -64,9 +64,9 @@ namespace DataWF.Data.Gui
 
 		#endregion
 
-		public void Localize()
+		public override void Localize()
 		{
-			box.Localize();
+			base.Localize();
 			label.Text = Locale.Get("StartPage", "Data\\Document Workflow Solution");
 			GuiService.Localize(this, "StartPage", "Welcome", GlyphType.Home);
 		}

@@ -80,7 +80,6 @@ namespace DataWF.Module.Flow
             get { return DBService.GetTable<Template>(); }
         }
 
-        private TemplateParamList allparams;
         private DBItemType documentType;
 
         public Template()
@@ -157,22 +156,26 @@ namespace DataWF.Module.Flow
             set { SetPropertyReference(value); }
         }
 
-        public IEnumerable<TemplateParam> GetParams()
+        //public IEnumerable<TemplateParam> GetParams()
+        //{
+        //    return GetReferencing<TemplateParam>(nameof(TemplateParam.TemplateId), DBLoadParam.None);
+        //}
+
+        public IEnumerable<TemplateData> GetDatas()
         {
-            return TemplateParam.DBTable.Select(
-                TemplateParam.DBTable.ParseProperty(nameof(TemplateParam.TemplateId)), CompareType.Equal, PrimaryId);
+            return GetReferencing<TemplateData>(nameof(TemplateData.TemplateId), DBLoadParam.None);
         }
 
-        [Browsable(false)]
-        public TemplateParamList TemplateAllParams
-        {
-            get
-            {
-                if (allparams == null && PrimaryId != null)
-                    allparams = new TemplateParamList(this);
-                return allparams;
-            }
-        }
+        //[Browsable(false)]
+        //public TemplateParamList TemplateAllParams
+        //{
+        //    get
+        //    {
+        //        if (allparams == null && PrimaryId != null)
+        //            allparams = new TemplateParamList(this);
+        //        return allparams;
+        //    }
+        //}
 
         [Browsable(false)]
         public DBItemType DocumentTypeInfo
@@ -194,30 +197,14 @@ namespace DataWF.Module.Flow
         }
 
         //[Editor(typeof(UIFileEditor), typeof(UITypeEditor))]
-        [DataMember, Column("template_file")]
-        public byte[] Data
-        {
-            get { return GetProperty<byte[]>(); }
-            set { SetProperty(value); }
-        }
 
-        [DataMember, Column("template_file_name", 1024)]
-        public string DataName
-        {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
-        }
+
 
         [DataMember, Column("is_file", Default = "False")]
         public bool? IsFile
         {
             get { return GetProperty<bool?>(); }
             set { SetProperty(value); }
-        }
-
-        public string FileType
-        {
-            get { return Path.GetExtension(DataName); }
         }
 
         //public bool BarCode
@@ -234,19 +221,21 @@ namespace DataWF.Module.Flow
         //    return list;
         //}
 
-        public TemplateParam GetAttribute(string attr)
-        {
-            foreach (TemplateParam ta in TemplateAllParams)
-                if (ta.PrimaryCode != null && ta.PrimaryCode.Equals(attr, StringComparison.OrdinalIgnoreCase))
-                    return ta;
-            return null;
-        }
+        //public TemplateParam GetAttribute(string attr)
+        //{
+        //    foreach (TemplateParam ta in TemplateAllParams)
+        //        if (ta.PrimaryCode != null && ta.PrimaryCode.Equals(attr, StringComparison.OrdinalIgnoreCase))
+        //            return ta;
+        //    return null;
+        //}
 
         public override void Dispose()
         {
             base.Dispose();
-            if (allparams != null)
-                allparams.Dispose();
+            //if (allparams != null)
+            //    allparams.Dispose();
         }
+
+
     }
 }

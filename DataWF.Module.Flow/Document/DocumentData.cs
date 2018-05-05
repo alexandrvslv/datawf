@@ -108,6 +108,25 @@ namespace DataWF.Module.Flow
             set { SetProperty(value, nameof(Id)); }
         }
 
+        [DataMember, Column("template_data_id")]
+        public int? TemplateDataId
+        {
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
+        }
+
+        [Reference(nameof(TemplateDataId))]
+        public TemplateData TemplateData
+        {
+            get { return GetPropertyReference<TemplateData>(); }
+            set
+            {
+                SetPropertyReference(value);
+                FileData = (byte[])value?.Data.Clone();
+                RefreshName();
+            }
+        }
+
         [DataMember, Column("file_name", 1024, Keys = DBColumnKeys.View)]
         public string FileName
         {
@@ -132,7 +151,7 @@ namespace DataWF.Module.Flow
                 buf = value;
                 DBService.SetZip(this, column, value);
 
-                if (IsTemplate.GetValueOrDefault() && templateDocument != null)
+                if (IsTemplate && templateDocument != null)
                 {
                     if (templateDocument is IDisposable)
                         ((IDisposable)templateDocument).Dispose();
@@ -156,12 +175,9 @@ namespace DataWF.Module.Flow
             }
         }
 
-
-        [DataMember, Column("is_template")]
-        public bool? IsTemplate
+        public bool IsTemplate
         {
-            get { return GetProperty<bool?>(); }
-            set { SetProperty(value); }
+            get { return TemplateDataId != null; }
         }
 
         [XmlIgnore, Browsable(false)]
@@ -197,7 +213,7 @@ namespace DataWF.Module.Flow
 
         public byte[] Parse(ExecuteArgs param)
         {
-            if (IsTemplate.GetValueOrDefault())
+            if (IsTemplate)
             {
                 Execute(this, param);
             }
@@ -255,7 +271,7 @@ namespace DataWF.Module.Flow
 
         public static BackgroundWorker ExecuteAsync(DocumentData data, ExecuteArgs param)
         {
-            BackgroundWorker worker = new BackgroundWorker();
+            var worker = new BackgroundWorker();
             //worker.WorkerSupportsCancellation = false;
             worker.DoWork += (object sender, DoWorkEventArgs e) =>
             {
@@ -276,22 +292,22 @@ namespace DataWF.Module.Flow
 
         public static void Execute(DocumentData data, ExecuteArgs param)
         {
-            if (data.FileData == null || data.Document.Template.Data == null)
+            if (data.FileData == null || data.TemplateData == null)
                 return;
-            //data.FileData = data.Document.Template.Parser.Execute(data.FileData, data.FileName, param);
+            //TODO data.FileData = data.Document.Template.Parser.Execute(data.FileData, data.FileName, param);
         }
 
         public void RefreshName()
         {
-            if (IsTemplate.GetValueOrDefault() && Document?.Template?.DataName != null)
+            if (IsTemplate && TemplateData.DataName != null)
             {
                 if (string.IsNullOrEmpty(Document.Number))
                 {
-                    FileName = $"{Path.GetFileNameWithoutExtension(Document.Template.DataName)}_{DateTime.Now.ToString("yyMMddhhmmss")}{Path.GetExtension(Document.Template.DataName)}";
+                    FileName = $"{Path.GetFileNameWithoutExtension(TemplateData.DataName)}_{DateTime.Now.ToString("yyMMddhhmmss")}{Path.GetExtension(TemplateData.DataName)}";
                 }
                 else
                 {
-                    FileName = $"{Document.Number}.{Path.GetExtension(Document.Template.DataName)}";
+                    FileName = $"{Document.Number}.{Path.GetExtension(TemplateData.DataName)}";
                 }
             }
         }

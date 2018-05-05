@@ -3,8 +3,6 @@
  
  Author:
       Alexandr <alexandr_vslv@mail.ru>
- 
-  
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License as published by
@@ -27,7 +25,7 @@ using System.Runtime.Serialization;
 namespace DataWF.Module.Common
 {
     [DataContract, Table("rbook", "Reference Book", BlockSize = 100)]
-    public class Book : DBItem
+    public class Book : DBGroupItem
     {
         public static DBTable<Book> DBTable
         {
@@ -41,32 +39,39 @@ namespace DataWF.Module.Common
             set { SetValue(value, Table.PrimaryKey); }
         }
 
-        [DataMember, Column("code", 40, Keys = DBColumnKeys.Code | DBColumnKeys.View)]
+        [DataMember, Column("code", 40, Keys = DBColumnKeys.Code)]
         public string Code
         {
             get { return GetValue<string>(Table.CodeKey); }
             set { SetValue(value, Table.CodeKey); }
         }
 
-        [DataMember, Column("type_id", Keys = DBColumnKeys.ElementType)]
-        public short? TypeId
+        [DataMember, Column("group_id", Keys = DBColumnKeys.Group)]
+        public int? ParentId
         {
-            get { return GetValue<short?>(Table.ElementTypeKey); }
-            set { SetValue(value, Table.ElementTypeKey); }
+            get { return GetGroupValue<int?>(); }
+            set { SetGroupValue(value); }
         }
 
-        [Reference(nameof(TypeId))]
-        public BookType Type
+        [Reference(nameof(ParentId))]
+        public Book Parent
         {
-            get { return GetReference<BookType>(Table.ElementTypeKey); }
-            set { SetReference(value, Table.ElementTypeKey); }
+            get { return GetGroupReference<Book>(); }
+            set { SetGroupReference(value); }
         }
 
         [DataMember, Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
         public override string Name
         {
-            get { return GetName("name"); }
-            set { SetName("name", value); }
+            get { return GetName(nameof(Name)); }
+            set { SetName(nameof(Name), value); }
+        }
+
+        [DataMember, Column("book_value")]
+        public string Value
+        {
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
         }
     }
 }

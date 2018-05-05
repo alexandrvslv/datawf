@@ -5,28 +5,18 @@ using Xwt.Drawing;
 
 namespace DataWF.Gui
 {
-    public class VPanel : VBox, IText, IGlyph
+    public class VPanel : VBox, IText, IGlyph, ILocalizable
     {
         private string text;
-        private Image image;
-        private GlyphType glyph;
 
         public VPanel()
         {
             Spacing = 1;
         }
 
-        public Image Image
-        {
-            get { return image; }
-            set { image = value; }
-        }
+        public Image Image { get; set; }
 
-        public GlyphType Glyph
-        {
-            get { return glyph; }
-            set { glyph = value; }
-        }
+        public GlyphType Glyph { get; set; }
 
         public string Text
         {
@@ -36,12 +26,22 @@ namespace DataWF.Gui
                 if (text != value)
                 {
                     text = value;
-                    if (TextChanged != null)
-                        TextChanged(this, EventArgs.Empty);
+                    TextChanged?.Invoke(this, EventArgs.Empty);
                 }
             }
         }
         public event EventHandler TextChanged;
+
+        public virtual void Localize()
+        {
+            foreach (var widget in Children)
+            {
+                if (widget is ILocalizable)
+                {
+                    ((ILocalizable)widget).Localize();
+                }
+            }
+        }
     }
 
 }

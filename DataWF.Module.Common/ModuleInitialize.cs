@@ -10,7 +10,6 @@ namespace DataWF.Module.Common
     {
         public void Initialize()
         {
-            BookType.DBTable.Load();
             Book.DBTable.Load();
 
             Department.DBTable.Load();

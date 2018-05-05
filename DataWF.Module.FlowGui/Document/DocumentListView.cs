@@ -155,7 +155,7 @@ namespace DataWF.Module.FlowGui
 
         public DockType DockType { get { return DockType.Content; } }
 
-        public virtual void Localize()
+        public override void Localize()
         {
             bar.Localize();
             filterBar.Localize();
@@ -512,8 +512,14 @@ namespace DataWF.Module.FlowGui
 
         protected override void Dispose(bool disposing)
         {
-            loader?.Dispose();
-            documents?.Dispose();
+            Application.Invoke(() =>
+            {
+                filter?.Dispose();
+                loader?.Dispose();
+                documents?.Dispose();
+                Filter = null;
+                Documents = null;
+            });
             base.Dispose(disposing);
         }
 
@@ -571,7 +577,7 @@ namespace DataWF.Module.FlowGui
                     {
                         foreach (var document in buffer)
                         {
-                            document.CreateReference(reference, false);
+                            document.CreateReference(reference);
                         }
                     }
                     documents.AddRange(buffer);
@@ -586,7 +592,7 @@ namespace DataWF.Module.FlowGui
                     {
                         if (!document.ContainsReference(reference.Id))
                         {
-                            document.CreateReference(reference, false);
+                            document.CreateReference(reference);
                         }
                     }
                 }

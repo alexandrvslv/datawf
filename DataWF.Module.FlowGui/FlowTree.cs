@@ -18,7 +18,7 @@ namespace DataWF.Module.FlowGui
     {
         None = 0,
         Template = 4,
-        TemplateParam = 8,
+        TemplateData = 8,
         Work = 16,
         Stage = 32,
         StageParam = 64
@@ -52,9 +52,9 @@ namespace DataWF.Module.FlowGui
         }
 
         [DefaultValue(false)]
-        public bool ShowTemplateParam
+        public bool ShowTemplateData
         {
-            get { return (flowKeys & FlowTreeKeys.TemplateParam) == FlowTreeKeys.TemplateParam; }
+            get { return (flowKeys & FlowTreeKeys.TemplateData) == FlowTreeKeys.TemplateData; }
         }
 
         [DefaultValue(false)]
@@ -90,7 +90,7 @@ namespace DataWF.Module.FlowGui
             {
                 node.Glyph = GlyphType.Book;
                 node.GlyphColor = Colors.LightBlue;
-                InitItems(((Template)item).GetParams(), node, ShowTemplateParam);
+                InitItems(((Template)item).GetDatas(), node, ShowTemplateData);
             }
             else if (item is Work)
             {
@@ -104,7 +104,7 @@ namespace DataWF.Module.FlowGui
                 node.GlyphColor = Colors.LightGoldenrodYellow;
                 InitItems(((Stage)item).GetParams(), node, ShowStageParam);
             }
-            else if (item is StageParam || item is TemplateParam)
+            else if (item is StageParam)
             {
                 node.Glyph = GlyphType.Code;
                 node.GlyphColor = Colors.LimeGreen;

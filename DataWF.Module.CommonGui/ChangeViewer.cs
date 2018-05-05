@@ -275,7 +275,7 @@ namespace DataWF.Module.CommonGui
             get { return true; }
         }
 
-        public void Localize()
+        public override void Localize()
         {
             GuiService.Localize(toolRefresh, "ChangeViewer", "Refresh", GlyphType.Refresh);
             GuiService.Localize(toolAccept, "ChangeViewer", "Accept", GlyphType.Check);

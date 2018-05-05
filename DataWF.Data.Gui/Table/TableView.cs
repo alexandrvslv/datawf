@@ -55,12 +55,6 @@ namespace DataWF.Data.Gui
             PackStart(list, true, true);
         }
 
-        public void Localize()
-        {
-            bar.Localize();
-            list.Localize();
-        }
-
         public Toolsbar Tools { get { return bar; } }
 
         public TableLayoutList List { get { return list; } }

@@ -37,24 +37,24 @@ namespace DataWF.Data.Gui
             tools.Items.Add(toolProgress);
             tools.Name = "tools";
 
-            toolInit.Name = "toolInit";
+            toolInit.Name = "Init";
             toolInit.Click += ToolInitClick;
             toolInit.DisplayStyle = ToolItemDisplayStyle.Text;
 
-            toolSchema.Name = "toolSchema";
+            toolSchema.Name = "Schema";
             toolSchema.Click += ToolSchemaClick;
             toolSchema.DisplayStyle = ToolItemDisplayStyle.Text;
 
-            toolStart.Name = "toolStart";
+            toolStart.Name = "Start";
             toolStart.Click += ToolStartClick;
             toolStart.DisplayStyle = ToolItemDisplayStyle.Text;
 
-            toolCancel.Name = "toolCancel";
+            toolCancel.Name = "Cancel";
             toolCancel.Click += ToolCancelClick;
             toolCancel.Sensitive = false;
             toolCancel.DisplayStyle = ToolItemDisplayStyle.Text;
 
-            toolProgress.Name = "toolProgress";
+            toolProgress.Name = "Progress";
 
             listTables.Name = "listTables";
             listTables.ReadOnly = false;
@@ -188,14 +188,10 @@ namespace DataWF.Data.Gui
             get { return DockType.Content; }
         }
 
-        public void Localize()
+        public override void Localize()
         {
-            string name = "DataExport";
-            GuiService.Localize(toolInit, name, "Initialize", GlyphType.CheckSquare);
-            GuiService.Localize(toolSchema, name, "Schema", GlyphType.Database);
-            GuiService.Localize(toolStart, name, "Start", GlyphType.Play);
-            GuiService.Localize(toolCancel, name, "Cancel", GlyphType.Stop);
-            GuiService.Localize(this, name, "Exporter", GlyphType.Random);
+            base.Localize();
+            GuiService.Localize(this, "DataExport", "Exporter", GlyphType.Random);
         }
 
         #endregion

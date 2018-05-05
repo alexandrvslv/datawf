@@ -108,7 +108,7 @@ namespace DataWF.Module.Flow
 
                 Template.DBTable.Load(transaction, "");
 
-                TemplateParam.DBTable.Load(transaction, "");
+                TemplateData.DBTable.Load(transaction, "");
 
                 Work.DBTable.Load(transaction, "");
 
@@ -227,31 +227,5 @@ namespace DataWF.Module.Flow
         //    Group group = Config.Group.View.GetById(e.Item.GroupId);
         //    e.String = group == null ? "empty" : group.Name;
         //}
-    }
-
-
-
-    public class CheckSystemStage : IExecutable
-    {
-        public object Execute(ExecuteArgs parameters)
-        {
-            string rez = null;
-            var filter = new QQuery(string.Empty, DocumentWork.DBTable);
-            filter.BuildPropertyParam(nameof(DocumentWork.IsComplete), CompareType.Equal, false);
-            filter.BuildPropertyParam(nameof(DocumentWork.IsSystem), CompareType.Equal, true);
-            //string filter = string.Format("{0}!='{1}' and {2} in (select {3} from {4} where {5} = '{6}')",
-            var wors = DocumentWork.DBTable.Load(filter, DBLoadParam.Load | DBLoadParam.Synchronize);
-            foreach (DocumentWork work in wors)
-            {
-                using (var transaction = new DBTransaction())
-                {
-                    var param = new ExecuteArgs(work.Document, transaction);
-                    Document.ExecuteStageProcedure(param, ParamType.Procedure);
-                    work.Document.Save(transaction);
-                }
-            }
-            return rez;
-        }
-
     }
 }

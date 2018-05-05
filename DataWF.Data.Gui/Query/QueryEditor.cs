@@ -599,7 +599,7 @@ namespace DataWF.Data.Gui
             textQuery.LoadText(Query == null ? "<empty>" : Query.Format(), TextFormat.Plain);
         }
 
-        public void Localize()
+        public override void Localize()
         {
             string name = "QueryEditor";
             toolAdd.Text = Common.Locale.Get(name, "Add");

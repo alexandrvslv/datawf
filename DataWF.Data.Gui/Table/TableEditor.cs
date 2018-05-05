@@ -242,6 +242,15 @@ namespace DataWF.Data.Gui
                 baseRow = value;
                 if (view == null)
                     DataSource = value;
+                else if (OpenMode == TableEditorMode.Referencing)
+                {
+                    if (view != null && view.DefaultParam != null)
+                    {
+                        view.DefaultParam.Value = value?.PrimaryId;
+                        view.ResetFilter();
+                        loader.LoadAsync();
+                    }
+                }
                 //else if (baseColumn != null && view != null && value != null)
                 //    view.DefaultFilter = $"{baseColumn.Name}={baseRow.PrimaryId}";
             }
@@ -338,6 +347,10 @@ namespace DataWF.Data.Gui
                 {
                     case TableEditorMode.Table:
                         ListMode = true;
+                        if (view != null && view.Table.IsCaching && !view.Table.IsSynchronized)
+                        {
+                            loader.LoadAsync(new QQuery(string.Empty, view.Table));
+                        }
                         break;
                     case TableEditorMode.Item:
                         ListMode = false;
@@ -370,10 +383,9 @@ namespace DataWF.Data.Gui
                         break;
                     case TableEditorMode.Referencing:
                         ListMode = true;
-                        list.AutoToStringSort = false;
-                        if (baseColumn != null && baseRow != null)
+                        if (baseColumn != null)
                         {
-                            view.DefaultParam = new QParam(LogicType.And, baseColumn, CompareType.Equal, baseRow.PrimaryId);
+                            view.DefaultParam = new QParam(LogicType.And, baseColumn, CompareType.Equal, baseRow?.PrimaryId);
                         }
                         break;
                     case TableEditorMode.Reference:
@@ -424,32 +436,6 @@ namespace DataWF.Data.Gui
 
         public void Initialize(IDBTableView view, DBItem row, DBColumn ownColumn, TableEditorMode openmode, bool readOnly)
         {
-            if (view != null)
-            {
-                switch (openmode)
-                {
-                    case TableEditorMode.Table:
-                        if (view.Table.IsCaching)
-                            if (!view.Table.IsSynchronized)
-                            {
-                                loader.View = view;
-                                loader.LoadAsync(new QQuery(string.Empty, view.Table));
-                            }
-                        break;
-                    case TableEditorMode.Referencing:
-                        if (row == null)
-                        {
-                            view.Query.BuildParam(view.Table.PrimaryKey, "0");
-                        }
-                        else
-                        {
-                            loader.View = view;
-                            view.ResetFilter();
-                            loader.LoadAsync(new QQuery($"where {ownColumn.Name} = {row.PrimaryId}", view.Table));
-                        }
-                        break;
-                }
-            }
             TableView = view;
             OwnerColumn = ownColumn;
             OwnerRow = row;
@@ -467,9 +453,8 @@ namespace DataWF.Data.Gui
 
             if (openmode == TableEditorMode.Referencing)
             {
-                for (int i = 0; i < Table.Columns.Count; i++)
+                foreach (var cs in Table.Columns.GetIsReference())
                 {
-                    DBColumn cs = Table.Columns[i];
                     if (cs.ReferenceTable != null && cs.Name.ToLower() != baseColumn.Name.ToLower())
                     {
                         var item = new ToolMenuItem();

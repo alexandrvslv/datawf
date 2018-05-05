@@ -416,10 +416,11 @@ namespace DataWF.Module.CommonGui
             }
         }
 
-        public void Localize()
+        public override void Localize()
         {
             GuiService.Localize(this, "DataLog", "Redo Logs");
             bar.Localize();
+            map.Localize();
             list.Localize();
             detailList.Localize();
         }

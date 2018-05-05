@@ -12,39 +12,44 @@ namespace DataWF.Gui
     {
         private DockItem mapItem;
         private DockPage currentPage;
-        private Menubar context = new Menubar();
-        private ToolMenuItem toolHide = new ToolMenuItem();
+        private Menubar context;
+        private ToolMenuItem toolHide;
         private LayoutAlignType pagesAlign = LayoutAlignType.Top;
-        private DockPageBox pages = new DockPageBox();
-        private VBox panel = new VBox();
+        private DockPageBox pages;
+        private VBox panel;
         private LinkedList<DockPage> pagesHistory = new LinkedList<DockPage>();
 
         public event EventHandler<DockPageEventArgs> PageSelected;
 
         private Widget widget;
 
-        public DockPanel()
-            : base()
+        public DockPanel() : base()
         {
+            toolHide = new ToolMenuItem { Name = "Hide", Text = "Hide" };
 
-            context.Items.Insert(0, toolHide);
+            context = new Menubar(toolHide);
 
-            toolHide.Name = "toolHide";
-            toolHide.Text = "Hide";
-
-            pages.Name = "toolStrip";
-            pages.Visible = true;
+            pages = new DockPageBox { Name = "toolStrip" };
             pages.PageClick += PagesPageClick;
             pages.Items.ListChanged += PageListOnChange;
 
-            panel.Visible = true;
-            panel.Margin = new WidgetSpacing(6, 0, 6, 6);
+            panel = new VBox
+            {
+                Margin = new WidgetSpacing(6, 0, 6, 6)
+            };
 
-            Name = "DocTabControl";
+            Name = "DockPanel";
             AddChild(pages);
             AddChild(panel);
-
             //BackgroundColor = Colors.Gray;
+        }
+
+        public DockPanel(params Widget[] widgets) : this()
+        {
+            foreach (var widget in widgets)
+            {
+                Put(widget);
+            }
         }
 
         public void Localize()
@@ -329,8 +334,6 @@ namespace DataWF.Gui
 
         public DockPage Put(Widget control, DockType type)
         {
-            if (control is ILocalizable)
-                ((ILocalizable)control).Localize();
             var page = DockBox.CreatePage(control);
             Put(page);
             return page;

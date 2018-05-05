@@ -190,10 +190,11 @@ namespace DataWF.Module.FlowGui
             }
         }
 
-        public void Localize()
+        public override void Localize()
         {
-            tools.Localize();
-            dock.Localize();
+            base.Localize();
+            //tools.Localize();
+            //dock.Localize();
         }
 
         private void ToolLogsOnClick(object sender, EventArgs e)
@@ -402,10 +403,10 @@ namespace DataWF.Module.FlowGui
                     {
                         foreach (var param in stage.GetParams())
                         {
-                            if (param.Type == ParamType.Reference)
-                                InitReference(stage, param);
-                            else if (param.Type == ParamType.Procedure)
-                                InitProcedure(stage, param);
+                            if (param is StageReference)
+                                InitReference(stage, (StageReference)param);
+                            else if (param is StageProcedure)
+                                InitProcedure(stage, (StageProcedure)param);
                             //else if (param.Type == ParamType.Template)
                             //    InitTemplate(stage, param.Param as Template, toolTemplates.DropDown.Items);
                         }
@@ -434,20 +435,20 @@ namespace DataWF.Module.FlowGui
                 {
                     template = value;
 
-                    if (template != null)
-                        foreach (TemplateParam param in template.TemplateAllParams)
-                        {
-                            if (param.Type == ParamType.Reference)
-                                InitReference(template, param);
-                            else if (param.Type == ParamType.Procedure)
-                                InitProcedure(template, param);
-                            //else if (param.Type == ParamType.Template)
-                            //    InitTemplate(template, param.Param as Template, toolTemplates.DropDownItems);
-                        }
-                    foreach (MenuItemProcedure item in toolProcedures.DropDownItems)
-                    {
-                        item.Visible = item.Tag == template;
-                    }
+                    //if (template != null)
+                    //    foreach (TemplateParam param in template.TemplateAllParams)
+                    //    {
+                    //        if (param.Type == ParamType.Reference)
+                    //            InitReference(template, param);
+                    //        else if (param.Type == ParamType.Procedure)
+                    //            InitProcedure(template, param);
+                    //        //else if (param.Type == ParamType.Template)
+                    //        //    InitTemplate(template, param.Param as Template, toolTemplates.DropDownItems);
+                    //    }
+                    //foreach (MenuItemProcedure item in toolProcedures.DropDownItems)
+                    //{
+                    //    item.Visible = item.Tag == template;
+                    //}
                     foreach (DockPage page in dock.GetPages())
                     {
                         page.Visible = page.Tag == null || page.Tag.Equals(template) || page.Tag.Equals(DocumentType);
@@ -600,9 +601,9 @@ namespace DataWF.Module.FlowGui
             }
         }
 
-        public DockPage InitReference(DBItem owner, ParamBase param)
+        public DockPage InitReference(DBItem owner, StageReference param)
         {
-            var foreign = param.Param as DBForeignKey;
+            var foreign = param.Reference;
             if (foreign == null || foreign.ReferenceTable != Document.DBTable)
                 return null;
 
@@ -635,10 +636,10 @@ namespace DataWF.Module.FlowGui
                 GuiService.Main.ShowProperty(this, e.Item, false);
         }
 
-        public void InitProcedure(DBItem owner, ParamBase param)
+        public void InitProcedure(DBItem owner, StageProcedure param)
         {
-            DBProcedure proc = param.Param as DBProcedure;
-            if (proc == null)
+            var proc = param.Procedure as DBProcedure;
+            if (proc == null || param.ProcedureType != ParamProcudureType.ByUser)
                 return;
 
             string name = "procedure" + proc.Name;

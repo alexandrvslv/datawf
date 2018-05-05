@@ -86,9 +86,9 @@ namespace DataWF.Gui
             map.Add(new GroupBoxItem() { Widget = list, Text = "Slyles", FillHeight = true, FillWidth = true });
             map.Add(smap);
 
-            this.Name = "StyleEditor";
-            this.Text = "Style Editor";
-            this.PackStart(map, true, true);
+            Name = "StyleEditor";
+            Text = "Style Editor";
+            PackStart(map, true, true);
 
             Localize();
         }
@@ -103,11 +103,10 @@ namespace DataWF.Gui
             }
         }
 
-        public void Localize()
+        public override void Localize()
         {
+            base.Localize();
             GuiService.Localize(this, GetType().Name, "Localize Editor");
-            list.Localize();
-            details.Localize();
         }
 
         protected override void Dispose(bool disposing)

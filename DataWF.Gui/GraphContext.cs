@@ -70,6 +70,8 @@ namespace DataWF.Gui
 
         public static Size MeasureString(string text, Font font, double w)
         {
+            if (text == null)
+                return Size.Zero;
             if (text.Length < 2000)
             {
                 if (measure == null)

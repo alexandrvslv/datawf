@@ -13,7 +13,7 @@ namespace DataWF.Module.FlowGui
     {
         static readonly Invoker<TableItemNode, int> countInvoker = new Invoker<TableItemNode, int>(nameof(TableItemNode.Count), p => p.Count);
 
-        private ToolSearchEntry toolFilter;        
+        private ToolSearchEntry toolFilter;
 
         private LayoutList fields;
 
@@ -31,7 +31,7 @@ namespace DataWF.Module.FlowGui
         public DocumentFilterView()
         {
             toolFilter = new ToolSearchEntry() { Name = "Filter", FillWidth = true };
-           
+
             fields = new LayoutList()
             {
                 EditMode = EditModes.ByClick,
@@ -146,8 +146,9 @@ namespace DataWF.Module.FlowGui
 
         public GroupBox Box { get => box; }
 
-        public void Localize()
+        public override void Localize()
         {
+            base.Localize();
             box.Localize();
         }
 

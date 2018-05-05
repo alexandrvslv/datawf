@@ -34,7 +34,7 @@ namespace DataWF.Module.FlowGui
 
             contextAdd = new Menubar(
                 new ToolMenuItem { Name = "Template", Sensitive = Template.DBTable?.Access.Create ?? false, Glyph = GlyphType.Book },
-                new ToolMenuItem { Name = "Template Attribute", Sensitive = TemplateParam.DBTable?.Access.Create ?? false, Glyph = GlyphType.Columns },
+                 new ToolMenuItem { Name = "Template Data", Sensitive = TemplateData.DBTable?.Access.Create ?? false, Glyph = GlyphType.File },
                 new ToolMenuItem { Name = "Work", Sensitive = Work.DBTable?.Access.Create ?? false, Glyph = GlyphType.GearsAlias },
                 new ToolMenuItem { Name = "Work Stage", Sensitive = Stage.DBTable?.Access.Create ?? false, Glyph = GlyphType.EditAlias },
                 new ToolMenuItem { Name = "Stage Parameter", Sensitive = StageParam.DBTable?.Access.Create ?? false, Glyph = GlyphType.Columns },
@@ -66,7 +66,7 @@ namespace DataWF.Module.FlowGui
             if (UserGroup.DBTable?.Access.View ?? false) userKeys |= UserTreeKeys.Group;
             if (Scheduler.DBTable?.Access.View ?? false) userKeys |= UserTreeKeys.Scheduler;
             var keys = FlowTreeKeys.None;
-            if (TemplateParam.DBTable?.Access.View ?? false) keys |= FlowTreeKeys.TemplateParam;
+            //if (TemplateParam.DBTable?.Access.View ?? false) keys |= FlowTreeKeys.TemplateParam;
             if (Template.DBTable?.Access.View ?? false) keys |= FlowTreeKeys.Template;
             if (StageParam.DBTable?.Access.View ?? false) keys |= FlowTreeKeys.StageParam;
             if (Stage.DBTable?.Access.View ?? false) keys |= FlowTreeKeys.Stage;
@@ -170,11 +170,11 @@ namespace DataWF.Module.FlowGui
                 if (tag is Template)
                     ((Template)row).Parent = (Template)tag;
             }
-            else if (item.Name == "Template Attribute")
+            else if (item.Name == "Template Data")
             {
-                row = new TemplateParam();
+                row = new TemplateData();
                 if (tag is Template)
-                    ((TemplateParam)row).Template = (Template)tag;
+                    ((TemplateData)row).Template = (Template)tag;
             }
             else if (item.Name == "User")
             {
@@ -215,8 +215,12 @@ namespace DataWF.Module.FlowGui
                     MessageDialog.ShowMessage(ParentWindow, "Unable edit current user!", "Access");
                     return;
                 }
-                UserEditor editor = new UserEditor();
-                editor.User = (User)item;
+                var editor = new UserEditor { User = (User)item };
+                editor.ShowWindow(this);
+            }
+            else if (item is Template)
+            {
+                var editor = new TemplateEditor { Template = (Template)item };
                 editor.ShowWindow(this);
             }
             else if (item is DBItem)
@@ -334,10 +338,9 @@ namespace DataWF.Module.FlowGui
 
         #region ILocalizable implementation
 
-        public void Localize()
+        public override void Localize()
         {
-            barMain.Localize();
-            tree.Localize();
+            base.Localize();
             GuiService.Localize(this, Name, "Flow Config", GlyphType.Wrench);
         }
 

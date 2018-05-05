@@ -81,7 +81,7 @@ namespace DataWF.Module.Flow
             set { SetProperty(value); }
         }
 
-        [DataMember, Column("code", Keys = DBColumnKeys.Code)]
+        [DataMember, Column("code", 512, Keys = DBColumnKeys.Code)]
         public string Code
         {
             get { return GetProperty<string>(); }
@@ -122,6 +122,10 @@ namespace DataWF.Module.Flow
         {
             get { return GetProperty<TimeSpan?>(); }
             set { SetProperty(value); }
+        }
+        public IEnumerable<StageProcedure> GetProceduresByType(ParamProcudureType type)
+        {
+            return GetParams().Where(p => p is StageProcedure && ((StageProcedure)p).ProcedureType == type).Cast<StageProcedure>();
         }
 
         public IEnumerable<StageParam> GetParams()
