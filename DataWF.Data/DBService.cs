@@ -805,6 +805,15 @@ namespace DataWF.Data
                     else
                     {
                         GetItemTypeAttribute(type);
+                        if (TypeHelper.IsInterface(type, typeof(IExecutable)))
+                        {
+                            var name = type.FullName;
+                            var procedure = schema.Procedures[name];
+                            if (procedure == null)
+                            {
+                                procedure = new DBProcedure();
+                            }
+                        }
                     }
                 }
             }
