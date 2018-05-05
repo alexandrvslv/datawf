@@ -116,7 +116,13 @@ namespace DataWF.Common
                     }
                     if (newobj == null)
                     {
-                        newobj = itemInfo.Constructor.Create();
+                        if (itemInfo.Constructor != null)
+                            newobj = itemInfo.Constructor.Create();
+                        else
+                        {
+                            Reader.ReadInnerXml();
+                            return;
+                        }
                     }
                     newobj = Read(newobj, itemInfo);
                 }
