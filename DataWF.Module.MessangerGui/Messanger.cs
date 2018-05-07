@@ -184,7 +184,7 @@ namespace DataWF.Module.MessangerGui
             {
                 using (var transaction = new DBTransaction())
                 {
-                    Message.Send(User.CurrentUser.Id, User.Id, MessageText, document, transaction);
+                    Message.Send(User.CurrentUser, User, MessageText, document, transaction);
                     transaction.Commit();
                 }
                 MessageText = string.Empty;
