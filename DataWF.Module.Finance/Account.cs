@@ -87,7 +87,7 @@ namespace DataWF.Module.Finance
             set { SetValue(value, Table.ElementTypeKey); }
         }
 
-        [Reference("fk_daccount_typeid", nameof(TypeId))]
+        [Reference(nameof(TypeId))]
         public Book Type
         {
             get { return GetReference<Book>(Table.ElementTypeKey); }
@@ -110,7 +110,7 @@ namespace DataWF.Module.Finance
             set { SetValue(value, Table.GroupKey); }
         }
 
-        [Reference("fk_daccount_parentid", "ParentId")]
+        [Reference(nameof(ParentId))]
         public Account Parent
         {
             get { return GetReference<Account>(Table.GroupKey); }

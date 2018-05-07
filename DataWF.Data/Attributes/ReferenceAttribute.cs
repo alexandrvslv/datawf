@@ -83,6 +83,7 @@ namespace DataWF.Data
             if (ForeignKey == null)
             {
                 Column.Column.IsReference = true;
+					
                 var referenceTable = DBService.GetTable(ReferenceType, Table.Schema, true, true);
                 if (referenceTable == null || referenceTable.PrimaryKey == null)
                 {
