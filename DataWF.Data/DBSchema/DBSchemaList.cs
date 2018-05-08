@@ -23,5 +23,15 @@ namespace DataWF.Data
     {
         public DBSchemaList() : base()
         { }
+
+        public override int AddInternal(DBSchema item)
+        {
+            int index = base.AddInternal(item);
+            if (item.LogSchema != null && item.LogSchema.Container == null)
+            {
+                Add(item.LogSchema);
+            }
+            return index;
+        }
     }
 }

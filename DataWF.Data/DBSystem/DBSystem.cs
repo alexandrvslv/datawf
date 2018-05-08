@@ -9,53 +9,6 @@ using DataWF.Common;
 
 namespace DataWF.Data
 {
-    public class DBDefaultSystem : DBSystem
-    {
-        public override IDbConnection CreateConnection(DBConnection connection)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void Format(StringBuilder ddl, DBSequence sequence, DDLType ddlType)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void FormatInsertSequence(StringBuilder command, DBTable table, DBItem row)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string GetConnectionString(DBConnection connection)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override DbConnectionStringBuilder GetConnectionStringBuilder(DBConnection connection)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override DbProviderFactory GetFactory()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string SequenceCurrentValue(DBSequence sequence)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string SequenceInline(DBSequence sequence)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string SequenceNextValue(DBSequence sequence)
-        {
-            throw new NotImplementedException();
-        }
-    }
     public abstract class DBSystem
     {
         public static readonly DBSystem MSSql = new DBSystemMSSql();
@@ -63,7 +16,7 @@ namespace DataWF.Data
         public static readonly DBSystem Oracle = new DBSystemOracle();
         public static readonly DBSystem Postgres = new DBSystemPostgres();
         public static readonly DBSystem SQLite = new DBSystemSQLite();
-        public static readonly DBSystem Default = new DBDefaultSystem();
+        public static readonly DBSystem Default = new DBSystemDefault();
 
         public string Name { get; internal set; }
 
@@ -152,18 +105,17 @@ namespace DataWF.Data
 
         public virtual List<DBConstraintInfo> GetConstraintInfo(DBConnection connection, DBTableInfo tableInfo)
         {
-            var query = string.Format(@"select a.constraint_schema
+            var query = $@"select a.constraint_schema
 ,a.constraint_name
 ,a.table_schema
 ,a.table_name
 ,a.constraint_type
-,b.column_name 
+,b.column_name
 from information_schema.table_constraints a
-  left join information_schema.constraint_column_usage b
+  left join information_schema.kye_column_usage b
      on b.constraint_schema = a.constraint_schema
-	 and b.constraint_name = a.constraint_name where a.table_name='{0}'{1}",
-                                      tableInfo.Name,
-                                      string.IsNullOrEmpty(tableInfo.Schema) ? null : $" and a.table_schema = '{tableInfo.Schema}'");
+	 and b.constraint_name = a.constraint_name
+where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? null : $" and a.table_schema = '{tableInfo.Schema}'")}";
             QResult list = connection.ExecuteQResult(query);
             var infos = new List<DBConstraintInfo>();
             int iName = list.GetIndex("constraint_name");
@@ -195,8 +147,12 @@ from information_schema.table_constraints a
             {
                 connection.DataBase = schema.Name;
             }
+            CreateSchema(schema, connection);
+        }
 
-            ddl.Clear();
+        public virtual void CreateSchema(DBSchema schema, DBConnection connection)
+        {
+            var ddl = new StringBuilder();
             Format(ddl, schema);
             connection.ExecuteGoQuery(ddl.ToString(), true);
         }

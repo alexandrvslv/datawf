@@ -92,9 +92,7 @@ namespace DataWF.Data
 
             connection.DataBase = schema.Name;
 
-            ddl.Clear();
-            Format(ddl, schema);
-            connection.ExecuteGoQuery(ddl.ToString(), true);
+            CreateSchema(schema, connection);
         }
 
         public override string SequenceCurrentValue(DBSequence sequence)

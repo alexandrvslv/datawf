@@ -178,7 +178,6 @@ namespace DataWF.Data
         }
 
         //public static event DBItemEditEventHandler RowStateEdited;
-
         //internal static void OnStateEdited(DBItemEventArgs e)
         //{
         //    RowStateEdited?.Invoke(e);
@@ -689,7 +688,6 @@ namespace DataWF.Data
                         }
                 }
             main.Table.Save(rows);
-
         }
 
         public static IDbCommand CreateCommand(IDbConnection connection, string text = null, IDbTransaction transaction = null)
@@ -791,6 +789,7 @@ namespace DataWF.Data
 
         public static void Generate(IEnumerable<Assembly> assemblies, DBSchema schema)
         {
+            var logSchema = schema.GenerateLogSchema();
             Helper.Logs.Add(new StateInfo("Load", "Database", "Generate Schema"));
             var attributes = new List<TableAttribute>();
             foreach (var assembly in assemblies)
@@ -811,7 +810,12 @@ namespace DataWF.Data
                             var procedure = schema.Procedures[name];
                             if (procedure == null)
                             {
-                                procedure = new DBProcedure();
+                                procedure = new DBProcedure
+                                {
+                                    DataName = assembly.FullName,
+                                    Name = name,
+                                    ProcedureType = ProcedureTypes.Assembly
+                                };
                             }
                         }
                     }
@@ -827,14 +831,9 @@ namespace DataWF.Data
         public static DBSchema Generate(Assembly assembly, string schemaName)
         {
             var schema = new DBSchema(schemaName);
-            Generate(assembly, schema);
+            Generate(new[] { assembly }, schema);
             schems.Add(schema);
             return schema;
-        }
-
-        public static void Generate(Assembly assembly, DBSchema schema)
-        {
-            Generate(new[] { assembly }, schema);
         }
 
         public static DBProcedure ParseProcedure(string name)

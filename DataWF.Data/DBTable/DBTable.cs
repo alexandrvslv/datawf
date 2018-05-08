@@ -87,7 +87,12 @@ namespace DataWF.Data
         [XmlIgnore]
         public DBLogTable LogTable
         {
-            get { return logTable ?? (logTable = DBService.ParseTable(LogTableName) as DBLogTable); }
+            get
+            {
+                return logTable
+                               ?? (logTable = (DBLogTable)Schema?.LogSchema?.Tables[LogTableName]
+                               ?? (DBLogTable)Schema?.Tables[LogTableName]);
+            }
             set
             {
                 logTable = value;
@@ -386,7 +391,7 @@ namespace DataWF.Data
         [XmlIgnore, Category("Database")]
         public virtual bool IsLoging
         {
-            get { return LogTable != null; }
+            get { return !string.IsNullOrEmpty(LogTableName); }
             set
             {
                 if (value)
@@ -1248,12 +1253,12 @@ namespace DataWF.Data
             imageKey = DBColumn.EmptyKey;
         }
 
-        public DBTable GenerateLogTable()
+        public DBLogTable GenerateLogTable()
         {
             if (LogTable == null)
             {
                 LogTable = new DBLogTable { BaseTable = this };
-                Schema.Tables.Add(logTable);
+                LogTable.Schema.Tables.Add(LogTable);
             }
             else
             {
@@ -1371,8 +1376,6 @@ namespace DataWF.Data
                     Constraints.Add(constraint);
             }
         }
-
-
 
         public string GetRowText(object id)
         {

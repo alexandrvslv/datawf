@@ -103,7 +103,7 @@ namespace DataWF.Data.Gui
             dataTree = new DataTree()
             {
                 Name = "dataTree",
-                DataKeys = DataTreeKeys.Schema | DataTreeKeys.TableGroup | DataTreeKeys.Table |
+                DataKeys = DataTreeKeys.Schema | DataTreeKeys.TableGroup | DataTreeKeys.Table | DataTreeKeys.LogTable |
                 DataTreeKeys.ColumnGroup | DataTreeKeys.Column |
                 DataTreeKeys.Index | DataTreeKeys.Constraint | DataTreeKeys.Foreign |
                 DataTreeKeys.Procedure | DataTreeKeys.ProcedureParam | DataTreeKeys.Sequence,
@@ -162,6 +162,7 @@ namespace DataWF.Data.Gui
         private void ShowNewItem(object item)
         {
             listExplorer.Value = item;
+            itemWindow.Title = "New item " + Locale.Get(item.GetType());
             itemWindow.Mode = ToolShowMode.Dialog;
             itemWindow.Show(this, new Point(0, 0));
         }
@@ -299,7 +300,20 @@ namespace DataWF.Data.Gui
             var value = listExplorer.Value;
             if (value is DBSchema)
             {
-                DBService.Schems.Add((DBSchema)value);
+                var schema = (DBSchema)value;
+                DBService.Schems.Add(schema);
+                if (schema.Connection != null)
+                {
+                    var text = new StringBuilder();
+                    text.AppendLine(schema.FormatSql(DDLType.Create));
+                    text.AppendLine("go");
+                    text.AppendLine(schema.FormatSql());
+
+                    var query = new DataQuery();
+                    query.Query = text.ToString();
+
+                    GuiService.Main.DockPanel.Put(query);
+                }
             }
             else if (value is DBConnection)
             {
@@ -390,7 +404,8 @@ namespace DataWF.Data.Gui
 
                 var moduleAttribute = assemblyDefinition.CustomAttributes
                                                        .Where(item => item.AttributeType.Name == nameof(AssemblyMetadataAttribute))
-                                                       .Select(item => item.ConstructorArguments.Select(sitem => sitem.Value.ToString()).ToArray());
+                                                       .Select(item => item.ConstructorArguments.Select(sitem => sitem.Value.ToString())
+                                                       .ToArray());
                 if (moduleAttribute.Any(item => item[0] == "module"))
                 {
                     assemblyList.Add(new AsseblyCheck(Assembly.LoadFile(dll)));
@@ -417,19 +432,8 @@ namespace DataWF.Data.Gui
                       var schema = new DBSchema("NewSchema");
                       DBService.Generate(assemblyList.Where(p => p.Check).Select(p => p.Assembly), schema);
                       DBService.Schems.Add(schema);
-                      if (schema != null)
-                      {
-                          var text = new StringBuilder();
-                          text.AppendLine(schema.FormatSql(DDLType.Create));
-                          text.AppendLine("go");
-                          text.AppendLine(schema.FormatSql());
 
-                          var query = new DataQuery();
-                          query.Query = text.ToString();
-
-                          GuiService.Main.DockPanel.Put(query);
-                      }
-
+                      ShowNewItem(schema);
                   };
         }
 

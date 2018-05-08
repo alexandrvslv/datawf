@@ -387,8 +387,24 @@ namespace DataWF.Data
             private static byte[] key = Encoding.ASCII.GetBytes("Jdv837rf;&G0dfj&");
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public DBConnection Clone()
+        {
+            return new DBConnection
+            {
+                Name = Name,
+                System = System,
+                Host = Host,
+                Port = port,
+                DataBase = DataBase,
+                Schema = Schema,
+                User = User,
+                Password = Password,
+                IntegratedSecurity = IntegratedSecurity,
+                Pool = Pool
+            };
+        }
 
+        public event PropertyChangedEventHandler PropertyChanged;
 
         public void OnPropertyChanged(string property)
         {

@@ -32,12 +32,44 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
+    public class DBLogSchema : DBSchema
+    {
+        protected DBSchema baseSchema;
+        protected string baseSchemaName;
+
+        public string BaseSchemaName
+        {
+            get { return baseSchemaName; }
+            set
+            {
+                if (baseSchemaName != value)
+                {
+                    baseSchemaName = value;
+                    OnPropertyChanged(nameof(BaseSchemaName), false);
+                }
+            }
+        }
+
+        [XmlIgnore]
+        public DBSchema BaseSchema
+        {
+            get { return baseSchema ?? (baseSchema = DBService.Schems[BaseSchemaName]); }
+            set
+            {
+                baseSchema = value;
+                BaseSchemaName = value?.Name;
+            }
+        }
+    }
+
     public class DBSchema : DBSchemaItem, IFileSerialize
     {
-        private string connectionName = "";
+        protected DBConnection connection;
+        private string connectionName = string.Empty;
         protected string dataBase = "";
         protected string fileName = "";
-        protected DBConnection connection;
+        protected DBLogSchema logSchema;
+        protected string logSchemaName;
 
         public DBSchema()
             : this(null)
@@ -58,6 +90,87 @@ namespace DataWF.Data
             FileName = fileName;
             Serialization.Deserialize(fileName, this);
         }
+
+        [Browsable(false)]
+        public string ConnectionName { get => connectionName; set => connectionName = value; }
+
+        [XmlIgnore]
+        public DBConnection Connection
+        {
+            get { return connection ?? (connection = DBService.Connections[ConnectionName]); }
+            set
+            {
+                connection = value;
+                ConnectionName = connection?.Name;
+                if (value != null && !DBService.Connections.Contains(value))
+                {
+                    DBService.Connections.Add(value);
+                }
+            }
+        }
+
+        [Browsable(false)]
+        public string LogSchemaName
+        {
+            get => logSchemaName;
+            set
+            {
+                if (logSchemaName != value)
+                {
+                    logSchemaName = value;
+                    OnPropertyChanged(nameof(LogSchemaName), false);
+                }
+            }
+        }
+
+        [XmlIgnore]
+        public DBLogSchema LogSchema
+        {
+            get { return logSchema ?? (logSchema = (DBLogSchema)DBService.Schems[logSchemaName]); }
+            set
+            {
+                logSchema = value;
+                LogSchemaName = value?.Name;
+            }
+        }
+
+        [Browsable(false)]
+        public DBSystem System { get { return Connection?.System ?? DBSystem.Default; } }
+
+        public DBTableList Tables { get; set; }
+
+        public DBTableGroupList TableGroups { get; set; }
+
+        public DBProcedureList Procedures { get; set; }
+
+        public DBSequenceList Sequences { get; set; }
+
+        public override string Name
+        {
+            get { return base.Name; }
+            set
+            {
+                base.Name = value;
+                if (DataBase == null)
+                    DataBase = value;
+            }
+        }
+
+        public string DataBase
+        {
+            get { return dataBase; }
+            set
+            {
+                if (dataBase != value)
+                {
+                    dataBase = value;
+                    OnPropertyChanged(nameof(DataBase), false);
+                }
+            }
+        }
+
+        [XmlIgnore]
+        public bool IsSynchronizing { get; internal set; }
 
         public DBTable GenerateTable(string name)
         {
@@ -113,46 +226,6 @@ namespace DataWF.Data
         }
         #endregion
 
-        [Browsable(false)]
-        public string ConnectionName { get => connectionName; set => connectionName = value; }
-
-        [XmlIgnore]
-        public DBConnection Connection
-        {
-            get { return connection ?? (connection = DBService.Connections[ConnectionName]); }
-            set
-            {
-                connection = value;
-                ConnectionName = connection?.Name;
-                if (value != null && !DBService.Connections.Contains(value))
-                {
-                    DBService.Connections.Add(value);
-                }
-            }
-        }
-
-        [Browsable(false)]
-        public DBSystem System { get { return Connection?.System ?? DBSystem.Default; } }
-
-        public DBTableList Tables { get; set; }
-
-        public DBTableGroupList TableGroups { get; set; }
-
-        public DBProcedureList Procedures { get; set; }
-
-        public DBSequenceList Sequences { get; set; }
-
-        public override string Name
-        {
-            get { return base.Name; }
-            set
-            {
-                base.Name = value;
-                if (DataBase == null)
-                    DataBase = value;
-            }
-        }
-
         public void Update()
         {
             foreach (var table in Tables)
@@ -160,22 +233,6 @@ namespace DataWF.Data
                 table.Save();
             }
         }
-
-        public string DataBase
-        {
-            get { return dataBase; }
-            set
-            {
-                if (dataBase != value)
-                {
-                    dataBase = value;
-                    OnPropertyChanged(nameof(DataBase), false);
-                }
-            }
-        }
-
-        [XmlIgnore]
-        public bool IsSynchronizing { get; internal set; }
 
         public string FormatSql()
         {
@@ -224,8 +281,48 @@ namespace DataWF.Data
 
         public void CreateDatabase()
         {
+            if (Connection == null)
+                throw new InvalidOperationException("Connection is not defined!");
             Helper.Logs.Add(new StateInfo("Load", "Database", "Create Database"));
             System.CreateDatabase(this, Connection);
+            if (LogSchema != null)
+            {
+                if (LogSchema.Connection != Connection)
+                    LogSchema.CreateDatabase();
+                else
+                    LogSchema.CreateSchema();
+            }
+        }
+
+        public void CreateSchema()
+        {
+            if (Connection == null)
+                throw new InvalidOperationException("Connection is not defined!");
+            Helper.Logs.Add(new StateInfo("Load", "Database", "Create Schema"));
+            System.CreateSchema(this, Connection);
+        }
+
+        public DBLogSchema GenerateLogSchema()
+        {
+            if (LogSchema == null)
+            {
+                //var logConnection = connection.Clone();
+                //logConnection.Name += "_log";
+                LogSchema = new DBLogSchema()
+                {
+                    Name = Name + "_log",
+                    Connection = connection,
+                    BaseSchema = this
+                };
+                foreach (DBTable table in Tables)
+                {
+                    if (table.IsLoging)
+                    {
+                        table.GenerateLogTable();
+                    }
+                }
+            }
+            return LogSchema;
         }
 
         internal IEnumerable<DBConstraint> GetConstraints()
@@ -300,7 +397,7 @@ namespace DataWF.Data
 
                         writer.WriteStartElement("th");
                         writer.WriteElementString("p", "Spec");
-                        writer.WriteEndElement();//th        
+                        writer.WriteEndElement();//th
 
                         writer.WriteStartElement("th");
                         writer.WriteElementString("p", "Reference");

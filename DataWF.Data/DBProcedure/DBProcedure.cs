@@ -311,7 +311,6 @@ namespace DataWF.Data
             }
 
             return result != null && result.Errors.Count > 0 ? null : result.CompiledAssembly;
-
         }
 
         public void Save()

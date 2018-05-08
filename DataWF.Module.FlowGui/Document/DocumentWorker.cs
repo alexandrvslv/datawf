@@ -182,19 +182,6 @@ namespace DataWF.Module.FlowGui
             GuiService.Localize(this, Name, "Documents", GlyphType.Book);
         }
 
-        public TemplateMenuItem InitTemplate(Template template)
-        {
-            var item = new TemplateMenuItem(template, TemplateItemClick);
-            foreach (Template ps in template.GetSubGroups<Template>(DBLoadParam.None))
-            {
-                if (ps.Access.Create)
-                {
-                    item.DropDown.Items.Add(InitTemplate(ps));
-                }
-            }
-            return item;
-        }
-
         internal static ToolMenuItem InitWork(DocumentWork d, EventHandler clickHandler)
         {
             var item = new ToolMenuItem();

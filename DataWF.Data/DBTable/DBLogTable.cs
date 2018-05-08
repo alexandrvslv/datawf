@@ -72,18 +72,24 @@ namespace DataWF.Data
         [XmlIgnore]
         public DBTable BaseTable
         {
-            get { return baseTable ?? (baseTable = Schema?.Tables[BaseTableName]); }
+            get
+            {
+                return baseTable ?? (baseTable = Schema is DBLogSchema
+                              ? ((DBLogSchema)Schema).BaseSchema.Tables[BaseTableName]
+                              : Schema?.Tables[BaseTableName]);
+            }
             set
             {
-                //if (BaseTable != null || value == null)
-                //    throw new Exception("Log table Initialized!");
+                if (value == null)
+                    throw new ArgumentException("BaseTable set operation required non null value!");
+
                 baseTable = value;
                 BaseTableName = value.Name;
 
                 Name = value.Name + "_log";
-                Schema = value.Schema;
+                Schema = value.Schema.LogSchema ?? value.Schema;
                 var seqName = value.SequenceName + "_log";
-                Sequence = value.Schema.Sequences[seqName] ?? new DBSequence() { Name = seqName };
+                Sequence = Schema.Sequences[seqName] ?? new DBSequence() { Name = seqName };
 
                 if (!Columns.Contains("logid"))
                 {
@@ -136,7 +142,6 @@ namespace DataWF.Data
             get { return BaseTable.Access; }
             set { base.Access = value; }
         }
-
 
         private DBLogColumn GetLogColumn(DBColumn column)
         {
