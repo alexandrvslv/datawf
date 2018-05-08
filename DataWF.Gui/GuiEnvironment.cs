@@ -135,7 +135,7 @@ namespace DataWF.Gui
 
         private static void OnAssemblyLoad(object sender, AssemblyLoadEventArgs e)
         {
-            if (e.LoadedAssembly.GetCustomAttributes<AssemblyMetadataAttribute>().Any(m => m.Key == "gui" || m.Key == "module"))
+            if (e.LoadedAssembly.GetCustomAttributes<AssemblyMetadataAttribute>().Any(m => m.Key == "gui"))// || m.Key == "module"
             {
                 foreach (var item in e.LoadedAssembly?.GetExportedTypes())
                 {

@@ -5,4 +5,3 @@ using System.Runtime.CompilerServices;
 // Change them to the values specific to your project.
 
 [assembly: AssemblyMetadata("module", "Flow")]
-[assembly: AssemblyMetadata("gui", "DataWF.Module.FlowGui")]

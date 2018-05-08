@@ -36,6 +36,7 @@ namespace DataWF.Common
         private static object[] cacheObjectParam;
         private static Type[] cacheTypeParam;
         private static StateInfoList logs = new StateInfoList();
+        public static List<IModuleInitialize> ModuleInitializer = new List<IModuleInitialize>();
 
         static Helper()
         {
@@ -48,6 +49,34 @@ namespace DataWF.Common
                     Logs.Save("crush" + DateTime.Now.ToString("yyMMddhhmmss") + ".log");
                 }
             };
+            AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
+
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                OnAssemblyLoad(null, new AssemblyLoadEventArgs(assembly));
+            }
+        }
+
+        private static void OnAssemblyLoad(object sender, AssemblyLoadEventArgs e)
+        {
+            if (e.LoadedAssembly.GetCustomAttributes<AssemblyMetadataAttribute>().Any(m => m.Key == "module"))
+            {
+                foreach (var item in e.LoadedAssembly?.GetExportedTypes())
+                {
+                    if (TypeHelper.IsInterface(item, typeof(IModuleInitialize)))
+                    {
+                        try
+                        {
+                            var imodule = (IModuleInitialize)EmitInvoker.CreateObject(item);
+                            ModuleInitializer.Add(imodule);
+                        }
+                        catch (Exception ex)
+                        {
+                            Helper.OnException(ex);
+                        }
+                    }
+                }
+            }
         }
 
         public static StateInfoList Logs
