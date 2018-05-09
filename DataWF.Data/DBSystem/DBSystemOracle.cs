@@ -165,18 +165,17 @@ namespace DataWF.Data
                     Schema = item[iSchema].ToString(),
                     Name = item[iName].ToString(),
                 };
-                table.Columns = GetColumnsInfo(connection, table);
+                GetColumnsInfo(connection, table);
                 yield return table;
             }
         }
 
-        public override List<DBColumnInfo> GetColumnsInfo(DBConnection connection, DBTableInfo tableInfo)
+        public override void GetColumnsInfo(DBConnection connection, DBTableInfo tableInfo)
         {
             var query = string.Format("select * from all_tab_cols where table_name = '{0}'{1} order by column_id",
                                       tableInfo.Name,
                                       string.IsNullOrEmpty(tableInfo.Schema) ? null : $" and owner = '{tableInfo.Schema}'");
             QResult list = connection.ExecuteQResult(query);
-            var infos = new List<DBColumnInfo>();
             int iName = list.GetIndex("column_name");
             int iType = list.GetIndex("data_type");
             int iPrec = list.GetIndex("data_precision");
@@ -187,7 +186,7 @@ namespace DataWF.Data
 
             foreach (object[] item in list.Values)
             {
-                infos.Add(new DBColumnInfo()
+				tableInfo.Columns.Add(new DBColumnInfo()
                 {
                     Name = item[iName].ToString(),
                     DataType = item[iType].ToString(),
@@ -198,8 +197,6 @@ namespace DataWF.Data
                     Default = item[iDefault].ToString(),
                 });
             }
-
-            return infos;
         }
 
 

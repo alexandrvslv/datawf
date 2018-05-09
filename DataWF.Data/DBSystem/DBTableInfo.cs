@@ -26,8 +26,8 @@ namespace DataWF.Data
         public string Schema { get; set; }
         public string Name { get; set; }
         public bool View { get; set; }
-        public List<DBColumnInfo> Columns { get; set; }
-        public List<DBConstraintInfo> Constraints { get; set; }
+		public List<DBColumnInfo> Columns { get; set; } = new List<DBColumnInfo>();
+		public List<DBConstraintInfo> Constraints { get; set; } = new List<DBConstraintInfo>();
     }
 
 

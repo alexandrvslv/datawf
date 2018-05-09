@@ -65,19 +65,18 @@ namespace DataWF.Data
                     Name = item[iName].ToString(),
                     View = item[iIndex].ToString().IndexOf("view", StringComparison.OrdinalIgnoreCase) >= 0,
                 };
-                table.Columns = GetColumnsInfo(connection, table);
-                table.Constraints = GetConstraintInfo(connection, table);
+                GetColumnsInfo(connection, table);
+                GetConstraintInfo(connection, table);
                 yield return table;
             }
         }
 
-        public virtual List<DBColumnInfo> GetColumnsInfo(DBConnection connection, DBTableInfo tableInfo)
+        public virtual void GetColumnsInfo(DBConnection connection, DBTableInfo tableInfo)
         {
             var query = string.Format("select * from information_schema.columns where table_name='{0}'{1} order by ordinal_position",
                                       tableInfo.Name,
                                       string.IsNullOrEmpty(tableInfo.Schema) ? null : $" and table_schema = '{tableInfo.Schema}'");
             QResult list = connection.ExecuteQResult(query);
-            var infos = new List<DBColumnInfo>();
             int iName = list.GetIndex("column_name");
             int iType = list.GetIndex("data_type");
             int iPrec = list.GetIndex("numeric_precision");
@@ -88,7 +87,7 @@ namespace DataWF.Data
 
             foreach (object[] item in list.Values)
             {
-                infos.Add(new DBColumnInfo()
+				tableInfo.Columns.Add(new DBColumnInfo()
                 {
                     Name = item[iName].ToString(),
                     DataType = item[iType].ToString(),
@@ -99,11 +98,9 @@ namespace DataWF.Data
                     Default = item[iDefault].ToString(),
                 });
             }
-
-            return infos;
         }
 
-        public virtual List<DBConstraintInfo> GetConstraintInfo(DBConnection connection, DBTableInfo tableInfo)
+		public virtual void GetConstraintInfo(DBConnection connection, DBTableInfo tableInfo)
         {
             var query = $@"select a.constraint_schema
 ,a.constraint_name
@@ -112,27 +109,24 @@ namespace DataWF.Data
 ,a.constraint_type
 ,b.column_name
 from information_schema.table_constraints a
-  left join information_schema.kye_column_usage b
+  left join information_schema.key_column_usage b
      on b.constraint_schema = a.constraint_schema
 	 and b.constraint_name = a.constraint_name
 where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? null : $" and a.table_schema = '{tableInfo.Schema}'")}";
             QResult list = connection.ExecuteQResult(query);
-            var infos = new List<DBConstraintInfo>();
             int iName = list.GetIndex("constraint_name");
             int iType = list.GetIndex("constraint_type");
             int iColu = list.GetIndex("column_name");
 
             foreach (object[] item in list.Values)
             {
-                infos.Add(new DBConstraintInfo()
+				tableInfo.Constraints.Add(new DBConstraintInfo()
                 {
                     Name = item[iName].ToString(),
                     Type = item[iType].ToString(),
                     Column = item[iColu].ToString()
                 });
             }
-
-            return infos;
         }
 
         public virtual void CreateDatabase(DBSchema schema, DBConnection connection)

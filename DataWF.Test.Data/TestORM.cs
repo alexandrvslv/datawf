@@ -72,9 +72,9 @@ namespace DataWF.Test.Data
             Serialization.Serialize(DBService.Schems, file);
             DBService.Schems.Clear();
             Serialization.Deserialize(file, DBService.Schems);
-            Assert.AreEqual(1, DBService.Schems.Count);
-            var schem = DBService.Schems[0];
-            Assert.AreEqual(4, schem.Tables.Count);
+            Assert.AreEqual(2, DBService.Schems.Count);
+			var schem = DBService.Schems[SchemaName];
+            Assert.AreEqual(2, schem.Tables.Count);
             var table = schem.Tables[EmployerTableName];
             Assert.IsNotNull(table);
             Assert.IsInstanceOf<DBTable<Employer>>(table);
