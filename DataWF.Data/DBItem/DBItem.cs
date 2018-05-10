@@ -399,7 +399,7 @@ namespace DataWF.Data
             return GetCache(Table.Columns[column]);
         }
 
-        public object GetCache(DBColumn column)
+        public virtual object GetCache(DBColumn column)
         {
             if (column == null)
                 return null;

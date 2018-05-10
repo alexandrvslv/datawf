@@ -163,6 +163,13 @@ namespace DataWF.Data
             return rez;
         }
 
+        public override object GetCache(DBColumn column)
+        {
+            if (column == Table.GroupKey)
+                return group != DBItem.EmptyItem ? group : null;
+            return base.GetCache(column);
+        }
+
         public IEnumerable SelectChilds()
         {
             return Table.SelectItems(Table.GroupKey, CompareType.Equal, this);
