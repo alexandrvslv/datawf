@@ -6,9 +6,9 @@ namespace DataWF.Gui
 {
     public class ToolSplit : ToolDropDown
     {
-        public ToolSplit() : base(new ToolItemWidget(new ToolItem() { MinWidth = 16, MinHeight = 16, Glyph = GlyphType.CaretDown }))
+        public ToolSplit() : base()
         {
-            ToolItem.Click += OnClickSplit;
+            GlyphWidget.Click += OnClickSplit;
         }
 
         public ToolSplit(EventHandler click) : this()
@@ -16,16 +16,11 @@ namespace DataWF.Gui
             ButtonClick += click;
         }
 
-        public ToolItem ToolItem
-        {
-            get { return ((ToolItemWidget)content).Tool; }
-        }
-
         public event EventHandler ButtonClick;
 
         protected override void OnClick(EventArgs e)
         {
-            if (ToolItem.State == CellDisplayState.Default)
+            if (GlyphWidget.State == CellDisplayState.Default)
                 ButtonClick?.Invoke(this, e);
         }
 

@@ -95,6 +95,7 @@ namespace DataWF.Gui
             items.GetBound();
             foreach (ToolItem item in items.GetVisibleItems())
             {
+                item.CheckSize();
                 items.GetBound(item);
                 if (item.Content != null && item.Content.Parent == this)
                     SetChildBounds(item.Content, item.GetContentBound());

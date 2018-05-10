@@ -205,7 +205,10 @@ namespace DataWF.Gui
             set
             {
                 style = GuiEnvironment.Theme["Tool"] == style ? style.Clone() : style;
-                style.FontBrush.Color = value.BlendWith(style.FontBrush.Color, 0.6);
+                style.FontBrush.ColorSelect =
+                    style.FontBrush.ColorHover =
+                    style.FontBrush.Color = value.BlendWith(style.FontBrush.Color, 0.5);
+
                 Bar?.QueueDraw();
             }
         }
@@ -323,9 +326,9 @@ namespace DataWF.Gui
                     textBound.Y = value.Y + (value.Height - textBound.Height) / 2D;
                 }
                 contentBound.X = DisplayStyle.HasFlag(ToolItemDisplayStyle.Text)
-                    ? textBound.Right
+                    ? textBound.Right - 2
                     : imaged
-                        ? imageBound.Right
+                        ? imageBound.Right - 2
                         : value.X + 1;
                 contentBound.Y = value.Y + (value.Height - contentBound.Height) / 2D;
                 contentBound.Width = value.Width - (contentBound.Left - value.Left);
@@ -382,7 +385,7 @@ namespace DataWF.Gui
             if (content != null)
             {
                 contentBound.Size = content.Surface.GetPreferredSize(SizeConstraint.Unconstrained, SizeConstraint.Unconstrained);
-                contentBound.Width += indent;
+               // contentBound.Width += indent;
             }
             else
             {

@@ -10,21 +10,30 @@ namespace DataWF.Gui
         protected Menubar menu;
         private LayoutAlignType menuAlign = LayoutAlignType.Bottom;
 
-        public ToolDropDown()
+        public ToolDropDown() : base()
         {
+            Initialize();
         }
 
         public ToolDropDown(EventHandler click) : base(click)
         {
+            Initialize();
         }
 
-        public ToolDropDown(params ToolItem[] items)
+        public ToolDropDown(params ToolItem[] items) : this()
         {
             DropDownItems.AddRange(items);
         }
 
-        public ToolDropDown(Widget content) : base(content)
+        private void Initialize()
         {
+            GlyphWidget = new GlyphWidget { Visible = false, MinWidth = 16, MinHeight = 16, Glyph = GlyphType.CaretDown };
+        }
+
+        public GlyphWidget GlyphWidget
+        {
+            get { return (GlyphWidget)content; }
+            set { Content = value;}
         }
 
         public event EventHandler DropDownOpened;
@@ -38,6 +47,7 @@ namespace DataWF.Gui
                 {
                     menu = value;
                     menu.OwnerItem = this;
+                    GlyphWidget.Visible = true;
                 }
             }
         }
