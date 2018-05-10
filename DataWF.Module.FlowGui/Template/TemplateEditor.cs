@@ -1,4 +1,5 @@
-﻿using DataWF.Data;
+﻿using DataWF.Common;
+using DataWF.Data;
 using DataWF.Data.Gui;
 using DataWF.Gui;
 using DataWF.Module.Flow;
@@ -27,7 +28,7 @@ namespace DataWF.Module.FlowGui
                     Row = 0,
                     FillWidth = true,
                     FillHeight = true,
-                    Panel = new DockPanel(attribures = new LayoutList())
+                    Panel = new DockPanel(attribures = new LayoutList { EditMode = EditModes.ByClick})
                 },
                 new DockItem
                 {
