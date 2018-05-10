@@ -5,7 +5,7 @@ using Xwt.Drawing;
 
 namespace DataWF.Gui
 {
-    public class VPanel : VBox, IText, IGlyph, ILocalizable
+    public class VPanel : VBox, IText, IGlyph, ILocalizable, ISerializableElement
     {
         private string text;
 
@@ -30,6 +30,7 @@ namespace DataWF.Gui
                 }
             }
         }
+
         public event EventHandler TextChanged;
 
         public virtual void Localize()
@@ -39,6 +40,49 @@ namespace DataWF.Gui
                 if (widget is ILocalizable)
                 {
                     ((ILocalizable)widget).Localize();
+                }
+            }
+        }
+
+        public virtual void XmlSerialize(string file)
+        {
+            using (var serializer = new Serializer())
+            {
+                serializer.Serialize(this, file);
+            }
+        }
+
+        public virtual void Serialize(ISerializeWriter writer)
+        {
+            foreach (var child in Children)
+            {
+                if (child is ISerializableElement)
+                {
+                    writer.Write(child, child.Name, true);
+                }
+            }
+        }
+
+        public virtual void XmlDeserialize(string file)
+        {
+            using (var serializer = new Serializer())
+            {
+                serializer.Deserialize(file, this, false);
+            }
+        }
+
+        public virtual void Deserialize(ISerializeReader reader)
+        {
+            while (reader.ReadBegin())
+            {
+                var type = reader.ReadType();
+                foreach (var child in Children)
+                {
+                    if (child.Name == reader.CurrentName && type == child.GetType())
+                    {
+                        ((ISerializableElement)child).Deserialize(reader);
+                        break;
+                    }
                 }
             }
         }

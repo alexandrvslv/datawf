@@ -25,6 +25,8 @@ namespace DataWF.Module.FlowGui
                 toolSave.Visible =
                 toolStatus.Visible =
                 toolSort.Visible = false;
+
+            Name = nameof(DocumentDetailView<T>);
         }
 
         DBItem IDocument.Document { get => Document; set => Document = (Document)value; }

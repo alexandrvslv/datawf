@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 namespace DataWF.Gui
 {
     [ToolboxItem(true)]
-    public partial class LayoutList : VPanel, ILocalizable, ILayoutList
+    public partial class LayoutList : VPanel, ILocalizable, ILayoutList, ISerializableElement
     {
         protected static LayoutMenu defMenu;
         protected LayoutListKeys keys = LayoutListKeys.AllowFilter |
@@ -4839,6 +4839,28 @@ namespace DataWF.Gui
                     cell.Format = "########################";
             }
             return GuiEnvironment.GetCellEditor(cell);
+        }
+
+        public override void Serialize(ISerializeWriter writer)
+        {
+            if (Mode == LayoutListMode.Fields)
+                writer.Write(FieldInfo);
+            else
+                writer.Write(ListInfo);
+        }
+
+        public override void Deserialize(ISerializeReader reader)
+        {
+            GenerateColumns = false;
+            GenerateFields = false;
+            if (Mode == LayoutListMode.Fields)
+            {
+                reader.Read(FieldInfo);
+            }
+            else
+            {
+                reader.Read(ListInfo);
+            }
         }
     }
 

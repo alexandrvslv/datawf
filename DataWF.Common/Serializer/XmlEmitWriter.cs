@@ -6,7 +6,7 @@ using System.IO;
 
 namespace DataWF.Common
 {
-    public class XmlEmitWriter : IDisposable
+    public class XmlEmitWriter : IDisposable, ISerializeWriter
     {
         private Serializer Serializer { get; set; }
         public XmlWriter Writer { get; set; }
@@ -33,30 +33,28 @@ namespace DataWF.Common
             }
         }
 
-        public void WriteDictionary(IEnumerable dictionary, Type type)
+        public void WriteDictionary(IDictionary dictionary, Type type)
         {
             //var dictionary = element as IEnumerable;
             var item = DictionaryItem.Create(type);
             var itemInfo = Serializer.GetTypeInfo(item.GetType());
-            foreach (var entry in dictionary)
+            foreach (var entry in (IEnumerable)dictionary)
             {
                 item.Fill(entry);
                 Write(item, itemInfo, "i", false);
             }
         }
 
-        public void BeginWrite(object element)
+        public void Write(object element)
         {
-            if (element == null)
-                return;
-
-            Write(element, "e", true);
+            Type type = element.GetType();
+            var typeInfo = Serializer.GetTypeInfo(type);
+            Write(element, typeInfo, type.Name, true);
         }
 
         public void Write(object element, string name, bool writeType)
         {
-            Type type = element.GetType();
-            Write(element, Serializer.GetTypeInfo(type), name, writeType);
+            Write(element, Serializer.GetTypeInfo(element.GetType()), name, writeType);
         }
 
         public void Write(object element, TypeSerializationInfo info, string name, bool writeType)
@@ -64,9 +62,9 @@ namespace DataWF.Common
             //Console.WriteLine($"Xml Write {name}");
             if (writeType)
             {
-                Writer.WriteComment(info.TypeName);
+                WriteType(info);
             }
-            Writer.WriteStartElement(name);
+            WriteBegin(name);
             if (info.IsAttribute)
             {
                 Writer.WriteValue(Helper.TextBinaryFormat(element));
@@ -77,17 +75,21 @@ namespace DataWF.Common
                 fileSerialize.Save();
                 Writer.WriteElementString("FileName", fileSerialize.FileName);
             }
+            else if (element is ISerializableElement)
+            {
+                ((ISerializableElement)element).Serialize(this);
+            }
             else
             {
                 if (info.IsList)
                 {
                     if (((IList)element).Count > 0)
                     {
-                        Writer.WriteAttributeString("Count", Helper.TextBinaryFormat(((IList)element).Count));
+                        WriteAttribute("Count", ((IList)element).Count);
                     }
                     if (info.ListDefaulType)
                     {
-                        Writer.WriteAttributeString("DT", Helper.TextBinaryFormat(info.ListDefaulType));
+                        WriteAttribute("DT", info.ListDefaulType);
                     }
                 }
 
@@ -101,7 +103,7 @@ namespace DataWF.Common
 
                     if (property.IsAttribute)
                     {
-                        Writer.WriteAttributeString(property.PropertyName, Helper.TextBinaryFormat(value));
+                        WriteAttribute(property.PropertyName, value);
                     }
                     else if (property.IsText)
                     {
@@ -115,7 +117,7 @@ namespace DataWF.Common
 
                 if (info.IsDictionary)
                 {
-                    WriteDictionary((IEnumerable)element, info.Type);
+                    WriteDictionary((IDictionary)element, info.Type);
                 }
                 else if (element is INamedList)
                 {
@@ -126,6 +128,31 @@ namespace DataWF.Common
                     WriteCollection((ICollection)element, info);
                 }
             }
+            WriteEnd();
+        }
+
+        public void WriteType(Type type)
+        {
+            WriteType(Serializer.GetTypeInfo(type));
+        }
+
+        public void WriteType(TypeSerializationInfo info)
+        {
+            Writer.WriteComment(info.TypeName);
+        }
+
+        public void WriteBegin(string name)
+        {
+            Writer.WriteStartElement(name);
+        }
+
+        public void WriteAttribute(string name, object value)
+        {
+            Writer.WriteAttributeString(name, Helper.TextBinaryFormat(value));
+        }
+
+        public void WriteEnd()
+        {
             Writer.WriteEndElement();
         }
 
@@ -134,5 +161,4 @@ namespace DataWF.Common
             Writer?.Dispose();
         }
     }
-
 }

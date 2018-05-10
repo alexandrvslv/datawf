@@ -382,10 +382,10 @@ namespace DataWF.Gui
         public double GetChildsWidth(double max)
         {
             var w = 0D;
-            foreach (DockPage dt in items)
+            foreach (DockPage page in items)
             {
-                if (dt.Visible)
-                    w += GetToolWidth(dt, max) + padding;
+                if (page.Visible)
+                    w += GetToolWidth(page, max) + padding;
             }
             return w;
         }

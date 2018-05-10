@@ -8,7 +8,7 @@ using Xwt.Drawing;
 
 namespace DataWF.Gui
 {
-    public class DockPanel : Canvas, IEnumerable, IEnumerable<DockPage>, IDockContainer, ILocalizable
+    public class DockPanel : Canvas, IEnumerable, IEnumerable<DockPage>, IDockContainer, ILocalizable, ISerializableElement
     {
         private DockItem mapItem;
         private DockPage currentPage;
@@ -400,6 +400,31 @@ namespace DataWF.Gui
         public IEnumerator<DockPage> GetEnumerator()
         {
             return pages.Items.GetEnumerator();
+        }
+
+        public void Serialize(ISerializeWriter writer)
+        {
+            foreach (DockPage page in pages.Items)
+            {
+                if (page.Widget is ISerializableElement)
+                {
+                    writer.Write(page.Widget, page.Widget.Name, true);
+                }
+            }
+        }
+
+        public void Deserialize(ISerializeReader reader)
+        {
+            while (reader.ReadBegin())
+            {
+                var type = reader.ReadType();
+                DockPage page = GetPage(reader.CurrentName);
+                if (page?.Widget != null && page.Widget.GetType() == type)
+                {
+                    ((ISerializableElement)page.Widget).Deserialize(reader);
+                    break;
+                }
+            }
         }
     }
 }

@@ -24,7 +24,7 @@ namespace DataWF.Module.FlowGui
             list.AllowSort = false;
             //AutoToStringFill = true;
             //GenerateColumns = false;
-            Name = "works";
+            Name = nameof(DocumentWorkView);
             Text = "Works";
 
             toolActual = new ToolItem(ToolActualClick) { Name = "Actual", Checked = true, CheckOnClick = true, ForeColor = Colors.Green, Glyph = GlyphType.CheckCircleO };

@@ -9,6 +9,7 @@ namespace DataWF.Module.FlowGui
     {
         public DocumentCustomerView() : base()
         {
+            Name = nameof(DocumentCustomerView);
         }
 
         public override void Localize()

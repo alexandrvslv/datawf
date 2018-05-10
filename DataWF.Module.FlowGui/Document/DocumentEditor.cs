@@ -485,8 +485,8 @@ namespace DataWF.Module.FlowGui
                     from = cwork != null && cwork.From != null && (cwork.From.User.IsCurrent || cwork.User.IsCurrent);
                     //pages
                     toolLabel.Text = cwork == null || cwork.Stage == null ? "" : cwork.Stage.ToString();
-
                 }
+
                 dock.PageSelected += DockPageSelected;
 
                 foreach (var panel in dock.GetDockPanels())
@@ -570,8 +570,17 @@ namespace DataWF.Module.FlowGui
             {
                 if (documentType == value)
                     return;
+                if (documentType != null)
+                {
+                    XmlSerialize(documentType.Name.ToString());
+                }
                 documentType = value;
                 GetPages(documentType).ForEach(p => p.Tag = value);
+
+                if (documentType != null)
+                {
+                    XmlDeserialize(documentType.Name.ToString());
+                }
             }
         }
 

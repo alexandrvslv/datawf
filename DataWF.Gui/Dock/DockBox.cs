@@ -17,7 +17,7 @@ namespace DataWF.Gui
         Move = 8
     }
 
-    public class DockBox : Canvas, IDockContainer
+    public class DockBox : Canvas, IDockContainer, ISerializableElement
     {
         private DockItem map;
         private EventHandler childFocusHandler;
@@ -641,6 +641,16 @@ namespace DataWF.Gui
                 if (item is IDisposable)
                     ((IDisposable)item).Dispose();
             base.Dispose(disposing);
+        }
+
+        public void Serialize(ISerializeWriter writer)
+        {
+            writer.Write(map);
+        }
+
+        public void Deserialize(ISerializeReader reader)
+        {
+            reader.Read(map);
         }
     }
 

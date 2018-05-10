@@ -253,6 +253,13 @@ namespace DataWF.Gui
             return GetRecursive(property) != null;
         }
 
+        public override void InsertInternal(int index, T item)
+        {
+            if (string.IsNullOrEmpty(item.Name))
+                item.Name = $"item_{item.Col}_{item.Row}";
+            base.InsertInternal(index, item);
+        }
+
         public override int AddInternal(T item)
         {
             if (Contains(item))

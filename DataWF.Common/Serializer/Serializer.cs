@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace DataWF.Common
 {
-    public class Serializer
+    public class Serializer : IDisposable
     {
         public static TypeSerializationInfo DictionaryItemInfo = new TypeSerializationInfo(typeof(DictionaryItem));
 
@@ -19,6 +19,16 @@ namespace DataWF.Common
             {
                 SerializationInfo[info.ListItemType] = new TypeSerializationInfo(info.ListItemType);
             }
+        }
+
+        public virtual ISerializeWriter GetWriter(Stream stream)
+        {
+            return new XmlEmitWriter(stream, this);
+        }
+
+        public virtual ISerializeReader GetReader(Stream stream)
+        {
+            return new XmlEmitReader(stream, this);
         }
 
         public bool CheckIFile { get; set; }
@@ -35,9 +45,9 @@ namespace DataWF.Common
             {
                 stream.Position = 0;
             }
-            using (var reader = new XmlEmitReader(stream, this))
+            using (var reader = GetReader(stream))
             {
-                element = reader.BeginRead(element);
+                element = reader.Read(element);
             }
             return element;
         }
@@ -72,8 +82,15 @@ namespace DataWF.Common
             return element;
         }
 
+        public void Dispose()
+        {
+            SerializationInfo.Clear();
+        }
+
         public TypeSerializationInfo GetTypeInfo(Type type)
         {
+            if (type == null)
+                return null;
             if (!SerializationInfo.TryGetValue(type, out var info))
             {
                 SerializationInfo[type] = info = new TypeSerializationInfo(type);
@@ -106,9 +123,9 @@ namespace DataWF.Common
 
         public void Serialize(object element, Stream stream)
         {
-            using (var writer = new XmlEmitWriter(stream, this))
+            using (var writer = GetWriter(stream))
             {
-                writer.BeginWrite(element);
+                writer.Write(element, "e", true);
             }
         }
     }

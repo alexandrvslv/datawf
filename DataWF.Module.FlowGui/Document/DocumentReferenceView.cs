@@ -21,8 +21,8 @@ namespace DataWF.Module.FlowGui
 
         public DocumentReferenceView()
         {
-            toolAttach = new ToolItem(ToolAttachClick) { Glyph = GlyphType.PlusSquareO };
-            toolDetach = new ToolItem(ToolDetachClick) { Glyph = GlyphType.MinusSquareO };
+            toolAttach = new ToolItem(ToolAttachClick) { Glyph = GlyphType.PlusSquareO, ForeColor = Colors.Green };
+            toolDetach = new ToolItem(ToolDetachClick) { Glyph = GlyphType.MinusSquareO, ForeColor = Colors.Red };
 
             AllowPreview = false;
             AutoLoad = false;
@@ -34,7 +34,7 @@ namespace DataWF.Module.FlowGui
             Bar.Items.Add(toolAttach);
             Bar.Items.Add(toolDetach);
 
-            Name = "DocumentRelations";
+            Name = nameof(DocumentReferenceView);
         }
 
         DBItem IDocument.Document { get { return Document; } set { Document = value as Document; } }
