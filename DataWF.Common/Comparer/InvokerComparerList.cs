@@ -41,7 +41,7 @@ namespace DataWF.Common
                 if (retval != 0)
                     return retval;
             }
-            return x.GetHashCode().CompareTo(y.GetHashCode());
+            return x?.GetHashCode().CompareTo(y.GetHashCode()) ?? 0;
         }
 
         public override bool Equals(object obj)
