@@ -254,29 +254,28 @@ namespace DataWF.Gui
         protected override void OnDraw(Context ctx, Rectangle dirtyRect)
         {
             base.OnDraw(ctx, dirtyRect);
-            GraphContext context = GraphContext.Default;
-            context.Context = ctx;
-
-            if (image != null)
+            using (var context = new GraphContext(ctx))
             {
-                context.DrawImage(image, recti);
-            }
-
-            if (dropDownVisible)
-            {
-                CellDisplayState state = CellDisplayState.Default;
-                if (hover == PEditorHover.DropDown)
-                    state = CellDisplayState.Hover;
-                rectg = new Rectangle(rectd.X, rectd.Y, 16, 16);
-                context.DrawCell(pstyle, GlyphType.AngleDoubleDown, rectd, rectd, state);
-            }
-            if (dropDownExVisible)
-            {
-                CellDisplayState state = CellDisplayState.Default;
-                if (hover == PEditorHover.DropDownEx)
-                    state = CellDisplayState.Hover;
-                rectg = new Rectangle(recte.X, recte.Y, 16, 16);
-                context.DrawCell(pstyle, GlyphType.AngleDoubleRight, recte, recte, state);
+                if (image != null)
+                {
+                    context.DrawImage(image, recti);
+                }
+                if (dropDownVisible)
+                {
+                    CellDisplayState state = CellDisplayState.Default;
+                    if (hover == PEditorHover.DropDown)
+                        state = CellDisplayState.Hover;
+                    rectg = new Rectangle(rectd.X, rectd.Y, 16, 16);
+                    context.DrawCell(pstyle, GlyphType.AngleDoubleDown, rectd, rectd, state);
+                }
+                if (dropDownExVisible)
+                {
+                    CellDisplayState state = CellDisplayState.Default;
+                    if (hover == PEditorHover.DropDownEx)
+                        state = CellDisplayState.Hover;
+                    rectg = new Rectangle(recte.X, recte.Y, 16, 16);
+                    context.DrawCell(pstyle, GlyphType.AngleDoubleRight, recte, recte, state);
+                }
             }
         }
 

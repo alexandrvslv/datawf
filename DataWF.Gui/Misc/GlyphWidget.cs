@@ -39,8 +39,8 @@ namespace DataWF.Gui
         {
             base.OnDraw(ctx, dirtyRect);
             var bound = new Rectangle(dirtyRect.Right - Bounds.Height, dirtyRect.Top, Bounds.Height, Bounds.Height);
-            GraphContext.Default.Context = ctx;
-            GraphContext.Default.DrawCell(Style, Image ?? (object)Glyph, bound, bound.Inflate(-1, 1), State);
+            using (var context = new GraphContext(ctx))
+                context.DrawCell(Style, Image ?? (object)Glyph, bound, bound.Inflate(-1, 1), State);
         }
 
         protected override void OnMouseEntered(EventArgs args)

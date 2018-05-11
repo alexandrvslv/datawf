@@ -7,12 +7,12 @@ using System.Collections.Generic;
 
 namespace DataWF.Gui
 {
-    public class GraphContext
+    public class GraphContext : IDisposable
     {
         private static TextLayout measure;
         private static Font glyphFont = null;
         private static Dictionary<GlyphType, TextLayout> glyphCache = new Dictionary<GlyphType, TextLayout>();
-        public static GraphContext Default = new GraphContext();
+        //public static GraphContext Default = new GraphContext();
 
         public static TextLayout GetGlyphLayout(GlyphType type, double maxSize)
         {
@@ -118,7 +118,7 @@ namespace DataWF.Gui
 
         private double scale = 1f;
         public Context Context;
-        private TextLayout cacheTextLayout;
+        private static TextLayout cacheTextLayout;
 
         public GraphContext(Context g)
         {
@@ -130,7 +130,7 @@ namespace DataWF.Gui
 
         public void Dispose()
         {
-            Context.Dispose();
+            //Context.Dispose();
         }
 
         public bool Print { get; set; }
@@ -205,10 +205,10 @@ namespace DataWF.Gui
             //Context.Save();
             //Context.Rectangle(bound);
             //Context.Clip();
-            using (DrawingPath path = GetRoundedRect(bound, style.Round))
+            var backColor = style.BackBrush.GetColorByState(state);
+            if (backColor != CellStyleBrush.ColorEmpty)
             {
-                var backColor = style.BackBrush.GetColorByState(state);
-                if (backColor != CellStyleBrush.ColorEmpty)
+                using (DrawingPath path = GetRoundedRect(bound, style.Round))
                 {
                     Context.SetColor(backColor);
                     var pattern = style.BackBrush.GetBrushByState(bound, state);
@@ -221,45 +221,45 @@ namespace DataWF.Gui
                         pattern.Dispose();
                     }
                 }
+            }
 
-                if (formated != null)
+            if (formated != null)
+            {
+                if (formated is string && ((string)formated).Length > 0)
                 {
-                    if (formated is string && ((string)formated).Length > 0)
-                    {
-                        DrawText(style, (string)formated, textBound, state);
-                    }
-                    else if (formated is TextLayout)
-                    {
-                        DrawText(style, (TextLayout)formated, textBound, state);
-                    }
-                    else if (formated is GlyphType)
-                    {
-                        DrawGlyph(style, textBound, (GlyphType)formated, state);
-                    }
-                    else if (formated is Image)
-                    {
-                        DrawImage((Image)formated, textBound);
-                    }
-                    else if (formated is CheckedState)
-                    {
-                        textBound.Width = textBound.Height;
-                        DrawCheckBox(style.FontBrush.GetColorByState(state), textBound, (CheckedState)formated);
-                    }
+                    DrawText(style, (string)formated, textBound, state);
                 }
-
-                var penColor = style.BorderBrush.GetColorByState(state);
-                if (penColor != CellStyleBrush.ColorEmpty && style.LineWidth > 0)
+                else if (formated is TextLayout)
                 {
-                    Context.SetLineWidth(style.LineWidth);
-                    Context.SetColor(penColor);
-                    var pattern = style.BorderBrush.GetBrushByState(bound, state);
-                    if (pattern != null)
-                        Context.Pattern = pattern;
-                    using (var borderPath = GetRoundedRect(bound.Inflate(-0.5, -0.5), style.Round))
-                    {
-                        Context.AppendPath(borderPath);
-                        Context.Stroke();
-                    }
+                    DrawText(style, (TextLayout)formated, textBound, state);
+                }
+                else if (formated is GlyphType)
+                {
+                    DrawGlyph(style, textBound, (GlyphType)formated, state);
+                }
+                else if (formated is Image)
+                {
+                    DrawImage((Image)formated, textBound);
+                }
+                else if (formated is CheckedState)
+                {
+                    textBound.Width = textBound.Height;
+                    DrawCheckBox(style.FontBrush.GetColorByState(state), textBound, (CheckedState)formated);
+                }
+            }
+
+            var penColor = style.BorderBrush.GetColorByState(state);
+            if (penColor != CellStyleBrush.ColorEmpty && style.LineWidth > 0)
+            {
+                Context.SetLineWidth(style.LineWidth);
+                Context.SetColor(penColor);
+                var pattern = style.BorderBrush.GetBrushByState(bound, state);
+                if (pattern != null)
+                    Context.Pattern = pattern;
+                using (var borderPath = GetRoundedRect(bound.Inflate(-0.5, -0.5), style.Round))
+                {
+                    Context.AppendPath(borderPath);
+                    Context.Stroke();
                 }
             }
             //Context.Restore();
@@ -341,18 +341,14 @@ namespace DataWF.Gui
         public static DrawingPath GetRoundedRect(Rectangle baseRect, float radius)
         {
             var path = new DrawingPath();
-            path.RoundRectangle(baseRect, radius);
-            path.ClosePath();
-            return path;
-        }
-        public static DrawingPath GetRect(Rectangle baseRect)
-        {
-            var path = new DrawingPath();
-            path.Rectangle(baseRect.Location, baseRect.Width, baseRect.Height);
-            path.ClosePath();
-            return path;
-        }
+            if (radius != 0)
+                path.RoundRectangle(baseRect, radius);
+            else
+                path.Rectangle(baseRect.Location, baseRect.Width, baseRect.Height);
 
+            path.ClosePath();
+            return path;
+        }
     }
 }
 

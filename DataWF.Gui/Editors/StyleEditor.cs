@@ -40,24 +40,24 @@ namespace DataWF.Gui
             ctx.RoundRectangle(dirtyRect, 10);
             ctx.Fill();
 
-            var context = GraphContext.Default;
-            context.Context = ctx;
-
-            if (style != null)
+            using (var context = new GraphContext(ctx))
             {
-                int y = 10;
-                foreach (var value in values)
+                if (style != null)
                 {
-                    using (TextLayout text = new TextLayout(this) { Text = value.ToString() })
+                    int y = 10;
+                    foreach (var value in values)
                     {
-                        ctx.SetColor(Colors.Black);
-                        ctx.DrawTextLayout(text, new Point(5, y));
+                        using (TextLayout text = new TextLayout(this) { Text = value.ToString() })
+                        {
+                            ctx.SetColor(Colors.Black);
+                            ctx.DrawTextLayout(text, new Point(5, y));
+                        }
+                        context.DrawCell(Style, "Test Text",
+                            new Rectangle(100, y, Size.Width - 120, 20),
+                            new Rectangle(100, y, Size.Width - 120, 20),
+                            (CellDisplayState)value);
+                        y += 30;
                     }
-                    context.DrawCell(Style, "Test Text",
-                        new Rectangle(100, y, Size.Width - 120, 20),
-                        new Rectangle(100, y, Size.Width - 120, 20),
-                        (CellDisplayState)value);
-                    y += 30;
                 }
             }
         }

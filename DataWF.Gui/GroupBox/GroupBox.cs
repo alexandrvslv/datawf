@@ -155,11 +155,12 @@ namespace DataWF.Gui
         protected override void OnDraw(Context ctx, Rectangle dirtyRect)
         {
             base.OnDraw(ctx, dirtyRect);
-            GraphContext.Default.Context = ctx;
-
-            foreach (ILayoutItem item in map.GetItems())
-                if (item.Visible && item is GroupBoxItem)
-                    ((GroupBoxItem)item).Paint(GraphContext.Default);
+            using (var context = new GraphContext(ctx))
+            {
+                foreach (ILayoutItem item in map.GetItems())
+                    if (item.Visible && item is GroupBoxItem)
+                        ((GroupBoxItem)item).Paint(context);
+            }
         }
 
         public new void AddChild(Widget widget)

@@ -352,30 +352,30 @@ namespace DataWF.Gui
 
         protected override void OnDraw(Context ctx, Rectangle dirtyRect)
         {
-            var context = GraphContext.Default;
-            context.Context = ctx;
-
-            if (ItemOrientation == Orientation.Horizontal)
-                PageStyle.Angle = 0;
-            else
-                PageStyle.Angle = 90;
-
-            foreach (DockPage page in items)
-            {
-                if (page.Visible)
-                {
-                    page.Draw(context);
-                }
-            }
-            if (items.Count > 0)
-            {
-                if (orientation == Orientation.Horizontal)
-                    brect = new Rectangle(0, Bounds.Height - 4, Bounds.Width, 5);
+            using (var context = new GraphContext(ctx))
+            {                
+                if (ItemOrientation == Orientation.Horizontal)
+                    PageStyle.Angle = 0;
                 else
-                    brect = new Rectangle(Bounds.Width - 4, 0, 4, Bounds.Height);
-                if (Panel.PagesAlign == LayoutAlignType.Bottom)
-                    brect.Y = 0;
-                context.FillRectangle(style, brect, CellDisplayState.Selected);//st.BackBrush.GetBrush(rectb, 
+                    PageStyle.Angle = 90;
+
+                foreach (DockPage page in items)
+                {
+                    if (page.Visible)
+                    {
+                        page.Draw(context);
+                    }
+                }
+                if (items.Count > 0)
+                {
+                    if (orientation == Orientation.Horizontal)
+                        brect = new Rectangle(0, Bounds.Height - 4, Bounds.Width, 5);
+                    else
+                        brect = new Rectangle(Bounds.Width - 4, 0, 4, Bounds.Height);
+                    if (Panel.PagesAlign == LayoutAlignType.Bottom)
+                        brect.Y = 0;
+                    context.FillRectangle(style, brect, CellDisplayState.Selected);//st.BackBrush.GetBrush(rectb, 
+                }
             }
         }
 

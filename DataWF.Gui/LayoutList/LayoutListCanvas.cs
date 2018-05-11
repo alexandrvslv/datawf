@@ -54,8 +54,10 @@ namespace DataWF.Gui
             base.OnDraw(ctx, dirtyRect);
             if (List.ListSource == null)
                 return;
-            GraphContext.Default.Context = ctx;
-            List.OnDrawList(GraphContext.Default, dirtyRect);
+            using (var context = new GraphContext(ctx))
+            {
+                List.OnDrawList(context, dirtyRect);
+            }
         }
 
         protected override void OnReallocate()

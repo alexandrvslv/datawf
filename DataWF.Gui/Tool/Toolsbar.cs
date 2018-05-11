@@ -106,13 +106,14 @@ namespace DataWF.Gui
         protected override void OnDraw(Context ctx, Rectangle dirtyRect)
         {
             base.OnDraw(ctx, dirtyRect);
-            var context = GraphContext.Default;
-            context.Context = ctx;
-            foreach (ToolItem item in items.GetVisibleItems())
+            using (var context = new GraphContext(ctx))
             {
-                item.OnDraw(context);
+                foreach (ToolItem item in items.GetVisibleItems())
+                {
+                    item.OnDraw(context);
+                }
+                //context.DrawRectangle(GuiEnvir.Styles["Column"], dirtyRect);
             }
-            //context.DrawRectangle(GuiEnvir.Styles["Column"], dirtyRect);
         }
 
         public void Add(ToolItem item)
