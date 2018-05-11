@@ -49,6 +49,7 @@ namespace DataWF.Data
             builder.Server = connection.Host;
             builder.Database = connection.DataBase;
             builder.Port = connection.Port;
+			builder.SslMode = MySqlSslMode.None;
             return builder;
         }
 
