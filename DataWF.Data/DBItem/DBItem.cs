@@ -622,7 +622,7 @@ namespace DataWF.Data
         [Browsable(false)]
         public object PrimaryId
         {
-            get { return Table.PrimaryKey == null ? null : this[Table.PrimaryKey]; }
+            get { return Table.PrimaryKey == null ? null : GetValue(Table.PrimaryKey); }
             set { this[Table.PrimaryKey] = value; }
         }
 
