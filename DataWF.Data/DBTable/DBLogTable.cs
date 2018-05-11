@@ -90,7 +90,7 @@ namespace DataWF.Data
                 Schema = value.Schema.LogSchema ?? value.Schema;
                 var seqName = value.SequenceName + "_log";
                 Sequence = Schema.Sequences[seqName] ?? new DBSequence() { Name = seqName };
-
+                DisplayName = value.DisplayName + " Log";
                 if (!Columns.Contains("logid"))
                 {
                     Columns.Add(new DBColumn()

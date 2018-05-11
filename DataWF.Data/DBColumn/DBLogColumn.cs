@@ -56,7 +56,7 @@ namespace DataWF.Data
                     throw new Exception("Log table Initialized!");
                 baseColumn = value;
                 BaseName = value.Name;
-
+                DisplayName = value.DisplayName + " Log";
                 Name = GetName(value);
                 DataType = value.DataType;
                 DBDataType = value.DBDataType;
