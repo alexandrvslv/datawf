@@ -135,6 +135,18 @@ namespace DataWF.Gui
             set { colums = value; }
         }
 
+		public void SetGridMode(bool gridMode)
+        {
+			if (!gridMode)
+				return;
+            Columns.GridAuto = true;
+            Columns.GridOrientation = GridOrientation.Vertical;
+            Columns.Indent = 4;
+            Columns.Sorters.Add(new LayoutSort("Category", ListSortDirection.Ascending, true));
+			ValueColumn.FillWidth = false;
+			ValueColumn.Width = 220;
+        }
+
         public virtual void Dispose()
         {
             colums.Dispose();

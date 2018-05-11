@@ -25,8 +25,7 @@ namespace DataWF.TestGui
                     e.Query,
                     e.Rezult is Exception ? StatusType.Error : StatusType.Information));
             };
-            bar.Items.Clear();
-            bar.Items.AddRange(new[]{
+			bar.Items[0].InsertBefore(new[]{
                 new ToolItem(FilesClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Files" },
                 new ToolItem(ListEditorClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "List Editor" },
                 new ToolItem(ORMTestClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "ORM Test" },
