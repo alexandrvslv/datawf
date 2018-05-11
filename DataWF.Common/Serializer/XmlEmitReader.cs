@@ -181,7 +181,7 @@ namespace DataWF.Common
         public object ReadDictionary(object element, TypeSerializationInfo info)
         {
             var dictionary = (IDictionary)element;
-            var item = DictionaryItem.Create(info.Type);
+            var item = Serializer.CreateDictionaryItem(info.Type);
             var itemInfo = Serializer.GetTypeInfo(item.GetType());
             while (ReadBegin())
             {

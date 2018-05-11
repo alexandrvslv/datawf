@@ -7,7 +7,22 @@ namespace DataWF.Common
 {
     public class Serializer : IDisposable
     {
-        public static TypeSerializationInfo DictionaryItemInfo = new TypeSerializationInfo(typeof(DictionaryItem));
+        //public static TypeSerializationInfo DictionaryItemInfo = new TypeSerializationInfo(typeof(DictionaryItem));
+        public static IDictionaryItem CreateDictionaryItem(Type type)
+        {
+            Type[] genericArguments = new Type[] { typeof(object), typeof(object) };
+
+            while (type != null)
+            {
+                if (type.IsGenericType)
+                {
+                    genericArguments = type.GetGenericArguments();
+                    break;
+                }
+                type = type.BaseType;
+            }
+            return (IDictionaryItem)TypeHelper.CreateObject(typeof(DictionaryItem<,>).MakeGenericType(genericArguments));
+        }
 
         public Serializer()
         { }

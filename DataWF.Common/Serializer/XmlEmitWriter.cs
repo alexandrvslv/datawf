@@ -36,7 +36,7 @@ namespace DataWF.Common
         public void WriteDictionary(IDictionary dictionary, Type type)
         {
             //var dictionary = element as IEnumerable;
-            var item = DictionaryItem.Create(type);
+            var item = Serializer.CreateDictionaryItem(type);
             var itemInfo = Serializer.GetTypeInfo(item.GetType());
             foreach (var entry in (IEnumerable)dictionary)
             {

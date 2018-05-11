@@ -5,13 +5,6 @@ namespace DataWF.Common
 {
     internal class DictionaryItem : IDictionaryItem
     {
-        public static IDictionaryItem Create(Type type)
-        {
-            return !type.IsGenericType
-               ? new DictionaryItem()
-               : (IDictionaryItem)TypeHelper.CreateObject(typeof(DictionaryItem<,>).MakeGenericType(type.GetGenericArguments()));
-        }
-
         public DictionaryItem()
         { }
 
@@ -30,11 +23,7 @@ namespace DataWF.Common
             Fill((DictionaryEntry)value);
         }
 
-        public void Fill(DictionaryEntry value)
-        {
-            Key = value.Key;
-            Value = value.Value;
-        }
+        
 
         public void Reset()
         {

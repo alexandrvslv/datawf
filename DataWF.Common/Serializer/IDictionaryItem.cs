@@ -1,6 +1,6 @@
 ﻿namespace DataWF.Common
 {
-    internal interface IDictionaryItem
+    public interface IDictionaryItem
     {
         object Key { get; set; }
         object Value { get; set; }
