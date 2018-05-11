@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DataWF.Common;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,6 +8,45 @@ using Xwt;
 
 namespace DataWF.Gui
 {
+    public class CalendarList : LayoutList
+    {
+        private LayoutColumn numberColumn;
+
+        public CalendarList()
+        {
+            var style = GuiEnvironment.Theme["CellCenter"].Clone();
+            style.BackBrush.Color = style.BackBrush.ColorHover.WithIncreasedLight(-0.1);
+            GenerateColumns = false;
+            GenerateToString = false;
+            ListInfo = new LayoutListInfo(numberColumn = new LayoutColumn() { Name = "Number", Width = 50, Height = 50, Style = style })
+            {
+                Indent = 4,
+                StyleRow = GuiEnvironment.Theme["Node"],
+                GridCol = 7,
+                //ColumnsVisible = false,
+                HeaderVisible = false
+            };
+        }
+
+        protected override void CheckScrolling()
+        {
+            if (Parent != null)
+            {
+                numberColumn.Width = (ParentBounds.Width - 40) / 7D;
+                numberColumn.Height = (ParentBounds.Height - 40) / 7D;
+            }
+            base.CheckScrolling();
+        }
+
+        protected override void OnDrawColumn(LayoutListDrawArgs e)
+        {
+            var format = (DayOfWeek)e.GridIndex;
+            var textBound = new Rectangle(new Point(e.Bound.Left + 3, e.Bound.Top + (e.Bound.Height - 20) / 2D),
+                                 e.Bound.Size - new Size(6, 6));
+            e.Context.DrawCell(listInfo.StyleColumn, format.ToString(), e.Bound, textBound, CellDisplayState.Default);
+        }
+    }
+
     public class CalendarEditor : VPanel
     {
         private Month month;
@@ -18,36 +58,24 @@ namespace DataWF.Gui
         {
             month = new Month();
 
-            var style = GuiEnvironment.Theme["CellCenter"].Clone();
-            style.BackBrush.Color = style.BackBrush.ColorHover.WithIncreasedLight(-0.1);
             var bar = new Toolsbar(
                 lable = new ToolLabel()
                 {
-                    Font = style.Font.WithScaledSize(1.5).WithWeight(Xwt.Drawing.FontWeight.Bold)
+                    Font = Font.WithScaledSize(1.5).WithWeight(Xwt.Drawing.FontWeight.Bold)
                 },
                 new ToolSeparator { FillWidth = true },
-                new ToolItem((s, e) => Value = Value.AddMonths(-1)) { Name = "Prev Month", Glyph = Common.GlyphType.ChevronUp },
-                new ToolItem((s, e) => Value = Value.AddMonths(1)) { Name = "Next Month", Glyph = Common.GlyphType.ChevronDown }
+                new ToolItem((s, e) => Date = Date.AddMonths(-1)) { Name = "Prev Month", Glyph = Common.GlyphType.ChevronUp },
+                new ToolItem((s, e) => Date = Date.AddMonths(1)) { Name = "Next Month", Glyph = Common.GlyphType.ChevronDown }
                 );
 
-            list = new LayoutList
+            list = new CalendarList
             {
-                GenerateColumns = false,
-                GenerateToString = false,
-                ListInfo = new LayoutListInfo(new LayoutColumn() { Name = "Number", Width = 50, Height = 50, Style = style })
-                {
-                    Indent = 4,
-                    StyleRow = GuiEnvironment.Theme["Node"],
-                    GridCol = 7,
-                    ColumnsVisible = false,
-                    HeaderVisible = false
-                },
                 ListSource = month.Days
             };
             list.SelectionChanged += ListSelectionChanged;
             PackStart(bar, false, false);
             PackStart(list, true, true);
-            Value = DateTime.Today;
+            Date = DateTime.Today;
         }
 
         private void ListSelectionChanged(object sender, LayoutSelectionEventArgs e)
@@ -67,10 +95,10 @@ namespace DataWF.Gui
 
         private void OnSelectionChanged(EventArgs e)
         {
-            SelectionChanged?.Invoke(this, e);
+            ValueChanged?.Invoke(this, e);
         }
 
-        public DateTime Value
+        public DateTime Date
         {
             get { return value; }
             set
@@ -81,7 +109,7 @@ namespace DataWF.Gui
             }
         }
 
-        public event EventHandler SelectionChanged;
+        public event EventHandler ValueChanged;
     }
 
     public class Month
@@ -128,7 +156,7 @@ namespace DataWF.Gui
 
         public DayOfWeek DayOfWeek { get => Date.DayOfWeek; }
 
-        public string Number { get => Date.ToString("ddd d"); }
+        public string Number { get => Date.ToString("dd"); }
 
     }
 }
