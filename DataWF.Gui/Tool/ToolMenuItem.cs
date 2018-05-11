@@ -23,7 +23,7 @@ namespace DataWF.Gui
         {
             MenuAlign = LayoutAlignType.Right;
             DisplayStyle = ToolItemDisplayStyle.ImageAndText;
-            GlyphWidget.Glyph = GlyphType.CaretRight;
+            CarretGlyph = GlyphType.CaretRight;
             indent = 0;
         }
 

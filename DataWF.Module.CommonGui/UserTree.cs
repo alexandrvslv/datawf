@@ -10,6 +10,7 @@ using Xwt.Drawing;
 using DataWF.Module.Common;
 using System.Text;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace DataWF.Module.CommonGui
 {
@@ -50,6 +51,22 @@ namespace DataWF.Module.CommonGui
         {
             get { return (SelectedNode as TableItemNode)?.Item as DBItem; }
             set { SelectedNode = value == null ? null : Find(value); }
+        }
+
+        public IEnumerable<DBItem> SelectedDBItems
+        {
+            get
+            {
+                foreach (var item in Selection.GetItems<TableItemNode>())
+                {
+                    if (item.Item is DBItem)
+                        yield return (DBItem)item.Item;
+                }
+            }
+            set
+            {
+                Selection.AddRange(value.Select(p => Find(p)));
+            }
         }
 
         public UserTreeKeys UserKeys
@@ -250,6 +267,7 @@ namespace DataWF.Module.CommonGui
                     node = InitItem((IDBTableContent)view);
                     node.Glyph = glyph;
                     node.GlyphColor = glyphColor;
+                    node.Localize();
                 }
                 IEnumerable enumer = view;
                 if (view.Table.GroupKey != null)

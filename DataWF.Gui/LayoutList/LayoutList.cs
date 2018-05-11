@@ -1910,8 +1910,17 @@ namespace DataWF.Gui
                 if (listInfo != null)
                 {
                     listInfo.BoundChanged += handleColumnsBound;
+                    if (ListType != null)
+                    {
+                        RefreshInfo();
+                    }
                 }
             }
+        }
+
+        public LayoutListCache GetLayoutListCache()
+        {
+            return GuiEnvironment.ListCache;
         }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -1925,17 +1934,20 @@ namespace DataWF.Gui
                 listItemType = value;
                 if (listItemType == null)
                     return;
-                if (GenerateColumns)
+
+                var key = GetCacheKey();
+                var cache = GetLayoutListCache();
+                LayoutListInfo temp = cache.Lists[key];
+                if (temp == null)
                 {
-                    string key = GetCacheKey();
-                    LayoutListInfo _columns = GuiEnvironment.ListsInfo[key];
-                    if (_columns == null)
-                    {
-                        GuiEnvironment.ListsInfo[key] = _columns = GenerateListInfo();
-                    }
-                    ListInfo = _columns;
+                    if (GenerateColumns)
+                        temp = GenerateListInfo();
+                    else
+                        temp = listInfo;
+                    cache.Lists[key] = temp;
                 }
-                RefreshInfo();
+                ListInfo = temp;
+
                 //Selection.Clear();
             }
         }
@@ -2025,8 +2037,8 @@ namespace DataWF.Gui
             get { return fieldInfo; }
             set
             {
-                if (fieldInfo == value)
-                    return;
+                //if (fieldInfo == value)
+                //    return;
                 fieldInfo = value;
                 ListInfo = fieldInfo?.Columns;
                 ListSource = fieldInfo?.Nodes.DefaultView;
@@ -2046,8 +2058,9 @@ namespace DataWF.Gui
                 {
                     if (GenerateFields)
                     {
-                        string key = GetCacheKey();
-                        temp = GuiEnvironment.FiledsInfo[key];
+                        var key = GetCacheKey();
+                        var cache = GetLayoutListCache();
+                        temp = cache.Fields[key];
                         if (temp == null)
                         {
                             temp = new LayoutFieldInfo();
@@ -2055,13 +2068,13 @@ namespace DataWF.Gui
                             {
                                 temp.Columns.GridAuto = true;
                                 temp.Columns.GridOrientation = GridOrientation.Vertical;
-                                temp.Columns.Indent = 6;
+                                temp.Columns.Indent = 4;
                                 temp.Columns.Sorters.Add(new LayoutSort("Category", ListSortDirection.Ascending, true));
                                 var val = temp.Columns.Columns["Value"] as LayoutColumn;
                                 val.FillWidth = false;
                                 val.Width = 220;
                             }
-                            GuiEnvironment.FiledsInfo[key] = temp;
+                            cache.Fields[key] = temp;
                         }
                     }
                     else if (fieldInfo == null)
@@ -2495,13 +2508,13 @@ namespace DataWF.Gui
 
         public void ResetFields()
         {
-            GuiEnvironment.FiledsInfo.Remove(fieldInfo);
+            GetLayoutListCache().Fields.Remove(fieldInfo);
             FieldType = fieldType;
         }
 
         public virtual void ResetColumns()
         {
-            GuiEnvironment.ListsInfo.Remove(listInfo);
+            GetLayoutListCache().Lists.Remove(listInfo);
             Type t = listItemType;
             listItemType = null;
             ListType = t;
@@ -2694,6 +2707,7 @@ namespace DataWF.Gui
         {
             listInfo.GetBound(column, null, null);
             var bound = column.Bound;
+            bound.X += listInfo.Indent;
             bound.X -= bounds.Area.X;
             return bound;
         }
@@ -4119,7 +4133,21 @@ namespace DataWF.Gui
                     OnDrawRows(cacheDraw, tdIndex.First, tdIndex.Last);
 
                 if (listInfo.ColumnsVisible && bounds.VisibleColumns?.Count > 0)
+                {
                     OnDrawColumns(cacheDraw);
+                    if (gridCols > 1)
+                    {
+                        context.Context.Save();
+
+                        for (int i = 1; i < gridCols; i++)
+                        {
+                            cacheDraw.GridIndex = i;
+                            context.Context.Translate(bounds.Columns.Width, 0);
+                            OnDrawColumns(cacheDraw);
+                        }
+                        context.Context.Restore();
+                    }
+                }
 
                 if (listInfo.HeaderVisible && listInfo.ColumnsVisible)
                 {
@@ -4851,8 +4879,8 @@ namespace DataWF.Gui
 
         public override void Deserialize(ISerializeReader reader)
         {
-            GenerateColumns = false;
-            GenerateFields = false;
+            // GenerateColumns = false;
+            //  GenerateFields = false;
             if (Mode == LayoutListMode.Fields)
             {
                 reader.Read(FieldInfo);

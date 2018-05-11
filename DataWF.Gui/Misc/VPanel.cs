@@ -37,10 +37,29 @@ namespace DataWF.Gui
         {
             foreach (var widget in Children)
             {
-                if (widget is ILocalizable)
+                Localize(widget);
+            }
+        }
+
+        public void Localize(Widget widget)
+        {
+            if (widget == null)
+                return;
+            if (widget is ILocalizable)
+            {
+                ((ILocalizable)widget).Localize();
+            }
+            else if (widget is Box)
+            {
+                foreach (var swidget in ((Box)widget).Children)
                 {
-                    ((ILocalizable)widget).Localize();
+                    Localize(swidget);
                 }
+            }
+            else if (widget is Paned)
+            {
+                Localize(((Paned)widget).Panel1.Content);
+                Localize(((Paned)widget).Panel2.Content);
             }
         }
 
@@ -56,10 +75,29 @@ namespace DataWF.Gui
         {
             foreach (var child in Children)
             {
-                if (child is ISerializableElement)
+                Serialize(child, writer);
+            }
+        }
+
+        public virtual void Serialize(Widget widget, ISerializeWriter writer)
+        {
+            if (widget == null)
+                return;
+            if (widget is ISerializableElement)
+            {
+                writer.Write(widget, widget.Name, true);
+            }
+            else if (widget is Box)
+            {
+                foreach (var swidget in ((Box)widget).Children)
                 {
-                    writer.Write(child, child.Name, true);
+                    Serialize(swidget, writer);
                 }
+            }
+            else if (widget is Paned)
+            {
+                Serialize(((Paned)widget).Panel1.Content, writer);
+                Serialize(((Paned)widget).Panel2.Content, writer);
             }
         }
 
@@ -76,15 +114,41 @@ namespace DataWF.Gui
             while (reader.ReadBegin())
             {
                 var type = reader.ReadType();
-                foreach (var child in Children)
+                var widget = FindWidget(this, reader.CurrentName, type);
+                if (widget != null)
                 {
-                    if (child.Name == reader.CurrentName && type == child.GetType())
-                    {
-                        ((ISerializableElement)child).Deserialize(reader);
-                        break;
-                    }
+                    ((ISerializableElement)widget).Deserialize(reader);
+                    break;
                 }
             }
+        }
+
+        public static Widget FindWidget(Widget widget, string name, Type type)
+        {
+            if (widget == null)
+                return null;
+            if (widget.Name == name && widget.GetType() == type)
+                return widget;
+            else if (widget is Box)
+            {
+                foreach (var swidget in ((Box)widget).Children)
+                {
+                    var result = FindWidget(swidget, name, type);
+                    if (result != null)
+                        return result;
+                }
+
+            }
+            else if (widget is Paned)
+            {
+                var result = FindWidget(((Paned)widget).Panel1.Content, name, type);
+                if (result != null)
+                    return result;
+                result = FindWidget(((Paned)widget).Panel2.Content, name, type);
+                if (result != null)
+                    return result;
+            }
+            return null;
         }
     }
 

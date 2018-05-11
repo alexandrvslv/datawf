@@ -21,5 +21,7 @@ namespace DataWF.Gui
         public CellStyle Style;
         public LayoutGroup Group;
         public int DisplayIndex;
+
+        public int GridIndex;
     }
 }

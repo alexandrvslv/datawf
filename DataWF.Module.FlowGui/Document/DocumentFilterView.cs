@@ -121,6 +121,8 @@ namespace DataWF.Module.FlowGui
                 Tag = new DocumentFilter() { }
             };
             GuiService.Localize(nodeSearch, "DocumentWorker", nodeSearch.Name);
+
+            Name = nameof(DocumentFilterView);
         }
         public DocumentFilter Filter
         {

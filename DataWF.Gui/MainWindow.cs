@@ -313,8 +313,7 @@ namespace DataWF.Gui
 
         protected void ShowControl(Widget widget)
         {
-            if (widget is IDockContent)
-                dock.Put(widget);
+            dock.Put(widget);
         }
 
         protected void MenuViewItemClick(object sender, EventArgs e)

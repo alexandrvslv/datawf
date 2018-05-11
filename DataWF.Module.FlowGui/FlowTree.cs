@@ -10,6 +10,7 @@ using Xwt.Drawing;
 using DataWF.Module.Flow;
 using DataWF.Module.Common;
 using DataWF.Module.CommonGui;
+using System.Collections.Generic;
 
 namespace DataWF.Module.FlowGui
 {
@@ -76,6 +77,7 @@ namespace DataWF.Module.FlowGui
         }
 
         public object DataFilter { get; internal set; }
+        
 
         private void RefreshData()
         {

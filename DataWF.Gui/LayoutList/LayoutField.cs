@@ -59,7 +59,7 @@ namespace DataWF.Gui
             }
         }
 
-        [Browsable(false)]
+        [Browsable(false), DefaultValue("Field")]
         public string StyleName { get; set; } = "Field";
 
         [XmlIgnore]
@@ -180,7 +180,7 @@ namespace DataWF.Gui
                 groupName = groupName,
                 categoryName = categoryName,
                 name = name,
-                invoker = invoker,
+                //invoker = ,
                 expand = expand
             };
         }

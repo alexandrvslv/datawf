@@ -58,12 +58,12 @@ namespace DataWF.Gui
         {
             handleGetEditor = ListOnGetCellEditor;
 
-            toolStatusArchive = new ToolMenuItem(ToolStatusItemClicked) { Name = "Archive", Tag = DBStatus.Archive, Glyph = GlyphType.FlagCheckered };
-            toolStatusEdit = new ToolMenuItem(ToolStatusItemClicked) { Name = "Edit", Tag = DBStatus.Edit, ForeColor = Colors.DarkOrange, Glyph = GlyphType.Flag };
-            toolStatusError = new ToolMenuItem(ToolStatusItemClicked) { Name = "Error", Tag = DBStatus.Error, ForeColor = Colors.DarkRed, Glyph = GlyphType.Flag };
-            toolStatusDelete = new ToolMenuItem(ToolStatusItemClicked) { Name = "Delete", Tag = DBStatus.Delete, ForeColor = Colors.Purple, Sensitive = false, Glyph = GlyphType.Flag };
-            toolStatusActual = new ToolMenuItem(ToolStatusItemClicked) { Name = "Actual", Tag = DBStatus.Actual, ForeColor = Colors.DarkGreen, Sensitive = false, Glyph = GlyphType.Flag };
-            toolStatusNew = new ToolMenuItem(ToolStatusItemClicked) { Name = "New", Tag = DBStatus.New, ForeColor = Colors.DarkBlue, Sensitive = false, Glyph = GlyphType.Flag };
+            toolStatusArchive = new ToolMenuItem() { Name = "Archive", Tag = DBStatus.Archive, Glyph = GlyphType.FlagCheckered };
+            toolStatusEdit = new ToolMenuItem() { Name = "Edit", Tag = DBStatus.Edit, ForeColor = Colors.DarkOrange, Glyph = GlyphType.Flag };
+            toolStatusError = new ToolMenuItem() { Name = "Error", Tag = DBStatus.Error, ForeColor = Colors.DarkRed, Glyph = GlyphType.Flag };
+            toolStatusDelete = new ToolMenuItem() { Name = "Delete", Tag = DBStatus.Delete, ForeColor = Colors.Purple, Sensitive = false, Glyph = GlyphType.Flag };
+            toolStatusActual = new ToolMenuItem() { Name = "Actual", Tag = DBStatus.Actual, ForeColor = Colors.DarkGreen, Sensitive = false, Glyph = GlyphType.Flag };
+            toolStatusNew = new ToolMenuItem() { Name = "New", Tag = DBStatus.New, ForeColor = Colors.DarkBlue, Sensitive = false, Glyph = GlyphType.Flag };
 
             toolStatus = new ToolSplit() { Name = "DBStatus", Glyph = GlyphType.Flag };
             toolStatus.DropDownItems.AddRange(new[]{toolStatusNew,
@@ -73,6 +73,7 @@ namespace DataWF.Gui
                 toolStatusError,
                 toolStatusDelete});
             toolStatus.ButtonClick += OnToolStatusClick;
+            toolStatus.ItemClick += ToolStatusItemClicked;
 
             toolPosition = new ToolLabel { Name = "Position", Text = "_ / _" };
 
@@ -116,10 +117,9 @@ namespace DataWF.Gui
             box.PackStart(bar, false, false);
 
             container = new VPaned() { Name = "container" };
-            container.Panel2.Content = access;
-            container.Panel2.Shrink = true;
+            container.Panel1.Content = box;
 
-            PackStart(box, false, false);
+            PackStart(container, true, true);
             List = list;
 
             fields = (LayoutList)EmitInvoker.CreateObject(list.GetType());
@@ -251,7 +251,7 @@ namespace DataWF.Gui
                     toolSave.Sensitive = true;
                 }
                 toolAccess.Visible = value is IAccessable;
-                ViewAccess(toolAccess.Checked);
+                AccessVisible = toolAccess.Checked;
 
             }
         }
@@ -319,7 +319,7 @@ namespace DataWF.Gui
                 list.ColumnFilterChanged += OnFilterChanged;
                 list.ColumnFilterChanging += OnFilterChanging;
                 list.KeyPressed += OnListKeyDown;
-                PackStart(list, true, true);
+                box.PackStart(list, true, true);
             }
         }
 
@@ -341,6 +341,7 @@ namespace DataWF.Gui
                 {
                     list.EditState = EditListState.Edit;
                 }
+                access.Readonly = value;
                 list.ReadOnly = value;
                 toolCut.Sensitive = !value;
                 toolSave.Sensitive = !value;
@@ -385,6 +386,7 @@ namespace DataWF.Gui
         protected virtual void OnToolStatusClick(object sender, EventArgs e)
         {
             StatusClick?.Invoke(this, new ListEditorEventArgs() { Item = DataSource });
+
         }
 
         public event EventHandler Saving;
@@ -442,27 +444,26 @@ namespace DataWF.Gui
         private void ToolAccessClick(object sender, EventArgs e)
         {
             //toolAccess.Checked = !toolAccess.Checked;
-            ViewAccess(toolAccess.Checked);
+            AccessVisible = toolAccess.Checked;
         }
 
-        private void ViewAccess(bool flag)
+        public bool AccessVisible
         {
-            if (DataSource is IAccessable && ((IAccessable)DataSource).Access != null && flag)
+            get { return toolAccess.Checked; }
+            set
             {
-                access.Access = ((IAccessable)DataSource).Access;
-
-                if (List.Parent == this)
+                toolAccess.Checked = value;
+                if (DataSource is IAccessable && ((IAccessable)DataSource).Access != null && value)
                 {
-                    Remove(List);
-                    container.Panel1.Content = list;
-                    PackStart(container, true, true);
+                    access.Access = ((IAccessable)DataSource).Access;
+                    container.Panel2.Content = access;
                 }
-            }
-            else if (container.Parent == this)
-            {
-                Remove(container);
-                container.Panel1.Content = null;
-                PackStart(list, true, true);
+                else
+                {
+                    container.Panel2.Content = null;
+                }
+
+                QueueForReallocate();
             }
         }
 
@@ -636,14 +637,20 @@ namespace DataWF.Gui
             ShowProperty();
         }
 
-        private void ToolStatusItemClicked(object sender, EventArgs e)
+        private void ToolStatusItemClicked(object sender, ToolItemEventArgs e)
         {
-            var item = sender as ToolMenuItem;
             IStatus status = dataSource as IStatus;
             if (status != null)
             {
-                status.Status = (DBStatus)item.Tag;
+                status.Status = (DBStatus)e.Item.Tag;
                 CheckStatus();
+            }
+            else if(list.Mode != LayoutListMode.Fields)
+            {
+                foreach (var item in list.Selection.GetItems<IStatus>())
+                {
+                    item.Status = (DBStatus)e.Item.Tag;
+                }
             }
         }
 

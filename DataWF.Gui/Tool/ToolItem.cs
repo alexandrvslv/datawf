@@ -361,7 +361,7 @@ namespace DataWF.Gui
             }
         }
 
-        protected internal void CheckSize(bool queue = true)
+        protected virtual internal void CheckSize(bool queue = true)
         {
             imageBound.Location = Point.Zero;
             if (DisplayStyle.HasFlag(ToolItemDisplayStyle.Image))

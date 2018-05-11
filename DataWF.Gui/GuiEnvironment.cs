@@ -8,7 +8,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Gui
 {
-    public class GuiEnvironment : IDisposable
+    public partial class GuiEnvironment : IDisposable
     {
         private static GuiEnvironment instance = new GuiEnvironment();
         public static Dictionary<Type, Func<ILayoutCell, ILayoutCellEditor>> CellEditorFabric = new Dictionary<Type, Func<ILayoutCell, ILayoutCellEditor>>();
@@ -211,14 +211,9 @@ namespace DataWF.Gui
             get { return instance; }
         }
 
-        public static LayoutListInfoCache ListsInfo
+        public static LayoutListCache ListCache
         {
-            get { return instance.Lists; }
-        }
-
-        public static LayoutFieldInfoCache FiledsInfo
-        {
-            get { return instance.Fields; }
+            get { return instance.Cache; }
         }
 
         public static ProjectHandleList ProjectsInfo
@@ -243,9 +238,7 @@ namespace DataWF.Gui
 
         private GuiTheme cacheTheme;
 
-        public LayoutFieldInfoCache Fields { get; set; } = new LayoutFieldInfoCache();
-
-        public LayoutListInfoCache Lists { get; set; } = new LayoutListInfoCache();
+        public LayoutListCache Cache { get; set; } = new LayoutListCache();
 
         public ProjectHandleList Projects { get; set; } = new ProjectHandleList();
 

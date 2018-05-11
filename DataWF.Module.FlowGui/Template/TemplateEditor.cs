@@ -14,35 +14,35 @@ namespace DataWF.Module.FlowGui
     public class TemplateEditor : VPanel
     {
         private Template template;
-        private LayoutList attribures;
+        private ListEditor attribures;
         private TableEditor datas;
         //private TableEditor parameters;
 
         public TemplateEditor()
         {
-            var groupBox = new DockBox(
-                new DockItem
+            var groupBox = new GroupBox(
+                new GroupBoxItem
                 {
                     Name = "Attributes",
                     Col = 0,
                     Row = 0,
                     FillWidth = true,
                     FillHeight = true,
-                    Panel = new DockPanel(attribures = new LayoutList { EditMode = EditModes.ByClick})
+                    Widget = attribures = new ListEditor { AccessVisible = true }
                 },
-                new DockItem
+                new GroupBoxItem
                 {
                     Name = "Datas",
                     Col = 1,
                     Row = 0,
                     FillWidth = true,
                     FillHeight = true,
-                    Panel = new DockPanel(datas = new TableEditor
+                    Widget = datas = new TableEditor
                     {
                         TableView = new DBTableView<TemplateData>((QParam)null, DBViewKeys.Empty),
                         OwnerColumn = TemplateData.DBTable.ParseProperty(nameof(TemplateData.TemplateId)),
                         OpenMode = TableEditorMode.Referencing
-                    })
+                    }
                 })
             //new DockItem
             //{
@@ -70,10 +70,12 @@ namespace DataWF.Module.FlowGui
                 if (template == value)
                     return;
                 template = value;
-                attribures.FieldSource = value;
+                attribures.DataSource = value;
                 datas.OwnerRow = value;
                 //parameters.OwnerRow = value;
             }
         }
+
+        public ListEditor Attributes { get { return attribures; } }
     }
 }

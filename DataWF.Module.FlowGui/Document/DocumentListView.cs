@@ -465,7 +465,10 @@ namespace DataWF.Module.FlowGui
             var template = FilterTemplate;
             if (template != null)
             {
-                ViewDocuments(CreateDocuments(template, Filter.Referencing));
+                foreach (Template item in FilterView.Templates.SelectedDBItems)
+                {
+                    ViewDocuments(CreateDocuments(item, Filter.Referencing));
+                }
             }
         }
 

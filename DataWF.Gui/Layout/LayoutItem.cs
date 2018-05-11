@@ -11,8 +11,8 @@ namespace DataWF.Gui
     public class LayoutItem<T> : NamedList<T>, ILayoutItem, IComparable where T : LayoutItem<T>, new()
     {
         private static readonly double min = 5;
-        protected double height = 22D;
-        protected double width = 120D;
+        protected internal double height = 22D;
+        protected internal double width = 120D;
         protected int row;
         protected int col;
         protected bool visible = true;

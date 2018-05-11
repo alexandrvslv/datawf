@@ -8,7 +8,7 @@ namespace DataWF.Gui
     {
         public ToolSplit() : base()
         {
-            GlyphWidget.Click += OnClickSplit;
+            CarretClick += OnClickSplit;
         }
 
         public ToolSplit(EventHandler click) : this()
@@ -20,7 +20,7 @@ namespace DataWF.Gui
 
         protected override void OnClick(EventArgs e)
         {
-            if (GlyphWidget.State == CellDisplayState.Default)
+            if (CarretState == CellDisplayState.Default)
                 ButtonClick?.Invoke(this, e);
         }
 

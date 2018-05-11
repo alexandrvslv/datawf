@@ -12,12 +12,10 @@ namespace DataWF.Gui
 
         public ToolDropDown() : base()
         {
-            Initialize();
         }
 
         public ToolDropDown(EventHandler click) : base(click)
         {
-            Initialize();
         }
 
         public ToolDropDown(params ToolItem[] items) : this()
@@ -25,16 +23,22 @@ namespace DataWF.Gui
             DropDownItems.AddRange(items);
         }
 
-        private void Initialize()
+        public Rectangle CarretBound
         {
-            GlyphWidget = new GlyphWidget { Visible = false, MinWidth = 16, MinHeight = 16, Glyph = GlyphType.CaretDown };
+            get { return new Rectangle(new Point(Bound.Right - CarretSize.Width, Bound.Top + (Bound.Height - CarretSize.Height) / 2D), CarretSize); }
         }
 
-        public GlyphWidget GlyphWidget
-        {
-            get { return (GlyphWidget)content; }
-            set { Content = value;}
-        }
+        public CellDisplayState CarretState { get; set; } = CellDisplayState.Default;
+
+        public CellStyle CarretStyle { get; set; } = GuiEnvironment.Theme["Window"];
+
+        public Size CarretSize { get; set; } = new Size(16, 16);
+
+        public bool CarretVisible { get; set; } = false;
+
+        public GlyphType CarretGlyph { get; set; } = GlyphType.CaretDown;
+
+        public event EventHandler CarretClick;
 
         public event EventHandler DropDownOpened;
 
@@ -47,7 +51,7 @@ namespace DataWF.Gui
                 {
                     menu = value;
                     menu.OwnerItem = this;
-                    GlyphWidget.Visible = true;
+                    CarretVisible = true;
                 }
             }
         }
@@ -87,6 +91,47 @@ namespace DataWF.Gui
             if (menu != null)
             {
                 Bar.CurrentMenubar = menu.Visible ? null : menu;
+            }
+        }
+
+        protected override internal void OnMouseEntered(EventArgs args)
+        {
+            base.OnMouseEntered(args);
+        }
+
+        protected override internal void OnMouseExited(EventArgs args)
+        {
+            base.OnMouseExited(args);
+            CarretState = CellDisplayState.Default;
+        }
+
+        protected override internal void OnButtonPressed(ButtonEventArgs args)
+        {
+            base.OnButtonPressed(args);
+        }
+
+        protected override internal void OnButtonReleased(ButtonEventArgs args)
+        {
+            base.OnButtonReleased(args);
+            if (CarretBound.Contains(args.Position))
+            {
+                CarretClick?.Invoke(this, args);
+            }
+        }
+
+        protected internal override void CheckSize(bool queue = true)
+        {
+            base.CheckSize(queue);
+            width += CarretSize.Width;
+        }
+
+        public override void OnDraw(GraphContext context)
+        {
+            base.OnDraw(context);
+            if (CarretVisible)
+            {
+                var carret = CarretBound;
+                context.DrawCell(CarretStyle, CarretGlyph, carret, carret, CellDisplayState.Default);
             }
         }
 

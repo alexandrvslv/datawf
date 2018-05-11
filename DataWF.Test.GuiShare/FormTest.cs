@@ -32,7 +32,7 @@ namespace DataWF.TestGui
                 new ToolItem(ORMTestClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "ORM Test" },
                 new ToolItem(TestInvokerClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Test Invoker" },
                 new ToolItem(LocalizeEditorClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Localize Editor" },
-                //new ToolItem(SyntaxTextClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Syntax Text" },
+                new ToolItem(SyntaxTextClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Calendar" },
                 new ToolItem(DiffTestClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Diff Test" },
                 new ToolItem(StyleEditorClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "StyleEditor" },
                 new ToolItem(MonoTextEditorClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "MonoTextEditor" },
@@ -102,9 +102,9 @@ namespace DataWF.TestGui
         {
             CalendarEditor calendare = new CalendarEditor();
             calendare.Text = "Calendar";
-            calendare.Value = DateTime.Now;
+            calendare.Date = DateTime.Now;
             dock.Put(calendare);
-
+            return;
             SyntaxText st = new SyntaxText();
             st.Text = @"using System;
 using System.Collections.Generic;

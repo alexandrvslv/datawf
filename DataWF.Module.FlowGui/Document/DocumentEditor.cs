@@ -496,7 +496,10 @@ namespace DataWF.Module.FlowGui
 
                     LoadPage(panel.CurrentPage);
                 }
-
+                if (documentType != null)
+                {
+                    XmlDeserialize(documentType.Name.ToString());
+                }
                 toolReturn.Sensitive = from;
                 toolSend.Sensitive = state != DocumentEditorState.Create;
                 toolNext.Sensitive = state == DocumentEditorState.Edit;
@@ -576,11 +579,6 @@ namespace DataWF.Module.FlowGui
                 }
                 documentType = value;
                 GetPages(documentType).ForEach(p => p.Tag = value);
-
-                if (documentType != null)
-                {
-                    XmlDeserialize(documentType.Name.ToString());
-                }
             }
         }
 
