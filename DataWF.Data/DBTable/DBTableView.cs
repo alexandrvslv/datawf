@@ -219,6 +219,7 @@ namespace DataWF.Data
                 defaultParam = value;
                 if (defaultParam != null)
                 {
+                    defaultParam.IsDefault = true;
                     Query.Parameters.Insert(0, defaultParam);
                 }
                 UpdateFilter();
@@ -506,13 +507,9 @@ namespace DataWF.Data
         public bool ClearFilter()
         {
             var flag = false;
-            var statusParam = query.GetByColumn(Table.StatusKey);
-            var typeParam = query.GetByColumn(Table.ItemTypeKey);
             foreach (var parameter in query.Parameters.ToList())
             {
-                if (parameter != DefaultParam
-                    && parameter != statusParam
-                    && parameter != typeParam)
+                if (!parameter.IsDefault)
                 {
                     flag = true;
                     query.Parameters.Remove(parameter);
@@ -523,10 +520,8 @@ namespace DataWF.Data
 
         public void ResetFilter()
         {
-            if (ClearFilter())
-            {
-                UpdateFilter();
-            }
+            ClearFilter();
+            UpdateFilter();
         }
 
         public override int AddInternal(T item)

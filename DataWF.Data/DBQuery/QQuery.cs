@@ -123,6 +123,7 @@ namespace DataWF.Data
                     if (param == null)
                     {
                         param = Table.GetTypeParam(type);
+                        param.IsDefault = true;
                         if (param != null)
                         {
                             parameters.Insert(0, param);
@@ -156,6 +157,7 @@ namespace DataWF.Data
                     if (param == null)
                     {
                         param = Table.GetStatusParam(status);
+                        param.IsDefault = true;
                         if (param != null)
                         {
                             parameters.Insert(0, param);

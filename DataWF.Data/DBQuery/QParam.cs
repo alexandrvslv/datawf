@@ -365,6 +365,8 @@ namespace DataWF.Data
         }
 
         public IQItemList Owner => throw new NotImplementedException();
+
+        public bool IsDefault { get; set; }
     }
 
 }
