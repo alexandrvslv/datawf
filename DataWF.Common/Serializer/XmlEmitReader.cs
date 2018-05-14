@@ -3,6 +3,8 @@ using System.Xml;
 using System.Collections;
 using System.IO;
 using System.Diagnostics;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace DataWF.Common
 {
@@ -51,12 +53,20 @@ namespace DataWF.Common
 
         public void ReadAttributes(object element, TypeSerializationInfo info)
         {
+            //foreach (var attribute in info.Attributes)
+            //{
+            //    if (attribute.DefaultSpecified && attribute.Default != null)
+            //    {
+            //        attribute.Invoker.Set(element, attribute.Default);
+            //    }
+            //}
             if (Reader.HasAttributes)
             {
                 while (Reader.MoveToNextAttribute())
                 {
                     ReadCurrentAttribute(element, info);
                 }
+                
                 Reader.MoveToElement();
             }
         }
@@ -68,7 +78,7 @@ namespace DataWF.Common
 
         public void ReadCurrentAttribute(object element, TypeSerializationInfo info)
         {
-            var member = info.GetProperty(Reader.Name);
+            var member = info.GetAttribute(Reader.Name);
             if (member != null)
             {
                 member.Invoker.Set(element, Helper.TextParse(Reader.Value, member.PropertyType));

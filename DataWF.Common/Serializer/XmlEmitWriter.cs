@@ -93,19 +93,23 @@ namespace DataWF.Common
                     }
                 }
 
+                foreach (var attribute in info.Attributes)
+                {
+                    var value = attribute.Invoker.Get(element);
+                    if (value == null || attribute.CheckDefault(value))
+                        continue;
+                    WriteAttribute(attribute.PropertyName, value);
+                }
+
                 foreach (var property in info.Properties)
                 {
                     var value = property.Invoker.Get(element);
-                    if (value == null || property.CheckDefault(value))
+                    if (value == null)
                         continue;
 
                     var mtype = property.PropertyType;
 
-                    if (property.IsAttribute)
-                    {
-                        WriteAttribute(property.PropertyName, value);
-                    }
-                    else if (property.IsText)
+                    if (property.IsText)
                     {
                         Writer.WriteElementString(property.PropertyName, Helper.TextBinaryFormat(value));
                     }

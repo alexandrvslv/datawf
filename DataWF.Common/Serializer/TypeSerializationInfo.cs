@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 
 namespace DataWF.Common
 {
@@ -38,25 +39,35 @@ namespace DataWF.Common
 
             Properties = new SelectableList<PropertySerializationInfo>();
             Properties.Indexes.Add(propertyNameInvoker);
-            foreach (var property in TypeHelper.GetTypeProperties(Type))
-            {
-                if (TypeHelper.IsNonSerialize(property))
-                    continue;
-                Properties.Add(new PropertySerializationInfo(property));
-            }
 
-            Properties.Sort(delegate (PropertySerializationInfo x, PropertySerializationInfo y)
+            Attributes = new SelectableList<PropertySerializationInfo>();
+            Attributes.Indexes.Add(propertyNameInvoker);
+
+            foreach (var btype in TypeHelper.GetTypeHierarchi(type))
             {
-                if (x.IsAttribute && !x.IsText)
+                if (btype == typeof(object))
+                    continue;
+                foreach (var property in btype.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly))
                 {
-                    if (y.IsAttribute && !y.IsText)
-                        return string.Compare(x.PropertyName, y.PropertyName, StringComparison.Ordinal);
-                    return -1;
+                    if (TypeHelper.IsNonSerialize(property))
+                        continue;
+                    var info = new PropertySerializationInfo(property);
+                    if (info.IsAttribute && !info.IsText)
+                    {
+                        var exist = GetAttribute(info.PropertyName);
+                        if (exist != null)
+                            Attributes.Remove(exist);
+                        Attributes.Add(info);
+                    }
+                    else
+                    {
+                        var exist = GetProperty(info.PropertyName);
+                        if (exist != null)
+                            Properties.Remove(exist);
+                        Properties.Add(info);
+                    }
                 }
-                if (y.IsAttribute && !y.IsText)
-                    return 1;
-                return string.Compare(x.PropertyName, y.PropertyName, StringComparison.Ordinal);
-            });
+            }
         }
 
         public Type Type { get; private set; }
@@ -83,8 +94,14 @@ namespace DataWF.Common
 
         public bool IsDictionary { get; private set; }
 
+        public SelectableList<PropertySerializationInfo> Attributes { get; private set; }
+
         public SelectableList<PropertySerializationInfo> Properties { get; private set; }
-        
+
+        internal PropertySerializationInfo GetAttribute(string name)
+        {
+            return Attributes.SelectOne(nameof(PropertySerializationInfo.PropertyName), name);
+        }
 
         internal PropertySerializationInfo GetProperty(string name)
         {

@@ -159,12 +159,10 @@ namespace DataWF.Common
         public static List<Type> GetTypeHierarchi(Type type)
         {
             var buffer = new List<Type>();
-            buffer.Add(type);
-            while (type.BaseType != null)
+            while (type != null)
             {
+                buffer.Insert(0, type);
                 type = type.BaseType;
-                if (type != null)
-                    buffer.Insert(0, type);
             }
             return buffer;
         }
@@ -271,7 +269,7 @@ namespace DataWF.Common
             if (!cacheDefault.TryGetValue(info, out object defaultValue))
             {
                 var defaultAttribute = info.GetCustomAttribute<DefaultValueAttribute>(false);
-                cacheDefault[info] = defaultValue = defaultAttribute?.Value ?? GetDefault(GetMemberType(info));
+                cacheDefault[info] = defaultValue = defaultAttribute?.Value;// ?? GetDefault(GetMemberType(info));
             }
             return defaultValue;
         }
