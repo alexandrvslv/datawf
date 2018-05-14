@@ -26,7 +26,7 @@ namespace DataWF.Module.FlowGui
             : base()
         {
             HideCollections = true;
-            AutoToStringFill = true;
+            //AutoToStringFill = true;
             //this.Size = new Size(872, 454);
         }
 

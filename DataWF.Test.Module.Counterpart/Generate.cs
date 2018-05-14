@@ -14,8 +14,7 @@ namespace DataWf.Test.Module.Counterparty
         {
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
             var schema = new DBSchema("wf_customer");
-            DBService.Generate(typeof(User).Assembly, schema);
-            DBService.Generate(typeof(Customer).Assembly, schema);
+            DBService.Generate(new[] { typeof(User).Assembly, typeof(Customer).Assembly }, schema);
             Assert.IsNotNull(Location.DBTable);
             Assert.IsNotNull(Address.DBTable);
             Assert.IsNotNull(Customer.DBTable);

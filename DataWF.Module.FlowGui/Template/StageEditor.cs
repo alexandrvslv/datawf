@@ -11,14 +11,14 @@ using System.Threading.Tasks;
 
 namespace DataWF.Module.FlowGui
 {
-    public class TemplateEditor : VPanel
+    public class StageEditor : VPanel
     {
-        private Template template;
+        private Stage stage;
         private ListEditor attribures;
-        private TableEditor datas;
+        private TableEditor parameters;
         //private TableEditor parameters;
 
-        public TemplateEditor()
+        public StageEditor()
         {
             var groupBox = new GroupBox(
                 new GroupBoxItem
@@ -32,49 +32,35 @@ namespace DataWF.Module.FlowGui
                 },
                 new GroupBoxItem
                 {
-                    Name = "Datas",
+                    Name = "Parameters",
                     Col = 1,
                     Row = 0,
                     FillWidth = true,
                     FillHeight = true,
-                    Widget = datas = new TableEditor
+                    Widget = parameters = new TableEditor
                     {
-                        TableView = new DBTableView<TemplateData>((QParam)null, DBViewKeys.Empty),
-                        OwnerColumn = TemplateData.DBTable.ParseProperty(nameof(TemplateData.TemplateId)),
+                        TableView = new DBTableView<StageParam>((QParam)null, DBViewKeys.Empty),
+                        OwnerColumn = StageParam.DBTable.ParseProperty(nameof(StageParam.StageId)),
                         OpenMode = TableEditorMode.Referencing
                     }
                 })
-            //new DockItem
-            //{
-            //    Name = "Parameters",
-            //    Col = 2,
-            //    Row = 0,
-            //    FillWidth = true,
-            //    FillHeight = true,
-            //    Panel = new DockPanel(parameters = new TableEditor
-            //    {
-            //        TableView = new DBTableView<TemplateParam>((QParam)null, DBViewKeys.Empty),
-            //        OwnerColumn = TemplateParam.DBTable.ParseProperty(nameof(TemplateParam.TemplateId)),
-            //        OpenMode = TableEditorMode.Referencing
-            //    })
-            //})
             { Name = "GroupBox" };
             PackStart(groupBox, true, true);
         }
 
-        public Template Template
+        public Stage Stage
         {
-            get { return template; }
+            get { return stage; }
             set
             {
-                if (template == value)
+                if (stage == value)
                     return;
-                template = value;
+                stage = value;
 
                 attribures.DataSource = value;
                 attribures.ReadOnly = false;
 
-                datas.OwnerRow = value;
+                parameters.OwnerRow = value;
             }
         }
 

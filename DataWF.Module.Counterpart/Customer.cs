@@ -149,6 +149,7 @@ namespace DataWF.Module.Counterpart
             set { SetProperty(value); }
         }
 
+        [Browsable(false)]
         [Reference(nameof(UserId))]
         public User User
         {

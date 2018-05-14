@@ -217,7 +217,7 @@ namespace DataWF.Module.CommonGui
             listObjects.Name = "listObjects";
             listObjects.DataKeys = DataTreeKeys.CheckTableAdmin | DataTreeKeys.Table | DataTreeKeys.Schema;
             listObjects.ListInfo.Columns.Add("Count", 35);
-            listObjects.BuildColumn(null, "Count");
+            listObjects.BuildColumn(listObjects.ListInfo, null, "Count");
             listObjects.SelectionChanged += ListObjectsSelectionChanged;
 
             listRows.EditMode = EditModes.None;

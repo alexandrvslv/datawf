@@ -11,14 +11,16 @@ using System.Threading.Tasks;
 
 namespace DataWF.Module.FlowGui
 {
-    public class TemplateEditor : VPanel
+    public class WorkEditor : VPanel
     {
-        private Template template;
+        private Work work;
         private ListEditor attribures;
-        private TableEditor datas;
+        private TableEditor stages;
+        private StageEditor stageEditor;
+
         //private TableEditor parameters;
 
-        public TemplateEditor()
+        public WorkEditor()
         {
             var groupBox = new GroupBox(
                 new GroupBoxItem
@@ -32,52 +34,53 @@ namespace DataWF.Module.FlowGui
                 },
                 new GroupBoxItem
                 {
-                    Name = "Datas",
+                    Name = "Stages",
                     Col = 1,
                     Row = 0,
                     FillWidth = true,
                     FillHeight = true,
-                    Widget = datas = new TableEditor
+                    Widget = stages = new TableEditor
                     {
-                        TableView = new DBTableView<TemplateData>((QParam)null, DBViewKeys.Empty),
-                        OwnerColumn = TemplateData.DBTable.ParseProperty(nameof(TemplateData.TemplateId)),
+                        TableView = new DBTableView<Stage>((QParam)null, DBViewKeys.Empty),
+                        OwnerColumn = Stage.DBTable.ParseProperty(nameof(Stage.WorkId)),
                         OpenMode = TableEditorMode.Referencing
                     }
+                },
+                new GroupBoxItem
+                {
+                    Name = "Stage Parameters",
+                    Col = 0,
+                    Row = 1,
+                    FillWidth = true,
+                    FillHeight = true,
+                    Widget = stageEditor = new StageEditor()
                 })
-            //new DockItem
-            //{
-            //    Name = "Parameters",
-            //    Col = 2,
-            //    Row = 0,
-            //    FillWidth = true,
-            //    FillHeight = true,
-            //    Panel = new DockPanel(parameters = new TableEditor
-            //    {
-            //        TableView = new DBTableView<TemplateParam>((QParam)null, DBViewKeys.Empty),
-            //        OwnerColumn = TemplateParam.DBTable.ParseProperty(nameof(TemplateParam.TemplateId)),
-            //        OpenMode = TableEditorMode.Referencing
-            //    })
-            //})
             { Name = "GroupBox" };
+            stages.SelectionChanged += StagesSelectionChanged;
             PackStart(groupBox, true, true);
         }
 
-        public Template Template
+        public Work Work
         {
-            get { return template; }
+            get { return work; }
             set
             {
-                if (template == value)
+                if (work == value)
                     return;
-                template = value;
+                work = value;
 
                 attribures.DataSource = value;
                 attribures.ReadOnly = false;
 
-                datas.OwnerRow = value;
+                stages.OwnerRow = value;
             }
         }
 
         public ListEditor Attributes { get { return attribures; } }
+
+        private void StagesSelectionChanged(object sender, ListEditorEventArgs e)
+        {
+            stageEditor.Stage = stages.Selected as Stage;
+        }
     }
 }

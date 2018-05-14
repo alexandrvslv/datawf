@@ -21,6 +21,8 @@ using DataWF.Data;
 using DataWF.Common;
 using System.ComponentModel;
 using System.Runtime.Serialization;
+using DataWF.Module.Common;
+using System.Collections.Generic;
 
 namespace DataWF.Module.Flow
 {
@@ -84,13 +86,6 @@ namespace DataWF.Module.Flow
             set { SetProperty(value, nameof(Id)); }
         }
 
-        [DataMember, Column("code", 1024)]
-        public string ParamCode
-        {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
-        }
-
         [Browsable(false)]
         [DataMember, Column("stage_id")]
         public int? StageId
@@ -104,6 +99,13 @@ namespace DataWF.Module.Flow
         {
             get { return GetPropertyReference<Stage>(); }
             set { SetPropertyReference(value); }
+        }
+
+        [DataMember, Column("code", 1024)]
+        public string ParamCode
+        {
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
         }
 
         public object Param
@@ -174,6 +176,51 @@ namespace DataWF.Module.Flow
                 //result.LocaleInfo = (LocaleItem)column.LocaleInfo.Clone();
             }
             return result;
+        }
+
+        public IEnumerable<User> GetUsers()
+        {
+            foreach (var access in Access.Items)
+            {
+                if (access.Create)
+                {
+                    foreach (User user in User.DBTable)
+                    {
+                        if (user.Access.Get(access.Group).Create)
+                            yield return user;
+                    }
+                }
+            }
+        }
+
+        public IEnumerable<Position> GetPositions()
+        {
+            foreach (var access in Access.Items)
+            {
+                if (access.Create)
+                {
+                    foreach (Position position in Position.DBTable)
+                    {
+                        if (position.Access.Get(access.Group).Create)
+                            yield return position;
+                    }
+                }
+            }
+        }
+
+        public IEnumerable<Department> GetDepartment()
+        {
+            foreach (var access in Access.Items)
+            {
+                if (access.Create)
+                {
+                    foreach (Department department in Department.DBTable)
+                    {
+                        if (department.Access.Get(access.Group).Create)
+                            yield return department;
+                    }
+                }
+            }
         }
 
         public override string ToString()

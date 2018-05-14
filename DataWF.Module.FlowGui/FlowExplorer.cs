@@ -223,6 +223,16 @@ namespace DataWF.Module.FlowGui
                 var editor = new TemplateEditor { Template = (Template)item };
                 editor.ShowWindow(this);
             }
+            else if (item is Work)
+            {
+                var editor = new WorkEditor { Work = (Work)item };
+                editor.ShowWindow(this);
+            }
+            else if (item is Stage)
+            {
+                var editor = new StageEditor { Stage = (Stage)item };
+                editor.ShowWindow(this);
+            }
             else if (item is DBItem)
             {
                 se.DataSource = item;

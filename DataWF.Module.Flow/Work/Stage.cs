@@ -53,12 +53,12 @@ namespace DataWF.Module.Flow
     [Flags]
     public enum StageKey
     {
-        MultiUser,
-        IsStop,
-        IsStart,
-        IsSystem,
-        IsReturn,
-        IsAutoComplete
+        None = 0,
+        IsStop = 1,
+        IsStart = 2,
+        IsSystem = 4,
+        IsReturn = 8,
+        IsAutoComplete = 16
     }
 
     [DataContract, Table("rstage", "Template", BlockSize = 100)]
@@ -160,6 +160,21 @@ namespace DataWF.Module.Flow
                     {
                         if (position.Access.Get(access.Group).Create)
                             yield return position;
+                    }
+                }
+            }
+        }
+
+        public IEnumerable<Department> GetDepartment()
+        {
+            foreach (var access in Access.Items)
+            {
+                if (access.Create)
+                {
+                    foreach (Department department in Department.DBTable)
+                    {
+                        if (department.Access.Get(access.Group).Create)
+                            yield return department;
                     }
                 }
             }
