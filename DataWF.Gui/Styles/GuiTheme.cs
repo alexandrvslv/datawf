@@ -23,6 +23,7 @@ namespace DataWF.Gui
             int round = 0,
             bool alter = true,
             bool emptyBack = true,
+            bool emptyBorder = true,
             double lineWidth = 0.8,
             Alignment alignment = Alignment.Start,
             CellStyleBrushType brushType = CellStyleBrushType.Solid)
@@ -48,7 +49,7 @@ namespace DataWF.Gui
                 },
                 BorderBrush = new CellStyleBrush
                 {
-                    Color = emptyBack ? CellStyleBrush.ColorEmpty : value.WithIncreasedContrast(Abs(diff)),
+                    Color = emptyBorder ? CellStyleBrush.ColorEmpty : value.WithIncreasedContrast(Abs(diff)),
                     ColorHover = value.WithIncreasedLight(diff).WithIncreasedContrast(Abs(diff)),
                     ColorSelect = value.WithIncreasedLight(diff * 2).WithIncreasedContrast(Abs(diff)),
                     ColorPress = value.WithIncreasedLight(diff * 3).WithIncreasedContrast(Abs(diff)),
@@ -120,9 +121,9 @@ namespace DataWF.Gui
                     lineWidth:0),
                 GenerateStyle("Value",
                     defaultFont,
-                    baseBackground.WithIncreasedLight(diff*3),
+                    baseBackground.WithIncreasedLight(diff*2),
                     diff,
-                    emptyBack:false),
+                    emptyBorder:false),
                 GenerateStyle("CellCenter",
                     defaultFont,
                     baseBackground.WithIncreasedLight(diff*3),
