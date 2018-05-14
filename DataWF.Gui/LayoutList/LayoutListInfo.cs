@@ -449,8 +449,8 @@ namespace DataWF.Gui
             }
         }
 
-        [DefaultValue(20)]
-        public int GroupHeigh { get; set; } = 20;
+        [DefaultValue(24)]
+        public int GroupHeigh { get; set; } = 24;
 
         public void ResetGroup()
         {

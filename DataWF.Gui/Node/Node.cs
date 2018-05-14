@@ -321,6 +321,11 @@ namespace DataWF.Gui
                 item.Visible = false;
             }
         }
+
+        public void Remove()
+        {
+            Container?.Remove(this);
+        }
     }
 }
 

@@ -32,17 +32,17 @@ namespace DataWF.Data.Gui
         {
             if (colLogic == null)
             {
-                colString = BuildColumn(null, "ToString");
+                colString = BuildColumn(listInfo, null, "ToString");
                 colString.Editable = false;
-                colOrder = BuildColumn(null, "Order");
+                colOrder = BuildColumn(listInfo, null, "Order");
                 colOrder.Visible = false;
-                colLogic = BuildColumn(null, "Logic");
-                colParamTable = BuildColumn(null, "Column.Table");
+                colLogic = BuildColumn(listInfo, null, "Logic");
+                colParamTable = BuildColumn(listInfo, null, "Column.Table");
                 colParamTable.Editable = false;
-                colParam = BuildColumn(null, "Column");
+                colParam = BuildColumn(listInfo, null, "Column");
                 colParam.Width = 200;
-                colComparer = BuildColumn(null, "Comparer");
-                colValue = BuildColumn(null, "Value");
+                colComparer = BuildColumn(listInfo, null, "Comparer");
+                colValue = BuildColumn(listInfo, null, "Value");
                 colValue.Width = 200;
                 listInfo.Columns.Add(colLogic);
                 listInfo.Columns.Add(colParamTable);

@@ -57,7 +57,7 @@ namespace DataWF.Gui
                 GenerateToString = false,
                 EditMode = EditModes.ByClick,
                 ListInfo = new LayoutListInfo(
-                    new LayoutColumn { Name = nameof(LayoutColumn.ToString) },
+                    new LayoutColumn { Name = nameof(LayoutColumn.ToString), Editable = false },
                     new LayoutColumn { Name = nameof(LayoutColumn.Text), FillWidth = true },
                     new LayoutColumn { Name = nameof(LayoutColumn.Visible), Width = 50 },
                     new LayoutColumn { Name = nameof(LayoutColumn.Format) })
@@ -69,7 +69,7 @@ namespace DataWF.Gui
                 GenerateToString = false,
                 EditMode = EditModes.ByClick,
                 ListInfo = new LayoutListInfo(
-                    new LayoutColumn { Name = nameof(LayoutField.ToString) },
+                    new LayoutColumn { Name = nameof(LayoutField.ToString), Editable = false },
                     new LayoutColumn { Name = nameof(LayoutField.Text), FillWidth = true },
                     new LayoutColumn { Name = nameof(LayoutField.Visible), Width = 50 },
                     new LayoutColumn { Name = nameof(LayoutField.Format) })
@@ -91,7 +91,8 @@ namespace DataWF.Gui
                 Name = "columns",
                 Widget = columns,
                 Text = "Columns",
-                FillHeight = true
+                FillHeight = true,
+                FillWidth = true
             };
             gFields = new GroupBoxItem()
             {
@@ -99,7 +100,8 @@ namespace DataWF.Gui
                 Widget = fields,
                 Text = "Fields",
                 Row = 1,
-                FillHeight = true
+                FillHeight = true,
+                FillWidth = true
             };
             gSorters = new GroupBoxItem()
             {
@@ -108,13 +110,10 @@ namespace DataWF.Gui
                 Text = "Sort",
                 Row = 2,
                 FillHeight = true,
+                FillWidth = true,
                 Expand = false
             };
-            var mColumns = new GroupBoxItem(gColumns, gFields, gSorters)
-            {
-                Col = 1,
-                FillWidth = true
-            };
+            var mColumns = new GroupBoxItem(gColumns, gFields, gSorters) { Col = 1 };
 
             gOptions = new GroupBoxItem()
             {

@@ -129,7 +129,7 @@ namespace DataWF.Gui
             }
         }
 
-        [DefaultValue("Column")]
+        [Browsable(false), DefaultValue("Column")]
         public string ColumnStyleName { get; set; } = "Column";
 
         [XmlIgnore]
@@ -144,7 +144,7 @@ namespace DataWF.Gui
             }
         }
 
-        [DefaultValue("Cell")]
+        [Browsable(false), DefaultValue("Cell")]
         public string StyleName { get; set; } = "Cell";
 
         [XmlIgnore]

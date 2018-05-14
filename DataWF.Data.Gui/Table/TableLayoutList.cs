@@ -161,6 +161,17 @@ namespace DataWF.Data.Gui
             }
         }
 
+        public override object FieldSource
+        {
+            get => base.FieldSource;
+            set
+            {
+                if (value is DBItem && ((DBItem)value).Table != Table)
+                    FieldType = null;
+                base.FieldSource = value;
+            }
+        }
+
         protected override IComparer OnColumnCreateComparer(LayoutColumn column, ListSortDirection direction)
         {
             if (column.Invoker is DBColumn)
@@ -266,7 +277,9 @@ namespace DataWF.Data.Gui
                 {
                     table = null;
                     if (args.Cell.Invoker is DBColumn column && column.IsReference)
+                    {
                         table = column.ReferenceTable;
+                    }
                 }
                 if (table != null)
                 {
@@ -332,14 +345,24 @@ namespace DataWF.Data.Gui
             return base.IsComplex(cell);
         }
 
-        public override LayoutField CreateField(string name)
+        public override LayoutField CreateField(LayoutFieldInfo info, LayoutField group, string name)
         {
             DBColumn dbcolumn = ParseDBColumn(name);
             if (dbcolumn != null)
             {
-                return new LayoutDBField { Name = name };
+                string groupName = dbcolumn?.GroupName ?? "Misc";
+                Category category = info.Categories[groupName];
+                if (category == null)
+                {
+                    category = new Category { Name = groupName };
+                    info.Categories.Add(category);
+                }
+                var columngroup = dbcolumn.Table.ColumnGroups[groupName];
+                category.Header = columngroup?.ToString() ?? Locale.Get("Group", groupName);
+
+                return new LayoutDBField { Name = name, Category = category, Group = group };
             }
-            return base.CreateField(name);
+            return base.CreateField(info, group, name);
         }
 
         public override LayoutColumn CreateColumn(string name)
@@ -367,17 +390,7 @@ namespace DataWF.Data.Gui
                 }
                 if (cell is LayoutDBField)
                 {
-                    string groupName = dbcolumn?.GroupName ?? "Misc";
-                    Category category = FieldInfo.Categories[groupName];
-                    if (category == null)
-                    {
-                        category = new Category { Name = groupName };
-                        FieldInfo.Categories.Add(category);
-                    }
-                    var columngroup = dbcolumn.Table.ColumnGroups[groupName];
-                    category.Header = columngroup?.ToString() ?? Locale.Get("Group", groupName);
 
-                    ((LayoutDBField)cell).Category = category;
                     ((LayoutDBField)cell).View = dbcolumn.Access.View;
                 }
             }

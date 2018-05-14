@@ -129,28 +129,32 @@ namespace DataWF.Gui
             }
         }
 
-        [DefaultValue(false)]
+        //[DefaultValue(false)]
         public virtual bool FillWidth
         {
-            get { return fillW || IsFillWidth(); }
+            get { return Count > 0 ? IsFillWidth() : fillW; }
             set
             {
                 if (fillW == value)
                     return;
+
                 fillW = value;
+
                 OnPropertyChanged(nameof(FillWidth));
             }
         }
 
-        [DefaultValue(false)]
+        //[DefaultValue(false)]
         public virtual bool FillHeight
         {
-            get { return fillH || IsFillHeight(); }
+            get { return Count > 0 ? IsFillHeight() : fillH; }
             set
             {
                 if (fillH == value)
                     return;
+
                 fillH = value;
+
                 OnPropertyChanged(nameof(FillHeight));
             }
         }
