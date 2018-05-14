@@ -12,7 +12,7 @@ namespace DataWF.Gui
     {
         private string lockName = "FieldsEditor";
 
-        protected AccessEditor access = new AccessEditor();
+        protected AccessEditor access;
         protected LayoutList list;
         protected LayoutList fields = new LayoutList();
         protected Toolsbar bar;
@@ -110,8 +110,6 @@ namespace DataWF.Gui
                 new ToolSeparator() { FillWidth = true },
                 toolPosition)
             { Name = "ListEditor" };
-
-            access = new AccessEditor { Name = "access" };
 
             box = new VBox() { Spacing = 1 };
             box.PackStart(bar, false, false);
@@ -341,7 +339,10 @@ namespace DataWF.Gui
                 {
                     list.EditState = EditListState.Edit;
                 }
-                access.Readonly = value;
+                if (access != null)
+                {
+                    access.Readonly = value;
+                }
                 list.ReadOnly = value;
                 toolCut.Sensitive = !value;
                 toolSave.Sensitive = !value;
@@ -453,9 +454,13 @@ namespace DataWF.Gui
             set
             {
                 toolAccess.Checked = value;
-                if (DataSource is IAccessable && ((IAccessable)DataSource).Access != null && value)
+                if (DataSource is IAccessable && value)
                 {
-                    access.Access = ((IAccessable)DataSource).Access;
+                    if (access == null)
+                    {
+                        access = new AccessEditor() { Name = "access" };
+                    }
+                    access.Accessable = (IAccessable)DataSource;
                     container.Panel2.Content = access;
                 }
                 else
@@ -645,7 +650,7 @@ namespace DataWF.Gui
                 status.Status = (DBStatus)e.Item.Tag;
                 CheckStatus();
             }
-            else if(list.Mode != LayoutListMode.Fields)
+            else if (list.Mode != LayoutListMode.Fields)
             {
                 foreach (var item in list.Selection.GetItems<IStatus>())
                 {

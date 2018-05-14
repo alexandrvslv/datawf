@@ -27,6 +27,7 @@ namespace DataWF.Gui
                                                                 {
                                                                     item.View = value;
                                                                     access.Add(item);
+                                                                    Accessable.Access = access;
                                                                 }
                                                             })},
                     new LayoutColumn() { Name = nameof(AccessItem.Edit), Width = 35 , Invoker = new Invoker<AccessItem, bool>(nameof(AccessItem.Edit),
@@ -39,6 +40,7 @@ namespace DataWF.Gui
                                                                 {
                                                                     item.Edit = value;
                                                                     access.Add(item);
+                                                                    Accessable.Access = access;
                                                                 }
                                                             })},
                     new LayoutColumn() { Name = nameof(AccessItem.Create), Width = 35 , Invoker = new Invoker<AccessItem, bool>(nameof(AccessItem.Create),
@@ -51,6 +53,7 @@ namespace DataWF.Gui
                                                                 {
                                                                     item.Create = value;
                                                                     access.Add(item);
+                                                                    Accessable.Access = access;
                                                                 }
                                                             })},
                     new LayoutColumn() { Name = nameof(AccessItem.Delete), Width = 35 , Invoker = new Invoker<AccessItem, bool>(nameof(AccessItem.Delete),
@@ -63,6 +66,7 @@ namespace DataWF.Gui
                                                                 {
                                                                     item.Delete = value;
                                                                     access.Add(item);
+                                                                    Accessable.Access = access;
                                                                 }
                                                             })},
                     new LayoutColumn() { Name = nameof(AccessItem.Admin), Width = 35, Invoker = new Invoker<AccessItem, bool>(nameof(AccessItem.Admin),
@@ -75,6 +79,7 @@ namespace DataWF.Gui
                                                                 {
                                                                     item.Admin = value;
                                                                     access.Add(item);
+                                                                    Accessable.Access = access;
                                                                 }
                                                             })},
                     new LayoutColumn() { Name = nameof(AccessItem.Accept), Width = 35, Invoker = new Invoker<AccessItem, bool>(nameof(AccessItem.Accept),
@@ -87,6 +92,7 @@ namespace DataWF.Gui
                                                                 {
                                                                     item.Accept = value;
                                                                     access.Add(item);
+                                                                    Accessable.Access = access;
                                                                 }
                                                             })} },
                     new[] { new LayoutSort("Group") })
@@ -122,7 +128,11 @@ namespace DataWF.Gui
             {
                 accessable = value;
                 if (accessable != null)
+                {
+                    if (accessable.Access == null)
+                        accessable.Access = new AccessValue();
                     Access = accessable.Access;
+                }
             }
         }
 
