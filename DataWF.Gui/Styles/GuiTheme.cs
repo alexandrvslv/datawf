@@ -213,7 +213,16 @@ namespace DataWF.Gui
                     baseBackground.WithIncreasedLight(diff),
                     diff,
                     lineWidth:1.5,
-                    round:3)
+                    round:3),
+                GenerateStyle("Toolsbar",
+                    defaultFont.WithSize(defaultFont.Size * 1.08).WithWeight(FontWeight.Semibold),
+                    baseBackground.WithIncreasedLight(diff),
+                    diff,
+                    lineWidth:1.5,
+                    round:3,
+                    emptyBack:false,
+                    emptyBorder:false,
+                    brushType: CellStyleBrushType.Gradient)
             });
         }
 
