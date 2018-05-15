@@ -276,6 +276,8 @@ namespace DataWF.Data.Gui
                 node = InitColumnGroup((DBColumnGroup)item);
             else if (item is DBColumn)
                 node = InitColumn((DBColumn)item);
+            else if (item is DBProcedure)
+                node = InitProcedure((DBProcedure)item);
             else
                 node = InitItem(item);
 
