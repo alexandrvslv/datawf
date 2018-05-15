@@ -32,6 +32,11 @@ namespace DataWF.Module.Common
             get { return DBService.GetTable<Book>(); }
         }
 
+        public Book()
+        {
+            Build(DBTable);
+        }
+
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
