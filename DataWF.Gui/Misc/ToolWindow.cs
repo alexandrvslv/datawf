@@ -17,11 +17,11 @@ namespace DataWF.Gui
         protected Widget senderWidget;
         protected WindowFrame senderWindow;
         protected Widget target;
-        protected Label toolLabel;
-        protected Button toolAccept;
-        protected Button toolClose;
+        protected ToolLabel toolLabel;
+        protected ToolItem toolAccept;
+        protected ToolItem toolClose;
         protected VBox vbox;
-        protected HBox hbox;
+        protected Toolsbar bar;
         protected ScrollView panel;
         private Point movePoint;
         private bool byDeactivate;
@@ -41,39 +41,38 @@ namespace DataWF.Gui
                 Name = "panel"
             };
 
-            toolLabel = new Label
+            toolLabel = new ToolLabel
             {
                 Name = "toolLabel",
                 Text = "Label",
-                Cursor = CursorType.Arrow,
-                TextColor = GuiEnvironment.Theme["Window"].BaseColor.Invert()
+                FillWidth = true,
+                ForeColor = GuiEnvironment.Theme["Window"].BaseColor.Invert()
             };
-            toolLabel.ButtonPressed += OnContentMouseDown;
-            toolLabel.ButtonReleased += OnContentMouseUp;
-            toolLabel.MouseEntered += OnContentMouseEntered;
-            toolLabel.MouseExited += OnContentMouseExited;
-            toolLabel.MouseMoved += OnContentMouseMove;
 
-            toolClose = new Button()
+            toolClose = new ToolItem(OnCloseClick)
             {
-                Name = "toolClose",
-                Label = "Close",
-                WidthRequest = 80
+                Name = "Close",
+                Text = "Close",
+                DisplayStyle = ToolItemDisplayStyle.Text
             };
-            toolClose.Clicked += OnCloseClick;
 
-            toolAccept = new Button()
+            toolAccept = new ToolItem(OnAcceptClick)
             {
-                Name = "toolAccept",
-                Label = "Ok",
-                WidthRequest = 60
+                Name = "Accept",
+                Text = "Ok",
+                DisplayStyle = ToolItemDisplayStyle.Text
             };
-            toolAccept.Clicked += OnAcceptClick;
 
-            hbox = new HBox();
-            hbox.PackStart(toolLabel, true, true);
-            hbox.PackStart(toolClose, false);
-            hbox.PackStart(toolAccept, false);
+            bar = new Toolsbar(
+                toolLabel,
+                toolClose,
+                toolAccept)
+            { Name = "Bar" };
+            bar.ButtonPressed += OnContentMouseDown;
+            bar.ButtonReleased += OnContentMouseUp;
+            bar.MouseEntered += OnContentMouseEntered;
+            bar.MouseExited += OnContentMouseExited;
+            bar.MouseMoved += OnContentMouseMove;
             //hbox.Margin = new WidgetSpacing(padding, 0, padding, padding);
 
             vbox = new VBox
@@ -82,7 +81,7 @@ namespace DataWF.Gui
                 Name = "tools"
             };
             vbox.PackStart(panel, true, true);
-            vbox.PackStart(hbox, false, false);
+            vbox.PackStart(bar, false, false);
             vbox.KeyPressed += OnContentKeyPress;
 
 
@@ -106,12 +105,12 @@ namespace DataWF.Gui
 
         public bool HeaderVisible
         {
-            get { return hbox.Visible; }
+            get { return bar.Visible; }
             set
             {
-                if (hbox.Visible != value)
+                if (bar.Visible != value)
                 {
-                    hbox.Visible = value;
+                    bar.Visible = value;
                 }
             }
         }
@@ -156,20 +155,20 @@ namespace DataWF.Gui
 
         public Command DResult { get; set; }
 
-        public Label Label
+        public ToolLabel Label
         {
             get { return toolLabel; }
         }
 
-        public Button ButtonAccept
+        public ToolItem ButtonAccept
         {
             get { return toolAccept; }
         }
 
         public string ButtonAcceptText
         {
-            get { return toolAccept.Label; }
-            set { toolAccept.Label = value; }
+            get { return toolAccept.Text; }
+            set { toolAccept.Text = value; }
         }
 
         public bool ButtonAcceptEnabled
@@ -180,25 +179,25 @@ namespace DataWF.Gui
 
         public event EventHandler ButtonAcceptClick
         {
-            add { toolAccept.Clicked += value; }
-            remove { toolAccept.Clicked -= value; }
+            add { toolAccept.Click += value; }
+            remove { toolAccept.Click -= value; }
         }
 
-        public Button ButtonClose
+        public ToolItem ButtonClose
         {
             get { return toolClose; }
         }
 
         public string ButtonCloseText
         {
-            get { return toolClose.Label; }
-            set { toolClose.Label = value; }
+            get { return toolClose.Text; }
+            set { toolClose.Text = value; }
         }
 
         public event EventHandler ButtonCloseClick
         {
-            add { toolClose.Clicked += value; }
-            remove { toolClose.Clicked -= value; }
+            add { toolClose.Click += value; }
+            remove { toolClose.Click -= value; }
         }
 
         public Widget Sender
@@ -233,7 +232,7 @@ namespace DataWF.Gui
             {
                 movePoint = Desktop.MouseLocation;
                 moveButton = e.Button;
-                Label.Cursor = CursorType.Move;
+                bar.Cursor = CursorType.Move;
             }
         }
 
@@ -241,7 +240,7 @@ namespace DataWF.Gui
         {
             moveButton = 0;
             moveBounds = Location;
-            Label.Cursor = CursorType.Arrow;
+            bar.Cursor = CursorType.Arrow;
         }
 
         private void OnContentMouseExited(object sender, EventArgs e)
@@ -270,7 +269,7 @@ namespace DataWF.Gui
                 var diff = new Point(location.X - movePoint.X, location.Y - movePoint.Y);
                 Debug.WriteLine($"Location Diff:{diff} Bound:{moveBounds}");
 
-                if (Label.Cursor == CursorType.Move)
+                if (bar.Cursor == CursorType.Move)
                 {
                     Location = new Point(moveBounds.X + diff.X, moveBounds.Y + diff.Y);
                 }
@@ -436,10 +435,12 @@ namespace DataWF.Gui
 
         public void AddButton(string text, EventHandler click)
         {
-            var button = new Button();
-            button.Label = text;
-            button.Clicked += click;
-            hbox.PackStart(button, false, false);
+            var button = new ToolItem(click)
+            {
+                Name = text,
+                Text = text
+            };
+            bar.Add(button);
         }
 
         public static ToolWindow InitEditor(string label, object obj, bool dispose = true)
