@@ -659,37 +659,6 @@ namespace DataWF.Data
             return equal;
         }
 
-        public static void Merge(IEnumerable list, DBItem main)
-        {
-            var relations = main.Table.GetChildRelations().ToList();
-            var rows = new List<DBItem>();
-            rows.Add(main);
-            foreach (DBItem item in list)
-                if (item != main)
-                {
-                    rows.Add(item);
-
-                    item.UpdateState |= DBUpdateState.Delete;
-                    foreach (DBColumn column in item.Table.Columns)
-                        if (main[column] == DBNull.Value && item[column] != DBNull.Value)
-                            main[column] = item[column];
-
-                    foreach (DBForeignKey relation in relations)
-                        if (relation.Table.Type == DBTableType.Table)
-                        {
-                            var refings = item.GetReferencing<DBItem>(relation, DBLoadParam.Load | DBLoadParam.Synchronize).ToList();
-                            if (refings.Count > 0)
-                            {
-                                foreach (DBItem refing in refings)
-                                    refing[relation.Column] = main.PrimaryId;
-
-                                relation.Table.Save(refings);
-                            }
-                        }
-                }
-            main.Table.Save(rows);
-        }
-
         public static IDbCommand CreateCommand(IDbConnection connection, string text = null, IDbTransaction transaction = null)
         {
             IDbCommand command = connection.CreateCommand();
@@ -806,16 +775,35 @@ namespace DataWF.Data
                         GetItemTypeAttribute(type);
                         if (TypeHelper.IsInterface(type, typeof(IExecutable)))
                         {
+                            var uri = new UriBuilder(assembly.CodeBase);
+                            var path = Uri.UnescapeDataString(uri.Path);
+                            var filename = Path.GetFileName(path);
+
+                            var gname = assembly.GetName().Name;
+                            var gprocedure = schema.Procedures[gname];
+                            if (gprocedure == null)
+                            {
+                                gprocedure = new DBProcedure
+                                {
+                                    Name = gname,                                    
+                                    DataName = filename,
+                                    ProcedureType = ProcedureTypes.File
+                                };
+                                schema.Procedures.Add(gprocedure);
+                            }
                             var name = type.FullName;
                             var procedure = schema.Procedures[name];
                             if (procedure == null)
                             {
                                 procedure = new DBProcedure
                                 {
-                                    DataName = assembly.FullName,
+                                    Parent = gprocedure,
                                     Name = name,
+                                    DisplayName = type.Name,
+                                    DataName = filename,
                                     ProcedureType = ProcedureTypes.Assembly
                                 };
+                                schema.Procedures.Add(procedure);
                             }
                         }
                     }

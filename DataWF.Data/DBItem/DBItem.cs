@@ -1225,6 +1225,37 @@ namespace DataWF.Data
             }
             return rows;
         }
+
+        public void Merge(IEnumerable<DBItem> list)
+        {
+            var relations = Table.GetChildRelations().ToList();
+            var rows = new List<DBItem>();
+            rows.Add(this);
+            foreach (DBItem item in list)
+                if (item != this)
+                {
+                    rows.Add(item);
+
+                    item.UpdateState |= DBUpdateState.Delete;
+                    foreach (DBColumn column in item.Table.Columns)
+                        if (this[column] == DBNull.Value && item[column] != DBNull.Value)
+                            this[column] = item[column];
+
+                    foreach (DBForeignKey relation in relations)
+                        if (relation.Table.Type == DBTableType.Table)
+                        {
+                            var refings = item.GetReferencing<DBItem>(relation, DBLoadParam.Load | DBLoadParam.Synchronize).ToList();
+                            if (refings.Count > 0)
+                            {
+                                foreach (DBItem refing in refings)
+                                    refing[relation.Column] = PrimaryId;
+
+                                relation.Table.Save(refings);
+                            }
+                        }
+                }
+            Table.Save(rows);
+        }
     }
 }
 
