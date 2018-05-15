@@ -146,6 +146,16 @@ namespace DataWF.Gui
                     expand = value;
                     if (widget != null)
                         widget.Visible = visible && expand;
+                    if (Map != null && value && RadioGroup > -1)
+                    {
+                        foreach (var item in Map)
+                        {
+                            if (item != this && item.RadioGroup == RadioGroup)
+                            {
+                                item.Expand = false;
+                            }
+                        }
+                    }
                     OnPropertyChanged(nameof(Expand));
                     GroupBox?.QueueDraw();
                     //if (map != null)
@@ -208,6 +218,9 @@ namespace DataWF.Gui
                 TextChanged?.Invoke(this, EventArgs.Empty);
             }
         }
+
+        [DefaultValue(-1)]
+        public int RadioGroup { get; set; } = -1;
 
         public override void Dispose()
         {
