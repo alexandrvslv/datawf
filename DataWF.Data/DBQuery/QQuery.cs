@@ -116,30 +116,31 @@ namespace DataWF.Data
             get { return type; }
             set
             {
-                if (TypeFilter != type)
+                if (Table.ItemTypeKey == null || TypeFilter == value)
                 {
-                    type = value;
-                    var param = GetByColumn(Table.ItemTypeKey);
-                    if (param == null)
+                    return;
+                }
+                type = value;
+                var param = GetByColumn(Table.ItemTypeKey);
+                if (param == null)
+                {
+                    param = Table.GetTypeParam(type);
+                    if (param != null)
                     {
-                        param = Table.GetTypeParam(type);
                         param.IsDefault = true;
-                        if (param != null)
-                        {
-                            parameters.Insert(0, param);
-                        }
+                        parameters.Insert(0, param);
+                    }
+                }
+                else
+                {
+                    var typeIndex = Table.GetTypeIndex(type);
+                    if (typeIndex <= 0)
+                    {
+                        parameters.Remove(param);
                     }
                     else
                     {
-                        var typeIndex = Table.GetTypeIndex(type);
-                        if (typeIndex <= 0)
-                        {
-                            parameters.Remove(param);
-                        }
-                        else
-                        {
-                            param.ValueRight = new QValue(typeIndex, Table.ItemTypeKey);
-                        }
+                        param.ValueRight = new QValue(typeIndex, Table.ItemTypeKey);
                     }
                 }
             }
