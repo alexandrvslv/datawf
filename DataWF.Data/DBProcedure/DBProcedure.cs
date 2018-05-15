@@ -59,7 +59,7 @@ namespace DataWF.Data
         [XmlIgnore]
         public DBProcedure Parent
         {
-            get { return Store[ParentName]; }
+            get { return Store?[ParentName]; }
             set { ParentName = value?.name; }
         }
 
@@ -72,6 +72,7 @@ namespace DataWF.Data
 
         public string DataName { get; set; }
 
+        [Browsable(false)]
         public byte[] DataStore { get; set; }
 
         [XmlIgnore]
@@ -111,9 +112,10 @@ namespace DataWF.Data
 
         public ProcedureTypes ProcedureType { get; set; }
 
+        [Browsable(false)]
         public IEnumerable<DBProcedure> Childs
         {
-            get { return Store.SelectByParent(this); }
+            get { return Store?.SelectByParent(this); }
         }
 
         public DBProcParameterList Parameters { get; set; }
@@ -125,7 +127,7 @@ namespace DataWF.Data
             get { return GroupHelper.GetAllParentExpand(this); }
         }
 
-        [XmlIgnore]
+        [XmlIgnore, Browsable(false)]
         public IGroup Group
         {
             get { return Parent; }

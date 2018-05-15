@@ -18,6 +18,8 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using System.Xml.Serialization;
+
 namespace DataWF.Data
 {
     public class DBProcParameterList : DBSchemaItemList<DBProcParameter>
@@ -27,12 +29,8 @@ namespace DataWF.Data
             this.Procedure = procedure;
         }
 
+        [XmlIgnore]
         public DBProcedure Procedure { get; set; }
 
-        public override int AddInternal(DBProcParameter item)
-        {
-            item.Procedure = Procedure;
-            return base.AddInternal(item);
-        }
     }
 }

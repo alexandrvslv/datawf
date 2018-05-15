@@ -34,7 +34,12 @@ namespace DataWF.Data
         public DBProcParameter()
         { }
 
-        public DBProcedure Procedure { get; set; }
+        [XmlIgnore]
+        public DBProcedure Procedure
+        {
+            get { return ((DBProcParameterList)Container).Procedure; }
+            set { value?.Parameters.Add(this); }
+        }
 
         public string DataTypeName { get; set; }
 
