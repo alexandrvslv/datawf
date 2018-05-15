@@ -70,7 +70,7 @@ namespace DataWF.Module.FlowGui
                 if (template == value)
                     return;
                 template = value;
-
+                Text = value?.ToString();
                 attribures.DataSource = value;
                 attribures.ReadOnly = false;
 

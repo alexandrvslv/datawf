@@ -125,59 +125,24 @@ namespace DataWF.Module.Flow
         }
         public IEnumerable<StageProcedure> GetProceduresByType(ParamProcudureType type)
         {
-            return GetParams().Where(p => p is StageProcedure && ((StageProcedure)p).ProcedureType == type).Cast<StageProcedure>();
+            return GetParams<StageProcedure>().Where(p => p.ProcedureType == type);
+        }
+
+        public IEnumerable<T> GetParams<T>() where T : StageParam
+        {
+            return GetReferencing<StageParam>(nameof(StageParam.StageId), DBLoadParam.None).OfType<T>();
         }
 
         public IEnumerable<StageParam> GetParams()
         {
-            var list = GetReferencing<StageParam>(nameof(StageParam.StageId), DBLoadParam.None).ToList();
-            list.Sort(new DBComparer(StageParam.DBTable.PrimaryKey, ListSortDirection.Ascending));
-            return list;
+            return GetReferencing<StageParam>(nameof(StageParam.StageId), DBLoadParam.None);
         }
 
-        public IEnumerable<User> GetUsers()
+        public StageReference GetStageReference()
         {
-            foreach (var access in Access.Items)
-            {
-                if (access.Create)
-                {
-                    foreach (User user in User.DBTable)
-                    {
-                        if (user.Access.Get(access.Group).Create)
-                            yield return user;
-                    }
-                }
-            }
+            return GetParams<StageReference>().FirstOrDefault();
         }
 
-        public IEnumerable<Position> GetPositions()
-        {
-            foreach (var access in Access.Items)
-            {
-                if (access.Create)
-                {
-                    foreach (Position position in Position.DBTable)
-                    {
-                        if (position.Access.Get(access.Group).Create)
-                            yield return position;
-                    }
-                }
-            }
-        }
 
-        public IEnumerable<Department> GetDepartment()
-        {
-            foreach (var access in Access.Items)
-            {
-                if (access.Create)
-                {
-                    foreach (Department department in Department.DBTable)
-                    {
-                        if (department.Access.Get(access.Group).Create)
-                            yield return department;
-                    }
-                }
-            }
-        }
     }
 }

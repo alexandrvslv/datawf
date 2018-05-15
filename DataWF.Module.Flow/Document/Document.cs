@@ -32,6 +32,14 @@ using System.IO;
 
 namespace DataWF.Module.Flow
 {
+
+    public class DocumentExecuteArgs : ExecuteArgs
+    {
+        public DocumentWork Work { get; set; }
+        public Stage Stage { get; set; }
+        public StageProcedure StageProcedure { get; set; }
+    }
+
     public class DocumentList : DBTableView<Document>
     {
         protected static long stampCache = 0;
@@ -82,29 +90,7 @@ namespace DataWF.Module.Flow
 
         private static List<Document> saving = new List<Document>();
 
-        public static object DefaultGenerator(string name)
-        {
-            var sequnce = DBTable.Schema.Sequences[name];
-            if (sequnce == null)
-            {
-                sequnce = new DBSequence(name) { };
-                DBTable.Schema.Sequences.Add(sequnce);
-                try { DBService.CommitChanges(DBTable.Schema); }
-                catch (Exception)
-                {
-                    DBService.Changes.Clear();
-                    DBService.Save();
-                }
-            }
-            //return DBService.ExecuteQuery(FlowEnvironment.Config.Schema, FlowEnvironment.Config.Schema.Sequence.Create(name, 0, 1));
-            var item = sequnce.NextValue();
-            return item.ToString("D8");
-        }
 
-        public static object DefaultGenerator(Template template)
-        {
-            return template.Code + DefaultGenerator("template_" + template.Code);
-        }
 
         public static event DocumentCreateDelegate Created;
 
@@ -151,59 +137,7 @@ namespace DataWF.Module.Flow
             return document;
         }
 
-        public static DocumentWork Send(DocumentWork from, object stageId, object userId, string descript, DBTransaction transaction, ExecuteDocumentCallback callback = null)
-        {
-            return Send(from.Document, from, stageId, userId, descript, transaction, callback);
-        }
-
-        public static DocumentWork Send(DocumentWork from, Stage stage, User user, string descript, DBTransaction transaction, ExecuteDocumentCallback callback = null)
-        {
-            return Send(from.Document, from, stage, user, descript, transaction, callback);
-        }
-
-        public static DocumentWork Send(Document document, DocumentWork from, object stageId, object userId, string descript, DBTransaction transaction, ExecuteDocumentCallback callback = null)
-        {
-            return Send(document, from, Stage.DBTable.LoadItemById(stageId), User.DBTable.LoadItemById(userId), descript, transaction, callback);
-        }
-
-        public static DocumentWork Send(Document document, DocumentWork from, Stage stage, User user, string descript, DBTransaction transaction, ExecuteDocumentCallback callback = null)
-        {
-            DocumentWork result = null;
-            if (stage != null)
-            {
-                DocumentWork oldWork = document.GetByStage(stage);
-                if (oldWork != null && oldWork != from && !oldWork.IsComplete
-                    && (oldWork.User == user))
-                    return null;
-                var enumer = stage.GetParams().Where(p => p is StageProcedure && ((StageProcedure)p).ProcedureType == ParamProcudureType.Check).Cast<StageProcedure>();
-                object obj = ExecuteStageProcedure(new ExecuteArgs(document, transaction), enumer, callback);
-                if (obj != null)
-                    return null;
-            }
-
-            result = document.CreateWork(from, stage, user, descript);
-            if (transaction != null)
-                transaction.Rows.Add(result);
-            if (from != null)
-            {
-                from.DateComplete = DateTime.Now;
-                if (transaction != null)
-                    transaction.Rows.Add(from);
-            }
-            if (result.IsComplete)
-            {
-                foreach (var iwork in document.Works)
-                    if (!iwork.IsComplete)
-                        iwork.DateComplete = DateTime.Now;
-            }
-            document.IsComplete = result.IsComplete;
-
-            if (!document.IsComplete.GetValueOrDefault() && document.Status == DBStatus.Archive)
-                document.Status = DBStatus.Edit;
-            return result;
-        }
-
-        public static object ExecuteStageProcedure(ExecuteArgs param, IEnumerable<StageProcedure> enumer, ExecuteDocumentCallback callback = null)
+        public static object ExecuteStageProcedure(DocumentExecuteArgs param, IEnumerable<StageProcedure> enumer, ExecuteDocumentCallback callback = null)
         {
             object result = null;
             foreach (var item in enumer)
@@ -212,6 +146,7 @@ namespace DataWF.Module.Flow
                 {
                     throw new ArgumentNullException($"{nameof(StageProcedure)}.{nameof(StageProcedure.Procedure)} not defined!");
                 }
+                param.StageProcedure = item;
                 result = item.Procedure.Execute(param);
                 callback?.Invoke(new ExecuteDocumentArg((Document)param.Document, item.Procedure, result, param));
             }
@@ -591,7 +526,7 @@ namespace DataWF.Module.Flow
             return null;
         }
 
-        public IEnumerable<DocumentWork> GetUnCompleteWorks(Stage filter)
+        public IEnumerable<DocumentWork> GetUnCompleteWorks(Stage filter = null)
         {
             foreach (DocumentWork work in Works)
             {
@@ -604,7 +539,7 @@ namespace DataWF.Module.Flow
 
         public DocumentWork GetLastWork()
         {
-            return Works.FirstOrDefault();
+            return Works.LastOrDefault();
         }
 
         public string GetWorkFlow()
@@ -669,36 +604,31 @@ namespace DataWF.Module.Flow
             }
         }
 
-        public DocumentWork CreateWork(DocumentWork from, Stage stage, User user, string descript)
+        public DocumentWork CreateWork(DocumentWork from, Stage stage, DBItem staff)
         {
-            var work = new DocumentWork();
-            work.GenerateId();
-            work.Document = this;
-            work.User = user;
-            work.Description = descript;
-            work.DateCreate = DateTime.Now;
-            work.Stage = stage;
-            if (from != null)
+            var work = new DocumentWork
             {
-                work.From = from;
-                if (from.Stage == stage)
-                {
-                    from.IsResend = true;
-                    work.IsResend = true;
-                }
-            }
+                DateCreate = DateTime.Now,
+                Document = this,
+                Stage = stage,
+                Staff = staff,
+                From = from
+            };
+
             if (stage != null)
             {
                 if (stage.Keys != null
                     && (stage.Keys & StageKey.IsStop) == StageKey.IsStop
                     && (stage.Keys & StageKey.IsAutoComplete) == StageKey.IsAutoComplete)
                     work.DateComplete = DateTime.Now;
-                if (stage.TimeLimit != TimeSpan.Zero)
+                if (stage.TimeLimit != null)
                     work.DateLimit = DateTime.Now + stage.TimeLimit;
             }
-            if (user != null && user.IsCurrent)
+            if (staff is User && ((User)staff).IsCurrent)
+            {
                 work.DateRead = DateTime.Now;
-
+            }
+            work.GenerateId();
             work.Attach();
             return work;
         }
@@ -717,11 +647,7 @@ namespace DataWF.Module.Flow
                 DocumentCustomer.DBTable.Save(Customers.ToList(), transaction);
         }
 
-        public class DocumentExecuteArgs : ExecuteArgs
-        {
-            public DocumentWork Work { get; set; }
-            public Stage Stage { get; set; }
-        }
+
 
         public void Save(DBTransaction transaction, ExecuteDocumentCallback callback = null)
         {
@@ -735,45 +661,16 @@ namespace DataWF.Module.Flow
             try
             {
                 var works = Works.ToList();
-                bool isnew = works.Count == 0 || (works.Count == 1 && works[0].UpdateState == DBUpdateState.Insert);
+                bool isnew = works.Count == 0;
 
-                if (isnew && Number == null)
-                    Number = DefaultGenerator(Template).ToString();
                 base.Save(tempTRN);
 
                 if (isnew)
                 {
                     var flow = Template.Work;
-                    var work = Send(this, null, flow?.GetStartStage(), User.CurrentUser, "Start stage", tempTRN, callback);
-                    param.Work = work;
-                    param.Stage = work.Stage;
-                    var enumer = work.Stage.GetParams().Where(p => p is StageProcedure && ((StageProcedure)p).ProcedureType == ParamProcudureType.OnStart).Cast<StageProcedure>();
-                    ExecuteStageProcedure(param, enumer, callback);
+                    var work = Send(null, flow?.GetStartStage(), new[] { User.CurrentUser }, tempTRN, callback).First();
+                    base.Save(tempTRN);
                 }
-                works = Works.ToList();
-                var stages = new List<Stage>();
-                foreach (var work in works)
-                {
-                    if (!work.IsResend && work.Stage != null && !stages.Contains(work.Stage))
-                    {
-                        param.Work = work;
-                        param.Stage = work.Stage;
-                        if (work.UpdateState == DBUpdateState.Update && work.IsComplete
-                            && work.Changed(DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.IsComplete))))
-                        {
-                            var enumer = work.Stage.GetParams().Where(p => p is StageProcedure && ((StageProcedure)p).ProcedureType == ParamProcudureType.OnFinish).Cast<StageProcedure>();
-                            ExecuteStageProcedure(param, enumer, callback);
-                        }
-
-                        if (work.UpdateState == DBUpdateState.Insert)
-                        {
-                            var enumer = work.Stage.GetParams().Where(p => p is StageProcedure && ((StageProcedure)p).ProcedureType == ParamProcudureType.OnStart).Cast<StageProcedure>();
-                            ExecuteStageProcedure(param, enumer, callback);
-                        }
-                    }
-                    work.IsResend = false;
-                }
-                base.Save(tempTRN);
 
                 var relations = Document.DBTable.GetChildRelations();
                 foreach (var relation in relations)
@@ -815,6 +712,94 @@ namespace DataWF.Module.Flow
                     tempTRN.Dispose();
                 saving.Remove(this);
             }
+        }
+
+        public List<DocumentWork> Send(DBTransaction transaction, ExecuteDocumentCallback callback = null)
+        {
+            var work = GetWork();
+            if (work == null)
+            {
+                throw new InvalidOperationException("No Actual works Found!");
+            }
+            if (work.Stage == null)
+            {
+                throw new InvalidOperationException("Stage on Work not Defined!");
+            }
+            var stageReference = work.Stage.GetStageReference();
+
+            return Send(work, stageReference.ReferenceStage, stageReference.GetDepartment(Template), transaction, callback);
+        }
+
+        public List<DocumentWork> Send(DocumentWork from, Stage stage, IEnumerable<DBItem> staff, DBTransaction transaction, ExecuteDocumentCallback callback = null)
+        {
+            if (!(staff?.Any() ?? false))
+            {
+                throw new InvalidOperationException($"Destination not specified {stage}!");
+            }
+            //if (stage != null)
+            //{
+            //    DocumentWork oldWork = GetByStage(stage);
+            //    if (oldWork != null && oldWork != from && !oldWork.IsComplete)
+            //    {
+            //        throw new InvalidOperationException($"Allready on Stage {stage}!");
+            //    }
+            //}
+            if (from != null)
+            {
+                if (from.User == null)
+                {
+                    from.User = User.CurrentUser;
+                }
+
+                if (from.Stage != null)
+                {
+                    var param = new DocumentExecuteArgs { Document = this, Transaction = transaction, Stage = from.Stage, Work = from };
+
+                    var checkResult = ExecuteStageProcedure(param, from.Stage.GetProceduresByType(ParamProcudureType.Check), callback);
+                    if (checkResult != null)
+                        throw new InvalidOperationException($"Check Fail {checkResult}");
+
+                    if (from.Stage == stage)
+                    {
+                        from.IsResend = true;
+                        // work.IsResend = true;
+                    }
+                    else
+                    {
+                        ExecuteStageProcedure(param, from.Stage.GetProceduresByType(ParamProcudureType.Finish), callback);
+                    }
+                }
+            }
+
+            var result = new List<DocumentWork>();
+            foreach (var item in staff)
+            {
+                result.Add(CreateWork(from, stage, item));
+            }
+            if (transaction != null)
+            {
+                transaction.Rows.AddRange(result);
+            }
+            if (from != null)
+            {
+                from.DateComplete = DateTime.Now;
+                if (transaction != null)
+                {
+                    transaction.Rows.Add(from);
+                }
+            }
+            CheckComplete();
+
+            if (stage != null)
+            {
+                var param = new DocumentExecuteArgs { Document = this, Transaction = transaction, Stage = stage };
+                ExecuteStageProcedure(param, stage.GetProceduresByType(ParamProcudureType.Start), callback);
+            }
+
+
+            if (!IsComplete.GetValueOrDefault() && Status == DBStatus.Archive)
+                Status = DBStatus.Edit;
+            return result;
         }
 
         public bool IsEdited()

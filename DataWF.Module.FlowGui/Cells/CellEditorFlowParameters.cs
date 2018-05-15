@@ -35,7 +35,7 @@ namespace DataWF.Module.FlowGui
                 {
                     DataType = typeof(DBProcedure);
                 }
-                else if (gp.ItemType == (int)ParamType.Relation)
+                else if (gp.ItemType == (int)ParamType.Reference)
                 {
                     DataType = typeof(Stage);
                 }
@@ -43,7 +43,7 @@ namespace DataWF.Module.FlowGui
                 {
                     DataType = typeof(Template);
                 }
-                else if (gp.ItemType == (int)ParamType.Reference)
+                else if (gp.ItemType == (int)ParamType.Foreign)
                 {
                     DataType = typeof(DBColumn);
                 }

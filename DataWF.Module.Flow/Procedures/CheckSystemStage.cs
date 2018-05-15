@@ -38,8 +38,8 @@ namespace DataWF.Module.Flow
                     continue;
                 using (var transaction = new DBTransaction(Document.DBTable.Schema.Connection))
                 {
-                    var param = new ExecuteArgs(work.Document, transaction);
-                    Document.ExecuteStageProcedure(param, work.Stage.GetProceduresByType(ParamProcudureType.ByUser));
+                    var param = new DocumentExecuteArgs { Document = work.Document, Transaction = transaction, Work = work, Stage = work.Stage };
+                    Document.ExecuteStageProcedure(param, work.Stage.GetProceduresByType(ParamProcudureType.Manual));
                     work.Document.Save(transaction);
 
                     transaction.Commit();

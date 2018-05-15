@@ -359,4 +359,52 @@ namespace DataWF.Module.Common
 
 
     }
+
+    public static class UserExtension
+        {
+        public static IEnumerable<User> GetUsers(this DBItem item, DBItem filter = null)
+        {
+            foreach (var access in item.Access.Items)
+            {
+                if (access.Create && filter == null || filter.Access.Get(access.Group).Create)
+                {
+                    foreach (User user in User.DBTable)
+                    {
+                        if (user.Access.Get(access.Group).Create)
+                            yield return user;
+                    }
+                }
+            }
+        }
+
+        public static IEnumerable<Position> GetPositions(this DBItem item, DBItem filter = null)
+        {
+            foreach (var access in item.Access.Items)
+            {
+                if (access.Create && filter == null || filter.Access.Get(access.Group).Create)
+                {
+                    foreach (Position position in Position.DBTable)
+                    {
+                        if (position.Access.Get(access.Group).Create)
+                            yield return position;
+                    }
+                }
+            }
+        }
+
+        public static IEnumerable<Department> GetDepartment(this DBItem item, DBItem filter = null)
+        {
+            foreach (var access in item.Access.Items)
+            {
+                if (access.Create && filter == null || filter.Access.Get(access.Group).Create)
+                {
+                    foreach (Department department in Department.DBTable)
+                    {
+                        if (department.Access.Get(access.Group).Create)
+                            yield return department;
+                    }
+                }
+            }
+        }
+    }
 }

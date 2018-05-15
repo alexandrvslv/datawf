@@ -15,7 +15,9 @@ namespace DataWF.Module.FlowGui
     {
         private Stage stage;
         private ListEditor attribures;
-        private TableEditor parameters;
+        private ListEditor procedures;
+        private ListEditor relations;
+
         //private TableEditor parameters;
 
         public StageEditor()
@@ -26,24 +28,46 @@ namespace DataWF.Module.FlowGui
                     Name = "Attributes",
                     Col = 0,
                     Row = 0,
-                    FillWidth = true,
+                    Width = 400,
                     FillHeight = true,
                     Widget = attribures = new ListEditor { AccessVisible = true }
                 },
                 new GroupBoxItem
+                (
+                    new GroupBoxItem
+                    {
+                        Name = "Relations",
+                        Col = 0,
+                        Row = 0,
+                        RadioGroup = 1,
+                        FillWidth = true,
+                        FillHeight = true,
+                        Widget = relations = new ListEditor
+                        {
+                            DataSource = new DBTableView<StageReference>(QQuery.CreateParam(StageParam.DBTable.ParseProperty(nameof(StageParam.StageId)), null), DBViewKeys.Empty)
+                        }
+                    },
+                    new GroupBoxItem
+                    {
+                        Name = "Procedures",
+                        Col = 0,
+                        Row = 1,
+                        RadioGroup = 1,
+                        Expand = false,
+                        FillWidth = true,
+                        FillHeight = true,
+                        Widget = procedures = new ListEditor
+                        {
+                            DataSource = new DBTableView<StageProcedure>(QQuery.CreateParam(StageParam.DBTable.ParseProperty(nameof(StageParam.StageId)), null), DBViewKeys.Empty)
+                        }
+                    }
+                )
                 {
-                    Name = "Parameters",
+                    Name = "Group",
                     Col = 1,
                     Row = 0,
-                    FillWidth = true,
-                    FillHeight = true,
-                    Widget = parameters = new TableEditor
-                    {
-                        TableView = new DBTableView<StageParam>((QParam)null, DBViewKeys.Empty),
-                        OwnerColumn = StageParam.DBTable.ParseProperty(nameof(StageParam.StageId)),
-                        OpenMode = TableEditorMode.Referencing
-                    }
-                })
+                }
+            )
             { Name = "GroupBox" };
             PackStart(groupBox, true, true);
         }
@@ -56,11 +80,15 @@ namespace DataWF.Module.FlowGui
                 if (stage == value)
                     return;
                 stage = value;
-
+                Text = value?.ToString();
                 attribures.DataSource = value;
                 attribures.ReadOnly = false;
 
-                parameters.OwnerRow = value;
+                ((DBTableView<StageProcedure>)procedures.DataSource).DefaultParam.Value = value?.Id;
+                ((DBTableView<StageProcedure>)procedures.DataSource).ResetFilter();
+
+                ((DBTableView<StageReference>)relations.DataSource).DefaultParam.Value = value?.Id;
+                ((DBTableView<StageReference>)relations.DataSource).ResetFilter();
             }
         }
 

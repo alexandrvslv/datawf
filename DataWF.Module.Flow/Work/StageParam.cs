@@ -31,18 +31,18 @@ namespace DataWF.Module.Flow
     {
         None,
         Column,
-        Reference,
+        Foreign,
         Template,
         Procedure,
-        Relation,
+        Reference,
     }
 
     public enum ParamProcudureType
     {
-        OnStart,
-        ByUser,
+        Start,
+        Manual,
         Check,
-        OnFinish
+        Finish
     }
 
     public class StageParamList : DBTableView<StageParam>
@@ -108,6 +108,7 @@ namespace DataWF.Module.Flow
             set { SetProperty(value); }
         }
 
+        [Browsable(false)]
         public object Param
         {
             get
@@ -122,13 +123,13 @@ namespace DataWF.Module.Flow
                             case ParamType.Column:
                                 _cache = GetColumn();
                                 break;
-                            case ParamType.Reference:
+                            case ParamType.Foreign:
                                 _cache = GetReference();
                                 break;
                             case ParamType.Procedure:
                                 _cache = DBService.ParseProcedure(ParamCode);
                                 break;
-                            case ParamType.Relation:
+                            case ParamType.Reference:
                                 _cache = Stage.DBTable.LoadItemById(ParamCode);
                                 break;
                             case ParamType.Template:
@@ -178,51 +179,6 @@ namespace DataWF.Module.Flow
             return result;
         }
 
-        public IEnumerable<User> GetUsers()
-        {
-            foreach (var access in Access.Items)
-            {
-                if (access.Create)
-                {
-                    foreach (User user in User.DBTable)
-                    {
-                        if (user.Access.Get(access.Group).Create)
-                            yield return user;
-                    }
-                }
-            }
-        }
-
-        public IEnumerable<Position> GetPositions()
-        {
-            foreach (var access in Access.Items)
-            {
-                if (access.Create)
-                {
-                    foreach (Position position in Position.DBTable)
-                    {
-                        if (position.Access.Get(access.Group).Create)
-                            yield return position;
-                    }
-                }
-            }
-        }
-
-        public IEnumerable<Department> GetDepartment()
-        {
-            foreach (var access in Access.Items)
-            {
-                if (access.Create)
-                {
-                    foreach (Department department in Department.DBTable)
-                    {
-                        if (department.Access.Get(access.Group).Create)
-                            yield return department;
-                    }
-                }
-            }
-        }
-
         public override string ToString()
         {
             return string.Format("{0} {1}", (ParamType)ItemType, Param);
@@ -251,12 +207,12 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [ItemType((int)ParamType.Relation)]
-    public class StageRelation : StageParam
+    [ItemType((int)ParamType.Reference)]
+    public class StageReference : StageParam
     {
-        public StageRelation()
+        public StageReference()
         {
-            ItemType = (int)ParamType.Relation;
+            ItemType = (int)ParamType.Reference;
         }
 
         public Stage ReferenceStage
@@ -266,15 +222,15 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [ItemType((int)ParamType.Reference)]
-    public class StageReference : StageParam
+    [ItemType((int)ParamType.Foreign)]
+    public class StageForeign : StageParam
     {
-        public StageReference()
+        public StageForeign()
         {
-            ItemType = (int)ParamType.Reference;
+            ItemType = (int)ParamType.Foreign;
         }
 
-        public DBForeignKey Reference
+        public DBForeignKey Foreign
         {
             get { return Param as DBForeignKey; }
             set { Param = value; }

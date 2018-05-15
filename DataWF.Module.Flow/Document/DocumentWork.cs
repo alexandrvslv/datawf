@@ -183,7 +183,11 @@ namespace DataWF.Module.Flow
         public Position Position
         {
             get { return GetPropertyReference<Position>(); }
-            set { SetPropertyReference(value); }
+            set
+            {
+                SetPropertyReference(value);
+                Department = value?.Department;
+            }
         }
 
         [Browsable(false)]
@@ -293,6 +297,21 @@ namespace DataWF.Module.Flow
 
         [Browsable(false)]
         public bool IsResend { get; set; }
+
+
+        public DBItem Staff
+        {
+            get { return (DBItem)User ?? (DBItem)Position ?? (DBItem)Department; }
+            set
+            {
+                if (value is Department)
+                    Department = (Department)value;
+                else if (value is Position)
+                    Position = (Position)value;
+                else if (value is User)
+                    User = (User)value;
+            }
+        }
 
         public override string ToString()
         {

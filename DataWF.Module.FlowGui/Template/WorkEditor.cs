@@ -28,7 +28,7 @@ namespace DataWF.Module.FlowGui
                     Name = "Attributes",
                     Col = 0,
                     Row = 0,
-                    FillWidth = true,
+                    Width = 400,
                     FillHeight = true,
                     Widget = attribures = new ListEditor { AccessVisible = true }
                 },
@@ -68,7 +68,7 @@ namespace DataWF.Module.FlowGui
                 if (work == value)
                     return;
                 work = value;
-
+                Text = value?.ToString();
                 attribures.DataSource = value;
                 attribures.ReadOnly = false;
 

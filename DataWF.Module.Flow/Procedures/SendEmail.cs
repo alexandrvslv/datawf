@@ -12,6 +12,7 @@ namespace DataWF.Module.Flow
     {
         public object Execute(ExecuteArgs arg)
         {
+            var darg = (DocumentExecuteArgs)arg;
             var smtpServer = Book.DBTable.LoadByCode("smtpserver");
             if (smtpServer == null)
                 throw new NullReferenceException("smtpserver book parameter not found!");
@@ -24,13 +25,50 @@ namespace DataWF.Module.Flow
                 using (var message = new MailMessage())
                 {
                     message.From = new MailAddress(User.CurrentUser.EMail);
-                    message.To.Add("receiver@me.com");
-                    message.Body = "body";
-                    message.Subject = "subject";
+                    FillTo(message, darg);
+                    message.Body = GetBody(darg);
+                    message.Subject = "Documents Notify";
                     client.Send(message);
                 }
             }
             return null;
+        }
+
+        public virtual void FillTo(MailMessage message, DocumentExecuteArgs arg)
+        {
+            if (arg.StageProcedure != null)
+            {
+                foreach (var department in arg.StageProcedure.GetDepartment(((Document)arg.Document).Template))
+                {
+                    foreach (var user in department.GetUsers())
+                    {
+                        message.To.Add(user.EMail);
+                    }
+                }
+            }
+        }
+
+        public virtual string GetBody(DocumentExecuteArgs arg)
+        {
+            var builder = new StringBuilder();
+            builder.AppendLine($"Informs you about document: {arg.Document}");
+            if (arg.StageProcedure != null)
+            {
+                if (arg.StageProcedure.ProcedureType == ParamProcudureType.Finish)
+                {
+                    builder.AppendLine($"Finish {arg.StageProcedure.Stage} stage!");
+                }
+                else if (arg.StageProcedure.ProcedureType == ParamProcudureType.Start)
+                {
+                    builder.AppendLine($"Start {arg.StageProcedure.Stage} stage!");
+                }
+                else if (arg.StageProcedure.ProcedureType == ParamProcudureType.Manual)
+                {
+                    builder.AppendLine($"Is on {arg.StageProcedure.Stage} stage!");
+                }
+            }
+            builder.AppendLine($"Mailed you by {User.CurrentUser}!");
+            return builder.ToString();
         }
     }
 }

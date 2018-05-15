@@ -42,7 +42,7 @@ namespace DataWF.Data.Gui
         public DataQuery()
         {
             tw.Mode = ToolShowMode.Dialog;
-            tw.ButtonAccept.Clicked += ButtonAccept_Click;
+            tw.ButtonAccept.Click += ButtonAccept_Click;
 
             timeInterval.Interval = 1000;
             timeInterval.Elapsed += TimeIntervalTick;
@@ -143,7 +143,7 @@ namespace DataWF.Data.Gui
         public override void Localize()
         {
             base.Localize();
-			bar.Localize();
+            bar.Localize();
             list.Localize();
             GuiService.Localize(this, "DataQuery", "Data Query", GlyphType.FileText);
         }
@@ -376,7 +376,7 @@ namespace DataWF.Data.Gui
 
             tw.Target = box;
             tw.Show(this, new Point(0, 0));
-            tw.ButtonAccept.Clicked += (o, a) =>
+            tw.ButtonAccept.Click += (o, a) =>
             {
                 var tables = new List<DBTable>();
                 foreach (Node n in dtree.Nodes)

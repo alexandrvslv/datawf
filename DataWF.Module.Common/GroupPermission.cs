@@ -259,7 +259,7 @@ namespace DataWF.Module.Common
             var permission = list.FirstOrDefault();
             if (list.Count > 1)
             {
-                DBService.Merge(list, permission);
+                permission.Merge(list);
             }
 
             if (permission == null)

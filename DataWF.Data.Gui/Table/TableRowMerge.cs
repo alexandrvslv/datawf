@@ -45,7 +45,7 @@ namespace DataWF.Data.Gui
             else
             {
                 DBItem main = (DBItem)list.SelectedItem;
-                DBService.Merge(itemlist, main);
+                main.Merge(itemlist);
                 //list.QueueDraw(false, false);
                 MessageDialog.ShowMessage(this, "Merge complete!");
             }

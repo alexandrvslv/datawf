@@ -403,8 +403,8 @@ namespace DataWF.Module.FlowGui
                     {
                         foreach (var param in stage.GetParams())
                         {
-                            if (param is StageReference)
-                                InitReference(stage, (StageReference)param);
+                            if (param is StageForeign)
+                                InitReference(stage, (StageForeign)param);
                             else if (param is StageProcedure)
                                 InitProcedure(stage, (StageProcedure)param);
                             //else if (param.Type == ParamType.Template)
@@ -608,9 +608,9 @@ namespace DataWF.Module.FlowGui
             }
         }
 
-        public DockPage InitReference(DBItem owner, StageReference param)
+        public DockPage InitReference(DBItem owner, StageForeign param)
         {
-            var foreign = param.Reference;
+            var foreign = param.Foreign;
             if (foreign == null || foreign.ReferenceTable != Document.DBTable)
                 return null;
 
@@ -646,7 +646,7 @@ namespace DataWF.Module.FlowGui
         public void InitProcedure(DBItem owner, StageProcedure param)
         {
             var proc = param.Procedure as DBProcedure;
-            if (proc == null || param.ProcedureType != ParamProcudureType.ByUser)
+            if (proc == null || param.ProcedureType != ParamProcudureType.Manual)
                 return;
 
             string name = "procedure" + proc.Name;

@@ -35,7 +35,6 @@ namespace DataWF.Module.FlowGui
         protected ToolTableLoader toolProgress;
         protected ToolDropDown toolParam;
 
-        protected Toolsbar filterBar;
         protected ToolItem filterWork;
         protected ToolItem filterCurrent;
         protected ToolItem filterClear;
@@ -66,7 +65,8 @@ namespace DataWF.Module.FlowGui
             filterTitle = new ToolFieldEditor { FillWidth = true, Name = nameof(DocumentFilter.Title), DisplayStyle = ToolItemDisplayStyle.Text };
             filterDate = new ToolFieldEditor { FillWidth = true, Name = nameof(DocumentFilter.Date), DisplayStyle = ToolItemDisplayStyle.Text };
 
-            filterBar = new Toolsbar(new ToolItem[]
+            var filterGroup = new ToolItem { Row = 1, Name = "FilterBar" };
+            filterGroup.AddRange(new ToolItem[]
             {
                 filterCustomer,
                 filterNumber,
@@ -76,8 +76,7 @@ namespace DataWF.Module.FlowGui
                 filterWork,
                 filterCurrent,
                 filterClear
-            })
-            { Name = "FilterBar" };
+            });
 
             ofDialog = new OpenFileDialog() { Multiselect = true };
             loader = new TableLoader();
@@ -109,7 +108,8 @@ namespace DataWF.Module.FlowGui
                 toolFilter,
                 toolPreview,
                 toolView,
-                toolProgress)
+                toolProgress,
+                filterGroup)
             { Name = "DocumentListBar" };
 
             list = new DocumentLayoutList()
@@ -136,7 +136,6 @@ namespace DataWF.Module.FlowGui
             //hSplit.Panel2.Content = vSplit;
 
             PackStart(bar, false, false);
-            PackStart(filterBar, false, false);
             PackStart(hSplit, true, true);
             Name = "DocumentListView";
             Filter = new DocumentFilter();
@@ -157,16 +156,16 @@ namespace DataWF.Module.FlowGui
 
         public override void Localize()
         {
-            bar.Localize();
-            filterBar.Localize();
-            list.Localize();
-            filterView.Localize();
-            GuiService.Localize(this, nameof(DocumentListView), "Documents List");
-
-            if (deditor != null)
+            base.Localize();
+            if (filterView.Parent == null)
+            {
+                filterView.Localize();
+            }
+            if (deditor != null && deditor.Parent == null)
             {
                 deditor.Localize();
             }
+            GuiService.Localize(this, nameof(DocumentListView), "Documents List");
             //CheckDocumentTemplates();
         }
 
