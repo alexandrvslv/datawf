@@ -309,6 +309,16 @@ namespace DataWF.Gui
             Container?.OnPropertyChanged(this, args);
         }
 
+        public IEnumerable<Node> GetNodes()
+        {
+            foreach (var item in Nodes)
+            {
+                yield return item;
+                foreach (var subItem in item.GetNodes())
+                    yield return subItem;
+            }
+        }
+
         public int CompareTo(object obj)
         {
             return order.CompareTo(((Node)obj).order);

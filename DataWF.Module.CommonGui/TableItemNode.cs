@@ -2,6 +2,8 @@
 using DataWF.Gui;
 using DataWF.Common;
 using Xwt.Drawing;
+using System;
+using System.Collections.Generic;
 
 namespace DataWF.Module.CommonGui
 {
@@ -32,6 +34,8 @@ namespace DataWF.Module.CommonGui
                 Text = Item?.ToString();
             }
         }
+
+        
     }
 }
 

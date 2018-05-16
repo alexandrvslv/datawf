@@ -22,6 +22,7 @@ namespace DataWF.Module.FlowGui
         private Menubar contextAdd;
         private Menubar contextTools;
         private FlowTree tree;
+        private DBItem currentItem;
 
         public FlowExplorer()
             : base()
@@ -331,9 +332,47 @@ namespace DataWF.Module.FlowGui
                 }
             }
             barMain["Remove"].Sensitive = flag;
+            CurrentItem = tree.SelectedDBItem;
 
-            if (tree.SelectedDBItem != null && GuiService.Main != null)
-                GuiService.Main.ShowProperty(this, tree.SelectedDBItem, false);
+        }
+
+        public DBItem CurrentItem
+        {
+            get { return currentItem; }
+            set
+            {
+                if (currentItem == value)
+                    return;
+                if (currentItem != null)
+                {
+                    currentItem.PropertyChanged -= CurrentItemPropertyChanged;
+                }
+                currentItem = value;
+                if (currentItem != null)
+                {
+                    if (GuiService.Main != null)
+                    {
+                        GuiService.Main.ShowProperty(this, tree.SelectedDBItem, false);
+                        currentItem.PropertyChanged += CurrentItemPropertyChanged;
+                    }
+                }
+            }
+        }
+
+        private void CurrentItemPropertyChanged(object sender, EventArgs e)
+        {
+            var item = (DBItem)sender;
+            if (item.IsChangedKey(item.Table.AccessKey))
+            {
+                var node = tree.Find(item);
+
+
+                foreach (var entry in node.GetNodes())
+                {
+                    if (entry is TableItemNode && ((TableItemNode)entry).Item is DBItem)
+                        ((DBItem)((TableItemNode)entry).Item).Access = item.Access;
+                }
+            }
         }
 
         public DockType DockType

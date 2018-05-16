@@ -116,8 +116,8 @@ namespace DataWF.Gui
             get { return access; }
             set
             {
-                access = value;
-                alist.ListSource = access != null ? access.Items : null;
+                access = value?.Clone();
+                alist.ListSource = access?.Items;
             }
         }
 
@@ -132,6 +132,7 @@ namespace DataWF.Gui
                     if (accessable.Access == null)
                         accessable.Access = new AccessValue();
                     Access = accessable.Access;
+                    Readonly = !Access.Edit && !Access.Admin;
                 }
             }
         }

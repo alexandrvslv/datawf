@@ -15,7 +15,7 @@ namespace DataWF.Common
             foreach (IAccessGroup group in Groups)
             {
                 if (group != null)
-                    Add(new AccessItem(group, AccessType.View | AccessType.Edit | AccessType.Create | AccessType.Admin));
+                    Add(new AccessItem(group, AccessType.View));
             }
         }
 

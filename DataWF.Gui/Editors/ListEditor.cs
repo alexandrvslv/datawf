@@ -460,6 +460,7 @@ namespace DataWF.Gui
                     {
                         access = new AccessEditor() { Name = "access" };
                     }
+                    
                     access.Accessable = (IAccessable)DataSource;
                     container.Panel2.Content = access;
                 }

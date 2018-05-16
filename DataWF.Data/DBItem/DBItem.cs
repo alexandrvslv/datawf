@@ -43,6 +43,7 @@ namespace DataWF.Data
         protected DBTable table;
         protected DBItemState state = DBItemState.New;
         protected DBUpdateState update = DBUpdateState.Default;
+        private AccessValue access;
 
         public DBItem()
         {
@@ -669,24 +670,20 @@ namespace DataWF.Data
         {
             get
             {
-                AccessValue access;
-
-                if (table.AccessKey != null)
+                if (access == null)
                 {
-                    access = GetCache(table.AccessKey) as AccessValue;
-                    if (access == null)
+                    if (table.AccessKey != null)
                     {
                         var accessData = GetValue<byte[]>(table.AccessKey);
                         if (accessData == null)
-                            access = Table.Access.Clone();
+                            access = Table.Access;
                         else
                             access = new AccessValue(accessData);
-                        SetCache(table.AccessKey, access);
                     }
-                }
-                else
-                {
-                    access = Table.Access;
+                    else
+                    {
+                        access = Table.Access;
+                    }
                 }
                 return access;
             }
@@ -698,7 +695,7 @@ namespace DataWF.Data
                     {
                         SetValue(value.Write(), table.AccessKey);
                     }
-                    SetCache(table.AccessKey, value);
+                    access = value;
                 }
             }
         }
