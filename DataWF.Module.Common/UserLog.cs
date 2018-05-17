@@ -389,7 +389,7 @@ namespace DataWF.Module.Common
             }
 
             newLog.TextData = text;
-            newLog.Save(false);
+            newLog.Save(null, false);
         }
 
         public static UserLog LogRow(DBItemEventArgs arg)
