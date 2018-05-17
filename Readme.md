@@ -6,10 +6,10 @@ Data/Document Work Flow is a set of C# libraries to build simple cross-platform 
 
 - DataWF.Common - .NETStandard collections, reflections, io and networks helpers
 - DataWF.Data - .NETStandard Cross RDBMS ORM
-- DataWF.Module.Common - Common models
-- DataWF.Module.Flow - Document Workflow models
 - DataWF.Gui - Xwt based desktop UI
 - DataWF.Data.Gui - Database desktop UI
+- DataWF.Module.Common - Common models
+- DataWF.Module.Flow - Document Workflow models
 - DataWF.Module.CommonGui - Users Administator UI
 - DataWF.Mudule.FlowGui - Document Workflow UI
 
@@ -80,24 +80,6 @@ Connection example:
     var connection = new DBConnection("test") { System = DBSystem.SQLite, DataBase = "test.sqlite" };
     var qresult = connection.ExecuteQResult( $"select * from {SomeTableName}");
 
-## DataWF.Module.Common
-
-Common Models:
-
-- Group & Permission
-- User & User Group
-- User Log
-- Reference Book
-- Scheduler
-
-## DataWF.Module.Flow
-
-WorkFlow Models:
-
-- Work & Stage
-- Template & Attribute
-- Document & Relating Data
-
 ## DataWF.Gui
 
 Cross Platform Desktop UI, based on Xwt. Provide several widgets to build data navigation application
@@ -118,6 +100,24 @@ Note: Move UI from WinForm/Gtk# to Xwt is not compleate and little bugly.
 - Database Export utilite
 - Query Builder(not compleate)
 - Report engeene(planed)
+
+## DataWF.Module.Common
+
+Common Models:
+
+- Group & Permission
+- User & User Group
+- User Log
+- Reference Book
+- Scheduler
+
+## DataWF.Module.Flow
+
+WorkFlow Models:
+
+- Work & Stage
+- Template & Attribute
+- Document & Relating Data
 
 ## DataWF.Module.CommonGUI
 
