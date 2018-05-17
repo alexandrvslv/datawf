@@ -633,43 +633,43 @@ namespace DataWF.Module.Flow
             return work;
         }
 
-        public void Save(DocInitType type, DBTransaction transaction = null)
+        public void Save(DocInitType type)
         {
             if (type == DocInitType.Default)
-                Save(transaction);
+                Save();
             else if (type == DocInitType.References)
-                DocumentReference.DBTable.Save(References.ToList(), transaction);
+                DocumentReference.DBTable.Save(References.ToList());
             else if (type == DocInitType.Data)
-                DocumentData.DBTable.Save(Datas.ToList(), transaction);
+                DocumentData.DBTable.Save(Datas.ToList());
             else if (type == DocInitType.Workflow)
-                DocumentWork.DBTable.Save(Works.ToList(), transaction);
+                DocumentWork.DBTable.Save(Works.ToList());
             else if (type == DocInitType.Customer)
-                DocumentCustomer.DBTable.Save(Customers.ToList(), transaction);
+                DocumentCustomer.DBTable.Save(Customers.ToList());
         }
 
 
 
-        public void Save(DBTransaction transaction, ExecuteDocumentCallback callback = null)
+        public void Save(ExecuteDocumentCallback callback)
         {
             if (saving.Contains(this))//prevent recursion
                 return;
             var temp = UserLog.CurrentDocument;
             UserLog.CurrentDocument = this;
             saving.Add(this);
-            var tempTRN = transaction ?? new DBTransaction(Table.Schema.Connection);
-            var param = new DocumentExecuteArgs() { Document = this, Transaction = tempTRN };
+            var transaction = DBTransaction.GetTransaction(this, Table.Schema.Connection);
+            var param = new DocumentExecuteArgs() { Document = this };
             try
             {
                 var works = Works.ToList();
                 bool isnew = works.Count == 0;
 
-                base.Save(tempTRN);
+                base.Save();
 
                 if (isnew)
                 {
                     var flow = Template.Work;
-                    var work = Send(null, flow?.GetStartStage(), new[] { User.CurrentUser }, tempTRN, callback).First();
-                    base.Save(tempTRN);
+                    var work = Send(null, flow?.GetStartStage(), new[] { User.CurrentUser }, callback).First();
+                    base.Save();
                 }
 
                 var relations = Document.DBTable.GetChildRelations();
@@ -683,7 +683,7 @@ namespace DataWF.Module.Flow
                             if (reference.IsChanged)
                                 updatind.Add(reference);
                         if (updatind.Count > 0)
-                            relation.Table.Save(updatind, tempTRN);
+                            relation.Table.Save(updatind);
                     }
                 }
                 if (isnew)//Templating
@@ -692,29 +692,29 @@ namespace DataWF.Module.Flow
                     if (data != null)
                         data.Parse(param);
                 }
-                Save(DocInitType.Data, tempTRN);
+                Save(DocInitType.Data);
                 Saved?.Invoke(null, new DocumentEventArgs(this));
                 UserLog.CurrentDocument = temp;
-                if (transaction == null)
+                if (transaction.Owner == this)
                 {
-                    tempTRN.Commit();
+                    transaction.Commit();
                 }
             }
             catch (Exception ex)
             {
-                if (transaction == null)
-                    tempTRN.Rollback();
+                if (transaction.Owner == this)
+                    transaction.Rollback();
                 throw ex;
             }
             finally
             {
-                if (transaction == null)
-                    tempTRN.Dispose();
+                if (transaction.Owner == this)
+                    transaction.Dispose();
                 saving.Remove(this);
             }
         }
 
-        public List<DocumentWork> Send(DBTransaction transaction, ExecuteDocumentCallback callback = null)
+        public List<DocumentWork> Send(ExecuteDocumentCallback callback = null)
         {
             var work = GetWork();
             if (work == null)
@@ -727,10 +727,10 @@ namespace DataWF.Module.Flow
             }
             var stageReference = work.Stage.GetStageReference();
 
-            return Send(work, stageReference.ReferenceStage, stageReference.GetDepartment(Template), transaction, callback);
+            return Send(work, stageReference.ReferenceStage, stageReference.GetDepartment(Template), callback);
         }
 
-        public List<DocumentWork> Send(DocumentWork from, Stage stage, IEnumerable<DBItem> staff, DBTransaction transaction, ExecuteDocumentCallback callback = null)
+        public List<DocumentWork> Send(DocumentWork from, Stage stage, IEnumerable<DBItem> staff, ExecuteDocumentCallback callback = null)
         {
             if (!(staff?.Any() ?? false))
             {
@@ -753,7 +753,7 @@ namespace DataWF.Module.Flow
 
                 if (from.Stage != null)
                 {
-                    var param = new DocumentExecuteArgs { Document = this, Transaction = transaction, Stage = from.Stage, Work = from };
+                    var param = new DocumentExecuteArgs { Document = this, Stage = from.Stage, Work = from };
 
                     var checkResult = ExecuteStageProcedure(param, from.Stage.GetProceduresByType(ParamProcudureType.Check), callback);
                     if (checkResult != null)
@@ -776,23 +776,18 @@ namespace DataWF.Module.Flow
             {
                 result.Add(CreateWork(from, stage, item));
             }
-            if (transaction != null)
-            {
-                transaction.Rows.AddRange(result);
-            }
+            DBTransaction.Current.Rows.AddRange(result);
+
             if (from != null)
             {
                 from.DateComplete = DateTime.Now;
-                if (transaction != null)
-                {
-                    transaction.Rows.Add(from);
-                }
+                DBTransaction.Current.Rows.Add(from);
             }
             CheckComplete();
 
             if (stage != null)
             {
-                var param = new DocumentExecuteArgs { Document = this, Transaction = transaction, Stage = stage };
+                var param = new DocumentExecuteArgs { Document = this, Stage = stage };
                 ExecuteStageProcedure(param, stage.GetProceduresByType(ParamProcudureType.Start), callback);
             }
 

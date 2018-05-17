@@ -713,7 +713,7 @@ namespace DataWF.Module.FlowGui
             {
                 if (document.IsEdited())
                 {
-                    document.Save(null, new ExecuteDocumentCallback(CheckProcRezult));
+                    document.Save(new ExecuteDocumentCallback(CheckProcRezult));
                 }
                 document.IsChanged = false;
             }
@@ -818,7 +818,7 @@ namespace DataWF.Module.FlowGui
                 }
                 else if (dr == Command.Yes)
                 {
-                    Document.Save(null, null);
+                    Document.Save(null);
                 }
             }
         }

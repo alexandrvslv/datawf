@@ -464,21 +464,19 @@ namespace DataWF.Data
             }
         }
 
-        public void FillReferenceBlock(DBTransaction transaction)
+        public void FillReferenceBlock(IDbCommand command)
         {
-            var command = transaction.Command;
             foreach (var column in Columns.GetIsReference())
             {
                 if ((column.Keys & DBColumnKeys.Group) != DBColumnKeys.Group && column.ReferenceTable != this && !column.ReferenceTable.IsSynchronized)
                 {
-                    var sub = transaction.AddCommand(DBCommand.CloneCommand(command, column.ReferenceTable.BuildQuery(string.Format("where {0} in (select {1} {2})",
+                    var sub = DBCommand.CloneCommand(command, column.ReferenceTable.BuildQuery(string.Format("where {0} in (select {1} {2})",
                                   column.ReferenceTable.PrimaryKey.Name,
                                   column.Name,
-                                  command.CommandText.Substring(command.CommandText.IndexOf(" from ", StringComparison.OrdinalIgnoreCase))), null)));
-                    column.ReferenceTable.LoadItems(transaction, sub);
+                                  command.CommandText.Substring(command.CommandText.IndexOf(" from ", StringComparison.OrdinalIgnoreCase))), null));
+                    column.ReferenceTable.LoadItems(sub);
                 }
             }
-            transaction.AddCommand(command);
         }
 
         public event EventHandler<DBLoadProgressEventArgs> LoadProgress;
@@ -555,15 +553,13 @@ namespace DataWF.Data
 
         public abstract IEnumerable LoadItems(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable cols = null, IDBTableView synch = null);
 
-        public abstract IEnumerable LoadItems(DBTransaction transaction, QQuery query);
+        public abstract IEnumerable LoadItems(IDbCommand command, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null);
 
-        public abstract IEnumerable LoadItems(DBTransaction transaction, IDbCommand command);
+        public abstract DBItem LoadItemByCode(string code, DBColumn column, DBLoadParam param);
 
-        public abstract DBItem LoadItemByCode(string code, DBColumn column, DBLoadParam param, DBTransaction transaction = null);
+        public abstract DBItem LoadItemById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable cols = null, IDBTableView synch = null);
 
-        public abstract DBItem LoadItemById(object id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null, IEnumerable cols = null, IDBTableView synch = null);
-
-        public abstract void ReloadItem(object id, DBTransaction transaction = null);
+        public abstract void ReloadItem(object id);
 
         public abstract void AddView(IDBTableView view);
 
@@ -623,7 +619,7 @@ namespace DataWF.Data
 
         public abstract IEnumerable<DBItem> GetChangedItems();
 
-        public virtual bool SaveItem(DBItem item, DBTransaction transaction)
+        public virtual bool SaveItem(DBItem item)
         {
             if (item.UpdateState == DBUpdateState.Default || (item.UpdateState & DBUpdateState.Commit) == DBUpdateState.Commit)
             {
@@ -652,33 +648,37 @@ namespace DataWF.Data
             if (!item.Attached)
                 Add(item);
 
-            if (transaction.Reference && (item.UpdateState & DBUpdateState.Delete) != DBUpdateState.Delete)
+            var transaction = DBTransaction.GetTransaction(item, Schema.Connection);
+
+            try
             {
-                foreach (var column in Columns.GetIsReference())
+                if (transaction.Reference && (item.UpdateState & DBUpdateState.Delete) != DBUpdateState.Delete)
                 {
-                    if (column.ColumnType == DBColumnTypes.Default)
+                    foreach (var column in Columns.GetIsReference())
                     {
-                        var refItem = item.GetCache(column) as DBItem;
-                        if (refItem == null && item.GetValue(column) != null)
+                        if (column.ColumnType == DBColumnTypes.Default)
                         {
-                            refItem = item.GetReference(column) as DBItem;
-                        }
-                        if (refItem != null && refItem != item)
-                        {
-                            if (refItem.IsChanged)
-                                refItem.Save(transaction.GetSubTransaction(refItem.Table.Schema.Connection));
-                            if (item.GetValue(column) == null)
-                                item.SetValue(refItem.PrimaryId, column);
+                            var refItem = item.GetCache(column) as DBItem;
+                            if (refItem == null && item.GetValue(column) != null)
+                            {
+                                refItem = item.GetReference(column) as DBItem;
+                            }
+                            if (refItem != null && refItem != item)
+                            {
+                                if (refItem.IsChanged)
+                                    refItem.Save();
+                                if (item.GetValue(column) == null)
+                                    item.SetValue(refItem.PrimaryId, column);
+                            }
                         }
                     }
                 }
-            }
 
-            transaction.Rows.Add(item);
-            var args = new DBItemEventArgs(item) { Transaction = transaction };
+                transaction.Rows.Add(item);
+                var args = new DBItemEventArgs(item) { Transaction = transaction };
 
-            if (item.OnUpdating(args))
-            {
+                if (!item.OnUpdating(args))
+                    return false;
                 args.Columns = item.GetChangeKeys().ToList();
                 DBCommand dmlCommand = null;
 
@@ -692,7 +692,7 @@ namespace DataWF.Data
                     }
                     else
                     {
-                        item.GenerateId(transaction);
+                        item.GenerateId();
                         if (dmlInsert == null)
                             dmlInsert = DBCommand.Build(this, comInsert, DBCommandTypes.Insert, Columns);
                         dmlCommand = dmlInsert;
@@ -718,26 +718,30 @@ namespace DataWF.Data
                 dmlCommand.FillCommand(command, item);
 
                 var result = transaction.ExecuteQuery(command, dmlCommand == dmlInsertSequence ? DBExecuteType.Scalar : DBExecuteType.NoReader);
-                if (!(result is Exception))
+                transaction.DbConnection.System.UploadCommand(item, command);
+                if (PrimaryKey != null && item.PrimaryId == null)
+                    item[PrimaryKey] = result;
+                if (LogTable != null)
                 {
-                    transaction.DbConnection.System.UploadCommand(item, command);
-                    if (PrimaryKey != null && item.PrimaryId == null)
-                        item[PrimaryKey] = result;
-                    if (LogTable != null)
-                    {
-                        var subTransaction = transaction.GetSubTransaction(LogTable.Schema.Connection);
-                        args.LogItem = new DBLogItem(item);
-                        args.LogItem.Save(subTransaction);
-                    }
-                    item.OnUpdated(args);
-                    item.UpdateState |= DBUpdateState.Commit;
-                    return true;
+                    args.LogItem = new DBLogItem(item);
+                    args.LogItem.Save();
                 }
+                item.OnUpdated(args);
+                item.UpdateState |= DBUpdateState.Commit;
+                if (transaction.Owner == item)
+                    transaction.Commit();
+                return true;
             }
+            finally
+            {
+                if (transaction.Owner == item)
+                    transaction.Dispose();
+            }
+
             return false;
         }
 
-        public void Save(IList rows = null, DBTransaction transaction = null)
+        public void Save(IList rows = null)
         {
             if (rows == null)
                 rows = GetChangedItems().ToList();
@@ -746,18 +750,18 @@ namespace DataWF.Data
 
             ListHelper.QuickSort(rows, new InvokerComparer(typeof(DBItem), nameof(DBItem.UpdateState)));
 
-            var temp = transaction ?? new DBTransaction(Schema.Connection);
+            var transaction = DBTransaction.GetTransaction(this, Schema.Connection);
             try
             {
                 foreach (DBItem row in rows)
-                    SaveItem(row, temp);
-                if (transaction == null)
-                    temp.Commit();
+                    SaveItem(row);
+                if (transaction.Owner == this)
+                    transaction.Commit();
             }
             finally
             {
-                if (transaction == null)
-                    temp.Dispose();
+                if (transaction.Owner == this)
+                    transaction.Dispose();
             }
         }
 
@@ -1130,7 +1134,7 @@ namespace DataWF.Data
             return System?.FormatQTable(this);
         }
 
-        public string DetectQuery(string whereText, IEnumerable cols = null)
+        public string CreateQuery(string whereText, IEnumerable cols = null)
         {
             string rez;
             if (string.IsNullOrEmpty(whereText) || whereText.Trim().StartsWith("where ", StringComparison.OrdinalIgnoreCase))

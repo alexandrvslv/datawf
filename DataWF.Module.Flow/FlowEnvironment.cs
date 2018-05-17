@@ -80,7 +80,7 @@ namespace DataWF.Module.Flow
 
                 foreach (DBColumn col in cols)
                 {
-                    var document = arg.Item.GetReference<Document>(col, DBLoadParam.None, null);
+                    var document = arg.Item.GetReference<Document>(col, DBLoadParam.None);
                     if (document != null)
                         document.OnReferenceChanged(arg.Item);
                 }
@@ -94,31 +94,31 @@ namespace DataWF.Module.Flow
             watch.Start();
             using (var transaction = new DBTransaction(Book.DBTable.Schema.Connection) { ReaderParam = DBLoadParam.Synchronize | DBLoadParam.CheckDeleted })
             {
-                Book.DBTable.Load(transaction, "");
+                Book.DBTable.Load();
                 //cache groups
-                UserGroup.DBTable.Load(transaction, "");
+                UserGroup.DBTable.Load();
 
                 AccessValue.Groups = new DBTableView<UserGroup>("");
                 AccessItem.Default = false;
 
-                Location.DBTable.Load(transaction, "");
+                Location.DBTable.Load();
 
 
-                User.DBTable.Load(transaction, "");
+                User.DBTable.Load();
 
-                Template.DBTable.Load(transaction, "");
+                Template.DBTable.Load();
 
-                TemplateData.DBTable.Load(transaction, "");
+                TemplateData.DBTable.Load();
 
-                Work.DBTable.Load(transaction, "");
+                Work.DBTable.Load();
 
-                Stage.DBTable.Load(transaction, "");
+                Stage.DBTable.Load();
 
-                StageParam.DBTable.Load(transaction, "");
+                StageParam.DBTable.Load();
 
-                GroupPermission.DBTable.Load(transaction, "");
+                GroupPermission.DBTable.Load();
 
-                Scheduler.DBTable.Load(transaction, "");
+                Scheduler.DBTable.Load();
             }
             watch.Stop();
 

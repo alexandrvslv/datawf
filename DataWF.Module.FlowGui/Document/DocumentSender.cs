@@ -398,7 +398,7 @@ namespace DataWF.Module.FlowGui
             var nodes = listUsers.Nodes.GetChecked().Cast<TableItemNode>().Select(p => (DBItem)p.Item).ToList();
             foreach (DocumentSendItem sender in items)
             {
-                using (var transaction = new DBTransaction())
+                using (var transaction = new DBTransaction(Document.DBTable.Schema.Connection))
                 {
                     try
                     {
@@ -413,10 +413,10 @@ namespace DataWF.Module.FlowGui
                         {
                             sender.Message = string.Empty;
                             cuuItem = sender;
-                            sender.Document.Send(sender.Work, SelectedStage, nodes, transaction, new ExecuteDocumentCallback(OnSend));
+                            sender.Document.Send(sender.Work, SelectedStage, nodes, new ExecuteDocumentCallback(OnSend));
                         }
 
-                        sender.Document.Save(transaction, null);
+                        sender.Document.Save(null);
                         transaction.Commit();
                     }
                     catch (Exception ex)

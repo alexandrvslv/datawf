@@ -168,8 +168,10 @@ namespace DataWF.Module.FlowGui
             {
                 e.Transaction.Tag = sender;
                 foreach (var item in changes)
+                {
                     if (item != userGroup)
-                        item.Save(e.Transaction);
+                        item.Save();
+                }
                 changes.Clear();
             }
         }

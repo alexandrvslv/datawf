@@ -37,11 +37,36 @@ namespace DataWF.Data
             return GetFactory().CreateDataAdapter();
         }
 
-        public IDbCommand CreateCommand(DBConnection connection)
+        public IDbCommand CreateCommand(DBConnection connection, string query = null, CommandType commandType = CommandType.Text)
         {
             IDbCommand command = GetFactory().CreateCommand();
             command.CommandTimeout = connection.TimeOut;
+            command.CommandType = commandType;
+            if (query != null)
+            {
+                command.CommandText = query;
+            }
             return command;
+        }
+
+
+        public IDataParameter CreateParameter(IDbCommand command, string name, object value)
+        {
+            IDataParameter dparam = null;
+            foreach (IDataParameter param in command.Parameters)
+                if (param.ParameterName == name)
+                {
+                    dparam = param;
+                    break;
+                }
+            if (dparam == null)
+            {
+                dparam = command.CreateParameter();
+                dparam.ParameterName = name;
+                command.Parameters.Add(dparam);
+            }
+            dparam.Value = value ?? DBNull.Value;
+            return dparam;
         }
 
         public static IEnumerable<DBSystem> GetSystems()
@@ -87,7 +112,7 @@ namespace DataWF.Data
 
             foreach (object[] item in list.Values)
             {
-				tableInfo.Columns.Add(new DBColumnInfo()
+                tableInfo.Columns.Add(new DBColumnInfo()
                 {
                     Name = item[iName].ToString(),
                     DataType = item[iType].ToString(),
@@ -100,7 +125,7 @@ namespace DataWF.Data
             }
         }
 
-		public virtual void GetConstraintInfo(DBConnection connection, DBTableInfo tableInfo)
+        public virtual void GetConstraintInfo(DBConnection connection, DBTableInfo tableInfo)
         {
             var query = $@"select a.constraint_schema
 ,a.constraint_name
@@ -120,7 +145,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
 
             foreach (object[] item in list.Values)
             {
-				tableInfo.Constraints.Add(new DBConstraintInfo()
+                tableInfo.Constraints.Add(new DBConstraintInfo()
                 {
                     Name = item[iName].ToString(),
                     Type = item[iType].ToString(),

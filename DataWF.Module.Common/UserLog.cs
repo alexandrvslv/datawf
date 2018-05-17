@@ -69,7 +69,7 @@ namespace DataWF.Module.Common
             var log = UserLog.LogRow(arg);
             var transaction = arg.Transaction.GetSubTransaction(DBTable.Schema, false);
             transaction.Reference = false;
-            log.Save(transaction);
+            log.Save();
             RowLoged?.Invoke(log, arg);
         }
 
@@ -389,7 +389,7 @@ namespace DataWF.Module.Common
             }
 
             newLog.TextData = text;
-            newLog.Save(null, false);
+            newLog.Save();
         }
 
         public static UserLog LogRow(DBItemEventArgs arg)
@@ -455,21 +455,22 @@ namespace DataWF.Module.Common
 
                 list.Add(log);
             }
-            using (var transaction = new DBTransaction(DBTable.Schema.Connection))
+            using (var transaction = new DBTransaction(changed, DBTable.Schema.Connection))
             {
                 foreach (var entry in changed)
                 {
                     CurrentLog = new UserLog() { TextData = "Reject", Parent = User.CurrentUser.LogStart };
-                    CurrentLog.Save(transaction);
-                    entry.Key.Save(transaction);
+                    CurrentLog.Save();
+                    entry.Key.Save();
 
                     foreach (var item in entry.Value)
                     {
                         item.Redo = CurrentLog;
-                        item.Save(transaction);
+                        item.Save();
                     }
 
                 }
+                transaction.Commit();
             }
             CurrentLog = null;
         }
@@ -480,11 +481,11 @@ namespace DataWF.Module.Common
                 row.Status = DBStatus.Actual;
             else if (row.Status == DBStatus.Delete)
                 row.Delete();
-            using (var transaction = new DBTransaction(DBTable.Schema.Connection))
+            using (var transaction = new DBTransaction(row, DBTable.Schema.Connection))
             {
                 CurrentLog = new UserLog { TextData = "Accept", Parent = User.CurrentUser.LogStart };
-                CurrentLog.Save(transaction);
-                row.Save(transaction);
+                CurrentLog.Save();
+                row.Save();
 
                 foreach (UserLog item in logs)
                 {
@@ -492,7 +493,7 @@ namespace DataWF.Module.Common
                     {
                         item.Redo = CurrentLog;
                         item.Status = DBStatus.Actual;
-                        item.Save(transaction);
+                        item.Save();
                     }
                 }
                 CurrentLog = null;

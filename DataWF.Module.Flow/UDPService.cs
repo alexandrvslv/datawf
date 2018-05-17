@@ -287,9 +287,9 @@ namespace DataWF.Module.Flow
                         {
                             var task = loadQueue.Dequeue();
                             if (task.Refresh)
-                                task.Table.ReloadItem(task.Id, transaction);
+                                task.Table.ReloadItem(task.Id);
                             else
-                                task.Table.LoadItemById(task.Id, DBLoadParam.Load, transaction);
+                                task.Table.LoadItemById(task.Id, DBLoadParam.Load);
                         }
                     }
                 }

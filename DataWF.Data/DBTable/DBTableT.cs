@@ -241,7 +241,7 @@ namespace DataWF.Data
             {
                 var maxIndex = 0;
                 foreach (var item in items)
-                    maxIndex = item.hindex > maxIndex ? maxIndex : maxIndex;
+                    maxIndex = item.hindex > maxIndex ? item.hindex : maxIndex;
                 if (Hash > maxIndex)
                 {
                     Hash = maxIndex;
@@ -270,12 +270,6 @@ namespace DataWF.Data
 
         public List<T> Load(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable cols = null, IDBTableView synch = null)
         {
-            using (var transaction = new DBTransaction(Schema.Connection) { View = synch, ReaderParam = param })
-                return Load(transaction, whereText, cols);
-        }
-
-        public List<T> Load(DBTransaction transaction, string whereText = null, IEnumerable cols = null)
-        {
             if (string.IsNullOrEmpty(whereText) || whereText.Trim().Equals("where", StringComparison.OrdinalIgnoreCase))
                 whereText = string.Empty;
             else if (whereText.Length > 3
@@ -283,7 +277,7 @@ namespace DataWF.Data
                      && !whereText.Trim().StartsWith("select", StringComparison.OrdinalIgnoreCase))
                 whereText = "where " + whereText;
 
-            return Load(transaction, transaction.AddCommand(DetectQuery(whereText, cols)));
+            return Load(Schema.Connection.CreateCommand(CreateQuery(whereText, cols)), param, synch);
         }
 
         public override IEnumerable LoadItems(QQuery query, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null)
@@ -291,51 +285,44 @@ namespace DataWF.Data
             return Load(query, param, synch);
         }
 
-        public List<T> Load(QQuery query, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null)
-        {
-            using (var transaction = new DBTransaction(Schema.Connection) { View = synch, ReaderParam = param })
-            {
-                return Load(transaction, query);
-            }
-        }
-
-        public override IEnumerable LoadItems(DBTransaction transaction, QQuery query)
-        {
-            return Load(transaction, query);
-        }
-
-        public List<T> Load(DBTransaction transaction, QQuery query)
+        public List<T> Load(QQuery query, DBLoadParam param = DBLoadParam.None, IDBTableView view = null)
         {
             if (query.Table != this)
                 throw new ArgumentException(nameof(query));
             if (Count == 0)
-                transaction.ReaderParam &= ~DBLoadParam.CheckDeleted;
+            {
+                param &= ~DBLoadParam.CheckDeleted;
+            }
+            var buf = Load(query.ToCommand(true), param, view);
 
-            var buf = Load(transaction, transaction.AddCommand(query.ToCommand(true)));
-
-            if (buf != null && (transaction.ReaderParam & DBLoadParam.CheckDeleted) == DBLoadParam.CheckDeleted)
-                CheckDelete(transaction, query, buf);
-
+            if (buf != null && (param & DBLoadParam.CheckDeleted) == DBLoadParam.CheckDeleted)
+            {
+                CheckDelete(query, buf, param, view);
+            }
             if (query.Parameters.Count == 0)
+            {
                 IsSynchronized = true;
+            }
             return buf;
         }
 
-        public override IEnumerable LoadItems(DBTransaction transaction, IDbCommand command)
+        public override IEnumerable LoadItems(IDbCommand command, DBLoadParam param = DBLoadParam.None, IDBTableView view = null)
         {
-            return Load(transaction, command);
+            return Load(command, param, view);
         }
 
-        public List<T> Load(DBTransaction transaction, IDbCommand command)
+        public List<T> Load(IDbCommand command, DBLoadParam param = DBLoadParam.None, IDBTableView view = null)
         {
+            DBTransaction transaction = DBTransaction.GetTransaction(this, Schema?.Connection, param, view);
+            transaction.AddCommand(command);
             if (transaction.Canceled)
                 return null;
             var whereInd = command.CommandText.IndexOf("where ", StringComparison.OrdinalIgnoreCase);
-            var arg = new DBLoadProgressEventArgs(transaction.View, 0, 0, null);
+            var arg = new DBLoadProgressEventArgs(view, 0, 0, null);
             IEnumerable<DBColumn> creference = null;
             List<T> buf = null;
-            if (transaction.View != null && transaction.View.Table == this && transaction.View.IsStatic)
-                transaction.View.Clear();
+            if (view != null && view.Table == this && view.IsStatic)
+                view.Clear();
             if (items.Count == 0)
                 transaction.ReaderParam &= ~DBLoadParam.Synchronize;
             try
@@ -383,7 +370,7 @@ namespace DataWF.Data
                                 {
                                     if (refer.ReferenceTable != this)
                                     {
-                                        row.GetReference(refer, DBLoadParam.Load, transaction.GetSubTransaction(refer.ReferenceTable.Schema, false));
+                                        row.GetReference(refer, DBLoadParam.Load);
                                     }
                                 }
                             }
@@ -418,7 +405,7 @@ namespace DataWF.Data
             return buf;
         }
 
-        public async Task<IEnumerable<T>> LoadAsync(QQuery query, DBLoadParam param, IDBTableView synch)
+        public async Task<IEnumerable<T>> LoadAsync(QQuery query, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null)
         {
             return await Task.Run<IEnumerable<T>>(() =>
             {
@@ -434,13 +421,13 @@ namespace DataWF.Data
             });
         }
 
-        public async Task<IEnumerable<T>> LoadAsync(DBTransaction transaction, IDbCommand command)
+        public async Task<IEnumerable<T>> LoadAsync(IDbCommand command, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null)
         {
             return await Task.Run<IEnumerable<T>>(() =>
              {
                  try
                  {
-                     return Load(transaction, command);
+                     return Load(command, param, synch);
                  }
                  catch (Exception e)
                  {
@@ -450,7 +437,7 @@ namespace DataWF.Data
              });
         }
 
-        public async Task<IEnumerable<T>> LoadAsync(string query, DBLoadParam param, IEnumerable columns, IDBTableView synch)
+        public async Task<IEnumerable<T>> LoadAsync(string query, DBLoadParam param = DBLoadParam.None, IEnumerable columns = null, IDBTableView synch = null)
         {
             return await Task.Run<IEnumerable<T>>(() =>
             {
@@ -466,35 +453,26 @@ namespace DataWF.Data
             });
         }
 
-        public override void ReloadItem(object id, DBTransaction transaction = null)
+        public override void ReloadItem(object id)
         {
-            var temp = transaction ?? new DBTransaction(Schema.Connection);
-            try
-            {
-                LoadItem(temp, id);
-            }
-            finally
-            {
-                if (transaction == null)
-                    temp.Dispose();
-            }
+            LoadItem(id);
         }
 
-        public T LoadItem(DBTransaction transaction, object id, IEnumerable cols = null)
+        public T LoadItem(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable cols = null, IDBTableView synch = null)
         {
             string idName = Schema.System.ParameterPrefix + PrimaryKey.Name;
-            var command = transaction.AddCommand(DetectQuery(string.Format("where {0}={1}", PrimaryKey.Name, idName), cols));
-            transaction.AddParameter(command, idName, id);
-            var rows = Load(transaction, command);
+            var command = System.CreateCommand(Schema.Connection, CreateQuery(string.Format("where {0}={1}", PrimaryKey.Name, idName), cols));
+            System.CreateParameter(command, idName, id);
+            var rows = Load(command);
             return rows?.FirstOrDefault();
         }
 
-        public override DBItem LoadItemById(object id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null, IEnumerable cols = null, IDBTableView synch = null)
+        public override DBItem LoadItemById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable cols = null, IDBTableView synch = null)
         {
-            return LoadById(id, param, transaction, cols, synch);
+            return LoadById(id, param, cols, synch);
         }
 
-        public T LoadById(object id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null, IEnumerable cols = null, IDBTableView synch = null)
+        public T LoadById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable cols = null, IDBTableView synch = null)
         {
             object val = PrimaryKey?.ParseValue(id) ?? id;
 
@@ -505,70 +483,52 @@ namespace DataWF.Data
 
             if (row == null && (param & DBLoadParam.Load) == DBLoadParam.Load)
             {
-                var temp = transaction ?? new DBTransaction(Schema.Connection) { View = synch, ReaderParam = param };
-                try
-                {
-                    row = LoadItem(temp, val, cols);
-                }
-                finally
-                {
-                    if (transaction == null)
-                        temp.Dispose();
-                }
+                row = LoadItem(val, param, cols, synch);
 
             }
             return row;
         }
 
-        public T LoadByCode(string code, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)
+        public T LoadByCode(string code, DBLoadParam param = DBLoadParam.None)
         {
             if (CodeKey == null)
                 return null;
-            return LoadByCode(code, CodeKey, param, transaction);
+            return LoadByCode(code, CodeKey, param);
         }
 
-        public T LoadByCode(string code, string column, DBLoadParam param, DBTransaction transaction = null)
+        public T LoadByCode(string code, string column, DBLoadParam param = DBLoadParam.None)
         {
-            return LoadByCode(code, ParseColumn(column), param, transaction);
+            return LoadByCode(code, ParseColumn(column), param);
         }
 
-        public override DBItem LoadItemByCode(string code, DBColumn column, DBLoadParam param, DBTransaction transaction = null)
+        public override DBItem LoadItemByCode(string code, DBColumn column, DBLoadParam param)
         {
-            return LoadByCode(code, column, param, transaction);
+            return LoadByCode(code, column, param);
         }
 
-        public T LoadByCode(string code, DBColumn column, DBLoadParam param, DBTransaction transaction = null)
+        public T LoadByCode(string code, DBColumn column, DBLoadParam param)
         {
             var row = SelectOne(column, code);
             if (row == null && (param & DBLoadParam.Load) == DBLoadParam.Load)
             {
-                var temp = transaction ?? new DBTransaction(Schema.Connection) { ReaderParam = param };
-                try
-                {
-                    var command = temp.AddCommand(DetectQuery(string.Format("where {0}={1}{0}", column.Name, Schema.System.ParameterPrefix), Columns));
-                    temp.AddParameter(command, Schema.System.ParameterPrefix + column.Name, code);
-                    var list = Load(temp, command);
-                    row = list.Count == 0 ? null : list[0];
-                }
-                finally
-                {
-                    if (transaction == null)
-                        temp.Dispose();
-                }
+                var command = System.CreateCommand(Schema.Connection, CreateQuery(string.Format("where {0}={1}{0}", column.Name, Schema.System.ParameterPrefix), Columns));
+                System.CreateParameter(command, Schema.System.ParameterPrefix + column.Name, code);
+                var list = Load(command, param);
+                row = list.Count == 0 ? null : list[0];
             }
             return row;
         }
 
-        public void LoadByStamp(DBTransaction transaction, IDBTableView synch)
+        public void LoadByStamp(string commandText, IDBTableView synch)
         {
             var synchCols = new List<DBColumn>(2);
             synchCols.Add(PrimaryKey);
             synchCols.Add(StampKey);
             string squery = string.Empty;
-            int whereInd = transaction.CommandText.IndexOf("where ", StringComparison.InvariantCultureIgnoreCase);
+            int whereInd = commandText.IndexOf("where ", StringComparison.InvariantCultureIgnoreCase);
             if (whereInd != -1)
-                squery = transaction.CommandText.Substring(whereInd);
-            squery = DetectQuery(squery, synchCols);
+                squery = commandText.Substring(whereInd);
+            squery = CreateQuery(squery, synchCols);
 
             int cur = 0;
             var vals = Schema.Connection.ExecuteQResult(squery);
@@ -576,19 +536,19 @@ namespace DataWF.Data
 
             foreach (var val in vals.Values)
             {
-                if (synch != null && synch.Command != transaction.Command)
-                    break;
+                //if (synch != null && synch.Command != transaction.Command)
+                //    break;
                 cur++;
                 var row = LoadById(val[0], DBLoadParam.None);
 
                 if (row == null)
-                    LoadItem(transaction, val[0]);
+                    LoadItem(val[0]);
                 else if (StampKey != null && ListHelper.Compare(row.Stamp, val[1], null, false) < 0)
-                    LoadItem(transaction, row.PrimaryId);
+                    LoadItem(row.PrimaryId);
             }
         }
 
-        private void CheckDelete(DBTransaction transcation, QQuery filter, List<T> buf)
+        private void CheckDelete(QQuery filter, List<T> buf, DBLoadParam param, IDBTableView view)
         {
             var list = Select(filter).ToList();
             if (list.Count > buf.Count)
@@ -597,13 +557,10 @@ namespace DataWF.Data
                 {
                     if ((item.UpdateState & DBUpdateState.Insert) != DBUpdateState.Insert && !buf.Contains(item))
                     {
-                        if (transcation.View != null && transcation.View.IsStatic)
-                            transcation.View.Remove(item);
+                        if (view != null && view.IsStatic)
+                            view.Remove(item);
                         Remove(item);
                     }
-
-                    if (transcation.Canceled)
-                        break;
                 }
             }
         }

@@ -186,10 +186,10 @@ namespace DataWF.Data
             return BaseTable.CheckColumn(name, t, ref newCol);
         }
 
-        public override bool SaveItem(DBItem row, DBTransaction transaction)
+        public override bool SaveItem(DBItem row)
         {
             row = row is DBVirtualItem ? ((DBVirtualItem)row).Main : row;
-            return BaseTable.SaveItem(row, transaction);
+            return BaseTable.SaveItem(row);
         }
 
         public override void Clear()

@@ -120,13 +120,13 @@ namespace DataWF.Data.Gui
 
         private void LoadReference()
         {
-            using (var transaction = new DBTransaction(Table.Schema.Connection))
+            using (var transaction = new DBTransaction(this, Table.Schema.Connection))
             {
                 Debug.WriteLine("Get References {0}", getReferenceStack.Count);
                 PDBTableParam item;
                 while (getReferenceStack.TryPop(out item))
                 {
-                    item.Row.GetReference(item.Column, DBLoadParam.Load, transaction);
+                    item.Row.GetReference(item.Column, DBLoadParam.Load);
                     item.Row.OnPropertyChanged(item.Column.Name, item.Column);
                 }
             }

@@ -5,7 +5,6 @@ namespace DataWF.Data
     {
         DBSchema CreateNew();
         void Generate();
-        void GenerateData();
         void Load();
         void Save();
     }

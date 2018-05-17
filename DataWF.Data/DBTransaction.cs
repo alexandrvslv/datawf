@@ -20,6 +20,7 @@
 //  You should have received a copy of the GNU Lesser General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
@@ -44,11 +45,41 @@ namespace DataWF.Data
     public class DBTransaction : IDbTransaction
     {
         public static EventHandler<DBTransactionEventArg> Commited;
+
+        [ThreadStatic]
+        private static DBTransaction current;
+        private static ConcurrentQueue<DBTransaction> queue = new ConcurrentQueue<DBTransaction>();
+        public static DBTransaction Current
+        {
+            get => current;
+            internal set
+            {
+                if (current != null && value != null)
+                {
+                    queue.Enqueue(current);
+                    //current.subTransactions[value.DbConnection] = value;
+                }
+                else
+                {
+                    current = value;
+                }
+            }
+        }
+
+        public static DBTransaction GetTransaction(object owner, DBConnection connection, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null)
+        {
+            var transaction = Current?.GetSubTransaction(connection) ?? new DBTransaction(owner, connection);
+            if (transaction.View == null)
+                transaction.View = synch;
+            if (transaction.ReaderParam == DBLoadParam.None)
+                transaction.ReaderParam = param;
+            return transaction;
+        }
+
         private List<IDbCommand> commands = new List<IDbCommand>();
         private IDbCommand command;
         private IDbTransaction transaction;
         private List<DBItem> rows = new List<DBItem>();
-        private bool cancel;
         private Dictionary<DBConnection, DBTransaction> subTransactions;
 
         public DBTransaction()
@@ -56,13 +87,19 @@ namespace DataWF.Data
         {
         }
 
-        public DBTransaction(DBConnection config, string text = "", bool noTransaction = false)
-            : this(config, config.GetConnection(), text, noTransaction)
+        public DBTransaction(DBConnection config)
+            : this(config, config)
+        { }
+
+        public DBTransaction(object owner, DBConnection config, string text = "", bool noTransaction = false)
+            : this(owner, config, config.GetConnection(), text, noTransaction)
         {
         }
 
-        public DBTransaction(DBConnection config, IDbConnection connection, string text = "", bool noTransaction = false)
+        public DBTransaction(object owner, DBConnection config, IDbConnection connection, string text = "", bool noTransaction = false)
         {
+            Owner = owner;
+            Current = this;
             DbConnection = config;
             Connection = connection;
             if (!noTransaction)
@@ -71,10 +108,9 @@ namespace DataWF.Data
                 AddCommand(text);
         }
 
-        public bool Canceled
-        {
-            get { return cancel; }
-        }
+        public object Owner { get; private set; }
+
+        public bool Canceled { get; private set; }
 
         public object Tag { get; set; }
 
@@ -124,12 +160,12 @@ namespace DataWF.Data
 
         public void Rollback()
         {
-            if (transaction != null && !cancel)
+            if (transaction != null && !Canceled)
             {
                 try
                 {
                     transaction.Rollback();
-                    cancel = true;
+                    Canceled = true;
                 }
                 catch (Exception te) { Helper.OnException(te); }
             }
@@ -143,7 +179,7 @@ namespace DataWF.Data
             {
                 foreach (var transaction in subTransactions.Values)
                 {
-                    transaction.Commit();
+                    transaction.Rollback();
                 }
             }
         }
@@ -186,7 +222,7 @@ namespace DataWF.Data
                 {
                     foreach (var item in commands)
                     {
-                        item.Cancel();
+                        //TODO CHECK item.Cancel();
                         foreach (IDataParameter param in item.Parameters)
                         {
                             if (param.Value is IDisposable)
@@ -208,9 +244,14 @@ namespace DataWF.Data
                 }
                 finally
                 {
+                    if (Current == this)
+                    {
+                        Current = null;
+                    }
                     if (Connection.State == ConnectionState.Open)
+                    {
                         Connection.Close();
-
+                    }
                     transaction = null;
                     Connection = null;
                     command = null;
@@ -218,25 +259,6 @@ namespace DataWF.Data
                 }
             }
 
-        }
-
-        public IDataParameter AddParameter(IDbCommand ncommand, string name, object value)
-        {
-            IDataParameter dparam = null;
-            foreach (IDataParameter param in ncommand.Parameters)
-                if (param.ParameterName == name)
-                {
-                    dparam = param;
-                    break;
-                }
-            if (dparam == null)
-            {
-                dparam = ncommand.CreateParameter();
-                dparam.ParameterName = name;
-                ncommand.Parameters.Add(dparam);
-            }
-            dparam.Value = value ?? DBNull.Value;
-            return dparam;
         }
 
         public IDbCommand AddCommand(IDbCommand ncommand)
@@ -289,9 +311,9 @@ namespace DataWF.Data
             return GetSubTransaction(DbConnection, false);
         }
 
-        public DBTransaction GetSubTransaction(DBSchema schema, bool check = true)
+        public DBTransaction GetSubTransaction(DBSchema schema, bool checkSelf = true)
         {
-            return GetSubTransaction(schema.Connection, check);
+            return GetSubTransaction(schema.Connection, checkSelf);
         }
 
         public DBTransaction GetSubTransaction(DBConnection config, bool checkSelf = true)
@@ -306,15 +328,15 @@ namespace DataWF.Data
             {
                 return subTransaction;
             }
-            return subTransactions[config] = new DBTransaction(config);
+            return subTransactions[config] = new DBTransaction(Owner, config);
             //TODO Check several opened connections in sqlite config.System == DBSystem.SQLite && DbConnection.System == DBSystem.SQLite
         }
 
         public void Cancel()
         {
-            if (!cancel)
+            if (!Canceled)
             {
-                cancel = true;
+                Canceled = true;
                 if (subTransactions != null)
                 {
                     foreach (var subTransaction in subTransactions.Values)
@@ -384,8 +406,8 @@ namespace DataWF.Data
             var watch = new Stopwatch();
             try
             {
-				//Debug.WriteLine(command.Connection.ConnectionString);
-				Debug.WriteLine(command.CommandText);
+                //Debug.WriteLine(command.Connection.ConnectionString);
+                Debug.WriteLine(command.CommandText);
                 watch.Start();
                 switch (type)
                 {
@@ -416,6 +438,8 @@ namespace DataWF.Data
             }
             return buf;
         }
+
+
     }
 }
 

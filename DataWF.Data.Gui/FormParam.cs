@@ -83,10 +83,10 @@ namespace DataWF.Data.Gui
             BackgroundWorker worker = new BackgroundWorker();
             worker.DoWork += (sender, e) =>
             {
-                using (var transaction = new DBTransaction(procedure.Schema.Connection))
+                using (var transaction = new DBTransaction(procedure, procedure.Schema.Connection))
                     try
                     {
-                        var param = new ExecuteArgs(document, transaction);
+                        var param = new ExecuteArgs(document);
                         e.Result = Execute(procedure, param);
                         transaction.Commit();
                     }
@@ -125,7 +125,7 @@ namespace DataWF.Data.Gui
 
         public static object Execute(DBProcedure procedure, DBItem document = null)
         {
-            return Execute(procedure, new ExecuteArgs(document, null));
+            return Execute(procedure, new ExecuteArgs(document));
         }
 
         public static object Execute(DBProcedure procedure, ExecuteArgs param)

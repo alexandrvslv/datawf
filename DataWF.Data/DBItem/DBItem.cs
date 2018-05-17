@@ -321,7 +321,7 @@ namespace DataWF.Data
             return row.GetReference(row.table.Columns[code.Substring(pi)]);
         }
 
-        public DBItem GetReference(DBColumn column, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null)
+        public DBItem GetReference(DBColumn column, DBLoadParam param = DBLoadParam.Load)
         {
             var item = GetTag(column) as DBItem;
 
@@ -331,26 +331,26 @@ namespace DataWF.Data
                 if (value == null)
                     return null;
 
-                item = column.ReferenceTable.LoadItemById(value, param, transaction);
+                item = column.ReferenceTable.LoadItemById(value, param);
                 SetTag(column, item);
             }
             return item;
         }
 
-        public T GetReference<T>(string code, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null) where T : DBItem, new()
+        public T GetReference<T>(string code, DBLoadParam param = DBLoadParam.Load) where T : DBItem, new()
         {
             DBItem row = this;
             int pi = 0, i = code.IndexOf('.');
             while (i > 0)
             {
-                var item = row.GetReference<T>(row.table.Columns[code.Substring(pi, i - pi)], param, transaction);
+                var item = row.GetReference<T>(row.table.Columns[code.Substring(pi, i - pi)], param);
                 if (item == null)
                     return null;
                 row = item;
                 pi = i + 1;
                 i = code.IndexOf('.', pi);
             }
-            return row.GetReference<T>(row.table.Columns[code.Substring(pi)], param, transaction);
+            return row.GetReference<T>(row.table.Columns[code.Substring(pi)], param);
         }
 
         public T GetPropertyReference<T>([CallerMemberName] string property = null) where T : DBItem, new()
@@ -358,7 +358,7 @@ namespace DataWF.Data
             return GetReference<T>(Table.Foreigns.GetByProperty(property)?.Column);
         }
 
-        public T GetReference<T>(DBColumn column, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null) where T : DBItem, new()
+        public T GetReference<T>(DBColumn column, DBLoadParam param = DBLoadParam.Load) where T : DBItem, new()
         {
             if (column == null)
                 return null;
@@ -375,7 +375,7 @@ namespace DataWF.Data
                 if (value == null)
                     return null;
 
-                item = (T)column.ReferenceTable.LoadItemById(value, param, transaction);
+                item = (T)column.ReferenceTable.LoadItemById(value, param);
                 SetTag(column, item);// item == null ? (object)DBNull.Value : item);
             }
             return item;
@@ -981,15 +981,14 @@ namespace DataWF.Data
         public void Refresh()
         {
             Reject();
-            using (var transaction = new DBTransaction(Table.Schema.Connection))
-                Table.ReloadItem(PrimaryId, transaction);
+            Table.ReloadItem(PrimaryId);
         }
 
-        public void GenerateId(DBTransaction transaction = null)
+        public void GenerateId()
         {
             if (Table.PrimaryKey != null && PrimaryId == null && Table.Sequence != null)
             {
-                PrimaryId = Table.Sequence.NextValue(transaction);
+                PrimaryId = Table.Sequence.NextValue();
             }
         }
 
@@ -1017,25 +1016,11 @@ namespace DataWF.Data
             }
         }
 
-        public virtual void Save(DBTransaction transaction = null, bool reference = true, object tag = null)
+        public virtual void Save()
         {
             if (!IsChanged)
                 return;
-            var temp = transaction ?? new DBTransaction(Table.Schema.Connection);
-            temp.Reference = reference;
-            temp.Tag = tag;
-            try
-            {
-                Table.SaveItem(this, temp);
-                if (transaction == null)
-                    temp.Commit();
-            }
-            finally
-            {
-                if (transaction == null)
-                    temp.Dispose();
-            }
-
+            Table.SaveItem(this);
         }
 
         public int CompareTo(object obj)
@@ -1249,7 +1234,7 @@ namespace DataWF.Data
             Table.Save(rows);
         }
 
-        public void SaveOrUpdate(DBTransaction transaction = null)
+        public void SaveOrUpdate()
         {
             if (Table.CodeKey != null)
             {
@@ -1267,17 +1252,17 @@ namespace DataWF.Data
                             exist.SetValue(value, column);
                         }
                     }
-                    exist.Save(transaction);
+                    exist.Save();
                     return;
                 }
             }
-            Save(transaction);
+            Save();
 
         }
 
         void IEditable.Save()
         {
-            Save(null);
+            Save();
         }
     }
 }

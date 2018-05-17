@@ -74,20 +74,20 @@ namespace DataWF.Data
             return ddl.ToString();
         }
 
-        public long NextValue(DBTransaction transaction = null)
+        public long NextValue()
         {
             long result = 0;
-            var temp = transaction ?? new DBTransaction(Schema?.Connection);
+            var transaction = DBTransaction.GetTransaction(this, Schema?.Connection);
             try
             {
-                Current = result = Convert.ToInt64(temp.ExecuteQuery(temp.AddCommand(GenerateQuery)));
-                if (transaction == null)
-                    temp.Commit();
+                Current = result = Convert.ToInt64(transaction.ExecuteQuery(transaction.AddCommand(GenerateQuery)));
+                if (transaction.Owner == this)
+                    transaction.Commit();
             }
             finally
             {
-                if (transaction == null)
-                    temp.Dispose();
+                if (transaction.Owner == this)
+                    transaction.Dispose();
             }
             return result;
         }

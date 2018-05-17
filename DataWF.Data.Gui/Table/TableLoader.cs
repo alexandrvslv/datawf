@@ -140,7 +140,7 @@ namespace DataWF.Data.Gui
                     using (var temp = new DBTransaction(view.Table.Schema.Connection) { View = view, ReaderParam = DBLoadParam.Synchronize })//DBLoadParam.GetCount | DBLoadParam.ReferenceRow
                     {
                         transaction = temp;
-                        View.Table.LoadItems(temp, query);
+                        View.Table.LoadItems(query);
                     }
                 }
                 catch (Exception e)

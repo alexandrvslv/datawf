@@ -693,7 +693,7 @@ namespace DataWF.Module.FlowGui
                         //}
                         //else
                         //{
-                        document.Save(null, null);
+                        document.Save(null);
                         //}
                     }
                 };

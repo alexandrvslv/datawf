@@ -30,25 +30,17 @@ namespace DataWF.Data
     public class ExecuteArgs
     {
         private DBItem document;
-        private DBTransaction transaction;
         private Dictionary<string, object> parameters;
 
-        public ExecuteArgs(DBItem document = null, DBTransaction transaction = null)
+        public ExecuteArgs(DBItem document = null)
         {
             this.document = document;
-            this.transaction = transaction;
         }
 
         public DBItem Document
         {
             get { return document; }
             set { document = value; }
-        }
-
-        public DBTransaction Transaction
-        {
-            get { return transaction; }
-            set { transaction = value; }
         }
 
         public Dictionary<string, object> Parameters

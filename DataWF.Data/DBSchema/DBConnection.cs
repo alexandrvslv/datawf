@@ -301,9 +301,9 @@ namespace DataWF.Data
             }
         }
 
-        public IDbCommand CreateCommand()
+        public IDbCommand CreateCommand(string query = null, CommandType commandType = CommandType.Text)
         {
-            return System.CreateCommand(this);
+            return System.CreateCommand(this, query, commandType);
         }
 
         public void CheckConnection()
@@ -421,15 +421,16 @@ namespace DataWF.Data
 
         public DBTable<T> ExecuteTable<T>(string tableName, string query) where T : DBItem, new()
         {
-            var table = new DBTable<T>(tableName);
-            using (var transaction = new DBTransaction(this, query, true))
-                table.Load(transaction, query);
+            var schema = new DBSchema() { Name = "temp", Connection = this };
+            var table = new DBTable<T>(tableName) { Schema = schema };
+            using (var transaction = new DBTransaction(this, this, query, true))
+                table.Load(transaction.Command);
             return table;
         }
 
         public QResult ExecuteQResult(string query, bool noTransaction = true)
         {
-            using (var transaction = new DBTransaction(this, query, noTransaction))
+            using (var transaction = new DBTransaction(this, this, query, noTransaction))
             {
                 return transaction.ExecuteQResult();
             }
@@ -438,7 +439,7 @@ namespace DataWF.Data
         public List<List<KeyValuePair<string, object>>> ExecuteListPair(string query)
         {
             List<List<KeyValuePair<string, object>>> list = null;
-            using (var transaction = new DBTransaction(this, query))
+            using (var transaction = new DBTransaction(this, this, query))
             {
                 list = new List<List<KeyValuePair<string, object>>>();
                 using (var reader = transaction.ExecuteQuery(DBExecuteType.Reader) as IDataReader)
@@ -459,7 +460,7 @@ namespace DataWF.Data
 
         public List<Dictionary<string, object>> ExecuteListDictionary(string query)
         {
-            using (var transaction = new DBTransaction(this, query))
+            using (var transaction = new DBTransaction(this, this, query))
                 return transaction.ExecuteListDictionary();
         }
 
@@ -467,7 +468,7 @@ namespace DataWF.Data
         {
             if (string.IsNullOrEmpty(query))
                 return null;
-            using (var transaction = new DBTransaction(this, query, noTransaction))
+            using (var transaction = new DBTransaction(this, this, query, noTransaction))
             {
                 var result = transaction.ExecuteQuery(type);
                 transaction.Commit();
