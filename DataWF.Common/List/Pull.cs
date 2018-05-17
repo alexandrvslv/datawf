@@ -36,14 +36,12 @@ namespace DataWF.Common
                     Buffer.BlockCopy(array, 0, array, count, count * size);
                 Buffer.BlockCopy(array, 0, array, count, (length - count) * size);
             }
-            else if (!typeof(T).IsClass)
+            else //if (!typeof(T).IsClass)
             {
                 for (count = index + 1; count <= length / 2; count *= 2)
                     Array.Copy(array, 0, array, count, count);
                 Array.Copy(array, 0, array, count, length - count);
-            }
-            else
-            { }
+            }           
         }
 
         public static void ReAlloc<T>(ref T[] array, int len, T NullValue)
@@ -144,6 +142,8 @@ namespace DataWF.Common
             BlockCount = 0;
             Count = 0;
         }
+
+        public abstract void Trunc(int maxIndex);
     }
 
     public class NullablePull<T> : Pull<T?>, IEnumerable<T?> where T : struct
@@ -236,5 +236,18 @@ namespace DataWF.Common
             return GetEnumerator();
         }
 
+        public override void Trunc(int maxIndex)
+        {
+            GetBlockIndexUnsafe(maxIndex, out short block, out short blockIndex);
+            while (block < array.Count - 1)
+            {
+                array.RemoveAt(array.Count - 1);
+                BlockCount--;
+            }
+            if (block < array.Count && blockIndex + 1 < BlockSize)
+            {
+                Memset<T>(array[block], default(T), blockIndex + 1);
+            }
+        }
     }
 }

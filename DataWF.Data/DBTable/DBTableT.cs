@@ -235,6 +235,24 @@ namespace DataWF.Data
                 queryViews[i].OnItemChanged(item, property, type);
         }
 
+        public override void Trunc()
+        {
+            if (items.Count > 0)
+            {
+                var maxIndex = 0;
+                foreach (var item in items)
+                    maxIndex = item.hindex > maxIndex ? maxIndex : maxIndex;
+                if (Hash > maxIndex)
+                {
+                    Hash = maxIndex;
+                    foreach (var column in Columns)
+                    {
+                        column.Pull?.Trunc(Hash);
+                    }
+                }
+            }
+        }
+
         public override IDBTableView CreateItemsView(string query, DBViewKeys mode, DBStatus filter)
         {
             return CreateView(query, mode, filter);

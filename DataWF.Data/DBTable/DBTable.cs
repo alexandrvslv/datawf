@@ -454,6 +454,8 @@ namespace DataWF.Data
 
         public abstract void OnItemChanged(DBItem item, string property, ListChangedType type);
 
+        public abstract void Trunc();
+
         public IEnumerable<DBTable> GetChilds()
         {
             foreach (var item in virtualViews)
