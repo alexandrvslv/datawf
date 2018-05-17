@@ -294,6 +294,7 @@ namespace DataWF.Data
 
         protected virtual internal void RemoveTag()
         {
+            access = null;
             foreach (DBColumn column in table.Columns)
             {
                 object o = GetTag(column);
@@ -691,10 +692,7 @@ namespace DataWF.Data
             {
                 if (value != null && table.AccessKey != null)
                 {
-                    //if (!value.IsEqual(_table.Access))
-                    {
-                        SetValue(value.Write(), table.AccessKey);
-                    }
+                    SetValue(value.Write(), table.AccessKey);
                     access = value;
                 }
             }
@@ -1019,28 +1017,25 @@ namespace DataWF.Data
             }
         }
 
-
-
-        public void Save()
+        public virtual void Save(DBTransaction transaction = null, bool reference = true, object tag = null)
         {
-            Save(true);
-        }
-
-        public virtual void Save(bool reference, object tag = null)
-        {
-            if (IsChanged)
+            if (!IsChanged)
+                return;
+            var temp = transaction ?? new DBTransaction(Table.Schema.Connection);
+            temp.Reference = reference;
+            temp.Tag = tag;
+            try
             {
-                using (var transaction = new DBTransaction(Table.Schema.Connection) { Reference = reference, Tag = tag })
-                {
-                    Save(transaction);
-                    transaction.Commit();
-                }
+                Table.SaveItem(this, temp);
+                if (transaction == null)
+                    temp.Commit();
             }
-        }
+            finally
+            {
+                if (transaction == null)
+                    temp.Dispose();
+            }
 
-        public virtual void Save(DBTransaction transaction)
-        {
-            Table.SaveItem(this, transaction);
         }
 
         public int CompareTo(object obj)
@@ -1252,6 +1247,32 @@ namespace DataWF.Data
                         }
                 }
             Table.Save(rows);
+        }
+
+        public void SaveOrUpdate(DBTransaction transaction = null)
+        {
+            if (Table.CodeKey != null)
+            {
+                var exist = Table.LoadItemByCode(PrimaryCode, Table.CodeKey, DBLoadParam.Load);
+                if (exist != null)
+                {
+                    PrimaryId = exist.PrimaryId;
+                    Access = exist.Access;
+                    foreach (var column in Table.Columns)
+                    {
+                        exist.SetValue(GetValue(column), column);
+                    }
+                    exist.Save(transaction);
+                    return;
+                }
+            }
+            Save(transaction);
+
+        }
+
+        void IEditable.Save()
+        {
+            Save(null);
         }
     }
 }
