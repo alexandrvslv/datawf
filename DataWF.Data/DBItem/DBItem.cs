@@ -1258,9 +1258,14 @@ namespace DataWF.Data
                 {
                     PrimaryId = exist.PrimaryId;
                     Access = exist.Access;
+
                     foreach (var column in Table.Columns)
                     {
-                        exist.SetValue(GetValue(column), column);
+                        var value = GetValue(column);
+                        if (value != null)
+                        {
+                            exist.SetValue(value, column);
+                        }
                     }
                     exist.Save(transaction);
                     return;

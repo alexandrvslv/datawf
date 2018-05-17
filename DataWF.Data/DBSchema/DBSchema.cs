@@ -287,19 +287,19 @@ namespace DataWF.Data
             System.CreateDatabase(this, Connection);
             if (LogSchema != null)
             {
-				if (LogSchema.Connection == null)
-				{
-					LogSchema.Connection = Connection;
-					LogSchema.CreateSchema();
-				}
-				else if (LogSchema.Connection != Connection)
-				{
-					LogSchema.CreateDatabase();
-				}
-				else
-				{
-					LogSchema.CreateSchema();
-				}
+                if (LogSchema.Connection == null)
+                {
+                    LogSchema.Connection = Connection;
+                }
+
+                if (LogSchema.Connection != Connection)
+                {
+                    LogSchema.CreateDatabase();
+                }
+                else
+                {
+                    LogSchema.CreateSchema();
+                }
             }
         }
 
