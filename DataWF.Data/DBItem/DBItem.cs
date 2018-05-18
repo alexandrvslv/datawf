@@ -1234,35 +1234,54 @@ namespace DataWF.Data
             Table.Save(rows);
         }
 
-        public void SaveOrUpdate()
+        public void SaveOrUpdate(DBLoadParam param = DBLoadParam.None)
         {
-            if (Table.CodeKey != null)
+            var exist = FindAndUpdate(param);
+            if (exist != null)
             {
-                var exist = Table.LoadItemByCode(PrimaryCode, Table.CodeKey, DBLoadParam.Load);
-                if (exist != null)
-                {
-                    PrimaryId = exist.PrimaryId;
-                    Access = exist.Access;
-
-                    foreach (var column in Table.Columns)
-                    {
-                        var value = GetValue(column);
-                        if (value != null)
-                        {
-                            exist.SetValue(value, column);
-                        }
-                    }
-                    exist.Save();
-                    return;
-                }
+                exist.Save();
             }
-            Save();
-
+            else
+            {
+                Save();
+            }
         }
 
-        void IEditable.Save()
+        public void AttachOrUpdate(DBLoadParam param = DBLoadParam.None)
         {
-            Save();
+            var exist = FindAndUpdate(param);
+            if (exist == null)
+            {
+                Attach();
+            }
+        }
+
+        public DBItem FindAndUpdate(DBLoadParam param = DBLoadParam.None)
+        {
+            var exist = PrimaryId == null
+                ? Table.LoadItemByCode(PrimaryCode, Table.CodeKey, param)
+                : Table.LoadItemById(PrimaryId, param);
+            if (exist != null)
+            {
+                PrimaryId = exist.PrimaryId;
+
+                foreach (var column in Table.Columns)
+                {
+                    if ((column.Keys & DBColumnKeys.Access) == DBColumnKeys.Access
+                        || (column.Keys & DBColumnKeys.State) == DBColumnKeys.State
+                        || (column.Keys & DBColumnKeys.Stamp) == DBColumnKeys.Stamp)
+                    {
+                        continue;
+                    }
+                    var value = GetValue(column);
+                    if (value != null)
+                    {
+                        exist.SetValue(value, column);
+                    }
+                }
+
+            }
+            return exist;
         }
     }
 }
