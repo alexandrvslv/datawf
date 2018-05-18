@@ -343,7 +343,7 @@ namespace DataWF.Module.Flow
             set { SetProperty(value); }
         }
 
-        [Category("Current State")]
+        [Browsable(false)]
         [Reference(nameof(WorkId))]
         public DocumentWork WorkCurrent
         {
@@ -351,7 +351,7 @@ namespace DataWF.Module.Flow
             set { SetPropertyReference(value); }
         }
 
-        [Category("Current State")]
+        [Browsable(false)]
         [DataMember, Column("work_user", ColumnType = DBColumnTypes.Internal)]
         public string WorkUser
         {
@@ -359,7 +359,7 @@ namespace DataWF.Module.Flow
             set { SetProperty(value); }
         }
 
-        [Category("Current State")]
+        [Browsable(false)]
         [DataMember, Column("work_stage", ColumnType = DBColumnTypes.Internal)]
         public string WorkStage
         {
@@ -367,13 +367,13 @@ namespace DataWF.Module.Flow
             set { SetProperty(value, nameof(WorkStage)); }
         }
 
-        [Category("Current State")]
+        [Browsable(false)]
         public DateTime? WorkDate
         {
             get { return WorkCurrent?.DateCreate; }
         }
 
-        [Category("Current State")]
+        [Browsable(false)]
         public bool IsCurrent
         {
             get { return WorkCurrent != null; }
@@ -400,7 +400,7 @@ namespace DataWF.Module.Flow
             set { SetProperty(value, nameof(Important)); }
         }
 
-        [Category("Current State")]
+        [Browsable(false)]
         [DataMember, Column("is_comlete", Default = "False")]
         public bool? IsComplete
         {
@@ -653,8 +653,6 @@ namespace DataWF.Module.Flow
         {
             if (saving.Contains(this))//prevent recursion
                 return;
-            var temp = UserLog.CurrentDocument;
-            UserLog.CurrentDocument = this;
             saving.Add(this);
             var transaction = DBTransaction.GetTransaction(this, Table.Schema.Connection);
             var param = new DocumentExecuteArgs() { Document = this };
@@ -694,11 +692,8 @@ namespace DataWF.Module.Flow
                 }
                 Save(DocInitType.Data);
                 Saved?.Invoke(null, new DocumentEventArgs(this));
-                UserLog.CurrentDocument = temp;
                 if (transaction.Owner == this)
-                {
                     transaction.Commit();
-                }
             }
             catch (Exception ex)
             {
