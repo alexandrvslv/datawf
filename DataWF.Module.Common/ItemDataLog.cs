@@ -27,7 +27,7 @@ namespace DataWF.Module.Common
     public class ItemDataLog
     {
         private DBItem row;
-        private List<UserLog> logs;
+        private List<DBLogItem> logs;
         private SelectableList<LogChange> changes = new SelectableList<LogChange>();
         private string user;
         private DBTable table;
@@ -63,19 +63,18 @@ namespace DataWF.Module.Common
 
         public void RefreshLogs()
         {
-            QQuery query = new QQuery(string.Empty, UserLog.DBTable);
-            query.BuildPropertyParam(nameof(UserLog.TargetTable), CompareType.Equal, row.Table.FullName);
-            query.BuildPropertyParam(nameof(UserLog.TargetId), CompareType.Equal, row.PrimaryId);
-            query.BuildPropertyParam(nameof(UserLog.UpdateState), CompareType.Equal, DBStatus.New);
-            Logs.AddRange(UserLog.DBTable.Load(query, DBLoadParam.Load | DBLoadParam.Synchronize));
+            QQuery query = new QQuery(string.Empty, Row.Table.LogTable);
+            query.BuildParam(Row.Table.LogTable.BaseKey, CompareType.Equal, row.PrimaryId);
+            query.BuildParam(Row.Table.LogTable.StatusKey, CompareType.Equal, DBStatus.New);
+            Logs.AddRange(Row.Table.LogTable.Load(query, DBLoadParam.Load | DBLoadParam.Synchronize));
         }
 
-        public List<UserLog> Logs
+        public List<DBLogItem> Logs
         {
             get
             {
                 if (logs == null)
-                    logs = new List<UserLog>();//DataLog.DBTable);
+                    logs = new List<DBLogItem>();//DataLog.DBTable);
                 return logs;
             }
             set
@@ -92,19 +91,18 @@ namespace DataWF.Module.Common
 
         public void RefreshChanges()
         {
-            logs.Sort(new DBComparer(UserLog.DBTable.PrimaryKey));
+            logs.Sort(new DBComparer(Row.Table.LogTable.PrimaryKey));
 
             changes.Clear();
             user = string.Empty;
             DBLogItem prev = null;
-            foreach (UserLog log in Logs)
+            foreach (var log in Logs)
             {
                 if (log.Status == DBStatus.New)
                 {
-                    string name = log.User == null ? "null" : log.User.Name;
+                    string name = ((UserLog)log.UserLog)?.User?.Name;
                     if (user.IndexOf(name, StringComparison.Ordinal) < 0)
                         user += name + "; ";
-                    var newItem = log.LogItem;
                     foreach (var logColumn in log.LogTable.GetLogColumns())
                     {
                         LogChange map = changes.SelectOne(nameof(LogChange.Column), CompareType.Equal, logColumn.BaseColumn);
@@ -117,9 +115,9 @@ namespace DataWF.Module.Common
                         }
                         if (!map.User.Contains(name))
                             map.User += name + "; ";
-                        map.New = newItem.GetValue(logColumn);
+                        map.New = log.GetValue(logColumn);
                     }
-                    prev = log.LogItem;
+                    prev = log;
                 }
             }
         }
@@ -134,13 +132,14 @@ namespace DataWF.Module.Common
         public bool Check()
         {
             bool flag = true;
-            foreach (UserLog log in Logs)
-                if (log.Status == DBStatus.New && log.User.IsCurrent)// && !log.User.Super
+            foreach (var log in Logs)
+            {
+                if (log.Status == DBStatus.New && (((UserLog)log.UserLog)?.User?.IsCurrent ?? false))// && !log.User.Super
                 {
                     flag = false;
                     break;
                 }
-
+            }
             return flag;
         }
 
@@ -157,11 +156,11 @@ namespace DataWF.Module.Common
         }
 
 
-        public List<UserLog> GetChilds()
-        {
-            var query = new QQuery("", UserLog.DBTable);
-            query.BuildPropertyParam(nameof(UserLog.ParentId), CompareType.In, logs);
-            return UserLog.DBTable.Load(query);
-        }
+        //public List<UserLog> GetChilds()
+        //{
+        //    var query = new QQuery("", UserLog.DBTable);
+        //    query.BuildPropertyParam(nameof(UserLog.ParentId), CompareType.In, logs);
+        //    return UserLog.DBTable.Load(query);
+        //}
     }
 }

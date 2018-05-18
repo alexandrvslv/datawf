@@ -33,15 +33,5 @@ namespace DataWF.Module.Common
             : this("")
         {
         }
-
-        public UserLogList(DBItem document)
-            : this(UserLog.DBTable.ParseProperty(nameof(UserLog.DocumentId)).Name + "='" + document.PrimaryId + "'")
-        {
-        }
-
-        public void FilterByDocument(DBItem document)
-        {
-            DefaultParam = new QParam(LogicType.And, UserLog.DBTable.ParseProperty(nameof(UserLog.DocumentId)), CompareType.Equal, document.PrimaryId);
-        }
     }
 }

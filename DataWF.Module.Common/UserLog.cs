@@ -26,6 +26,7 @@ using System.ComponentModel;
 using System.Xml.Serialization;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Collections;
 
 namespace DataWF.Module.Common
 {
@@ -37,213 +38,61 @@ namespace DataWF.Module.Common
         Start,
         Stop,
         Execute,
-        Insert,
-        Update,
-        Delete,
+        Transaction,
         Reject
     }
 
-    [DataContract, Table("duser_log", "User", BlockSize = 500, IsLoging = false)]
-    public class UserLog : DBGroupItem, ICheck
+    public enum UserLogStrategy
     {
-        [ThreadStatic]
-        public static DBItem CurrentDocument;
-        [ThreadStatic]
-        public static UserLog CurrentLog;
+        ByItem,
+        ByTransaction,
+        BySession
+    }
 
-        public static DBTable<UserLog> DBTable
-        {
-            get { return DBService.GetTable<UserLog>(); }
-        }
-
-        public static event EventHandler<DBItemEventArgs> RowLoging;
-
-        public static event EventHandler<DBItemEventArgs> RowLoged;
-
-        public static void OnDBRowUpdate(DBItemEventArgs arg)
-        {
-            if (arg.Item.Table == UserLog.DBTable
-                || arg.Item.Table is DBLogTable)
-                return;
-            RowLoging?.Invoke(null, arg);
-            var log = UserLog.LogRow(arg);
-            var transaction = arg.Transaction.GetSubTransaction(DBTable.Schema, false);
-            transaction.Reference = false;
-            log.Save();
-            RowLoged?.Invoke(log, arg);
-        }
-
+    public class UserLogItem
+    {
         private DBLogItem cacheLogItem;
         private DBTable cacheTargetTable;
         private DBItem cacheTarget;
-        private DBTable cacheDocumentTable;
-        private DBItem cacheDocument;
-
-        public UserLog()
-        {
-            Build(DBTable);
-        }
-
-        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
-        public long? Id
-        {
-            get { return GetValue<long?>(Table.PrimaryKey); }
-            set { SetValue(value, Table.PrimaryKey); }
-        }
-
-        [DataMember, Column("user_id", Keys = DBColumnKeys.View)]
-        public int? UserId
-        {
-            get { return GetProperty<int?>(nameof(UserId)); }
-            set { SetProperty(value, nameof(UserId)); }
-        }
-
-        [Reference(nameof(UserId))]
-        public User User
-        {
-            get { return GetPropertyReference<User>(); }
-            set { SetPropertyReference(value); }
-        }
-
-        [DataMember, Column("type_id", Keys = DBColumnKeys.ElementType | DBColumnKeys.View)]
-        public UserLogType? LogType
-        {
-            get { return GetProperty<UserLogType?>(nameof(LogType)); }
-            set { SetProperty(value, nameof(LogType)); }
-        }
-
-        [DataMember, Column("document_table", 512)]
-        public string DocumentTableName
-        {
-            get { return GetProperty<string>(nameof(DocumentTableName)); }
-            set { SetProperty(value, nameof(DocumentTableName)); }
-        }
-
-        [XmlIgnore]
-        public DBTable DocumentTable
-        {
-            get { return cacheDocumentTable ?? (cacheDocumentTable = DBService.ParseTable(DocumentTableName)); }
-            set
-            {
-                cacheDocumentTable = value;
-                DocumentTableName = value?.Name;
-            }
-        }
 
         [Browsable(false)]
-        [DataMember, Column("document_id", 256)]
-        public string DocumentId
-        {
-            get { return GetProperty<string>(nameof(DocumentId)); }
-            set { SetProperty(value, nameof(DocumentId)); }
-        }
+        public string TableName { get; set; }
 
         [XmlIgnore]
-        public DBItem Document
+        public DBTable Table
         {
-            get { return cacheDocument ?? (cacheDocument = (DocumentTable?.LoadItemById(DocumentId) ?? DBItem.EmptyItem)); }
-            set
-            {
-                cacheDocument = value;
-                DocumentId = value?.PrimaryId.ToString();
-                DocumentTable = value?.Table;
-            }
-        }
-
-        [Browsable(false)]
-        [DataMember, Column("parent_id", Keys = DBColumnKeys.Group)]
-        public long? ParentId
-        {
-            get { return GetGroupValue<long?>(); }
-            set { SetGroupValue(value); }
-        }
-
-        [Reference(nameof(ParentId))]
-        public UserLog Parent
-        {
-            get { return GetGroupReference<UserLog>(); }
-            set { SetGroupReference(value); }
-        }
-
-        [Browsable(false)]
-        [DataMember, Column("redo_id")]
-        public long? RedoId
-        {
-            get { return GetProperty<long?>(nameof(RedoId)); }
-            set { SetProperty(value, nameof(RedoId)); }
-        }
-
-        [Reference(nameof(RedoId))]
-        public UserLog Redo
-        {
-            get { return GetPropertyReference<UserLog>(); }
-            set { SetPropertyReference(value); }
-        }
-
-        [DataMember, Column("target_table", 512)]
-        public string TargetTableName
-        {
-            get { return GetProperty<string>(nameof(TargetTableName)); }
-            set { SetProperty(value, nameof(TargetTableName)); }
-        }
-
-        [XmlIgnore]
-        public DBTable TargetTable
-        {
-            get { return cacheTargetTable ?? (cacheTargetTable = DBService.ParseTable(TargetTableName, DBService.DefaultSchema)); }
+            get { return cacheTargetTable ?? (cacheTargetTable = DBService.ParseTable(TableName)); }
             set
             {
                 cacheTargetTable = value;
-                TargetTableName = value?.FullName;
+                TableName = value?.FullName;
             }
         }
 
-        [DataMember, Column("target_id", 256)]
-        public string TargetId
-        {
-            get { return GetProperty<string>(nameof(TargetId)); }
-            set { SetProperty(value, nameof(TargetId)); }
-        }
+        [Browsable(false)]
+        public string ItemId { get; set; }
 
         [XmlIgnore]
-        public DBItem TargetItem
+        public DBItem Item
         {
-            get { return cacheTarget ?? (cacheTarget = (TargetTable?.LoadItemById(TargetId) ?? DBItem.EmptyItem)); }
+            get { return cacheTarget ?? (cacheTarget = (Table?.LoadItemById(ItemId) ?? DBItem.EmptyItem)); }
             set
             {
                 cacheTarget = value;
-                TargetId = value?.PrimaryId.ToString();
-                TargetTable = value?.Table;
-
-                if (value == null)
-                    return;
-                if (value.UpdateState.HasFlag(DBUpdateState.Insert))
-                {
-                    LogType = UserLogType.Insert;
-                }
-                else if (value.UpdateState.HasFlag(DBUpdateState.Delete))
-                {
-                    LogType = UserLogType.Delete;
-                }
-                else if (value.UpdateState.HasFlag(DBUpdateState.Update))
-                {
-                    LogType = UserLogType.Update;
-                }
+                ItemId = value?.PrimaryId.ToString();
+                Table = value?.Table;
             }
         }
 
         public DBLogTable LogTable
         {
-            get { return TargetTable?.LogTable; }
+            get { return Table?.LogTable; }
         }
 
-        [DataMember, Column("log_id")]
-        public int? LogId
-        {
-            get { return GetProperty<int?>(nameof(LogId)); }
-            set { SetProperty(value, nameof(LogId)); }
-        }
+        [Browsable(false)]
+        public int? LogId { get; set; }
 
+        [XmlIgnore]
         public DBLogItem LogItem
         {
             get { return cacheLogItem ?? (cacheLogItem = LogTable?.LoadById(LogId)); }
@@ -253,26 +102,14 @@ namespace DataWF.Module.Common
                 if (value != null)
                 {
                     LogId = value.LogId;
-                    TargetItem = value.BaseItem;
+                    Item = value.BaseItem;
                 }
             }
         }
 
-        [DataMember, Column("text_data", ColumnType = DBColumnTypes.Internal)]
-        public string TextData
-        {
-            get { return GetProperty<string>(nameof(TextData)); }
-            set { SetProperty(value, nameof(TextData)); }
-        }
-
-        public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)
-        {
-            base.OnPropertyChanged(property, column, value);
-        }
-
         public void RefereshText()
         {
-            string _textCache = GetProperty<string>(nameof(TextData));
+            string _textCache = "";
             if (_textCache?.Length == 0 && LogItem != null)
             {
                 var logPrevius = LogItem.GetPrevius();
@@ -340,8 +177,137 @@ namespace DataWF.Module.Common
                     }
                 }
             }
-            SetProperty(_textCache, nameof(TextData));
         }
+    }
+
+    [DataContract, Table("duser_log", "User", BlockSize = 500, IsLoging = false)]
+    public class UserLog : DBGroupItem, ICheck
+    {
+        public static UserLogStrategy LogStrategy = UserLogStrategy.BySession;
+
+        [ThreadStatic]
+        public static UserLog CurrentLog;
+
+        public static DBTable<UserLog> DBTable
+        {
+            get { return DBService.GetTable<UserLog>(); }
+        }
+
+        public static event EventHandler<DBItemEventArgs> RowLoging;
+
+        public static event EventHandler<DBItemEventArgs> RowLoged;
+
+        public static void OnDBItemLoging(DBItemEventArgs arg)
+        {
+            if (arg.Item.Table == UserLog.DBTable || arg.Item.Table is DBLogTable)
+                return;
+            RowLoging?.Invoke(null, arg);
+            var userLog = CurrentLog ?? User.CurrentUser?.LogStart;
+
+            if (LogStrategy == UserLogStrategy.ByTransaction)
+            {
+                var transaction = DBTransaction.Current;
+                if (transaction.UserLog == null)
+                {
+                    transaction.UserLog = new UserLog { User = User.CurrentUser, Parent = userLog, LogType = UserLogType.Transaction };
+                    transaction.UserLog.Save();
+                }
+                userLog = (UserLog)transaction.UserLog;
+
+            }
+            else if (LogStrategy == UserLogStrategy.ByItem)
+            {
+                userLog = new UserLog { User = User.CurrentUser, Parent = userLog, LogType = UserLogType.Transaction };
+                userLog.Save();
+            }
+            if (arg.LogItem != null)
+            {
+                arg.LogItem.UserLog = userLog;
+            }
+        }
+
+        private DBTable cacheDocumentTable;
+
+        private DBItem cacheDocument;
+
+        public UserLog()
+        {
+            Build(DBTable);
+        }
+
+        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
+        public long? Id
+        {
+            get { return GetValue<long?>(Table.PrimaryKey); }
+            set { SetValue(value, Table.PrimaryKey); }
+        }
+
+        [DataMember, Column("user_id", Keys = DBColumnKeys.View)]
+        public int? UserId
+        {
+            get { return GetProperty<int?>(nameof(UserId)); }
+            set { SetProperty(value, nameof(UserId)); }
+        }
+
+        [Reference(nameof(UserId))]
+        public User User
+        {
+            get { return GetPropertyReference<User>(); }
+            set { SetPropertyReference(value); }
+        }
+
+        [DataMember, Column("type_id", Keys = DBColumnKeys.ElementType | DBColumnKeys.View)]
+        public UserLogType? LogType
+        {
+            get { return GetProperty<UserLogType?>(nameof(LogType)); }
+            set { SetProperty(value, nameof(LogType)); }
+        }
+
+        [Browsable(false)]
+        [DataMember, Column("parent_id", Keys = DBColumnKeys.Group)]
+        public long? ParentId
+        {
+            get { return GetGroupValue<long?>(); }
+            set { SetGroupValue(value); }
+        }
+
+        [Reference(nameof(ParentId))]
+        public UserLog Parent
+        {
+            get { return GetGroupReference<UserLog>(); }
+            set { SetGroupReference(value); }
+        }
+
+        [Browsable(false)]
+        [DataMember, Column("redo_id")]
+        public long? RedoId
+        {
+            get { return GetProperty<long?>(nameof(RedoId)); }
+            set { SetProperty(value, nameof(RedoId)); }
+        }
+
+        [Reference(nameof(RedoId))]
+        public UserLog Redo
+        {
+            get { return GetPropertyReference<UserLog>(); }
+            set { SetPropertyReference(value); }
+        }
+
+        [DataMember, Column("text_data")]
+        public string TextData
+        {
+            get { return GetProperty<string>(nameof(TextData)); }
+            set { SetProperty(value, nameof(TextData)); }
+        }
+
+        public List<UserLogItem> Items { get; set; }
+
+        public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)
+        {
+            base.OnPropertyChanged(property, column, value);
+        }
+
+
 
         //public SelectableList<LogChange> GetLogMapList()
         //{
@@ -371,8 +337,7 @@ namespace DataWF.Module.Common
             {
                 User = user,
                 LogType = type,
-                Parent = user.LogStart,
-                Document = CurrentDocument
+                Parent = user.LogStart
             };
 
             string text = info;
@@ -392,58 +357,35 @@ namespace DataWF.Module.Common
             newLog.Save();
         }
 
-        public static UserLog LogRow(DBItemEventArgs arg)
+        public static void Reject(IEnumerable<DBLogItem> redo)
         {
-            var parent = CurrentLog ?? arg.Transaction.Tag as UserLog ?? User.CurrentUser.LogStart;
-            var log = new UserLog()
+            var changed = new Dictionary<DBItem, List<DBLogItem>>();
+            foreach (DBLogItem log in redo.OrderBy(p => p.PrimaryId))
             {
-                User = User.CurrentUser,
-                Parent = parent,
-                Document = CurrentDocument
-            };
-            if (arg.LogItem != null)
-            {
-                log.LogItem = arg.LogItem;
-            }
-            else
-            {
-                log.TargetItem = arg.Item;
-            }
-            return log;
-        }
-
-        public static void Reject(IList<UserLog> redo)
-        {
-            ListHelper.QuickSort<UserLog>(redo, new DBComparer(DBTable.PrimaryKey, ListSortDirection.Descending));
-            var changed = new Dictionary<DBItem, List<UserLog>>();
-            foreach (UserLog log in redo)
-            {
-                DBItem row = log.TargetItem;
+                DBItem row = log.BaseItem;
                 if (row == null)
                 {
-                    if (log.LogType == UserLogType.Insert)
+                    if (log.LogType == DBLogType.Insert)
                         continue;
-                    row = log.TargetTable.NewItem(DBUpdateState.Insert, false);
-                    row.SetValue(log.TargetTable.PrimaryKey.ParseValue(log.TargetId), log.TargetTable.PrimaryKey, false);
+                    row = log.BaseTable.NewItem(DBUpdateState.Insert, false);
+                    row.SetValue(log.BaseId, log.BaseTable.PrimaryKey, false);
                 }
-                else if (log.LogType == UserLogType.Delete && !changed.ContainsKey(row))
-                    continue;
-
-                if (log.LogItem != null)
+                else if (log.LogType == DBLogType.Delete && !changed.ContainsKey(row))
                 {
-                    log.LogItem.Upload(row);
+                    continue;
                 }
+                log.Upload(row);
 
-                if (log.LogType == UserLogType.Insert)
+                if (log.LogType == DBLogType.Insert)
                 {
                     row.UpdateState |= DBUpdateState.Delete;
                 }
-                else if (log.LogType == UserLogType.Delete)
+                else if (log.LogType == DBLogType.Delete)
                 {
                     row.UpdateState |= DBUpdateState.Insert;
-                    log.TargetTable.Add(row);
+                    log.BaseTable.Add(row);
                 }
-                else if (log.LogType == UserLogType.Update && row.GetIsChanged())
+                else if (log.LogType == DBLogType.Update && row.GetIsChanged())
                 {
                     row.UpdateState |= DBUpdateState.Update;
                 }
@@ -451,7 +393,7 @@ namespace DataWF.Module.Common
                 log.Status = DBStatus.Delete;
 
                 if (!changed.TryGetValue(row, out var list))
-                    changed[row] = list = new List<UserLog>();
+                    changed[row] = list = new List<DBLogItem>();
 
                 list.Add(log);
             }
@@ -459,13 +401,13 @@ namespace DataWF.Module.Common
             {
                 foreach (var entry in changed)
                 {
-                    CurrentLog = new UserLog() { TextData = "Reject", Parent = User.CurrentUser.LogStart };
+                    //var currentLog = entry.Key.Table.LogTable.NewItem();
+                    transaction.UserLog = CurrentLog = new UserLog() { TextData = "Reject", Parent = User.CurrentUser.LogStart };
                     CurrentLog.Save();
                     entry.Key.Save();
 
                     foreach (var item in entry.Value)
                     {
-                        item.Redo = CurrentLog;
                         item.Save();
                     }
 
@@ -475,7 +417,7 @@ namespace DataWF.Module.Common
             CurrentLog = null;
         }
 
-        public static void Accept(DBItem row, IList<UserLog> logs)
+        public static void Accept(DBItem row, IEnumerable<DBLogItem> logs)
         {
             if (row.Status == DBStatus.Edit || row.Status == DBStatus.New || row.Status == DBStatus.Error)
                 row.Status = DBStatus.Actual;
@@ -483,19 +425,19 @@ namespace DataWF.Module.Common
                 row.Delete();
             using (var transaction = new DBTransaction(row, DBTable.Schema.Connection))
             {
-                CurrentLog = new UserLog { TextData = "Accept", Parent = User.CurrentUser.LogStart };
+                transaction.UserLog = CurrentLog = new UserLog { TextData = "Accept", Parent = User.CurrentUser.LogStart };
                 CurrentLog.Save();
                 row.Save();
 
-                foreach (UserLog item in logs)
+                foreach (var item in logs)
                 {
                     if (item.Status == DBStatus.New)
                     {
-                        item.Redo = CurrentLog;
                         item.Status = DBStatus.Actual;
                         item.Save();
                     }
                 }
+                transaction.Commit();
                 CurrentLog = null;
             }
         }

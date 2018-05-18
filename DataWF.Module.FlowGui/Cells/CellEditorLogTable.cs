@@ -14,8 +14,8 @@ namespace DataWF.Module.FlowGui
 
         public override object FormatValue(object value, object dataSource, Type valueType)
         {
-            if (dataSource is UserLog)
-                value = ((UserLog)dataSource).TargetTable;
+            if (dataSource is DBLogItem)
+                value = ((DBLogItem)dataSource).BaseTable;
             return base.FormatValue(value, dataSource, valueType);
         }
 

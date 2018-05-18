@@ -9,6 +9,8 @@ using Xwt.Drawing;
 using System.Linq;
 using DataWF.Module.Common;
 using Xwt;
+using System.Collections;
+using System.Threading.Tasks;
 
 namespace DataWF.Module.CommonGui
 {
@@ -61,10 +63,9 @@ namespace DataWF.Module.CommonGui
         private DataTree toolWindTree;
         private DBItem filter;
         private DataLogMode mode = DataLogMode.Default;
-        private DBTableView<UserLog> logs;
+
         private DBTable table = null;
         private VPaned split;
-        private RichTextView detailText = new RichTextView();
 
         private TableLoader loader;
         private Toolsbar bar;
@@ -86,9 +87,8 @@ namespace DataWF.Module.CommonGui
         private ToolMenuItem toolTypePassword;
         private ToolMenuItem toolTypeStart;
         private ToolMenuItem toolTypeStop;
-        private ToolMenuItem toolTypeInsert;
-        private ToolMenuItem toolTypeUpdate;
-        private ToolMenuItem toolTypeDelete;
+        private ToolMenuItem toolTypeProcedure;
+        private ToolMenuItem toolTypeTransaction;
         private ToolFieldEditor dateField;
         private ToolFieldEditor dataField;
         private TableLayoutList detailList;
@@ -104,10 +104,10 @@ namespace DataWF.Module.CommonGui
             //dateField.Alignment = ToolStripItemAlignment.Right;
             //toolType.DropDown.Closing += DropDown_Closing;
 
-            logs = new DBTableView<UserLog>(UserLog.DBTable, string.Empty, DBViewKeys.Static);
-            logs.ListChanged += LogsListChanged;
+            //logs = new DBTableView<UserLog>(UserLog.DBTable, string.Empty, DBViewKeys.Static);
+            //logs.ListChanged += LogsListChanged;
 
-            loader = new TableLoader() { View = logs };
+            loader = new TableLoader() { View = null };
 
             toolModeDefault = new ToolMenuItem(ToolModeClick) { Name = "Default" };
             toolModeLogConfirm = new ToolMenuItem(ToolModeClick) { Name = "Log Confirmation" };
@@ -139,19 +139,16 @@ namespace DataWF.Module.CommonGui
             toolTypePassword = new ToolMenuItem(ToolTypeItemClicked) { Checked = true, Name = "Password" };
             toolTypeStart = new ToolMenuItem(ToolTypeItemClicked) { Checked = true, Name = "Start" };
             toolTypeStop = new ToolMenuItem(ToolTypeItemClicked) { Checked = true, Name = "Stop" };
-            toolTypeInsert = new ToolMenuItem(ToolTypeItemClicked) { Checked = true, Name = "Insert" };
-            toolTypeUpdate = new ToolMenuItem(ToolTypeItemClicked) { Checked = true, Name = "Update" };
-            toolTypeDelete = new ToolMenuItem(ToolTypeItemClicked) { Checked = true, Name = "Delete" };
+            toolTypeProcedure = new ToolMenuItem(ToolTypeItemClicked) { Checked = true, Name = "Procedure" };
+            toolTypeTransaction = new ToolMenuItem(ToolTypeItemClicked) { Checked = true, Name = "Transaction" };
 
             toolType = new ToolDropDown(
                 toolTypeAuthorization,
                 toolTypePassword,
                 toolTypeStart,
                 toolTypeStop,
-                new ToolSeparator(),
-                toolTypeInsert,
-                toolTypeUpdate,
-                toolTypeDelete)
+                toolTypeProcedure,
+                toolTypeTransaction)
             { DisplayStyle = ToolItemDisplayStyle.Text, Name = "LogType" };
 
             dateField = new ToolFieldEditor()
@@ -192,9 +189,8 @@ namespace DataWF.Module.CommonGui
                 GenerateToString = false,
                 Mode = LayoutListMode.List,
                 Name = "list",
-                ListSource = logs
+                //ListSource = logs
             };
-            list.RetriveCellEditor += ListRetriveCellEditor;
             list.GetProperties += list_GetProperties;
             list.GenerateColumns = true;
             list.CellMouseClick += ListCellMouseClick;
@@ -256,7 +252,7 @@ namespace DataWF.Module.CommonGui
             {
                 detailList.Dispose();
                 loader.Dispose();
-                logs.Dispose();
+                //logs.Dispose();
             }
 
             base.Dispose(disposing);
@@ -272,10 +268,10 @@ namespace DataWF.Module.CommonGui
         {
             if (e.ListChangedType == ListChangedType.ItemAdded)
             {
-                var log = logs[e.NewIndex];
-                var cache = log.TextData;
-                if (cache == null)
-                    log.RefereshText();
+                //var log = logs[e.NewIndex];
+                //var cache = log.TextData;
+                //if (cache == null)
+                //    log.RefereshText();
             }
         }
 
@@ -286,24 +282,6 @@ namespace DataWF.Module.CommonGui
             //        e.Properties = PList.GetPropertiesByCell(null, typeof(DBTable));
             //    else if (e.Cell.Name == FlowEnvir.Config.DataLog.RowId.ColumnCode)
             //        e.Properties = PList.GetPropertiesByCell(null, typeof(DBRow));
-        }
-
-        private ILayoutCellEditor ListRetriveCellEditor(object listItem, object value, ILayoutCell cell)
-        {
-            if (cell.CellEditor != null)
-                return cell.CellEditor;
-            if (cell.Name == UserLog.DBTable.ParseProperty(nameof(UserLog.TargetTableName)).Name)
-            {
-                cell.Name = "DBTable";
-                cell.Invoker = EmitInvoker.Initialize(typeof(UserLog), cell.Name);
-            }
-            else if (cell.Name == UserLog.DBTable.ParseProperty(nameof(UserLog.TargetId)).Name)
-            {
-                cell.Name = "DBRow";
-                cell.Invoker = EmitInvoker.Initialize(typeof(UserLog), cell.Name);
-            }
-
-            return null;
         }
 
         private ILayoutCellEditor DetailListRetriveCellEditor(object listItem, object value, ILayoutCell cell)
@@ -428,17 +406,15 @@ namespace DataWF.Module.CommonGui
         private void SelectData()
         {
             var log = list.SelectedItem as UserLog;
-            if (log != null && (log.LogType == UserLogType.Insert || log.LogType == UserLogType.Update || log.LogType == UserLogType.Delete))
+            if (list.SelectedItem is UserLog && (log.LogType == UserLogType.Transaction))
             {
-                detailList.FieldSource = log.LogItem;
-                detailRow.FieldSource = log.TargetItem;
-                detailText.LoadText(log.TextData ?? string.Empty, Xwt.Formats.TextFormat.Plain);
+                detailList.ListSource = log.Items;
+                detailRow.FieldSource = log;
             }
-            else
+            else if (list.SelectedItem is DBLogItem)
             {
-                detailList.ListSource = null;
+                detailList.FieldSource = list.SelectedItem;
                 detailRow.FieldSource = null;
-                detailText.LoadText("", Xwt.Formats.TextFormat.Plain);
             }
         }
 
@@ -482,7 +458,7 @@ namespace DataWF.Module.CommonGui
 
         public void SetFilter(DBItem filter)
         {
-            if (filter.Access.Admin || filter is UserLog)
+            if (filter.Access.Admin || filter.Access.Edit || filter is UserLog)
             {
                 toolRollback.Visible = filter.Access.Edit;
                 this.filter = filter;
@@ -557,80 +533,117 @@ namespace DataWF.Module.CommonGui
 
         public void UpdateFilter()
         {
-            var f = new List<object>();
-            if (toolTypeAuthorization.Checked)
-                f.Add((int)UserLogType.Authorization);
-            if (toolTypePassword.Checked)
-                f.Add((int)UserLogType.Password);
-            if (toolTypeStart.Checked)
-                f.Add((int)UserLogType.Start);
-            if (toolTypeStop.Checked)
-                f.Add((int)UserLogType.Stop);
-            if (toolTypeInsert.Checked)
-                f.Add((int)UserLogType.Insert);
-            if (toolTypeUpdate.Checked)
-                f.Add((int)UserLogType.Update);
-            if (toolTypeDelete.Checked)
-                f.Add((int)UserLogType.Delete);
-
-            logs.Clear();
-            logs.ClearFilter();
-            var query = logs.Query;
-            query.BuildPropertyParam(nameof(UserLog.LogType), CompareType.In, f);
-
-            if (dateField.DataValue != null)
+            if (Mode == DataLogMode.Default)
             {
-                var interval = (DateInterval)dateField.DataValue;
-                query.BuildPropertyParam(nameof(UserLog.DateCreate), CompareType.GreaterOrEqual, interval.Min);
-                query.BuildPropertyParam(nameof(UserLog.DateCreate), CompareType.LessOrEqual, interval.Max.AddDays(1));
-            }
-            if (dataField.DataValue != null)
-            {
-                var table = dataField.DataValue as DBTable;
-                query.BuildPropertyParam(nameof(UserLog.TargetTable), CompareType.Equal, table.FullName);
-            }
-
-            if (filter is DBItem && mode == DataLogMode.Document)
-            {
-                query.BuildPropertyParam(nameof(UserLog.DocumentId), CompareType.Equal, filter.PrimaryId);
-            }
-            else if (filter is User && mode == DataLogMode.User)
-            {
-                query.BuildPropertyParam(nameof(UserLog.UserId), CompareType.Equal, filter.PrimaryId);
-            }
-            else if (filter is UserGroup && mode == DataLogMode.Group)
-            {
-                query.BuildPropertyParam(nameof(UserLog.UserId), CompareType.In, ((UserGroup)filter).GetUsers().ToList());
-            }
-            else if (filter is UserLog && mode == DataLogMode.LogConfirm)
-            {
-                query.BuildPropertyParam(nameof(UserLog.RedoId), CompareType.Equal, filter.PrimaryId);
+                if (filter == null || filter.Table.LogTable == null)
+                    return;
+                var view = list.ListSource as IDBTableView;
+                if (view?.Table != filter.Table.LogTable)
+                {
+                    view.Dispose();
+                    view = null;
+                }
+                if (view == null)
+                {
+                    view = filter.Table.LogTable.CreateItemsView(string.Empty, DBViewKeys.Empty, DBStatus.Empty);
+                }
+                view.Query.Parameters.Clear();
+                view.Query.BuildParam(filter.Table.LogTable.BaseKey, CompareType.Equal, filter.PrimaryId).IsDefault = true;
+                list.ListSource = loader.View = view;
+                loader.Cancel();
+                loader.LoadAsync();
             }
             else if (mode == DataLogMode.Table)
             {
-                query.BuildPropertyParam(nameof(UserLog.TargetTableName), CompareType.Equal, table.FullName);
-            }
-            else if (filter != null)
-            {
-                filter = filter is DBVirtualItem ? ((DBVirtualItem)filter).Main : filter;
-
-                if (filter is UserLog)
-                    query.BuildPropertyParam(nameof(UserLog.ParentId), CompareType.Equal, filter.PrimaryId);
-                else
+                if (table == null || table.LogTable == null)
+                    return;
+                var view = list.ListSource as IDBTableView;
+                if (view?.Table != table.LogTable)
                 {
-                    query.BuildPropertyParam(nameof(UserLog.TargetTableName), CompareType.Equal, filter.Table.FullName);
-                    query.BuildPropertyParam(nameof(UserLog.TargetId), CompareType.Equal, filter.PrimaryId);
+                    view.Dispose();
+                    view = null;
                 }
+                if (view == null)
+                {
+                    view = table.LogTable.CreateItemsView(string.Empty, DBViewKeys.Empty, DBStatus.New);
+                }
+                view.ResetFilter();
+                list.ListSource = loader.View = view;
+                loader.Cancel();
+                loader.LoadAsync();
             }
-            //logs.UpdateFilter();
-            //logs.IsStatic = true;
-            loader.Cancel();
+            else if (mode == DataLogMode.Document)
+            {
+                if (filter == null || filter.Table.LogTable == null)
+                    return;
+                var view = list.ListSource as SelectableList<DBLogItem>;
+                if (view == null)
+                {
+                    view = new SelectableList<DBLogItem>();
+                }
+                list.ListSource = view;
+                Task.Run(() => { });
+            }
+            else
+            {
+                if (!(filter is User || filter is UserGroup || filter is UserLog))
+                    return;
+                var view = list.ListSource as DBTableView<UserLog>;
+                if (view == null)
+                {
+                    if (list.ListSource is IDBTableView)
+                    {
+                        ((IDisposable)list.ListSource).Dispose();
+                    }
+                    list.ListSource = view = new DBTableView<UserLog>((string)null, DBViewKeys.Empty);
+                }
+                var query = view.Query;
 
+                var f = new List<object>();
+                if (toolTypeAuthorization.Checked)
+                    f.Add((int)UserLogType.Authorization);
+                if (toolTypePassword.Checked)
+                    f.Add((int)UserLogType.Password);
+                if (toolTypeStart.Checked)
+                    f.Add((int)UserLogType.Start);
+                if (toolTypeStop.Checked)
+                    f.Add((int)UserLogType.Stop);
+                if (toolTypeProcedure.Checked)
+                    f.Add((int)UserLogType.Execute);
+                if (toolTypeTransaction.Checked)
+                    f.Add((int)UserLogType.Transaction);
 
+                query.BuildPropertyParam(nameof(UserLog.LogType), CompareType.In, f);
 
-            loader.LoadAsync();// logs.FillAsynch(DBLoadParam.Synchronize);
+                if (dateField.DataValue != null)
+                {
+                    var interval = (DateInterval)dateField.DataValue;
+                    query.BuildPropertyParam(nameof(UserLog.DateCreate), CompareType.GreaterOrEqual, interval.Min);
+                    query.BuildPropertyParam(nameof(UserLog.DateCreate), CompareType.LessOrEqual, interval.Max.AddDays(1));
+                }
+                if (filter is User && mode == DataLogMode.User)
+                {
+                    query.BuildPropertyParam(nameof(UserLog.UserId), CompareType.Equal, filter.PrimaryId);
+                }
+                else if (filter is UserGroup && mode == DataLogMode.Group)
+                {
+                    query.BuildPropertyParam(nameof(UserLog.UserId), CompareType.In, ((UserGroup)filter).GetUsers().ToList());
+                }
+                else if (filter is UserLog)
+                {
+                    if (mode == DataLogMode.LogConfirm)
+                    {
+                        query.BuildPropertyParam(nameof(UserLog.RedoId), CompareType.Equal, filter.PrimaryId);
+                    }
+                    else
+                    {
+                        query.BuildPropertyParam(nameof(UserLog.ParentId), CompareType.Equal, filter.PrimaryId);
+                    }
+                }
+                loader.Cancel();
+                loader.LoadAsync();
+            }
         }
-
         public DockType DockType
         {
             get { return DockType.Content; }
@@ -660,9 +673,9 @@ namespace DataWF.Module.CommonGui
             if (list.SelectedItem == null)
                 return;
 
-            var redo = list.Selection.GetItems<UserLog>();
-            if (redo[0].TargetTable != null && redo[0].TargetTable.Access.Edit)
-                UserLog.Reject(redo);
+            var redo = list.Selection.GetItems<DBLogItem>();
+            if (redo[0] != null && redo[0].Table.Access.Edit)
+                redo[0].Upload();
             else
                 MessageDialog.ShowMessage(ParentWindow, "Access denied!");
         }
@@ -676,37 +689,6 @@ namespace DataWF.Module.CommonGui
                 RowAccept(row, ref d, this);
             }
         }
-
-        public bool Check()
-        {
-            bool flag = false;
-            UserLog log = logs.Last<UserLog>();
-            if (log != null && log.TargetTable != null)
-            {
-                if (log.TargetTable.StatusKey == null)
-                {
-                    MessageDialog.ShowMessage(ParentWindow, "Table is not acceptable!");
-                }
-                else if (log.TargetItem == null)
-                {
-                    MessageDialog.ShowMessage(ParentWindow, "Record was deleted!");
-                }
-                else if (log.TargetItem.Status == DBStatus.Actual)
-                {
-                    MessageDialog.ShowMessage(ParentWindow, "Record is in actual state!");
-                }
-                else if (log.User == User.CurrentUser)
-                {
-                    MessageDialog.ShowMessage(ParentWindow, "You and editor is the same user!");
-                }
-                else
-                {
-                    flag = true;
-                }
-            }
-            return flag;
-        }
-
     }
 
     public enum DataLogMode

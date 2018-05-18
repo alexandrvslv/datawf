@@ -1,6 +1,7 @@
 ﻿using DataWF.Data.Gui;
 using System;
 using DataWF.Module.Common;
+using DataWF.Data;
 
 namespace DataWF.Module.FlowGui
 {
@@ -8,8 +9,8 @@ namespace DataWF.Module.FlowGui
     {
         public override object FormatValue(object value, object dataSource, Type valueType)
         {
-            if (dataSource is UserLog)
-                value = ((UserLog)dataSource).TargetItem;
+            if (dataSource is DBLogItem)
+                value = ((DBLogItem)dataSource).BaseItem;
             return base.FormatValue(value, dataSource, valueType);
         }
 

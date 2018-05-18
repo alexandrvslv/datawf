@@ -42,7 +42,7 @@ namespace DataWF.Module.Flow
         class MessageItem
         {
             public DBTable Table;
-            public UserLogType Type;
+            public DBLogType Type;
             public object Id;
         }
         public static UDPService Default;
@@ -168,14 +168,14 @@ namespace DataWF.Module.Flow
             if (!(log is UserLog) && log.Table.Type == DBTableType.Table &&
                 (log.Table == DocumentWork.DBTable || log.Table.IsLoging))
             {
-                UserLogType type = UserLogType.None;
+                var type = DBLogType.None;
                 if ((arg.State & DBUpdateState.Delete) == DBUpdateState.Delete)
-                    type = UserLogType.Delete;
+                    type = DBLogType.Delete;
                 else if ((arg.State & DBUpdateState.Update) == DBUpdateState.Update)
-                    type = UserLogType.Update;
+                    type = DBLogType.Update;
                 else if ((arg.State & DBUpdateState.Insert) == DBUpdateState.Insert)
-                    type = UserLogType.Insert;
-                if (type != UserLogType.None)
+                    type = DBLogType.Insert;
+                if (type != DBLogType.None)
                 {
                     buffer.Add(new MessageItem() { Table = log.Table, Id = log.PrimaryId, Type = type });
                 }
@@ -217,9 +217,9 @@ namespace DataWF.Module.Flow
                         if (!log.Id.Equals(id))
                         {
                             id = log.Id;
-                            temp.AppendFormat(";{0}{1}", log.Type == UserLogType.Insert ? "I" :
-                                                         log.Type == UserLogType.Update ? "U" :
-                                                         log.Type == UserLogType.Delete ? "D" : "",
+                            temp.AppendFormat(";{0}{1}", log.Type == DBLogType.Insert ? "I" :
+                                                         log.Type == DBLogType.Update ? "U" :
+                                                         log.Type == DBLogType.Delete ? "D" : "",
                                                          log.Id);
                         }
                     }

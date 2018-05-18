@@ -166,7 +166,7 @@ namespace DataWF.Module.FlowGui
         {
             if (e.Item == userGroup && changes.Count > 0)
             {
-                e.Transaction.Tag = sender;
+                e.Transaction.UserLog = sender as UserLog;
                 foreach (var item in changes)
                 {
                     if (item != userGroup)
