@@ -52,12 +52,12 @@ namespace DataWF.Data
             get { return baseColumn ?? (baseColumn = LogTable?.BaseTable?.ParseColumn(BaseName)); }
             set
             {
-                if (BaseColumn != null || value == null)
-                    throw new Exception("Log table Initialized!");
+                if (value == null)
+                    throw new Exception("BaseColumn value is empty!");
                 baseColumn = value;
                 BaseName = value.Name;
-                DisplayName = value.DisplayName + " Log";
                 Name = GetName(value);
+                DisplayName = value.DisplayName + " Log";
                 DataType = value.DataType;
                 DBDataType = value.DBDataType;
                 Size = value.Size;

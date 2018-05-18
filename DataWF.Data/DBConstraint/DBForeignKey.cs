@@ -31,7 +31,7 @@ namespace DataWF.Data
                 if (property != value)
                 {
                     property = value;
-                    OnPropertyChanged(nameof(Property), false);
+                    OnPropertyChanged(nameof(Property));
                 }
             }
         }

@@ -45,7 +45,7 @@ namespace DataWF.Data
                 if (baseSchemaName != value)
                 {
                     baseSchemaName = value;
-                    OnPropertyChanged(nameof(BaseSchemaName), false);
+                    OnPropertyChanged(nameof(BaseSchemaName));
                 }
             }
         }
@@ -118,7 +118,7 @@ namespace DataWF.Data
                 if (logSchemaName != value)
                 {
                     logSchemaName = value;
-                    OnPropertyChanged(nameof(LogSchemaName), false);
+                    OnPropertyChanged(nameof(LogSchemaName));
                 }
             }
         }
@@ -164,7 +164,7 @@ namespace DataWF.Data
                 if (dataBase != value)
                 {
                     dataBase = value;
-                    OnPropertyChanged(nameof(DataBase), false);
+                    OnPropertyChanged(nameof(DataBase));
                 }
             }
         }

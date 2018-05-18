@@ -55,7 +55,7 @@ namespace DataWF.Data
                     return;
                 bname = value;
                 cacheBaseColumn = null;
-                OnPropertyChanged(nameof(BaseName), true);
+                OnPropertyChanged(nameof(BaseName), DDLType.Alter);
             }
         }
 

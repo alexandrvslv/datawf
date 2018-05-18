@@ -142,7 +142,7 @@ namespace DataWF.Data
                 {
                     litem.Name = Name;
                 }
-                OnPropertyChanged(nameof(Name), true);
+                OnPropertyChanged(nameof(Name), DDLType.Alter);
             }
         }
 
@@ -171,13 +171,13 @@ namespace DataWF.Data
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public void OnPropertyChanged(string PropertyName, bool synch)
+        public void OnPropertyChanged(string propertyName, DDLType type = DDLType.Default)
         {
-            var args = new PropertyChangedEventArgs(PropertyName);
+            var args = new PropertyChangedEventArgs(propertyName);
             PropertyChanged?.Invoke(this, args);
             Container?.OnPropertyChanged(this, args);
-            if (synch)
-                DBService.OnDBSchemaChanged(this, DDLType.Alter);
+            if (type != DDLType.Default)
+                DBService.OnDBSchemaChanged(this, type);
         }
 
         #endregion

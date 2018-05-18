@@ -53,7 +53,7 @@ namespace DataWF.Data
                 if (order == value)
                     return;
                 order = value;
-                OnPropertyChanged(nameof(Order), false);
+                OnPropertyChanged(nameof(Order));
             }
         }
 

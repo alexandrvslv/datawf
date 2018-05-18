@@ -129,7 +129,7 @@ namespace DataWF.Data
                 if (property != value)
                 {
                     property = value;
-                    OnPropertyChanged(nameof(Property), false);
+                    OnPropertyChanged(nameof(Property));
                 }
             }
         }
@@ -247,7 +247,7 @@ namespace DataWF.Data
                 if (value != null && value.Length != 0)
                     keys |= DBColumnKeys.View;
                 cacheCulture = null;
-                OnPropertyChanged(nameof(CultureCode), false);
+                OnPropertyChanged(nameof(CultureCode));
             }
         }
 
@@ -284,7 +284,7 @@ namespace DataWF.Data
                     return;
                 gname = value;
                 cacheGroup = null;
-                OnPropertyChanged(nameof(GroupName), false);
+                OnPropertyChanged(nameof(GroupName));
             }
         }
 
@@ -318,7 +318,7 @@ namespace DataWF.Data
                 keys = value;
                 var isNotnull2 = (keys & DBColumnKeys.Notnull) == DBColumnKeys.Notnull;
                 CheckIndex();
-                OnPropertyChanged(nameof(Keys), isNotnull1 != isNotnull2);
+                OnPropertyChanged(nameof(Keys), isNotnull1 != isNotnull2 ? DDLType.Alter : DDLType.Default);
             }
         }
 
@@ -331,7 +331,7 @@ namespace DataWF.Data
                 if (btrue == value)
                     return;
                 btrue = value;
-                OnPropertyChanged(nameof(BoolTrue), false);
+                OnPropertyChanged(nameof(BoolTrue));
             }
         }
 
@@ -344,7 +344,7 @@ namespace DataWF.Data
                 if (bfalse == value)
                     return;
                 bfalse = value;
-                OnPropertyChanged(nameof(BoolFalse), false);
+                OnPropertyChanged(nameof(BoolFalse));
             }
         }
 
@@ -355,7 +355,7 @@ namespace DataWF.Data
             set
             {
                 format = value;
-                OnPropertyChanged(nameof(Format), false);
+                OnPropertyChanged(nameof(Format));
             }
         }
 
@@ -370,7 +370,7 @@ namespace DataWF.Data
                 order = value;
                 if (list != null)
                     list.SortInternal();
-                OnPropertyChanged(nameof(Order), false);
+                OnPropertyChanged(nameof(Order));
             }
         }
 
@@ -419,7 +419,7 @@ namespace DataWF.Data
                         Keys |= DBColumnKeys.Reference;
                     else
                         Keys &= ~DBColumnKeys.Reference;
-                    OnPropertyChanged(nameof(IsReference), false);
+                    OnPropertyChanged(nameof(IsReference));
                 }
             }
         }
@@ -455,7 +455,7 @@ namespace DataWF.Data
                         default: dataType = typeof(object); break;
                     }
                 CheckPull();
-                OnPropertyChanged(nameof(DBDataType), true);
+                OnPropertyChanged(nameof(DBDataType), DDLType.Alter);
             }
         }
 
@@ -528,7 +528,7 @@ namespace DataWF.Data
                 if (cdefault == value)
                     return;
                 cdefault = value;
-                OnPropertyChanged(nameof(DefaultValue), true);
+                OnPropertyChanged(nameof(DefaultValue), DDLType.Alter);
             }
         }
 
@@ -541,7 +541,7 @@ namespace DataWF.Data
                 if (ctype == value)
                     return;
                 ctype = value;
-                OnPropertyChanged(nameof(ColumnType), false);
+                OnPropertyChanged(nameof(ColumnType), value == DBColumnTypes.Default ? DDLType.Create : DDLType.Alter);
             }
         }
 
@@ -554,7 +554,7 @@ namespace DataWF.Data
                 if (query == value)
                     return;
                 query = value;
-                OnPropertyChanged(nameof(Query), true);
+                OnPropertyChanged(nameof(Query), DDLType.Alter);
             }
         }
 
@@ -581,7 +581,7 @@ namespace DataWF.Data
                         else
                             DBDataType = DBDataType.ByteArray;
                     }
-                    OnPropertyChanged(nameof(Size), true);
+                    OnPropertyChanged(nameof(Size), DDLType.Alter);
                 }
             }
         }
@@ -595,7 +595,7 @@ namespace DataWF.Data
                 if (scale != value)
                 {
                     scale = value;
-                    OnPropertyChanged(nameof(Scale), true);
+                    OnPropertyChanged(nameof(Scale), DDLType.Alter);
                 }
             }
         }
