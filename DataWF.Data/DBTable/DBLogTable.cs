@@ -28,6 +28,10 @@ namespace DataWF.Data
 
     public class DBLogTable : DBTable<DBLogItem>
     {
+        public static readonly string TypeName = "logtype";
+        public static readonly string IdName = "logid";
+        public static readonly string DateName = "datecreate";
+        public static readonly string StateName = "status_id";
         public static readonly string UserLogName = "userlog_id";
         public static DBTable UserLogTable { get; set; }
 
@@ -80,10 +84,7 @@ namespace DataWF.Data
             }
             set
             {
-                if (value == null)
-                    throw new ArgumentException("BaseTable set operation required non null value!");
-
-                baseTable = value;
+                baseTable = value ?? throw new ArgumentException("BaseTable set operation required not null value!");
                 BaseTableName = value.Name;
 
                 Name = value.Name + "_log";
@@ -91,46 +92,38 @@ namespace DataWF.Data
                 var seqName = value.SequenceName + "_log";
                 Sequence = Schema.Sequences[seqName] ?? new DBSequence() { Name = seqName };
                 DisplayName = value.DisplayName + " Log";
-                if (!Columns.Contains("logid"))
-                {
-                    Columns.Add(new DBColumn()
-                    {
-                        Name = "logid",
-                        DataType = typeof(int),
-                        Keys = DBColumnKeys.Primary | DBColumnKeys.Notnull
-                    });
-                    Columns.Add(new DBColumn()
-                    {
-                        Name = "datecreate",
-                        DataType = typeof(DateTime),
-                        Keys = DBColumnKeys.Date
-                    });
-                    Columns.Add(new DBColumn()
-                    {
-                        Name = "logtype",
-                        DataType = typeof(DBLogType),
-                        Keys = DBColumnKeys.ElementType
-                    });
-                    Columns.Add(new DBColumn()
-                    {
-                        Name = UserLogName,
-                        DataType = typeof(DBLogType),
-                        Keys = DBColumnKeys.ElementType
-                    });
-                    Columns.Add(new DBColumn()
-                    {
-                        Name = "status_id",
-                        DataType = typeof(DBStatus),
-                        Keys = DBColumnKeys.Date
-                    });
-                }
+
+                var idColumn = Columns[IdName];
+                if (idColumn == null) Columns.Add(new DBColumn() { Name = IdName, DataType = typeof(int), Keys = DBColumnKeys.Primary | DBColumnKeys.Notnull });
+                else { idColumn.DataType = typeof(int); idColumn.Keys = DBColumnKeys.Primary | DBColumnKeys.Notnull; }
+                var dateColumn = Columns[DateName];
+                if (dateColumn == null) Columns.Add(new DBColumn() { Name = DateName, DataType = typeof(DateTime), Keys = DBColumnKeys.Date });
+                else { dateColumn.DataType = typeof(DateTime); dateColumn.Keys = DBColumnKeys.Date; }
+                var typeColumn = Columns[TypeName];
+                if (typeColumn == null) Columns.Add(new DBColumn() { Name = TypeName, DataType = typeof(DBLogType), Keys = DBColumnKeys.ElementType });
+                else { typeColumn.DataType = typeof(DBLogType); typeColumn.Keys = DBColumnKeys.ElementType; }
+                var stateColumn = Columns[StateName];
+                if (stateColumn == null) Columns.Add(new DBColumn() { Name = StateName, DataType = typeof(DBStatus), Keys = DBColumnKeys.State });
+                else { stateColumn.DataType = typeof(DBStatus); stateColumn.Keys = DBColumnKeys.State; }
+                var userColumn = Columns[UserLogName];
+                if (userColumn == null) Columns.Add(new DBColumn() { Name = UserLogName, DataType = typeof(long) });
+                else { userColumn.DataType = typeof(long); userColumn.Keys = DBColumnKeys.None; }
+
                 foreach (var column in value.Columns)
                 {
                     if (column.ColumnType == DBColumnTypes.Default
-                        && (column.Keys & DBColumnKeys.NoLog) != DBColumnKeys.NoLog
-                        && !Columns.Contains(DBLogColumn.GetName(column)))
+                        && (column.Keys & DBColumnKeys.NoLog) != DBColumnKeys.NoLog)
                     {
-                        Columns.Add(new DBLogColumn(column));
+                        var logColumn = GetLogColumn(column);
+                        if (logColumn == null)
+                        {
+                            logColumn = new DBLogColumn(column);
+                            Columns.Add(logColumn);
+                        }
+                        else
+                        {
+                            logColumn.BaseColumn = column;
+                        }
                     }
                 }
             }
