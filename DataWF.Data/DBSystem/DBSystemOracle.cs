@@ -60,7 +60,7 @@ namespace DataWF.Data
 
         public override void CreateDatabase(DBSchema schema, DBConnection connection)
         {
-            DropDatabase(schema);
+            //DropDatabase(schema);
 
             var ddl = new StringBuilder();
             Format(ddl, schema, DDLType.Create);

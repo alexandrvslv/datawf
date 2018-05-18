@@ -79,7 +79,7 @@ namespace DataWF.Data
 
         public override void CreateDatabase(DBSchema schema, DBConnection connection)
         {
-            DropDatabase(schema);
+            //DropDatabase(schema);
 
             connection.DataBase = "postgres";
 
