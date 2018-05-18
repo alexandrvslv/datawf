@@ -32,16 +32,16 @@ namespace DataWF.Common
             if (typeof(T).IsPrimitive)
             {
                 var size = Marshal.SizeOf(typeof(T));
-                for (count = index + 1; count <= length / 2; count *= 2)
-                    Buffer.BlockCopy(array, 0, array, count, count * size);
-                Buffer.BlockCopy(array, 0, array, count, (length - count) * size);
+                for (count = 1; count <= length / 2; count *= 2)
+                    Buffer.BlockCopy(array, index, array, index + count, count * size);
+                Buffer.BlockCopy(array, index, array, index + count, (length - count) * size);
             }
             else //if (!typeof(T).IsClass)
             {
-                for (count = index + 1; count <= length / 2; count *= 2)
-                    Array.Copy(array, 0, array, count, count);
-                Array.Copy(array, 0, array, count, length - count);
-            }           
+                for (count = 1; count <= length / 2; count *= 2)
+                    Array.Copy(array, index, array, index + count, count);
+                Array.Copy(array, index, array, index + count, length - count);
+            }
         }
 
         public static void ReAlloc<T>(ref T[] array, int len, T NullValue)
