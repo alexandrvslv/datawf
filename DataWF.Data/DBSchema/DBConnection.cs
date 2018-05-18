@@ -26,7 +26,7 @@ namespace DataWF.Data
         }
     }
 
-    public class DBConnection : INotifyPropertyChanged
+    public class DBConnection : INotifyPropertyChanged,IDisposable
     {
         private string name = "";
         private string host = "";
@@ -415,34 +415,35 @@ namespace DataWF.Data
         public void OnPropertyChanged(PropertyChangedEventArgs args)
         {
             ClearConnectionCache();
-            if (PropertyChanged != null)
-                PropertyChanged(this, args);
+            PropertyChanged?.Invoke(this, args);
         }
 
         public DBTable<T> ExecuteTable<T>(string tableName, string query) where T : DBItem, new()
         {
             var schema = new DBSchema() { Name = "temp", Connection = this };
             var table = new DBTable<T>(tableName) { Schema = schema };
-            using (var transaction = new DBTransaction(this, this, query, true))
-                table.Load(transaction.Command);
+            using (var transaction = DBTransaction.GetTransaction(this, this, true))
+            {
+                table.Load(transaction.AddCommand(query));
+            }
             return table;
         }
 
-        public QResult ExecuteQResult(string query, bool noTransaction = true)
+        public QResult ExecuteQResult(string query)
         {
-            using (var transaction = new DBTransaction(this, this, query, noTransaction))
+            using (var transaction = DBTransaction.GetTransaction(this, this, true))
             {
+                transaction.AddCommand(query);
                 return transaction.ExecuteQResult();
             }
         }
 
         public List<List<KeyValuePair<string, object>>> ExecuteListPair(string query)
         {
-            List<List<KeyValuePair<string, object>>> list = null;
-            using (var transaction = new DBTransaction(this, this, query))
+            using (var transaction = DBTransaction.GetTransaction(this, this, true))
             {
-                list = new List<List<KeyValuePair<string, object>>>();
-                using (var reader = transaction.ExecuteQuery(DBExecuteType.Reader) as IDataReader)
+                var list = new List<List<KeyValuePair<string, object>>>();
+                using (var reader = transaction.ExecuteQuery(transaction.AddCommand(query), DBExecuteType.Reader) as IDataReader)
                 {
                     int fCount = reader.FieldCount;
                     while (reader.Read())
@@ -454,23 +455,26 @@ namespace DataWF.Data
                     }
                     reader.Close();
                 }
+                return list;
             }
-            return list;
         }
 
         public List<Dictionary<string, object>> ExecuteListDictionary(string query)
         {
-            using (var transaction = new DBTransaction(this, this, query))
+            using (var transaction = DBTransaction.GetTransaction(this, this, true))
+            {
+                transaction.AddCommand(query);
                 return transaction.ExecuteListDictionary();
+            }
         }
 
         public object ExecuteQuery(string query, bool noTransaction = false, DBExecuteType type = DBExecuteType.Scalar)
         {
             if (string.IsNullOrEmpty(query))
                 return null;
-            using (var transaction = new DBTransaction(this, this, query, noTransaction))
+            using (var transaction = DBTransaction.GetTransaction(this, this, noTransaction))
             {
-                var result = transaction.ExecuteQuery(type);
+                var result = transaction.ExecuteQuery(transaction.AddCommand(query), type);
                 transaction.Commit();
                 return result;
             }
@@ -490,6 +494,11 @@ namespace DataWF.Data
                 result.Add(ExecuteQuery(go, noTransaction, type));
             }
             return result;
+        }
+
+        public void Dispose()
+        {
+            ClearConnectionCache();
         }
     }
 }

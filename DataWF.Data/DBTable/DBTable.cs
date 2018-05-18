@@ -67,7 +67,7 @@ namespace DataWF.Data
         protected string sequenceName;
         protected bool caching = false;
         protected DBTableType type = DBTableType.Table;
-        private int block = 1000;
+        private int block = 500;
         internal object locker = new object();
         protected List<IDBVirtualTable> virtualViews = new List<IDBVirtualTable>(0);
         private DBItemType itemType;
@@ -140,7 +140,7 @@ namespace DataWF.Data
                 if (query != value)
                 {
                     query = value;
-                    OnPropertyChanged(nameof(Query), true);
+                    OnPropertyChanged(nameof(Query), DDLType.Alter);
                 }
             }
         }
@@ -197,7 +197,7 @@ namespace DataWF.Data
                     return;
                 groupName = value;
                 tableGroup = null;
-                OnPropertyChanged(nameof(GroupName), false);
+                OnPropertyChanged(nameof(GroupName));
             }
         }
 
@@ -226,7 +226,7 @@ namespace DataWF.Data
                 if (sequenceName != value)
                 {
                     sequenceName = value;
-                    OnPropertyChanged(nameof(SequenceName), false);
+                    OnPropertyChanged(nameof(SequenceName));
                 }
             }
         }
@@ -384,7 +384,7 @@ namespace DataWF.Data
                 if (type == value)
                     return;
                 type = value;
-                OnPropertyChanged(nameof(Type), true);
+                OnPropertyChanged(nameof(Type), DDLType.Alter);
             }
         }
 
@@ -412,7 +412,7 @@ namespace DataWF.Data
             set
             {
                 caching = value;
-                OnPropertyChanged(nameof(IsCaching), false);
+                OnPropertyChanged(nameof(IsCaching));
             }
         }
 
@@ -634,14 +634,14 @@ namespace DataWF.Data
                     item.Stamp = DateTime.Now;
                 if (DateKey != null)
                     item.DateCreate = DateTime.Now;
-                if (IsLoging && StatusKey != null && item.GetType().Name != "DocumentLog")
+                if (IsLoging && StatusKey != null && !item.Changed(StatusKey))
                     item.Status = DBStatus.New;
             }
             else if ((item.UpdateState & DBUpdateState.Update) == DBUpdateState.Update)
             {
                 if (StampKey != null)
                     item.Stamp = DateTime.Now;
-                if (IsLoging && StatusKey != null && item.Status == DBStatus.Actual && !item.Changed(StatusKey) && !item.Changed(AccessKey) && item.GetType().Name != "DocumentLog")
+                if (IsLoging && StatusKey != null && item.Status == DBStatus.Actual && !item.Changed(StatusKey) && !item.Changed(AccessKey))
                     item.Status = DBStatus.Edit;
             }
 
@@ -724,6 +724,7 @@ namespace DataWF.Data
                 if (LogTable != null)
                 {
                     args.LogItem = new DBLogItem(item);
+                    DBService.OnLogItem(args);
                     args.LogItem.Save();
                 }
                 item.OnUpdated(args);
@@ -737,8 +738,6 @@ namespace DataWF.Data
                 if (transaction.Owner == item)
                     transaction.Dispose();
             }
-
-            return false;
         }
 
         public void Save(IList rows = null)

@@ -56,7 +56,7 @@ namespace DataWF.Data
                 if (groupName == value)
                     return;
                 groupName = value;
-                OnPropertyChanged(nameof(GroupName), false);
+                OnPropertyChanged(nameof(GroupName));
             }
         }
 
@@ -76,7 +76,7 @@ namespace DataWF.Data
                 {
                     groupName = value?.name;
                     group = value;
-                    OnPropertyChanged(nameof(Group), false);
+                    OnPropertyChanged(nameof(Group));
                 }
             }
         }

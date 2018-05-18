@@ -66,9 +66,9 @@ namespace DataWF.Data
             }
         }
 
-        public static DBTransaction GetTransaction(object owner, DBConnection connection, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null)
+        public static DBTransaction GetTransaction(object owner, DBConnection connection, bool noTransaction = false, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null)
         {
-            var transaction = Current?.GetSubTransaction(connection) ?? new DBTransaction(owner, connection);
+            var transaction = Current?.GetSubTransaction(connection, true, noTransaction) ?? new DBTransaction(owner, connection, noTransaction);
             if (transaction.View == null)
                 transaction.View = synch;
             if (transaction.ReaderParam == DBLoadParam.None)
@@ -91,12 +91,12 @@ namespace DataWF.Data
             : this(config, config)
         { }
 
-        public DBTransaction(object owner, DBConnection config, string text = "", bool noTransaction = false)
-            : this(owner, config, config.GetConnection(), text, noTransaction)
+        public DBTransaction(object owner, DBConnection config, bool noTransaction = false)
+            : this(owner, config, config.GetConnection(), noTransaction)
         {
         }
 
-        public DBTransaction(object owner, DBConnection config, IDbConnection connection, string text = "", bool noTransaction = false)
+        public DBTransaction(object owner, DBConnection config, IDbConnection connection, bool noTransaction = false)
         {
             Owner = owner;
             Current = this;
@@ -104,15 +104,11 @@ namespace DataWF.Data
             Connection = connection;
             if (!noTransaction)
                 transaction = connection.BeginTransaction(config.IsolationLevel);
-            if (!string.IsNullOrEmpty(text))
-                AddCommand(text);
         }
 
         public object Owner { get; private set; }
 
         public bool Canceled { get; private set; }
-
-        public object Tag { get; set; }
 
         public bool Reference { get; set; } = true;
 
@@ -214,6 +210,8 @@ namespace DataWF.Data
 
         public IDBTableView View { get; set; }
 
+        public DBItem UserLog { get; set; }
+
         public void Dispose()
         {
             if (Connection != null)
@@ -248,6 +246,10 @@ namespace DataWF.Data
                     {
                         Current = null;
                     }
+                    else if (Current != null)
+                    {
+                        Current.RemoveSubtransaction(this);
+                    }
                     if (Connection.State == ConnectionState.Open)
                     {
                         Connection.Close();
@@ -279,6 +281,9 @@ namespace DataWF.Data
 
         public IDbCommand AddCommand(string query, CommandType commandType = CommandType.Text)
         {
+            if (string.IsNullOrEmpty(query))
+                return null;
+
             //if (cancel)
             //    throw new Exception("Transaction is Canceled!");
             command = null;
@@ -316,7 +321,7 @@ namespace DataWF.Data
             return GetSubTransaction(schema.Connection, checkSelf);
         }
 
-        public DBTransaction GetSubTransaction(DBConnection config, bool checkSelf = true)
+        public DBTransaction GetSubTransaction(DBConnection config, bool checkSelf = true, bool noTransaction = false)
         {
             if (checkSelf && config == DbConnection)
                 return this;
@@ -328,8 +333,23 @@ namespace DataWF.Data
             {
                 return subTransaction;
             }
-            return subTransactions[config] = new DBTransaction(Owner, config);
+            return subTransactions[config] = new DBTransaction(Owner, config, noTransaction);
             //TODO Check several opened connections in sqlite config.System == DBSystem.SQLite && DbConnection.System == DBSystem.SQLite
+        }
+
+        public void RemoveSubtransaction(DBTransaction subTransaction)
+        {
+            if (subTransactions != null)
+            {
+                foreach (var entry in subTransactions)
+                {
+                    if (entry.Value == subTransaction)
+                    {
+                        subTransactions.Remove(entry.Key);
+                        return;
+                    }
+                }
+            }
         }
 
         public void Cancel()

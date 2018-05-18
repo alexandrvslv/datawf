@@ -190,6 +190,13 @@ namespace DataWF.Data
             RowUpdating?.Invoke(e);
         }
 
+        public static event DBItemEditEventHandler RowLoging;
+
+        internal static void OnLogItem(DBItemEventArgs e)
+        {
+            RowLoging?.Invoke(e);
+        }
+
         public static event DBItemEditEventHandler RowUpdated;
 
         internal static void OnUpdated(DBItemEventArgs e)

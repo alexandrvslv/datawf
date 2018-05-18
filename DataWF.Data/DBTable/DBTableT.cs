@@ -313,7 +313,7 @@ namespace DataWF.Data
 
         public List<T> Load(IDbCommand command, DBLoadParam param = DBLoadParam.None, IDBTableView view = null)
         {
-            DBTransaction transaction = DBTransaction.GetTransaction(this, Schema?.Connection, param, view);
+            DBTransaction transaction = DBTransaction.GetTransaction(command, Schema?.Connection, true, param, view);
             transaction.AddCommand(command);
             if (transaction.Canceled)
                 return null;
@@ -399,6 +399,8 @@ namespace DataWF.Data
             }
             finally
             {
+                if (transaction.Owner == command)
+                    transaction.Dispose();
                 base.RaiseLoadCompleate(new DBLoadCompleteEventArgs(transaction.View, buf));
             }
 
@@ -509,7 +511,7 @@ namespace DataWF.Data
         public T LoadByCode(string code, DBColumn column, DBLoadParam param)
         {
             var row = SelectOne(column, code);
-            if (row == null && (param & DBLoadParam.Load) == DBLoadParam.Load)
+            if (row == null && (param & DBLoadParam.Load) == DBLoadParam.Load)//&& !IsSynchronized
             {
                 var command = System.CreateCommand(Schema.Connection, CreateQuery(string.Format("where {0}={1}{0}", column.Name, Schema.System.ParameterPrefix), Columns));
                 System.CreateParameter(command, Schema.System.ParameterPrefix + column.Name, code);

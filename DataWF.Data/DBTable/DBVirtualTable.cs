@@ -60,7 +60,7 @@ namespace DataWF.Data
                     baseTableName = value;
                     baseTable = null;
                     filterQuery = null;
-                    OnPropertyChanged(nameof(BaseTableName), true);
+                    OnPropertyChanged(nameof(BaseTableName), DDLType.Alter);
                 }
             }
         }
