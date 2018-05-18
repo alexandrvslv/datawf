@@ -20,9 +20,11 @@
 using System;
 using DataWF.Data;
 using DataWF.Common;
+using System.Text;
 
 namespace DataWF.Module.Flow
 {
+
     public class DocumentNumberGenerator : IExecutable
     {
         public virtual long GenerateIdentifier(string name)
