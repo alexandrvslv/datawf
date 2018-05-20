@@ -279,6 +279,11 @@ namespace DataWF.Data
             return System.GetTablesInfo(Connection, schemaName, tableName);
         }
 
+        public void DropDatabase()
+        {
+            System.DropDatabase(this);
+        }
+
         public void CreateDatabase()
         {
             if (Connection == null)

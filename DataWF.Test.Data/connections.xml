@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <!--DataWF.Data.DBConnectionList, DataWF.Data-->
 <e Count="5">
-  <i DataBase="test.sqlite" Host="" IntegratedSecurity="False" IsolationLevel="Unspecified" Name="TestSqlLite" Pool="False" Port="0" Schema="" SystemName="SQLite" TimeOut="80" User=""/>
-  <i DataBase="postgres" Host="localhost" IntegratedSecurity="False" IsolationLevel="ReadUncommitted" Name="TestPostgres" Password="postgres" Pool="False" Port="5432" Schema="public" SystemName="Postgres" TimeOut="80" User="postgres" Path = "C:\postgres\postgres" />
-  <i DataBase="XE" Host="localhost" IntegratedSecurity="False" IsolationLevel="ReadCommitted" Name="TestOracle" Password="test" Pool="False" Port="1521" Schema="test" SystemName="Oracle" TimeOut="80" User="system" />
-  <i DataBase="" Host="localhost" IntegratedSecurity="False" IsolationLevel="ReadUncommitted" Name="TestMySql" Password="root" Pool="False" Port="3306" Schema="test" SystemName="MySql" TimeOut="80" User="root" />
-  <i DataBase="" Host="localhost\SQLEXPRESS" IntegratedSecurity="False" IsolationLevel="ReadUncommitted" Name="TestMSSql" Password="Mssql1Root2" Pool="False" Port="" Schema="dbo" SystemName="MSSql" TimeOut="5" User="sa" Path = "/opt/mssql"/>
+  <i DataBase="test.sqlite" Host="" IntegratedSecurity="False" IsolationLevel="Unspecified" Name="TestSqlLite" Pool="False" Port="0" Schema="" SystemName="SQLite" TimeOut="10" User=""/>
+  <i DataBase="postgres" Host="localhost" IntegratedSecurity="False" IsolationLevel="ReadUncommitted" Name="TestPostgres" Password="test" Pool="False" Port="5432" Schema="public" SystemName="Postgres" TimeOut="10" User="postgres" Path = "C:\postgres\postgres" />
+  <i DataBase="XE" Host="localhost" IntegratedSecurity="False" IsolationLevel="ReadCommitted" Name="TestOracle" Password="test" Pool="False" Port="1521" Schema="test" SystemName="Oracle" TimeOut="10" User="system" />
+  <i DataBase="" Host="localhost" IntegratedSecurity="False" IsolationLevel="ReadUncommitted" Name="TestMySql" Password="root" Pool="False" Port="3306" Schema="test" SystemName="MySql" TimeOut="10" User="root" />
+  <i DataBase="" Host="localhost" IntegratedSecurity="False" IsolationLevel="ReadUncommitted" Name="TestMSSql" Password="Mssql1Root2" Pool="False" Port="" Schema="dbo" SystemName="MSSql" TimeOut="10" User="sa" Path = "/opt/mssql"/>
 </e>

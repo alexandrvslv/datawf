@@ -67,13 +67,13 @@ namespace DataWF.Test.Data
         [Test]
         public void SchemaSerialization()
         {
-			DBService.Generate(GetType().Assembly, SchemaName);
+            var schem = DBService.Generate(GetType().Assembly, SchemaName);
             var file = "data.xml";
             Serialization.Serialize(DBService.Schems, file);
             DBService.Schems.Clear();
             Serialization.Deserialize(file, DBService.Schems);
             Assert.AreEqual(2, DBService.Schems.Count);
-			var schem = DBService.Schems[SchemaName];
+
             Assert.AreEqual(2, schem.Tables.Count);
             var table = schem.Tables[EmployerTableName];
             Assert.IsNotNull(table);
@@ -86,7 +86,7 @@ namespace DataWF.Test.Data
         public void Generate(DBConnection connection)
         {
             connection.CheckConnection();
-			schema = DBService.Generate(GetType().Assembly, SchemaName);
+            schema = DBService.Generate(GetType().Assembly, SchemaName);
 
             Assert.IsNotNull(schema, "Attribute Generator Fail. On Schema");
             Assert.IsNotNull(Employer.DBTable, "Attribute Generator Fail. On Employer Table");
@@ -96,6 +96,7 @@ namespace DataWF.Test.Data
             Assert.IsNotNull(schema, "Attribute Generator Fail. On Column Employer Id");
             schema.Connection = connection;
 
+            schema.DropDatabase();
             schema.CreateDatabase();
 
             var result = schema.GetTablesInfo(connection.Schema, EmployerTableName);
