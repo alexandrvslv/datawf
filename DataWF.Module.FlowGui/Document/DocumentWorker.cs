@@ -61,26 +61,26 @@ namespace DataWF.Module.FlowGui
             Worker = this;
             FilterVisible = true;
 
-            Task.Run(() =>
-            {
-                try
-                {
-                    var items = qWork.Select().Cast<DocumentWork>().ToList();
-                    items.Sort((x, y) =>
-                    {
-                        var result = x.Document.Template.Name.CompareTo(y.Document.Template.Name);
-                        return result == 0 ? x.Stage.Name.CompareTo(y.Stage.Name) : result;
-                    });
-                    foreach (var item in items)
-                    {
-                        works.Add(item);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Helper.OnException(ex);
-                }
-            });
+            //Task.Run(() =>
+            //{
+            //    try
+            //    {
+            //        var items = qWork.Select().Cast<DocumentWork>().ToList();
+            //        items.Sort((x, y) =>
+            //        {
+            //            var result = x.Document.Template.Name.CompareTo(y.Document.Template.Name);
+            //            return result == 0 ? x.Stage.Name.CompareTo(y.Stage.Name) : result;
+            //        });
+            //        foreach (var item in items)
+            //        {
+            //            works.Add(item);
+            //        }
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        Helper.OnException(ex);
+            //    }
+            //});
 
             Task.Run(() =>
             {
