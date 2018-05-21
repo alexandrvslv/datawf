@@ -246,7 +246,7 @@ namespace DataWF.Data.Gui
                 {
                     if (view != null && view.DefaultParam != null)
                     {
-                        view.DefaultParam.Value = value?.PrimaryId;
+                        view.DefaultParam.Value = value?.PrimaryId ?? 0;
                         view.ResetFilter();
                         loader.LoadAsync();
                     }
@@ -887,6 +887,10 @@ namespace DataWF.Data.Gui
                 question.Buttons.Add(Command.Yes);
                 if (MessageDialog.AskQuestion(ParentWindow, question) == Command.Yes)
                     Table.RejectChanges();
+            }
+            else if (Table.IsSynchronized)
+            {
+                Table.IsSynchronized = false;
             }
         }
 
