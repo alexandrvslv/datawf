@@ -414,7 +414,7 @@ namespace DataWF.Module.CommonGui
             else if (list.SelectedItem is DBLogItem)
             {
                 detailList.FieldSource = list.SelectedItem;
-                detailRow.FieldSource = null;
+                detailRow.FieldSource = ((DBLogItem)list.SelectedItem).BaseItem;
             }
         }
 
@@ -538,7 +538,7 @@ namespace DataWF.Module.CommonGui
                 if (filter == null || filter.Table.LogTable == null)
                     return;
                 var view = list.ListSource as IDBTableView;
-                if (view?.Table != filter.Table.LogTable)
+                if (view != null && view.Table != filter.Table.LogTable)
                 {
                     view.Dispose();
                     view = null;
@@ -549,6 +549,7 @@ namespace DataWF.Module.CommonGui
                 }
                 view.Query.Parameters.Clear();
                 view.Query.BuildParam(filter.Table.LogTable.BaseKey, CompareType.Equal, filter.PrimaryId).IsDefault = true;
+                view.UpdateFilter();
                 list.ListSource = loader.View = view;
                 loader.Cancel();
                 loader.LoadAsync();
@@ -558,7 +559,7 @@ namespace DataWF.Module.CommonGui
                 if (table == null || table.LogTable == null)
                     return;
                 var view = list.ListSource as IDBTableView;
-                if (view?.Table != table.LogTable)
+                if (view != null && view.Table != table.LogTable)
                 {
                     view.Dispose();
                     view = null;
@@ -581,8 +582,31 @@ namespace DataWF.Module.CommonGui
                 {
                     view = new SelectableList<DBLogItem>();
                 }
+                view.Clear();
                 list.ListSource = view;
-                Task.Run(() => { });
+                Task.Run(() =>
+                {
+                    using (var query = new QQuery("", filter.Table.LogTable))
+                    {
+                        query.BuildParam(filter.Table.LogTable.BaseKey, CompareType.Equal, filter.PrimaryId);
+
+                        foreach (var item in filter.Table.LogTable.Load(query))
+                            view.Add(item);
+                    }
+                    foreach (var refed in filter.Table.GetChildRelations())
+                    {
+                        if (refed.Table.LogTable != null)
+                        {
+                            using (var query = new QQuery("", refed.Table.LogTable))
+                            {
+                                query.BuildParam(refed.Table.LogTable.GetLogColumn(refed.Column), CompareType.Equal, filter.PrimaryId);
+
+                                foreach (var item in refed.Table.LogTable.Load(query))
+                                    view.Add(item);
+                            }
+                        }
+                    }
+                });
             }
             else
             {
