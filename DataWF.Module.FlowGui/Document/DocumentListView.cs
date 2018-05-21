@@ -392,7 +392,9 @@ namespace DataWF.Module.FlowGui
             if (e.ListChangedType == ListChangedType.ItemAdded)
             {
                 var document = documents[e.NewIndex];
-                if (document.WorkStage == null || document.WorkStage.Length == 0)
+                if (document == null)
+                    return;
+                if (document.UpdateState == DBUpdateState.Default && (document.WorkStage == null || document.WorkStage.Length == 0))
                     document.GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), DBLoadParam.Load);
             }
         }
