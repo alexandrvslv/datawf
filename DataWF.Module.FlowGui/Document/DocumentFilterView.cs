@@ -76,6 +76,7 @@ namespace DataWF.Module.FlowGui
             users = new UserTree()
             {
                 ShowListNode = false,
+                Status = DBStatus.Current,
                 UserKeys = UserTreeKeys.Department | UserTreeKeys.Position | UserTreeKeys.User,
                 Name = "Users"
             };
