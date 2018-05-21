@@ -48,7 +48,7 @@ namespace DataWF.Module.Flow
 
         public virtual string Generate(Template template)
         {
-            return template.Code + GenerateIdentifier("template_" + template.Code).ToString("D8");
+            return template.Code + GenerateIdentifier("template_" + template.Id).ToString("D8");
         }
 
         public object Execute(ExecuteArgs arg)

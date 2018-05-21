@@ -329,7 +329,7 @@ namespace DataWF.Module.Flow
         }
 
         [DataMember, Column("title", Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
-        public string Title
+        public virtual string Title
         {
             get { return GetName(nameof(Title)); }
             set { SetName(nameof(Title), value); }
@@ -771,12 +771,17 @@ namespace DataWF.Module.Flow
             {
                 result.Add(CreateWork(from, stage, item));
             }
-            DBTransaction.Current.Rows.AddRange(result);
-
+            if (DBTransaction.Current != null)
+            {
+                DBTransaction.Current.Rows.AddRange(result);
+            }
             if (from != null)
             {
                 from.DateComplete = DateTime.Now;
-                DBTransaction.Current.Rows.Add(from);
+                if (DBTransaction.Current != null)
+                {
+                    DBTransaction.Current.Rows.Add(from);
+                }
             }
             CheckComplete();
 
@@ -848,10 +853,9 @@ namespace DataWF.Module.Flow
             string workUsers = string.Empty;
             string workStages = string.Empty;
             DocumentWork current = null;
-            var works = Works.ToList();
-            for (int i = 0; i < works.Count; i++)
+            var works = GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), DBLoadParam.None);
+            foreach (DocumentWork dw in works)
             {
-                DocumentWork dw = works[i];
                 var stage = dw.Stage?.ToString() ?? "none";
                 var user = dw.User?.Name ?? "empty";
                 if (!dw.IsComplete)
@@ -864,11 +868,12 @@ namespace DataWF.Module.Flow
                         if (current == null || !current.User.IsCurrent)
                             current = dw;
                 }
-                if (i == works.Count - 1 && workStages.Length == 0)
-                    workStages = stage;
-                if (i == works.Count - 1 && workUsers.Length == 0)
-                    workUsers = dw.User.Name;
+
             }
+            if (workStages.Length == 0)
+                workStages = works.LastOrDefault()?.Stage?.ToString() ?? "none";
+            if (workUsers.Length == 0)
+                workUsers = works.LastOrDefault()?.User?.Name ?? "empty";
             WorkUser = workUsers;
             WorkStage = workStages;
             WorkCurrent = current;
