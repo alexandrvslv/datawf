@@ -435,7 +435,7 @@ namespace DataWF.Common
         public static string GetCategory(MemberInfo info)
         {
             var category = (CategoryAttribute)info.GetCustomAttribute(typeof(CategoryAttribute), false);
-            return category == null ? "Misclenation" : category.Category;
+            return category == null ? "General" : category.Category;
         }
 
         public static string GetDescription(MemberInfo property)
