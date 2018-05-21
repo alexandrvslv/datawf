@@ -24,6 +24,8 @@ namespace DataWF.Module.FlowGui
             toolAttach = new ToolItem(ToolAttachClick) { Glyph = GlyphType.PlusSquareO, ForeColor = Colors.Green };
             toolDetach = new ToolItem(ToolDetachClick) { Glyph = GlyphType.MinusSquareO, ForeColor = Colors.Red };
 
+            filterCustomer.Visible = false;
+
             AllowPreview = false;
             AutoLoad = false;
             FilterVisible = true;
