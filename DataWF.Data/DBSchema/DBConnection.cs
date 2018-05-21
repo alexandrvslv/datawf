@@ -472,7 +472,7 @@ namespace DataWF.Data
         {
             if (string.IsNullOrEmpty(query))
                 return null;
-            using (var transaction = DBTransaction.GetTransaction(this, this, noTransaction))
+            using (var transaction = new DBTransaction(this, this, noTransaction))
             {
                 var result = transaction.ExecuteQuery(transaction.AddCommand(query), type);
                 transaction.Commit();
