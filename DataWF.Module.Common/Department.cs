@@ -59,7 +59,7 @@ namespace DataWF.Module.Common
             set { SetGroupReference(value); }
         }
 
-        [DataMember, Column("code", 256, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing), Index("rdepartment_code", false)]
+        [DataMember, Column("code", 256, Keys = DBColumnKeys.Code | DBColumnKeys.Indexing), Index("rdepartment_code", false)]
         public string Code
         {
             get { return GetValue<string>(Table.CodeKey); }
