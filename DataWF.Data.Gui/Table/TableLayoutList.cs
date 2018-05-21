@@ -350,7 +350,7 @@ namespace DataWF.Data.Gui
             DBColumn dbcolumn = ParseDBColumn(name);
             if (dbcolumn != null)
             {
-                string groupName = dbcolumn?.GroupName ?? "Misc";
+                string groupName = dbcolumn?.GroupName ?? "General";
                 Category category = info.Categories[groupName];
                 if (category == null)
                 {
