@@ -2263,7 +2263,7 @@ namespace DataWF.Gui
             var member = TypeHelper.GetMemberInfo(FieldType, name);
             var categoryName = TypeHelper.GetCategory(member);
             if (group != null)
-                categoryName = group.Name;
+                categoryName = group.CategoryName;
             var category = info.Categories[categoryName];
             if (category == null)
             {
