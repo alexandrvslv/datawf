@@ -91,7 +91,7 @@ namespace DataWF.Module.CommonGui
                 if (status != value)
                 {
                     status = value;
-                    RefreshData();
+                    //RefreshData();
                 }
             }
         }
@@ -277,7 +277,7 @@ namespace DataWF.Module.CommonGui
 
                 foreach (DBItem item in enumer)
                 {
-                    if ((status == DBStatus.Empty || (status & item.Status) == status) && (!Access || item.Access.View))
+                    if ((status == DBStatus.Empty || (status & item.Status) !=  DBStatus.Empty) && (!Access || item.Access.View))
                     {
                         var element = InitItem(item);
                         if (ShowListNode)
@@ -313,7 +313,7 @@ namespace DataWF.Module.CommonGui
                 {
                     Helper.OnException(new Exception($"Warning - self reference!({item})"));
                 }
-                if (show && (status == DBStatus.Empty || (status & item.Status) == status) && (!Access || item.Access.View))
+                if (show && (status == DBStatus.Empty || (status & item.Status) != DBStatus.Empty) && (!Access || item.Access.View))
                 {
                     InitItem(item).Group = pnode;
                 }
