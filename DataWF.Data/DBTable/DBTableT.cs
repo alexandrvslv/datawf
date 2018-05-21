@@ -268,7 +268,7 @@ namespace DataWF.Data
             return Load(whereText, param, cols, synch);
         }
 
-        public List<T> Load(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable cols = null, IDBTableView synch = null)
+        public IEnumerable<T> Load(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable cols = null, IDBTableView synch = null)
         {
             if (string.IsNullOrEmpty(whereText) || whereText.Trim().Equals("where", StringComparison.OrdinalIgnoreCase))
                 whereText = string.Empty;
@@ -285,7 +285,7 @@ namespace DataWF.Data
             return Load(query, param, synch);
         }
 
-        public List<T> Load(QQuery query, DBLoadParam param = DBLoadParam.None, IDBTableView view = null)
+        public IEnumerable<T> Load(QQuery query, DBLoadParam param = DBLoadParam.None, IDBTableView view = null)
         {
             if (query.Table != this)
                 throw new ArgumentException(nameof(query));
@@ -320,7 +320,7 @@ namespace DataWF.Data
             var whereInd = command.CommandText.IndexOf("where ", StringComparison.OrdinalIgnoreCase);
             var arg = new DBLoadProgressEventArgs(view, 0, 0, null);
             IEnumerable<DBColumn> creference = null;
-            List<T> buf = null;
+
             if (view != null && view.Table == this && view.IsStatic)
                 view.Clear();
             if (items.Count == 0)
@@ -333,18 +333,13 @@ namespace DataWF.Data
                     var val = transaction.ExecuteQuery(transaction.AddCommand(DBCommand.CloneCommand(command, BuildQuery(w, null, "count(*)"))), DBExecuteType.Scalar);
                     arg.TotalCount = val is Exception ? -1 : int.Parse(val.ToString());
 
-                    if (arg.TotalCount < 0)
+                    if (arg.TotalCount < 0 || arg.TotalCount == 0)
                         return null;
-                    if (arg.TotalCount == 0)
-                        return new List<T>(0);
                     if (items.Capacity < arg.TotalCount)
                         items.Capacity = arg.TotalCount;
                     //arg.TotalCount = Rows._items.Capacity;
                 }
-                if (transaction.Canceled)
-                {
-                    return null;
-                }
+                var buffer = new List<T>(arg.TotalCount == 0 ? 1 : arg.TotalCount);
                 if ((transaction.ReaderParam & DBLoadParam.ReferenceRow) == DBLoadParam.ReferenceRow)
                 {
                     creference = Columns.GetIsReference();
@@ -355,7 +350,6 @@ namespace DataWF.Data
                 }
                 using (transaction.Reader = transaction.ExecuteQuery(command, DBExecuteType.Reader) as IDataReader)
                 {
-                    buf = arg.TotalCount > 0 ? new List<T>(arg.TotalCount) : new List<T>();
                     CheckColumns(transaction);
                     while (!transaction.Canceled && transaction.Reader.Read())
                     {
@@ -379,16 +373,17 @@ namespace DataWF.Data
                         }
                         if (arg.TotalCount > 0)
                         {
-                            arg.Current = buf.Count;
+                            arg.Current++;
                             arg.CurrentRow = row;
                             RaiseLoadProgress(arg);
                         }
-                        buf.Add(row);
+                        buffer.Add(row);
                         if (transaction.View != null && transaction.View.Table == this && transaction.View.IsStatic)
                             transaction.View.Add(row);
                     }
                     transaction.Reader.Close();
                 }
+                transaction.Reader = null;
                 //Check IsSynchronized
                 if (transaction.View != null && transaction.View.Table == this)
                     transaction.View.IsSynchronized = true;
@@ -396,15 +391,15 @@ namespace DataWF.Data
                 {
                     IsSynchronized = true;
                 }
+
+                return buffer;
             }
             finally
             {
                 if (transaction.Owner == command)
                     transaction.Dispose();
-                base.RaiseLoadCompleate(new DBLoadCompleteEventArgs(transaction.View, buf));
+                base.RaiseLoadCompleate(new DBLoadCompleteEventArgs(transaction.View, null));
             }
-
-            return buf;
         }
 
         public async Task<IEnumerable<T>> LoadAsync(QQuery query, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null)
@@ -465,8 +460,7 @@ namespace DataWF.Data
             string idName = Schema.System.ParameterPrefix + PrimaryKey.Name;
             var command = System.CreateCommand(Schema.Connection, CreateQuery(string.Format("where {0}={1}", PrimaryKey.Name, idName), cols));
             System.CreateParameter(command, idName, id);
-            var rows = Load(command);
-            return rows?.FirstOrDefault();
+            return Load(command).FirstOrDefault();
         }
 
         public override DBItem LoadItemById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable cols = null, IDBTableView synch = null)
@@ -486,7 +480,6 @@ namespace DataWF.Data
             if (row == null && (param & DBLoadParam.Load) == DBLoadParam.Load)
             {
                 row = LoadItem(val, param, cols, synch);
-
             }
             return row;
         }
@@ -515,8 +508,7 @@ namespace DataWF.Data
             {
                 var command = System.CreateCommand(Schema.Connection, CreateQuery(string.Format("where {0}={1}{0}", column.Name, Schema.System.ParameterPrefix), Columns));
                 System.CreateParameter(command, Schema.System.ParameterPrefix + column.Name, code);
-                var list = Load(command, param);
-                row = list.Count == 0 ? null : list[0];
+                row = Load(command, param).FirstOrDefault();
             }
             return row;
         }
@@ -550,14 +542,15 @@ namespace DataWF.Data
             }
         }
 
-        private void CheckDelete(QQuery filter, List<T> buf, DBLoadParam param, IDBTableView view)
+        private void CheckDelete(QQuery filter, IEnumerable<T> buf, DBLoadParam param, IDBTableView view)
         {
             var list = Select(filter).ToList();
-            if (list.Count > buf.Count)
+            var bufList = buf.ToList();
+            if (list.Count > bufList.Count)
             {
                 foreach (var item in list)
                 {
-                    if ((item.UpdateState & DBUpdateState.Insert) != DBUpdateState.Insert && !buf.Contains(item))
+                    if ((item.UpdateState & DBUpdateState.Insert) != DBUpdateState.Insert && !bufList.Contains(item))
                     {
                         if (view != null && view.IsStatic)
                             view.Remove(item);
