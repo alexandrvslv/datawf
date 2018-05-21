@@ -65,9 +65,9 @@ namespace DataWF.Data
             {
                 if (userLogkey == DBColumn.EmptyKey)
                 {
-                    basekey = Columns[UserLogName];
+                    userLogkey = Columns[UserLogName];
                 }
-                return basekey;
+                return userLogkey;
             }
         }
 
@@ -103,8 +103,8 @@ namespace DataWF.Data
                 if (typeColumn == null) Columns.Add(new DBColumn() { Name = TypeName, DataType = typeof(DBLogType), Keys = DBColumnKeys.ElementType });
                 else { typeColumn.DataType = typeof(DBLogType); typeColumn.Keys = DBColumnKeys.ElementType; }
                 var stateColumn = Columns[StateName];
-                if (stateColumn == null) Columns.Add(new DBColumn() { Name = StateName, DataType = typeof(DBStatus), Keys = DBColumnKeys.State });
-                else { stateColumn.DataType = typeof(DBStatus); stateColumn.Keys = DBColumnKeys.State; }
+                if (stateColumn == null) Columns.Add(new DBColumn() { Name = StateName, DataType = typeof(DBStatus), Keys = DBColumnKeys.State, DefaultValue = "1" });
+                else { stateColumn.DataType = typeof(DBStatus); stateColumn.Keys = DBColumnKeys.State; stateColumn.DefaultValue = "1"; }
                 var userColumn = Columns[UserLogName];
                 if (userColumn == null) Columns.Add(new DBColumn() { Name = UserLogName, DataType = typeof(long) });
                 else { userColumn.DataType = typeof(long); userColumn.Keys = DBColumnKeys.None; }
@@ -136,7 +136,7 @@ namespace DataWF.Data
             set { base.Access = value; }
         }
 
-        private DBLogColumn GetLogColumn(DBColumn column)
+        public DBLogColumn GetLogColumn(DBColumn column)
         {
             return ParseColumn(column.Name + "_log") as DBLogColumn;
         }
