@@ -16,43 +16,41 @@ namespace DataWF.Data.Gui
         private DBItem row;
         private string message = string.Empty;
 
-        private LayoutList list = new LayoutList();
-        private Toolsbar toolsb = new Toolsbar();
-        private ToolLabel toolExecute = new ToolLabel();
-        private ToolProgressBar toolProgress = new ToolProgressBar();
-        private VPanel box = new VPanel();
+        private LayoutList list;
+        private ToolLabel toolExecute;
+        private ToolProgressBar toolProgress;
 
         public RowDeleting()
         {
-            list.AutoToStringFill = true;
-            list.GenerateColumns = false;
-            list.Name = "list";
-            list.Text = "Reference List";
-            list.ListInfo.Columns.Add(nameof(DBItem.Table), 100).Visible = false;
-            list.ListInfo.Columns.Add(nameof(DBItem.Status), 100);
-            list.ListInfo.Columns.Add(nameof(DBItem.UpdateState), 100);
-            list.ListInfo.Columns.Add(nameof(DBItem.Attached), 30);
-            list.ListInfo.ColumnsVisible = false;
-            list.ListInfo.Sorters.Add(new LayoutSort("Table", ListSortDirection.Ascending, true));
-            list.ListSource = rows;
+            toolExecute = new ToolLabel();
+            toolProgress = new ToolProgressBar { Name = "toolProgress" };
 
-            toolsb.Items.Add(toolExecute);
-            toolsb.Items.Add(toolProgress);
-            toolsb.Name = "tools";
+            list = new LayoutList()
+            {
+                AutoToStringFill = true,
+                GenerateColumns = false,
+                Name = "list",
+                Text = "Reference List",
+                ListInfo = new LayoutListInfo(
+                    new[]{
+                        new LayoutColumn{Name = nameof(DBItem.Table), Width = 100, Visible = false},
+                        new LayoutColumn{Name = nameof(DBItem.Status), Width = 100 },
+                        new LayoutColumn { Name = nameof(DBItem.UpdateState), Width = 100 },
+                        new LayoutColumn { Name = nameof(DBItem.Attached), Width = 30 }
+                    },
+                    new[] { new LayoutSort("Table", ListSortDirection.Ascending, true) })
+                { ColumnsVisible = false, },
+                ListSource = rows
+            };
 
-            toolExecute.Name = "toolExecute";
-            toolProgress.Name = "toolProgress";
-
-            box.Name = "groupBox1";
-            //box.Text = "Referencing Rows";
-            box.PackStart(toolsb, false, false);
-            box.PackStart(list, true, true);
+            bar.Add(toolExecute);
+            bar.Add(toolProgress);
 
             Label.Text = "Row Deleting";
 
-            this.Name = "RowDeleting";
-            this.Target = box;
-            this.Mode = ToolShowMode.Modal;
+            Name = "RowDeleting";
+            Target = list;
+            Mode = ToolShowMode.Modal;
 
             Localizing();
         }
@@ -109,7 +107,9 @@ namespace DataWF.Data.Gui
                 toolProgress.Visible = false;
                 list.RefreshBounds(false);
                 if (message.Length != 0)
+                {
                     MessageDialog.ShowMessage(Content.ParentWindow, message);
+                }
                 else if (!row.Attached)
                 {
                     toolExecute.Text = Locale.Get("RowDeleting", "Delete Complete!");
@@ -117,7 +117,9 @@ namespace DataWF.Data.Gui
                     Hide();
                 }
                 else
+                {
                     toolExecute.Text = Locale.Get("RowDeleting", "Start Delete?");
+                }
                 message = string.Empty;
             });
         }
