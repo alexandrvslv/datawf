@@ -19,14 +19,16 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using DataWF.Common;
 
 namespace DataWF.Data
 {
-    public class DBLogItem : DBItem
+    public partial class DBLogItem : DBItem
     {
-        private DBItem baseItem;
+        private DBItem baseItem = DBItem.EmptyItem;
 
         public DBLogItem()
         { }
@@ -67,7 +69,7 @@ namespace DataWF.Data
 
         public DBItem BaseItem
         {
-            get { return baseItem ?? (baseItem = BaseTable.LoadItemById(BaseId)); }
+            get { return baseItem == DBItem.EmptyItem ? (baseItem = BaseTable.LoadItemById(BaseId)) : baseItem; }
             set
             {
                 baseItem = value;
@@ -119,6 +121,86 @@ namespace DataWF.Data
         public override string ToString()
         {
             return $"{LogType} {BaseItem}";
+        }
+
+        public static void Reject(IEnumerable<DBLogItem> redo)
+        {
+            var changed = new Dictionary<DBItem, List<DBLogItem>>();
+            foreach (DBLogItem log in redo.OrderBy(p => p.PrimaryId))
+            {
+                DBItem row = log.BaseItem;
+                if (row == null)
+                {
+                    if (log.LogType == DBLogType.Insert)
+                        continue;
+                    row = log.BaseTable.NewItem(DBUpdateState.Insert, false);
+                    row.SetValue(log.BaseId, log.BaseTable.PrimaryKey, false);
+                }
+                else if (log.LogType == DBLogType.Delete && !changed.ContainsKey(row))
+                {
+                    continue;
+                }
+                log.Upload(row);
+
+                if (log.LogType == DBLogType.Insert)
+                {
+                    row.UpdateState |= DBUpdateState.Delete;
+                }
+                else if (log.LogType == DBLogType.Delete)
+                {
+                    row.UpdateState |= DBUpdateState.Insert;
+                    log.BaseTable.Add(row);
+                }
+                else if (log.LogType == DBLogType.Update && row.GetIsChanged())
+                {
+                    row.UpdateState |= DBUpdateState.Update;
+                }
+
+                log.Status = DBStatus.Delete;
+
+                if (!changed.TryGetValue(row, out var list))
+                    changed[row] = list = new List<DBLogItem>();
+
+                list.Add(log);
+            }
+
+            foreach (var entry in changed)
+            {
+                using (var transaction = new DBTransaction(changed, entry.Key.Table.Schema.Connection))
+                {
+                    //var currentLog = entry.Key.Table.LogTable.NewItem();
+                    entry.Key.Save();
+
+                    foreach (var item in entry.Value)
+                    {
+                        item.Save();
+                    }
+                    transaction.Commit();
+                }
+
+            }
+        }
+
+        public static void Accept(DBItem row, IEnumerable<DBLogItem> logs)
+        {
+            if (row.Status == DBStatus.Edit || row.Status == DBStatus.New || row.Status == DBStatus.Error)
+                row.Status = DBStatus.Actual;
+            else if (row.Status == DBStatus.Delete)
+                row.Delete();
+            using (var transaction = new DBTransaction(logs, row.Table.Schema.Connection))
+            {
+                row.Save();
+
+                foreach (var item in logs)
+                {
+                    if (item.Status == DBStatus.New)
+                    {
+                        item.Status = DBStatus.Actual;
+                        item.Save();
+                    }
+                }
+                transaction.Commit();
+            }
         }
     }
 }

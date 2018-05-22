@@ -29,7 +29,7 @@ namespace DataWF.Data
     {
         private DBItem row;
         private DBTable list;
-        private List<DBItem> index;
+        private List<DBItem> index = new List<DBItem>();
         private IComparer comparer;
         private DBColumn column;
         //private string property;

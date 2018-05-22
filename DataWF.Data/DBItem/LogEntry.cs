@@ -1,6 +1,6 @@
 ﻿/*
- DocumentLog.cs
-
+ DBTable.cs
+ 
  Author:
       Alexandr <alexandr_vslv@mail.ru>
 
@@ -17,30 +17,61 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+using DataWF.Common;
 using System;
 using System.Collections.Generic;
-using DataWF.Data;
-using DataWF.Common;
 
-namespace DataWF.Module.Common
+namespace DataWF.Data
 {
-    public class ItemDataLog
+    public class LogEntry
+    {
+        //bool check
+        public LogEntry()
+        {
+        }
+
+        public string User { get; set; }
+
+        public DBColumn Column { get; set; }
+
+        public object Old { get; set; }
+
+        public object New { get; set; }
+
+        public object OldFormat
+        {
+            get { return Column.Access.View ? Column.FormatValue(Old) : "*****"; }
+            set { Old = value; }
+        }
+
+        public object NewFormat
+        {
+            get { return Column.Access.View ? Column.FormatValue(New) : "*****"; }
+            set { New = value; }
+        }
+
+        public object Tag { get; set; }
+    }
+
+    public class LogMap
     {
         private DBItem row;
-        private List<DBLogItem> logs;
-        private SelectableList<LogChange> changes = new SelectableList<LogChange>();
+        private List<DBLogItem> logs = new List<DBLogItem>();
+        private SelectableList<LogEntry> changes = new SelectableList<LogEntry>();
         private string user;
         private DBTable table;
         private string text;
 
-        public ItemDataLog()
-        { }
-
-        public ItemDataLog(DBItem row)
+        public LogMap()
         {
-            changes.Indexes.Add(new Invoker<LogChange, DBColumn>(nameof(LogChange.Column),
+            changes.Indexes.Add(new Invoker<LogEntry, DBColumn>(nameof(LogEntry.Column),
                         (item) => item.Column,
                         (item, value) => item.Column = value));
+        }
+
+        public LogMap(DBItem row) : this()
+        {
             Row = row;
         }
 
@@ -65,18 +96,13 @@ namespace DataWF.Module.Common
         {
             QQuery query = new QQuery(string.Empty, Row.Table.LogTable);
             query.BuildParam(Row.Table.LogTable.BaseKey, CompareType.Equal, row.PrimaryId);
-            query.BuildParam(Row.Table.LogTable.StatusKey, CompareType.Equal, DBStatus.New);
+            query.BuildParam(Row.Table.LogTable.StatusKey, CompareType.Equal, (int)DBStatus.New);
             Logs.AddRange(Row.Table.LogTable.Load(query, DBLoadParam.Load | DBLoadParam.Synchronize));
         }
 
         public List<DBLogItem> Logs
         {
-            get
-            {
-                if (logs == null)
-                    logs = new List<DBLogItem>();//DataLog.DBTable);
-                return logs;
-            }
+            get { return logs; }
             set
             {
                 logs = value;
@@ -100,15 +126,15 @@ namespace DataWF.Module.Common
             {
                 if (log.Status == DBStatus.New)
                 {
-                    string name = ((UserLog)log.UserLog)?.User?.Name;
+                    string name = ((IUserLog)log.UserLog)?.User?.Name;
                     if (user.IndexOf(name, StringComparison.Ordinal) < 0)
                         user += name + "; ";
                     foreach (var logColumn in log.LogTable.GetLogColumns())
                     {
-                        LogChange map = changes.SelectOne(nameof(LogChange.Column), CompareType.Equal, logColumn.BaseColumn);
+                        LogEntry map = changes.SelectOne(nameof(LogEntry.Column), CompareType.Equal, logColumn.BaseColumn);
                         if (map == null)
                         {
-                            map = new LogChange();
+                            map = new LogEntry();
                             map.Column = logColumn.BaseColumn;
                             map.Old = prev?.GetValue(logColumn);
                             changes.Add(map);
@@ -124,43 +150,40 @@ namespace DataWF.Module.Common
 
         public string Text { get { return text; } set { text = value; } }
 
-        public SelectableList<LogChange> Changes
+        public SelectableList<LogEntry> Changes
         {
             get { return changes; }
         }
 
-        public bool Check()
-        {
-            bool flag = true;
-            foreach (var log in Logs)
-            {
-                if (log.Status == DBStatus.New && (((UserLog)log.UserLog)?.User?.IsCurrent ?? false))// && !log.User.Super
-                {
-                    flag = false;
-                    break;
-                }
-            }
-            return flag;
-        }
+        //public bool Check()
+        //{
+        //    bool flag = true;
+        //    foreach (var log in Logs)
+        //    {
+        //        if (log.Status == DBStatus.New && (((IUserLog)log.UserLog)?.User?.IsCurrent ?? false))// && !log.User.Super
+        //        {
+        //            flag = false;
+        //            break;
+        //        }
+        //    }
+        //    return flag;
+        //}
 
         public void Accept()
         {
-            UserLog.Accept(row, logs);
+            DBLogItem.Accept(row, logs);
             RefreshLogs();
         }
 
         public void Reject()
         {
-            UserLog.Reject(logs);
+            DBLogItem.Reject(logs);
             RefreshLogs();
         }
+    }
 
-
-        //public List<UserLog> GetChilds()
-        //{
-        //    var query = new QQuery("", UserLog.DBTable);
-        //    query.BuildPropertyParam(nameof(UserLog.ParentId), CompareType.In, logs);
-        //    return UserLog.DBTable.Load(query);
-        //}
+    internal interface IUserLog
+    {
+        DBItem User { get; }
     }
 }

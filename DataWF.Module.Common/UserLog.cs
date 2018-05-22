@@ -224,11 +224,8 @@ namespace DataWF.Module.Common
             {
                 arg.LogItem.UserLog = userLog;
             }
+            RowLoged?.Invoke(null, arg);
         }
-
-        private DBTable cacheDocumentTable;
-
-        private DBItem cacheDocument;
 
         public UserLog()
         {
@@ -357,89 +354,6 @@ namespace DataWF.Module.Common
             newLog.Save();
         }
 
-        public static void Reject(IEnumerable<DBLogItem> redo)
-        {
-            var changed = new Dictionary<DBItem, List<DBLogItem>>();
-            foreach (DBLogItem log in redo.OrderBy(p => p.PrimaryId))
-            {
-                DBItem row = log.BaseItem;
-                if (row == null)
-                {
-                    if (log.LogType == DBLogType.Insert)
-                        continue;
-                    row = log.BaseTable.NewItem(DBUpdateState.Insert, false);
-                    row.SetValue(log.BaseId, log.BaseTable.PrimaryKey, false);
-                }
-                else if (log.LogType == DBLogType.Delete && !changed.ContainsKey(row))
-                {
-                    continue;
-                }
-                log.Upload(row);
-
-                if (log.LogType == DBLogType.Insert)
-                {
-                    row.UpdateState |= DBUpdateState.Delete;
-                }
-                else if (log.LogType == DBLogType.Delete)
-                {
-                    row.UpdateState |= DBUpdateState.Insert;
-                    log.BaseTable.Add(row);
-                }
-                else if (log.LogType == DBLogType.Update && row.GetIsChanged())
-                {
-                    row.UpdateState |= DBUpdateState.Update;
-                }
-
-                log.Status = DBStatus.Delete;
-
-                if (!changed.TryGetValue(row, out var list))
-                    changed[row] = list = new List<DBLogItem>();
-
-                list.Add(log);
-            }
-            using (var transaction = new DBTransaction(changed, DBTable.Schema.Connection))
-            {
-                foreach (var entry in changed)
-                {
-                    //var currentLog = entry.Key.Table.LogTable.NewItem();
-                    transaction.UserLog = CurrentLog = new UserLog() { TextData = "Reject", Parent = User.CurrentUser.LogStart };
-                    CurrentLog.Save();
-                    entry.Key.Save();
-
-                    foreach (var item in entry.Value)
-                    {
-                        item.Save();
-                    }
-
-                }
-                transaction.Commit();
-            }
-            CurrentLog = null;
-        }
-
-        public static void Accept(DBItem row, IEnumerable<DBLogItem> logs)
-        {
-            if (row.Status == DBStatus.Edit || row.Status == DBStatus.New || row.Status == DBStatus.Error)
-                row.Status = DBStatus.Actual;
-            else if (row.Status == DBStatus.Delete)
-                row.Delete();
-            using (var transaction = new DBTransaction(row, DBTable.Schema.Connection))
-            {
-                transaction.UserLog = CurrentLog = new UserLog { TextData = "Accept", Parent = User.CurrentUser.LogStart };
-                CurrentLog.Save();
-                row.Save();
-
-                foreach (var item in logs)
-                {
-                    if (item.Status == DBStatus.New)
-                    {
-                        item.Status = DBStatus.Actual;
-                        item.Save();
-                    }
-                }
-                transaction.Commit();
-                CurrentLog = null;
-            }
-        }
+        
     }
 }

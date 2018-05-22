@@ -184,11 +184,11 @@ namespace DataWF.Data.Gui
                         }
                         else
                         {
-                            toolAdd.DropDownItems.Add(new ToolItemType((s, e) => ShowNewItem((DBItem)((ToolItemType)s).ItemType.Constructor.Create()))
+                            toolAdd.DropDownItems.Add(new ToolItemType((s, e) => ShowNewItem((DBItem)((ToolItemType)s).Type.Constructor.Create()))
                             {
                                 Name = itemType.Type.FullName,
                                 Text = itemType.Type.Name,
-                                ItemType = itemType
+                                Type = itemType
                             });
                         }
                     }
@@ -918,11 +918,36 @@ namespace DataWF.Data.Gui
             DBItem newRow = (DBItem)TableView.NewItem();
             newRow.Status = DBStatus.New;
             if (mode == TableEditorMode.Referencing)
+            {
                 newRow[baseColumn] = OwnerRow.PrimaryId;
+            }
             TableView.ApplySort(null);
             TableView.Add(newRow);
             DBList.SelectedRow = newRow;
             //list.VScrollToItem(newRow);
+        }
+
+        protected override void OnToolLogClick(object sender, EventArgs e)
+        {
+            if (Table == null)
+                return;
+            var logView = new DataLogView()
+            {
+                Filter = Selected,
+                Table = Table,
+                Mode = Selected != null ? DataLogMode.Default : DataLogMode.Table
+            };
+            logView.ShowDialog(this);
+        }
+
+        protected override void OnToolStatusClick(object sender, EventArgs e)
+        {
+            if (Selected != null)
+            {
+                var acceptor = new ChangeAccept { Row = Selected };
+                acceptor.Show(this, Point.Zero);
+            }
+
         }
     }
 
@@ -933,7 +958,7 @@ namespace DataWF.Data.Gui
             Glyph = GlyphType.Plus;
         }
 
-        public DBItemType ItemType { get; set; }
+        public DBItemType Type { get; set; }
 
         public override void Localize()
         {

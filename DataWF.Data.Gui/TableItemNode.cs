@@ -5,7 +5,7 @@ using Xwt.Drawing;
 using System;
 using System.Collections.Generic;
 
-namespace DataWF.Module.CommonGui
+namespace DataWF.Data.Gui
 {
     public class TableItemNode : Node, ILocalizable
     {
@@ -35,7 +35,7 @@ namespace DataWF.Module.CommonGui
             }
         }
 
-        
+
     }
 }
 

@@ -6,69 +6,62 @@ using System;
 using System.ComponentModel;
 using Xwt.Drawing;
 using System.Threading;
-using DataWF.Module.Common;
 using Xwt;
 
-namespace DataWF.Module.CommonGui
+namespace DataWF.Data.Gui
 {
 
-   // [Module(true)]
+    // [Module(true)]
     public class ChangeViewer : VPanel, IDockContent
     {
         private DBTable table = null;
-        private SelectableList<ItemDataLog> rows;
-        private SelectableListView<ItemDataLog> rowsView;
+        private SelectableList<LogMap> rows;
+        private SelectableListView<LogMap> rowsView;
 
-        private Toolsbar tools = new Toolsbar();
-        private ToolItem toolRefresh = new ToolItem();
-        private ToolItem toolAccept = new ToolItem();
-        private ToolItem toolReject = new ToolItem();
-        private ToolItem toolDetails = new ToolItem();
+        private Toolsbar tools;
+        private ToolItem toolRefresh;
+        private ToolItem toolAccept;
+        private ToolItem toolReject;
+        private ToolItem toolDetails;
 
         private HPaned split2 = new HPaned();
         private HPaned split1 = new HPaned();
-        private DataTree listObjects = new DataTree();
-        private LayoutList listRows = new LayoutList();
+        private DataTree listObjects;
+        private LayoutList listRows;
         private LayoutList listDiff = new LayoutList();
         private ManualResetEvent wait = new ManualResetEvent(false);
 
         public ChangeViewer()
         {
-            tools.Items.Add(toolRefresh);
-            tools.Items.Add(toolAccept);
-            tools.Items.Add(toolReject);
-            tools.Items.Add(toolDetails);
-            tools.Name = "tools";
+            toolRefresh = new ToolItem(ToolRefreshClick) { Name = "Refresh", Text = "Refresh", Glyph = GlyphType.Refresh };
+            toolAccept = new ToolItem(ToolAcceptClick) { Name = "Accept", Text = "Accept", Glyph = GlyphType.Check };
+            toolReject = new ToolItem(ToolRejectClick) { Name = "Reject", Text = "Reject", Glyph = GlyphType.Undo };
+            toolDetails = new ToolItem(ToolDetailsClick) { Name = "Details", Text = "Details", Glyph = GlyphType.Tag };
 
-            toolRefresh.Name = "toolRefresh";
-            toolRefresh.Text = "Refresh";
-            toolRefresh.Click += ToolRefreshClick;
+            tools = new Toolsbar(toolRefresh,
+                toolAccept,
+                toolReject,
+                toolDetails)
+            { Name = "Bar" };
 
-            toolAccept.Name = "toolAccept";
-            toolAccept.Text = "Accept";
-            toolAccept.Click += ToolAcceptClick;
-
-            toolReject.Name = "toolReject";
-            toolReject.Text = "Reject";
-            toolReject.Click += ToolRejectClick;
-
-            toolDetails.Name = "toolDetails";
-            toolDetails.Text = "Details";
-            toolDetails.Click += ToolDetailsClick;
-
-
-            listObjects.Name = "listObjects";
-            listObjects.DataKeys = DataTreeKeys.CheckTableAdmin | DataTreeKeys.Table | DataTreeKeys.Schema;
+            listObjects = new DataTree()
+            {
+                Name = "listObjects",
+                DataKeys = DataTreeKeys.CheckTableAdmin | DataTreeKeys.Table | DataTreeKeys.Schema
+            };
             listObjects.ListInfo.Columns.Add("Count", 35);
             listObjects.BuildColumn(listObjects.ListInfo, null, "Count");
             listObjects.SelectionChanged += ListObjectsSelectionChanged;
 
-            listRows.EditMode = EditModes.None;
-            listRows.EditState = EditListState.Edit;
-            listRows.GenerateColumns = false;
-            listRows.GenerateToString = false;
-            listRows.Mode = LayoutListMode.List;
-            listRows.Name = "listRows";
+            listRows = new LayoutList()
+            {
+                EditMode = EditModes.None,
+                EditState = EditListState.Edit,
+                GenerateColumns = false,
+                GenerateToString = false,
+                Mode = LayoutListMode.List,
+                Name = "listRows"
+            };
             listRows.ListInfo.Columns.Add("Row.Status", 60);
             listRows.ListInfo.Columns.Add("Row", 200).FillWidth = true;
             listRows.ListInfo.Columns.Add("User", 100).FillWidth = true;
@@ -99,10 +92,8 @@ namespace DataWF.Module.CommonGui
             split2.Panel1.Content = listRows;
             split2.Panel2.Content = listDiff;
 
-            Localize();
-
-            rows = new SelectableList<ItemDataLog>();
-            rowsView = new SelectableListView<ItemDataLog>(rows);
+            rows = new SelectableList<LogMap>();
+            rowsView = new SelectableListView<LogMap>(rows);
             //rowsView.Filter.Parameters.Add(typeof(RowChanges), LogicType.Undefined, "Row.Status", CompareType.NotEqual, DBStatus.Actual);
             listRows.ListSource = rowsView;
 
@@ -120,11 +111,8 @@ namespace DataWF.Module.CommonGui
 
         public override void Localize()
         {
-            GuiService.Localize(toolRefresh, "ChangeViewer", "Refresh", GlyphType.Refresh);
-            GuiService.Localize(toolAccept, "ChangeViewer", "Accept", GlyphType.Check);
-            GuiService.Localize(toolReject, "ChangeViewer", "Reject", GlyphType.Undo);
-            GuiService.Localize(toolDetails, "ChangeViewer", "Details", GlyphType.Tag);
-            GuiService.Localize(this, "ChangeViewer", "Change Viewr");
+            base.Localize();
+            GuiService.Localize(this, "ChangeViewer", "Change Viewer");
         }
 
         private void LoadData()
@@ -135,7 +123,7 @@ namespace DataWF.Module.CommonGui
                 foreach (TableItemNode node in listObjects.Nodes)
                 {
                     DBTable table = node.Tag as DBTable;
-                    if (table != null && table != UserLog.DBTable && table.IsLoging && table.StatusKey != null)
+                    if (table != null && table.IsLoging && table.StatusKey != null)
                     {
                         var filter = table.GetStatusParam(DBStatus.Accept);
                         command.CommandText = table.BuildQuery("where " + filter.Format(), null, "count(*)");
@@ -184,7 +172,6 @@ namespace DataWF.Module.CommonGui
             }
         }
 
-
         private void LoadTable(DBTable table)
         {
             rows.Clear();
@@ -200,20 +187,19 @@ namespace DataWF.Module.CommonGui
                     if (rows.Find("Row", CompareType.Equal, row) == null)
                         try
                         {
-                            rows.Add(new ItemDataLog(row));
+                            rows.Add(new LogMap(row));
                         }
                         catch
                         {
                         }
                 }
-            QQuery qdelete = new QQuery("", UserLog.DBTable);
-            //qdelete.BuildPropertyParam(nameof(UserLog.TargetTableName), CompareType.Equal, table.FullName);
-            //qdelete.BuildPropertyParam(nameof(UserLog.LogType), CompareType.Equal, UserLogType.Delete);
-            qdelete.BuildPropertyParam(nameof(UserLog.State), CompareType.Equal, DBStatus.New);
-            var list = UserLog.DBTable.Load(qdelete, DBLoadParam.Synchronize);
+            QQuery qdelete = new QQuery("", table.LogTable);
+            qdelete.BuildParam(table.LogTable.ElementTypeKey, CompareType.Equal, DBLogType.Delete);
+            qdelete.BuildParam(table.LogTable.StatusKey, CompareType.Equal, DBStatus.New);
+            var list = table.LogTable.Load(qdelete, DBLoadParam.Synchronize);
             foreach (var log in list)
             {
-                ItemDataLog change = new ItemDataLog();
+                LogMap change = new LogMap();
                 change.Table = table;
                 //change.Logs.Add(log);
                 change.RefreshChanges();
@@ -242,7 +228,7 @@ namespace DataWF.Module.CommonGui
         {
             if (listRows.SelectedItem == null)
                 return;
-            ItemDataLog changes = (ItemDataLog)listRows.SelectedItem;
+            LogMap changes = (LogMap)listRows.SelectedItem;
             listDiff.ListSource = changes.Changes;
             GuiService.Main.ShowProperty(this, changes.Row, false);
         }
@@ -258,7 +244,7 @@ namespace DataWF.Module.CommonGui
             if (listRows.SelectedItem == null)
                 return;
 
-            ItemDataLog changes = (ItemDataLog)listRows.SelectedItem;
+            LogMap changes = (LogMap)listRows.SelectedItem;
             changes.Reject();
             listDiff.ListSource = changes.Changes;
             rows.Remove(changes);
@@ -270,29 +256,24 @@ namespace DataWF.Module.CommonGui
                 return;
             foreach (var s in listRows.Selection)
             {
-                ItemDataLog changes = (ItemDataLog)s.Item;
-                if (changes.Check())
+                LogMap changes = (LogMap)s.Item;
+                if (changes.Row.Status == DBStatus.Delete)
                 {
-                    if (changes.Row.Status == DBStatus.Delete)
-                    {
-                        var dr = MessageDialog.AskQuestion("Accept Deleting!", "Delete completly?", Command.No, Command.Yes, Command.Cancel);
-                        if (dr != Command.Yes)
-                            break;
-                    }
-                    changes.Accept();
-                    listDiff.ListSource = changes.Changes;
+                    var dr = MessageDialog.AskQuestion("Accept Deleting!", "Delete completly?", Command.No, Command.Yes, Command.Cancel);
+                    if (dr != Command.Yes)
+                        break;
                 }
+                changes.Accept();
+                listDiff.ListSource = changes.Changes;
             }
             rowsView.UpdateFilter();
         }
 
         private void ToolDetailsClick(object sender, EventArgs e)
         {
-
             if (listRows.SelectedItem == null)
                 return;
-            var details = new DataLogView();
-            details.SetFilter(((ItemDataLog)listRows.SelectedItem).Row);
+            var details = new DataLogView() { Filter = ((LogMap)listRows.SelectedItem).Row, Mode = DataLogMode.Default };
             details.ShowWindow(this);
         }
 

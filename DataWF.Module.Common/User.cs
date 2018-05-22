@@ -366,7 +366,7 @@ namespace DataWF.Module.Common
         {
             foreach (var access in item.Access.Items)
             {
-                if (access.Create && filter == null || filter.Access.Get(access.Group).Create)
+                if (access.Create && (filter == null || filter.Access.Get(access.Group).Create))
                 {
                     foreach (User user in User.DBTable)
                     {
@@ -381,7 +381,7 @@ namespace DataWF.Module.Common
         {
             foreach (var access in item.Access.Items)
             {
-                if (access.Create && filter == null || filter.Access.Get(access.Group).Create)
+                if (access.Create && (filter == null || filter.Access.Get(access.Group).Create))
                 {
                     foreach (Position position in Position.DBTable)
                     {
@@ -396,7 +396,7 @@ namespace DataWF.Module.Common
         {
             foreach (var access in item.Access.Items)
             {
-                if (access.Create && filter == null || filter.Access.Get(access.Group).Create)
+                if (access.Create && (filter == null || filter.Access.Get(access.Group).Create))
                 {
                     foreach (Department department in Department.DBTable)
                     {

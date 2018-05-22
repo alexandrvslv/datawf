@@ -220,6 +220,19 @@ namespace DataWF.Module.Common
             return PermissionName;
         }
 
+        public override AccessValue Access
+        {
+            get => base.Access;
+            set
+            {
+                base.Access = value;
+                if (Permission is IAccessable)
+                {
+                    ((IAccessable)Permission).Access = value;
+                }
+            }
+        }
+
         public static PermissionType GetPermissionType(object value, out string key)
         {
             key = null;
