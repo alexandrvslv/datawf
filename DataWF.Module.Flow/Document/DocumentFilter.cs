@@ -316,6 +316,7 @@ namespace DataWF.Module.Flow
                     }
                     else
                     {
+                        paramStage.Column = column;
                         paramStage.Value = Stage.PrimaryId;
                     }
                 }
@@ -339,9 +340,9 @@ namespace DataWF.Module.Flow
                     return;
                 cacheUser = value;
                 staff = value == null ? null : $"{value.Table.Name}:{ value.PrimaryId}";
-                var column = Stage is Department
+                var column = Staff is Department
                     ? DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DepartmentId))
-                    : Stage is Position
+                    : Staff is Position
                     ? DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.PositionId))
                     : DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.UserId));
                 if (value != null)
@@ -353,6 +354,7 @@ namespace DataWF.Module.Flow
                     }
                     else
                     {
+                        paramStaff.Column = column;
                         paramStaff.Value = Staff.PrimaryId;
                     }
                 }

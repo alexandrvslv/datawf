@@ -63,6 +63,7 @@ namespace DataWF.Module.FlowGui
             var userKeys = UserTreeKeys.None;
             if (Department.DBTable?.Access.View ?? false) userKeys |= UserTreeKeys.Department;
             if (Position.DBTable?.Access.View ?? false) userKeys |= UserTreeKeys.Position;
+            if (GroupPermission.DBTable?.Access.View ?? false) userKeys |= UserTreeKeys.Permission;
             if (User.DBTable?.Access.View ?? false) userKeys |= UserTreeKeys.User;
             if (UserGroup.DBTable?.Access.View ?? false) userKeys |= UserTreeKeys.Group;
             if (Scheduler.DBTable?.Access.View ?? false) userKeys |= UserTreeKeys.Scheduler;

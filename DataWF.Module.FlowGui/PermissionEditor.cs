@@ -280,8 +280,7 @@ namespace DataWF.Module.FlowGui
 
         private void ToolLogsClick(object sender, EventArgs e)
         {
-            var logs = new DataLogView();
-            logs.SetFilter(userGroup);
+            var logs = new UserLogView { Filter = userGroup, Mode = DataLogMode.Group };
             logs.ShowWindow(this);
         }
 

@@ -672,11 +672,9 @@ namespace DataWF.Gui
                      e.Key == Key.Up || e.Key == Key.Down ||
                      e.Key == Key.PageUp || e.Key == Key.PageDown || e.Key == Key.Tab)//
                 {
-                    var items = listInfo.Columns.GetVisible().ToList();
-
                     LayoutColumn colbuf = CurrentCell;
                     if (colbuf == null)
-                        colbuf = items.Count == 0 ? null : items[0];
+                        colbuf = bounds.VisibleColumns.Count == 0 ? null : bounds.VisibleColumns[0];
                     object item = selection.HoverRow != null && e.Modifiers == ModifierKeys.Control
                                             ? selection.HoverRow.Item
                                             : SelectedItem;
@@ -708,15 +706,15 @@ namespace DataWF.Gui
                                   ? -1 : e.Key == Key.Down ? 1 : e.Key == Key.PageUp
                                   ? -page : e.Key == Key.PageDown ? page : 0;
 
-                    int indexcolumn = items.IndexOf(colbuf);
+                    int indexcolumn = bounds.VisibleColumns.IndexOf(colbuf);
                     indexcolumn += e.Key == Key.Right || e.Key == Key.Tab ? 1 : e.Key == Key.Left ? -1 : 0;
 
                     if (indexcolumn < 0)
                     {
                         index--;
-                        indexcolumn = items.Count - 1;
+                        indexcolumn = bounds.VisibleColumns.Count - 1;
                     }
-                    else if (indexcolumn >= items.Count)
+                    else if (indexcolumn >= bounds.VisibleColumns.Count)
                     {
                         index++;
                         indexcolumn = 0;
@@ -731,7 +729,7 @@ namespace DataWF.Gui
                         else
                             SelectedItem = listSource[index];
 
-                        CurrentCell = items[indexcolumn] as LayoutColumn;
+                        CurrentCell = bounds.VisibleColumns[indexcolumn] as LayoutColumn;
                         if (e.Key == Key.Tab && CurrentCell.Editable)
                         {
                             OnCellEditBegin(SelectedItem, CurrentCell);
@@ -1623,6 +1621,7 @@ namespace DataWF.Gui
                 else if (value == LayoutListMode.List)
                 {
                     FieldInfo = null;
+                    FieldType = null;
                     FieldSource = null;
                     AllowCellSize = true;
                     GenerateColumns = true;
@@ -1913,7 +1912,7 @@ namespace DataWF.Gui
                     listInfo.BoundChanged += handleColumnsBound;
                     if (ListType != null)
                     {
-                        RefreshInfo();                        
+                        RefreshInfo();
                     }
                 }
             }
@@ -1932,7 +1931,7 @@ namespace DataWF.Gui
             {
                 if (listType == value)
                     return;
-                
+
                 listType = value;
                 if (listType == null || Mode == LayoutListMode.Tree || Mode == LayoutListMode.Fields)
                     return;
@@ -1981,8 +1980,11 @@ namespace DataWF.Gui
                         ((INotifyListChanged)listSource).ListChanged += handleListChanged;
                     else if (listSource is IBindingList)
                         ((IBindingList)listSource).ListChanged += handleListChanged;
-
-                    ListType = TypeHelper.GetItemType(listSource);
+                    var type = TypeHelper.GetItemType(listSource);
+                    if (ListType != type)
+                        ListType = type;
+                    else
+                        RefreshInfo();
                 }
 
                 RefreshBounds(true);
@@ -2156,7 +2158,7 @@ namespace DataWF.Gui
 
         public bool IsEdit(object item, ILayoutCell cell = null)
         {
-            if (listMode == LayoutListMode.Fields)
+            if (listMode == LayoutListMode.Fields && item is ILayoutCell)
             {
                 cell = (ILayoutCell)item;
                 item = fieldSource;
@@ -4616,7 +4618,7 @@ namespace DataWF.Gui
             }
         }
 
-        public void RefreshBounds(bool buildgroup)
+        public virtual void RefreshBounds(bool buildgroup)
         {
             if (ListSource == null)
                 return;

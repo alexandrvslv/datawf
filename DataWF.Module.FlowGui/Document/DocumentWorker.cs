@@ -12,6 +12,7 @@ using Xwt;
 using Xwt.Drawing;
 using System.Threading.Tasks;
 using DataWF.Module.CommonGui;
+using DataWF.Data.Gui;
 
 namespace DataWF.Module.FlowGui
 {
@@ -126,8 +127,10 @@ namespace DataWF.Module.FlowGui
                 if (di != 0)
                 {
                     IncrementNode(filterView.Templates.Find(document.Template), di);
-                    IncrementNode(filterView.Users.Find(work.User), di);
-                    IncrementNode(filterView.Works.Find(work.Stage), di);
+                    if (work.User != null)
+                        IncrementNode(filterView.Users.Find(work.User), di);
+                    if (work.Stage != null)
+                        IncrementNode(filterView.Works.Find(work.Stage), di);
                 }
             }
         }

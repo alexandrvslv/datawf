@@ -218,8 +218,8 @@ namespace DataWF.Module.FlowGui
             {
                 if (documents == value)
                     return;
-                if (documents != null)
-                    documents.ListChanged -= DocumentsListChanged;
+                //if (documents != null)
+                //    documents.ListChanged -= DocumentsListChanged;
 
                 documents = value;
                 list.ListSource = documents;
@@ -227,7 +227,7 @@ namespace DataWF.Module.FlowGui
 
                 if (documents != null)
                 {
-                    documents.ListChanged += DocumentsListChanged;
+                    //documents.ListChanged += DocumentsListChanged;
                     if (Filter != null)
                     {
                         documents.Query = filter.QDoc;

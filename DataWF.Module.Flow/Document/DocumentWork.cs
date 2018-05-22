@@ -280,7 +280,12 @@ namespace DataWF.Module.Flow
         [Browsable(false)]
         public bool IsCurrent
         {
-            get { return !IsComplete && User == User.CurrentUser; }
+            get
+            {
+                return !IsComplete && (User == User.CurrentUser
+                  || (User == null && Position == User.CurrentUser?.Position)
+                  || (Position == null && Department == User.CurrentUser?.Department));
+            }
         }
 
         [Browsable(false)]

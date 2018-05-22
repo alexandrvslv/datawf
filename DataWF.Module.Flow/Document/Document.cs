@@ -861,14 +861,18 @@ namespace DataWF.Module.Flow
                 if (!dw.IsComplete)
                 {
                     if (workUsers.Length == 0 || workUsers.IndexOf(user, StringComparison.Ordinal) < 0)
+                    {
                         workUsers = workUsers + user + " ";
+                    }
                     if (workStages.Length == 0 || workStages.IndexOf(stage, StringComparison.Ordinal) < 0)
+                    {
                         workStages = workStages + stage + " ";
-                    if (dw.IsCurrent)
-                        if (current == null || !current.User.IsCurrent)
-                            current = dw;
+                    }
+                    if (dw.IsCurrent && (current == null || current.User == null))
+                    {
+                        current = dw;
+                    }
                 }
-
             }
             if (workStages.Length == 0)
                 workStages = works.LastOrDefault()?.Stage?.ToString() ?? "none";

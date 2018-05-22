@@ -112,6 +112,18 @@ namespace DataWF.Module.Flow
             set { SetName(nameof(Name), value); }
         }
 
+        public string NameEN
+        {
+            get => GetName(nameof(Name), "en-US");
+            set => SetName(nameof(Name), "en-US", value);
+        }
+
+        public string NameRU
+        {
+            get => GetName(nameof(Name), "ru-RU");
+            set => SetName(nameof(Name), "ru-RU", value);
+        }
+
         [DataMember, Column("document_type", 250, Default = "0")]
         public int? DocumentType
         {

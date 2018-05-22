@@ -199,8 +199,7 @@ namespace DataWF.Module.FlowGui
 
         private void ToolLogsOnClick(object sender, EventArgs e)
         {
-            var logViewer = new DataLogView();
-            logViewer.SetFilter(document);
+            var logViewer = new DataLogView { Filter = document, Mode = DataLogMode.Document };
             logViewer.ShowWindow(this);
         }
 
@@ -482,7 +481,7 @@ namespace DataWF.Module.FlowGui
                         Stage = cwork;
                     else if (document.GetLastWork() != null)
                         cwork = document.GetLastWork();
-                    from = cwork != null && cwork.From != null && (cwork.From.User.IsCurrent || cwork.User.IsCurrent);
+                    from = cwork != null && cwork.From != null && (cwork.From.IsCurrent || cwork.IsCurrent);
                     //pages
                     toolLabel.Text = cwork == null || cwork.Stage == null ? "" : cwork.Stage.ToString();
                 }
@@ -601,7 +600,7 @@ namespace DataWF.Module.FlowGui
                 var work = document.WorkCurrent;
                 EditorState = !document.Attached || document.UpdateState == DBUpdateState.Insert
                     ? DocumentEditorState.Create
-                    : work != null && work.User.IsCurrent
+                    : work != null && work.IsCurrent
                     ? DocumentEditorState.Edit
                     : DocumentEditorState.Readonly;
                 toolSave.Sensitive = document.IsChanged || state == DocumentEditorState.Create;
@@ -772,23 +771,27 @@ namespace DataWF.Module.FlowGui
         private void ToolAcceptClick(object sender, EventArgs e)
         {
             var work = document.WorkCurrent;
-            if (work != null && !work.User.IsCurrent)
+            if (work != null)
             {
-                var question = new QuestionMessage("Accept", "Accept to work?");
-                question.Buttons.Add(Command.No);
-                question.Buttons.Add(Command.Yes);
-                if (MessageDialog.AskQuestion(ParentWindow, question) == Command.Yes)
+                if (work.User == null)
                 {
-                    if (work.Stage != null && !work.Stage.Access.Edit)
+                    var question = new QuestionMessage("Accept", "Accept to work?");
+                    question.Buttons.Add(Command.No);
+                    question.Buttons.Add(Command.Yes);
+                    if (MessageDialog.AskQuestion(ParentWindow, question) == Command.Yes)
                     {
-                        MessageDialog.ShowMessage(ParentWindow, "Access denied!", "Accept");
-                    }
-                    else
-                    {
-                        Send(work, work.Stage, User.CurrentUser);
+                        if (work.Stage != null && !work.Stage.Access.Edit)
+                        {
+                            MessageDialog.ShowMessage(ParentWindow, "Access denied!", "Accept");
+                        }
+                        else
+                        {
+                            work.User = User.CurrentUser;
+                        }
                     }
                 }
-                return;
+                Send(null, null, null);
+
             }
             work = document.GetWork();
             if (work != null && work.User != null && !work.User.IsCurrent)
@@ -799,6 +802,7 @@ namespace DataWF.Module.FlowGui
             }
 
             Send(null, null, null);
+
         }
 
         protected void OnClosing(CancelEventArgs e)

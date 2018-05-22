@@ -139,8 +139,6 @@ namespace DataWF.Module.FlowGui
             Name = "DocumentSender";
             Target = groupBox;
             Size = new Size(640, 640);
-
-            Localize();
         }
 
         public void Localize()
@@ -172,18 +170,21 @@ namespace DataWF.Module.FlowGui
             {
                 var dworks = document.Works.ToList();
                 if (dworks.Count == 0)
+                {
                     dworks = document.GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), DBLoadParam.Load).ToList();
-
+                }
                 var cwork = document.WorkCurrent;
                 if (cwork != null)
                 {
 
                     foreach (var w in dworks)
+                    {
                         if (!w.IsComplete && w != cwork && w.User == cwork.User)
                         {
                             w.DateComplete = DateTime.Now;
                             w.Save();
                         }
+                    }
                 }
                 if (current.Template != document.Template)
                     continue;
@@ -234,7 +235,7 @@ namespace DataWF.Module.FlowGui
             {
                 foreach (var cwork in works)
                 {
-                    if (!cwork.IsComplete && !cwork.User.IsCurrent)
+                    if (!cwork.IsComplete && !cwork.IsCurrent)
                     {
                         toolComplete.Sensitive = true;
                         break;
@@ -255,7 +256,7 @@ namespace DataWF.Module.FlowGui
 
         public void InitNodes(DBItem reference)
         {
-            foreach (var item in reference.GetDepartment())
+            foreach (var item in reference.GetDepartment(current.Template))
                 InitNode(item);
         }
 
