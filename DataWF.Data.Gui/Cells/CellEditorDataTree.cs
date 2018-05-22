@@ -39,6 +39,10 @@ namespace DataWF.Data.Gui
                 if (DataType == value)
                     return;
                 base.DataType = value;
+                if (value?.IsGenericType ?? false)
+                {
+                    base.DataType = value.BaseType;
+                }
                 if (value == typeof(DBSchema))
                     key = DataTreeKeys.Schema;
                 else if (value == typeof(DBProcedure))
@@ -152,10 +156,15 @@ namespace DataWF.Data.Gui
         {
             if (editor != null
                 && DataTree.SelectedDBItem != null
-                && (DataTree.SelectedDBItem.GetType() == DataType || DataType == null))
+                && (TypeHelper.IsBaseType(DataTree.SelectedDBItem.GetType(), DataType) || DataType == null))
             {
-                Value = ParseValue(DataTree.SelectedDBItem);                
+                Value = DataTree.SelectedDBItem; 
             }
+        }
+
+        protected override object GetDropDownValue()
+        {
+            return DataTree.SelectedDBItem;
         }
 
         public override void FreeEditor()
