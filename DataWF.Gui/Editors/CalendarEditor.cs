@@ -28,14 +28,15 @@ namespace DataWF.Gui
             };
         }
 
-        protected override void CheckScrolling()
+
+        public override void RefreshBounds(bool group)
         {
             if (Parent != null)
             {
-                numberColumn.Width = (ParentBounds.Width - 40) / 7D;
-                numberColumn.Height = (ParentBounds.Height - 40) / 7D;
+                numberColumn.Width = (canvas.Size.Width) / 8D;
+                numberColumn.Height = (canvas.Size.Height) / 8D;
             }
-            base.CheckScrolling();
+            base.RefreshBounds(group);
         }
 
         protected override void OnDrawColumn(LayoutListDrawArgs e)
