@@ -104,10 +104,11 @@ namespace DataWF.Gui
         {
             CellStyle style = new CellStyle()
             {
+                Name = Name,
                 Alternate = Alternate,
                 Alignment = Alignment,
-                fontName = fontName,
-                baseColor = baseColor,
+                FontName = FontName,
+                BaseColor = BaseColor,
                 Round = Round
             };
             if (back != null)
