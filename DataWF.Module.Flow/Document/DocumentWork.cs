@@ -137,7 +137,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [DataMember, Column("work_id", Keys = DBColumnKeys.View), Index("ddocument_work_work_id")]
+        [DataMember, Column("work_id"), Index("ddocument_work_work_id")]
         public int? WorkId
         {
             get { return GetProperty<int?>(); }

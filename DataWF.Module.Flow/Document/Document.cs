@@ -351,6 +351,11 @@ namespace DataWF.Module.Flow
             set { SetPropertyReference(value); }
         }
 
+        public Stage Stage
+        {
+            get { return WorkCurrent?.Stage; }
+        }
+
         [Browsable(false)]
         [DataMember, Column("work_user", ColumnType = DBColumnTypes.Internal)]
         public string WorkUser

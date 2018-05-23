@@ -124,7 +124,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [DataMember, Column("reference_id")]
+        [DataMember, Column("reference_id", Keys = DBColumnKeys.View)]
         public long? ReferenceId
         {
             get { return GetProperty<long?>(); }
