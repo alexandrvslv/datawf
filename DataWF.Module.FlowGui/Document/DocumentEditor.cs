@@ -790,19 +790,18 @@ namespace DataWF.Module.FlowGui
                         }
                     }
                 }
-                Send(null, null, null);
-
             }
-            work = document.GetWork();
-            if (work != null && work.User != null && !work.User.IsCurrent)
+            else
             {
-                var rezult = MessageDialog.AskQuestion("Accept", "Document current on " + work.User + " Accept anywhere?", Command.No, Command.Yes);
-                if (rezult == Command.No)
-                    return;
+                work = document.GetWork();
+                if (work != null && work.User != null && !work.User.IsCurrent)
+                {
+                    var rezult = MessageDialog.AskQuestion("Accept", "Document current on " + work.User + " Accept anywhere?", Command.No, Command.Yes);
+                    if (rezult == Command.No)
+                        return;
+                }
             }
-
             Send(null, null, null);
-
         }
 
         protected void OnClosing(CancelEventArgs e)
@@ -885,10 +884,10 @@ namespace DataWF.Module.FlowGui
         {
             state = DocumentEditorState.Send;
             var sender = new DocumentSender();
+            sender.Localize();
             sender.Initialize(GetList());
             sender.SendType = sendType;
-            sender.SendComplete += SenderSendComplete;
-            //sender.FormClosed += SenderFormClosed;
+            sender.Hidden += SenderSendComplete;
             if (stage != null && user != null)
                 sender.Send(stage, user, sendType);
             sender.Show(toolSend.Bar, toolSend.Bound.Location);
