@@ -47,11 +47,11 @@ namespace DataWF.Data.Gui
         private bool _delete = false;
         private TableLoader loader;
         private ToolTableLoader toolProgress;
-        private ToolDropDown refButton;
+        private ToolDropDown toolReference;
         private ToolDropDown toolParam;
         private ToolMenuItem toolInsertLine;
-        private ToolItem toolReport;
-        private ToolItem toolMerge;
+        private ToolMenuItem toolReport;
+        private ToolMenuItem toolMerge;
         protected ToolWindow _currentControl;
         private QuestionMessage question;
 
@@ -61,17 +61,15 @@ namespace DataWF.Data.Gui
             //toolInsertLine = new ToolMenuItem(OnToolInsertLineClick) { Name = "Insert Line", Glyph = GlyphType.ChevronCircleRight };
             //toolAdd.DropDownItems.Add(toolInsertLine);
 
-            refButton = new ToolDropDown() { Name = "References", DisplayStyle = ToolItemDisplayStyle.Text };
-            toolMerge = new ToolItem(OnToolMergeClick) { Name = "Merge", Glyph = GlyphType.PaperPlane };
-            toolReport = new ToolItem(ToolReportClick) { Name = "Report", Glyph = GlyphType.FileExcelO };
-            toolParam = new ToolDropDown(ToolParamClick) { Name = "Parameters", Glyph = GlyphType.GearAlias };
+            toolReference = new ToolDropDown() { Name = "References", Visible = false, DisplayStyle = ToolItemDisplayStyle.Text };
+            toolMerge = new ToolMenuItem(OnToolMergeClick) { Name = "Merge", Glyph = GlyphType.PaperPlane };
+            toolReport = new ToolMenuItem(ToolReportClick) { Name = "Report", Glyph = GlyphType.FileExcelO };
+            toolParam = new ToolDropDown(toolMerge, toolReport) { Name = "Parameters", Glyph = GlyphType.GearAlias };
 
             loader = new TableLoader();
             toolProgress = new ToolTableLoader { Loader = loader };
 
-            Bar.Items.Add(refButton);
-            Bar.Items.Add(toolMerge);
-            Bar.Items.Add(toolReport);
+            Bar.Items.Add(toolReference);
             Bar.Items.Add(toolParam);
             Bar.Items.Add(toolProgress);
 
@@ -165,7 +163,6 @@ namespace DataWF.Data.Gui
 
                 if (view != null)
                 {
-                    toolGroup.Visible = view.Table.GroupKey != null;
                     DataSource = view;
 
                     foreach (var item in toolAdd.DropDownItems)
@@ -354,7 +351,7 @@ namespace DataWF.Data.Gui
                         break;
                     case TableEditorMode.Item:
                         ListMode = false;
-                        foreach (MenuItemRelation item in refButton.DropDownItems)
+                        foreach (MenuItemRelation item in toolReference.DropDownItems)
                             item.Visible = false;
                         if (OwnerRow != null)
                         {
@@ -362,7 +359,7 @@ namespace DataWF.Data.Gui
                             {
                                 if (!relation.Table.Access.View)
                                     continue;
-                                var itemRelation = refButton.DropDownItems[relation.Name] as MenuItemRelation;
+                                var itemRelation = toolReference.DropDownItems[relation.Name] as MenuItemRelation;
                                 if (itemRelation != null)
                                 {
                                     itemRelation.Visible = true;
@@ -374,7 +371,7 @@ namespace DataWF.Data.Gui
                                     itemRelation.Text = relation.Table + "(" + relation.Column + ")";
                                     itemRelation.Relation = relation;
                                     itemRelation.Click += ToolReferencesClick;
-                                    refButton.DropDown.Items.Add(itemRelation);
+                                    toolReference.DropDown.Items.Add(itemRelation);
                                 }
                                 //if (TableView == null)
                                 //	ToolReferencesClick(itemRelation, null);
@@ -404,7 +401,7 @@ namespace DataWF.Data.Gui
         {
             var tool = (MenuItemRelation)sender;
 
-            refButton.Text = tool.Text;
+            toolReference.Text = tool.Text;
 
             if (tool.View == null)
                 tool.View = tool.Relation.Table.CreateItemsView("", DBViewKeys.Empty, DBStatus.Current);

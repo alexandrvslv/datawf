@@ -6,7 +6,12 @@ using Xwt;
 
 namespace DataWF.Gui
 {
-    public class LayoutMenuEditor : VPanel
+    public class ToolsbarEditor : VPanel
+    {
+
+    }
+
+    public class LayoutInfoEditor : VPanel
     {
         private LayoutList contextList;
         private LayoutColumn contextColumn;
@@ -18,6 +23,8 @@ namespace DataWF.Gui
         private ToolItem ColumnsSub = new ToolItem();
         private ToolItem ViewMode;
         private ToolItem Print;
+        protected ToolItem toolGroup;
+        protected ToolItem toolSort;
 
         private Toolsbar bar;
         private GroupBox map;
@@ -32,18 +39,22 @@ namespace DataWF.Gui
         private GroupBoxItem gFields;
         private GroupBoxItem gSorters;
 
-        public LayoutMenuEditor()
+        public LayoutInfoEditor()
         {
             CellCopy = new ToolItem(OnMenuCellCopyClick) { Name = "Copy", Glyph = GlyphType.CopyAlias };
             CellCheck = new ToolItem(OnMenuCellCheckClick) { Name = "Check All", Glyph = GlyphType.CheckSquare };
             ViewMode = new ToolItem(OnMenuViewModeClick) { Name = "Grid View", Glyph = GlyphType.PhotoAlias };
             Reset = new ToolItem(OnMenuResetColumnsClick) { Name = "Reset", Glyph = GlyphType.Refresh };
             Print = new ToolItem() { Glyph = GlyphType.Print };
+            toolSort = new ToolItem(ToolSortClick) { Name = "Sort", CheckOnClick = true, Glyph = GlyphType.SortAlphaAsc };
+            toolGroup = new ToolItem(ToolGroupClick) { Name = "Group", CheckOnClick = true, Glyph = GlyphType.PlusSquareO };
 
             bar = new Toolsbar(
                 ViewMode,
                 Reset,
                 Print,
+                toolGroup,
+                toolSort,
                 new ToolSeparator(),
                 CellCopy,
                 CellCheck)
@@ -148,6 +159,9 @@ namespace DataWF.Gui
                 fields.DataSource = contextList?.FieldInfo?.Nodes;
                 gFields.Visible = fields.DataSource != null;
                 gColumns.Expand = fields.DataSource == null;
+
+                toolGroup.Visible = value.Mode == LayoutListMode.Fields || TypeHelper.IsInterface(value.ListType, typeof(IGroup));
+                toolGroup.Checked = value.Mode == LayoutListMode.Fields ? value.Grouping : value.TreeMode;
             }
         }
 
@@ -175,6 +189,32 @@ namespace DataWF.Gui
         {
             bar.Localize();
             map.Localize();
+        }
+
+        public void ToolSortClick(object sender, EventArgs e)
+        {
+            if (!toolSort.Checked)
+            {
+                ContextList.ListInfo.Sorters.Remove("ToString");
+                ContextList.OnColumnSort("Order", ListSortDirection.Ascending);
+            }
+            else
+            {
+                ContextList.ListInfo.Sorters.Remove("Order");
+                ContextList.OnColumnSort("ToString", ListSortDirection.Ascending);
+            }
+        }
+
+        public void ToolGroupClick(object sender, EventArgs e)
+        {
+            if (ContextList.Mode == LayoutListMode.Fields)
+            {
+                ContextList.Grouping = toolGroup.Checked;
+            }
+            else if (ContextList.Mode == LayoutListMode.List)
+            {
+                ContextList.TreeMode = toolGroup.Checked;
+            }
         }
 
         private void OnMenuResetColumnsClick(object sender, EventArgs e)

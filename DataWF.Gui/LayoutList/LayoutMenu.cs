@@ -19,13 +19,13 @@ namespace DataWF.Gui
 
         public LayoutMenu()
         {
-            Target = new LayoutMenuEditor();
+            Target = new LayoutInfoEditor();
             Size = new Size(800, 600);
         }
 
-        public LayoutMenuEditor Editor
+        public LayoutInfoEditor Editor
         {
-            get { return (LayoutMenuEditor)Target; }
+            get { return (LayoutInfoEditor)Target; }
         }
 
         protected override void OnAcceptClick(object sender, EventArgs e)

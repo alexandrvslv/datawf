@@ -16,8 +16,6 @@ namespace DataWF.Gui
         protected LayoutList list;
         protected LayoutList fields = new LayoutList();
         protected Toolsbar bar;
-        protected ToolItem toolGroup;
-        protected ToolItem toolSort;
         protected ToolItem toolCut;
         protected ToolItem toolRefresh;
         protected ToolItem toolSave;
@@ -59,14 +57,15 @@ namespace DataWF.Gui
             handleGetEditor = ListOnGetCellEditor;
 
             toolStatusArchive = new ToolMenuItem() { Name = "Archive", Tag = DBStatus.Archive, Glyph = GlyphType.FlagCheckered };
-            toolStatusEdit = new ToolMenuItem() { Name = "Edit", Tag = DBStatus.Edit, ForeColor = Colors.DarkOrange, Glyph = GlyphType.Flag };
-            toolStatusError = new ToolMenuItem() { Name = "Error", Tag = DBStatus.Error, ForeColor = Colors.DarkRed, Glyph = GlyphType.Flag };
-            toolStatusDelete = new ToolMenuItem() { Name = "Delete", Tag = DBStatus.Delete, ForeColor = Colors.Purple, Sensitive = false, Glyph = GlyphType.Flag };
-            toolStatusActual = new ToolMenuItem() { Name = "Actual", Tag = DBStatus.Actual, ForeColor = Colors.DarkGreen, Sensitive = false, Glyph = GlyphType.Flag };
-            toolStatusNew = new ToolMenuItem() { Name = "New", Tag = DBStatus.New, ForeColor = Colors.DarkBlue, Sensitive = false, Glyph = GlyphType.Flag };
+            toolStatusEdit = new ToolMenuItem() { Name = "Edit", Tag = DBStatus.Edit, GlyphColor = Colors.DarkOrange, Glyph = GlyphType.Flag };
+            toolStatusError = new ToolMenuItem() { Name = "Error", Tag = DBStatus.Error, GlyphColor = Colors.DarkRed, Glyph = GlyphType.Flag };
+            toolStatusDelete = new ToolMenuItem() { Name = "Delete", Tag = DBStatus.Delete, GlyphColor = Colors.Purple, Sensitive = false, Glyph = GlyphType.Flag };
+            toolStatusActual = new ToolMenuItem() { Name = "Actual", Tag = DBStatus.Actual, GlyphColor = Colors.DarkGreen, Sensitive = false, Glyph = GlyphType.Flag };
+            toolStatusNew = new ToolMenuItem() { Name = "New", Tag = DBStatus.New, GlyphColor = Colors.DarkBlue, Sensitive = false, Glyph = GlyphType.Flag };
 
-            toolStatus = new ToolSplit() { Name = "DBStatus", Glyph = GlyphType.Flag };
-            toolStatus.DropDownItems.AddRange(new[]{toolStatusNew,
+            toolStatus = new ToolSplit() { Name = "Status", Glyph = GlyphType.Flag };
+            toolStatus.DropDownItems.AddRange(new[] {
+                toolStatusNew,
                 toolStatusActual,
                 toolStatusEdit,
                 toolStatusArchive,
@@ -80,32 +79,27 @@ namespace DataWF.Gui
             toolCopy = new ToolMenuItem(OnToolCopyClick) { Name = "Copy", Glyph = GlyphType.CopyAlias };
             toolInsert = new ToolMenuItem(OnToolInsertClick) { Name = "Insert", Glyph = GlyphType.Plus };
 
-            toolSort = new ToolItem(ToolSortClick) { Name = "Sort", CheckOnClick = true, Glyph = GlyphType.SortAlphaAsc };
-            toolGroup = new ToolItem(ToolGroupClick) { Name = "Group", CheckOnClick = true, Glyph = GlyphType.PlusSquareO };
-            toolCut = new ToolItem(OnToolCutClick) { Name = "Cut", Visible = false, Glyph = GlyphType.CutAlias };
-            toolLog = new ToolItem(OnToolLogClick) { Name = "Log", Glyph = GlyphType.History };
-            toolAccess = new ToolItem(ToolAccessClick) { Name = "Access", CheckOnClick = true, Glyph = Glyph = GlyphType.Key };
-            toolRefresh = new ToolItem(OnToolRefreshClick) { Name = "Refresh", Glyph = GlyphType.Refresh };
-            toolSave = new ToolItem(OnToolSaveClick) { Name = "Save", ForeColor = Colors.DarkBlue, Glyph = GlyphType.SaveAlias };
-            toolLoad = new ToolItem(OnToolLoadClick) { Name = "Load", Glyph = GlyphType.FolderOpen };
-            toolAdd = new ToolDropDown(toolInsert, toolCopy) { Name = "Add", ForeColor = Colors.DarkGreen, Glyph = GlyphType.PlusCircle };
-            toolRemove = new ToolItem(OnToolRemoveClick) { Name = "Remove", ForeColor = Colors.DarkRed, Glyph = GlyphType.MinusCircle };
-            toolEdit = new ToolItem(OnToolEditClick) { Name = "Edit", ForeColor = Colors.SandyBrown.WithIncreasedLight(-0.2), Glyph = GlyphType.Pencil };
+            toolCut = new ToolItem(OnToolCutClick) { Name = "Cut", DisplayStyle = ToolItemDisplayStyle.Text, Visible = false, Glyph = GlyphType.CutAlias };
+            toolLog = new ToolItem(OnToolLogClick) { Name = "Logs", DisplayStyle = ToolItemDisplayStyle.Text, Glyph = GlyphType.History };
+            toolAccess = new ToolItem(ToolAccessClick) { Name = "Access", DisplayStyle = ToolItemDisplayStyle.Text, CheckOnClick = true, Glyph = Glyph = GlyphType.Key };
+            toolRefresh = new ToolItem(OnToolRefreshClick) { Name = "Refresh", DisplayStyle = ToolItemDisplayStyle.Text, Glyph = GlyphType.Refresh };
+            toolSave = new ToolItem(OnToolSaveClick) { Name = "Save", DisplayStyle = ToolItemDisplayStyle.Text, GlyphColor = Colors.Blue, Glyph = GlyphType.SaveAlias };
+            toolLoad = new ToolItem(OnToolLoadClick) { Name = "Load", DisplayStyle = ToolItemDisplayStyle.Text, Glyph = GlyphType.FolderOpen };
+            toolAdd = new ToolDropDown(toolInsert, toolCopy) { Name = "Add", DisplayStyle = ToolItemDisplayStyle.Text, GlyphColor = Colors.Green, Glyph = GlyphType.PlusCircle };
+            toolRemove = new ToolItem(OnToolRemoveClick) { Name = "Remove", DisplayStyle = ToolItemDisplayStyle.Text, GlyphColor = Colors.Red, Glyph = GlyphType.MinusCircle };
+            toolEdit = new ToolItem(OnToolEditClick) { Name = "Edit", DisplayStyle = ToolItemDisplayStyle.Text, Visible = false, GlyphColor = Colors.SandyBrown, Glyph = GlyphType.Pencil };
 
             bar = new Toolsbar(
-                toolGroup,
-                toolSort,
-                new ToolSeparator(),
                 toolRefresh,
                 toolLoad,
                 toolSave,
                 new ToolSeparator(),
-                toolLog,
                 toolAccess,
                 toolAdd,
                 toolRemove,
-                toolEdit,
+                //toolEdit,
                 toolCut,
+                toolLog,
                 toolStatus,
                 new ToolSeparator() { FillWidth = true },
                 toolPosition)
@@ -163,7 +157,7 @@ namespace DataWF.Gui
                 {
                     toolStatus.Image = item.Image;
                     toolStatus.Glyph = item.Glyph;
-                    toolStatus.ForeColor = item.ForeColor;
+                    toolStatus.GlyphColor = item.GlyphColor;
                     toolStatus.Text = item.Text;
                 }
                 var accessable = dataSource as IAccessable;
@@ -225,8 +219,6 @@ namespace DataWF.Gui
                     list.FieldSource = null;
                     list.ListSource = null;
                 }
-                toolGroup.Visible = list.Mode == LayoutListMode.Fields || TypeHelper.IsInterface(list.ListType, typeof(IGroup));
-                toolGroup.Checked = list.Mode == LayoutListMode.Fields ? list.Grouping : list.TreeMode;
                 toolAdd.Visible =
                         toolCopy.Visible =
                         toolRemove.Visible =
@@ -460,7 +452,7 @@ namespace DataWF.Gui
                     {
                         access = new AccessEditor() { Name = "access" };
                     }
-                    
+
                     access.Accessable = (IAccessable)DataSource;
                     container.Panel2.Content = access;
                 }
@@ -498,32 +490,6 @@ namespace DataWF.Gui
                 list.CurrentCell = null;
                 ((IEditable)DataSource).Reject();
                 ((IEditable)DataSource).Refresh();
-            }
-        }
-
-        public void ToolSortClick(object sender, EventArgs e)
-        {
-            if (!toolSort.Checked)
-            {
-                list.ListInfo.Sorters.Remove("ToString");
-                list.OnColumnSort("Order", ListSortDirection.Ascending);
-            }
-            else
-            {
-                list.ListInfo.Sorters.Remove("Order");
-                list.OnColumnSort("ToString", ListSortDirection.Ascending);
-            }
-        }
-
-        public void ToolGroupClick(object sender, EventArgs e)
-        {
-            if (list.Mode == LayoutListMode.Fields)
-            {
-                list.Grouping = toolGroup.Checked;
-            }
-            else if (list.Mode == LayoutListMode.List)
-            {
-                list.TreeMode = toolGroup.Checked;
             }
         }
 
