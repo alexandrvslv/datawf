@@ -98,6 +98,8 @@ namespace DataWF.Data
             query.BuildParam(Row.Table.LogTable.BaseKey, CompareType.Equal, row.PrimaryId);
             query.BuildParam(Row.Table.LogTable.StatusKey, CompareType.Equal, (int)DBStatus.New);
             Logs.AddRange(Row.Table.LogTable.Load(query, DBLoadParam.Load | DBLoadParam.Synchronize));
+
+            RefreshChanges();
         }
 
         public List<DBLogItem> Logs
@@ -135,6 +137,7 @@ namespace DataWF.Data
                         if (map == null)
                         {
                             map = new LogEntry();
+                            map.User = name;
                             map.Column = logColumn.BaseColumn;
                             map.Old = prev?.GetValue(logColumn);
                             changes.Add(map);
@@ -182,7 +185,7 @@ namespace DataWF.Data
         }
     }
 
-    internal interface IUserLog
+    public interface IUserLog
     {
         DBItem User { get; }
     }

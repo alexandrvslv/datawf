@@ -181,7 +181,7 @@ namespace DataWF.Module.Common
     }
 
     [DataContract, Table("duser_log", "User", BlockSize = 500, IsLoging = false)]
-    public class UserLog : DBGroupItem, ICheck
+    public class UserLog : DBGroupItem, IUserLog
     {
         public static UserLogStrategy LogStrategy = UserLogStrategy.BySession;
 
@@ -354,6 +354,9 @@ namespace DataWF.Module.Common
             newLog.Save();
         }
 
-        
+        DBItem IUserLog.User
+        {
+            get { return User; }
+        }
     }
 }

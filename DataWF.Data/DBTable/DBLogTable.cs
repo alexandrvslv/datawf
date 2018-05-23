@@ -103,8 +103,8 @@ namespace DataWF.Data
                 if (typeColumn == null) Columns.Add(new DBColumn() { Name = TypeName, DataType = typeof(DBLogType), Keys = DBColumnKeys.ElementType });
                 else { typeColumn.DataType = typeof(DBLogType); typeColumn.Keys = DBColumnKeys.ElementType; }
                 var stateColumn = Columns[StateName];
-                if (stateColumn == null) Columns.Add(new DBColumn() { Name = StateName, DataType = typeof(DBStatus), Keys = DBColumnKeys.State, DefaultValue = "1" });
-                else { stateColumn.DataType = typeof(DBStatus); stateColumn.Keys = DBColumnKeys.State; stateColumn.DefaultValue = "1"; }
+                if (stateColumn == null) Columns.Add(new DBColumn() { Name = StateName, DataType = typeof(DBStatus), Keys = DBColumnKeys.State, DefaultValue = "2" });
+                else { stateColumn.DataType = typeof(DBStatus); stateColumn.Keys = DBColumnKeys.State; stateColumn.DefaultValue = "2"; }
                 var userColumn = Columns[UserLogName];
                 if (userColumn == null) Columns.Add(new DBColumn() { Name = UserLogName, DataType = typeof(long) });
                 else { userColumn.DataType = typeof(long); userColumn.Keys = DBColumnKeys.None; }
