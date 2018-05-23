@@ -79,7 +79,7 @@ namespace DataWF.Gui
         public LayoutFieldInfo()
         {
             Nodes = new LayoutNodeList<LayoutField>();
-            ValueColumn = new LayoutFieldColumn() { Name = "Value", FillWidth = true, Style = GuiEnvironment.Theme["Value"], Invoker = new FieldValueInvoker() };
+            ValueColumn = new LayoutFieldColumn() { Name = "Value", FillWidth = true, StyleName = "Value", Invoker = new FieldValueInvoker() };
 
             Columns = new LayoutListInfo(
                 new LayoutColumn { Name = nameof(LayoutField.ToString), Editable = false, Width = 100, Invoker = ToStringInvoker.Instance },
@@ -91,7 +91,7 @@ namespace DataWF.Gui
                 ColumnsVisible = false,
                 HeaderVisible = false,
                 Tree = true,
-                StyleRow = GuiEnvironment.Theme["Field"]
+                StyleRowName = "Field"
             };
 
             colums.Sorters.Add(new LayoutSort(nameof(LayoutField.Order), ListSortDirection.Ascending, false));
@@ -135,16 +135,16 @@ namespace DataWF.Gui
             set { colums = value; }
         }
 
-		public void SetGridMode(bool gridMode)
+        public void SetGridMode(bool gridMode)
         {
-			if (!gridMode)
-				return;
+            if (!gridMode)
+                return;
             Columns.GridAuto = true;
             Columns.GridOrientation = GridOrientation.Vertical;
             Columns.Indent = 4;
             Columns.Sorters.Add(new LayoutSort("Category", ListSortDirection.Ascending, true));
-			ValueColumn.FillWidth = false;
-			ValueColumn.Width = 220;
+            ValueColumn.FillWidth = false;
+            ValueColumn.Width = 220;
         }
 
         public virtual void Dispose()
