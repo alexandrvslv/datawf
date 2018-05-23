@@ -21,7 +21,6 @@ namespace DataWF.Module.FlowGui
     public class DocumentSender : ToolWindow, ILocalizable
     {
         private FlowTree listUsers;
-        private ToolItem toolSend;
         private ToolItem toolPrint;
         private ToolDropDown toolType;
         private ToolMenuItem toolNext;
@@ -104,15 +103,13 @@ namespace DataWF.Module.FlowGui
             };
             toolType.ItemClick += ToolTypeItemClicked;
 
-            toolSend = new ToolItem(ToolSendClick) { Name = "Send", DisplayStyle = ToolItemDisplayStyle.Text };
+            toolAccept.Name = "Send";
             toolPrint = new ToolItem(ToolPrintClick) { Name = "Print", DisplayStyle = ToolItemDisplayStyle.Text };
 
             toolProgress = new ToolProgressBar() { Name = "Progress", Visible = false };
 
-            bar.Items[0].InsertBefore(new ToolItem[] {
+            bar.Items[0].InsertAfter(new ToolItem[] {
                 toolType,
-                toolPrint,
-                toolSend,
                 toolProgress });
 
             listDocuments = new DocumentLayoutList()
@@ -435,7 +432,6 @@ namespace DataWF.Module.FlowGui
         {
             Application.Invoke(() =>
             {
-                toolSend.Sensitive = true;
                 toolProgress.Visible = false;
                 listDocuments.Sensitive = true;
                 listDocuments.RefreshBounds(false);
@@ -444,10 +440,11 @@ namespace DataWF.Module.FlowGui
                 var sended = send.Union(restor).ToList();
                 MessageDialog.ShowMessage(this, string.Format("Sended {0} of {1} documents", sended.Count, items.Count));
                 if (sended.Count == items.Count)
-                    this.DResult = Command.Ok;
-                if (SendComplete != null)
-                    SendComplete(this, EventArgs.Empty);
-
+                {
+                    Hide();
+                    DResult = Command.Ok;
+                }
+                SendComplete?.Invoke(this, EventArgs.Empty);
             });
         }
 
@@ -460,7 +457,7 @@ namespace DataWF.Module.FlowGui
                 return;
             }
             //listDocuments.Sensitive = false;
-            toolSend.Sensitive = false;
+            toolAccept.Sensitive = false;
             toolProgress.Visible = true;
             if (GuiService.Main == null)
             {
@@ -496,7 +493,7 @@ namespace DataWF.Module.FlowGui
             SendCallback();
         }
 
-        private void ToolSendClick(object sender, EventArgs e)
+        protected override void OnAcceptClick(object sender, EventArgs e)
         {
             Send();
         }
