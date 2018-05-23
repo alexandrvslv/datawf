@@ -53,7 +53,7 @@ namespace DataWF.Gui
 			Task.Run(() => LoadConfiguration());
 		}
 
-		public void LoadConfiguration()
+		public virtual void LoadConfiguration()
         {
             Helper.SetDirectory();
             try

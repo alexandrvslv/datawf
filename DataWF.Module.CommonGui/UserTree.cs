@@ -421,7 +421,7 @@ namespace DataWF.Module.CommonGui
                     textRect = new Rectangle(imgRect.Right, imgRect.Top, e.Bound.Width - imgRect.Width, e.Bound.Height);
                     //string val = (index + 1).ToString() + (row.DBState != DBUpdateState.Default ? (" " + row.DBState.ToString()[0]) : "");
                     e.Context.DrawCell(listInfo.StyleHeader, null, e.Bound, textRect, e.State);
-                    e.Context.DrawGlyph(color, imgRect, glyph);
+                    e.Context.DrawGlyph(glyph, imgRect, color);
                 }
                 if (node.Item is IDBTableView)
                 {
