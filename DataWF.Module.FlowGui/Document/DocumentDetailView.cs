@@ -100,20 +100,13 @@ namespace DataWF.Module.FlowGui
 
         protected override void OnToolLogClick(object sender, EventArgs e)
         {
-            if (Current == null)
-                return;
-            var param = new QParam()
+            var logs = new DataLogView
             {
-                Column = Table.LogTable.BaseKey,
-                Comparer = CompareType.Equal,
-                Value = Current.PrimaryId
+                Table = Table,
+                Filter = Current,
+                Mode = Current == null ? DataLogMode.Table : DataLogMode.Default
             };
-            var tableView = new TableView()
-            {
-                View = new DBTableView<DBLogItem>(Table.LogTable, param),
-                Text = $"{Table.DisplayName} Logs"
-            };
-            tableView.ShowWindow(ParentWindow);
+            logs.ShowDialog(this);
         }
 
         protected override void OnToolWindowAcceptClick(object sender, EventArgs e)
