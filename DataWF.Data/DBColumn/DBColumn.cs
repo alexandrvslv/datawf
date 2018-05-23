@@ -55,7 +55,9 @@ namespace DataWF.Data
         Reference = 1 << 19,
         TableReference = 1 << 20,
         NoLog = 1 << 21,
-        ElementType = 1 << 22
+        ElementType = 1 << 22,
+        File = 1 << 23,
+        FileName = 1 << 24,
     }
 
     public class DBColumn : DBTableItem, IComparable, IComparable<DBColumn>, ICloneable, IInvoker<DBItem, object>

@@ -60,14 +60,14 @@ namespace DataWF.Module.Flow
             set { SetPropertyReference(value); }
         }
 
-        [DataMember, Column("template_file")]
+        [DataMember, Column("template_file", Keys = DBColumnKeys.File)]
         public byte[] Data
         {
             get { return GetProperty<byte[]>(); }
             set { SetProperty(value); }
         }
 
-        [DataMember, Column("template_file_name", 1024)]
+        [DataMember, Column("template_file_name", 1024, Keys = DBColumnKeys.FileName | DBColumnKeys.View)]
         public string DataName
         {
             get { return GetProperty<string>(); }

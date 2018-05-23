@@ -8,6 +8,7 @@ using DataWF.Common;
 using DataWF.Data;
 using Xwt;
 using System.Text;
+using System.IO;
 
 namespace DataWF.Data.Gui
 {
@@ -39,7 +40,7 @@ namespace DataWF.Data.Gui
         private DBItem baseRow = null;
         private DBItem clonedRow = null;
         private DBItem searchRow = null;
-        private DBItem newRow = null;
+        private DBItem newItem = null;
         private TableEditorStatus status = TableEditorStatus.Default;
         private TableEditorMode mode = TableEditorMode.Empty;
         private bool _insert = false;
@@ -159,7 +160,7 @@ namespace DataWF.Data.Gui
                 view = value;
                 loader.View = view;
                 searchRow = null;
-                newRow = null;
+                newItem = null;
 
                 if (view != null)
                 {
@@ -294,11 +295,11 @@ namespace DataWF.Data.Gui
                         break;
                     case TableEditorStatus.Clone:
                         clonedRow = Selected;
-                        if (newRow == null || newRow.Attached)
+                        if (newItem == null || newItem.Attached)
                         {
-                            newRow = (DBItem)clonedRow.Clone();
+                            newItem = (DBItem)clonedRow.Clone();
                         }
-                        ((LayoutList)toolWindow.Target).FieldSource = newRow;
+                        ((LayoutList)toolWindow.Target).FieldSource = newItem;
                         toolCopy.Sensitive = true;
                         break;
                     case TableEditorStatus.Search:
@@ -317,18 +318,34 @@ namespace DataWF.Data.Gui
             }
         }
 
-        private void ShowNewItem(DBItem newRow)
+        private void ShowNewItem(DBItem item)
         {
-            this.newRow = newRow;
+            newItem = item;
+            var fileColumn = Table.Columns.GetByKey(DBColumnKeys.File);
+            if (fileColumn != null)
+            {
+                using (var dialog = new OpenFileDialog { Multiselect = false })
+                {
+                    if (dialog.Run(ParentWindow))
+                    {
+                        item[fileColumn] = File.ReadAllBytes(dialog.FileName);
+                        var fileNameColumn = Table.Columns.GetByKey(DBColumnKeys.FileName);
+                        if (fileNameColumn != null)
+                        {
+                            item[fileNameColumn] = Path.GetFileName(dialog.FileName);
+                        }
+                    }
+                }
+            }
             if (OwnerRow != null && baseColumn != null)
             {
-                newRow[baseColumn] = OwnerRow.PrimaryId;
+                item[baseColumn] = OwnerRow.PrimaryId;
             }
             if (Table.GroupKey != null && Selected != null && Selected.Table == Table)
             {
-                newRow[Table.GroupKey] = Selected.PrimaryId;
+                item[Table.GroupKey] = Selected.PrimaryId;
             }
-            ((LayoutList)toolWindow.Target).FieldSource = newRow;
+            ((LayoutList)toolWindow.Target).FieldSource = item;
             toolWindow.Show(bar, toolAdd.Bound.BottomLeft);
         }
 
