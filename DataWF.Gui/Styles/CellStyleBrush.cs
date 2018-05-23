@@ -41,7 +41,7 @@ namespace DataWF.Gui
         public static LinearGradient GetGradientBrush(Color color, Rectangle bound)
         {
             var pattern = new LinearGradient(bound.Left, bound.Top, bound.Left, bound.Bottom);
-            pattern.AddColorStop(0D, color.WithIncreasedLight(0.3D));
+            pattern.AddColorStop(0D, color.WithIncreasedLight(0.2D));
             pattern.AddColorStop(1D, color);
             return pattern;
         }
