@@ -48,8 +48,8 @@ namespace DataWF.Module.FlowGui
             contextAdd.Bar.ItemClick += ContextAddItemClicked;
 
             barMain = new Toolsbar(
-                new ToolDropDown { Name = "Add", ForeColor = Colors.DarkGreen, DropDown = contextAdd, Glyph = GlyphType.PlusCircle },
-                new ToolItem(ToolMainRemoveClick) { Name = "Remove", ForeColor = Colors.DarkRed, Glyph = GlyphType.MinusCircle },
+                new ToolDropDown { Name = "Add", GlyphColor = Colors.DarkGreen, DropDown = contextAdd, Glyph = GlyphType.PlusCircle },
+                new ToolItem(ToolMainRemoveClick) { Name = "Remove", GlyphColor = Colors.DarkRed, Glyph = GlyphType.MinusCircle },
                 new ToolItem(ToolMainCopyClick) { Name = "Copy", Glyph = GlyphType.CopyAlias },
                 new ToolDropDown { Name = "Tools", DropDown = contextTools, Glyph = GlyphType.Wrench },
                 new ToolSearchEntry() { Name = "FilterText", FillWidth = true })

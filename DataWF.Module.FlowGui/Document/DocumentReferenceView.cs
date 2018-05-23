@@ -21,8 +21,8 @@ namespace DataWF.Module.FlowGui
 
         public DocumentReferenceView()
         {
-            toolAttach = new ToolItem(ToolAttachClick) { Glyph = GlyphType.PlusSquareO, ForeColor = Colors.Green };
-            toolDetach = new ToolItem(ToolDetachClick) { Glyph = GlyphType.MinusSquareO, ForeColor = Colors.Red };
+            toolAttach = new ToolItem(ToolAttachClick) { Glyph = GlyphType.PlusSquareO, GlyphColor = Colors.Green };
+            toolDetach = new ToolItem(ToolDetachClick) { Glyph = GlyphType.MinusSquareO, GlyphColor = Colors.Red };
 
             filterCustomer.Visible = false;
 
@@ -70,7 +70,7 @@ namespace DataWF.Module.FlowGui
         public override void Localize()
         {
             base.Localize();
-            GuiService.Localize(this, base.Name, "Relations", GlyphType.Link);
+            GuiService.Localize(this, base.Name, "Documents", GlyphType.Link);
         }
 
         public override bool ReadOnly

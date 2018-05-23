@@ -263,7 +263,7 @@ namespace DataWF.Gui
                 {
                     box.Font = style.Font;
                     box.BackgroundColor = style.BackBrush.ColorSelect;
-                    //box.
+                    box.TextColor = style.FontBrush.ColorSelect;
                 }
                 if (!ReadOnly && HandleText)
                     box.Changed += OnTextChanged;

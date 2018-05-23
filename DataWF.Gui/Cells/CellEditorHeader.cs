@@ -24,12 +24,12 @@ namespace DataWF.Gui
             if (layoutList.ListInfo.Tree && gitem != null && gitem.IsCompaund)
             {
                 var glyphBound = layoutList.GetCellGlyphBound(gitem, level, e.Bound);
-                e.Context.DrawGlyph(e.Style, glyphBound, gitem.Expand ? GlyphType.CaretDown : GlyphType.CaretRight, e.State);
+                e.Context.DrawGlyph(gitem.Expand ? GlyphType.CaretDown : GlyphType.CaretRight, glyphBound, e.Style, e.State);
             }
             if (layoutList.AllowCheck && e.Item is ICheck)
             {
                 var checkBound = layoutList.GetCellCheckBound(e.Item, level, e.Bound);
-                e.Context.DrawCheckBox(e.Style.FontBrush.GetColorByState(e.State), checkBound, ((ICheck)e.Item).Check ? CheckedState.Checked : CheckedState.Unchecked);
+                e.Context.DrawCheckBox(((ICheck)e.Item).Check ? CheckedState.Checked : CheckedState.Unchecked, checkBound, e.Style.FontBrush.GetColorByState(e.State));
             }
             if (layoutList.AllowImage && image != null)
             {
@@ -45,7 +45,7 @@ namespace DataWF.Gui
                     {
                         color = ((Node)image).GlyphColor;
                     }
-                    e.Context.DrawGlyph(color, imageBound, image.Glyph);
+                    e.Context.DrawGlyph(image.Glyph, imageBound, color);
                 }
             }
             var textBound = layoutList.GetCellTextBound(e);

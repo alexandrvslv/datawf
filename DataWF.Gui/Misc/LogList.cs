@@ -27,7 +27,7 @@ namespace DataWF.Gui
                     type = GlyphType.ExclamationTriangle;
                     color = Colors.Yellow;
                 }
-                e.Context.DrawGlyph(color, e.Bound, type);
+                e.Context.DrawGlyph(type, e.Bound, color);
             }
             else
             {

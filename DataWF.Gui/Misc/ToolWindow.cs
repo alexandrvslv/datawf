@@ -46,7 +46,7 @@ namespace DataWF.Gui
                 Name = "toolLabel",
                 Text = "Label",
                 FillWidth = true,
-                ForeColor = GuiEnvironment.Theme["Window"].BaseColor.Invert()
+                GlyphColor = GuiEnvironment.Theme["Window"].BaseColor.Invert()
             };
 
             toolClose = new ToolItem(OnCloseClick)

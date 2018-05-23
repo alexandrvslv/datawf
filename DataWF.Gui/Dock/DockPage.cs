@@ -247,7 +247,7 @@ namespace DataWF.Gui
                 if (Image != null)
                     context.DrawImage(Image, BoundImage);
                 else if (Glyph != GlyphType.None)
-                    context.DrawGlyph(Box.PageStyle, BoundImage, Glyph, state);
+                    context.DrawGlyph(Glyph, BoundImage, Box.PageStyle, state);
             }
         }
         #endregion

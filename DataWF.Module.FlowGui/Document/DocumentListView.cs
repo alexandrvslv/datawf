@@ -81,8 +81,8 @@ namespace DataWF.Module.FlowGui
             ofDialog = new OpenFileDialog() { Multiselect = true };
             loader = new TableLoader();
 
-            toolCreate = new ToolItem(ToolCreateClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Create", ForeColor = Colors.DarkGreen, Glyph = GlyphType.PlusCircle };
-            toolCreateFrom = new ToolDropDown() { DisplayStyle = ToolItemDisplayStyle.Text, Name = "CreateFrom", ForeColor = Colors.DarkGreen, Glyph = GlyphType.PlusCircle };
+            toolCreate = new ToolItem(ToolCreateClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Create", GlyphColor = Colors.Green, Glyph = GlyphType.PlusCircle };
+            toolCreateFrom = new ToolDropDown() { DisplayStyle = ToolItemDisplayStyle.Text, Name = "CreateFrom", GlyphColor = Colors.Green, Glyph = GlyphType.PlusCircle };
             toolCopy = new ToolItem(ToolCopyClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Copy", Glyph = GlyphType.CopyAlias };
             toolLoad = new ToolItem(ToolLoadClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Load", Glyph = GlyphType.Download };
 

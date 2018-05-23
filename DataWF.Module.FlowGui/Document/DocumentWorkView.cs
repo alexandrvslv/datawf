@@ -27,7 +27,7 @@ namespace DataWF.Module.FlowGui
             Name = nameof(DocumentWorkView);
             Text = "Works";
 
-            toolActual = new ToolItem(ToolActualClick) { Name = "Actual", Checked = true, CheckOnClick = true, ForeColor = Colors.Green, Glyph = GlyphType.CheckCircleO };
+            toolActual = new ToolItem(ToolActualClick) { Name = "Actual", Checked = true, CheckOnClick = true, GlyphColor = Colors.Green, Glyph = GlyphType.CheckCircleO };
 
             Bar.Add(toolActual);
             //list.ListInfo = new LayoutListInfo(

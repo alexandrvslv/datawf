@@ -19,12 +19,10 @@ namespace DataWF.Module.FlowGui
             DataSource = view;
 
             toolLog.Visible = Table.IsLoging;
-            toolGroup.Visible = view.Table.GroupKey != null;
             toolLoad.Visible =
                 toolRefresh.Visible =
                 toolSave.Visible =
-                toolStatus.Visible =
-                toolSort.Visible = false;
+                toolStatus.Visible = false;
 
             Name = nameof(DocumentDetailView<T>);
         }

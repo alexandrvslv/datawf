@@ -12,6 +12,7 @@ namespace DataWF.Gui
     {
         protected CellStyle style;
         protected GlyphType glyph;
+        protected Color glyphColor;
         protected Image image;
         protected TextLayout text;
         protected Widget content;
@@ -31,6 +32,7 @@ namespace DataWF.Gui
         {
             var baseColor = Colors.Silver;
             style = GuiEnvironment.Theme["Tool"];
+            glyphColor = style.FontBrush.Color;
         }
 
         public ToolItem(EventHandler click) : this()
@@ -125,6 +127,7 @@ namespace DataWF.Gui
             }
         }
 
+        [XmlIgnore]
         public Widget Content
         {
             get { return content; }
@@ -186,6 +189,7 @@ namespace DataWF.Gui
             }
         }
 
+        [XmlIgnore]
         public Image Image
         {
             get { return image; }
@@ -199,15 +203,14 @@ namespace DataWF.Gui
             }
         }
 
-        public Color ForeColor
+        public Color GlyphColor
         {
-            get { return style.FontBrush.Color; }
+            get { return glyphColor; }
             set
             {
-                style = GuiEnvironment.Theme["Tool"] == style ? style.Clone() : style;
-                style.FontBrush.ColorSelect =
-                    style.FontBrush.ColorHover =
-                    style.FontBrush.Color = value.BlendWith(style.FontBrush.Color, 0.5);
+                if (GlyphColor == value)
+                    return;
+                glyphColor = value.BlendWith(style.FontBrush.Color, 0.5);
 
                 Bar?.QueueDraw();
             }
@@ -322,7 +325,7 @@ namespace DataWF.Gui
                 }
                 if (DisplayStyle.HasFlag(ToolItemDisplayStyle.Text))
                 {
-                    textBound.X = imaged ? imageBound.Right : value.X + 2D;
+                    textBound.X = imaged ? imageBound.Right : value.X + 4D;
                     textBound.Y = value.Y + (value.Height - textBound.Height) / 2D;
                 }
                 contentBound.X = DisplayStyle.HasFlag(ToolItemDisplayStyle.Text)
@@ -351,10 +354,22 @@ namespace DataWF.Gui
 
         public virtual void OnDraw(GraphContext context)
         {
-            object formatted = GetFormattedImage();
-            var dstate = !Sensitive ? CellDisplayState.Pressed : state == CellDisplayState.Default && Checked ? CellDisplayState.Selected : state;
-            context.DrawCell(style, formatted, Bound, imageBound, dstate);
 
+            var dstate = !Sensitive ? CellDisplayState.Pressed : state == CellDisplayState.Default && Checked ? CellDisplayState.Selected : state;
+            context.DrawCell(style, null, Bound, Bound, dstate);
+
+            object formatted = GetFormattedImage();
+            if (DisplayStyle.HasFlag(ToolItemDisplayStyle.Image))
+            {
+                if (image != null)
+                {
+                    context.DrawImage(image, imageBound);
+                }
+                else if (glyph != GlyphType.None)
+                {
+                    context.DrawGlyph(glyph, imageBound, glyphColor);
+                }
+            }
             if (DisplayStyle.HasFlag(ToolItemDisplayStyle.Text) && !string.IsNullOrEmpty(Text))
             {
                 context.DrawText(style, text, textBound, state);
@@ -385,7 +400,7 @@ namespace DataWF.Gui
             if (content != null)
             {
                 contentBound.Size = content.Surface.GetPreferredSize(SizeConstraint.Unconstrained, SizeConstraint.Unconstrained);
-               // contentBound.Width += indent;
+                // contentBound.Width += indent;
             }
             else
             {

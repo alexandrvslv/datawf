@@ -216,7 +216,9 @@ namespace DataWF.Data.Gui
             if (row != null)
             {
                 var imgRect = new Rectangle(e.Bound.X + 1, e.Bound.Y + 1, 0, 0);
-                var glyph = row.Status == DBStatus.Archive ? GlyphType.FlagCheckered : GlyphType.Flag;
+                var glyph = row.UpdateState == DBUpdateState.Default
+                    ? row.Status == DBStatus.Archive ? GlyphType.FlagCheckered : GlyphType.Flag
+                    : row.UpdateState == DBUpdateState.Insert ? GlyphType.PlusCircle : GlyphType.Pencil;
                 var color = Colors.Black;
                 if (row.Status == DBStatus.Actual)
                 {
@@ -241,10 +243,10 @@ namespace DataWF.Data.Gui
 
                 imgRect.Width = imgRect.Height = 14 * listInfo.Scale;
 
-                var textRect = new Rectangle(imgRect.Right + 3, imgRect.Top + 2, e.Bound.Width - (imgRect.Width + 6), e.Bound.Height - 3);
-                string val = (e.Index + 1).ToString() + (row.UpdateState != DBUpdateState.Default ? (" " + row.UpdateState.ToString()[0]) : "");
+                var textRect = new Rectangle(imgRect.Right + 3, imgRect.Top + 2, e.Bound.Width - (imgRect.Width + 7), e.Bound.Height - 3);
+                string val = (e.Index + 1).ToString();
                 e.Context.DrawCell(listInfo.StyleHeader, val, e.Bound, textRect, e.State);
-                e.Context.DrawGlyph(color, imgRect, glyph);
+                e.Context.DrawGlyph(glyph, imgRect, color);
             }
             else
             {

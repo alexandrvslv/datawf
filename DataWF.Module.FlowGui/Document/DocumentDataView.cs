@@ -20,7 +20,7 @@ namespace DataWF.Module.FlowGui
         public DocumentDataView()
         {
             toolView = new ToolItem(ToolViewClick) { Name = "View", Glyph = GlyphType.PictureO };
-            toolTemplate = new ToolItem(ToolTemplateClick) { Name = "Template", ForeColor = Colors.LightBlue, Glyph = GlyphType.Book };
+            toolTemplate = new ToolItem(ToolTemplateClick) { Name = "Template", GlyphColor = Colors.LightBlue, Glyph = GlyphType.Book };
 
             Name = nameof(DocumentDataView<T>);
             toolStatus.InsertAfter(new[] { toolView, toolTemplate });

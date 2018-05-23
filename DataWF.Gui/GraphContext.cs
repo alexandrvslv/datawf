@@ -141,17 +141,17 @@ namespace DataWF.Gui
             set { scale = value; }
         }
 
-        public void DrawCheckBox(Color color, Rectangle bound, CheckedState formated)
+        public void DrawCheckBox(CheckedState formated, Rectangle bound, Color color)
         {
-            DrawGlyph(color, bound, formated == CheckedState.Checked ? GlyphType.CheckSquareO : formated == CheckedState.Unchecked ? GlyphType.SquareO : GlyphType.Square);
+            DrawGlyph(formated == CheckedState.Checked ? GlyphType.CheckSquareO : formated == CheckedState.Unchecked ? GlyphType.SquareO : GlyphType.Square, bound, color);
         }
 
-        public void DrawGlyph(CellStyle style, Rectangle bound, GlyphType type, CellDisplayState state = CellDisplayState.Default)
+        public void DrawGlyph(GlyphType type, Rectangle bound, CellStyle style, CellDisplayState state = CellDisplayState.Default)
         {
-            DrawGlyph(style.FontBrush.GetColorByState(state), bound, type);
+            DrawGlyph(type, bound, style.FontBrush.GetColorByState(state));
         }
 
-        public void DrawGlyph(Color color, Rectangle bound, GlyphType type)
+        public void DrawGlyph(GlyphType type, Rectangle bound, Color color)
         {
             var text = GetGlyphLayout(type, bound.Height);
             var otext = GlyphType.None;
@@ -175,7 +175,7 @@ namespace DataWF.Gui
             if (otext != GlyphType.None)
             {
                 var sbound = new Rectangle(bound.TopLeft + new Size(bound.Width * 0.3, bound.Height * 0.3), new Size(bound.Width * 0.6, bound.Height * 0.6));
-                DrawGlyph(color, sbound, otext);
+                DrawGlyph(otext, sbound, color);
             }
         }
 
@@ -186,7 +186,7 @@ namespace DataWF.Gui
 
             DrawCell(style, textLayout, bound, text, state);
 
-            DrawGlyph(style, gliph, group.IsExpand ? GlyphType.ChevronDown : GlyphType.ChevronRight, state);
+            DrawGlyph(group.IsExpand ? GlyphType.ChevronDown : GlyphType.ChevronRight, gliph, style, state);
 
             var pen = style.FontBrush.GetColorByState(state);
             if (pen != CellStyleBrush.ColorEmpty)
@@ -235,7 +235,7 @@ namespace DataWF.Gui
                 }
                 else if (formated is GlyphType)
                 {
-                    DrawGlyph(style, textBound, (GlyphType)formated, state);
+                    DrawGlyph((GlyphType)formated, textBound, style, state);
                 }
                 else if (formated is Image)
                 {
@@ -244,7 +244,7 @@ namespace DataWF.Gui
                 else if (formated is CheckedState)
                 {
                     textBound.Width = textBound.Height;
-                    DrawCheckBox(style.FontBrush.GetColorByState(state), textBound, (CheckedState)formated);
+                    DrawCheckBox((CheckedState)formated, textBound, style.FontBrush.GetColorByState(state));
                 }
             }
 

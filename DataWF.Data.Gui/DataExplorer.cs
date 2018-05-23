@@ -34,7 +34,7 @@ namespace DataWF.Data.Gui
         public DataExplorer()
         {
             contextTools = new Menubar(
-                new ToolMenuItem(ToolMainRefreshOnClick) { Name = "Refresh Tree", ForeColor = Colors.DarkBlue, Glyph = GlyphType.Refresh },
+                new ToolMenuItem(ToolMainRefreshOnClick) { Name = "Refresh Tree", GlyphColor = Colors.DarkBlue, Glyph = GlyphType.Refresh },
                 new ToolMenuItem(ToolDBCheckClick) { Name = "Check Connection" },
                 new ToolMenuItem(ToolDBRefreshClick) { Name = "Refresh Schema Info" },
                 new ToolMenuItem(ToolDBGenerateClick) { Name = "Generate Database" },
@@ -69,17 +69,17 @@ namespace DataWF.Data.Gui
             { Name = "DBSchema" };
 
             contextMain = new Menubar(
-                new ToolMenuItem { Name = "Add", ForeColor = Colors.DarkGreen, DropDown = contextAdd, Glyph = GlyphType.PlusCircle },
+                new ToolMenuItem { Name = "Add", GlyphColor = Colors.DarkGreen, DropDown = contextAdd, Glyph = GlyphType.PlusCircle },
                 new ToolMenuItem(ToolCopyClick) { Name = "Copy", Glyph = GlyphType.CopyAlias },
-                new ToolMenuItem(ToolRemoveClick) { Name = "Remove", ForeColor = Colors.DarkRed, Glyph = GlyphType.MinusCircle },
+                new ToolMenuItem(ToolRemoveClick) { Name = "Remove", GlyphColor = Colors.DarkRed, Glyph = GlyphType.MinusCircle },
                 new ToolSeparator(),
                 new ToolMenuItem { Name = "Tools", DropDown = contextTools, Glyph = GlyphType.Wrench },
                 new ToolMenuItem(ToolPropertyClick) { Name = "Properties" })
             { Name = "Bar" };
 
             barMain = new Toolsbar(
-                new ToolDropDown() { Name = "Add", ForeColor = Colors.DarkGreen, DropDown = contextAdd, Glyph = GlyphType.PlusCircle },
-                new ToolItem(ToolRemoveClick) { Name = "Remove", ForeColor = Colors.DarkRed, Glyph = GlyphType.MinusCircle },
+                new ToolDropDown() { Name = "Add", GlyphColor = Colors.DarkGreen, DropDown = contextAdd, Glyph = GlyphType.PlusCircle },
+                new ToolItem(ToolRemoveClick) { Name = "Remove", GlyphColor = Colors.DarkRed, Glyph = GlyphType.MinusCircle },
                 new ToolItem(ToolCopyClick) { Name = "Copy", Glyph = GlyphType.CopyAlias },
                 new ToolDropDown { Name = "Tools", DropDown = contextTools, Glyph = GlyphType.Wrench },
                 new ToolSearchEntry() { Name = "FilterText" })

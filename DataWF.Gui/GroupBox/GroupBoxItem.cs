@@ -175,8 +175,8 @@ namespace DataWF.Gui
             rectText = new Rectangle(Bound.X + 30, Bound.Y + 3, Bound.Width - 40, rectHeader.Height - 5);
 
             context.DrawCell(styleHeader, Text, rectHeader, rectText, CellDisplayState.Default);
-            context.DrawGlyph(styleHeader, rectGlyph, Glyph);
-            context.DrawGlyph(styleHeader, rectExpand, Expand ? GlyphType.ChevronDown : GlyphType.ChevronRight);
+            context.DrawGlyph(Glyph, rectGlyph, styleHeader);
+            context.DrawGlyph(Expand ? GlyphType.ChevronDown : GlyphType.ChevronRight, rectExpand, styleHeader);
         }
 
         public Rectangle GetExpandBound(Rectangle bound)

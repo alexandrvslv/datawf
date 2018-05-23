@@ -970,7 +970,7 @@ namespace DataWF.Gui
                 return;
             if (bounds.TempArea.X != bounds.Area.X || bounds.TempArea.Width != bounds.Area.Width || bounds.Columns != bounds.TempColumns)
             {
-                bounds.VisibleColumns = listInfo.GridMode
+                bounds.VisibleColumns = listInfo.GridMode || gridCols > 1
                     ? listInfo.Columns.GetVisible().ToList()
                     : listInfo.GetDisplayed(bounds.Area.Left, bounds.Area.Right).ToList();
             }
@@ -1284,7 +1284,7 @@ namespace DataWF.Gui
 
         public Rectangle GetContentBound()
         {
-            bounds.Content.Width = (bounds.Columns.Width + ListInfo.Indent * 2) * gridCols + listInfo.HeaderWidth;
+            bounds.Content.Width = ((bounds.Columns.Width) * gridCols) + (listInfo.HeaderWidth + ListInfo.Indent);
             bounds.Content.Height = 0D;
             if (listInfo.ColumnsVisible)
             {
@@ -4268,12 +4268,12 @@ namespace DataWF.Gui
                 if (AllowSort)
                 {
                     bounds.ColumnSort = GetColumnSortBound(e.Bound);
-                    e.Context.DrawGlyph(listInfo.StyleColumn, bounds.ColumnSort, GlyphType.SortAsc);
+                    e.Context.DrawGlyph(GlyphType.SortAsc, bounds.ColumnSort, listInfo.StyleColumn);
                 }
                 if (AllowFilter)
                 {
                     bounds.ColumnFilter = GetColumnFilterBound(e.Bound);
-                    e.Context.DrawGlyph(listInfo.StyleColumn, bounds.ColumnFilter, GlyphType.Filter);
+                    e.Context.DrawGlyph(GlyphType.Filter, bounds.ColumnFilter, listInfo.StyleColumn);
                 }
             }
             else
@@ -4282,13 +4282,13 @@ namespace DataWF.Gui
                 if (parameter != null)
                 {
                     bounds.ColumnFilter = GetColumnFilterBound(e.Bound);
-                    e.Context.DrawGlyph(listInfo.StyleColumn, bounds.ColumnFilter, GlyphType.Filter);
+                    e.Context.DrawGlyph(GlyphType.Filter, bounds.ColumnFilter, listInfo.StyleColumn);
                 }
                 var sort = listInfo.Sorters[e.Column.Name];
                 if (sort != null)
                 {
                     bounds.ColumnSort = GetColumnSortBound(e.Bound);
-                    e.Context.DrawGlyph(listInfo.StyleColumn, bounds.ColumnSort, sort.Direction == ListSortDirection.Ascending ? GlyphType.SortAsc : GlyphType.SortDesc);
+                    e.Context.DrawGlyph(sort.Direction == ListSortDirection.Ascending ? GlyphType.SortAsc : GlyphType.SortDesc, bounds.ColumnSort, listInfo.StyleColumn);
                 }
             }
         }
@@ -4653,7 +4653,7 @@ namespace DataWF.Gui
                 }
                 if (bounds.TempArea.X != bounds.Area.X || bounds.TempArea.Width != bounds.Area.Width || bounds.Columns != bounds.TempColumns)
                 {
-                    bounds.VisibleColumns = listInfo.GridMode
+                    bounds.VisibleColumns = listInfo.GridMode || gridCols > 1
                         ? listInfo.Columns.GetVisible().ToList()
                         : listInfo.GetDisplayed(bounds.Area.Left, bounds.Area.Right).ToList();
                 }

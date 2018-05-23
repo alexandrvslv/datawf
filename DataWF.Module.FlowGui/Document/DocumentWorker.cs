@@ -36,7 +36,7 @@ namespace DataWF.Module.FlowGui
 
         public DocumentWorker()
         {
-            toolRefresh = new ToolItem(ToolLoadOnClick) { Name = "Load", ForeColor = Colors.DarkBlue, Glyph = GlyphType.Download };
+            toolRefresh = new ToolItem(ToolLoadOnClick) { Name = "Load", GlyphColor = Colors.DarkBlue, Glyph = GlyphType.Download };
             toolPreview.InsertAfter(new[] { toolRefresh });
 
             //mtimer.Elapsed += (object sender, System.Timers.ElapsedEventArgs asg) => { CheckNewDocument(null); mtimer.Stop(); };
