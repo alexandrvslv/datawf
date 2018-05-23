@@ -530,7 +530,7 @@ namespace DataWF.Module.Flow
         {
             foreach (DocumentWork work in Works)
             {
-                if (!work.IsComplete && (filter == null || (filter != null && work.Stage == filter)))
+                if (!work.IsComplete && (filter == null || work.Stage == filter))
                 {
                     yield return work;
                 }
@@ -769,18 +769,31 @@ namespace DataWF.Module.Flow
             var result = new List<DocumentWork>();
             foreach (var item in staff)
             {
-                result.Add(CreateWork(from, stage, item));
+                var work = CreateWork(from, stage, item);
+                result.Add(work);
+                if (DBTransaction.Current != null)
+                {
+                    DBTransaction.Current.Rows.Add(work);
+                }
             }
-            if (DBTransaction.Current != null)
-            {
-                DBTransaction.Current.Rows.AddRange(result);
-            }
+
             if (from != null)
             {
                 from.DateComplete = DateTime.Now;
                 if (DBTransaction.Current != null)
                 {
                     DBTransaction.Current.Rows.Add(from);
+                }
+                if (from.Stage != null && (from.Stage.Keys & StageKey.IsAutoComplete) == StageKey.IsAutoComplete)
+                {
+                    foreach (var work in GetUnCompleteWorks(from.Stage))
+                    {
+                        work.DateComplete = from.DateComplete;
+                        if (DBTransaction.Current != null)
+                        {
+                            DBTransaction.Current.Rows.Add(work);
+                        }
+                    }
                 }
             }
             CheckComplete();
@@ -791,9 +804,10 @@ namespace DataWF.Module.Flow
                 ExecuteStageProcedure(param, stage.GetProceduresByType(ParamProcudureType.Start), callback);
             }
 
-
             if (!IsComplete.GetValueOrDefault() && Status == DBStatus.Archive)
+            {
                 Status = DBStatus.Edit;
+            }
             return result;
         }
 
