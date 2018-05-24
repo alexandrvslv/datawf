@@ -49,11 +49,11 @@ namespace DataWF.Gui
                 },
                 BorderBrush = new CellStyleBrush
                 {
-                    Color = emptyBorder ? CellStyleBrush.ColorEmpty : backColor.WithIncreasedLight(Abs(diff)),
-                    ColorHover = backColor.WithIncreasedLight(diff).WithIncreasedLight(Abs(diff)),
-                    ColorSelect = backColor.WithIncreasedLight(diff * 2).WithIncreasedLight(Abs(diff)),
-                    ColorPress = backColor.WithIncreasedLight(diff * 3).WithIncreasedLight(Abs(diff)),
-                    ColorAlternate = backColor.WithIncreasedLight(diff / 4.0).WithIncreasedLight(Abs(diff))
+                    Color = emptyBorder ? CellStyleBrush.ColorEmpty : backColor.WithIncreasedLight(-diff),
+                    ColorHover = backColor.WithIncreasedLight(-diff),
+                    ColorSelect = backColor.WithIncreasedLight(-diff * 2),
+                    ColorPress = backColor.WithIncreasedLight(-diff * 3),
+                    ColorAlternate = backColor.WithIncreasedLight(-diff / 4.0)
                 },
                 FontBrush = new CellStyleBrush
                 {
