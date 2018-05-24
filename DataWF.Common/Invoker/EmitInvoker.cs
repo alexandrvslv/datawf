@@ -192,6 +192,11 @@ namespace DataWF.Common
             return ListHelper.Compare(accesor.Get(x), key, comparer, false);
         }
 
+        public static T CreateObject<T>(bool cache = true)
+        {
+            return (T)CreateObject(typeof(T), cache);
+        }
+
         public static object CreateObject(Type type, bool cache = true)
         {
             return CreateObject(type, Type.EmptyTypes, null, cache);
