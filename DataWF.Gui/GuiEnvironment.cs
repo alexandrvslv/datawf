@@ -211,11 +211,6 @@ namespace DataWF.Gui
             get { return instance; }
         }
 
-        public static LayoutListCache ListCache
-        {
-            get { return instance.Cache; }
-        }
-
         public static ProjectHandleList ProjectsInfo
         {
             get { return instance.Projects; }
@@ -237,8 +232,6 @@ namespace DataWF.Gui
         }
 
         private GuiTheme cacheTheme;
-
-        public LayoutListCache Cache { get; set; } = new LayoutListCache();
 
         public ProjectHandleList Projects { get; set; } = new ProjectHandleList();
 

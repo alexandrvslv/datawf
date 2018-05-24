@@ -10,6 +10,8 @@ namespace DataWF.Data.Gui
 {
     public class TableExplorer : ListExplorer
     {
+        private DBTable table;
+
         public TableExplorer() : base(new TableEditor())
         {
             Name = "TableExplorer";
@@ -44,6 +46,7 @@ namespace DataWF.Data.Gui
 
         public DBTable Table
         {
+            get { return table; }
             set
             {
                 Initialize(value, null, null, TableEditorMode.Table, false);
@@ -57,6 +60,8 @@ namespace DataWF.Data.Gui
 
         public void Initialize(DBTable table, DBItem row, DBColumn ownColumn, TableEditorMode openmode, bool readOnly)
         {
+            if (this.table == null)
+                this.table = table;
             if (Name == "")
                 Name = table.Name + ownColumn?.Name;
             TableExplorerNode node = null;
@@ -225,6 +230,20 @@ namespace DataWF.Data.Gui
         {
             base.Localize();
             //GuiService.Localize(this, "TableExplorer", "Table Explorer", GlyphType.Table);
+        }
+
+        public override void Serialize(ISerializeWriter writer)
+        {
+            writer.WriteAttribute("TableName", Table?.FullName);
+        }
+
+        public override void Deserialize(ISerializeReader reader)
+        {
+            var tableName = reader.ReadAttribute<string>("TableName");
+            if (!string.IsNullOrEmpty(tableName))
+            {
+                Table = DBService.ParseTable(tableName);
+            }
         }
     }
 }

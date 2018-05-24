@@ -410,6 +410,10 @@ namespace DataWF.Gui
                 {
                     writer.Write(page.Widget, page.Widget.Name, true);
                 }
+                else
+                {
+
+                }
             }
         }
 
@@ -419,10 +423,15 @@ namespace DataWF.Gui
             {
                 var type = reader.ReadType();
                 DockPage page = GetPage(reader.CurrentName);
-                if (page?.Widget != null && page.Widget.GetType() == type)
+                if (page == null)
+                {
+                    var widget = (Widget)EmitInvoker.CreateObject(type);
+                    widget.Name = reader.CurrentName;
+                    page = Put(widget);
+                }
+                if (page.Widget.GetType() == type && page.Widget is ISerializableElement)
                 {
                     ((ISerializableElement)page.Widget).Deserialize(reader);
-                    break;
                 }
             }
         }

@@ -784,6 +784,7 @@ namespace DataWF.Gui
                     FieldInfo = null;
                     ListSource = null;
                     ListInfo = null;
+                    NodeInfo = null;
                 });
 
             }
@@ -1920,7 +1921,20 @@ namespace DataWF.Gui
 
         public LayoutListCache GetLayoutListCache()
         {
-            return GuiEnvironment.ListCache;
+            var widget = (Widget)this;
+            while (widget != null)
+            {
+                if (widget is ILayoutCacheProvider)
+                {
+                    return ((ILayoutCacheProvider)widget).Cache;
+                }
+                widget = widget.Parent;
+            }
+            if (ParentWindow is ILayoutCacheProvider)
+            {
+                return ((ILayoutCacheProvider)ParentWindow).Cache;
+            }
+            return GuiService.Main.Cache;
         }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -1945,8 +1959,10 @@ namespace DataWF.Gui
                         temp = GenerateListInfo();
                     ListInfo = cache.Lists[key] = temp;
                 }
-
-                RefreshInfo();
+                else
+                {
+                    RefreshInfo();
+                }
             }
         }
 
@@ -2273,8 +2289,7 @@ namespace DataWF.Gui
                 category.Name = categoryName;
                 info.Categories.Add(category);
             }
-            category.Header = group?.Text ?? Locale.Get(Locale.GetTypeCategory(fieldType), categoryName);
-
+            category.Header = Locale.Get(Locale.GetTypeCategory(fieldType), categoryName);
             return new LayoutField() { Name = name, Category = category, Group = group };
         }
 
@@ -2501,6 +2516,10 @@ namespace DataWF.Gui
             if (listInfo.Sorters.Count > 0 && listInfo.Sorters[0].Column != null && listInfo.Sorters[0].Column.Invoker != null)
             {
                 OnColumnApplySort(OnColumnsCreateComparer());
+            }
+            else
+            {
+                OnColumnSort((LayoutColumn)null, ListSortDirection.Ascending);
             }
             TreeMode = listInfo.Tree;
         }
@@ -4874,24 +4893,12 @@ namespace DataWF.Gui
 
         public override void Serialize(ISerializeWriter writer)
         {
-            if (Mode == LayoutListMode.Fields)
-                writer.Write(FieldInfo);
-            else
-                writer.Write(ListInfo);
+            writer.WriteAttribute("Key", GetCacheKey());
         }
 
         public override void Deserialize(ISerializeReader reader)
         {
-            // GenerateColumns = false;
-            //  GenerateFields = false;
-            if (Mode == LayoutListMode.Fields)
-            {
-                reader.Read(FieldInfo);
-            }
-            else
-            {
-                reader.Read(ListInfo);
-            }
+            var key = reader.ReadAttribute("Key", typeof(string));
         }
     }
 

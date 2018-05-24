@@ -35,7 +35,7 @@ namespace DataWF.Gui
         bool HideOnClose { get; }
     }
 
-    public interface IDockMain : IDocked, ILocalizable
+    public interface IDockMain : IDocked, ILocalizable, ILayoutCacheProvider
     {
         void SetStatus(StateInfo info);
 

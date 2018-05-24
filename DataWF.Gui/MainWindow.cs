@@ -12,8 +12,7 @@ using System.Linq;
 
 namespace DataWF.Gui
 {
-
-    public class MainWindow : Window, IDockMain
+    public class MainWindow : Window, IDockMain, ISerializableElement
     {
         public Action SaveAction;
         private StatusIcon icon;
@@ -47,8 +46,6 @@ namespace DataWF.Gui
         protected ToolDropDown menuView;
         protected OpenFileDialog openFD;
         protected SaveFileDialog saveFD;
-        private ListEditor properties;
-        private LogExplorer logs;
 
         public MainWindow()
         {
@@ -84,12 +81,9 @@ namespace DataWF.Gui
                     menuProjectExit)
             { Name = "Project", DisplayStyle = ToolItemDisplayStyle.Text };
 
-            properties = new ListEditor();
-            logs = new LogExplorer();
-
             menuView = new ToolDropDown(
-                    BuildMenuItem(properties),
-                    BuildMenuItem(logs),
+                    BuildMenuItem(typeof(ListEditor), "Properties"),
+                    BuildMenuItem(typeof(LogExplorer), "Logs"),
                     new ToolSeparator())
             { Name = "View", DisplayStyle = ToolItemDisplayStyle.Text };
 
@@ -166,14 +160,21 @@ namespace DataWF.Gui
             BackgroundColor = GuiEnvironment.Theme["Window"].BaseColor;
         }
 
+        public LayoutListCache Cache { get; set; } = new LayoutListCache();
+
+        public void LoadConfiguration()
+        {
+            XmlDeserialize("MainWindow.xml");
+            Localize();
+        }
+
         public void SaveConfiguration()
         {
             Helper.SetDirectory();
             Locale.Save();
             SaveAction?.Invoke();
-            //DBService.Save();
-            //DBService.SaveCache();
             GuiEnvironment.Save();
+            XmlSerialize("MainWindow.xml");
         }
 
 
@@ -237,12 +238,12 @@ namespace DataWF.Gui
 
         public ListEditor Properties
         {
-            get { return properties; }
+            get { return dock.Find("Properties") as ListEditor; }
         }
 
         public LogExplorer Logs
         {
-            get { return logs; }
+            get { return dock.Find("Logs") as LogExplorer; }
         }
 
         #region IAppMainForm implementation
@@ -318,7 +319,21 @@ namespace DataWF.Gui
 
         protected void MenuViewItemClick(object sender, EventArgs e)
         {
-            ShowControl(((ToolWidgetHandler)sender).Widget);
+            var item = (ToolWidgetHandler)sender;
+            if (item.Widget == null)
+            {
+                item.Widget = dock.Find(item.Name);
+                if (item.Widget == null)
+                {
+                    item.Widget = (Widget)EmitInvoker.CreateObject(item.WidgetType);
+                    item.Widget.Name = item.Name;
+                    if (item.Widget is ILocalizable)
+                    {
+                        ((ILocalizable)item.Widget).Localize();
+                    }
+                }
+            }
+            ShowControl(item.Widget);
         }
 
         public StatusIcon NotifyIcon
@@ -353,24 +368,16 @@ namespace DataWF.Gui
             return item;
         }
 
-        public ToolWidgetHandler BuildMenuItem(Widget widget)
+        public ToolWidgetHandler BuildMenuItem(Type widgetType, string name = null, string text = null)
         {
-            if (widget is ILocalizable)
+            return new ToolWidgetHandler(MenuViewItemClick)
             {
-                ((ILocalizable)widget).Localize();
-            }
-            var item = new ToolWidgetHandler(MenuViewItemClick)
-            {
-                Name = widget.GetType().Name,
-                Text = widget is IText ? ((IText)widget).Text : widget.Name,
-                Widget = widget
+                Name = name ?? widgetType.Name,
+                Text = text ?? Locale.Get(widgetType),
+                WidgetType = widgetType,
+                Image = (Image)Locale.GetImage(Locale.GetTypeCategory(widgetType), widgetType.Name),
+                //Glyph = Locale.GetGlyph(widgetType, widgetType.Name, GlyphType.EditAlias)
             };
-            if (widget is IGlyph)
-            {
-                item.Image = ((IGlyph)widget).Image;
-                item.Glyph = ((IGlyph)widget).Glyph;
-            }
-            return item;
         }
 
         protected override bool OnCloseRequested()
@@ -570,6 +577,34 @@ namespace DataWF.Gui
         {
             base.Dispose(disposing);
         }
+
+        public virtual void XmlSerialize(string file)
+        {
+            using (var serializer = new Serializer())
+            {
+                serializer.Serialize(this, file);
+            }
+        }
+
+        public virtual void Serialize(ISerializeWriter writer)
+        {
+            writer.Write(Cache, "Cache", true);
+            writer.Write(dock, dock.Name, true);
+        }
+
+        public virtual void XmlDeserialize(string file)
+        {
+            using (var serializer = new Serializer())
+            {
+                serializer.Deserialize(file, this, false);
+            }
+        }
+
+        public virtual void Deserialize(ISerializeReader reader)
+        {
+            reader.Read(Cache);
+            reader.Read(dock);
+        }
     }
 
     public class ToolProjectItem : ToolMenuItem
@@ -605,6 +640,8 @@ namespace DataWF.Gui
         }
 
         public Widget Widget { get; set; }
+
+        public Type WidgetType { get; set; }
 
         public override void Localize()
         { }
