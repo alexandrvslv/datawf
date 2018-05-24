@@ -46,6 +46,11 @@ namespace DataWF.Common
             return Helper.TextParse(Reader.GetAttribute(name), type);
         }
 
+        public T ReadAttribute<T>(string name)
+        {
+            return (T)ReadAttribute(name, typeof(T));
+        }
+
         public void ReadAttributes(object element)
         {
             ReadAttributes(element, Serializer.GetTypeInfo(element.GetType()));
@@ -66,7 +71,7 @@ namespace DataWF.Common
                 {
                     ReadCurrentAttribute(element, info);
                 }
-                
+
                 Reader.MoveToElement();
             }
         }
