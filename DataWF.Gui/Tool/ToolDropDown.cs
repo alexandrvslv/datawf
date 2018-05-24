@@ -135,6 +135,12 @@ namespace DataWF.Gui
             }
         }
 
+        public override void Dispose()
+        {
+            menu?.Dispose();
+            base.Dispose();
+        }
+
         protected virtual void OnDropDownOpened()
         {
             DropDownOpened?.Invoke(this, EventArgs.Empty);

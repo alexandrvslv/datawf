@@ -145,6 +145,7 @@ namespace DataWF.Gui
             if (toString != textLayout.Text)
             {
                 textLayout.Text = toString;
+                textLayout.Width = -1;
                 TextSize = textLayout.GetSize();
             }
             return textLayout;

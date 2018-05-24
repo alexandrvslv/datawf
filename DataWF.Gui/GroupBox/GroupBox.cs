@@ -202,7 +202,13 @@ namespace DataWF.Gui
             {
                 item.Localize();
             }
+        }
 
+        protected override void Dispose(bool disposing)
+        {
+            map.Dispose();
+
+            base.Dispose(disposing);
         }
     }
 }

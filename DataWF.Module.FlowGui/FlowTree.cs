@@ -89,9 +89,17 @@ namespace DataWF.Module.FlowGui
         {
             var node = base.InitItem(item);
             if (item is Template)
-            {
-                node.Glyph = GlyphType.Book;
-                node.GlyphColor = Colors.LightBlue;
+            {                
+                if (((Template)item).IsCompaund)
+                {
+                    node.Glyph = GlyphType.FolderOpen;
+                    node.GlyphColor = Colors.SandyBrown;
+                }
+                else
+                {
+                    node.Glyph = GlyphType.Book;
+                    node.GlyphColor = Colors.LightBlue;
+                }
                 InitItems(((Template)item).GetDatas(), node, ShowTemplateData);
             }
             else if (item is Work)

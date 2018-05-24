@@ -193,6 +193,12 @@ namespace DataWF.Gui
             }
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            Items.Dispose();
+            base.Dispose(disposing);
+        }
+
         public void Localize()
         {
             foreach (ToolItem item in Items.GetItems())

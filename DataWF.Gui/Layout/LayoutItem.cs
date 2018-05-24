@@ -1037,6 +1037,13 @@ namespace DataWF.Gui
 
         public override void Dispose()
         {
+            if (items != null)
+            {
+                foreach (var item in items)
+                {
+                    item.Dispose();
+                }
+            }
             base.Dispose();
         }
     }

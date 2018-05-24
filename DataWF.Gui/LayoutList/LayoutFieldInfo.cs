@@ -90,6 +90,7 @@ namespace DataWF.Gui
             {
                 ColumnsVisible = false,
                 HeaderVisible = false,
+                GroupCount = false,
                 Tree = true,
                 StyleRowName = "Field"
             };

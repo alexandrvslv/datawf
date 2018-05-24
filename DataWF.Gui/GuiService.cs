@@ -46,7 +46,7 @@ namespace DataWF.Gui
 
             using (var main = (MainWindow)EmitInvoker.CreateObject(mainType))
             {
-                main.Localize();
+                main.LoadConfiguration();
                 main.Show();
                 Application.Run();
             }
@@ -135,6 +135,7 @@ namespace DataWF.Gui
                 Size = size,
                 TransientFor = owner
             };
+            window.Closed += (s, e) => ((Window)s).Dispose();
             if (widget is IText)
             {
                 if (!string.IsNullOrEmpty(((IText)widget).Text))

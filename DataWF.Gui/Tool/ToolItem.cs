@@ -160,7 +160,9 @@ namespace DataWF.Gui
 
         public override void Dispose()
         {
-            text.Dispose();
+            Click = null;
+            TextChanged = null;
+            text?.Dispose();
             if (content != null)
                 content.Dispose();
             base.Dispose();

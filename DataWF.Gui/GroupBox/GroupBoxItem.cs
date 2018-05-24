@@ -224,6 +224,7 @@ namespace DataWF.Gui
 
         public override void Dispose()
         {
+            TextChanged = null;
             if (widget != null)
                 widget.Dispose();
             base.Dispose();

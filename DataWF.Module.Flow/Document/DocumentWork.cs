@@ -303,7 +303,7 @@ namespace DataWF.Module.Flow
         [Browsable(false)]
         public bool IsResend { get; set; }
 
-
+        [Browsable(false)]
         public DBItem Staff
         {
             get { return (DBItem)User ?? (DBItem)Position ?? (DBItem)Department; }
