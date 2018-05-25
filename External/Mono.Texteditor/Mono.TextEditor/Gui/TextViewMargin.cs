@@ -1041,8 +1041,8 @@ namespace Mono.TextEditor
                             if (textEditor.preeditOffset < end)
                                 end += (int)preeditLength;
                         }
-                        var si = TranslateToUTF8Index(lineChars, startIndex + start - chunk.Offset, ref curIndex, ref byteIndex);
-                        var ei = TranslateToUTF8Index(lineChars, startIndex + end - chunk.Offset, ref curIndex, ref byteIndex);
+                        var si = startIndex + start - chunk.Offset;//TranslateToUTF8Index(lineChars, startIndex + start - chunk.Offset, ref curIndex, ref byteIndex);                        
+                        var ei = startIndex + end - chunk.Offset;//TranslateToUTF8Index(lineChars, startIndex + end - chunk.Offset, ref curIndex, ref byteIndex);
                         var color = ColorStyle.GetForeground(chunkStyle);
                         foreach (var marker in markers)
                         {
@@ -1080,8 +1080,8 @@ namespace Mono.TextEditor
                             if (textEditor.preeditOffset < end)
                                 end += (int)preeditLength;
                         }
-                        var si = TranslateToUTF8Index(lineChars, startIndex + start - chunk.Offset, ref curIndex, ref byteIndex);
-                        var ei = TranslateToUTF8Index(lineChars, startIndex + end - chunk.Offset, ref curIndex, ref byteIndex);
+                        var si = startIndex + start - chunk.Offset;//TranslateToUTF8Index(lineChars, startIndex + start - chunk.Offset, ref curIndex, ref byteIndex);
+                        var ei = startIndex + end - chunk.Offset;//TranslateToUTF8Index(lineChars, startIndex + end - chunk.Offset, ref curIndex, ref byteIndex);
                         var color = !SelectionColor.TransparentForeground ? SelectionColor.Foreground : ColorStyle.GetForeground(chunkStyle);
                         foreach (var marker in markers)
                         {
@@ -2779,7 +2779,7 @@ namespace Mono.TextEditor
             var foldings = Document.GetStartFoldings(line);
             int offset = line.Offset;
             double foldXMargin = foldMarkerXMargin * textEditor.Options.Zoom;
-        restart:
+            restart:
             using (var calcTextLayout = textEditor.LayoutCache.RequestLayout())
             using (var calcFoldingLayout = textEditor.LayoutCache.RequestLayout())
             {
@@ -2987,7 +2987,7 @@ namespace Mono.TextEditor
             int offset = line.Offset;
             int caretOffset = Caret.Offset;
             bool isEolFolded = false;
-        restart:
+            restart:
             int logicalRulerColumn = line.GetLogicalColumn(textEditor.GetTextEditorData(), textEditor.Options.RulerColumn);
 
             if ((HighlightCaretLine || textEditor.GetTextEditorData().HighlightCaretLine) && Caret.Line == lineNr)
@@ -3323,7 +3323,7 @@ namespace Mono.TextEditor
                 TextLayout measueLayout = null;
                 try
                 {
-                restart:
+                    restart:
                     int logicalRulerColumn = line.GetLogicalColumn(margin.textEditor.GetTextEditorData(), margin.textEditor.Options.RulerColumn);
                     foreach (FoldSegment folding in foldings.Where(f => f.IsFolded))
                     {
@@ -3455,7 +3455,7 @@ namespace Mono.TextEditor
             {
                 index = (int)TranslateToUTF8Index(wrapper.LineChars, System.Math.Min(System.Math.Max(0, column), wrapper.LineChars.Length), ref curIndex, ref byteIndex);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 System.Diagnostics.Debug.WriteLine(e);
                 return 0;
