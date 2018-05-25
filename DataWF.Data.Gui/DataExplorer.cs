@@ -782,21 +782,23 @@ namespace DataWF.Data.Gui
 
         private void ToolDBExportClick(object sender, EventArgs e)
         {
-            var schema = dataTree.SelectedDBItem as DBSchema;
-            if (schema != null)
-            {
-                using (var dialog = new SaveFileDialog())
-                {
-                    dialog.Filters.Add(new FileDialogFilter("Web Page(*.xhtml)", "*.xhtml"));
-                    if (dialog.Run(ParentWindow))
-                        schema.ExportXHTML(dialog.FileName);
-                }
-            }
+            //var schema = dataTree.SelectedDBItem as DBSchema;
+            //if (schema != null)
+            //{
+            //    using (var dialog = new SaveFileDialog())
+            //    {
+            //        dialog.Filters.Add(new FileDialogFilter("Web Page(*.xhtml)", "*.xhtml"));
+            //        if (dialog.Run(ParentWindow))
+            //            schema.ExportXHTML(dialog.FileName);
+            //    }
+            //}
             //ProjectHandler ph = new ProjectHandler();
-            //ph.Project = new DBExport();
-            //if (dataTree.SelectedObject is DBSchema)
-            //    ((DBExport)ph.Project).SourceSchema = schema;
-            //GuiService.Main.CurrentProject = ph;
+            if (CurrentSchema == null)
+                return;
+            var export = new DBExport() { Source = CurrentSchema };
+            var exportEditor = new DataExport() { Export = export };
+            GuiService.Main.DockPanel.Put(exportEditor);
+
         }
 
         private void ToolTableExplorerOnClick(object sender, EventArgs e)

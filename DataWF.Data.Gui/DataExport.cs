@@ -17,67 +17,60 @@ namespace DataWF.Data.Gui
         private IAsyncResult current;
         private ExportEditorDelegate exp = null;
 
-        private TableLayoutList setting = new TableLayoutList();
-        private Toolsbar tools = new Toolsbar();
-        private ToolItem toolInit = new ToolItem();
-        private ToolItem toolSchema = new ToolItem();
-        private ToolItem toolStart = new ToolItem();
-        private ToolItem toolCancel = new ToolItem();
-        private ToolProgressBar toolProgress = new ToolProgressBar();
-        private ListEditor listTables = new ListEditor();
-        private ListEditor listColumns = new ListEditor();
-        private GroupBox map = new GroupBox();
+        private TableLayoutList setting;
+        private Toolsbar tools;
+        private ToolItem toolInit;
+        private ToolItem toolScript;
+        private ToolItem toolSchema;
+        private ToolItem toolStart;
+        private ToolItem toolCancel;
+        private ToolProgressBar toolProgress;
+        private ListEditor listTables;
+        private ListEditor listColumns;
+        private GroupBox map;
 
         public DataExport()
         {
-            tools.Items.Add(toolInit);
-            tools.Items.Add(toolSchema);
-            tools.Items.Add(toolStart);
-            tools.Items.Add(toolCancel);
-            tools.Items.Add(toolProgress);
-            tools.Name = "tools";
+            toolInit = new ToolItem(ToolInitClick) { Name = "Init", DisplayStyle = ToolItemDisplayStyle.Text };
+            toolScript = new ToolItem(ToolScriptClick) { Name = "Script", DisplayStyle = ToolItemDisplayStyle.Text };
+            toolSchema = new ToolItem(ToolSchemaClick) { Name = "Schema", DisplayStyle = ToolItemDisplayStyle.Text };
+            toolStart = new ToolItem(ToolStartClick) { Name = "Start", DisplayStyle = ToolItemDisplayStyle.Text };
+            toolCancel = new ToolItem(ToolCancelClick) { Name = "Cancel", Sensitive = false, DisplayStyle = ToolItemDisplayStyle.Text };
+            toolProgress = new ToolProgressBar { Name = "Progress" };
 
-            toolInit.Name = "Init";
-            toolInit.Click += ToolInitClick;
-            toolInit.DisplayStyle = ToolItemDisplayStyle.Text;
+            tools = new Toolsbar(
+                toolInit,
+                toolScript,
+                toolSchema,
+                toolStart,
+                toolCancel,
+                toolProgress)
+            { Name = "tools" };
 
-            toolSchema.Name = "Schema";
-            toolSchema.Click += ToolSchemaClick;
-            toolSchema.DisplayStyle = ToolItemDisplayStyle.Text;
 
-            toolStart.Name = "Start";
-            toolStart.Click += ToolStartClick;
-            toolStart.DisplayStyle = ToolItemDisplayStyle.Text;
-
-            toolCancel.Name = "Cancel";
-            toolCancel.Click += ToolCancelClick;
-            toolCancel.Sensitive = false;
-            toolCancel.DisplayStyle = ToolItemDisplayStyle.Text;
-
-            toolProgress.Name = "Progress";
-
-            listTables.Name = "listTables";
-            listTables.ReadOnly = false;
+            listTables = new ListEditor() { Name = "listTables", ReadOnly = false };
             listTables.List.SelectionChanged += ListTablesOnSelectionChahged;
             listTables.List.AllowCheck = true;
             listTables.List.AllowSort = false;
             listTables.List.EditMode = EditModes.ByF2;
 
-            listColumns.Name = "listColumns";
-            listColumns.ReadOnly = false;
+            listColumns = new ListEditor() { Name = "listColumns", ReadOnly = false };
             listColumns.List.AllowCheck = true;
             listColumns.List.AllowSort = false;
             listColumns.List.EditMode = EditModes.ByF2;
 
-            setting.EditMode = EditModes.ByClick;
-            setting.EditState = EditListState.Edit;
-            setting.Mode = LayoutListMode.List;
-            setting.Name = "setting";
-            setting.Text = "Settings";
+            setting = new TableLayoutList()
+            {
+                EditMode = EditModes.ByClick,
+                EditState = EditListState.Edit,
+                Mode = LayoutListMode.List,
+                Name = "setting",
+                Text = "Settings"
+            };
 
             var gSetting = new GroupBoxItem()
             {
-                Text = "Setting",
+                Name = "Setting",
                 Widget = setting,
                 Col = 0,
                 Row = 0,
@@ -88,7 +81,7 @@ namespace DataWF.Data.Gui
 
             var gTable = new GroupBoxItem()
             {
-                Text = "Tables",
+                Name = "Tables",
                 Widget = listTables,
                 Col = 1,
                 Row = 0,
@@ -99,7 +92,7 @@ namespace DataWF.Data.Gui
 
             var gColumn = new GroupBoxItem()
             {
-                Text = "Columns",
+                Name = "Columns",
                 Widget = listColumns,
                 Col = 0,
                 Row = 1,
@@ -107,22 +100,18 @@ namespace DataWF.Data.Gui
                 FillHeight = true
             };
 
-            map.Add(gSetting);
-            map.Add(gTable);
-            map.Add(gColumn);
+            map = new GroupBox(gSetting, gTable, gColumn);
 
-            this.Name = "DataExport";
-            this.Text = "Export";
+            Name = "DataExport";
+            Text = "Export";
 
             PackStart(tools, false, false);
             PackStart(map, true, true);
-            Localize();
-
         }
 
         public DBExport Export
         {
-            get { return this.export; }
+            get { return export; }
             set
             {
                 if (export == value)
@@ -142,7 +131,7 @@ namespace DataWF.Data.Gui
                     export.PropertyChanged += OnExportProperty;
                 }
 
-                listTables.DataSource = export == null ? null : export.Tables;
+                listTables.DataSource = export?.Tables;
                 setting.FieldSource = export;
 
                 OnExportProperty(export, EventArgs.Empty);
@@ -278,23 +267,30 @@ namespace DataWF.Data.Gui
 
         public void Initialise()
         {
-            DataTree dtree = new DataTree();
-            dtree.AllowCheck = true;
-            dtree.DataKeys = DataTreeKeys.Schema | DataTreeKeys.TableGroup | DataTreeKeys.Table;
-            dtree.DataFilter = DBService.DefaultSchema;
+            var dtree = new DataTree()
+            {
+                AllowCheck = true,
+                DataKeys = DataTreeKeys.Schema | DataTreeKeys.TableGroup | DataTreeKeys.Table,
+                DataFilter = DBService.DefaultSchema
+            };
 
-            var tw = new ToolWindow();
-            tw.Mode = ToolShowMode.Dialog;
-            tw.Label.Text = "Selected Tables.";
-            tw.Target = dtree;
-            tw.Show(this, new Point(0, 0));
-            tw.ButtonAcceptClick += (o, a) =>
+            var window = new ToolWindow()
+            {
+                Mode = ToolShowMode.Dialog,
+                Title = "Selected Tables.",
+                Target = dtree
+            };
+            window.Show(this, new Point(0, 0));
+            window.ButtonAcceptClick += (o, a) =>
             {
                 var tables = new List<DBTable>();
-                foreach (Node n in dtree.Nodes)
-                    if (n.Check && n.Tag is DBTable && ((DBTable)n.Tag).Type == DBTableType.Table && ((DBTable)n.Tag).StampKey != null)
-                        tables.Add(n.Tag as DBTable);
-
+                foreach (SchemaItemNode node in dtree.Nodes.GetChecked())
+                {
+                    if (node.Item is DBTable && ((DBTable)node.Item).Type == DBTableType.Table && ((DBTable)node.Item).StampKey != null)
+                    {
+                        tables.Add(node.Item as DBTable);
+                    }
+                }
                 tables.Sort(new Comparison<DBTable>(DBService.CompareDBTable));
                 status.Type = ExportProgressType.Initialize;
                 export.Initialize(status, tables);
@@ -329,6 +325,12 @@ namespace DataWF.Data.Gui
         private void ToolInitClick(object sender, EventArgs e)
         {
             Initialise();
+        }
+
+        private void ToolScriptClick(object sender, EventArgs e)
+        {
+            var query = new DataQuery { Query = export.GeneratePatch() };
+            GuiService.Main.DockPanel.Put(query);
         }
 
         private void ToolSchemaClick(object sender, EventArgs e)

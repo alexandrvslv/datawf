@@ -350,10 +350,10 @@ namespace DataWF.Data.Gui
 
         private void toolGenerateClick(object sender, EventArgs e)
         {
-            var param = new GenerateParam
+            var param = new DBExport
             {
                 Mode = ExportMode.Patch,
-                PatchDate = DateTime.Today
+                Stamp = DateTime.Today
             };
 
             var dtree = new DataTree
@@ -386,7 +386,7 @@ namespace DataWF.Data.Gui
                         tables.Add(n.Tag as DBTable);
                     }
                 }
-                this.queryText.Text += DBExport.GeneratePatch(param, tables);
+                this.queryText.Text += param.GeneratePatch(tables);
             };
         }
 
