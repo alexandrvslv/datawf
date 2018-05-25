@@ -83,11 +83,15 @@ namespace DataWF.Data
             if (ForeignKey == null)
             {
                 Column.Column.IsReference = true;
-					
+
                 var referenceTable = DBService.GetTable(ReferenceType, Table.Schema, true, true);
-                if (referenceTable == null || referenceTable.PrimaryKey == null)
+                if (referenceTable == null)
                 {
-                    throw new Exception($"{nameof(ReferenceType)} table not found!");
+                    throw new Exception($"{nameof(ReferenceType)}({ColumnProperty} - {ReferenceType}) Table not found! Target table: {Table.Table}");
+                }
+                if (referenceTable.PrimaryKey == null)
+                {
+                    throw new Exception($"{nameof(ReferenceType)}({ColumnProperty} - {ReferenceType}) Primary key not found! Target table: {Table.Table}");
                 }
                 ForeignKey = new DBForeignKey()
                 {
