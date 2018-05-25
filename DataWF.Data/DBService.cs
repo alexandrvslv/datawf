@@ -29,6 +29,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Xml.Serialization;
 using DataWF.Common;
 
 namespace DataWF.Data
@@ -318,19 +319,47 @@ namespace DataWF.Data
             }
         }
 
-        public static void CommitChanges(DBSchema schema)
+        public static void CommitChanges()
         {
-            if (Changes.Count > 0)
+            if (Changes.Count == 0)
+                return;
+            var schema = (DBSchema)null;
+            var builder = new StringBuilder();
+            foreach (var item in Changes.OrderBy(p => p.Item.Schema))
             {
-                schema.Connection.ExecuteGoQuery(BuildChangesQuery(schema));
-                Save();
+                if (item.Item.Schema != schema)
+                {
+                    if (schema != null)
+                    {
+                        schema.Connection.ExecuteGoQuery(builder.ToString());
+                        schema = null;
+                    }
+                    schema = item.Item.Schema;
+                }
+                string val = item.Generate();
+                if (item.Check && !string.IsNullOrEmpty(val))
+                {
+                    builder.Append("-- ");
+                    builder.AppendLine(item.ToString());
+                    builder.AppendLine(val);
+                    builder.AppendLine("go");
+                    builder.AppendLine();
+                }
+                item.Item.OldName = null;
             }
+            if (schema != null)
+            {
+                schema.Connection.ExecuteGoQuery(builder.ToString());
+            }
+            Serialization.Serialize(Changes, $"SchemaDiff_{DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss")}.xml");
+            Changes.Clear();
+            Save();
         }
 
         public static string BuildChangesQuery(DBSchema schema)
         {
             var builder = new StringBuilder();
-            foreach (var item in Changes)
+            foreach (var item in Changes.ToList())
             {
                 if (schema != null && item.Item.Schema != schema)
                     continue;
@@ -344,8 +373,8 @@ namespace DataWF.Data
                     builder.AppendLine();
                 }
                 item.Item.OldName = null;
+                Changes.Remove(item);
             }
-            Changes.Clear();
             return builder.ToString();
         }
 
@@ -792,7 +821,7 @@ namespace DataWF.Data
                             {
                                 gprocedure = new DBProcedure
                                 {
-                                    Name = gname,                                    
+                                    Name = gname,
                                     DataName = filename,
                                     ProcedureType = ProcedureTypes.File
                                 };
