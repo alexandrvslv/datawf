@@ -238,7 +238,15 @@ namespace DataWF.Gui
 
         public ListEditor Properties
         {
-            get { return dock.Find("Properties") as ListEditor; }
+            get
+            {
+                var item = (ToolWidgetHandler)menuView.DropDownItems["Properties"];
+                if (item.Widget == null)
+                {
+                    MenuViewItemClick(item, EventArgs.Empty);
+                }
+                return (ListEditor)item.Widget;
+            }
         }
 
         public LogExplorer Logs
@@ -373,7 +381,7 @@ namespace DataWF.Gui
             return new ToolWidgetHandler(MenuViewItemClick)
             {
                 Name = name ?? widgetType.Name,
-                Text = text ?? Locale.Get(widgetType),
+                Text = text ?? Locale.Get(Locale.GetTypeCategory(widgetType), name ?? widgetType.Name),
                 WidgetType = widgetType,
                 Image = (Image)Locale.GetImage(Locale.GetTypeCategory(widgetType), widgetType.Name),
                 //Glyph = Locale.GetGlyph(widgetType, widgetType.Name, GlyphType.EditAlias)
@@ -588,6 +596,8 @@ namespace DataWF.Gui
 
         public virtual void Serialize(ISerializeWriter writer)
         {
+            writer.WriteAttribute("Width", Width);
+            writer.WriteAttribute("Height", Height);
             writer.Write(Cache, "Cache", true);
             writer.Write(dock, dock.Name, true);
         }
@@ -602,6 +612,8 @@ namespace DataWF.Gui
 
         public virtual void Deserialize(ISerializeReader reader)
         {
+            Width = reader.ReadAttribute<double>("Width");
+            Height = reader.ReadAttribute<double>("Height");
             reader.Read(Cache);
             reader.Read(dock);
         }

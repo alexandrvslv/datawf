@@ -653,6 +653,7 @@ namespace DataWF.Data.Gui
         {
             if (Selected == null)
                 return;
+            // var deletWindow = new RowDeleting { Row = Selected };
             var rowsText = new StringBuilder();
             var temp = DBList.Selection.GetItems<DBItem>();
             foreach (DBItem refRow in temp)

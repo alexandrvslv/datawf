@@ -21,6 +21,8 @@ namespace DataWF.Common
 
         public string CurrentName { get => Reader.Name; }
 
+        public bool IsEmpty { get => Reader.IsEmptyElement; }
+
         public Type ReadType()
         {
             if (Reader.NodeType == XmlNodeType.Comment)
@@ -117,6 +119,11 @@ namespace DataWF.Common
             {
                 Reader.ReadInnerXml();
             }
+        }
+
+        public string ReadContent()
+        {
+            return Reader.ReadInnerXml();
         }
 
         public void ReadElement(object element, TypeSerializationInfo info, ref int listIndex)

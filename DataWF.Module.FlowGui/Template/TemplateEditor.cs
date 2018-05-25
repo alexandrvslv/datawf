@@ -60,6 +60,7 @@ namespace DataWF.Module.FlowGui
             //})
             { Name = "GroupBox" };
             PackStart(groupBox, true, true);
+            Name = nameof(TemplateEditor);
         }
 
         public Template Template

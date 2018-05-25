@@ -379,10 +379,12 @@ namespace DataWF.Module.FlowGui
         {
             var textbox = new RichTextView();
             textbox.LoadText(result.ToString(), Xwt.Formats.TextFormat.Plain);
-            var wind = new ToolWindow();
-            wind.Target = textbox;
-            wind.Mode = ToolShowMode.Dialog;
-            wind.Size = new Size(600, 400);
+            var wind = new ToolWindow()
+            {
+                Target = textbox,
+                Mode = ToolShowMode.Dialog,
+                Size = new Size(600, 400)
+            };
             wind.ButtonClose.Visible = false;
             wind.Label.Text = "Result of " + (proc != null ? proc.Name : string.Empty);
             wind.Show();
@@ -495,10 +497,10 @@ namespace DataWF.Module.FlowGui
 
                     LoadPage(panel.CurrentPage);
                 }
-                if (documentType != null)
-                {
-                    XmlDeserialize(documentType.Name.ToString());
-                }
+                //if (documentType != null)
+                //{
+                //    XmlDeserialize(documentType.Name.ToString());
+                //}
                 toolReturn.Sensitive = from;
                 toolSend.Sensitive = state != DocumentEditorState.Create;
                 toolNext.Sensitive = state == DocumentEditorState.Edit;
@@ -572,10 +574,10 @@ namespace DataWF.Module.FlowGui
             {
                 if (documentType == value)
                     return;
-                if (documentType != null)
-                {
-                    XmlSerialize(documentType.Name.ToString());
-                }
+                //if (documentType != null)
+                //{
+                //    XmlSerialize(documentType.Name.ToString());
+                //}
                 documentType = value;
                 GetPages(documentType).ForEach(p => p.Tag = value);
             }

@@ -22,7 +22,7 @@ namespace DataWF.Gui
         private DockItem map;
         private EventHandler childFocusHandler;
         private DockPage page = null;
-        private DockItem pContent;
+
         private DockBoxState state = DockBoxState.Default;
         private Point cach;
         private Rectangle stateMove;
@@ -32,16 +32,13 @@ namespace DataWF.Gui
         private DockBoxHitTest hitTop = null;
         private DockBoxHitTest hitBottom = null;
         private bool visibleClose = true;
+        private DockItem content;
 
         public event EventHandler<DockPageEventArgs> PageSelected;
 
         public DockBox() : base()
         {
             Map = new DockItem() { };
-            pContent = GetDockItem("Content", null, LayoutAlignType.None, false);
-            pContent.FillWidth = true;
-            pContent.FillHeight = true;
-            pContent.main = true;
         }
 
         public DockBox(params DockItem[] items) : base()
@@ -51,6 +48,22 @@ namespace DataWF.Gui
             {
                 Add(item);
             }
+        }
+
+        private DockItem Main
+        {
+            get
+            {
+                if (content == null)
+                {
+                    content = GetDockItem("Content", null, LayoutAlignType.None, false);
+                    content.FillWidth = true;
+                    content.FillHeight = true;
+                    content.Main = true;
+                }
+                return content;
+            }
+            set { }
         }
 
         public DockBoxState State
@@ -90,12 +103,8 @@ namespace DataWF.Gui
                 if (map == value)
                     return;
                 map = value;
+                map.DockBox = this;
             }
-        }
-
-        public DockItem PContent
-        {
-            get { return pContent; }
         }
 
         public IDockContainer DockParent
@@ -428,7 +437,7 @@ namespace DataWF.Gui
 
         public DockItem GetDockItem(string name, LayoutAlignType type, bool gp)
         {
-            return GetDockItem(name, pContent, type, gp);
+            return GetDockItem(name, Main, type, gp);
         }
 
         public DockItem GetDockItem(string name, DockItem exist, LayoutAlignType type, bool gp)
@@ -458,11 +467,6 @@ namespace DataWF.Gui
 
         public void Add(DockItem item, DockItem exist = null, LayoutAlignType type = LayoutAlignType.None, bool gp = false)
         {
-            item.Panel.PageSelected += PanelTabSelected;
-            item.Panel.Pages.VisibleClose = VisibleClose;
-            item.Panel.Pages.PageClick += Pages_PageClick;
-            item.Panel.Pages.PageDrag += OnPageDrag;
-
             if (exist == null)
             {
                 map.Add(item);
@@ -471,8 +475,24 @@ namespace DataWF.Gui
             {
                 exist.InsertWith(item, type, gp);
             }
+        }
 
-            AddChild(item.Panel);
+        internal void Add(DockPanel panel)
+        {
+            panel.PageSelected += PanelTabSelected;
+            panel.Pages.VisibleClose = VisibleClose;
+            panel.Pages.PageClick += Pages_PageClick;
+            panel.Pages.PageDrag += OnPageDrag;
+            AddChild(panel);
+        }
+
+        internal void Remove(DockPanel panel)
+        {
+            panel.PageSelected -= PanelTabSelected;
+            panel.Pages.VisibleClose = VisibleClose;
+            panel.Pages.PageClick -= Pages_PageClick;
+            panel.Pages.PageDrag -= OnPageDrag;
+            RemoveChild(panel);
         }
 
         #region Container
@@ -589,33 +609,33 @@ namespace DataWF.Gui
                 DockItem item = null;
                 if (type == DockType.Content)
                 {
-                    item = pContent;
+                    item = Main;
                 }
                 else if (type == DockType.Left)
                 {
-                    item = GetDockItem("Left", pContent, LayoutAlignType.Left, false);
+                    item = GetDockItem("Left", Main, LayoutAlignType.Left, false);
                 }
                 else if (type == DockType.LeftBottom)
                 {
-                    item = GetDockItem("Left", pContent, LayoutAlignType.Left, false);
+                    item = GetDockItem("Left", Main, LayoutAlignType.Left, false);
                     item = GetDockItem("LeftBottom", item, LayoutAlignType.Bottom, true);
                 }
                 else if (type == DockType.Right)
                 {
-                    item = GetDockItem("Right", pContent, LayoutAlignType.Right, false);
+                    item = GetDockItem("Right", Main, LayoutAlignType.Right, false);
                 }
                 else if (type == DockType.RightBottom)
                 {
-                    item = GetDockItem("Right", pContent, LayoutAlignType.Right, false);
+                    item = GetDockItem("Right", Main, LayoutAlignType.Right, false);
                     item = GetDockItem("RightBottom", item, LayoutAlignType.Bottom, true);
                 }
                 else if (type == DockType.Top)
                 {
-                    item = GetDockItem("Top", pContent, LayoutAlignType.Top, false);
+                    item = GetDockItem("Top", Main, LayoutAlignType.Top, false);
                 }
                 else if (type == DockType.Bottom)
                 {
-                    item = GetDockItem("Bottom", pContent, LayoutAlignType.Bottom, true);
+                    item = GetDockItem("Bottom", Main, LayoutAlignType.Bottom, false);
                     //item.Panel.PagesAlign = LayoutAlignType.Bottom;
                 }
                 item.Visible = true;

@@ -111,6 +111,8 @@ namespace DataWF.Gui
 
         public virtual void Deserialize(ISerializeReader reader)
         {
+            if (reader.IsEmpty)
+                return;
             while (reader.ReadBegin())
             {
                 var type = reader.ReadType();
@@ -118,7 +120,10 @@ namespace DataWF.Gui
                 if (widget != null)
                 {
                     ((ISerializableElement)widget).Deserialize(reader);
-                    break;
+                }
+                else
+                {
+                    var temp = reader.ReadContent();
                 }
             }
         }

@@ -30,7 +30,9 @@ namespace DataWF.Module.FlowGui
         private FlowTreeKeys flowKeys;
 
         public FlowTree()
-        { }
+        {
+            Name = nameof(FlowTree);
+        }
 
         public FlowTreeKeys FlowKeys
         {
@@ -77,7 +79,7 @@ namespace DataWF.Module.FlowGui
         }
 
         public object DataFilter { get; internal set; }
-        
+
 
         private void RefreshData()
         {
@@ -89,7 +91,7 @@ namespace DataWF.Module.FlowGui
         {
             var node = base.InitItem(item);
             if (item is Template)
-            {                
+            {
                 if (((Template)item).IsCompaund)
                 {
                     node.Glyph = GlyphType.FolderOpen;

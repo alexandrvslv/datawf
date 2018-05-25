@@ -13,8 +13,8 @@ namespace DataWF.Gui
         private static readonly double min = 5;
         protected internal double height = 22D;
         protected internal double width = 120D;
-        protected int row;
-        protected int col;
+        protected int row = -1;
+        protected int col = -1;
         protected bool visible = true;
         protected bool fillW;
         protected bool fillH;
@@ -66,6 +66,7 @@ namespace DataWF.Gui
             }
         }
 
+        [DefaultValue(-1)]
         public int Row
         {
             get { return row; }
@@ -78,6 +79,7 @@ namespace DataWF.Gui
             }
         }
 
+        [DefaultValue(-1)]
         public int Col
         {
             get { return col; }
@@ -268,16 +270,14 @@ namespace DataWF.Gui
         {
             if (Contains(item))
                 return IndexOf(item);
-            if (item.Col == 0 && item.Row == 0)
+            if (item.Row < 0)
             {
-                if (GrowMode == LayoutGrowMode.Vertical)
-                {
-                    item.Row = GetRowMaxIndex() + 1;
-                }
-                if (item.Col == 0)
-                {
-                    item.Col = GetRowColumnCount(item.Row);
-                }
+                item.Row = GrowMode == LayoutGrowMode.Vertical
+                    ? GetRowMaxIndex() + 1 : 0;
+            }
+            if (item.Col < 0)
+            {
+                item.Col = GetRowColumnCount(item.Row);
             }
             return base.AddInternal(item);
         }

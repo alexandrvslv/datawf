@@ -419,6 +419,8 @@ namespace DataWF.Gui
 
         public void Deserialize(ISerializeReader reader)
         {
+            if (reader.IsEmpty)
+                return;
             while (reader.ReadBegin())
             {
                 var type = reader.ReadType();
