@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Text;
+using System.Linq;
 using System.Threading;
 using DataWF.Common;
 using System.IO;
@@ -62,16 +63,21 @@ namespace DataWF.Data
             return export;
         }
 
-        public static string GeneratePatch(GenerateParam param, List<DBTable> tables)
+        public string GeneratePatch()
         {
-            tables.Sort(new Comparison<DBTable>(DBService.CompareDBTable));
+            return GeneratePatch(tables.Select(p => p.SourceTable).ToList());
+        }
+
+        public string GeneratePatch(List<DBTable> list)
+        {
+            list.Sort(new Comparison<DBTable>(DBService.CompareDBTable));
             var builder = new StringBuilder();
 
-            if ((param.Mode & ExportMode.DropTable) == ExportMode.DropTable)
+            if ((Mode & ExportMode.DropTable) == ExportMode.DropTable)
             {
                 builder.AppendLine("-- -=================== Drop Tables =====================");
                 tables.Reverse();
-                foreach (DBTable table in tables)
+                foreach (DBTable table in list)
                 {
                     builder.AppendLine("if exists (select * from information_schema.tables where table_name = '" + table.Name + "')");
                     builder.AppendLine("\t" + table.FormatSql(DDLType.Drop));
@@ -79,11 +85,11 @@ namespace DataWF.Data
                 builder.AppendLine("go");
                 tables.Reverse();
             }
-            if ((param.Mode & ExportMode.ClearData) == ExportMode.ClearData)
+            if ((Mode & ExportMode.ClearData) == ExportMode.ClearData)
             {
-                builder.AppendLine("-- -================================= Clear Tables =================================");
+                builder.AppendLine("-- -=================== Clear Tables ======================");
                 tables.Reverse();
-                foreach (DBTable table in tables)
+                foreach (DBTable table in list)
                 {
                     builder.AppendLine("if exists (select * from information_schema.tables where table_name = '" + table.Name + "')");
                     builder.AppendLine("\tdelete from " + table.Name);
@@ -92,23 +98,23 @@ namespace DataWF.Data
                 tables.Reverse();
             }
 
-            foreach (DBTable table in tables)
+            foreach (DBTable table in list)
             {
                 builder.AppendLine();
-                builder.AppendLine("-- -===================== " + table.Name + " ===================");
+                builder.AppendLine("-- -===================== " + table.Name + " ======================");
                 table.LoadItems();
-                if ((param.Mode & ExportMode.DropTable) == ExportMode.DropTable)
+                if ((Mode & ExportMode.DropTable) == ExportMode.DropTable)
                 {
                     builder.AppendLine(table.FormatSql(DDLType.Create));
                     builder.AppendLine("go");
                 }
                 if (table.Type == DBTableType.Table)//table.IsCaching && 
                 {
-                    if ((param.Mode & ExportMode.Patch) == ExportMode.Patch)
+                    if ((Mode & ExportMode.Patch) == ExportMode.Patch)
                     {
                         foreach (DBItem row in table)
                         {
-                            if (row.Stamp != null && row.Stamp >= param.PatchDate)//((DateTime)row.Stamp >= param.PatchDate)
+                            if (row.Stamp != null && row.Stamp >= Stamp)//((DateTime)row.Stamp >= param.PatchDate)
                             {
                                 builder.AppendLine(string.Format("if exists(select * from {0} where {1}={2})",
                                                             table.Name,
@@ -125,7 +131,9 @@ namespace DataWF.Data
                     {
                         builder.AppendLine(table.Schema.System.FormatInsert(table, true));
                         if (table.Count > 0)
+                        {
                             builder.AppendLine("go");
+                        }
                     }
                 }
             }
@@ -261,8 +269,6 @@ namespace DataWF.Data
         {
             get { return (tables.Count != 0); }
         }
-
-
 
         [Browsable(false)]
         public DBETableList Tables
@@ -466,7 +472,7 @@ namespace DataWF.Data
                     ea.Description = null;
                     OnExportProgress(ea);
 
-                    using (transacton.Reader = transacton.ExecuteQuery(transacton.AddCommand(table.SourceTable.CreateQuery(table.Query, null)), DBExecuteType.Reader) as IDataReader)
+                    using (transacton.Reader = transacton.ExecuteQuery(table.SourceTable.CreateQuery(table.Query, null), DBExecuteType.Reader) as IDataReader)
                     {
                         table.SourceTable.CheckColumns(transacton);
                         while (transacton.Reader.Read())
