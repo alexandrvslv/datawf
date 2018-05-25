@@ -8,6 +8,7 @@ using System.Collections;
 using System.Globalization;
 using System.Xml.Serialization;
 using System.Linq;
+using Portable.Xaml.Markup;
 
 namespace DataWF.Common
 {
@@ -21,6 +22,7 @@ namespace DataWF.Common
         private static Dictionary<string, Type> cacheTypes = new Dictionary<string, Type>(200, StringComparer.Ordinal);
         private static Dictionary<MemberInfo, bool> cacheIsXmlText = new Dictionary<MemberInfo, bool>(200);
         private static Dictionary<Type, TypeConverter> cacheTypeConverter = new Dictionary<Type, TypeConverter>(200);
+        private static Dictionary<Type, ValueSerializer> cacheValueSerializer = new Dictionary<Type, ValueSerializer>(200);
         private static Dictionary<Type, PropertyInfo[]> cacheTypeProperties = new Dictionary<Type, PropertyInfo[]>(200);
         private static Dictionary<MemberInfo, bool> cacheIsXmlAttribute = new Dictionary<MemberInfo, bool>(200);
         private static Dictionary<Type, bool> cacheTypeIsXmlAttribute = new Dictionary<Type, bool>(200);
@@ -180,6 +182,21 @@ namespace DataWF.Common
                         typeConverter = CreateObject(converterType) as TypeConverter;
                 }
                 return cacheTypeConverter[type] = typeConverter;
+            }
+            return converter;
+        }
+
+        public static ValueSerializer GetValueSerializer(Type type)
+        {
+            if (!cacheValueSerializer.TryGetValue(type, out var converter))
+            {
+                var attribute = type.GetCustomAttribute(typeof(ValueSerializerAttribute)) as ValueSerializerAttribute;
+                ValueSerializer serializer = null;
+                if (attribute != null && attribute.ValueSerializerType != null)
+                {
+                    serializer = (ValueSerializer)CreateObject(attribute.ValueSerializerType);
+                }
+                return cacheValueSerializer[type] = serializer;
             }
             return converter;
         }

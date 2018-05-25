@@ -983,11 +983,17 @@ namespace DataWF.Common
             }
             else
             {
-                var typeConverter = TypeHelper.GetTypeConverter(value.GetType());
-                if (typeConverter != null && typeConverter.CanConvertTo(typeof(string)))
-                    result = (string)typeConverter.ConvertTo(value, typeof(string));
+                var valueSerialize = TypeHelper.GetValueSerializer(value.GetType());
+                if (valueSerialize != null)
+                    result = valueSerialize.ConvertToString(value, null);
                 else
-                    result = value.ToString();
+                {
+                    var typeConverter = TypeHelper.GetTypeConverter(value.GetType());
+                    if (typeConverter != null && typeConverter.CanConvertTo(typeof(string)))
+                        result = (string)typeConverter.ConvertTo(value, typeof(string));
+                    else
+                        result = value.ToString();
+                }
             }
             return result;
         }
@@ -1020,74 +1026,80 @@ namespace DataWF.Common
 
         public static object TextParse(string value, Type type, string format = "binary")
         {
-            object rez = null;
+            object result = null;
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
                 type = type.GetGenericArguments()?.FirstOrDefault();
             if (type == typeof(string) || type == null)
-                rez = value;
+                result = value;
             else if (type == typeof(Type))
-                rez = Type.GetType(value);
+                result = Type.GetType(value);
             else if (type == typeof(CultureInfo))
-                rez = CultureInfo.GetCultureInfo(value);
+                result = CultureInfo.GetCultureInfo(value);
             else if (type == typeof(bool))
-                rez = bool.Parse(value);
+                result = bool.Parse(value);
             else if (type == typeof(int))
-                rez = value.Length == 0 ? 0 : int.Parse(value, CultureInfo.InvariantCulture);
+                result = value.Length == 0 ? 0 : int.Parse(value, CultureInfo.InvariantCulture);
             else if (type == typeof(uint))
-                rez = value.Length == 0 ? 0U : uint.Parse(value, CultureInfo.InvariantCulture);
+                result = value.Length == 0 ? 0U : uint.Parse(value, CultureInfo.InvariantCulture);
             else if (type == typeof(long))
-                rez = value.Length == 0 ? 0L : long.Parse(value, CultureInfo.InvariantCulture);
+                result = value.Length == 0 ? 0L : long.Parse(value, CultureInfo.InvariantCulture);
             else if (type == typeof(ulong))
-                rez = value.Length == 0 ? 0UL : ulong.Parse(value, CultureInfo.InvariantCulture);
+                result = value.Length == 0 ? 0UL : ulong.Parse(value, CultureInfo.InvariantCulture);
             else if (type == typeof(short))
-                rez = value.Length == 0 ? (short)0 : short.Parse(value, CultureInfo.InvariantCulture);
+                result = value.Length == 0 ? (short)0 : short.Parse(value, CultureInfo.InvariantCulture);
             else if (type == typeof(ushort))
-                rez = value.Length == 0 ? (ushort)0 : ushort.Parse(value, CultureInfo.InvariantCulture);
+                result = value.Length == 0 ? (ushort)0 : ushort.Parse(value, CultureInfo.InvariantCulture);
             else if (type == typeof(byte))
-                rez = value.Length == 0 ? (byte)0 : byte.Parse(value, CultureInfo.InvariantCulture);
+                result = value.Length == 0 ? (byte)0 : byte.Parse(value, CultureInfo.InvariantCulture);
             else if (type == typeof(sbyte))
-                rez = value.Length == 0 ? (sbyte)0 : sbyte.Parse(value, CultureInfo.InvariantCulture);
+                result = value.Length == 0 ? (sbyte)0 : sbyte.Parse(value, CultureInfo.InvariantCulture);
             else if (type == typeof(float))
-                rez = value.Length == 0 ? 0F : float.Parse(value, CultureInfo.InvariantCulture);
+                result = value.Length == 0 ? 0F : float.Parse(value, CultureInfo.InvariantCulture);
             else if (type == typeof(double))
-                rez = value.Length == 0 ? 0D : double.Parse(value, CultureInfo.InvariantCulture);
+                result = value.Length == 0 ? 0D : double.Parse(value, CultureInfo.InvariantCulture);
             else if (type == typeof(decimal))
             {
                 if (value.Length == 0)
-                    rez = 0M;
+                    result = 0M;
                 else
                 {
                     string s = value.Replace(",", ".").Replace(" ", "").Replace(" ", "").Replace("%", "");
                     decimal d = decimal.Parse(s, NumberStyles.Number, CultureInfo.InvariantCulture.NumberFormat);
-                    rez = format == "p" ? d / 100 : d;
+                    result = format == "p" ? d / 100 : d;
                 }
             }
             else if (type == typeof(byte[]))
-                rez = Convert.FromBase64String(value);
+                result = Convert.FromBase64String(value);
             else if (type == typeof(LogicType))
-                rez = new LogicType(LogicType.Parse(value));
+                result = new LogicType(LogicType.Parse(value));
             else if (type == typeof(CompareType))
-                rez = new CompareType(CompareType.Parse(value));
+                result = new CompareType(CompareType.Parse(value));
             else if (type == typeof(DateInterval))
-                rez = DateInterval.Parse(value);
+                result = DateInterval.Parse(value);
             else if (type == typeof(TimeSpan))
-                rez = TimeSpan.Parse(value, CultureInfo.InvariantCulture);
+                result = TimeSpan.Parse(value, CultureInfo.InvariantCulture);
             else if (type.IsEnum)
-                rez = Enum.Parse(type, value);
+                result = Enum.Parse(type, value);
             else if (type == typeof(DateTime))
             {
                 if (format == "binary")
-                    rez = DateTime.FromBinary(long.Parse(value));
+                    result = DateTime.FromBinary(long.Parse(value));
                 else
-                    rez = DateTime.Parse(value, CultureInfo.InvariantCulture);
+                    result = DateTime.Parse(value, CultureInfo.InvariantCulture);
             }
             else
             {
-                var typeConverter = TypeHelper.GetTypeConverter(type);
-                if (typeConverter != null && typeConverter.CanConvertFrom(typeof(string)))
-                    rez = typeConverter.ConvertFrom(value);
+                var valueSerialize = TypeHelper.GetValueSerializer(value.GetType());
+                if (valueSerialize != null)
+                    result = valueSerialize.ConvertFromString(value, null);
+                else
+                {
+                    var typeConverter = TypeHelper.GetTypeConverter(type);
+                    if (typeConverter != null && typeConverter.CanConvertFrom(typeof(string)))
+                        result = typeConverter.ConvertFrom(value);
+                }
             }
-            return rez;
+            return result;
         }
 
         private static Dictionary<string, string> words = new Dictionary<string, string>();
