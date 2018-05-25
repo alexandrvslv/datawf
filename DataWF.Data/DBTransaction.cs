@@ -420,6 +420,11 @@ namespace DataWF.Data
             return ExecuteQuery(Command, type);
         }
 
+        public object ExecuteQuery(string commandText, DBExecuteType type = DBExecuteType.Scalar)
+        {
+            return ExecuteQuery(AddCommand(CommandText), type);
+        }
+
         public object ExecuteQuery(IDbCommand command, DBExecuteType type = DBExecuteType.Scalar)
         {
             object buf = null;
