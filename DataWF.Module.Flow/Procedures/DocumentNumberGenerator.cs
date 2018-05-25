@@ -34,7 +34,7 @@ namespace DataWF.Module.Flow
             {
                 sequence = new DBSequence(name) { };
                 Document.DBTable.Schema.Sequences.Add(sequence);
-                try { DBService.CommitChanges(Document.DBTable.Schema); }
+                try { DBService.CommitChanges(); }
                 catch (Exception ex)
                 {
                     Helper.OnException(ex);
