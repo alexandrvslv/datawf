@@ -187,7 +187,7 @@ namespace DataWF.Module.CommonGui
                         item = (DBItem)view[e.NewIndex];
                         if (item.PrimaryId == null)
                             return;
-                        node = InitItem((IDBTableContent)item);
+                        node = InitItem(item);
                         if (item is DBGroupItem && ((DBGroupItem)item).Group != null)
                             nodeParent = (TableItemNode)Nodes.Find(GetName(((DBGroupItem)item).Group));
 

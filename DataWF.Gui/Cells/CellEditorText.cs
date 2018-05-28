@@ -281,6 +281,11 @@ namespace DataWF.Gui
                 InitDropDown();
             }
             Value = value;
+            if (editor.Widget is TextEntry)
+            {
+                ((TextEntry)editor.Widget).SelectionStart = 0;
+                ((TextEntry)editor.Widget).SelectionLength = ((TextEntry)editor.Widget).Text.Length;
+            }
             editor.IsValueChanged = false;
             editor.Initialize = false;
         }

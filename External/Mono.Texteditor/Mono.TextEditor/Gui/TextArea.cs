@@ -774,13 +774,15 @@ namespace Mono.TextEditor
                 popupWindow.Dispose();
 
             HideTooltip();
-            Document.EndUndo -= HandleDocumenthandleEndUndo;
-            Document.TextReplaced -= OnDocumentStateChanged;
-            Document.TextSet -= OnTextSet;
-            Document.LineChanged -= UpdateLinesOnTextMarkerHeightChange;
-            Document.MarkerAdded -= HandleTextEditorDataDocumentMarkerChange;
-            Document.MarkerRemoved -= HandleTextEditorDataDocumentMarkerChange;
-
+            if (Document != null)
+            {
+                Document.EndUndo -= HandleDocumenthandleEndUndo;
+                Document.TextReplaced -= OnDocumentStateChanged;
+                Document.TextSet -= OnTextSet;
+                Document.LineChanged -= UpdateLinesOnTextMarkerHeightChange;
+                Document.MarkerAdded -= HandleTextEditorDataDocumentMarkerChange;
+                Document.MarkerRemoved -= HandleTextEditorDataDocumentMarkerChange;
+            }
             DisposeAnimations();
 
             RemoveFocusOutTimerId();

@@ -295,11 +295,9 @@ namespace DataWF.Data.Gui
                         break;
                     case TableEditorStatus.Clone:
                         clonedRow = Selected;
-                        if (newItem == null || newItem.Attached)
-                        {
-                            newItem = (DBItem)clonedRow.Clone();
-                        }
+                        newItem = (DBItem)clonedRow.Clone();
                         ((LayoutList)toolWindow.Target).FieldSource = newItem;
+                        toolWindow.ButtonAccept.Sensitive = true;
                         toolCopy.Sensitive = true;
                         break;
                     case TableEditorStatus.Search:
@@ -345,6 +343,7 @@ namespace DataWF.Data.Gui
             {
                 item[Table.GroupKey] = Selected.PrimaryId;
             }
+            toolWindow.ButtonAccept.Sensitive = true;
             ((LayoutList)toolWindow.Target).FieldSource = item;
             toolWindow.Show(bar, toolAdd.Bound.BottomLeft);
         }
