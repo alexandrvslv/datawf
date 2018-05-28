@@ -310,7 +310,7 @@ namespace DataWF.Data.Gui
                         break;
                     case TableEditorStatus.Default:
                         OpenMode = OpenMode;
-                        TableView.ResetFilter();
+                        //TableView.ResetFilter();
                         break;
                 }
             }
