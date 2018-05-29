@@ -112,16 +112,11 @@ namespace DataWF.Module.FlowGui
 
         private void ToolTemplateClick(object sender, EventArgs e)
         {
-            var data = Document.GetTemplated();
-
-            if (data == null)
+            if (Current?.TemplateData != null)
             {
-                data = document.GenerateFromTemplate();
-                data.Attach();
+                Current.Parse(new DocumentExecuteArgs() { Document = Document });
+                Current.Execute();
             }
-            data.Parse(new ExecuteArgs(Document));
-            Current = data as T;
-            Current.Execute();
         }
 
         private void ToolViewClick(object sender, EventArgs e)

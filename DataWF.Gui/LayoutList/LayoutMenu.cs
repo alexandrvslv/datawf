@@ -21,6 +21,7 @@ namespace DataWF.Gui
         {
             Target = new LayoutInfoEditor();
             Size = new Size(800, 600);
+            Title = Locale.Get(nameof(LayoutMenu), "List Constructor");
         }
 
         public LayoutInfoEditor Editor

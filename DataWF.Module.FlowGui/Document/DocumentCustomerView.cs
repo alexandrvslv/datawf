@@ -4,7 +4,6 @@ using DataWF.Module.Flow;
 
 namespace DataWF.Module.FlowGui
 {
-
     public class DocumentCustomerView : DocumentDetailView<DocumentCustomer>
     {
         public DocumentCustomerView() : base()

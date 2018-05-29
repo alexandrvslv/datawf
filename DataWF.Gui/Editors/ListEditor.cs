@@ -216,8 +216,10 @@ namespace DataWF.Gui
                 }
                 else
                 {
-                    list.FieldSource = null;
-                    list.ListSource = null;
+                    if (list.Mode == LayoutListMode.Fields)
+                        list.FieldSource = null;
+                    else
+                        list.ListSource = null;
                 }
                 toolAdd.Visible =
                         toolCopy.Visible =

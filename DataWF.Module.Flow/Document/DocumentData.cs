@@ -211,7 +211,7 @@ namespace DataWF.Module.Flow
             return fileName;
         }
 
-        public byte[] Parse(ExecuteArgs param)
+        public byte[] Parse(DocumentExecuteArgs param)
         {
             if (IsTemplate)
             {
@@ -269,7 +269,7 @@ namespace DataWF.Module.Flow
             FileName = Path.GetFileName(path);
         }
 
-        public static BackgroundWorker ExecuteAsync(DocumentData data, ExecuteArgs param)
+        public static BackgroundWorker ExecuteAsync(DocumentData data, DocumentExecuteArgs param)
         {
             var worker = new BackgroundWorker();
             //worker.WorkerSupportsCancellation = false;
@@ -290,11 +290,11 @@ namespace DataWF.Module.Flow
             //worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(worker_RunWorkerCompleted);
         }
 
-        public static void Execute(DocumentData data, ExecuteArgs param)
+        public static void Execute(DocumentData data, DocumentExecuteArgs param)
         {
             if (data.FileData == null || data.TemplateData == null)
                 return;
-            //TODO data.FileData = data.Document.Template.Parser.Execute(data.FileData, data.FileName, param);
+            data.FileData = Parser.Execute(data.TemplateData.Data, data.FileName, param);
         }
 
         public void RefreshName()
@@ -303,11 +303,11 @@ namespace DataWF.Module.Flow
             {
                 if (string.IsNullOrEmpty(Document.Number))
                 {
-                    FileName = $"{Path.GetFileNameWithoutExtension(TemplateData.DataName)}_{DateTime.Now.ToString("yyMMddhhmmss")}{Path.GetExtension(TemplateData.DataName)}";
+                    FileName = $"{Path.GetFileNameWithoutExtension(TemplateData.DataName)}{DateTime.Now.ToString("yy-MM-dd_hh-mm-ss")}{Path.GetExtension(TemplateData.DataName)}";
                 }
                 else
                 {
-                    FileName = $"{Document.Number}.{Path.GetExtension(TemplateData.DataName)}";
+                    FileName = $"{Path.GetFileNameWithoutExtension(TemplateData.DataName)}{Document.Number}.{Path.GetExtension(TemplateData.DataName)}";
                 }
             }
         }

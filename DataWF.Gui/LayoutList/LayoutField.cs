@@ -10,7 +10,6 @@ namespace DataWF.Gui
     {
         protected bool readOnly;
         protected bool validate;
-        protected bool view = true;
         protected bool edit = true;
         protected string format;
 
@@ -102,20 +101,6 @@ namespace DataWF.Gui
                 if (readOnly != value)
                 {
                     readOnly = value;
-                }
-            }
-        }
-
-        [DefaultValue(true)]
-        public bool View
-        {
-            get { return view; }
-            set
-            {
-                if (view != value)
-                {
-                    view = value;
-                    visible = value;
                 }
             }
         }

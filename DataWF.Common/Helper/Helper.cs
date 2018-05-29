@@ -100,7 +100,7 @@ namespace DataWF.Common
 
         public static string IntToChar(int val)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             float f = val / 25F;
             if (f <= 1)
             {
