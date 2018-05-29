@@ -295,10 +295,21 @@ namespace DataWF.Data
                 }
             if (command == null)
             {
-                command = DBService.CreateCommand(Connection, query, transaction);
+                command = CreateCommand(Connection, query, transaction);
                 commands.Add(command);
             }
             command.CommandType = commandType;
+            return command;
+        }
+
+        public IDbCommand CreateCommand(IDbConnection connection, string text = null, IDbTransaction transaction = null)
+        {
+            IDbCommand command = connection.CreateCommand();
+            command.CommandTimeout = connection.ConnectionTimeout;
+            command.CommandText = text;
+            if (transaction != null)
+                command.Transaction = transaction;
+
             return command;
         }
 
@@ -369,15 +380,22 @@ namespace DataWF.Data
         public QResult ExecuteQResult()
         {
             var list = new QResult();
-            ExecuteQResult(list);
+            ExecuteQResult(Command, list);
             return list;
         }
 
-        public void ExecuteQResult(QResult list)
+        public QResult ExecuteQResult(string commandText)
+        {
+            var list = new QResult();
+            ExecuteQResult(AddCommand(commandText), list);
+            return list;
+        }
+
+        public void ExecuteQResult(IDbCommand command, QResult list)
         {
             list.Values.Clear();
             list.Columns.Clear();
-            using (var reader = ExecuteQuery(DBExecuteType.Reader) as IDataReader)
+            using (var reader = ExecuteQuery(command, DBExecuteType.Reader) as IDataReader)
             {
                 int fCount = reader.FieldCount;
                 for (int i = 0; i < fCount; i++)

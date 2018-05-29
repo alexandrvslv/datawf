@@ -571,10 +571,12 @@ namespace DataWF.Data
             else if (value is string)
                 return "'" + ((string)value).Replace("'", "''") + "'";
             else if (value is DateTime)
+            {
                 if (((DateTime)value).TimeOfDay == TimeSpan.Zero)
                     return "'" + ((DateTime)value).ToString("yyyy-MM-dd") + "'";
                 else
                     return "'" + ((DateTime)value).ToString("yyyy-MM-dd HH:mm:ss.fff") + "'";
+            }
             else if (value is byte[])
             {
                 var sBuilder = new StringBuilder();
@@ -693,17 +695,6 @@ namespace DataWF.Data
                     equal = x.Equals(y);
             }
             return equal;
-        }
-
-        public static IDbCommand CreateCommand(IDbConnection connection, string text = null, IDbTransaction transaction = null)
-        {
-            IDbCommand command = connection.CreateCommand();
-            command.CommandTimeout = connection.ConnectionTimeout;
-            command.CommandText = text;
-            if (transaction != null)
-                command.Transaction = transaction;
-
-            return command;
         }
 
         public static object GetItem(List<KeyValuePair<string, object>> list, string key)
@@ -833,15 +824,22 @@ namespace DataWF.Data
                             {
                                 procedure = new DBProcedure
                                 {
+                                    Schema = schema,
                                     Parent = gprocedure,
                                     Name = name,
                                     DisplayName = type.Name,
                                     DataName = filename,
                                     ProcedureType = ProcedureTypes.Assembly
                                 };
+                                var codes = type.GetCustomAttributes<CodeAttribute>();
+                                foreach (var code in codes)
+                                {
+                                    procedure.Codes.Add(code.Code);
+                                }
                                 schema.Procedures.Add(procedure);
                             }
                         }
+
                     }
                 }
             }
@@ -865,6 +863,17 @@ namespace DataWF.Data
             foreach (var schema in Schems)
             {
                 var procedure = schema.Procedures[name];
+                if (procedure != null)
+                    return procedure;
+            }
+            return null;
+        }
+
+        public static DBProcedure ParseProcedureByCode(string code)
+        {
+            foreach (var schema in Schems)
+            {
+                var procedure = schema.Procedures.SelectByCode(code);
                 if (procedure != null)
                     return procedure;
             }

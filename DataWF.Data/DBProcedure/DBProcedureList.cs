@@ -30,9 +30,11 @@ namespace DataWF.Data
         static readonly Invoker<DBProcedure, string> dataNameInvoker = new Invoker<DBProcedure, string>(nameof(DBProcedure.DataName), (item) => item.DataName);
         static readonly Invoker<DBProcedure, ProcedureTypes> typeInvoker = new Invoker<DBProcedure, ProcedureTypes>(nameof(DBProcedure.ProcedureType), (item) => item.ProcedureType);
 
+        private Dictionary<string, DBProcedure> codeIndex = new Dictionary<string, DBProcedure>(StringComparer.OrdinalIgnoreCase);
+
         public DBProcedureList(DBSchema schema) : base(schema)
         {
-            Indexes.Add(parentNameInvoker);            
+            Indexes.Add(parentNameInvoker);
             Indexes.Add(dataNameInvoker);
             Indexes.Add(typeInvoker);
         }
@@ -48,6 +50,20 @@ namespace DataWF.Data
         public IEnumerable<DBProcedure> SelectByParent(DBProcedure procedure)
         {
             return Select(nameof(DBProcedure.ParentName), CompareType.Equal, procedure?.Name);
+        }
+
+        public DBProcedure SelectByCode(string code)
+        {
+            return codeIndex.TryGetValue(code, out var procedure) ? procedure : null;
+        }
+
+        public override void InsertInternal(int index, DBProcedure item)
+        {
+            base.InsertInternal(index, item);
+            foreach (var code in item.Codes)
+            {
+                codeIndex[code] = item;
+            }
         }
     }
 }

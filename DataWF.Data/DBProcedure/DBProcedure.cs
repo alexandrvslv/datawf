@@ -143,6 +143,7 @@ namespace DataWF.Data
         }
 
         public DateTime Date { get; set; }
+        public List<string> Codes { get; set; } = new List<string>();
 
         public static Assembly Compile(string outFile, IEnumerable<DBProcedure> procedures, out CompilerResults result, bool inMemory)
         {
