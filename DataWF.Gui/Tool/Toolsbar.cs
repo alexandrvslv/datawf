@@ -16,15 +16,13 @@ namespace DataWF.Gui
         public Toolsbar()
         {
             items = new ToolItem() { Bar = this };
-            Style = GuiEnvironment.Theme["Toolsbar"];
+            items.StyleName = "Toolsbar";
         }
 
         public Toolsbar(params ToolItem[] items) : this()
         {
             Items.AddRange(items);
         }
-
-        public CellStyle Style { get; set; }
 
         public ToolItem Items
         {
@@ -111,9 +109,9 @@ namespace DataWF.Gui
             base.OnDraw(ctx, dirtyRect);
             using (var context = new GraphContext(ctx))
             {
-                if (Style != null)
+                if (items.Style != null)
                 {
-                    context.DrawCell(Style, null, this.Bounds, this.Bounds, CellDisplayState.Default);
+                    context.DrawCell(items.Style, null, this.Bounds, this.Bounds, CellDisplayState.Default);
                 }
                 foreach (ToolItem item in items.GetVisibleItems())
                 {

@@ -9,8 +9,6 @@ namespace DataWF.Gui
     public class GroupBoxItem : LayoutItem<GroupBoxItem>, IComparable, IDisposable, IText
     {
         private Widget widget;
-        private CellStyle styleHeader = null;
-        private CellStyle style = null;
         private Rectangle rectExpand = new Rectangle();
         private Rectangle rectHeader = new Rectangle();
         private Rectangle rectGlyph = new Rectangle();
@@ -22,6 +20,8 @@ namespace DataWF.Gui
         public GlyphType Glyph = GlyphType.GearAlias;
         private string text;
         private GroupBox groupBox;
+        private CellStyle styleHeader;
+        private CellStyle style;
 
         public event EventHandler TextChanged;
 
@@ -29,8 +29,6 @@ namespace DataWF.Gui
         {
             Width = 200;
             Height = 200;
-            styleHeader = GuiEnvironment.Theme["GroupBoxHeader"];
-            style = GuiEnvironment.Theme["GroupBox"];
         }
 
         public GroupBoxItem(GroupBox groupBox)
@@ -41,6 +39,29 @@ namespace DataWF.Gui
         public GroupBoxItem(params GroupBoxItem[] items)
         {
             AddRange(items);
+        }
+
+        public string StyleHeaderName { get; set; } = "GroupBoxHeader";
+        public string StyleName { get; set; } = "GroupBox";
+
+        public CellStyle StyleHeader
+        {
+            get { return styleHeader ?? (styleHeader = GuiEnvironment.Theme[StyleHeaderName]); }
+            set
+            {
+                styleHeader = value;
+                StyleHeaderName = value?.Name;
+            }
+        }
+
+        public CellStyle Style
+        {
+            get { return style ?? (style = GuiEnvironment.Theme[StyleName]); }
+            set
+            {
+                style = value;
+                StyleName = value?.Name;
+            }
         }
 
         public GroupBox GroupBox
@@ -166,7 +187,7 @@ namespace DataWF.Gui
 
         public void Paint(GraphContext context)
         {
-            context.DrawCell(style, null, bound, bound, CellDisplayState.Default);
+            context.DrawCell(Style, null, bound, bound, CellDisplayState.Default);
 
             GetExpandBound(Bound);
 
@@ -174,9 +195,9 @@ namespace DataWF.Gui
             rectGlyph = new Rectangle(Bound.X + 10, Bound.Y + 3, 15, 15);
             rectText = new Rectangle(Bound.X + 30, Bound.Y + 3, Bound.Width - 40, rectHeader.Height - 5);
 
-            context.DrawCell(styleHeader, Text, rectHeader, rectText, CellDisplayState.Default);
-            context.DrawGlyph(Glyph, rectGlyph, styleHeader);
-            context.DrawGlyph(Expand ? GlyphType.ChevronDown : GlyphType.ChevronRight, rectExpand, styleHeader);
+            context.DrawCell(StyleHeader, Text, rectHeader, rectText, CellDisplayState.Default);
+            context.DrawGlyph(Glyph, rectGlyph, StyleHeader);
+            context.DrawGlyph(Expand ? GlyphType.ChevronDown : GlyphType.ChevronRight, rectExpand, StyleHeader);
         }
 
         public Rectangle GetExpandBound(Rectangle bound)

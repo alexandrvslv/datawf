@@ -10,7 +10,6 @@ namespace DataWF.Gui
 {
     public class ToolItem : LayoutItem<ToolItem>, IGlyph, IText, IDisposable, IToolItem, ILocalizable
     {
-        protected CellStyle style;
         protected GlyphType glyph;
         protected Color glyphColor;
         protected Image image;
@@ -27,12 +26,10 @@ namespace DataWF.Gui
         private bool check;
         private bool sensitive = true;
         private Toolsbar bar;
+        private CellStyle style;
 
         public ToolItem()
         {
-            var baseColor = Colors.Silver;
-            style = GuiEnvironment.Theme["Tool"];
-            glyphColor = style.FontBrush.Color;
         }
 
         public ToolItem(EventHandler click) : this()
@@ -43,6 +40,20 @@ namespace DataWF.Gui
         public ToolItem(Widget content) : this()
         {
             Content = content;
+        }
+
+        [Browsable(false)]
+        public string StyleName { get; set; } = "Tool";
+
+
+        public CellStyle Style
+        {
+            get { return style ?? (style = GuiEnvironment.Theme[StyleName]); }
+            set
+            {
+                style = value;
+                StyleName = value?.Name;
+            }
         }
 
         [XmlIgnore]
@@ -179,7 +190,7 @@ namespace DataWF.Gui
                     {
                         text = new TextLayout()
                         {
-                            Font = style.Font,
+                            Font = Style.Font,
                             Trimming = TextTrimming.WordElipsis
                         };
                     }
@@ -207,20 +218,19 @@ namespace DataWF.Gui
 
         public Color GlyphColor
         {
-            get { return glyphColor; }
+            get { return glyphColor == CellStyleBrush.ColorEmpty ? (glyphColor = Style.FontBrush.Color) : glyphColor; }
             set
             {
                 if (GlyphColor == value)
                     return;
-                glyphColor = value.BlendWith(style.FontBrush.Color, 0.5);
-
+                glyphColor = value.BlendWith(Style.FontBrush.Color, 0.5);
                 Bar?.QueueDraw();
             }
         }
 
         public Font Font
         {
-            get { return text?.Font ?? style.Font; }
+            get { return text?.Font ?? Style.Font; }
             set
             {
                 if (text == null)
@@ -358,7 +368,7 @@ namespace DataWF.Gui
         {
 
             var dstate = !Sensitive ? CellDisplayState.Pressed : state == CellDisplayState.Default && Checked ? CellDisplayState.Selected : state;
-            context.DrawCell(style, null, Bound, Bound, dstate);
+            context.DrawCell(Style, null, Bound, Bound, dstate);
 
             object formatted = GetFormattedImage();
             if (DisplayStyle.HasFlag(ToolItemDisplayStyle.Image))
@@ -369,12 +379,12 @@ namespace DataWF.Gui
                 }
                 else if (glyph != GlyphType.None)
                 {
-                    context.DrawGlyph(glyph, imageBound, glyphColor);
+                    context.DrawGlyph(glyph, imageBound, GlyphColor);
                 }
             }
             if (DisplayStyle.HasFlag(ToolItemDisplayStyle.Text) && !string.IsNullOrEmpty(Text))
             {
-                context.DrawText(style, text, textBound, state);
+                context.DrawText(Style, text, textBound, state);
             }
         }
 

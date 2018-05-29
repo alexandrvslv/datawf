@@ -218,7 +218,7 @@ namespace DataWF.Gui
 
         public static GuiTheme Theme
         {
-            get { return instance.CurrentTheme; }            
+            get { return instance.CurrentTheme; }
         }
 
         public static WebLinkList WebLinks
@@ -231,7 +231,8 @@ namespace DataWF.Gui
             instance.SaveDirectory(Helper.GetDirectory(), name);
         }
 
-        private GuiTheme cacheTheme;
+        private GuiTheme theme;
+        private string themeName = "Light";
 
         public ProjectHandleList Projects { get; set; } = new ProjectHandleList();
 
@@ -239,17 +240,28 @@ namespace DataWF.Gui
 
         public GuiThemeList Themes { get; set; } = new GuiThemeList();
 
-        public string ThemeName { get; set; } = "Light";
+        public string ThemeName
+        {
+            get { return themeName; }
+            set
+            {
+                if (value != themeName)
+                {
+                    themeName = value;
+                    theme = null;
+                }
+            }
+        }
 
         [XmlIgnore]
         public GuiTheme CurrentTheme
         {
-            get { return cacheTheme ?? (cacheTheme = Themes[ThemeName]); }
+            get { return theme ?? (theme = Themes[ThemeName]); }
             set
             {
                 if (CurrentTheme != value)
                 {
-                    cacheTheme = value;
+                    theme = value;
                     ThemeName = value?.Name;
                 }
             }

@@ -8,13 +8,17 @@ namespace DataWF.Gui
     public class GlyphWidget : Canvas, IGlyph
     {
         private CellDisplayState state;
+        private CellStyle style;
 
         public GlyphWidget()
         {
-            Style = GuiEnvironment.Theme["Window"];
         }
 
-        public CellStyle Style { get; set; }
+        public CellStyle Style
+        {
+            get { return style ?? (style = GuiEnvironment.Theme["Window"]); }
+            set { style = value; }
+        }
 
         public GlyphType Glyph { get; set; }
 

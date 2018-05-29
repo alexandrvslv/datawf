@@ -139,7 +139,7 @@ namespace DataWF.Gui
 
             PackStart(bar, false, false);
             PackStart(map, true, true);
-            BackgroundColor = GuiEnvironment.Theme["Page"].BaseColor;
+            //BackgroundColor = GuiEnvironment.Theme["Page"].BaseColor;
         }
 
         public Toolsbar Bar

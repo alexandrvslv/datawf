@@ -9,6 +9,7 @@ namespace DataWF.Gui
     {
         protected Menubar menu;
         private LayoutAlignType menuAlign = LayoutAlignType.Bottom;
+        private CellStyle carretStyle;
 
         public ToolDropDown() : base()
         {
@@ -30,7 +31,17 @@ namespace DataWF.Gui
 
         public CellDisplayState CarretState { get; set; } = CellDisplayState.Default;
 
-        public CellStyle CarretStyle { get; set; } = GuiEnvironment.Theme["Window"];
+        public string CarretStyleName { get; set; } = "Window";
+
+        public CellStyle CarretStyle
+        {
+            get { return carretStyle ?? (carretStyle = GuiEnvironment.Theme[CarretStyleName]); }
+            set
+            {
+                carretStyle = value;
+                CarretStyleName = value?.Name;
+            }
+        }
 
         public Size CarretSize { get; set; } = new Size(16, 16);
 

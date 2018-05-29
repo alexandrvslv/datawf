@@ -30,8 +30,8 @@ namespace DataWF.Gui
         protected ToolSplit toolTasks;
         protected ToolProgressBar toolProgress;
         protected SelectableList<TaskExecutor> tasks = new SelectableList<TaskExecutor>();
-        protected NotifyWindow notify = new NotifyWindow();
-        protected TaskWindow task = new TaskWindow();
+        protected NotifyWindow notify;
+        protected TaskWindow task;
         protected ToolDropDown menuProject;
         protected ToolMenuItem menuProjectProps;
         protected ToolMenuItem menuProjectCreate;
@@ -156,7 +156,7 @@ namespace DataWF.Gui
             InitialLocation = WindowLocation.CenterScreen;
             Title = "Main Form";
             Size = new Size(1024, 768);
-            task.TaskList = tasks;
+            
             BackgroundColor = GuiEnvironment.Theme["Window"].BaseColor;
         }
 
@@ -426,9 +426,17 @@ namespace DataWF.Gui
         public void SetStatus(StateInfo info)
         {
             if (GuiService.InvokeRequired)
+            {
                 Application.Invoke(() => SetStatus(info));
+            }
             else
+            {
+                if (notify == null)
+                {
+                    notify = new NotifyWindow();
+                }
                 notify.SetStatus(info, true);
+            }
         }
 
         protected void ToolEditLocalizeClick(object sender, EventArgs e)
@@ -491,7 +499,11 @@ namespace DataWF.Gui
 
         protected void ToolTaskClick(object sender, EventArgs e)
         {
-            notify.Show(statusBar, toolTasks.Bound.TopRight);
+            if (task == null)
+            {
+                task = new TaskWindow() { TaskList = tasks };
+            }
+            task.Show(statusBar, toolTasks.Bound.TopRight);
         }
 
         protected void ToolProjectPropertiesClick(object sender, EventArgs e)

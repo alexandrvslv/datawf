@@ -77,7 +77,7 @@ namespace DataWF.Data.Gui
             listDiff.ListInfo.Columns.Add("Column", 120);
             listDiff.ListInfo.Columns.Add("OldFormat", 150).FillWidth = true;
             listDiff.ListInfo.Columns.Add("NewFormat", 150).FillWidth = true;
-            listDiff.ListInfo.StyleRow = GuiEnvironment.Theme["ChangeRow"];
+            listDiff.ListInfo.StyleRowName = "ChangeRow";
             listDiff.ListInfo.HeaderVisible = false;
 
             this.Name = "ChangeViewer";

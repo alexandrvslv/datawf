@@ -28,16 +28,27 @@ namespace DataWF.Gui
         protected ToolWindow dropDown;
         private Image image;
         private CellStyle style;
-        private CellStyle pstyle;
         Rectangle recte = new Rectangle();
         Rectangle rectd = new Rectangle();
         Rectangle rectg = new Rectangle();
         Rectangle recti = new Rectangle(0, 0, 18D, 18D);
         private ILayoutCell cell;
+        private CellStyle buttonStyle;
 
         public LayoutEditor() : base()
         {
-            pstyle = GuiEnvironment.Theme["DropDown"];
+        }
+
+        public string ButtonStyleName { get; set; } = "DropDown";
+
+        public CellStyle ButtonStyle
+        {
+            get { return buttonStyle ?? (buttonStyle = GuiEnvironment.Theme[ButtonStyleName]); }
+            set
+            {
+                buttonStyle = value;
+                ButtonStyleName = value?.Name;
+            }
         }
 
         public ILayoutCell Cell
@@ -266,7 +277,7 @@ namespace DataWF.Gui
                     if (hover == PEditorHover.DropDown)
                         state = CellDisplayState.Hover;
                     rectg = new Rectangle(rectd.X, rectd.Y, 16, 16);
-                    context.DrawCell(pstyle, GlyphType.AngleDoubleDown, rectd, rectd, state);
+                    context.DrawCell(ButtonStyle, GlyphType.AngleDoubleDown, rectd, rectd, state);
                 }
                 if (dropDownExVisible)
                 {
@@ -274,7 +285,7 @@ namespace DataWF.Gui
                     if (hover == PEditorHover.DropDownEx)
                         state = CellDisplayState.Hover;
                     rectg = new Rectangle(recte.X, recte.Y, 16, 16);
-                    context.DrawCell(pstyle, GlyphType.AngleDoubleRight, recte, recte, state);
+                    context.DrawCell(ButtonStyle, GlyphType.AngleDoubleRight, recte, recte, state);
                 }
             }
         }

@@ -31,7 +31,7 @@ namespace DataWF.Gui
 
         public LayoutListInfo()
         {
-            columns = new LayoutColumn(this);
+            columns = new LayoutColumn(this) { StyleName = "List" };
             sorters = new LayoutSortList(this);
         }
 

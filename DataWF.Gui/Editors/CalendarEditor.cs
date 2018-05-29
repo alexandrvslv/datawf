@@ -16,10 +16,10 @@ namespace DataWF.Gui
         {
             GenerateColumns = false;
             GenerateToString = false;
-            ListInfo = new LayoutListInfo(numberColumn = new LayoutColumn() { Name = "Number", Width = 50, Height = 50, Style = GuiEnvironment.Theme["Calendar"] })
+            ListInfo = new LayoutListInfo(numberColumn = new LayoutColumn() { Name = "Number", Width = 50, Height = 50, StyleName = "Calendar" })
             {
                 Indent = 4,
-                StyleRow = GuiEnvironment.Theme["Node"],
+                StyleRowName = "Node",
                 GridCol = 7,
                 //ColumnsVisible = false,
                 HeaderVisible = false
@@ -31,8 +31,8 @@ namespace DataWF.Gui
         {
             if (Parent != null)
             {
-                numberColumn.Width = ((canvas.Size.Width) / 7D) - ListInfo.Indent*1.3;
-                numberColumn.Height = ((canvas.Size.Height) / 7D) - ListInfo.Indent*1.3;
+                numberColumn.Width = ((canvas.Size.Width) / 7D) - ListInfo.Indent * 1.3;
+                numberColumn.Height = ((canvas.Size.Height) / 7D) - ListInfo.Indent * 1.3;
             }
             base.RefreshBounds(group);
         }

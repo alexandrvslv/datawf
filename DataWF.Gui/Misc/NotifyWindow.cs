@@ -63,15 +63,13 @@ namespace DataWF.Gui
         public NotifyWindow()
             : base()
         {
-            var style = GuiEnvironment.Theme["Notify"];
-
             LayoutColumn module = new LayoutColumn()
             {
                 Name = "Module",
                 FillWidth = true,
                 Col = 2,
                 Height = 25,
-                Style = style
+                StyleName = "Notify"
             };
 
             var notifyInfo = new LayoutListInfo();

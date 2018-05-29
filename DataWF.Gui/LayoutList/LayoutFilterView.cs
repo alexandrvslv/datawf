@@ -89,7 +89,7 @@ namespace DataWF.Gui
                 GridMode = true,
                 GridAuto = true,
                 HeaderVisible = false,
-                StyleRow = GuiEnvironment.Theme["Field"]
+                StyleRowName = "Field"
                 //StyleRow = new CellStyle()
                 //{
                 //    Alternate = false,

@@ -30,7 +30,7 @@ namespace DataWF.Data.Gui
                     new LayoutColumn { Name = "Row.Status", Width = 60 },
                     new LayoutColumn { Name = "Row", Width = 150, FillWidth = true })
                 {
-                    StyleRow = GuiEnvironment.Theme["ChangeRow"],
+                    StyleRowName = "ChangeRow",
                     HeaderVisible = false
                 }
             };
@@ -51,7 +51,7 @@ namespace DataWF.Data.Gui
                     new LayoutColumn() { Name = "OldFormat", Width = 150, FillWidth = true },
                     new LayoutColumn() { Name = "NewFormat", Width = 150, FillWidth = true })
                 {
-                    StyleRow = GuiEnvironment.Theme["ChangeRow"],
+                    StyleRowName = "ChangeRow",
                     HeaderVisible = false
                 }
             };
