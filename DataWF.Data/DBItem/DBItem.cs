@@ -1101,22 +1101,24 @@ namespace DataWF.Data
                     //bufRez += temprez;
                     continue;
                 }
-                string header = string.Empty;
-                if (showColumn)
-                    header = $"{column}: ";
+                string header = (showColumn) ? header = $"{column}: " : string.Empty;
                 string value = column.FormatValue(GetValue(column));
                 if (column.IsCulture)
                 {
-                    if (column.Culture.TwoLetterISOLanguageName == Locale.Instance.Culture.TwoLetterISOLanguageName)
+                    if (value.Length != 0)
                     {
-                        builder.Append(header);
-                        builder.Append(value);
-                        builder.Append(separator);
-                        if (value.Length != 0)
+                        if (column.Culture.TwoLetterISOLanguageName == Locale.Instance.Culture.TwoLetterISOLanguageName)
+                        {
+                            builder.Append(header);
+                            builder.Append(value);
+                            builder.Append(separator);
                             c = null;
+                        }
+                        else if (c != null && c.Length == 0)
+                        {
+                            c = header + value;
+                        }
                     }
-                    else if (c != null && c.Length == 0 && value.Length != 0)
-                        c = value;
                 }
                 else if (value.Length > 0)
                 {
@@ -1129,10 +1131,8 @@ namespace DataWF.Data
             {
                 builder.Append(c);
             }
-            else
-            {
-                builder.Length = builder.Length - separator.Length;
-            }
+            builder.Length -= separator.Length;
+
             return builder.ToString();
         }
 
