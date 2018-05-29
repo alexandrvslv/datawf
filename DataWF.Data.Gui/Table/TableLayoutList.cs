@@ -24,9 +24,6 @@ namespace DataWF.Data.Gui
         private static CellStyle DBEStyle;
         private static CellStyle DBDStyle;
         private static CellStyle DBAStyle;
-        private static ToolItem menuExportTxt = new ToolItem();
-        private static ToolItem menuExportODS = new ToolItem();
-        private static ToolItem menuExportXlsx = new ToolItem();
         private static Menu contextStatusFilter = null;
 
         public TableLayoutList()
@@ -34,12 +31,8 @@ namespace DataWF.Data.Gui
         {
             if (contextStatusFilter == null)
             {
-                menuExportTxt.Glyph = GlyphType.FileTextO;
-                menuExportTxt.Click += MenuExportTxtClick;
-                menuExportODS.Glyph = GlyphType.FileWordO;
-                menuExportODS.Click += MenuExportOdsClick;
-                menuExportXlsx.Glyph = GlyphType.FileExcelO;
-                menuExportXlsx.Click += MenuExportXlsxClick;
+
+
                 var filters = Enum.GetValues(typeof(DBStatus));
 
                 contextStatusFilter = new Menu();
@@ -51,78 +44,16 @@ namespace DataWF.Data.Gui
                     item.Clicked += MenuStatusItemClick;
                     contextStatusFilter.Items.Add(item);
                 }
-                if (defMenu != null)
-                {
-                    defMenu.Editor.Bar.Items.Add(menuExportODS);
-                    defMenu.Editor.Bar.Items.Add(menuExportXlsx);
-                    defMenu.Editor.Bar.Items.Add(menuExportTxt);
-                }
+
             }
-        }
-
-        public override void Localize()
-        {
-            base.Localize();
-
-            menuExportODS.Text = Locale.Get("TableEditor", "Export Odf");
-            menuExportXlsx.Text = Locale.Get("TableEditor", "Export Excel");
-            menuExportTxt.Text = Locale.Get("TableEditor", "Export Text");
         }
 
         private static void MenuStatusItemClick(object sender, EventArgs e)
         {
             var item = (MenuItem)sender;
             var filter = (DBStatus)item.Tag;
-            if (defMenu.ContextList is TableLayoutList && ((TableLayoutList)defMenu.ContextList).View != null)
-                ((TableLayoutList)defMenu.ContextList).View.StatusFilter = filter;
-        }
-
-        private static void MenuExportTxtClick(object sender, EventArgs e)
-        {
-            string fileName = "list" + DateTime.Now.ToString("yyMMddHHmmss") + ".txt";
-            var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "wfdocuments");
-            if (!Directory.Exists(dir))
-                Directory.CreateDirectory(dir);
-            fileName = Path.Combine(dir, fileName);
-            var columns = defMenu.ContextList.ListInfo.Columns.GetVisible();
-            using (var file = new FileStream(fileName, FileMode.Create))
-            using (var stream = new StreamWriter(file, Encoding.UTF8))
-            {
-                foreach (var item in defMenu.ContextList.ListSource)
-                {
-                    StringBuilder s = new StringBuilder();
-                    foreach (var column in columns)
-                    {
-                        s.Append(Helper.TextBinaryFormat(defMenu.ContextList.ReadValue(item, column)));
-                        s.Append('^');
-                    }
-                    stream.WriteLine(s.ToString());
-                }
-                stream.Flush();
-            }
-            System.Diagnostics.Process.Start(fileName);
-        }
-
-        private static void MenuExportOdsClick(object sender, EventArgs e)
-        {
-            string fileName = "list" + DateTime.Now.ToString("yyMMddHHmmss") + ".ods";
-            var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "wfdocuments");
-            if (!Directory.Exists(dir))
-                Directory.CreateDirectory(dir);
-            fileName = Path.Combine(dir, fileName);
-            ExcellExport.ExportPList(fileName, defMenu.ContextList);
-            System.Diagnostics.Process.Start(fileName);
-        }
-
-        private static void MenuExportXlsxClick(object sender, EventArgs e)
-        {
-            string fileName = "list" + DateTime.Now.ToString("yyMMddHHmmss") + ".xlsx";
-            var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "wfdocuments");
-            if (!Directory.Exists(dir))
-                Directory.CreateDirectory(dir);
-            fileName = Path.Combine(dir, fileName);
-            ExcellExport.ExportPListXSAX(fileName, defMenu.ContextList);
-            System.Diagnostics.Process.Start(fileName);
+            if (DefaultMenu.ContextList is TableLayoutList && ((TableLayoutList)DefaultMenu.ContextList).View != null)
+                ((TableLayoutList)DefaultMenu.ContextList).View.StatusFilter = filter;
         }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -393,7 +324,7 @@ namespace DataWF.Data.Gui
                 if (cell is LayoutDBField)
                 {
 
-                    ((LayoutDBField)cell).View = dbcolumn.Access.View;
+                    ((LayoutDBField)cell).Visible = dbcolumn.Access.View;
                 }
             }
             else

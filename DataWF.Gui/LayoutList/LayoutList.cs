@@ -17,7 +17,8 @@ namespace DataWF.Gui
     [ToolboxItem(true)]
     public partial class LayoutList : VPanel, ILocalizable, ILayoutList, ISerializableElement
     {
-        protected static LayoutMenu defMenu;
+        public static LayoutMenu DefaultMenu { get; set; }
+
         protected LayoutListKeys keys = LayoutListKeys.AllowFilter |
                                    LayoutListKeys.AllowSort |
                                    LayoutListKeys.AllowMoveColumn |
@@ -76,7 +77,6 @@ namespace DataWF.Gui
         private List<Dictionary<LayoutColumn, TextLayout>> cache = new List<Dictionary<LayoutColumn, TextLayout>>();
         private int gridCols = 1;
         private int gridRows = 1;
-        private CellStyle listStyle = GuiEnvironment.Theme["List"];
         #region Events
         protected ListChangedEventHandler handleListChanged;
         protected PropertyChangedEventHandler handleProperty;
@@ -883,32 +883,32 @@ namespace DataWF.Gui
 
         protected virtual void OnContextMenuShow(LayoutHitTestInfo e)
         {
-            if (defMenu == null)
-                defMenu = new LayoutMenu();
+            if (DefaultMenu == null)
+                DefaultMenu = new LayoutMenu();
             if (editor.Visible)
             {
                 OnCellEditEnd(new CancelEventArgs(true));
             }
-            defMenu.ContextList = this;
-            defMenu.ContextColumn = e.Column;
+            DefaultMenu.ContextList = this;
+            DefaultMenu.ContextColumn = e.Column;
             if (GenerateMenu)
             {
                 OnContextColumnMenuGenerate(e);
                 if (Mode == LayoutListMode.Fields)
-                    defMenu.ContextField = e.Location == LayoutHitTestLocation.Cell
+                    DefaultMenu.ContextField = e.Location == LayoutHitTestLocation.Cell
                         ? (LayoutField)listSource[e.Index]
                         : null;
             }
-            defMenu.Show(this, e.Point);
+            DefaultMenu.Show(this, e.Point);
         }
 
         protected virtual void OnContextColumnMenuGenerate(LayoutHitTestInfo e)
         {
             if (e.Location == LayoutHitTestLocation.Column || e.Location == LayoutHitTestLocation.Cell)
             {
-                defMenu.Editor.CellCheck.Visible = (e.Column.Name == nameof(object.ToString) && AllowCheck)
+                DefaultMenu.Editor.CellCheck.Visible = (e.Column.Name == nameof(object.ToString) && AllowCheck)
                     || e.Column.GetEditor(e.Item) is CellEditorCheck;
-                defMenu.Editor.CellCopy.Visible = e.Location != LayoutHitTestLocation.Column;
+                DefaultMenu.Editor.CellCopy.Visible = e.Location != LayoutHitTestLocation.Column;
 
                 //defMenu.MenuSubСolumns.Items.Clear();
                 //if (e.HitTest.Column.Accessor != null && IsComplex(e.HitTest.Column))
@@ -1956,7 +1956,9 @@ namespace DataWF.Gui
                     var cache = GetLayoutListCache();
                     LayoutListInfo temp = cache.Lists[key];
                     if (temp == null)
+                    {
                         temp = GenerateListInfo();
+                    }
                     ListInfo = cache.Lists[key] = temp;
                 }
                 else
@@ -2143,20 +2145,6 @@ namespace DataWF.Gui
                     info.Indent = 10;
                     info.ColumnsVisible = false;
                     info.HeaderVisible = false;
-                }
-            }
-
-            var arg = new LayoutListPropertiesArgs();
-            OnGetProperties(arg);
-            foreach (string property in arg.Properties)
-            {
-                if (property != null)
-                {
-                    var column = BuildColumn(info, null, property);
-                    if (column != null)
-                    {
-                        info.Columns.Add(column);
-                    }
                 }
             }
             return info;
@@ -2503,10 +2491,30 @@ namespace DataWF.Gui
             return strings;
         }
 
+        public void RefreshProperties()
+        {
+            if (!GenerateColumns)
+                return;
+            var arg = new LayoutListPropertiesArgs();
+            OnGetProperties(arg);
+            foreach (string property in arg.Properties)
+            {
+                if (property != null)
+                {
+                    var column = BuildColumn(ListInfo, null, property);
+                    if (column?.Map == null)
+                    {
+                        ListInfo.Columns.Add(column);
+                    }
+                }
+            }
+        }
+
         public virtual void RefreshInfo()
         {
             listInfo.Columns.Bound = Rectangle.Zero;
             ClearFilter();
+            RefreshProperties();
             foreach (LayoutColumn item in ListInfo.Columns.GetItems().ToList())
             {
                 BuildColumn(ListInfo, item.Owner as LayoutColumn, item.Name);
@@ -4130,7 +4138,7 @@ namespace DataWF.Gui
                 bounds.Clip = clip;
                 //context.Scale = ListInfo.Scale;
 
-                context.FillRectangle(listStyle.BaseColor, clip);
+                context.FillRectangle(ListInfo.Columns.Style, clip, CellDisplayState.Default);
 
                 if (bounds.Clip.Width != bounds.Area.Width || bounds.Clip.Height != bounds.Area.Height)
                 {
