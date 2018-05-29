@@ -60,6 +60,7 @@ namespace DataWF.Data
                 DisplayName = value.DisplayName + " Log";
                 DataType = value.DataType;
                 DBDataType = value.DBDataType;
+                ReferenceTable = value.ReferenceTable;
                 Size = value.Size;
                 Scale = value.Scale;
             }
