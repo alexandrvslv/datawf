@@ -63,6 +63,9 @@ namespace DataWF.Data
             get { return GetChanged().Any(); }
         }
 
+        [Browsable(false)]
+        public DBConnection Connection { get { return Schema?.Connection; } }
+
         public override DBItem this[int index]
         {
             get { return items[index]; }
