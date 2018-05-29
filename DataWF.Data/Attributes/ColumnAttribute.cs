@@ -130,6 +130,9 @@ namespace DataWF.Data
             if (Column == null)
             {
                 Column = CreateColumn(name);
+            }
+            if (Column.DisplayName.Equals(Column.Name, StringComparison.Ordinal))
+            {
                 Column.DisplayName = culture == null ? Property : $"{Property} {culture.TwoLetterISOLanguageName.ToUpperInvariant()}";
             }
             if (!(Column is DBVirtualColumn))

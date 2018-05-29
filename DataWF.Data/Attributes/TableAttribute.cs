@@ -97,7 +97,6 @@ namespace DataWF.Data
             var table = (DBTable)EmitInvoker.CreateObject(typeof(DBTable<>).MakeGenericType(ItemType));
             table.Name = TableName;
             table.Schema = Schema;
-            table.DisplayName = ItemType.Name;
             return table;
         }
 
@@ -120,6 +119,10 @@ namespace DataWF.Data
             if (Table == null)
             {
                 Table = CreateTable();
+            }
+            if (Table.DisplayName.Equals(Table.Name, StringComparison.Ordinal))
+            {
+                Table.DisplayName = ItemType.Name;
             }
             Table.Group = TableGroup;
             Table.Type = TableType;
