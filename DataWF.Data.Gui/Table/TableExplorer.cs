@@ -49,6 +49,8 @@ namespace DataWF.Data.Gui
             get { return table; }
             set
             {
+                if (Table == value)
+                    return;
                 Initialize(value, null, null, TableEditorMode.Table, false);
             }
         }
