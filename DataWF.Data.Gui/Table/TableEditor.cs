@@ -772,7 +772,7 @@ namespace DataWF.Data.Gui
             base.OnToolWindowCancelClick(sender, e);
             DBItem bufRow = ((TableLayoutList)toolWindow.Target).FieldSource as DBItem;
             bufRow.Reject();
-            view.ResetFilter();
+            //view.ResetFilter();
         }
 
         protected override void OnToolWindowAcceptClick(object sender, EventArgs e)
