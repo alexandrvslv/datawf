@@ -126,8 +126,13 @@ namespace DataWF.Gui
             base.OnButtonReleased(args);
             if (CarretBound.Contains(args.Position))
             {
-                CarretClick?.Invoke(this, args);
+                OnCarretClick(args);
             }
+        }
+
+        protected virtual void OnCarretClick(ButtonEventArgs args)
+        {
+            CarretClick?.Invoke(this, args);
         }
 
         protected internal override void CheckSize(bool queue = true)

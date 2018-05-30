@@ -69,7 +69,7 @@ namespace DataWF.Data.Gui
         }
     }
 
-    public class ToolDataFieldEditor : ToolItem
+    public class ToolDataFieldEditor : ToolContentItem
     {
         public int fieldWidth = 100;
 

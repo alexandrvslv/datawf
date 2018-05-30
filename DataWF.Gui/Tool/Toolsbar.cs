@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using DataWF.Common;
+using System.Linq;
 using Xwt;
 using Xwt.Drawing;
 
@@ -9,9 +10,11 @@ namespace DataWF.Gui
 {
     public class Toolsbar : Canvas, ILocalizable
     {
-        private ToolItem items;
-        private ToolItem cacheHitItem;
-        private Menubar currentMenu;
+        protected ToolItem items;
+        protected ToolItem cacheHitItem;
+        protected ToolItem hitItem;
+        protected Menubar currentMenu;
+        protected Orientation itemOrientation = Orientation.Horizontal;
 
         public Toolsbar()
         {
@@ -23,6 +26,8 @@ namespace DataWF.Gui
         {
             Items.AddRange(items);
         }
+
+        public double Indent { get; set; } = 5D;
 
         public ToolItem Items
         {
@@ -66,6 +71,23 @@ namespace DataWF.Gui
             }
         }
 
+        public Orientation ItemOrientation
+        {
+            get { return itemOrientation; }
+            set
+            {
+                if (itemOrientation == value)
+                    return;
+                itemOrientation = value;
+                items.GrowMode = value;
+            }
+        }
+
+        protected internal virtual void OnItemMove(ToolItemEventArgs args)
+        {
+
+        }
+
         public ToolItem this[string name]
         {
             get { return (ToolItem)Items[name]; }
@@ -75,7 +97,7 @@ namespace DataWF.Gui
         {
             var size = base.OnGetPreferredSize(widthConstraint, heightConstraint);
             items.GetBound(widthConstraint.AvailableSize, heightConstraint.AvailableSize);
-            foreach (ToolItem item in items.GetVisibleItems())
+            foreach (var item in items.GetVisibleItems().OfType<ToolContentItem>())
             {
                 item.Content?.Surface.GetPreferredSize();
             }
@@ -98,8 +120,8 @@ namespace DataWF.Gui
             {
                 item.CheckSize();
                 items.GetBound(item);
-                if (item.Content != null && item.Content.Parent == this)
-                    SetChildBounds(item.Content, item.GetContentBound());
+                if (item is ToolContentItem && ((ToolContentItem)item).Content != null && ((ToolContentItem)item).Content.Parent == this)
+                    SetChildBounds(((ToolContentItem)item).Content, ((ToolContentItem)item).ContentBound);
             }
             QueueDraw();
         }
@@ -159,6 +181,10 @@ namespace DataWF.Gui
                 }
                 cacheHitItem = hitItem;
             }
+            else if (cacheHitItem != null)
+            {
+                cacheHitItem.OnMouseMove(args);
+            }
         }
 
         protected override void OnMouseExited(EventArgs args)
@@ -174,7 +200,7 @@ namespace DataWF.Gui
         protected override void OnButtonPressed(ButtonEventArgs args)
         {
             base.OnButtonPressed(args);
-            var hitItem = HitTest(args.Position);
+            hitItem = HitTest(args.Position);
             if (hitItem != null)
             {
                 hitItem.OnButtonPressed(args);
@@ -184,7 +210,7 @@ namespace DataWF.Gui
         protected override void OnButtonReleased(ButtonEventArgs args)
         {
             base.OnButtonReleased(args);
-            var hitItem = HitTest(args.Position);
+            hitItem = HitTest(args.Position);
             if (hitItem != null)
             {
                 hitItem.OnButtonReleased(args);
@@ -205,7 +231,7 @@ namespace DataWF.Gui
 
         public event EventHandler<ToolItemEventArgs> ItemClick;
 
-        public void OnItemClick(ToolItem toolItem)
+        public virtual void OnItemClick(ToolItem toolItem)
         {
             ItemClick?.Invoke(this, new ToolItemEventArgs { Item = toolItem });
         }

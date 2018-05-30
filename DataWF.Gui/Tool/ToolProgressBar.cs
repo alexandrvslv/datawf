@@ -2,7 +2,7 @@
 
 namespace DataWF.Gui
 {
-    public class ToolProgressBar : ToolItem
+    public class ToolProgressBar : ToolContentItem
     {
         public ToolProgressBar() : base(new ProgressBar() { MinHeight = 15 })
         {

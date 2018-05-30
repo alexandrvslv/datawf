@@ -2,7 +2,7 @@
 
 namespace DataWF.Gui
 {
-    public class ToolComboBox : ToolItem
+    public class ToolComboBox : ToolContentItem
     {
         public ToolComboBox() : base(new ComboBox())
         { }

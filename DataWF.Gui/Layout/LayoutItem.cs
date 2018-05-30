@@ -46,8 +46,8 @@ namespace DataWF.Gui
             set { scale = value; }
         }
 
-        [DefaultValue(LayoutGrowMode.Horizontal)]
-        public LayoutGrowMode GrowMode { get; set; }
+        [DefaultValue(Orientation.Horizontal)]
+        public Orientation GrowMode { get; set; }
 
         public T this[int rowIndex, int colIndex]
         {
@@ -272,7 +272,7 @@ namespace DataWF.Gui
                 return IndexOf(item);
             if (item.Row < 0)
             {
-                item.Row = GrowMode == LayoutGrowMode.Vertical
+                item.Row = GrowMode == Orientation.Vertical
                     ? GetRowMaxIndex() + 1 : 0;
             }
             if (item.Col < 0)
@@ -309,8 +309,8 @@ namespace DataWF.Gui
             {
                 column.Row = row;
                 column.Col = col;
-                Map.Insert(column, GrowMode == LayoutGrowMode.Vertical);
-                if (GrowMode == LayoutGrowMode.Horizontal)
+                Map.Insert(column, GrowMode == Orientation.Vertical);
+                if (GrowMode == Orientation.Horizontal)
                 {
                     col++;
                 }
@@ -334,7 +334,7 @@ namespace DataWF.Gui
             var col = Col;
             foreach (var column in columns)
             {
-                if (GrowMode == LayoutGrowMode.Horizontal)
+                if (GrowMode == Orientation.Horizontal)
                 {
                     col++;
                 }
@@ -345,7 +345,7 @@ namespace DataWF.Gui
 
                 column.Row = row;
                 column.Col = col;
-                Map.Insert(column, GrowMode == LayoutGrowMode.Vertical);
+                Map.Insert(column, GrowMode == Orientation.Vertical);
             }
         }
 

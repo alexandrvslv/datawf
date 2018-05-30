@@ -2,7 +2,7 @@
 
 namespace DataWF.Gui
 {
-    public class ToolFieldEditor : ToolItem
+    public class ToolFieldEditor : ToolContentItem
     {
 
         public ToolFieldEditor() : base(new FieldEditor())

@@ -11,8 +11,8 @@ namespace DataWF.Gui
         {
             Bar = new Toolsbar();
             Bar.ItemClick += OnItemClick;
-            Bar.Items.GrowMode = LayoutGrowMode.Vertical;
-
+            Bar.Items.GrowMode = Orientation.Vertical;
+            Bar.Indent = 0;
             BackgroundColor = GuiEnvironment.Theme["Window"].BaseColor;
             Content = Bar;
             Decorated = false;

@@ -3,7 +3,7 @@ using Xwt;
 
 namespace DataWF.Gui
 {
-    public class ToolPasswordEntry : ToolItem
+    public class ToolPasswordEntry : ToolContentItem
     {
         public ToolPasswordEntry() : base(new PasswordEntry())
         {

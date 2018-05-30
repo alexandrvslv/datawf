@@ -24,7 +24,6 @@ namespace DataWF.Gui
             MenuAlign = LayoutAlignType.Right;
             DisplayStyle = ToolItemDisplayStyle.ImageAndText;
             CarretGlyph = GlyphType.CaretRight;
-            indent = 0;
         }
 
         public override void OnDraw(GraphContext context)

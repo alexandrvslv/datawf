@@ -10,7 +10,6 @@ namespace DataWF.Gui
 		{
 			MinWidth = 6D;
 			MinHeight = 6D;
-			indent = 2D;
 			DisplayStyle = ToolItemDisplayStyle.Image;
 			CheckSize();
 		}

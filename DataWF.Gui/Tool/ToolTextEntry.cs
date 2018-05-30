@@ -3,10 +3,9 @@ using Xwt;
 
 namespace DataWF.Gui
 {
-    public class ToolTextEntry : ToolItem
+    public class ToolTextEntry : ToolContentItem
     {
-        public ToolTextEntry()
-            : base(new TextEntry())
+        public ToolTextEntry() : base(new TextEntry())
         {
             FillWidth = true;
         }
