@@ -396,6 +396,16 @@ namespace DataWF.Data.Gui
                 RowAccept(row, ref d, this);
             }
         }
+
+        public bool Closing()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Activating()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public enum DataLogMode

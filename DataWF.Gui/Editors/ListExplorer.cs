@@ -36,7 +36,7 @@ namespace DataWF.Gui
             toolPrev = new ToolItem(ToolPrevClick) { Glyph = GlyphType.ArrowLeft };
             toolNext = new ToolItem(ToolNextClick) { Glyph = GlyphType.ArrowRight };
 
-            var group = new ToolItem();
+            var group = new ToolItem { Col = 0, Row = 0 };
             group.Add(toolPrev);
             group.Add(toolNext);
             group.Add(toolTree);
@@ -201,7 +201,10 @@ namespace DataWF.Gui
                     {
                         propertyNode.Group = node;
                     }
-                    Tree.Nodes.Add(propertyNode);
+                    else
+                    {
+                        Tree.Nodes.Add(propertyNode);
+                    }
                 }
             }
             node.Check = true;
@@ -247,6 +250,16 @@ namespace DataWF.Gui
             base.Localize();
             toolPrev.Text = Locale.Get("OptionEditor", "Prev");
             toolNext.Text = Locale.Get("OptionEditor", "Next");
+        }
+
+        public virtual bool Closing()
+        {
+            return true;
+        }
+
+        public virtual void Activating()
+        {
+            return;
         }
     }
 

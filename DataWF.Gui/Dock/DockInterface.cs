@@ -33,6 +33,10 @@ namespace DataWF.Gui
         DockType DockType { get; }
 
         bool HideOnClose { get; }
+
+        bool Closing();
+
+        void Activating();
     }
 
     public interface IDockMain : IDocked, ILocalizable, ILayoutCacheProvider

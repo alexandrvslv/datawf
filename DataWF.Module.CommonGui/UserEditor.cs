@@ -180,5 +180,15 @@ namespace DataWF.Module.CommonGui
                 MessageDialog.ShowMessage(ParentWindow, Locale.Get("Login", "Authorization Error: check your Login and Password."), "Login");
             }
         }
+
+        public bool Closing()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Activating()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -28,7 +28,7 @@ namespace DataWF.Module.FlowGui
         None
     }
 
-    public class DocumentEditor : VPanel, IDocked, IDockContent
+    public class DocumentEditor : VPanel, IDocked, IDockContent, ISerializableElement
     {
         static Dictionary<Type, List<Type>> typesCache = new Dictionary<Type, List<Type>>();
         static List<Type> GetTypes(Type documentType)
@@ -119,7 +119,7 @@ namespace DataWF.Module.FlowGui
                 VisibleClose = false
             };
             pageHeader = dock.Put(new DocumentHeader(), DockType.Left);
-            pageHeader.Panel.MapItem.Width = 350;//pageHeader.Panel.MapItem.FillWidth = true;
+            pageHeader.Panel.DockItem.Width = 350;//pageHeader.Panel.MapItem.FillWidth = true;
             pageWorks = dock.Put(new DocumentWorkView(), DockType.LeftBottom);
             pageRefers = dock.Put((references = new DocumentReferenceView()), DockType.Content);
 
@@ -271,6 +271,7 @@ namespace DataWF.Module.FlowGui
             if (list != null && list.Count > 1)
             {
                 if (!ExecuteDocumentsProcedure(proc, list))
+                {
                     for (int i = 0; i < list.Count; i++)
                     {
                         Document listDocument = list[i];
@@ -278,6 +279,7 @@ namespace DataWF.Module.FlowGui
                         if (result != null)
                             CheckProcRezult(new ExecuteDocumentArg(listDocument, proc, result, this));
                     }
+                }
                 if (GuiService.Main != null)
                 {
                     var task = new TaskExecutor();
@@ -336,15 +338,15 @@ namespace DataWF.Module.FlowGui
 
             else if (arg.Result is IList<DocumentReference>)
             {
-                pageRefers.Panel.SelectPage(pageRefers);
+                pageRefers.Panel.CurrentPage = pageRefers;
             }
             else if (arg.Result is DocInitType)
             {
                 var ini = (DocInitType)arg.Result;
                 if (ini == DocInitType.References)
-                    pageRefers.Panel.SelectPage(pageRefers);
+                    pageRefers.Panel.CurrentPage = pageRefers;
                 else if (ini == DocInitType.Data)
-                    pageRefers.Panel.SelectPage(pageHeader);
+                    pageRefers.Panel.CurrentPage = pageHeader;
             }
             else if (arg.Result is Document && arg.Result != arg.Document)
             {
@@ -493,7 +495,7 @@ namespace DataWF.Module.FlowGui
                 foreach (var panel in dock.GetDockPanels())
                 {
                     if (panel.CurrentPage == null)
-                        panel.SelectPage(panel.FirstOrDefault());
+                        panel.CurrentPage = panel.FirstOrDefault();
 
                     LoadPage(panel.CurrentPage);
                 }
@@ -619,13 +621,11 @@ namespace DataWF.Module.FlowGui
             var page = dock.GetPage(name);
             if (page == null)
             {
-                IDBTableView view = foreign.Table.CreateItemsView("", DBViewKeys.None, DBStatus.Current);
-
                 var editor = new TableEditor()
                 {
                     Name = name,
                     Text = param.Name == null || param.Name.Length == 0 ? foreign.Table.ToString() : param.Name,
-                    TableView = view,
+                    TableView = foreign.Table.CreateItemsView("", DBViewKeys.None, DBStatus.Current),
                     OwnerColumn = foreign.Column,
                     OpenMode = TableEditorMode.Referencing
                 };
@@ -901,6 +901,31 @@ namespace DataWF.Module.FlowGui
         {
             CheckState(DocumentEditorState.None);
             SendComplete?.Invoke(this, e);
+        }
+
+        public override void Serialize(ISerializeWriter writer)
+        {
+            writer.WriteAttribute("TemplateId", Template?.Id);
+            writer.WriteAttribute("DocumentId", Document?.Id);
+            base.Serialize(writer);
+        }
+
+        public override void Deserialize(ISerializeReader reader)
+        {
+            var templateid = reader.ReadAttribute("TemplateId", typeof(int));
+            var documentid = reader.ReadAttribute("DocumentId", typeof(long));
+            base.Deserialize(reader);
+            Document = Document.DBTable.LoadById(documentid);
+        }
+
+        public bool Closing()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Activating()
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -62,9 +62,19 @@ namespace DataWF.Data.Gui
 			get { return true; }
 		}
 
-		#endregion
+        public void Activating()
+        {
+            throw new NotImplementedException();
+        }
 
-		public override void Localize()
+        public bool Closing()
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
+        public override void Localize()
 		{
 			base.Localize();
 			label.Text = Locale.Get("StartPage", "Data\\Document Workflow Solution");

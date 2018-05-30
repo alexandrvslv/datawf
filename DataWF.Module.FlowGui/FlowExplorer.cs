@@ -394,6 +394,16 @@ namespace DataWF.Module.FlowGui
             GuiService.Localize(this, Name, "Flow Config", GlyphType.Wrench);
         }
 
+        public bool Closing()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Activating()
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
     }
 }

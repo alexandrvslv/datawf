@@ -527,6 +527,16 @@ namespace DataWF.Data.Gui
             throw new NotImplementedException();
         }
 
+        public bool Closing()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Activating()
+        {
+            throw new NotImplementedException();
+        }
+
 #if GTK
         void QueryTextOnDragEnter(object sender, DragEventArgs e)
         {

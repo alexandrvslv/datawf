@@ -118,5 +118,14 @@ namespace DataWF.Gui
         {
             base.Dispose(disposing);
         }
+
+        public bool Closing()
+        {
+            return true;
+        }
+
+        public void Activating()
+        {
+        }
     }
 }

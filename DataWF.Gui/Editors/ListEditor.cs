@@ -43,7 +43,6 @@ namespace DataWF.Gui
         private PListGetEditorHandler handleGetCellEditor;
         private PListGetEditorHandler handleGetEditor;
         private object dataSource;
-        private DockType dockType = DockType.Right;
 
 
         public ListEditor()
@@ -637,11 +636,12 @@ namespace DataWF.Gui
         #region IDockMain implementation
 
         [DefaultValue(DockType.Right)]
-        public DockType DockType
-        {
-            get { return dockType; }
-            set { dockType = value; }
-        }
+        public DockType DockType { get; set; }
+
+        public bool HideOnClose { get; set; }
+
+        [DefaultValue(false)]
+        public bool AutoShowDetails { get; set; }
 
         public override void Localize()
         {
@@ -651,16 +651,16 @@ namespace DataWF.Gui
             list.Localize();
 
             GuiService.Localize(this, lockName, "Property Editor", GlyphType.Pencil);
-
         }
 
-        public bool HideOnClose
+        public virtual bool Closing()
         {
-            get { return true; }
+            return true;
         }
 
-        [DefaultValue(false)]
-        public bool AutoShowDetails { get; set; }
+        public virtual void Activating()
+        {
+        }
 
         #endregion
 

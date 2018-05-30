@@ -399,6 +399,16 @@ namespace DataWF.Data.Gui
         {
             throw new NotImplementedException();
         }
+
+        public bool Closing()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Activating()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public delegate void ExportEditorDelegate(ExportProgressArgs arg);

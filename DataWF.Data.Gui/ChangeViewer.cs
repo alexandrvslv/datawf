@@ -284,6 +284,15 @@ namespace DataWF.Data.Gui
             base.Dispose(disposing);
         }
 
+        public bool Closing()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Activating()
+        {
+            throw new NotImplementedException();
+        }
     }
 
 

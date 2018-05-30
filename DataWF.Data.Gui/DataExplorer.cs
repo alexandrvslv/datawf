@@ -933,6 +933,16 @@ namespace DataWF.Data.Gui
                 MessageDialog.ShowMessage(ParentWindow, Locale.Get("FlowExplorer", "Files load complete!"), "File Loader!");
             }
         }
+
+        public bool Closing()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Activating()
+        {
+            throw new NotImplementedException();
+        }
     }
 
 
