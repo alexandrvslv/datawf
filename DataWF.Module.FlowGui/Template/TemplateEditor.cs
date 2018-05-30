@@ -32,7 +32,7 @@ namespace DataWF.Module.FlowGui
                 },
                 new GroupBoxItem
                 {
-                    Name = "Datas",
+                    Name = "Files",
                     Col = 1,
                     Row = 0,
                     FillWidth = true,

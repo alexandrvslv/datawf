@@ -13,6 +13,7 @@ namespace DataWF.Gui
         public CellEditorEnum()
         {
             ListAutoSort = false;
+            Filtering = true;
         }
 
         public override Type DataType
