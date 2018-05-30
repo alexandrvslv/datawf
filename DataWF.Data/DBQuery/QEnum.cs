@@ -48,6 +48,7 @@ namespace DataWF.Data
             set
             {
                 items = value;
+                items.Indexes.Clear();
                 items.Owner = this;
             }
         }
