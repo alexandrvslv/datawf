@@ -214,6 +214,9 @@ namespace DataWF.Gui
                         categoryName = group.categoryName;
                         //this.order = _group._childs.Count;
                         group.nodes.Add(this);
+
+                        if (group.Container != null)
+                            group.Container.Add(this);
                     }
                     OnPropertyChanged(nameof(Group));
                 }

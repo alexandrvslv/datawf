@@ -123,6 +123,24 @@ namespace DataWF.Module.FlowGui
             }
             return node;
         }
+
+        public override void CheckNode(TableItemNode node)
+        {
+            base.CheckNode(node);
+            var item = (DBItem)node.Item;
+            if (item is Template)
+            {
+                InitItems(((Template)item).GetDatas(), node, ShowTemplateData);
+            }
+            else if (item is Work)
+            {
+                InitItems(((Work)item).GetStages(), node, ShowStage);
+            }
+            else if (item is Stage)
+            {
+                InitItems(((Stage)item).GetParams(), node, ShowStageParam);
+            }
+        }
     }
 }
 

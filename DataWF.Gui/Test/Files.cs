@@ -139,7 +139,6 @@ namespace DataWF.TestGui
                                 {
                                     Node snode = InitDirectory(item);
                                     snode.Group = check;
-                                    directoryTree.Nodes.Add(snode);
                                 }
                             }
                         }

@@ -208,7 +208,8 @@ namespace DataWF.Data.Gui
                         onode = Find(((DBColumn)item).Group);
                     if (onode != null)
                         node.Group = onode;
-                    Nodes.Add(node);
+                    else
+                        Nodes.Add(node);
                 }
                 else
                     Nodes.Remove(node);

@@ -554,6 +554,7 @@ namespace DataWF.Gui
 
         protected internal virtual void CanvasMouseScrolled(MouseScrolledEventArgs e)
         {
+            hitt.ItemBound = new Rectangle();
             CanvasMouseMoved(new MouseMovedEventArgs(e.Timestamp, e.X, e.Y));
             canvas.QueueDraw();
         }
@@ -3443,8 +3444,10 @@ namespace DataWF.Gui
         protected virtual void OnCellDoubleClick(LayoutHitTestEventArgs e)
         {
             CellDoubleClick?.Invoke(this, e);
-            if (SelectedNode != null && SelectedNode.IsCompaund)
-                SelectedNode.Expand = !SelectedNode.Expand;
+            if (e.HitTest.Column.Name == nameof(ToString) && ListInfo.Tree && e.HitTest.Item is IGroup)
+            {
+                OnCellGlyphClick(e);
+            }
         }
 
         protected virtual void OnColumnDoubleClick(LayoutHitTestEventArgs e)

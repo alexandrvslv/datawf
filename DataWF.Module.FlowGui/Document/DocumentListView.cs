@@ -27,9 +27,8 @@ namespace DataWF.Module.FlowGui
         protected Toolsbar bar;
         protected ToolLabel toolCount;
         protected ToolItem toolCreate;
-        protected ToolDropDown toolCreateFrom;
+        protected ToolItem toolCreateFrom;
         protected ToolItem toolCopy;
-        protected ToolItem toolView;
         protected ToolItem toolFilter;
         protected ToolItem toolPreview;
         protected ToolTableLoader toolProgress;
@@ -54,12 +53,12 @@ namespace DataWF.Module.FlowGui
             {
                 Filter.IsWork = filterWork.Checked ? CheckedState.Checked : CheckedState.Indeterminate;
             })
-            { Name = "IsWork", DisplayStyle = ToolItemDisplayStyle.Text, CheckOnClick = true };
+            { Name = "Work", DisplayStyle = ToolItemDisplayStyle.Text, CheckOnClick = true };
             filterCurrent = new ToolItem((s, e) =>
             {
                 Filter.IsCurrent = filterCurrent.Checked;
             })
-            { Name = "IsCurrent", DisplayStyle = ToolItemDisplayStyle.Text, CheckOnClick = true };
+            { Name = "TODO", DisplayStyle = ToolItemDisplayStyle.Text, CheckOnClick = true };
             filterCustomer = new ToolFieldEditor { FillWidth = true, Name = nameof(DocumentFilter.Customer), DisplayStyle = ToolItemDisplayStyle.Text };
             filterNumber = new ToolFieldEditor { FillWidth = true, Name = nameof(DocumentFilter.Number), DisplayStyle = ToolItemDisplayStyle.Text };
             filterTitle = new ToolFieldEditor { FillWidth = true, Name = nameof(DocumentFilter.Title), DisplayStyle = ToolItemDisplayStyle.Text };
@@ -82,18 +81,12 @@ namespace DataWF.Module.FlowGui
             loader = new TableLoader();
 
             toolCreate = new ToolItem(ToolCreateClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Create", GlyphColor = Colors.Green, Glyph = GlyphType.PlusCircle };
-            toolCreateFrom = new ToolDropDown() { DisplayStyle = ToolItemDisplayStyle.Text, Name = "CreateFrom", GlyphColor = Colors.Green, Glyph = GlyphType.PlusCircle };
+            toolCreateFrom = new ToolItem(ToolCreateFromClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "CreateFrom", GlyphColor = Colors.Green, Glyph = GlyphType.PlusCircle };
             toolCopy = new ToolItem(ToolCopyClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Copy", Glyph = GlyphType.CopyAlias };
             toolLoad = new ToolItem(ToolLoadClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Load", Glyph = GlyphType.Download };
 
-            foreach (Template template in Template.DBTable.SelectParents())
-            {
-                if (template.Access.Create)
-                    toolCreateFrom.DropDownItems.Add(InitTemplate(template));
-            }
             toolCount = new ToolLabel { Text = "0" };
             toolPreview = new ToolItem(ToolPreviewClick) { CheckOnClick = true, Checked = true, Name = "Preview", Glyph = GlyphType.List };
-            toolView = new ToolItem(ToolViewClick) { Name = "View", Glyph = GlyphType.PictureO };
             toolFilter = new ToolItem(ToolFilterClick) { Name = "Filter", CheckOnClick = true, Glyph = GlyphType.Filter };
             toolParam = new ToolDropDown(ToolParamClick) { Name = "Parameters", Glyph = GlyphType.Spinner };
             toolProgress = new ToolTableLoader { Loader = loader };
@@ -107,7 +100,6 @@ namespace DataWF.Module.FlowGui
                 toolCount,
                 toolFilter,
                 toolPreview,
-                toolView,
                 toolProgress,
                 filterGroup)
             { Name = "DocumentListBar" };
@@ -404,14 +396,6 @@ namespace DataWF.Module.FlowGui
             return list.Selection.GetItems<Document>();
         }
 
-        private void ToolViewClick(object sender, EventArgs e)
-        {
-            if (CurrentDocument == null)
-                return;
-            var editor = new DocumentEditor { Document = CurrentDocument };
-            editor.ShowWindow(this);
-        }
-
         public void ShowDocument(Document document)
         {
             string name = "DocumentEditor" + document.Id.ToString();
@@ -459,6 +443,25 @@ namespace DataWF.Module.FlowGui
         private async void ToolLoadClick(object sender, EventArgs e)
         {
             await loader.LoadAsync();
+        }
+
+        protected virtual void ToolCreateFromClick(object sender, EventArgs e)
+        {
+            var tree = new FlowTree { FlowKeys = FlowTreeKeys.Template };
+            var toolCreateWindow = new ToolWindow
+            {
+                Target = tree,
+                Title = Locale.Get(nameof(DocumentListView), "Create From Selection")
+            };
+            toolCreateWindow.ButtonAcceptClick += (s, a) =>
+            {
+                var template = tree.SelectedDBItem as Template;
+
+                if (template == null || template.IsCompaund)
+                    return;
+                ViewDocuments(CreateDocuments(template, Filter.Referencing, List.Selection.GetItems<Document>()));
+            };
+            toolCreateWindow.Show(bar, toolCreateFrom.Bound.BottomLeft);
         }
 
         protected virtual void ToolCreateClick(object sender, EventArgs e)
@@ -527,31 +530,9 @@ namespace DataWF.Module.FlowGui
             base.Dispose(disposing);
         }
 
-        public ToolMenuItem InitTemplate(Template template)
-        {
-            if (template == null)
-                return null;
-            string name = "template" + template.Id.ToString();
-
-            var item = toolCreateFrom.DropDownItems[name] as TemplateMenuItem;
-            if (item == null)
-            {
-                item = new TemplateMenuItem(template) { Name = name };
-
-                var list = template.GetSubGroups<Template>(DBLoadParam.None);
-                foreach (var subTemplate in list)
-                    item.DropDown.Items.Add(InitTemplate(subTemplate));
-
-                if (list.Count() == 0)
-                    item.Click += TemplateItemClick;
-            }
-            return item;
-        }
-
         private void TemplateItemClick(object sender, EventArgs e)
         {
-            var templateItem = sender as TemplateMenuItem;
-            ViewDocuments(CreateDocuments(templateItem.Template, Filter.Referencing, List.Selection.GetItems<Document>()));
+
         }
 
         public List<Document> CreateDocuments(Template template, Document parent, List<Document> references)
@@ -703,5 +684,14 @@ namespace DataWF.Module.FlowGui
             }
         }
 
+        public bool Closing()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Activating()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

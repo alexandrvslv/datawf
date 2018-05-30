@@ -11,6 +11,8 @@ namespace DataWF.Data.Gui
     {
         public IDBTableContent Item { get; set; }
 
+        public bool CheckNodes { get; set; } = false;
+
         public string TableName
         {
             get { return Item?.Table.DisplayName; }

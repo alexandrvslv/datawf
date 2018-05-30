@@ -177,6 +177,22 @@ namespace DataWF.Module.CommonGui
                 {
                     InitItem((IDBTableContent)view);
                 }
+                else if (e.ListChangedType == ListChangedType.ItemDeleted)
+                {
+                    if (e.NewIndex >= 0)
+                    {
+                        var item = (DBItem)view[e.NewIndex];
+                        var node = Find(item);
+                        if (node != null)
+                        {
+                            if (node.Group != null)
+                            {
+                                node.Group = null;
+                            }
+                            Nodes.Remove(node);
+                        }
+                    }
+                }
                 else
                 {
                     TableItemNode node = null;
@@ -194,21 +210,24 @@ namespace DataWF.Module.CommonGui
                         //if (nodeParent == null && rowview.Group!=null && node.Group != null && node.Group.Tag)
                         //    nodeParent = node.Group;
                     }
-                    if (e.ListChangedType == ListChangedType.ItemDeleted && item != null)
-                    {
-                        if (node.Group == nodeParent)
-                            Nodes.Remove(node);
-                        node = null;
-                    }
                     if (node != null && nodeParent != null)
                     {
                         node.Group = nodeParent;
-                        Nodes.Add(node);
                     }
                     if (node != null)
                         InvalidateRow(listSource.IndexOf(node));
                 }
             });
+        }
+
+        protected override void OnCellGlyphClick(LayoutHitTestEventArgs e)
+        {
+            base.OnCellGlyphClick(e);
+            var node = e.HitTest.Item as TableItemNode;
+            if (node != null && !node.CheckNodes)
+            {
+                CheckNode(node);
+            }
         }
 
         public override CellStyle OnGetCellStyle(object listItem, object value, ILayoutCell col)
@@ -267,6 +286,7 @@ namespace DataWF.Module.CommonGui
                     node = InitItem((IDBTableContent)view);
                     node.Glyph = glyph;
                     node.GlyphColor = glyphColor;
+                    node.CheckNodes = true;
                     node.Localize();
                 }
                 IEnumerable enumer = view;
@@ -277,7 +297,7 @@ namespace DataWF.Module.CommonGui
 
                 foreach (DBItem item in enumer)
                 {
-                    if ((status == DBStatus.Empty || (status & item.Status) !=  DBStatus.Empty) && (!Access || item.Access.View))
+                    if ((status == DBStatus.Empty || (status & item.Status) != DBStatus.Empty) && (!Access || item.Access.View))
                     {
                         var element = InitItem(item);
                         if (ShowListNode)
@@ -297,8 +317,8 @@ namespace DataWF.Module.CommonGui
             }
             else
             {
-                views.Remove(view);
                 view.ListChanged -= HandleViewListChanged;
+                views.Remove(view);
                 node = (TableItemNode)Nodes.Find(GetName(view));
                 if (node != null)
                     node.Hide();
@@ -315,7 +335,8 @@ namespace DataWF.Module.CommonGui
                 }
                 if (show && (status == DBStatus.Empty || (status & item.Status) != DBStatus.Empty) && (!Access || item.Access.View))
                 {
-                    InitItem(item).Group = pnode;
+                    var node = InitItem(item);
+                    node.Group = pnode;
                 }
                 else
                 {
@@ -333,18 +354,11 @@ namespace DataWF.Module.CommonGui
             {
                 node.Glyph = GlyphType.UserMd;
                 node.GlyphColor = Colors.PeachPuff;
-                InitItems(((Position)item).GetUsers(), node, ShowUser);
             }
-            else if (item.Table.GroupKey != null && item.PrimaryId != null)
-            {
-                InitItems(item.Table.SelectItems(item.Table.GroupKey, CompareType.Equal, item.PrimaryId), node, node.Visible);
-            }
-            if (item is Department)
+            else if (item is Department)
             {
                 node.Glyph = GlyphType.Home;
                 node.GlyphColor = Colors.SandyBrown;
-                InitItems(((Department)item).GetUsers(), node, ShowUser && !ShowPosition);
-                InitItems(((Department)item).GetPositions(), node, ShowPosition);
             }
             else if (item is User)
             {
@@ -384,13 +398,38 @@ namespace DataWF.Module.CommonGui
             return node;
         }
 
+        public virtual void CheckNode(TableItemNode node)
+        {
+            var item = (DBItem)node.Item;
+            if (item is Position)
+            {
+                InitItems(((Position)item).GetUsers(), node, ShowUser);
+            }
+            else if (item.Table.GroupKey != null && item.PrimaryId != null)
+            {
+                InitItems(item.Table.SelectItems(item.Table.GroupKey, CompareType.Equal, item.PrimaryId), node, node.Visible);
+            }
+            if (item is Department)
+            {
+                InitItems(((Department)item).GetUsers(), node, ShowUser && !ShowPosition);
+                InitItems(((Department)item).GetPositions(), node, ShowPosition);
+            }
+            node.IsCompaund = node.Nodes.Count > 0;
+            node.CheckNodes = true;
+        }
+
         public TableItemNode InitItem(IDBTableContent item)
         {
             var name = GetName(item);
             var node = Nodes.Find(name) as TableItemNode;
             if (node == null)
             {
-                node = new TableItemNode { Name = name, Item = item };
+                node = new TableItemNode
+                {
+                    Name = name,
+                    Item = item,
+                    IsCompaund = true
+                };
             }
             return node;
         }
@@ -528,7 +567,6 @@ namespace DataWF.Module.CommonGui
                 }
             }
         }
-
 
         private void BindSourcePropertyChanged(object sender, PropertyChangedEventArgs e)
         {
