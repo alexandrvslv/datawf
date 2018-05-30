@@ -29,7 +29,7 @@ namespace DataWF.Gui
                 if (panel == value)
                     return;
                 panel = value;
-                panel.MapItem = this;
+                panel.DockItem = this;
                 if (box != null && panel.Parent == null)
                 {
                     box.Add(Panel);

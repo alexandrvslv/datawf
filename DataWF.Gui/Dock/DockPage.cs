@@ -7,54 +7,31 @@ using Xwt.Drawing;
 
 namespace DataWF.Gui
 {
-    public class DockPage : IContainerNotifyPropertyChanged
+    public class DockPage : ToolDropDown
     {
-        private GlyphType glyph;
         private bool hideOnClose;
         private bool active;
-        private bool visible = true;
-        private string name;
-        private string label;
-        private string toolText;
         private bool closing = false;
-        private Rectangle bound = new Rectangle();
-        public object Tag;
         private Widget widget;
 
         public DockPage()
         {
-
-        }
-
-        public Rectangle Bound
-        {
-            get { return bound; }
-            set
-            {
-                bound = value;
-                CheckBounds();
-            }
-        }
-
-        public Rectangle BoundImage { get; set; }
-
-        public Rectangle BoundText { get; set; }
-
-        public Rectangle BoundClose { get; set; }
-
-        public DockPageList List
-        {
-            get { return (DockPageList)Container; }
+            CarretVisible = true;
+            CarretGlyph = GlyphType.CloseAlias;
+            CarretStyleName = "PageClose";
+            StyleName = "Page";
+            Indent = 2;
+            DisplayStyle = ToolItemDisplayStyle.ImageAndText;
         }
 
         public DockPageBox Box
         {
-            get { return List?.Box; }
+            get { return Bar as DockPageBox; }
         }
 
         public DockPanel Panel
         {
-            get { return Box != null ? Box.Panel : null; }
+            get { return Box?.Panel; }
         }
 
         public Widget Widget
@@ -71,7 +48,7 @@ namespace DataWF.Gui
                 {
                     if (widget is IText)
                         ((IText)widget).TextChanged += ControlTextChanged;
-                    Label = widget is IText
+                    Text = widget is IText
                         ? ((IText)widget).Text
                                            : string.IsNullOrEmpty(widget.TooltipText)
                                            ? widget.GetType().FullName
@@ -86,20 +63,10 @@ namespace DataWF.Gui
             }
         }
 
-        public bool Closing
+        public bool HideOnClose
         {
-            get { return closing; }
-        }
-
-        public void Close()
-        {
-            if (!closing)
-            {
-                closing = true;
-                if (Box != null)
-                    Box.ClosePage(this);
-                closing = false;
-            }
+            get { return hideOnClose; }
+            set { hideOnClose = value; }
         }
 
         public bool Active
@@ -111,145 +78,92 @@ namespace DataWF.Gui
                 {
                     active = value;
                     if (active)
+                    {
                         UncheckExcept();
+                    }
+                    Bar?.QueueDraw();
                     OnPropertyChanged(nameof(Active));
                 }
             }
         }
 
-        public Image Image { get; set; }
-
-        public GlyphType Glyph
+        public void Close()
         {
-            get { return glyph; }
-            set
+            if (!closing)
             {
-                glyph = value;
-                OnPropertyChanged(nameof(Glyph));
+                closing = true;
+                if (Box != null)
+                {
+                    Box.ClosePage(this);
+                }
+                closing = false;
             }
         }
 
-        public string Name
+        protected override void OnClick(EventArgs e)
         {
-            get { return name; }
+            base.OnClick(e);
+            if (!Active)
+            {
+                Panel.CurrentPage = this;
+            }
+        }
+
+        public override bool Visible
+        {
+            get => base.Visible;
             set
             {
-                if (name != value)
+                base.Visible = value;
+
+                if (value)
                 {
-                    name = value;
-                    OnPropertyChanged(nameof(Name));
+                    Panel.CurrentPage = this;
+                }
+                else
+                {
+                    Panel.RemovePage(this);
                 }
             }
         }
 
-        public string Label
-        {
-            get { return label; }
-            set
-            {
-                if (label != value)
-                {
-                    label = value;
-                    toolText = value;
-                    OnPropertyChanged(nameof(Label));
-                }
-            }
-        }
 
-        public string ToolText
+        protected override void OnCarretClick(ButtonEventArgs args)
         {
-            get { return toolText; }
-            set
-            {
-                if (toolText != value)
-                {
-                    toolText = value;
-                    OnPropertyChanged(nameof(ToolText));
-                }
-            }
-        }
-
-        public bool Visible
-        {
-            get { return visible; }
-            set
-            {
-                if (visible != value)
-                {
-                    visible = value;
-                    OnPropertyChanged(nameof(Visible));
-                }
-            }
-        }
-
-        public bool HideOnClose
-        {
-            get { return hideOnClose; }
-            set { hideOnClose = value; }
-        }
-
-        [XmlIgnore]
-        public INotifyListChanged Container { get; set; }
-
-        private void DockPageFormClosed(object sender, EventArgs e)
-        {
+            base.OnCarretClick(args);
             Close();
         }
 
+
         private void ControlTextChanged(object sender, EventArgs e)
         {
-            Label = ((IText)widget).Text;
+            Text = ((IText)widget).Text;
         }
 
         private void UncheckExcept()
         {
-            foreach (DockPage item in List)
+            foreach (DockPage item in Box.Items.GetItems())
+            {
                 if (item != this)
                     item.Active = false;
-        }
-
-        public void CheckBounds()
-        {
-            BoundImage = new Rectangle(Bound.X + 2,
-                Bound.Y + 2,
-                Box.VisibleImage && (Image != null || Glyph != GlyphType.None) ? 19 : 3,
-                Box.VisibleImage && (Image != null || Glyph != GlyphType.None) ? 19 : 3);
-            BoundText = new Rectangle(Bound.X + (Box.ItemOrientation == Orientation.Horizontal ? BoundImage.Width + 3 : 3),
-                Bound.Y + (Box.ItemOrientation == Orientation.Horizontal ? 3 : BoundImage.Height + 4),
-                Box.ItemOrientation == Orientation.Horizontal ? Bound.Width - (3 + BoundImage.Width + (Box.VisibleClose ? 15 : 0)) : 20,
-                Box.ItemOrientation == Orientation.Horizontal ? 20 : Bound.Height - (3 + BoundImage.Height + (Box.VisibleClose ? 15 : 0)));
-            BoundClose = new Rectangle(
-                (Box.ItemOrientation == Orientation.Horizontal ? Bound.Right - 16 : Bound.X + 3),
-                (Box.ItemOrientation == Orientation.Horizontal ? Bound.Y + 3 : Bound.Bottom - 16),
-                14, 14);
-        }
-
-        #region INotifyPropertyChanged implementation
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected void OnPropertyChanged(string property)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
-            Container?.OnPropertyChanged(this, new PropertyChangedEventArgs(property));
-        }
-
-        internal void Draw(GraphContext context)
-        {
-            var state = this == Box.hover ? CellDisplayState.Hover : (Active ? CellDisplayState.Selected : CellDisplayState.Default);
-            context.DrawCell(Box.PageStyle, Label, Bound, BoundText, state);
-            if (Box.VisibleClose)
-            {
-                context.DrawCell(Box.CloseStyle, GlyphType.CloseAlias, BoundClose, BoundClose, Box.closeHover == this ? CellDisplayState.Selected : CellDisplayState.Default);
             }
-            //image
-            if (Box.VisibleImage)
+            State = CellDisplayState.Selected;
+        }
+
+        public override void Localize()
+        {
+            //base.Localize();
+            if (widget is ILocalizable)
             {
-                if (Image != null)
-                    context.DrawImage(Image, BoundImage);
-                else if (Glyph != GlyphType.None)
-                    context.DrawGlyph(Glyph, BoundImage, Box.PageStyle, state);
+                ((ILocalizable)widget).Localize();
             }
         }
-        #endregion
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            widget?.Dispose();
+            widget = null;
+        }
     }
 }

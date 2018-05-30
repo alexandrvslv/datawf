@@ -20,7 +20,6 @@ namespace DataWF.Gui
     public class DockBox : Canvas, IDockContainer, ISerializableElement
     {
         private DockItem map;
-        private EventHandler childFocusHandler;
         private DockPage page = null;
 
         private DockBoxState state = DockBoxState.Default;
@@ -171,7 +170,7 @@ namespace DataWF.Gui
                 if (State.HasFlag(DockBoxState.Move))
                 {
                     var htest = DockHitTest(args.X, args.Y, 50);
-                    page.List.Remove(page);
+                    page.Remove();
                     if (htest.Align == LayoutAlignType.None)
                     {
                         htest.Item.Panel.Pages.Items.Add(page);
@@ -317,12 +316,12 @@ namespace DataWF.Gui
             //}
         }
 
-        public DockPage PickTool(Widget control)
+        public DockPage PickPage(Widget control)
         {
-            return PickTool(this, control);
+            return PickPage(this, control);
         }
 
-        public DockPage PickTool(IDockContainer cont, Widget control)
+        public DockPage PickPage(IDockContainer cont, Widget control)
         {
             foreach (IDockContainer idc in cont.GetDocks())
             {
@@ -331,7 +330,7 @@ namespace DataWF.Gui
                     if (idc is DockPanel)
                         return ((DockPanel)idc).GetPage(control);
                     else
-                        return PickTool(idc, control);
+                        return PickPage(idc, control);
                 }
             }
             return null;
@@ -378,8 +377,8 @@ namespace DataWF.Gui
 
         private void MapPageSelected(object sender, DockPageEventArgs arg)
         {
-            if (childFocusHandler != null && arg.Page != null)
-                childFocusHandler(arg.Page.Widget, arg);
+            if (ContentFocus != null && arg.Page != null)
+                ContentFocus(arg.Page.Widget, arg);
         }
 
         public DockPage PickPage(int x, int y, DockItem item)
@@ -394,39 +393,30 @@ namespace DataWF.Gui
             return null;
         }
 
-        public event EventHandler ContentFocus
+        public event EventHandler ContentFocus;
+
+        private void ChildFocusInEvent(object sender, EventArgs args)
         {
-            add { childFocusHandler += value; }
-            remove { childFocusHandler -= value; }
+            ContentFocus?.Invoke(sender, args);
         }
 
-        private void ChildFocusInEvent(object o, EventArgs args)
-        {
-            if (childFocusHandler != null)
-                childFocusHandler(o, args);
-        }
-
-        private void Pages_PageClick(object sender, DockPageEventArgs e)
-        {
-            ChildFocusInEvent(e.Page.Widget, e);
-        }
-
-        private void PanelTabSelected(object sender, DockPageEventArgs e)
+        internal void OnPageSelected(object sender, DockPageEventArgs e)
         {
             if (e.Page == null)
             {
-                if (!((DockPanel)sender).MapItem.FillWidth)
+                if (!((DockPanel)sender).DockItem.FillWidth)
                 {
-                    ((DockPanel)sender).MapItem.Visible = false;
+                    ((DockPanel)sender).DockItem.Visible = false;
                     QueueDraw();
                 }
             }
-            else if (!((DockPanel)sender).MapItem.Visible)
+            else if (!((DockPanel)sender).DockItem.Visible)
             {
-                ((DockPanel)sender).MapItem.Visible = true;
+                ((DockPanel)sender).DockItem.Visible = true;
                 QueueDraw();
             }
 
+            ChildFocusInEvent(sender, e);
             PageSelected?.Invoke(this, e);
         }
 
@@ -479,18 +469,14 @@ namespace DataWF.Gui
 
         internal void Add(DockPanel panel)
         {
-            panel.PageSelected += PanelTabSelected;
             panel.Pages.VisibleClose = VisibleClose;
-            panel.Pages.PageClick += Pages_PageClick;
             panel.Pages.PageDrag += OnPageDrag;
             AddChild(panel);
         }
 
         internal void Remove(DockPanel panel)
         {
-            panel.PageSelected -= PanelTabSelected;
             panel.Pages.VisibleClose = VisibleClose;
-            panel.Pages.PageClick -= Pages_PageClick;
             panel.Pages.PageDrag -= OnPageDrag;
             RemoveChild(panel);
         }
@@ -597,10 +583,10 @@ namespace DataWF.Gui
 
         public DockPage Put(Widget widget, DockType type)
         {
-            DockPage page = PickTool(widget);
+            DockPage page = PickPage(widget);
             if (page != null)
             {
-                page.Panel.SelectPage(page);
+                page.Panel.CurrentPage = page;
             }
             else
             {

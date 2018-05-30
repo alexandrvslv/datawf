@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using DataWF.Common;
 using Xwt;
 using Xwt.Drawing;
@@ -10,154 +11,52 @@ namespace DataWF.Gui
 {
     public class DockPanel : Canvas, IEnumerable, IEnumerable<DockPage>, IDockContainer, ILocalizable, ISerializableElement
     {
-        private DockItem mapItem;
         private DockPage currentPage;
         private Menubar context;
         private ToolMenuItem toolHide;
         private LayoutAlignType pagesAlign = LayoutAlignType.Top;
-        private DockPageBox pages;
         private VBox panel;
         private LinkedList<DockPage> pagesHistory = new LinkedList<DockPage>();
-
-        public event EventHandler<DockPageEventArgs> PageSelected;
 
         private Widget widget;
 
         public DockPanel() : base()
         {
+            //context = new Menubar(toolHide);
             toolHide = new ToolMenuItem { Name = "Hide", Text = "Hide" };
-
-            context = new Menubar(toolHide);
-
-            pages = new DockPageBox { Name = "toolStrip" };
-            pages.PageClick += PagesPageClick;
-            pages.Items.ListChanged += PageListOnChange;
-
-            panel = new VBox
-            {
-                Margin = new WidgetSpacing(6, 0, 6, 6)
-            };
+            Pages = new DockPageBox { Name = "pages" };
+            panel = new VBox { Margin = new WidgetSpacing(6, 0, 6, 6) };
 
             Name = "DockPanel";
-            AddChild(pages);
+            AddChild(Pages);
             AddChild(panel);
-            //BackgroundColor = Colors.Gray;
         }
 
-        public DockPanel(params Widget[] widgets) : this()
-        {
-            foreach (var widget in widgets)
-            {
-                Put(widget);
-            }
-        }
+        public DockPageBox Pages { get; internal set; }
 
-        public void Localize()
-        {
-            foreach (DockPage page in pages.Items)
-            {
-                var loc = page.Widget as ILocalizable;
-                if (loc != null)
-                    loc.Localize();
-            }
-        }
+        public DockItem DockItem { get; set; }
 
-        public DockPage AddPage(Widget c)
-        {
-            var page = DockBox.CreatePage(c);
-            Pages.Items.Add(page);
-            return page;
-        }
+        public DockBox DockBox { get { return DockItem?.DockBox; } }
 
-        private void PagesPageClick(object sender, DockPageEventArgs e)
+        public Widget CurrentWidget
         {
-            SelectPage(e.Page);
-        }
+            get { return widget; }
+            set
+            {
+                if (value == widget)
+                    return;
 
-        private void PageListOnChange(object sender, ListChangedEventArgs e)
-        {
-            if (e.ListChangedType == ListChangedType.ItemAdded)
-            {
-                if (MapItem != null && !MapItem.Visible)
+                if (widget != null)
                 {
-                    MapItem.Visible = true;
-                    //Parent.ResumeLayout(true);
-                }
-                DockPage page = pages.Items[e.NewIndex];
-                SelectPage(page);
-            }
-            else if (e.ListChangedType == ListChangedType.ItemChanged)
-            {
-                DockPage page = pages.Items[e.NewIndex];
-                if (CurrentWidget == page.Widget && !page.Visible)
-                {
-                    RemovePage(page, false);
-                }
-                else if (CurrentWidget == null && page.Visible)
-                {
-                    SelectPage(page);
-                }
-            }
-            else if (e.ListChangedType == ListChangedType.ItemDeleted)
-            {
-                if (e.NewIndex >= 0)
-                {
-                    DockPage page = pages.Items[e.NewIndex];
-                    RemovePage(page, true);
-                }
-                else
-                {
-                    if (pages.Items.Count > 0)
-                    {
-                        if (CurrentWidget == null)
-                            SelectPage(pages.Items[0]);
-                    }
-                    else
-                    {
-                        if (MapItem != null && !MapItem.FillWidth)
-                        {
-                            MapItem.Visible = false;
-                            foreach (var mapItem in MapItem.Map)
-                            {
-                                if (mapItem.Count == 0)
-                                {
-                                    if (mapItem.Panel.Pages.Items.Count == 0)
-                                        mapItem.Visible = false;
-                                }
-                            }
-                            if (Parent is DockBox)
-                            {
-                                ((DockBox)Parent).QueueForReallocate();
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        public void RemovePage(DockPage page, bool RemoveHistory)
-        {
-            if (page != null)
-            {
-                if (CurrentWidget == page.Widget)
-                {
-                    DockPage npage = null;
-                    if (pagesHistory.Last != null)
-                    {
-                        var item = pagesHistory.Last;
-
-                        while (item != null && (item.Value == page || !item.Value.Visible))
-                            item = item.Previous;
-                        if (item != null)
-                            npage = item.Value;
-                    }
-                    SelectPage(npage);
+                    panel.Remove(widget);
                 }
 
-                if (RemoveHistory)
-                    while (pagesHistory.Remove(page))
-                    {
-                    }
+                widget = value;
+
+                if (widget != null)
+                {
+                    panel.PackStart(widget, true);
+                }
             }
         }
 
@@ -171,10 +70,54 @@ namespace DataWF.Gui
                 pagesAlign = value;
                 if (pagesAlign == LayoutAlignType.Left ||
                     pagesAlign == LayoutAlignType.Right)
-                    pages.Orientation = Orientation.Vertical;
+                    Pages.Orientation = Orientation.Vertical;
                 else
-                    pages.Orientation = Orientation.Horizontal;
+                    Pages.Orientation = Orientation.Horizontal;
                 //PerformLayout();
+            }
+        }
+
+        public DockPanel(params Widget[] widgets) : this()
+        {
+            foreach (var widget in widgets)
+            {
+                Put(widget);
+            }
+        }
+
+        public void Localize()
+        {
+            Pages.Localize();
+        }
+
+        public DockPage AddPage(Widget c)
+        {
+            var page = DockBox.CreatePage(c);
+            Pages.Items.Add(page);
+            return page;
+        }
+
+        public void RemovePage(DockPage page)
+        {
+            if (page == null)
+                return;
+            if (CurrentWidget == page.Widget)
+            {
+                DockPage npage = null;
+                if (pagesHistory.Last != null)
+                {
+                    var item = pagesHistory.Last;
+
+                    while (item != null && (item.Value == page || !item.Value.Visible))
+                        item = item.Previous;
+                    if (item != null)
+                        npage = item.Value;
+                }
+                CurrentPage = page;
+            }
+
+            while (pagesHistory.Remove(page))
+            {
             }
         }
 
@@ -186,14 +129,14 @@ namespace DataWF.Gui
             var widgetRect = Rectangle.Zero;
             if (pagesAlign == LayoutAlignType.Top)
             {
-                if (pages.ItemOrientation == Orientation.Vertical)
+                if (Pages.ItemOrientation == Orientation.Vertical)
                     def = 100D;
                 pagesRect = new Rectangle(0D, 0D, Size.Width, def);
                 widgetRect = new Rectangle(0D, def, Size.Width, Size.Height - def);
             }
             else if (pagesAlign == LayoutAlignType.Bottom)
             {
-                if (pages.ItemOrientation == Orientation.Vertical)
+                if (Pages.ItemOrientation == Orientation.Vertical)
                     def = 100D;
 
                 pagesRect = new Rectangle(0D, Size.Height - def, Size.Width, def);
@@ -201,7 +144,7 @@ namespace DataWF.Gui
             }
             else if (pagesAlign == LayoutAlignType.Left)
             {
-                if (pages.ItemOrientation == Orientation.Horizontal)
+                if (Pages.ItemOrientation == Orientation.Horizontal)
                     def = 100;
 
                 pagesRect = new Rectangle(0D, 0D, def, Size.Height);
@@ -209,59 +152,20 @@ namespace DataWF.Gui
             }
             else if (pagesAlign == LayoutAlignType.Right)
             {
-                if (pages.ItemOrientation == Orientation.Horizontal)
+                if (Pages.ItemOrientation == Orientation.Horizontal)
                     def = 100;
 
                 pagesRect = new Rectangle(Size.Width - def, 0D, def, Size.Height);
                 widgetRect = new Rectangle(0D, 0D, Size.Width - def, Size.Height);
             }
-            SetChildBounds(pages, pagesRect);
+            SetChildBounds(Pages, pagesRect);
             SetChildBounds(panel, widgetRect);
-        }
-
-        public DockPageBox Pages
-        {
-            get { return pages; }
-        }
-
-        public DockItem MapItem
-        {
-            get { return mapItem; }
-            set { mapItem = value; }
-        }
-
-        public Widget CurrentWidget
-        {
-            get { return widget; }
-            set
-            {
-                if (value == widget)
-                    return;
-
-                if (widget != null)
-                {
-                    panel.Remove(widget);
-                    widget.Visible = false;
-                }
-
-                widget = value;
-
-                if (widget != null)
-                {
-                    widget.Visible = true;
-                    panel.PackStart(widget, true);
-                }
-            }
-        }
-
-        public int Count
-        {
-            get { return pages.Items.Count; }
         }
 
         public void ClearPages()
         {
-            pages.Items.Clear();
+            Pages.Items.Clear();
+            CurrentPage = null;
         }
 
         public void SelectPageByControl(Widget control)
@@ -269,33 +173,36 @@ namespace DataWF.Gui
             var page = GetPage(control);
             if (page != null)
             {
-                SelectPage(page);
+                CurrentPage = page;
             }
         }
 
         public DockPage CurrentPage
         {
             get { return currentPage; }
-        }
-
-        public void SelectPage(DockPage page)
-        {
-            if (currentPage == page)
-                return;
-
-            currentPage = page;
-            if (page != null)
+            set
             {
-                pagesHistory.AddLast(page);
-                page.Active = true;
-                CurrentWidget = page.Widget;
+                if (currentPage == value)
+                    return;
+
+                currentPage = value;
+                if (value != null)
+                {
+                    if (DockItem != null && !DockItem.Visible)
+                    {
+                        DockItem.Visible = true;
+                        //Parent.ResumeLayout(true);
+                    }
+                    pagesHistory.AddLast(value);
+                    value.Active = true;
+                    CurrentWidget = value.Widget;
+                }
+                else
+                {
+                    CurrentWidget = null;
+                }
+                DockBox?.OnPageSelected(this, new DockPageEventArgs(value));
             }
-            else
-            {
-                CurrentWidget = null;
-            }
-            if (PageSelected != null)
-                PageSelected(this, new DockPageEventArgs(page));
         }
 
         #region IDockContainer implementation
@@ -307,7 +214,7 @@ namespace DataWF.Gui
 
         public bool Contains(Widget control)
         {
-            foreach (DockPage t in pages.Items)
+            foreach (DockPage t in Pages.Items)
                 if (t.Widget == control)
                     return true;
             return false;
@@ -315,13 +222,13 @@ namespace DataWF.Gui
 
         public IEnumerable<Widget> GetControls()
         {
-            foreach (DockPage t in pages.Items)
+            foreach (DockPage t in Pages.Items)
                 yield return t.Widget;
         }
 
         public Widget Find(string name)
         {
-            foreach (DockPage page in pages.Items)
+            foreach (DockPage page in Pages.Items)
                 if (page.Widget.Name == name)
                     return page.Widget;
             return null;
@@ -341,12 +248,13 @@ namespace DataWF.Gui
 
         public void Put(DockPage page)
         {
-            pages.Items.Add(page);
+            Pages.Items.Add(page);
+            CurrentPage = page;
         }
 
         public DockPage GetPage(string name)
         {
-            foreach (DockPage page in pages.Items)
+            foreach (DockPage page in Pages.Items)
                 if (page.Widget?.Name == name)
                 {
                     return page;
@@ -356,7 +264,7 @@ namespace DataWF.Gui
 
         public DockPage GetPage(Widget control)
         {
-            foreach (DockPage page in pages.Items)
+            foreach (DockPage page in Pages.Items)
                 if (page.Widget == control)
                 {
                     return page;
@@ -366,10 +274,10 @@ namespace DataWF.Gui
 
         public bool Delete(Widget control)
         {
-            var tp = GetPage(control);
-            if (tp != null)
+            var page = GetPage(control);
+            if (page != null)
             {
-                tp.List.Remove(tp);
+                page.Close();
                 return true;
             }
             return false;
@@ -377,7 +285,7 @@ namespace DataWF.Gui
 
         public IEnumerable<IDockContainer> GetDocks()
         {
-            foreach (DockPage page in pages.Items)
+            foreach (DockPage page in Pages.Items)
             {
                 if (page.Widget is IDockContainer)
                     yield return (IDockContainer)page.Widget;
@@ -388,23 +296,24 @@ namespace DataWF.Gui
 
         protected override void Dispose(bool disposing)
         {
-            pages.Dispose();
+            Pages.Dispose();
             base.Dispose(disposing);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return pages.Items.GetEnumerator();
+            return Pages.Items.GetItems().GetEnumerator();
         }
 
         public IEnumerator<DockPage> GetEnumerator()
         {
-            return pages.Items.GetEnumerator();
+            return Pages.Items.GetItems().Cast<DockPage>().GetEnumerator();
         }
 
         public void Serialize(ISerializeWriter writer)
         {
-            foreach (DockPage page in pages.Items)
+            writer.WriteAttribute("Current", CurrentWidget?.Name ?? string.Empty);
+            foreach (DockPage page in Pages.Items)
             {
                 if (page.Widget is ISerializableElement)
                 {
@@ -419,8 +328,10 @@ namespace DataWF.Gui
 
         public void Deserialize(ISerializeReader reader)
         {
+            var current = reader.ReadAttribute<string>("Current");
             if (reader.IsEmpty)
                 return;
+
             while (reader.ReadBegin())
             {
                 var type = reader.ReadType();

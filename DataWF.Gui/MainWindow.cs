@@ -156,7 +156,7 @@ namespace DataWF.Gui
             InitialLocation = WindowLocation.CenterScreen;
             Title = "Main Form";
             Size = new Size(1024, 768);
-            
+
             BackgroundColor = GuiEnvironment.Theme["Window"].BaseColor;
         }
 
@@ -660,7 +660,6 @@ namespace DataWF.Gui
         public ToolWidgetHandler(EventHandler click) : base(click)
         {
             DisplayStyle = ToolItemDisplayStyle.ImageAndText;
-            indent = 6;
         }
 
         public Widget Widget { get; set; }
