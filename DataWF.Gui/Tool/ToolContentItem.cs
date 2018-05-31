@@ -67,20 +67,16 @@ namespace DataWF.Gui
             }
         }
 
-        public override Rectangle Bound
+        public override void ApplyBound(Rectangle value)
         {
-            get => base.Bound;
-            set
-            {
-                base.Bound = value;
-                contentBound.X = DisplayStyle.HasFlag(ToolItemDisplayStyle.Text)
-                   ? textBound.Right - 2
-                   : DisplayStyle.HasFlag(ToolItemDisplayStyle.Image)
-                       ? imageBound.Right - 2
-                       : value.X + 1;
-                contentBound.Y = value.Y + (value.Height - contentBound.Height) / 2D;
-                contentBound.Width = value.Width - (contentBound.Left - value.Left);
-            }
+            base.ApplyBound(value);
+            contentBound.X = DisplayStyle.HasFlag(ToolItemDisplayStyle.Text)
+               ? textBound.Right - 2
+               : DisplayStyle.HasFlag(ToolItemDisplayStyle.Image)
+                   ? imageBound.Right - 2
+                   : Bound.X + 1;
+            contentBound.Y = Bound.Y + (Bound.Height - contentBound.Height) / 2D;
+            contentBound.Width = Bound.Width - (contentBound.Left - Bound.Left);
         }
 
         protected internal override void CheckSize(bool queue = true)
@@ -100,7 +96,7 @@ namespace DataWF.Gui
 
             contentBound.X = (DisplayStyle.HasFlag(ToolItemDisplayStyle.Text) ? textBound.Right : imageBound.Right);
             contentBound.Y = 0;
-            contentBound.Height = MinHeight;
+            //contentBound.Height = MinHeight - Bar.Indent;
 
             width = Math.Max(contentBound.Right, MinWidth) + (Bar?.Indent ?? 0);
             height = Math.Max(Math.Max(textBound.Height, contentBound.Height), MinHeight) + Bar.Indent;

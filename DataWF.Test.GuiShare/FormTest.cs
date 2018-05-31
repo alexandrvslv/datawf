@@ -69,7 +69,7 @@ namespace DataWF.TestGui
                     System = DBSystem.SQLite,
                     DataBase = "test.common.sqlite"
                 };
-
+                schema.DropDatabase();
                 schema.CreateDatabase();
             });
 

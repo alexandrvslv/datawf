@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Xml.Serialization;
 using DataWF.Common;
 using Xwt;
 
@@ -10,6 +12,7 @@ namespace DataWF.Gui
         protected Menubar menu;
         private LayoutAlignType menuAlign = LayoutAlignType.Bottom;
         private CellStyle carretStyle;
+        private CellDisplayState carretState = CellDisplayState.Default;
 
         public ToolDropDown() : base()
         {
@@ -26,13 +29,29 @@ namespace DataWF.Gui
 
         public Rectangle CarretBound
         {
-            get { return new Rectangle(new Point(Bound.Right - CarretSize.Width, Bound.Top + (Bound.Height - CarretSize.Height) / 2D), CarretSize); }
+            get { return new Rectangle(Bound.Right - (CarretSize + 2), Bound.Top + (Bound.Height - CarretSize) / 2D, CarretSize, CarretSize); }
         }
 
-        public CellDisplayState CarretState { get; set; } = CellDisplayState.Default;
+        [DefaultValue(16D)]
+        public Double CarretSize { get; set; } = 16D;
+
+        [XmlIgnore]
+        public CellDisplayState CarretState
+        {
+            get { return carretState; }
+            set
+            {
+                if (carretState != value)
+                {
+                    carretState = value;
+                    Bar?.QueueDraw();
+                }
+            }
+        }
 
         public string CarretStyleName { get; set; } = "Window";
 
+        [XmlIgnore]
         public CellStyle CarretStyle
         {
             get { return carretStyle ?? (carretStyle = GuiEnvironment.Theme[CarretStyleName]); }
@@ -43,8 +62,6 @@ namespace DataWF.Gui
             }
         }
 
-        public Size CarretSize { get; set; } = new Size(16, 16);
-
         public bool CarretVisible { get; set; } = false;
 
         public GlyphType CarretGlyph { get; set; } = GlyphType.CaretDown;
@@ -53,6 +70,7 @@ namespace DataWF.Gui
 
         public event EventHandler DropDownOpened;
 
+        [XmlIgnore]
         public Menubar DropDown
         {
             get { return menu ?? (DropDown = new Menubar { Name = Name }); }
@@ -70,6 +88,7 @@ namespace DataWF.Gui
         public ToolItem DropDownItems
         {
             get { return DropDown.Items; }
+            set { DropDown.Items.AddRange(value); }
         }
 
         public bool HasDropDown
@@ -99,15 +118,15 @@ namespace DataWF.Gui
         protected override void OnClick(EventArgs e)
         {
             base.OnClick(e);
+            QueueShowMenu();
+        }
+
+        protected void QueueShowMenu()
+        {
             if (menu != null)
             {
                 Bar.CurrentMenubar = menu.Visible ? null : menu;
             }
-        }
-
-        protected override internal void OnMouseEntered(EventArgs args)
-        {
-            base.OnMouseEntered(args);
         }
 
         protected override internal void OnMouseExited(EventArgs args)
@@ -123,10 +142,26 @@ namespace DataWF.Gui
 
         protected override internal void OnButtonReleased(ButtonEventArgs args)
         {
-            base.OnButtonReleased(args);
-            if (CarretBound.Contains(args.Position))
+            if (CarretVisible && CarretBound.Contains(args.Position))
             {
                 OnCarretClick(args);
+            }
+            else
+            {
+                base.OnButtonReleased(args);
+            }
+        }
+
+        protected internal override void OnMouseMove(MouseMovedEventArgs args)
+        {
+            base.OnMouseMove(args);
+            if (CarretVisible && CarretBound.Contains(args.Position))
+            {
+                CarretState = CellDisplayState.Hover;
+            }
+            else
+            {
+                CarretState = CellDisplayState.Default;
             }
         }
 
@@ -138,7 +173,7 @@ namespace DataWF.Gui
         protected internal override void CheckSize(bool queue = true)
         {
             base.CheckSize(queue);
-            width += CarretSize.Width;
+            width += CarretSize;
         }
 
         public override void OnDraw(GraphContext context)
@@ -147,7 +182,7 @@ namespace DataWF.Gui
             if (CarretVisible)
             {
                 var carret = CarretBound;
-                context.DrawCell(CarretStyle, CarretGlyph, carret, carret, CellDisplayState.Default);
+                context.DrawCell(CarretStyle, CarretGlyph, carret, carret, CarretState);
             }
         }
 

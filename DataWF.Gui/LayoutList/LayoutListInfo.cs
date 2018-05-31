@@ -303,7 +303,7 @@ namespace DataWF.Gui
         }
 
         [DefaultValue(0)]
-        public int Indent { get; set; }
+        public double Indent { get { return columns.Indent; } set { columns.Indent = value; } }
 
         [DefaultValue(19)]
         public int LevelIndent { get; set; } = 19;
@@ -382,11 +382,6 @@ namespace DataWF.Gui
 
         public virtual void OnBoundChanged(EventArgs e)
         {
-            columns.Bound = Rectangle.Zero;
-            foreach (var item in columns.GetItems())
-            {
-                item.Bound = Rectangle.Zero;
-            }
             BoundChanged?.Invoke(this, e);
         }
 
@@ -459,38 +454,7 @@ namespace DataWF.Gui
                     sort.IsGroup = false;
         }
 
-        public void GetColumnsBound(double w, Func<ILayoutItem, double> wd, Func<ILayoutItem, double> hd)
-        {
-            if (Columns.Bound.Width.Equals(0) || CalcWidth || CalcHeigh || Columns.FillWidth)
-            {
-                columns.GetBound(HeaderVisible ? w - headerWidth * scale : w, 0, wd, hd);
 
-                Columns.Bound = new Rectangle(Columns.Bound.X + HeaderWidth,
-                                             Columns.Bound.Y,
-                                             Columns.Bound.Width,
-                                             Columns.Bound.Height);
-            }
-        }
-
-        public void GetBound(LayoutColumn column, Func<ILayoutItem, double> wd, Func<ILayoutItem, double> hd)
-        {
-            if (column.Bound.Width.Equals(0) || CalcWidth || CalcHeigh || columns.FillWidth)
-            {
-                columns.GetBound(column, wd, hd);
-            }
-        }
-
-        public IEnumerable<LayoutColumn> GetDisplayed(double left, double right)
-        {
-            foreach (LayoutColumn column in columns.GetVisibleItems())
-            {
-                GetBound(column, null, null);
-                if (column.Bound.Right > left && column.Bound.Left < right)
-                {
-                    yield return column;
-                }
-            }
-        }
 
         public void ScaleRec(ref Rectangle rec)
         {

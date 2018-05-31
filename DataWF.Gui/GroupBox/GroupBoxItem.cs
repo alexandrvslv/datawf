@@ -76,14 +76,13 @@ namespace DataWF.Gui
             GroupBox?.QueueForReallocate();
         }
 
-        public void CheckBounds()
+        public override void ApplyBound(Rectangle bound)
         {
             var top = TopMap;
             if (top == null)
                 return;
 
-            var bound = top.GetBound(this);
-
+            Bound = bound;
             //if (!expand)
             //    bound.Height = HeaderHeight + 5;
 
@@ -187,7 +186,7 @@ namespace DataWF.Gui
 
         public void Paint(GraphContext context)
         {
-            context.DrawCell(Style, null, bound, bound, CellDisplayState.Default);
+            context.DrawCell(Style, null, Bound, Bound, CellDisplayState.Default);
 
             GetExpandBound(Bound);
 
@@ -242,6 +241,7 @@ namespace DataWF.Gui
 
         [DefaultValue(-1)]
         public int RadioGroup { get; set; } = -1;
+        public Rectangle Bound { get; private set; }
 
         public override void Dispose()
         {

@@ -1,11 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Xwt;
 
 namespace DataWF.Gui
 {
     public partial class LayoutList
     {
-        internal class LayoutBoundsCache
+        internal class LayoutBoundsCache : Dictionary<LayoutColumn, Rectangle>
         {
             public int Index = -2;
             public LayoutGroup Group;
@@ -19,7 +20,6 @@ namespace DataWF.Gui
             public Rectangle Cell = new Rectangle();
             public Rectangle CellGlyph = new Rectangle();
             public Rectangle CellText = new Rectangle();
-            public Rectangle Column = new Rectangle();
             public Rectangle ColumnGlyph = new Rectangle();
             public Rectangle ColumnFilter = new Rectangle();
             public Rectangle ColumnSort = new Rectangle();
@@ -36,11 +36,19 @@ namespace DataWF.Gui
             public Rectangle Selection = new Rectangle(-1D, -1D, -1D, -1D);
             public List<LayoutColumn> VisibleColumns;
 
-            public void Clear()
+            public new void Clear()
             {
+                ClearItems();
+                Index = -1;
+                Columns = Rectangle.Zero;
                 TempArea = Rectangle.Zero;
                 TempColumns = Rectangle.Zero;
                 TempContent = Rectangle.Zero;
+            }
+
+            public void ClearItems()
+            {
+                base.Clear();
             }
         }
     }

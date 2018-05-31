@@ -867,17 +867,17 @@ namespace DataWF.Gui
             var min = canvas.ScrollHorizontal.LowerValue;
             var max = canvas.ScrollHorizontal.UpperValue;
 
-            bounds.Column = GetColumnBound(value);
+            var bound = GetColumnBound(value);
 
             var left = listInfo.HeaderVisible ? listInfo.HeaderWidth : 0;
-            if (bounds.Column.Left < left)
+            if (bound.Left < left)
             {
-                var val = bounds.Column.Left < 0 ? canvas.ScrollHorizontal.Value + bounds.Column.Left : canvas.ScrollHorizontal.Value - bounds.Column.Left;
+                var val = bound.Left < 0 ? canvas.ScrollHorizontal.Value + bound.Left : canvas.ScrollHorizontal.Value - bound.Left;
                 canvas.ScrollHorizontal.Value = (int)(val < 0 ? 0 : val < min ? min : val);
             }
-            else if (bounds.Column.Right > canvas.Bounds.Width)
+            else if (bound.Right > canvas.Bounds.Width)
             {
-                var val = canvas.ScrollHorizontal.Value + bounds.Column.Right - canvas.Bounds.Width;
+                var val = canvas.ScrollHorizontal.Value + bound.Right - canvas.Bounds.Width;
                 canvas.ScrollHorizontal.Value = (int)(val > max ? max : val);
             }
         }
@@ -961,7 +961,7 @@ namespace DataWF.Gui
                 if (_hideEmpty == value)
                     return;
                 _hideEmpty = value;
-                this.RefreshBounds(true);
+                RefreshBounds(true);
             }
         }
 
@@ -974,7 +974,7 @@ namespace DataWF.Gui
             {
                 bounds.VisibleColumns = listInfo.GridMode || gridCols > 1
                     ? listInfo.Columns.GetVisible().ToList()
-                    : listInfo.GetDisplayed(bounds.Area.Left, bounds.Area.Right).ToList();
+                    : GetDisplayed(bounds.Area.Left, bounds.Area.Right).ToList();
             }
             GetDisplayIndexes();
             bounds.TempArea = bounds.Area;
@@ -1017,8 +1017,8 @@ namespace DataWF.Gui
         {
             if (column != null && listInfo.ColumnsVisible)
             {
-                bounds.Column = GetColumnBound(column);
-                QueueDraw(bounds.Column.X, bounds.Column.Y, bounds.Column.Width, bounds.Column.Height + 1);
+                var bound = GetColumnBound(column);
+                QueueDraw(bound.X, bound.Y, bound.Width, bound.Height + 1);
             }
         }
 
@@ -1286,7 +1286,7 @@ namespace DataWF.Gui
 
         public Rectangle GetContentBound()
         {
-            bounds.Content.Width = ((bounds.Columns.Width) * gridCols) + (listInfo.HeaderWidth + ListInfo.Indent);
+            bounds.Content.Width = ((bounds.Columns.Width) * gridCols) + listInfo.HeaderWidth;
             bounds.Content.Height = 0D;
             if (listInfo.ColumnsVisible)
             {
@@ -1319,7 +1319,7 @@ namespace DataWF.Gui
             {
                 double h = 0;
                 for (int i = sIndex; i <= eIndex; i++)
-                    h += GetItemHeight(i) + listInfo.Indent;
+                    h += GetItemHeight(i);
                 return h;
             }
             else
@@ -1344,28 +1344,26 @@ namespace DataWF.Gui
             {
                 cacheCalc.Index = index;
                 cacheCalc.Item = listSource[index];
-
-                listInfo.GetColumnsBound(bounds.Area.Width, null, handleCalcHeigh);
-                h = listInfo.Columns.Bound.Height;
+                cacheCalc.RowBound = GetColumnsBound(bounds.Area.Width, null, handleCalcHeigh);
+                h = cacheCalc.RowBound.Height;
             }
 
-            return h - listInfo.Indent;
+            return h;
         }
 
         protected double CalculateHeight(ILayoutItem item)
         {
             double max = 300;
-            double hh = 0;
+            double hh = 22;
 
             cacheCalc.Column = (LayoutColumn)item;
             cacheCalc.Value = ReadValue(cacheCalc.Item, cacheCalc.Column);
             cacheCalc.Style = OnGetCellStyle(cacheCalc.Item, cacheCalc.Value, cacheCalc.Column);
             cacheCalc.Formated = FormatValue(cacheCalc.Item, cacheCalc.Value, cacheCalc.Column);
 
-            if (cacheCalc.Formated is string)
+            if (cacheCalc.Formated is string && ((string)cacheCalc.Formated).Length > 0)
             {
-                listInfo.GetBound((LayoutColumn)item, null, null);
-                cacheCalc.Bound = item.Bound;
+                cacheCalc.Bound = ListInfo.Columns.GetBound(cacheCalc.Column, bounds.Columns);
                 cacheCalc.DisplayIndex = cacheCalc.Index;
 
                 hh = GetTextLayout(cacheCalc).Height + 4;
@@ -1405,6 +1403,61 @@ namespace DataWF.Gui
             return Math.Min(max, ww);
         }
 
+        public Rectangle GetColumnsBound()
+        {
+            return GetColumnsBound(bounds.Area.Width, null, null);
+        }
+
+        public Rectangle GetColumnsBound(double maxWidth, Func<ILayoutItem, double> wd, Func<ILayoutItem, double> hd)
+        {
+            var bound = bounds.Columns;
+            if (bound.Width.Equals(0) || wd != null || hd != null || (ListInfo.Columns.FillWidth && bounds.TempArea != bounds.Area))
+            {
+                bound = ListInfo.Columns.GetBound(ListInfo.HeaderVisible ? maxWidth - ListInfo.HeaderWidth * ListInfo.Scale : maxWidth, 0, wd, hd);
+                bound.X += ListInfo.HeaderWidth;
+
+                if (wd == null && hd == null)
+                {
+                    bounds.Columns = bound;
+                    bounds.Index = -1;
+                    bounds.ClearItems();
+                }
+            }
+
+            return bound;
+        }
+
+        protected Rectangle GetColumnBound(LayoutColumn column)
+        {
+            var bound = GetColumnBound(column, bounds.Columns, null, null);
+            bound.X -= bounds.Area.X;
+            return bound;
+        }
+
+        public Rectangle GetColumnBound(LayoutColumn column, Rectangle mapBound, Func<ILayoutItem, double> wd, Func<ILayoutItem, double> hd)
+        {
+            if (!bounds.TryGetValue(column, out var bound) || wd != null || hd != null)
+            {
+                bound = listInfo.Columns.GetBound(column, mapBound, wd, hd);
+
+                if (wd == null && hd == null)
+                    bounds[column] = bound;
+            }
+
+            return bound;
+        }
+
+        public IEnumerable<LayoutColumn> GetDisplayed(double left, double right)
+        {
+            foreach (LayoutColumn column in ListInfo.Columns.GetVisibleItems())
+            {
+                var bound = GetColumnBound(column, bounds.Columns, null, null);
+                if (bound.Right > left && bound.Left < right)
+                {
+                    yield return column;
+                }
+            }
+        }
         public virtual LayoutGroup GetRowGroup(int rowIndex)
         {
             if (listInfo.GroupVisible)
@@ -2513,7 +2566,7 @@ namespace DataWF.Gui
 
         public virtual void RefreshInfo()
         {
-            listInfo.Columns.Bound = Rectangle.Zero;
+            bounds.Columns = Rectangle.Zero;
             ClearFilter();
             RefreshProperties();
             foreach (LayoutColumn item in ListInfo.Columns.GetItems().ToList())
@@ -2579,7 +2632,7 @@ namespace DataWF.Gui
 
         protected virtual void GetColumnGlyphBound(LayoutColumn column)
         {
-            var bound = column.Bound;
+            var bound = GetColumnBound(column, bounds.Columns, null, null);
             bounds.ColumnGlyph = new Rectangle(bound.X + 1, bound.Y + 1, 16 * listInfo.Scale, 16 * listInfo.Scale);
         }
 
@@ -2659,11 +2712,11 @@ namespace DataWF.Gui
                 bound.X = grid * (columns.Width + listInfo.HeaderWidth);
                 if (!listInfo.HeaderVisible)
                     bound.X += listInfo.Indent;
-                bound.Width = bounds.Columns.Width + listInfo.HeaderWidth - listInfo.Indent;
-                bound.Height = GetItemHeight(index);
+                bound.Width = (bounds.Columns.Width - listInfo.Indent) + listInfo.HeaderWidth;
+                bound.Height = GetItemHeight(index) - listInfo.Indent;
                 if (group != null)
                 {
-                    top += group.Bound.Y + (listInfo.GroupHeigh + 2) + listInfo.Indent;
+                    top += group.Bound.Y + (listInfo.GroupHeigh + 2);
                     if (listInfo.GridOrientation == GridOrientation.Horizontal)
                         top += GetItemsHeight(group.IndexStart, index - 1);
                     else
@@ -2685,7 +2738,6 @@ namespace DataWF.Gui
 
             bounds.Index = index;
             bounds.Group = group;
-            bounds.CacheRow = bound;
             return bound;
         }
 
@@ -2695,26 +2747,19 @@ namespace DataWF.Gui
             {
                 cacheCalc.Index = index;
                 cacheCalc.Item = listSource[index];
-                listInfo.GetBound(column, null, handleCalcHeigh);
+                return GetColumnBound(column, row, null, handleCalcHeigh);
             }
             else
             {
-                listInfo.GetBound(column, null, null);
+                var bound = GetColumnBound(column, bounds.Columns, null, null);
+
+                bound.X += row.X;// - ListInfo.Indent;
+                if (!listInfo.HeaderVisible)
+                    bound.X -= listInfo.Indent;
+                bound.Y += row.Y - ListInfo.Indent;
+
+                return bound;
             }
-            var bound = column.Bound;
-            bound.Y += row.Y;
-            bound.X += row.X;
-
-            return bound;
-        }
-
-        public void GetColumnsBound()
-        {
-            listInfo.GetColumnsBound(bounds.Area.Width, null, null);
-            bounds.Columns = listInfo.Columns.Bound;
-            bounds.Columns.Width += listInfo.Indent;
-            bounds.Columns.Height += listInfo.Indent;
-            bounds.Index = -1;
         }
 
         public List<LayoutColumn> GetDisplayedColumns()
@@ -2732,15 +2777,6 @@ namespace DataWF.Gui
             LayoutGroup listGroup = GetRowGroup(index);
             var bound = GetRowBound(index, listGroup);
             return GetCellBound(column, index, bound);
-        }
-
-        protected Rectangle GetColumnBound(LayoutColumn column)
-        {
-            listInfo.GetBound(column, null, null);
-            var bound = column.Bound;
-            bound.X += listInfo.Indent;
-            bound.X -= bounds.Area.X;
-            return bound;
         }
 
         protected Rectangle GetGroupHeaderBound(LayoutGroup group)
@@ -2892,8 +2928,7 @@ namespace DataWF.Gui
         {
             if (listInfo.GroupVisible)
                 RefreshGroupsBound();
-            bounds.Index = -1;
-            bounds.TempColumns = Rectangle.Zero;
+            bounds.Clear();
             RefreshBounds(true);
         }
 
@@ -4175,7 +4210,7 @@ namespace DataWF.Gui
                         for (int i = 1; i < gridCols; i++)
                         {
                             cacheDraw.GridIndex = i;
-                            context.Context.Translate(bounds.Columns.Width, 0);
+                            context.Context.Translate(bounds.Columns.Width + listInfo.HeaderWidth, 0);
                             OnDrawColumns(cacheDraw);
                         }
                         context.Context.Restore();
@@ -4513,11 +4548,20 @@ namespace DataWF.Gui
                 || layout.Width != e.Bound.Width)
             {
                 layout.Text = (string)e.Formated;
-                layout.Width = e.Bound.Width;
+                layout.Width = -1;
                 layout.Height = -1;
-                var size = layout.GetSize();
-                size.Height = Math.Max(12, size.Height);
-                layout.Height = Math.Min(size.Height, listInfo.CalcHeigh ? 300 : e.Bound.Height);
+
+                layout.Width = e.Bound.Width;
+                //var size = layout.GetSize();
+                //size.Height = Math.Max(12, size.Height);
+                if (ListInfo.CalcHeigh)
+                {
+                    layout.Height = Math.Max(16, Math.Min(300, layout.GetSize().Height));
+                }
+                else
+                {
+                    layout.Height = e.Bound.Height - 4;
+                }
             }
             return layout;
         }
@@ -4652,7 +4696,6 @@ namespace DataWF.Gui
         {
             if (ListSource == null)
                 return;
-
             bounds.Index = -1;
 
             GetAreaBound();
@@ -4685,7 +4728,7 @@ namespace DataWF.Gui
                 {
                     bounds.VisibleColumns = listInfo.GridMode || gridCols > 1
                         ? listInfo.Columns.GetVisible().ToList()
-                        : listInfo.GetDisplayed(bounds.Area.Left, bounds.Area.Right).ToList();
+                        : GetDisplayed(bounds.Area.Left, bounds.Area.Right).ToList();
                 }
                 GetDisplayIndexes();
 

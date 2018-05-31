@@ -218,8 +218,8 @@ namespace DataWF.Gui
             }
         }
 
-
-        public CellDisplayState State
+        [XmlIgnore]
+        public virtual CellDisplayState State
         {
             get { return state; }
             set
@@ -245,7 +245,7 @@ namespace DataWF.Gui
             }
         }
 
-        public bool Checked
+        public virtual bool Checked
         {
             get { return check; }
             set
@@ -279,33 +279,30 @@ namespace DataWF.Gui
             get { return Bar?.Owner; }
         }
 
-        public override Rectangle Bound
-        {
-            get { return base.Bound; }
-            set
-            {
-                if (Count > 0)
-                {
-                    base.Bound = value;
-                    return;
-                }
-                var halfIndent = Bar.Indent / 2D;
-                value = value.Inflate(-halfIndent, -halfIndent);
-                var imaged = DisplayStyle.HasFlag(ToolItemDisplayStyle.Image) && GetFormattedImage() != null;
-                if (imaged)
-                {
-                    imageBound.X = value.X + (MinWidth - imageBound.Width) / 2D;
-                    imageBound.Y = value.Y + (value.Height - imageBound.Height) / 2D;
-                }
-                if (DisplayStyle.HasFlag(ToolItemDisplayStyle.Text))
-                {
-                    textBound.X = imaged ? imageBound.Right : value.X + 4D;
-                    textBound.Y = value.Y + (value.Height - textBound.Height) / 2D;
-                }
+        public Rectangle Bound { get; set; }
 
-                base.Bound = value;
-                //Console.WriteLine($"ToolItem {Name} Bound:{value}");
+        public override void ApplyBound(Rectangle value)
+        {
+            base.ApplyBound(value);
+            if (Count > 0)
+            {
+                return;
             }
+            var halfIndent = Bar.Indent / 2D;
+            value = value.Inflate(-halfIndent, -halfIndent);
+            var imaged = DisplayStyle.HasFlag(ToolItemDisplayStyle.Image) && GetFormattedImage() != null;
+            if (imaged)
+            {
+                imageBound.X = value.X + (MinWidth - imageBound.Width) / 2D;
+                imageBound.Y = value.Y + (value.Height - imageBound.Height) / 2D;
+            }
+            if (DisplayStyle.HasFlag(ToolItemDisplayStyle.Text))
+            {
+                textBound.X = imaged ? imageBound.Right : value.X + 4D;
+                textBound.Y = value.Y + (value.Height - textBound.Height) / 2D;
+            }
+            Bound = value;
+            //Console.WriteLine($"ToolItem {Name} Bound:{value}");
         }
 
         public object GetFormattedImage()
@@ -385,7 +382,7 @@ namespace DataWF.Gui
             width = temp;
         }
 
-        protected internal void OnMouseMove(MouseMovedEventArgs args)
+        protected virtual internal void OnMouseMove(MouseMovedEventArgs args)
         {
             MouseMove?.Invoke(this, args);
             if (State == CellDisplayState.Pressed)

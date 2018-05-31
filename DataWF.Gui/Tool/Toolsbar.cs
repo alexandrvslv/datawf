@@ -96,12 +96,12 @@ namespace DataWF.Gui
         protected override Size OnGetPreferredSize(SizeConstraint widthConstraint, SizeConstraint heightConstraint)
         {
             var size = base.OnGetPreferredSize(widthConstraint, heightConstraint);
-            items.GetBound(widthConstraint.AvailableSize, heightConstraint.AvailableSize);
+            var bound = items.GetBound(widthConstraint.AvailableSize, heightConstraint.AvailableSize);
             foreach (var item in items.GetVisibleItems().OfType<ToolContentItem>())
             {
                 item.Content?.Surface.GetPreferredSize();
             }
-            return items.Bound.Size;
+            return bound.Size;
         }
 
         public void Reallocate()
@@ -115,11 +115,11 @@ namespace DataWF.Gui
             base.OnReallocate();
             items.Width = Size.Width;
             items.Height = Size.Height;
-            items.GetBound();
+            var mapBound = items.GetBound();
             foreach (ToolItem item in items.GetVisibleItems())
             {
                 item.CheckSize();
-                items.GetBound(item);
+                items.GetBound(item, mapBound);
                 if (item is ToolContentItem && ((ToolContentItem)item).Content != null && ((ToolContentItem)item).Content.Parent == this)
                     SetChildBounds(((ToolContentItem)item).Content, ((ToolContentItem)item).ContentBound);
             }
@@ -131,15 +131,19 @@ namespace DataWF.Gui
             base.OnDraw(ctx, dirtyRect);
             using (var context = new GraphContext(ctx))
             {
-                if (items.Style != null)
-                {
-                    context.DrawCell(items.Style, null, this.Bounds, this.Bounds, CellDisplayState.Default);
-                }
-                foreach (ToolItem item in items.GetVisibleItems())
-                {
-                    item.OnDraw(context);
-                }
-                //context.DrawRectangle(GuiEnvir.Styles["Column"], dirtyRect);
+                OnDraw(context);
+            }
+        }
+
+        protected virtual void OnDraw(GraphContext context)
+        {
+            if (items.Style != null)
+            {
+                context.DrawCell(items.Style, null, Bounds, Bounds, CellDisplayState.Default);
+            }
+            foreach (ToolItem item in items.GetVisibleItems())
+            {
+                item.OnDraw(context);
             }
         }
 

@@ -9,10 +9,10 @@ namespace DataWF.Gui
     {
         public Menubar() : base(PopupType.Menu)
         {
-            Bar = new Toolsbar();
+            Bar = new Toolsbar() { Indent = 0 };
             Bar.ItemClick += OnItemClick;
             Bar.Items.GrowMode = Orientation.Vertical;
-            Bar.Indent = 0;
+
             BackgroundColor = GuiEnvironment.Theme["Window"].BaseColor;
             Content = Bar;
             Decorated = false;

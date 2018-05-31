@@ -30,5 +30,11 @@ namespace DataWF.Gui
         {
             base.OnDraw(context);
         }
+
+        protected internal override void OnMouseEntered(EventArgs args)
+        {
+            base.OnMouseEntered(args);
+            QueueShowMenu();
+        }
     }
 }

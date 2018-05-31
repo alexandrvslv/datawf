@@ -126,18 +126,18 @@ namespace DataWF.Gui
             //        box.GroupBox.OnGetPreferredSize(widthConstraint, heightConstraint);
             //    }
             //}
-            map.GetBound(widthConstraint.AvailableSize, heightConstraint.AvailableSize);
-            foreach (GroupBoxItem item in map.GetVisibleItems())
+            var bound = map.GetBound(widthConstraint.AvailableSize, heightConstraint.AvailableSize);
+            foreach (var item in map.GetVisibleItems())
             {
                 item.Widget.Surface.GetPreferredSize();
             }
-            return map.Bound.Size;
+            return bound.Size;
         }
 
         protected override void OnButtonReleased(ButtonEventArgs args)
         {
             base.OnButtonReleased(args);
-            foreach (GroupBoxItem box in map.GetVisibleItems())
+            foreach (var box in map.GetVisibleItems())
             {
                 if (box.Visible)
                 {
@@ -157,9 +157,10 @@ namespace DataWF.Gui
             base.OnDraw(ctx, dirtyRect);
             using (var context = new GraphContext(ctx))
             {
-                foreach (ILayoutItem item in map.GetItems())
-                    if (item.Visible && item is GroupBoxItem)
-                        ((GroupBoxItem)item).Paint(context);
+                foreach (ILayoutItem item in map.GetVisibleItems())
+                {
+                    ((GroupBoxItem)item).Paint(context);
+                }
             }
         }
 
@@ -177,11 +178,11 @@ namespace DataWF.Gui
             base.OnReallocate();
             map.Width = Size.Width;
             map.Height = Size.Height;
-            map.GetBound();
+            var mapBound = map.GetBound();
 
             foreach (GroupBoxItem item in map.GetVisibleItems())
             {
-                item.CheckBounds();
+                map.GetBound(item, mapBound);
             }
             QueueDraw();
         }

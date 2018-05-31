@@ -6,7 +6,7 @@ namespace DataWF.Gui
 {
     public interface ILayoutItem : IContainerNotifyPropertyChanged, INamed, IEnumerable<ILayoutItem>
     {
-        Rectangle Bound { get; set; }
+        //Rectangle Bound { get; set; }
 
         double Height { get; set; }
 

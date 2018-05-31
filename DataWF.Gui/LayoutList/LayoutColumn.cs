@@ -45,12 +45,11 @@ namespace DataWF.Gui
         {
             get { return info ?? Map?.Info; }
             set { info = value; }
-        }                
-        
+        }
+
         public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, string property = null)
         {
             base.OnListChanged(type, newIndex, oldIndex, property);
-            bound.Width = 0;
             if (Info != null)
             {
                 Info.OnBoundChanged(EventArgs.Empty);

@@ -20,7 +20,7 @@ namespace DataWF.Gui
         protected bool fillH;
         protected string name;
         protected object tag;
-        protected Rectangle bound;
+        //protected Rectangle bound;
         public Func<ILayoutItem, double> CalcHeight;
         public Func<ILayoutItem, double> CalcWidth;
         private INotifyListChanged container;
@@ -32,12 +32,12 @@ namespace DataWF.Gui
             ApplySortInternal(new LayoutItemComparer<T>());
         }
 
-        [XmlIgnore]
-        public virtual Rectangle Bound
-        {
-            get { return bound; }
-            set { bound = value; }
-        }
+        //[XmlIgnore]
+        //public virtual Rectangle Bound
+        //{
+        //    get { return bound; }
+        //    set { bound = value; }
+        //}
 
         [DefaultValue(1D)]
         public virtual double Scale
@@ -248,7 +248,6 @@ namespace DataWF.Gui
 
         protected virtual void OnPropertyChanged(string property)
         {
-            bound.Width = 0D;
             var args = new PropertyChangedEventArgs(property);
             PropertyChanged?.Invoke(this, args);
             Container?.OnPropertyChanged(this, args);
@@ -286,6 +285,11 @@ namespace DataWF.Gui
         {
             item.Col = index;
             Map.Insert(item, false);
+        }
+
+        public virtual void ApplyBound(Rectangle value)
+        {
+            //throw new NotImplementedException();
         }
 
         public void InsertRow(int index, T item)
@@ -508,20 +512,23 @@ namespace DataWF.Gui
 
         public virtual Rectangle GetBound(double maxWidth, double maxHeight, Func<ILayoutItem, double> calcWidth, Func<ILayoutItem, double> calcHeight)
         {
-            return Bound = new Rectangle(0, 0, GetWidth(maxWidth + Indent, calcWidth), GetHeight(maxHeight + Indent, calcHeight)).Inflate(Indent, Indent);
+            var bound = new Rectangle(0, 0, GetWidth(maxWidth - Indent*2, calcWidth), GetHeight(maxHeight - Indent*2, calcHeight));
+            bound.X += Indent;
+            bound.Y += Indent;
+            bound.Width += Indent;
+            bound.Height += Indent;
+            return bound;
         }
 
-        public virtual Rectangle GetBound(T item)
+        public virtual Rectangle GetBound(T item, Rectangle mapBound)
         {
-            GetBound(item, CalcWidth, CalcHeight);
-            return item.Bound;
+            return GetBound(item, mapBound, CalcWidth, CalcHeight);
         }
 
-        public void GetBound(T item, Func<ILayoutItem, double> calcWidth, Func<ILayoutItem, double> calcHeight)
+        public Rectangle GetBound(T item, Rectangle mapBound, Func<ILayoutItem, double> calcWidth, Func<ILayoutItem, double> calcHeight)
         {
             double x = 0, y = 0;
             int r = -1;
-            T subMap = null;
             var bound = new Rectangle();
             foreach (var entry in this)
             {
@@ -529,7 +536,7 @@ namespace DataWF.Gui
                 {
                     x = 0;
                     if (r != -1)
-                        y += GetRowHeight(r, Bound.Height, true, calcHeight);
+                        y += GetRowHeight(r, mapBound.Height, true, calcHeight);
                     r = entry.Row;
                     //if (col.Row < column.Row)
                     //     continue;
@@ -540,30 +547,29 @@ namespace DataWF.Gui
                 {
                     bound.X = x;
                     bound.Y = y;
-                    bound.Width = entry.GetItemWidth(Bound.Width, calcWidth);
-                    bound.Height = GetRowHeight(r, Bound.Height, true, calcHeight);
+                    bound.Width = entry.GetItemWidth(mapBound.Width, calcWidth);
+                    bound.Height = GetRowHeight(r, mapBound.Height, true, calcHeight);
                     break;
                 }
                 else if (entry.Contains(item))
                 {
-                    subMap = entry;
-                    GetBound(subMap, calcWidth, calcHeight);
-                    subMap.GetBound(item, calcWidth, calcHeight);
-                    return;
+                    var entryBound = GetBound(entry, mapBound, calcWidth, calcHeight);
+                    return entry.GetBound(item, entryBound, calcWidth, calcHeight);
                 }
-                x += entry.GetItemWidth(Bound.Width, calcWidth);
+                x += entry.GetItemWidth(mapBound.Width, calcWidth);
             }
             if (item.Map == this)
             {
-                bound.X += Bound.X;// + imap.Indent
-                bound.Y += Bound.Y;// + imap.Indent
+                bound.X += mapBound.X;// + imap.Indent
+                bound.Y += mapBound.Y;// + imap.Indent
 
-                if (item.IsLastCol() && bound.Right < Bound.Right)
-                    bound.Width += Bound.Right - bound.Right - Indent;
-                if (item.IsLastRow() && bound.Bottom < Bound.Bottom)
-                    bound.Height += Bound.Bottom - bound.Bottom - Indent;
+                if (item.IsLastCol() && bound.Right < mapBound.Right)
+                    bound.Width += mapBound.Right - bound.Right - Indent;
+                if (item.IsLastRow() && bound.Bottom < mapBound.Bottom)
+                    bound.Height += mapBound.Bottom - bound.Bottom - Indent;
             }
-            item.Bound = bound;
+            item.ApplyBound(bound);
+            return bound;
         }
 
         public bool IsFillWidth()
