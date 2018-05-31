@@ -60,7 +60,9 @@ namespace DataWF.Data
             if (f1.Length == 0 || f2.Length == 0)
                 return string.Empty;
 
-            if (Query?.Table?.Schema?.System == DBSystem.MSSql || Query?.Table?.Schema?.System == DBSystem.Postgres)
+            if (Query?.Table?.Schema?.System == DBSystem.MSSql 
+                || Query?.Table?.Schema?.System == DBSystem.Postgres
+                || Query?.Table?.Schema?.System == DBSystem.SQLite)
                 return f1 + " and " + f2;
             else
                 return string.Format("({0}, {1})", f1, f2);
