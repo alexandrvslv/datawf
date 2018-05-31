@@ -31,8 +31,8 @@ namespace DataWF.Gui
         {
             if (Parent != null)
             {
-                numberColumn.Width = ((canvas.Size.Width) / 7D) - ListInfo.Indent * 1.3;
-                numberColumn.Height = ((canvas.Size.Height) / 7D) - ListInfo.Indent * 1.3;
+                numberColumn.Width = ((canvas.Size.Width - ((ListInfo.Indent + 1) * 7)) / 7D);
+                numberColumn.Height = ((canvas.Size.Height - ((ListInfo.Indent + 1) * 7)) / 7D);
             }
             base.RefreshBounds(group);
         }
