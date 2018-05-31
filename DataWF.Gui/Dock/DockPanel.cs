@@ -9,30 +9,30 @@ using Xwt.Drawing;
 
 namespace DataWF.Gui
 {
-    public class DockPanel : Canvas, IEnumerable, IEnumerable<DockPage>, IDockContainer, ILocalizable, ISerializableElement
+    public class DockPanel : Toolsbar, IEnumerable, IEnumerable<DockPage>, IDockContainer, ILocalizable, ISerializableElement
     {
         private DockPage currentPage;
-        private Menubar context;
-        private ToolMenuItem toolHide;
+        //private Menubar context;
+        //private ToolMenuItem toolHide;
         private LayoutAlignType pagesAlign = LayoutAlignType.Top;
-        private VBox panel;
         private LinkedList<DockPage> pagesHistory = new LinkedList<DockPage>();
 
         private Widget widget;
+        private Orientation orientation = Orientation.Horizontal;
+        private bool viewClose = true;
+        private bool viewImage = true;
+        private Rectangle widgetRect;
 
         public DockPanel() : base()
         {
+            Items.StyleName = "Window";
+            Indent = 1;
+
             //context = new Menubar(toolHide);
-            toolHide = new ToolMenuItem { Name = "Hide", Text = "Hide" };
-            Pages = new DockPageBox { Name = "pages" };
-            panel = new VBox { Margin = new WidgetSpacing(6, 0, 6, 6) };
+            //toolHide = new ToolMenuItem { Name = "Hide", Text = "Hide" };
 
             Name = "DockPanel";
-            AddChild(Pages);
-            AddChild(panel);
         }
-
-        public DockPageBox Pages { get; internal set; }
 
         public DockItem DockItem { get; set; }
 
@@ -48,14 +48,15 @@ namespace DataWF.Gui
 
                 if (widget != null)
                 {
-                    panel.Remove(widget);
+                    RemoveChild(widget);
                 }
 
                 widget = value;
 
                 if (widget != null)
                 {
-                    panel.PackStart(widget, true);
+                    AddChild(widget);
+                    SetChildBounds(widget, widgetRect);
                 }
             }
         }
@@ -70,9 +71,9 @@ namespace DataWF.Gui
                 pagesAlign = value;
                 if (pagesAlign == LayoutAlignType.Left ||
                     pagesAlign == LayoutAlignType.Right)
-                    Pages.Orientation = Orientation.Vertical;
+                    Orientation = Orientation.Vertical;
                 else
-                    Pages.Orientation = Orientation.Horizontal;
+                    Orientation = Orientation.Horizontal;
                 //PerformLayout();
             }
         }
@@ -83,18 +84,6 @@ namespace DataWF.Gui
             {
                 Put(widget);
             }
-        }
-
-        public void Localize()
-        {
-            Pages.Localize();
-        }
-
-        public DockPage AddPage(Widget c)
-        {
-            var page = DockBox.CreatePage(c);
-            Pages.Items.Add(page);
-            return page;
         }
 
         public void RemovePage(DockPage page)
@@ -113,7 +102,7 @@ namespace DataWF.Gui
                     if (item != null)
                         npage = item.Value;
                 }
-                CurrentPage = page;
+                CurrentPage = npage;
             }
 
             while (pagesHistory.Remove(page))
@@ -124,19 +113,19 @@ namespace DataWF.Gui
         protected override void OnReallocate()
         {
             base.OnReallocate();
-            double def = 25;
+            double def = 30;
             var pagesRect = Rectangle.Zero;
-            var widgetRect = Rectangle.Zero;
+            widgetRect = Rectangle.Zero;
             if (pagesAlign == LayoutAlignType.Top)
             {
-                if (Pages.ItemOrientation == Orientation.Vertical)
+                if (ItemOrientation == Orientation.Vertical)
                     def = 100D;
                 pagesRect = new Rectangle(0D, 0D, Size.Width, def);
                 widgetRect = new Rectangle(0D, def, Size.Width, Size.Height - def);
             }
             else if (pagesAlign == LayoutAlignType.Bottom)
             {
-                if (Pages.ItemOrientation == Orientation.Vertical)
+                if (ItemOrientation == Orientation.Vertical)
                     def = 100D;
 
                 pagesRect = new Rectangle(0D, Size.Height - def, Size.Width, def);
@@ -144,7 +133,7 @@ namespace DataWF.Gui
             }
             else if (pagesAlign == LayoutAlignType.Left)
             {
-                if (Pages.ItemOrientation == Orientation.Horizontal)
+                if (ItemOrientation == Orientation.Horizontal)
                     def = 100;
 
                 pagesRect = new Rectangle(0D, 0D, def, Size.Height);
@@ -152,19 +141,21 @@ namespace DataWF.Gui
             }
             else if (pagesAlign == LayoutAlignType.Right)
             {
-                if (Pages.ItemOrientation == Orientation.Horizontal)
+                if (ItemOrientation == Orientation.Horizontal)
                     def = 100;
 
                 pagesRect = new Rectangle(Size.Width - def, 0D, def, Size.Height);
                 widgetRect = new Rectangle(0D, 0D, Size.Width - def, Size.Height);
             }
-            SetChildBounds(Pages, pagesRect);
-            SetChildBounds(panel, widgetRect);
+            if (CurrentWidget != null)
+            {
+                SetChildBounds(CurrentWidget, widgetRect);
+            }
         }
 
         public void ClearPages()
         {
-            Pages.Items.Clear();
+            Items.Clear();
             CurrentPage = null;
         }
 
@@ -194,7 +185,7 @@ namespace DataWF.Gui
                         //Parent.ResumeLayout(true);
                     }
                     pagesHistory.AddLast(value);
-                    value.Active = true;
+                    value.Checked = true;
                     CurrentWidget = value.Widget;
                 }
                 else
@@ -205,115 +196,25 @@ namespace DataWF.Gui
             }
         }
 
-        #region IDockContainer implementation
-
-        public IDockContainer DockParent
-        {
-            get { return GuiService.GetDockParent(this); }
-        }
-
-        public bool Contains(Widget control)
-        {
-            foreach (DockPage t in Pages.Items)
-                if (t.Widget == control)
-                    return true;
-            return false;
-        }
-
-        public IEnumerable<Widget> GetControls()
-        {
-            foreach (DockPage t in Pages.Items)
-                yield return t.Widget;
-        }
-
-        public Widget Find(string name)
-        {
-            foreach (DockPage page in Pages.Items)
-                if (page.Widget.Name == name)
-                    return page.Widget;
-            return null;
-        }
-
-        public DockPage Put(Widget control)
-        {
-            return Put(control, DockType.Content);
-        }
-
-        public DockPage Put(Widget control, DockType type)
-        {
-            var page = DockBox.CreatePage(control);
-            Put(page);
-            return page;
-        }
-
-        public void Put(DockPage page)
-        {
-            Pages.Items.Add(page);
-            CurrentPage = page;
-        }
-
-        public DockPage GetPage(string name)
-        {
-            foreach (DockPage page in Pages.Items)
-                if (page.Widget?.Name == name)
-                {
-                    return page;
-                }
-            return null;
-        }
-
-        public DockPage GetPage(Widget control)
-        {
-            foreach (DockPage page in Pages.Items)
-                if (page.Widget == control)
-                {
-                    return page;
-                }
-            return null;
-        }
-
-        public bool Delete(Widget control)
-        {
-            var page = GetPage(control);
-            if (page != null)
-            {
-                page.Close();
-                return true;
-            }
-            return false;
-        }
-
-        public IEnumerable<IDockContainer> GetDocks()
-        {
-            foreach (DockPage page in Pages.Items)
-            {
-                if (page.Widget is IDockContainer)
-                    yield return (IDockContainer)page.Widget;
-            }
-        }
-
-        #endregion
-
         protected override void Dispose(bool disposing)
         {
-            Pages.Dispose();
             base.Dispose(disposing);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return Pages.Items.GetItems().GetEnumerator();
+            return Items.GetItems().GetEnumerator();
         }
 
         public IEnumerator<DockPage> GetEnumerator()
         {
-            return Pages.Items.GetItems().Cast<DockPage>().GetEnumerator();
+            return Items.GetItems().Cast<DockPage>().GetEnumerator();
         }
 
         public void Serialize(ISerializeWriter writer)
         {
             writer.WriteAttribute("Current", CurrentWidget?.Name ?? string.Empty);
-            foreach (DockPage page in Pages.Items)
+            foreach (DockPage page in Items)
             {
                 if (page.Widget is ISerializableElement)
                 {
@@ -347,6 +248,195 @@ namespace DataWF.Gui
                     ((ISerializableElement)page.Widget).Deserialize(reader);
                 }
             }
+            if (!string.IsNullOrEmpty(current))
+            {
+                CurrentPage = GetPage(current);
+            }
         }
+
+        public bool VisibleClose
+        {
+            get { return viewClose; }
+            set
+            {
+                if (viewClose == value)
+                    return;
+                viewClose = value;
+                foreach (DockPage item in Items.GetItems())
+                {
+                    item.CarretVisible = viewClose;
+                }
+            }
+        }
+
+        public Orientation Orientation
+        {
+            get { return orientation; }
+            set
+            {
+                if (orientation == value)
+                    return;
+                orientation = value;
+                QueueForReallocate();
+            }
+        }
+
+        public event EventHandler<DockPageEventArgs> PageDrag;
+
+        protected void OnPageDrag(DockPageEventArgs arg)
+        {
+            PageDrag?.Invoke(this, arg);
+        }
+
+        protected internal override void OnItemMove(ToolItemEventArgs args)
+        {
+            base.OnItemMove(args);
+
+            //if ((mdown && p0.X != 0D && p0.Y != 0D) &&
+            //     (Math.Abs(p0.X - arg.Point.X) > 12 ||
+            //      Math.Abs(p0.Y - arg.Point.Y) > 12))
+            //    OnPageDrag(arg);
+        }
+
+        public event EventHandler<DockPageEventArgs> PageClose;
+
+        public void ClosePage(DockPage page)
+        {
+            OnPageClose(new DockPageEventArgs(page));
+        }
+
+        protected void OnPageClose(DockPageEventArgs arg)
+        {
+            if (arg.Page.Widget is IDockContent)
+            {
+                if (!((IDockContent)arg.Page.Widget).Closing())
+                    return;
+            }
+            PageClose?.Invoke(this, arg);
+            if (!arg.Page.HideOnClose)
+            {
+                arg.Page.Widget.Dispose();
+            }
+            Items.Remove(arg.Page);
+            RemovePage(arg.Page);
+        }
+
+        protected override void OnDraw(GraphContext context)
+        {
+            base.OnDraw(context);
+            Rectangle brect = orientation == Orientation.Horizontal
+                ? new Rectangle(0, 30 - 5, Bounds.Width, 5)
+                : new Rectangle(Bounds.Width - 5, 0, 5, 30);
+            if (PagesAlign == LayoutAlignType.Bottom)
+                brect.Y = 0;
+            context.FillRectangle(items.Style, brect, CellDisplayState.Selected);//st.BackBrush.GetBrush(rectb, 
+        }
+
+        protected override Size OnGetPreferredSize(SizeConstraint widthConstraint, SizeConstraint heightConstraint)
+        {
+            var baseSize = base.OnGetPreferredSize(widthConstraint, heightConstraint);
+            if (CurrentWidget != null)
+            {
+                var size = CurrentWidget.Surface.GetPreferredSize();
+                size.Height += baseSize.Height;
+                return size;
+            }
+            return baseSize;
+        }
+
+        #region IDockContainer implementation
+
+        public IDockContainer DockParent
+        {
+            get { return GuiService.GetDockParent(this); }
+        }
+
+        public bool Contains(Widget control)
+        {
+            foreach (DockPage t in Items)
+                if (t.Widget == control)
+                    return true;
+            return false;
+        }
+
+        public IEnumerable<Widget> GetControls()
+        {
+            foreach (DockPage t in Items)
+                yield return t.Widget;
+        }
+
+        public Widget Find(string name)
+        {
+            foreach (DockPage page in Items)
+                if (page.Widget.Name == name)
+                    return page.Widget;
+            return null;
+        }
+
+        public DockPage Put(Widget widget)
+        {
+            return Put(widget, DockType.Content);
+        }
+
+        public DockPage Put(Widget widget, DockType type)
+        {
+            var page = new DockPage
+            {
+                Name = widget.Name,
+                Widget = widget,
+                HideOnClose = widget is IDockContent ? ((IDockContent)widget).HideOnClose : false
+            };
+            Put(page);
+            return page;
+        }
+
+        public void Put(DockPage page)
+        {
+            Items.Add(page);
+            CurrentPage = page;
+        }
+
+        public DockPage GetPage(string name)
+        {
+            foreach (DockPage page in Items)
+                if (page.Widget?.Name == name)
+                {
+                    return page;
+                }
+            return null;
+        }
+
+        public DockPage GetPage(Widget control)
+        {
+            foreach (DockPage page in Items)
+                if (page.Widget == control)
+                {
+                    return page;
+                }
+            return null;
+        }
+
+        public bool Delete(Widget control)
+        {
+            var page = GetPage(control);
+            if (page != null)
+            {
+                page.Close();
+                return true;
+            }
+            return false;
+        }
+
+        public IEnumerable<IDockContainer> GetDocks()
+        {
+            foreach (DockPage page in Items)
+            {
+                if (page.Widget is IDockContainer)
+                    yield return (IDockContainer)page.Widget;
+            }
+        }
+
+        #endregion
+
     }
 }

@@ -119,7 +119,7 @@ namespace DataWF.Gui
                 visibleClose = value;
                 foreach (var panel in GetDockPanels())
                 {
-                    panel.Pages.VisibleClose = value;
+                    panel.VisibleClose = value;
                 }
             }
         }
@@ -173,12 +173,12 @@ namespace DataWF.Gui
                     page.Remove();
                     if (htest.Align == LayoutAlignType.None)
                     {
-                        htest.Item.Panel.Pages.Items.Add(page);
+                        htest.Item.Panel.Items.Add(page);
                     }
                     else
                     {
                         DockItem nitem = GetDockItem(htest.Item.Name + htest.Align.ToString(), htest.Item, htest.Align, true);
-                        nitem.Panel.Pages.Items.Add(page);
+                        nitem.Panel.Items.Add(page);
                     }
                     page = null;
                 }
@@ -265,20 +265,17 @@ namespace DataWF.Gui
             foreach (DockItem item in map.GetVisibleItems())
             {
                 var size = item.Panel.Surface.GetPreferredSize();
-                item.Width = size.Width;
-                item.Height = size.Height;
             }
-            map.GetBound();
-            return map.Bound.Size;
+            return map.GetBound().Size;
         }
 
         protected override void OnReallocate()
         {
             base.OnReallocate();
-            map.GetBound(Size.Width, Size.Height);
+            var mapBound = map.GetBound(Size.Width, Size.Height);
             foreach (DockItem item in map.GetVisibleItems())
             {
-                item.Bound = map.GetBound(item).Inflate(-3, -3);
+                map.GetBound(item, mapBound);
                 if (item.Bound.Width > 0 && item.Bound.Height > 0)
                 {
                     SetChildBounds(item.Panel, item.Bound);
@@ -336,19 +333,6 @@ namespace DataWF.Gui
             return null;
         }
 
-        public static DockPage CreatePage(Widget widget)
-        {
-            if (widget is ILocalizable)
-                ((ILocalizable)widget).Localize();
-
-            return new DockPage
-            {
-                Name = widget.Name,
-                Widget = widget,
-                HideOnClose = widget is IDockContent ? ((IDockContent)widget).HideOnClose : false
-            };
-        }
-
         public DockBoxHitTest DockHitTest(double x, double y)
         {
             return DockHitTest(x, y, 3);
@@ -383,7 +367,7 @@ namespace DataWF.Gui
 
         public DockPage PickPage(int x, int y, DockItem item)
         {
-            foreach (DockPage itemPage in item.Panel.Pages.Items)
+            foreach (DockPage itemPage in item.Panel.Items)
             {
                 if (itemPage.Bound.Contains(x, y))
                 {
@@ -469,15 +453,15 @@ namespace DataWF.Gui
 
         internal void Add(DockPanel panel)
         {
-            panel.Pages.VisibleClose = VisibleClose;
-            panel.Pages.PageDrag += OnPageDrag;
+            panel.VisibleClose = VisibleClose;
+            panel.PageDrag += OnPageDrag;
             AddChild(panel);
         }
 
         internal void Remove(DockPanel panel)
         {
-            panel.Pages.VisibleClose = VisibleClose;
-            panel.Pages.PageDrag -= OnPageDrag;
+            panel.VisibleClose = VisibleClose;
+            panel.PageDrag -= OnPageDrag;
             RemoveChild(panel);
         }
 

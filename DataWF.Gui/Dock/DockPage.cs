@@ -9,8 +9,6 @@ namespace DataWF.Gui
 {
     public class DockPage : ToolDropDown
     {
-        private bool hideOnClose;
-        private bool active;
         private bool closing = false;
         private Widget widget;
 
@@ -20,18 +18,12 @@ namespace DataWF.Gui
             CarretGlyph = GlyphType.CloseAlias;
             CarretStyleName = "PageClose";
             StyleName = "Page";
-            Indent = 2;
             DisplayStyle = ToolItemDisplayStyle.ImageAndText;
-        }
-
-        public DockPageBox Box
-        {
-            get { return Bar as DockPageBox; }
         }
 
         public DockPanel Panel
         {
-            get { return Box?.Panel; }
+            get { return Bar as DockPanel; }
         }
 
         public Widget Widget
@@ -41,11 +33,14 @@ namespace DataWF.Gui
             {
                 if (widget == value)
                     return;
-                if (widget != null && widget is IText)
+
+                if (widget is IText)
                     ((IText)widget).TextChanged -= ControlTextChanged;
                 widget = value;
                 if (widget != null)
                 {
+                    if (widget is ILocalizable)
+                        ((ILocalizable)widget).Localize();
                     if (widget is IText)
                         ((IText)widget).TextChanged += ControlTextChanged;
                     Text = widget is IText
@@ -63,26 +58,21 @@ namespace DataWF.Gui
             }
         }
 
-        public bool HideOnClose
-        {
-            get { return hideOnClose; }
-            set { hideOnClose = value; }
-        }
+        public bool HideOnClose { get; set; }
 
-        public bool Active
+        public override bool Checked
         {
-            get { return active; }
+            get { return base.Checked; }
             set
             {
-                if (active != value)
+                if (Checked != value)
                 {
-                    active = value;
-                    if (active)
+                    base.Checked = value;
+                    if (value)
                     {
                         UncheckExcept();
                     }
                     Bar?.QueueDraw();
-                    OnPropertyChanged(nameof(Active));
                 }
             }
         }
@@ -92,9 +82,9 @@ namespace DataWF.Gui
             if (!closing)
             {
                 closing = true;
-                if (Box != null)
+                if (Panel != null)
                 {
-                    Box.ClosePage(this);
+                    Panel.ClosePage(this);
                 }
                 closing = false;
             }
@@ -103,7 +93,7 @@ namespace DataWF.Gui
         protected override void OnClick(EventArgs e)
         {
             base.OnClick(e);
-            if (!Active)
+            if (!Checked)
             {
                 Panel.CurrentPage = this;
             }
@@ -142,12 +132,11 @@ namespace DataWF.Gui
 
         private void UncheckExcept()
         {
-            foreach (DockPage item in Box.Items.GetItems())
+            foreach (DockPage item in Panel.Items.GetItems())
             {
                 if (item != this)
-                    item.Active = false;
+                    item.Checked = false;
             }
-            State = CellDisplayState.Selected;
         }
 
         public override void Localize()

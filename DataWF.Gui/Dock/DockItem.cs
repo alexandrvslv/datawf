@@ -82,6 +82,14 @@ namespace DataWF.Gui
             }
         }
 
+        public Rectangle Bound { get; private set; }
+
+        public override void ApplyBound(Rectangle value)
+        {
+            base.ApplyBound(value);
+            Bound = value.Inflate(-3, -3);
+        }
+
         public override void Dispose()
         {
             foreach (var item in this)
