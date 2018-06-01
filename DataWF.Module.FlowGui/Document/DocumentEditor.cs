@@ -83,7 +83,7 @@ namespace DataWF.Module.FlowGui
 
         public DocumentEditor()
         {
-            toolProcedures = new ToolDropDown { Name = "Procedures", Glyph = GlyphType.PuzzlePiece };
+            toolProcedures = new ToolDropDown { Name = "Procedures", Glyph = GlyphType.PuzzlePiece, DropDown = new Menubar { Name = "Procedures" } };
             toolSave = new ToolItem(ToolSaveClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Save", Glyph = GlyphType.SaveAlias };
             toolRefresh = new ToolItem(ToolRefreshClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Refresh", Glyph = GlyphType.Refresh };
             toolDelete = new ToolItem(ToolDeleteClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Delete", Glyph = GlyphType.MinusSquare };
@@ -262,9 +262,10 @@ namespace DataWF.Module.FlowGui
         private void ProcedureItemClick(object sender, EventArgs e)
         {
             var sen = sender as MenuItemProcedure;
-            if (sen.DropDown.Items.Count > 0)
+            if (sen.DropDown?.Items.Count > 0)
+            {
                 return;
-
+            }
             DBProcedure proc = sen.Procedure;
             object result = null;
             var list = GetList();
@@ -682,7 +683,7 @@ namespace DataWF.Module.FlowGui
             }
             else
             {
-                var item = toolProcedures.DropDown.Items[name] as MenuItemProcedure;
+                var item = toolProcedures.DropDown?.Items[name] as MenuItemProcedure;
                 if (item == null)
                 {
                     item = new MenuItemProcedure(proc);
@@ -806,28 +807,6 @@ namespace DataWF.Module.FlowGui
             Send(null, null, null);
         }
 
-        protected void OnClosing(CancelEventArgs e)
-        {
-            e.Cancel = HideOnClose;
-
-            if (Document != null && (Document.UpdateState & DBUpdateState.Delete) != DBUpdateState.Delete && EditorState != DocumentEditorState.Readonly && Document.IsChanged)
-            {
-                var question = new QuestionMessage(Locale.Get("DocumentEditor", "On Close"), Locale.Get("DocumentEditor", "Save changes?"));
-                question.Buttons.Add(Command.No);
-                question.Buttons.Add(Command.Yes);
-                question.Buttons.Add(Command.Cancel);
-                var dr = MessageDialog.AskQuestion(ParentWindow, question);
-                if (dr == Command.Cancel)
-                {
-                    e.Cancel = true;
-                }
-                else if (dr == Command.Yes)
-                {
-                    Document.Save(null);
-                }
-            }
-        }
-
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -920,7 +899,23 @@ namespace DataWF.Module.FlowGui
 
         public bool Closing()
         {
-            throw new NotImplementedException();
+            if (Document != null && (Document.UpdateState & DBUpdateState.Delete) != DBUpdateState.Delete && EditorState != DocumentEditorState.Readonly && Document.IsChanged)
+            {
+                var question = new QuestionMessage(Locale.Get(nameof(DocumentEditor), "On Close"), Locale.Get(nameof(DocumentEditor), "Save changes?"));
+                question.Buttons.Add(Command.No);
+                question.Buttons.Add(Command.Yes);
+                question.Buttons.Add(Command.Cancel);
+                var dr = MessageDialog.AskQuestion(ParentWindow, question);
+                if (dr == Command.Cancel)
+                {
+                    return false;
+                }
+                else if (dr == Command.Yes)
+                {
+                    Document.Save(null);
+                }
+            }
+            return true;
         }
 
         public void Activating()

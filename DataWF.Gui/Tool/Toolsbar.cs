@@ -20,12 +20,17 @@ namespace DataWF.Gui
         {
             items = new ToolItem() { Bar = this };
             items.StyleName = "Toolsbar";
+            Name = "Bar";
         }
 
         public Toolsbar(params ToolItem[] items) : this()
         {
             Items.AddRange(items);
         }
+
+        public double MinItemHeight { get; set; } = 28;
+
+        public double MinItemWidth { get; set; } = 28;
 
         public double Indent { get; set; } = 5D;
 
@@ -238,6 +243,16 @@ namespace DataWF.Gui
         public virtual void OnItemClick(ToolItem toolItem)
         {
             ItemClick?.Invoke(this, new ToolItemEventArgs { Item = toolItem });
+        }
+
+        public void Serialize(ISerializeWriter writer)
+        {
+            writer.Write(items);
+        }
+
+        public void Deserialize(ISerializeReader reader)
+        {
+            reader.Read(items);
         }
     }
 }

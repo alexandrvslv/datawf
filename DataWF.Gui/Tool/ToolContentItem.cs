@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Xml.Serialization;
 using Xwt;
 
@@ -13,6 +14,9 @@ namespace DataWF.Gui
         {
             Content = content;
         }
+
+        [DefaultValue(120)]
+        public double ContentMinWidth { get; set; } = 120D;
 
         [XmlIgnore]
         public Widget Content
@@ -45,6 +49,7 @@ namespace DataWF.Gui
             }
         }
 
+        [XmlIgnore]
         public override Toolsbar Bar
         {
             get => base.Bar;
@@ -98,8 +103,8 @@ namespace DataWF.Gui
             contentBound.Y = 0;
             //contentBound.Height = MinHeight - Bar.Indent;
 
-            width = Math.Max(contentBound.Right, MinWidth) + (Bar?.Indent ?? 0);
-            height = Math.Max(Math.Max(textBound.Height, contentBound.Height), MinHeight) + Bar.Indent;
+            width = Math.Max(contentBound.Right, ContentMinWidth) + (Bar?.Indent ?? 0);
+            height = Math.Max(Math.Max(textBound.Height, contentBound.Height), Bar.MinItemHeight) + Bar.Indent;
         }
 
         public override void Dispose()

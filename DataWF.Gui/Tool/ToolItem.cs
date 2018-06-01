@@ -43,6 +43,7 @@ namespace DataWF.Gui
         [Browsable(false)]
         public string StyleName { get; set; } = "Tool";
 
+        [XmlIgnore]
         public CellStyle Style
         {
             get { return style ?? (style = GuiEnvironment.Theme[StyleName]); }
@@ -158,7 +159,7 @@ namespace DataWF.Gui
                         };
                     }
                     text.Text = value;
-                    text.Height = MinHeight;
+                    text.Height = -1;
                     text.Width = -1;
                     OnTextChanged(EventArgs.Empty);
                 }
@@ -191,6 +192,7 @@ namespace DataWF.Gui
             }
         }
 
+        [XmlIgnore]
         public Font Font
         {
             get { return text?.Font ?? Style.Font; }
@@ -270,15 +272,12 @@ namespace DataWF.Gui
             }
         }
 
-        public double MinHeight { get; set; } = 28;
-
-        public double MinWidth { get; set; } = 28;
-
         public ToolItem Owner
         {
             get { return Bar?.Owner; }
         }
 
+        [XmlIgnore]
         public Rectangle Bound { get; set; }
 
         public override void ApplyBound(Rectangle value)
@@ -293,7 +292,7 @@ namespace DataWF.Gui
             var imaged = DisplayStyle.HasFlag(ToolItemDisplayStyle.Image) && GetFormattedImage() != null;
             if (imaged)
             {
-                imageBound.X = value.X + (MinWidth - imageBound.Width) / 2D;
+                imageBound.X = value.X + (Bar.MinItemWidth - imageBound.Width) / 2D;
                 imageBound.Y = value.Y + (value.Height - imageBound.Height) / 2D;
             }
             if (DisplayStyle.HasFlag(ToolItemDisplayStyle.Text))
@@ -343,7 +342,7 @@ namespace DataWF.Gui
                 return;
             imageBound.Location = Point.Zero;
             if (DisplayStyle.HasFlag(ToolItemDisplayStyle.Image))
-                imageBound.Size = Image != null || Glyph != GlyphType.None ? new Size(MinHeight - 2, MinHeight - 2) : Size.Zero;
+                imageBound.Size = Image != null || Glyph != GlyphType.None ? new Size(Bar.MinItemHeight - 2, Bar.MinItemHeight - 2) : Size.Zero;
             else
                 imageBound.Size = Size.Zero;
 
@@ -363,8 +362,8 @@ namespace DataWF.Gui
                 textBound.Size = new Size(textBound.Height, textBound.Width);
             }
 
-            width = Math.Max(textBound.Right, MinWidth) + Bar.Indent;
-            height = Math.Max(Math.Max(textBound.Height, textBound.Height), MinHeight) + Bar.Indent;
+            width = Math.Max(textBound.Right, Bar.MinItemWidth) + Bar.Indent;
+            height = Math.Max(Math.Max(textBound.Height, textBound.Height), Bar.MinItemHeight) + Bar.Indent;
             if (Bar.ItemOrientation == Orientation.Vertical)
             {
                 InvertSize();

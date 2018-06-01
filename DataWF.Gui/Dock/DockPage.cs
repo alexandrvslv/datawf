@@ -7,7 +7,7 @@ using Xwt.Drawing;
 
 namespace DataWF.Gui
 {
-    public class DockPage : ToolDropDown
+    public class DockPage : ToolCarret
     {
         private bool closing = false;
         private Widget widget;
@@ -26,6 +26,20 @@ namespace DataWF.Gui
             get { return Bar as DockPanel; }
         }
 
+        [XmlIgnore]
+        public override Toolsbar Bar
+        {
+            get => base.Bar;
+            set
+            {
+                base.Bar = value;
+                if (value != null && Widget != null && Visible && Checked)
+                {
+                    Panel.CurrentPage = this;
+                }
+            }
+        }
+
         public Widget Widget
         {
             get { return widget; }
@@ -39,6 +53,10 @@ namespace DataWF.Gui
                 widget = value;
                 if (widget != null)
                 {
+                    if (widget.Name != Name)
+                    {
+                        widget.Name = Name;
+                    }
                     if (widget is ILocalizable)
                         ((ILocalizable)widget).Localize();
                     if (widget is IText)
@@ -105,7 +123,8 @@ namespace DataWF.Gui
             set
             {
                 base.Visible = value;
-
+                if (Panel == null)
+                    return;
                 if (value)
                 {
                     Panel.CurrentPage = this;
@@ -116,7 +135,6 @@ namespace DataWF.Gui
                 }
             }
         }
-
 
         protected override void OnCarretClick(ButtonEventArgs args)
         {
@@ -132,7 +150,9 @@ namespace DataWF.Gui
 
         private void UncheckExcept()
         {
-            foreach (DockPage item in Panel.Items.GetItems())
+            if (Map == null)
+                return;
+            foreach (DockPage item in Map.GetItems())
             {
                 if (item != this)
                     item.Checked = false;

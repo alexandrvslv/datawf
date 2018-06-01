@@ -62,7 +62,7 @@ namespace DataWF.Data.Gui
             //toolInsertLine = new ToolMenuItem(OnToolInsertLineClick) { Name = "Insert Line", Glyph = GlyphType.ChevronCircleRight };
             //toolAdd.DropDownItems.Add(toolInsertLine);
 
-            toolReference = new ToolDropDown() { Name = "References", Visible = false, DisplayStyle = ToolItemDisplayStyle.Text };
+            toolReference = new ToolDropDown() { Name = "References", Visible = false, DisplayStyle = ToolItemDisplayStyle.Text, DropDown = new Menubar { Name = "References" } };
             toolMerge = new ToolMenuItem(OnToolMergeClick) { Name = "Merge", Glyph = GlyphType.PaperPlane };
             toolReport = new ToolMenuItem(ToolReportClick) { Name = "Report", Glyph = GlyphType.FileExcelO };
             toolParam = new ToolDropDown(toolMerge, toolReport) { Name = "Parameters", Glyph = GlyphType.GearAlias };
@@ -382,10 +382,13 @@ namespace DataWF.Data.Gui
                                 }
                                 else
                                 {
-                                    itemRelation = new MenuItemRelation();
-                                    itemRelation.Name = relation.Name;
-                                    itemRelation.Text = relation.Table + "(" + relation.Column + ")";
-                                    itemRelation.Relation = relation;
+                                    itemRelation = new MenuItemRelation
+                                    {
+                                        Name = relation.Name,
+                                        Text = relation.Table + "(" + relation.Column + ")",
+                                        Relation = relation,
+                                        DropDown = new Menubar { Name = relation.Name }
+                                    };
                                     itemRelation.Click += ToolReferencesClick;
                                     toolReference.DropDown.Items.Add(itemRelation);
                                 }

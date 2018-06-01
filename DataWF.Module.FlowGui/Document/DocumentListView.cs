@@ -686,12 +686,17 @@ namespace DataWF.Module.FlowGui
 
         public bool Closing()
         {
-            throw new NotImplementedException();
+            if (Documents.IsEdited)
+            {
+                MessageDialog.ShowWarning(Locale.Get(nameof(DocumentListView), "Some data not saved!"));
+                return false;
+            }
+            return true;
         }
 
         public void Activating()
         {
-            throw new NotImplementedException();
+
         }
     }
 }

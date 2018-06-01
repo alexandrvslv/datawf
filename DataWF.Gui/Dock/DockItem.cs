@@ -9,7 +9,6 @@ namespace DataWF.Gui
     public class DockItem : LayoutItem<DockItem>, IDisposable
     {
         protected DockPanel panel;
-
         private DockBox box;
 
         public DockItem()
@@ -20,7 +19,7 @@ namespace DataWF.Gui
 
         [DefaultValue(false)]
         public bool Main { get; set; }
-
+                
         public DockPanel Panel
         {
             get { return panel; }
@@ -82,6 +81,7 @@ namespace DataWF.Gui
             }
         }
 
+        [XmlIgnore]
         public Rectangle Bound { get; private set; }
 
         public override void ApplyBound(Rectangle value)
@@ -92,9 +92,7 @@ namespace DataWF.Gui
 
         public override void Dispose()
         {
-            foreach (var item in this)
-                if (item is IDisposable)
-                    ((IDisposable)item).Dispose();
+            base.Dispose();
             panel?.Dispose();
         }
 

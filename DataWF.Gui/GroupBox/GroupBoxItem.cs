@@ -186,11 +186,11 @@ namespace DataWF.Gui
 
         public void Paint(GraphContext context)
         {
-            context.DrawCell(Style, null, Bound, Bound, CellDisplayState.Default);
+            context.DrawCell(Style, null, Bound, Bound, CellDisplayState.Selected);
 
             GetExpandBound(Bound);
 
-            rectHeader = new Rectangle(Bound.X + 6, Bound.Y + 0, Bound.Width - 12, this.HeaderHeight);
+            rectHeader = new Rectangle(Bound.X + 3, Bound.Y, Bound.Width - 3, HeaderHeight);
             rectGlyph = new Rectangle(Bound.X + 10, Bound.Y + 3, 15, 15);
             rectText = new Rectangle(Bound.X + 30, Bound.Y + 3, Bound.Width - 40, rectHeader.Height - 5);
 

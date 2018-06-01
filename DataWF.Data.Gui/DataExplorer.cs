@@ -28,8 +28,8 @@ namespace DataWF.Data.Gui
         private Menubar contextTools;
         private VPaned container;
         private LayoutList changesView;
-        private VPanel panel1;
-        private VPanel panel2;
+        private VBox panel1;
+        private VBox panel2;
 
         public DataExplorer()
         {
@@ -114,11 +114,11 @@ namespace DataWF.Data.Gui
             dataTree.CellDoubleClick += DataTreeOnDoubleClick;
             dataTree.SelectionChanged += DataTreeOnAfterSelect;
 
-            panel1 = new VPanel();
+            panel1 = new VBox { Name = "Panel1" };
             panel1.PackStart(barMain, false, false);
             panel1.PackStart(dataTree, true, true);
 
-            panel2 = new VPanel();
+            panel2 = new VBox { Name = "Panel2" };
             panel2.PackStart(barChanges, false, false);
             panel2.PackStart(changesView, true, true);
 
@@ -147,15 +147,6 @@ namespace DataWF.Data.Gui
         public override void Localize()
         {
             base.Localize();
-            panel1.Localize();
-            panel2.Localize();
-            //barChanges.Localize();
-            //barMain.Localize();
-            //contextMain.Localize();
-            //contextAdd.Localize();
-            //contextTools.Localize();
-            //dataTree.Localize();
-
             GuiService.Localize(this, Name, "Database", GlyphType.Database);
         }
 
@@ -936,12 +927,11 @@ namespace DataWF.Data.Gui
 
         public bool Closing()
         {
-            throw new NotImplementedException();
+            return true;
         }
 
         public void Activating()
         {
-            throw new NotImplementedException();
         }
     }
 

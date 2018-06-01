@@ -199,7 +199,7 @@ namespace DataWF.Module.FlowGui
         private void TemplateItemClick(object sender, EventArgs e)
         {
             var item = sender as TemplateMenuItem;
-            if (item.DropDown.Items.Count > 0)
+            if (item.DropDown?.Items.Count > 0)
                 return;
             ViewDocuments(CreateDocuments(item.Template, null));
         }

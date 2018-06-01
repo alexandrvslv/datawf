@@ -14,6 +14,7 @@ namespace DataWF.Module.FlowGui
             var item = new StageMenuItem(stage, clickHandler);
             if (iniUsers)
             {
+                item.DropDown = new Menubar { Name = item.Name };
                 foreach (User user in stage.GetUsers())
                 {
                     if (user.Status != DBStatus.Error && user.Status != DBStatus.Archive)
@@ -35,7 +36,7 @@ namespace DataWF.Module.FlowGui
 
         public StageMenuItem(Stage stage, EventHandler click) : base(click)
         {
-            Stage = stage;            
+            Stage = stage;
         }
 
         public Stage Stage

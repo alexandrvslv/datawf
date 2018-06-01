@@ -5,7 +5,7 @@ using Xwt;
 
 namespace DataWF.Gui
 {
-    public class Menubar : PopupWindow, ILocalizable
+    public class Menubar : PopupWindow, ILocalizable, ISerializableElement
     {
         public Menubar() : base(PopupType.Menu)
         {
@@ -19,6 +19,7 @@ namespace DataWF.Gui
             Padding = new WidgetSpacing(8, 8, 8, 8);
             InitialLocation = WindowLocation.Manual;
             ShowInTaskbar = false;
+            Name = nameof(Menubar);
         }
 
         public Menubar(params ToolItem[] items) : this()
@@ -110,6 +111,16 @@ namespace DataWF.Gui
                 return;
             }
             BaseGetFocus(null, null);
+        }
+
+        public void Serialize(ISerializeWriter writer)
+        {
+            writer.Write(Bar.Items);
+        }
+
+        public void Deserialize(ISerializeReader reader)
+        {
+            reader.Read(Bar.Items);
         }
     }
 }

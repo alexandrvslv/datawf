@@ -62,7 +62,7 @@ namespace DataWF.Gui
             toolStatusActual = new ToolMenuItem() { Name = "Actual", Tag = DBStatus.Actual, GlyphColor = Colors.DarkGreen, Sensitive = false, Glyph = GlyphType.Flag };
             toolStatusNew = new ToolMenuItem() { Name = "New", Tag = DBStatus.New, GlyphColor = Colors.DarkBlue, Sensitive = false, Glyph = GlyphType.Flag };
 
-            toolStatus = new ToolSplit() { Name = "Status", Glyph = GlyphType.Flag };
+            toolStatus = new ToolSplit() { Name = "Status", Glyph = GlyphType.Flag, DropDown = new Menubar { Name = "Status" } };
             toolStatus.DropDownItems.AddRange(new[] {
                 toolStatusNew,
                 toolStatusActual,

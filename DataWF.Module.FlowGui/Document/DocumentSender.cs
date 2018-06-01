@@ -35,6 +35,7 @@ namespace DataWF.Module.FlowGui
         private CellStyle styleComplete = new CellStyle();
         private CellStyle styleError = new CellStyle();
         private SelectableList<DocumentSendItem> items = new SelectableList<DocumentSendItem>();
+
         private Stage CurrentStage
         {
             get { return currentStage; }
@@ -84,7 +85,7 @@ namespace DataWF.Module.FlowGui
                 ShowUser = true
             };
 
-            toolNext = new ToolMenuItem { Name = "Next" };
+            toolNext = new ToolMenuItem { Name = "Next", DropDown = new Menubar { Name = "Next" } };
             toolNext.ItemClick += ToolNextItemClick;
             toolForward = new ToolMenuItem { Name = "Forward" };
             toolReturn = new ToolMenuItem { Name = "Return" };

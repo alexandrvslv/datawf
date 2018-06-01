@@ -60,8 +60,8 @@ namespace DataWF.Gui
             openFD = new OpenFileDialog() { Title = "Open File" };
             saveFD = new SaveFileDialog() { Title = "Save File" };
 
-            menuProjectCreate = new ToolMenuItem { Name = "Create" };
-            menuProjectCreate.DropDown.Bar.ItemClick += ToolProjectCreateItemClick;
+            menuProjectCreate = new ToolMenuItem { Name = "Create", DropDown = new Menubar { Name = "Create" } };
+            menuProjectCreate.ItemClick += ToolProjectCreateItemClick;
             menuProjectOpen = new ToolMenuItem(ToolProjectOpenClick) { Name = "Open" };
             menuProjectProps = new ToolMenuItem(ToolProjectPropertiesClick) { Name = "Properties" };
             menuProjectSave = new ToolMenuItem(ToolProjectSaveClick) { Name = "Save" };
@@ -90,7 +90,7 @@ namespace DataWF.Gui
             menuEditUIEnvironment = new ToolMenuItem(ToolEditUIEnvironment) { Name = "UI Environment" };
             menuEditLocalize = new ToolMenuItem(ToolEditLocalizeClick) { Name = "Localize" };
 
-            menuWindowLang = new ToolMenuItem { Name = "Language" };
+            menuWindowLang = new ToolMenuItem { Name = "Language", DropDown = new Menubar { Name = "Language" } };
             foreach (var info in Locale.Instance.Cultures)
             {
                 menuWindowLang.DropDown.Items.Add(new ToolLangItem(LangItemClick)
@@ -100,7 +100,7 @@ namespace DataWF.Gui
                     Text = info.DisplayName,
                 });
             }
-            menuWindowTheme = new ToolMenuItem { Name = "Theme" };
+            menuWindowTheme = new ToolMenuItem { Name = "Theme", DropDown = new Menubar { Name = "Theme" } };
             foreach (var theme in GuiEnvironment.Instance.Themes)
             {
                 menuWindowTheme.DropDown.Items.Add(new ToolThemeItem(ThemeItemClick)

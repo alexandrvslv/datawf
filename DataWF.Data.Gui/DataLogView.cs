@@ -72,7 +72,7 @@ namespace DataWF.Data.Gui
                 Editor = new CellEditorDate { TwoDate = true, DataType = typeof(DateInterval) },
                 DataValue = new DateInterval(DateTime.Today.AddMonths(-1), DateTime.Today),
                 Name = "Date",
-                FieldWidth = 200
+                ContentMinWidth = 200
             };
             dateField.Field.ValueChanged += DateValueChanged;
 
@@ -80,7 +80,7 @@ namespace DataWF.Data.Gui
             {
                 Editor = new CellEditorDataTree { DataType = typeof(DBTable) },
                 Name = "Table",
-                FieldWidth = 200
+                ContentMinWidth = 200
             };
             dataField.Field.ValueChanged += DataValueChanged;
 

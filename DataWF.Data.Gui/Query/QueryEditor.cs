@@ -114,6 +114,7 @@ namespace DataWF.Data.Gui
             toolAdd.Name = "toolAdd";
             toolAdd.Tag = "";
             toolAdd.Text = "Add";
+            toolAdd.DropDown = new Menubar { Name = "Add" };
 
             toolAddGroup.Name = "toolAddGroup";
             toolAddGroup.Text = "Group";
@@ -438,15 +439,14 @@ namespace DataWF.Data.Gui
 
         protected ToolMenuItem InitSchemaTool(DBSchema schema)
         {
-            var item = new ToolMenuItem();
-            item.Tag = schema;
-            item.Name = schema.Name;
-            item.Text = schema.ToString();
+            var item = new ToolMenuItem { Tag = schema, Name = schema.Name, Text = schema.ToString(), DropDown = new Menubar { Name = schema.Name } };
             var list = new SelectableList<DBTable>(schema.Tables);
             list.ApplySortInternal("Name", ListSortDirection.Ascending);
             foreach (DBTable ts in list)
+            {
                 if (ts.Access.Admin)
                     item.DropDown.Items.Add(InitTableTool(ts));
+            }
             return item;
         }
 

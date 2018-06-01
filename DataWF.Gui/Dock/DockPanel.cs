@@ -211,48 +211,49 @@ namespace DataWF.Gui
             return Items.GetItems().Cast<DockPage>().GetEnumerator();
         }
 
-        public void Serialize(ISerializeWriter writer)
-        {
-            writer.WriteAttribute("Current", CurrentWidget?.Name ?? string.Empty);
-            foreach (DockPage page in Items)
-            {
-                if (page.Widget is ISerializableElement)
-                {
-                    writer.Write(page.Widget, page.Widget.Name, true);
-                }
-                else
-                {
+        //public void Serialize(ISerializeWriter writer)
+        //{
+        //    writer.WriteAttribute("Current", CurrentWidget?.Name ?? string.Empty);
+        //    writer.Write(items);
+        //    foreach (DockPage page in Items)
+        //    {
+        //        if (page.Widget is ISerializableElement)
+        //        {
+        //            writer.Write(page.Widget, page.Widget.Name, true);
+        //        }
+        //        else
+        //        {
 
-                }
-            }
-        }
+        //        }
+        //    }
+        //}
 
-        public void Deserialize(ISerializeReader reader)
-        {
-            var current = reader.ReadAttribute<string>("Current");
-            if (reader.IsEmpty)
-                return;
+        //public void Deserialize(ISerializeReader reader)
+        //{
+        //    var current = reader.ReadAttribute<string>("Current");
+        //    if (reader.IsEmpty)
+        //        return;
 
-            while (reader.ReadBegin())
-            {
-                var type = reader.ReadType();
-                DockPage page = GetPage(reader.CurrentName);
-                if (page == null)
-                {
-                    var widget = (Widget)EmitInvoker.CreateObject(type);
-                    widget.Name = reader.CurrentName;
-                    page = Put(widget);
-                }
-                if (page.Widget.GetType() == type && page.Widget is ISerializableElement)
-                {
-                    ((ISerializableElement)page.Widget).Deserialize(reader);
-                }
-            }
-            if (!string.IsNullOrEmpty(current))
-            {
-                CurrentPage = GetPage(current);
-            }
-        }
+        //    while (reader.ReadBegin())
+        //    {
+        //        var type = reader.ReadType();
+        //        DockPage page = GetPage(reader.CurrentName);
+        //        if (page == null)
+        //        {
+        //            var widget = (Widget)EmitInvoker.CreateObject(type);
+        //            widget.Name = reader.CurrentName;
+        //            page = Put(widget);
+        //        }
+        //        if (page.Widget.GetType() == type && page.Widget is ISerializableElement)
+        //        {
+        //            ((ISerializableElement)page.Widget).Deserialize(reader);
+        //        }
+        //    }
+        //    if (!string.IsNullOrEmpty(current))
+        //    {
+        //        CurrentPage = GetPage(current);
+        //    }
+        //}
 
         public bool VisibleClose
         {

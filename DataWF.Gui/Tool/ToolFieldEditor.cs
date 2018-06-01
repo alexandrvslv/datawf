@@ -1,4 +1,5 @@
 ﻿using DataWF.Common;
+using System.Xml.Serialization;
 
 namespace DataWF.Gui
 {
@@ -15,12 +16,7 @@ namespace DataWF.Gui
             get { return content as FieldEditor; }
         }
 
-        public double FieldWidth
-        {
-            get { return MinWidth; }
-            set { MinWidth = value; }
-        }
-
+        [XmlIgnore]
         public ILayoutCellEditor Editor
         {
             get { return Field.CellEditor; }
@@ -31,6 +27,7 @@ namespace DataWF.Gui
             }
         }
 
+        [XmlIgnore]
         public object DataValue
         {
             get { return Field.DataValue; }

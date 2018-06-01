@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Xml.Serialization;
 using DataWF.Data;
 using DataWF.Gui;
 using Xwt;
@@ -9,6 +10,7 @@ namespace DataWF.Data.Gui
     {
         private TableLoader loader;
 
+        [XmlIgnore]
         public TableLoader Loader
         {
             get { return loader; }
