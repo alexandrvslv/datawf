@@ -59,19 +59,9 @@ namespace DataWF.Module.FlowGui
             }
         }
 
-        public override void OnItemSelect(ListEditorEventArgs ea)
+        public override void OnItemSelect(ListEditorEventArgs e)
         {
-            if (ea.Item != null)
-            {
-                if (GuiService.Main != null)
-                {
-                    GuiService.Main?.ShowProperty(this, ea.Item, false);
-                }
-                else
-                {
-                    base.OnItemSelect(ea);
-                }
-            }
+            ToolViewClick(this, e);
         }
 
         protected override void OnToolEditClick(object sender, EventArgs e)
@@ -153,7 +143,6 @@ namespace DataWF.Module.FlowGui
         {
             ToolViewClick(this, EventArgs.Empty);
         }
-
 
     }
 }

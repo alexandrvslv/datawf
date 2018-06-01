@@ -29,5 +29,10 @@ namespace DataWF.Data
         public int Col;
         public string ColA => Helper.IntToChar(Col);
         public int Row;
+
+        public override string ToString()
+        {
+            return ColA + Row.ToString();
+        }
     }
 }

@@ -64,7 +64,7 @@ namespace DataWF.Module.FlowGui
 
         private void DocumentRefChanged(Document arg1, ListChangedType arg2)
         {
-            Documents.UpdateFilter();
+            //Documents.UpdateFilter();
         }
 
         public override void Localize()
@@ -91,8 +91,12 @@ namespace DataWF.Module.FlowGui
             {
                 try
                 {
-                    document.GetReferencing<DocumentReference>(nameof(DocumentReference.DocumentId), DBLoadParam.Load);
-                    document.GetReferencing<DocumentReference>(nameof(DocumentReference.ReferenceId), DBLoadParam.Load);
+                    using (var transaction = new DBTransaction())
+                    {
+                        document.GetReferencing<DocumentReference>(nameof(DocumentReference.DocumentId), DBLoadParam.Load);
+                        document.GetReferencing<DocumentReference>(nameof(DocumentReference.ReferenceId), DBLoadParam.Load);
+                        Documents.Load();
+                    }
                     //refs.Documents.UpdateFilter();
                     synch = true;
                 }

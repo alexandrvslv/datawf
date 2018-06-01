@@ -484,11 +484,11 @@ namespace DataWF.Data
             {
                 WorkbookPart workbookPart = document.WorkbookPart;
 
-                var calc = workbookPart.GetPartsOfType<CalculationChainPart>();
-                if (calc.Count() > 0)
-                    workbookPart.DeletePart(calc.First());
+                //var calc = workbookPart.GetPartsOfType<CalculationChainPart>();
+                //if (calc.Count() > 0)
+                //    workbookPart.DeletePart(calc.First());
 
-                var cacheNanme = new List<DefinedName>();
+                var cacheNanme = new Dictionary<string, DefinedName>();
 
                 foreach (Excel.DefinedName name in workbookPart.Workbook.DefinedNames)
                 {
@@ -501,14 +501,15 @@ namespace DataWF.Data
                     var procedure = DBService.ParseProcedureByCode(name.Name);
                     if (procedure != null)
                     {
-                        cacheNanme.Add(new DefinedName
+                        var defName = new DefinedName
                         {
                             Name = name.Name,
-                            Sheet = split[0],
+                            Sheet = split[0].Trim('\''),
                             Reference = split[1],
                             Procedure = procedure,
                             Value = procedure.Execute(param)
-                        });
+                        };
+                        cacheNanme.Add(defName.A.ToString(), defName);
                     }
                 }
 
@@ -519,7 +520,12 @@ namespace DataWF.Data
                     string origninalSheetId = workbookPart.GetIdOfPart(worksheetPart);
 
                     WorksheetPart replacementPart = workbookPart.AddNewPart<WorksheetPart>();
+
                     string replacementPartId = workbookPart.GetIdOfPart(replacementPart);
+
+
+                    Excel.Sheet sheet = workbookPart.Workbook.Descendants<Excel.Sheet>().First(s => s.Id.Value.Equals(origninalSheetId));
+                    sheet.Id.Value = replacementPartId;
 
                     var reader = OpenXmlReader.Create(worksheetPart);
                     var writer = OpenXmlWriter.Create(replacementPart);
@@ -529,17 +535,22 @@ namespace DataWF.Data
                         if (reader.ElementType == typeof(Excel.Row))
                         {
                             Excel.Row r = (Excel.Row)reader.LoadCurrentElement();
-
                             ind = (int)r.RowIndex.Value + dif;
-
                             var orow = CloneRow(r, ind);
-
                             QResult query = null;
-
                             foreach (Excel.Cell ocell in orow.ChildElements)
                             {
-                                string value = ReadCell(ocell, stringTables);
-                                object rz = ReplaceExcelString(param, value);
+                                object rz = null;
+                                if (cacheNanme.TryGetValue(ocell.CellReference.Value, out var defName) && defName.Sheet.Equals(sheet.Name.Value, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    rz = defName.Value;
+                                }
+                                else
+                                {
+                                    string value = ReadCell(ocell, stringTables);
+                                    rz = ReplaceExcelString(param, value);
+                                }
+
                                 if (rz != null)
                                 {
                                     query = rz as QResult;
@@ -574,27 +585,39 @@ namespace DataWF.Data
                             if (query == null)
                                 writer.WriteElement(orow);
                         }
+                        else if (TypeHelper.IsBaseType(reader.ElementType, typeof(Excel.SheetViews)))
+                        {
+                            var views = reader.LoadCurrentElement() as Excel.SheetViews;
+                        }
                         else if (TypeHelper.IsBaseType(reader.ElementType, typeof(OpenXmlLeafTextElement)))
                         {
                             var footer = reader.LoadCurrentElement() as OpenXmlLeafTextElement;
                             footer.Text = ReplaceExcelString(param, footer.Text) as string;
                             writer.WriteElement(footer);
                         }
+                        else if (reader.IsStartElement)
+                            writer.WriteStartElement(reader);
+                        else if (reader.IsEndElement)
+                            writer.WriteEndElement();
                         else
                         {
-                            if (reader.IsStartElement)
-                                writer.WriteStartElement(reader);
-                            else if (reader.IsEndElement)
-                                writer.WriteEndElement();
                         }
                     }
                     reader.Close();
                     writer.Close();
 
-                    Excel.Sheet sheet = workbookPart.Workbook.Descendants<Excel.Sheet>().Where(s => s.Id.Value.Equals(origninalSheetId)).First();
-                    sheet.Id.Value = replacementPartId;
-                    workbookPart.DeletePart(worksheetPart);
+                    foreach (var part in workbookPart.Parts)
+                    {
+                        part.OpenXmlPart = replacementPart;
+                    }
+
+                    //workbookPart.DeletePart(worksheetPart);
+                   // workbookPart.ChangeIdOfPart(replacementPart, origninalSheetId);
+
+
                 }
+                workbookPart.Workbook.Save();
+                document.Save();
             }
             return File.ReadAllBytes(filename);
         }
