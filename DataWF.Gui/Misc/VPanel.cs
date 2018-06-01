@@ -119,7 +119,8 @@ namespace DataWF.Gui
                 var widget = FindWidget(this, reader.CurrentName, type);
                 if (widget != null)
                 {
-                    ((ISerializableElement)widget).Deserialize(reader);
+                    reader.Read(widget, reader.GetTypeInfo(type));
+                    //((ISerializableElement)widget).Deserialize(reader);
                 }
                 else
                 {

@@ -41,7 +41,7 @@ namespace DataWF.Test.Common
             Console.WriteLine($"Benchmark {stopwatch.ElapsedMilliseconds}");
         }
 
-		[Test()]
+        [Test()]
         public void BenchmarkWriteNative()
         {
             var list = new List<string> { "one", "two", "three" };
@@ -87,7 +87,7 @@ namespace DataWF.Test.Common
             return buffer;
         }
 
-		public byte[] TestWrite(XmlSerializer serializer, object list)
+        public byte[] TestWrite(XmlSerializer serializer, object list)
         {
             var buffer = (byte[])null;
             using (var stream = new MemoryStream())
@@ -106,15 +106,13 @@ namespace DataWF.Test.Common
             }
         }
 
-		public void TestRead(XmlSerializer serializer, byte[] buffer)
+        public void TestRead(XmlSerializer serializer, byte[] buffer)
         {
             using (var stream = new MemoryStream(buffer))
             {
                 var newList = serializer.Deserialize(stream);
             }
         }
-
-        
 
         public void TestGenericList(Serializer serializer, object list, bool print = true)
         {
@@ -195,7 +193,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void TestArrayList()
         {
-            var list = new ArrayList { "one", 2, 3.0M, new TestRefType { IntValue = 1, DecimalValue = 2.2M, StringValue = "bla" } };
+            var list = new ArrayList { "one", 2, 3.0M, new TestSerializeClass { IntValue = 1, DecimalValue = 2.2M, StringValue = "bla" } };
             var buffer = (byte[])null;
             using (var stream = new MemoryStream())
             {
@@ -211,8 +209,8 @@ namespace DataWF.Test.Common
                 Assert.IsInstanceOf<ArrayList>(newList, "Deserialization Fail");
                 Assert.AreEqual(4, ((ArrayList)newList).Count, "Deserialization Fail");
                 Assert.AreEqual("one", ((ArrayList)newList)[0], "Deserialization Fail");
-                Assert.IsInstanceOf<TestRefType>(((ArrayList)newList)[3], "Deserialization Fail");
-                Assert.AreEqual("bla", ((TestRefType)((ArrayList)newList)[3]).StringValue, "Deserialization Fail");
+                Assert.IsInstanceOf<TestSerializeClass>(((ArrayList)newList)[3], "Deserialization Fail");
+                Assert.AreEqual("bla", ((TestSerializeClass)((ArrayList)newList)[3]).StringValue, "Deserialization Fail");
             }
         }
 
@@ -263,12 +261,12 @@ namespace DataWF.Test.Common
         [Test()]
         public void TestClass()
         {
-            var item = new TestRefType
+            var item = new TestSerializeClass
             {
                 IntValue = 5,
                 DecimalValue = 5.5M,
                 StringValue = "bla bla",
-                ClassValue = new TestRefType
+                ClassValue = new TestSerializeClass
                 {
                     IntValue = 25,
                     DecimalValue = 25.25M,
@@ -287,22 +285,154 @@ namespace DataWF.Test.Common
             using (var stream = new MemoryStream(buffer))
             {
                 var newItem = Serialization.Deserialize(stream);
-                Assert.IsInstanceOf<TestRefType>(newItem, "Deserialization Fail");
-                Assert.AreEqual(item.IntValue, ((TestRefType)newItem).IntValue, "Deserialization Fail");
-                Assert.AreEqual(item.DecimalValue, ((TestRefType)newItem).DecimalValue, "Deserialization Fail");
-                Assert.AreEqual(item.StringValue, ((TestRefType)newItem).StringValue, "Deserialization Fail");
-                Assert.AreEqual(item.ClassValue.StringValue, ((TestRefType)newItem).ClassValue.StringValue, "Deserialization Fail");
+                Assert.IsInstanceOf<TestSerializeClass>(newItem, "Deserialization Fail");
+                Assert.AreEqual(item.IntValue, ((TestSerializeClass)newItem).IntValue, "Deserialization Fail");
+                Assert.AreEqual(item.DecimalValue, ((TestSerializeClass)newItem).DecimalValue, "Deserialization Fail");
+                Assert.AreEqual(item.StringValue, ((TestSerializeClass)newItem).StringValue, "Deserialization Fail");
+                Assert.AreEqual(item.ClassValue.StringValue, ((TestSerializeClass)newItem).ClassValue.StringValue, "Deserialization Fail");
 
             }
         }
 
+        [Test()]
+        public void TestClassList()
+        {
+            var item = new List<TestSerializeClass>();
+            item.AddRange(new[] {
+                new TestSerializeClass
+                {
+                    IntValue = 5,
+                    DecimalValue = 5.5M,
+                    StringValue = "bla bla",
+                    ClassValue = new TestSerializeClass
+                    {
+                        IntValue = 25,
+                        DecimalValue = 25.25M,
+                        StringValue = "bla bla bla"
+                    }
+                },
+                new TestSerializeClass
+                {
+                    IntValue = 10,
+                    DecimalValue = 10.5M,
+                    StringValue = "bla bla",
+                    ClassValue = new TestSerializeClass
+                    {
+                        IntValue = 35,
+                        DecimalValue = 35.25M,
+                        StringValue = "bla bla bla"
+                    }
+                },
+                new TestSerializeClass
+                {
+                    IntValue = 15,
+                    DecimalValue = 15.5M,
+                    StringValue = "bla bla",
+                    ClassValue = new TestSerializeClass
+                    {
+                        IntValue = 45,
+                        DecimalValue = 45.25M,
+                        StringValue = "bla bla bla"
+                    }
+                }
+            });
+            var buffer = (byte[])null;
+            using (var stream = new MemoryStream())
+            {
+                Serialization.Serialize(item, stream);
+                buffer = stream.ToArray();
+            }
+#if DEBUG
+            PrintBuffer(buffer);
+#endif
+            using (var stream = new MemoryStream(buffer))
+            {
+                var newItem = Serialization.Deserialize(stream);
+                Assert.IsInstanceOf<List<TestSerializeClass>>(newItem, "Deserialization Fail");
+                Assert.AreEqual(item.Count, ((List<TestSerializeClass>)newItem).Count, "Deserialization Fail");
+                Assert.AreEqual(item[1].IntValue, ((List<TestSerializeClass>)newItem)[1].IntValue, "Deserialization Fail");
+                Assert.AreEqual(item[1].DecimalValue, ((List<TestSerializeClass>)newItem)[1].DecimalValue, "Deserialization Fail");
+                Assert.AreEqual(item[1].StringValue, ((List<TestSerializeClass>)newItem)[1].StringValue, "Deserialization Fail");
+                Assert.AreEqual(item[1].ClassValue.StringValue, ((List<TestSerializeClass>)newItem)[1].ClassValue.StringValue, "Deserialization Fail");
+            }
+        }
+
+        [Test()]
+        public void TestSerializeableElementList()
+        {
+            var item = new List<TestSerializableElement>();
+            item.AddRange(new[] {
+                new TestSerializableElement{
+                    ToSerialize =
+                    new TestSerializeClass
+                    {
+                        IntValue = 5,
+                        DecimalValue = 5.5M,
+                        StringValue = "bla bla",
+                        ClassValue = new TestSerializeClass
+                        {
+                            IntValue = 25,
+                            DecimalValue = 25.25M,
+                            StringValue = "bla bla bla"
+                        }
+                    } },
+                new TestSerializableElement{
+                    ToSerialize =
+                    new TestSerializeClass
+                    {
+                        IntValue = 10,
+                        DecimalValue = 10.5M,
+                        StringValue = "bla bla",
+                        ClassValue = new TestSerializeClass
+                        {
+                            IntValue = 35,
+                            DecimalValue = 35.25M,
+                            StringValue = "bla bla bla"
+                        }
+                    } },
+                new TestSerializableElement{
+                    ToSerialize =
+                    new TestSerializeClass
+                    {
+                        IntValue = 15,
+                        DecimalValue = 15.5M,
+                        StringValue = "bla bla",
+                        ClassValue = new TestSerializeClass
+                        {
+                            IntValue = 45,
+                            DecimalValue = 45.25M,
+                            StringValue = "bla bla bla"
+                        }
+                    }
+                }
+            });
+            var buffer = (byte[])null;
+            using (var stream = new MemoryStream())
+            {
+                Serialization.Serialize(item, stream);
+                buffer = stream.ToArray();
+            }
+#if DEBUG
+            PrintBuffer(buffer);
+#endif
+            using (var stream = new MemoryStream(buffer))
+            {
+                var newItem = Serialization.Deserialize(stream);
+                Assert.IsInstanceOf<List<TestSerializableElement>>(newItem, "Deserialization Fail");
+                Assert.AreEqual(item.Count, ((List<TestSerializableElement>)newItem).Count, "Deserialization Fail");
+                Assert.AreEqual(item[1].ToSerialize.IntValue, ((List<TestSerializableElement>)newItem)[1].ToSerialize.IntValue, "Deserialization Fail");
+                Assert.AreEqual(item[1].ToSerialize.DecimalValue, ((List<TestSerializableElement>)newItem)[1].ToSerialize.DecimalValue, "Deserialization Fail");
+                Assert.AreEqual(item[1].ToSerialize.StringValue, ((List<TestSerializableElement>)newItem)[1].ToSerialize.StringValue, "Deserialization Fail");
+                Assert.AreEqual(item[1].ToSerialize.ClassValue.StringValue, ((List<TestSerializableElement>)newItem)[1].ToSerialize.ClassValue.StringValue, "Deserialization Fail");
+            }
+        }
 
         private void PrintBuffer(byte[] buffer)
         {
             var text = System.Text.Encoding.UTF8.GetString(buffer);
             using (var reader = new StringReader(text))
             {
-                for (;;)
+                for (; ; )
                 {
                     var line = reader.ReadLine();
                     if (line != null)
@@ -313,14 +443,29 @@ namespace DataWF.Test.Common
             }
         }
 
-        public class TestRefType
+        public class TestSerializeClass
         {
             public int IntValue { get; set; }
             [DefaultValue(1)]
             public int DefaultValue { get; set; } = 1;
             public decimal DecimalValue { get; set; }
             public string StringValue { get; set; }
-            public TestRefType ClassValue { get; set; }
+            public TestSerializeClass ClassValue { get; set; }
+        }
+
+        public class TestSerializableElement : ISerializableElement
+        {
+            public TestSerializeClass ToSerialize { get; set; }
+
+            public void Deserialize(ISerializeReader reader)
+            {
+                ToSerialize = reader.Read(ToSerialize) as TestSerializeClass;                
+            }
+
+            public void Serialize(ISerializeWriter writer)
+            {
+                writer.Write(ToSerialize);
+            }
         }
     }
 }

@@ -55,7 +55,7 @@ namespace DataWF.Common
 
         public void ReadAttributes(object element)
         {
-            ReadAttributes(element, Serializer.GetTypeInfo(element.GetType()));
+            ReadAttributes(element, GetTypeInfo(element.GetType()));
         }
 
         public void ReadAttributes(object element, TypeSerializationInfo info)
@@ -80,7 +80,7 @@ namespace DataWF.Common
 
         public void ReadCurrentAttribute(object element)
         {
-            ReadCurrentAttribute(element, Serializer.GetTypeInfo(element.GetType()));
+            ReadCurrentAttribute(element, GetTypeInfo(element.GetType()));
         }
 
         public void ReadCurrentAttribute(object element, TypeSerializationInfo info)
@@ -110,7 +110,7 @@ namespace DataWF.Common
                 }
                 else
                 {
-                    var mInfo = Serializer.GetTypeInfo(mtype ?? member.PropertyType);
+                    var mInfo = GetTypeInfo(mtype ?? member.PropertyType);
                     value = Read(member.Invoker.Get(element), mInfo);
                 }
                 member.Invoker.Set(element, value);
@@ -126,12 +126,12 @@ namespace DataWF.Common
             return Reader.ReadInnerXml();
         }
 
-        public void ReadElement(object element, TypeSerializationInfo info, ref int listIndex)
+        public void ReadCollectionElement(object element, TypeSerializationInfo info, ref int listIndex)
         {
             Type mtype = ReadType();
             if (Reader.Name == "i")
             {
-                var itemInfo = mtype != null ? Serializer.GetTypeInfo(mtype) : info.ListItemTypeInfo;
+                var itemInfo = mtype != null ? GetTypeInfo(mtype) : info.ListItemTypeInfo;
                 var list = (IList)element;
                 object newobj = null;
                 if (itemInfo?.IsAttribute ?? info.ListItemIsAttribute)
@@ -182,19 +182,19 @@ namespace DataWF.Common
 
         public object ReadCollection(IList list, TypeSerializationInfo info)
         {
-            info.ListItemTypeInfo = Serializer.GetTypeInfo(info.ListItemType);
+            info.ListItemTypeInfo = GetTypeInfo(info.ListItemType);
             if (info.ListDefaulType)
             {
                 var type = TypeHelper.ParseType(Reader.GetAttribute("DT"));
                 if (type != null && type != info.ListItemType)
                 {
-                    info.ListItemTypeInfo = Serializer.GetTypeInfo(type);
+                    info.ListItemTypeInfo = GetTypeInfo(type);
                 }
             }
             var listIndex = 0;
             while (ReadBegin())
             {
-                ReadElement(list, info, ref listIndex);
+                ReadCollectionElement(list, info, ref listIndex);
             }
 
             return list;
@@ -204,7 +204,7 @@ namespace DataWF.Common
         {
             var dictionary = (IDictionary)element;
             var item = Serializer.CreateDictionaryItem(info.Type);
-            var itemInfo = Serializer.GetTypeInfo(item.GetType());
+            var itemInfo = GetTypeInfo(item.GetType());
             while (ReadBegin())
             {
                 Read(item, itemInfo);
@@ -245,7 +245,7 @@ namespace DataWF.Common
         {
             if (ReadBegin())
             {
-                element = Read(element, element != null ? Serializer.GetTypeInfo(element.GetType()) : null);
+                element = Read(element, element != null ? GetTypeInfo(element.GetType()) : null);
             }
             return element;
         }
@@ -253,8 +253,10 @@ namespace DataWF.Common
         public object Read(object element, TypeSerializationInfo info)
         {
             var type = ReadType();
-            info = Serializer.GetTypeInfo(type) ?? info;
-
+            if (type != null)
+            {
+                info = GetTypeInfo(type);
+            }
             if (info == null)
             {
                 throw new ArgumentException("Element type can't be resolved!", nameof(element));
@@ -283,7 +285,12 @@ namespace DataWF.Common
             }
             if (element is ISerializableElement)
             {
+                var name = Reader.Name;
                 ((ISerializableElement)element).Deserialize(this);
+                while (Reader.Name != name)
+                {
+                    ReadBegin();
+                }
                 return element;
             }
 
@@ -312,6 +319,11 @@ namespace DataWF.Common
         public void Dispose()
         {
             Reader?.Dispose();
+        }
+
+        public TypeSerializationInfo GetTypeInfo(Type type)
+        {
+            return Serializer.GetTypeInfo(type);
         }
     }
 }
