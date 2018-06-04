@@ -12,6 +12,7 @@ using System.Linq;
 
 namespace DataWF.Gui
 {
+
     public class MainWindow : Window, IDockMain, ISerializableElement
     {
         public Action SaveAction;
@@ -82,7 +83,7 @@ namespace DataWF.Gui
             { Name = "Project", DisplayStyle = ToolItemDisplayStyle.Text };
 
             menuView = new ToolDropDown(
-                    BuildMenuItem(typeof(ListEditor), "Properties"),
+                    BuildMenuItem(typeof(PropertiesEditor), "Properties"),
                     BuildMenuItem(typeof(LogExplorer), "Logs"),
                     new ToolSeparator())
             { Name = "View", DisplayStyle = ToolItemDisplayStyle.Text };
