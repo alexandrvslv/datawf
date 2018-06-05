@@ -157,7 +157,6 @@ namespace DataWF.Gui
             InitialLocation = WindowLocation.CenterScreen;
             Title = "Main Form";
             Size = new Size(1024, 768);
-
             BackgroundColor = GuiEnvironment.Theme["Window"].BaseColor;
         }
 

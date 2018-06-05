@@ -261,12 +261,11 @@ namespace DataWF.Gui
 
         protected override Size OnGetPreferredSize(SizeConstraint widthConstraint, SizeConstraint heightConstraint)
         {
-            base.OnGetPreferredSize(widthConstraint, heightConstraint);
             foreach (DockItem item in map.GetVisibleItems())
             {
-                var size = item.Panel.Surface.GetPreferredSize();
+                item.Panel.Surface.GetPreferredSize();
             }
-            return map.GetBound().Size;
+            return map.GetBound(0, 0).Size;
         }
 
         protected override void OnReallocate()
