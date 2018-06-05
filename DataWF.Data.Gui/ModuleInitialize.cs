@@ -96,7 +96,8 @@ namespace DataWF.Data.Gui
             if (!Directory.Exists(dir))
                 Directory.CreateDirectory(dir);
             fileName = Path.Combine(dir, fileName);
-            ExcellExport.ExportPList(fileName, LayoutList.DefaultMenu.ContextList);
+            OfdExport export = new OfdExport();
+            export.Export(fileName, LayoutList.DefaultMenu.ContextList);
             System.Diagnostics.Process.Start(fileName);
         }
 
@@ -107,7 +108,8 @@ namespace DataWF.Data.Gui
             if (!Directory.Exists(dir))
                 Directory.CreateDirectory(dir);
             fileName = Path.Combine(dir, fileName);
-            ExcellExport.ExportPListXSAX(fileName, LayoutList.DefaultMenu.ContextList);
+            var export = new XlsxSaxExport();
+            export.Export(fileName, LayoutList.DefaultMenu.ContextList);
             System.Diagnostics.Process.Start(fileName);
         }
     }

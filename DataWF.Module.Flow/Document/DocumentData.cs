@@ -294,7 +294,7 @@ namespace DataWF.Module.Flow
         {
             if (data.FileData == null || data.TemplateData == null)
                 return;
-            data.FileData = Parser.Execute(data.TemplateData.Data, data.FileName, param);
+            data.FileData = DocumentParser.Execute(data.TemplateData.Data, data.FileName, param);
         }
 
         public void RefreshName()

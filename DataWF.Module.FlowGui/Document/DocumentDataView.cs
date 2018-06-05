@@ -16,12 +16,15 @@ namespace DataWF.Module.FlowGui
     {
         private ToolItem toolView;
         private ToolItem toolTemplate;
+        private ToolItem toolInsertTemplate;
 
         public DocumentDataView()
         {
-            toolView = new ToolItem(ToolViewClick) { Name = "View", Glyph = GlyphType.PictureO };
-            toolTemplate = new ToolItem(ToolTemplateClick) { Name = "Template", GlyphColor = Colors.LightBlue, Glyph = GlyphType.Book };
-
+            toolView = new ToolItem(ToolViewClick) { Name = "View", DisplayStyle = ToolItemDisplayStyle.Text, Glyph = GlyphType.PictureO };
+            toolTemplate = new ToolItem(ToolTemplateClick) { Name = "Template", DisplayStyle = ToolItemDisplayStyle.Text, GlyphColor = Colors.LightBlue, Glyph = GlyphType.Book };
+            toolInsertTemplate = new ToolItem(ToolInsertTemplateClick) { Name = "Template", DisplayStyle = ToolItemDisplayStyle.ImageAndText, Glyph = GlyphType.Book };
+            toolInsert.Name = "File";
+            toolInsert.InsertAfter(toolInsertTemplate);
             Name = nameof(DocumentDataView<T>);
             toolStatus.InsertAfter(new[] { toolView, toolTemplate });
             Glyph = GlyphType.File;
@@ -98,6 +101,23 @@ namespace DataWF.Module.FlowGui
                     }
                 }
             }
+        }
+
+        private void ToolInsertTemplateClick(object sender, EventArgs e)
+        {
+            var list = new SelectableList<TemplateData>(Document.Template.GetReferencing<TemplateData>(nameof(TemplateData.TemplateId), DBLoadParam.None));
+            var listView = new LayoutList { ListSource = list };
+            var window = new ToolWindow { Target = listView };
+            window.ButtonAcceptClick += (s, a) =>
+            {
+                if (listView.SelectedItem == null)
+                    return;
+                var data = Document.GenerateFromTemplate<T>((TemplateData)listView.SelectedItem);
+                data.Attach();
+                Current = data;
+                ToolTemplateClick(s, a);
+            };
+            window.Show(Bar, toolAdd.Bound.BottomLeft);
         }
 
         private void ToolTemplateClick(object sender, EventArgs e)

@@ -300,9 +300,7 @@ namespace DataWF.Gui
 
         public virtual void InsertBefore(T column)
         {
-            column.Row = Row;
-            column.Col = Col;
-            Map.Insert(column, false);
+            InsertBefore(new[] { column });
         }
 
         public virtual void InsertBefore(IEnumerable<T> columns)
@@ -313,7 +311,7 @@ namespace DataWF.Gui
             {
                 column.Row = row;
                 column.Col = col;
-                Map.Insert(column, GrowMode == Orientation.Vertical);
+                Map.Insert(column, Map.GrowMode == Orientation.Vertical);
                 if (GrowMode == Orientation.Horizontal)
                 {
                     col++;
@@ -327,9 +325,7 @@ namespace DataWF.Gui
 
         public virtual void InsertAfter(T column)
         {
-            column.Row = Row;
-            column.Col = Col + 1;
-            Map.Insert(column, false);
+            InsertAfter(new[] { column });
         }
 
         public virtual void InsertAfter(IEnumerable<T> columns)
@@ -338,7 +334,7 @@ namespace DataWF.Gui
             var col = Col;
             foreach (var column in columns)
             {
-                if (GrowMode == Orientation.Horizontal)
+                if (Map.GrowMode == Orientation.Horizontal)
                 {
                     col++;
                 }
@@ -349,7 +345,7 @@ namespace DataWF.Gui
 
                 column.Row = row;
                 column.Col = col;
-                Map.Insert(column, GrowMode == Orientation.Vertical);
+                Map.Insert(column, Map.GrowMode == Orientation.Vertical);
             }
         }
 

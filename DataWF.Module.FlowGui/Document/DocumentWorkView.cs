@@ -22,8 +22,6 @@ namespace DataWF.Module.FlowGui
             view.Query.Parameters.Add(actualParam);
 
             list.AllowSort = false;
-            //AutoToStringFill = true;
-            //GenerateColumns = false;
             Name = nameof(DocumentWorkView);
             Text = "Works";
 

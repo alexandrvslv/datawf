@@ -7,416 +7,15 @@ using DataWF.Gui;
 using DataWF.Common;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 
 namespace DataWF.Data.Gui
 {
-    public class ExcellExport
+    public class XslxDomExport : XlsxSaxExport, IExport
     {
-        static void WriteRandomValuesSAX(string filename, int numRows, int numCols)
-        {
-            using (SpreadsheetDocument myDoc = SpreadsheetDocument.Create(filename, SpreadsheetDocumentType.Workbook))
-            {
-                WorkbookPart workbookPart = myDoc.AddWorkbookPart();
-                WorksheetPart worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
-                string origninalSheetId = workbookPart.GetIdOfPart(worksheetPart);
-
-                WorksheetPart replacementPart = workbookPart.AddNewPart<WorksheetPart>();
-                string replacementPartId = workbookPart.GetIdOfPart(replacementPart);
-
-                worksheetPart.Worksheet.Save();
-
-                OpenXmlReader reader = OpenXmlReader.Create(worksheetPart);
-                OpenXmlWriter writer = OpenXmlWriter.Create(replacementPart);
-
-                Row r = new Row();
-                Cell c = new Cell();
-                CellFormula f = new CellFormula();
-                f.CalculateCell = true;
-                f.Text = "RAND()";
-                c.Append(f);
-                CellValue v = new CellValue();
-                c.Append(v);
-                while (reader.Read())
-                {
-                    if (reader.ElementType == typeof(SheetData))
-                    {
-                        if (reader.IsEndElement)
-                            continue;
-                        writer.WriteStartElement(new SheetData());
-                        for (int row = 0; row < numRows; row++)
-                        {
-                            writer.WriteStartElement(r);
-                            for (int col = 0; col < numCols; col++)
-                            {
-                                writer.WriteElement(c);
-                            }
-                            writer.WriteEndElement();
-                        }
-                        writer.WriteEndElement();
-                    }
-                    else
-                    {
-                        if (reader.IsStartElement)
-                        {
-                            writer.WriteStartElement(reader);
-                        }
-                        else if (reader.IsEndElement)
-                        {
-                            writer.WriteEndElement();
-                        }
-                    }
-                }
-                reader.Close();
-                writer.Close();
-
-                Sheet sheet = workbookPart.Workbook.Descendants<Sheet>().Where(s => s.Id.Value.Equals(origninalSheetId)).First();
-                sheet.Id.Value = replacementPartId;
-                workbookPart.DeletePart(worksheetPart);
-            }
-        }
-
-        public static Row GetRow(SheetData sheetData, int r, bool check)
-        {
-            if (check)
-            {
-                foreach (Row row in sheetData)
-                {
-                    if (row.RowIndex != null && row.RowIndex == r)
-                        return row;
-                }
-            }
-            Row rez = new Row()
-            {
-                RowIndex = (uint)r
-            };
-            sheetData.Append(rez);
-            return rez;
-        }
-
-        public static Doc.Odf.Row GetRow(Doc.Odf.Table sheetData, int r, bool check)
-        {
-            if (check)
-            {
-                foreach (Doc.Odf.DocumentElement drow in sheetData)
-                {
-                    Doc.Odf.Row row = drow as Doc.Odf.Row;
-                    if (row != null && row.Index == r)
-                        return (Doc.Odf.Row)row;
-                }
-            }
-            Doc.Odf.Row rez = new Doc.Odf.Row(sheetData.Document)
-            {
-                Index = r
-            };
-            rez.StyleName = "ro2";
-            sheetData.Add(rez);
-            return rez;
-        }
-
-        public static Doc.Odf.Column GetColumn(Doc.Odf.Table sheetData, int index, double width)
-        {
-            Doc.Odf.Column column = new Doc.Odf.Column(sheetData.Document);
-            Doc.Odf.ColumnStyle cs = new Doc.Odf.ColumnStyle(sheetData.Document);
-            cs.ColumnProperty.BreakBefore = "auto";
-            if (width > 0)
-            {
-                cs.ColumnProperty.Width = ((float)width / 37F).ToString(CultureInfo.InvariantCulture.NumberFormat) + "cm";
-            }
-            else
-            {
-                column.ColumnsRepeatedCount = "1000";
-            }
-            column.Style = cs;
-            column.DefaultCellStyleName = "ce2";
-            sheetData.Add(column);
-            return column;
-        }
-
-        public static Column GetColumn(SheetData sheetData, int index, double width)
-        {
-            Columns cols = GetColumns(sheetData.Parent);
-            foreach (Column col in sheetData.Descendants<Column>())
-            {
-                if (col.Min != null && col.Min == index)
-                    return col;
-            }
-            Column column = new Column();
-            column.Min = (uint)index;
-            column.Max = (uint)index;
-            column.Width = width / 6;
-            column.CustomWidth = true;
-            cols.AppendChild<Column>(column);
-            return column;
-
-        }
-
-        public static Columns GetColumns(OpenXmlElement worksheet)
-        {
-            foreach (OpenXmlElement column in worksheet)
-            {
-                if (column is Columns)
-                    return (Columns)column;
-            }
-            Columns mcells = new Columns();
-            worksheet.InsertAt<Columns>(mcells, 0);
-            return mcells;
-        }
-
-        public static MergeCells GetMergeCells(OpenXmlElement worksheet)
-        {
-            foreach (MergeCells row in worksheet.Descendants<MergeCells>())
-            {
-                return row;
-            }
-            MergeCells mcells = new MergeCells();
-            //sheetData.Append(mcells);
-            worksheet.InsertAfter(mcells, worksheet.Elements<SheetData>().First());
-            return mcells;
-        }
-
-        public static Doc.Odf.Cell GetCell(Doc.Odf.Table table, int c, int r)
-        {
-            Doc.Odf.Cell cell = new Doc.Odf.Cell(table.Document);
-            //cell.StyleName = styleIndex;
-
-            return cell;
-        }
-
-        public static Doc.Odf.Cell GetCell(Doc.Odf.Table table, int c, int r, object value, string style)
-        {
-            Doc.Odf.Cell cell = new Doc.Odf.Cell(table.Document);
-            cell.StyleName = style;
-            cell.Val = value;
-            return cell;
-        }
-
-        public static void WriteRows(OpenXmlWriter writer, List<Row> rows)
-        {
-            foreach (Row row in rows)
-            {
-                WriteRow(writer, row);
-            }
-            rows.Clear();
-        }
-
-        public static void WriteRow(OpenXmlWriter writer, Row row)
-        {
-            writer.WriteStartElement(row);
-            foreach (Cell cell in row)
-                writer.WriteElement(cell);
-            writer.WriteEndElement();
-        }
-
-        public static Row GenerateRow(int rr, int mc, bool header)
-        {
-            Row row = new Row() { RowIndex = (uint)rr };
-            for (int i = 0; i < mc; i++)
-                row.AppendChild(Parser.GetCell(null, i, rr, header ? (uint)7 : (uint)6));
-            return row;
-        }
-
-        public static void ExpMapLayout(Doc.Odf.Table sheetData, LayoutColumn map, int scol, int srow, out int mcol, out int mrow, LayoutList list, object listItem)
-        {
-            int tws = map.GetWithdSpan();
-            //int ths = tool.LayoutMapTool.GetHeightSpan(map);
-            mrow = srow;
-            mcol = scol;
-            Doc.Odf.Row temp = null;
-            for (int i = 0; i < map.Count; i++)
-            {
-                var item = map[i];
-                if (!item.Visible)
-                    continue;
-
-                int cc = 0;
-                int rr = 0;
-                map.GetVisibleIndex(item, out cc, out rr);
-                int c = cc + scol;
-                int r = rr + srow;
-                if (item.Count > 0)
-                {
-                    ExpMapLayout(sheetData, item, c, r, out c, out r, list, listItem);
-                }
-                else
-                {
-                    Doc.Odf.Cell cell = GetCell(sheetData, c, r);
-
-                    if (list != null)
-                    {
-                        cell.StyleName = "ce3";
-                        cell.Val = list.FormatValue(listItem, (ILayoutCell)item) as string;
-                    }
-                    else
-                    {
-                        cell.StyleName = "ce1";
-                        cell.Val = item.Text;
-                        GetColumn(sheetData, c + 1, item.Width);
-                    }
-                    if (temp == null || temp.Index != r)
-                        temp = GetRow(sheetData, r, mrow >= r);
-
-                    if (r > mrow && r > srow)
-                    {
-                        for (int j = 0; j < scol; j++)
-                        {
-                            Doc.Odf.CoveredCell ccell = new Doc.Odf.CoveredCell(sheetData.Document);
-                            temp.Add(ccell);
-                        }
-                    }
-
-                    temp.Add(cell);
-
-                    int ws = map.GetRowWidthSpan(item.Row);
-                    if (tws > ws)
-                    {
-                        cell.NumberColumnsSpanned = ((tws - ws) + 1).ToString();
-                        cell.NumberRowsSpanned = "1";
-                        Doc.Odf.CoveredCell ccell = new Doc.Odf.CoveredCell(sheetData.Document);
-                        ccell.ColumnsRepeatedCount = (tws - ws).ToString();
-                        temp.Add(ccell);
-                    }
-                    int hs = map.GetRowHeightSpan(item.Row, true);
-                    if (hs > 1)
-                    {
-                        cell.NumberRowsSpanned = (hs).ToString();
-                        if (cell.NumberColumnsSpanned.Length == 0)
-                            cell.NumberColumnsSpanned = "1";
-
-                    }
-
-                }
-
-                if (r > mrow)
-                {
-                    mrow = r;
-                }
-                if (c > mcol)
-                {
-                    mcol = c;
-                }
-
-            }
-        }
-
-        public static void ExpMapLayout(SheetData sheetData, LayoutColumn map, int scol, int srow, out int mcol, out int mrow, LayoutList list, object listItem)
-        {
-            int tws = map.GetWithdSpan();
-            //int ths = tool.LayoutMapTool.GetHeightSpan(map);
-            mrow = srow;
-            mcol = scol;
-            Row temp = null;
-            for (int i = 0; i < map.Count; i++)
-            {
-                var item = map[i];
-                if (!item.Visible)
-                    continue;
-
-                int c = 0;
-                int r = 0;
-                map.GetVisibleIndex(item, out c, out r);
-                c += scol;
-                r += srow;
-                if (item.Count > 0)
-                {
-                    ExpMapLayout(sheetData, item, c, r, out c, out r, list, listItem);
-                }
-                else
-                {
-                    object celldata = ((LayoutColumn)item).Text;
-
-                    if (list != null)
-                    {
-                        object val = list.ReadValue(listItem, (ILayoutCell)item);
-                        celldata = list.FormatValue(listItem, val, (ILayoutCell)item);
-                        decimal dval;
-                        if (val is decimal && decimal.TryParse(celldata.ToString(), out dval))
-                            celldata = val;
-                    }
-
-                    Cell cell = Parser.GetCell(celldata, c, r, celldata is decimal ? 3U : 6U);
-
-
-                    if (list == null)
-                    {
-                        cell.StyleIndex = 7;
-                        GetColumn(sheetData, c + 1, item.Width);
-                    }
-                    if (temp == null || temp.RowIndex != r)
-                        temp = GetRow(sheetData, r, mrow >= r);
-
-                    temp.Append(cell);
-
-                    int ws = map.GetRowWidthSpan(item.Row);
-                    if (tws > ws)
-                    {
-                        MergeCell mcell = new MergeCell() { Reference = new StringValue(Helper.GetReference(c, r, c + tws - ws, r)) };
-                        GetMergeCells(sheetData.Parent).Append(mcell);
-                    }
-                    int hs = map.GetRowHeightSpan(item.Row, true);
-                    if (hs > 1)
-                    {
-                        MergeCell mcell = new MergeCell() { Reference = new StringValue(Helper.GetReference(c, r, c, r + hs - 1)) };
-                        GetMergeCells(sheetData.Parent).Append(mcell);
-                    }
-
-                }
-                if (r > mrow)
-                    mrow = r;
-                if (c > mcol)
-                    mcol = c;
-            }
-        }
-
-        public static void ExportPList(string filename, LayoutList list)
-        {
-            Doc.Odf.CellDocument doc = new Doc.Odf.CellDocument();
-            Doc.Odf.Table table = doc.SpreadSheet.GetChilds(typeof(Doc.Odf.Table))[0] as Doc.Odf.Table;
-            table.Clear();
-            int ind = 1;
-            //List<ILayoutItem> cols = LayoutMapTool.GetVisibleItems(list.ListInfo.Columns);
-            int mc;
-            //columns
-            ExpMapLayout(table, list.ListInfo.Columns, 0, 2, out mc, out ind, null, null);
-            //GetColumn(table, mc + 1, 0);
-            //data
-            if (list.ListInfo.GroupVisible)
-            {
-                foreach (LayoutGroup g in list.Groups)
-                {
-                    ind++;
-                    Doc.Odf.Cell cell = GetCell(table, 0, (int)ind);
-                    cell.StyleName = "ce4";
-                    cell.Val = g.TextValue;
-                    Doc.Odf.Row row = GetRow(table, ind, false);
-                    row.Add(cell);
-                    cell.NumberColumnsSpanned = (mc + 1).ToString();
-                    cell.NumberRowsSpanned = "1";
-                    Doc.Odf.CoveredCell ccell = new Doc.Odf.CoveredCell(table.Document);
-                    ccell.ColumnsRepeatedCount = mc.ToString();
-                    row.Add(ccell);
-                    for (int i = g.IndexStart; i <= g.IndexEnd; i++)
-                    {
-                        ind++;
-                        ExpMapLayout(table, list.ListInfo.Columns, 0, ind, out mc, out ind, list, list.ListSource[i]);
-                    }
-                }
-            }
-            else
-            {
-                foreach (object o in list.ListSource)
-                {
-                    ind++;
-                    ExpMapLayout(table, list.ListInfo.Columns, 0, ind, out mc, out ind, list, o);
-                }
-            }
-            doc.Save(filename);
-        }
-
-        public static void ExportPListX(string filename, LayoutList list)
+        public override void Export(string filename, LayoutList list)
         {
             using (SpreadsheetDocument xl = SpreadsheetDocument.Create(filename, SpreadsheetDocumentType.Workbook))
             {
@@ -459,7 +58,7 @@ namespace DataWF.Data.Gui
                     foreach (LayoutGroup g in list.Groups)
                     {
                         ind++;
-                        Cell cell = Parser.GetCell(g.TextValue, 0, (int)ind, 8);
+                        Cell cell = GetCell(g.TextValue, 0, (int)ind, 8);
                         GetRow(sd, ind, false).Append(cell);
                         MergeCells mcells = GetMergeCells(worksheet);
 
@@ -498,11 +97,161 @@ namespace DataWF.Data.Gui
                 xl.Close();
             }
         }
+    }
 
-        public static void ExportPListXSAX(string fileName, LayoutList list)
+    public class XlsxSaxExport : XlsxSaxParser, IExport
+    {
+        public Row GetRow(SheetData sheetData, int r, bool check)
         {
-            var temp = new ExcellExport();
-            temp.XslxSAX(fileName, list);
+            if (check)
+            {
+                foreach (Row row in sheetData)
+                {
+                    if (row.RowIndex != null && row.RowIndex == r)
+                        return row;
+                }
+            }
+            Row rez = new Row()
+            {
+                RowIndex = (uint)r
+            };
+            sheetData.Append(rez);
+            return rez;
+        }
+
+        public Column GetColumn(SheetData sheetData, int index, double width)
+        {
+            Columns cols = GetColumns(sheetData.Parent);
+            foreach (Column col in sheetData.Descendants<Column>())
+            {
+                if (col.Min != null && col.Min == index)
+                    return col;
+            }
+            Column column = new Column();
+            column.Min = (uint)index;
+            column.Max = (uint)index;
+            column.Width = width / 6;
+            column.CustomWidth = true;
+            cols.AppendChild<Column>(column);
+            return column;
+
+        }
+
+        public Columns GetColumns(OpenXmlElement worksheet)
+        {
+            foreach (OpenXmlElement column in worksheet)
+            {
+                if (column is Columns)
+                    return (Columns)column;
+            }
+            Columns mcells = new Columns();
+            worksheet.InsertAt<Columns>(mcells, 0);
+            return mcells;
+        }
+
+        public MergeCells GetMergeCells(OpenXmlElement worksheet)
+        {
+            foreach (MergeCells row in worksheet.Descendants<MergeCells>())
+            {
+                return row;
+            }
+            MergeCells mcells = new MergeCells();
+            //sheetData.Append(mcells);
+            worksheet.InsertAfter(mcells, worksheet.Elements<SheetData>().First());
+            return mcells;
+        }
+
+        public void WriteRows(OpenXmlWriter writer, List<Row> rows)
+        {
+            foreach (Row row in rows)
+            {
+                WriteRow(writer, row);
+            }
+            rows.Clear();
+        }
+
+        public void WriteRow(OpenXmlWriter writer, Row row)
+        {
+            writer.WriteStartElement(row);
+            foreach (Cell cell in row)
+                writer.WriteElement(cell);
+            writer.WriteEndElement();
+        }
+
+        public Row GenerateRow(int rr, int mc, bool header)
+        {
+            Row row = new Row() { RowIndex = (uint)rr };
+            for (int i = 0; i < mc; i++)
+                row.AppendChild(GetCell(null, i, rr, header ? (uint)7 : (uint)6));
+            return row;
+        }
+
+        public void ExpMapLayout(SheetData sheetData, LayoutColumn map, int scol, int srow, out int mcol, out int mrow, LayoutList list, object listItem)
+        {
+            int tws = map.GetWithdSpan();
+            //int ths = tool.LayoutMapTool.GetHeightSpan(map);
+            mrow = srow;
+            mcol = scol;
+            Row temp = null;
+            for (int i = 0; i < map.Count; i++)
+            {
+                var item = map[i];
+                if (!item.Visible)
+                    continue;
+
+                int c = 0;
+                int r = 0;
+                map.GetVisibleIndex(item, out c, out r);
+                c += scol;
+                r += srow;
+                if (item.Count > 0)
+                {
+                    ExpMapLayout(sheetData, item, c, r, out c, out r, list, listItem);
+                }
+                else
+                {
+                    object celldata = ((LayoutColumn)item).Text;
+
+                    if (list != null)
+                    {
+                        object val = list.ReadValue(listItem, (ILayoutCell)item);
+                        celldata = list.FormatValue(listItem, val, (ILayoutCell)item);
+                        decimal dval;
+                        if (val is decimal && decimal.TryParse(celldata.ToString(), out dval))
+                            celldata = val;
+                    }
+
+                    Cell cell = GetCell(celldata, c, r, celldata is decimal ? 3U : 6U);
+
+                    if (list == null)
+                    {
+                        cell.StyleIndex = 7;
+                        GetColumn(sheetData, c + 1, item.Width);
+                    }
+                    if (temp == null || temp.RowIndex != r)
+                        temp = GetRow(sheetData, r, mrow >= r);
+
+                    temp.Append(cell);
+
+                    int ws = map.GetRowWidthSpan(item.Row);
+                    if (tws > ws)
+                    {
+                        MergeCell mcell = new MergeCell() { Reference = new CellRange(c, r, c + tws - ws, r).ToString() };
+                        GetMergeCells(sheetData.Parent).Append(mcell);
+                    }
+                    int hs = map.GetRowHeightSpan(item.Row, true);
+                    if (hs > 1)
+                    {
+                        MergeCell mcell = new MergeCell() { Reference = new CellRange(c, r, c, r + hs - 1).ToString() };
+                        GetMergeCells(sheetData.Parent).Append(mcell);
+                    }
+
+                }
+                if (r > mrow)
+                    mrow = r;
+                if (c > mcol)
+                    mcol = c;
+            }
         }
 
         LayoutList list;
@@ -511,7 +260,7 @@ namespace DataWF.Data.Gui
         List<MergeCell> mcells;
         int mc;
 
-        public void XslxSAX(string fileName, LayoutList list)
+        public virtual void Export(string fileName, LayoutList list)
         {
             this.list = list;
             using (SpreadsheetDocument xl = SpreadsheetDocument.Create(fileName, SpreadsheetDocumentType.Workbook))
@@ -559,9 +308,9 @@ namespace DataWF.Data.Gui
 
                 int ind = 1;
                 var row = new Row() { RowIndex = (uint)ind, Height = 25 };
-                row.AppendChild(Parser.GetCell(list.Description, 0, ind, (uint)13));
+                row.AppendChild(GetCell(list.Description, 0, ind, (uint)13));
                 WriteRows(writer, new List<Row>(new Row[] { row }));
-                mcells.Add(new MergeCell() { Reference = Helper.GetReference(0, 1, mc - 1, 1) });
+                mcells.Add(new MergeCell() { Reference = new CellRange(0, 1, mc - 1, 1).ToString() });
 
                 WriteMapItem(list.ListInfo.Columns, -1, null, 0, 0, ref ind);
 
@@ -592,8 +341,8 @@ namespace DataWF.Data.Gui
                         {
                             ind++;
                             var header = new Row() { RowIndex = (uint)ind, CustomHeight = true, Height = 20 };
-                            header.AppendChild(Parser.GetCell(g.TextValue, 0, ind, 8));
-                            mcells.Add(new MergeCell() { Reference = Helper.GetReference(0, ind, mc - 1, ind) });
+                            header.AppendChild(GetCell(g.TextValue, 0, ind, 8));
+                            mcells.Add(new MergeCell() { Reference = new CellRange(0, ind, mc - 1, ind).ToString() });
                             WriteRow(writer, header);
                         }
 
@@ -647,7 +396,7 @@ namespace DataWF.Data.Gui
                 rows = new List<Row>();
                 mr++;
                 row = GenerateRow(mr, mc, listItem == null);
-                Parser.SetCellValue(row.GetFirstChild<Cell>(), listItem == null ? (object)"#" : (object)(listIndex + 1));
+                SetCellValue(row.GetFirstChild<Cell>(), listItem == null ? (object)"#" : (object)(listIndex + 1));
                 rows.Add(row);
                 sc = 1;
             }
@@ -695,7 +444,7 @@ namespace DataWF.Data.Gui
                         }
 
                         var cellc = (Cell)row.ChildElements.GetItem(c);
-                        Parser.SetCellValue(cellc, celldata);
+                        SetCellValue(cellc, celldata);
                         if (celldata is decimal)
                             cellc.StyleIndex = 3;
 
@@ -703,15 +452,15 @@ namespace DataWF.Data.Gui
                         int hs = map.GetRowHeightSpan(item.Row, true);
                         if (tws > ws && hs > 1)
                         {
-                            mcells.Add(new MergeCell() { Reference = Helper.GetReference(c, rr, c + tws - ws, rr + hs - 1) });
+                            mcells.Add(new MergeCell() { Reference = new CellRange(c, rr, c + tws - ws, rr + hs - 1).ToString() });
                         }
                         else if (tws > ws)
                         {
-                            mcells.Add(new MergeCell() { Reference = Helper.GetReference(c, rr, c + tws - ws, rr) });
+                            mcells.Add(new MergeCell() { Reference = new CellRange(c, rr, c + tws - ws, rr).ToString() });
                         }
                         else if (hs > 1)
                         {
-                            mcells.Add(new MergeCell() { Reference = Helper.GetReference(c, rr, c, rr + hs - 1) });
+                            mcells.Add(new MergeCell() { Reference = new CellRange(c, rr, c, rr + hs - 1).ToString() });
                         }
                     }
                 }
@@ -720,7 +469,7 @@ namespace DataWF.Data.Gui
             {
                 if (rows.Count > 1)
                 {
-                    mcells.Add(new MergeCell() { Reference = Helper.GetReference(0, nr, 0, nr + rows.Count - 1) });
+                    mcells.Add(new MergeCell() { Reference = new CellRange(0, nr, 0, nr + rows.Count - 1).ToString() });
                 }
                 if (listItem is Node)
                     foreach (var item in rows)
@@ -776,7 +525,7 @@ namespace DataWF.Data.Gui
             }
         }
 
-        private static void BuildWorkbook(string filename)
+        private void BuildWorkbook(string filename)
         {
             try
             {
@@ -908,7 +657,7 @@ namespace DataWF.Data.Gui
             }
         }
 
-        public static Stylesheet CreateStylesheet()
+        public Stylesheet CreateStylesheet()
         {
             Stylesheet ss = new Stylesheet();
 
@@ -1130,7 +879,7 @@ namespace DataWF.Data.Gui
             return ss;
         }
 
-        private static Row CreateHeader(UInt32 index)
+        private Row CreateHeader(UInt32 index)
         {
             Row r = new Row();
             r.RowIndex = index;
@@ -1145,7 +894,7 @@ namespace DataWF.Data.Gui
             return r;
         }
 
-        private static Row CreateColumnHeader(UInt32 index)
+        private Row CreateColumnHeader(UInt32 index)
         {
             Row r = new Row();
             r.RowIndex = index;
@@ -1189,7 +938,7 @@ namespace DataWF.Data.Gui
             return r;
         }
 
-        private static Row CreateContent(UInt32 index, ref Random rd)
+        private Row CreateContent(UInt32 index, ref Random rd)
         {
             Row r = new Row();
             r.RowIndex = index;

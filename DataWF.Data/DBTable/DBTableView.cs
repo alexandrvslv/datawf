@@ -289,7 +289,15 @@ namespace DataWF.Data
                 lock (items)
                 {
                     int index = -1, newindex = -1;
-                    index = newindex = items.BinarySearch(item, comparer);
+                    try
+                    {
+                        index = newindex = items.BinarySearch(item, comparer);
+                    }
+                    catch (Exception ex)
+                    {
+                        Helper.OnException(ex);
+                        return;
+                    }
                     if (index < 0)
                     {
                         if ((keys & DBViewKeys.Static) == DBViewKeys.Static)

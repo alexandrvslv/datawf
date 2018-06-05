@@ -215,33 +215,6 @@ namespace DataWF.Common
             return rez;
         }
 
-        //A1
-        public static void GetReferenceValue(string reference, out int col, out int row)
-        {
-            col = row = 0;
-            MatchCollection mc = Regex.Matches(reference, @"\d[\d]*", RegexOptions.IgnoreCase);
-            if (mc.Count == 1)
-            {
-                col = CharToInt(reference.Replace(mc[0].Value, ""));
-                row = int.Parse(mc[0].Value);
-            }
-        }
-
-        //A1:E4
-        public static void GetReferenceValue(string reference, out int sCol, out int sRow, out int eCol, out int eRow)
-        {
-            sCol = sRow = eCol = eRow = 0;
-            string[] split1 = reference.Split(':');
-            GetReferenceValue(split1[0], out sCol, out sRow);
-            if (split1.Length > 1)
-                GetReferenceValue(split1[1], out eCol, out eRow);
-        }
-
-        public static string GetReference(int sCol, int sRow, int eCol, int eRow)
-        {
-            return IntToChar(sCol) + (sRow).ToString() + ":" + IntToChar(eCol) + (eRow).ToString();
-        }
-
         public static byte GetAscii(char ichar)
         {
             byte[] ascii = Encoding.ASCII.GetBytes(new char[] { ichar });

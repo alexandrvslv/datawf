@@ -16,7 +16,7 @@ namespace DataWF.Module.FlowGui
 
         public DocumentHeader() : base(new DocumentLayoutList())
         {
-            Name = "DocumentHeader";
+            Name = nameof(DocumentHeader);
             Text = "Document";
             Bar.Visible = false;
             List.AllowCellSize = true;

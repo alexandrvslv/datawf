@@ -398,11 +398,11 @@ namespace DataWF.Data.Gui
             using (var xl = DocumentFormat.OpenXml.Packaging.SpreadsheetDocument.Open(fileName, false))
             {
                 var sp = xl.WorkbookPart.SharedStringTablePart;
-                foreach (DocumentFormat.OpenXml.Packaging.WorksheetPart part in xl.WorkbookPart.WorksheetParts)
+                foreach (var part in xl.WorkbookPart.WorksheetParts)
                 {
                     var worksheet = part.Worksheet;
                     var sd = worksheet.GetFirstChild<DocumentFormat.OpenXml.Spreadsheet.SheetData>();
-                    foreach (DocumentFormat.OpenXml.OpenXmlElement element in sd)
+                    foreach (var element in sd)
                     {
                         var row = element as DocumentFormat.OpenXml.Spreadsheet.Row;
                         if (row != null)
@@ -412,12 +412,12 @@ namespace DataWF.Data.Gui
                                 table = new DBTable<DBItem>("sheet");
                                 table.Schema = CurrentSchema;
 
-                                foreach (DocumentFormat.OpenXml.OpenXmlElement celement in element)
+                                foreach (var celement in element)
                                 {
-                                    DocumentFormat.OpenXml.Spreadsheet.Cell cell = celement as DocumentFormat.OpenXml.Spreadsheet.Cell;
+                                    var cell = celement as DocumentFormat.OpenXml.Spreadsheet.Cell;
                                     if (cell != null)
                                     {
-                                        DBColumn column = new DBColumn(Parser.ReadCell(cell, sp));
+                                        DBColumn column = new DBColumn(XlsxSaxParser.ReadCell(cell, sp));
                                         table.Columns.Add(column);
                                     }
                                 }
@@ -438,7 +438,7 @@ namespace DataWF.Data.Gui
                                     DocumentFormat.OpenXml.Spreadsheet.Cell cell = celement as DocumentFormat.OpenXml.Spreadsheet.Cell;
                                     if (cell != null && index < table.Columns.Count)
                                     {
-                                        drow[index] = Parser.ReadCell(cell, sp);
+                                        drow[index] = XlsxSaxParser.ReadCell(cell, sp);
                                         index++;
                                     }
                                 }

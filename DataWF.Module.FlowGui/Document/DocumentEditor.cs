@@ -79,7 +79,6 @@ namespace DataWF.Module.FlowGui
 
         private DocumentEditorState state = DocumentEditorState.None;
         private Type documentType;
-        private DocumentReferenceView references;
 
         public DocumentEditor()
         {
@@ -118,13 +117,9 @@ namespace DataWF.Module.FlowGui
                 BackgroundColor = GuiEnvironment.Theme["Page"].BaseColor,
                 VisibleClose = false
             };
-            pageHeader = dock.Put(new DocumentHeader(), DockType.Left);
-            pageHeader.Panel.DockItem.Width = 350;//pageHeader.Panel.MapItem.FillWidth = true;
-            pageWorks = dock.Put(new DocumentWorkView(), DockType.LeftBottom);
-            pageRefers = dock.Put((references = new DocumentReferenceView()), DockType.Content);
 
             Glyph = GlyphType.Book;
-            Name = "DocumentEditor";
+            Name = nameof(DocumentEditor);
             Text = "Document";
             Tag = "Document";
 
@@ -188,13 +183,6 @@ namespace DataWF.Module.FlowGui
                 if (page.Widget is ISync)
                     await ((ISync)page.Widget).SyncAsync();
             }
-        }
-
-        public override void Localize()
-        {
-            base.Localize();
-            //tools.Localize();
-            //dock.Localize();
         }
 
         private void ToolLogsOnClick(object sender, EventArgs e)
@@ -478,7 +466,6 @@ namespace DataWF.Module.FlowGui
 
                 bool from = false;
                 dock.PageSelected -= DockPageSelected;
-                if (state != DocumentEditorState.Create)
                 {
                     Template = document.Template;
                     var cwork = document.WorkCurrent;
@@ -500,10 +487,7 @@ namespace DataWF.Module.FlowGui
 
                     LoadPage(panel.CurrentPage);
                 }
-                //if (documentType != null)
-                //{
-                //    XmlDeserialize(documentType.Name.ToString());
-                //}
+
                 toolReturn.Sensitive = from;
                 toolSend.Sensitive = state != DocumentEditorState.Create;
                 toolNext.Sensitive = state == DocumentEditorState.Edit;
@@ -514,7 +498,7 @@ namespace DataWF.Module.FlowGui
                 toolSave.Sensitive = state != DocumentEditorState.Readonly;
                 toolLogs.Sensitive = state != DocumentEditorState.Create;
                 toolBarCode.Sensitive = state != DocumentEditorState.Create;
-                pageRefers.Visible = state != DocumentEditorState.Create;
+                //pageRefers.Visible = state != DocumentEditorState.Create;
             }
         }
 
@@ -577,10 +561,12 @@ namespace DataWF.Module.FlowGui
             {
                 if (documentType == value)
                     return;
-                //if (documentType != null)
-                //{
-                //    XmlSerialize(documentType.Name.ToString());
-                //}
+
+                pageHeader = dock.GetPage(nameof(DocumentHeader)) ?? dock.Put(new DocumentHeader(), DockType.Left);
+                //pageHeader.Panel.DockItem.Width = 350;//pageHeader.Panel.MapItem.FillWidth = true;
+                pageWorks = dock.GetPage(nameof(DocumentWorkView)) ?? dock.Put(new DocumentWorkView(), DockType.LeftBottom);
+                pageRefers = dock.GetPage(nameof(DocumentReferenceView)) ?? dock.Put(new DocumentReferenceView(), DockType.Content);
+
                 documentType = value;
                 GetPages(documentType).ForEach(p => p.Tag = value);
             }
@@ -704,8 +690,6 @@ namespace DataWF.Module.FlowGui
             }
             return false;
         }
-
-
         #endregion        
 
         private void ToolSaveClick(object sender, EventArgs e)

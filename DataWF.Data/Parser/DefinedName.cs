@@ -19,6 +19,7 @@
 */
 
 using DataWF.Common;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 //using DataControl;
 
@@ -27,8 +28,7 @@ namespace DataWF.Data
     public class DefinedName
     {
         private string reference;
-        public CellReference? A;
-        public CellReference? B;
+        public CellRange Range;
 
         public string Name;
         public string Sheet;
@@ -38,54 +38,11 @@ namespace DataWF.Data
             set
             {
                 reference = value;
-                string word = "";
-                char start = ' ';
-                int col = -1;
-                int row = -1;
-                for (int i = 0; i < reference.Length; i++)
-                {
-                    var c = reference[i];
-                    bool end = i == reference.Length - 1;
-                    if (c == '$' || c == ':' || end)
-                    {
-                        if (end)
-                            word += c;
-                        if (word.Length > 0)
-                        {
-                            if (col == -1)
-                            {
-                                col = Helper.CharToInt(word);
-                            }
-                            else if (row == -1 && start == '$')
-                            {
-                                row = int.Parse(word);
-                            }
-
-                            if (c == ':')
-                            {
-                                A = new CellReference { Col = col, Row = row };
-                            }
-                            else if (end)
-                            {
-                                if (A == null)
-                                    A = new CellReference { Col = col, Row = row };
-                                else
-                                    B = new CellReference { Col = col, Row = row };
-                            }
-                        }
-                        else
-                        {
-                            start = c;
-                        }
-                        word = "";
-                    }
-                    else
-                    {
-                        word += c;
-                    }
-                }
+                Range = CellRange.Parse(value);
             }
         }
+
+        public Table Table;
         public DBProcedure Procedure;
         public object Value;
     }

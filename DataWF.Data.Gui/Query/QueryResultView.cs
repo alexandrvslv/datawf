@@ -154,7 +154,8 @@ namespace DataWF.Data.Gui
             {
                 if (dialog.Run(ParentWindow))
                 {
-                    ExcellExport.ExportPListXSAX(dialog.FileName, list);
+                    XlsxSaxExport export = new XlsxSaxExport();
+                    export.Export(dialog.FileName, list);
                     System.Diagnostics.Process.Start(dialog.FileName);
                 }
             }
