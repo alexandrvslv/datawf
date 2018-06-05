@@ -386,25 +386,20 @@ namespace DataWF.Module.FlowGui
             get { return true; }
         }
 
-        #region ILocalizable implementation
+        public bool Closing()
+        {
+            return true;
+        }
+
+        public void Activating()
+        {
+        }
 
         public override void Localize()
         {
             base.Localize();
             GuiService.Localize(this, Name, "Flow Config", GlyphType.Wrench);
         }
-
-        public bool Closing()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Activating()
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
     }
 }
 
