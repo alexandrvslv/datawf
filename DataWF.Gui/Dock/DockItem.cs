@@ -19,7 +19,7 @@ namespace DataWF.Gui
 
         [DefaultValue(false)]
         public bool Main { get; set; }
-                
+
         public DockPanel Panel
         {
             get { return panel; }
@@ -93,6 +93,10 @@ namespace DataWF.Gui
         public override void Dispose()
         {
             base.Dispose();
+            if (panel != null && panel.Parent == DockBox)
+            {
+                DockBox?.Remove(panel);
+            }
             panel?.Dispose();
         }
 

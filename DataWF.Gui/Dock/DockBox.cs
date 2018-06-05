@@ -32,6 +32,7 @@ namespace DataWF.Gui
         private DockBoxHitTest hitBottom = null;
         private bool visibleClose = true;
         private DockItem content;
+        private Image processImage;
 
         public event EventHandler<DockPageEventArgs> PageSelected;
 
@@ -72,6 +73,29 @@ namespace DataWF.Gui
             {
                 if (state != value)
                 {
+                    if (value.HasFlag(DockBoxState.InProcess))
+                    {
+                        processImage = Toolkit.CurrentEngine.RenderWidget(this);
+                        //processImage.Save("test.png", ImageFileType.Png);
+                        foreach (var widget in Children)
+                        {
+                            if (widget.Visible)
+                            {
+                                widget.Visible = false;
+                            }
+                        }
+                    }
+                    else if (state.HasFlag(DockBoxState.InProcess))
+                    {
+                        processImage?.Dispose();
+                        foreach (var item in map.GetVisibleItems())
+                        {
+                            if (item.Panel != null)
+                            {
+                                item.Panel.Visible = true;
+                            }
+                        }
+                    }
                     state = value;
                     if (state.HasFlag(DockBoxState.SizeLR))
                     {
@@ -89,6 +113,7 @@ namespace DataWF.Gui
                     {
                         Cursor = CursorType.Arrow;
                     }
+                    QueueDraw();
                 }
             }
         }
@@ -171,14 +196,18 @@ namespace DataWF.Gui
                 {
                     var htest = DockHitTest(args.X, args.Y, 50);
                     page.Remove();
-                    if (htest.Align == LayoutAlignType.None)
+                    if (htest.Item != null)
                     {
-                        htest.Item.Panel.Items.Add(page);
-                    }
-                    else
-                    {
-                        DockItem nitem = GetDockItem(htest.Item.Name + htest.Align.ToString(), htest.Item, htest.Align, true);
-                        nitem.Panel.Items.Add(page);
+                        if (htest.Align == LayoutAlignType.None)
+                        {
+                            htest.Item.Panel.Put(page);
+                        }
+                        else
+                        {
+                            var name = $"{(htest.Item.Name == "Content" ? "" : htest.Item.Name)}{htest.Align.ToString()}";
+                            DockItem nitem = GetDockItem(name, htest.Item, htest.Align, true);
+                            nitem.Panel.Put(page);
+                        }
                     }
                     page = null;
                 }
@@ -209,7 +238,7 @@ namespace DataWF.Gui
                         stateMove = Rectangle.Zero;
                         if (htest.Align == LayoutAlignType.None)
                         {
-                            stateMove = new Rectangle(htest.Item.Bound.X + 10, htest.Item.Bound.Y + 10, htest.Item.Bound.Width - 20, htest.Item.Bound.Height - 20);
+                            stateMove = htest.Item.Bound.Inflate(-40, -40);
                         }
                         else
                         {
@@ -263,7 +292,7 @@ namespace DataWF.Gui
         {
             foreach (DockItem item in map.GetVisibleItems())
             {
-                item.Panel.Surface.GetPreferredSize();
+                item.Panel?.Surface.GetPreferredSize();
             }
             return map.GetBound(0, 0).Size;
         }
@@ -275,7 +304,7 @@ namespace DataWF.Gui
             foreach (DockItem item in map.GetVisibleItems())
             {
                 map.GetBound(item, mapBound);
-                if (item.Bound.Width > 0 && item.Bound.Height > 0)
+                if (item.Panel != null && item.Bound.Width > 0 && item.Bound.Height > 0)
                 {
                     SetChildBounds(item.Panel, item.Bound);
                 }
@@ -287,31 +316,20 @@ namespace DataWF.Gui
             base.OnDraw(ctx, dirtyRect);
             if (State.HasFlag(DockBoxState.InProcess))
             {
-                ctx.SetColor(Colors.Black);
-                ctx.Rectangle(stateSize);
-                ctx.Stroke();
+                using (var cont = new GraphContext(ctx))
+                {
+                    cont.DrawImage(processImage, new Rectangle(Point.Zero, processImage.Size));
+                    if (state.HasFlag(DockBoxState.Move))
+                    {
+                        cont.DrawCell(GuiEnvironment.Theme["Selection"], null, stateMove, stateMove, CellDisplayState.Default);
+                    }
+                    else
+                    {
+                        cont.DrawCell(GuiEnvironment.Theme["Selection"], null, stateSize, stateSize, CellDisplayState.Default);
+                    }
+                }
             }
-            //GraphContext cont = new GraphContext(e.Graphics);
-            //List<ILayoutMapItem> list = LayoutMapTool.GetVisibleItems(map);
-            //Pen p = new Pen(SystemBrushes.WidgetDarkDark, 6);
-            //foreach (DockMapItem item in list)
-            //{
-            //RectangleF rect = map.GetBound(item);
-
-            //rect.X++;
-            //rect.Y++;
-            //rect.Width -= 1;
-            //rect.Height -= 1;
-
-            //cont.G.DrawRectangle(p, rect.X, rect.Y, rect.Width, rect.Height);
-
-            //rect = item.Panel.Pages.Bounds;
-            //rect.Width += 5;
-
-            //cont.G.FillRectangle(SystemBrushes.WidgetDarkDark, rect);
-            //}
         }
-
         public DockPage PickPage(Widget control)
         {
             return PickPage(this, control);
@@ -403,9 +421,10 @@ namespace DataWF.Gui
             PageSelected?.Invoke(this, e);
         }
 
-        private void OnPageDrag(object sender, DockPageEventArgs e)
+        protected internal void OnPageDrag(ToolItemEventArgs e)
         {
-            page = e.Page;
+            page = e.Item as DockPage;
+            State = DockBoxState.Move | DockBoxState.InProcess;
         }
 
         public DockItem GetDockItem(string name, LayoutAlignType type, bool gp)
@@ -453,14 +472,11 @@ namespace DataWF.Gui
         internal void Add(DockPanel panel)
         {
             panel.VisibleClose = VisibleClose;
-            panel.PageDrag += OnPageDrag;
             AddChild(panel);
         }
 
         internal void Remove(DockPanel panel)
         {
-            panel.VisibleClose = VisibleClose;
-            panel.PageDrag -= OnPageDrag;
             RemoveChild(panel);
         }
 

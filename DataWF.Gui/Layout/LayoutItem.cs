@@ -268,7 +268,7 @@ namespace DataWF.Gui
         public override int AddInternal(T item)
         {
             if (Contains(item))
-                return IndexOf(item);
+                return -IndexOf(item);
             if (item.Row < 0)
             {
                 item.Row = GrowMode == Orientation.Vertical
@@ -512,7 +512,7 @@ namespace DataWF.Gui
 
         public virtual Rectangle GetBound(double maxWidth, double maxHeight, Func<ILayoutItem, double> calcWidth, Func<ILayoutItem, double> calcHeight)
         {
-            var bound = new Rectangle(0, 0, GetWidth(maxWidth - Indent*2, calcWidth), GetHeight(maxHeight - Indent*2, calcHeight));
+            var bound = new Rectangle(0, 0, GetWidth(maxWidth - Indent * 2, calcWidth), GetHeight(maxHeight - Indent * 2, calcHeight));
             bound.X += Indent;
             bound.Y += Indent;
             bound.Width += Indent;
@@ -884,7 +884,7 @@ namespace DataWF.Gui
             {
                 if (item.Count > 0)
                 {
-                    foreach (var subItem in item)
+                    foreach (var subItem in item.GetItems())
                         yield return subItem;
                 }
                 else

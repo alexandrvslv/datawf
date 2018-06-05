@@ -386,7 +386,10 @@ namespace DataWF.Gui
             MouseMove?.Invoke(this, args);
             if (State == CellDisplayState.Pressed)
             {
-                OnMove();
+                var dX = pressLocation.X - args.Position.X;
+                var dY = pressLocation.Y - args.Position.Y;
+                if (Math.Max(Math.Abs(dX), Math.Abs(dY)) > 5)
+                    OnMove();
             }
         }
 

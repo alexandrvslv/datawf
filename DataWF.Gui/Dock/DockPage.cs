@@ -32,8 +32,14 @@ namespace DataWF.Gui
             get => base.Bar;
             set
             {
+                if (Bar == value)
+                    return;
+                if (Bar != null && Panel.CurrentPage == this)
+                {
+                    Panel.RemovePage(this);
+                }
                 base.Bar = value;
-                if (value != null && Widget != null && Visible && Checked)
+                if (Bar != null && Widget != null && Visible && Checked)
                 {
                     Panel.CurrentPage = this;
                 }
@@ -83,13 +89,14 @@ namespace DataWF.Gui
             get { return base.Checked; }
             set
             {
+                if (value)
+                {
+                    UncheckExcept();
+                }
                 if (Checked != value)
                 {
                     base.Checked = value;
-                    if (value)
-                    {
-                        UncheckExcept();
-                    }
+
                     Bar?.QueueDraw();
                 }
             }

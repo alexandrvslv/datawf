@@ -27,11 +27,18 @@ namespace DataWF.Gui
         {
             Items.StyleName = "Window";
             Indent = 1;
-
             //context = new Menubar(toolHide);
             //toolHide = new ToolMenuItem { Name = "Hide", Text = "Hide" };
 
             Name = "DockPanel";
+        }
+
+        public DockPanel(params Widget[] widgets) : this()
+        {
+            foreach (var widget in widgets)
+            {
+                Put(widget);
+            }
         }
 
         public DockItem DockItem { get; set; }
@@ -41,7 +48,7 @@ namespace DataWF.Gui
         public Widget CurrentWidget
         {
             get { return widget; }
-            set
+            internal set
             {
                 if (value == widget)
                     return;
@@ -78,18 +85,13 @@ namespace DataWF.Gui
             }
         }
 
-        public DockPanel(params Widget[] widgets) : this()
-        {
-            foreach (var widget in widgets)
-            {
-                Put(widget);
-            }
-        }
-
         public void RemovePage(DockPage page)
         {
             if (page == null)
                 return;
+            while (pagesHistory.Remove(page))
+            {
+            }
             if (CurrentWidget == page.Widget)
             {
                 DockPage npage = null;
@@ -97,17 +99,14 @@ namespace DataWF.Gui
                 {
                     var item = pagesHistory.Last;
 
-                    while (item != null && (item.Value == page || !item.Value.Visible))
+                    while (item != null && (item.Value == page || item.Value.Panel != this))
                         item = item.Previous;
-                    if (item != null)
+                    if (item != null && item.Value.Panel == this)
                         npage = item.Value;
                 }
                 CurrentPage = npage;
             }
 
-            while (pagesHistory.Remove(page))
-            {
-            }
         }
 
         protected override void OnReallocate()
@@ -211,50 +210,6 @@ namespace DataWF.Gui
             return Items.GetItems().Cast<DockPage>().GetEnumerator();
         }
 
-        //public void Serialize(ISerializeWriter writer)
-        //{
-        //    writer.WriteAttribute("Current", CurrentWidget?.Name ?? string.Empty);
-        //    writer.Write(items);
-        //    foreach (DockPage page in Items)
-        //    {
-        //        if (page.Widget is ISerializableElement)
-        //        {
-        //            writer.Write(page.Widget, page.Widget.Name, true);
-        //        }
-        //        else
-        //        {
-
-        //        }
-        //    }
-        //}
-
-        //public void Deserialize(ISerializeReader reader)
-        //{
-        //    var current = reader.ReadAttribute<string>("Current");
-        //    if (reader.IsEmpty)
-        //        return;
-
-        //    while (reader.ReadBegin())
-        //    {
-        //        var type = reader.ReadType();
-        //        DockPage page = GetPage(reader.CurrentName);
-        //        if (page == null)
-        //        {
-        //            var widget = (Widget)EmitInvoker.CreateObject(type);
-        //            widget.Name = reader.CurrentName;
-        //            page = Put(widget);
-        //        }
-        //        if (page.Widget.GetType() == type && page.Widget is ISerializableElement)
-        //        {
-        //            ((ISerializableElement)page.Widget).Deserialize(reader);
-        //        }
-        //    }
-        //    if (!string.IsNullOrEmpty(current))
-        //    {
-        //        CurrentPage = GetPage(current);
-        //    }
-        //}
-
         public bool VisibleClose
         {
             get { return viewClose; }
@@ -282,21 +237,18 @@ namespace DataWF.Gui
             }
         }
 
-        public event EventHandler<DockPageEventArgs> PageDrag;
+        public event EventHandler<ToolItemEventArgs> PageDrag;
 
-        protected void OnPageDrag(DockPageEventArgs arg)
+        protected void OnPageDrag(ToolItemEventArgs arg)
         {
             PageDrag?.Invoke(this, arg);
+            DockBox?.OnPageDrag(arg);
         }
 
         protected internal override void OnItemMove(ToolItemEventArgs args)
         {
             base.OnItemMove(args);
-
-            //if ((mdown && p0.X != 0D && p0.Y != 0D) &&
-            //     (Math.Abs(p0.X - arg.Point.X) > 12 ||
-            //      Math.Abs(p0.Y - arg.Point.Y) > 12))
-            //    OnPageDrag(arg);
+            OnPageDrag(args);
         }
 
         public event EventHandler<DockPageEventArgs> PageClose;
@@ -393,6 +345,8 @@ namespace DataWF.Gui
 
         public void Put(DockPage page)
         {
+            page.Col = -1;
+            page.Row = -1;
             Items.Add(page);
             CurrentPage = page;
         }

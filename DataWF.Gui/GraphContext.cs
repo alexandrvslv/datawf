@@ -292,8 +292,9 @@ namespace DataWF.Gui
             FillRectangle(bound);
         }
 
-        public void DrawRectangle(Color color, Rectangle bound)
+        public void DrawRectangle(Color color, Rectangle bound, double lineWidth = 2)
         {
+            Context.SetLineWidth(lineWidth);
             Context.SetColor(color);
             DrawRectangle(bound);
         }
