@@ -655,7 +655,7 @@ namespace DataWF.Gui
             }
             else if (e.Key == Key.Left || e.Key == Key.Right)
             {
-                e.Handled = true;
+                //e.Handled = true;
             }
             if (e.Handled)
             {
