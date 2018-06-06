@@ -70,6 +70,18 @@ namespace DataWF.Gui
             return new Color(1D - color.Red, 1D - color.Green, 1D - color.Blue, color.Alpha);
         }
 
+        public static T GetParent<T>(this Widget widget) where T : Widget
+        {
+            var parent = (Widget)widget;
+            while (parent != null)
+            {
+                parent = parent.Parent;
+                if (parent is T)
+                    break;
+            }
+            return (T)parent;
+        }
+
         public static Command ShowDialog(this Widget widget, Widget owner)
         {
             return widget.ShowDialog(owner.ParentWindow);

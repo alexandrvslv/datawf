@@ -338,7 +338,8 @@ namespace DataWF.Module.FlowGui
             {
                 deditor = new DocumentEditor()
                 {
-                    HideOnClose = true
+                    HideOnClose = true,
+                    FileSerialize = false
                 };
                 deditor.MainMenu.Visible = false;
                 toolLoad.InsertAfter(((IEnumerable<ToolItem>)deditor.MainMenu.Items).ToList());
@@ -402,11 +403,11 @@ namespace DataWF.Module.FlowGui
             var editor = GuiService.Main?.DockPanel.Find(name) as DocumentEditor;
             if (editor == null)
             {
-                editor = new DocumentEditor()
-                {
-                    Name = name,
-                    Document = document
-                };
+                editor = new DocumentEditor();
+                editor.XmlDeserialize($"{document.GetType().Name}.xml");
+                editor.Name = name;
+                editor.Document = document;
+
                 if (GuiService.Main == null || !MainDock)
                 {
                     editor.ShowWindow(this);

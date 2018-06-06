@@ -868,17 +868,35 @@ namespace DataWF.Module.FlowGui
 
         public override void Serialize(ISerializeWriter writer)
         {
-            writer.WriteAttribute("TemplateId", Template?.Id);
-            writer.WriteAttribute("DocumentId", Document?.Id);
-            base.Serialize(writer);
+            if (FileSerialize)
+            {
+                var fileName = $"{DocumentType.Name}.xml";
+                writer.WriteAttribute("FileName", fileName);
+                writer.WriteAttribute("DocumentId", Document?.Id);
+
+                XmlSerialize(fileName);
+            }
+            else
+            {
+                base.Serialize(writer);
+            }
         }
 
         public override void Deserialize(ISerializeReader reader)
         {
-            var templateid = reader.ReadAttribute("TemplateId", typeof(int));
-            var documentid = reader.ReadAttribute("DocumentId", typeof(long));
-            base.Deserialize(reader);
-            Document = Document.DBTable.LoadById(documentid);
+            if (FileSerialize)
+            {
+                var fileName = reader.ReadAttribute<string>("FileName");
+                var documentid = reader.ReadAttribute<long>("DocumentId");
+
+                XmlDeserialize(fileName);
+
+                Document = Document.DBTable.LoadById(documentid);
+            }
+            else
+            {
+                base.Deserialize(reader);
+            }
         }
 
         public bool Closing()

@@ -13,6 +13,7 @@ namespace DataWF.Gui
         {
             Spacing = 1;
         }
+        public bool FileSerialize { get; set; } = true;
 
         public Image Image { get; set; }
 
@@ -65,10 +66,13 @@ namespace DataWF.Gui
 
         public virtual void XmlSerialize(string file)
         {
+            var temp = FileSerialize;
+            FileSerialize = false;
             using (var serializer = new Serializer())
             {
                 serializer.Serialize(this, file);
             }
+            FileSerialize = temp;
         }
 
         public virtual void Serialize(ISerializeWriter writer)
@@ -103,10 +107,13 @@ namespace DataWF.Gui
 
         public virtual void XmlDeserialize(string file)
         {
+            var temp = FileSerialize;
+            FileSerialize = false;
             using (var serializer = new Serializer())
             {
                 serializer.Deserialize(file, this, false);
             }
+            FileSerialize = temp;
         }
 
         public virtual void Deserialize(ISerializeReader reader)
