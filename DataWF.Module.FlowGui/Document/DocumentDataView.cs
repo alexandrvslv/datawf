@@ -124,7 +124,7 @@ namespace DataWF.Module.FlowGui
         {
             if (Current?.TemplateData != null)
             {
-                Current.Parse(new DocumentExecuteArgs() { Document = Document });
+                Current.Parse();
                 Current.Execute();
             }
         }

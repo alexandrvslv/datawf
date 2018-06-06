@@ -58,8 +58,7 @@ namespace DataWF.Data
         {
             var temp = code.Split(new char[] { ':' });
             object val = null;
-            // TODO if (code.Equals("CurrentUser", StringComparison.OrdinalIgnoreCase))
-            //   val = FlowEnvir.Personal.User.Name;
+
             string procedureCode = code;
             string param = null;
             string localize = null;
@@ -103,7 +102,7 @@ namespace DataWF.Data
 
             if (val == null)
             {
-                var procedure = DBService.ParseProcedure(procedureCode);
+                var procedure = DBService.ParseProcedure(procedureCode, parameters.ProcedureCategory);
                 if (procedure != null)
                     try { val = procedure.Execute(parameters); }
                     catch (Exception ex) { val = ex.Message; }

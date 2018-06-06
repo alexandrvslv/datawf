@@ -660,7 +660,7 @@ namespace DataWF.Module.Flow
                 return;
             saving.Add(this);
             var transaction = DBTransaction.GetTransaction(this, Table.Schema.Connection);
-            var param = new DocumentExecuteArgs() { Document = this };
+            var param = new DocumentExecuteArgs() { Document = this, ProcedureCategory = Template.Code };
             try
             {
                 var works = Works.ToList();

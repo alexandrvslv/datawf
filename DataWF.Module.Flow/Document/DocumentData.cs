@@ -211,6 +211,11 @@ namespace DataWF.Module.Flow
             return fileName;
         }
 
+        public byte[] Parse()
+        {
+            return Parse(new DocumentExecuteArgs() { Document = Document, ProcedureCategory = TemplateData.Template.Code });
+        }
+
         public byte[] Parse(DocumentExecuteArgs param)
         {
             if (IsTemplate)

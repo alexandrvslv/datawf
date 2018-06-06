@@ -30,7 +30,7 @@ namespace DataWF.Data
         static readonly Invoker<DBProcedure, string> dataNameInvoker = new Invoker<DBProcedure, string>(nameof(DBProcedure.DataName), (item) => item.DataName);
         static readonly Invoker<DBProcedure, ProcedureTypes> typeInvoker = new Invoker<DBProcedure, ProcedureTypes>(nameof(DBProcedure.ProcedureType), (item) => item.ProcedureType);
 
-        private Dictionary<string, DBProcedure> codeIndex = new Dictionary<string, DBProcedure>(StringComparer.OrdinalIgnoreCase);
+        private Dictionary<string, Dictionary<string, DBProcedure>> codeIndex = new Dictionary<string, Dictionary<string, DBProcedure>>(StringComparer.OrdinalIgnoreCase);
 
         public DBProcedureList(DBSchema schema) : base(schema)
         {
@@ -52,17 +52,28 @@ namespace DataWF.Data
             return Select(nameof(DBProcedure.ParentName), CompareType.Equal, procedure?.Name);
         }
 
-        public DBProcedure SelectByCode(string code)
+        public DBProcedure SelectByCode(string code, string category = "General")
         {
-            return codeIndex.TryGetValue(code, out var procedure) ? procedure : null;
+            if (codeIndex.TryGetValue(category, out var categoryIndex))
+                return categoryIndex.TryGetValue(code, out var procedure) ? procedure : null;
+            return null;
         }
 
         public override void InsertInternal(int index, DBProcedure item)
         {
             base.InsertInternal(index, item);
+            AddCodes(item);
+        }
+
+        public void AddCodes(DBProcedure item)
+        {
             foreach (var code in item.Codes)
             {
-                codeIndex[code] = item;
+                if (!codeIndex.TryGetValue(code.Category, out var categoryIndex))
+                {
+                    codeIndex[code.Category] = categoryIndex = new Dictionary<string, DBProcedure>(StringComparer.OrdinalIgnoreCase);
+                }
+                categoryIndex[code.Code] = item;
             }
         }
     }

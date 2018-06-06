@@ -22,13 +22,17 @@ using System;
 
 namespace DataWF.Data
 {
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
     public class CodeAttribute : Attribute
     {
-        public CodeAttribute(string code)
+        public CodeAttribute(string code, string category = "General")
         {
             Code = code;
+            Category = category;
         }
 
-        public string Code { get; set; }
+        public string Code { get; private set; }
+
+        public string Category { get; private set; }
     }
 }

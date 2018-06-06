@@ -29,26 +29,23 @@ namespace DataWF.Data
 
     public class ExecuteArgs
     {
-        private DBItem document;
         private Dictionary<string, object> parameters;
 
-        public ExecuteArgs(DBItem document = null)
+        public ExecuteArgs(DBItem document = null, string category = "General")
         {
-            this.document = document;
+            Document = document;
         }
 
-        public DBItem Document
-        {
-            get { return document; }
-            set { document = value; }
-        }
+        public DBItem Document { get; set; }
+
+        public string ProcedureCategory { get; set; }
 
         public Dictionary<string, object> Parameters
         {
             get
             {
                 if (parameters == null)
-                    parameters = DBProcedure.CreateParams(document);
+                    parameters = DBProcedure.CreateParams(Document);
                 return parameters;
             }
             set
@@ -59,7 +56,7 @@ namespace DataWF.Data
 
         public override string ToString()
         {
-            return document == null ? string.Empty : document.ToString();
+            return Document == null ? string.Empty : Document.ToString();
         }
 
         public QResult Result { get; set; }

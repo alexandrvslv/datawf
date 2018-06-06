@@ -333,6 +333,7 @@ namespace DataWF.Data
                     {
                         schema.Connection.ExecuteGoQuery(builder.ToString());
                         schema = null;
+                        builder.Clear();
                     }
                     schema = item.Item.Schema;
                 }
@@ -831,13 +832,14 @@ namespace DataWF.Data
                                     DataName = filename,
                                     ProcedureType = ProcedureTypes.Assembly
                                 };
-                                var codes = type.GetCustomAttributes<CodeAttribute>();
-                                foreach (var code in codes)
-                                {
-                                    procedure.Codes.Add(code.Code);
-                                }
                                 schema.Procedures.Add(procedure);
                             }
+
+                            procedure.Codes.Clear();
+                            procedure.Codes.AddRange(type.GetCustomAttributes<CodeAttribute>());
+
+                            schema.Procedures.AddCodes(procedure);
+
                         }
 
                     }
@@ -858,26 +860,20 @@ namespace DataWF.Data
             return schema;
         }
 
-        public static DBProcedure ParseProcedure(string name)
+        public static DBProcedure ParseProcedure(string code, string category = "General")
         {
+            var procedure = (DBProcedure)null;
             foreach (var schema in Schems)
             {
-                var procedure = schema.Procedures[name];
+                procedure = schema.Procedures[code];
+                if (procedure == null)
+                    procedure = schema.Procedures.SelectByCode(code, category);
+                if (procedure == null && category != "General")
+                    procedure = schema.Procedures.SelectByCode(code);
                 if (procedure != null)
-                    return procedure;
+                    break;
             }
-            return null;
-        }
-
-        public static DBProcedure ParseProcedureByCode(string code)
-        {
-            foreach (var schema in Schems)
-            {
-                var procedure = schema.Procedures.SelectByCode(code);
-                if (procedure != null)
-                    return procedure;
-            }
-            return null;
+            return procedure;
         }
 
         public static void ClearChache()
