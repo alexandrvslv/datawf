@@ -28,7 +28,7 @@ namespace DataWF.Gui
 
         public override Widget InitDropDownContent()
         {
-            var colors = editor.GetCached<ColorSelector>();
+            var colors = Editor.GetCached<ColorSelector>();
             colors.Sensitive = !ReadOnly;
             if (!ReadOnly && HandleText)
                 colors.ColorChanged += OnColorChanged;
@@ -50,20 +50,20 @@ namespace DataWF.Gui
             if (Selector.Color != (Color)Value)
             {
                 Value = Selector.Color;
-                ((TextEntry)editor.Widget).BackgroundColor = Selector.Color;
+                ((TextEntry)Editor.Widget).BackgroundColor = Selector.Color;
             }
         }
 
         public override void InitializeEditor(LayoutEditor editor, object value, object dataSource)
         {
             base.InitializeEditor(editor, value, dataSource);
-            tempBack = ((TextEntry)base.editor.Widget).BackgroundColor;
+            tempBack = ((TextEntry)base.Editor.Widget).BackgroundColor;
         }
 
         public override void FreeEditor()
         {
             Selector.ColorChanged -= OnColorChanged;
-            ((TextEntry)editor.Widget).BackgroundColor = tempBack;
+            ((TextEntry)Editor.Widget).BackgroundColor = tempBack;
             base.FreeEditor();
         }
 

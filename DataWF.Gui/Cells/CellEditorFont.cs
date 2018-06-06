@@ -33,14 +33,14 @@ namespace DataWF.Gui
                 var font = (Font)value;
                 base.Value = value;
                 Selector.SelectedFont = font;
-                ((TextEntry)editor.Widget).Font = font;
-                ((TextEntry)editor.Widget).Text = FormatValue(font) as string;
+                ((TextEntry)Editor.Widget).Font = font;
+                ((TextEntry)Editor.Widget).Text = FormatValue(font) as string;
             }
         }
 
         public override Widget InitDropDownContent()
         {
-            var selector = editor.GetCached<FontSelector>();
+            var selector = Editor.GetCached<FontSelector>();
             selector.FontChanged += OnFontSelect;
             return selector;
         }
@@ -48,7 +48,7 @@ namespace DataWF.Gui
         public override void InitializeEditor(LayoutEditor editor, object value, object dataSource)
         {
             base.InitializeEditor(editor, value, dataSource);
-            tempFont = ((TextEntry)base.editor.Widget).Font;
+            tempFont = ((TextEntry)Editor.Widget).Font;
         }
 
         private void OnFontSelect(object sender, EventArgs e)
@@ -64,7 +64,7 @@ namespace DataWF.Gui
         public override void FreeEditor()
         {
             Selector.FontChanged -= OnFontSelect;
-            ((TextEntry)editor.Widget).Font = tempFont;
+            ((TextEntry)Editor.Widget).Font = tempFont;
             base.FreeEditor();
         }
     }

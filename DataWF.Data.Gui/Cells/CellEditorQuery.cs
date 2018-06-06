@@ -14,7 +14,7 @@ namespace DataWF.Data.Gui
 
         public override Widget InitDropDownContent()
         {
-            var query = editor.GetCached<QueryEditor>();
+            var query = Editor.GetCached<QueryEditor>();
             query.Initialize(SearchState.Reference, Value as QQuery, EditItem as QParam, null);
             return query;
         }

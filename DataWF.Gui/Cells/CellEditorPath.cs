@@ -16,12 +16,12 @@ namespace DataWF.Gui
 
         private void OnDropDownClick(object sender, EventArgs e)
         {
-            if (picker.Run(editor.ParentWindow))
+            if (picker.Run(Editor.ParentWindow))
             {
-                editor.Value = picker.FileName;
-                ((TextEntry)editor.Widget).Changed -= OnTextChanged;
-                ((TextEntry)editor.Widget).Text = picker.FileName;
-                ((TextEntry)editor.Widget).Changed += OnTextChanged;
+                Editor.Value = picker.FileName;
+                ((TextEntry)Editor.Widget).Changed -= OnTextChanged;
+                ((TextEntry)Editor.Widget).Text = picker.FileName;
+                ((TextEntry)Editor.Widget).Changed += OnTextChanged;
             }
         }
 
@@ -29,8 +29,8 @@ namespace DataWF.Gui
         {
             base.InitializeEditor(editor, value, dataSource);
 
-            base.editor.DropDownVisible = true;
-            base.editor.DropDownClick += OnDropDownClick;
+            Editor.DropDownVisible = true;
+            Editor.DropDownClick += OnDropDownClick;
 
             if (picker == null)
             {
@@ -42,7 +42,7 @@ namespace DataWF.Gui
 
         public override void FreeEditor()
         {
-            editor.DropDownClick -= OnDropDownClick;
+            Editor.DropDownClick -= OnDropDownClick;
             base.FreeEditor();
         }
     }

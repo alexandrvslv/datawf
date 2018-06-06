@@ -50,7 +50,7 @@ namespace DataWF.Module.CommonGui
 
         public override Widget InitDropDownContent()
         {
-            var tree = editor.GetCached<UserTree>();
+            var tree = Editor.GetCached<UserTree>();
             tree.UserKeys = UserKeys;
             tree.Nodes.ExpandTop();
             if (Value is DBItem)

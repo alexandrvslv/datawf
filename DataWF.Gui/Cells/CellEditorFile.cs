@@ -71,7 +71,7 @@ namespace DataWF.Gui
 
         private void OnDropDownClick(object sender, EventArgs e)
         {
-            if (fdOpen.Run(editor.ParentWindow))
+            if (fdOpen.Run(Editor.ParentWindow))
             {
                 if (File.Exists(fdOpen.FileName))
                 {
@@ -83,7 +83,7 @@ namespace DataWF.Gui
                         while ((count = stream.Read(buf, sum, buf.Length - sum)) > 0)
                             sum += count;  // sum is a buffer offset for next reading
 
-                        editor.Value = buf;
+                        Editor.Value = buf;
                     }
                 }
                 string name = Path.GetFileName(fdOpen.FileName);
@@ -99,18 +99,18 @@ namespace DataWF.Gui
             {
                 fdSave.InitialFileName = invoker.Get(base.EditItem) as string;
             }
-            if (editor.Value != null && fdSave.Run(editor.ParentWindow))
+            if (Editor.Value != null && fdSave.Run(Editor.ParentWindow))
             {
-                File.WriteAllBytes(fdSave.FileName, (byte[])editor.Value);
+                File.WriteAllBytes(fdSave.FileName, (byte[])Editor.Value);
             }
         }
 
         public override void FreeEditor()
         {
-            if (editor != null)
+            if (Editor != null)
             {
-                editor.DropDownClick -= OnDropDownClick;
-                editor.DropDownExClick -= OnDropDownExClick;
+                Editor.DropDownClick -= OnDropDownClick;
+                Editor.DropDownExClick -= OnDropDownExClick;
             }
             base.FreeEditor();
         }

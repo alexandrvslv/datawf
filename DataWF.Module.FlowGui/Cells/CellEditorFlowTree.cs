@@ -51,7 +51,7 @@ namespace DataWF.Module.FlowGui
 
         public override Widget InitDropDownContent()
         {
-            var tree = editor.GetCached<FlowTree>();
+            var tree = Editor.GetCached<FlowTree>();
             tree.FlowKeys = FlowKeys;
             tree.Nodes.ExpandTop();
             if (DataFilter != null)

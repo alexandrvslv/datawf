@@ -92,7 +92,7 @@ namespace DataWF.Gui
 
         public override Widget InitEditorContent()
         {
-            var box = editor.GetCached<CheckBox>();
+            var box = Editor.GetCached<CheckBox>();
             box.AllowMixed = _treeState;
             if (!ReadOnly)
             {
@@ -114,15 +114,15 @@ namespace DataWF.Gui
             {
                 bool flag = HandleText;
                 HandleText = false;
-                ((CheckBox)editor.Widget).State = (CheckBoxState)(CheckedState)FormatValue(value);
+                ((CheckBox)Editor.Widget).State = (CheckBoxState)(CheckedState)FormatValue(value);
                 HandleText = flag;
             }
         }
 
         public override void FreeEditor()
         {
-            if (editor?.Widget is CheckBox)
-                ((CheckBox)editor.Widget).Toggled -= OnTextChanged;
+            if (Editor?.Widget is CheckBox)
+                ((CheckBox)Editor.Widget).Toggled -= OnTextChanged;
             base.FreeEditor();
         }
     }

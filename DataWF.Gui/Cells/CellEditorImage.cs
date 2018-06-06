@@ -18,7 +18,7 @@ namespace DataWF.Gui
             set
             {
                 base.Value = value;
-                editor.Image = FormatValue(editor.Value) as Image;
+                Editor.Image = FormatValue(Editor.Value) as Image;
             }
         }
 
@@ -36,7 +36,7 @@ namespace DataWF.Gui
         {
             if (listSource == null)
             {
-                var imgEditor = editor.GetCached<ImageEditor>();
+                var imgEditor = Editor.GetCached<ImageEditor>();
                 imgEditor.EditImage = FormatValue(Value) as Image;
                 return imgEditor;
             }

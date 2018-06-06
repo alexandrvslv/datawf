@@ -79,18 +79,18 @@ namespace DataWF.Data.Gui
                 TextWidget.Text = value;
                 TextWidget.SelectionStart = index + filter.Length;
                 TextWidget.SelectionLength = value.Length - TextWidget.SelectionStart;
-                editor.Value = list[0].Tag;
+                Editor.Value = list[0].Tag;
             }
             else if (filter.Length > 0)
             {
-                editor.ShowDropDown(ToolShowMode.AutoHide);
+                Editor.ShowDropDown(ToolShowMode.AutoHide);
             }
             HandleText = true;
         }
 
         public virtual DataTree GetToolTarget()
         {
-            return editor.GetCached<DataTree>();
+            return Editor.GetCached<DataTree>();
         }
 
         public override Widget InitDropDownContent()
@@ -154,7 +154,7 @@ namespace DataWF.Data.Gui
 
         protected virtual void HandleAfterSelect(object sender, EventArgs e)
         {
-            if (editor != null
+            if (Editor != null
                 && DataTree.SelectedDBItem != null
                 && (TypeHelper.IsBaseType(DataTree.SelectedDBItem.GetType(), DataType) || DataType == null))
             {

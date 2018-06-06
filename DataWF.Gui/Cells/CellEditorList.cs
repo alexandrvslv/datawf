@@ -88,7 +88,7 @@ namespace DataWF.Gui
                 }
                 else if (count > 1)
                 {
-                    editor.ShowDropDown(ToolShowMode.AutoHide);
+                    Editor.ShowDropDown(ToolShowMode.AutoHide);
                 }
             }
             else
@@ -99,7 +99,7 @@ namespace DataWF.Gui
 
         public override Widget InitDropDownContent()
         {
-            var list = editor.GetCached<LayoutList>();
+            var list = Editor.GetCached<LayoutList>();
             list.AllowCheck = false;
             list.GenerateColumns = false;
             list.GenerateToString = false;

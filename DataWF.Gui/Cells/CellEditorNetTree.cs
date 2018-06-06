@@ -56,18 +56,18 @@ namespace DataWF.Gui
                 TextWidget.SelectionStart = index + filter.Length;
                 TextWidget.SelectionLength = value.Length - TextWidget.SelectionStart;
 
-                editor.Value = list[0].Tag;
+                Editor.Value = list[0].Tag;
             }
             else if (filter.Length > 0)
             {
-                editor.ShowDropDown(ToolShowMode.AutoHide);
+                Editor.ShowDropDown(ToolShowMode.AutoHide);
             }
             HandleText = true;
         }
 
         public override Widget InitDropDownContent()
         {
-            var tree = editor.GetCached<NetTree>();
+            var tree = Editor.GetCached<NetTree>();
 
             tree.Localize();
             foreach (Node n in tree.Nodes.GetTopLevel())
@@ -97,14 +97,14 @@ namespace DataWF.Gui
 
         protected virtual void HandleAfterSelect(object sender, EventArgs e)
         {
-            if (editor != null && sender is NetTree &&
+            if (Editor != null && sender is NetTree &&
                 ((NetTree)sender).SelectedNode != null &&
                 ((NetTree)sender).SelectedNode.Tag != null &&
                 (((NetTree)sender).SelectedNode.Tag.GetType() == typeof(IPAddress)))
             {
-                editor.Value = ParseValue(((NetTree)sender).SelectedNode.Tag);
+                Editor.Value = ParseValue(((NetTree)sender).SelectedNode.Tag);
                 HandleText = false;
-                EditorText = FormatValue(editor.Value) as string;
+                EditorText = FormatValue(Editor.Value) as string;
                 HandleText = true;
             }
         }

@@ -18,7 +18,7 @@ namespace DataWF.Gui
         protected bool dropDownWindow = true;
         protected bool dropDownAutoHide;
         //protected bool dropDownByKey = true;
-        protected LayoutEditor editor;
+        private LayoutEditor _editor;
         protected Widget content;
         public string ListProperty = "ToString";
         public bool ListAutoSort = true;
@@ -53,11 +53,11 @@ namespace DataWF.Gui
 
         public ToolWindow DropDown
         {
-            get { return editor?.DropDown; }
+            get { return Editor?.DropDown; }
             set
             {
-                if (editor != null)
-                    editor.DropDown = value;
+                if (Editor != null)
+                    Editor.DropDown = value;
             }
         }
 
@@ -98,8 +98,8 @@ namespace DataWF.Gui
 
         public LayoutEditor Editor
         {
-            get { return editor; }
-            protected set { editor = value; }
+            get { return _editor; }
+            protected set { _editor = value; }
         }
 
         public object EditItem { get; set; }
@@ -129,7 +129,7 @@ namespace DataWF.Gui
 
         protected virtual void OnTextChanged(object sender, EventArgs e)
         {
-            if (HandleText)
+            if (HandleText && Editor != null)
             {
                 var text = sender == Editor.Widget ? EditorText : sender is RichTextView ? ((RichTextView)sender).PlainText.TrimEnd() : string.Empty;
                 HandleText = false;
@@ -142,7 +142,7 @@ namespace DataWF.Gui
 
                     try
                     {
-                        if (sender != editor.Widget && EditorText != text)
+                        if (sender != Editor.Widget && EditorText != text)
                             EditorText = text;
                         Editor.Value = ParseValue(EditorText);
                     }
@@ -152,7 +152,7 @@ namespace DataWF.Gui
                         {
                             GuiService.ToolTip.LableText = "Input error";
                             GuiService.ToolTip.ContentText = ex.Message + "\n" + ex.StackTrace;
-                            GuiService.ToolTip.Show(editor, new Point(0, editor.Size.Height));
+                            GuiService.ToolTip.Show(Editor, new Point(0, Editor.Size.Height));
                         }
                     }
                 }
@@ -213,9 +213,9 @@ namespace DataWF.Gui
 
         public virtual void InitDropDown()
         {
-            var tool = editor.GetCached<ToolWindow>();
+            var tool = Editor.GetCached<ToolWindow>();
             tool.HeaderVisible = headerVisible;
-            tool.Label.Text = string.IsNullOrEmpty(Header) ? editor?.Cell?.Text : Header;
+            tool.Label.Text = string.IsNullOrEmpty(Header) ? Editor?.Cell?.Text : Header;
             tool.ButtonAcceptClick += OnDropDownAccept;
             DropDown = tool;
             DropDown.Target = InitDropDownContent();
@@ -223,7 +223,7 @@ namespace DataWF.Gui
 
         public virtual Widget InitDropDownContent()
         {
-            var reachText = editor.GetCached<RichTextView>();
+            var reachText = Editor.GetCached<RichTextView>();
             return reachText;
         }
 
@@ -231,7 +231,7 @@ namespace DataWF.Gui
         {
             if (Masked && Format != null)
             {
-                var box = editor.GetCached<TextEntry>();
+                var box = Editor.GetCached<TextEntry>();
                 box.MultiLine = MultiLine;
                 box.KeyPressed += OnTextKeyPressed;
                 box.KeyReleased += OnTextKeyReleased;
@@ -252,7 +252,7 @@ namespace DataWF.Gui
             }
             else
             {
-                var box = editor.GetCached<TextEntry>();
+                var box = Editor.GetCached<TextEntry>();
                 box.MultiLine = MultiLine;
                 box.KeyPressed += OnTextKeyPressed;
                 box.KeyReleased += OnTextKeyReleased;
@@ -310,7 +310,7 @@ namespace DataWF.Gui
             {
                 if (!DropDown.Visible && !e.Handled)
                 {
-                    editor.ShowDropDown(ToolShowMode.Default);
+                    Editor.ShowDropDown(ToolShowMode.Default);
                 }
             }
             else if (e.Key == Key.Escape && DropDown?.Target != null)
@@ -345,7 +345,7 @@ namespace DataWF.Gui
                 DropDown.Hide();
                 DropDown.ButtonAcceptClick -= OnDropDownAccept;
             }
-            if (editor != null)
+            if (Editor != null)
             {
                 if (TextWidget != null)
                 {
@@ -353,12 +353,12 @@ namespace DataWF.Gui
                     TextWidget.KeyPressed -= OnTextKeyPressed;
                     TextWidget.KeyReleased -= OnTextKeyReleased;
                 }
-                editor.Image = null;
-                editor.DropDown = null;
-                editor.CurrentEditor = null;
-                editor.ClearValue();
+                Editor.Image = null;
+                Editor.DropDown = null;
+                Editor.CurrentEditor = null;
+                Editor.ClearValue();
             }
-            editor = null;
+            Editor = null;
             EditItem = null;
         }
 

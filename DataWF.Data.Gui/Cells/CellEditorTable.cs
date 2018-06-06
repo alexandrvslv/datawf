@@ -160,14 +160,14 @@ namespace DataWF.Data.Gui
 
         public override Widget InitDropDownContent()
         {
-            var tableEditor = editor.GetCached<TableEditor>();
+            var tableEditor = Editor.GetCached<TableEditor>();
 
             tableEditor.ReadOnly = ReadOnly;
             tableEditor.KeyPressed -= OnTextKeyPressed;
 
             if (table != null)
             {
-                editor.DropDownExClick += OnDropDownExClick;
+                Editor.DropDownExClick += OnDropDownExClick;
                 tableEditor.Initialize(View, GetItem(Value), column, TableEditorMode.Reference, false);
                 if (!ReadOnly)
                 {
@@ -183,13 +183,13 @@ namespace DataWF.Data.Gui
 
         private void OnDropDownExClick(object sender, EventArgs e)
         {
-            var row = GetItem(editor.Value, EditItem);
-            if (editor != null && row != null)
+            var row = GetItem(Editor.Value, EditItem);
+            if (Editor != null && row != null)
             {
                 using (var te = new TableExplorer())
                 {
                     te.Initialize(row, TableEditorMode.Item, false);
-                    te.ShowDialog(editor);
+                    te.ShowDialog(Editor);
                 }
             }
         }
@@ -244,18 +244,18 @@ namespace DataWF.Data.Gui
             {
                 var item = (DBItem)e.Item;
                 Value = ParseValue(item);
-                ((TextEntry)editor.Widget).Changed -= OnTextChanged;
-                ((TextEntry)editor.Widget).Text = item.ToString();
-                ((TextEntry)editor.Widget).Changed += OnTextChanged;
+                ((TextEntry)Editor.Widget).Changed -= OnTextChanged;
+                ((TextEntry)Editor.Widget).Text = item.ToString();
+                ((TextEntry)Editor.Widget).Changed += OnTextChanged;
                 DropDown.Hide();
             }
         }
 
         public override void FreeEditor()
         {
-            if (editor != null)
+            if (Editor != null)
             {
-                editor.DropDownExClick -= OnDropDownExClick;
+                Editor.DropDownExClick -= OnDropDownExClick;
             }
             if (TableEditor != null)
             {

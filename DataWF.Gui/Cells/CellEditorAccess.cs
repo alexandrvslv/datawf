@@ -44,7 +44,7 @@ namespace DataWF.Gui
 
         public override Widget InitDropDownContent()
         {
-            var target = editor.GetCached<AccessEditor>();
+            var target = Editor.GetCached<AccessEditor>();
             target.Access = ParseValue(Value, null, DataType) as AccessValue;
             return target;
         }

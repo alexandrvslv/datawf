@@ -48,7 +48,7 @@ namespace DataWF.Gui
 
         public override Widget InitDropDownContent()
         {
-            var interval = editor.GetCached<IntervalSelector>();
+            var interval = Editor.GetCached<IntervalSelector>();
             interval.TwoDate = twoDate;
             interval.ValueChanged += PickerDateChanged;
             return interval;
@@ -83,7 +83,7 @@ namespace DataWF.Gui
         {
             if (e.Key == Key.Return)
             {
-                editor.DropDown.Hide();
+                Editor.DropDown.Hide();
             }
         }
 
