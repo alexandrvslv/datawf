@@ -45,5 +45,6 @@ namespace DataWF.Data
         public Table Table;
         public DBProcedure Procedure;
         public object Value;
+        internal CellRange NewRange;
     }
 }

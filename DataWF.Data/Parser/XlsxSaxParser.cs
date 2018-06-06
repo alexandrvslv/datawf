@@ -80,8 +80,6 @@ namespace DataWF.Data
                                 newWorkbookPart.AddPart((CalculationChainPart)part.OpenXmlPart);
                         }
 
-
-                        //System.Xml.Schema.Well
                         using (var reader = OpenXmlReader.Create(workbookPart))
                         using (var writer = XmlWriter.Create(newWorkbookPart.GetStream(), new XmlWriterSettings { Encoding = Encoding.UTF8 }))
                         {
@@ -149,6 +147,7 @@ namespace DataWF.Data
                                             if (reader.ElementType == typeof(Excel.Table))
                                             {
                                                 var table = (Excel.Table)reader.LoadCurrentElement();
+
                                                 var procedure = DBService.ParseProcedureByCode(table.Name);
                                                 if (procedure != null)
                                                 {
@@ -166,8 +165,9 @@ namespace DataWF.Data
                                                         var index = reference.Start.Row + ((QResult)defName.Value).Values.Count;
                                                         if (index > reference.End.Row)
                                                         {
-                                                            var newrange = new CellRange(reference.Start, new CellReference(reference.End.Col, index));
-                                                            table.Reference = newrange.ToString();
+                                                            defName.NewRange = new CellRange(reference.Start, new CellReference(reference.End.Col, index));
+                                                            table.Reference = defName.NewRange.ToString();
+                                                            //table.TotalsRowCount = (uint)newrange.Rows;
                                                         }
                                                         defName.Table = table;
                                                     }
@@ -214,9 +214,9 @@ namespace DataWF.Data
                                     {
                                         var row = (Excel.Row)reader.LoadCurrentElement();
                                         ind = (int)row.RowIndex.Value + dif;
-                                        var orow = CloneRow(row, ind);
+                                        var newRow = CloneRow(row, ind);
                                         QResult query = null;
-                                        foreach (Excel.Cell ocell in orow.Descendants<Excel.Cell>())
+                                        foreach (Excel.Cell ocell in newRow.Descendants<Excel.Cell>())
                                         {
                                             object rz = null;
                                             if (cacheNames.TryGetValue(ocell.CellReference.Value, out var defName) && defName.Sheet.Equals(sheet.Name.Value, StringComparison.OrdinalIgnoreCase))
@@ -236,34 +236,39 @@ namespace DataWF.Data
                                                 {
                                                     var sref = CellReference.Parse(ocell.CellReference);
                                                     var insert = new CellRange(sref, sref);
-                                                    Excel.Row excelRow = null;
+                                                    Excel.Row tableRow = null;
                                                     foreach (object[] dataRow in query.Values)
                                                     {
-                                                        if (excelRow == null)
-                                                            excelRow = orow;
+                                                        if (tableRow == null)
+                                                            tableRow = newRow;
                                                         else if (defName != null && defName.Range.End.Row > sref.Row)
                                                         {
                                                             reader.Read();
-                                                            excelRow = (Excel.Row)reader.LoadCurrentElement();
+                                                            row = (Excel.Row)reader.LoadCurrentElement();
+                                                            tableRow = CloneRow(row, (int)row.RowIndex.Value + dif);
+                                                            insert.Start.Row++;
+                                                            insert.End.Row++;
                                                         }
                                                         else
                                                         {
+                                                            tableRow = CloneRow(tableRow, sref.Row);// GetRow(sd, srow, excelRow == null, cell.Parent as Excel.Row);
                                                             insert.End.Row++;
-                                                            excelRow = CloneRow(orow, insert.End.Row);// GetRow(sd, srow, excelRow == null, cell.Parent as Excel.Row);
                                                         }
+
                                                         int col = sref.Col;
                                                         foreach (object itemValue in dataRow)
                                                         {
-                                                            GetCell(excelRow, itemValue, col, sref.Row, 0);
+                                                            GetCell(tableRow, itemValue, col, sref.Row, 0);
                                                             col++;
                                                         }
                                                         sref.Row++;
-                                                        WriteElement(writer, excelRow);
+                                                        WriteElement(writer, tableRow);
                                                     }
+
                                                     if (insert.Rows > 0)
                                                     {
                                                         inserts.Add(insert);
-                                                        dif += insert.Rows -1;
+                                                        dif += insert.Rows;
                                                     }
                                                     break;
                                                 }
@@ -275,7 +280,7 @@ namespace DataWF.Data
                                             }
                                         }
                                         if (query == null)
-                                            WriteElement(writer, orow);
+                                            WriteElement(writer, newRow);
                                     }
                                     else if (reader.ElementType == typeof(Excel.MergeCell))
                                     {
@@ -286,12 +291,35 @@ namespace DataWF.Data
                                         {
                                             if (insert.Start.Row < range.Start.Row)
                                             {
-                                                range.Start.Row += insert.Rows -1;
-                                                range.End.Row += insert.Rows -1 ;
+                                                range.Start.Row += insert.Rows;
+                                                range.End.Row += insert.Rows;
                                             }
                                         }
                                         merge.Reference = range.ToString();
                                         WriteElement(writer, merge);
+                                    }
+                                    else if (reader.ElementType == typeof(Excel.DataValidation))
+                                    {
+                                        var valid = (Excel.DataValidation)reader.LoadCurrentElement();
+                                        if (valid.SequenceOfReferences.HasValue)
+                                        {
+                                            var newlist = new List<StringValue>();
+                                            foreach (var item in valid.SequenceOfReferences.Items)
+                                            {
+                                                var range = CellRange.Parse(item);
+                                                foreach (var insert in inserts)
+                                                {
+                                                    if (insert.Start.Row <= range.End.Row && insert.End.Row > range.End.Row)
+                                                    {
+                                                        range.End.Row = insert.End.Row;
+                                                        break;
+                                                    }
+                                                }
+                                                newlist.Add(range.ToString());
+                                            }
+                                            valid.SequenceOfReferences = new ListValue<StringValue>(newlist);
+                                        }
+                                        WriteElement(writer, valid);
                                     }
                                     else if (reader.ElementType == typeof(Excel.OddFooter)
                                         || reader.ElementType == typeof(Excel.EvenFooter)
@@ -518,6 +546,7 @@ namespace DataWF.Data
             else
                 writer.WriteStartElement(element.Prefix, element.LocalName, element.NamespaceUri);
             WriteAttributes(writer, element.GetAttributes());
+            WriteNamespace(writer, element.NamespaceDeclarations);
             if (element.HasChildren)
             {
                 foreach (var child in element.ChildElements)
@@ -540,11 +569,8 @@ namespace DataWF.Data
                 writer.WriteStartElement(reader.Prefix, reader.LocalName, reader.NamespaceUri);
 
             WriteAttributes(writer, reader.Attributes);
+            WriteNamespace(writer, reader.NamespaceDeclarations);
 
-            foreach (var ns in reader.NamespaceDeclarations)
-            {
-                writer.WriteAttributeString("xmlns", ns.Key, null, ns.Value);
-            }
             var text = reader.GetText();
             if (!string.IsNullOrEmpty(text))
             {
@@ -563,8 +589,13 @@ namespace DataWF.Data
             }
         }
 
-
-
+        public void WriteNamespace(XmlWriter writer, IEnumerable<KeyValuePair<string, string>> namespaces)
+        {
+            foreach (var ns in namespaces)
+            {
+                writer.WriteAttributeString("xmlns", ns.Key, null, ns.Value);
+            }
+        }
 
     }
 }
