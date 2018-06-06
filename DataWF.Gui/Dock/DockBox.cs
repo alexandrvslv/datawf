@@ -642,9 +642,7 @@ namespace DataWF.Gui
 
         protected override void Dispose(bool disposing)
         {
-            foreach (var item in map)
-                if (item is IDisposable)
-                    ((IDisposable)item).Dispose();
+            Application.Invoke(() => map.Dispose());
             base.Dispose(disposing);
         }
 
