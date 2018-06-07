@@ -42,16 +42,16 @@ namespace DataWF.Data
             return Select(nameof(DBColumnReference.ColumnName), CompareType.Equal, column).Any();
         }
 
-        public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, string property = null)
+        public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, object item = null, string property = null)
         {
             Names = string.Empty;
-            foreach (var item in items)
+            foreach (var element in items)
             {
-                Names += item.ColumnName.Substring(item.ColumnName.LastIndexOf('.') + 1);
-                if (!IsLast(item))
+                Names += element.ColumnName.Substring(element.ColumnName.LastIndexOf('.') + 1);
+                if (!IsLast(element))
                     Names += ", ";
             }
-            base.OnListChanged(type, newIndex, oldIndex, property);
+            base.OnListChanged(type, newIndex, oldIndex, item, property);
         }
     }
 }

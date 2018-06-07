@@ -31,6 +31,13 @@ namespace DataWF.Data
         }
 
         [XmlIgnore]
+        public override DBSchema Schema
+        {
+            get { return base.Schema ?? Table?.Schema; }
+            internal set { base.Schema = value; }
+        }
+
+        [XmlIgnore]
         public DBTable Table { get; set; }
 
         public override int AddInternal(T item)

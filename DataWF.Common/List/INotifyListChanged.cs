@@ -8,7 +8,7 @@ namespace DataWF.Common
     {
         event ListChangedEventHandler ListChanged;
 
-        void OnListChanged(ListChangedType type, int oldindex = -1, int newindex = -1, string property = null);
+        void OnListChanged(ListChangedType type, int oldindex = -1, int newindex = -1, object item = null, string property = null);
 
         void OnPropertyChanged(object sender, PropertyChangedEventArgs e);
     }

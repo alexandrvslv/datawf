@@ -47,9 +47,9 @@ namespace DataWF.Gui
             set { info = value; }
         }
 
-        public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, string property = null)
+        public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, object item = null, string property = null)
         {
-            base.OnListChanged(type, newIndex, oldIndex, property);
+            base.OnListChanged(type, newIndex, oldIndex, item, property);
             if (Info != null)
             {
                 Info.OnBoundChanged(EventArgs.Empty);

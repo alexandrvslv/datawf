@@ -40,7 +40,7 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, Browsable(false)]
-        public DBSchema Schema { get; internal set; }
+        public virtual DBSchema Schema { get; internal set; }
 
         public virtual T this[string name]
         {
@@ -81,6 +81,15 @@ namespace DataWF.Data
             bool flag = base.Remove(item);
             DBService.OnDBSchemaChanged(item, DDLType.Drop);
             return flag;
+        }
+
+        public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, object item = null, string property = null)
+        {
+            base.OnListChanged(type, newIndex, oldIndex, item, property);
+            if (Schema != null && Schema.Container != null)
+            {
+                ((DBSchemaList)Schema.Container).OnItemsListChanged(this, new ListPropertyChangedEventArgs(type, newIndex, oldIndex) { Sender = item, Property = property });
+            }
         }
 
         //public DateTime GetMaxStamp ()

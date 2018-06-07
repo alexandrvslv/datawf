@@ -1102,6 +1102,7 @@ namespace DataWF.Data
 
         public void OnParametersListChanged(object sender, ListChangedEventArgs e)
         {
+            //var pe = (ListPropertyChangedEventArgs)e;
             //if (e.ListChangedType == ListChangedType.ItemAdded)
             //{
             //    var param = ((IList)sender)[e.NewIndex] as QParam;

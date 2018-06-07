@@ -168,6 +168,7 @@ namespace DataWF.Module.CommonGui
             {
                 return;
             }
+            var pe = e as ListPropertyChangedEventArgs;
             Application.Invoke(() =>
             {
                 IDBTableView view = (IDBTableView)sender;
@@ -179,43 +180,39 @@ namespace DataWF.Module.CommonGui
                 }
                 else if (e.ListChangedType == ListChangedType.ItemDeleted)
                 {
-                    if (e.NewIndex >= 0)
+                    var item = (DBItem)pe.Sender;
+                    var node = Find(item);
+                    if (node != null)
                     {
-                        var item = (DBItem)view[e.NewIndex];
-                        var node = Find(item);
-                        if (node != null)
+                        if (node.Group != null)
                         {
-                            if (node.Group != null)
-                            {
-                                node.Group = null;
-                            }
-                            Nodes.Remove(node);
+                            node.Group = null;
                         }
+                        Nodes.Remove(node);
                     }
                 }
-                else
+                else if (pe.Sender != null)
                 {
                     TableItemNode node = null;
-                    DBItem item = null;
+                    var item = (DBItem)pe.Sender;
 
-                    if (e.NewIndex >= 0)
-                    {
-                        item = (DBItem)view[e.NewIndex];
-                        if (item.PrimaryId == null)
-                            return;
-                        node = InitItem(item);
-                        if (item is DBGroupItem && ((DBGroupItem)item).Group != null)
-                            nodeParent = (TableItemNode)Nodes.Find(GetName(((DBGroupItem)item).Group));
+                    item = (DBItem)view[e.NewIndex];
+                    if (item.PrimaryId == null)
+                        return;
+                    node = InitItem(item);
+                    if (item is DBGroupItem && ((DBGroupItem)item).Group != null)
+                        nodeParent = (TableItemNode)Nodes.Find(GetName(((DBGroupItem)item).Group));
 
-                        //if (nodeParent == null && rowview.Group!=null && node.Group != null && node.Group.Tag)
-                        //    nodeParent = node.Group;
-                    }
+                    //if (nodeParent == null && rowview.Group!=null && node.Group != null && node.Group.Tag)
+                    //    nodeParent = node.Group;
                     if (node != null && nodeParent != null)
                     {
                         node.Group = nodeParent;
                     }
                     if (node != null)
+                    {
                         InvalidateRow(listSource.IndexOf(node));
+                    }
                 }
             });
         }

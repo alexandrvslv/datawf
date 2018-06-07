@@ -17,12 +17,18 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using DataWF.Common;
+using System;
+using System.ComponentModel;
+
 namespace DataWF.Data
 {
     public class DBSchemaList : DBSchemaItemList<DBSchema>
     {
         public DBSchemaList() : base()
         { }
+
+        public event EventHandler<ListPropertyChangedEventArgs> ItemsListChanged;
 
         public override int AddInternal(DBSchema item)
         {
@@ -32,6 +38,20 @@ namespace DataWF.Data
                 Add(item.LogSchema);
             }
             return index;
+        }
+
+        protected internal void OnItemsListChanged(object sender, ListPropertyChangedEventArgs arg)
+        {
+            ItemsListChanged?.Invoke(sender, arg);
+        }
+
+        public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, object item = null, string property = null)
+        {
+            base.OnListChanged(type, newIndex, oldIndex, item, property);
+            if (ItemsListChanged != null)
+            {
+                OnItemsListChanged(this, new ListPropertyChangedEventArgs(type, newIndex, oldIndex) { Sender = item, Property = property });
+            }
         }
     }
 }

@@ -189,9 +189,9 @@ namespace DataWF.Common
             get { return items == null; }
         }
 
-        public virtual void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, string property = null)
+        public virtual void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, object sender = null, string property = null)
         {
-            ListChanged?.Invoke(this, new ListPropertyChangedEventArgs(type, newIndex, oldIndex, property));
+            ListChanged?.Invoke(this, new ListPropertyChangedEventArgs(type, newIndex, oldIndex) { Property = property, Sender = sender });
         }
 
         public virtual void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -212,13 +212,13 @@ namespace DataWF.Common
                         newindex--;
                     items.RemoveAt(index);
                     items.Insert(newindex, (T)sender);
-                    OnListChanged(ListChangedType.ItemMoved, newindex, index, e.PropertyName);
+                    OnListChanged(ListChangedType.ItemMoved, newindex, index, sender, e.PropertyName);
                     return;
                 }
             }
             if (index >= 0)
             {
-                OnListChanged(ListChangedType.ItemChanged, index, -1, e.PropertyName);
+                OnListChanged(ListChangedType.ItemChanged, index, -1, sender, e.PropertyName);
             }
         }
 
@@ -296,7 +296,7 @@ namespace DataWF.Common
         public virtual void Insert(int index, T item)
         {
             InsertInternal(index, item);
-            OnListChanged(ListChangedType.ItemAdded, index);
+            OnListChanged(ListChangedType.ItemAdded, index, -1, item);
         }
 
         public virtual int AddInternal(T item)
@@ -334,7 +334,7 @@ namespace DataWF.Common
             int index = AddInternal(item);
             if (index >= 0)
             {
-                OnListChanged(ListChangedType.ItemAdded, index);
+                OnListChanged(ListChangedType.ItemAdded, index, -1, item);
             }
         }
 
@@ -357,9 +357,8 @@ namespace DataWF.Common
 
         public void Remove(T item, int index)
         {
-            OnListChanged(ListChangedType.ItemDeleted, index, -1);
             RemoveInternal(item, index);
-            OnListChanged(ListChangedType.ItemDeleted, -1, index);
+            OnListChanged(ListChangedType.ItemDeleted, -1, index, item);
         }
 
         public void Remove(object item)

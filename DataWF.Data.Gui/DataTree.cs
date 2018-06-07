@@ -45,7 +45,6 @@ namespace DataWF.Data.Gui
 
     public class DataTree : LayoutList
     {
-        private ListChangedEventHandler schemaChanged;
         private DBSchemaItem datafilter = null;
         private DataTreeKeys dataKeys = DataTreeKeys.None;
         private TextEntry filterEntry;
@@ -55,8 +54,7 @@ namespace DataWF.Data.Gui
 
         public DataTree() : base()
         {
-            schemaChanged = new ListChangedEventHandler(OnItemsListChanged);
-            base.ListSensetive = true;
+            ListSensetive = true;
             Mode = LayoutListMode.Tree;
         }
 
@@ -183,19 +181,27 @@ namespace DataWF.Data.Gui
             get { return (dataKeys & DataTreeKeys.Sequence) == DataTreeKeys.Sequence; }
         }
 
-        public void OnItemsListChanged(object sender, ListChangedEventArgs arg)
+        public void OnItemsListChanged(object sender, ListPropertyChangedEventArgs arg)
         {
+            if ((!ShowTableGroup && sender is DBTableGroupList)
+                || (!ShowTable && sender is DBTableList)
+                || (!ShowProcedures && sender is DBProcedureList)
+                || (!ShowSequences && sender is DBSequenceList)
+                || (!ShowColumn && sender is DBColumnList)
+                || (!ShowColumnGroup && sender is DBColumnGroupList))
+                return;
+
             if (arg.ListChangedType == ListChangedType.Reset)
             {
                 RefreshData();
                 return;
             }
 
-            if (arg.ListChangedType == ListChangedType.ItemAdded ||
-                arg.ListChangedType == ListChangedType.ItemChanged ||
-                (arg.ListChangedType == ListChangedType.ItemDeleted && arg.NewIndex >= 0))
+            if (arg.ListChangedType == ListChangedType.ItemAdded
+                || arg.ListChangedType == ListChangedType.ItemChanged
+                || arg.ListChangedType == ListChangedType.ItemDeleted)
             {
-                var item = ((IList)sender)[arg.NewIndex] as DBSchemaItem;
+                var item = (DBSchemaItem)arg.Sender;
                 var node = Init(item);
                 if (arg.ListChangedType != ListChangedType.ItemDeleted)
                 {
@@ -252,9 +258,9 @@ namespace DataWF.Data.Gui
 
         private void InitSchems()
         {
-            DBService.Schems.ListChanged -= schemaChanged;
+            DBService.Schems.ItemsListChanged -= OnItemsListChanged;
             if (ShowSchema)
-                DBService.Schems.ListChanged += schemaChanged;
+                DBService.Schems.ItemsListChanged += OnItemsListChanged;
 
             Nodes.Sense = false;
             foreach (var schema in DBService.Schems)
@@ -313,19 +319,7 @@ namespace DataWF.Data.Gui
         {
             var node = InitItem(schema);
 
-            schema.TableGroups.ListChanged -= schemaChanged;
-            schema.Tables.ListChanged -= schemaChanged;
-            schema.Procedures.ListChanged -= schemaChanged;
-            schema.Sequences.ListChanged -= schemaChanged;
 
-            if (ShowTableGroup)
-                schema.TableGroups.ListChanged += schemaChanged;
-            if (ShowTable)
-                schema.Tables.ListChanged += schemaChanged;
-            if (ShowProcedures)
-                schema.Procedures.ListChanged += schemaChanged;
-            if (ShowSequences)
-                schema.Procedures.ListChanged += schemaChanged;
 
             InitList(schema.TableGroups.GetTopParents(), node, ShowTableGroup);
 
@@ -417,9 +411,6 @@ namespace DataWF.Data.Gui
         public void InitColumnGroups(SchemaItemNode node)
         {
             var table = (DBTable)node.Item;
-            table.ColumnGroups.ListChanged -= schemaChanged;
-            if (ShowColumnGroup)
-                table.ColumnGroups.ListChanged += schemaChanged;
 
             foreach (DBColumnGroup columnGroup in table.ColumnGroups)
             {
@@ -430,9 +421,6 @@ namespace DataWF.Data.Gui
         public void InitColumns(SchemaItemNode node)
         {
             var table = (DBTable)node.Item;
-            table.Columns.ListChanged -= schemaChanged;
-            if (ShowColumn)
-                table.Columns.ListChanged += schemaChanged;
 
             foreach (DBColumn column in table.Columns)
             {
@@ -445,9 +433,6 @@ namespace DataWF.Data.Gui
         public void InitIndexes(SchemaItemNode node)
         {
             var table = (DBTable)node.Item;
-            table.Indexes.ListChanged -= schemaChanged;
-            if (ShowIndex)
-                table.Indexes.ListChanged += schemaChanged;
 
             foreach (var index in table.Indexes)
             {
@@ -458,9 +443,6 @@ namespace DataWF.Data.Gui
         public void InitConstraints(SchemaItemNode node)
         {
             var table = (DBTable)node.Item;
-            table.Constraints.ListChanged -= schemaChanged;
-            if (ShowConstraint)
-                table.Constraints.ListChanged += schemaChanged;
 
             foreach (var constr in table.Constraints)
             {
@@ -471,9 +453,6 @@ namespace DataWF.Data.Gui
         public void InitForeigns(SchemaItemNode node)
         {
             var table = (DBTable)node.Item;
-            table.Foreigns.ListChanged -= schemaChanged;
-            if (ShowForeign)
-                table.Foreigns.ListChanged += schemaChanged;
 
             foreach (var constr in table.Foreigns)
             {
@@ -602,6 +581,12 @@ namespace DataWF.Data.Gui
                 TreeMode = true;
             }
             list.UpdateFilter();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            DBService.Schems.ItemsListChanged -= OnItemsListChanged;
+            base.Dispose(disposing);
         }
     }
 }
