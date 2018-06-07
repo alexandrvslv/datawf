@@ -12,11 +12,9 @@ using Xwt.Drawing;
 using System.IO;
 using DataWF.Module.Counterpart;
 using DataWF.Common;
-//using System.Windows.Forms;
 
 namespace DataWF.Module.FlowGui
 {
-
     public class DocumentLayoutList : LayoutList
     {
         private Template template;
@@ -30,9 +28,10 @@ namespace DataWF.Module.FlowGui
             //this.Size = new Size(872, 454);
         }
 
-        public Document Document
+        public virtual Document Document
         {
             get { return fieldSource as Document; }
+            set { FieldSource = value; }
         }
 
         public DocumentList Documents

@@ -20,6 +20,55 @@ namespace DataWF.Module.FlowGui
 {
     public class DocumentSender : ToolWindow, ILocalizable
     {
+        public static void Send(Widget widget, Document document)
+        {
+            var work = document.WorkCurrent;
+            if (work != null)
+            {
+                if (work.User == null)
+                {
+                    var question = new QuestionMessage("Accept", "Accept to work?");
+                    question.Buttons.Add(Command.No);
+                    question.Buttons.Add(Command.Yes);
+                    if (MessageDialog.AskQuestion((Window)GuiService.Main, question) == Command.Yes)
+                    {
+                        if (work.Stage != null && !work.Stage.Access.Edit)
+                        {
+                            MessageDialog.ShowMessage((Window)GuiService.Main, "Access denied!", "Accept");
+                        }
+                        else
+                        {
+                            work.User = User.CurrentUser;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                work = document.GetWork();
+                if (work != null && work.User != null && !work.User.IsCurrent)
+                {
+                    var rezult = MessageDialog.AskQuestion("Accept", "Document current on " + work.User + " Accept anywhere?", Command.No, Command.Yes);
+                    if (rezult == Command.No)
+                        return;
+                }
+            }
+            Send(widget, new[] { document }, null, null, null);
+        }
+
+        public static async void Send(Widget widget, IEnumerable<Document> documnets, DocumentWork work, Stage stage, User user, DocumentSendType sendType = DocumentSendType.Next)
+        {
+            var sender = new DocumentSender();
+            sender.Localize();
+            sender.Initialize(documnets.ToList());
+            sender.SendType = sendType;
+
+            // sender.Hidden += SenderSendComplete;
+            if (stage != null && user != null)
+                sender.Send(stage, user, sendType);
+            await sender.ShowAsync(widget, Point.Zero);
+        }
+
         private FlowTree listUsers;
         private ToolItem toolPrint;
         private ToolDropDown toolType;
@@ -134,6 +183,7 @@ namespace DataWF.Module.FlowGui
                 new GroupBoxItem() { Widget = listUsers, Name = "Users", FillHeight = true, FillWidth = true, Row = 1 })
             { Name = "GroupMap" };
 
+            Mode = ToolShowMode.Dialog;
             Name = "DocumentSender";
             Target = groupBox;
             Size = new Size(640, 640);

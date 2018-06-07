@@ -215,7 +215,7 @@ namespace DataWF.Gui
                         canvas.ScrollVertical.LowerValue = 0;
                         canvas.ScrollVertical.UpperValue = bounds.Content.Height;// - recs.Area.Height
                         canvas.ScrollVertical.PageSize =
-                                   canvas.ScrollVertical.PageIncrement = bounds.Area.Height - bounds.Columns.Height;
+                                   canvas.ScrollVertical.PageIncrement = bounds.Area.Height > bounds.Columns.Height ? bounds.Area.Height - bounds.Columns.Height : bounds.Columns.Height;
                         canvas.ScrollVertical.StepIncrement = bounds.Columns.Height;
                         //vScroll.ScrollAdjustment.LargeChange = (this.Height - 20) / 4;
                     }
@@ -4014,8 +4014,8 @@ namespace DataWF.Gui
         {
             if (listSource == null)
                 return;
-            listSource.Remove(value);
             selection.RemoveBy(value);
+            listSource.Remove(value);
             if (!(listSource is INotifyListChanged)
                 && !(listSource is IBindingList))
                 RefreshBounds(true);
@@ -4908,9 +4908,6 @@ namespace DataWF.Gui
                 }
             }
             var e = arg as ListChangedEventArgs;
-
-            if (e.ListChangedType == ListChangedType.ItemDeleted && e.NewIndex >= 0)
-                return;
 
             if (GuiService.InvokeRequired)
             {

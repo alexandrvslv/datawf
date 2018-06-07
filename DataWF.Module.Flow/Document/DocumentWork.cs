@@ -83,9 +83,9 @@ namespace DataWF.Module.Flow
             return index;
         }
 
-        public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, string property = null)
+        public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, object item = null, string property = null)
         {
-            base.OnListChanged(type, newIndex, oldIndex, property);
+            base.OnListChanged(type, newIndex, oldIndex, item, property);
             if (document != null && (property == null || property == DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.IsComplete)).Name))
                 document.RefreshCache();
         }

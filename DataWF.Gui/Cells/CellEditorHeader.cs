@@ -50,9 +50,9 @@ namespace DataWF.Gui
             }
             var textBound = layoutList.GetCellTextBound(e);
             if (e.Formated is string)
-                e.Context.DrawText(e.Style, (string)e.Formated, textBound, e.State);
+                e.Context.DrawText((string)e.Formated, textBound, e.Style, e.State);
             else if (e.Formated is TextLayout)
-                e.Context.DrawText(e.Style, (TextLayout)e.Formated, textBound, e.State);
+                e.Context.DrawText((TextLayout)e.Formated, textBound, e.Style, e.State);
         }
     }
 }

@@ -26,12 +26,10 @@ namespace DataWF.Module.FlowGui
 
             filterCustomer.Visible = false;
 
-            AllowPreview = false;
             AutoLoad = false;
             FilterVisible = true;
             LabelText = null;
             MainDock = true;
-            ShowPreview = false;
 
             Bar.Items.Add(toolAttach);
             Bar.Items.Add(toolDetach);

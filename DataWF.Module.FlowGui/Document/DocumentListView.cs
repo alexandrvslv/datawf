@@ -18,7 +18,6 @@ namespace DataWF.Module.FlowGui
     {
         private OpenFileDialog ofDialog;
         private string label;
-        private DocumentEditor deditor;
         private DocumentFilter filter;
         private DocumentList documents;
         protected DocumentFilterView filterView;
@@ -29,6 +28,7 @@ namespace DataWF.Module.FlowGui
         protected ToolItem toolCreate;
         protected ToolItem toolCreateFrom;
         protected ToolItem toolCopy;
+        protected ToolItem toolSend;
         protected ToolItem toolFilter;
         protected ToolItem toolPreview;
         protected ToolTableLoader toolProgress;
@@ -43,8 +43,8 @@ namespace DataWF.Module.FlowGui
         protected ToolFieldEditor filterTitle;
         protected ToolFieldEditor filterDate;
         private DocumentLayoutList list;
-        private VPaned vSplit;
         private HBox hSplit;
+        private DocumentEditorPreview editor;
 
         public DocumentListView()
         {
@@ -84,6 +84,7 @@ namespace DataWF.Module.FlowGui
             toolCreateFrom = new ToolItem(ToolCreateFromClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "CreateFrom", GlyphColor = Colors.Green, Glyph = GlyphType.PlusCircle };
             toolCopy = new ToolItem(ToolCopyClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Copy", Glyph = GlyphType.CopyAlias };
             toolLoad = new ToolItem(ToolLoadClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Load", Glyph = GlyphType.Download };
+            toolSend = new ToolItem(ToolAcceptClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Send/Accept", Glyph = GlyphType.CheckCircle };
 
             toolCount = new ToolLabel { Text = "0" };
             toolPreview = new ToolItem(ToolPreviewClick) { CheckOnClick = true, Checked = true, Name = "Preview", Glyph = GlyphType.List };
@@ -117,12 +118,9 @@ namespace DataWF.Module.FlowGui
 
             filterView = new DocumentFilterView() { Visible = false };
 
-            vSplit = new VPaned() { Name = "split" };
-            vSplit.Panel1.Content = list;
-
             hSplit = new HBox();
             hSplit.PackStart(filterView, false, false);
-            hSplit.PackStart(vSplit, true, true);
+            hSplit.PackStart(list, true, true);
             //hSplit.Panel1.Resize = false;
             //hSplit.Panel2.Resize = true;
             //hSplit.Panel2.Content = vSplit;
@@ -144,7 +142,7 @@ namespace DataWF.Module.FlowGui
         [DefaultValue(true)]
         public bool MainDock { get; set; } = true;
 
-        public DockType DockType { get { return DockType.Content; } }
+        public DockType DockType { get; set; } = DockType.Content;
 
         public override void Localize()
         {
@@ -152,10 +150,6 @@ namespace DataWF.Module.FlowGui
             if (filterView.Parent == null)
             {
                 filterView.Localize();
-            }
-            if (deditor != null && deditor.Parent == null)
-            {
-                deditor.Localize();
             }
             GuiService.Localize(this, nameof(DocumentListView), "Documents List");
             //CheckDocumentTemplates();
@@ -309,41 +303,27 @@ namespace DataWF.Module.FlowGui
         //    }
         //}
 
-        public bool HideOnClose
-        {
-            get { return true; }
-        }
+        public bool HideOnClose { get; set; } = true;
 
         private void ListOnSelectionChanged(object sender, LayoutSelectionEventArgs e)
         {
-            if (deditor == null)
-                InitPreview();
+            if (e.Type == LayoutSelectionChange.Remove)
+                return;
+            Preview();
+        }
 
-            if (deditor.EditorState != DocumentEditorState.Send)
-            {
-                deditor.SetList(GetSelected());
-                deditor.Document = CurrentDocument;
+        private void Preview()
+        {
+            if (!AllowPreview
+                || !toolPreview.Checked
+                || CurrentDocument == null)
+                return;
+            var editor = GetEditor(true);
 
-                if (e.Type != LayoutSelectionChange.Remove)
-                {
-                    ShowProperty(list.Selection.CurrentRow != null && list.Selection.Count == 1 ? list.Selection.CurrentRow.Item : null);
-                }
-            }
-            if (AllowPreview)
+            if (editor.EditorState != DocumentEditorState.Send)
             {
-                ShowPreview = true;
-            }
-
-            void InitPreview()
-            {
-                deditor = new DocumentEditor()
-                {
-                    HideOnClose = true,
-                    FileSerialize = false
-                };
-                deditor.MainMenu.Visible = false;
-                toolLoad.InsertAfter(((IEnumerable<ToolItem>)deditor.MainMenu.Items).ToList());
-                deditor.SendComplete += EditorSendComplete;
+                editor.SetList(GetSelected());
+                editor.Document = CurrentDocument;
             }
         }
 
@@ -353,18 +333,7 @@ namespace DataWF.Module.FlowGui
             //    ShowProperty(this.list.SelectedItem);
         }
 
-        public void ShowProperty(object document)
-        {
-            if (AllowPreview && toolPreview.Checked && document != null)
-            {
-                ShowPreview = true;
-                deditor.Document = (Document)document;
-            }
-            else
-            {
-                ShowPreview = false;
-            }
-        }
+
 
         private void ListOnPositionChanged(object sender, NotifyProperty text)
         {
@@ -397,7 +366,7 @@ namespace DataWF.Module.FlowGui
             return list.Selection.GetItems<Document>();
         }
 
-        public void ShowDocument(Document document)
+        public virtual void ShowDocument(Document document)
         {
             string name = "DocumentEditor" + document.Id.ToString();
             var editor = GuiService.Main?.DockPanel.Find(name) as DocumentEditor;
@@ -424,7 +393,6 @@ namespace DataWF.Module.FlowGui
             if (e.HitTest.Index >= 0)
                 ShowDocument(list.SelectedItem as Document);
         }
-
 
         private void ToolParamClick(object sender, EventArgs e)
         {
@@ -486,8 +454,12 @@ namespace DataWF.Module.FlowGui
 
         private void ToolPreviewClick(object sender, EventArgs e)
         {
-            ShowPreview = toolPreview.Checked;
-            ShowProperty(ShowPreview ? list.SelectedItem : null);
+            Preview();
+        }
+
+        private void ToolAcceptClick(object sender, EventArgs e)
+        {
+            DocumentSender.Send(this, List.Selection.GetItems<Document>(), null, null, null);
         }
 
         public bool AllowPreview
@@ -496,21 +468,22 @@ namespace DataWF.Module.FlowGui
             set { toolPreview.Sensitive = value; }
         }
 
-        public bool ShowPreview
+        public DocumentEditor GetEditor(bool create)
         {
-            get { return vSplit.Panel2.Content != null && vSplit.Panel2.Content.Visible; }
-            set
+            var dock = this.GetParent<DockBox>();
+            if (dock == null)
+                return null;
+
+            if (editor == null)
             {
-                if (value && vSplit.Panel2.Content == null)
+                editor = (DocumentEditorPreview)dock.Find(nameof(DocumentEditorPreview));
+                if (editor == null && create)
                 {
-                    vSplit.Panel2.Content = deditor;
-                }
-                else if (!value && vSplit.Panel2.Content != null)
-                {
-                    vSplit.Panel2.Content = null;
-                    QueueForReallocate();
+                    editor = new DocumentEditorPreview();
                 }
             }
+            dock.Put(editor);
+            return editor;
         }
 
         private void EditorSendComplete(object sender, EventArgs e)
@@ -691,6 +664,11 @@ namespace DataWF.Module.FlowGui
             {
                 MessageDialog.ShowWarning(Locale.Get(nameof(DocumentListView), "Some data not saved!"));
                 return false;
+            }
+            var editor = GetEditor(false);
+            if (editor != null)
+            {
+                this.GetParent<DockBox>().ClosePage(editor);
             }
             return true;
         }

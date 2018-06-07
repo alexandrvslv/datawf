@@ -82,24 +82,17 @@ namespace DataWF.Gui
             }
         }
 
-        public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, string property = null)
+        public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, object sender = null, string property = null)
         {
-            base.OnListChanged(type, newIndex, oldIndex, property);
+            base.OnListChanged(type, newIndex, oldIndex, sender, property);
+            var toolItem = (ToolItem)sender;
             if (type == ListChangedType.ItemAdded)
             {
-                var toolItem = items[newIndex];
-                if (toolItem != null)
-                {
-                    toolItem.Bar = bar;
-                }
+                toolItem.Bar = bar;
             }
-            else if (type == ListChangedType.ItemDeleted && newIndex >= 0)
+            else if (type == ListChangedType.ItemDeleted)
             {
-                var toolItem = items[newIndex];
-                if (toolItem != null)
-                {
-                    toolItem.Bar = null;
-                }
+                toolItem.Bar = null;
             }
             else if (type == ListChangedType.Reset)
             {
@@ -332,7 +325,7 @@ namespace DataWF.Gui
             }
             if (DisplayStyle.HasFlag(ToolItemDisplayStyle.Text) && !string.IsNullOrEmpty(Text))
             {
-                context.DrawText(Style, text, textBound, state);
+                context.DrawText(text, textBound, Style, state);
             }
         }
 

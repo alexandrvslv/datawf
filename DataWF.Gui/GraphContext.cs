@@ -227,11 +227,11 @@ namespace DataWF.Gui
             {
                 if (formated is string && ((string)formated).Length > 0)
                 {
-                    DrawText(style, (string)formated, textBound, state);
+                    DrawText((string)formated, textBound, style, state);
                 }
                 else if (formated is TextLayout)
                 {
-                    DrawText(style, (TextLayout)formated, textBound, state);
+                    DrawText((TextLayout)formated, textBound, style, state);
                 }
                 else if (formated is GlyphType)
                 {
@@ -312,30 +312,44 @@ namespace DataWF.Gui
             DrawRectangle(bound);
         }
 
-        public void DrawText(CellStyle style, string text, Rectangle bound, CellDisplayState state = CellDisplayState.Default)
+        public void DrawText(string text, Rectangle bound, CellStyle style, CellDisplayState state = CellDisplayState.Default)
+        {
+            //var pattern = style.FontBrush.GetBrushByState(bound, state);
+            //if (pattern != null)
+            //    Context.Pattern = pattern;
+
+            DrawText(text, bound, style.Font, style.FontBrush.GetColorByState(state), style.Alignment);
+        }
+
+        public void DrawText(string text, Rectangle bound, Font font, Color color, Alignment alignment = Alignment.Start)
         {
             if (cacheTextLayout == null)
             {
                 cacheTextLayout = new TextLayout();
                 //cacheTextLayout.Trimming = TextTrimming.WordElipsis;
             }
-            cacheTextLayout.Font = style.Font;
-            cacheTextLayout.TextAlignment = style.Alignment;
+            cacheTextLayout.Font = font;
+            cacheTextLayout.TextAlignment = alignment;
             cacheTextLayout.Text = text;
-            DrawText(style, cacheTextLayout, bound, state);
+            DrawText(cacheTextLayout, bound, color);
         }
 
-        public void DrawText(CellStyle style, TextLayout textLayout, Rectangle bound, CellDisplayState state = CellDisplayState.Default)
+        public void DrawText(TextLayout textLayout, Rectangle bound, CellStyle style, CellDisplayState state = CellDisplayState.Default)
+        {
+            if (textLayout.Font != style.Font)
+                textLayout.Font = style.Font;
+            if (textLayout.TextAlignment != style.Alignment)
+                textLayout.TextAlignment = style.Alignment;
+            DrawText(textLayout, bound, style.FontBrush.GetColorByState(state));
+        }
+
+        public void DrawText(TextLayout textLayout, Rectangle bound, Color color)
         {
             if (textLayout.Height != bound.Height)
                 textLayout.Height = bound.Height;
             if (textLayout.Width != bound.Width)
                 textLayout.Width = bound.Width;
-            Context.SetColor(style.FontBrush.GetColorByState(state));
-            var pattern = style.FontBrush.GetBrushByState(bound, state);
-            if (pattern != null)
-                Context.Pattern = pattern;
-
+            Context.SetColor(color);
             Context.DrawTextLayout(textLayout, bound.Location);
         }
 

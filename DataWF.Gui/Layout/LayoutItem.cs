@@ -194,6 +194,8 @@ namespace DataWF.Gui
             set
             {
                 container = value;
+                if (container == this)
+                    throw new InvalidOperationException("Layout self reference!");
                 //OnPropertyChanged(nameof(Map));
             }
         }
@@ -260,6 +262,8 @@ namespace DataWF.Gui
 
         public override void InsertInternal(int index, T item)
         {
+            if (item == this)
+                throw new InvalidOperationException("Layout self reference!");
             if (string.IsNullOrEmpty(item.Name))
                 item.Name = $"item_{item.Col}_{item.Row}";
             base.InsertInternal(index, item);
@@ -437,9 +441,9 @@ namespace DataWF.Gui
             else if (anch == LayoutAlignType.Bottom)
                 newItem.Row = 1;
             else if (anch == LayoutAlignType.Right)
-                Col = 1;
-            else if (anch == LayoutAlignType.Left)
                 newItem.Col = 1;
+            else if (anch == LayoutAlignType.Left)
+                Col = 1;
 
             map.Add((T)this);
             map.Add(newItem);
@@ -467,7 +471,7 @@ namespace DataWF.Gui
             {
                 if (Count == 1)
                 {
-                    this[0].Replace((T)this);//map.Map, 
+                    Replace(this[0]);//map.Map, 
                 }
                 else if (Count == 0)
                 {
@@ -481,18 +485,19 @@ namespace DataWF.Gui
         {
             var tempMap = Map;
             int index = tempMap.IndexOf(this);
+            tempMap.RemoveInternal((T)this, index);
+            newColumn.Remove();
             newColumn.Row = Row;
             newColumn.Col = Col;
-            tempMap.RemoveInternal((T)this, index);
             tempMap.InsertInternal(index, newColumn);
         }
 
-        public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, string property = null)
+        public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, object sender = null, string property = null)
         {
-            base.OnListChanged(type, newIndex, oldIndex, property);
+            base.OnListChanged(type, newIndex, oldIndex, sender, property);
             if (Map != null)
             {
-                Map.OnListChanged(type, newIndex, oldIndex, property);
+                Map.OnListChanged(type, newIndex, oldIndex, sender, property);
             }
         }
 

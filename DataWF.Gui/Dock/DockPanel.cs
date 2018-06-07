@@ -21,7 +21,8 @@ namespace DataWF.Gui
         private Orientation orientation = Orientation.Horizontal;
         private bool viewClose = true;
         private bool viewImage = true;
-        private Rectangle widgetRect;
+        private Rectangle widgetBounds;
+        private TextLayout selectText;
 
         public DockPanel() : base()
         {
@@ -30,7 +31,7 @@ namespace DataWF.Gui
             //context = new Menubar(toolHide);
             //toolHide = new ToolMenuItem { Name = "Hide", Text = "Hide" };
 
-            Name = "DockPanel";
+            Name = nameof(DockPanel);
         }
 
         public DockPanel(params Widget[] widgets) : this()
@@ -63,7 +64,7 @@ namespace DataWF.Gui
                 if (widget != null)
                 {
                     AddChild(widget);
-                    SetChildBounds(widget, widgetRect);
+                    SetChildBounds(widget, widgetBounds);
                 }
             }
         }
@@ -90,23 +91,26 @@ namespace DataWF.Gui
             if (page == null)
                 return;
             while (pagesHistory.Remove(page))
-            {
-            }
-            if (CurrentWidget == page.Widget)
-            {
-                DockPage npage = null;
-                if (pagesHistory.Last != null)
-                {
-                    var item = pagesHistory.Last;
+            { }
+            DockPage npage = null;
 
-                    while (item != null && (item.Value == page || item.Value.Panel != this))
-                        item = item.Previous;
-                    if (item != null && item.Value.Panel == this)
-                        npage = item.Value;
-                }
-                CurrentPage = npage;
-            }
+            if (CurrentPage == page)
+            {
+                var item = pagesHistory.Last;
 
+                while (item != null && (item.Value == page || item.Value.Panel != this))
+                    item = item.Previous;
+                if (item != null && item.Value.Panel == this)
+                    npage = item.Value;
+                else
+                    npage = (DockPage)items.GetItems().FirstOrDefault(p => p != page);
+            }
+            else
+            {
+                npage = CurrentPage;
+            }
+            CurrentPage = npage;
+            QueueDraw();
         }
 
         protected override void OnReallocate()
@@ -114,13 +118,13 @@ namespace DataWF.Gui
             base.OnReallocate();
             double def = 30;
             var pagesRect = Rectangle.Zero;
-            widgetRect = Rectangle.Zero;
+            widgetBounds = Rectangle.Zero;
             if (pagesAlign == LayoutAlignType.Top)
             {
                 if (ItemOrientation == Orientation.Vertical)
                     def = 100D;
                 pagesRect = new Rectangle(0D, 0D, Size.Width, def);
-                widgetRect = new Rectangle(0D, def, Size.Width, Size.Height - def);
+                widgetBounds = new Rectangle(0D, def, Size.Width, Size.Height - def);
             }
             else if (pagesAlign == LayoutAlignType.Bottom)
             {
@@ -128,7 +132,7 @@ namespace DataWF.Gui
                     def = 100D;
 
                 pagesRect = new Rectangle(0D, Size.Height - def, Size.Width, def);
-                widgetRect = new Rectangle(0D, 0D, Size.Width, Size.Height - def);
+                widgetBounds = new Rectangle(0D, 0D, Size.Width, Size.Height - def);
             }
             else if (pagesAlign == LayoutAlignType.Left)
             {
@@ -136,7 +140,7 @@ namespace DataWF.Gui
                     def = 100;
 
                 pagesRect = new Rectangle(0D, 0D, def, Size.Height);
-                widgetRect = new Rectangle(def, 0D, Size.Width - def, Size.Height);
+                widgetBounds = new Rectangle(def, 0D, Size.Width - def, Size.Height);
             }
             else if (pagesAlign == LayoutAlignType.Right)
             {
@@ -144,11 +148,11 @@ namespace DataWF.Gui
                     def = 100;
 
                 pagesRect = new Rectangle(Size.Width - def, 0D, def, Size.Height);
-                widgetRect = new Rectangle(0D, 0D, Size.Width - def, Size.Height);
+                widgetBounds = new Rectangle(0D, 0D, Size.Width - def, Size.Height);
             }
             if (CurrentWidget != null)
             {
-                SetChildBounds(CurrentWidget, widgetRect);
+                SetChildBounds(CurrentWidget, widgetBounds);
             }
         }
 
@@ -176,16 +180,16 @@ namespace DataWF.Gui
                     return;
 
                 currentPage = value;
-                if (value != null)
+                if (currentPage != null)
                 {
                     if (DockItem != null && !DockItem.Visible)
                     {
                         DockItem.Visible = true;
                         //Parent.ResumeLayout(true);
                     }
-                    pagesHistory.AddLast(value);
-                    value.Checked = true;
-                    CurrentWidget = value.Widget;
+                    pagesHistory.AddLast(currentPage);
+                    currentPage.Checked = true;
+                    CurrentWidget = currentPage.Widget;
                 }
                 else
                 {
@@ -255,23 +259,18 @@ namespace DataWF.Gui
 
         public void ClosePage(DockPage page)
         {
-            OnPageClose(new DockPageEventArgs(page));
-        }
-
-        protected void OnPageClose(DockPageEventArgs arg)
-        {
-            if (arg.Page.Widget is IDockContent)
+            if (page.Widget is IDockContent)
             {
-                if (!((IDockContent)arg.Page.Widget).Closing())
+                if (!((IDockContent)page.Widget).Closing())
                     return;
             }
-            PageClose?.Invoke(this, arg);
-            if (!arg.Page.HideOnClose)
+            PageClose?.Invoke(this, new DockPageEventArgs(page));
+
+            Items.Remove(page);
+            if (!page.HideOnClose)
             {
-                arg.Page.Widget.Dispose();
+                page.Widget.Dispose();
             }
-            Items.Remove(arg.Page);
-            RemovePage(arg.Page);
         }
 
         protected override void OnDraw(GraphContext context)
@@ -283,6 +282,21 @@ namespace DataWF.Gui
             if (PagesAlign == LayoutAlignType.Bottom)
                 brect.Y = 0;
             context.FillRectangle(items.Style, brect, CellDisplayState.Selected);//st.BackBrush.GetBrush(rectb, 
+
+            if (CurrentWidget == null && widgetBounds.Width > 0 && widgetBounds.Height > 0)
+            {
+                if (selectText == null)
+                {
+                    selectText = new TextLayout
+                    {
+                        Font = Font.WithScaledSize(5D),
+                        TextAlignment = Alignment.Center,
+                        Text = "Select Document",
+                    };
+                }
+                var bound = new Rectangle(widgetBounds.X, widgetBounds.Height / 2D, widgetBounds.Width, 100);
+                context.DrawText(selectText, bound, items.Style.FontBrush.Color.WithAlpha(0.3));
+            }
         }
 
         protected override Size OnGetPreferredSize(SizeConstraint widthConstraint, SizeConstraint heightConstraint)

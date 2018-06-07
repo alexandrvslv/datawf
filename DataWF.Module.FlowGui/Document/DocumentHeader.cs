@@ -9,35 +9,32 @@ using System.Threading.Tasks;
 
 namespace DataWF.Module.FlowGui
 {
-    public class DocumentHeader : ListEditor, IDocument, ISync, ILocalizable, IReadOnly
+    public class DocumentHeader : DocumentLayoutList, IDocument, ISync, ILocalizable, IReadOnly
     {
-        private Document document;
         private bool synch = false;
 
-        public DocumentHeader() : base(new DocumentLayoutList())
+        public DocumentHeader()
         {
             Name = nameof(DocumentHeader);
             Text = "Document";
-            Bar.Visible = false;
-            List.AllowCellSize = true;
-            List.EditMode = EditModes.ByClick;
-            List.EditState = EditListState.Edit;
-            //List.Grouping = true;
-            List.GridMode = true;
+            AllowCellSize = true;
+            EditMode = EditModes.ByClick;
+            EditState = EditListState.Edit;
+            //Grouping = true;
+            GridMode = true;
 
             Localize();
         }
 
-        public Document Document
+        public override Document Document
         {
-            get { return document; }
+            get { return base.Document; }
             set
             {
-                if (document != value)
+                if (Document != value)
                 {
                     synch = false;
-                    document = value;
-                    DataSource = document;
+                    base.Document = value;
                 }
             }
         }
@@ -54,8 +51,8 @@ namespace DataWF.Module.FlowGui
         {
             if (!synch)
             {
-                if (document != null && document.Id != null)
-                    Document.DBTable.ReloadItem(document.Id);
+                if (Document != null && Document.Id != null)
+                    Document.DBTable.ReloadItem(Document.Id);
                 synch = true;
             }
         }

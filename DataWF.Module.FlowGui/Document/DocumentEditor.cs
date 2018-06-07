@@ -54,7 +54,7 @@ namespace DataWF.Module.FlowGui
             return types;
         }
 
-        private Toolsbar tools;
+        private Toolsbar bar;
         private ToolItem toolSave;
         private ToolItem toolRefresh;
         private ToolItem toolSend;
@@ -82,6 +82,8 @@ namespace DataWF.Module.FlowGui
 
         public DocumentEditor()
         {
+            FileSerialize = true;
+
             toolProcedures = new ToolDropDown { Name = "Procedures", Glyph = GlyphType.PuzzlePiece, DropDown = new Menubar { Name = "Procedures" } };
             toolSave = new ToolItem(ToolSaveClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Save", Glyph = GlyphType.SaveAlias };
             toolRefresh = new ToolItem(ToolRefreshClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Refresh", Glyph = GlyphType.Refresh };
@@ -93,7 +95,7 @@ namespace DataWF.Module.FlowGui
             toolForward = new ToolItem(ToolForwardClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Forward", Glyph = GlyphType.StepForward };
             toolNext = new ToolItem(ToolNextClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Next", Glyph = GlyphType.Forward };
 
-            tools = new Toolsbar(
+            bar = new Toolsbar(
                //toolProcedures,
                toolSave,
                toolRefresh,
@@ -109,7 +111,7 @@ namespace DataWF.Module.FlowGui
                //toolLabel
                )
             { Name = "tools" };
-            toolsItems = tools.Items.Cast<ToolItem>();
+            toolsItems = bar.Items.Cast<ToolItem>();
 
             dock = new DockBox()
             {
@@ -123,15 +125,15 @@ namespace DataWF.Module.FlowGui
             Text = "Document";
             Tag = "Document";
 
-            PackStart(tools, false, false);
+            PackStart(bar, false, false);
             PackStart(dock, true, true);
 
             Localize();
         }
 
-        public Toolsbar MainMenu
+        public Toolsbar Bar
         {
-            get { return tools; }
+            get { return bar; }
         }
 
         public IDockContainer DockPanel
@@ -246,7 +248,6 @@ namespace DataWF.Module.FlowGui
             return result;
         }
 
-
         private void ProcedureItemClick(object sender, EventArgs e)
         {
             var sen = sender as MenuItemProcedure;
@@ -297,7 +298,7 @@ namespace DataWF.Module.FlowGui
 
         private void CheckProcRezult(object p)
         {
-            ExecuteDocumentArg arg = p as ExecuteDocumentArg;
+            var arg = p as ExecuteDocumentArg;
             CheckProcRezult(arg);
             if (arg.Procedure.ProcedureType == ProcedureTypes.StoredFunction || arg.Procedure.ProcedureType == ProcedureTypes.StoredProcedure)
             {
@@ -544,8 +545,8 @@ namespace DataWF.Module.FlowGui
                     }
                 }
 
-                if (document.Id != null && document.Id != null)
-                    Name = "DocumentEditor" + document.Id.ToString();
+                //if (document.Id != null && document.Id != null)
+                //    Name = "DocumentEditor" + document.Id.ToString();
 
                 //var works = document.GetWorks();
                 toolDelete.Visible = document.Access.Delete;// works.Count == 0 || (works.Count == 1 && works[0].IsUser);
@@ -561,14 +562,20 @@ namespace DataWF.Module.FlowGui
             {
                 if (documentType == value)
                     return;
-
-                pageHeader = dock.GetPage(nameof(DocumentHeader)) ?? dock.Put(new DocumentHeader(), DockType.Left);
-                //pageHeader.Panel.DockItem.Width = 350;//pageHeader.Panel.MapItem.FillWidth = true;
-                pageWorks = dock.GetPage(nameof(DocumentWorkView)) ?? dock.Put(new DocumentWorkView(), DockType.LeftBottom);
-                pageRefers = dock.GetPage(nameof(DocumentReferenceView)) ?? dock.Put(new DocumentReferenceView(), DockType.Content);
-
                 documentType = value;
-                GetPages(documentType).ForEach(p => p.Tag = value);
+                if (documentType != null)
+                {
+                    //if (dock.Map.Count == 0)
+                    //{
+                    //    XmlDeserialize(GetFileName());
+                    //}
+                    pageHeader = dock.GetPage(nameof(DocumentHeader)) ?? dock.Put(new DocumentHeader(), DockType.Left);
+                    //pageHeader.Panel.DockItem.Width = 350;//pageHeader.Panel.MapItem.FillWidth = true;
+                    pageWorks = dock.GetPage(nameof(DocumentWorkView)) ?? dock.Put(new DocumentWorkView(), DockType.LeftBottom);
+                    pageRefers = dock.GetPage(nameof(DocumentReferenceView)) ?? dock.Put(new DocumentReferenceView(), DockType.Content);
+
+                    GetPages(documentType).ForEach(p => p.Tag = value);
+                }
             }
         }
 
@@ -757,38 +764,9 @@ namespace DataWF.Module.FlowGui
 
         private void ToolAcceptClick(object sender, EventArgs e)
         {
-            var work = document.WorkCurrent;
-            if (work != null)
-            {
-                if (work.User == null)
-                {
-                    var question = new QuestionMessage("Accept", "Accept to work?");
-                    question.Buttons.Add(Command.No);
-                    question.Buttons.Add(Command.Yes);
-                    if (MessageDialog.AskQuestion(ParentWindow, question) == Command.Yes)
-                    {
-                        if (work.Stage != null && !work.Stage.Access.Edit)
-                        {
-                            MessageDialog.ShowMessage(ParentWindow, "Access denied!", "Accept");
-                        }
-                        else
-                        {
-                            work.User = User.CurrentUser;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                work = document.GetWork();
-                if (work != null && work.User != null && !work.User.IsCurrent)
-                {
-                    var rezult = MessageDialog.AskQuestion("Accept", "Document current on " + work.User + " Accept anywhere?", Command.No, Command.Yes);
-                    if (rezult == Command.No)
-                        return;
-                }
-            }
-            Send(null, null, null);
+            state = DocumentEditorState.Send;
+            DocumentSender.Send(this, document);
+            SenderSendComplete(sender, e);
         }
 
         protected override void Dispose(bool disposing)
@@ -832,45 +810,37 @@ namespace DataWF.Module.FlowGui
         private void ToolReturnClick(object sender, EventArgs e)
         {
             var work = document.WorkCurrent ?? document.GetWork() ?? document.GetLastWork();
-            Send(work, work.From.Stage, work.From.User, DocumentSendType.Return);
+            DocumentSender.Send(this, new[] { document }, work, work.From.Stage, work.From.User, DocumentSendType.Return);
         }
 
         private void ToolNextClick(object sender, EventArgs e)
         {
-            Send(document.WorkCurrent, null, null, DocumentSendType.Next);
+            DocumentSender.Send(this, new[] { document }, document.WorkCurrent, null, null, DocumentSendType.Next);
         }
 
         private void ToolForwardClick(object sender, EventArgs e)
         {
-            Send(document.WorkCurrent, null, null, DocumentSendType.Forward);
-        }
-
-        private void Send(DocumentWork work, Stage stage, User user, DocumentSendType sendType = DocumentSendType.Next)
-        {
-            state = DocumentEditorState.Send;
-            var sender = new DocumentSender();
-            sender.Localize();
-            sender.Initialize(GetList());
-            sender.SendType = sendType;
-            sender.Hidden += SenderSendComplete;
-            if (stage != null && user != null)
-                sender.Send(stage, user, sendType);
-            sender.Show(toolSend.Bar, toolSend.Bound.Location);
+            DocumentSender.Send(this, new[] { document }, document.WorkCurrent, null, null, DocumentSendType.Forward);
         }
 
         public event EventHandler SendComplete;
 
-        private void SenderSendComplete(object senderObj, EventArgs e)
+        private void SenderSendComplete(object sender, EventArgs e)
         {
             CheckState(DocumentEditorState.None);
             SendComplete?.Invoke(this, e);
+        }
+
+        public string GetFileName()
+        {
+            return $"{DocumentType.Name}.xml";
         }
 
         public override void Serialize(ISerializeWriter writer)
         {
             if (FileSerialize)
             {
-                var fileName = $"{DocumentType.Name}.xml";
+                var fileName = GetFileName();
                 writer.WriteAttribute("FileName", fileName);
                 writer.WriteAttribute("DocumentId", Document?.Id);
 

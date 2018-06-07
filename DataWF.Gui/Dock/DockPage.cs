@@ -34,7 +34,7 @@ namespace DataWF.Gui
             {
                 if (Bar == value)
                     return;
-                if (Bar != null && Panel.CurrentPage == this)
+                if (Bar != null)
                 {
                     Panel.RemovePage(this);
                 }

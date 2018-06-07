@@ -314,9 +314,11 @@ namespace DataWF.Gui
         protected override void OnDraw(Context ctx, Rectangle dirtyRect)
         {
             base.OnDraw(ctx, dirtyRect);
-            if (State.HasFlag(DockBoxState.InProcess))
+            using (var cont = new GraphContext(ctx))
             {
-                using (var cont = new GraphContext(ctx))
+                cont.FillRectangle(GuiEnvironment.Theme["Dock"].BackBrush.Color, this.Bounds);
+
+                if (State.HasFlag(DockBoxState.InProcess))
                 {
                     cont.DrawImage(processImage, new Rectangle(Point.Zero, processImage.Size));
                     if (state.HasFlag(DockBoxState.Move))
@@ -408,13 +410,13 @@ namespace DataWF.Gui
                 if (!((DockPanel)sender).DockItem.FillWidth)
                 {
                     ((DockPanel)sender).DockItem.Visible = false;
-                    QueueDraw();
+                    QueueForReallocate();
                 }
             }
             else if (!((DockPanel)sender).DockItem.Visible)
             {
                 ((DockPanel)sender).DockItem.Visible = true;
-                QueueDraw();
+                QueueForReallocate();
             }
 
             ChildFocusInEvent(sender, e);

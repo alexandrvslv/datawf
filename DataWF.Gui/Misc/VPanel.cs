@@ -13,7 +13,8 @@ namespace DataWF.Gui
         {
             Spacing = 1;
         }
-        public bool FileSerialize { get; set; } = true;
+
+        public bool FileSerialize { get; set; }
 
         public Image Image { get; set; }
 

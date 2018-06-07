@@ -210,10 +210,13 @@ namespace DataWF.Module.Flow
                 RefChanged?.Invoke(this, ListChangedType.Reset);
             }
             if (item.UpdateState != DBUpdateState.Default && (item.UpdateState & DBUpdateState.Commit) != DBUpdateState.Commit && item.Attached)
+            {
                 changes++;
-            else if (item.UpdateState == DBUpdateState.Default || !item.Attached)
+            }
+            else if (changes > 0 && (item.UpdateState == DBUpdateState.Default || !item.Attached))
+            {
                 changes--;
-
+            }
             ReferenceChanged?.Invoke(this, new DBItemEventArgs(item));
         }
 

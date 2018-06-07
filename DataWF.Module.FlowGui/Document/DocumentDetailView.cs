@@ -91,7 +91,7 @@ namespace DataWF.Module.FlowGui
         protected override void OnToolRemoveClick(object sender, EventArgs e)
         {
             var items = list.Selection.GetItems<T>();
-            base.OnToolRemoveClick(sender, e);
+            //base.OnToolRemoveClick(sender, e);
             foreach (var data in items)
             {
                 data.Delete();

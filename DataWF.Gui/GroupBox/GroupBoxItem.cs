@@ -70,9 +70,9 @@ namespace DataWF.Gui
             set { groupBox = value; }
         }
 
-        public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, string property = null)
+        public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, object sender = null, string property = null)
         {
-            base.OnListChanged(type, newIndex, oldIndex, property);
+            base.OnListChanged(type, newIndex, oldIndex, sender, property);
             GroupBox?.QueueForReallocate();
         }
 

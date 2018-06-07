@@ -6,13 +6,15 @@ using Xwt.Drawing;
 using System.Timers;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace DataWF.Gui
 {
     public class ToolWindow : Window
     {
-        protected Timer timerHide = new Timer();
-        protected Timer timerStart = new Timer();
+        protected System.Timers.Timer timerHide = new System.Timers.Timer();
+        protected System.Timers.Timer timerStart = new System.Timers.Timer();
         protected ToolShowMode mode = ToolShowMode.Default;
         protected Widget senderWidget;
         protected WindowFrame senderWindow;
@@ -31,6 +33,7 @@ namespace DataWF.Gui
         private Point tempLocation;
         private PointerButton moveButton;
         private Point moveBounds;
+        private TaskCompletionSource<Command> token;
 
         public ToolWindow()// : base(PopupType.Menu)
         {
@@ -125,7 +128,7 @@ namespace DataWF.Gui
             get { return senderWindow as ToolWindow; }
         }
 
-        public Timer StartTimer
+        public System.Timers.Timer StartTimer
         {
             get { return timerStart; }
         }
@@ -278,6 +281,7 @@ namespace DataWF.Gui
 
         public virtual void Show(Widget sender, Point location)
         {
+            DResult = null;
             if (mode == ToolShowMode.ToolTip)
             {
                 tempSender = sender;
@@ -292,13 +296,10 @@ namespace DataWF.Gui
             Sender = sender;
 
             CheckLocation(sender?.ConvertToScreenCoordinates(location) ?? location);
-
             base.Show();
-
             CheckLocation(sender?.ConvertToScreenCoordinates(location) ?? location);
 
             //if (Owner != null) Owner.Show();
-
             if (mode == ToolShowMode.AutoHide || mode == ToolShowMode.ToolTip)
             {
                 if (timerHide.Enabled)
@@ -307,6 +308,13 @@ namespace DataWF.Gui
             }
 
             byDeactivate = false;
+        }
+
+        public async Task<Command> ShowAsync(Widget sender, Point location)
+        {
+            Show(sender, location);
+            token = new TaskCompletionSource<Command>();
+            return await token.Task;
         }
 
         public void ShowCancel()
@@ -344,6 +352,7 @@ namespace DataWF.Gui
         protected override void OnHidden()
         {
             base.OnHidden();
+
             var temp = Owner;
             Owner = null;
 
@@ -363,6 +372,11 @@ namespace DataWF.Gui
                 timerHide.Stop();
             byDeactivate = false;
 
+            if (token != null)
+            {
+                token.TrySetResult(DResult);
+                token = null;
+            }
         }
 
         protected void OnContentKeyPress(object sender, KeyEventArgs e)
