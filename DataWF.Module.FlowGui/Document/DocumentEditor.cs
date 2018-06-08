@@ -116,8 +116,6 @@ namespace DataWF.Module.FlowGui
             dock = new DockBox()
             {
                 Name = "dock",
-                BackgroundColor = GuiEnvironment.Theme["Page"].BaseColor,
-                VisibleClose = false
             };
 
             Glyph = GlyphType.Book;
@@ -452,6 +450,11 @@ namespace DataWF.Module.FlowGui
             }
         }
 
+        public static string GetFileName(Type type)
+        {
+            return $"{type.Name}.xml";
+        }
+
         public DocumentEditorState EditorState
         {
             get { return state; }
@@ -762,10 +765,10 @@ namespace DataWF.Module.FlowGui
             //}
         }
 
-        private void ToolAcceptClick(object sender, EventArgs e)
+        private async void ToolAcceptClick(object sender, EventArgs e)
         {
             state = DocumentEditorState.Send;
-            DocumentSender.Send(this, document);
+            await DocumentSender.Send(this, document);
             SenderSendComplete(sender, e);
         }
 
@@ -807,20 +810,20 @@ namespace DataWF.Module.FlowGui
             return documentWidgets;
         }
 
-        private void ToolReturnClick(object sender, EventArgs e)
+        private async void ToolReturnClick(object sender, EventArgs e)
         {
             var work = document.WorkCurrent ?? document.GetWork() ?? document.GetLastWork();
-            DocumentSender.Send(this, new[] { document }, work, work.From.Stage, work.From.User, DocumentSendType.Return);
+            await DocumentSender.Send(this, new[] { document }, work, work.From.Stage, work.From.User, DocumentSendType.Return);
         }
 
-        private void ToolNextClick(object sender, EventArgs e)
+        private async void ToolNextClick(object sender, EventArgs e)
         {
-            DocumentSender.Send(this, new[] { document }, document.WorkCurrent, null, null, DocumentSendType.Next);
+            await DocumentSender.Send(this, new[] { document }, document.WorkCurrent, null, null, DocumentSendType.Next);
         }
 
-        private void ToolForwardClick(object sender, EventArgs e)
+        private async void ToolForwardClick(object sender, EventArgs e)
         {
-            DocumentSender.Send(this, new[] { document }, document.WorkCurrent, null, null, DocumentSendType.Forward);
+            await DocumentSender.Send(this, new[] { document }, document.WorkCurrent, null, null, DocumentSendType.Forward);
         }
 
         public event EventHandler SendComplete;
@@ -833,7 +836,7 @@ namespace DataWF.Module.FlowGui
 
         public string GetFileName()
         {
-            return $"{DocumentType.Name}.xml";
+            return GetFileName(DocumentType);
         }
 
         public override void Serialize(ISerializeWriter writer)

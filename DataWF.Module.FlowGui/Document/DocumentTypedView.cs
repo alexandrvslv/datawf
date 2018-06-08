@@ -31,9 +31,9 @@ namespace DataWF.Module.FlowGui
             }
         }
 
-        public override void ShowDocument(Document document)
+        public override void ShowDocument(Document document, bool mainDock)
         {
-            base.ShowDocument(document);
+            base.ShowDocument(document, mainDock);
             this.GetParent<DockBox>()?.ClosePage(this);
         }
 

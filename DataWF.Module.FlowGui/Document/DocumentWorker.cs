@@ -201,7 +201,7 @@ namespace DataWF.Module.FlowGui
             var item = sender as TemplateMenuItem;
             if (item.DropDown?.Items.Count > 0)
                 return;
-            ViewDocuments(CreateDocuments(item.Template, null));
+            ViewDocumentsAsync(CreateDocuments(item.Template, null));
         }
 
         private void ToolLoadOnClick(object sender, EventArgs e)

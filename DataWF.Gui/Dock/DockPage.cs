@@ -129,16 +129,19 @@ namespace DataWF.Gui
             get => base.Visible;
             set
             {
-                base.Visible = value;
-                if (Panel == null)
+                if (Visible == value)
                     return;
-                if (value)
+                base.Visible = value;
+                if (Panel != null)
                 {
-                    Panel.CurrentPage = this;
-                }
-                else
-                {
-                    Panel.RemovePage(this);
+                    if (value)
+                    {
+                        Panel.CurrentPage = this;
+                    }
+                    else
+                    {
+                        Panel.RemovePage(this);
+                    }
                 }
             }
         }

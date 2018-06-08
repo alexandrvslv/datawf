@@ -4175,9 +4175,6 @@ namespace DataWF.Gui
             {
                 bounds.Clip = clip;
                 //context.Scale = ListInfo.Scale;
-
-                context.FillRectangle(ListInfo.Columns.Style, clip, CellDisplayState.Default);
-
                 if (bounds.Clip.Width != bounds.Area.Width || bounds.Clip.Height != bounds.Area.Height)
                 {
                     GetDisplayIndexes(bounds.Clip);
@@ -4694,7 +4691,7 @@ namespace DataWF.Gui
 
         public virtual void RefreshBounds(bool buildgroup)
         {
-            if (ListSource == null)
+            if (ListSource == null || ListInfo == null)
                 return;
             bounds.Index = -1;
 

@@ -52,10 +52,13 @@ namespace DataWF.Gui
         protected override void OnDraw(Context ctx, Rectangle dirtyRect)
         {
             base.OnDraw(ctx, dirtyRect);
-            if (List.ListSource == null)
-                return;
+
             using (var context = new GraphContext(ctx))
             {
+                context.FillRectangle(GuiEnvironment.Theme["List"].BaseColor, dirtyRect);
+
+                if (List.ListSource == null)
+                    return;
                 List.OnDrawList(context, dirtyRect);
             }
         }

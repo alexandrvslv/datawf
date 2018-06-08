@@ -10,6 +10,7 @@ using Xwt;
 using System.Linq;
 using DataWF.Data;
 using DataWF.Module.Common;
+using System.Threading.Tasks;
 
 namespace DataWF.Module.FlowGui
 {
@@ -44,7 +45,7 @@ namespace DataWF.Module.FlowGui
         protected ToolFieldEditor filterDate;
         private DocumentLayoutList list;
         private HBox hSplit;
-        private DocumentEditorPreview editor;
+        private DocumentEditor editor;
 
         public DocumentListView()
         {
@@ -114,7 +115,6 @@ namespace DataWF.Module.FlowGui
             list.CellDoubleClick += ListCellMouseDoubleClick;
             list.PositionChanged += ListOnPositionChanged;
             list.SelectionChanged += ListOnSelectionChanged;
-            list.CellMouseClick += ListOnCellMouseClick;
 
             filterView = new DocumentFilterView() { Visible = false };
 
@@ -138,9 +138,6 @@ namespace DataWF.Module.FlowGui
         public virtual bool ReadOnly { get; set; }
 
         public Toolsbar Bar { get { return bar; } }
-
-        [DefaultValue(true)]
-        public bool MainDock { get; set; } = true;
 
         public DockType DockType { get; set; } = DockType.Content;
 
@@ -318,7 +315,7 @@ namespace DataWF.Module.FlowGui
                 || !toolPreview.Checked
                 || CurrentDocument == null)
                 return;
-            var editor = GetEditor(true);
+            var editor = GetEditor(CurrentDocument.GetType(), true);
 
             if (editor.EditorState != DocumentEditorState.Send)
             {
@@ -327,23 +324,10 @@ namespace DataWF.Module.FlowGui
             }
         }
 
-        private void ListOnCellMouseClick(object sender, LayoutHitTestEventArgs e)
-        {
-            //if (this.list.SelectedItem != null)
-            //    ShowProperty(this.list.SelectedItem);
-        }
-
-
-
         private void ListOnPositionChanged(object sender, NotifyProperty text)
         {
             toolCount.Text = text.Value;
         }
-
-        //private void ContextTemplateItemClicked(object sender, ToolStripItemClickedEventArgs e)
-        //{
-        //    TemplateFilter = e.ClickedItem.Tag as Template;
-        //}
 
         public event EventHandler FilterChanged;
 
@@ -366,32 +350,11 @@ namespace DataWF.Module.FlowGui
             return list.Selection.GetItems<Document>();
         }
 
-        public virtual void ShowDocument(Document document)
-        {
-            string name = "DocumentEditor" + document.Id.ToString();
-            var editor = GuiService.Main?.DockPanel.Find(name) as DocumentEditor;
-            if (editor == null)
-            {
-                editor = new DocumentEditor();
-                editor.XmlDeserialize($"{document.GetType().Name}.xml");
-                editor.Name = name;
-                editor.Document = document;
-
-                if (GuiService.Main == null || !MainDock)
-                {
-                    editor.ShowWindow(this);
-                }
-            }
-            if (GuiService.Main != null && MainDock)
-            {
-                GuiService.Main.DockPanel.Put(editor, DockType.Content);
-            }
-        }
 
         private void ListCellMouseDoubleClick(object sender, LayoutHitTestEventArgs e)
         {
             if (e.HitTest.Index >= 0)
-                ShowDocument(list.SelectedItem as Document);
+                ShowDocument(list.SelectedItem as Document, true);
         }
 
         private void ToolParamClick(object sender, EventArgs e)
@@ -428,7 +391,7 @@ namespace DataWF.Module.FlowGui
 
                 if (template == null || template.IsCompaund)
                     return;
-                ViewDocuments(CreateDocuments(template, Filter.Referencing, List.Selection.GetItems<Document>()));
+                ViewDocumentsAsync(CreateDocuments(template, Filter.Referencing, List.Selection.GetItems<Document>()));
             };
             toolCreateWindow.Show(bar, toolCreateFrom.Bound.BottomLeft);
         }
@@ -440,7 +403,7 @@ namespace DataWF.Module.FlowGui
             {
                 foreach (Template item in FilterView.Templates.SelectedDBItems)
                 {
-                    ViewDocuments(CreateDocuments(item, Filter.Referencing));
+                    ViewDocumentsAsync(CreateDocuments(item, Filter.Referencing));
                 }
             }
         }
@@ -449,7 +412,7 @@ namespace DataWF.Module.FlowGui
         {
             if (CurrentDocument == null)
                 return;
-            ViewDocuments(new List<Document>(new[] { (Document)CurrentDocument.Clone() }));
+            ViewDocumentsAsync(new List<Document>(new[] { (Document)CurrentDocument.Clone() }));
         }
 
         private void ToolPreviewClick(object sender, EventArgs e)
@@ -457,9 +420,9 @@ namespace DataWF.Module.FlowGui
             Preview();
         }
 
-        private void ToolAcceptClick(object sender, EventArgs e)
+        private async void ToolAcceptClick(object sender, EventArgs e)
         {
-            DocumentSender.Send(this, List.Selection.GetItems<Document>(), null, null, null);
+            await DocumentSender.Send(this, List.Selection.GetItems<Document>(), null, null, null);
         }
 
         public bool AllowPreview
@@ -468,18 +431,41 @@ namespace DataWF.Module.FlowGui
             set { toolPreview.Sensitive = value; }
         }
 
-        public DocumentEditor GetEditor(bool create)
+        public virtual void ShowDocument(Document document, bool mainDock)
+        {
+            string name = "DocumentEditor" + document.Id.ToString();
+            var editor = GuiService.Main?.DockPanel.Find(name) as DocumentEditor;
+            if (editor == null)
+            {
+                editor = new DocumentEditor { Name = name };
+                editor.XmlDeserialize(DocumentEditor.GetFileName(document.GetType()));
+                editor.Document = document;
+
+                if (GuiService.Main == null || !mainDock)
+                {
+                    editor.ShowWindow(this);
+                }
+            }
+            if(mainDock)
+            {
+                GuiService.Main.DockPanel.Put(editor, DockType.Content);
+            }
+        }
+
+        public DocumentEditor GetEditor(Type documentType, bool create)
         {
             var dock = this.GetParent<DockBox>();
             if (dock == null)
                 return null;
 
-            if (editor == null)
+            if (editor == null || editor.DocumentType != documentType)
             {
-                editor = (DocumentEditorPreview)dock.Find(nameof(DocumentEditorPreview));
+                var name = nameof(DocumentEditor) + documentType.Name;
+                editor = (DocumentEditor)dock.Find(name);
                 if (editor == null && create)
                 {
-                    editor = new DocumentEditorPreview();
+                    editor = new DocumentEditor() { Name = name };
+                    editor.XmlDeserialize(DocumentEditor.GetFileName(documentType));
                 }
             }
             dock.Put(editor);
@@ -609,13 +595,11 @@ namespace DataWF.Module.FlowGui
             return documents;
         }
 
-        public void ViewDocuments(List<Document> documents)
+        public async void ViewDocumentsAsync(List<Document> documents)
         {
             if (documents.Count == 1)
             {
-                var editor = new DocumentEditor();
-                editor.Document = documents[0];
-                editor.ShowWindow(this);
+                ShowDocument(documents[0], false);
             }
             else if (documents.Count > 1)
             {
@@ -625,36 +609,26 @@ namespace DataWF.Module.FlowGui
                 var dlist = new DocumentListView();
                 dlist.List.GenerateColumns = false;
                 dlist.List.AutoToStringFill = true;
-                dlist.MainDock = false;
                 dlist.Filter.Template = documents[0].Template;
                 dlist.Documents = list;
 
-                var form = new ToolWindow
+                using (var form = new ToolWindow
                 {
                     Title = "New Documents",
                     Mode = ToolShowMode.Dialog,
                     Size = new Size(800, 600),
                     Target = dlist
-                };
-                form.ButtonAcceptClick += (s, e) =>
+                })
                 {
-                    foreach (Document document in documents)
+                    var command = await form.ShowAsync(this, new Point(1, 1));
+                    if (command == Command.Ok)
                     {
-                        //if (GuiService.Main != null)
-                        //{
-                        //    TaskExecutor executor = new TaskExecutor();
-                        //    executor.Parameters = new object[] { document };
-                        //    executor.Procedure = ReflectionAccessor.InitAccessor(typeof(DocumentTool).GetMethod("SaveDocument", new Type[] { typeof(Document) }), false);
-                        //    executor.Name = "Save Document " + document.Id;
-                        //    GuiService.Main.AddTask(dlist, executor);
-                        //}
-                        //else
-                        //{
-                        document.Save(null);
-                        //}
+                        foreach (Document document in documents)
+                        {
+                            document.Save(null);
+                        }
                     }
-                };
-                form.Show(this, new Point(1, 1));
+                }
             }
         }
 
@@ -665,7 +639,7 @@ namespace DataWF.Module.FlowGui
                 MessageDialog.ShowWarning(Locale.Get(nameof(DocumentListView), "Some data not saved!"));
                 return false;
             }
-            var editor = GetEditor(false);
+            var editor = GetEditor(CurrentDocument?.GetType(), false);
             if (editor != null)
             {
                 this.GetParent<DockBox>().ClosePage(editor);

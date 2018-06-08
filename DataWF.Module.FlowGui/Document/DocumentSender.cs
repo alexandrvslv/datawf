@@ -20,7 +20,7 @@ namespace DataWF.Module.FlowGui
 {
     public class DocumentSender : ToolWindow, ILocalizable
     {
-        public static void Send(Widget widget, Document document)
+        public async static Task<Command> Send(Widget widget, Document document)
         {
             var work = document.WorkCurrent;
             if (work != null)
@@ -50,13 +50,13 @@ namespace DataWF.Module.FlowGui
                 {
                     var rezult = MessageDialog.AskQuestion("Accept", "Document current on " + work.User + " Accept anywhere?", Command.No, Command.Yes);
                     if (rezult == Command.No)
-                        return;
+                        return null;
                 }
             }
-            Send(widget, new[] { document }, null, null, null);
+            return await Send(widget, new[] { document }, null, null, null);
         }
 
-        public static async void Send(Widget widget, IEnumerable<Document> documnets, DocumentWork work, Stage stage, User user, DocumentSendType sendType = DocumentSendType.Next)
+        public static async Task<Command> Send(Widget widget, IEnumerable<Document> documnets, DocumentWork work, Stage stage, User user, DocumentSendType sendType = DocumentSendType.Next)
         {
             var sender = new DocumentSender();
             sender.Localize();
@@ -66,7 +66,7 @@ namespace DataWF.Module.FlowGui
             // sender.Hidden += SenderSendComplete;
             if (stage != null && user != null)
                 sender.Send(stage, user, sendType);
-            await sender.ShowAsync(widget, Point.Zero);
+            return await sender.ShowAsync(widget, Point.Zero);
         }
 
         private FlowTree listUsers;
