@@ -240,10 +240,13 @@ namespace DataWF.Gui
 
         public event EventHandler<ToolItemEventArgs> ItemClick;
 
-        public virtual void OnItemClick(ToolItem toolItem)
+        public virtual void OnItemClick(ToolItem item)
         {
-            ItemClick?.Invoke(this, new ToolItemEventArgs { Item = toolItem });
+            ItemClick?.Invoke(this, new ToolItemEventArgs { Item = item });
         }
+
+        public virtual void OnItemDoubleClick(ToolItem item)
+        { }
 
         public void Serialize(ISerializeWriter writer)
         {

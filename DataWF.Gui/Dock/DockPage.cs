@@ -82,7 +82,7 @@ namespace DataWF.Gui
             }
         }
 
-        public bool HideOnClose { get; set; }
+        public bool HideOnClose { get { return widget is IDockContent ? ((IDockContent)widget).HideOnClose : false; } }
 
         public override bool Checked
         {
@@ -107,20 +107,8 @@ namespace DataWF.Gui
             if (!closing)
             {
                 closing = true;
-                if (Panel != null)
-                {
-                    Panel.ClosePage(this);
-                }
+                Panel?.ClosePage(this);
                 closing = false;
-            }
-        }
-
-        protected override void OnClick(EventArgs e)
-        {
-            base.OnClick(e);
-            if (!Checked)
-            {
-                Panel.CurrentPage = this;
             }
         }
 

@@ -311,6 +311,21 @@ namespace DataWF.Gui
             return baseSize;
         }
 
+        public override void OnItemClick(ToolItem item)
+        {
+            base.OnItemClick(item);
+            if (!item.Checked)
+            {
+                CurrentPage = (DockPage)item;
+            }
+        }
+
+        public override void OnItemDoubleClick(ToolItem item)
+        {
+            base.OnItemDoubleClick(item);
+            DockBox?.OnPageDoubleClick((DockPage)item);
+        }
+
         #region IDockContainer implementation
 
         public IDockContainer DockParent
@@ -351,7 +366,6 @@ namespace DataWF.Gui
             {
                 Name = widget.Name,
                 Widget = widget,
-                HideOnClose = widget is IDockContent ? ((IDockContent)widget).HideOnClose : false
             };
             Put(page);
             return page;

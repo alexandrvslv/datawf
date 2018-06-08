@@ -19,7 +19,7 @@ namespace DataWF.Gui
 
     public class DockBox : Canvas, IDockContainer, ISerializableElement
     {
-        private DockItem map;
+        private DockItem items;
         private DockPage page = null;
 
         private DockBoxState state = DockBoxState.Default;
@@ -33,17 +33,18 @@ namespace DataWF.Gui
         private bool visibleClose = true;
         private DockItem content;
         private Image processImage;
+        private List<DockItem> hided = new List<DockItem>();
 
         public event EventHandler<DockPageEventArgs> PageSelected;
 
         public DockBox() : base()
         {
-            Map = new DockItem() { };
+            Items = new DockItem() { };
         }
 
         public DockBox(params DockItem[] items) : base()
         {
-            Map = new DockItem() { };
+            Items = new DockItem() { };
             foreach (var item in items)
             {
                 Add(item);
@@ -88,7 +89,7 @@ namespace DataWF.Gui
                     else if (state.HasFlag(DockBoxState.InProcess))
                     {
                         processImage?.Dispose();
-                        foreach (var item in map.GetVisibleItems())
+                        foreach (var item in items.GetVisibleItems())
                         {
                             if (item.Panel != null)
                             {
@@ -119,15 +120,15 @@ namespace DataWF.Gui
         }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public DockItem Map
+        public DockItem Items
         {
-            get { return map; }
+            get { return items; }
             set
             {
-                if (map == value)
+                if (items == value)
                     return;
-                map = value;
-                map.DockBox = this;
+                items = value;
+                items.DockBox = this;
             }
         }
 
@@ -290,20 +291,20 @@ namespace DataWF.Gui
 
         protected override Size OnGetPreferredSize(SizeConstraint widthConstraint, SizeConstraint heightConstraint)
         {
-            foreach (DockItem item in map.GetVisibleItems())
+            foreach (DockItem item in items.GetVisibleItems())
             {
                 item.Panel?.Surface.GetPreferredSize();
             }
-            return map.GetBound(0, 0).Size;
+            return items.GetBound(0, 0).Size;
         }
 
         protected override void OnReallocate()
         {
             base.OnReallocate();
-            var mapBound = map.GetBound(Size.Width, Size.Height);
-            foreach (DockItem item in map.GetVisibleItems())
+            var mapBound = items.GetBound(Size.Width, Size.Height);
+            foreach (DockItem item in items.GetVisibleItems())
             {
-                map.GetBound(item, mapBound);
+                items.GetBound(item, mapBound);
                 if (item.Panel != null && item.Bound.Width > 0 && item.Bound.Height > 0)
                 {
                     SetChildBounds(item.Panel, item.Bound);
@@ -360,7 +361,7 @@ namespace DataWF.Gui
         public DockBoxHitTest DockHitTest(double x, double y, double size)
         {
             var htest = new DockBoxHitTest();
-            foreach (DockItem item in map.GetVisibleItems())
+            foreach (DockItem item in items.GetVisibleItems())
             {
                 if (item.Bound.Contains(x, y))
                 {
@@ -403,23 +404,56 @@ namespace DataWF.Gui
             ContentFocus?.Invoke(sender, args);
         }
 
-        internal void OnPageSelected(object sender, DockPageEventArgs e)
+        public void HideExcept(DockItem item)
+        {
+            foreach (var dockItem in Items)
+            {
+                if (dockItem != item && dockItem.Visible)
+                {
+                    hided.Add(dockItem);
+                    dockItem.Visible = false;
+                }
+            }
+        }
+
+        public void Unhide()
+        {
+            foreach (var dockItem in hided)
+            {
+                dockItem.Visible = true;
+            }
+            hided.Clear();
+        }
+
+        protected internal void OnPageDoubleClick(DockPage page)
+        {
+            if (hided.Count == 0)
+            {
+                HideExcept(page.Panel.DockItem);
+            }
+            else
+            {
+                Unhide();
+            }
+        }
+
+        protected internal void OnPageSelected(DockPanel panel, DockPageEventArgs e)
         {
             if (e.Page == null)
             {
-                if (!((DockPanel)sender).DockItem.FillWidth)
+                if (!panel.DockItem.Main)
                 {
-                    ((DockPanel)sender).DockItem.Visible = false;
-                    QueueForReallocate();
+                    panel.DockItem.Visible = false;
                 }
+                Unhide();
             }
-            else if (!((DockPanel)sender).DockItem.Visible)
+            else if (!panel.DockItem.Visible)
             {
-                ((DockPanel)sender).DockItem.Visible = true;
-                QueueForReallocate();
+                panel.DockItem.Visible = true;
             }
 
-            ChildFocusInEvent(sender, e);
+            QueueForReallocate();
+            ChildFocusInEvent(panel, e);
             PageSelected?.Invoke(this, e);
         }
 
@@ -436,7 +470,7 @@ namespace DataWF.Gui
 
         public DockItem GetDockItem(string name, DockItem exist, LayoutAlignType type, bool gp)
         {
-            DockItem item = map.GetRecursive(name) as DockItem;
+            DockItem item = items.GetRecursive(name) as DockItem;
             if (item == null)
             {
                 item = CreateDockItem(name, exist, type, gp);
@@ -463,7 +497,7 @@ namespace DataWF.Gui
         {
             if (exist == null)
             {
-                map.Add(item);
+                items.Add(item);
             }
             else
             {
@@ -485,7 +519,7 @@ namespace DataWF.Gui
         #region Container
         public bool Contains(Widget c)
         {
-            foreach (DockItem item in map.GetItems())
+            foreach (DockItem item in items.GetItems())
                 if (item.Panel.Contains(c))
                     return true;
             return false;
@@ -493,7 +527,7 @@ namespace DataWF.Gui
 
         public bool Delete(Widget c)
         {
-            foreach (DockItem item in map.GetItems())
+            foreach (DockItem item in items.GetItems())
             {
                 if (item.Panel.Contains(c))
                 {
@@ -506,7 +540,7 @@ namespace DataWF.Gui
 
         public IEnumerable<Widget> GetControls()
         {
-            foreach (DockItem item in map.GetItems())
+            foreach (DockItem item in items.GetItems())
             {
                 foreach (var widget in item.Panel.GetControls())
                     yield return widget;
@@ -515,7 +549,7 @@ namespace DataWF.Gui
 
         public IEnumerable<DockPage> GetPages()
         {
-            foreach (DockItem item in map.GetItems())
+            foreach (DockItem item in items.GetItems())
             {
                 foreach (var pageItem in item.Panel)
                     yield return pageItem;
@@ -524,7 +558,7 @@ namespace DataWF.Gui
 
         public DockPage GetPage(string name)
         {
-            foreach (DockItem item in map.GetItems())
+            foreach (DockItem item in items.GetItems())
             {
                 DockPage dp = item.Panel.GetPage(name);
                 if (dp != null)
@@ -537,7 +571,7 @@ namespace DataWF.Gui
 
         public DockPage GetPage(Widget c)
         {
-            foreach (DockItem item in map.GetItems())
+            foreach (DockItem item in items.GetItems())
             {
                 DockPage dp = item.Panel.GetPage(c);
                 if (dp != null)
@@ -562,7 +596,7 @@ namespace DataWF.Gui
 
         public IEnumerable<IDockContainer> GetDocks()
         {
-            foreach (DockItem item in map.GetVisibleItems())
+            foreach (DockItem item in items.GetVisibleItems())
             {
                 yield return item.Panel;
             }
@@ -570,7 +604,7 @@ namespace DataWF.Gui
 
         public IEnumerable<DockPanel> GetDockPanels()
         {
-            foreach (DockItem item in map.GetVisibleItems())
+            foreach (DockItem item in items.GetVisibleItems())
             {
                 yield return item.Panel;
             }
@@ -644,18 +678,18 @@ namespace DataWF.Gui
 
         protected override void Dispose(bool disposing)
         {
-            Application.Invoke(() => map.Dispose());
+            Application.Invoke(() => items.Dispose());
             base.Dispose(disposing);
         }
 
         public void Serialize(ISerializeWriter writer)
         {
-            writer.Write(map);
+            writer.Write(items);
         }
 
         public void Deserialize(ISerializeReader reader)
         {
-            reader.Read(map);
+            reader.Read(items);
         }
     }
 

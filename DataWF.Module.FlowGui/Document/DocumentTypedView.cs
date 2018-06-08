@@ -31,10 +31,12 @@ namespace DataWF.Module.FlowGui
             }
         }
 
-        public override void ShowDocument(Document document, bool mainDock)
+        public override DocumentEditor ShowDocument(Document document, bool mainDock)
         {
-            base.ShowDocument(document, mainDock);
-            this.GetParent<DockBox>()?.ClosePage(this);
+            var editor = base.ShowDocument(document, mainDock);
+            var dock = this.GetParent<DockBox>();
+            dock.HideExcept(dock.GetPage(editor)?.Panel.DockItem);
+            return editor;
         }
 
         public override void Serialize(ISerializeWriter writer)

@@ -26,6 +26,7 @@ namespace DataWF.Gui
         private Toolsbar bar;
         private CellStyle style;
         private Point pressLocation;
+        private int pressCount;
 
         public ToolItem()
         {
@@ -37,6 +38,7 @@ namespace DataWF.Gui
         }
 
         public event EventHandler Click;
+        public event EventHandler DoubleClick;
         public event EventHandler<MouseMovedEventArgs> MouseMove;
         public event EventHandler TextChanged;
 
@@ -404,15 +406,23 @@ namespace DataWF.Gui
         protected virtual internal void OnButtonPressed(ButtonEventArgs args)
         {
             pressLocation = args.Position;
+            pressCount = args.MultiplePress;
             State = CellDisplayState.Pressed;
         }
 
         protected virtual internal void OnButtonReleased(ButtonEventArgs args)
         {
             State = CellDisplayState.Hover;
-            if (args.MultiplePress <= 1 && Sensitive)
+            if (Sensitive && args.Button == PointerButton.Left)
             {
-                OnClick(EventArgs.Empty);
+                if (pressCount == 1)
+                {
+                    OnClick(args);
+                }
+                else if (pressCount == 2)
+                {
+                    OnDoubleClick(args);
+                }
             }
         }
 
@@ -423,6 +433,12 @@ namespace DataWF.Gui
 
             Bar?.OnItemClick(this);
             Click?.Invoke(this, e);
+        }
+
+        protected virtual void OnDoubleClick(EventArgs e)
+        {
+            Bar?.OnItemDoubleClick(this);
+            DoubleClick?.Invoke(this, e);
         }
 
         protected virtual void OnTextChanged(EventArgs e)

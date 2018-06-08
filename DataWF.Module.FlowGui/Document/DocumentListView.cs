@@ -431,7 +431,7 @@ namespace DataWF.Module.FlowGui
             set { toolPreview.Sensitive = value; }
         }
 
-        public virtual void ShowDocument(Document document, bool mainDock)
+        public virtual DocumentEditor ShowDocument(Document document, bool mainDock)
         {
             string name = "DocumentEditor" + document.Id.ToString();
             var editor = GuiService.Main?.DockPanel.Find(name) as DocumentEditor;
@@ -446,10 +446,12 @@ namespace DataWF.Module.FlowGui
                     editor.ShowWindow(this);
                 }
             }
-            if(mainDock)
+            if (mainDock)
             {
                 GuiService.Main.DockPanel.Put(editor, DockType.Content);
             }
+
+            return editor;
         }
 
         public DocumentEditor GetEditor(Type documentType, bool create)
@@ -467,6 +469,7 @@ namespace DataWF.Module.FlowGui
                     editor = new DocumentEditor() { Name = name };
                     editor.XmlDeserialize(DocumentEditor.GetFileName(documentType));
                 }
+                editor.HideOnClose = true;
             }
             dock.Put(editor);
             return editor;
