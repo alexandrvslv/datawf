@@ -227,7 +227,7 @@ namespace DataWF.Common
             {
                 if (type.IsPrimitive || type.IsEnum
                    || type == typeof(string) || type == typeof(decimal) || type == typeof(byte[])
-                   || type == typeof(CultureInfo) || type == typeof(Type))
+                   || type == typeof(DateTime) || type == typeof(CultureInfo) || type == typeof(Type))
                 {
                     flag = true;
                 }
