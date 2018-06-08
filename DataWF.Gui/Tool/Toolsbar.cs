@@ -182,7 +182,7 @@ namespace DataWF.Gui
                 if (hitItem != null)
                 {
                     hitItem.OnMouseEntered(EventArgs.Empty);
-                    if (!hitItem.DisplayStyle.HasFlag(ToolItemDisplayStyle.Text))
+                    //if (!hitItem.DisplayStyle.HasFlag(ToolItemDisplayStyle.Text))
                     {
                         TooltipText = hitItem.Text;
                         //Debug.WriteLine($"Tooltip Text {TooltipText}");
