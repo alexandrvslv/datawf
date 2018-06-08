@@ -41,7 +41,7 @@ namespace DataWF.Module.Common
     {
         public static DBTable<GroupPermission> DBTable
         {
-            get { return DBService.GetTable<GroupPermission>(); }
+            get { return GetTable<GroupPermission>(); }
         }
 
         public static GroupPermission Find(GroupPermission parent, object obj, bool generate)

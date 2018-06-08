@@ -108,7 +108,7 @@ namespace DataWF.Module.Flow
     {
         public static DBTable<DocumentReference> DBTable
         {
-            get { return DBService.GetTable<DocumentReference>(); }
+            get { return GetTable<DocumentReference>(); }
         }
 
         public DocumentReference()

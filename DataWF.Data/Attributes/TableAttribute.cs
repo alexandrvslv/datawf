@@ -209,7 +209,7 @@ namespace DataWF.Data
 
         public virtual ColumnAttribute InitializeColumn(PropertyInfo property)
         {
-            var column = DBService.GetColumnAttribute(property);
+            var column = DBColumn.GetColumnAttribute(property);
             if (column != null)
             {
                 column.Table = this;

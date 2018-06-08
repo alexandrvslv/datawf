@@ -21,12 +21,14 @@ using DataWF.Common;
 using System.ComponentModel;
 using System.Collections.Generic;
 using System;
+using System.Reflection;
+using System.IO;
 
 namespace DataWF.Data
 {
     public class DBProcedureList : DBSchemaItemList<DBProcedure>
     {
-        static readonly Invoker<DBProcedure, string> parentNameInvoker = new Invoker<DBProcedure, string>(nameof(DBProcedure.ParentName), (item) => item.ParentName);
+        static readonly Invoker<DBProcedure, string> parentNameInvoker = new Invoker<DBProcedure, string>(nameof(DBProcedure.GroupName), (item) => item.GroupName);
         static readonly Invoker<DBProcedure, string> dataNameInvoker = new Invoker<DBProcedure, string>(nameof(DBProcedure.DataName), (item) => item.DataName);
         static readonly Invoker<DBProcedure, ProcedureTypes> typeInvoker = new Invoker<DBProcedure, ProcedureTypes>(nameof(DBProcedure.ProcedureType), (item) => item.ProcedureType);
 
@@ -49,7 +51,7 @@ namespace DataWF.Data
 
         public IEnumerable<DBProcedure> SelectByParent(DBProcedure procedure)
         {
-            return Select(nameof(DBProcedure.ParentName), CompareType.Equal, procedure?.Name);
+            return Select(nameof(DBProcedure.GroupName), CompareType.Equal, procedure?.Name);
         }
 
         public DBProcedure SelectByCode(string code, string category = "General")
@@ -65,6 +67,13 @@ namespace DataWF.Data
             AddCodes(item);
         }
 
+        public override DDLType GetInsertType(DBProcedure item)
+        {
+            return item.ProcedureType == ProcedureTypes.StoredFunction || item.ProcedureType == ProcedureTypes.StoredProcedure
+                ? DDLType.Create
+                : DDLType.Default;
+        }
+
         public void AddCodes(DBProcedure item)
         {
             foreach (var code in item.Codes)
@@ -75,6 +84,73 @@ namespace DataWF.Data
                 }
                 categoryIndex[code.Code] = item;
             }
+        }
+
+        public DBProcedure AddOrUpdate(DBProcedure item)
+        {
+            var exist = this[item.Name];
+            if (exist == null)
+            {
+                Add(item);
+                return item;
+            }
+
+            exist.ProcedureType = item.ProcedureType;
+            exist.Group = item.Group;
+            exist.Source = item.Source;
+            exist.Codes = item.Codes;
+            exist.Parameters.Clear();
+            exist.Parameters.AddRange(item.Parameters);
+            AddCodes(exist);
+
+            return exist;
+        }
+
+        public DBProcedure GenerateGroup(Assembly assembly)
+        {
+            var uri = new UriBuilder(assembly.CodeBase);
+            var path = Uri.UnescapeDataString(uri.Path);
+            var filename = Path.GetFileName(path);
+
+            var gname = assembly.GetName().Name;
+            var procedure = this[gname];
+            if (procedure == null)
+            {
+                procedure = new DBProcedure
+                {
+                    Name = gname,
+                    DataName = filename,
+                    ProcedureType = ProcedureTypes.File
+                };
+                Add(procedure);
+            }
+            return procedure;
+        }
+
+        public DBProcedure Generate(Assembly assembly)
+        {
+            var gprocedure = GenerateGroup(assembly);
+            foreach (var type in assembly.ExportedTypes)
+            {
+                if (TypeHelper.IsInterface(type, typeof(IExecutable)))
+                {
+                    var name = type.FullName;
+                    var procedure = new DBProcedure
+                    {
+                        Group = gprocedure,
+                        Name = name,
+                        DataName = gprocedure.DataName,
+                        ProcedureType = ProcedureTypes.Assembly
+                    };
+                    procedure = AddOrUpdate(procedure);
+                    procedure.DisplayName = type.Name;
+
+                    procedure.Codes.Clear();
+                    procedure.Codes.AddRange(type.GetCustomAttributes<CodeAttribute>());
+                    AddCodes(procedure);
+                }
+            }
+            return gprocedure;
         }
     }
 }

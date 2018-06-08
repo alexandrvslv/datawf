@@ -87,7 +87,7 @@ namespace DataWF.Data
                         temp = ((DateTime)val).ToString(format);
                     }
                     else
-                        temp = DBService.FormatToSqlText(val);
+                        temp = DBSystem.FormatText(val);
                     if (param.Size > 0 && temp.Length > param.Size)
                         temp = temp.Substring(0, (int)param.Size);
                     return temp;
@@ -125,7 +125,7 @@ namespace DataWF.Data
 
         public override string Format(IDbCommand command = null)
         {
-            StringBuilder rez = new StringBuilder();
+            var rez = new StringBuilder();
             rez.Append(type.ToString());
             rez.Append("(");
             QItem prev = null;

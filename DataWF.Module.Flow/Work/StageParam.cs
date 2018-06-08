@@ -71,7 +71,7 @@ namespace DataWF.Module.Flow
 
         public static DBTable<StageParam> DBTable
         {
-            get { return DBService.GetTable<StageParam>(); }
+            get { return GetTable<StageParam>(); }
         }
 
         public StageParam()

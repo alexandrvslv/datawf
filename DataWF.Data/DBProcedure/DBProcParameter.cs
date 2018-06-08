@@ -50,7 +50,7 @@ namespace DataWF.Data
             set { DataTypeName = TypeHelper.BinaryFormatType(value); }
         }
 
-        public ParameterDirection Direction { get; set; }
+        public ParameterDirection Direction { get; set; } = ParameterDirection.Input;
 
         public string ColumnName { get; set; }
 

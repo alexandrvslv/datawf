@@ -31,7 +31,7 @@ namespace DataWF.Module.FlowGui
 
         public DBTable Table
         {
-            get { return DBService.GetTable(typeof(T), null, false, true); }
+            get { return DBTable.GetTable(typeof(T), null, false, true); }
         }
 
         public virtual Document Document
@@ -125,7 +125,7 @@ namespace DataWF.Module.FlowGui
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
-            view.Dispose();
+            view?.Dispose();
         }
 
         public override void Localize()

@@ -47,10 +47,10 @@ namespace DataWF.Module.Counterpart
 
     [DataContract, Table("rlocation", "Address", BlockSize = 100)]
     public class Location : DBGroupItem
-    {     
+    {
         public static DBTable<Location> DBTable
         {
-            get { return DBService.GetTable<Location>(); }
+            get { return GetTable<Location>(); }
         }
 
         public Location()

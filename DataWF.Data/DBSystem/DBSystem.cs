@@ -657,7 +657,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                     }
                     else
                     {
-                        command.Append(DBService.FormatToSqlText(row[column]));
+                        command.Append(FormatText(row[column]));
                     }
                 }
                 command.Append(", ");
@@ -676,14 +676,14 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             {
                 if (column.ColumnType == DBColumnTypes.Default && !column.IsPrimaryKey)
                 {
-                    command.AppendFormat("{0}={1}, ", column.SqlName, row == null ? ParameterPrefix + column.Name : DBService.FormatToSqlText(row[column]));
+                    command.AppendFormat("{0}={1}, ", column.SqlName, row == null ? ParameterPrefix + column.Name : FormatText(row[column]));
                     flag = true;
                 }
             }
             if (flag)
             {
                 command.Remove(command.Length - 2, 2);
-                command.AppendFormat(" where {0}={1}", table.PrimaryKey.SqlName, row == null ? ParameterPrefix + table.PrimaryKey.Name : DBService.FormatToSqlText(row.PrimaryId));
+                command.AppendFormat(" where {0}={1}", table.PrimaryKey.SqlName, row == null ? ParameterPrefix + table.PrimaryKey.Name : FormatText(row.PrimaryId));
             }
         }
 
@@ -695,7 +695,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                 command.AppendFormat("delete from {0} where {1}={2}",
                     table.SqlName,
                     table.PrimaryKey.Name,
-                    row == null ? prefix + table.PrimaryKey.Name : DBService.FormatToSqlText(row.PrimaryId));
+                    row == null ? prefix + table.PrimaryKey.Name : FormatText(row.PrimaryId));
             }
         }
 
@@ -818,6 +818,40 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                 return $"{schema}.{table.SqlName}";
             }
             return table.SqlName;
+        }
+
+        public virtual string FormatText(object value)
+        {
+            if (value is DBItem)
+                value = ((DBItem)value).PrimaryId;
+
+            if (value == null)
+                return "null";
+            else if (value is string)
+                return "'" + ((string)value).Replace("'", "''") + "'";
+            else if (value is DateTime)
+            {
+                if (((DateTime)value).TimeOfDay == TimeSpan.Zero)
+                    return "'" + ((DateTime)value).ToString("yyyy-MM-dd") + "'";
+                else
+                    return "'" + ((DateTime)value).ToString("yyyy-MM-dd HH:mm:ss.fff") + "'";
+            }
+            else if (value is byte[])
+            {
+                var sBuilder = new StringBuilder();
+                var data = (byte[])value;
+                // Loop through each byte of the hashed data 
+                // and format each one as a hexadecimal string.
+                sBuilder.Append("0x");
+                for (int i = 0; i < data.Length; i++)
+                {
+                    sBuilder.Append(data[i].ToString("x2"));
+                }
+
+                return sBuilder.ToString();
+            }
+            else
+                return value.ToString().Replace(",", ".");
         }
     }
 }

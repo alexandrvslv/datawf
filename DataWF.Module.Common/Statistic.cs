@@ -49,7 +49,7 @@ namespace DataWF.Module.Common
     {
         public static DBTable<Statistic> DBTable
         {
-            get { return DBService.GetTable<Statistic>(); }
+            get { return GetTable<Statistic>(); }
         }
 
         public Statistic()

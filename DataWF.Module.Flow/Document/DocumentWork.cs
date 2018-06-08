@@ -96,7 +96,7 @@ namespace DataWF.Module.Flow
     {
         public static DBTable<DocumentWork> DBTable
         {
-            get { return DBService.GetTable<DocumentWork>(); }
+            get { return GetTable<DocumentWork>(); }
         }
 
         public static DocumentWork Empty = new DocumentWork();

@@ -26,6 +26,7 @@ using System.Text;
 using System.Xml.Serialization;
 using System.Data;
 using System.Linq;
+using System.Reflection;
 
 namespace DataWF.Data
 {
@@ -63,6 +64,15 @@ namespace DataWF.Data
     public class DBColumn : DBTableItem, IComparable, IComparable<DBColumn>, ICloneable, IInvoker<DBItem, object>
     {
         public static DBColumn EmptyKey = new DBColumn();
+        public static ColumnAttribute GetColumnAttribute(PropertyInfo property)
+        {
+            var config = property.GetCustomAttribute<ColumnAttribute>();
+            if (config == null)
+            {
+                config = property.GetCustomAttribute<VirtualColumnAttribute>();
+            }
+            return config;
+        }
 
         #region Variable
         private QExpression expression;

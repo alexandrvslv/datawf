@@ -30,7 +30,7 @@ namespace DataWF.Module.Common
     {
         public static DBTable<Department> DBTable
         {
-            get { return DBService.GetTable<Department>(); }
+            get { return GetTable<Department>(); }
         }
 
         public Department()

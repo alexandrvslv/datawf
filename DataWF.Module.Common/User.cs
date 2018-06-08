@@ -130,7 +130,7 @@ namespace DataWF.Module.Common
 
         public static DBTable<User> DBTable
         {
-            get { return DBService.GetTable<User>(); }
+            get { return GetTable<User>(); }
         }
 
         private static string GetString(byte[] data)
@@ -361,7 +361,7 @@ namespace DataWF.Module.Common
     }
 
     public static class UserExtension
-        {
+    {
         public static IEnumerable<User> GetUsers(this DBItem item, DBItem filter = null)
         {
             foreach (var access in item.Access.Items)

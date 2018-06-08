@@ -59,7 +59,7 @@ namespace DataWF.Module.Counterpart
     {
         public static DBTable<PersoneIdentify> DBTable
         {
-            get { return DBService.GetTable<PersoneIdentify>(); }
+            get { return GetTable<PersoneIdentify>(); }
         }
 
         public PersoneIdentify()

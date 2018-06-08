@@ -37,6 +37,12 @@ namespace DataWF.Data
     public class DBItem : ICloneable, IComparable<DBItem>, IDisposable, IAccessable, ICheck, INotifyPropertyChanged, IEditable, IStatus, IDBTableContent
     {
         public static readonly DBItem EmptyItem = new DBItem() { cacheToString = "Loading" };
+
+        public static DBTable<T> GetTable<T>() where T : DBItem, new()
+        {
+            return DBTable.GetTable<T>();
+        }
+
         public object Tag;
         internal int hindex = -1;
         internal string cacheToString = string.Empty;
@@ -469,7 +475,7 @@ namespace DataWF.Data
 
         public IEnumerable<T> GetReferencing<T>(string property, DBLoadParam param) where T : DBItem, new()
         {
-            var table = DBService.GetTableAttribute<T>(true)?.Table;
+            var table = DBTable.GetTableAttribute<T>(true)?.Table;
             return GetReferencing<T>(table, table.ParseProperty(property), param);
         }
 
@@ -1283,6 +1289,61 @@ namespace DataWF.Data
             }
             return exist;
         }
+
+        public static DateTime GetDateVal(object val)
+        {
+            if (val == null)
+                return DateTime.MinValue;
+            if (val is DateTime)
+                return (DateTime)val;
+            return DateTime.Parse(val.ToString());
+        }
+
+        public DateTime GetDate(DBColumn column)
+        {
+            return GetDateVal(this[column]);
+        }
+
+        public DateTime GetDate(string column)
+        {
+            return GetDateVal(this[column]);
+        }
+
+        public void SetDate(DBColumn column, DateTime value)
+        {
+            this[column] = value;
+        }
+
+        public TimeSpan GetTimeSpan(DBColumn column)
+        {
+            object val = this[column];
+            if (val == null)
+                return new TimeSpan();
+            if (val is TimeSpan)
+                return (TimeSpan)val;
+            return TimeSpan.Parse(val.ToString());
+        }
+
+        public void SetTimeSpan(DBColumn column, TimeSpan value)
+        {
+            this[column] = value;
+        }
+
+        public byte[] GetZip(DBColumn column)
+        {
+            var data = GetValue<byte[]>(column);
+            if (data != null && Helper.IsGZip(data))
+                data = Helper.ReadGZip(data);
+            return data;
+        }
+
+        public byte[] SetZip(DBColumn column, byte[] data)
+        {
+            byte[] temp = data != null && data.Length > 500 ? Helper.WriteGZip(data) : data;
+            SetValue(temp, column);
+            return temp;
+        }
+
     }
 }
 

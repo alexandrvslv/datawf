@@ -24,6 +24,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -32,38 +33,16 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    public class DBLogSchema : DBSchema
-    {
-        protected DBSchema baseSchema;
-        protected string baseSchemaName;
-
-        public string BaseSchemaName
-        {
-            get { return baseSchemaName; }
-            set
-            {
-                if (baseSchemaName != value)
-                {
-                    baseSchemaName = value;
-                    OnPropertyChanged(nameof(BaseSchemaName));
-                }
-            }
-        }
-
-        [XmlIgnore]
-        public DBSchema BaseSchema
-        {
-            get { return baseSchema ?? (baseSchema = DBService.Schems[BaseSchemaName]); }
-            set
-            {
-                baseSchema = value;
-                BaseSchemaName = value?.Name;
-            }
-        }
-    }
-
     public class DBSchema : DBSchemaItem, IFileSerialize
     {
+        public static DBSchema Generate(Assembly assembly, string schemaName)
+        {
+            var schema = new DBSchema(schemaName);
+            schema.Generate(new[] { assembly });
+            DBService.Schems.Add(schema);
+            return schema;
+        }
+
         protected DBConnection connection;
         private string connectionName = string.Empty;
         protected string dataBase = "";
@@ -477,6 +456,34 @@ namespace DataWF.Data
                     Helper.OnException(ex);
                 }
             });
+        }
+
+        public void Generate(IEnumerable<Assembly> assemblies)
+        {
+            var logSchema = GenerateLogSchema();
+            Helper.Logs.Add(new StateInfo("Load", "Database", "Generate Schema"));
+            var attributes = new List<TableAttribute>();
+            foreach (var assembly in assemblies)
+            {
+                foreach (var type in assembly.GetExportedTypes().Where(item => item.IsClass))
+                {
+                    var tableAttribute = DBTable.GetTableAttribute(type);
+                    if (tableAttribute != null)
+                    {
+                        attributes.Add(tableAttribute);
+                    }
+                    else
+                    {
+                        DBTable.GetItemTypeAttribute(type);
+                    }
+                }
+                Procedures.Generate(assembly);
+            }
+
+            foreach (var tableAttribute in attributes)
+            {
+                tableAttribute.Generate(this);
+            }
         }
     }
 }

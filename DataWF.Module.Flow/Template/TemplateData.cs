@@ -30,7 +30,7 @@ namespace DataWF.Module.Flow
     {
         public static DBTable<TemplateData> DBTable
         {
-            get { return DBService.GetTable<TemplateData>(); }
+            get { return GetTable<TemplateData>(); }
         }
 
         public TemplateData()

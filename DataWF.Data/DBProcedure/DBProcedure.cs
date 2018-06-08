@@ -42,6 +42,7 @@ namespace DataWF.Data
     {
         private Assembly tempAssembly;
         private byte[] cacheData;
+        DBProcedure group;
 
         public DBProcedure()
         {
@@ -49,18 +50,28 @@ namespace DataWF.Data
             Parameters = new DBProcParameterList(this);
         }
 
+        public DBProcedure(IEnumerable<DBProcParameter> parameters) : this()
+        {
+            Parameters.AddRange(parameters);
+        }
+
         public DBProcedureList Store
         {
             get { return (DBProcedureList)container; }
         }
 
-        public string ParentName { get; set; }
+        public string GroupName { get; set; }
 
         [XmlIgnore]
-        public DBProcedure Parent
+        public DBProcedure Group
         {
-            get { return Store?[ParentName]; }
-            set { ParentName = value?.name; }
+            get { return group ?? (group = Store?[GroupName]); }
+            set
+            {
+                group = value;
+                GroupName = value?.name;
+                OnPropertyChanged(nameof(GroupName));
+            }
         }
 
         [XmlIgnore, Browsable(false)]
@@ -108,6 +119,7 @@ namespace DataWF.Data
             }
         }
 
+        [XmlText]
         public string Source { get; set; }
 
         public ProcedureTypes ProcedureType { get; set; }
@@ -128,10 +140,10 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, Browsable(false)]
-        public IGroup Group
+        IGroup IGroup.Group
         {
-            get { return Parent; }
-            set { Parent = value as DBProcedure; }
+            get { return Group; }
+            set { Group = value as DBProcedure; }
         }
 
         [XmlIgnore]
@@ -141,8 +153,6 @@ namespace DataWF.Data
         {
             get { return Childs.Any(); }
         }
-
-        public DateTime Date { get; set; }
 
         [XmlIgnore]
         public List<CodeAttribute> Codes { get; set; } = new List<CodeAttribute>();
@@ -539,9 +549,8 @@ namespace DataWF.Data
             var transaction = DBTransaction.GetTransaction(command, Schema.Connection);
             try
             {
-                transaction.AddCommand(command);
                 //UpdateCommand(command, parameters);
-                buf = transaction.ExecuteQResult();
+                buf = transaction.ExecuteQResult(transaction.AddCommand(command));
             }
             finally
             {
@@ -636,7 +645,7 @@ namespace DataWF.Data
                                 ProcedureType = ProcedureTypes.Assembly,
                                 Name = TypeHelper.BinaryFormatType(type),
                                 DisplayName = Locale.Get(type),
-                                Parent = this,
+                                Group = this,
                                 DataName = fileName
                             };
                             Store.Add(procedure);

@@ -119,7 +119,11 @@ namespace DataWF.Data
 
         public static void OnDBSchemaChanged(DBSchemaItem item, DDLType type)
         {
-            if (item.Container == null || item.Schema == null || item.Schema.Container == null || item.Schema.IsSynchronizing)
+            if (type == DDLType.Default
+                || item.Container == null
+                || item.Schema == null
+                || item.Schema.Container == null
+                || item.Schema.IsSynchronizing)
                 return;
             if (item is IDBTableContent)
             {
@@ -458,85 +462,6 @@ namespace DataWF.Data
             return schema.TableGroups[code];
         }
 
-        public static bool GetBool(DBItem row, string ColumnCode)
-        {
-            return GetBool(row, row.Table.Columns[ColumnCode]);
-        }
-
-        public static bool GetBool(DBItem row, DBColumn Column)
-        {
-            if (Column == null || (Column.Keys & DBColumnKeys.Boolean) != DBColumnKeys.Boolean)
-                return false;
-
-            return row[Column].ToString() == Column.BoolTrue;
-        }
-
-        public static void SetBool(DBItem row, string ColumnCode, bool Value)
-        {
-            SetBool(row, row.Table.Columns[ColumnCode], Value);
-        }
-
-        public static void SetBool(DBItem row, DBColumn Column, bool Value)
-        {
-            if (Column == null || (Column.Keys & DBColumnKeys.Boolean) != DBColumnKeys.Boolean)
-                return;
-            row[Column] = Value ? Column.BoolTrue : Column.BoolFalse;
-        }
-
-        public static DateTime GetDateVal(object val)
-        {
-            if (val == null)
-                return DateTime.MinValue;
-            if (val is DateTime)
-                return (DateTime)val;
-            return DateTime.Parse(val.ToString());
-        }
-
-        public static DateTime GetDate(DBItem row, DBColumn Column)
-        {
-            return GetDateVal(row[Column]);
-        }
-
-        public static DateTime GetDate(DBItem row, string Column)
-        {
-            return GetDateVal(row[Column]);
-        }
-
-        public static void SetDate(DBItem row, DBColumn Column, DateTime value)
-        {
-            row[Column] = value;
-        }
-
-        public static TimeSpan GetTimeSpan(DBItem row, DBColumn Column)
-        {
-            object val = row[Column];
-            if (val == null)
-                return new TimeSpan();
-            if (val is TimeSpan)
-                return (TimeSpan)val;
-            return TimeSpan.Parse(val.ToString());
-        }
-
-        public static void SetTimeSpan(DBItem row, DBColumn Column, TimeSpan value)
-        {
-            row[Column] = value;
-        }
-
-        public static byte[] GetZip(DBItem row, DBColumn column)
-        {
-            var data = row.GetValue<byte[]>(column);
-            if (data != null && Helper.IsGZip(data))
-                data = Helper.ReadGZip(data);
-            return data;
-        }
-
-        public static byte[] SetZip(DBItem row, DBColumn column, byte[] data)
-        {
-            byte[] temp = data != null && data.Length > 500 ? Helper.WriteGZip(data) : data;
-            row.SetValue(temp, column);
-            return temp;
-        }
-
         public static int GetIntValue(object value)
         {
             if (value == null)
@@ -562,39 +487,7 @@ namespace DataWF.Data
             }
         }
 
-        public static string FormatToSqlText(object value)
-        {
-            if (value is DBItem)
-                value = ((DBItem)value).PrimaryId;
 
-            if (value == null)
-                return "null";
-            else if (value is string)
-                return "'" + ((string)value).Replace("'", "''") + "'";
-            else if (value is DateTime)
-            {
-                if (((DateTime)value).TimeOfDay == TimeSpan.Zero)
-                    return "'" + ((DateTime)value).ToString("yyyy-MM-dd") + "'";
-                else
-                    return "'" + ((DateTime)value).ToString("yyyy-MM-dd HH:mm:ss.fff") + "'";
-            }
-            else if (value is byte[])
-            {
-                var sBuilder = new StringBuilder();
-                var data = (byte[])value;
-                // Loop through each byte of the hashed data 
-                // and format each one as a hexadecimal string.
-                sBuilder.Append("0x");
-                for (int i = 0; i < data.Length; i++)
-                {
-                    sBuilder.Append(data[i].ToString("x2"));
-                }
-
-                return sBuilder.ToString();
-            }
-            else
-                return value.ToString().Replace(",", ".");
-        }
 
         public static event DBExecuteDelegate Execute;
 
@@ -659,23 +552,6 @@ namespace DataWF.Data
             return string.Compare(x.Name, y.Name, StringComparison.Ordinal);
         }
 
-        public static DBItem FabricRow(DBItem row, Type t)
-        {
-            if (row == null)
-                return null;
-            DBItem view = row;
-            if (view != null && TypeHelper.IsBaseType(view.GetType(), t))
-                return view;
-
-            var pa = EmitInvoker.Initialize(t, Type.EmptyTypes, true);
-            if (pa == null)
-                throw new InvalidOperationException(string.Format("Type {0} must have constructor with DBRow parameters", t));
-            var rowview = (DBItem)pa.Create(new object[] { row });
-            rowview.Table = row.Table;
-            //rowview.Initialize(row);
-            return rowview;
-        }
-
         public static bool Equal(object x, object y)
         {
             if (x == null)
@@ -706,159 +582,7 @@ namespace DataWF.Data
             return DBNull.Value;
         }
 
-        public static T FabricRow<T>()
-        {
-            throw new NotImplementedException();
-        }
 
-        public static ColumnAttribute GetColumnAttribute(PropertyInfo property)
-        {
-            var config = property.GetCustomAttribute<ColumnAttribute>();
-            if (config == null)
-            {
-                config = property.GetCustomAttribute<VirtualColumnAttribute>();
-            }
-            return config;
-        }
-
-        private static Dictionary<Type, TableAttribute> cacheTables = new Dictionary<Type, TableAttribute>();
-
-        private static Dictionary<Type, ItemTypeAttribute> cacheItemTypes = new Dictionary<Type, ItemTypeAttribute>();
-
-        public static TableAttribute GetTableAttribute<T>(bool inherite = false)
-        {
-            return GetTableAttribute(typeof(T), inherite);
-        }
-
-        public static TableAttribute GetTableAttribute(Type type, bool inherite = false)
-        {
-            if (!cacheTables.TryGetValue(type, out TableAttribute table))
-            {
-                table = type.GetCustomAttribute<TableAttribute>();
-                if (table == null)
-                {
-                    table = type.GetCustomAttribute<VirtualTableAttribute>();
-                }
-                if (table != null)
-                {
-                    table.Initialize(type);
-                }
-                cacheTables[type] = table;
-            }
-            if (table == null && inherite)
-            {
-                var itemType = GetItemTypeAttribute(type);
-                table = itemType?.Table;
-            }
-            return table;
-        }
-
-        public static ItemTypeAttribute GetItemTypeAttribute(Type type)
-        {
-            if (!cacheItemTypes.TryGetValue(type, out ItemTypeAttribute itemType))
-            {
-                itemType = type.GetCustomAttribute<ItemTypeAttribute>();
-                if (itemType != null)
-                {
-                    itemType.Initialize(type);
-                }
-                cacheItemTypes[type] = itemType;
-            }
-            return itemType;
-        }
-
-        public static DBTable<T> GetTable<T>(DBSchema schema = null, bool generate = false) where T : DBItem, new()
-        {
-            return (DBTable<T>)GetTable(typeof(T), schema, generate);
-        }
-
-        public static DBTable GetTable(Type type, DBSchema schema = null, bool generate = false, bool inherite = false)
-        {
-            var config = GetTableAttribute(type, inherite);
-            if (config != null)
-            {
-                if (config.Table == null && generate)
-                    config.Generate(schema);
-                return config.Table;
-            }
-            return null;
-        }
-
-        public static void Generate(IEnumerable<Assembly> assemblies, DBSchema schema)
-        {
-            var logSchema = schema.GenerateLogSchema();
-            Helper.Logs.Add(new StateInfo("Load", "Database", "Generate Schema"));
-            var attributes = new List<TableAttribute>();
-            foreach (var assembly in assemblies)
-            {
-                foreach (var type in assembly.GetExportedTypes().Where(item => item.IsClass))
-                {
-                    var tableAttribute = GetTableAttribute(type);
-                    if (tableAttribute != null)
-                    {
-                        attributes.Add(tableAttribute);
-                    }
-                    else
-                    {
-                        GetItemTypeAttribute(type);
-                        if (TypeHelper.IsInterface(type, typeof(IExecutable)))
-                        {
-                            var uri = new UriBuilder(assembly.CodeBase);
-                            var path = Uri.UnescapeDataString(uri.Path);
-                            var filename = Path.GetFileName(path);
-
-                            var gname = assembly.GetName().Name;
-                            var gprocedure = schema.Procedures[gname];
-                            if (gprocedure == null)
-                            {
-                                gprocedure = new DBProcedure
-                                {
-                                    Name = gname,
-                                    DataName = filename,
-                                    ProcedureType = ProcedureTypes.File
-                                };
-                                schema.Procedures.Add(gprocedure);
-                            }
-                            var name = type.FullName;
-                            var procedure = schema.Procedures[name];
-                            if (procedure == null)
-                            {
-                                procedure = new DBProcedure
-                                {
-                                    Schema = schema,
-                                    Parent = gprocedure,
-                                    Name = name,
-                                    DisplayName = type.Name,
-                                    DataName = filename,
-                                    ProcedureType = ProcedureTypes.Assembly
-                                };
-                                schema.Procedures.Add(procedure);
-                            }
-
-                            procedure.Codes.Clear();
-                            procedure.Codes.AddRange(type.GetCustomAttributes<CodeAttribute>());
-
-                            schema.Procedures.AddCodes(procedure);
-
-                        }
-
-                    }
-                }
-            }
-
-            foreach (var tableAttribute in attributes)
-            {
-                tableAttribute.Generate(schema);
-            }
-        }
-
-        public static DBSchema Generate(Assembly assembly, string schemaName)
-        {
-            var schema = new DBSchema(schemaName);
-            Generate(new[] { assembly }, schema);
-            schems.Add(schema);
-            return schema;
-        }
 
         public static DBProcedure ParseProcedure(string code, string category = "General")
         {
@@ -874,11 +598,6 @@ namespace DataWF.Data
                     break;
             }
             return procedure;
-        }
-
-        public static void ClearChache()
-        {
-            cacheTables.Clear();
         }
 
         private static List<int> accessGroups = new List<int>();

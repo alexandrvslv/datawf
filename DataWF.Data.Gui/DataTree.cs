@@ -202,9 +202,10 @@ namespace DataWF.Data.Gui
                 || arg.ListChangedType == ListChangedType.ItemDeleted)
             {
                 var item = (DBSchemaItem)arg.Sender;
-                var node = Init(item);
                 if (arg.ListChangedType != ListChangedType.ItemDeleted)
                 {
+                    var node = Init(item);
+
                     Node onode = item is DBTableItem ? Find(((DBTableItem)item).Table) : Find(item.Schema);
                     if (item is DBTableGroup && ((DBTableGroup)item).Group != null && ShowTableGroup)
                         onode = Find(((DBTableGroup)item).Group);
@@ -218,7 +219,13 @@ namespace DataWF.Data.Gui
                         Nodes.Add(node);
                 }
                 else
-                    Nodes.Remove(node);
+                {
+                    var node = Find(item);
+                    if (node != null)
+                    {
+                        Nodes.Remove(node);
+                    }
+                }
             }
         }
 

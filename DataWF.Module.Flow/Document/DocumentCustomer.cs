@@ -46,7 +46,7 @@ namespace DataWF.Module.Flow
     {
         public static DBTable<DocumentCustomer> DBTable
         {
-            get { return DBService.GetTable<DocumentCustomer>(); }
+            get { return GetTable<DocumentCustomer>(); }
         }
 
         public DocumentCustomer()

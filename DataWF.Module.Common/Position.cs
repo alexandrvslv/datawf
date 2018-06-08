@@ -32,7 +32,7 @@ namespace DataWF.Module.Common
     {
         public static DBTable<Position> DBTable
         {
-            get { return DBService.GetTable<Position>(); }
+            get { return GetTable<Position>(); }
         }
 
         public Position()

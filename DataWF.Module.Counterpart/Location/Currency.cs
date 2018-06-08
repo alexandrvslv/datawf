@@ -29,7 +29,7 @@ namespace DataWF.Module.Counterpart
     {
         public static DBVirtualTable<Currency> DBTable
         {
-            get { return (DBVirtualTable<Currency>)DBService.GetTable<Currency>(); }
+            get { return (DBVirtualTable<Currency>)GetTable<Currency>(); }
         }
 
         [VirtualColumn("unid", Keys = DBColumnKeys.Primary)]

@@ -421,7 +421,7 @@ namespace DataWF.Data.Gui
             window.ButtonAcceptClick += (s, a) =>
                   {
                       var schema = new DBSchema("NewSchema");
-                      DBService.Generate(assemblyList.Where(p => p.Check).Select(p => p.Assembly), schema);
+                      schema.Generate(assemblyList.Where(p => p.Check).Select(p => p.Assembly));
                       DBService.Schems.Add(schema);
 
                       ShowNewItem(schema);
@@ -918,7 +918,7 @@ namespace DataWF.Data.Gui
                         procedire.Name = Path.GetFileNameWithoutExtension(name);
                     }
                     procedire.Data = File.ReadAllBytes(fileName);
-                    procedire.Date = File.GetLastWriteTime(fileName);
+                    procedire.Stamp = File.GetLastWriteTime(fileName);
                     procedire.Save();
                 }
                 MessageDialog.ShowMessage(ParentWindow, Locale.Get("FlowExplorer", "Files load complete!"), "File Loader!");

@@ -66,7 +66,7 @@ namespace DataWF.Module.Flow
     {
         public static DBTable<Stage> DBTable
         {
-            get { return DBService.GetTable<Stage>(); }
+            get { return GetTable<Stage>(); }
         }
 
         public Stage()

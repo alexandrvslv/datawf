@@ -41,7 +41,7 @@ namespace DataWF.Data
             do
             {
                 type = type.BaseType;
-                Table = type == null ? null : DBService.GetTableAttribute(type);
+                Table = type == null ? null : DBTable.GetTableAttribute(type);
             }
             while (Table == null && type != null);
             if (Table == null)

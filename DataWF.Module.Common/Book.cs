@@ -29,7 +29,7 @@ namespace DataWF.Module.Common
     {
         public static DBTable<Book> DBTable
         {
-            get { return DBService.GetTable<Book>(); }
+            get { return GetTable<Book>(); }
         }
 
         public Book()

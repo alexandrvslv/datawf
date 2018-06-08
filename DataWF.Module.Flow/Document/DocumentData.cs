@@ -90,7 +90,7 @@ namespace DataWF.Module.Flow
     {
         public static DBTable<DocumentData> DBTable
         {
-            get { return DBService.GetTable<DocumentData>(); }
+            get { return GetTable<DocumentData>(); }
         }
 
         protected object templateDocument = null;
@@ -144,12 +144,12 @@ namespace DataWF.Module.Flow
         [DataMember, Column("file_data")]
         public virtual byte[] FileData
         {
-            get { return buf ?? (buf = DBService.GetZip(this, Table.Columns.GetByProperty(nameof(FileData)))); }
+            get { return buf ?? (buf = GetZip(Table.Columns.GetByProperty(nameof(FileData)))); }
             set
             {
                 var column = Table.Columns.GetByProperty(nameof(FileData));
                 buf = value;
-                DBService.SetZip(this, column, value);
+                SetZip(column, value);
 
                 if (IsTemplate && templateDocument != null)
                 {

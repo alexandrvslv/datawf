@@ -39,11 +39,11 @@ namespace DataWF.Data
         private Query filterQuery;
 
         public DBTableView(string defaultFilter, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
-            : this(DBService.GetTable(typeof(T), null, false, true), defaultFilter, mode, statusFilter)
+            : this(DBTable.GetTable(typeof(T), null, false, true), defaultFilter, mode, statusFilter)
         { }
 
         public DBTableView(QParam defaultFilter = null, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
-            : this(DBService.GetTable(typeof(T), null, false, true), defaultFilter, mode, statusFilter)
+            : this(DBTable.GetTable(typeof(T), null, false, true), defaultFilter, mode, statusFilter)
         { }
 
         public DBTableView(DBTable table, string defaultFilter = null, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
@@ -334,10 +334,10 @@ namespace DataWF.Data
                                     items.RemoveAt(index);
                                     items.Insert(newindex, item);
                                     // RaiseListChanged(ListChangedType.ItemMoved, newindex, index);
-                                    OnListChanged(ListChangedType.ItemChanged, newindex, -1, property);
+                                    OnListChanged(ListChangedType.ItemChanged, newindex, -1, item, property);
                                 }
                                 else
-                                    OnListChanged(type, index, -1, property);
+                                    OnListChanged(type, index, -1, item, property);
                             }
                             break;
                         case ListChangedType.ItemDeleted:

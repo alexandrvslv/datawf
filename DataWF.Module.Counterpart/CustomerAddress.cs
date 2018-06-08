@@ -22,7 +22,7 @@ namespace DataWF.Module.Counterpart
     {
         public static DBTable<CustomerAddress> DBTable
         {
-            get { return DBService.GetTable<CustomerAddress>(); }
+            get { return GetTable<CustomerAddress>(); }
         }
 
         public CustomerAddress()

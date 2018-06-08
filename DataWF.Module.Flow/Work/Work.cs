@@ -41,7 +41,7 @@ namespace DataWF.Module.Flow
     {
         public static DBTable<Work> DBTable
         {
-            get { return DBService.GetTable<Work>(); }
+            get { return GetTable<Work>(); }
         }
 
         public Work()

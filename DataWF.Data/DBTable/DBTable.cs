@@ -39,6 +39,75 @@ namespace DataWF.Data
 
     public abstract class DBTable : DBSchemaItem, ICollection<DBItem>, IComparable, IAccessable, IDisposable
     {
+
+        private static Dictionary<Type, TableAttribute> cacheTables = new Dictionary<Type, TableAttribute>();
+        private static Dictionary<Type, ItemTypeAttribute> cacheItemTypes = new Dictionary<Type, ItemTypeAttribute>();
+
+        public static void ClearChache()
+        {
+            cacheTables.Clear();
+            cacheItemTypes.Clear();
+        }
+
+        public static TableAttribute GetTableAttribute<T>(bool inherite = false)
+        {
+            return GetTableAttribute(typeof(T), inherite);
+        }
+
+        public static TableAttribute GetTableAttribute(Type type, bool inherite = false)
+        {
+            if (!cacheTables.TryGetValue(type, out TableAttribute table))
+            {
+                table = type.GetCustomAttribute<TableAttribute>();
+                if (table == null)
+                {
+                    table = type.GetCustomAttribute<VirtualTableAttribute>();
+                }
+                if (table != null)
+                {
+                    table.Initialize(type);
+                }
+                cacheTables[type] = table;
+            }
+            if (table == null && inherite)
+            {
+                var itemType = GetItemTypeAttribute(type);
+                table = itemType?.Table;
+            }
+            return table;
+        }
+
+        public static ItemTypeAttribute GetItemTypeAttribute(Type type)
+        {
+            if (!cacheItemTypes.TryGetValue(type, out ItemTypeAttribute itemType))
+            {
+                itemType = type.GetCustomAttribute<ItemTypeAttribute>();
+                if (itemType != null)
+                {
+                    itemType.Initialize(type);
+                }
+                cacheItemTypes[type] = itemType;
+            }
+            return itemType;
+        }
+
+        public static DBTable<T> GetTable<T>(DBSchema schema = null, bool generate = false) where T : DBItem, new()
+        {
+            return (DBTable<T>)GetTable(typeof(T), schema, generate);
+        }
+
+        public static DBTable GetTable(Type type, DBSchema schema = null, bool generate = false, bool inherite = false)
+        {
+            var config = GetTableAttribute(type, inherite);
+            if (config != null)
+            {
+                if (config.Table == null && generate)
+                    config.Generate(schema);
+                return config.Table;
+            }
+            return null;
+        }
+
         protected DBCommand dmlInsert;
         protected DBCommand dmlInsertSequence;
         protected DBCommand dmlDelete;

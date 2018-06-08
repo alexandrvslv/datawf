@@ -30,13 +30,23 @@ namespace DataWF.Data
     public class ExecuteArgs
     {
         private Dictionary<string, object> parameters;
+        private DBItem document;
 
         public ExecuteArgs(DBItem document = null, string category = "General")
         {
             Document = document;
         }
 
-        public DBItem Document { get; set; }
+        public DBItem Document
+        {
+            get { return document; }
+            set
+            {
+                if (document == value)
+                    return;
+                document = value;
+            }
+        }
 
         public string ProcedureCategory { get; set; }
 

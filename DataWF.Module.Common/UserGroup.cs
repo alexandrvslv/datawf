@@ -37,7 +37,7 @@ namespace DataWF.Module.Common
 
         public static DBTable<UserGroup> DBTable
         {
-            get { return DBService.GetTable<UserGroup>(); }
+            get { return GetTable<UserGroup>(); }
         }
 
         public void AddUser(User user)

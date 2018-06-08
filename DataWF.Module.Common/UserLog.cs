@@ -190,7 +190,7 @@ namespace DataWF.Module.Common
 
         public static DBTable<UserLog> DBTable
         {
-            get { return DBService.GetTable<UserLog>(); }
+            get { return GetTable<UserLog>(); }
         }
 
         public static event EventHandler<DBItemEventArgs> RowLoging;

@@ -49,7 +49,7 @@ namespace DataWF.Module.Common
     {
         public static DBTable<Scheduler> DBTable
         {
-            get { return DBService.GetTable<Scheduler>(); }
+            get { return GetTable<Scheduler>(); }
         }
 
         public Scheduler()

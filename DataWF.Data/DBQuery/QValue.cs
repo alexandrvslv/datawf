@@ -65,7 +65,7 @@ namespace DataWF.Data
                 if (this.value != value)
                 {
                     this.value = value;
-                    this.text = DBService.FormatToSqlText(value);
+                    this.text = DBSystem.FormatText(value);
                     OnPropertyChanged(nameof(Value));
                 }
             }
@@ -97,7 +97,7 @@ namespace DataWF.Data
 
         public override string Format(IDbCommand command = null)
         {
-            return (command == null || Value == null) ? DBService.FormatToSqlText(Value) : CreateParameter(command, Value);
+            return (command == null || Value == null) ? DBSystem.FormatText(Value) : CreateParameter(command, Value);
         }
 
         public override object GetValue(DBItem row)

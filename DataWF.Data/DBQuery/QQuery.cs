@@ -81,7 +81,7 @@ namespace DataWF.Data
 
         public QQuery(Type type) : this()
         {
-            var attribute = DBService.GetTableAttribute(type, true);
+            var attribute = DBTable.GetTableAttribute(type, true);
             if (attribute != null)
                 Table = attribute.Table;
         }

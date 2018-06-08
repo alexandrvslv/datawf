@@ -36,7 +36,7 @@ namespace DataWF.Module.Counterpart
     {
         public static DBTable<Address> DBTable
         {
-            get { return DBService.GetTable<Address>(); }
+            get { return GetTable<Address>(); }
         }
 
         public Address()

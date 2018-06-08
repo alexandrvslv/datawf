@@ -386,8 +386,13 @@ namespace DataWF.Data
 
         public QResult ExecuteQResult(string commandText)
         {
+            return ExecuteQResult(AddCommand(commandText));
+        }
+
+        public QResult ExecuteQResult(IDbCommand command)
+        {
             var list = new QResult();
-            ExecuteQResult(AddCommand(commandText), list);
+            ExecuteQResult(AddCommand(command), list);
             return list;
         }
 

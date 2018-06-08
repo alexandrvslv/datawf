@@ -77,7 +77,7 @@ namespace DataWF.Module.Flow
     {
         public static DBTable<Template> DBTable
         {
-            get { return DBService.GetTable<Template>(); }
+            get { return GetTable<Template>(); }
         }
 
         private DBItemType documentType;

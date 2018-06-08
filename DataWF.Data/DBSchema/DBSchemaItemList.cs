@@ -110,8 +110,13 @@ namespace DataWF.Data
                 item.Schema = Schema;
 
             int index = base.AddInternal(item);
-            DBService.OnDBSchemaChanged(item, DDLType.Create);
+            DBService.OnDBSchemaChanged(item, GetInsertType(item));
             return index;
+        }
+
+        public virtual DDLType GetInsertType(T item)
+        {
+            return DDLType.Create;
         }
 
         public override object NewItem()

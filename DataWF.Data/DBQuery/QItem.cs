@@ -97,6 +97,18 @@ namespace DataWF.Data
             set { }
         }
 
+        [Browsable(false)]
+        public virtual DBSchema Schema
+        {
+            get { return Table?.Schema; }
+        }
+
+        [Browsable(false)]
+        public virtual DBSystem DBSystem
+        {
+            get { return Schema?.System ?? DBSystem.Default; }
+        }
+
         public virtual string Format(IDbCommand command = null)
         {
             return text;

@@ -77,7 +77,7 @@ namespace DataWF.Module.Flow
     {
         public static DBTable<Document> DBTable
         {
-            get { return DBService.GetTable<Document>(); }
+            get { return GetTable<Document>(); }
         }
 
         public static Document FindDocument(Template template, object p)
@@ -325,7 +325,7 @@ namespace DataWF.Module.Flow
         }
 
         [Reference(nameof(AddressId))]
-        public Address Address
+        public virtual Address Address
         {
             get { return GetPropertyReference<Address>(); }
             set { SetPropertyReference(value); }

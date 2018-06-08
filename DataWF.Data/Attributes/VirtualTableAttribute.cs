@@ -67,7 +67,7 @@ namespace DataWF.Data
 
 		public override void Initialize(Type type)
 		{
-			BaseTable = DBService.GetTableAttribute(BaseType);
+			BaseTable = DBTable.GetTableAttribute(BaseType);
 			base.Initialize(type);
 		}
 

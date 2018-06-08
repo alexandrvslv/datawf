@@ -36,7 +36,7 @@ namespace DataWF.Module.Counterpart
     {
         public static DBTable<CustomerReference> DBTable
         {
-            get { return DBService.GetTable<CustomerReference>(); }
+            get { return GetTable<CustomerReference>(); }
         }
 
         public CustomerReference()
