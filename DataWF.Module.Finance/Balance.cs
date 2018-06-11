@@ -39,7 +39,7 @@ namespace DataWF.Module.Finance
     {
         public static DBTable<Balance> DBTable
         {
-            get { return DBService.GetTable<Balance>(); }
+            get { return GetTable<Balance>(); }
         }
 
         public static DBTableView<Balance> DataView

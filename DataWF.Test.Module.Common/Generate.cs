@@ -14,7 +14,7 @@ namespace DataWF.Test.Module.Common
         public void Initialize()
         {
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            var schema = DBService.Generate(typeof(User).Assembly, "common_database");
+            var schema = DBSchema.Generate(typeof(User).Assembly, "common_database");
             Assert.IsNotNull(schema);
             Assert.IsNotNull(Book.DBTable);
             Assert.IsNotNull(UserGroup.DBTable);
@@ -29,7 +29,7 @@ namespace DataWF.Test.Module.Common
                 System = DBSystem.SQLite,
                 DataBase = "test.common"
             };
-
+            schema.DropDatabase();
             schema.CreateDatabase();
 
             var group = new UserGroup()

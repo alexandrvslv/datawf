@@ -61,13 +61,13 @@ namespace DataWF.Module.Messanger
     {
         public static DBTable<Message> DBTable
         {
-            get { return DBService.GetTable<Message>(); }
+            get { return GetTable<Message>(); }
         }
 
         private MessageAddressList addresses;
         private DBItem cacheDocument;
 
-        public static Message SendToGroup(User from, UserGroup group, string data, DBItem document, DBTransaction transaction)
+        public static Message SendToGroup(User from, UserGroup group, string data, DBItem document)
         {
             var message = new Message
             {
@@ -76,7 +76,7 @@ namespace DataWF.Module.Messanger
                 Data = data,
                 Document = document
             };
-            message.Save(transaction);
+            message.Save();
 
             foreach (var user in group.GetUsers())
             {
@@ -85,13 +85,13 @@ namespace DataWF.Module.Messanger
                     var address = new MessageAddress();
                     address.Message = message;
                     address.User = user;
-                    address.Save(transaction);
+                    address.Save();
                 }
             }
             return message;
         }
 
-        public static Message Send(User from, DBItem to, string data, DBItem document, DBTransaction transaction)
+        public static Message Send(User from, DBItem to, string data, DBItem document)
         {
             var message = new Message()
             {
@@ -100,7 +100,7 @@ namespace DataWF.Module.Messanger
                 Data = data,
                 Document = document
             };
-            message.Save(transaction);
+            message.Save();
 
             if (to is User)
             {
@@ -109,7 +109,7 @@ namespace DataWF.Module.Messanger
                     Message = message,
                     User = (User)to
                 };
-				address.Save(transaction);
+				address.Save();
 			}
             else if (to is Department)
             {
@@ -122,7 +122,7 @@ namespace DataWF.Module.Messanger
                             Message = message,
                             User = user
                         };
-                        saddress.Save(transaction);
+                        saddress.Save();
                     }
                 }
             }
@@ -137,7 +137,7 @@ namespace DataWF.Module.Messanger
                             Message = message,
                             User = user
                         };
-                        saddress.Save(transaction);
+                        saddress.Save();
                     }
                 }
             }

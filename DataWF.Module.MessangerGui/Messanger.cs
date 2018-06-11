@@ -184,7 +184,7 @@ namespace DataWF.Module.MessangerGui
             {
                 using (var transaction = new DBTransaction())
                 {
-                    Message.Send(User.CurrentUser, User, MessageText, document, transaction);
+                    Message.Send(User.CurrentUser, User, MessageText, document);
                     transaction.Commit();
                 }
                 MessageText = string.Empty;
@@ -211,6 +211,15 @@ namespace DataWF.Module.MessangerGui
             if (list != null)
                 list.Dispose();
             base.Dispose(disposing);
+        }
+
+        public bool Closing()
+        {
+            return true;
+        }
+
+        public void Activating()
+        {
         }
     }
 }

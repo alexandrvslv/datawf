@@ -22,7 +22,7 @@ namespace DataWF.Test.Data
         {
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
             DBService.Schems.Clear();
-            DBService.ClearChache();
+            DBTable.ClearChache();
 
             if (DBService.Connections.Count == 0)
                 Serialization.Deserialize("connections.xml", DBService.Connections);
@@ -67,7 +67,7 @@ namespace DataWF.Test.Data
         [Test]
         public void SchemaSerialization()
         {
-            var schem = DBService.Generate(GetType().Assembly, SchemaName);
+            var schem = DBSchema.Generate(GetType().Assembly, SchemaName);
             var file = "data.xml";
             Serialization.Serialize(DBService.Schems, file);
             DBService.Schems.Clear();
@@ -86,7 +86,7 @@ namespace DataWF.Test.Data
         public void Generate(DBConnection connection)
         {
             connection.CheckConnection();
-            schema = DBService.Generate(GetType().Assembly, SchemaName);
+            schema = DBSchema.Generate(GetType().Assembly, SchemaName);
 
             Assert.IsNotNull(schema, "Attribute Generator Fail. On Schema");
             Assert.IsNotNull(Employer.DBTable, "Attribute Generator Fail. On Employer Table");
@@ -169,7 +169,7 @@ namespace DataWF.Test.Data
             Position.DBTable.Save();
             Position.DBTable.Clear();
             var positions = Position.DBTable.Load();
-            Assert.AreEqual(7, positions.Count, "Insert/Read several Fail");
+            Assert.AreEqual(7, positions.Count(), "Insert/Read several Fail");
 
             //GetById
             employer = Employer.DBTable.LoadById(1);
@@ -220,7 +220,7 @@ namespace DataWF.Test.Data
         {
             public static DBTable<Position> DBTable
             {
-                get { return DBService.GetTable<Position>(); }
+                get { return GetTable<Position>(); }
             }
 
             public Position()
@@ -282,7 +282,7 @@ namespace DataWF.Test.Data
         {
             public static DBTable<Employer> DBTable
             {
-                get { return DBService.GetTable<Employer>(); }
+                get { return GetTable<Employer>(); }
             }
 
             public Employer()

@@ -37,7 +37,7 @@ namespace DataWF.Module.Finance
 	{
 		public static DBTable<Payment> DBTable
 		{
-			get { return DBService.GetTable<Payment>(); }
+			get { return GetTable<Payment>(); }
 		}
 
 		public Payment()

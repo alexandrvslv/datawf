@@ -46,7 +46,7 @@ namespace DataWF.Module.Messanger
     {
         public static DBTable<MessageData> DBTable
         {
-            get { return DBService.GetTable<MessageData>(); }
+            get { return GetTable<MessageData>(); }
         }
 
         public MessageData()

@@ -48,7 +48,7 @@ namespace DataWF.Module.Finance
     {
         public static DBTable<Account> DBTable
         {
-            get { return DBService.GetTable<Account>(); }
+            get { return GetTable<Account>(); }
         }
 
         [NonSerialized()]

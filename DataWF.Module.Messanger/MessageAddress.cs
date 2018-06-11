@@ -49,7 +49,7 @@ namespace DataWF.Module.Messanger
     {
         public static DBTable<MessageAddress> DBTable
         {
-            get { return DBService.GetTable<MessageAddress>(); }
+            get { return GetTable<MessageAddress>(); }
         }
 
         public MessageAddress()

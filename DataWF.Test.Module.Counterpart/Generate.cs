@@ -14,7 +14,7 @@ namespace DataWf.Test.Module.Counterparty
         {
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
             var schema = new DBSchema("wf_customer");
-            DBService.Generate(new[] { typeof(User).Assembly, typeof(Customer).Assembly }, schema);
+            schema.Generate(new[] { typeof(User).Assembly, typeof(Customer).Assembly });
             Assert.IsNotNull(Location.DBTable);
             Assert.IsNotNull(Address.DBTable);
             Assert.IsNotNull(Customer.DBTable);
@@ -28,7 +28,7 @@ namespace DataWf.Test.Module.Counterparty
                 DataBase = "test.common",
                 System = DBSystem.SQLite
             };
-
+            schema.DropDatabase();
             schema.CreateDatabase();
 
             Location.DBTable.Add(new Location { LocationType = LocationType.Continent, Code = "AF", Name = "Africa" });

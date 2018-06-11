@@ -31,7 +31,7 @@ namespace DataWF.TestGui
                 new ToolItem(ORMTestClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "ORM Test" },
                 new ToolItem(TestInvokerClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Test Invoker" },
                 new ToolItem(LocalizeEditorClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Localize Editor" },
-                new ToolItem(SyntaxTextClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Calendar" },
+                new ToolItem(CalendarClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Calendar" },
                 new ToolItem(DiffTestClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Diff Test" },
                 new ToolItem(StyleEditorClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "StyleEditor" },
                 new ToolItem(MonoTextEditorClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "MonoTextEditor" },
@@ -62,7 +62,7 @@ namespace DataWF.TestGui
         {
             await Task.Run(() =>
             {
-                var schema = DBService.Generate(typeof(User).Assembly, "common_data");
+                var schema = DBSchema.Generate(typeof(User).Assembly, "common_data");
                 schema.Connection = new DBConnection
                 {
                     Name = "test.common",
@@ -97,7 +97,7 @@ namespace DataWF.TestGui
             dock.Put(custom);
         }
 
-        private void SyntaxTextClick(object sender, EventArgs e)
+        private void CalendarClick(object sender, EventArgs e)
         {
             CalendarEditor calendare = new CalendarEditor();
             calendare.Text = "Calendar";
