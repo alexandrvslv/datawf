@@ -7,38 +7,34 @@ namespace DataWF.TestGui
 {
     public class DiffTest : VPanel
     {
-        private Label textALabel = new Label();
-        private Label textBLabel = new Label();
-        private TextEntry textA = new TextEntry();
-        private TextEntry textB = new TextEntry();
-        private Button testChar = new Button();
-        private Button testWord = new Button();
-        private LayoutList result = new LayoutList();
-        private GroupBoxItem itemParam = new GroupBoxItem();
-        private GroupBoxItem itemResult = new GroupBoxItem();
-        private GroupBox map = new GroupBox();
-        private Table panel = new Table();
+        private Label textALabel;
+        private Label textBLabel;
+        private TextEntry textA;
+        private TextEntry textB;
+        private Button testChar;
+        private Button testWord;
+        private LayoutList result;
+        private GroupBoxItem itemParam;
+        private GroupBoxItem itemResult;
+        private GroupBox map;
+        private Table panel;
         public DiffTest()
         {
-            textALabel.Text = "Param1:";
-            textALabel.TextAlignment = Alignment.Center;
+            textALabel = new Label() { Text = "Param1:", TextAlignment = Alignment.Center };
+            textBLabel = new Label() { Text = "Param2:", TextAlignment = Alignment.Center };
+            textA = new TextEntry() { Text = "Sequential Read: Up to 550 MB/s " };
+            textB = new TextEntry() { Text = "Sequential Write: Up to 510 MB/s " };
 
-            textBLabel.Text = "Param2:";
-            textBLabel.TextAlignment = Alignment.Center;
-
-            textA.Text = "Sequential Read: Up to 550 MB/s ";
-
-            textB.Text = "Sequential Write: Up to 510 MB/s ";
-
-            testChar.Label = "Test Char";
+            testChar = new Button() { Label = "Test Char" };
             testChar.Clicked += TestCharOnClick;
 
-            testWord.Label = "Test Word";
+            testWord = new Button() { Label = "Test Word" };
             testWord.Clicked += TestWordOnClick;
 
-            result.GenerateToString = false;
+            result = new LayoutList() { GenerateToString = false };
             result.SelectionChanged += result_SelectionChanged;
 
+            panel = new Table();
             panel.Add(textALabel, 0, 0);
             panel.Add(textA, 1, 0, colspan: 2, hexpand: true);
             panel.Add(textBLabel, 0, 1);
@@ -47,17 +43,22 @@ namespace DataWF.TestGui
             panel.Add(testWord, 1, 2, hexpand: false);
             //test.RowSpan = 
 
-            itemParam.Widget = panel;
-            itemParam.FillWidth = true;
-            itemParam.Text = "Params";
+            itemParam = new GroupBoxItem()
+            {
+                Widget = panel,
+                FillWidth = true,
+                Name = "Params"
+            };
 
-            itemResult.Widget = result;
-            itemResult.Row = 1;
-            itemResult.FillHeight = true;
-            itemResult.Text = "Result";
+            itemResult = new GroupBoxItem()
+            {
+                Widget = result,
+                Row = 1,
+                FillHeight = true,
+                Name = "Result"
+            };
 
-            map.Add(itemParam);
-            map.Add(itemResult);
+            map = new GroupBox(itemParam, itemResult);
 
             PackStart(map, true, true);
             Text = "Diff Test";
