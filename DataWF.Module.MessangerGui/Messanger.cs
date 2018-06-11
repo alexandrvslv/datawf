@@ -144,9 +144,9 @@ namespace DataWF.Module.MessangerGui
             get { return false; }
         }
 
-        public void Localize()
+        public override void Localize()
         {
-            tools.Localize();
+            base.Localize();
             GuiService.Localize(this, "Messager", "Messages", GlyphType.SignIn);
         }
 
