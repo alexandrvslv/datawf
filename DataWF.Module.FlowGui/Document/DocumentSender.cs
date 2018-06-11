@@ -311,6 +311,7 @@ namespace DataWF.Module.FlowGui
         public TableItemNode InitNode(DBItem staff)
         {
             var staffNode = listUsers.InitItem(staff);
+            listUsers.CheckNode(staffNode);
             staffNode.CheckRecursive = false;
             staffNode.Check = true;
             listUsers.Nodes.Add(staffNode);
@@ -533,6 +534,7 @@ namespace DataWF.Module.FlowGui
                 exec.Action = () =>
                 {
                     SendBackground();
+                    SendCallback();
                     return null;
                 };
                 GuiService.Main.AddTask(this, exec);
