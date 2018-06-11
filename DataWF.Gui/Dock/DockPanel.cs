@@ -257,7 +257,7 @@ namespace DataWF.Gui
 
         public event EventHandler<DockPageEventArgs> PageClose;
 
-        public void ClosePage(DockPage page)
+        public void OnPageClose(DockPage page)
         {
             if (page.Widget is IDockContent)
             {

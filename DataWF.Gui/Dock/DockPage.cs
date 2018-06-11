@@ -107,7 +107,7 @@ namespace DataWF.Gui
             if (!closing)
             {
                 closing = true;
-                Panel?.ClosePage(this);
+                Panel?.OnPageClose(this);
                 closing = false;
             }
         }
