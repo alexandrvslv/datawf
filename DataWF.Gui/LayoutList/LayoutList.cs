@@ -2986,16 +2986,20 @@ namespace DataWF.Gui
 
             object val = ReadValue(item, cell);
 
-            editor.Initialize = true;
-            editor.Cell = cell;
-            cellEdit.ReadOnly = (cell.ReadOnly || editState == EditListState.ReadOnly) && editState != EditListState.EditAny;
-            cellEdit.InitializeEditor(editor, val, item);
-            editor.Style = OnGetCellStyle(item, val, cell);
-            SetEditorBound();
-            editor.Sensitive = true;
-            editor.Visible = true;
-            editor.Initialize = false;
-
+            try
+            {
+                editor.Initialize = true;
+                editor.Cell = cell;
+                cellEdit.ReadOnly = (cell.ReadOnly || editState == EditListState.ReadOnly) && editState != EditListState.EditAny;
+                cellEdit.InitializeEditor(editor, val, item);
+                editor.Style = OnGetCellStyle(item, val, cell);
+                editor.Sensitive =
+                    editor.Visible = true;
+            }
+            finally
+            {
+                editor.Initialize = false;
+            }
             FocusEditControl();
         }
 
@@ -4733,10 +4737,11 @@ namespace DataWF.Gui
                 bounds.TempColumns = bounds.Columns;
                 bounds.TempContent = bounds.Content;
 
-                if (CurrentEditor != null)
-                    SetEditorBound();
                 canvas.QueueDraw();
             }
+            if (CurrentEditor != null)
+                SetEditorBound();
+
         }
 
         public LayoutGroupList Groups { get { return groups; } }
