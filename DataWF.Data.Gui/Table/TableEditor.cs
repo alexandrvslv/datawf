@@ -50,7 +50,7 @@ namespace DataWF.Data.Gui
         private ToolTableLoader toolProgress;
         private ToolDropDown toolReference;
         private ToolDropDown toolParam;
-        private ToolMenuItem toolInsertLine;
+        //private ToolMenuItem toolInsertLine;
         private ToolMenuItem toolReport;
         private ToolMenuItem toolMerge;
         protected ToolWindow _currentControl;
@@ -88,18 +88,25 @@ namespace DataWF.Data.Gui
             throw new NotImplementedException();
         }
 
-        private void Closing()
+        public override bool Closing()
         {
             loader.Cancel();
 
             if (Table != null && Table.IsEdited)
             {
                 question.SecondaryText = Locale.Get("TableEditor", "Save changes?");
-                if (MessageDialog.AskQuestion(ParentWindow, question) == Command.Yes)
+                var result = MessageDialog.AskQuestion(ParentWindow, question);
+                if (result == Command.Yes)
                 {
                     Table.Save();
+                    return true;
+                }
+                else if (result == Command.Cancel)
+                {
+                    return false;
                 }
             }
+            return true;
         }
 
         [DefaultValue(false)]

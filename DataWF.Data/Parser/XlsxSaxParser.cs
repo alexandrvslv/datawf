@@ -536,7 +536,9 @@ namespace DataWF.Data
                 }
             }
             catch (Exception ex)
-            { }
+            {
+                Helper.OnException(ex);
+            }
         }
 
         public void WriteElement(XmlWriter writer, OpenXmlElement element)
