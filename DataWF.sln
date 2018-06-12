@@ -3,15 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27130.2020
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.StarterGtk", "DataWF.StarterGtk\DataWF.StarterGtk.csproj", "{687DFE24-9DE0-4A3B-9854-CF41B8FDC134}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataWF.StarterGtk", "DataWF.StarterGtk\DataWF.StarterGtk.csproj", "{687DFE24-9DE0-4A3B-9854-CF41B8FDC134}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Module.FlowGui", "DataWF.Module.FlowGui\DataWF.Module.FlowGui.csproj", "{EA38C2A9-BC62-419A-8385-2C72ECBBD5E7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataWF.Module.FlowGui", "DataWF.Module.FlowGui\DataWF.Module.FlowGui.csproj", "{EA38C2A9-BC62-419A-8385-2C72ECBBD5E7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mono.TextEditor", "External\Mono.Texteditor\Mono.TextEditor.csproj", "{A2329308-3751-4DBD-9A75-5F7B8B024625}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mono.TextEditor", "External\Mono.Texteditor\Mono.TextEditor.csproj", "{A2329308-3751-4DBD-9A75-5F7B8B024625}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Gui", "DataWF.Gui\DataWF.Gui.csproj", "{337D88BA-7460-4C2A-B83D-6B27DF626983}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataWF.Gui", "DataWF.Gui\DataWF.Gui.csproj", "{337D88BA-7460-4C2A-B83D-6B27DF626983}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Test.GuiGtk", "DataWF.Test.GuiGtk\DataWF.Test.GuiGtk.csproj", "{69C37C81-AEAD-4F49-BB18-0750387E680D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataWF.Test.GuiGtk", "DataWF.Test.GuiGtk\DataWF.Test.GuiGtk.csproj", "{69C37C81-AEAD-4F49-BB18-0750387E680D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "External", "External", "{9862F37D-3BE1-4ACA-9CF0-BB75B04FD109}"
 EndProject
@@ -19,53 +19,57 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{B61599
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "DataWF.Test.GuiShare", "DataWF.Test.GuiShare\DataWF.Test.GuiShare.shproj", "{0968C296-837F-48C3-B310-7B2AA9452EF8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Test.GuiWpf", "DataWF.Test.GuiWpf\DataWF.Test.GuiWpf.csproj", "{6DFEFA1C-CBC0-4EFC-BDAC-FF46BA86B9F3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataWF.Test.GuiWpf", "DataWF.Test.GuiWpf\DataWF.Test.GuiWpf.csproj", "{6DFEFA1C-CBC0-4EFC-BDAC-FF46BA86B9F3}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{E6FA534E-87C1-41F5-BF7C-75343C26C481}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Common", "DataWF.Common\DataWF.Common.csproj", "{32A948C0-5468-4392-A490-91947BFC3BE4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataWF.Common", "DataWF.Common\DataWF.Common.csproj", "{32A948C0-5468-4392-A490-91947BFC3BE4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Data", "DataWF.Data\DataWF.Data.csproj", "{C982088F-82EC-4400-8D3C-BD76221C0C9C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataWF.Data", "DataWF.Data\DataWF.Data.csproj", "{C982088F-82EC-4400-8D3C-BD76221C0C9C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Test.Common", "DataWF.Test.Common\DataWF.Test.Common.csproj", "{9D872B67-0087-4B29-AD5D-B4B4B045D2F7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataWF.Test.Common", "DataWF.Test.Common\DataWF.Test.Common.csproj", "{9D872B67-0087-4B29-AD5D-B4B4B045D2F7}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Modules", "Modules", "{4F5DA472-639D-4798-9C04-DBAA318F6C0E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Module.Flow", "DataWF.Module.Flow\DataWF.Module.Flow.csproj", "{E5EFC9B0-AEE6-47B4-B553-37A241ADF976}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataWF.Module.Flow", "DataWF.Module.Flow\DataWF.Module.Flow.csproj", "{E5EFC9B0-AEE6-47B4-B553-37A241ADF976}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Desktop", "Desktop", "{A5F3D8FA-311C-40F7-9AD5-3F998D61E96D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Data.Gui", "DataWF.Data.Gui\DataWF.Data.Gui.csproj", "{3CCBAB5D-85AE-4DE0-A20E-AD302AF442A2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataWF.Data.Gui", "DataWF.Data.Gui\DataWF.Data.Gui.csproj", "{3CCBAB5D-85AE-4DE0-A20E-AD302AF442A2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Test.Data", "DataWF.Test.Data\DataWF.Test.Data.csproj", "{A505FEEE-28A8-4D99-9E15-39DDD3F48F2D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataWF.Test.Data", "DataWF.Test.Data\DataWF.Test.Data.csproj", "{A505FEEE-28A8-4D99-9E15-39DDD3F48F2D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Test.Module.Common", "DataWF.Test.Module.Common\DataWF.Test.Module.Common.csproj", "{52064A5D-12B6-410F-9BCF-6F6B52455A28}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataWF.Test.Module.Common", "DataWF.Test.Module.Common\DataWF.Test.Module.Common.csproj", "{52064A5D-12B6-410F-9BCF-6F6B52455A28}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Module.Counterpart", "DataWF.Module.Counterpart\DataWF.Module.Counterpart.csproj", "{D9D3537E-C1F9-4F59-AE2B-5098213FF747}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataWF.Module.Counterpart", "DataWF.Module.Counterpart\DataWF.Module.Counterpart.csproj", "{D9D3537E-C1F9-4F59-AE2B-5098213FF747}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Test.Module.Counterpart", "DataWF.Test.Module.Counterpart\DataWF.Test.Module.Counterpart.csproj", "{1CD6F41B-3619-4210-BCBD-4AD8DD55B00E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataWF.Test.Module.Counterpart", "DataWF.Test.Module.Counterpart\DataWF.Test.Module.Counterpart.csproj", "{1CD6F41B-3619-4210-BCBD-4AD8DD55B00E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Module.Finance", "DataWF.Module.Finance\DataWF.Module.Finance.csproj", "{89A2D4B4-6352-4193-BB62-12E9DEA49221}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataWF.Module.Finance", "DataWF.Module.Finance\DataWF.Module.Finance.csproj", "{89A2D4B4-6352-4193-BB62-12E9DEA49221}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Module.CommonGui", "DataWF.Module.CommonGui\DataWF.Module.CommonGui.csproj", "{E17A78AE-28C2-4264-A36D-A7EBAFE7626D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataWF.Module.CommonGui", "DataWF.Module.CommonGui\DataWF.Module.CommonGui.csproj", "{E17A78AE-28C2-4264-A36D-A7EBAFE7626D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.StarterWpf", "DataWF.StarterWpf\DataWF.StarterWpf.csproj", "{25F7A02C-C741-464F-9BB0-312B252575A0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataWF.StarterWpf", "DataWF.StarterWpf\DataWF.StarterWpf.csproj", "{25F7A02C-C741-464F-9BB0-312B252575A0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Module.Messanger", "DataWF.Module.Messanger\DataWF.Module.Messanger.csproj", "{1B9CC5A9-6163-403C-9BEA-E44176676DDD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataWF.Module.Messanger", "DataWF.Module.Messanger\DataWF.Module.Messanger.csproj", "{1B9CC5A9-6163-403C-9BEA-E44176676DDD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Module.MessangerGui", "DataWF.Module.MessangerGui\DataWF.Module.MessangerGui.csproj", "{42B8E03E-746D-443D-9226-F05EF3023ACF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataWF.Module.MessangerGui", "DataWF.Module.MessangerGui\DataWF.Module.MessangerGui.csproj", "{42B8E03E-746D-443D-9226-F05EF3023ACF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.OdfGui", "DataWF.OdfGui\DataWF.OdfGui.csproj", "{36C171D5-6670-4E6A-AB42-3A05932DC6A7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataWF.OdfGui", "DataWF.OdfGui\DataWF.OdfGui.csproj", "{36C171D5-6670-4E6A-AB42-3A05932DC6A7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Odf", "DataWF.Odf\DataWF.Odf.csproj", "{E82E5D9B-4E63-4820-9EB3-383D1D5D4C66}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataWF.Odf", "DataWF.Odf\DataWF.Odf.csproj", "{E82E5D9B-4E63-4820-9EB3-383D1D5D4C66}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Module.Common", "DataWF.Module.Common\DataWF.Module.Common.csproj", "{0AB0FAC1-55E1-45D1-AAF5-CC6FCC8954D4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataWF.Module.Common", "DataWF.Module.Common\DataWF.Module.Common.csproj", "{0AB0FAC1-55E1-45D1-AAF5-CC6FCC8954D4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xwt", "External\xwt\Xwt\Xwt.csproj", "{92494904-35FA-4DC9-BDE9-3A3E87AC49D3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xwt.Gtk", "External\xwt\Xwt.Gtk\Xwt.Gtk.csproj", "{C3887A93-B2BD-4097-8E2F-3A063EFF32FD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xwt.WPF", "External\xwt\Xwt.WPF\Xwt.WPF.csproj", "{C93D746E-1586-4D4F-B411-BF5A966E6A08}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Service", "Service", "{ABE1FC5F-1A1C-401E-8EC8-8C64BC088F65}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Web.Common", "DataWF.Web.Common\DataWF.Web.Common.csproj", "{3F3566DB-64BC-43E6-9A5A-F5F84E9E7D55}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -394,6 +398,18 @@ Global
 		{C93D746E-1586-4D4F-B411-BF5A966E6A08}.Release|x64.Build.0 = Release|Any CPU
 		{C93D746E-1586-4D4F-B411-BF5A966E6A08}.Release|x86.ActiveCfg = Release|Any CPU
 		{C93D746E-1586-4D4F-B411-BF5A966E6A08}.Release|x86.Build.0 = Release|Any CPU
+		{3F3566DB-64BC-43E6-9A5A-F5F84E9E7D55}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F3566DB-64BC-43E6-9A5A-F5F84E9E7D55}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F3566DB-64BC-43E6-9A5A-F5F84E9E7D55}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3F3566DB-64BC-43E6-9A5A-F5F84E9E7D55}.Debug|x64.Build.0 = Debug|Any CPU
+		{3F3566DB-64BC-43E6-9A5A-F5F84E9E7D55}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3F3566DB-64BC-43E6-9A5A-F5F84E9E7D55}.Debug|x86.Build.0 = Debug|Any CPU
+		{3F3566DB-64BC-43E6-9A5A-F5F84E9E7D55}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F3566DB-64BC-43E6-9A5A-F5F84E9E7D55}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3F3566DB-64BC-43E6-9A5A-F5F84E9E7D55}.Release|x64.ActiveCfg = Release|Any CPU
+		{3F3566DB-64BC-43E6-9A5A-F5F84E9E7D55}.Release|x64.Build.0 = Release|Any CPU
+		{3F3566DB-64BC-43E6-9A5A-F5F84E9E7D55}.Release|x86.ActiveCfg = Release|Any CPU
+		{3F3566DB-64BC-43E6-9A5A-F5F84E9E7D55}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -426,6 +442,7 @@ Global
 		{92494904-35FA-4DC9-BDE9-3A3E87AC49D3} = {9862F37D-3BE1-4ACA-9CF0-BB75B04FD109}
 		{C3887A93-B2BD-4097-8E2F-3A063EFF32FD} = {9862F37D-3BE1-4ACA-9CF0-BB75B04FD109}
 		{C93D746E-1586-4D4F-B411-BF5A966E6A08} = {9862F37D-3BE1-4ACA-9CF0-BB75B04FD109}
+		{3F3566DB-64BC-43E6-9A5A-F5F84E9E7D55} = {ABE1FC5F-1A1C-401E-8EC8-8C64BC088F65}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1F744653-49E6-408E-A9CA-7C21732CF644}
