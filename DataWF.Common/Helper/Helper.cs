@@ -1265,30 +1265,32 @@ namespace DataWF.Common
         {
             if (string.IsNullOrEmpty(str))
                 return str;
-            char[] charArray = new char[str.Length];
+            var charArray = new List<char>(str.Length);
             bool newWord = true;
-            for (int i = 0; i < str.Length; ++i)
+            int i = -1;
+            foreach (Char currentChar in str)
             {
-                Char currentChar = str[i];
+                var newChar = currentChar;
                 if (Char.IsLetter(currentChar))
                 {
                     if (newWord)
                     {
                         newWord = false;
-                        currentChar = Char.ToUpper(currentChar);
+                        newChar = Char.ToUpper(currentChar);
                     }
                     else
                     {
-                        currentChar = Char.ToLower(currentChar);
+                        newChar = Char.ToLower(currentChar);
                     }
                 }
                 else if (separator.Contains(currentChar))
                 {
                     newWord = true;
+                    continue;
                 }
-                charArray[i] = currentChar;
+                charArray.Add(newChar);
             }
-            return new string(charArray);
+            return new string(charArray.ToArray());
         }
     }
 
