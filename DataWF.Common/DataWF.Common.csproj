@@ -51,6 +51,7 @@
     <Compile Remove="Serializer\DictionaryItem.cs" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="Portable.Xaml" Version="0.22.0" />
     <PackageReference Include="SharpZipLib.NETStandard" Version="1.0.7" />
     <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />

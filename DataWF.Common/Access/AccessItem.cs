@@ -3,18 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Serialization;
 
 namespace DataWF.Common
 {
-    //public class AccessItemEventArg : StringEventArg
-    //{
-    //    public AccessItem Item;
-    //}
-
     public struct AccessItem
     {
         public readonly static AccessItem Empty = new AccessItem();
-        //public static event EventHandler<AccessItemEventArg> GetGroup;
         public static bool Default = true;
 
         public AccessItem(IAccessGroup group, AccessType data = AccessType.None) : this()
@@ -28,6 +23,7 @@ namespace DataWF.Common
             return $"{Group?.Name}({Data})";
         }
 
+        [XmlIgnore]
         public IAccessGroup Group { get; private set; }
 
         public int GroupId

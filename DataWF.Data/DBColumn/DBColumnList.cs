@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.ComponentModel;
 using DataWF.Common;
+using System.Linq;
 
 namespace DataWF.Data
 {
@@ -179,7 +180,12 @@ namespace DataWF.Data
 
         public DBColumn GetByProperty(string property)
         {
-            return SelectOne(nameof(DBColumn.Property), CompareType.Equal, property);
+            var columns = Select(nameof(DBColumn.Property), CompareType.Equal, property);
+            if (columns.Count() > 1)
+            {
+                return columns.Where(p => p.Culture == Locale.Instance.Culture).FirstOrDefault();
+            }
+            return columns.FirstOrDefault();
         }
 
         public DBColumn GetByKey(DBColumnKeys key)

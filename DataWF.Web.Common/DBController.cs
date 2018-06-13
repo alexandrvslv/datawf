@@ -19,15 +19,19 @@ namespace DataWF.Web.Common
         {
         }
 
-        // GET api/values
         [HttpGet]
         public ActionResult<IEnumerable<T>> Get()
         {
             return new ActionResult<IEnumerable<T>>(table.Select(""));
         }
 
-        // GET api/values/5
-        [HttpGet("{id}")]
+        [HttpGet("{filter}")]
+        public ActionResult<IEnumerable<T>> Get(string filter)
+        {
+            return new ActionResult<IEnumerable<T>>(table.Select(filter));
+        }
+
+        [HttpGet("{id:int}")]
         public ActionResult<T> Get(int id)
         {
             var item = table.LoadById(id);
@@ -38,13 +42,24 @@ namespace DataWF.Web.Common
             return Ok(item);
         }
 
-        // POST api/values
         [HttpPost]
         public IActionResult Post(T value)
         {
             try
             {
-                value.Save();
+                if (value == null)
+                {
+                    throw new InvalidOperationException("ID not specified!");
+                }
+                if (value.UpdateState == DBUpdateState.Insert)
+                {
+                    value.Save();
+                }
+                else
+                {
+                    value.Reject();
+                    throw new InvalidOperationException("Specified ID is in use!");
+                }
             }
             catch (Exception ex)
             {
@@ -54,19 +69,17 @@ namespace DataWF.Web.Common
             return Ok(value.PrimaryId);
         }
 
-        // PUT api/values/5
-        [HttpPut("{id}")]
-        public IActionResult Put(int id, T value)
+        [HttpPut]
+        public IActionResult Put(T value)
         {
             try
             {
-                var existing = table.LoadById(id);
-                foreach (var property in table.Columns)
+                if (value == null || value.UpdateState == DBUpdateState.Insert)
                 {
-                    var propertyValue = EmitInvoker.GetValue(typeof(T), property.Property, value);
-                    EmitInvoker.SetValue(typeof(T), property.Property, existing, propertyValue);
-
+                    throw new InvalidOperationException("ID not specified!");
                 }
+                if (!value.IsChanged)
+                    return Ok(false);
                 value.Save();
             }
             catch (Exception ex)
@@ -76,13 +89,16 @@ namespace DataWF.Web.Common
             return Ok();
         }
 
-        // DELETE api/values/5
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
             try
             {
-                table.LoadById(id)?.Delete();
+                var item = table.LoadById(id);
+                if (item == null)
+                    return NotFound();
+                item.Delete();
+                item.Save();
             }
             catch (Exception ex)
             {

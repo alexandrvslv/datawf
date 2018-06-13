@@ -143,7 +143,7 @@ namespace DataWF.Data
                 Column.ColumnType = ColumnType;
             }
             Column.Keys = Keys;
-            Column.Property = Property;
+            Column.Property = culture == null ? Property : $"{Property}{culture.TwoLetterISOLanguageName.ToUpper()}";
             Column.DefaultValue = Default;
             Column.Culture = culture;
             Column.GroupName = groupName;

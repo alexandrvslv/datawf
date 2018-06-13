@@ -19,6 +19,7 @@
 */
 
 using DataWF.Common;
+using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -34,6 +35,7 @@ using System.Text;
 namespace DataWF.Data
 {
     [DataContract]
+    [JsonConverter(typeof(DBItemJsonConverter))]
     public class DBItem : ICloneable, IComparable<DBItem>, IDisposable, IAccessable, ICheck, INotifyPropertyChanged, IEditable, IStatus, IDBTableContent
     {
         public static readonly DBItem EmptyItem = new DBItem() { cacheToString = "Loading" };
@@ -1024,9 +1026,10 @@ namespace DataWF.Data
 
         public virtual void Save()
         {
-            if (!IsChanged)
-                return;
-            Table.SaveItem(this);
+            if (IsChanged)
+            {
+                Table.SaveItem(this);
+            }
         }
 
         public int CompareTo(object obj)

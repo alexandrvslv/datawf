@@ -1,9 +1,11 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
 namespace DataWF.Common
 {
+    [JsonConverter(typeof(AccessValueJson))]
     public class AccessValue
     {
         public static IEnumerable<IAccessGroup> Groups = new List<IAccessGroup>();
@@ -205,6 +207,30 @@ namespace DataWF.Common
         public bool IsEqual(AccessValue accessCache)
         {
             throw new NotImplementedException();
+        }
+    }
+
+    public class AccessValueJson : JsonConverter
+    {
+        public override bool CanConvert(Type objectType)
+        {
+            return objectType == typeof(AccessValue);
+        }
+
+        public override bool CanRead { get { return false; } }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            if (!(value is AccessValue typeValue))
+            {
+                throw new JsonSerializationException($"Expected {nameof(AccessValue)} but {nameof(value)} is {value?.GetType().Name}.");
+            }
+            writer.WriteValue(value.ToString());
         }
     }
 }

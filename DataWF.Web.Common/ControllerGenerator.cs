@@ -4,12 +4,15 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
+using Microsoft.CodeAnalysis;
+using System.Collections.Generic;
 
 namespace DataWF.Web.Common
 {
@@ -41,35 +44,46 @@ namespace DataWF.Web.Common
             }
         }
 
-        public static void GenerateRoslyn(DBSchema schema)
+        public static Assembly GenerateRoslyn(DBSchema schema)
         {
             var name = schema.Name.ToInitcap('_');
-            using (var file = new FileStream("DBController.cs", FileMode.Open, FileAccess.Read, FileShare.Read))
+            var files = new List<SyntaxTree>();
+            var references = new Dictionary<string, MetadataReference>() {
+                {"netstandard", MetadataReference.CreateFromFile(Assembly.Load("netstandard, Version=2.0.0.0").Location) },
+                {"System", MetadataReference.CreateFromFile(typeof(Object).Assembly.Location) },
+                {"System.Runtime", MetadataReference.CreateFromFile(Assembly.Load("System.Runtime, Version=0.0.0.0").Location) },
+                {"System.Collection", MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location) },
+                {"Microsoft.AspNetCore.Mvc", MetadataReference.CreateFromFile(typeof(ControllerBase).Assembly.Location) },
+                {"DataWF.Common", MetadataReference.CreateFromFile(typeof(Helper).Assembly.Location) },
+                {"DataWF.Data", MetadataReference.CreateFromFile(typeof(DBTable).Assembly.Location) },
+                {"DataWF.Web.Common", MetadataReference.CreateFromFile(typeof(DBController<>).Assembly.Location) }
+            };
+            var tree = (SyntaxTree)null;
+            var fileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DBController.cs");
+            using (var file = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 var sourceText = SourceText.From(file, Encoding.UTF8);
-                var tree = CSharpSyntaxTree.ParseText(sourceText);
-                var node = tree.GetRoot();
-                var classNode = node.DescendantNodes().OfType<ClassDeclarationSyntax>().FirstOrDefault();
-                var usingNodes = node.DescendantNodes().OfType<UsingDirectiveSyntax>().ToArray();
-                if (classNode != null)
-                {
-                    string baseClassName = classNode.Identifier.Text;
+                tree = CSharpSyntaxTree.ParseText(sourceText);
+            }
+            var node = ((CompilationUnitSyntax)tree.GetRoot()).AddUsings(CreateUsingDirective("DataWF.Web.Common"));
+            var namespaceNode = node.DescendantNodes().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
+            var classNode = node.DescendantNodes().OfType<ClassDeclarationSyntax>().FirstOrDefault();
+            string baseClassName = classNode.Identifier.Text;
 
-                    foreach (var table in schema.Tables)
-                    {
-                        var itemType = table.GetType().GetGenericArguments().FirstOrDefault();
-                        var tableAttribute = DBTable.GetTableAttribute(itemType);
-                        var controllerType = typeof(DBController<>).MakeGenericType(itemType);
 
-                        string controllerClassName = $"{tableAttribute.ItemType.Name}Controller";
-                        // Only for demo purposes, pluralizing an object is done by
-                        // simply adding the "s" letter. Consider proper algorithms
-                        string newImplementation =
-                          $@"public namespace DataWF.Web.{name} 
+            foreach (var table in schema.Tables)
+            {
+                var itemType = table.GetType().GetGenericArguments().FirstOrDefault();
+                var tableAttribute = DBTable.GetTableAttribute(itemType);
+                var controllerType = typeof(DBController<>).MakeGenericType(itemType);
+                string controllerClassName = $"{tableAttribute.ItemType.Name}Controller";
+
+                var newImplementation = CSharpSyntaxTree.ParseText(
+                  $@"namespace DataWF.Web.{name} 
 {{
-[Route(""api /[controller]"")]
- [ApiController]
-public class {controllerClassName} : {baseClassName}<{itemType.FullName}>
+[Route(""api/[controller]"")]
+[ApiController]
+public class {controllerClassName} : {baseClassName}<{itemType.Name}>
 {{
 public {controllerClassName}() {{
 // default ctor
@@ -77,19 +91,68 @@ public {controllerClassName}() {{
 //TODO Methods from itemType
 }}
 }}
-";
-                        var newTree = CSharpSyntaxTree.ParseText(newImplementation);
-                        var newNamespace = (NamespaceDeclarationSyntax)newTree.GetRoot();
-                        newNamespace.AddUsings(usingNodes);
-                        
-                        
+").GetRoot().DescendantNodes().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
+
+
+                var newTree = CSharpSyntaxTree.Create(node
+                    .ReplaceNode(namespaceNode, newImplementation)
+                    .AddUsings(CreateUsingDirective(itemType.Namespace)).NormalizeWhitespace());
+                
+                var newSourceText = newTree.GetText();
+                //var newFileName = $"{controllerClassName}.cs";
+                //using (var newFile = new FileStream(newFileName, FileMode.Create, FileAccess.Write))
+                //using (var writer = new StreamWriter(newFile))
+                //    newSourceText.Write(writer);
+                files.Add(newTree);
+                if (!references.ContainsKey(itemType.Assembly.GetName().Name))
+                    references[itemType.Assembly.GetName().Name] = MetadataReference.CreateFromFile(itemType.Assembly.Location);
+            }
+            CSharpCompilation compilation = CSharpCompilation.Create($"{name}.dll", files, references.Values,
+                new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+
+            using (var dllStream = new MemoryStream())
+            using (var pdbStream = new MemoryStream())
+            {
+                var emitResult = compilation.Emit(dllStream, pdbStream);
+                if (!emitResult.Success)
+                {
+                    IEnumerable<Diagnostic> failures = emitResult.Diagnostics.Where(diagnostic =>
+             diagnostic.IsWarningAsError ||
+             diagnostic.Severity == DiagnosticSeverity.Error);
+
+                    foreach (Diagnostic diagnostic in failures)
+                    {
+                        Console.Error.WriteLine("{0}: {1}", diagnostic.Id, diagnostic.GetMessage());
                     }
                 }
                 else
                 {
-                    return ;
+                    return Assembly.Load(dllStream.ToArray(), pdbStream.ToArray());
                 }
             }
+            return null;
+        }
+
+        //https://stackoverflow.com/a/36845547
+        private static UsingDirectiveSyntax CreateUsingDirective(string usingName)
+        {
+            NameSyntax qualifiedName = null;
+
+            foreach (var identifier in usingName.Split('.'))
+            {
+                var name = SyntaxFactory.IdentifierName(identifier);
+
+                if (qualifiedName != null)
+                {
+                    qualifiedName = SyntaxFactory.QualifiedName(qualifiedName, name);
+                }
+                else
+                {
+                    qualifiedName = name;
+                }
+            }
+
+            return SyntaxFactory.UsingDirective(qualifiedName);
         }
     }
 }

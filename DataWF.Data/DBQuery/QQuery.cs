@@ -255,7 +255,7 @@ namespace DataWF.Data
         {
             if (tables.Count == 1)
             {
-                DBColumn column = tables[0].Table.ParseColumn(word);
+                DBColumn column = tables[0].Table.ParseColumn(word) ?? tables[0].Table.ParseProperty(word);
                 if (column != null)
                     return column;
             }
