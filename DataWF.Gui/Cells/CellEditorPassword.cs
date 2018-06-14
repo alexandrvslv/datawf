@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Security;
 using Xwt;
 
 namespace DataWF.Gui
@@ -15,6 +16,13 @@ namespace DataWF.Gui
         public override object FormatValue(object value, object dataSource, Type valueType)
         {
             return "*******";
+        }
+
+        public override object ParseValue(object value, object dataSource, Type valueType)
+        {
+            if (value is string && valueType == typeof(SecureString))
+                return (Editor?.Widget as PasswordEntry)?.SecurePassword;
+            return base.ParseValue(value, dataSource, valueType);
         }
 
         public override string EditorText
@@ -42,11 +50,11 @@ namespace DataWF.Gui
 
         public override void FreeEditor()
         {
-            base.FreeEditor();
             var password = Editor.Widget as PasswordEntry;
             password.KeyPressed -= OnTextKeyPressed;
             password.KeyReleased -= OnTextKeyReleased;
             password.Changed -= OnTextChanged;
+            base.FreeEditor();
         }
     }
 }

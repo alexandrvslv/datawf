@@ -38,6 +38,10 @@ namespace DataWF.Gui
                 }
                 return editor;
             };
+            CellEditorFabric[typeof(System.Security.SecureString)] = cell =>
+            {
+                return new CellEditorPassword();
+            };
             CellEditorFabric[typeof(byte[])] = cell =>
             {
                 var editor = new CellEditorFile();

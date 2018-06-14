@@ -576,45 +576,19 @@ namespace DataWF.Common
             object value = null;
             switch (typev)
             {
-                case BinaryTypeIndex.Boolean:
-                    value = reader.ReadBoolean();
-                    break;
-                case BinaryTypeIndex.Byte:
-                    value = reader.ReadByte();
-                    break;
-                case BinaryTypeIndex.SByte:
-                    value = reader.ReadSByte();
-                    break;
-                case BinaryTypeIndex.Char:
-                    value = reader.ReadChar();
-                    break;
-                case BinaryTypeIndex.Short:
-                    value = reader.ReadInt16();
-                    break;
-                case BinaryTypeIndex.UShort:
-                    value = reader.ReadUInt16();
-                    break;
-                case BinaryTypeIndex.Int:
-                    value = reader.ReadInt32();
-                    break;
-                case BinaryTypeIndex.UInt:
-                    value = reader.ReadUInt32();
-                    break;
-                case BinaryTypeIndex.Long:
-                    value = reader.ReadInt64();
-                    break;
-                case BinaryTypeIndex.ULong:
-                    value = reader.ReadUInt64();
-                    break;
-                case BinaryTypeIndex.Float:
-                    value = reader.ReadSingle();
-                    break;
-                case BinaryTypeIndex.Double:
-                    value = reader.ReadDouble();
-                    break;
-                case BinaryTypeIndex.Decimal:
-                    value = reader.ReadDecimal();
-                    break;
+                case BinaryTypeIndex.Boolean: value = reader.ReadBoolean(); break;
+                case BinaryTypeIndex.Byte: value = reader.ReadByte(); break;
+                case BinaryTypeIndex.SByte: value = reader.ReadSByte(); break;
+                case BinaryTypeIndex.Char: value = reader.ReadChar(); break;
+                case BinaryTypeIndex.Short: value = reader.ReadInt16(); break;
+                case BinaryTypeIndex.UShort: value = reader.ReadUInt16(); break;
+                case BinaryTypeIndex.Int: value = reader.ReadInt32(); break;
+                case BinaryTypeIndex.UInt: value = reader.ReadUInt32(); break;
+                case BinaryTypeIndex.Long: value = reader.ReadInt64(); break;
+                case BinaryTypeIndex.ULong: value = reader.ReadUInt64(); break;
+                case BinaryTypeIndex.Float: value = reader.ReadSingle(); break;
+                case BinaryTypeIndex.Double: value = reader.ReadDouble(); break;
+                case BinaryTypeIndex.Decimal: value = reader.ReadDecimal(); break;
                 case BinaryTypeIndex.DateTime:
                     var l = reader.ReadInt64();
                     try
@@ -634,7 +608,7 @@ namespace DataWF.Common
                     int cl = reader.ReadInt32();
                     value = reader.ReadChars(cl);
                     break;
-                case BinaryTypeIndex.DBNull:
+                case BinaryTypeIndex.Null:
                     value = DBNull.Value;
                     break;
                 default:
@@ -724,7 +698,7 @@ namespace DataWF.Common
             if (value == DBNull.Value)
             {
                 if (writetype)
-                    writer.Write((byte)BinaryTypeIndex.DBNull);
+                    writer.Write((byte)BinaryTypeIndex.Null);
                 //writer.Write((byte)0);
             }
             else if (value is bool)
@@ -1267,7 +1241,6 @@ namespace DataWF.Common
                 return str;
             var charArray = new List<char>(str.Length);
             bool newWord = true;
-            int i = -1;
             foreach (Char currentChar in str)
             {
                 var newChar = currentChar;

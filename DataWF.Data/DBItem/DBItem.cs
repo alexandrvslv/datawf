@@ -1140,7 +1140,8 @@ namespace DataWF.Data
             {
                 builder.Append(c);
             }
-            builder.Length -= separator.Length;
+            if (builder.Length > separator.Length)
+                builder.Length -= separator.Length;
 
             return builder.ToString();
         }
