@@ -47,28 +47,6 @@ namespace DataWF.Common
             return myport;
         }
 
-        public static int GetUdpPort()
-        {
-            var prop = IPGlobalProperties.GetIPGlobalProperties();
-            var active = prop.GetActiveUdpListeners();
-            int myport = 49152;
-            for (; myport < 65535; myport++)
-            {
-                bool alreadyinuse = false;
-                foreach (var p in active)
-                    if (p.Port == myport)
-                    {
-                        alreadyinuse = true;
-                        break;
-                    }
-                if (!alreadyinuse)
-                {
-                    break;
-                }
-            }
-            return myport;
-        }
-
         public static IPHostEntry GetHostEntry()
         {
             return Dns.GetHostEntry(Dns.GetHostName());

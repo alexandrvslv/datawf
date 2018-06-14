@@ -30,103 +30,65 @@ using System.Linq;
 using Novell.Directory.Ldap;
 using System.Diagnostics;
 using System.Runtime.Serialization;
+using System.Security;
+using MailKit.Net.Smtp;
+using System.Net;
 
 namespace DataWF.Module.Common
 {
+
     [DataContract, Table("ruser", "User", BlockSize = 100)]
     public class User : DBItem, IComparable, IDisposable
     {
-        internal static void SetCurrent()
+        [ThreadStatic]
+        private static User threadCurrentUser;
+        private static User currentUser;
+
+        public static User CurrentUser
+        {
+            get { return threadCurrentUser ?? currentUser; }
+        }
+
+        public static void SetCurrentUser(User value, bool threaded = false)
+        {
+            if (CurrentUser == value)
+                return;
+            if (threaded)
+                threadCurrentUser = value;
+            else
+                currentUser = value;
+            if (value != null)
+            {
+                UserLog.LogUser(value, UserLogType.Authorization, "GetUser");
+            }
+        }
+
+        public static void SetCurrentByEnvironment()
         {
             var user = DBTable.LoadByCode(Environment.UserName);
-            if (user != null)
-                UserLog.LogUser(user, UserLogType.Authorization, "GetUser");
-            CurrentUser = user;
+            SetCurrentUser(user);
         }
 
-        public static void SetCurrent(string login, string password)
+        public static void SetCurrentByCredential(string login, string password, bool threaded = false)
         {
             var user = GetUser(login, GetSha(password));
-            CurrentUser = user ?? throw new Exception();
+            SetCurrentUser(user ?? throw new KeyNotFoundException(), threaded);
         }
 
-        public static User GetByNetId(string netid)
+        public static void SeCurrentByEmail(string email, SecureString password)
         {
-            return DBTable.Select($"{User.DBTable.ParseProperty(nameof(User.NetworkAddress)).Name} like '%{netid}%'").FirstOrDefault();
-        }
-
-        public static List<User> LoadADUsers(string userName, string password)
-        {
-            var users = new List<User>();
-            try
+            var user = DBTable.SelectOne(DBTable.ParseProperty(nameof(EMail)), email);
+            if (user == null)
+                throw new KeyNotFoundException();
+            var config = SmtpSetting.Current;
+            using (var smtpClient = new SmtpClient())
             {
-                var domain = System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties().DomainName;
-                var domain1 = domain.Substring(0, domain.IndexOf('.'));
-                var domain2 = domain.Substring(domain.IndexOf('.') + 1);
-                var ldapDom = $"dc={domain1},dc={domain2}";
-                var userDN = $"{userName},{ldapDom}";//$"cn={userName},o={domain1}";
-                var attributes = new string[] { "cn", "company", "lastLongon", "lastLongoff", "mail", "mailNickname", "name", "title", "userPrincipalName" };
-                using (var conn = new LdapConnection())
-                {
-                    conn.Connect(domain, LdapConnection.DEFAULT_PORT);
-                    conn.Bind(userDN, password);
-                    var results = conn.Search(ldapDom, //search base
-                        LdapConnection.SCOPE_SUB, //scope 
-                        "(&(objectCategory=person)(objectClass=user)(!(userAccountControl:1.2.840.113556.1.4.803:=2)))", //filter
-                        attributes, //attributes 
-                        false); //types only 
-                    while (results.HasMore())
-                    {
-                        try
-                        {
-
-                            var resultRecord = results.Next();
-                            var attribute = resultRecord.getAttribute("mailNickname");
-                            if (attribute != null)
-                            {
-                                Position position = null;
-                                var positionName = resultRecord.getAttribute("title")?.StringValue;
-                                if (!string.IsNullOrEmpty(positionName))
-                                {
-                                    position = Position.DBTable.LoadByCode(positionName);
-                                    if (position == null)
-                                    {
-                                        position = new Position();
-                                    }
-                                    position.Code = positionName;
-                                    position.Name = positionName;
-                                    position.Save();
-                                }
-
-                                var user = User.DBTable.LoadByCode(attribute.StringValue, User.DBTable.ParseProperty(nameof(User.Login)), DBLoadParam.None);
-                                if (user == null)
-                                {
-                                    user = new User();
-                                }
-                                user.Position = position;
-                                user.Login = attribute.StringValue;
-                                user.EMail = resultRecord.getAttribute("mail")?.StringValue;
-                                user.Name = resultRecord.getAttribute("name")?.StringValue;
-                                user.Save();
-                            }
-
-                        }
-                        catch (LdapException e)
-                        {
-                            Debug.WriteLine(e.Message);
-                        }
-                    }
-                    conn.Disconnect();
-                }
+                smtpClient.ServerCertificateValidationCallback = (s, c, h, e) => true;
+                smtpClient.Connect(config.Host, config.Port, config.SSL);
+                smtpClient.Authenticate(new NetworkCredential(email, password));
+                SetCurrentUser(user);
             }
-            catch (Exception ex)
-            {
-                Helper.OnException(ex);
-            }
-            return users;
         }
-
-        public static User CurrentUser { get; internal set; }
 
         public static DBTable<User> DBTable
         {
@@ -220,11 +182,6 @@ namespace DataWF.Module.Common
             return user;
         }
 
-        public static void SetCurrentUser(User user)
-        {
-            CurrentUser = user;
-        }
-
         protected bool online = false;
 
         public User()
@@ -238,7 +195,7 @@ namespace DataWF.Module.Common
         public int? Id
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
-            set { this[Table.PrimaryKey] = value; }
+            set { SetValue(value, Table.PrimaryKey); }
         }
 
         [DataMember, Column("login", 256, Keys = DBColumnKeys.Code | DBColumnKeys.Indexing), Index("ruser_login", true)]
@@ -312,13 +269,6 @@ namespace DataWF.Module.Common
             set { SetProperty(value, nameof(EMail)); }
         }
 
-        [DataMember, Column("network_address", 2048)]
-        public string NetworkAddress
-        {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
-        }
-
         public bool IsBlock
         {
             get { return Status != DBStatus.Actual; }
@@ -356,7 +306,94 @@ namespace DataWF.Module.Common
         {
             base.Dispose();
         }
+    }
 
+    [DataContract, Table("rinstance", "User", BlockSize = 100)]
+    public class Instance : DBItem
+    {
+        public static DBTable<Instance> DBTable { get { return GetTable<Instance>(); } }
+
+        public static Instance GetByNetId(IPEndPoint endPoint, bool create)
+        {
+            var query = new QQuery(DBTable);
+            query.BuildPropertyParam(nameof(Host), CompareType.Equal, endPoint.Address.ToString());
+            query.BuildPropertyParam(nameof(Port), CompareType.Equal, endPoint.Port);
+            var instance = DBTable.Select(query).FirstOrDefault();
+            if (instance == null && create)
+            {
+                instance = new Instance
+                {
+                    EndPoint = endPoint,
+                    User = User.CurrentUser,
+                    Active = true,
+                    IsCurrent = true
+                };
+                instance.Save();
+            }
+            return instance;
+        }
+
+        private IPEndPoint ipEndPoint;
+
+        public Instance()
+        {
+            Build(DBTable);
+        }
+
+        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
+        public int? Id
+        {
+            get { return GetValue<int?>(Table.PrimaryKey); }
+            set { SetValue(value, Table.PrimaryKey); }
+        }
+
+        [DataMember, Column("user_id"), Browsable(false)]
+        public int? UserId
+        {
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
+        }
+
+        [Reference(nameof(UserId))]
+        public User User
+        {
+            get { return GetPropertyReference<User>(); }
+            set { SetPropertyReference(value); }
+        }
+
+        [DataMember, Column("instance_host")]
+        public string Host
+        {
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
+        }
+
+        [DataMember, Column("instance_port")]
+        public int? Port
+        {
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
+        }
+
+        [DataMember, Column("instance_active")]
+        public bool? Active
+        {
+            get { return GetProperty<bool?>(); }
+            set { SetProperty(value); }
+        }
+
+        public IPEndPoint EndPoint
+        {
+            get { return ipEndPoint ?? (ipEndPoint = Host == null ? null : new IPEndPoint(IPAddress.Parse(Host), Port.GetValueOrDefault())); }
+            set
+            {
+                ipEndPoint = value;
+                Host = value?.Address.ToString();
+                Port = value?.Port;
+            }
+        }
+
+        public bool IsCurrent { get; internal set; }
 
     }
 

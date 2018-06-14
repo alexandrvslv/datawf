@@ -4,18 +4,41 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
     public class UdpServerEventArgs : EventArgs
     {
-        public EndPoint Point { get; set; }
+        public IPEndPoint Point { get; set; }
         public int Length { get; set; }
         public byte[] Data { get; set; }
     }
 
     public class UdpServer : IDisposable
     {
+        public static int GetUdpPort()
+        {
+            var prop = IPGlobalProperties.GetIPGlobalProperties();
+            var active = prop.GetActiveUdpListeners();
+            int myport = 49152;
+            for (; myport < 65535; myport++)
+            {
+                bool alreadyinuse = false;
+                foreach (var p in active)
+                    if (p.Port == myport)
+                    {
+                        alreadyinuse = true;
+                        break;
+                    }
+                if (!alreadyinuse)
+                {
+                    break;
+                }
+            }
+            return myport;
+        }
+
         protected bool online;
         protected UdpClient listener;
         protected UdpClient sender;
@@ -49,7 +72,7 @@ namespace DataWF.Common
         public void StartListener()
         {
             if (localPoint == null)
-                localPoint = new IPEndPoint(IPAddress.Any, TcpServer.GetUdpPort());
+                localPoint = new IPEndPoint(IPAddress.Any, GetUdpPort());
             listener = new UdpClient();
             listener.Client.Bind(localPoint);
             //this.listener.Client.SendTimeout = 5000;
@@ -68,7 +91,7 @@ namespace DataWF.Common
 
         private void WaiteData()
         {
-            ThreadPool.QueueUserWorkItem(p =>
+            new Task(() =>
             {
                 while (online)
                 {
@@ -76,7 +99,7 @@ namespace DataWF.Common
                     listener.BeginReceive(ReceiveCallback, new UdpServerEventArgs());
                     receiveEvent.WaitOne();
                 }
-            });
+            }, TaskCreationOptions.LongRunning).Start();
         }
 
         private void ReceiveCallback(IAsyncResult result)
@@ -133,25 +156,20 @@ namespace DataWF.Common
 
         protected virtual void OnDataSend(UdpServerEventArgs arg)
         {
-            if (DataSend != null)
-                DataSend(this, arg);
+            DataSend?.Invoke(this, arg);
             NetStat.Set("Data Send", 1, arg.Length);
 
         }
 
         protected virtual void OnDataLoad(UdpServerEventArgs arg)
         {
-            if (DataLoad != null)
-                DataLoad(this, arg);
+            DataLoad?.Invoke(this, arg);
             NetStat.Set("Data Receive", 1, arg.Length);
-
         }
 
         protected virtual void OnDataException(ExceptionEventArgs ex)
         {
-            if (DataException != null)
-                DataException(this, ex);
-
+            DataException?.Invoke(this, ex);
             Helper.OnException(ex.Exception);
         }
 

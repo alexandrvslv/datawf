@@ -121,7 +121,7 @@ namespace DataWF.Module.FlowGui
                 Mode = ToolShowMode.Dialog;
                 ButtonClose.Visible = false;
 
-                users.ListSource = UDPService.Default.List;
+                users.ListSource = NotifyService.Default.List;
                 stats.ListSource = NetStat.Items;
 
                 map.Add(new GroupBoxItem() { Widget = users, Text = "Users" });
@@ -133,7 +133,7 @@ namespace DataWF.Module.FlowGui
 
         private void ToolStatClick(object sender, EventArgs e)
         {
-            if (UDPService.Default != null)
+            if (NotifyService.Default != null)
             {
                 var window = new StatWindow();
                 window.Show(this, new Point());

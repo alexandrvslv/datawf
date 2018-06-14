@@ -19,8 +19,7 @@ namespace DataWF.Module.Common
             UserGroup.SetCurrent();
 
             User.DBTable.DefaultComparer = new DBComparer(User.DBTable.CodeKey) { Hash = true };
-            User.DBTable.Load();
-            User.SetCurrent();
+            User.DBTable.Load();            
 
             UserLog.DBTable.DefaultComparer = new DBComparer(UserLog.DBTable.PrimaryKey) { Hash = true };
             DBLogTable.UserLogTable = UserLog.DBTable;
