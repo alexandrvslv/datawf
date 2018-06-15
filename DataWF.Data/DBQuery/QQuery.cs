@@ -79,13 +79,13 @@ namespace DataWF.Data
             order = 0;
         }
 
-        public QQuery(Type type) : this(DBTable.GetTable(type, null, false, true))
-        { }
-
-        public QQuery(DBTable table)
+        public QQuery(DBTable table) : this()
         {
             Table = table;
         }
+
+        public QQuery(Type type) : this(DBTable.GetTable(type, null, false, true))
+        { }
 
         public void Sort<T>(List<T> list)
         {
