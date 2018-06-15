@@ -4610,7 +4610,13 @@ namespace DataWF.Gui
 
         protected virtual void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (fieldSource != null && listSource != null)
+            if (fieldSource == null && listSource == null)
+                return;
+            if (GuiService.InvokeRequired)
+            {
+                Application.Invoke(() => OnPropertyChanged(sender, e));
+            }
+            else
             {
                 foreach (LayoutField field in listSource)
                 {
