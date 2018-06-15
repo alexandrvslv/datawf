@@ -147,6 +147,10 @@ namespace DataWF.Gui
                 if (target == value)
                     return;
                 target = value;
+                if (target is ILocalizable localizeable)
+                {
+                    localizeable.Localize();
+                }
                 panel.Content = target;
                 var size = target.Surface.GetPreferredSize();
                 if (size.Width > Size.Width || size.Height > Size.Height)
@@ -408,16 +412,16 @@ namespace DataWF.Gui
 
         protected virtual void OnCloseClick(object sender, EventArgs e)
         {
+            DResult = Command.Cancel;
             if (CloseOnClose)
                 Hide();
-            DResult = Command.Cancel;
         }
 
         protected virtual void OnAcceptClick(object sender, EventArgs e)
         {
+            DResult = Command.Ok;
             if (CloseOnAccept)
                 Hide();
-            DResult = Command.Ok;
         }
 
         protected override void Dispose(bool disposing)
