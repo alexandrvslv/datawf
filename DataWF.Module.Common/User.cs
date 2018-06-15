@@ -44,6 +44,9 @@ namespace DataWF.Module.Common
         private static User threadCurrentUser;
         private static User currentUser;
 
+        public static Action CurrentUserChanged;
+
+
         public static User CurrentUser
         {
             get { return threadCurrentUser ?? currentUser; }
@@ -60,6 +63,7 @@ namespace DataWF.Module.Common
             if (value != null)
             {
                 UserLog.LogUser(value, UserLogType.Authorization, "GetUser");
+                CurrentUserChanged?.Invoke();
             }
         }
 
@@ -75,7 +79,7 @@ namespace DataWF.Module.Common
             SetCurrentUser(user ?? throw new KeyNotFoundException(), threaded);
         }
 
-        public static void SeCurrentByEmail(string email, SecureString password)
+        public static void SeCurrentByEmail(string email, SecureString password, bool threaded = false)
         {
             var user = DBTable.SelectOne(DBTable.ParseProperty(nameof(EMail)), email);
             if (user == null)
@@ -86,7 +90,7 @@ namespace DataWF.Module.Common
                 smtpClient.ServerCertificateValidationCallback = (s, c, h, e) => true;
                 smtpClient.Connect(config.Host, config.Port, config.SSL);
                 smtpClient.Authenticate(new NetworkCredential(email, password));
-                SetCurrentUser(user);
+                SetCurrentUser(user, threaded);
             }
         }
 
@@ -237,7 +241,11 @@ namespace DataWF.Module.Common
         public Position Position
         {
             get { return GetPropertyReference<Position>(); }
-            set { SetPropertyReference(value); }
+            set
+            {
+                SetPropertyReference(value);
+                Department = value?.Department;
+            }
         }
 
         [ReadOnly(true)]
@@ -297,104 +305,17 @@ namespace DataWF.Module.Common
 
         #endregion
 
+        [Browsable(false)]
         public bool IsCurrent
         {
             get { return this == CurrentUser; }
         }
 
+
         public override void Dispose()
         {
             base.Dispose();
         }
-    }
-
-    [DataContract, Table("rinstance", "User", BlockSize = 100)]
-    public class Instance : DBItem
-    {
-        public static DBTable<Instance> DBTable { get { return GetTable<Instance>(); } }
-
-        public static Instance GetByNetId(IPEndPoint endPoint, bool create)
-        {
-            var query = new QQuery(DBTable);
-            query.BuildPropertyParam(nameof(Host), CompareType.Equal, endPoint.Address.ToString());
-            query.BuildPropertyParam(nameof(Port), CompareType.Equal, endPoint.Port);
-            var instance = DBTable.Select(query).FirstOrDefault();
-            if (instance == null && create)
-            {
-                instance = new Instance
-                {
-                    EndPoint = endPoint,
-                    User = User.CurrentUser,
-                    Active = true,
-                    IsCurrent = true
-                };
-                instance.Save();
-            }
-            return instance;
-        }
-
-        private IPEndPoint ipEndPoint;
-
-        public Instance()
-        {
-            Build(DBTable);
-        }
-
-        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
-        {
-            get { return GetValue<int?>(Table.PrimaryKey); }
-            set { SetValue(value, Table.PrimaryKey); }
-        }
-
-        [DataMember, Column("user_id"), Browsable(false)]
-        public int? UserId
-        {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
-        }
-
-        [Reference(nameof(UserId))]
-        public User User
-        {
-            get { return GetPropertyReference<User>(); }
-            set { SetPropertyReference(value); }
-        }
-
-        [DataMember, Column("instance_host")]
-        public string Host
-        {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
-        }
-
-        [DataMember, Column("instance_port")]
-        public int? Port
-        {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
-        }
-
-        [DataMember, Column("instance_active")]
-        public bool? Active
-        {
-            get { return GetProperty<bool?>(); }
-            set { SetProperty(value); }
-        }
-
-        public IPEndPoint EndPoint
-        {
-            get { return ipEndPoint ?? (ipEndPoint = Host == null ? null : new IPEndPoint(IPAddress.Parse(Host), Port.GetValueOrDefault())); }
-            set
-            {
-                ipEndPoint = value;
-                Host = value?.Address.ToString();
-                Port = value?.Port;
-            }
-        }
-
-        public bool IsCurrent { get; internal set; }
-
     }
 
     public static class UserExtension

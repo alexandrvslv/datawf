@@ -304,8 +304,6 @@ namespace DataWF.Module.Common
             base.OnPropertyChanged(property, column, value);
         }
 
-
-
         //public SelectableList<LogChange> GetLogMapList()
         //{
         //    DBTable table = TargetTable;

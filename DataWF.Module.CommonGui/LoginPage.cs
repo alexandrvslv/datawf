@@ -36,7 +36,7 @@ namespace DataWF.Data.CommonGui
             bCancel.Clicked += BCancelClicked;
 
             PackStart(listUser, true, true);
-            PackStart(bLogin, false, false);
+            //PackStart(bLogin, false, false);
 
             User = new UserCredential();
             Name = nameof(LoginPage);

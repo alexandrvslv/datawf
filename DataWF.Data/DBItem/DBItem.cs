@@ -835,6 +835,7 @@ namespace DataWF.Data
         {
             if (IsChanged || (UpdateState & DBUpdateState.Commit) == DBUpdateState.Commit)
             {
+                DBService.OnAccept(this);
                 if ((UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete)
                 {
                     Detach();
@@ -845,7 +846,6 @@ namespace DataWF.Data
                     UpdateState = DBUpdateState.Default;
                 }
                 RemoveOld();
-                DBService.OnAccept(this);
             }
         }
 
@@ -982,7 +982,7 @@ namespace DataWF.Data
             if (Attached)
                 table.OnItemChanged(this, property, ListChangedType.ItemChanged);
             // raise events
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(column?.Property ?? property));
         }
         #endregion
 

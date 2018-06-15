@@ -26,8 +26,35 @@ using System.Diagnostics;
 
 namespace DataWF.Module.Common
 {
-    public class LDAPHelper
+    public class LdapSetting
     {
+        public string Domain { get; set; }
+        public bool SSL { get; set; }
+    }
+
+    public static class LdapHelper
+    {
+        //https://github.com/WinLwinOoNet/AspNetCoreActiveDirectoryStarterKit/blob/master/src/Libraries/Asp.NovellDirectoryLdap/LdapAuthenticationService.cs#L14
+        public static bool ValidateUser(string domainName, string username, string password)
+        {
+            string userDn = $"{username}@{domainName}";
+            try
+            {
+                using (var connection = new LdapConnection { SecureSocketLayer = false })
+                {
+                    connection.Connect(domainName, LdapConnection.DEFAULT_PORT);
+                    connection.Bind(userDn, password);
+                    if (connection.Bound)
+                        return true;
+                }
+            }
+            catch (LdapException ex)
+            {
+                // Log exception
+            }
+            return false;
+        }
+
         public static List<User> LoadADUsers(string userName, string password)
         {
             var users = new List<User>();

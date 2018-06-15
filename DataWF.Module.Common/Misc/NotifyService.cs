@@ -9,27 +9,10 @@ using System.Timers;
 using System.Net;
 using System.Threading.Tasks;
 using System.IO;
+using System.Linq;
 
 namespace DataWF.Module.Common
 {
-    public static class EndPointExtension
-    {
-        public static byte[] GetBytes(this IPEndPoint endPoint)
-        {
-            var result = new List<byte>(endPoint.Address.GetAddressBytes());
-            result.AddRange(BitConverter.GetBytes(endPoint.Port));
-            return result.ToArray();
-        }
-
-        public static IPEndPoint GetEndPoint(this byte[] buffer)
-        {
-            var temp = new byte[buffer.Length - 4];
-            Array.Copy(buffer, 0, temp, 0, temp.Length);
-            var address = new IPAddress(temp);
-            return new IPEndPoint(address, BitConverter.ToInt32(buffer, temp.Length + 1));
-        }
-    }
-
 
     public class NotifyService : UdpServer
     {
@@ -37,27 +20,7 @@ namespace DataWF.Module.Common
         {
             var service = new NotifyService();
             service.MessageLoad += onLoad;
-            service.StartListener();
             service.Login();
-        }
-
-        private static void ServiceLoaded(EndPointMessage obj)
-        {
-            var instance = Instance.DBTable.LoadById(obj.Sender);
-            if (instance == null || instance.IsCurrent)
-                return;
-            if (obj.Type == SocketMessageType.Login)
-            {
-                //SetStatus(user + " login!");
-            }
-            else if (obj.Type == SocketMessageType.Hello)
-            {
-                //SetStatus(user + " is online!");
-            }
-            else if (obj.Type == SocketMessageType.Logout)
-            {
-                //SetStatus(user + " was logout!");
-            }
         }
 
         class MessageItem
@@ -81,8 +44,8 @@ namespace DataWF.Module.Common
         private Instance instance;
         private ConcurrentBag<MessageItem> buffer = new ConcurrentBag<MessageItem>();
         private ManualResetEvent runEvent = new ManualResetEvent(false);
-        private ManualResetEvent sendEvent = new ManualResetEvent(true);
         private int timer = 3000;
+        private IPEndPoint endPoint;
 
         public NotifyService() : base()
         {
@@ -91,8 +54,6 @@ namespace DataWF.Module.Common
 
         public event Action<EndPointMessage> MessageLoad;
 
-        public EndPointReferenceList<Instance> List { get; } = new EndPointReferenceList<Instance>();
-
         protected override void OnDataLoad(UdpServerEventArgs arg)
         {
             base.OnDataLoad(arg);
@@ -100,7 +61,7 @@ namespace DataWF.Module.Common
             var message = EndPointMessage.Read(arg.Data);
             if (message != null)
             {
-                message.EndPoint = arg.Point;
+                message.RecivedEndPoint = arg.Point;
                 try { OnMessageLoad(message); }
                 catch (Exception e) { Helper.OnException(e); }
             }
@@ -116,7 +77,9 @@ namespace DataWF.Module.Common
         {
             StartListener();
 
-            instance = Instance.GetByNetId(localPoint, true);
+            endPoint = new IPEndPoint(EndPointHelper.GetInterNetworkIPs().First(), ListenerEndPoint.Port);
+
+            instance = Instance.GetByNetId(endPoint, true);
 
             byte[] temp = instance.EndPoint.GetBytes();
             Send(temp, null, SocketMessageType.Login);
@@ -143,31 +106,23 @@ namespace DataWF.Module.Common
         {
             var buffer = EndPointMessage.Write(new EndPointMessage()
             {
-                Sender = instance.Id.ToString(),
+                SenderName = instance.Id.ToString(),
+                SenderEndPoint = endPoint,
                 Type = type,
-                Data = data,
-                EndPoint = localPoint
+                Data = data
             });
 
             if (type == SocketMessageType.Login)
             {
-                List.Clear();
-                User.DBTable.Load("", DBLoadParam.Synchronize);
-                foreach (Instance item in Instance.DBTable)
-                {
-                    if (item.Active.Value && item.EndPoint != null && item.EndPoint != localPoint && (address == null || item == address))
-                    {
-                        Send(buffer, item.EndPoint);
-                    }
-                }
+                Instance.DBTable.Load();
+
             }
-            else
+
+            foreach (Instance item in Instance.DBTable)
             {
-                foreach (var item in List)
+                if (item.Active.Value && item.EndPoint != null && !item.EndPoint.Equals(endPoint) && (address == null || item == address))
                 {
-                    if ((address == null || item.Reference == address) &&
-                        item.EndPoint != null && item.EndPoint != localPoint)
-                        Send(buffer, item.EndPoint);
+                    Send(buffer, item.EndPoint);
                 }
             }
         }
@@ -194,18 +149,12 @@ namespace DataWF.Module.Common
 
         private void OnMessageLoad(EndPointMessage message)
         {
-            var sender = Instance.DBTable.LoadById(message.Sender);
+            var sender = Instance.DBTable.LoadById(message.SenderName);
             if (sender == null)
                 return;
+            sender.Count++;
+            sender.Length += message.Lenght;
 
-            var address = List[message.EndPoint];
-            if (address == null)
-            {
-                address = new EndPointReference<Instance>() { Reference = sender, EndPoint = message.EndPoint };
-                List.Add(address);
-            }
-            address.Count++;
-            address.Length += message.Lenght;
             switch (message.Type)
             {
                 case (SocketMessageType.Hello):
@@ -213,14 +162,13 @@ namespace DataWF.Module.Common
                     break;
                 case (SocketMessageType.Login):
                     sender.Active = true;
-                    Send(localPoint.GetBytes(), sender, SocketMessageType.Hello);
+                    Send(endPoint.GetBytes(), sender, SocketMessageType.Hello);
                     break;
                 case (SocketMessageType.Logout):
                     sender.Active = false;
-                    List.Remove(address);
                     break;
                 case (SocketMessageType.Data):
-                    CheckData(message.Data);
+                    LoadData(message.Data);
                     break;
             }
             MessageLoad?.Invoke(message);
@@ -232,9 +180,10 @@ namespace DataWF.Module.Common
             {
                 try
                 {
+                    if (buffer.Count == 0)
+                        continue;
+
                     var list = new MessageItem[buffer.Count > 200 ? 200 : buffer.Count];
-                    if (list.Length == 0)
-                        return;
 
                     for (int i = 0; i < list.Length; i++)
                     {
@@ -261,13 +210,13 @@ namespace DataWF.Module.Common
                             {
                                 id = null;
                                 table = log.Table;
-                                writer.Write(1);
+                                writer.Write((char)1);
                                 writer.Write(table.Name);
                             }
                             if (!log.Id.Equals(id))
                             {
                                 id = log.Id;
-                                writer.Write(2);
+                                writer.Write((char)2);
                                 writer.Write((int)log.Type);
                                 Helper.WriteBinary(writer, log.Id, true);
                             }
@@ -283,7 +232,7 @@ namespace DataWF.Module.Common
             }
         }
 
-        public static void CheckData(byte[] buffer)
+        public static void LoadData(byte[] buffer)
         {
             lock (loadLock)
             {
@@ -292,12 +241,14 @@ namespace DataWF.Module.Common
                     var stream = new MemoryStream(buffer);
                     using (var reader = new BinaryReader(stream))
                     {
-                        while (reader.Read() == 1)
+                        while (reader.PeekChar() == 1)
                         {
+                            reader.ReadChar();
                             var tableName = reader.ReadString();
                             DBTable table = DBService.ParseTable(tableName);
-                            while (reader.Read() == 2)
+                            while (reader.PeekChar() == 2)
                             {
+                                reader.ReadChar();
                                 var type = (DBLogType)reader.ReadInt32();
                                 var id = Helper.ReadBinary(reader);
                                 if (type == DBLogType.Insert)
