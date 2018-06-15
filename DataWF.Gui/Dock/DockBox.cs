@@ -596,7 +596,7 @@ namespace DataWF.Gui
 
         public IEnumerable<IDockContainer> GetDocks()
         {
-            foreach (DockItem item in items.GetVisibleItems())
+            foreach (DockItem item in items.GetItems())
             {
                 yield return item.Panel;
             }
@@ -604,7 +604,7 @@ namespace DataWF.Gui
 
         public IEnumerable<DockPanel> GetDockPanels()
         {
-            foreach (DockItem item in items.GetVisibleItems())
+            foreach (DockItem item in items.GetItems())
             {
                 yield return item.Panel;
             }
@@ -622,6 +622,7 @@ namespace DataWF.Gui
             if (page != null)
             {
                 page.Panel.CurrentPage = page;
+                page.Panel.DockItem.Visible = true;
             }
             else
             {
