@@ -17,8 +17,9 @@ namespace DataWF.Common
     {
         //public System.Net.EndPoint From;
         public SocketMessageType Type;
-        public string Sender = string.Empty;
-        public IPEndPoint EndPoint;
+        public string SenderName = string.Empty;
+        public IPEndPoint SenderEndPoint;
+        public IPEndPoint RecivedEndPoint;
         public byte[] Data = null;
         public uint Lenght;
 
@@ -30,7 +31,7 @@ namespace DataWF.Common
 
         public override string ToString()
         {
-            return string.Format("Type:{0} Id:{1} Data:{2}", Type, EndPoint, Data);
+            return string.Format("Type:{0} Id:{1} Data:{2}", Type, SenderEndPoint, Data);
         }
 
 
@@ -41,9 +42,11 @@ namespace DataWF.Common
             using (var writer = new BinaryWriter(stream))
             {
                 writer.Write((int)message.Type);
-                writer.Write(message.Sender);
+                Helper.WriteBinary(writer, message.SenderName);
+                writer.WriteEndPoint(message.SenderEndPoint);
                 writer.Write(message.Data?.Length ?? 0);
-                writer.Write(message.Data);
+                if (message.Data != null)
+                    writer.Write(message.Data);
                 writer.Flush();
                 buf = stream.ToArray();
             }
@@ -65,7 +68,8 @@ namespace DataWF.Common
                 using (var reader = new BinaryReader(stream))
                 {
                     message.Type = (SocketMessageType)reader.ReadInt32();
-                    message.Sender = reader.ReadString();
+                    message.SenderName = (string)Helper.ReadBinary(reader, typeof(string));
+                    message.SenderEndPoint = reader.ReadIpEndPoint();
                     var length = reader.ReadInt32();
                     if (length > 0)
                         message.Data = reader.ReadBytes(length);

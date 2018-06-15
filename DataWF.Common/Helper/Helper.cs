@@ -673,7 +673,10 @@ namespace DataWF.Common
                 val = reader.ReadChars(c);
             }
             else
-                val = reader.ReadString();
+            {
+                var length = reader.ReadInt32();
+                val = Encoding.UTF8.GetString(reader.ReadBytes(length));
+            }
             return val;
         }
 
@@ -807,7 +810,9 @@ namespace DataWF.Common
             {
                 if (writetype)
                     writer.Write((byte)BinaryTypeIndex.String);
-                writer.Write(value.ToString());
+                var buffer = Encoding.UTF8.GetBytes(value.ToString());
+                writer.Write(buffer.Length);
+                writer.Write(buffer);
             }
         }
 
