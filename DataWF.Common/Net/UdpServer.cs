@@ -42,7 +42,7 @@ namespace DataWF.Common
         protected bool online;
         protected UdpClient listener;
         protected UdpClient sender;
-        protected IPEndPoint localPoint;
+        private IPEndPoint listenerEndPoint;
         private ManualResetEvent receiveEvent = new ManualResetEvent(false);
 
         public event EventHandler<ExceptionEventArgs> DataException;
@@ -58,10 +58,10 @@ namespace DataWF.Common
             get { return online; }
         }
 
-        public IPEndPoint LocalPoint
+        public IPEndPoint ListenerEndPoint
         {
-            get { return localPoint; }
-            set { localPoint = value; }
+            get { return listenerEndPoint; }
+            set { listenerEndPoint = value; }
         }
 
         public UdpClient Client
@@ -71,10 +71,10 @@ namespace DataWF.Common
 
         public void StartListener()
         {
-            if (localPoint == null)
-                localPoint = new IPEndPoint(IPAddress.Any, GetUdpPort());
+            if (listenerEndPoint == null)
+                listenerEndPoint = new IPEndPoint(IPAddress.Any, GetUdpPort());
             listener = new UdpClient();
-            listener.Client.Bind(localPoint);
+            listener.Client.Bind(listenerEndPoint);
             //this.listener.Client.SendTimeout = 5000;
             //this.listener.Client.ReceiveTimeout = 5000;
             sender = new UdpClient();
@@ -107,7 +107,7 @@ namespace DataWF.Common
             try
             {
                 receiveEvent.Set();
-                var point = new IPEndPoint(IPAddress.Any, localPoint.Port);
+                var point = new IPEndPoint(IPAddress.Any, listenerEndPoint.Port);
                 var arg = result.AsyncState as UdpServerEventArgs;
                 arg.Data = listener.EndReceive(result, ref point);
                 arg.Length = arg.Data.Length;
