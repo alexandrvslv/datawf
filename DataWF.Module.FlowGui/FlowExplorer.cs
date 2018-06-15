@@ -14,7 +14,7 @@ using DataWF.Module.CommonGui;
 namespace DataWF.Module.FlowGui
 {
     [Module(true)]
-    public class FlowExplorer : VPanel, IDockContent
+    public partial class FlowExplorer : VPanel, IDockContent
     {
         private ToolWindow ose;
         private ListEditor se;
@@ -110,27 +110,6 @@ namespace DataWF.Module.FlowGui
             }
         }
 
-        public class StatWindow : ToolWindow
-        {
-            LayoutList users = new LayoutList();
-            LayoutList stats = new LayoutList();
-            GroupBox map = new GroupBox();
-
-            public StatWindow()
-            {
-                Mode = ToolShowMode.Dialog;
-                ButtonClose.Visible = false;
-
-                users.ListSource = NotifyService.Default.List;
-                stats.ListSource = NetStat.Items;
-
-                map.Add(new GroupBoxItem() { Widget = users, Text = "Users" });
-                map.Add(new GroupBoxItem() { Widget = stats, Text = "Statistic", Row = 1 });
-                Target = map;
-            }
-
-        }
-
         private void ToolStatClick(object sender, EventArgs e)
         {
             if (NotifyService.Default != null)
@@ -183,6 +162,8 @@ namespace DataWF.Module.FlowGui
                 row = new User();
                 if (tag is Department)
                     ((User)row).Department = (Department)tag;
+                else if (tag is Position)
+                    ((User)row).Position = (Position)tag;
                 //row.Access.Create
                 for (int i = 0; i < row.Access.Items.Count; i++)
                 {
