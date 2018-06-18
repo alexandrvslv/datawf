@@ -21,8 +21,8 @@ namespace DataWF.Module.FlowGui
 
         public DocumentReferenceView()
         {
-            toolAttach = new ToolItem(ToolAttachClick) { Glyph = GlyphType.PlusSquareO, GlyphColor = Colors.Green };
-            toolDetach = new ToolItem(ToolDetachClick) { Glyph = GlyphType.MinusSquareO, GlyphColor = Colors.Red };
+            toolAttach = new ToolItem(ToolAttachClick) { Name = "Attach", Glyph = GlyphType.PlusSquareO, GlyphColor = Colors.Green };
+            toolDetach = new ToolItem(ToolDetachClick) { Name = "Deattach", Glyph = GlyphType.MinusSquareO, GlyphColor = Colors.Red };
 
             filterCustomer.Visible = false;
 
