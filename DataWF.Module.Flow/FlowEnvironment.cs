@@ -98,11 +98,9 @@ namespace DataWF.Module.Flow
                 //cache groups
                 UserGroup.DBTable.Load();
 
-                AccessValue.Groups = new DBTableView<UserGroup>("");
-                AccessItem.Default = false;
+                AccessValue.Groups = new DBTableView<UserGroup>("");                
 
                 Location.DBTable.Load();
-
 
                 User.DBTable.Load();
 
