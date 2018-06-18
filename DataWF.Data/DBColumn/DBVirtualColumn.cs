@@ -21,6 +21,7 @@ using System;
 using System.ComponentModel;
 using System.Xml.Serialization;
 using DataWF.Common;
+using Newtonsoft.Json;
 
 namespace DataWF.Data
 {
@@ -59,7 +60,7 @@ namespace DataWF.Data
             }
         }
 
-        [XmlIgnore, Category("Database")]
+        [XmlIgnore, JsonIgnore, Category("Database")]
         public DBColumn BaseColumn
         {
             get

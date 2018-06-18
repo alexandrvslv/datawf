@@ -97,7 +97,7 @@ public {controllerClassName}() {{
                 var newTree = CSharpSyntaxTree.Create(node
                     .ReplaceNode(namespaceNode, newImplementation)
                     .AddUsings(CreateUsingDirective(itemType.Namespace)).NormalizeWhitespace());
-                
+
                 var newSourceText = newTree.GetText();
                 //var newFileName = $"{controllerClassName}.cs";
                 //using (var newFile = new FileStream(newFileName, FileMode.Create, FileAccess.Write))

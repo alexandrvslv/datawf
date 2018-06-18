@@ -22,6 +22,7 @@ using System.ComponentModel;
 using DataWF.Common;
 using System.Xml.Serialization;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace DataWF.Data
 {
@@ -38,7 +39,7 @@ namespace DataWF.Data
             Columns.Indexes.Add(baseNameInvoker);
         }
 
-        [XmlIgnore, Browsable(false)]
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public QQuery FilterQuery
         {
             get
@@ -65,7 +66,7 @@ namespace DataWF.Data
             }
         }
 
-        [XmlIgnore, Category("Database")]
+        [XmlIgnore, JsonIgnore, Category("Database")]
         public DBTable BaseTable
         {
             get { return baseTable ?? (baseTable = Schema?.Tables[baseTableName]); }
@@ -79,7 +80,7 @@ namespace DataWF.Data
             }
         }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public override DBSchema Schema
         {
             get => base.Schema;
@@ -91,7 +92,7 @@ namespace DataWF.Data
             }
         }
 
-        [XmlIgnore, Browsable(false)]
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public override bool IsLoging
         {
             get { return BaseTable.IsLoging; }

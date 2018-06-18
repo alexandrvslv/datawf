@@ -1,4 +1,5 @@
 ﻿using DataWF.Data;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -18,7 +19,7 @@ namespace DataWF.Data
         protected DBTableItem(string name) : base(name)
         { }
 
-        [XmlIgnore, Browsable(false)]
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public DBTable Table
         {
             get { return table; }

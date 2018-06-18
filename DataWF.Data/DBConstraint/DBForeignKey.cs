@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -43,7 +44,7 @@ namespace DataWF.Data
             name = string.Format("{0}{1}{2}{3}", Table.Name, Columns.Names, Reference.Table.Name, References.Names);
         }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public DBColumn Reference
         {
             get { return References.GetFirst()?.Column; }
@@ -58,7 +59,7 @@ namespace DataWF.Data
             }
         }
 
-        [XmlIgnore, Browsable(false)]
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public string ReferenceName
         {
             get { return References.GetFirst()?.ColumnName; }

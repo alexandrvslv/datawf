@@ -26,14 +26,15 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
+
     [DataContract]
     [JsonConverter(typeof(DBItemJsonConverter))]
     public class DBItem : ICloneable, IComparable<DBItem>, IDisposable, IAccessable, ICheck, INotifyPropertyChanged, IEditable, IStatus, IDBTableContent
@@ -629,14 +630,14 @@ namespace DataWF.Data
             }
         }
 
-        [Browsable(false)]
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public object PrimaryId
         {
             get { return Table.PrimaryKey == null ? null : GetValue(Table.PrimaryKey); }
             set { this[Table.PrimaryKey] = value; }
         }
 
-        [Browsable(false)]
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public string PrimaryCode
         {
             get { return Table.CodeKey == null ? null : GetValue<string>(Table.CodeKey); }
@@ -673,7 +674,7 @@ namespace DataWF.Data
             set { SetValue(value, Table.StampKey); }
         }
 
-        [NotMapped, Browsable(false)]
+        [XmlIgnore, JsonIgnore, NotMapped, Browsable(false)]
         [DataMember, Column("group_access", 512, DataType = typeof(byte[]), GroupName = "system", Keys = DBColumnKeys.Access | DBColumnKeys.System, Order = 102)]
         public virtual AccessValue Access
         {
@@ -713,7 +714,7 @@ namespace DataWF.Data
             set { SetName(nameof(Name), value); }
         }
 
-        [Browsable(false)]
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public virtual DBTable Table
         {
             get { return table; }
@@ -792,7 +793,7 @@ namespace DataWF.Data
             }
         }
 
-        [Browsable(false)]
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public DBItemState State
         {
             get { return state; }
@@ -805,7 +806,7 @@ namespace DataWF.Data
             }
         }
 
-        [Browsable(false)]
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public virtual DBUpdateState UpdateState
         {
             get { return update; }
@@ -908,7 +909,7 @@ namespace DataWF.Data
             return item;
         }
 
-        #endregion        
+        #endregion
 
         [Browsable(false)]
         public bool Attached
@@ -1012,7 +1013,7 @@ namespace DataWF.Data
             get { return UpdateState != DBUpdateState.Default && (UpdateState & DBUpdateState.Commit) != DBUpdateState.Commit; }
         }
 
-        [Browsable(false)]
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public byte[] Image
         {
             get { return this[table.ImageKey] as byte[]; }
@@ -1037,7 +1038,7 @@ namespace DataWF.Data
             return CompareTo(obj as DBItem);
         }
 
-        [Browsable(false)]
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public bool Check
         {
             get { return (state & DBItemState.Check) == DBItemState.Check; }

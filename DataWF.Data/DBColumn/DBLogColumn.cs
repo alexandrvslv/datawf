@@ -21,6 +21,7 @@ using System;
 using System.ComponentModel;
 using System.Xml.Serialization;
 using DataWF.Common;
+using Newtonsoft.Json;
 
 namespace DataWF.Data
 {
@@ -46,7 +47,7 @@ namespace DataWF.Data
         [Browsable(false)]
         public string BaseName { get; set; }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public DBColumn BaseColumn
         {
             get { return baseColumn ?? (baseColumn = LogTable?.BaseTable?.ParseColumn(BaseName)); }
@@ -66,7 +67,7 @@ namespace DataWF.Data
             }
         }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public override AccessValue Access
         {
             get { return BaseColumn?.Access; }

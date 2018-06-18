@@ -22,6 +22,7 @@ using System.ComponentModel;
 using DataWF.Common;
 using System.Xml.Serialization;
 using System.Globalization;
+using Newtonsoft.Json;
 
 namespace DataWF.Data
 {
@@ -43,7 +44,7 @@ namespace DataWF.Data
             }
         }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public EmitConstructor Constructor { get; set; }
     }
 

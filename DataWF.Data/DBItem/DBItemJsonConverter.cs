@@ -42,8 +42,7 @@ namespace DataWF.Data
             var table = item.Table;
             foreach (var column in table.Columns)
             {
-                if (!column.Access.View
-                    || (column.Keys & DBColumnKeys.System) == DBColumnKeys.System)//check permission
+                if (!column.Access.View || (column.Keys & DBColumnKeys.Access) == DBColumnKeys.Access)//check permission
                     continue;
                 writer.WritePropertyName(column.Property ?? column.Name);
                 writer.WriteValue(item.GetValue(column));

@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
 using DataWF.Common;
+using Newtonsoft.Json;
 
 namespace DataWF.Data
 {
@@ -73,7 +74,7 @@ namespace DataWF.Data
 
         public string BaseTableName { get; set; }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public DBTable BaseTable
         {
             get
@@ -129,7 +130,7 @@ namespace DataWF.Data
             }
         }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public override AccessValue Access
         {
             get { return BaseTable.Access; }

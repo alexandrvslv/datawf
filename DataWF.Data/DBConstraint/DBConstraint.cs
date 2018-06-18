@@ -17,6 +17,7 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using Newtonsoft.Json;
 using System;
 using System.ComponentModel;
 using System.Text;
@@ -65,7 +66,7 @@ namespace DataWF.Data
 
         public DBColumnReferenceList Columns { get; set; }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public DBColumn Column
         {
             get { return Columns.GetFirst()?.Column; }
@@ -84,7 +85,7 @@ namespace DataWF.Data
             }
         }
 
-        [XmlIgnore, Browsable(false)]
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public string ColumnName
         {
             get { return Columns.GetFirst().ColumnName; }

@@ -21,6 +21,7 @@ using System;
 using System.Reflection;
 using System.Xml.Serialization;
 using DataWF.Common;
+using Newtonsoft.Json;
 
 namespace DataWF.Data
 {
@@ -31,7 +32,7 @@ namespace DataWF.Data
             : base(name, null)
         {
             BaseType = baseType;
-            Query = query;            
+            Query = query;
         }
 
         public override string GroupName
@@ -43,7 +44,7 @@ namespace DataWF.Data
 
         public string Query { get; set; }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public TableAttribute BaseTable { get; internal set; }
 
         public override DBTable CreateTable()
@@ -65,13 +66,13 @@ namespace DataWF.Data
             return table;
         }
 
-		public override void Initialize(Type type)
-		{
-			BaseTable = DBTable.GetTableAttribute(BaseType);
-			base.Initialize(type);
-		}
+        public override void Initialize(Type type)
+        {
+            BaseTable = DBTable.GetTableAttribute(BaseType);
+            base.Initialize(type);
+        }
 
-		public override ColumnAttribute InitializeColumn(PropertyInfo property)
+        public override ColumnAttribute InitializeColumn(PropertyInfo property)
         {
             var column = base.InitializeColumn(property);
             if (column != null && !(column is VirtualColumnAttribute))

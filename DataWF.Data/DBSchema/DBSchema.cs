@@ -18,6 +18,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Common;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -73,7 +74,7 @@ namespace DataWF.Data
         [Browsable(false)]
         public string ConnectionName { get => connectionName; set => connectionName = value; }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public DBConnection Connection
         {
             get { return connection ?? (connection = DBService.Connections[ConnectionName]); }
@@ -102,7 +103,7 @@ namespace DataWF.Data
             }
         }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public DBLogSchema LogSchema
         {
             get { return logSchema ?? (logSchema = (DBLogSchema)DBService.Schems[logSchemaName]); }
@@ -148,7 +149,7 @@ namespace DataWF.Data
             }
         }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public bool IsSynchronizing { get; internal set; }
 
         public DBTable GenerateTable(string name)

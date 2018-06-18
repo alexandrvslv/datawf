@@ -17,6 +17,7 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using Newtonsoft.Json;
 using System;
 using System.Xml.Serialization;
 
@@ -51,10 +52,10 @@ namespace DataWF.Data
 
         public string ColumnProperty { get; set; }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public Type ReferenceType { get; internal set; }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public TableAttribute Table { get; internal set; }
 
         public ColumnAttribute Column

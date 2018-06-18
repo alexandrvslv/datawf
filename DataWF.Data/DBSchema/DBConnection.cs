@@ -1,4 +1,5 @@
 ﻿using DataWF.Common;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -80,7 +81,7 @@ namespace DataWF.Data
             }
         }
 
-        [XmlIgnore, Category("1. Host")]
+        [XmlIgnore, JsonIgnore, Category("1. Host")]
         public DBSystem System
         {
             get { return system ?? (system = GetSystem()); }

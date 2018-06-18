@@ -17,6 +17,7 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using Newtonsoft.Json;
 using System;
 using System.ComponentModel;
 using System.Xml.Serialization;
@@ -48,7 +49,7 @@ namespace DataWF.Data
             set { schemaName = value; }
         }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public DBSchema Schema
         {
             get { return schema ?? (schema = DBService.Schems[schemaName]); }

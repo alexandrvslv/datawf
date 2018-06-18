@@ -18,6 +18,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Common;
+using Newtonsoft.Json;
 using System;
 using System.ComponentModel;
 using System.Xml.Serialization;
@@ -39,7 +40,7 @@ namespace DataWF.Data
             Schema = schema;
         }
 
-        [XmlIgnore, Browsable(false)]
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public virtual DBSchema Schema { get; internal set; }
 
         public virtual T this[string name]

@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Xml.Serialization;
 using System.Reflection;
 using System.Diagnostics;
+using Newtonsoft.Json;
 
 namespace DataWF.Data
 {
@@ -60,21 +61,21 @@ namespace DataWF.Data
         [DefaultValue(DBTableType.Table)]
         protected DBTableType TableType { get; set; } = DBTableType.Table;
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public DBSchema Schema
         {
             get { return cacheSchema; }
             set { cacheSchema = value; }
         }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public DBTable Table
         {
             get { return cacheTable ?? (cacheTable = DBService.ParseTable(TableName)); }
             internal set { cacheTable = value; }
         }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public DBTableGroup TableGroup
         {
             get { return cacheGroup ?? (cacheGroup = Schema?.TableGroups[GroupName]); }

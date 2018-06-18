@@ -26,6 +26,7 @@ using System.Collections;
 using System.Text;
 using System.Linq;
 using System.Xml.Serialization;
+using Newtonsoft.Json;
 
 namespace DataWF.Data
 {
@@ -217,7 +218,7 @@ namespace DataWF.Data
             }
         }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public QParam Group
         {
             get { return List?.Owner as QParam; }

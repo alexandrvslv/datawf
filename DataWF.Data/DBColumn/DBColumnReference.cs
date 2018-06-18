@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Xml.Serialization;
 using DataWF.Common;
+using Newtonsoft.Json;
 
 namespace DataWF.Data
 {
@@ -25,7 +26,7 @@ namespace DataWF.Data
             }
         }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public DBColumn Column
         {
             get { return column ?? DBService.ParseColumn(columnName); }
@@ -39,11 +40,11 @@ namespace DataWF.Data
             }
         }
 
-        [Browsable(false), XmlIgnore]
+        [Browsable(false), XmlIgnore, JsonIgnore]
         public INotifyListChanged Container { get; set; }
 
 
-        [Browsable(false), XmlIgnore]
+        [Browsable(false), XmlIgnore, JsonIgnore]
         public DBColumnReferenceList List
         {
             get { return Container as DBColumnReferenceList; }

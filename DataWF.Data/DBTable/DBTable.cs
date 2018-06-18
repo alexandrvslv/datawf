@@ -33,6 +33,7 @@ using System.Text.RegularExpressions;
 using System.IO;
 using System.Globalization;
 using System.Diagnostics;
+using Newtonsoft.Json;
 
 namespace DataWF.Data
 {
@@ -153,7 +154,7 @@ namespace DataWF.Data
         [Browsable(false)]
         public string LogTableName { get; set; }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public DBLogTable LogTable
         {
             get
@@ -175,7 +176,7 @@ namespace DataWF.Data
             get { return locker; }
         }
 
-        //[Browsable(false), XmlIgnore]
+        //[Browsable(false), XmlIgnore, JsonIgnore]
         //public TableAttribute Info { get; protected set; }
 
         public DBColumn ParseProperty(string property)
@@ -186,7 +187,7 @@ namespace DataWF.Data
         [Browsable(false)]
         public Dictionary<int, DBItemType> ItemTypes { get; set; } = new Dictionary<int, DBItemType>();
 
-        [Browsable(false), XmlIgnore]
+        [Browsable(false), XmlIgnore, JsonIgnore]
         public DBItemType ItemType => itemType;
 
         protected void SetItemType(Type type)
@@ -270,7 +271,7 @@ namespace DataWF.Data
             }
         }
 
-        [XmlIgnore, Category("Group")]
+        [XmlIgnore, JsonIgnore, Category("Group")]
         public DBTableGroup Group
         {
             get
@@ -300,7 +301,7 @@ namespace DataWF.Data
             }
         }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public DBSequence Sequence
         {
             get { return cacheSequence ?? (cacheSequence = Schema?.Sequences[sequenceName]); }
@@ -457,7 +458,7 @@ namespace DataWF.Data
             }
         }
 
-        [XmlIgnore, Category("Database")]
+        [XmlIgnore, JsonIgnore, Category("Database")]
         public virtual bool IsLoging
         {
             get { return !string.IsNullOrEmpty(LogTableName); }

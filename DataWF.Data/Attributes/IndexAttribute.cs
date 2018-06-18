@@ -18,6 +18,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -45,7 +46,7 @@ namespace DataWF.Data
         [DefaultValue(false)]
         public bool Unique { get; set; }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public List<ColumnAttribute> Columns
         {
             get { return columns; }
@@ -57,7 +58,7 @@ namespace DataWF.Data
             internal set { cacheIndex = value; }
         }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public TableAttribute Table { get; internal set; }
 
         public DBIndex Generate()

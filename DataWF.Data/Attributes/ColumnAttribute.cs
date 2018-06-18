@@ -26,6 +26,7 @@ using System.Text;
 using System.Xml.Serialization;
 using DataWF.Data;
 using DataWF.Common;
+using Newtonsoft.Json;
 
 namespace DataWF.Data
 {
@@ -66,10 +67,10 @@ namespace DataWF.Data
 
         public DBColumnKeys Keys { get; set; }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public TableAttribute Table { get; internal set; }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public DBColumn Column
         {
             get
@@ -81,10 +82,10 @@ namespace DataWF.Data
             internal set { cache = value; }
         }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public string Property { get; internal set; }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public Type DataType { get; set; }
 
         public Type GetDataType()

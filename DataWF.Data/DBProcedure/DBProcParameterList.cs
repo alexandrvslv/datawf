@@ -18,6 +18,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using Newtonsoft.Json;
 using System.Xml.Serialization;
 
 namespace DataWF.Data
@@ -29,7 +30,7 @@ namespace DataWF.Data
             this.Procedure = procedure;
         }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public DBProcedure Procedure { get; set; }
 
     }

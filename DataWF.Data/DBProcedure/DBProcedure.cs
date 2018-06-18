@@ -29,6 +29,7 @@ using System.Xml;
 using System.Text;
 using System.Xml.Serialization;
 using System.Linq;
+using Newtonsoft.Json;
 
 namespace DataWF.Data
 {
@@ -62,7 +63,7 @@ namespace DataWF.Data
 
         public string GroupName { get; set; }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public DBProcedure Group
         {
             get { return group ?? (group = Store?[GroupName]); }
@@ -74,7 +75,7 @@ namespace DataWF.Data
             }
         }
 
-        [XmlIgnore, Browsable(false)]
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public Assembly TempAssembly
         {
             get { return this.tempAssembly; }
@@ -86,7 +87,7 @@ namespace DataWF.Data
         [Browsable(false)]
         public byte[] DataStore { get; set; }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public byte[] Data
         {
             get
@@ -139,14 +140,14 @@ namespace DataWF.Data
             get { return GroupHelper.GetAllParentExpand(this); }
         }
 
-        [XmlIgnore, Browsable(false)]
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         IGroup IGroup.Group
         {
             get { return Group; }
             set { Group = value as DBProcedure; }
         }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public bool Expand { get; set; }
 
         public bool IsCompaund
@@ -154,7 +155,7 @@ namespace DataWF.Data
             get { return Childs.Any(); }
         }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public List<CodeAttribute> Codes { get; set; } = new List<CodeAttribute>();
 
         public static Assembly Compile(string outFile, IEnumerable<DBProcedure> procedures, out CompilerResults result, bool inMemory)

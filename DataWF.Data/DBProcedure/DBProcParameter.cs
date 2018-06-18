@@ -22,6 +22,7 @@ using System.Data;
 using System.ComponentModel;
 using System.Xml.Serialization;
 using DataWF.Common;
+using Newtonsoft.Json;
 
 namespace DataWF.Data
 {
@@ -34,7 +35,7 @@ namespace DataWF.Data
         public DBProcParameter()
         { }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public DBProcedure Procedure
         {
             get { return ((DBProcParameterList)Container).Procedure; }
@@ -43,7 +44,7 @@ namespace DataWF.Data
 
         public string DataTypeName { get; set; }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public Type DataType
         {
             get { return DataTypeName.Length == 0 ? typeof(string) : TypeHelper.ParseType(DataTypeName); }
@@ -54,7 +55,7 @@ namespace DataWF.Data
 
         public string ColumnName { get; set; }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public DBColumn Column
         {
             get

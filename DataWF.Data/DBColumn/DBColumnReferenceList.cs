@@ -1,4 +1,5 @@
 ﻿using DataWF.Common;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -19,7 +20,7 @@ namespace DataWF.Data
             AddRangeInternal(columns.Select(p => new DBColumnReference { Column = p }));
         }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public string Names { get; private set; }
 
         public void Add(DBColumn column)

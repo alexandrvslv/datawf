@@ -18,6 +18,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Common;
+using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.ComponentModel;
@@ -50,14 +51,14 @@ namespace DataWF.Data
             this.name = name;
         }
 
-        [Browsable(false), XmlIgnore]
+        [Browsable(false), XmlIgnore, JsonIgnore]
         public INotifyListChanged Container
         {
             get { return container; }
             set { container = value; }
         }
 
-        [Browsable(false), XmlIgnore]
+        [Browsable(false), XmlIgnore, JsonIgnore]
         public virtual DBSchema Schema
         {
             get { return schema; }
@@ -75,7 +76,7 @@ namespace DataWF.Data
             return LocaleInfo?.Value ?? name;
         }
 
-        [Browsable(false), Category("Policy"), XmlIgnore]
+        [Browsable(false), Category("Policy"), XmlIgnore, JsonIgnore]
         public virtual AccessValue Access
         {
             get { return access ?? (access = new AccessValue()); }
@@ -93,7 +94,7 @@ namespace DataWF.Data
             return Schema?.Name ?? Name;
         }
 
-        [Browsable(false), Category("Naming"), XmlIgnore]
+        [Browsable(false), Category("Naming"), XmlIgnore, JsonIgnore]
         public LocaleItem LocaleInfo
         {
             get
@@ -114,7 +115,7 @@ namespace DataWF.Data
             //}
         }
 
-        [Category("Naming"), XmlIgnore]
+        [Category("Naming"), XmlIgnore, JsonIgnore]
         public string DisplayName
         {
             get { return LocaleInfo?.Value ?? Name; }
@@ -146,14 +147,14 @@ namespace DataWF.Data
             }
         }
 
-        [Browsable(false), XmlIgnore]
+        [Browsable(false), XmlIgnore, JsonIgnore]
         public string OldName
         {
             get { return oldname; }
             set { oldname = value; }
         }
 
-        [Browsable(false), XmlIgnore]
+        [Browsable(false), XmlIgnore, JsonIgnore]
         public bool IsSynchronized
         {
             get { return isSynchronized; }

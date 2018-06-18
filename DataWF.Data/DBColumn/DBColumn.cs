@@ -27,6 +27,7 @@ using System.Xml.Serialization;
 using System.Data;
 using System.Linq;
 using System.Reflection;
+using Newtonsoft.Json;
 
 namespace DataWF.Data
 {
@@ -149,7 +150,7 @@ namespace DataWF.Data
         [Browsable(false)]
         public bool CanWrite { get { return true; } }
 
-        [XmlIgnore, Browsable(false)]
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public Pull Pull
         {
             get { return pull; }
@@ -203,7 +204,7 @@ namespace DataWF.Data
             }
         }
 
-        [XmlIgnore, Browsable(false)]
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public DBPullIndex Index
         {
             get { return index; }
@@ -263,7 +264,7 @@ namespace DataWF.Data
             }
         }
 
-        [XmlIgnore, Category("Add")]
+        [XmlIgnore, JsonIgnore, Category("Add")]
         public CultureInfo Culture
         {
             get
@@ -300,7 +301,7 @@ namespace DataWF.Data
             }
         }
 
-        [XmlIgnore, Category("Add")]
+        [XmlIgnore, JsonIgnore, Category("Add")]
         public DBColumnGroup Group
         {
             get
@@ -371,7 +372,7 @@ namespace DataWF.Data
             }
         }
 
-        [Browsable(false), Category("Database"), XmlIgnore]
+        [Browsable(false), Category("Database"), XmlIgnore, JsonIgnore]
         public int Order
         {
             get { return order; }
@@ -391,7 +392,7 @@ namespace DataWF.Data
             return Table?.Foreigns.GetForeignByColumn(this);
         }
 
-        [XmlIgnore, Category("Database")]
+        [XmlIgnore, JsonIgnore, Category("Database")]
         public DBTable ReferenceTable
         {
             get
@@ -413,13 +414,13 @@ namespace DataWF.Data
             }
         }
 
-        [XmlIgnore, Browsable(false), Category("Database")]
+        [XmlIgnore, JsonIgnore, Browsable(false), Category("Database")]
         public bool IsView
         {
             get { return (Keys & DBColumnKeys.View) == DBColumnKeys.View; }
         }
 
-        [XmlIgnore, Browsable(false), Category("Database")]
+        [XmlIgnore, JsonIgnore, Browsable(false), Category("Database")]
         public bool IsReference
         {
             get { return (Keys & DBColumnKeys.Reference) == DBColumnKeys.Reference; }
@@ -528,7 +529,7 @@ namespace DataWF.Data
             }
         }
 
-        [Browsable(false), XmlIgnore]
+        [Browsable(false), XmlIgnore, JsonIgnore]
         public Type ReaderDataType { get; set; }
 
         [Category("Database")]
