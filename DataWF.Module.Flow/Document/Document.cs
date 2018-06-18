@@ -425,7 +425,7 @@ namespace DataWF.Module.Flow
                 if ((initype & DocInitType.References) != DocInitType.References)
                 {
                     initype |= DocInitType.References;
-                    return DocumentReference.DBTable.Load(CreateRefsFilter(Id));
+                    DocumentReference.DBTable.Load(CreateRefsFilter(Id));
                 }
                 return GetReferencing<DocumentReference>(nameof(DocumentReference.DocumentId), DBLoadParam.None);
             }
@@ -438,7 +438,7 @@ namespace DataWF.Module.Flow
                 if ((initype & DocInitType.Workflow) != DocInitType.Workflow)
                 {
                     initype |= DocInitType.Workflow;
-                    return GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), DBLoadParam.Load);
+                    GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), DBLoadParam.Load);
                 }
 
                 return GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), DBLoadParam.None);
@@ -452,7 +452,7 @@ namespace DataWF.Module.Flow
                 if ((initype & DocInitType.Data) != DocInitType.Data)
                 {
                     initype |= DocInitType.Data;
-                    return GetReferencing<DocumentData>(nameof(DocumentData.DocumentId), DBLoadParam.Load);
+                    GetReferencing<DocumentData>(nameof(DocumentData.DocumentId), DBLoadParam.Load);
                 }
                 return GetReferencing<DocumentData>(nameof(DocumentData.DocumentId), DBLoadParam.None);
             }
@@ -466,7 +466,7 @@ namespace DataWF.Module.Flow
                 if ((initype & DocInitType.Customer) != DocInitType.Customer)
                 {
                     initype |= DocInitType.Customer;
-                    return GetReferencing<DocumentCustomer>(nameof(DocumentCustomer.DocumentId), DBLoadParam.Load);
+                    GetReferencing<DocumentCustomer>(nameof(DocumentCustomer.DocumentId), DBLoadParam.Load);
                 }
                 return GetReferencing<DocumentCustomer>(nameof(DocumentCustomer.DocumentId), DBLoadParam.None);
             }
