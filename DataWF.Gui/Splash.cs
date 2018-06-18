@@ -61,7 +61,6 @@ namespace DataWF.Gui
                 Locale.Load();
                 LoadAction?.Invoke();
                 GuiEnvironment.Load();
-                AccessItem.Default = true;
             }
             catch (Exception ex)
             {
