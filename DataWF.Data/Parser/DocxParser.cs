@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Word = DocumentFormat.OpenXml.Wordprocessing;
+using System.Linq;
 
 //using DataControl;
 
@@ -58,19 +59,24 @@ namespace DataWF.Data
             Find<Word.SdtElement>(doc, list);
             foreach (var item in list)
             {
-                OpenXmlElement element = FindChild<Word.SdtContentBlock>(item);
-                if (element == null)
-                    element = FindChild<Word.SdtContentRun>(item);
-                var prop = FindChild<Word.SdtProperties>(item);
-                var tag = prop.GetFirstChild<Word.Tag>();
+                OpenXmlElement stdContent = FindChildByName(item, "sdtContent");
+                var element = stdContent.FirstChild;
+                var prop = item.Descendants<Word.SdtProperties>().FirstOrDefault();
+                var temp = prop.Descendants<Word.TemporarySdt>().FirstOrDefault();
+                var tag = prop.Descendants<Word.Tag>().FirstOrDefault();
                 if (tag == null)
-                    tag = FindChild<Word.Tag>(element);
+                    tag = stdContent.Descendants<Word.Tag>().FirstOrDefault();
 
                 if (tag != null)
                 {
                     object val = ParseString(param, tag.Val.ToString());
                     if (val != null)
                     {
+                        if (temp != null)
+                        {
+                            element.Remove();
+                            item.Parent.ReplaceChild(element, item);
+                        }
                         if (val is QResult)
                             FillTable(item, (QResult)val);
                         else
@@ -81,10 +87,18 @@ namespace DataWF.Data
             doc.Save();
         }
 
+        private OpenXmlElement FindChildByName(OpenXmlElement element, string v)
+        {
+            foreach (var child in element)
+                if (child.LocalName == v)
+                    return child;
+            return null;
+        }
+
         public void FillTable(OpenXmlElement element, QResult query)
         {
             var row = FindParent<Word.TableRow>(element);
-            var prg = FindChild<Word.Paragraph>(row);
+            var prg = row.Descendants<Word.Paragraph>().FirstOrDefault();
             //element.Remove();
             Word.TableRow prow = null;
             foreach (object[] data in query.Values)
@@ -94,13 +108,13 @@ namespace DataWF.Data
                 {
                     if (cell != null)
                     {
-                        var paragraph = FindChild<Word.Paragraph>(cell);
+                        var paragraph = cell.Descendants<Word.Paragraph>().FirstOrDefault();
                         if (paragraph == null)
                         {
                             paragraph = (Word.Paragraph)prg.Clone();
                             cell.Append(paragraph);
                         }
-                        Word.Run run = FindChild<Word.Run>(paragraph);
+                        Word.Run run = paragraph.Descendants<Word.Run>().FirstOrDefault();
                         if (run != null)
                         {
                             ReplaceString(run, value.ToString());
@@ -123,43 +137,33 @@ namespace DataWF.Data
             }
         }
 
-        public T FindChild<T>(OpenXmlElement element) where T : OpenXmlElement
-        {
-            if (element is Word.DeletedRun)
-            {
-                element.Remove();
-                return null;
-            }
-            if (element is T)
-                return (T)element;
-            var item = element.GetFirstChild<T>();
-
-            if (item == null)
-                foreach (var sub in element)
-                {
-                    item = FindChild<T>(sub);
-                    if (item != null)
-                        break;
-                }
-            return item;
-        }
-
         public T FindParent<T>(OpenXmlElement element) where T : OpenXmlElement
         {
             while (!(element is T) && element.Parent != null)
                 element = element.Parent;
-            return element is T ? (T)element : null;
+            return element as T;
         }
 
         public void ReplaceString(OpenXmlElement element, string val)
         {
-            var text = FindChild<Word.Text>(element);
-            var run = text == null ? FindChild<Word.Run>(element) : FindParent<Word.Run>(text);
+            var text = element.Descendants<Word.Text>().FirstOrDefault();
+            var run = text == null ? element.Descendants<Word.Run>().FirstOrDefault() : FindParent<Word.Run>(text);
             var runp = run.Parent;
-            var paragrap = FindParent<Word.Paragraph>(runp);
+            var paragraph = FindParent<Word.Paragraph>(runp);
+            run.RsidRunProperties = null;
             run.RemoveAllChildren<Word.Text>();
+            run.RemoveAllChildren<Word.RunProperties>();
             runp.RemoveAllChildren<Word.Run>();
             runp.RemoveAllChildren<Word.Break>();
+
+            if (paragraph.ParagraphProperties?.ParagraphMarkRunProperties != null)
+            {
+                run.RunProperties = new Word.RunProperties();
+                foreach (var item in paragraph.ParagraphProperties.ParagraphMarkRunProperties)
+                {
+                    run.RunProperties.AppendChild(item.CloneNode(true));
+                }
+            }
             if (text == null)
                 text = new Word.Text();
             else if (text.Parent != null)
@@ -167,14 +171,14 @@ namespace DataWF.Data
             string[] pagesplit = val.TrimEnd("\r\n".ToCharArray()).Split("\f".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
             for (int p = 0; p < pagesplit.Length; p++)
             {
-                var temp = pagesplit[p].Split(new string[] { "\r\n", "\n" }, StringSplitOptions.None);
-                if (temp.Length > 0)
+                var lineSpit = pagesplit[p].Split(new string[] { "\r\n", "\n" }, StringSplitOptions.None);
+                if (lineSpit.Length > 0)
                 {
-                    for (int i = 0; i < temp.Length; i++)
+                    for (int i = 0; i < lineSpit.Length; i++)
                     {
                         if (p == 0 && i == 0)
                         {
-                            text.Text = temp[0];
+                            text.Text = lineSpit[0];
                             text.Space = SpaceProcessingModeValues.Preserve;
                             run.Append(text);
                             runp.Append(run);
@@ -182,9 +186,9 @@ namespace DataWF.Data
                         }
                         Word.Run r = run.Clone() as Word.Run;
                         r.RemoveAllChildren<Word.Text>();
-                        r.Append(new Word.Text(temp[i]) { Space = SpaceProcessingModeValues.Preserve });
+                        r.Append(new Word.Text(lineSpit[i]) { Space = SpaceProcessingModeValues.Preserve });
 
-                        Word.Paragraph pr = (Word.Paragraph)paragrap.Clone();
+                        Word.Paragraph pr = (Word.Paragraph)paragraph.Clone();
                         pr.RemoveAllChildren<Word.Run>();
                         pr.RemoveAllChildren<Word.Break>();
                         pr.RemoveAllChildren<Word.SdtBlock>();
@@ -192,15 +196,14 @@ namespace DataWF.Data
 
                         pr.Append(r);
 
-                        paragrap.Parent.InsertAfter<Word.Paragraph>(pr, paragrap);
-                        paragrap = pr;
+                        paragraph.Parent.InsertAfter<Word.Paragraph>(pr, paragraph);
+                        paragraph = pr;
                     }
                 }
                 if (p < pagesplit.Length - 1)
                 {
-                    Word.Break bp = new Word.Break();
-                    bp.Type = Word.BreakValues.Page;
-                    paragrap.AppendChild<Word.Break>(bp);
+                    var bp = new Word.Break() { Type = Word.BreakValues.Page };
+                    paragraph.AppendChild(bp);
                 }
             }
         }
