@@ -26,11 +26,6 @@ using System.Diagnostics;
 
 namespace DataWF.Module.Common
 {
-    public class LdapSetting
-    {
-        public string Domain { get; set; }
-        public bool SSL { get; set; }
-    }
 
     public static class LdapHelper
     {

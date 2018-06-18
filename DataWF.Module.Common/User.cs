@@ -84,7 +84,7 @@ namespace DataWF.Module.Common
             var user = DBTable.SelectOne(DBTable.ParseProperty(nameof(EMail)), email);
             if (user == null)
                 throw new KeyNotFoundException();
-            var config = SmtpSetting.Current;
+            var config = SmtpSetting.Load();
             using (var smtpClient = new SmtpClient())
             {
                 smtpClient.ServerCertificateValidationCallback = (s, c, h, e) => true;

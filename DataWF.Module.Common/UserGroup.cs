@@ -78,6 +78,7 @@ namespace DataWF.Module.Common
             set { SetName(nameof(Name), value); }
         }
 
+        [Referencing(typeof(User))]
         public IEnumerable<User> GetUsers()
         {
             foreach (User user in User.DBTable)
@@ -90,28 +91,14 @@ namespace DataWF.Module.Common
         {
             get
             {
-                return (Status == DBStatus.Actual || (User.CurrentUser?.Super.Value ?? false))
+                return ((User.CurrentUser?.Super.Value ?? false))//Status == DBStatus.Actual ||
                     && (User.CurrentUser?.Access.Get(this).Create ?? false);
             }
         }
 
-        //public GroupPermissionList GroupPermissions
-        //{
-        //    get
-        //    {
-        //        if (_permission == null && Id != DBNull.Value)
-        //            _permission = new GroupPermissionList(this);
-        //        return _permission;
-        //    }
-        //}
-
         public override void Dispose()
         {
             base.Dispose();
-            // if (_users != null)
-            //     _users.Dispose();            
         }
-
-
     }
 }
