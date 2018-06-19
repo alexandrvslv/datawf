@@ -24,6 +24,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.Linq;
 
 namespace DataWF.Data
 {
@@ -234,7 +235,7 @@ namespace DataWF.Data
                         transaction.Dispose();
                     if (subTransactions != null)
                     {
-                        foreach (var subTransaction in subTransactions.Values)
+                        foreach (var subTransaction in subTransactions.Values.ToArray())
                         {
                             subTransaction.Dispose();
                         }
@@ -334,13 +335,13 @@ namespace DataWF.Data
 
         public DBTransaction GetSubTransaction(DBConnection config, bool checkSelf = true, bool noTransaction = false)
         {
-            if (checkSelf && config == DbConnection)
+            if (checkSelf && config == DbConnection && Reader == null)
                 return this;
             if (subTransactions == null)
             {
                 subTransactions = new Dictionary<DBConnection, DBTransaction>();
             }
-            else if (subTransactions.TryGetValue(config, out var subTransaction))
+            else if (subTransactions.TryGetValue(config, out var subTransaction) && subTransaction.Reader == null)
             {
                 return subTransaction;
             }
