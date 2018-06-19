@@ -158,6 +158,7 @@ namespace DataWF.Common
             return type;
         }
 
+
         public static List<Type> GetTypeHierarchi(Type type)
         {
             var buffer = new List<Type>();
@@ -557,6 +558,26 @@ namespace DataWF.Common
             return ((mInfo.MemberType == MemberTypes.Method && ((MethodInfo)mInfo).IsStatic) ||
                 (mInfo.MemberType == MemberTypes.Property && ((PropertyInfo)mInfo).GetGetMethod().IsStatic) ||
                 (mInfo.MemberType == MemberTypes.Field && ((FieldInfo)mInfo).IsStatic));
+        }
+
+        public static string CodeFormatType(Type type)
+        {
+            var builder = new StringBuilder();
+            if (type.IsGenericType)
+            {
+                builder.Append($"{type.Namespace}.{type.Name.Remove(type.Name.IndexOf('`'))}<");
+                foreach (var parameter in type.GetGenericArguments())
+                {
+                    builder.Append($"{CodeFormatType(parameter)}, ");
+                }
+                builder.Length -= 2;
+                builder.Append(">");
+            }
+            else
+            {
+                builder.Append(type.FullName);
+            }
+            return builder.ToString();
         }
 
         public static string BinaryFormatType(Type type)
