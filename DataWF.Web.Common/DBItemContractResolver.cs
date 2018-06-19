@@ -2,6 +2,7 @@
 using DataWF.Data;
 using Newtonsoft.Json.Serialization;
 using System;
+using System.Reflection;
 
 namespace DataWF.Web.Common
 {
@@ -50,17 +51,6 @@ namespace DataWF.Web.Common
                 baseResult.Properties.Clear();
             return baseResult;
 
-        }
-
-        protected override string ResolvePropertyName(string propertyName)
-        {
-            try
-            {
-                var res = base.ResolvePropertyName(propertyName);
-                return res;
-            }
-            catch (Exception ex)
-            { return null; }
         }
     }
 }

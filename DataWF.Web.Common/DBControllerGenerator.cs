@@ -16,7 +16,8 @@ using System.Collections.Generic;
 
 namespace DataWF.Web.Common
 {
-    public class ControllerGenerator
+
+    public class DBControllerGenerator
     {
         [Obsolete()]
         public static void Generate(DBSchema schema)
@@ -78,8 +79,8 @@ namespace DataWF.Web.Common
                 var controllerType = typeof(DBController<>).MakeGenericType(itemType);
                 string controllerClassName = $"{tableAttribute.ItemType.Name}Controller";
 
-                var newImplementation = CSharpSyntaxTree.ParseText(
-                  $@"namespace DataWF.Web.{name} 
+
+                var builder = new StringBuilder($@"namespace DataWF.Web.{name} 
 {{
 [Route(""api/[controller]"")]
 [ApiController]
@@ -88,17 +89,62 @@ public class {controllerClassName} : {baseClassName}<{itemType.Name}>
 public {controllerClassName}() {{
 // default ctor
 }}
-//TODO Methods from itemType
-}}
-}}
-").GetRoot().DescendantNodes().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
+");
+                foreach (var method in itemType.GetMethods(BindingFlags.Public | BindingFlags.Instance))
+                {
+                    //continue;
+                    if (method.GetCustomAttribute<ControllerMethodAttribute>() != null)
+                    {
+                        var parameters = method.IsStatic ? "" : "/{id:int}";
+                        var returning = $"ActionResult<{ TypeHelper.CodeFormatType(method.ReturnType)}>";
+                        foreach (var parameter in method.GetParameters())
+                        {
+                            parameters += $"/{{{parameter.Name}}}";
+                        }
+                        //var methodsyntax = GetMethod(method);
+                        builder.Append($@"
+[Route(""api/[controller]/{method.Name}{parameters}""), HttpGet()]
+public {returning} {method.Name} (");
+                        if (!method.IsStatic)
+                        {
+                            builder.Append($"int id");
+                        }
+                        foreach (var parameter in method.GetParameters())
+                        {
+                            builder.Append($", {parameter.ParameterType.FullName} {parameter.Name}");
+                        }
+                        if (!method.IsStatic)
+                        {
+                            builder.Append($@")
+{{
+    var item = table.LoadById(id);
+    return new {returning}(item.{method.Name}(");
+                            foreach (var parameter in method.GetParameters())
+                            {
+                                builder.Append($"{parameter.Name}, ");
+                            }
+                            builder.Append(@"));
+}");
+                        }
+                    }
+                }
+                builder.Append(@"}
+}");
+                var newImplementation = CSharpSyntaxTree.ParseText(builder.ToString()).GetRoot().DescendantNodes().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
 
+                //foreach (var method in itemType.GetMethods(BindingFlags.Public | BindingFlags.Instance))
+                //{
+                //    if (method.GetCustomAttribute<ControllerMethodAttribute>() != null)
+                //    {
+                //        var methodsyntax = GetMethod(method);
+                //    }
+                //}
 
                 var newTree = CSharpSyntaxTree.Create(node
                     .ReplaceNode(namespaceNode, newImplementation)
                     .AddUsings(CreateUsingDirective(itemType.Namespace)).NormalizeWhitespace());
 
-                var newSourceText = newTree.GetText();
+                //var newSourceText = newTree.GetText();
                 //var newFileName = $"{controllerClassName}.cs";
                 //using (var newFile = new FileStream(newFileName, FileMode.Create, FileAccess.Write))
                 //using (var writer = new StreamWriter(newFile))
@@ -131,6 +177,53 @@ public {controllerClassName}() {{
                 }
             }
             return null;
+        }
+
+        //https://stackoverflow.com/questions/37710714/roslyn-add-new-method-to-an-existing-class
+        private static MethodDeclarationSyntax GetMethod(MethodInfo method)
+        {
+            return SyntaxFactory.MethodDeclaration(attributeLists: SyntaxFactory.List<AttributeListSyntax>(GetAttributeList(method)),
+                          modifiers: SyntaxFactory.TokenList(),
+                          returnType: SyntaxFactory.ParseTypeName($"ActionResult<{method.ReturnType.FullName}>"),
+                          explicitInterfaceSpecifier: null,
+                          identifier: SyntaxFactory.Identifier(method.Name),
+                          typeParameterList: null,
+                          parameterList: SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(GetParametersList(method))),
+                          constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
+                          body: null,
+                          semicolonToken: SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+            // Annotate that this node should be formatted
+            //.WithAdditionalAnnotations(Formatter.Annotation);
+        }
+
+        private static IEnumerable<AttributeListSyntax> GetAttributeList(MethodInfo method)
+        {
+            var arg = string.Empty;
+            var attributeArgument = SyntaxFactory.AttributeArgument(SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(arg)));
+            yield return SyntaxFactory.AttributeList(
+                         SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(
+                         SyntaxFactory.Attribute(
+                         SyntaxFactory.IdentifierName(nameof(HttpGetAttribute))).WithArgumentList(
+                             SyntaxFactory.AttributeArgumentList(SyntaxFactory.SingletonSeparatedList(attributeArgument)))
+                             ));
+        }
+
+        private static IEnumerable<ParameterSyntax> GetParametersList(MethodInfo method)
+        {
+            yield return SyntaxFactory.Parameter(attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
+                                                         modifiers: SyntaxFactory.TokenList(),
+                                                         type: SyntaxFactory.ParseTypeName(typeof(int).FullName),
+                                                         identifier: SyntaxFactory.Identifier("id"),
+                                                         @default: null);
+            var parameters = method.GetParameters();
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                yield return SyntaxFactory.Parameter(attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
+                                                         modifiers: SyntaxFactory.TokenList(),
+                                                         type: SyntaxFactory.ParseTypeName(parameters[i].ParameterType.FullName),
+                                                         identifier: SyntaxFactory.Identifier(parameters[i].Name),
+                                                         @default: null);
+            }
         }
 
         //https://stackoverflow.com/a/36845547

@@ -8,7 +8,7 @@ namespace DataWF.Web.Common
 {
     public abstract class DBController<T> : ControllerBase where T : DBItem, new()
     {
-        DBTable<T> table;
+        protected DBTable<T> table;
 
         public DBController(DBTable<T> dBTable)
         {
@@ -22,24 +22,41 @@ namespace DataWF.Web.Common
         [HttpGet]
         public ActionResult<IEnumerable<T>> Get()
         {
-            return new ActionResult<IEnumerable<T>>(table.Select(""));
+            return Get(string.Empty);
         }
 
         [HttpGet("{filter}")]
         public ActionResult<IEnumerable<T>> Get(string filter)
         {
-            return new ActionResult<IEnumerable<T>>(table.Select(filter));
+            try
+            {
+                using (var query = new QQuery(filter, table))
+                {
+                    return new ActionResult<IEnumerable<T>>(table.LoadByStamp(query));
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
         }
 
         [HttpGet("{id:int}")]
         public ActionResult<T> Get(int id)
         {
-            var item = table.LoadById(id);
-            if (item == null)
+            try
             {
-                NotFound();
+                var item = table.LoadById(id);
+                if (item == null)
+                {
+                    NotFound();
+                }
+                return Ok(item);
             }
-            return Ok(item);
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
         }
 
         [HttpPost]
@@ -63,7 +80,6 @@ namespace DataWF.Web.Common
             }
             catch (Exception ex)
             {
-                Helper.OnException(ex);
                 return BadRequest(ex);
             }
             return Ok(value.PrimaryId);

@@ -78,7 +78,7 @@ namespace DataWF.Module.Common
             set { SetName(nameof(Name), value); }
         }
 
-        [Referencing(typeof(User))]
+        [ControllerMethod]
         public IEnumerable<User> GetUsers()
         {
             foreach (User user in User.DBTable)

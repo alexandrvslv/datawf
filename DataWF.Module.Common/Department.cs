@@ -73,11 +73,13 @@ namespace DataWF.Module.Common
             set { SetName(nameof(Name), value); }
         }
 
+        [ControllerMethod]
         public IEnumerable<Position> GetPositions()
         {
             return GetReferencing<Position>(nameof(Position.DepartmentId), DBLoadParam.None);
         }
 
+        [ControllerMethod]
         public IEnumerable<User> GetUsers()
         {
             return GetReferencing<User>(nameof(User.DepartmentId), DBLoadParam.None);

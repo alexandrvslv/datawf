@@ -55,7 +55,7 @@ namespace DataWF.Test.Module.Common
             };
             user.Save();
 
-            User.SetCurrent("test", "UserCommon1!");
+            User.SetCurrentByCredential("test", "UserCommon1!");
 
             GroupPermission.CachePermission();
 

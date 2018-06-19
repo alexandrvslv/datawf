@@ -90,6 +90,7 @@ namespace DataWF.Module.Common
             set { SetName(nameof(Name), value); }
         }
 
+        [ControllerMethod]
         public IEnumerable<User> GetUsers()
         {
             return GetReferencing<User>(nameof(User.PositionId), DBLoadParam.None);
