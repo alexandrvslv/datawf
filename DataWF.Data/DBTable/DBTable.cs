@@ -836,8 +836,7 @@ namespace DataWF.Data
 
         public int GetRowCount(DBTransaction transaction, string @where)
         {
-            var command = transaction.AddCommand(BuildQuery(@where, null, "count(*)"));
-            object val = transaction.ExecuteQuery(command, DBExecuteType.Scalar);
+            object val = transaction.ExecuteQuery(transaction.AddCommand(BuildQuery(@where, null, "count(*)")), DBExecuteType.Scalar);
             return val is Exception ? -1 : int.Parse(val.ToString());
         }
         #region IComparable Members

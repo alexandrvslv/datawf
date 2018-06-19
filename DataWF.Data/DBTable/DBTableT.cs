@@ -326,8 +326,7 @@ namespace DataWF.Data
 
             if (view != null && view.Table == this && view.IsStatic)
                 view.Clear();
-            if (items.Count == 0)
-                transaction.ReaderParam &= ~DBLoadParam.Synchronize;
+
             try
             {
                 if ((transaction.ReaderParam & DBLoadParam.GetCount) == DBLoadParam.GetCount)
@@ -360,7 +359,6 @@ namespace DataWF.Data
                         lock (Lock)
                         {
                             row = LoadFromReader(transaction);
-
                             if (creference != null)
                             {
                                 foreach (var refer in creference)
@@ -372,7 +370,9 @@ namespace DataWF.Data
                                 }
                             }
                             if (!row.Attached && (transaction.ReaderParam & DBLoadParam.NoAttach) != DBLoadParam.NoAttach)
+                            {
                                 Add(row);
+                            }
                         }
                         if (arg.TotalCount > 0)
                         {
@@ -405,9 +405,9 @@ namespace DataWF.Data
             }
         }
 
-        public async Task<IEnumerable<T>> LoadAsync(QQuery query, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null)
+        public Task<IEnumerable<T>> LoadAsync(QQuery query, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null)
         {
-            return await Task.Run<IEnumerable<T>>(() =>
+            return Task.Run<IEnumerable<T>>(() =>
             {
                 try
                 {
@@ -421,9 +421,9 @@ namespace DataWF.Data
             });
         }
 
-        public async Task<IEnumerable<T>> LoadAsync(IDbCommand command, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null)
+        public Task<IEnumerable<T>> LoadAsync(IDbCommand command, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null)
         {
-            return await Task.Run<IEnumerable<T>>(() =>
+            return Task.Run<IEnumerable<T>>(() =>
              {
                  try
                  {
@@ -437,9 +437,9 @@ namespace DataWF.Data
              });
         }
 
-        public async Task<IEnumerable<T>> LoadAsync(string query, DBLoadParam param = DBLoadParam.None, IEnumerable columns = null, IDBTableView synch = null)
+        public Task<IEnumerable<T>> LoadAsync(string query, DBLoadParam param = DBLoadParam.None, IEnumerable columns = null, IDBTableView synch = null)
         {
-            return await Task.Run<IEnumerable<T>>(() =>
+            return Task.Run<IEnumerable<T>>(() =>
             {
                 try
                 {
@@ -460,7 +460,7 @@ namespace DataWF.Data
 
         public T LoadItem(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable cols = null, IDBTableView synch = null)
         {
-            string idName = Schema.System.ParameterPrefix + PrimaryKey.Name;
+            string idName = System.ParameterPrefix + PrimaryKey.Name;
             var command = System.CreateCommand(Schema.Connection, CreateQuery(string.Format("where {0}={1}", PrimaryKey.Name, idName), cols));
             System.CreateParameter(command, idName, id);
             return Load(command).FirstOrDefault();
@@ -516,33 +516,16 @@ namespace DataWF.Data
             return row;
         }
 
-        public void LoadByStamp(string commandText, IDBTableView synch)
+        public IEnumerable<T> LoadByStamp(QQuery query)
         {
-            var synchCols = new List<DBColumn>(2);
-            synchCols.Add(PrimaryKey);
-            synchCols.Add(StampKey);
-            string squery = string.Empty;
-            int whereInd = commandText.IndexOf("where ", StringComparison.InvariantCultureIgnoreCase);
-            if (whereInd != -1)
-                squery = commandText.Substring(whereInd);
-            squery = CreateQuery(squery, synchCols);
+            if (items.Count == 0)
+                return Load(query);
 
-            int cur = 0;
-            var vals = Schema.Connection.ExecuteQResult(squery);
-            //var e = new DBLoadProgressEventArgs(synch, vals.Values.Count, cur, null);
+            query.Columns.Clear();
+            query.Columns.Add(new QColumn(PrimaryKey));
+            query.Columns.Add(new QColumn(StampKey));
 
-            foreach (var val in vals.Values)
-            {
-                //if (synch != null && synch.Command != transaction.Command)
-                //    break;
-                cur++;
-                var row = LoadById(val[0], DBLoadParam.None);
-
-                if (row == null)
-                    LoadItem(val[0]);
-                else if (StampKey != null && ListHelper.Compare(row.Stamp, val[1], null, false) < 0)
-                    LoadItem(row.PrimaryId);
-            }
+            return Load(query.ToCommand(), DBLoadParam.Synchronize);
         }
 
         private void CheckDelete(QQuery filter, IEnumerable<T> buf, DBLoadParam param, IDBTableView view)
@@ -571,9 +554,24 @@ namespace DataWF.Data
         public virtual T LoadFromReader(DBTransaction transaction)
         {
             T srow = null;
-            if (transaction.ReaderPrimaryKey >= 0)
+            var id = transaction.ReaderPrimaryKey >= 0 ? transaction.Reader.GetValue(transaction.ReaderPrimaryKey) : null;
+            if (id != null)
             {
-                srow = SelectOne(PrimaryKey, transaction.Reader.GetValue(transaction.ReaderPrimaryKey));
+                srow = SelectOne(PrimaryKey, id);
+
+                if ((transaction.ReaderParam & DBLoadParam.Synchronize) == DBLoadParam.Synchronize)
+                {
+                    if (srow != null
+                    && transaction.ReaderStampKey >= 0
+                    && srow.Stamp.Value.CompareTo(transaction.Reader.GetDateTime(transaction.ReaderStampKey)) >= 0)
+                    {
+                        return srow;
+                    }
+                    else if (transaction.ReaderColumns.Count < Columns.Count)
+                    {
+                        return LoadItem(id);
+                    }
+                }
             }
             if (srow == null)
             {
@@ -582,11 +580,7 @@ namespace DataWF.Data
                     typeIndex = transaction.Reader.GetInt32(transaction.ReaderItemTypeKey);
                 srow = New(transaction.ReaderState, false, typeIndex);
             }
-            else if (transaction.ReaderStampKey >= 0 && (transaction.ReaderParam & DBLoadParam.Synchronize) == DBLoadParam.Synchronize
-                     && srow.Stamp.Value.CompareTo(transaction.Reader.GetDateTime(transaction.ReaderStampKey)) >= 0)
-            {
-                return srow;
-            }
+
             for (int i = 0; i < transaction.ReaderColumns.Count; i++)
             {
                 var column = transaction.ReaderColumns[i];
