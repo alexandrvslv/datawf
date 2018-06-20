@@ -157,7 +157,7 @@ namespace DataWF.Gui
                     alignment: Alignment.Center,
                     emptyBack: false,
                     emptyBorder: false),
-            GenerateStyle("CellFar",
+                GenerateStyle("CellFar",
                     defaultFont,
                     baseBackground.WithIncreasedLight(diff * 3),
                     baseForeColor,
@@ -270,6 +270,31 @@ namespace DataWF.Gui
                     emptyBack: false,
                     emptyBorder: false,
                     brushType: CellStyleBrushType.Gradient)
+            });
+
+            Add(new CellStyle()
+            {
+                Name = "Close",
+                Alternate = false,
+                Round = 5,
+                BackBrush = new CellStyleBrush()
+                {
+                    Color = Colors.Red.WithIncreasedLight(0.2),
+                    ColorSelect = Colors.Red,
+                    ColorHover = Colors.Red
+                },
+                BorderBrush = new CellStyleBrush()
+                {
+                    Color = Colors.Gray,
+                    ColorSelect = Colors.Gray,
+                    ColorHover = Colors.Gray
+                },
+                FontBrush = new CellStyleBrush()
+                {
+                    Color = Colors.White,
+                    ColorSelect = Colors.White,
+                    ColorHover = Colors.White
+                }
             });
         }
 

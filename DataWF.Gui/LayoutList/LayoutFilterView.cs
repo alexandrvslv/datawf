@@ -43,29 +43,7 @@ namespace DataWF.Gui
 
         public LayoutFilterView(LayoutList list)
         {
-            styleClose = new CellStyle()
-            {
-                Alternate = false,
-                Round = 5,
-                BackBrush = new CellStyleBrush()
-                {
-                    Color = Colors.Red.WithIncreasedLight(0.2),
-                    ColorSelect = Colors.Red,
-                    ColorHover = Colors.Red
-                },
-                BorderBrush = new CellStyleBrush()
-                {
-                    Color = Colors.Gray,
-                    ColorSelect = Colors.Gray,
-                    ColorHover = Colors.Gray
-                },
-                FontBrush = new CellStyleBrush()
-                {
-                    Color = Colors.White,
-                    ColorSelect = Colors.White,
-                    ColorHover = Colors.White
-                }
-            };
+            styleClose = GuiEnvironment.Theme["Close"];
             AutoSize = true;
             AllowCellSize = true;
             AllowFilter = false;
@@ -85,11 +63,11 @@ namespace DataWF.Gui
                 valueColumn)
             {
                 Indent = 9,
+                HeaderWidth = 22,
                 ColumnsVisible = false,
                 GridMode = true,
                 GridAuto = true,
-                HeaderVisible = false,
-                StyleRowName = "Field"
+                StyleRowName = "Row"
                 //StyleRow = new CellStyle()
                 //{
                 //    Alternate = false,
@@ -178,39 +156,34 @@ namespace DataWF.Gui
             return base.GetCellEditor(listItem, itemValue, cell);
         }
 
-        protected override void OnDrawRow(LayoutListDrawArgs e)
+        protected override void OnDrawHeader(LayoutListDrawArgs e)
         {
-            base.OnDrawRow(e);
-            var close = GetRowCloseBound(e.RowBound);
+            base.OnDrawHeader(e);
+            var close = GetRowCloseBound(e.Bound);
             e.Context.DrawCell(styleClose, GlyphType.CloseAlias, close, close,
                              cacheHitt != null && close.Contains(cacheHitt.HitTest.Point) ? CellDisplayState.Hover : CellDisplayState.Default);
         }
 
-        protected override void OnButtonReleased(ButtonEventArgs e)
+        protected override void OnHeaderMouseUp(LayoutHitTestEventArgs e)
         {
-            base.OnButtonReleased(e);
-
-            for (int i = 0; i < Filters.Count; i++)
+            base.OnHeaderMouseUp(e);
+            if (e.HitTest.ItemBound.Contains(cacheHitt.HitTest.Point))
             {
-                var cloreBound = GetRowCloseBound(i);
-                if (cloreBound.Contains(cacheHitt.HitTest.Point))
-                {
-                    OnCellEditEnd(new CancelEventArgs(true));
-                    Filters.RemoveAt(i);
-                    return;
-                }
+                OnCellEditEnd(new CancelEventArgs(true));
+                Filters.RemoveAt(e.HitTest.Index);
+                return;
             }
         }
 
         public Rectangle GetRowCloseBound(int index)
         {
             var bound = GetRowBound(index, GetRowGroup(index));
-            return GetRowCloseBound(bound);
+            return GetRowCloseBound(GetHeaderBound(bound));
         }
 
         public Rectangle GetRowCloseBound(Rectangle bound)
         {
-            return new Rectangle(bound.Right - 7, bound.Top - 7, 14, 14);
+            return new Rectangle(bound.X + (bound.Width - 14) / 2.0, bound.Y + (bound.Height - 14) / 2.0, 14, 14);
         }
 
         protected override Size OnGetPreferredSize(SizeConstraint widthConstraint, SizeConstraint heightConstraint)

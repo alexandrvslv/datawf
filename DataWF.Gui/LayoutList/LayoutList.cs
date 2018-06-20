@@ -2724,7 +2724,7 @@ namespace DataWF.Gui
                 }
                 else
                 {
-                    top += (listInfo.ColumnsVisible ? bounds.Columns.Height : listInfo.Indent);
+                    top += (listInfo.ColumnsVisible ? bounds.Columns.Height : 0);//listInfo.Indent
                     if (listInfo.GridOrientation == GridOrientation.Horizontal)
                         top += GetItemsHeight(0, index - 1);
                     else
@@ -2965,7 +2965,6 @@ namespace DataWF.Gui
 
         protected virtual void OnCellEditBegin(object item, ILayoutCell cell)
         {
-            AllowFilter = false;
             if (cell.Name == "Value" && item is ILayoutCell)
             {
                 cell = (ILayoutCell)item;
