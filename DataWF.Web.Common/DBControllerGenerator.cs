@@ -92,51 +92,11 @@ public {controllerClassName}() {{
 // default ctor
 }}
 ");
-                foreach (var method in itemType.GetMethods(BindingFlags.Public | BindingFlags.Instance))
+                foreach (var method in itemType.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
                 {
-                    //continue;
                     if (method.GetCustomAttribute<ControllerMethodAttribute>() != null)
                     {
-                        var mparams = method.GetParameters();
-                        var parameters = method.IsStatic ? "" : "/{id:int}";
-                        var returning = $"ActionResult<{ TypeHelper.CodeFormatType(method.ReturnType)}>";
-                        foreach (var parameter in mparams)
-                        {
-                            parameters += $"/{{{parameter.Name}}}";
-                        }
-                        //var methodsyntax = GetMethod(method);
-                        builder.Append($@"
-[Route(""api/[controller]/{method.Name}{parameters}""), HttpGet()]
-public {returning} {method.Name} (");
-                        if (!method.IsStatic)
-                        {
-                            builder.Append($"int id{(mparams.Length > 0 ? ", " : "")}");
-                        }
-                        if (mparams.Length > 0)
-                        {
-                            foreach (var parameter in mparams)
-                            {
-                                builder.Append($"{parameter.ParameterType.FullName} {parameter.Name}, ");
-                            }
-                            builder.Length -= 2;
-                        }
-                        if (!method.IsStatic)
-                        {
-                            builder.Append($@")
-{{
-    var item = table.LoadById(id);
-    return new {returning}(item.{method.Name}(");
-                            if (mparams.Length > 0)
-                            {
-                                foreach (var parameter in mparams)
-                                {
-                                    builder.Append($"{parameter.Name}, ");
-                                }
-                                builder.Length -= 2;
-                            }
-                            builder.Append(@"));
-}");
-                        }
+                        GetMethod(builder, method, table);
                     }
                 }
                 builder.Append(@"}
@@ -189,6 +149,90 @@ public {returning} {method.Name} (");
                 }
             }
             return null;
+        }
+
+        private class ParametrDBInfo
+        {
+            private ParameterInfo info;
+
+            public Type Type { get; private set; }
+            public DBTable Table { get; private set; }
+            public string ValueName { get; private set; }
+            public ParameterInfo Info
+            {
+                get => info;
+                set
+                {
+                    info = value;
+                    Type = info.ParameterType;
+                    ValueName = info.Name;
+                    if (TypeHelper.IsBaseType(Type, typeof(DBItem)))
+                    {
+                        Table = DBTable.GetTable(Type, null, false, true);
+                        if (Table != null && Table.PrimaryKey != null)
+                        {
+                            Type = Table.PrimaryKey.DataType;
+                            ValueName += "Value";
+                        }
+                    }
+                }
+            }
+        }
+
+        private static void GetMethod(StringBuilder builder, MethodInfo method, DBTable table)
+        {
+            var mparams = method.GetParameters();
+            var parameters = method.IsStatic ? "" : "/{id:int}";
+            var returning = $"ActionResult<{TypeHelper.CodeFormatType(method.ReturnType)}>";
+
+            var parametersInfo = new List<ParametrDBInfo>();
+
+
+            foreach (var parameter in mparams)
+            {
+                parametersInfo.Add(new ParametrDBInfo { Info = parameter });
+                parameters += $"/{{{parameter.Name}}}";
+            }
+            //var methodsyntax = GetMethod(method);
+            builder.AppendLine($"[Route(\"api/[controller]/{method.Name}{parameters}\"), HttpGet()]");
+            builder.Append($"public {(method.IsVirtual ? "virtual" : "")} {returning} {method.Name} (");
+            if (!method.IsStatic)
+            {
+                builder.Append($"int id{(mparams.Length > 0 ? ", " : "")}");
+            }
+            if (mparams.Length > 0)
+            {
+                foreach (var parameter in parametersInfo)
+                {
+                    builder.Append($"{parameter.Type.FullName} {parameter.Info.Name}, ");
+                }
+                builder.Length -= 2;
+            }
+            builder.AppendLine(") {");
+            if (!method.IsStatic)
+            {
+                builder.AppendLine("var idValue = table.LoadById(id);");
+
+                foreach (var parameter in parametersInfo)
+                {
+                    if (parameter.Table != null)
+                        builder.AppendLine($" var {parameter.ValueName} = DBItem.GetTable<{parameter.Info.ParameterType.FullName}>().LoadById({parameter.Info.Name});");
+                }
+
+                builder.Append($@"return new {returning}(idValue.{method.Name}(");
+
+                if (mparams.Length > 0)
+                {
+                    foreach (var parameter in parametersInfo)
+                    {
+                        builder.Append($"{parameter.ValueName}, ");
+                    }
+                    builder.Length -= 2;
+                }
+                builder.AppendLine("));");
+
+            }
+            builder.AppendLine("}");
         }
 
         //https://stackoverflow.com/questions/37710714/roslyn-add-new-method-to-an-existing-class
