@@ -194,7 +194,7 @@ public {controllerClassName}() {{
                 parameters += $"/{{{parameter.Name}}}";
             }
             //var methodsyntax = GetMethod(method);
-            builder.AppendLine($"[Route(\"api/[controller]/{method.Name}{parameters}\"), HttpGet()]");
+            builder.AppendLine($"[Route(\"{method.Name}{parameters}\"), HttpGet()]");
             builder.Append($"public {(method.IsVirtual ? "virtual" : "")} {returning} {method.Name} (");
             if (!method.IsStatic)
             {
