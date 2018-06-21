@@ -102,7 +102,7 @@ namespace DataWF.Data
         //  return value;
         //}
 
-        public override int AddInternal(T item)
+        public override void InsertInternal(int index, T item)
         {
             if (Contains(item.Name))
                 throw new Exception($"{typeof(T).Name} with name {item.Name} already exist");
@@ -110,9 +110,8 @@ namespace DataWF.Data
             if (item.Schema == null && Schema != null)
                 item.Schema = Schema;
 
-            int index = base.AddInternal(item);
+            base.InsertInternal(index, item);
             DBService.OnDBSchemaChanged(item, GetInsertType(item));
-            return index;
         }
 
         public virtual DDLType GetInsertType(T item)

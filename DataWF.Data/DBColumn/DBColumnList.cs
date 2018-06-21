@@ -84,20 +84,22 @@ namespace DataWF.Data
             base.Clear();
         }
 
-        public override int AddInternal(DBColumn item)
+        public override void InsertInternal(int index, DBColumn item)
         {
             if (Contains(item))
             {
-                return -1;
+                return;
             }
             if (Contains(item.Name))
             {
                 throw new InvalidOperationException($"Columns name duplication {item.Name}");
             }
             // if (col.Order == -1 || col.Order > this.Count)
-            item.Order = this.Count;
+            if (item.IsPrimaryKey)
+                index = 0;
+            item.Order = index;
 
-            var index = base.AddInternal(item);
+            base.InsertInternal(index, item);
 
             item.CheckPull();
             if (item.IsPrimaryKey)
@@ -119,7 +121,6 @@ namespace DataWF.Data
                     Table.DefaultComparer = new DBComparer(Table.PrimaryKey) { Hash = true };
                 }
             }
-            return index;
         }
 
         public DBColumn Add(string name)
