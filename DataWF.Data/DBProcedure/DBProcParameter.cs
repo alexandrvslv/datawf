@@ -48,7 +48,7 @@ namespace DataWF.Data
         public Type DataType
         {
             get { return DataTypeName.Length == 0 ? typeof(string) : TypeHelper.ParseType(DataTypeName); }
-            set { DataTypeName = TypeHelper.BinaryFormatType(value); }
+            set { DataTypeName = TypeHelper.FormatBinary(value); }
         }
 
         public ParameterDirection Direction { get; set; } = ParameterDirection.Input;

@@ -638,13 +638,13 @@ namespace DataWF.Data
                 {
                     if (type.GetInterface("IDockContent") != null || TypeHelper.IsInterface(type, typeof(IProjectEditor)))
                     {
-                        DBProcedure procedure = Store[TypeHelper.BinaryFormatType(type)];
+                        DBProcedure procedure = Store[TypeHelper.FormatBinary(type)];
                         if (procedure == null)
                         {
                             procedure = new DBProcedure()
                             {
                                 ProcedureType = ProcedureTypes.Assembly,
-                                Name = TypeHelper.BinaryFormatType(type),
+                                Name = TypeHelper.FormatBinary(type),
                                 DisplayName = Locale.Get(type),
                                 Group = this,
                                 DataName = fileName

@@ -2484,7 +2484,7 @@ namespace DataWF.Gui
         protected virtual string GetCacheKey()
         {
             Type t = (listMode == LayoutListMode.Fields) ? FieldType : ListType;
-            return (t == null ? string.Empty : TypeHelper.BinaryFormatType(t) + (_gridMode ? "List" : string.Empty));
+            return (t == null ? string.Empty : TypeHelper.FormatBinary(t) + (_gridMode ? "List" : string.Empty));
         }
 
         public bool GetVisible(ILayoutCell cell)

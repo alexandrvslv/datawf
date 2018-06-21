@@ -911,11 +911,11 @@ namespace DataWF.Common
             }
             else if (value is Type)
             {
-                result = TypeHelper.BinaryFormatType((Type)value);
+                result = TypeHelper.FormatBinary((Type)value);
             }
             else if (value is MemberInfo)
             {
-                result = TypeHelper.BinaryFormatType(((MemberInfo)value).DeclaringType) + ";" + ((MemberInfo)value).Name;
+                result = TypeHelper.FormatBinary(((MemberInfo)value).DeclaringType) + ";" + ((MemberInfo)value).Name;
             }
             else if (value is byte[])
             {

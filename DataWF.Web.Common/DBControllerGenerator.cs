@@ -183,7 +183,7 @@ public {controllerClassName}() {{
         {
             var mparams = method.GetParameters();
             var parameters = method.IsStatic ? "" : "/{id:int}";
-            var returning = $"ActionResult<{TypeHelper.CodeFormatType(method.ReturnType)}>";
+            var returning = method.ReturnType == typeof(void) ? "void" : $"ActionResult<{TypeHelper.FormatCode(method.ReturnType)}>";
 
             var parametersInfo = new List<ParametrDBInfo>();
 
@@ -216,10 +216,11 @@ public {controllerClassName}() {{
                 foreach (var parameter in parametersInfo)
                 {
                     if (parameter.Table != null)
-                        builder.AppendLine($" var {parameter.ValueName} = DBItem.GetTable<{parameter.Info.ParameterType.FullName}>().LoadById({parameter.Info.Name});");
+                        builder.AppendLine($"var {parameter.ValueName} = DBItem.GetTable<{parameter.Info.ParameterType.FullName}>().LoadById({parameter.Info.Name});");
                 }
-
-                builder.Append($@"return new {returning}(idValue.{method.Name}(");
+                if (method.ReturnType != typeof(void))
+                    builder.Append($@"return new {returning}(");
+                builder.Append($" idValue.{method.Name}(");
 
                 if (mparams.Length > 0)
                 {
@@ -229,7 +230,9 @@ public {controllerClassName}() {{
                     }
                     builder.Length -= 2;
                 }
-                builder.AppendLine("));");
+                if (method.ReturnType != typeof(void))
+                    builder.Append(")");
+                builder.AppendLine(");");
 
             }
             builder.AppendLine("}");

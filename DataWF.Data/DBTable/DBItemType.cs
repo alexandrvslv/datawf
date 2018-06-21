@@ -68,7 +68,7 @@ namespace DataWF.Data
 
         public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
         {
-            return TypeHelper.BinaryFormatType(((DBItemType)value).Type);
+            return TypeHelper.FormatBinary(((DBItemType)value).Type);
         }
     }
 }

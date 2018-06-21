@@ -560,27 +560,36 @@ namespace DataWF.Common
                 (mInfo.MemberType == MemberTypes.Field && ((FieldInfo)mInfo).IsStatic));
         }
 
-        public static string CodeFormatType(Type type)
+        public static string FormatCode(Type type, bool nameSpace = true)
         {
             var builder = new StringBuilder();
+
             if (type.IsGenericType)
             {
-                builder.Append($"{type.Namespace}.{type.Name.Remove(type.Name.IndexOf('`'))}<");
+                if (nameSpace)
+                    builder.Append($"{type.Namespace}.");
+                builder.Append($"{type.Name.Remove(type.Name.IndexOf('`'))}<");
                 foreach (var parameter in type.GetGenericArguments())
                 {
-                    builder.Append($"{CodeFormatType(parameter)}, ");
+                    builder.Append($"{FormatCode(parameter)}, ");
                 }
                 builder.Length -= 2;
                 builder.Append(">");
             }
+            else if (type == typeof(void))
+            {
+                builder.Append("void");
+            }
             else
             {
-                builder.Append(type.FullName);
+                if (nameSpace)
+                    builder.Append($"{type.Namespace}.");
+                builder.Append(type.Name);
             }
             return builder.ToString();
         }
 
-        public static string BinaryFormatType(Type type)
+        public static string FormatBinary(Type type)
         {
             var builder = new StringBuilder();
             if (type.IsGenericType)
@@ -588,7 +597,7 @@ namespace DataWF.Common
                 builder.Append($"{type.Namespace}.{type.Name}[");
                 foreach (var parameter in type.GetGenericArguments())
                 {
-                    builder.Append($"[{BinaryFormatType(parameter)}], ");
+                    builder.Append($"[{FormatBinary(parameter)}], ");
                 }
                 builder.Length -= 2;
                 builder.Append("]");

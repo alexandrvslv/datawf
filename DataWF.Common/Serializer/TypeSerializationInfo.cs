@@ -10,7 +10,7 @@ namespace DataWF.Common
         public TypeSerializationInfo(Type type)
         {
             Type = type;
-            TypeName = TypeHelper.BinaryFormatType(Type);
+            TypeName = TypeHelper.FormatBinary(Type);
             if (!Type.IsInterface)
             {
                 Constructor = EmitInvoker.Initialize(type, Type.EmptyTypes);
