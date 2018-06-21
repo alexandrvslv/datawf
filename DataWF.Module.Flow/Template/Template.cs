@@ -25,6 +25,7 @@ using System.IO;
 using DataWF.Data;
 using DataWF.Common;
 using System.Runtime.Serialization;
+using System.Linq;
 
 namespace DataWF.Module.Flow
 {
@@ -114,14 +115,14 @@ namespace DataWF.Module.Flow
 
         public string NameEN
         {
-            get => GetName(nameof(Name), "en-US");
-            set => SetName(nameof(Name), "en-US", value);
+            get => GetProperty<string>();
+            set => SetProperty(value);
         }
 
         public string NameRU
         {
-            get => GetName(nameof(Name), "ru-RU");
-            set => SetName(nameof(Name), "ru-RU", value);
+            get => GetProperty<string>();
+            set => SetProperty(value);
         }
 
         [DataMember, Column("document_type", 250, Default = "0")]
@@ -173,6 +174,7 @@ namespace DataWF.Module.Flow
         //    return GetReferencing<TemplateParam>(nameof(TemplateParam.TemplateId), DBLoadParam.None);
         //}
 
+        [ControllerMethod]
         public IEnumerable<TemplateData> GetDatas()
         {
             return GetReferencing<TemplateData>(nameof(TemplateData.TemplateId), DBLoadParam.None);
@@ -201,6 +203,7 @@ namespace DataWF.Module.Flow
             }
         }
 
+        [ControllerMethod]
         public virtual Document CreateDocument()
         {
             var document = (Document)DocumentTypeInfo.Constructor.Create();
@@ -208,8 +211,32 @@ namespace DataWF.Module.Flow
             return document;
         }
 
-        //[Editor(typeof(UIFileEditor), typeof(UITypeEditor))]
+        public static event DocumentCreateDelegate Created;
 
+        [ControllerMethod]
+        public virtual Document CreateDocument(Document parent = null, params string[] fileNames)
+        {
+            var document = CreateDocument();
+            document.GenerateId();
+            document.DocumentDate = DateTime.Now;
+            if (document.Template.GetDatas().Any())
+            {
+                var data = document.CreateTemplatedData();
+                data.Attach();
+            }
+
+            if (parent != null)
+            {
+                document.Parent = parent;
+                parent.CreateReference(document);
+            }
+
+            if (fileNames != null)
+                document.CreateData<DocumentData>(fileNames);
+
+            Created?.Invoke(null, new DocumentCreateEventArgs() { Template = document.Template, Parent = parent, Document = document });
+            return document;
+        }
 
 
         [DataMember, Column("is_file", Default = "False")]

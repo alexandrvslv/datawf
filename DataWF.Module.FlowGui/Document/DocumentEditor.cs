@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
 using Xwt.Drawing;
@@ -36,13 +37,16 @@ namespace DataWF.Module.FlowGui
             if (!typesCache.TryGetValue(documentType, out List<Type> types))
             {
                 types = new List<Type>();
-                foreach (var property in TypeHelper.GetPropertyes(documentType))
+                foreach (var method in documentType.GetMethods())
                 {
-                    if (property.PropertyType.IsGenericType
-                        && TypeHelper.IsInterface(property.PropertyType, typeof(IEnumerable))
-                        && TypeHelper.GetBrowsable(property))
+                    var controller = method.GetCustomAttribute<ControllerMethodAttribute>();
+                    if ((controller?.Design ?? false)
+                        && method.ReturnType.IsGenericType
+                        && method.GetParameters().Length == 0
+                        && TypeHelper.IsInterface(method.ReturnType, typeof(IEnumerable))
+                        && TypeHelper.GetBrowsable(method))
                     {
-                        var type = property.PropertyType.GetGenericArguments().First();
+                        var type = method.ReturnType.GetGenericArguments().First();
                         if (TypeHelper.IsBaseType(type, typeof(DocumentDetail)))
                         {
                             types.Add(type);
@@ -79,6 +83,7 @@ namespace DataWF.Module.FlowGui
 
         private DocumentEditorState state = DocumentEditorState.None;
         private Type documentType;
+        private bool disposed;
 
         public DocumentEditor()
         {
@@ -523,10 +528,11 @@ namespace DataWF.Module.FlowGui
                 toolLabel.Text = "";
                 if (document == null)
                 {
-                    foreach (var item in toolsItems)
-                    {
-                        item.Sensitive = false;
-                    }
+                    if (!disposed)
+                        foreach (var item in toolsItems)
+                        {
+                            item.Sensitive = false;
+                        }
                     return;
                 }
 
@@ -709,7 +715,7 @@ namespace DataWF.Module.FlowGui
             {
                 if (document.IsEdited())
                 {
-                    document.Save(new ExecuteDocumentCallback(CheckProcRezult));
+                    document.SaveComplex();
                 }
                 document.IsChanged = false;
             }
@@ -774,8 +780,9 @@ namespace DataWF.Module.FlowGui
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
+            if (disposing && !disposed)
             {
+                disposed = true;
                 Document = null;
                 dock.Dispose();
             }
@@ -812,7 +819,7 @@ namespace DataWF.Module.FlowGui
 
         private async void ToolReturnClick(object sender, EventArgs e)
         {
-            var work = document.WorkCurrent ?? document.GetWork() ?? document.GetLastWork();
+            var work = document.WorkCurrent ?? document.GetWorksUncompleted().FirstOrDefault() ?? document.GetLastWork();
             await DocumentSender.Send(this, new[] { document }, work, work.From.Stage, work.From.User, DocumentSendType.Return);
         }
 
@@ -887,7 +894,7 @@ namespace DataWF.Module.FlowGui
                 }
                 else if (dr == Command.Yes)
                 {
-                    Document.Save(null);
+                    Document.SaveComplex();
                 }
             }
             return true;

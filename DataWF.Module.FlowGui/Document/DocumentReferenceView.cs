@@ -118,15 +118,11 @@ namespace DataWF.Module.FlowGui
             };
             window.ButtonAcceptClick += (o, a) =>
             {
-                foreach (Document d in window.List.GetSelected())
+                foreach (Document selected in window.List.GetSelected())
                 {
-                    if (document.ContainsReference(d.Id) || document == d)
+                    if (document.ContainsReference(selected) || document == selected)
                         continue;
-                    var refer = new DocumentReference();
-                    refer.GenerateId();
-                    refer.Document = document;
-                    refer.Reference = d;
-                    refer.Attach();
+                    document.CreateReference(selected);
                 }
                 window.Dispose();
             };
@@ -137,8 +133,8 @@ namespace DataWF.Module.FlowGui
         {
             if (List.SelectedItem == null)
                 return;
-            var dc = List.SelectedItem as Document;
-            var refer = document.FindReference(dc.Id);
+            var selected = List.SelectedItem as Document;
+            var refer = document.FindReference(selected);
             if (refer != null)
             {
                 refer.Delete();

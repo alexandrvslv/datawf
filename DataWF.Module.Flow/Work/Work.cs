@@ -70,6 +70,7 @@ namespace DataWF.Module.Flow
             set { SetName(nameof(Name), value); }
         }
 
+        [ControllerMethod]
         public List<Template> GetTemplates()
         {
             var list = new List<Template>(Template.DBTable.Select(Template.DBTable.ParseProperty(nameof(Template.WorkId)), CompareType.Equal, PrimaryId));
@@ -77,6 +78,7 @@ namespace DataWF.Module.Flow
             return list;
         }
 
+        [ControllerMethod]
         public List<Stage> GetStages()
         {
             var list = new List<Stage>(Stage.DBTable.Select(Stage.DBTable.ParseProperty(nameof(Stage.WorkId)), CompareType.Equal, PrimaryId));
@@ -84,6 +86,7 @@ namespace DataWF.Module.Flow
             return list;
         }
 
+        [ControllerMethod]
         public Stage GetStartStage()
         {
             var stages = GetStages();
@@ -93,6 +96,7 @@ namespace DataWF.Module.Flow
             return stages.Count == 0 ? null : stages[0];
         }
 
+        [ControllerMethod]
         public Stage GetStopStage()
         {
             var stages = GetStages();

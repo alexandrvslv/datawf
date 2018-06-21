@@ -23,6 +23,14 @@ namespace DataWF.Data
 {
     public class ControllerMethodAttribute : Attribute
     {
+        public ControllerMethodAttribute()
+        { }
 
+        public ControllerMethodAttribute(bool design)
+        {
+            Design = design;
+        }
+
+        public bool Design { get; }
     }
 }

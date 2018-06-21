@@ -45,7 +45,7 @@ namespace DataWF.Module.FlowGui
             }
             else
             {
-                work = document.GetWork();
+                work = document.GetWorksUncompleted().FirstOrDefault();
                 if (work != null && work.User != null && !work.User.IsCurrent)
                 {
                     var rezult = MessageDialog.AskQuestion("Accept", "Document current on " + work.User + " Accept anywhere?", Command.No, Command.Yes);
@@ -206,8 +206,8 @@ namespace DataWF.Module.FlowGui
             current = documents[0];
             // Определение текущего этапа
 
-            var work = current.GetWork();
-            var works = current.Works.ToList();
+            var work = current.GetWorksUncompleted().FirstOrDefault();
+            var works = current.GetWorks().ToList();
             if (current.WorkCurrent != null)
                 CurrentStage = current.WorkCurrent.Stage;
             if (CurrentStage == null && work != null)
@@ -216,7 +216,9 @@ namespace DataWF.Module.FlowGui
             // Построение списка документов
             foreach (Document document in documents)
             {
-                var dworks = document.Works.ToList();
+                if (current.Template != document.Template)
+                    continue;
+                var dworks = document.GetWorks().ToList();
                 if (dworks.Count == 0)
                 {
                     dworks = document.GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), DBLoadParam.Load).ToList();
@@ -234,11 +236,10 @@ namespace DataWF.Module.FlowGui
                         }
                     }
                 }
-                if (current.Template != document.Template)
-                    continue;
+
                 if (cwork != null && cwork.Stage != CurrentStage)
                     continue;
-                var dwork = document.GetWork();
+                var dwork = document.GetWorksUncompleted().FirstOrDefault();
                 if (WorkStage != null && dwork.Stage != WorkStage)
                     continue;
 
@@ -463,10 +464,10 @@ namespace DataWF.Module.FlowGui
                         {
                             sender.Message = string.Empty;
                             cuuItem = sender;
-                            sender.Document.Send(sender.Work, SelectedStage, nodes, new ExecuteDocumentCallback(OnSend));
+                            sender.Document.Send(sender.Work, SelectedStage, nodes);
                         }
 
-                        sender.Document.Save(null);
+                        sender.Document.SaveComplex();
                         transaction.Commit();
                     }
                     catch (Exception ex)

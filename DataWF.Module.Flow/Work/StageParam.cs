@@ -220,6 +220,13 @@ namespace DataWF.Module.Flow
             get { return Param as Stage; }
             set { Param = value; }
         }
+
+        [DataMember, Column("is_next")]
+        public bool? Next
+        {
+            get => GetProperty<bool?>();
+            set => SetProperty(value);
+        }
     }
 
     [ItemType((int)ParamType.Foreign)]

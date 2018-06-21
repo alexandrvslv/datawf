@@ -30,7 +30,7 @@ namespace DataWF.Module.Flow
             var document = (Document)arg.Document;
             var builder = new StringBuilder();
 
-            foreach (var work in document.Works)
+            foreach (var work in document.GetWorks())
             {
                 if (work == darg.Work)
                     continue;

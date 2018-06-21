@@ -123,24 +123,40 @@ namespace DataWF.Module.Flow
             get { return GetProperty<TimeSpan?>(); }
             set { SetProperty(value); }
         }
-        public IEnumerable<StageProcedure> GetProceduresByType(ParamProcudureType type)
-        {
-            return GetParams<StageProcedure>().Where(p => p.ProcedureType == type);
-        }
 
         public IEnumerable<T> GetParams<T>() where T : StageParam
         {
             return GetReferencing<StageParam>(nameof(StageParam.StageId), DBLoadParam.None).OfType<T>();
         }
 
+        [ControllerMethod]
         public IEnumerable<StageParam> GetParams()
         {
             return GetReferencing<StageParam>(nameof(StageParam.StageId), DBLoadParam.None);
         }
 
-        public StageReference GetStageReference()
+        [ControllerMethod]
+        public IEnumerable<StageReference> GetReferences()
         {
-            return GetParams<StageReference>().FirstOrDefault();
+            return GetParams<StageReference>();
+        }
+
+        [ControllerMethod]
+        public StageReference GetNextReference()
+        {
+            return GetParams<StageReference>().FirstOrDefault(p => p.Next ?? false);
+        }
+
+        [ControllerMethod]
+        public IEnumerable<StageProcedure> GetProcedures()
+        {
+            return GetParams<StageProcedure>();
+        }
+
+        [ControllerMethod]
+        public IEnumerable<StageProcedure> GetProceduresByType(ParamProcudureType type)
+        {
+            return GetParams<StageProcedure>().Where(p => p.ProcedureType == type);
         }
 
 

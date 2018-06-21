@@ -90,54 +90,7 @@ namespace DataWF.Module.Flow
 
         private static List<Document> saving = new List<Document>();
 
-
-
-        public static event DocumentCreateDelegate Created;
-
-        public static Document Create(object templateid, Document parent)
-        {
-            var t = Template.DBTable.LoadItemById(templateid) as Template;
-            if (t == null)
-                return null;
-            else
-                return Create(t, parent);
-        }
-
-        public static Document Create(Template template, Document parent, params string[] filenames)
-        {
-            var document = template.CreateDocument();
-            Create(document, parent, filenames);
-            document.Template = template;
-            return document;
-        }
-
-        public static Document Create(Document document, Document parent, string[] fileNames)
-        {
-            if (document.Attached)
-                return document;
-            document.GenerateId();
-            document.DocumentDate = DateTime.Now;
-            if (document.Template.GetDatas().Any())
-            {
-                var data = document.GenerateFromTemplate();
-                data.Attach();
-            }
-
-            if (parent != null)
-            {
-                document.Parent = parent;
-                parent.CreateReference(document);
-            }
-
-            if (fileNames != null)
-                document.CreateData<DocumentData>(fileNames);
-
-            Created?.Invoke(null, new DocumentCreateEventArgs() { Template = document.Template, Parent = parent, Document = document });
-
-            return document;
-        }
-
-        public static object ExecuteStageProcedure(DocumentExecuteArgs param, IEnumerable<StageProcedure> enumer, ExecuteDocumentCallback callback = null)
+        public static object ExecuteProcedures(DocumentExecuteArgs param, IEnumerable<StageProcedure> enumer)
         {
             object result = null;
             foreach (var item in enumer)
@@ -148,42 +101,50 @@ namespace DataWF.Module.Flow
                 }
                 param.StageProcedure = item;
                 result = item.Procedure.Execute(param);
-                callback?.Invoke(new ExecuteDocumentArg((Document)param.Document, item.Procedure, result, param));
             }
 
             return result;
         }
 
-        public DocumentReference CreateReference(Document document)
+        public static QQuery CreateRefsFilter(object id)
         {
-            if (document == null)
-                return null;
-
-            var reference = new DocumentReference();
-            reference.Document = this;
-            reference.Reference = document;
-            reference.Attach();
-            return reference;
+            var query = new QQuery("", DocumentReference.DBTable);
+            query.Parameters.Add(CreateRefsParam(id));
+            return query;
         }
 
-
-        //public static void Initialize(DocInitType type, Document document)
-        //{
-        //    //if (type == DocInitType.Logs)
-        //    //     document.Logs.Fill(DBLoadParam.Synchronize);
-        //    //if (type == DocInitType.Account)
-        //    //    document.Accounts.Synchronize(false, false, false);
-        //    if (initializeHandler != null)
-        //        initializeHandler(null, new DocumentInitializeEventArgs(document, type));
-        //}
-
-        public static void Delete(Document document)
+        public static QParam CreateRefsParam(object id)
         {
-            document.Delete();
-            Deleted?.Invoke(null, new DocumentEventArgs(document));
+            var qrefing = new QQuery(string.Format("select {0} from {1} where {2} = {3}",
+                                                   DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.DocumentId)).Name,
+                                                   DocumentReference.DBTable.Name,
+                                                   DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.ReferenceId)).Name,
+                                                   id));
+            var qrefed = new QQuery(string.Format("select {2} from {1} where {0} = {3}",
+                                                  DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.DocumentId)).Name,
+                                                  DocumentReference.DBTable.Name,
+                                                  DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.ReferenceId)).Name,
+                                                  id));
+
+            var param = new QParam();
+            param.Parameters.Add(QQuery.CreateParam(LogicType.And, DBTable.PrimaryKey, CompareType.In, qrefed));
+            param.Parameters.Add(QQuery.CreateParam(LogicType.Or, DBTable.PrimaryKey, CompareType.In, qrefing));
+            return param;
         }
 
-        public static event DocumentDeleteDelegate Deleted;
+        public static void LoadDocuments(User user)
+        {
+            var qWork = new QQuery(string.Empty, DocumentWork.DBTable);
+            qWork.Columns.Add(new QColumn(nameof(DocumentWork.Document)));
+            qWork.BuildPropertyParam(nameof(DocumentWork.IsComplete), CompareType.Equal, false);
+            qWork.BuildPropertyParam(nameof(DocumentWork.UserId), CompareType.Equal, user);
+
+            var qDocs = new QQuery(string.Empty, Document.DBTable);
+            qDocs.BuildPropertyParam(nameof(Document.Id), CompareType.In, qWork);
+
+            Document.DBTable.Load(qDocs, DBLoadParam.Synchronize);
+            DocumentWork.DBTable.Load(qWork, DBLoadParam.Synchronize);
+        }
 
         public static event DocumentSaveDelegate Saved;
 
@@ -223,12 +184,6 @@ namespace DataWF.Module.Flow
         public Document()
         {
             Build(DBTable);
-        }
-
-        public Document(Template template) : this()
-        {
-            Template = template;
-            IsComplete = false;
         }
 
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
@@ -291,7 +246,7 @@ namespace DataWF.Module.Flow
             set
             {
                 SetProperty(value, nameof(Number));
-                var data = GetTemplated();
+                var data = GetTemplatedData();
                 if (data != null)
                     data.RefreshName();
             }
@@ -418,58 +373,50 @@ namespace DataWF.Module.Flow
 
         public event Action<Document, ListChangedType> RefChanged;
 
-        public IEnumerable<DocumentReference> References
+        [ControllerMethod(true)]
+        public IEnumerable<DocumentReference> GetReferences()
         {
-            get
+            if ((initype & DocInitType.References) != DocInitType.References)
             {
-                if ((initype & DocInitType.References) != DocInitType.References)
-                {
-                    initype |= DocInitType.References;
-                    DocumentReference.DBTable.Load(CreateRefsFilter(Id));
-                }
-                return GetReferencing<DocumentReference>(nameof(DocumentReference.DocumentId), DBLoadParam.None);
+                initype |= DocInitType.References;
+                DocumentReference.DBTable.Load(CreateRefsFilter(Id));
             }
+            return GetReferencing<DocumentReference>(nameof(DocumentReference.DocumentId), DBLoadParam.None);
         }
 
-        public IEnumerable<DocumentWork> Works
+        [ControllerMethod(true)]
+        public IEnumerable<DocumentWork> GetWorks()
         {
-            get
+            if ((initype & DocInitType.Workflow) != DocInitType.Workflow)
             {
-                if ((initype & DocInitType.Workflow) != DocInitType.Workflow)
-                {
-                    initype |= DocInitType.Workflow;
-                    GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), DBLoadParam.Load);
-                }
-
-                return GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), DBLoadParam.None);
+                initype |= DocInitType.Workflow;
+                GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), DBLoadParam.Load);
             }
+
+            return GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), DBLoadParam.None);
         }
 
-        public virtual IEnumerable<DocumentData> Datas
+        [ControllerMethod(true)]
+        public virtual IEnumerable<DocumentData> GetDatas()
         {
-            get
+            if ((initype & DocInitType.Data) != DocInitType.Data)
             {
-                if ((initype & DocInitType.Data) != DocInitType.Data)
-                {
-                    initype |= DocInitType.Data;
-                    GetReferencing<DocumentData>(nameof(DocumentData.DocumentId), DBLoadParam.Load);
-                }
-                return GetReferencing<DocumentData>(nameof(DocumentData.DocumentId), DBLoadParam.None);
+                initype |= DocInitType.Data;
+                GetReferencing<DocumentData>(nameof(DocumentData.DocumentId), DBLoadParam.Load);
             }
+            return GetReferencing<DocumentData>(nameof(DocumentData.DocumentId), DBLoadParam.None);
         }
 
+        [ControllerMethod]
         [Browsable(false)]
-        public IEnumerable<DocumentCustomer> Customers
+        public IEnumerable<DocumentCustomer> GetCustomers()
         {
-            get
+            if ((initype & DocInitType.Customer) != DocInitType.Customer)
             {
-                if ((initype & DocInitType.Customer) != DocInitType.Customer)
-                {
-                    initype |= DocInitType.Customer;
-                    GetReferencing<DocumentCustomer>(nameof(DocumentCustomer.DocumentId), DBLoadParam.Load);
-                }
-                return GetReferencing<DocumentCustomer>(nameof(DocumentCustomer.DocumentId), DBLoadParam.None);
+                initype |= DocInitType.Customer;
+                GetReferencing<DocumentCustomer>(nameof(DocumentCustomer.DocumentId), DBLoadParam.Load);
             }
+            return GetReferencing<DocumentCustomer>(nameof(DocumentCustomer.DocumentId), DBLoadParam.None);
         }
 
         [Browsable(false)]
@@ -489,54 +436,29 @@ namespace DataWF.Module.Flow
             }
         }
 
-        //public object this[TemplateParam attribute]
-        //{
-        //    get { return this[attribute.Param as DBColumn]; }
-        //    set { this[attribute.Param as DBColumn] = value; }
-        //}
-
-        public DocumentWork GetWork()
+        [ControllerMethod]
+        public DocumentData GetDataByFileName(string fileName)
         {
-            DocumentWork workNow = null;
-            foreach (var work in Works)
-            {
-                if (!work.IsComplete)
-                {
-                    workNow = work;
-                    break;
-                }
-            }
-            return workNow;
-        }
-
-        public DocumentData GetData(string p)
-        {
-            foreach (var data in Datas)
-                if (data.FileName == p || data.FileName.EndsWith(p))
+            foreach (var data in GetDatas())
+                if (data.FileName == fileName || data.FileName.EndsWith(fileName))
                     return data;
             return null;
         }
 
-        public DocumentWork GetByStage(object stageId)
+        [ControllerMethod]
+        public IEnumerable<DocumentWork> GetWorksByStage(Stage stage)
         {
-            return GetByStage(Stage.DBTable.LoadById(stageId));
-        }
-
-        public DocumentWork GetByStage(Stage stage)
-        {
-            var works = Works.ToList();
-            for (int i = works.Count - 1; i >= 0; i--)
+            foreach (var work in GetWorks().Reverse())
             {
-                DocumentWork work = works[i];
                 if (work.Stage == stage)
-                    return work;
+                    yield return work;
             }
-            return null;
         }
 
-        public IEnumerable<DocumentWork> GetUnCompleteWorks(Stage filter = null)
+        [ControllerMethod]
+        public IEnumerable<DocumentWork> GetWorksUncompleted(Stage filter = null)
         {
-            foreach (DocumentWork work in Works)
+            foreach (DocumentWork work in GetWorks())
             {
                 if (!work.IsComplete && (filter == null || work.Stage == filter))
                 {
@@ -545,15 +467,16 @@ namespace DataWF.Module.Flow
             }
         }
 
+        [ControllerMethod]
         public DocumentWork GetLastWork()
         {
-            return Works.LastOrDefault();
+            return GetWorks().LastOrDefault();
         }
 
         public string GetWorkFlow()
         {
             var workFlows = string.Empty;
-            foreach (DocumentWork work in Works)
+            foreach (DocumentWork work in GetWorks())
             {
                 string flow = work.Stage != null ? work.Stage.Work.Name : "<no name>";
                 if (!work.IsComplete
@@ -570,15 +493,17 @@ namespace DataWF.Module.Flow
             return workFlows;
         }
 
-        public virtual DocumentData GetTemplated()
+        [ControllerMethod]
+        public virtual DocumentData GetTemplatedData()
         {
-            foreach (DocumentData data in Datas)
+            foreach (DocumentData data in GetDatas())
                 if (data.IsTemplate)
                     return data;
             return null;
         }
 
-        public virtual DocumentData GenerateFromTemplate()
+        [ControllerMethod]
+        public virtual DocumentData CreateTemplatedData()
         {
             return GenerateFromTemplate<DocumentData>(Template.GetDatas().FirstOrDefault());
         }
@@ -596,9 +521,10 @@ namespace DataWF.Module.Flow
             };
         }
 
-        public override void Reject()
+        [ControllerMethod]
+        public virtual DocumentData CreateData(string fileName)
         {
-            base.Reject();
+            return CreateData<DocumentData>(fileName).First();
         }
 
         public IEnumerable<T> CreateData<T>(params string[] files) where T : DocumentData, new()
@@ -610,6 +536,35 @@ namespace DataWF.Module.Flow
                 data.Attach();
                 yield return data;
             }
+        }
+
+        [ControllerMethod]
+        public virtual DocumentReference CreateReference(Document document)
+        {
+            if (document == null)
+                return null;
+
+            var reference = new DocumentReference { Document = this, Reference = document };
+            reference.Attach();
+            return reference;
+        }
+
+        [ControllerMethod]
+        public DocumentWork CreateWorkByDepartment(DocumentWork from, Stage stage, Position position)
+        {
+            return CreateWork(from, stage, position);
+        }
+
+        [ControllerMethod]
+        public DocumentWork CreateWorkByPosition(DocumentWork from, Stage stage, Position position)
+        {
+            return CreateWork(from, stage, position);
+        }
+
+        [ControllerMethod]
+        public DocumentWork CreateWorkByUser(DocumentWork from, Stage stage, User user)
+        {
+            return CreateWork(from, stage, user);
         }
 
         public DocumentWork CreateWork(DocumentWork from, Stage stage, DBItem staff)
@@ -646,18 +601,16 @@ namespace DataWF.Module.Flow
             if (type == DocInitType.Default)
                 Save();
             else if (type == DocInitType.References)
-                DocumentReference.DBTable.Save(References.ToList());
+                DocumentReference.DBTable.Save(GetReferences().ToList());
             else if (type == DocInitType.Data)
-                DocumentData.DBTable.Save(Datas.ToList());
+                DocumentData.DBTable.Save(GetDatas().ToList());
             else if (type == DocInitType.Workflow)
-                DocumentWork.DBTable.Save(Works.ToList());
+                DocumentWork.DBTable.Save(GetWorks().ToList());
             else if (type == DocInitType.Customer)
-                DocumentCustomer.DBTable.Save(Customers.ToList());
+                DocumentCustomer.DBTable.Save(GetCustomers().ToList());
         }
 
-
-
-        public void Save(ExecuteDocumentCallback callback)
+        public void SaveComplex()
         {
             if (saving.Contains(this))//prevent recursion
                 return;
@@ -666,7 +619,7 @@ namespace DataWF.Module.Flow
             var param = new DocumentExecuteArgs() { Document = this, ProcedureCategory = Template.Code };
             try
             {
-                var works = Works.ToList();
+                var works = GetWorks().ToList();
                 bool isnew = works.Count == 0;
 
                 base.Save();
@@ -674,7 +627,7 @@ namespace DataWF.Module.Flow
                 if (isnew)
                 {
                     var flow = Template.Work;
-                    var work = Send(null, flow?.GetStartStage(), new[] { User.CurrentUser }, callback).First();
+                    var work = Send(null, flow?.GetStartStage(), new[] { User.CurrentUser }).First();
                     base.Save();
                 }
 
@@ -694,7 +647,7 @@ namespace DataWF.Module.Flow
                 }
                 if (isnew)//Templating
                 {
-                    var data = GetTemplated();
+                    var data = GetTemplatedData();
                     if (data != null)
                         data.Parse(param);
                 }
@@ -717,9 +670,10 @@ namespace DataWF.Module.Flow
             }
         }
 
-        public List<DocumentWork> Send(ExecuteDocumentCallback callback = null)
+        [ControllerMethod]
+        public List<DocumentWork> Send()
         {
-            var work = GetWork();
+            var work = GetWorksUncompleted().FirstOrDefault();
             if (work == null)
             {
                 throw new InvalidOperationException("No Actual works Found!");
@@ -728,12 +682,31 @@ namespace DataWF.Module.Flow
             {
                 throw new InvalidOperationException("Stage on Work not Defined!");
             }
-            var stageReference = work.Stage.GetStageReference();
-
-            return Send(work, stageReference.ReferenceStage, stageReference.GetDepartment(Template), callback);
+            var stageReference = work.Stage.GetNextReference();
+            if (stageReference == null)
+            {
+                throw new InvalidOperationException("Next Stage not Defined!");
+            }
+            return Send(work, stageReference.ReferenceStage, stageReference.GetDepartment(Template));
         }
 
-        public List<DocumentWork> Send(DocumentWork from, Stage stage, IEnumerable<DBItem> staff, ExecuteDocumentCallback callback = null)
+        [ControllerMethod]
+        public object ExecuteProceduresByWork(DocumentWork work, ParamProcudureType type)
+        {
+            if (work?.Stage == null)
+                throw new ArgumentNullException();
+            var param = new DocumentExecuteArgs { Document = this, Work = work, Stage = work.Stage };
+            return ExecuteProcedures(param, work.Stage.GetProceduresByType(type));
+        }
+
+        [ControllerMethod]
+        public object ExecuteProceduresByStage(Stage stage, ParamProcudureType type)
+        {
+            var param = new DocumentExecuteArgs { Document = this, Stage = stage };
+            return ExecuteProcedures(param, stage.GetProceduresByType(type));
+        }
+
+        public List<DocumentWork> Send(DocumentWork from, Stage stage, IEnumerable<DBItem> staff)
         {
             if (!(staff?.Any() ?? false))
             {
@@ -756,9 +729,7 @@ namespace DataWF.Module.Flow
 
                 if (from.Stage != null)
                 {
-                    var param = new DocumentExecuteArgs { Document = this, Stage = from.Stage, Work = from };
-
-                    var checkResult = ExecuteStageProcedure(param, from.Stage.GetProceduresByType(ParamProcudureType.Check), callback);
+                    var checkResult = ExecuteProceduresByStage(from.Stage, ParamProcudureType.Check);
                     if (checkResult != null)
                         throw new InvalidOperationException($"Check Fail {checkResult}");
 
@@ -769,7 +740,7 @@ namespace DataWF.Module.Flow
                     }
                     else
                     {
-                        ExecuteStageProcedure(param, from.Stage.GetProceduresByType(ParamProcudureType.Finish), callback);
+                        ExecuteProceduresByStage(from.Stage, ParamProcudureType.Finish);
                     }
                 }
             }
@@ -794,7 +765,7 @@ namespace DataWF.Module.Flow
                 }
                 if (from.Stage != null && (from.Stage.Keys & StageKey.IsAutoComplete) == StageKey.IsAutoComplete)
                 {
-                    foreach (var work in GetUnCompleteWorks(from.Stage))
+                    foreach (var work in GetWorksUncompleted(from.Stage))
                     {
                         work.DateComplete = from.DateComplete;
                         if (DBTransaction.Current != null)
@@ -808,8 +779,7 @@ namespace DataWF.Module.Flow
 
             if (stage != null)
             {
-                var param = new DocumentExecuteArgs { Document = this, Stage = stage };
-                ExecuteStageProcedure(param, stage.GetProceduresByType(ParamProcudureType.Start), callback);
+                ExecuteProceduresByStage(stage, ParamProcudureType.Start);
             }
 
             if (!IsComplete.GetValueOrDefault() && Status == DBStatus.Archive)
@@ -833,41 +803,41 @@ namespace DataWF.Module.Flow
             return false;
         }
 
-        public Document FindReference(object tempalteid, bool create)
+        [ControllerMethod]
+        public Document FindReference(Template template, bool create)
         {
-            return FindReference(Template.DBTable.LoadById(tempalteid), create);
-        }
-
-        public Document FindReference(Template t, bool create)
-        {
-            foreach (var refer in References)
+            foreach (var refer in GetReferences())
             {
-                if ((refer.Reference.Template == t && refer.Reference != this)
-                    || (refer.Document.Template == t && refer.Document != this))
+                if ((refer.Reference.Template == template && refer.Reference != this)
+                    || (refer.Document.Template == template && refer.Document != this))
                     return refer.Reference;
             }
             if (create)
             {
-                var newdoc = Document.Create(t, this);
-                newdoc.Save(null);
+                var newdoc = template.CreateDocument(this);
+                newdoc.SaveComplex();
                 return newdoc;
             }
             return null;
         }
 
-        public DocumentReference FindReference(object id)
+        [ControllerMethod]
+        public DocumentReference FindReference(Document document)
         {
-            foreach (var item in References)
-                if ((item.ReferenceId.Equals(id) && !item.ReferenceId.Equals(this.Id))
-                    || (item.DocumentId.Equals(id) && !item.DocumentId.Equals(this.Id)))
+            if (document == null || document == this)
+                return null;
+            foreach (var item in GetReferences())
+            {
+                if ((item.ReferenceId.Equals(document.Id)) || (item.DocumentId.Equals(document.Id)))
                     return item;
-
+            }
             return null;
         }
 
-        public bool ContainsReference(object id)
+        [ControllerMethod]
+        public bool ContainsReference(Document document)
         {
-            return FindReference(id) != null;
+            return FindReference(document) != null;
         }
 
         public void RefreshCache()
@@ -904,33 +874,7 @@ namespace DataWF.Module.Flow
             WorkStage = workStages;
             WorkCurrent = current;
         }
-
-        public static QQuery CreateRefsFilter(object id)
-        {
-            var query = new QQuery("", DocumentReference.DBTable);
-            query.Parameters.Add(CreateRefsParam(id));
-            return query;
-        }
-
-        public static QParam CreateRefsParam(object id)
-        {
-            var qrefing = new QQuery(string.Format("select {0} from {1} where {2} = {3}",
-                                                   DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.DocumentId)).Name,
-                                                   DocumentReference.DBTable.Name,
-                                                   DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.ReferenceId)).Name,
-                                                   id));
-            var qrefed = new QQuery(string.Format("select {2} from {1} where {0} = {3}",
-                                                  DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.DocumentId)).Name,
-                                                  DocumentReference.DBTable.Name,
-                                                  DocumentReference.DBTable.ParseProperty(nameof(DocumentReference.ReferenceId)).Name,
-                                                  id));
-
-            var param = new QParam();
-            param.Parameters.Add(QQuery.CreateParam(LogicType.And, DBTable.PrimaryKey, CompareType.In, qrefed));
-            param.Parameters.Add(QQuery.CreateParam(LogicType.Or, DBTable.PrimaryKey, CompareType.In, qrefing));
-            return param;
-        }
-
+        
         public override string ToString()
         {
             return base.ToString();
@@ -939,7 +883,7 @@ namespace DataWF.Module.Flow
 
         public void CheckComplete()
         {
-            foreach (var work in Works)
+            foreach (var work in GetWorks())
             {
                 if (!work.IsComplete)
                 {
@@ -950,42 +894,9 @@ namespace DataWF.Module.Flow
             IsComplete = true;
         }
 
-        [Browsable(false)]
-        public DocumentData GetData()
-        {
-            return Datas.FirstOrDefault();
-        }
-
-        public void LoadDocuments(User user)
-        {
-            var qWork = new QQuery(string.Empty, DocumentWork.DBTable);
-            qWork.Columns.Add(new QColumn(nameof(DocumentWork.Document)));
-            qWork.BuildPropertyParam(nameof(DocumentWork.IsComplete), CompareType.Equal, false);
-            qWork.BuildPropertyParam(nameof(DocumentWork.UserId), CompareType.Equal, user);
-
-            var qDocs = new QQuery(string.Empty, Document.DBTable);
-            qDocs.BuildPropertyParam(nameof(Document.Id), CompareType.In, qWork);
-
-            Document.DBTable.Load(qDocs, DBLoadParam.Synchronize);
-            DocumentWork.DBTable.Load(qWork, DBLoadParam.Synchronize);
-        }
-
         public override void Dispose()
         {
             base.Dispose();
-        }
-
-        public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)
-        {
-            base.OnPropertyChanged(property, column, value);
-            //TODO ?????????????if (_handler != null)
-            {
-                //foreach (TemplateParam att in Template.TemplateAllParams)
-                //{
-                //    if (att.ParamCode.Contains(property) && !att.Code.Contains(property))
-                //        _handler(this, new PropertyChangedEventArgs(att.Code));
-                //}
-            }
         }
     }
 

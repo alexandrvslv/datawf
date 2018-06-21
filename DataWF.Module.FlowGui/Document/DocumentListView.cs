@@ -538,7 +538,7 @@ namespace DataWF.Module.FlowGui
                 {
                     foreach (var document in documents)
                     {
-                        if (!document.ContainsReference(reference.Id))
+                        if (!document.ContainsReference(reference))
                         {
                             document.CreateReference(reference);
                         }
@@ -594,7 +594,7 @@ namespace DataWF.Module.FlowGui
             }
 
 
-            documents.Add(Document.Create(template, parent, fileNames.ToArray()));
+            documents.Add(template.CreateDocument(parent, fileNames.ToArray()));
             return documents;
         }
 
@@ -628,7 +628,7 @@ namespace DataWF.Module.FlowGui
                     {
                         foreach (Document document in documents)
                         {
-                            document.Save(null);
+                            document.SaveComplex();
                         }
                     }
                 }
