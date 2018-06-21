@@ -374,7 +374,7 @@ namespace DataWF.Module.Flow
         public event Action<Document, ListChangedType> RefChanged;
 
         [ControllerMethod(true)]
-        public IEnumerable<DocumentReference> GetReferences()
+        public virtual IEnumerable<DocumentReference> GetReferences()
         {
             if ((initype & DocInitType.References) != DocInitType.References)
             {
@@ -533,6 +533,7 @@ namespace DataWF.Module.Flow
             {
                 var data = new T { Document = this };
                 data.Load(file);
+                data.GenerateId();
                 data.Attach();
                 yield return data;
             }
@@ -545,6 +546,7 @@ namespace DataWF.Module.Flow
                 return null;
 
             var reference = new DocumentReference { Document = this, Reference = document };
+            reference.GenerateId();
             reference.Attach();
             return reference;
         }
@@ -610,6 +612,7 @@ namespace DataWF.Module.Flow
                 DocumentCustomer.DBTable.Save(GetCustomers().ToList());
         }
 
+        [ControllerMethod]
         public void SaveComplex()
         {
             if (saving.Contains(this))//prevent recursion
@@ -874,7 +877,7 @@ namespace DataWF.Module.Flow
             WorkStage = workStages;
             WorkCurrent = current;
         }
-        
+
         public override string ToString()
         {
             return base.ToString();
