@@ -261,17 +261,23 @@ namespace DataWF.Module.Flow
             return true;
         }
 
+        public void Load(string filename, Stream stream)
+        {
+            FileName = Path.GetFileName(FileName);
+            using (var memory = new MemoryStream())
+            {
+                stream.CopyTo(memory);
+                FileData = memory.ToArray();// File.ReadAllBytes(path);
+            }
+        }
+
         public void Load(string path)
         {
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
-                using (var memory = new MemoryStream())
-                {
-                    stream.CopyTo(memory);
-                    FileData = memory.ToArray();// File.ReadAllBytes(path);
-                }
+                Load(path, stream);
             }
-            FileName = Path.GetFileName(path);
+
         }
 
         public static BackgroundWorker ExecuteAsync(DocumentData data, DocumentExecuteArgs param)
