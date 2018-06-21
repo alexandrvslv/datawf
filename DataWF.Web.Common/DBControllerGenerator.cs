@@ -53,7 +53,9 @@ namespace DataWF.Web.Common
                 {"netstandard", MetadataReference.CreateFromFile(Assembly.Load("netstandard, Version=2.0.0.0").Location) },
                 {"System", MetadataReference.CreateFromFile(typeof(Object).Assembly.Location) },
                 {"System.Runtime", MetadataReference.CreateFromFile(Assembly.Load("System.Runtime, Version=0.0.0.0").Location) },
-                {"System.Collection", MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location) },
+                {"System.Collections", MetadataReference.CreateFromFile(Assembly.Load("System.Collections, Version=0.0.0.0").Location) },
+                {"System.List", MetadataReference.CreateFromFile(typeof(List<>).Assembly.Location) },
+                {"System.Linq", MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location) },
                 {"Microsoft.AspNetCore.Mvc", MetadataReference.CreateFromFile(typeof(ControllerBase).Assembly.Location) },
                 {"DataWF.Common", MetadataReference.CreateFromFile(typeof(Helper).Assembly.Location) },
                 {"DataWF.Data", MetadataReference.CreateFromFile(typeof(DBTable).Assembly.Location) },
@@ -95,9 +97,10 @@ public {controllerClassName}() {{
                     //continue;
                     if (method.GetCustomAttribute<ControllerMethodAttribute>() != null)
                     {
+                        var mparams = method.GetParameters();
                         var parameters = method.IsStatic ? "" : "/{id:int}";
                         var returning = $"ActionResult<{ TypeHelper.CodeFormatType(method.ReturnType)}>";
-                        foreach (var parameter in method.GetParameters())
+                        foreach (var parameter in mparams)
                         {
                             parameters += $"/{{{parameter.Name}}}";
                         }
@@ -107,11 +110,15 @@ public {controllerClassName}() {{
 public {returning} {method.Name} (");
                         if (!method.IsStatic)
                         {
-                            builder.Append($"int id");
+                            builder.Append($"int id{(mparams.Length > 0 ? ", " : "")}");
                         }
-                        foreach (var parameter in method.GetParameters())
+                        if (mparams.Length > 0)
                         {
-                            builder.Append($", {parameter.ParameterType.FullName} {parameter.Name}");
+                            foreach (var parameter in mparams)
+                            {
+                                builder.Append($"{parameter.ParameterType.FullName} {parameter.Name}, ");
+                            }
+                            builder.Length -= 2;
                         }
                         if (!method.IsStatic)
                         {
@@ -119,9 +126,13 @@ public {returning} {method.Name} (");
 {{
     var item = table.LoadById(id);
     return new {returning}(item.{method.Name}(");
-                            foreach (var parameter in method.GetParameters())
+                            if (mparams.Length > 0)
                             {
-                                builder.Append($"{parameter.Name}, ");
+                                foreach (var parameter in mparams)
+                                {
+                                    builder.Append($"{parameter.Name}, ");
+                                }
+                                builder.Length -= 2;
                             }
                             builder.Append(@"));
 }");
@@ -150,8 +161,9 @@ public {returning} {method.Name} (");
                 //using (var writer = new StreamWriter(newFile))
                 //    newSourceText.Write(writer);
                 files.Add(newTree);
-                if (!references.ContainsKey(itemType.Assembly.GetName().Name))
-                    references[itemType.Assembly.GetName().Name] = MetadataReference.CreateFromFile(itemType.Assembly.Location);
+                var assemblyName = itemType.Assembly.GetName().Name;
+                if (!references.ContainsKey(assemblyName))
+                    references[assemblyName] = MetadataReference.CreateFromFile(itemType.Assembly.Location);
             }
             CSharpCompilation compilation = CSharpCompilation.Create($"{name}.dll", files, references.Values,
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
