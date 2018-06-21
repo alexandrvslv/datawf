@@ -165,7 +165,7 @@ namespace DataWF.Module.Common
                     Send(endPoint.GetBytes(), sender, SocketMessageType.Hello);
                     break;
                 case (SocketMessageType.Logout):
-                    sender.Active = false;
+                    sender.Detach();
                     break;
                 case (SocketMessageType.Data):
                     LoadData(message.Data);
