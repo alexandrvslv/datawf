@@ -796,7 +796,7 @@ namespace DataWF.Module.FlowGui
             {
                 if (TypeHelper.IsBaseType(type, typeof(DocumentWork)))
                     documentWidgets.Add(pageWorks);
-                else if (TypeHelper.IsBaseType(type, typeof(DocumentReference)))
+                else if (type == typeof(DocumentReference))
                     documentWidgets.Add(pageRefers);
                 else
                 {
