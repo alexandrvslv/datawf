@@ -565,6 +565,11 @@ namespace DataWF.TestGui
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
+
+        public IEnumerable<IGroup> GetGroups()
+        {
+            throw new NotImplementedException();
+        }
     }
 
 
