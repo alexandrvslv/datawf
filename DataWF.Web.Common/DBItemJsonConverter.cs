@@ -21,9 +21,10 @@
 using System;
 using System.Collections.Generic;
 using DataWF.Common;
+using DataWF.Data;
 using Newtonsoft.Json;
 
-namespace DataWF.Data
+namespace DataWF.Web.Common
 {
     public class DBItemJsonConverter : JsonConverter
     {
