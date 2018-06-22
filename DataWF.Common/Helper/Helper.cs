@@ -612,7 +612,8 @@ namespace DataWF.Common
                     value = DBNull.Value;
                     break;
                 default:
-                    value = reader.ReadString();
+                    var length = reader.ReadInt32();
+                    value = Encoding.UTF8.GetString(reader.ReadBytes(length));
                     break;
             }
 
@@ -704,107 +705,107 @@ namespace DataWF.Common
                     writer.Write((byte)BinaryTypeIndex.Null);
                 //writer.Write((byte)0);
             }
-            else if (value is bool)
+            else if (value is bool boolValue)
             {
                 if (writetype)
                     writer.Write((byte)BinaryTypeIndex.Boolean);
-                writer.Write((bool)value);
+                writer.Write(boolValue);
             }
-            else if (value is byte)
+            else if (value is byte byteValue)
             {
                 if (writetype)
                     writer.Write((byte)BinaryTypeIndex.Byte);
-                writer.Write((byte)value);
+                writer.Write(byteValue);
             }
-            else if (value is sbyte)
+            else if (value is sbyte sbyteValue)
             {
                 if (writetype)
                     writer.Write((byte)BinaryTypeIndex.SByte);
-                writer.Write((sbyte)value);
+                writer.Write(sbyteValue);
             }
-            else if (value is char)
+            else if (value is char charValue)
             {
                 if (writetype)
                     writer.Write((byte)BinaryTypeIndex.Char);
-                writer.Write((char)value);
+                writer.Write(charValue);
             }
-            else if (value is short)
+            else if (value is short shortValue)
             {
                 if (writetype)
                     writer.Write((byte)BinaryTypeIndex.Short);
-                writer.Write((short)value);
+                writer.Write(shortValue);
             }
-            else if (value is ushort)
+            else if (value is ushort ushortValue)
             {
                 if (writetype)
                     writer.Write((byte)BinaryTypeIndex.UShort);
-                writer.Write((ushort)value);
+                writer.Write(ushortValue);
             }
-            else if (value is int)
+            else if (value is int intValue)
             {
                 if (writetype)
                     writer.Write((byte)BinaryTypeIndex.Int);
-                writer.Write((int)value);
+                writer.Write(intValue);
             }
-            else if (value is uint)
+            else if (value is uint uintValue)
             {
                 if (writetype)
                     writer.Write((byte)BinaryTypeIndex.UInt);
-                writer.Write((uint)value);
+                writer.Write(uintValue);
             }
-            else if (value is long)
+            else if (value is long longValue)
             {
                 if (writetype)
                     writer.Write((byte)BinaryTypeIndex.Long);
-                writer.Write((long)value);
+                writer.Write(longValue);
             }
-            else if (value is ulong)
+            else if (value is ulong ulongValue)
             {
                 if (writetype)
                     writer.Write((byte)BinaryTypeIndex.ULong);
-                writer.Write((ulong)value);
+                writer.Write(ulongValue);
             }
-            else if (value is float)
+            else if (value is float floatValue)
             {
                 if (writetype)
                     writer.Write((byte)BinaryTypeIndex.Float);
-                writer.Write((float)value);
+                writer.Write(floatValue);
             }
-            else if (value is double)
+            else if (value is double doubleValue)
             {
                 if (writetype)
                     writer.Write((byte)BinaryTypeIndex.Double);
-                writer.Write((double)value);
+                writer.Write(doubleValue);
             }
-            else if (value is decimal)
+            else if (value is decimal decimalValue)
             {
                 if (writetype)
                     writer.Write((byte)BinaryTypeIndex.Decimal);
-                writer.Write((decimal)value);
+                writer.Write(decimalValue);
             }
-            else if (value is DateTime)
+            else if (value is DateTime dateTimeValue)
             {
                 if (writetype)
                     writer.Write((byte)BinaryTypeIndex.DateTime);
-                writer.Write(((DateTime)value).ToBinary());
+                writer.Write(dateTimeValue.ToBinary());
             }
-            else if (value is byte[])
+            else if (value is byte[] byteArray)
             {
                 if (writetype)
                     writer.Write((byte)BinaryTypeIndex.ByteArray);
 
-                int len = ((byte[])value).Length;
+                int len = byteArray.Length;
                 writer.Write(len);
-                writer.Write((byte[])value, 0, len);
+                writer.Write(byteArray, 0, len);
             }
-            else if (value is char[])
+            else if (value is char[] charArray)
             {
                 if (writetype)
                     writer.Write((byte)BinaryTypeIndex.CharArray);
 
-                int len = ((char[])value).Length;
+                int len = (charArray).Length;
                 writer.Write(len);
-                writer.Write((char[])value, 0, len);
+                writer.Write(charArray, 0, len);
             }
             else
             {
@@ -846,47 +847,47 @@ namespace DataWF.Common
             string result = null;
             if (format != null && format.Equals("size", StringComparison.OrdinalIgnoreCase))
             {
-                if (value is long)
-                    result = LengthFormat((long)value);
-                else if (value is ulong)
-                    result = LengthFormat((ulong)value);
-                else if (value is int)
-                    result = LengthFormat((int)value);
-                else if (value is decimal)
-                    result = LengthFormat((decimal)value);
+                if (value is long longValue)
+                    result = LengthFormat(longValue);
+                else if (value is ulong ulongValue)
+                    result = LengthFormat(ulongValue);
+                else if (value is int intValue)
+                    result = LengthFormat(intValue);
+                else if (value is decimal decimalValue)
+                    result = LengthFormat(decimalValue);
             }
-            else if (value is CultureInfo)
-                result = ((CultureInfo)value).Name;
-            else if (value is Type)
+            else if (value is CultureInfo cultureInfo)
+                result = cultureInfo.Name;
+            else if (value is Type typeValue)
             {
-                result = Locale.Get((Type)value);
+                result = Locale.Get(typeValue);
             }
-            else if (value is MemberInfo)
+            else if (value is MemberInfo memeberInfo)
             {
-                result = Locale.Get(Locale.GetTypeCategory(((MemberInfo)value).DeclaringType), ((MemberInfo)value).Name);
+                result = Locale.Get(Locale.GetTypeCategory(memeberInfo.DeclaringType), memeberInfo.Name);
             }
-            else if (value is byte[])
+            else if (value is byte[] byteArray)
             {
-                result = LengthFormat(((byte[])value).LongLength);
+                result = LengthFormat(byteArray.LongLength);
             }
             else if (value is IList)
             {
                 result = "Collection (" + ((IList)value).Count + ")";
             }
-            else if (value is DateTime)
+            else if (value is DateTime dateValue)
             {
                 if (format == null)
-                    result = ((DateTime)value).ToString(info.DateTimeFormat);
+                    result = dateValue.ToString(info.DateTimeFormat);
                 else
-                    result = ((DateTime)value).ToString(format, info.DateTimeFormat);
+                    result = dateValue.ToString(format, info.DateTimeFormat);
             }
-            else if (value is TimeSpan)
+            else if (value is TimeSpan spanValue)
             {
-                result = ((TimeSpan)value).ToString(format, info.DateTimeFormat);
+                result = spanValue.ToString(format, info.DateTimeFormat);
             }
-            else if (value is IFormattable)
+            else if (value is IFormattable formattable)
             {
-                result = ((IFormattable)value).ToString(format, info);
+                result = formattable.ToString(format, info);
             }
             else
             {
@@ -905,33 +906,33 @@ namespace DataWF.Common
             {
                 result = (string)value;
             }
-            if (value is CultureInfo)
+            if (value is CultureInfo cultureInfo)
             {
-                result = ((CultureInfo)value).Name;
+                result = cultureInfo.Name;
             }
-            else if (value is Type)
+            else if (value is Type typeValue)
             {
-                result = TypeHelper.FormatBinary((Type)value);
+                result = TypeHelper.FormatBinary(typeValue);
             }
-            else if (value is MemberInfo)
+            else if (value is MemberInfo memberInfo)
             {
-                result = TypeHelper.FormatBinary(((MemberInfo)value).DeclaringType) + ";" + ((MemberInfo)value).Name;
+                result = $"{TypeHelper.FormatBinary(memberInfo.DeclaringType)};{memberInfo.Name}";
             }
-            else if (value is byte[])
+            else if (value is byte[] byteArray)
             {
-                result = Convert.ToBase64String((byte[])value);
+                result = Convert.ToBase64String(byteArray);
             }
-            else if (value is DateTime)
+            else if (value is DateTime dataValue)
             {
-                result = ((DateTime)value).ToBinary().ToString();
+                result = dataValue.ToBinary().ToString();
             }
-            else if (value is TimeSpan)
+            else if (value is TimeSpan spanValue)
             {
-                result = ((TimeSpan)value).ToString();
+                result = spanValue.ToString();
             }
-            else if (value is IFormattable)
+            else if (value is IFormattable formattable)
             {
-                result = ((IFormattable)value).ToString(string.Empty, CultureInfo.InvariantCulture);
+                result = formattable.ToString(string.Empty, CultureInfo.InvariantCulture);
             }
             else
             {
@@ -1211,17 +1212,6 @@ namespace DataWF.Common
             if (ThreadException != null)
                 ThreadException(e);
         }
-
-        //public static event EventHandler<ExceptionEventArgs> ThreadException;
-
-        //public static void OnThreadException(Exception e)
-        //{
-
-        //if (e.InnerException != null && e.InnerException != e)
-        //    OnThreadException(e.InnerException);
-        //if (ThreadException != null)
-        //    ThreadException(e.Source, new ExceptionEventArgs(e));
-        //}
 
         private static long WorkingSet64;
 
