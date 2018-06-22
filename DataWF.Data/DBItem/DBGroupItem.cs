@@ -207,6 +207,11 @@ namespace DataWF.Data
                 rez += "," + row.PrimaryId;
             return rez;
         }
+
+        public IEnumerable<IGroup> GetGroups()
+        {
+            return GetSubGroups<DBGroupItem>(DBLoadParam.Load);
+        }
     }
 }
 

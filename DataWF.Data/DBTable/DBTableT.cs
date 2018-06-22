@@ -562,8 +562,8 @@ namespace DataWF.Data
                 if ((transaction.ReaderParam & DBLoadParam.Synchronize) == DBLoadParam.Synchronize)
                 {
                     if (srow != null
-                    && transaction.ReaderStampKey >= 0
-                    && srow.Stamp.Value.CompareTo(transaction.Reader.GetDateTime(transaction.ReaderStampKey)) >= 0)
+                        && transaction.ReaderStampKey >= 0
+                        && srow.Stamp.Value.CompareTo(transaction.Reader.GetDateTime(transaction.ReaderStampKey)) >= 0)
                     {
                         return srow;
                     }

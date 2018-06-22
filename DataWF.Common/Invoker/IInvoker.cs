@@ -4,7 +4,7 @@ namespace DataWF.Common
 {
     public interface IInvoker
     {
-        Type DataType { get; set; }
+        Type DataType { get; }
 
         Type TargetType { get; }
 

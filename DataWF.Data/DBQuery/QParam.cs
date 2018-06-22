@@ -348,6 +348,11 @@ namespace DataWF.Data
             throw new NotImplementedException();
         }
 
+        public IEnumerable<IGroup> GetGroups()
+        {
+            return parameters;
+        }
+
         public bool IsExpanded
         {
             get { return GroupHelper.GetAllParentExpand(this); }

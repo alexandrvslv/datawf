@@ -87,6 +87,11 @@ namespace DataWF.Data
             return Schema?.TableGroups.GetByGroup(Name);
         }
 
+        public IEnumerable<IGroup> GetGroups()
+        {
+            return GetChilds(); ;
+        }
+
         public IEnumerable<DBTable> GetTables()
         {
             return Schema?.Tables.GetByGroup(Name);
@@ -113,8 +118,6 @@ namespace DataWF.Data
                 GroupName = GroupName
             };
         }
-
-
         #endregion
 
         #region IGroupable implementation

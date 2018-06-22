@@ -90,9 +90,9 @@ namespace DataWF.Web.Common
         {
             try
             {
-                if (value == null || value.UpdateState == DBUpdateState.Insert)
+                if (value == null)
                 {
-                    throw new InvalidOperationException("ID not specified!");
+                    throw new InvalidOperationException("ID must by specified by value or null!");
                 }
                 if (!value.IsChanged)
                     return Ok(false);

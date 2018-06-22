@@ -27,6 +27,12 @@ namespace DataWF.Data
 {
     public class DBItemJsonConverter : JsonConverter
     {
+        public bool IsSerializeableColumn(DBColumn column)
+        {
+            return column.PropertyInvoker != null
+                && (column.Keys & DBColumnKeys.Access) != DBColumnKeys.Access;
+        }
+
         public override bool CanConvert(Type objectType)
         {
             return TypeHelper.IsBaseType(objectType, typeof(DBItem));
@@ -42,10 +48,10 @@ namespace DataWF.Data
             var table = item.Table;
             foreach (var column in table.Columns)
             {
-                if (!column.Access.View || (column.Keys & DBColumnKeys.Access) == DBColumnKeys.Access)//check permission
+                if (!IsSerializeableColumn(column))
                     continue;
-                writer.WritePropertyName(column.Property ?? column.Name);
-                writer.WriteValue(item.GetValue(column));
+                writer.WritePropertyName(column.Property);
+                writer.WriteValue(column.PropertyInvoker.Get(item));
             }
             writer.WriteEndObject();
         }
@@ -73,7 +79,14 @@ namespace DataWF.Data
                 {
                     column = table.ParseProperty((string)reader.Value) ?? table.ParseColumn((string)reader.Value);
                 }
-                else if (reader.TokenType == JsonToken.String)
+                else if (reader.TokenType == JsonToken.String
+                    || reader.TokenType == JsonToken.Boolean 
+                    || reader.TokenType == JsonToken.Bytes
+                    || reader.TokenType == JsonToken.Date
+                    || reader.TokenType == JsonToken.Float
+                    || reader.TokenType == JsonToken.Integer
+                    || reader.TokenType == JsonToken.Float
+                    || reader.TokenType == JsonToken.Null)
                 {
                     if (column == null)
                         continue;
@@ -91,7 +104,15 @@ namespace DataWF.Data
                     }
                     else
                     {
-                        item.SetValue(value, column);
+                        if (column.ReferenceProperty != null)
+                        {
+                            value = column.ReferenceTable.LoadItemById(value);
+                            column.ReferenceProperty.Set(item, value);
+                        }
+                        else
+                        {
+                            column.PropertyInvoker.Set(item, value);
+                        }
                     }
                     column = null;
                 }

@@ -136,7 +136,7 @@ namespace DataWF.Gui
 
         private void CheckStatus()
         {
-            IStatus status = dataSource as IStatus;
+            IStatusable status = dataSource as IStatusable;
             if (status != null)
             {
                 ToolMenuItem item = null;
@@ -228,7 +228,7 @@ namespace DataWF.Gui
                 toolRefresh.Visible =
                             toolSave.Visible = type != null && TypeHelper.IsInterface(type, typeof(IEditable));
 
-                toolStatus.Visible = type != null && TypeHelper.IsInterface(type, typeof(IStatus));
+                toolStatus.Visible = type != null && TypeHelper.IsInterface(type, typeof(IStatusable));
 
                 if (value is IEditable)
                 {
@@ -612,15 +612,14 @@ namespace DataWF.Gui
 
         private void ToolStatusItemClicked(object sender, ToolItemEventArgs e)
         {
-            IStatus status = dataSource as IStatus;
-            if (status != null)
+            if (dataSource is IStatusable status)
             {
                 status.Status = (DBStatus)e.Item.Tag;
                 CheckStatus();
             }
             else if (list.Mode != LayoutListMode.Fields)
             {
-                foreach (var item in list.Selection.GetItems<IStatus>())
+                foreach (var item in list.Selection.GetItems<IStatusable>())
                 {
                     item.Status = (DBStatus)e.Item.Tag;
                 }

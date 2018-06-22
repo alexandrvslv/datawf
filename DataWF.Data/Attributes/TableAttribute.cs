@@ -34,7 +34,7 @@ namespace DataWF.Data
     public class TableAttribute : Attribute
     {
         static readonly Invoker<ColumnAttribute, string> columnNameInvoker = new Invoker<ColumnAttribute, string>(nameof(ColumnAttribute.ColumnName), (item) => item.ColumnName);
-        static readonly Invoker<ColumnAttribute, string> propertyInvoker = new Invoker<ColumnAttribute, string>(nameof(ColumnAttribute.Property), (item) => item.Property);
+        static readonly Invoker<ColumnAttribute, string> propertyInvoker = new Invoker<ColumnAttribute, string>(nameof(ColumnAttribute.Property), (item) => item.Property.Name);
         static readonly Invoker<IndexAttribute, string> IndexNameinvoker = new Invoker<IndexAttribute, string>(nameof(IndexAttribute.IndexName), (item) => item.IndexName);
 
         private DBSchema cacheSchema;
@@ -167,8 +167,9 @@ namespace DataWF.Data
             cacheIndexes.Clear();
             var types = TypeHelper.GetTypeHierarchi(type);
             foreach (var item in types)
+            {
                 InitializeType(item);
-
+            }
         }
 
         public void InitializeItemType(ItemTypeAttribute itemType)
@@ -181,46 +182,73 @@ namespace DataWF.Data
 
         public void InitializeType(Type type)
         {
-            foreach (var property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly))
+            var properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
+            foreach (var property in properties)
             {
-                var column = InitializeColumn(property);
-                if (column != null)
+                if (InitializeColumn(property, out var column))
                 {
                     cacheColumns.Add(column);
                 }
-                var reference = property.GetCustomAttribute<ReferenceAttribute>();
-                if (reference != null)
+                if (InitializeIndex(property, column, out var index))
                 {
-                    reference.Table = this;
-                    reference.Property = property.Name;
-                    reference.ReferenceType = property.PropertyType;
-                    reference.Column.Keys |= DBColumnKeys.Reference;
-                    cacheReferences.Add(reference);
-                }
-                var index = property.GetCustomAttribute<IndexAttribute>();
-                if (index != null)
-                {
-                    index = cacheIndexes.SelectOne(nameof(IndexAttribute.IndexName), index.IndexName) ?? index;
-                    index.Table = this;
-                    index.Columns.Add(column);
                     cacheIndexes.Add(index);
+                }
+            }
+            foreach (var property in properties)
+            {
+                if (InitializeReference(property, out var reference))
+                {
+                    cacheReferences.Add(reference);
                 }
             }
         }
 
-        public virtual ColumnAttribute InitializeColumn(PropertyInfo property)
+        private bool InitializeIndex(PropertyInfo property, ColumnAttribute column, out IndexAttribute index)
         {
-            var column = DBColumn.GetColumnAttribute(property);
+            index = property.GetCustomAttribute<IndexAttribute>();
+            if (index != null)
+            {
+                index = cacheIndexes.SelectOne(nameof(IndexAttribute.IndexName), index.IndexName) ?? index;
+                index.Table = this;
+                index.Columns.Add(column);
+                return true;
+            }
+            return false;
+        }
+
+        public virtual bool InitializeReference(PropertyInfo property, out ReferenceAttribute reference)
+        {
+            reference = property.GetCustomAttribute<ReferenceAttribute>();
+            if (reference != null)
+            {
+                try
+                {
+                    reference.Table = this;
+                    reference.Property = property;
+                    reference.ReferenceType = property.PropertyType;
+                    reference.Column.Keys |= DBColumnKeys.Reference;
+                    reference.Column.ReferenceProperty = property;
+                }
+                catch (Exception ex) { }
+                return true;
+            }
+            return false;
+        }
+
+        public virtual bool InitializeColumn(PropertyInfo property, out ColumnAttribute column)
+        {
+            column = DBColumn.GetColumnAttribute(property);
             if (column != null)
             {
                 column.Table = this;
-                column.Property = property.Name;
+                column.Property = property;
                 if (column.DataType == null)
                     column.DataType = property.PropertyType;
                 if (column.Order <= 0)
                     column.Order = cacheColumns.Count;
+                return true;
             }
-            return column;
+            return false;
         }
 
         public ColumnAttribute GetColumn(string name)

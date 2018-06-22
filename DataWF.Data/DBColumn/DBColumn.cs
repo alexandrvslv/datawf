@@ -147,6 +147,12 @@ namespace DataWF.Data
             }
         }
 
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public IInvoker PropertyInvoker { get; internal set; }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public IInvoker ReferenceProperty { get; internal set; }
+
         [Browsable(false)]
         public bool CanWrite { get { return true; } }
 
@@ -630,6 +636,7 @@ namespace DataWF.Data
         {
             get { return (Keys & DBColumnKeys.Notnull) == DBColumnKeys.Notnull; }
         }
+
 
         #region IComparable Members
 

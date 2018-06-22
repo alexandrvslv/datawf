@@ -212,7 +212,6 @@ namespace DataWF.Gui
                     if (group != null)
                     {
                         categoryName = group.categoryName;
-                        //this.order = _group._childs.Count;
                         group.nodes.Add(this);
 
                         if (group.Container != null)
@@ -343,6 +342,11 @@ namespace DataWF.Gui
         public void Remove()
         {
             Container?.Remove(this);
+        }
+
+        public IEnumerable<IGroup> GetGroups()
+        {
+            return nodes;
         }
     }
 }

@@ -53,9 +53,9 @@ namespace DataWF.Data
             return new DBVirtualColumn(name) { Table = Table.Table, };
         }
 
-        public override void GenerateCultureColumn(DBTable table, string groupName, CultureInfo culture)
+        public override void GenerateColumn(DBTable table, string groupName, CultureInfo culture)
         {
-            base.GenerateCultureColumn(table, groupName, culture);
+            base.GenerateColumn(table, groupName, culture);
 
             if (TableView?.BaseTable?.Table == null)
             {

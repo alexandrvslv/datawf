@@ -27,6 +27,7 @@ using System.Xml.Serialization;
 using DataWF.Data;
 using DataWF.Common;
 using Newtonsoft.Json;
+using System.Reflection;
 
 namespace DataWF.Data
 {
@@ -83,7 +84,10 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore]
-        public string Property { get; internal set; }
+        public PropertyInfo Property { get; internal set; }
+
+        [XmlIgnore, JsonIgnore]
+        public PropertyInfo ReferenceProperty { get; internal set; }
 
         [XmlIgnore, JsonIgnore]
         public Type DataType { get; set; }
@@ -109,17 +113,17 @@ namespace DataWF.Data
             {
                 foreach (var culture in Locale.Instance.Cultures)
                 {
-                    GenerateCultureColumn(Table.Table, ColumnName, culture);
+                    GenerateColumn(Table.Table, ColumnName, culture);
                 }
             }
             else
             {
-                GenerateCultureColumn(Table.Table, GroupName, null);
+                GenerateColumn(Table.Table, GroupName, null);
             }
             return Column;
         }
 
-        public virtual void GenerateCultureColumn(DBTable table, string groupName, CultureInfo culture)
+        public virtual void GenerateColumn(DBTable table, string groupName, CultureInfo culture)
         {
             if (!string.IsNullOrEmpty(groupName) && table.ColumnGroups[groupName] == null)
             {
@@ -134,7 +138,7 @@ namespace DataWF.Data
             }
             if (Column.DisplayName.Equals(Column.Name, StringComparison.Ordinal))
             {
-                Column.DisplayName = culture == null ? Property : $"{Property} {culture.TwoLetterISOLanguageName.ToUpperInvariant()}";
+                Column.DisplayName = culture == null ? Property.Name : $"{Property.Name} {culture.TwoLetterISOLanguageName.ToUpperInvariant()}";
             }
             if (!(Column is DBVirtualColumn))
             {
@@ -144,10 +148,14 @@ namespace DataWF.Data
                 Column.ColumnType = ColumnType;
             }
             Column.Keys = Keys;
-            Column.Property = culture == null ? Property : $"{Property}{culture.TwoLetterISOLanguageName.ToUpper()}";
+            Column.Property = culture == null ? Property.Name : $"{Property.Name}{culture.TwoLetterISOLanguageName.ToUpper()}";
+            Column.PropertyInvoker = culture == null //TODO Check if property with culture defined in class
+                ? EmitInvoker.Initialize(Property, false) : Column;
             Column.DefaultValue = Default;
             Column.Culture = culture;
             Column.GroupName = groupName;
+            Column.ReferenceProperty = ReferenceProperty == null ? null : EmitInvoker.Initialize(ReferenceProperty, false);
+
 
             if (!table.Columns.Contains(Column.Name))
             {

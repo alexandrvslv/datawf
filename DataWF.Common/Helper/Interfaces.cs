@@ -141,7 +141,7 @@ namespace DataWF.Common
     }
 
 
-    public interface IStatus
+    public interface IStatusable
     {
         DBStatus Status { get; set; }
     }
@@ -189,6 +189,8 @@ namespace DataWF.Common
         bool Expand { get; set; }
 
         bool IsCompaund { get; }
+
+        IEnumerable<IGroup> GetGroups();
     }
 
     public interface IReadOnly

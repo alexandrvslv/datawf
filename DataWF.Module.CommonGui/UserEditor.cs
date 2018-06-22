@@ -183,7 +183,7 @@ namespace DataWF.Module.CommonGui
 
         public bool Closing()
         {
-            throw new NotImplementedException();
+            return true;
         }
 
         public void Activating()

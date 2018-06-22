@@ -131,6 +131,11 @@ namespace DataWF.Data
             get { return Store?.SelectByParent(this); }
         }
 
+        public IEnumerable<IGroup> GetGroups()
+        {
+            return Childs;
+        }
+
         public DBProcParameterList Parameters { get; set; }
 
         public DateTime Stamp { get; set; } = DateTime.Now;

@@ -11,7 +11,6 @@ namespace DataWF.Common
         {
             GetAction = getAction;
             SetAction = setAction;
-            DataType = typeof(V);
             Name = name;
         }
 
@@ -19,7 +18,7 @@ namespace DataWF.Common
 
         public string Name { get; set; }
 
-        public Type DataType { get; set; }
+        public Type DataType { get { return typeof(V); } }
 
         public Type TargetType { get { return typeof(T); } }
 

@@ -19,6 +19,7 @@
 */
 using Newtonsoft.Json;
 using System;
+using System.Reflection;
 using System.Xml.Serialization;
 
 namespace DataWF.Data
@@ -49,7 +50,6 @@ namespace DataWF.Data
             set { name = value; }
         }
 
-
         public string ColumnProperty { get; set; }
 
         [XmlIgnore, JsonIgnore]
@@ -69,7 +69,7 @@ namespace DataWF.Data
             internal set { cacheKey = value; }
         }
 
-        public string Property { get; set; }
+        public PropertyInfo Property { get; set; }
 
         public DBForeignKey Generate()
         {
@@ -103,7 +103,7 @@ namespace DataWF.Data
                 };
                 Table.Table.Foreigns.Add(ForeignKey);
             }
-            ForeignKey.Property = Property;
+            ForeignKey.Property = Property.Name;
 
             return ForeignKey;
         }

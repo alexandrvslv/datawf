@@ -72,23 +72,24 @@ namespace DataWF.Data
             base.Initialize(type);
         }
 
-        public override ColumnAttribute InitializeColumn(PropertyInfo property)
+        public override bool InitializeColumn(PropertyInfo property, out ColumnAttribute column)
         {
-            var column = base.InitializeColumn(property);
-            if (column != null && !(column is VirtualColumnAttribute))
+            if (base.InitializeColumn(property, out column))
             {
-                column = new VirtualColumnAttribute(column.ColumnName)
-                {
-                    Table = column.Table,
-                    Property = column.Property,
-                    Order = column.Order,
-                    Keys = column.Keys,
-                    DataType = column.DataType,
-                    Default = column.Default,
-                    GroupName = column.GroupName
-                };
+                if (!(column is VirtualColumnAttribute))
+                    column = new VirtualColumnAttribute(column.ColumnName)
+                    {
+                        Table = column.Table,
+                        Property = column.Property,
+                        Order = column.Order,
+                        Keys = column.Keys,
+                        DataType = column.DataType,
+                        Default = column.Default,
+                        GroupName = column.GroupName
+                    };
+                return true;
             }
-            return column;
+            return false;
         }
     }
 }
