@@ -458,7 +458,7 @@ namespace DataWF.Data
             LoadItem(id);
         }
 
-        public T LoadItem(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable cols = null, IDBTableView synch = null)
+        public T LoadItem(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable cols = null)
         {
             string idName = System.ParameterPrefix + PrimaryKey.Name;
             var command = System.CreateCommand(Schema.Connection, CreateQuery(string.Format("where {0}={1}", PrimaryKey.Name, idName), cols));
@@ -466,12 +466,17 @@ namespace DataWF.Data
             return Load(command).FirstOrDefault();
         }
 
-        public override DBItem LoadItemById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable cols = null, IDBTableView synch = null)
+        public override DBItem LoadItemById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable cols = null)
         {
-            return LoadById(id, param, cols, synch);
+            return LoadById(id, param, cols);
         }
 
-        public T LoadById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable cols = null, IDBTableView synch = null)
+        public T1 LoadById<T1>(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable cols = null) where T1 : T
+        {
+            return (T1)LoadById(id, param, cols);
+        }
+
+        public T LoadById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable cols = null)
         {
             object val = PrimaryKey?.ParseValue(id) ?? id;
 
@@ -482,7 +487,7 @@ namespace DataWF.Data
 
             if (row == null && (param & DBLoadParam.Load) == DBLoadParam.Load)
             {
-                row = LoadItem(val, param, cols, synch);
+                row = LoadItem(val, param, cols);
             }
             return row;
         }

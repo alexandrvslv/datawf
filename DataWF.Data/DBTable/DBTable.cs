@@ -627,7 +627,7 @@ namespace DataWF.Data
 
         public abstract DBItem LoadItemByCode(string code, DBColumn column, DBLoadParam param);
 
-        public abstract DBItem LoadItemById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable cols = null, IDBTableView synch = null);
+        public abstract DBItem LoadItemById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable cols = null);
 
         public abstract void ReloadItem(object id);
 

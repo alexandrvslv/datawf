@@ -36,7 +36,7 @@ namespace DataWF.Data
 {
 
     [DataContract]
-    [JsonConverter(typeof(DBItemJsonConverter))]
+    //[JsonConverter(typeof(DBItemJsonConverter))]
     public class DBItem : ICloneable, IComparable<DBItem>, IDisposable, IAccessable, ICheck, INotifyPropertyChanged, IEditable, IStatusable, IDBTableContent
     {
         public static readonly DBItem EmptyItem = new DBItem() { cacheToString = "Loading" };
@@ -1058,7 +1058,7 @@ namespace DataWF.Data
                 GetHashCode().CompareTo(obj.GetHashCode());
         }
 
-        public string DMLPatch()
+        public string FormatPatch()
         {
             var rez = new StringBuilder();
             rez.AppendLine(string.Format("if exists(select * from {0} where {1}={2})", Table.Name, Table.PrimaryKey.Name, PrimaryId));

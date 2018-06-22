@@ -221,15 +221,11 @@ namespace DataWF.Data
             reference = property.GetCustomAttribute<ReferenceAttribute>();
             if (reference != null)
             {
-                try
-                {
-                    reference.Table = this;
-                    reference.Property = property;
-                    reference.ReferenceType = property.PropertyType;
-                    reference.Column.Keys |= DBColumnKeys.Reference;
-                    reference.Column.ReferenceProperty = property;
-                }
-                catch (Exception ex) { }
+                reference.Table = this;
+                reference.Property = property;
+                reference.ReferenceType = property.PropertyType;
+                reference.Column.Keys |= DBColumnKeys.Reference;
+                reference.Column.ReferenceProperty = property;
                 return true;
             }
             return false;

@@ -13,43 +13,20 @@ using System.Reflection.Emit;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DataWF.Web.Common
 {
 
     public class DBControllerGenerator
     {
-        [Obsolete()]
-        public static void Generate(DBSchema schema)
-        {
-            var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(schema.Name), AssemblyBuilderAccess.Run);
-            var moduleBuilder = assemblyBuilder.DefineDynamicModule("MainModule");
-            var typeAttributes = TypeAttributes.Public |
-                    TypeAttributes.Class |
-                    TypeAttributes.AutoClass |
-                    TypeAttributes.AnsiClass |
-                    TypeAttributes.BeforeFieldInit |
-                    TypeAttributes.AutoLayout;
-            foreach (var table in schema.Tables)
-            {
-                var itemType = table.GetType().GetGenericArguments().FirstOrDefault();
-                var tableAttribute = DBTable.GetTableAttribute(itemType);
-                var controllerType = typeof(DBController<>).MakeGenericType(itemType);
-                var typeBuilder = moduleBuilder.DefineType(tableAttribute.ItemType.Name + "Controller", typeAttributes, controllerType);
-                var apiControllerAttribute = new CustomAttributeBuilder(typeof(ApiControllerAttribute).GetConstructor(Type.EmptyTypes), new object[] { });
-                typeBuilder.SetCustomAttribute(apiControllerAttribute);
-                var routeAttribute = new CustomAttributeBuilder(typeof(RouteAttribute).GetConstructor(new[] { typeof(string) }), new object[] { "api/[controller]" });
-                typeBuilder.SetCustomAttribute(routeAttribute);
+        private Dictionary<string, MetadataReference> references;
+        private Dictionary<string, UsingDirectiveSyntax> usings;
+        private List<MethodParametrInfo> parametersInfo;
 
-                var constructor = typeBuilder.DefineDefaultConstructor(MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName);
-            }
-        }
-
-        public static Assembly GenerateRoslyn(DBSchema schema)
+        public DBControllerGenerator()
         {
-            var name = schema.Name.ToInitcap('_');
-            var files = new List<SyntaxTree>();
-            var references = new Dictionary<string, MetadataReference>() {
+            references = new Dictionary<string, MetadataReference>() {
                 {"netstandard", MetadataReference.CreateFromFile(Assembly.Load("netstandard, Version=2.0.0.0").Location) },
                 {"System", MetadataReference.CreateFromFile(typeof(Object).Assembly.Location) },
                 {"System.Runtime", MetadataReference.CreateFromFile(Assembly.Load("System.Runtime, Version=0.0.0.0").Location) },
@@ -61,18 +38,26 @@ namespace DataWF.Web.Common
                 {"DataWF.Data", MetadataReference.CreateFromFile(typeof(DBTable).Assembly.Location) },
                 {"DataWF.Web.Common", MetadataReference.CreateFromFile(typeof(DBController<>).Assembly.Location) }
             };
-            var tree = (SyntaxTree)null;
-            var fileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DBController.cs");
-            using (var file = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
-            {
-                var sourceText = SourceText.From(file, Encoding.UTF8);
-                tree = CSharpSyntaxTree.ParseText(sourceText);
-            }
-            var node = ((CompilationUnitSyntax)tree.GetRoot()).AddUsings(CreateUsingDirective("DataWF.Web.Common"));
-            var namespaceNode = node.DescendantNodes().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
-            var classNode = node.DescendantNodes().OfType<ClassDeclarationSyntax>().FirstOrDefault();
-            string baseClassName = classNode.Identifier.Text;
+            //foreach (var module in Helper.ModuleInitializer)
+            //{
+            //    var assembly = module.GetType().Assembly;
+            //    references.Add(assembly.GetName().Name, MetadataReference.CreateFromFile(assembly.Location));
+            //}
+            usings = new Dictionary<string, UsingDirectiveSyntax>(StringComparer.Ordinal) {
+                { "DataWF.Common", CreateUsingDirective("DataWF.Common") },
+                { "DataWF.Data", CreateUsingDirective("DataWF.Data") },
+                { "DataWF.Web.Common", CreateUsingDirective("DataWF.Web.Common") },
+                { "Microsoft.AspNetCore.Mvc", CreateUsingDirective("Microsoft.AspNetCore.Mvc") },
+                { "System", CreateUsingDirective("System") },
+                { "System.Collections.Generic", CreateUsingDirective("System.Collections.Generic") }
+            };
+        }
 
+        //https://carlos.mendible.com/2017/03/02/create-a-class-with-net-core-and-roslyn/
+        public Assembly GenerateRoslyn(DBSchema schema)
+        {
+            var name = schema.Name.ToInitcap('_');
+            var files = new List<SyntaxTree>();
 
             foreach (var table in schema.Tables)
             {
@@ -80,47 +65,24 @@ namespace DataWF.Web.Common
                 var tableAttribute = DBTable.GetTableAttribute(itemType);
                 var controllerType = typeof(DBController<>).MakeGenericType(itemType);
                 string controllerClassName = $"{tableAttribute.ItemType.Name}Controller";
+                var @class = SyntaxFactory.ClassDeclaration(
+                    attributeLists: SyntaxFactory.List<AttributeListSyntax>(GetCalssAttributeList()),
+                    modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
+                    identifier: SyntaxFactory.Identifier(controllerClassName),
+                    typeParameterList: null,
+                    baseList: SyntaxFactory.BaseList(SyntaxFactory.SingletonSeparatedList<BaseTypeSyntax>(
+                        SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"DBController<{itemType.Name}>")))),
+                    constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
+                    members: SyntaxFactory.List<MemberDeclarationSyntax>(GetClassMemebers(table))
+                    );
 
+                var @namespace = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName($"DataWF.Web.{name}"))
+                    .AddMembers(@class);
+                var @unit = SyntaxFactory.CompilationUnit()
+                                        .AddUsings(usings.Values.ToArray())
+                                        .AddMembers(@namespace).NormalizeWhitespace();
 
-                var builder = new StringBuilder($@"namespace DataWF.Web.{name} 
-{{
-[Route(""api/[controller]"")]
-[ApiController]
-public class {controllerClassName} : {baseClassName}<{itemType.Name}>
-{{
-public {controllerClassName}() {{
-// default ctor
-}}
-");
-                foreach (var method in itemType.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
-                {
-                    if (method.GetCustomAttribute<ControllerMethodAttribute>() != null)
-                    {
-                        GetMethod(builder, method, table);
-                    }
-                }
-                builder.Append(@"}
-}");
-                var newImplementation = CSharpSyntaxTree.ParseText(builder.ToString()).GetRoot().DescendantNodes().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
-
-                //foreach (var method in itemType.GetMethods(BindingFlags.Public | BindingFlags.Instance))
-                //{
-                //    if (method.GetCustomAttribute<ControllerMethodAttribute>() != null)
-                //    {
-                //        var methodsyntax = GetMethod(method);
-                //    }
-                //}
-
-                var newTree = CSharpSyntaxTree.Create(node
-                    .ReplaceNode(namespaceNode, newImplementation)
-                    .AddUsings(CreateUsingDirective(itemType.Namespace)).NormalizeWhitespace());
-
-                //var newSourceText = newTree.GetText();
-                //var newFileName = $"{controllerClassName}.cs";
-                //using (var newFile = new FileStream(newFileName, FileMode.Create, FileAccess.Write))
-                //using (var writer = new StreamWriter(newFile))
-                //    newSourceText.Write(writer);
-                files.Add(newTree);
+                files.Add(@unit.SyntaxTree);
                 var assemblyName = itemType.Assembly.GetName().Name;
                 if (!references.ContainsKey(assemblyName))
                     references[assemblyName] = MetadataReference.CreateFromFile(itemType.Assembly.Location);
@@ -151,46 +113,188 @@ public {controllerClassName}() {{
             return null;
         }
 
-        private class ParametrDBInfo
+        public IEnumerable<MemberDeclarationSyntax> GetClassMemebers(DBTable table)
         {
-            private ParameterInfo info;
-
-            public Type Type { get; private set; }
-            public DBTable Table { get; private set; }
-            public string ValueName { get; private set; }
-            public ParameterInfo Info
+            foreach (var typeInfo in table.ItemTypes.Values)
             {
-                get => info;
-                set
+                AddUsing(typeInfo.Type);
+                foreach (var method in typeInfo.Type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
                 {
-                    info = value;
-                    Type = info.ParameterType;
-                    ValueName = info.Name;
-                    if (TypeHelper.IsBaseType(Type, typeof(DBItem)))
+                    if (method.GetCustomAttribute<ControllerMethodAttribute>() != null
+                        && (!method.IsVirtual || method.GetBaseDefinition() == null))
                     {
-                        Table = DBTable.GetTable(Type, null, false, true);
-                        if (Table != null && Table.PrimaryKey != null)
-                        {
-                            Type = Table.PrimaryKey.DataType;
-                            ValueName += "Value";
-                        }
+                        yield return GetMethod(method, table);
                     }
                 }
             }
         }
 
-        private static void GetMethod(StringBuilder builder, MethodInfo method, DBTable table)
+
+        private IEnumerable<AttributeListSyntax> GetCalssAttributeList()
         {
+            var attributeArgument = SyntaxFactory.AttributeArgument(SyntaxFactory.LiteralExpression(
+                SyntaxKind.StringLiteralExpression,
+                SyntaxFactory.Literal("api/[controller]")));
+            yield return SyntaxFactory.AttributeList(
+                         SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(
+                         SyntaxFactory.Attribute(
+                         SyntaxFactory.IdentifierName("Route")).WithArgumentList(
+                             SyntaxFactory.AttributeArgumentList(SyntaxFactory.SingletonSeparatedList(attributeArgument)))));
+            yield return SyntaxFactory.AttributeList(
+                         SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(
+                         SyntaxFactory.Attribute(
+                         SyntaxFactory.IdentifierName("ApiController"))));
+        }
+
+        //https://stackoverflow.com/questions/37710714/roslyn-add-new-method-to-an-existing-class
+        private MethodDeclarationSyntax GetMethod(MethodInfo method, DBTable table)
+        {
+            AddUsing(method.DeclaringType);
+            AddUsing(method.ReturnType);
+            var returning = method.ReturnType == typeof(void) ? "void" : $"ActionResult<{TypeHelper.FormatCode(method.ReturnType)}>";
+
+            return SyntaxFactory.MethodDeclaration(attributeLists: SyntaxFactory.List<AttributeListSyntax>(GetMethodAttributeList(method)),
+                          modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
+                          returnType: returning == "void"
+                          ? SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword))
+                          : SyntaxFactory.ParseTypeName(returning),
+                          explicitInterfaceSpecifier: null,
+                          identifier: SyntaxFactory.Identifier(method.Name),
+                          typeParameterList: null,
+                          parameterList: SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(GetParametersList(method))),
+                          constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
+                          body: SyntaxFactory.Block(GetMethodBody(method)),
+                          semicolonToken: SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+            // Annotate that this node should be formatted
+            //.WithAdditionalAnnotations(Formatter.Annotation);
+        }
+
+        private IEnumerable<StatementSyntax> GetMethodBody(MethodInfo method)
+        {
+            var returning = method.ReturnType == typeof(void) ? "void" : $"ActionResult<{TypeHelper.FormatCode(method.ReturnType)}>";
+            if (!method.IsStatic)
+            {
+                yield return SyntaxFactory.ParseStatement($"var idValue = table.LoadById<{TypeHelper.FormatCode(method.DeclaringType)}>(id);");
+
+                foreach (var parameter in parametersInfo)
+                {
+                    if (parameter.Table != null)
+                    {
+                        yield return SyntaxFactory.ParseStatement($"var {parameter.ValueName} = DBItem.GetTable<{TypeHelper.FormatCode(parameter.Info.ParameterType)}>().LoadById({parameter.Info.Name});");
+                    }
+                }
+                var builder = new StringBuilder();
+                if (method.ReturnType != typeof(void))
+                {
+                    builder.Append($"return new {returning}(");
+                }
+                builder.Append($" idValue.{method.Name}(");
+
+                if (parametersInfo.Count > 0)
+                {
+                    foreach (var parameter in parametersInfo)
+                    {
+                        builder.Append($"{parameter.ValueName}, ");
+                    }
+                    builder.Length -= 2;
+                }
+                if (method.ReturnType != typeof(void))
+                    builder.Append(")");
+                builder.AppendLine(");");
+
+                yield return SyntaxFactory.ParseStatement(builder.ToString());
+
+            }
+        }
+
+        private IEnumerable<AttributeListSyntax> GetMethodAttributeList(MethodInfo method)
+        {
+            var parameters = method.Name + (method.IsStatic ? "" : "/{id:int}");
+            foreach (var parameter in method.GetParameters())
+            {
+                parameters += $"/{{{parameter.Name}}}";
+            }
+            var attributeArgument = SyntaxFactory.AttributeArgument(
+                SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(parameters)));
+            yield return SyntaxFactory.AttributeList(
+                         SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(
+                         SyntaxFactory.Attribute(
+                         SyntaxFactory.IdentifierName("Route")).WithArgumentList(
+                             SyntaxFactory.AttributeArgumentList(SyntaxFactory.SingletonSeparatedList(attributeArgument)))));
+            yield return SyntaxFactory.AttributeList(
+                         SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(
+                         SyntaxFactory.Attribute(
+                         SyntaxFactory.IdentifierName("HttpGet"))));
+        }
+
+        private IEnumerable<ParameterSyntax> GetParametersList(MethodInfo method)
+        {
+            yield return SyntaxFactory.Parameter(attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
+                                                         modifiers: SyntaxFactory.TokenList(),
+                                                         type: SyntaxFactory.ParseTypeName(typeof(int).Name),
+                                                         identifier: SyntaxFactory.Identifier("id"),
+                                                         @default: null);
+            parametersInfo = new List<MethodParametrInfo>();
+
+            foreach (var parameter in method.GetParameters())
+            {
+                var methodParameter = new MethodParametrInfo { Info = parameter };
+                parametersInfo.Add(methodParameter);
+                AddUsing(methodParameter.Info.ParameterType);
+                yield return SyntaxFactory.Parameter(attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
+                                                         modifiers: SyntaxFactory.TokenList(),
+                                                         type: SyntaxFactory.ParseTypeName(methodParameter.Type.Name),
+                                                         identifier: SyntaxFactory.Identifier(methodParameter.Info.Name),
+                                                         @default: null);
+            }
+        }
+
+        private void AddUsing(Type type)
+        {
+            AddUsing(type.Namespace);
+        }
+
+        private void AddUsing(string usingName)
+        {
+            if (!usings.TryGetValue(usingName, out var syntax))
+            {
+                usings.Add(usingName, CreateUsingDirective(usingName));
+            }
+        }
+
+        //https://stackoverflow.com/a/36845547
+        private UsingDirectiveSyntax CreateUsingDirective(string usingName)
+        {
+            NameSyntax qualifiedName = null;
+
+            foreach (var identifier in usingName.Split('.'))
+            {
+                var name = SyntaxFactory.IdentifierName(identifier);
+
+                if (qualifiedName != null)
+                {
+                    qualifiedName = SyntaxFactory.QualifiedName(qualifiedName, name);
+                }
+                else
+                {
+                    qualifiedName = name;
+                }
+            }
+
+            return SyntaxFactory.UsingDirective(qualifiedName);
+        }
+
+        private void GetMethod(StringBuilder builder, MethodInfo method, DBTable table)
+        {
+            AddUsing(method.ReturnType);
             var mparams = method.GetParameters();
             var parameters = method.IsStatic ? "" : "/{id:int}";
             var returning = method.ReturnType == typeof(void) ? "void" : $"ActionResult<{TypeHelper.FormatCode(method.ReturnType)}>";
-
-            var parametersInfo = new List<ParametrDBInfo>();
-
+            parametersInfo = new List<MethodParametrInfo>();
 
             foreach (var parameter in mparams)
             {
-                parametersInfo.Add(new ParametrDBInfo { Info = parameter });
+                parametersInfo.Add(new MethodParametrInfo { Info = parameter });
                 parameters += $"/{{{parameter.Name}}}";
             }
             //var methodsyntax = GetMethod(method);
@@ -204,19 +308,24 @@ public {controllerClassName}() {{
             {
                 foreach (var parameter in parametersInfo)
                 {
-                    builder.Append($"{parameter.Type.FullName} {parameter.Info.Name}, ");
+                    AddUsing(parameter.Type);
+                    builder.Append($"{TypeHelper.FormatCode(parameter.Type)} {parameter.Info.Name}, ");
                 }
                 builder.Length -= 2;
             }
             builder.AppendLine(") {");
             if (!method.IsStatic)
             {
-                builder.AppendLine("var idValue = table.LoadById(id);");
+                AddUsing(method.DeclaringType);
+                builder.AppendLine($"var idValue = table.LoadById<{TypeHelper.FormatCode(method.DeclaringType)}>(id);");
 
                 foreach (var parameter in parametersInfo)
                 {
                     if (parameter.Table != null)
-                        builder.AppendLine($"var {parameter.ValueName} = DBItem.GetTable<{parameter.Info.ParameterType.FullName}>().LoadById({parameter.Info.Name});");
+                    {
+                        AddUsing(parameter.Info.ParameterType);
+                        builder.AppendLine($"var {parameter.ValueName} = DBItem.GetTable<{TypeHelper.FormatCode(parameter.Info.ParameterType)}>().LoadById({parameter.Info.Name});");
+                    }
                 }
                 if (method.ReturnType != typeof(void))
                     builder.Append($@"return new {returning}(");
@@ -237,74 +346,34 @@ public {controllerClassName}() {{
             }
             builder.AppendLine("}");
         }
+    }
 
-        //https://stackoverflow.com/questions/37710714/roslyn-add-new-method-to-an-existing-class
-        private static MethodDeclarationSyntax GetMethod(MethodInfo method)
-        {
-            return SyntaxFactory.MethodDeclaration(attributeLists: SyntaxFactory.List<AttributeListSyntax>(GetAttributeList(method)),
-                          modifiers: SyntaxFactory.TokenList(),
-                          returnType: SyntaxFactory.ParseTypeName($"ActionResult<{method.ReturnType.FullName}>"),
-                          explicitInterfaceSpecifier: null,
-                          identifier: SyntaxFactory.Identifier(method.Name),
-                          typeParameterList: null,
-                          parameterList: SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(GetParametersList(method))),
-                          constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
-                          body: null,
-                          semicolonToken: SyntaxFactory.Token(SyntaxKind.SemicolonToken));
-            // Annotate that this node should be formatted
-            //.WithAdditionalAnnotations(Formatter.Annotation);
-        }
+    public class MethodParametrInfo
+    {
+        private ParameterInfo info;
 
-        private static IEnumerable<AttributeListSyntax> GetAttributeList(MethodInfo method)
+        public Type Type { get; private set; }
+        public DBTable Table { get; private set; }
+        public string ValueName { get; private set; }
+        public ParameterInfo Info
         {
-            var arg = string.Empty;
-            var attributeArgument = SyntaxFactory.AttributeArgument(SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(arg)));
-            yield return SyntaxFactory.AttributeList(
-                         SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(
-                         SyntaxFactory.Attribute(
-                         SyntaxFactory.IdentifierName(nameof(HttpGetAttribute))).WithArgumentList(
-                             SyntaxFactory.AttributeArgumentList(SyntaxFactory.SingletonSeparatedList(attributeArgument)))
-                             ));
-        }
-
-        private static IEnumerable<ParameterSyntax> GetParametersList(MethodInfo method)
-        {
-            yield return SyntaxFactory.Parameter(attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
-                                                         modifiers: SyntaxFactory.TokenList(),
-                                                         type: SyntaxFactory.ParseTypeName(typeof(int).FullName),
-                                                         identifier: SyntaxFactory.Identifier("id"),
-                                                         @default: null);
-            var parameters = method.GetParameters();
-            for (int i = 0; i < parameters.Length; i++)
+            get => info;
+            set
             {
-                yield return SyntaxFactory.Parameter(attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
-                                                         modifiers: SyntaxFactory.TokenList(),
-                                                         type: SyntaxFactory.ParseTypeName(parameters[i].ParameterType.FullName),
-                                                         identifier: SyntaxFactory.Identifier(parameters[i].Name),
-                                                         @default: null);
-            }
-        }
-
-        //https://stackoverflow.com/a/36845547
-        private static UsingDirectiveSyntax CreateUsingDirective(string usingName)
-        {
-            NameSyntax qualifiedName = null;
-
-            foreach (var identifier in usingName.Split('.'))
-            {
-                var name = SyntaxFactory.IdentifierName(identifier);
-
-                if (qualifiedName != null)
+                info = value;
+                Type = info.ParameterType;
+                ValueName = info.Name;
+                if (TypeHelper.IsBaseType(Type, typeof(DBItem)))
                 {
-                    qualifiedName = SyntaxFactory.QualifiedName(qualifiedName, name);
-                }
-                else
-                {
-                    qualifiedName = name;
+                    Table = DBTable.GetTable(Type, null, false, true);
+                    if (Table != null && Table.PrimaryKey != null)
+                    {
+                        Type = Table.PrimaryKey.DataType;
+                        ValueName += "Value";
+                    }
                 }
             }
-
-            return SyntaxFactory.UsingDirective(qualifiedName);
         }
     }
+
 }

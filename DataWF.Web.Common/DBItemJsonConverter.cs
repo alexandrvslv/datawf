@@ -46,12 +46,16 @@ namespace DataWF.Data
             }
             writer.WriteStartObject();
             var table = item.Table;
+            var valueType = value.GetType();
             foreach (var column in table.Columns)
             {
                 if (!IsSerializeableColumn(column))
                     continue;
-                writer.WritePropertyName(column.Property);
-                writer.WriteValue(column.PropertyInvoker.Get(item));
+                if (TypeHelper.IsBaseType(valueType, column.PropertyInvoker.TargetType))
+                {
+                    writer.WritePropertyName(column.Property);
+                    writer.WriteValue(column.PropertyInvoker.Get(item));
+                }
             }
             writer.WriteEndObject();
         }
@@ -80,7 +84,7 @@ namespace DataWF.Data
                     column = table.ParseProperty((string)reader.Value) ?? table.ParseColumn((string)reader.Value);
                 }
                 else if (reader.TokenType == JsonToken.String
-                    || reader.TokenType == JsonToken.Boolean 
+                    || reader.TokenType == JsonToken.Boolean
                     || reader.TokenType == JsonToken.Bytes
                     || reader.TokenType == JsonToken.Date
                     || reader.TokenType == JsonToken.Float

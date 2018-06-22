@@ -1,14 +1,8 @@
-﻿using DataWF.Data;
-using DataWF.Data.Gui;
-using DataWF.Gui;
+﻿using DataWF.Gui;
 using DataWF.Common;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using Xwt.Drawing;
-using System.Linq;
 using Xwt;
-using System.Collections;
 using System.Threading.Tasks;
 
 namespace DataWF.Data.Gui
@@ -153,12 +147,6 @@ namespace DataWF.Data.Gui
             }
 
             base.Dispose(disposing);
-        }
-
-        protected void DropDown_Closing(object sender, EventArgs e)
-        {
-            //if (e.CloseReason == ToolStripDropDownCloseReason.ItemClicked)
-            //e.Cancel = true;
         }
 
         protected void ToolModeClick(object sender, ToolItemEventArgs e)

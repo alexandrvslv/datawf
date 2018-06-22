@@ -26,7 +26,7 @@ using DataWF.Common;
 
 namespace DataWF.Data
 {
-    public partial class DBLogItem : DBItem
+    public class DBLogItem : DBItem
     {
         private DBItem baseItem = DBItem.EmptyItem;
 

@@ -486,5 +486,16 @@ namespace DataWF.Data
                 tableAttribute.Generate(this);
             }
         }
+
+        public string GeneretePatch(IEnumerable<DBItem> items)
+        {
+            var rez = new StringBuilder();
+
+            foreach (var item in items)
+            {
+                rez.Append(((DBItem)item).FormatPatch());
+            }
+            return rez.ToString();
+        }
     }
 }

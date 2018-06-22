@@ -482,13 +482,13 @@ namespace DataWF.Module.CommonGui
                     var node = (TableItemNode)s.Item;
                     if (node.Item is DBItem)
                     {
-                        rez.Append(((DBItem)node.Item).DMLPatch());
+                        rez.Append(((DBItem)node.Item).FormatPatch());
                     }
                     else if (node.Item is IEnumerable)
                     {
                         foreach (DBItem item in (IEnumerable)node.Item)
                         {
-                            rez.Append(item.DMLPatch());
+                            rez.Append(item.FormatPatch());
                         }
                     }
                 }

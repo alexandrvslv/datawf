@@ -560,7 +560,7 @@ namespace DataWF.Common
                 (mInfo.MemberType == MemberTypes.Field && ((FieldInfo)mInfo).IsStatic));
         }
 
-        public static string FormatCode(Type type, bool nameSpace = true)
+        public static string FormatCode(Type type, bool nameSpace = false)
         {
             var builder = new StringBuilder();
 

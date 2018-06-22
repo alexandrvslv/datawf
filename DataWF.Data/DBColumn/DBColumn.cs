@@ -833,10 +833,28 @@ namespace DataWF.Data
                 buf = null;
             else if (DataType == value.GetType())
                 buf = value;
-            else if (value is DBItem)
-                buf = ((DBItem)value).PrimaryId;
-            //else if (column.Pull.ItemType.IsG )
-            //buf = ((DBItem)value).PrimaryId;
+            else if (value is DBItem item)
+                buf = item.PrimaryId;
+            else if (value is string text && DataType != typeof(string))
+                buf = ParseValue(text);
+            else if (value is long longValue)
+            {
+                if (DataType == typeof(int))
+                    buf = (int)longValue;
+                else if (DataType == typeof(short))
+                    buf = (short)longValue;
+                else if (DataType == typeof(byte))
+                    buf = (byte)longValue;
+                else if (DataType.IsEnum)
+                    buf = (int)longValue;
+            }
+            else if (value is decimal mValue)
+            {
+                if (DataType == typeof(double))
+                    buf = (double)mValue;
+                if (DataType == typeof(float))
+                    buf = (float)mValue;
+            }
             else
                 buf = ParseValue(value.ToString());
 
