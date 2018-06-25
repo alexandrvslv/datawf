@@ -84,7 +84,7 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore]
-        public PropertyInfo Property { get; internal set; }
+        public PropertyInfo Property { get; set; }
 
         [XmlIgnore, JsonIgnore]
         public PropertyInfo ReferenceProperty { get; internal set; }

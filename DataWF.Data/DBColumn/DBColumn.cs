@@ -637,6 +637,11 @@ namespace DataWF.Data
             get { return (Keys & DBColumnKeys.Notnull) == DBColumnKeys.Notnull; }
         }
 
+        [Browsable(false)]
+        public bool IsSystem
+        {
+            get { return (Keys & DBColumnKeys.System) == DBColumnKeys.System; }
+        }
 
         #region IComparable Members
 

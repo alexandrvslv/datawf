@@ -55,7 +55,14 @@ namespace DataWF.Web.Common
                 if (TypeHelper.IsBaseType(valueType, column.PropertyInvoker.TargetType))
                 {
                     writer.WritePropertyName(column.Property);
-                    writer.WriteValue(column.PropertyInvoker.Get(item));
+                    if (column.DataType.IsEnum)
+                    {
+                        writer.WriteValue(column.PropertyInvoker.Get(item)?.ToString());
+                    }
+                    else
+                    {
+                        writer.WriteValue(column.PropertyInvoker.Get(item));
+                    }
                 }
             }
             writer.WriteEndObject();

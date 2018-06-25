@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
-using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
+//using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 using System;
 using System.IO;
 using System.Linq;
@@ -66,14 +66,14 @@ namespace DataWF.Web.Common
                 var controllerType = typeof(DBController<>).MakeGenericType(itemType);
                 string controllerClassName = $"{tableAttribute.ItemType.Name}Controller";
                 var @class = SyntaxFactory.ClassDeclaration(
-                    attributeLists: SyntaxFactory.List<AttributeListSyntax>(GetCalssAttributeList()),
+                    attributeLists: SyntaxFactory.List<AttributeListSyntax>(GetControllerAttributeList()),
                     modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
                     identifier: SyntaxFactory.Identifier(controllerClassName),
                     typeParameterList: null,
                     baseList: SyntaxFactory.BaseList(SyntaxFactory.SingletonSeparatedList<BaseTypeSyntax>(
                         SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"DBController<{itemType.Name}>")))),
                     constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
-                    members: SyntaxFactory.List<MemberDeclarationSyntax>(GetClassMemebers(table))
+                    members: SyntaxFactory.List<MemberDeclarationSyntax>(GetControllerMemebers(table))
                     );
 
                 var @namespace = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName($"DataWF.Web.{name}"))
@@ -113,7 +113,7 @@ namespace DataWF.Web.Common
             return null;
         }
 
-        public IEnumerable<MemberDeclarationSyntax> GetClassMemebers(DBTable table)
+        public IEnumerable<MemberDeclarationSyntax> GetControllerMemebers(DBTable table)
         {
             foreach (var typeInfo in table.ItemTypes.Values)
             {
@@ -123,14 +123,14 @@ namespace DataWF.Web.Common
                     if (method.GetCustomAttribute<ControllerMethodAttribute>() != null
                         && (!method.IsVirtual || method.GetBaseDefinition() == null))
                     {
-                        yield return GetMethod(method, table);
+                        yield return GetControllerMethod(method, table);
                     }
                 }
             }
         }
 
 
-        private IEnumerable<AttributeListSyntax> GetCalssAttributeList()
+        private IEnumerable<AttributeListSyntax> GetControllerAttributeList()
         {
             var attributeArgument = SyntaxFactory.AttributeArgument(SyntaxFactory.LiteralExpression(
                 SyntaxKind.StringLiteralExpression,
@@ -147,13 +147,13 @@ namespace DataWF.Web.Common
         }
 
         //https://stackoverflow.com/questions/37710714/roslyn-add-new-method-to-an-existing-class
-        private MethodDeclarationSyntax GetMethod(MethodInfo method, DBTable table)
+        private MethodDeclarationSyntax GetControllerMethod(MethodInfo method, DBTable table)
         {
             AddUsing(method.DeclaringType);
             AddUsing(method.ReturnType);
             var returning = method.ReturnType == typeof(void) ? "void" : $"ActionResult<{TypeHelper.FormatCode(method.ReturnType)}>";
 
-            return SyntaxFactory.MethodDeclaration(attributeLists: SyntaxFactory.List<AttributeListSyntax>(GetMethodAttributeList(method)),
+            return SyntaxFactory.MethodDeclaration(attributeLists: SyntaxFactory.List<AttributeListSyntax>(GetControllerMethodAttributeList(method)),
                           modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
                           returnType: returning == "void"
                           ? SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword))
@@ -161,15 +161,15 @@ namespace DataWF.Web.Common
                           explicitInterfaceSpecifier: null,
                           identifier: SyntaxFactory.Identifier(method.Name),
                           typeParameterList: null,
-                          parameterList: SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(GetParametersList(method))),
+                          parameterList: SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(GetControllerMethodParametersList(method))),
                           constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
-                          body: SyntaxFactory.Block(GetMethodBody(method)),
+                          body: SyntaxFactory.Block(GetControllerMethodBody(method)),
                           semicolonToken: SyntaxFactory.Token(SyntaxKind.SemicolonToken));
             // Annotate that this node should be formatted
             //.WithAdditionalAnnotations(Formatter.Annotation);
         }
 
-        private IEnumerable<StatementSyntax> GetMethodBody(MethodInfo method)
+        private IEnumerable<StatementSyntax> GetControllerMethodBody(MethodInfo method)
         {
             var returning = method.ReturnType == typeof(void) ? "void" : $"ActionResult<{TypeHelper.FormatCode(method.ReturnType)}>";
             if (!method.IsStatic)
@@ -207,7 +207,7 @@ namespace DataWF.Web.Common
             }
         }
 
-        private IEnumerable<AttributeListSyntax> GetMethodAttributeList(MethodInfo method)
+        private IEnumerable<AttributeListSyntax> GetControllerMethodAttributeList(MethodInfo method)
         {
             var parameters = method.Name + (method.IsStatic ? "" : "/{id:int}");
             foreach (var parameter in method.GetParameters())
@@ -227,7 +227,7 @@ namespace DataWF.Web.Common
                          SyntaxFactory.IdentifierName("HttpGet"))));
         }
 
-        private IEnumerable<ParameterSyntax> GetParametersList(MethodInfo method)
+        private IEnumerable<ParameterSyntax> GetControllerMethodParametersList(MethodInfo method)
         {
             yield return SyntaxFactory.Parameter(attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
                                                          modifiers: SyntaxFactory.TokenList(),

@@ -29,7 +29,7 @@ namespace DataWF.Web.Common
 
                     foreach (DBColumn column in table.Columns)
                     {
-                        if (column.Property != null && column.Access.View && (column.Keys & DBColumnKeys.Access) != DBColumnKeys.Access)
+                        if (column.PropertyInvoker != null && column.Access.View && (column.Keys & DBColumnKeys.Access) != DBColumnKeys.Access)
                         {
                             var property = objectType.GetProperty(column.Property);
                             if (property != null)
