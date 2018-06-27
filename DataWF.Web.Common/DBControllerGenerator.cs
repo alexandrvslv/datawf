@@ -15,7 +15,7 @@ using System.Text;
 namespace DataWF.Web.Common
 {
 
-    public class DBControllerGenerator
+    public partial class DBControllerGenerator
     {
         private Dictionary<string, MetadataReference> references;
         private Dictionary<string, UsingDirectiveSyntax> usings;
@@ -41,12 +41,12 @@ namespace DataWF.Web.Common
             //    references.Add(assembly.GetName().Name, MetadataReference.CreateFromFile(assembly.Location));
             //}
             usings = new Dictionary<string, UsingDirectiveSyntax>(StringComparer.Ordinal) {
-                { "DataWF.Common", CreateUsingDirective("DataWF.Common") },
-                { "DataWF.Data", CreateUsingDirective("DataWF.Data") },
-                { "DataWF.Web.Common", CreateUsingDirective("DataWF.Web.Common") },
-                { "Microsoft.AspNetCore.Mvc", CreateUsingDirective("Microsoft.AspNetCore.Mvc") },
-                { "System", CreateUsingDirective("System") },
-                { "System.Collections.Generic", CreateUsingDirective("System.Collections.Generic") }
+                { "DataWF.Common", SyntaxHelper.CreateUsingDirective("DataWF.Common") },
+                { "DataWF.Data", SyntaxHelper.CreateUsingDirective("DataWF.Data") },
+                { "DataWF.Web.Common", SyntaxHelper.CreateUsingDirective("DataWF.Web.Common") },
+                { "Microsoft.AspNetCore.Mvc", SyntaxHelper.CreateUsingDirective("Microsoft.AspNetCore.Mvc") },
+                { "System", SyntaxHelper.CreateUsingDirective("System") },
+                { "System.Collections.Generic", SyntaxHelper.CreateUsingDirective("System.Collections.Generic") }
             };
         }
 
@@ -255,30 +255,8 @@ namespace DataWF.Web.Common
         {
             if (!usings.TryGetValue(usingName, out var syntax))
             {
-                usings.Add(usingName, CreateUsingDirective(usingName));
+                usings.Add(usingName, SyntaxHelper.CreateUsingDirective(usingName));
             }
-        }
-
-        //https://stackoverflow.com/a/36845547
-        private UsingDirectiveSyntax CreateUsingDirective(string usingName)
-        {
-            NameSyntax qualifiedName = null;
-
-            foreach (var identifier in usingName.Split('.'))
-            {
-                var name = SyntaxFactory.IdentifierName(identifier);
-
-                if (qualifiedName != null)
-                {
-                    qualifiedName = SyntaxFactory.QualifiedName(qualifiedName, name);
-                }
-                else
-                {
-                    qualifiedName = name;
-                }
-            }
-
-            return SyntaxFactory.UsingDirective(qualifiedName);
         }
 
         private void GetMethod(StringBuilder builder, MethodInfo method, DBTable table)
