@@ -183,8 +183,7 @@ namespace DataWF.Module.Flow
 
         public void Initialize()
         {
-            DBService.Execute += FlowEnvironment.OnDBServiceExecute;
-            //TODO DBService.RowUpdated += FlowEnvironment.OnDBRowUpdated;
+            //DBService.Execute += FlowEnvironment.OnDBServiceExecute;
 
             FlowEnvironment.Config.LogUpdate = true;
 
@@ -195,8 +194,7 @@ namespace DataWF.Module.Flow
 
         public void Dispose()
         {
-            DBService.Execute -= FlowEnvironment.OnDBServiceExecute;
-            //TODO DBService.RowUpdated -= FlowEnvironment.OnDBRowUpdated;
+            //DBService.Execute -= FlowEnvironment.OnDBServiceExecute;
 
             //DBService.RowStateEdited -= FlowEnvironment.OnDBRowChanged;
             //DBService.RowAdded -= FlowEnvir.OnDBRowChanged;
