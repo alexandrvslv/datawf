@@ -122,6 +122,10 @@ namespace DataWF.Web.Common
                             value = column.ReferenceTable.LoadItemById(value);
                             column.ReferenceProperty.Set(item, value);
                         }
+                        else if (column.PropertyInvoker == null)
+                        {
+                            throw new InvalidOperationException($"Column {column} Property Information not found!");
+                        }
                         else
                         {
                             column.PropertyInvoker.Set(item, value);
