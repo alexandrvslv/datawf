@@ -403,7 +403,7 @@ namespace DataWF.Web.Common
                     SyntaxFactory.Token(SyntaxKind.EqualsToken),
                     SyntaxFactory.LiteralExpression(SyntaxKind.NullLiteralExpression));
             yield return SyntaxFactory.Parameter(
-                attributeLists: SyntaxFactory.List<AttributeListSyntax>(new[]{
+                attributeLists: SyntaxFactory.List(new[]{
                     SyntaxFactory.AttributeList(
                         SyntaxFactory.SingletonSeparatedList(
                             SyntaxFactory.Attribute(
@@ -418,16 +418,26 @@ namespace DataWF.Web.Common
         {
             var typeDeclaration = GetTypeDeclaration(property);
             return SyntaxFactory.PropertyDeclaration(
-                attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
+                attributeLists: SyntaxFactory.List<AttributeListSyntax>(GenClassPropertyAttributes(property)),
                 modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
                 type: typeDeclaration,
                 explicitInterfaceSpecifier: null,
                 identifier: SyntaxFactory.Identifier(property.Id),
-                accessorList: SyntaxFactory.AccessorList(SyntaxFactory.List<AccessorDeclarationSyntax>(GenPropertyAccessors(property))),
+                accessorList: SyntaxFactory.AccessorList(SyntaxFactory.List(GenPropertyAccessors(property))),
                 expressionBody: null,
                 initializer: null,
                 semicolonToken: SyntaxFactory.Token(SyntaxKind.None)
                );
+        }
+
+        private IEnumerable<AttributeListSyntax> GenClassPropertyAttributes(JsonProperty property)
+        {
+            yield return SyntaxFactory.AttributeList(
+                         SyntaxFactory.SingletonSeparatedList(
+                         SyntaxFactory.Attribute(
+                         SyntaxFactory.IdentifierName("JsonProperty")).WithArgumentList(
+                             SyntaxFactory.AttributeArgumentList(SyntaxFactory.SingletonSeparatedList(
+                                 SyntaxFactory.AttributeArgument(SyntaxFactory.ParseExpression($"NullValueHandling = NullValueHandling.Ignore")))))));
         }
 
         private IEnumerable<AccessorDeclarationSyntax> GenPropertyAccessors(JsonProperty property)
