@@ -52,11 +52,13 @@ namespace DataWF.Gui
 
         public LayoutAlignType MenuAlign { get => menuAlign; set => menuAlign = value; }
 
-        public event EventHandler<ToolItemEventArgs> ItemClick
+        public virtual void OnItemClick(ToolItemEventArgs e)
         {
-            add { DropDownItems.Bar.ItemClick += value; }
-            remove { DropDownItems.Bar.ItemClick -= value; }
+            ItemClick?.Invoke(this, e);
+            Bar.OnItemClick(e.Item);
         }
+
+        public event EventHandler<ToolItemEventArgs> ItemClick;
 
         public override void Localize()
         {

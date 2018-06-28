@@ -38,9 +38,9 @@ namespace DataWF.Gui
 
         public Menubar Owner { get; set; }
 
-        public ToolItem OwnerItem
+        public ToolDropDown OwnerItem
         {
-            get { return Bar.Owner; }
+            get { return Bar.Owner as ToolDropDown; }
             set { Bar.Owner = value; }
         }
 
@@ -112,6 +112,7 @@ namespace DataWF.Gui
             {
                 return;
             }
+            OwnerItem?.OnItemClick(e);
             BaseGetFocus(null, null);
         }
 
