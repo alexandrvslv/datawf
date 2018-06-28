@@ -86,52 +86,48 @@ namespace DataWF.Web.Common
                 throw new JsonSerializationException($"Can't find table of {objectType?.Name ?? "null"}");
             }
             var column = (DBColumn)null;
+            var dictionary = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            var key = (string)null;
             while (reader.Read() && reader.TokenType != JsonToken.EndObject)
             {
                 if (reader.TokenType == JsonToken.PropertyName)
                 {
-                    column = table.ParseProperty((string)reader.Value) ?? table.ParseColumn((string)reader.Value);
+                    key = (string)reader.Value;
                 }
-                else if (reader.TokenType == JsonToken.String
-                    || reader.TokenType == JsonToken.Boolean
-                    || reader.TokenType == JsonToken.Bytes
-                    || reader.TokenType == JsonToken.Date
-                    || reader.TokenType == JsonToken.Float
-                    || reader.TokenType == JsonToken.Integer
-                    || reader.TokenType == JsonToken.Float
-                    || reader.TokenType == JsonToken.Null)
+                else
                 {
-                    if (column == null)
-                        continue;
-                    var value = column.ParseValue(reader.Value);
-                    if (item == null)
-                    {
-                        if (column.IsPrimaryKey && value != null)
-                        {
-                            item = table.LoadItemById(value);
-                        }
-                        if (value == null && item == null)
-                        {
-                            item = table.NewItem();
-                        }
-                    }
-                    else
-                    {
-                        if (column.ReferenceProperty != null)
-                        {
-                            value = column.ReferenceTable.LoadItemById(value);
-                            column.ReferenceProperty.Set(item, value);
-                        }
-                        else if (column.PropertyInvoker == null)
-                        {
-                            throw new InvalidOperationException($"Column {column} Property Information not found!");
-                        }
-                        else
-                        {
-                            column.PropertyInvoker.Set(item, value);
-                        }
-                    }
-                    column = null;
+                    dictionary[key] = reader.Value;
+                }
+
+            }
+
+            if (!dictionary.TryGetValue(table.PrimaryKey.Property, out var value) || value == null)
+            {
+                item = table.NewItem();
+            }
+            else
+            {
+                item = table.LoadItemById(value);
+            }
+
+            foreach (var entry in dictionary)
+            {
+                column = table.ParseProperty(entry.Key);
+                if (column == null)
+                    continue;
+                value = column.ParseValue(entry.Value);
+                if (column.ReferenceProperty != null)
+                {
+                    value = column.ReferenceTable.LoadItemById(value);
+                    column.ReferenceProperty.Set(item, value);
+                }
+                else if (column.PropertyInvoker == null)
+                {
+                    throw new InvalidOperationException($"Column {column} Property Information not found!");
+                }
+                else
+                {
+                    column.PropertyInvoker.Set(item, value);
                 }
             }
             return item;
