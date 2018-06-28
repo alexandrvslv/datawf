@@ -31,23 +31,23 @@ namespace DataWF.Module.FlowGui
             if (dataSource is StageParam)
             {
                 var gp = (StageParam)dataSource;
-                if (gp.ItemType == (int)ParamType.Procedure)
+                if (gp.ItemType == (int)StageParamType.Procedure)
                 {
                     DataType = typeof(DBProcedure);
                 }
-                else if (gp.ItemType == (int)ParamType.Reference)
+                else if (gp.ItemType == (int)StageParamType.Reference)
                 {
                     DataType = typeof(Stage);
                 }
-                else if (gp.ItemType == (int)ParamType.Template)
+                else if (gp.ItemType == (int)StageParamType.Template)
                 {
                     DataType = typeof(Template);
                 }
-                else if (gp.ItemType == (int)ParamType.Foreign)
+                else if (gp.ItemType == (int)StageParamType.Foreign)
                 {
                     DataType = typeof(DBColumn);
                 }
-                else if (gp.ItemType == (int)ParamType.Column)
+                else if (gp.ItemType == (int)StageParamType.Column)
                 {
                     DataType = typeof(DBColumn);
                     DataFilter = Document.DBTable;

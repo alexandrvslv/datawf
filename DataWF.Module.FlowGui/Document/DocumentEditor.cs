@@ -650,7 +650,7 @@ namespace DataWF.Module.FlowGui
         public void InitProcedure(DBItem owner, StageProcedure param)
         {
             var proc = param.Procedure as DBProcedure;
-            if (proc == null || param.ProcedureType != ParamProcudureType.Manual)
+            if (proc == null || param.ProcedureType != StageParamProcudureType.Manual)
                 return;
 
             string name = "procedure" + proc.Name;

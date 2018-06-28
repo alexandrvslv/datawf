@@ -54,15 +54,15 @@ namespace DataWF.Module.Flow
             builder.AppendLine($"Informs you about document: {arg.Document}");
             if (arg.StageProcedure != null)
             {
-                if (arg.StageProcedure.ProcedureType == ParamProcudureType.Finish)
+                if (arg.StageProcedure.ProcedureType == StageParamProcudureType.Finish)
                 {
                     builder.AppendLine($"Finish {arg.StageProcedure.Stage} stage!");
                 }
-                else if (arg.StageProcedure.ProcedureType == ParamProcudureType.Start)
+                else if (arg.StageProcedure.ProcedureType == StageParamProcudureType.Start)
                 {
                     builder.AppendLine($"Start {arg.StageProcedure.Stage} stage!");
                 }
-                else if (arg.StageProcedure.ProcedureType == ParamProcudureType.Manual)
+                else if (arg.StageProcedure.ProcedureType == StageParamProcudureType.Manual)
                 {
                     builder.AppendLine($"Is on {arg.StageProcedure.Stage} stage!");
                 }

@@ -154,7 +154,7 @@ namespace DataWF.Module.Flow
         }
 
         [ControllerMethod]
-        public IEnumerable<StageProcedure> GetProceduresByType(ParamProcudureType type)
+        public IEnumerable<StageProcedure> GetProceduresByType(StageParamProcudureType type)
         {
             return GetParams<StageProcedure>().Where(p => p.ProcedureType == type);
         }

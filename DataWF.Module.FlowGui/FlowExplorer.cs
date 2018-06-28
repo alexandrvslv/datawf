@@ -38,7 +38,16 @@ namespace DataWF.Module.FlowGui
                  new ToolMenuItem { Name = "Template Data", Sensitive = TemplateData.DBTable?.Access.Create ?? false, Glyph = GlyphType.File },
                 new ToolMenuItem { Name = "Work", Sensitive = Work.DBTable?.Access.Create ?? false, Glyph = GlyphType.GearsAlias },
                 new ToolMenuItem { Name = "Work Stage", Sensitive = Stage.DBTable?.Access.Create ?? false, Glyph = GlyphType.EditAlias },
-                new ToolMenuItem { Name = "Stage Parameter", Sensitive = StageParam.DBTable?.Access.Create ?? false, Glyph = GlyphType.Columns },
+                new ToolMenuItem
+                {
+                    Name = "Stage Parameter",
+                    Sensitive = StageParam.DBTable?.Access.Create ?? false,
+                    Glyph = GlyphType.Columns,
+                    DropDown = new Menubar(
+                        new ToolMenuItem { Name = "Stage Procedure", Sensitive = StageParam.DBTable?.Access.Create ?? false, Glyph = GlyphType.EditAlias },
+                        new ToolMenuItem { Name = "Stage Reference", Sensitive = StageParam.DBTable?.Access.Create ?? false, Glyph = GlyphType.EditAlias }
+                        )
+                },
                 new ToolMenuItem { Name = "Group", Sensitive = UserGroup.DBTable?.Access.Create ?? false, Glyph = GlyphType.Users },
                 new ToolMenuItem { Name = "Department", Sensitive = Department.DBTable?.Access.Create ?? false, Glyph = GlyphType.Home },
                 new ToolMenuItem { Name = "Position", Sensitive = Position.DBTable?.Access.Create ?? false, Glyph = GlyphType.UserMd },
@@ -138,6 +147,18 @@ namespace DataWF.Module.FlowGui
             else if (item.Name == "Stage Parameter")
             {
                 row = new StageParam();
+                if (tag is Stage)
+                    ((StageParam)row).Stage = (Stage)tag;
+            }
+            else if (item.Name == "Stage Procedure")
+            {
+                row = new StageProcedure();
+                if (tag is Stage)
+                    ((StageParam)row).Stage = (Stage)tag;
+            }
+            else if (item.Name == "Stage Reference")
+            {
+                row = new StageReference();
                 if (tag is Stage)
                     ((StageParam)row).Stage = (Stage)tag;
             }

@@ -27,7 +27,7 @@ using System.Collections.Generic;
 namespace DataWF.Module.Flow
 {
 
-    public enum ParamType
+    public enum StageParamType
     {
         None,
         Column,
@@ -37,7 +37,7 @@ namespace DataWF.Module.Flow
         Reference,
     }
 
-    public enum ParamProcudureType
+    public enum StageParamProcudureType
     {
         Start,
         Manual,
@@ -117,22 +117,22 @@ namespace DataWF.Module.Flow
                 {
                     if (!string.IsNullOrEmpty(ParamCode))
                     {
-                        ParamType type = (ParamType)ItemType;
+                        StageParamType type = (StageParamType)ItemType;
                         switch (type)
                         {
-                            case ParamType.Column:
+                            case StageParamType.Column:
                                 _cache = GetColumn();
                                 break;
-                            case ParamType.Foreign:
+                            case StageParamType.Foreign:
                                 _cache = GetReference();
                                 break;
-                            case ParamType.Procedure:
+                            case StageParamType.Procedure:
                                 _cache = DBService.ParseProcedure(ParamCode);
                                 break;
-                            case ParamType.Reference:
+                            case StageParamType.Reference:
                                 _cache = Stage.DBTable.LoadItemById(ParamCode);
                                 break;
-                            case ParamType.Template:
+                            case StageParamType.Template:
                                 _cache = Template.DBTable.LoadItemById(ParamCode);
                                 break;
                         }
@@ -181,16 +181,16 @@ namespace DataWF.Module.Flow
 
         public override string ToString()
         {
-            return string.Format("{0} {1}", (ParamType)ItemType, Param);
+            return string.Format("{0} {1}", (StageParamType)ItemType, Param);
         }
     }
 
-    [ItemType((int)ParamType.Procedure)]
+    [ItemType((int)StageParamType.Procedure)]
     public class StageProcedure : StageParam
     {
         public StageProcedure()
         {
-            ItemType = (int)ParamType.Procedure;
+            ItemType = (int)StageParamType.Procedure;
         }
 
         public DBProcedure Procedure
@@ -200,19 +200,19 @@ namespace DataWF.Module.Flow
         }
 
         [DataMember, Column("procedure_type")]
-        public ParamProcudureType? ProcedureType
+        public StageParamProcudureType? ProcedureType
         {
-            get { return GetProperty<ParamProcudureType?>(); }
+            get { return GetProperty<StageParamProcudureType?>(); }
             set { SetProperty(value); }
         }
     }
 
-    [ItemType((int)ParamType.Reference)]
+    [ItemType((int)StageParamType.Reference)]
     public class StageReference : StageParam
     {
         public StageReference()
         {
-            ItemType = (int)ParamType.Reference;
+            ItemType = (int)StageParamType.Reference;
         }
 
         public Stage ReferenceStage
@@ -229,12 +229,12 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [ItemType((int)ParamType.Foreign)]
+    [ItemType((int)StageParamType.Foreign)]
     public class StageForeign : StageParam
     {
         public StageForeign()
         {
-            ItemType = (int)ParamType.Foreign;
+            ItemType = (int)StageParamType.Foreign;
         }
 
         public DBForeignKey Foreign

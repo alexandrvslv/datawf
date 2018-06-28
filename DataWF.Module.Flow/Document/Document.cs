@@ -694,7 +694,7 @@ namespace DataWF.Module.Flow
         }
 
         [ControllerMethod]
-        public object ExecuteProceduresByWork(DocumentWork work, ParamProcudureType type)
+        public object ExecuteProceduresByWork(DocumentWork work, StageParamProcudureType type)
         {
             if (work?.Stage == null)
                 throw new ArgumentNullException();
@@ -703,7 +703,7 @@ namespace DataWF.Module.Flow
         }
 
         [ControllerMethod]
-        public object ExecuteProceduresByStage(Stage stage, ParamProcudureType type)
+        public object ExecuteProceduresByStage(Stage stage, StageParamProcudureType type)
         {
             var param = new DocumentExecuteArgs { Document = this, Stage = stage };
             return ExecuteProcedures(param, stage.GetProceduresByType(type));
@@ -732,7 +732,7 @@ namespace DataWF.Module.Flow
 
                 if (from.Stage != null)
                 {
-                    var checkResult = ExecuteProceduresByStage(from.Stage, ParamProcudureType.Check);
+                    var checkResult = ExecuteProceduresByStage(from.Stage, StageParamProcudureType.Check);
                     if (checkResult != null)
                         throw new InvalidOperationException($"Check Fail {checkResult}");
 
@@ -743,7 +743,7 @@ namespace DataWF.Module.Flow
                     }
                     else
                     {
-                        ExecuteProceduresByStage(from.Stage, ParamProcudureType.Finish);
+                        ExecuteProceduresByStage(from.Stage, StageParamProcudureType.Finish);
                     }
                 }
             }
@@ -782,7 +782,7 @@ namespace DataWF.Module.Flow
 
             if (stage != null)
             {
-                ExecuteProceduresByStage(stage, ParamProcudureType.Start);
+                ExecuteProceduresByStage(stage, StageParamProcudureType.Start);
             }
 
             if (!IsComplete.GetValueOrDefault() && Status == DBStatus.Archive)
