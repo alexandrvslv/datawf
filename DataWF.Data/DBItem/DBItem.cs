@@ -646,7 +646,7 @@ namespace DataWF.Data
 
         [Browsable(false)]
         [DataMember, Column("item_type", GroupName = "system", Keys = DBColumnKeys.ItemType | DBColumnKeys.System, Order = 98, Default = "0")]
-        public int ItemType
+        public int? ItemType
         {
             get { return Table.ItemTypeKey == null ? 0 : GetValue<int?>(Table.ItemTypeKey).Value; }
             set { SetValue(value, Table.ItemTypeKey); }
