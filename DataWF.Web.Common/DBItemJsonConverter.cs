@@ -31,7 +31,8 @@ namespace DataWF.Web.Common
         public bool IsSerializeableColumn(DBColumn column)
         {
             return column.PropertyInvoker != null
-                && (column.Keys & DBColumnKeys.Access) != DBColumnKeys.Access;
+                && (column.Keys & DBColumnKeys.Access) != DBColumnKeys.Access
+                && (column.Keys & DBColumnKeys.Password) != DBColumnKeys.Password;
         }
 
         public override bool CanConvert(Type objectType)

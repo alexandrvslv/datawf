@@ -63,14 +63,14 @@ namespace DataWF.Web.Common
                 var controllerType = typeof(DBController<>).MakeGenericType(itemType);
                 string controllerClassName = $"{tableAttribute.ItemType.Name}Controller";
                 var @class = SyntaxFactory.ClassDeclaration(
-                    attributeLists: SyntaxFactory.List<AttributeListSyntax>(GetControllerAttributeList()),
+                    attributeLists: SyntaxFactory.List(GetControllerAttributeList()),
                     modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
                     identifier: SyntaxFactory.Identifier(controllerClassName),
                     typeParameterList: null,
                     baseList: SyntaxFactory.BaseList(SyntaxFactory.SingletonSeparatedList<BaseTypeSyntax>(
                         SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"DBController<{itemType.Name}>")))),
                     constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
-                    members: SyntaxFactory.List<MemberDeclarationSyntax>(GetControllerMemebers(table))
+                    members: SyntaxFactory.List(GetControllerMemebers(table))
                     );
 
                 var @namespace = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName($"DataWF.Web.{name}"))
@@ -126,21 +126,20 @@ namespace DataWF.Web.Common
             }
         }
 
-
         private IEnumerable<AttributeListSyntax> GetControllerAttributeList()
         {
             var attributeArgument = SyntaxFactory.AttributeArgument(SyntaxFactory.LiteralExpression(
                 SyntaxKind.StringLiteralExpression,
                 SyntaxFactory.Literal("api/[controller]")));
             yield return SyntaxFactory.AttributeList(
-                         SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(
-                         SyntaxFactory.Attribute(
-                         SyntaxFactory.IdentifierName("Route")).WithArgumentList(
+                         SyntaxFactory.SingletonSeparatedList(
+                             SyntaxFactory.Attribute(
+                                 SyntaxFactory.IdentifierName("Route")).WithArgumentList(
                              SyntaxFactory.AttributeArgumentList(SyntaxFactory.SingletonSeparatedList(attributeArgument)))));
             yield return SyntaxFactory.AttributeList(
-                         SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(
-                         SyntaxFactory.Attribute(
-                         SyntaxFactory.IdentifierName("ApiController"))));
+                         SyntaxFactory.SingletonSeparatedList(
+                             SyntaxFactory.Attribute(
+                                 SyntaxFactory.IdentifierName("ApiController"))));
         }
 
         //https://stackoverflow.com/questions/37710714/roslyn-add-new-method-to-an-existing-class
@@ -215,13 +214,13 @@ namespace DataWF.Web.Common
                 SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(parameters)));
             yield return SyntaxFactory.AttributeList(
                          SyntaxFactory.SingletonSeparatedList(
-                         SyntaxFactory.Attribute(
-                         SyntaxFactory.IdentifierName("Route")).WithArgumentList(
-                             SyntaxFactory.AttributeArgumentList(SyntaxFactory.SingletonSeparatedList(attributeArgument)))));
+                             SyntaxFactory.Attribute(
+                                 SyntaxFactory.IdentifierName("Route")).WithArgumentList(
+                                 SyntaxFactory.AttributeArgumentList(SyntaxFactory.SingletonSeparatedList(attributeArgument)))));
             yield return SyntaxFactory.AttributeList(
                          SyntaxFactory.SingletonSeparatedList(
-                         SyntaxFactory.Attribute(
-                         SyntaxFactory.IdentifierName("HttpGet"))));
+                             SyntaxFactory.Attribute(
+                                 SyntaxFactory.IdentifierName("HttpGet"))));
         }
 
         private IEnumerable<ParameterSyntax> GetControllerMethodParameters(MethodInfo method)

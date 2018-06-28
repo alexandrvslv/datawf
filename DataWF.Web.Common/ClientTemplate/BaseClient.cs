@@ -51,6 +51,8 @@ namespace DataWF.Web.Client
             int i = 0;
             foreach (var item in url.Split('/'))
             {
+                if (item.Length == 0)
+                    continue;
                 urlBuilder.Append('/');
                 if (item.StartsWith("{", StringComparison.Ordinal))
                 {
@@ -133,66 +135,6 @@ namespace DataWF.Web.Client
                     }
                 }
             }
-        }
-
-        public Task<List<T>> GetAsync()
-        {
-            return GetAsync(CancellationToken.None);
-        }
-
-        public virtual async Task<List<T>> GetAsync(CancellationToken cancellationToken)
-        {
-            return await Request<List<T>>(cancellationToken, "GET", "/api/Type", "application/json");
-        }
-
-        public Task<T> PutAsync(T value)
-        {
-            return PutAsync(value, CancellationToken.None);
-        }
-
-        public virtual async Task<T> PutAsync(T value, CancellationToken cancellationToken)
-        {
-            return await Request<T>(cancellationToken, "PUT", "/api/Type", "application/json", value);
-        }
-
-        public Task<T> PostAsync(T value)
-        {
-            return PostAsync(value, CancellationToken.None);
-        }
-
-        public virtual async Task<T> PostAsync(T value, CancellationToken cancellationToken)
-        {
-            return await Request<T>(cancellationToken, "POST", "/api/Type", "application/json", value);
-        }
-
-        public Task<List<T>> GetAsync(string filter)
-        {
-            return GetAsync(filter, CancellationToken.None);
-        }
-
-        public virtual async Task<List<T>> GetAsync(string filter, CancellationToken cancellationToken)
-        {
-            return await Request<List<T>>(cancellationToken, "GET", "/api/Type/{filter}", "application/json", null, filter);
-        }
-
-        public Task<T> GetAsync(int id)
-        {
-            return GetAsync(id, CancellationToken.None);
-        }
-
-        public virtual async Task<T> GetAsync(int id, CancellationToken cancellationToken)
-        {
-            return await Request<T>(cancellationToken, "GET", "/api/Type/{id}", "application/json", null, id);
-        }
-
-        public Task<string> DeleteAsync(int id)
-        {
-            return DeleteAsync(id, CancellationToken.None);
-        }
-
-        public virtual async Task<string> DeleteAsync(int id, CancellationToken cancellationToken)
-        {
-            return await Request<string>(cancellationToken, "DELETE", "/api/Type/{id}", "application/json", null, id);
         }
 
         protected string ConvertToString(object value, System.Globalization.CultureInfo cultureInfo)

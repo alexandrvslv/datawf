@@ -8,7 +8,9 @@ using NJsonSchema;
 using NSwag;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -17,41 +19,57 @@ namespace DataWF.Web.Common
     public class ClientGenerator
     {
         private string Namespace = "DataWF.Web.Client";
-        private Dictionary<string, SchemaRealization> cacheModels = new Dictionary<string, SchemaRealization>();
+        private Dictionary<string, CompilationUnitSyntax> cacheModels = new Dictionary<string, CompilationUnitSyntax>();
         private Dictionary<string, ClassDeclarationSyntax> cacheClients = new Dictionary<string, ClassDeclarationSyntax>();
-        private Dictionary<string, UsingDirectiveSyntax> usings = new Dictionary<string, UsingDirectiveSyntax>();
+        private List<UsingDirectiveSyntax> usings = new List<UsingDirectiveSyntax>();
         private SwaggerDocument document;
-        private class SchemaRealization
-        {
-            public SyntaxTree SyntaxTree { get; set; }
-            public JsonSchema4 Schema { get; set; }
-            public string Name { get; set; }
-        }
+        private Uri uri;
 
-        public async Task Generate(string url)
+        public async Task Generate(string url, string output)
         {
-            usings = new Dictionary<string, UsingDirectiveSyntax>(StringComparer.Ordinal) {
-                { "DataWF.Common", SyntaxHelper.CreateUsingDirective("DataWF.Common") },
-                { "System", SyntaxHelper.CreateUsingDirective("System") },
-                { "System.Collections.Generic", SyntaxHelper.CreateUsingDirective("System.Collections.Generic") },
-                { "System.ComponentModel", SyntaxHelper.CreateUsingDirective("System.Collections.Generic") },
-                { "System.Linq", SyntaxHelper.CreateUsingDirective("System.Linq") },
-                { "System.Runtime.Serialization", SyntaxHelper.CreateUsingDirective("System.Runtime.Serialization") },
-                { "System.Runtime.CompilerServices", SyntaxHelper.CreateUsingDirective("System.Runtime.CompilerServices") },
-                { "System.Threading.Tasks", SyntaxHelper.CreateUsingDirective("System.Threading.Tasks") },
-                { "System.Net.Http", SyntaxHelper.CreateUsingDirective("System.Net.Http") },
-                { "System.Net.Http.Headers", SyntaxHelper.CreateUsingDirective("System.Net.Http.Headers") },
-                { "Newtonsoft.Json", SyntaxHelper.CreateUsingDirective("Newtonsoft.Json") }
+            usings = new List<UsingDirectiveSyntax>() {
+                SyntaxHelper.CreateUsingDirective("DataWF.Common") ,
+                SyntaxHelper.CreateUsingDirective("System") ,
+                SyntaxHelper.CreateUsingDirective("System.Collections.Generic") ,
+                SyntaxHelper.CreateUsingDirective("System.ComponentModel") ,
+                SyntaxHelper.CreateUsingDirective("System.Linq") ,
+                SyntaxHelper.CreateUsingDirective("System.Runtime.Serialization") ,
+                SyntaxHelper.CreateUsingDirective("System.Runtime.CompilerServices") ,
+                SyntaxHelper.CreateUsingDirective("System.Threading") ,
+                SyntaxHelper.CreateUsingDirective("System.Threading.Tasks") ,
+                SyntaxHelper.CreateUsingDirective("System.Net.Http") ,
+                SyntaxHelper.CreateUsingDirective("System.Net.Http.Headers") ,
+                SyntaxHelper.CreateUsingDirective("Newtonsoft.Json")
             };
+            output = Path.GetFullPath(output);
+            Directory.CreateDirectory(output);
+
+            var assembly = typeof(ClientGenerator).Assembly;
+            var baseName = assembly.GetName().Name + ".ClientTemplate.";
+            foreach (var name in assembly.GetManifestResourceNames())
+            {
+                if (!name.StartsWith(baseName))
+                    continue;
+                var path = Path.Combine(output, name.Substring(baseName.Length));
+                using (var stream = new FileStream(path, FileMode.OpenOrCreate))
+                {
+                    assembly.GetManifestResourceStream(name).CopyTo(stream);
+                }
+            }
 
             document = await SwaggerDocument.FromUrlAsync(url);
+            uri = new Uri(url);
             foreach (var definition in document.Definitions)
             {
                 definition.Value.Id = definition.Key;
             }
+
+            var modelPath = Path.Combine(output, "Models");
+            Directory.CreateDirectory(modelPath);
             foreach (var definition in document.Definitions)
             {
-                GetOrGenerateDefinion(definition.Key);
+                var realisation = GetOrGenerateDefinion(definition.Key);
+                File.WriteAllText(Path.Combine(modelPath, definition.Key + ".cs"), realisation.ToFullString());
             }
 
             foreach (var operation in document.Operations)
@@ -59,11 +77,12 @@ namespace DataWF.Web.Common
                 AddClientOperation(operation);
             }
 
-            foreach (var classSyntax in cacheClients.Values)
+            var clientPath = Path.Combine(output, "Clients");
+            Directory.CreateDirectory(clientPath);
+            foreach (var entry in cacheClients)
             {
-                var @unit = GenUnit(classSyntax);
+                File.WriteAllText(Path.Combine(clientPath, entry.Key + "Client.cs"), GenUnit(entry.Value).ToFullString());
             }
-
         }
 
         public virtual string GetClientName(SwaggerOperationDescription decriptor)
@@ -124,8 +143,19 @@ namespace DataWF.Web.Common
                     baseList: SyntaxFactory.BaseList(SyntaxFactory.SingletonSeparatedList<BaseTypeSyntax>(
                         SyntaxFactory.SimpleBaseType(baseType))),
                     constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
-                    members: SyntaxFactory.List<MemberDeclarationSyntax>()
+                    members: SyntaxFactory.List<MemberDeclarationSyntax>(GenClientConstructor(clientName))
                     );
+        }
+
+        private IEnumerable<ConstructorDeclarationSyntax> GenClientConstructor(string clientName)
+        {
+            yield return SyntaxFactory.ConstructorDeclaration(
+                attributeLists: SyntaxFactory.List(ClientAttributeList()),
+                modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
+                identifier: SyntaxFactory.Identifier($"{clientName}Client"),
+                parameterList: SyntaxFactory.ParameterList(),
+                initializer: null,
+                body: SyntaxFactory.Block(SyntaxFactory.ParseStatement($"BaseUrl = \"{uri.Scheme}://{uri.Authority}\";")));
         }
 
         private IEnumerable<AttributeListSyntax> ClientAttributeList()
@@ -133,15 +163,36 @@ namespace DataWF.Web.Common
             yield break;
         }
 
+        private string GetReturningType(SwaggerOperationDescription descriptor)
+        {
+            var returnType = "string";
+            if (descriptor.Operation.Responses.TryGetValue("200", out var responce) && responce.Schema != null)
+            {
+                returnType = $"{GetTypeString(responce.Schema)}";
+            }
+            return returnType;
+        }
+
         private IEnumerable<MemberDeclarationSyntax> GenOperation(string operationName, SwaggerOperationDescription descriptor)
         {
             var actualName = $"{operationName}Async";
 
-            var returnType = "Task<string>";
-            if (descriptor.Operation.Responses.TryGetValue("200", out var responce) && responce.Schema != null)
-            {
-                returnType = $"Task<{GetTypeString(responce.Schema)}>";
-            }
+            var returnType = GetReturningType(descriptor);
+            returnType = returnType.Length > 0 ? $"Task<{returnType}>" : "Task";
+
+            yield return SyntaxFactory.MethodDeclaration(
+                attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
+                    modifiers: SyntaxFactory.TokenList(
+                        SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
+                    returnType: SyntaxFactory.ParseTypeName(returnType),
+                    explicitInterfaceSpecifier: null,
+                    identifier: SyntaxFactory.Identifier(actualName),
+                    typeParameterList: null,
+                    parameterList: SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(GenOperationParameter(descriptor, false))),
+                    constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
+                    body: SyntaxFactory.Block(GenOperationWrapperBody(actualName, descriptor)),
+                    semicolonToken: SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+
             yield return SyntaxFactory.MethodDeclaration(
                 attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
                     modifiers: SyntaxFactory.TokenList(
@@ -151,37 +202,60 @@ namespace DataWF.Web.Common
                     explicitInterfaceSpecifier: null,
                     identifier: SyntaxFactory.Identifier(actualName),
                     typeParameterList: null,
-                    parameterList: SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(GenOperationParameter(descriptor))),
+                    parameterList: SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(GenOperationParameter(descriptor, true))),
                     constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
                     body: SyntaxFactory.Block(GenOperationBody(descriptor)),
                     semicolonToken: SyntaxFactory.Token(SyntaxKind.SemicolonToken));
         }
 
-        private static StatementSyntax GenOperationBody(SwaggerOperationDescription descriptor)
+        private StatementSyntax GenOperationWrapperBody(string actualName, SwaggerOperationDescription descriptor)
+        {
+            var builder = new StringBuilder();
+            builder.Append($"return {actualName}(");
+
+            if (descriptor.Operation.Parameters.Any(p => p.Kind == SwaggerParameterKind.Body))
+            {
+                builder.Append("value, ");
+            }
+            foreach (var parameter in descriptor.Operation.Parameters)
+            {
+                if (parameter.Kind != SwaggerParameterKind.Body)
+                {
+                    builder.Append($"{parameter.Name}, ");
+                }
+            }
+            builder.Append("CancellationToken.None);");
+            return SyntaxFactory.ParseStatement(builder.ToString());
+        }
+
+        private StatementSyntax GenOperationBody(SwaggerOperationDescription descriptor)
         {
             var method = descriptor.Method.ToString().ToUpperInvariant();
             var path = descriptor.Path;
             var mediatype = "application/json";
-            var returnType = "";
+            var returnType = GetReturningType(descriptor);
             var builder = new StringBuilder();
             builder.Append($"return await Request<{returnType}>(cancellationToken, \"{method}\", \"{path}\", \"{mediatype}\"");
-
+            if (descriptor.Operation.Parameters.Any(p => p.Kind == SwaggerParameterKind.Body))
+            {
+                builder.Append(", value");
+            }
+            else
+            {
+                builder.Append(", null");
+            }
             foreach (var parameter in descriptor.Operation.Parameters)
             {
-                if (parameter.Kind == SwaggerParameterKind.Body)
-                {
-                    builder.Append(", value");
-                }
-                else
+                if (parameter.Kind != SwaggerParameterKind.Body)
                 {
                     builder.Append($", {parameter.Name}");
                 }
             }
-            builder.Append(")");
+            builder.Append(");");
             return SyntaxFactory.ParseStatement(builder.ToString());
         }
 
-        private IEnumerable<ParameterSyntax> GenOperationParameter(SwaggerOperationDescription descriptor)
+        private IEnumerable<ParameterSyntax> GenOperationParameter(SwaggerOperationDescription descriptor, bool cancelationToken)
         {
             foreach (var parameter in descriptor.Operation.Parameters)
             {
@@ -191,16 +265,17 @@ namespace DataWF.Web.Common
                                                          identifier: SyntaxFactory.Identifier(parameter.Name),
                                                          @default: null);
             }
-
-            yield return SyntaxFactory.Parameter(attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
-                                                        modifiers: SyntaxFactory.TokenList(),
-                                                        type: SyntaxFactory.ParseTypeName("CancellationToken"),
-                                                        identifier: SyntaxFactory.Identifier("cancellationToken"),
-                                                        @default: null);
-
+            if (cancelationToken)
+            {
+                yield return SyntaxFactory.Parameter(attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
+                                                            modifiers: SyntaxFactory.TokenList(),
+                                                            type: SyntaxFactory.ParseTypeName("CancellationToken"),
+                                                            identifier: SyntaxFactory.Identifier("cancellationToken"),
+                                                            @default: null);
+            }
         }
 
-        private SchemaRealization GetOrGenerateDefinion(string key)
+        private CompilationUnitSyntax GetOrGenerateDefinion(string key)
         {
             if (!cacheModels.TryGetValue(key, out var tree))
             {
@@ -216,19 +291,16 @@ namespace DataWF.Web.Common
                                              .AddMembers(@class);
             return SyntaxFactory.CompilationUnit(
                 externs: SyntaxFactory.List<ExternAliasDirectiveSyntax>(),
-                usings: SyntaxFactory.List(usings.Values),
+                usings: SyntaxFactory.List(usings),
                 attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
                 members: SyntaxFactory.List<MemberDeclarationSyntax>(new[] { @namespace }))
                                         .NormalizeWhitespace("    ", true);
         }
 
-        private SchemaRealization GenDefinition(JsonSchema4 schema)
+        private CompilationUnitSyntax GenDefinition(JsonSchema4 schema)
         {
             var @class = schema.IsEnumeration ? GenDefinitionEnum(schema) : GenDefinitionClass(schema);
-            var @unit = GenUnit(@class);
-            //var formatted = Formatter.Format(@unit.SyntaxTree.GetRoot(), workspace);
-
-            return new SchemaRealization() { Name = schema.Id, Schema = schema, SyntaxTree = @unit.SyntaxTree };
+            return GenUnit(@class);
         }
 
         private MemberDeclarationSyntax GenDefinitionEnum(JsonSchema4 schema)
@@ -264,9 +336,7 @@ namespace DataWF.Web.Common
                          SyntaxFactory.Attribute(
                          SyntaxFactory.IdentifierName("EnumMember")).WithArgumentList(
                              SyntaxFactory.AttributeArgumentList(SyntaxFactory.SingletonSeparatedList(
-                                 SyntaxFactory.AttributeArgument(
-                                     SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression,
-                                     SyntaxFactory.Literal(item.ToString()))))))));
+                                 SyntaxFactory.AttributeArgument(SyntaxFactory.ParseExpression($"Value = \"{item.ToString()}\"")))))));
         }
 
         private MemberDeclarationSyntax GenDefinitionClass(JsonSchema4 schema)
@@ -399,8 +469,9 @@ namespace DataWF.Web.Common
             switch (value.Type)
             {
                 case JsonObjectType.Integer:
-                case JsonObjectType.Boolean:
                     return Helper.ToInitcap(value.Format) + "?";
+                case JsonObjectType.Boolean:
+                    return "bool" + "?";
                 case JsonObjectType.Number:
                     return value.Format + "?";
                 case JsonObjectType.String:
@@ -420,7 +491,10 @@ namespace DataWF.Web.Common
                 case JsonObjectType.None:
                     if (value.ActualTypeSchema != null)
                     {
-                        return GetTypeString(value.ActualTypeSchema);
+                        if (value.ActualTypeSchema.Type != JsonObjectType.None)
+                            return GetTypeString(value.ActualTypeSchema);
+                        else
+                        { }
                     }
                     break;
                 case JsonObjectType.Object:

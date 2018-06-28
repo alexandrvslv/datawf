@@ -86,6 +86,9 @@ namespace DataWF.Web.Common
 
         public void ApplyColumn(Schema schema, SchemaFilterContext context, ColumnAttribute column)
         {
+            if ((column.Keys & DBColumnKeys.Access) == DBColumnKeys.Access
+                || (column.Keys & DBColumnKeys.Password) == DBColumnKeys.Password)
+                return;
             var columnSchema = context.SchemaRegistry.GetOrRegister(column.DataType);
             if (column.DataType == typeof(string) && column.Size > 0)
             {
