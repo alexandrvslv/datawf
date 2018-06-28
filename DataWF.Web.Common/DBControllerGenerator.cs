@@ -51,7 +51,7 @@ namespace DataWF.Web.Common
         }
 
         //https://carlos.mendible.com/2017/03/02/create-a-class-with-net-core-and-roslyn/
-        public Assembly GenerateRoslyn(DBSchema schema)
+        public Assembly Generate(DBSchema schema)
         {
             var name = schema.Name.ToInitcap('_');
             var files = new List<SyntaxTree>();
@@ -150,7 +150,7 @@ namespace DataWF.Web.Common
             AddUsing(method.ReturnType);
             var returning = method.ReturnType == typeof(void) ? "void" : $"ActionResult<{TypeHelper.FormatCode(method.ReturnType)}>";
 
-            return SyntaxFactory.MethodDeclaration(attributeLists: SyntaxFactory.List<AttributeListSyntax>(GetControllerMethodAttributeList(method)),
+            return SyntaxFactory.MethodDeclaration(attributeLists: SyntaxFactory.List<AttributeListSyntax>(GetControllerMethodAttributes(method)),
                           modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
                           returnType: returning == "void"
                           ? SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword))
@@ -158,7 +158,7 @@ namespace DataWF.Web.Common
                           explicitInterfaceSpecifier: null,
                           identifier: SyntaxFactory.Identifier(method.Name),
                           typeParameterList: null,
-                          parameterList: SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(GetControllerMethodParametersList(method))),
+                          parameterList: SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(GetControllerMethodParameters(method))),
                           constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
                           body: SyntaxFactory.Block(GetControllerMethodBody(method)),
                           semicolonToken: SyntaxFactory.Token(SyntaxKind.SemicolonToken));
@@ -204,7 +204,7 @@ namespace DataWF.Web.Common
             }
         }
 
-        private IEnumerable<AttributeListSyntax> GetControllerMethodAttributeList(MethodInfo method)
+        private IEnumerable<AttributeListSyntax> GetControllerMethodAttributes(MethodInfo method)
         {
             var parameters = method.Name + (method.IsStatic ? "" : "/{id:int}");
             foreach (var parameter in method.GetParameters())
@@ -214,23 +214,24 @@ namespace DataWF.Web.Common
             var attributeArgument = SyntaxFactory.AttributeArgument(
                 SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(parameters)));
             yield return SyntaxFactory.AttributeList(
-                         SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(
+                         SyntaxFactory.SingletonSeparatedList(
                          SyntaxFactory.Attribute(
                          SyntaxFactory.IdentifierName("Route")).WithArgumentList(
                              SyntaxFactory.AttributeArgumentList(SyntaxFactory.SingletonSeparatedList(attributeArgument)))));
             yield return SyntaxFactory.AttributeList(
-                         SyntaxFactory.SingletonSeparatedList<AttributeSyntax>(
+                         SyntaxFactory.SingletonSeparatedList(
                          SyntaxFactory.Attribute(
                          SyntaxFactory.IdentifierName("HttpGet"))));
         }
 
-        private IEnumerable<ParameterSyntax> GetControllerMethodParametersList(MethodInfo method)
+        private IEnumerable<ParameterSyntax> GetControllerMethodParameters(MethodInfo method)
         {
-            yield return SyntaxFactory.Parameter(attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
-                                                         modifiers: SyntaxFactory.TokenList(),
-                                                         type: SyntaxFactory.ParseTypeName(typeof(int).Name),
-                                                         identifier: SyntaxFactory.Identifier("id"),
-                                                         @default: null);
+
+            yield return SyntaxFactory.Parameter(attributeLists: SyntaxFactory.List<AttributeListSyntax>(GetParameterAttributes()),
+                                                             modifiers: SyntaxFactory.TokenList(),
+                                                             type: SyntaxFactory.ParseTypeName(typeof(int).Name),
+                                                             identifier: SyntaxFactory.Identifier("id"),
+                                                             @default: null);
             parametersInfo = new List<MethodParametrInfo>();
 
             foreach (var parameter in method.GetParameters())
@@ -238,12 +239,21 @@ namespace DataWF.Web.Common
                 var methodParameter = new MethodParametrInfo { Info = parameter };
                 parametersInfo.Add(methodParameter);
                 AddUsing(methodParameter.Info.ParameterType);
-                yield return SyntaxFactory.Parameter(attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
+                yield return SyntaxFactory.Parameter(attributeLists: SyntaxFactory.List<AttributeListSyntax>(GetParameterAttributes()),
                                                          modifiers: SyntaxFactory.TokenList(),
                                                          type: SyntaxFactory.ParseTypeName(methodParameter.Type.Name),
                                                          identifier: SyntaxFactory.Identifier(methodParameter.Info.Name),
                                                          @default: null);
             }
+        }
+
+        private IEnumerable<AttributeListSyntax> GetParameterAttributes()
+        {
+            //yield break;
+            yield return SyntaxFactory.AttributeList(
+                         SyntaxFactory.SingletonSeparatedList(
+                         SyntaxFactory.Attribute(
+                         SyntaxFactory.IdentifierName("FromRoute"))));
         }
 
         private void AddUsing(Type type)

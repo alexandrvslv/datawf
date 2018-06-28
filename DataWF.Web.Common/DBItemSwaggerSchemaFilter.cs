@@ -7,6 +7,33 @@ using System.Reflection;
 
 namespace DataWF.Web.Common
 {
+    public class DBItemSwaggerParameterFilter : IParameterFilter
+    {
+        public void Apply(IParameter parameter, ParameterFilterContext context)
+        {
+            if (parameter is NonBodyParameter nonBodyParameter && string.IsNullOrEmpty(nonBodyParameter.Type))
+            {
+                var type = context.ControllerParameterDescriptor.ParameterType;
+                if (type.IsEnum)
+                {
+                    var schema = context.SchemaRegistry.GetOrRegister(context.ControllerParameterDescriptor.ParameterType);
+                    nonBodyParameter.Extensions.Add("schema", schema);
+                }
+            }
+        }
+    }
+
+    public class DBItemSwaggerOperationFilter : IOperationFilter
+    {
+        public void Apply(Operation operation, OperationFilterContext context)
+        {
+            foreach (var parameter in operation.Parameters)
+            {
+                //if(parameter.)
+            }
+        }
+    }
+
     public class DBItemSwaggerSchemaFilter : ISchemaFilter
     {
         public void Apply(Schema schema, SchemaFilterContext context)
@@ -53,6 +80,8 @@ namespace DataWF.Web.Common
                     }
                 }
             }
+            else
+            { }
         }
 
         public void ApplyColumn(Schema schema, SchemaFilterContext context, ColumnAttribute column)

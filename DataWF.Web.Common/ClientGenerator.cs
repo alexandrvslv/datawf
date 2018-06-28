@@ -28,7 +28,7 @@ namespace DataWF.Web.Common
             public string Name { get; set; }
         }
 
-        public async Task Generate(string url, string baseUrl)
+        public async Task Generate(string url)
         {
             usings = new Dictionary<string, UsingDirectiveSyntax>(StringComparer.Ordinal) {
                 { "DataWF.Common", SyntaxHelper.CreateUsingDirective("DataWF.Common") },
@@ -45,7 +45,6 @@ namespace DataWF.Web.Common
             };
 
             document = await SwaggerDocument.FromUrlAsync(url);
-            document.BasePath = baseUrl;
             foreach (var definition in document.Definitions)
             {
                 definition.Value.Id = definition.Key;

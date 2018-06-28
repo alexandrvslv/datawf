@@ -24,7 +24,7 @@ namespace DataWF.Web.Common
         public static Assembly AddDBController(this IMvcCoreBuilder builder, DBSchema schema)
         {
             var generator = new DBControllerGenerator();
-            var controllersAssembly = generator.GenerateRoslyn(schema);
+            var controllersAssembly = generator.Generate(schema);
             builder.AddApplicationPart(controllersAssembly);
             return controllersAssembly;
         }
@@ -32,7 +32,7 @@ namespace DataWF.Web.Common
         public static Assembly AddDBController(this IMvcBuilder builder, DBSchema schema)
         {
             var generator = new DBControllerGenerator();
-            var controllersAssembly = generator.GenerateRoslyn(schema);
+            var controllersAssembly = generator.Generate(schema);
             builder.AddApplicationPart(controllersAssembly);
             return controllersAssembly;
         }
