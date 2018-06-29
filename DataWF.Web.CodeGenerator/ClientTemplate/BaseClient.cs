@@ -176,9 +176,9 @@ namespace DataWF.Web.Client
 
         public Task GetAsync(object id) { return GetAsync((K)id); }
 
-        public abstract Task<K> DeleteAsync(K id);
+        public abstract Task<bool> DeleteAsync(K id);
 
-        public abstract Task<K> DeleteAsync(K id, CancellationToken cancellationToken);
+        public abstract Task<bool> DeleteAsync(K id, CancellationToken cancellationToken);
 
         public Task DeleteAsync(object id) { return DeleteAsync((K)id); }
 

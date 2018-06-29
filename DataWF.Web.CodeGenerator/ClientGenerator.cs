@@ -248,7 +248,7 @@ namespace DataWF.Web.Common
             }
             var property = GetPrimaryKey(schema);
 
-            var baseType = SyntaxFactory.ParseTypeName($"BaseClient<{clientName}, {(property == null ? "int" : GetTypeString(property))}>");
+            var baseType = SyntaxFactory.ParseTypeName($"BaseClient<{clientName}, {(property == null ? "int" : GetTypeString(property, false))}>");
 
             return SyntaxFactory.ClassDeclaration(
                     attributeLists: SyntaxFactory.List(ClientAttributeList()),
@@ -296,7 +296,7 @@ namespace DataWF.Web.Common
             var returnType = "string";
             if (descriptor.Operation.Responses.TryGetValue("200", out var responce) && responce.Schema != null)
             {
-                returnType = $"{GetTypeString(responce.Schema)}";
+                returnType = $"{GetTypeString(responce.Schema, false)}";
             }
             return returnType;
         }
@@ -392,7 +392,7 @@ namespace DataWF.Web.Common
             {
                 yield return SyntaxFactory.Parameter(attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
                                                          modifiers: SyntaxFactory.TokenList(),
-                                                         type: GetTypeDeclaration(parameter.ActualSchema ?? parameter),
+                                                         type: GetTypeDeclaration(parameter, false),
                                                          identifier: SyntaxFactory.Identifier(parameter.Name),
                                                          @default: null);
             }
@@ -537,7 +537,7 @@ namespace DataWF.Web.Common
 
         private PropertyDeclarationSyntax GenDefinitionClassProperty(JsonProperty property)
         {
-            var typeDeclaration = GetTypeDeclaration(property);
+            var typeDeclaration = GetTypeDeclaration(property, true);
             return SyntaxFactory.PropertyDeclaration(
                 attributeLists: SyntaxFactory.List(GenClassPropertyAttributes(property)),
                 modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
@@ -595,20 +595,20 @@ namespace DataWF.Web.Common
         {
             return SyntaxFactory.FieldDeclaration(SyntaxFactory.List<AttributeListSyntax>(),
                 SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PrivateKeyword)),
-                SyntaxFactory.VariableDeclaration(GetTypeDeclaration(property))
+                SyntaxFactory.VariableDeclaration(GetTypeDeclaration(property, true))
                                  .AddVariables(SyntaxFactory.VariableDeclarator("_" + property.Name)));
         }
 
-        private string GetTypeString(JsonSchema4 value)
+        private string GetTypeString(JsonSchema4 value, bool nullable)
         {
             switch (value.Type)
             {
                 case JsonObjectType.Integer:
-                    return Helper.ToInitcap(value.Format) + "?";
+                    return Helper.ToInitcap(value.Format) + (nullable ? "?" : string.Empty);
                 case JsonObjectType.Boolean:
-                    return "bool" + "?";
+                    return "bool" + (nullable ? "?" : string.Empty);
                 case JsonObjectType.Number:
-                    return value.Format + "?";
+                    return value.Format + (nullable ? "?" : string.Empty);
                 case JsonObjectType.String:
                     switch (value.Format)
                     {
@@ -617,17 +617,17 @@ namespace DataWF.Web.Common
                             return "byte[]";
                         case "date":
                         case "date-time":
-                            return "DateTime?";
+                            return "DateTime" + (nullable ? "?" : string.Empty);
                         default:
                             return "string";
                     }
                 case JsonObjectType.Array:
-                    return $"List<{GetTypeString(value.Item)}>";
+                    return $"List<{GetTypeString(value.Item, false)}>";
                 case JsonObjectType.None:
                     if (value.ActualTypeSchema != null)
                     {
                         if (value.ActualTypeSchema.Type != JsonObjectType.None)
-                            return GetTypeString(value.ActualTypeSchema);
+                            return GetTypeString(value.ActualTypeSchema, nullable);
                         else
                         { }
                     }
@@ -637,7 +637,7 @@ namespace DataWF.Web.Common
                     {
                         GetOrGenerateDefinion(value.Id);
                         if (value.IsEnumeration)
-                            return value.Id + "?";
+                            return value.Id + (nullable ? "?" : string.Empty);
                         else
                             return value.Id;
                     }
@@ -646,9 +646,9 @@ namespace DataWF.Web.Common
             return "string";
         }
 
-        private TypeSyntax GetTypeDeclaration(JsonSchema4 value)
+        private TypeSyntax GetTypeDeclaration(JsonSchema4 value, bool nullable)
         {
-            return SyntaxFactory.ParseTypeName(GetTypeString(value));
+            return SyntaxFactory.ParseTypeName(GetTypeString(value, nullable));
         }
 
         private IEnumerable<AttributeListSyntax> DefinitionAttributeList()
