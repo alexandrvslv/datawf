@@ -71,7 +71,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Service", "Service", "{ABE1
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataWF.Web.Common", "DataWF.Web.Common\DataWF.Web.Common.csproj", "{3F3566DB-64BC-43E6-9A5A-F5F84E9E7D55}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Web.ClientGenerator", "DataWF.Web.ClientGenerator\DataWF.Web.ClientGenerator.csproj", "{7DD344C7-17CD-4BD6-8F27-63B419980BF1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWF.Web.CodeGenerator", "DataWF.Web.CodeGenerator\DataWF.Web.CodeGenerator.csproj", "{7DD344C7-17CD-4BD6-8F27-63B419980BF1}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution

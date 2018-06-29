@@ -4,29 +4,29 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 
-namespace DataWF.Web.Common
+namespace DataWF.Web.Controller
 {
-    public abstract class DBController<T> : ControllerBase where T : DBItem, new()
+    public abstract class BaseController<T, K> : ControllerBase where T : DBItem, new()
     {
         protected DBTable<T> table;
 
-        public DBController(DBTable<T> dBTable)
+        public BaseController(DBTable<T> dBTable)
         {
             table = dBTable;
         }
 
-        public DBController() : this(DBTable.GetTable<T>())
+        public BaseController() : this(DBTable.GetTable<T>())
         {
         }
 
         [HttpGet]
         public ActionResult<IEnumerable<T>> Get()
         {
-            return Get(string.Empty);
+            return Find(string.Empty);
         }
 
-        [HttpGet("{filter}")]
-        public ActionResult<IEnumerable<T>> Get(string filter)
+        [HttpGet("Find/{filter}")]
+        public ActionResult<IEnumerable<T>> Find(string filter)
         {
             try
             {
@@ -41,8 +41,8 @@ namespace DataWF.Web.Common
             }
         }
 
-        [HttpGet("{id:int}")]
-        public ActionResult<T> Get(int id)
+        [HttpGet("{id}")]
+        public ActionResult<T> Get(K id)
         {
             try
             {
@@ -60,7 +60,7 @@ namespace DataWF.Web.Common
         }
 
         [HttpPost]
-        public IActionResult Post(T value)
+        public ActionResult<T> Post(T value)
         {
             try
             {
@@ -82,11 +82,11 @@ namespace DataWF.Web.Common
             {
                 return BadRequest(ex);
             }
-            return Ok(value.PrimaryId);
+            return Ok(value);
         }
 
         [HttpPut]
-        public IActionResult Put(T value)
+        public ActionResult<T> Put(T value)
         {
             try
             {
@@ -102,11 +102,11 @@ namespace DataWF.Web.Common
             {
                 return BadRequest(ex);
             }
-            return Ok();
+            return Ok(value);
         }
 
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public ActionResult<K> Delete(K id)
         {
             try
             {

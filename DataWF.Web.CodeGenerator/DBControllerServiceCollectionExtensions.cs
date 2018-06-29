@@ -23,18 +23,23 @@ namespace DataWF.Web.Common
 
         public static Assembly AddDBController(this IMvcCoreBuilder builder, DBSchema schema)
         {
-            var generator = new DBControllerGenerator();
-            var controllersAssembly = generator.Generate(schema);
+            var controllersAssembly = Generate(schema);
             builder.AddApplicationPart(controllersAssembly);
             return controllersAssembly;
         }
 
         public static Assembly AddDBController(this IMvcBuilder builder, DBSchema schema)
         {
-            var generator = new DBControllerGenerator();
-            var controllersAssembly = generator.Generate(schema);
+            var controllersAssembly = Generate(schema);
             builder.AddApplicationPart(controllersAssembly);
             return controllersAssembly;
+        }
+
+        public static Assembly Generate(DBSchema schema)
+        {
+            var generator = new ControllerGenerator(schema.Assemblies, string.Empty, null);
+            generator.Generate();
+            return generator.Compile();
         }
     }
 }

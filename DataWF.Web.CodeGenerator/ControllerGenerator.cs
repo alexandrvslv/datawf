@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-//using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,14 +14,29 @@ using System.Text;
 namespace DataWF.Web.Common
 {
 
-    public partial class DBControllerGenerator
+    public partial class ControllerGenerator
     {
         private Dictionary<string, MetadataReference> references;
         private Dictionary<string, UsingDirectiveSyntax> usings;
         private List<MethodParametrInfo> parametersInfo;
+        private Dictionary<string, ClassDeclarationSyntax> trees = new Dictionary<string, ClassDeclarationSyntax>();
+        public List<Assembly> Assemblies { get; private set; }
+        public string Output { get; }
+        public string Namespace { get; private set; }
 
-        public DBControllerGenerator()
+        public ControllerGenerator(string paths, string output, string nameSpace)
+            : this(paths.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries), output, nameSpace)
+        { }
+
+        public ControllerGenerator(IEnumerable<string> assemblies, string output, string nameSpace)
+            : this(LoadAssemblies(assemblies), output, nameSpace)
+        { }
+
+        public ControllerGenerator(IEnumerable<Assembly> assemblies, string output, string nameSpace)
         {
+            Assemblies = new List<Assembly>(assemblies);
+            Output = string.IsNullOrEmpty(output) ? null : Path.GetFullPath(output);
+            Namespace = nameSpace ?? "DataWF.Web.Controller";
             references = new Dictionary<string, MetadataReference>() {
                 {"netstandard", MetadataReference.CreateFromFile(Assembly.Load("netstandard, Version=2.0.0.0").Location) },
                 {"System", MetadataReference.CreateFromFile(typeof(Object).Assembly.Location) },
@@ -33,7 +47,6 @@ namespace DataWF.Web.Common
                 {"Microsoft.AspNetCore.Mvc", MetadataReference.CreateFromFile(typeof(ControllerBase).Assembly.Location) },
                 {"DataWF.Common", MetadataReference.CreateFromFile(typeof(Helper).Assembly.Location) },
                 {"DataWF.Data", MetadataReference.CreateFromFile(typeof(DBTable).Assembly.Location) },
-                {"DataWF.Web.Common", MetadataReference.CreateFromFile(typeof(DBController<>).Assembly.Location) }
             };
             //foreach (var module in Helper.ModuleInitializer)
             //{
@@ -43,48 +56,69 @@ namespace DataWF.Web.Common
             usings = new Dictionary<string, UsingDirectiveSyntax>(StringComparer.Ordinal) {
                 { "DataWF.Common", SyntaxHelper.CreateUsingDirective("DataWF.Common") },
                 { "DataWF.Data", SyntaxHelper.CreateUsingDirective("DataWF.Data") },
-                { "DataWF.Web.Common", SyntaxHelper.CreateUsingDirective("DataWF.Web.Common") },
                 { "Microsoft.AspNetCore.Mvc", SyntaxHelper.CreateUsingDirective("Microsoft.AspNetCore.Mvc") },
                 { "System", SyntaxHelper.CreateUsingDirective("System") },
                 { "System.Collections.Generic", SyntaxHelper.CreateUsingDirective("System.Collections.Generic") }
             };
         }
 
-        //https://carlos.mendible.com/2017/03/02/create-a-class-with-net-core-and-roslyn/
-        public Assembly Generate(DBSchema schema)
+        public static IEnumerable<Assembly> LoadAssemblies(IEnumerable<string> assemblies)
         {
-            var name = schema.Name.ToInitcap('_');
-            var files = new List<SyntaxTree>();
-
-            foreach (var table in schema.Tables)
+            foreach (var name in assemblies)
             {
-                var itemType = table.GetType().GetGenericArguments().FirstOrDefault();
-                var tableAttribute = DBTable.GetTableAttribute(itemType);
-                var controllerType = typeof(DBController<>).MakeGenericType(itemType);
+                yield return Assembly.LoadFrom(Path.GetFullPath(name));
+            }
+        }
+
+        public void Generate()
+        {
+            foreach (var assembly in Assemblies)
+            {
+                var assemblyName = assembly.GetName().Name;
+                if (!references.ContainsKey(assemblyName))
+                    references[assemblyName] = MetadataReference.CreateFromFile(assembly.Location);
+
+                foreach (var itemType in assembly.GetExportedTypes())
+                {
+                    var tableAttribute = DBTable.GetTableAttribute(itemType, true);
+                    if (tableAttribute != null)
+                    {
+                        var controller = GetOrGenerateController(tableAttribute);
+                        if (tableAttribute.ItemType != itemType)
+                        {
+                            trees[tableAttribute.ItemType.Name] = controller.AddMembers(GetControllerMemebers(itemType, tableAttribute).ToArray());
+                        }
+                    }
+                }
+            }
+        }
+
+        //https://carlos.mendible.com/2017/03/02/create-a-class-with-net-core-and-roslyn/
+        private ClassDeclarationSyntax GetOrGenerateController(TableAttribute tableAttribute)
+        {
+            if (!trees.TryGetValue(tableAttribute.ItemType.Name, out var controller))
+            {
                 string controllerClassName = $"{tableAttribute.ItemType.Name}Controller";
-                var @class = SyntaxFactory.ClassDeclaration(
+                var primaryKeyType = tableAttribute.GetPrimaryKey()?.GetDataType() ?? typeof(int);
+                controller = SyntaxFactory.ClassDeclaration(
                     attributeLists: SyntaxFactory.List(GetControllerAttributeList()),
                     modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
                     identifier: SyntaxFactory.Identifier(controllerClassName),
                     typeParameterList: null,
                     baseList: SyntaxFactory.BaseList(SyntaxFactory.SingletonSeparatedList<BaseTypeSyntax>(
-                        SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"DBController<{itemType.Name}>")))),
+                        SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"BaseController<{tableAttribute.ItemType.Name}, {primaryKeyType.Name}>")))),
                     constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
-                    members: SyntaxFactory.List(GetControllerMemebers(table))
+                    members: SyntaxFactory.List(GetControllerMemebers(tableAttribute.ItemType, tableAttribute))
                     );
 
-                var @namespace = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName($"DataWF.Web.{name}"))
-                    .AddMembers(@class);
-                var @unit = SyntaxFactory.CompilationUnit()
-                                        .AddUsings(usings.Values.ToArray())
-                                        .AddMembers(@namespace).NormalizeWhitespace();
-
-                files.Add(@unit.SyntaxTree);
-                var assemblyName = itemType.Assembly.GetName().Name;
-                if (!references.ContainsKey(assemblyName))
-                    references[assemblyName] = MetadataReference.CreateFromFile(itemType.Assembly.Location);
+                trees[tableAttribute.ItemType.Name] = controller;
             }
-            CSharpCompilation compilation = CSharpCompilation.Create($"{name}.dll", files, references.Values,
+            return controller;
+        }
+
+        public Assembly Compile()
+        {
+            var compilation = CSharpCompilation.Create($"{Namespace}.dll", GetUnits(false), references.Values,
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
             using (var dllStream = new MemoryStream())
@@ -110,18 +144,38 @@ namespace DataWF.Web.Common
             return null;
         }
 
-        public IEnumerable<MemberDeclarationSyntax> GetControllerMemebers(DBTable table)
+        public List<SyntaxTree> GetUnits(bool save)
         {
-            foreach (var typeInfo in table.ItemTypes.Values)
+            var list = new List<SyntaxTree>();
+            if (save)
             {
-                AddUsing(typeInfo.Type);
-                foreach (var method in typeInfo.Type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+                Directory.CreateDirectory(Output);
+            }
+            var assembly = typeof(ControllerGenerator).Assembly;
+            var baseName = assembly.GetName().Name + ".ControllerTemplate.";
+            list.AddRange(SyntaxHelper.LoadResources(assembly, baseName, save ? Output : null).Select(P => P.SyntaxTree));
+
+            foreach (var entry in trees)
+            {
+                var unit = SyntaxHelper.GenUnit(entry.Value, Namespace, usings.Values);
+                if (save)
                 {
-                    if (method.GetCustomAttribute<ControllerMethodAttribute>() != null
-                        && (!method.IsVirtual || method.GetBaseDefinition() == null))
-                    {
-                        yield return GetControllerMethod(method, table);
-                    }
+                    File.WriteAllText(Path.Combine(Output, $"{entry.Key}Controller.cs"), unit.ToFullString());
+                }
+                list.Add(unit.SyntaxTree);
+            }
+            return list;
+        }
+
+        public IEnumerable<MemberDeclarationSyntax> GetControllerMemebers(Type type, TableAttribute table)
+        {
+            AddUsing(type);
+            foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+            {
+                if (method.GetCustomAttribute<ControllerMethodAttribute>() != null
+                    && (!method.IsVirtual || method.GetBaseDefinition() == null))
+                {
+                    yield return GetControllerMethod(method, table);
                 }
             }
         }
@@ -143,13 +197,13 @@ namespace DataWF.Web.Common
         }
 
         //https://stackoverflow.com/questions/37710714/roslyn-add-new-method-to-an-existing-class
-        private MethodDeclarationSyntax GetControllerMethod(MethodInfo method, DBTable table)
+        private MethodDeclarationSyntax GetControllerMethod(MethodInfo method, TableAttribute table)
         {
             AddUsing(method.DeclaringType);
             AddUsing(method.ReturnType);
             var returning = method.ReturnType == typeof(void) ? "void" : $"ActionResult<{TypeHelper.FormatCode(method.ReturnType)}>";
 
-            return SyntaxFactory.MethodDeclaration(attributeLists: SyntaxFactory.List<AttributeListSyntax>(GetControllerMethodAttributes(method)),
+            return SyntaxFactory.MethodDeclaration(attributeLists: SyntaxFactory.List(GetControllerMethodAttributes(method)),
                           modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
                           returnType: returning == "void"
                           ? SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword))
@@ -157,7 +211,7 @@ namespace DataWF.Web.Common
                           explicitInterfaceSpecifier: null,
                           identifier: SyntaxFactory.Identifier(method.Name),
                           typeParameterList: null,
-                          parameterList: SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(GetControllerMethodParameters(method))),
+                          parameterList: SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(GetControllerMethodParameters(method, table))),
                           constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
                           body: SyntaxFactory.Block(GetControllerMethodBody(method)),
                           semicolonToken: SyntaxFactory.Token(SyntaxKind.SemicolonToken));
@@ -205,7 +259,7 @@ namespace DataWF.Web.Common
 
         private IEnumerable<AttributeListSyntax> GetControllerMethodAttributes(MethodInfo method)
         {
-            var parameters = method.Name + (method.IsStatic ? "" : "/{id:int}");
+            var parameters = method.Name + (method.IsStatic ? "" : "/{id}");
             foreach (var parameter in method.GetParameters())
             {
                 parameters += $"/{{{parameter.Name}}}";
@@ -223,12 +277,11 @@ namespace DataWF.Web.Common
                                  SyntaxFactory.IdentifierName("HttpGet"))));
         }
 
-        private IEnumerable<ParameterSyntax> GetControllerMethodParameters(MethodInfo method)
+        private IEnumerable<ParameterSyntax> GetControllerMethodParameters(MethodInfo method, TableAttribute table)
         {
-
-            yield return SyntaxFactory.Parameter(attributeLists: SyntaxFactory.List<AttributeListSyntax>(GetParameterAttributes()),
+            yield return SyntaxFactory.Parameter(attributeLists: SyntaxFactory.List(GetParameterAttributes()),
                                                              modifiers: SyntaxFactory.TokenList(),
-                                                             type: SyntaxFactory.ParseTypeName(typeof(int).Name),
+                                                             type: SyntaxFactory.ParseTypeName((table.GetPrimaryKey()?.GetDataType() ?? typeof(int)).Name),
                                                              identifier: SyntaxFactory.Identifier("id"),
                                                              @default: null);
             parametersInfo = new List<MethodParametrInfo>();
@@ -238,7 +291,7 @@ namespace DataWF.Web.Common
                 var methodParameter = new MethodParametrInfo { Info = parameter };
                 parametersInfo.Add(methodParameter);
                 AddUsing(methodParameter.Info.ParameterType);
-                yield return SyntaxFactory.Parameter(attributeLists: SyntaxFactory.List<AttributeListSyntax>(GetParameterAttributes()),
+                yield return SyntaxFactory.Parameter(attributeLists: SyntaxFactory.List(GetParameterAttributes()),
                                                          modifiers: SyntaxFactory.TokenList(),
                                                          type: SyntaxFactory.ParseTypeName(methodParameter.Type.Name),
                                                          identifier: SyntaxFactory.Identifier(methodParameter.Info.Name),
@@ -337,7 +390,7 @@ namespace DataWF.Web.Common
         private ParameterInfo info;
 
         public Type Type { get; private set; }
-        public DBTable Table { get; private set; }
+        public TableAttribute Table { get; private set; }
         public string ValueName { get; private set; }
         public ParameterInfo Info
         {
@@ -349,10 +402,11 @@ namespace DataWF.Web.Common
                 ValueName = info.Name;
                 if (TypeHelper.IsBaseType(Type, typeof(DBItem)))
                 {
-                    Table = DBTable.GetTable(Type, null, false, true);
-                    if (Table != null && Table.PrimaryKey != null)
+                    Table = DBTable.GetTableAttribute(Type, true);
+                    var primaryKey = Table?.GetPrimaryKey();
+                    if (primaryKey != null)
                     {
-                        Type = Table.PrimaryKey.DataType;
+                        Type = primaryKey.GetDataType();
                         ValueName += "Value";
                     }
                 }

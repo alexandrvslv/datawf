@@ -2,8 +2,6 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Formatting;
-using Microsoft.CodeAnalysis.Options;
 using NJsonSchema;
 using NSwag;
 using System;
@@ -25,7 +23,17 @@ namespace DataWF.Web.Common
         private SwaggerDocument document;
         private Uri uri;
 
-        public async Task Generate(string url, string output)
+
+        public ClientGenerator(string url, string output)
+        {
+            Output = string.IsNullOrEmpty(output) ? null : Path.GetFullPath(output);
+            uri = new Uri(url);
+        }
+
+        public string Output { get; }
+
+
+        public void Generate()
         {
             usings = new List<UsingDirectiveSyntax>() {
                 SyntaxHelper.CreateUsingDirective("DataWF.Common") ,
@@ -41,48 +49,53 @@ namespace DataWF.Web.Common
                 SyntaxHelper.CreateUsingDirective("System.Net.Http.Headers") ,
                 SyntaxHelper.CreateUsingDirective("Newtonsoft.Json")
             };
-            output = Path.GetFullPath(output);
-            Directory.CreateDirectory(output);
 
-            var assembly = typeof(ClientGenerator).Assembly;
-            var baseName = assembly.GetName().Name + ".ClientTemplate.";
-            foreach (var name in assembly.GetManifestResourceNames())
-            {
-                if (!name.StartsWith(baseName))
-                    continue;
-                var path = Path.Combine(output, name.Substring(baseName.Length));
-                using (var stream = new FileStream(path, FileMode.OpenOrCreate))
-                {
-                    assembly.GetManifestResourceStream(name).CopyTo(stream);
-                }
-            }
 
-            document = await SwaggerDocument.FromUrlAsync(url);
-            uri = new Uri(url);
+            document = SwaggerDocument.FromUrlAsync(uri.OriginalString).Result;
             foreach (var definition in document.Definitions)
             {
                 definition.Value.Id = definition.Key;
             }
-
-            var modelPath = Path.Combine(output, "Models");
-            Directory.CreateDirectory(modelPath);
             foreach (var definition in document.Definitions)
             {
-                var realisation = GetOrGenerateDefinion(definition.Key);
-                File.WriteAllText(Path.Combine(modelPath, definition.Key + ".cs"), realisation.ToFullString());
+                GetOrGenerateDefinion(definition.Key);
             }
-
             foreach (var operation in document.Operations)
             {
                 AddClientOperation(operation);
             }
+        }
 
-            var clientPath = Path.Combine(output, "Clients");
+        public List<SyntaxTree> GetUnits(bool save)
+        {
+            var list = new List<SyntaxTree>();
+            var assembly = typeof(ClientGenerator).Assembly;
+            var baseName = assembly.GetName().Name + ".ClientTemplate.";
+            list.AddRange(SyntaxHelper.LoadResources(assembly, baseName, save ? Output : null).Select(p => p.SyntaxTree));
+
+            var modelPath = Path.Combine(Output, "Models");
+            Directory.CreateDirectory(modelPath);
+            foreach (var entry in cacheModels)
+            {
+                if (save)
+                {
+                    File.WriteAllText(Path.Combine(modelPath, entry.Key + ".cs"), entry.Value.ToFullString());
+                }
+                list.Add(entry.Value.SyntaxTree);
+            }
+
+            var clientPath = Path.Combine(Output, "Clients");
             Directory.CreateDirectory(clientPath);
             foreach (var entry in cacheClients)
             {
-                File.WriteAllText(Path.Combine(clientPath, entry.Key + "Client.cs"), GenUnit(entry.Value).ToFullString());
+                var unit = SyntaxHelper.GenUnit(entry.Value, Namespace, usings);
+                if (save)
+                {
+                    File.WriteAllText(Path.Combine(clientPath, entry.Key + "Client.cs"), unit.ToFullString());
+                }
+                list.Add(unit.SyntaxTree);
             }
+            return list;
         }
 
         public virtual string GetClientName(SwaggerOperationDescription decriptor)
@@ -285,22 +298,12 @@ namespace DataWF.Web.Common
             return tree;
         }
 
-        private CompilationUnitSyntax GenUnit(MemberDeclarationSyntax @class)
-        {
-            var @namespace = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(Namespace))
-                                             .AddMembers(@class);
-            return SyntaxFactory.CompilationUnit(
-                externs: SyntaxFactory.List<ExternAliasDirectiveSyntax>(),
-                usings: SyntaxFactory.List(usings),
-                attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
-                members: SyntaxFactory.List<MemberDeclarationSyntax>(new[] { @namespace }))
-                                        .NormalizeWhitespace("    ", true);
-        }
+
 
         private CompilationUnitSyntax GenDefinition(JsonSchema4 schema)
         {
             var @class = schema.IsEnumeration ? GenDefinitionEnum(schema) : GenDefinitionClass(schema);
-            return GenUnit(@class);
+            return SyntaxHelper.GenUnit(@class, Namespace, usings);
         }
 
         private MemberDeclarationSyntax GenDefinitionEnum(JsonSchema4 schema)

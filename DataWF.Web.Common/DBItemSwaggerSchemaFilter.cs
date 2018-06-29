@@ -13,10 +13,11 @@ namespace DataWF.Web.Common
         {
             if (parameter is NonBodyParameter nonBodyParameter && string.IsNullOrEmpty(nonBodyParameter.Type))
             {
-                var type = context.ControllerParameterDescriptor.ParameterType;
+                var type = context.ApiParameterDescription.Type;
                 if (type.IsEnum)
                 {
-                    var schema = context.SchemaRegistry.GetOrRegister(context.ControllerParameterDescriptor.ParameterType);
+                    nonBodyParameter.Type = "string";
+                    var schema = context.SchemaRegistry.GetOrRegister(context.ApiParameterDescription.Type);
                     nonBodyParameter.Extensions.Add("schema", schema);
                 }
             }
@@ -41,21 +42,6 @@ namespace DataWF.Web.Common
             if (TypeHelper.IsBaseType(context.SystemType, typeof(DBItem)))
             {
                 schema.Properties.Clear();
-
-                //Obsoled as of DBSchema generated required 
-                //var table = DBTable.GetTableAttribute(context.SystemType, true);
-                //if (table != null)
-                //{
-                //    var baseSchema = context.SchemaRegistry.GetOrRegister(context.SystemType.BaseType);
-                //    schema.AllOf = new List<Schema> { baseSchema };
-                //    foreach (var column in table.Columns)
-                //    {
-                //        if (column.Property != null && column.Property.DeclaringType == context.SystemType)
-                //        {
-                //            ApplyColumn(schema, context, column);
-                //        }
-                //    }
-                //}
 
                 if (context.SystemType != typeof(DBItem))
                 {
@@ -89,7 +75,8 @@ namespace DataWF.Web.Common
             if ((column.Keys & DBColumnKeys.Access) == DBColumnKeys.Access
                 || (column.Keys & DBColumnKeys.Password) == DBColumnKeys.Password)
                 return;
-            var columnSchema = context.SchemaRegistry.GetOrRegister(column.DataType);
+            var columnSchema = context.SchemaRegistry.GetOrRegister(column.GetDataType());
+            
             if (column.DataType == typeof(string) && column.Size > 0)
             {
                 columnSchema.MaxLength = column.Size;
