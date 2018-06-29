@@ -51,7 +51,7 @@ namespace DataWF.Web.Common
             };
 
 
-            document = SwaggerDocument.FromUrlAsync(uri.OriginalString).Result;
+            document = SwaggerDocument.FromUrlAsync(uri.OriginalString).GetAwaiter().GetResult();
             foreach (var definition in document.Definitions)
             {
                 definition.Value.Id = definition.Key;
