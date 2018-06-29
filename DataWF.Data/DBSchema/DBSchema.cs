@@ -204,6 +204,9 @@ namespace DataWF.Data
             }
             set { fileName = value; }
         }
+
+        [JsonIgnore, XmlIgnore, Browsable(false)]
+        public List<Assembly> Assemblies { get; private set; }
         #endregion
 
         public void Update()
@@ -461,6 +464,7 @@ namespace DataWF.Data
 
         public void Generate(IEnumerable<Assembly> assemblies)
         {
+            Assemblies = new List<Assembly>(assemblies);
             var logSchema = GenerateLogSchema();
             Helper.Logs.Add(new StateInfo("Load", "Database", "Generate Schema"));
             var attributes = new List<TableAttribute>();
