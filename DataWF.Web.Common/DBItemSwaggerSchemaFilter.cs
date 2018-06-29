@@ -76,7 +76,7 @@ namespace DataWF.Web.Common
                 || (column.Keys & DBColumnKeys.Password) == DBColumnKeys.Password)
                 return;
             var columnSchema = context.SchemaRegistry.GetOrRegister(column.GetDataType());
-            
+
             if (column.DataType == typeof(string) && column.Size > 0)
             {
                 columnSchema.MaxLength = column.Size;
@@ -86,11 +86,16 @@ namespace DataWF.Web.Common
                 columnSchema.ReadOnly = true;
             }
             if ((column.Keys & DBColumnKeys.Notnull) == DBColumnKeys.Notnull
-                || (column.Keys & DBColumnKeys.Primary) == DBColumnKeys.Primary)
+                || (column.Keys & DBColumnKeys.Primary) != DBColumnKeys.Primary)
             {
                 if (schema.Required == null)
                     schema.Required = new List<string>();
                 schema.Required.Add(column.Property.Name);
+            }
+            if ((column.Keys & DBColumnKeys.Primary) == DBColumnKeys.Primary)
+            {
+                schema.Extensions.Add("x-id", column.Property.Name);
+                //columnSchema. = true;
             }
             if ((column.Keys & DBColumnKeys.Culture) == DBColumnKeys.Culture)
             {
