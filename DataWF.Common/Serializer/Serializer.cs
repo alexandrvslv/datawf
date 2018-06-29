@@ -80,8 +80,9 @@ namespace DataWF.Common
             try
             {
                 using (var stream = new FileStream(file, FileMode.Open, FileAccess.Read))
+                using (var buffer = new BufferedStream(stream))
                 {
-                    element = Deserialize(stream, element);
+                    element = Deserialize(buffer, element);
                 }
             }
             catch (Exception e)
