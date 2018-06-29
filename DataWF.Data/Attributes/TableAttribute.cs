@@ -157,6 +157,18 @@ namespace DataWF.Data
             return Table;
         }
 
+        public ColumnAttribute GetPrimaryKey()
+        {
+            foreach (var column in cacheColumns)
+            {
+                if ((column.Keys & DBColumnKeys.Primary) == DBColumnKeys.Primary)
+                {
+                    return column;
+                }
+            }
+            return null;
+        }
+
         public virtual void Initialize(Type type)
         {
             if (ItemType != null)
