@@ -1,5 +1,6 @@
 ﻿using DataWF.Web.Common;
 using System;
+using System.Collections.Generic;
 
 namespace DataWF.Web.CodeGenerator
 {
@@ -7,10 +8,25 @@ namespace DataWF.Web.CodeGenerator
     {
         static void Main(string[] args)
         {
-            string type = args.Length > 0 ? args[0] : throw new ArgumentException();
-            string path = args.Length > 1 ? args[1] : throw new ArgumentException();
-            string output = args.Length > 2 ? args[2] : string.Empty;
-            string nameSpace = args.Length > 3 ? args[3] : null;
+            var map = new Dictionary<string, string>();
+            var key = (string)null;
+            foreach (var item in args)
+            {
+                if (item.Length == 0)
+                    continue;
+                if (item.StartsWith('-'))
+                    key = item;
+                else if (key != null)
+                    map[key] = $"{(map.TryGetValue(key, out var value) ? value : string.Empty)} {item}";
+            }
+            if (!map.TryGetValue("-t", out var type) && !map.TryGetValue("--type", out type))
+                throw new ArgumentException("Type missing, expect -t|--type client|controller");
+            if (!map.TryGetValue("-p", out var path) && !map.TryGetValue("--path", out path))
+                throw new ArgumentException("Path missing, expect -p|--path path1 path2");
+            if (!map.TryGetValue("-o", out var output) && !map.TryGetValue("--out", out output))
+                throw new ArgumentException("Out missing, expect -o|--out path1 path2");
+            if (map.TryGetValue("-n", out var nameSpace) || map.TryGetValue("--namespace", out nameSpace))
+            { }
 
             if (type.Equals("client", StringComparison.OrdinalIgnoreCase))
             {

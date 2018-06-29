@@ -25,7 +25,7 @@ namespace DataWF.Web.Common
         public string Namespace { get; private set; }
 
         public ControllerGenerator(string paths, string output, string nameSpace)
-            : this(paths.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries), output, nameSpace)
+            : this(paths.Split(new char[] { ';', ',', ' ' }, StringSplitOptions.RemoveEmptyEntries), output, nameSpace)
         { }
 
         public ControllerGenerator(IEnumerable<string> assemblies, string output, string nameSpace)
