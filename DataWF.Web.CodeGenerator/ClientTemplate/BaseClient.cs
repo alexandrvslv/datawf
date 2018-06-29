@@ -1,5 +1,7 @@
-﻿using Newtonsoft.Json;
+﻿using DataWF.Common;
+using Newtonsoft.Json;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -15,9 +17,10 @@ namespace DataWF.Web.Client
     /// Concept from https://github.com/RSuter/NSwag/wiki/SwaggerToCSharpClientGenerator
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public partial class BaseClient<T>
+    public abstract partial class BaseClient<T, K> : IBaseClient
     {
         private Lazy<JsonSerializerSettings> _settings;
+        private string baseUrl;
 
         public BaseClient()
         {
@@ -29,9 +32,15 @@ namespace DataWF.Web.Client
             });
         }
 
-        public string BaseUrl { get; set; } = "";
-
         protected JsonSerializerSettings JsonSerializerSettings { get { return _settings.Value; } }
+
+        public IBaseProvider Provider { get; set; }
+
+        public string BaseUrl
+        {
+            get { return Provider?.BaseUrl ?? baseUrl; }
+            set { baseUrl = value; }
+        }
 
         partial void UpdateJsonSerializerSettings(JsonSerializerSettings settings);
         partial void PrepareRequest(HttpClient client, HttpRequestMessage request, StringBuilder urlBuilder);
@@ -137,6 +146,42 @@ namespace DataWF.Web.Client
             }
         }
 
+        public abstract Task<List<T>> GetAsync();
+
+        public abstract Task<List<T>> GetAsync(CancellationToken cancellationToken);
+
+        Task IBaseClient.GetAsync() { return GetAsync(); }
+
+        public abstract Task<T> PutAsync(T value);
+
+        public abstract Task<T> PutAsync(T value, CancellationToken cancellationToken);
+
+        public Task PutAsync(object value) { return PutAsync((K)value); }
+
+        public abstract Task<T> PostAsync(T value);
+
+        public abstract Task<T> PostAsync(T value, CancellationToken cancellationToken);
+
+        public Task PostAsync(object value) { return PostAsync((K)value); }
+
+        public abstract Task<List<T>> FindAsync(string filter);
+
+        public abstract Task<List<T>> FindAsync(string filter, CancellationToken cancellationToken);
+
+        Task IBaseClient.FindAsync(string filter) { return FindAsync(filter); }
+
+        public abstract Task<T> GetAsync(K id);
+
+        public abstract Task<T> GetAsync(K id, CancellationToken cancellationToken);
+
+        public Task GetAsync(object id) { return GetAsync((K)id); }
+
+        public abstract Task<K> DeleteAsync(K id);
+
+        public abstract Task<K> DeleteAsync(K id, CancellationToken cancellationToken);
+
+        public Task DeleteAsync(object id) { return DeleteAsync((K)id); }
+
         protected string ConvertToString(object value, System.Globalization.CultureInfo cultureInfo)
         {
             if (value is System.Enum)
@@ -168,5 +213,7 @@ namespace DataWF.Web.Client
 
             return System.Convert.ToString(value, cultureInfo);
         }
+
+
     }
 }

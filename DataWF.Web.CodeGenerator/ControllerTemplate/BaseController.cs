@@ -106,7 +106,7 @@ namespace DataWF.Web.Controller
         }
 
         [HttpDelete("{id}")]
-        public ActionResult<K> Delete(K id)
+        public ActionResult<bool> Delete(K id)
         {
             try
             {
@@ -120,7 +120,7 @@ namespace DataWF.Web.Controller
             {
                 return BadRequest(ex);
             }
-            return Ok();
+            return Ok(true);
         }
 
         public override BadRequestObjectResult BadRequest(object error)
