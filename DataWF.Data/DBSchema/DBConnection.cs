@@ -27,7 +27,7 @@ namespace DataWF.Data
         }
     }
 
-    public class DBConnection : INotifyPropertyChanged,IDisposable
+    public class DBConnection : INotifyPropertyChanged, IDisposable
     {
         private string name = "";
         private string host = "";
@@ -481,17 +481,24 @@ namespace DataWF.Data
             }
         }
 
-        public List<object> ExecuteGoQuery(string query, bool noTransaction = true, DBExecuteType type = DBExecuteType.Scalar)
+        public IEnumerable<string> SplitGoQuery(string query)
         {
             var regex = new Regex(@"\s*go\s*(\n|$)", RegexOptions.IgnoreCase);
-            var split = regex.Split(query);
-            var result = new List<object>(split.Length);
-            foreach (var go in split)
+            foreach (var item in regex.Split(query))
             {
-                if (go.Trim().Length == 0)
+                if (item.Trim().Length == 0)
                 {
                     continue;
                 }
+                yield return item;
+            }
+        }
+
+        public List<object> ExecuteGoQuery(string query, bool noTransaction = true, DBExecuteType type = DBExecuteType.Scalar)
+        {
+            var result = new List<object>();
+            foreach (var go in SplitGoQuery(query))
+            {
                 result.Add(ExecuteQuery(go, noTransaction, type));
             }
             return result;

@@ -354,7 +354,19 @@ namespace DataWF.Data
             }
             if (schema != null)
             {
-                schema.Connection.ExecuteGoQuery(builder.ToString());
+                foreach (var command in schema.Connection.SplitGoQuery(builder.ToString()))
+                {
+                    try
+                    {
+                        schema.Connection.ExecuteQuery(command);
+                    }
+                    catch (Exception ex)
+                    {
+                        if (ex.Message.Contains("already exist"))
+                        {
+                        }
+                    }
+                }
             }
             Serialization.Serialize(Changes, $"SchemaDiff_{DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss")}.xml");
             Changes.Clear();
