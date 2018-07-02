@@ -911,26 +911,7 @@ namespace DataWF.Gui
                     || e.Column.GetEditor(e.Item) is CellEditorCheck;
                 DefaultMenu.Editor.CellCopy.Visible = e.Location != LayoutHitTestLocation.Column;
 
-                //defMenu.MenuSubСolumns.Items.Clear();
-                //if (e.HitTest.Column.Accessor != null && IsComplex(e.HitTest.Column))
-                //{
-                //    var arg = new LayoutListPropertiesArgs() { Cell = e.HitTest.Column };
-                //    OnGetProperties(arg);
-                //    foreach (string s in arg.Properties)
-                //    {
-                //        string property = (s.IndexOf('.') < 0 ? e.HitTest.Column.Name + "." : string.Empty) + s;
-                //        LayoutColumn column = e.HitTest.Column.Columns[property];
-                //        if (column == null)
-                //        {
-                //            column = BuildColumn(e.HitTest.Column, property);
-                //            if (column == null)
-                //                continue;
-                //            e.HitTest.Column.Columns.Add(column);
-                //        }
-                //        if (column.View)
-                //            defMenu.MenuSubСolumns.Items.Add(LayoutMenu.BuildMenuItem(column));
-                //    }
-                //}
+                
             }
         }
 

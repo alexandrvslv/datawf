@@ -73,7 +73,8 @@ namespace DataWF.Gui
                     new LayoutColumn { Name = nameof(LayoutColumn.Visible), Width = 50 },
                     new LayoutColumn { Name = nameof(LayoutColumn.Format) })
             });
-
+            columns.List.SelectionChanged += ColumnsItemSelect;
+            ToolInsert.ItemClick += ToolInsertItemClick;
             fields = new ListEditor(new LayoutList
             {
                 GenerateColumns = false,
@@ -189,6 +190,73 @@ namespace DataWF.Gui
         {
             bar.Localize();
             map.Localize();
+        }
+
+        private ToolMenuItem ToolInsert
+        {
+            get { return (ToolMenuItem)((ToolDropDown)columns.Bar["Add"]).DropDown["Insert"]; }
+        }
+
+        private void ToolInsertItemClick(object sender, ToolItemEventArgs e)
+        {
+            var column = (LayoutColumn)e.Item.Tag;
+            column.Visible = e.Item.Checked = !e.Item.Checked;
+            if (column.Visible && column.Map == null && column.Owner != null)
+            {
+                ((LayoutColumn)column.Owner).InsertAfter(column);
+            }
+        }
+
+        private void ColumnsItemSelect(object sender, EventArgs e)
+        {
+            if (columns.List.SelectedItem == null)
+                return;
+            var insert = ToolInsert;
+            if (insert.DropDown == null)
+            {
+                insert.DropDown = new Menubar();
+            }
+            else
+            {
+                foreach (var item in insert.DropDown.Items)
+                {
+                    item.Visible = false;
+                }
+            }
+            var column = (LayoutColumn)columns.List.SelectedItem;
+            if (column.Invoker != null && ContextList.IsComplex(column))
+            {
+                var propertiest = ContextList.GetPropertiesByCell(column, null);
+                foreach (string item in propertiest)
+                {
+                    string property = (item.IndexOf('.') < 0 ? (column.Name + ".") : string.Empty) + item;
+                    var itemColumn = ContextList.ListInfo.Columns[property];
+                    if (itemColumn == null)
+                    {
+                        itemColumn = ContextList.BuildColumn(ContextList.ListInfo, column, property);
+                        if (itemColumn == null)
+                            continue;
+                    }
+                    var tool = insert.DropDown[property];
+                    if (tool == null)
+                    {
+                        insert.DropDown.Items.Add(tool = BuildMenuItem(itemColumn));
+                    }
+                    tool.Visible = !itemColumn.Visible || itemColumn.Map == null;
+                }
+            }
+        }
+
+        public ToolMenuItem BuildMenuItem(LayoutColumn column)
+        {
+            var item = new ToolMenuItem()
+            {
+                Text = column.Text,
+                Name = column.Name,
+                Checked = column.Map != null && column.Visible,
+                Tag = column
+            };
+            return item;
         }
 
         public void ToolSortClick(object sender, EventArgs e)

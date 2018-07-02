@@ -64,18 +64,7 @@ namespace DataWF.Gui
             return CacheMenuColumn.TryGetValue(column, out var menuItem) ? menuItem : null;
         }
 
-        public static ToolMenuItem BuildMenuItem(LayoutColumn column)
-        {
-            var item = new ToolMenuItem()
-            {
-                Text = column.Text,
-                Name = column.Name,
-                Checked = column.Map != null && column.Visible,
-                Tag = column
-            };
-            //item.Click += defMenu.MenuSubColumnsItemClicked;
-            return item;
-        }
+        
 
         public static ToolMenuItem BuilMenuItem(LayoutField f)
         {
