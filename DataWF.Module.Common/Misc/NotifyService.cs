@@ -30,16 +30,9 @@ namespace DataWF.Module.Common
             public object Id;
         }
 
-        private struct LoadTask
-        {
-            public DBTable Table;
-            public bool Refresh;
-            public object Id;
-        }
-
         public static NotifyService Default;
 
-        private static object loadLock = new Queue<LoadTask>();
+        private static object loadLock = new object();
 
         private Instance instance;
         private ConcurrentBag<MessageItem> buffer = new ConcurrentBag<MessageItem>();
