@@ -644,7 +644,7 @@ namespace DataWF.Gui
 
         public override void Localize()
         {
-            bar.Localize();
+            base.Localize();
             if (fields != null)
                 fields.Localize();
             list.Localize();
