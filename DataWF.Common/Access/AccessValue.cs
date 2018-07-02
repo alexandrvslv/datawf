@@ -10,6 +10,11 @@ namespace DataWF.Common
     {
         public static IEnumerable<IAccessGroup> Groups = new List<IAccessGroup>();
 
+        public static implicit operator AccessValue(byte[] value)
+        {
+            return new AccessValue(value);
+        }
+
         public List<AccessItem> Items = new List<AccessItem>(1);
 
         public AccessValue()

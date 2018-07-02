@@ -63,6 +63,50 @@ namespace DataWF.Data
             return export;
         }
 
+        public string GenetareCode()
+        {
+            List<DBTable> list = tables.Select(p => p.SourceTable).ToList();
+            var builder = new StringBuilder("");
+            builder.AppendLine("using DataWF.Common;");
+            builder.AppendLine("using DataWF.Data;");
+            builder.AppendLine("using DataWF.Module.Flow;");
+            builder.AppendLine("using System;");
+            builder.AppendLine("namespace CodeGenerator {");
+            foreach (var table in list)
+            {
+                builder.AppendLine($"    public class {table.DisplayName.Replace(" ", "")}Generator {{");
+                builder.AppendLine($"        public void Generate() {{");
+                builder.AppendLine($"            using(var transaction = new DBTransaction({table.DisplayName}.DBTable.Schema.Connection)){{");
+                var enumer = table.SelectItems("");
+                if (table.GroupKey != null)
+                {
+                    var groupList = enumer.Cast<IGroup>().ToList();
+                    groupList.Sort(GroupHelper.Compare);
+                    enumer = groupList;
+                }
+
+                foreach (DBItem row in enumer)
+                {
+                    var type = row.GetType();
+                    builder.AppendLine($"                new {type.Name}{{");
+                    foreach (var column in table.Columns)
+                    {
+                        if (column.Property != null)
+                        {
+                            builder.AppendLine($"                    {column.Property} = {column.FormatCode(row.GetValue(column))},");
+                        }
+                    }
+                    builder.AppendLine("                }.Save();");
+                }
+                builder.AppendLine("                transaction.Commit();");
+                builder.AppendLine("            }");
+                builder.AppendLine("        }");
+                builder.AppendLine("    }");
+            }
+            builder.AppendLine("}");
+            return builder.ToString();
+        }
+
         public string GeneratePatch()
         {
             return GeneratePatch(tables.Select(p => p.SourceTable).ToList());

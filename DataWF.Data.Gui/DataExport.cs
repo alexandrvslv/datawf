@@ -21,6 +21,7 @@ namespace DataWF.Data.Gui
         private Toolsbar tools;
         private ToolItem toolInit;
         private ToolItem toolScript;
+        private ToolItem toolCode;
         private ToolItem toolSchema;
         private ToolItem toolStart;
         private ToolItem toolCancel;
@@ -33,6 +34,7 @@ namespace DataWF.Data.Gui
         {
             toolInit = new ToolItem(ToolInitClick) { Name = "Init", DisplayStyle = ToolItemDisplayStyle.Text };
             toolScript = new ToolItem(ToolScriptClick) { Name = "Script", DisplayStyle = ToolItemDisplayStyle.Text };
+            toolCode = new ToolItem(ToolCodeClick) { Name = "Code", DisplayStyle = ToolItemDisplayStyle.Text };
             toolSchema = new ToolItem(ToolSchemaClick) { Name = "Schema", DisplayStyle = ToolItemDisplayStyle.Text };
             toolStart = new ToolItem(ToolStartClick) { Name = "Start", DisplayStyle = ToolItemDisplayStyle.Text };
             toolCancel = new ToolItem(ToolCancelClick) { Name = "Cancel", Sensitive = false, DisplayStyle = ToolItemDisplayStyle.Text };
@@ -41,6 +43,7 @@ namespace DataWF.Data.Gui
             tools = new Toolsbar(
                 toolInit,
                 toolScript,
+                toolCode,
                 toolSchema,
                 toolStart,
                 toolCancel,
@@ -325,6 +328,15 @@ namespace DataWF.Data.Gui
         private void ToolInitClick(object sender, EventArgs e)
         {
             Initialise();
+        }
+
+        private void ToolCodeClick(object sender, EventArgs e)
+        {
+            var dialog = new SaveFileDialog();
+            if (dialog.Run())
+            {
+                File.WriteAllText(dialog.FileName, export.GenetareCode());
+            }
         }
 
         private void ToolScriptClick(object sender, EventArgs e)

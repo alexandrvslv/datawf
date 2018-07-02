@@ -529,7 +529,7 @@ namespace DataWF.Data.Gui
 
         public bool Closing()
         {
-            throw new NotImplementedException();
+            return true;
         }
 
         public void Activating()

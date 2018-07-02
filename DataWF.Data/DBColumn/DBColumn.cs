@@ -764,6 +764,48 @@ namespace DataWF.Data
             Set((DBItem)target, value);
         }
 
+        public string FormatCode(object value)
+        {
+            if (value is DBItem)
+                value = ((DBItem)value).PrimaryId;
+
+            if (value == null)
+                return "null";
+            else if(value is bool)
+                return value.ToString().ToLowerInvariant();
+            else if (value is string)
+                return $"\"{((string)value).Replace("\"", "\\\"")}\"";
+            else if (value is DateTime)
+            {
+                if (((DateTime)value).TimeOfDay == TimeSpan.Zero)
+                    return $"DateTime.Parse(\"\"{((DateTime)value).ToString("yyyy-MM-dd")}\")";
+                else
+                    return $"DateTime.Parse(\"{((DateTime)value).ToString("yyyy-MM-dd HH:mm:ss.fff")}\")";
+            }
+            else if (value is Enum)
+            {
+                return $"{value.GetType().Name}.{value}";
+            }
+            else if (value is byte[])
+            {
+                var sBuilder = new StringBuilder("new byte[]{");
+                var data = (byte[])value;
+                for (int i = 0; i < data.Length; i++)
+                {
+                    sBuilder.Append("0x");
+                    sBuilder.Append(data[i].ToString("x2"));
+                    sBuilder.Append(",");
+                }
+                sBuilder.Length -= 1;
+                sBuilder.Append("}");
+                return sBuilder.ToString();
+            }
+            else
+            {
+                return value.ToString().Replace(",", ".");
+            }
+        }
+
         public string FormatValue(object val)
         {
             //if value passed to format is null
