@@ -7,7 +7,7 @@ using Xwt;
 
 namespace DataWF.Module.CommonGui
 {
-    public class CellEditorUserTree : CellEditorText
+    public class CellEditorUserTree : CellEditorList
     {
         public CellEditorUserTree()
         {
@@ -53,9 +53,38 @@ namespace DataWF.Module.CommonGui
             var tree = Editor.GetCached<UserTree>();
             tree.UserKeys = UserKeys;
             tree.Nodes.ExpandTop();
-            if (Value is DBItem)
-                tree.SelectedNode = UserTree.Nodes.Find(UserTree.GetName((DBItem)Value));
+            if (!ReadOnly)
+            {
+                tree.CellDoubleClick += ListCellDoubleClick;
+                tree.KeyPressed += ListCellKeyDown;
+                //list.SelectionChanged += PListSelectionChanged;
+            }
             return tree;
+        }
+
+        public override object Value
+        {
+            get => base.Value;
+            set
+            {
+                base.Value = value;
+                if (Value is DBItem)
+                {
+                    UserTree.SelectedDBItem = (DBItem)Value;
+                }
+            }
+        }
+
+        protected override object GetDropDownValue()
+        {
+            return UserTree.SelectedDBItem;
+        }
+
+        public override void FreeEditor()
+        {
+            UserTree.CellDoubleClick -= ListCellDoubleClick;
+            UserTree.KeyPressed -= ListCellKeyDown;
+            base.FreeEditor();
         }
     }
 
