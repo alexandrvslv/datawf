@@ -581,67 +581,64 @@ namespace DataWF.Gui
 
         protected internal virtual void CanvasKeyPressed(KeyEventArgs e)
         {
-            if (editor.Visible)
+            if (e.Key == Key.Escape && editor.Sensitive)
             {
-                if (e.Key == Key.Escape)
+                OnCellEditEnd(new CancelEventArgs(true));
+                e.Handled = true;
+            }
+            if (e.Key == Key.Return)// || keyData == Keys.Down)
+            {
+                if (SelectedItem != null)
                 {
-                    OnCellEditEnd(new CancelEventArgs(true));
-                    e.Handled = true;
-                }
-                if (e.Key == Key.Return)// || keyData == Keys.Down)
-                {
-                    if (SelectedItem != null)
+                    int index = selection.CurrentRow.Index;
+                    if (index + 1 < listSource.Count)
                     {
-                        int index = selection.CurrentRow.Index;
-                        if (index + 1 < listSource.Count)
-                        {
-                            LayoutColumn colbuf = CurrentCell;
-                            SelectedItem = listSource[index + 1];
-                            CurrentCell = colbuf;
-                            OnCellEditBegin(SelectedItem, CurrentCell);
-                        }
-                        else
-                        {
-                            OnCellEditEnd(new CancelEventArgs());
-                        }
-                        e.Handled = true;
-                    }
-                    else if (editor.Sensitive)
-                    {
-                        var box = editor.Widget as TextEntry;
-                        if (box == null || !box.MultiLine)
-                        {
-                            OnCellEditEnd(new CancelEventArgs());
-                            e.Handled = true;
-                        }
-                    }
-                }
-                else if (e.Key == Key.Tab)
-                {
-                    if (SelectedItem != null)
-                    {
-                        int index = listSource.IndexOf(SelectedItem);
-                        var items = listInfo.Columns.GetVisible().ToArray();
-                        int cindex = Array.IndexOf(items, CurrentCell) + 1;
-                        if (cindex == items.Length)
-                        {
-                            cindex = 0;
-                            index++;
-                        }
-                        if (index == listSource.Count)
-                            e.Handled = true;
-                        while (!items[cindex].Editable)
-                        {
-                            cindex++;
-                            if (cindex == items.Length)
-                                e.Handled = true;
-                        }
-                        SelectedItem = listSource[index];
-                        CurrentCell = items[cindex];
+                        LayoutColumn colbuf = CurrentCell;
+                        SelectedItem = listSource[index + 1];
+                        CurrentCell = colbuf;
                         OnCellEditBegin(SelectedItem, CurrentCell);
                     }
+                    else
+                    {
+                        OnCellEditEnd(new CancelEventArgs());
+                    }
                     e.Handled = true;
                 }
+                else if (editor.Sensitive)
+                {
+                    var box = editor.Widget as TextEntry;
+                    if (box == null || !box.MultiLine)
+                    {
+                        OnCellEditEnd(new CancelEventArgs());
+                        e.Handled = true;
+                    }
+                }
+            }
+            else if (e.Key == Key.Tab)
+            {
+                if (SelectedItem != null)
+                {
+                    int index = listSource.IndexOf(SelectedItem);
+                    var items = listInfo.Columns.GetVisible().ToArray();
+                    int cindex = Array.IndexOf(items, CurrentCell) + 1;
+                    if (cindex == items.Length)
+                    {
+                        cindex = 0;
+                        index++;
+                    }
+                    if (index == listSource.Count)
+                        e.Handled = true;
+                    while (!items[cindex].Editable)
+                    {
+                        cindex++;
+                        if (cindex == items.Length)
+                            e.Handled = true;
+                    }
+                    SelectedItem = listSource[index];
+                    CurrentCell = items[cindex];
+                    OnCellEditBegin(SelectedItem, CurrentCell);
+                }
+                e.Handled = true;
             }
             else if (e.Key == Key.Up)
             {
@@ -657,121 +654,132 @@ namespace DataWF.Gui
             {
                 //e.Handled = true;
             }
-            if (e.Handled)
+
+            if (e.Modifiers == ModifierKeys.Control && e.Key == Key.Space && selection.HoverRow != null)
             {
-                if (e.Modifiers == ModifierKeys.Control && e.Key == Key.Space && selection.HoverRow != null)
+                if (selection.Contains(selection.HoverRow.Index))
                 {
-                    if (selection.Contains(selection.HoverRow.Index))
-                        selection.RemoveBy(selection.HoverRow.Index);
-                    else
+                    selection.RemoveBy(selection.HoverRow.Index);
+                }
+                else
+                {
+                    selection.Add(selection.HoverRow);
+                    selection.SetCurrent(selection.HoverRow);
+                }
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Right
+                || e.Key == Key.Left
+                || e.Key == Key.Up
+                || e.Key == Key.Down
+                || e.Key == Key.PageUp
+                || e.Key == Key.PageDown
+                || e.Key == Key.Tab)//
+            {
+                LayoutColumn colbuf = CurrentCell;
+                if (colbuf == null)
+                {
+                    colbuf = bounds.VisibleColumns.Count == 0 ? null : bounds.VisibleColumns[0];
+                }
+                object item = selection.HoverRow != null && e.Modifiers == ModifierKeys.Control
+                                        ? selection.HoverRow.Item
+                                        : SelectedItem;
+
+                if (colbuf.Name == nameof(object.ToString)
+                    && ListInfo.Tree
+                    && item is IGroup
+                    && (e.Key == Key.Right || e.Key == Key.Left))
+                {
+                    bool flag = e.Key == Key.Right;
+                    IGroup group = (IGroup)item;
+                    if (group.IsCompaund && group.Expand != flag)
                     {
-                        selection.Add(selection.HoverRow);
-                        selection.SetCurrent(selection.HoverRow);
+                        cacheHitt.HitTest.Index = listSource.IndexOf(item);
+                        cacheHitt.HitTest.Item = item;
+                        OnCellGlyphClick(cacheHitt);
+                        return;
                     }
                 }
-                else if (e.Key == Key.Right || e.Key == Key.Left ||
-                     e.Key == Key.Up || e.Key == Key.Down ||
-                     e.Key == Key.PageUp || e.Key == Key.PageDown || e.Key == Key.Tab)//
+
+                int index = listSource.IndexOf(item);
+                int page = dIndex.Last - dIndex.First;
+
+                if (gridCols > 1 && (e.Key == Key.Up || e.Key == Key.Down))
+                    index += e.Key == Key.Up
+                              ? -gridCols : gridCols;
+                else
+                    index += e.Key == Key.Up
+                              ? -1 : e.Key == Key.Down ? 1 : e.Key == Key.PageUp
+                              ? -page : e.Key == Key.PageDown ? page : 0;
+
+                int indexcolumn = bounds.VisibleColumns.IndexOf(colbuf);
+                indexcolumn += e.Key == Key.Right || e.Key == Key.Tab ? 1 : e.Key == Key.Left ? -1 : 0;
+
+                if (indexcolumn < 0)
                 {
-                    LayoutColumn colbuf = CurrentCell;
-                    if (colbuf == null)
-                        colbuf = bounds.VisibleColumns.Count == 0 ? null : bounds.VisibleColumns[0];
-                    object item = selection.HoverRow != null && e.Modifiers == ModifierKeys.Control
-                                            ? selection.HoverRow.Item
-                                            : SelectedItem;
-
-                    if (colbuf.Name == nameof(object.ToString)
-                        && ListInfo.Tree
-                        && item is IGroup
-                        && (e.Key == Key.Right || e.Key == Key.Left))
-                    {
-                        bool flag = e.Key == Key.Right;
-                        IGroup group = (IGroup)item;
-                        if (group.IsCompaund && group.Expand != flag)
-                        {
-                            cacheHitt.HitTest.Index = listSource.IndexOf(item);
-                            cacheHitt.HitTest.Item = item;
-                            OnCellGlyphClick(cacheHitt);
-                            return;
-                        }
-                    }
-
-                    int index = listSource.IndexOf(item);
-                    int page = dIndex.Last - dIndex.First;
-
-                    if (gridCols > 1 && (e.Key == Key.Up || e.Key == Key.Down))
-                        index += e.Key == Key.Up
-                                  ? -gridCols : gridCols;
-                    else
-                        index += e.Key == Key.Up
-                                  ? -1 : e.Key == Key.Down ? 1 : e.Key == Key.PageUp
-                                  ? -page : e.Key == Key.PageDown ? page : 0;
-
-                    int indexcolumn = bounds.VisibleColumns.IndexOf(colbuf);
-                    indexcolumn += e.Key == Key.Right || e.Key == Key.Tab ? 1 : e.Key == Key.Left ? -1 : 0;
-
-                    if (indexcolumn < 0)
-                    {
-                        index--;
-                        indexcolumn = bounds.VisibleColumns.Count - 1;
-                    }
-                    else if (indexcolumn >= bounds.VisibleColumns.Count)
-                    {
-                        index++;
-                        indexcolumn = 0;
-                    }
-                    index = index < 0 ? 0 : index > listSource.Count - 1 ? listSource.Count - 1 : index;
-                    if (index >= 0 && index < listSource.Count)
-                    {
-                        if (e.Modifiers == ModifierKeys.Shift)
-                            selection.SetCurrent(selection.Add(listSource[index], index));
-                        else if (e.Modifiers == ModifierKeys.Control)
-                            selection.SetHover(new LayoutSelectionRow(listSource[index], index));
-                        else
-                            SelectedItem = listSource[index];
-
-                        CurrentCell = bounds.VisibleColumns[indexcolumn] as LayoutColumn;
-                        if (e.Key == Key.Tab && CurrentCell.Editable)
-                        {
-                            OnCellEditBegin(SelectedItem, CurrentCell);
-                        }
-
-                    }
+                    index--;
+                    indexcolumn = bounds.VisibleColumns.Count - 1;
                 }
-                else if (e.Key == Key.F2)
+                else if (indexcolumn >= bounds.VisibleColumns.Count)
                 {
-                    if (editMode != EditModes.None && CurrentCell != null)
+                    index++;
+                    indexcolumn = 0;
+                }
+                index = index < 0 ? 0 : index > listSource.Count - 1 ? listSource.Count - 1 : index;
+                if (index >= 0 && index < listSource.Count)
+                {
+                    if (e.Modifiers == ModifierKeys.Shift)
+                        selection.SetCurrent(selection.Add(listSource[index], index));
+                    else if (e.Modifiers == ModifierKeys.Control)
+                        selection.SetHover(new LayoutSelectionRow(listSource[index], index));
+                    else
+                        SelectedItem = listSource[index];
+
+                    CurrentCell = bounds.VisibleColumns[indexcolumn] as LayoutColumn;
+                    if (e.Key == Key.Tab && CurrentCell.Editable)
                     {
                         OnCellEditBegin(SelectedItem, CurrentCell);
                     }
                 }
-                else if (e.Modifiers == ModifierKeys.Control)
-                {
-                    if (e.Key == Key.C)
-                    {
-                        if (CurrentCell != null)
-                            CopyToClipboard(CurrentCell);
-                        else if (selection.CurrentValue is PSelectionAggregate)
-                        {
-                            var aggre = (PSelectionAggregate)selection.CurrentValue;
-                            var value = GetCollectedValue(aggre.Column, aggre.Group);
-                            if (value != null)
-                                CopyToClipboard(value.ToString());
-                        }
-                    }
-                    if (e.Key == Key.V)
-                    {
-                        //string vsl = Clipboard.GetText();
-                        //IDataObject obj = Clipboard.GetDataObject();
-                    }
-                }
-                else if (CurrentCell != null
-                         && e.Modifiers == ModifierKeys.None
-                         && editMode == EditModes.ByClick)
+                e.Handled = true;
+            }
+            else if (e.Key == Key.F2)
+            {
+                if (editMode != EditModes.None && CurrentCell != null)
                 {
                     OnCellEditBegin(SelectedItem, CurrentCell);
+                    e.Handled = true;
                 }
             }
+            else if (e.Modifiers == ModifierKeys.Control)
+            {
+                if (e.Key == Key.C)
+                {
+                    if (CurrentCell != null)
+                        CopyToClipboard(CurrentCell);
+                    else if (selection.CurrentValue is PSelectionAggregate)
+                    {
+                        var aggre = (PSelectionAggregate)selection.CurrentValue;
+                        var value = GetCollectedValue(aggre.Column, aggre.Group);
+                        if (value != null)
+                            CopyToClipboard(value.ToString());
+                    }
+                    e.Handled = true;
+                }
+                if (e.Key == Key.V)
+                {
+                    //string vsl = Clipboard.GetText();
+                    //IDataObject obj = Clipboard.GetDataObject();
+                }
+            }
+            else if (CurrentCell != null
+                     && e.Modifiers == ModifierKeys.None
+                     && editMode == EditModes.ByClick)
+            {
+                OnCellEditBegin(SelectedItem, CurrentCell);
+                e.Handled = true;
+            }
+
         }
 
         protected override void Dispose(bool disposing)
@@ -911,7 +919,7 @@ namespace DataWF.Gui
                     || e.Column.GetEditor(e.Item) is CellEditorCheck;
                 DefaultMenu.Editor.CellCopy.Visible = e.Location != LayoutHitTestLocation.Column;
 
-                
+
             }
         }
 
