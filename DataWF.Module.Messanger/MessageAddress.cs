@@ -44,8 +44,8 @@ namespace DataWF.Module.Messanger
         { }
     }
 
-    [DataContract, Table("dmessage_address", "Message")]
-    public class MessageAddress : DBItem
+    [DataContract, Table("dmessage_address", "Message", IsLoging = false)]
+    public class MessageAddress : MessageDetail
     {
         public static DBTable<MessageAddress> DBTable
         {
@@ -57,7 +57,7 @@ namespace DataWF.Module.Messanger
             Build(DBTable);
         }
 
-        [Column("unid", Keys = DBColumnKeys.Primary)]
+        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
             get { return GetProperty<int?>(); }
@@ -65,22 +65,7 @@ namespace DataWF.Module.Messanger
         }
 
         [Browsable(false)]
-        [Column("messageid")]
-        public int? MessageId
-        {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
-        }
-
-        [Reference(nameof(MessageId))]
-        public Message Message
-        {
-            get { return GetPropertyReference<Message>(); }
-            set { SetPropertyReference(value); }
-        }
-
-        [Browsable(false)]
-        [Column("userid")]
+        [DataMember, Column("user_id")]
         public int? UserId
         {
             get { return GetProperty<int?>(); }
@@ -94,7 +79,7 @@ namespace DataWF.Module.Messanger
             set { SetPropertyReference(value); }
         }
 
-        [Column("dateread")]
+        [DataMember, Column("date_read")]
         public DateTime? DateRead
         {
             get { return GetProperty<DateTime?>(); }

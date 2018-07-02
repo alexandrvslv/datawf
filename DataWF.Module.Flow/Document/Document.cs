@@ -419,6 +419,18 @@ namespace DataWF.Module.Flow
             return GetReferencing<DocumentCustomer>(nameof(DocumentCustomer.DocumentId), DBLoadParam.None);
         }
 
+        [ControllerMethod(true)]
+        public IEnumerable<DocumentComment> GetComments()
+        {
+            if ((initype & DocInitType.Comment) != DocInitType.Comment)
+            {
+                initype |= DocInitType.Comment;
+                GetReferencing<DocumentComment>(nameof(DocumentComment.DocumentId), DBLoadParam.Load);
+            }
+
+            return GetReferencing<DocumentComment>(nameof(DocumentComment.DocumentId), DBLoadParam.None);
+        }
+
         [Browsable(false)]
         public override AccessValue Access
         {

@@ -1,6 +1,7 @@
 ﻿using DataWF.Common;
 using DataWF.Gui;
 using DataWF.Module.Flow;
+using DataWF.Module.Messanger;
 
 namespace DataWF.Module.FlowGui
 {
@@ -14,7 +15,7 @@ namespace DataWF.Module.FlowGui
         public override void Localize()
         {
             base.Localize();
-            GuiService.Localize(this, "DocumentCustomer", "Clients", GlyphType.Users);
+            GuiService.Localize(this, Name, "Clients", GlyphType.Users);
         }
     }
 }

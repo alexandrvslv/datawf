@@ -32,7 +32,8 @@ namespace DataWF.Module.Flow
         References = 1,
         Data = 4,
         Workflow = 8,
-        Customer = 16
+        Customer = 16,
+        Comment = 32
         //Logs,
     }
 

@@ -9,6 +9,7 @@ using DataWF.Module.Flow;
 using Xwt;
 using Xwt.Drawing;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace DataWF.Module.FlowGui
 {

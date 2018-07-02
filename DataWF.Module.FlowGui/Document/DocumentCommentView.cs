@@ -1,0 +1,53 @@
+﻿using System;
+using DataWF.Common;
+using DataWF.Gui;
+using DataWF.Module.Flow;
+using DataWF.Module.Messanger;
+using DataWF.Module.MessangerGui;
+
+namespace DataWF.Module.FlowGui
+{
+    public class DocumentCommentView : DocumentDetailView<DocumentComment>
+    {
+        MessageEditor editor;
+        public DocumentCommentView() : base()
+        {
+            Name = nameof(DocumentCommentView);
+            List.GenerateColumns = false;
+            List.ListInfo = new LayoutListInfo(
+                new LayoutColumn() { Name = $"{nameof(DocumentComment.Message)}.{nameof(Message.User)}", FillWidth = true },
+                new LayoutColumn() { Name = $"{nameof(DocumentComment.Message)}.{nameof(Message.DateCreate)}", FillWidth = true },
+                new LayoutColumn() { Name = $"{nameof(DocumentComment.Message)}.{nameof(Message.Data)}", Row = 1, Height = 60 })
+            { ColumnsVisible = false };
+            editor = new MessageEditor();
+            editor.OnSending = new Action<Message>(OnSend);
+            editor.HeightRequest = 100;
+            PackStart(editor, false);
+        }
+
+        private void OnSend(Message message)
+        {
+            var comment = new DocumentComment() { Document = Document, Message = message };
+            comment.Save();
+        }
+
+        protected override void OnToolInsertClick(object sender, EventArgs e)
+        {
+            base.OnToolInsertClick(sender, e);
+        }
+
+        public override void Sync()
+        {
+            if (!view.IsSynchronized)
+            {
+                base.Sync();
+            }
+        }
+
+        public override void Localize()
+        {
+            base.Localize();
+            GuiService.Localize(this, Name, "Comments", GlyphType.Comments);
+        }
+    }
+}

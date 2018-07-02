@@ -53,6 +53,8 @@
     <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj" />
     <ProjectReference Include="..\DataWF.Module.CommonGui\DataWF.Module.CommonGui.csproj" />
     <ProjectReference Include="..\DataWF.Module.Flow\DataWF.Module.Flow.csproj" />
+    <ProjectReference Include="..\DataWF.Module.MessangerGui\DataWF.Module.MessangerGui.csproj" />
+    <ProjectReference Include="..\DataWF.Module.Messanger\DataWF.Module.Messanger.csproj" />
     <ProjectReference Include="..\External\xwt\Xwt\Xwt.csproj" />
   </ItemGroup>
   <ItemGroup>

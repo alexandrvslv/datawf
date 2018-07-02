@@ -9,7 +9,7 @@ using Xwt.Drawing;
 namespace DataWF.Module.FlowGui
 {
 
-    public class DocumentWorkView : DocumentDetailView<DocumentWork>, IDocument
+    public class DocumentWorkView : DocumentDetailView<DocumentWork>
     {
         ToolItem toolActual;
         private QParam actualParam;

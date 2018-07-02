@@ -1,21 +1,15 @@
-﻿using System;
-using System.Reflection;
-using System.Collections;
-using System.Collections.Generic;
-using Xwt.Drawing;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using DSBarCode;
+﻿using DataWF.Common;
 using DataWF.Data;
 using DataWF.Data.Gui;
 using DataWF.Gui;
-using DataWF.Common;
-using System.ComponentModel;
-using DataWF.Module.Common;
 using DataWF.Module.Flow;
+using DSBarCode;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using Xwt;
-using DataWF.Module.CommonGui;
 
 namespace DataWF.Module.FlowGui
 {
@@ -31,6 +25,13 @@ namespace DataWF.Module.FlowGui
 
     public class DocumentEditor : VPanel, IDocked, IDockContent, ISerializableElement
     {
+        public static Dictionary<Type, Type> TypeBinding = new Dictionary<Type, Type> {
+            { typeof(DocumentReference), typeof(DocumentReferenceView) },
+            { typeof(DocumentWork), typeof(DocumentWorkView) },
+            { typeof(DocumentData), typeof(DocumentDataView<>) },
+            { typeof(DocumentComment), typeof(DocumentCommentView) }
+        };
+
         static Dictionary<Type, List<Type>> typesCache = new Dictionary<Type, List<Type>>();
         static List<Type> GetTypes(Type documentType)
         {
@@ -72,8 +73,6 @@ namespace DataWF.Module.FlowGui
         private DockBox dock;
         private ToolLabel toolLabel = new ToolLabel();
         private IEnumerable<ToolItem> toolsItems;
-        private DockPage pageWorks;
-        private DockPage pageRefers;
         private DockPage pageHeader;
 
         private List<Document> _list;
@@ -328,19 +327,6 @@ namespace DataWF.Module.FlowGui
                 if (arg.Tag == this)
                     dock.Put(c);
             }
-
-            else if (arg.Result is IList<DocumentReference>)
-            {
-                pageRefers.Panel.CurrentPage = pageRefers;
-            }
-            else if (arg.Result is DocInitType)
-            {
-                var ini = (DocInitType)arg.Result;
-                if (ini == DocInitType.References)
-                    pageRefers.Panel.CurrentPage = pageRefers;
-                else if (ini == DocInitType.Data)
-                    pageRefers.Panel.CurrentPage = pageHeader;
-            }
             else if (arg.Result is Document && arg.Result != arg.Document)
             {
                 var editor = new DocumentEditor();
@@ -471,7 +457,6 @@ namespace DataWF.Module.FlowGui
                 Text = document.ToString();// +"(" + this.Tag.ToString() + ")";
 
                 pageHeader.Tag = document.Template;
-                pageRefers.Tag = document.Template;
 
                 bool from = false;
                 dock.PageSelected -= DockPageSelected;
@@ -580,8 +565,6 @@ namespace DataWF.Module.FlowGui
                     //}
                     pageHeader = dock.GetPage(nameof(DocumentHeader)) ?? dock.Put(new DocumentHeader(), DockType.Left);
                     //pageHeader.Panel.DockItem.Width = 350;//pageHeader.Panel.MapItem.FillWidth = true;
-                    pageWorks = dock.GetPage(nameof(DocumentWorkView)) ?? dock.Put(new DocumentWorkView(), DockType.LeftBottom);
-                    pageRefers = dock.GetPage(nameof(DocumentReferenceView)) ?? dock.Put(new DocumentReferenceView(), DockType.Content);
 
                     GetPages(documentType).ForEach(p => p.Tag = value);
                 }
@@ -794,25 +777,24 @@ namespace DataWF.Module.FlowGui
             var documentWidgets = new List<DockPage>();
             foreach (var type in GetTypes(documentType))
             {
-                if (TypeHelper.IsBaseType(type, typeof(DocumentWork)))
-                    documentWidgets.Add(pageWorks);
-                else if (type == typeof(DocumentReference))
-                    documentWidgets.Add(pageRefers);
-                else
+                var name = type.Name;
+                var page = dock.GetPage(name);
+                if (page == null)
                 {
-                    var name = type.Name;
-                    var page = dock.GetPage(name);
-                    if (page == null)
+                    if (!TypeBinding.TryGetValue(type, out var widgetType))
                     {
-                        var widgetType = TypeHelper.IsBaseType(type, typeof(DocumentData))
-                            ? typeof(DocumentDataView<>).MakeGenericType(type)
-                            : typeof(DocumentDetailView<>).MakeGenericType(type);
-                        Widget widget = (Widget)EmitInvoker.CreateObject(widgetType);
-                        widget.Name = name;
-                        page = dock.Put(widget, TypeHelper.IsBaseType(type, typeof(DocumentData)) ? DockType.LeftBottom : DockType.Content);
+                        widgetType = typeof(DocumentDetailView<>);
                     }
-                    documentWidgets.Add(page);
+                    if (widgetType.IsGenericType)
+                    {
+                        widgetType = widgetType.MakeGenericType(type);
+                    }
+
+                    var widget = (Widget)EmitInvoker.CreateObject(widgetType);
+                    widget.Name = name;
+                    page = dock.Put(widget, TypeHelper.IsBaseType(type, typeof(DocumentData)) ? DockType.LeftBottom : DockType.Content);
                 }
+                documentWidgets.Add(page);
             }
             return documentWidgets;
         }

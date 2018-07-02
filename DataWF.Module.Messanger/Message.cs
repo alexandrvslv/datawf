@@ -23,6 +23,7 @@ using System;
 using System.ComponentModel;
 using DataWF.Module.Common;
 using System.Runtime.Serialization;
+using System.Collections.Generic;
 
 namespace DataWF.Module.Messanger
 {
@@ -48,15 +49,9 @@ namespace DataWF.Module.Messanger
                                  MessageAddress.DBTable.ParseProperty(nameof(MessageAddress.UserId)).Name,
                                  fromUser.Id))
         { }
-
-        public MessageList(DBItem document)
-            : this(string.Format("{0} = {1} and {2} = {3}",
-                                 MessageAddress.DBTable.ParseProperty(nameof(Message.DocumentTable)).Name, document.Table.FullName,
-                                 MessageAddress.DBTable.ParseProperty(nameof(Message.DocumentId)).Name, document.PrimaryId))
-        { }
     }
 
-    [DataContract, Table("dmessage", "Message")]
+    [DataContract, Table("dmessage", "Message", IsLoging = false)]
     public class Message : DBItem, IDisposable
     {
         public static DBTable<Message> DBTable
@@ -64,85 +59,55 @@ namespace DataWF.Module.Messanger
             get { return GetTable<Message>(); }
         }
 
-        private MessageAddressList addresses;
-        private DBItem cacheDocument;
-
-        public static Message SendToGroup(User from, UserGroup group, string data, DBItem document)
+        [ControllerMethod]
+        public static Message SendToGroup(User from, UserGroup group, string data)
         {
-            var message = new Message
-            {
-                DateCreate = DateTime.Now,
-                User = from,
-                Data = data,
-                Document = document
-            };
-            message.Save();
-
-            foreach (var user in group.GetUsers())
-            {
-                if (user.Status == DBStatus.Actual)
-                {
-                    var address = new MessageAddress();
-                    address.Message = message;
-                    address.User = user;
-                    address.Save();
-                }
-            }
-            return message;
+            return Send(from, group.GetUsers(), data);
         }
 
-        public static Message Send(User from, DBItem to, string data, DBItem document)
+        [ControllerMethod]
+        public static Message SendToUser(User from, User to, string data)
+        {
+            return Send(from, new[] { to }, data);
+        }
+
+        [ControllerMethod]
+        public static Message SendToPosition(User from, Position to, string data)
+        {
+            return Send(from, to.GetUsers(), data);
+        }
+
+        [ControllerMethod]
+        public static Message SendToDepartment(User from, Department to, string data)
+        {
+            return Send(from, to.GetUsers(), data);
+        }
+
+        public static Message Send(User from, IEnumerable<User> to, string data)
         {
             var message = new Message()
             {
                 DateCreate = DateTime.Now,
                 User = from,
-                Data = data,
-                Document = document
+                Data = data
             };
             message.Save();
 
-            if (to is User)
+            foreach (var user in to)
             {
-                var address = new MessageAddress
+                if (user != message.User && user.Status == DBStatus.Actual)
                 {
-                    Message = message,
-                    User = (User)to
-                };
-				address.Save();
-			}
-            else if (to is Department)
-            {
-                foreach (var user in ((Department)to).GetUsers())
-                {
-                    if (user != message.User && user.Status == DBStatus.Actual)
+                    var address = new MessageAddress
                     {
-                        var saddress = new MessageAddress()
-                        {
-                            Message = message,
-                            User = user
-                        };
-                        saddress.Save();
-                    }
-                }
-            }
-			else if (to is Position)
-            {
-                foreach (var user in ((Position)to).GetUsers())
-                {
-                    if (user != message.User && user.Status == DBStatus.Actual)
-                    {
-                        var saddress = new MessageAddress()
-                        {
-                            Message = message,
-                            User = user
-                        };
-                        saddress.Save();
-                    }
+                        Message = message,
+                        User = user
+                    };
+                    address.Save();
                 }
             }
             return message;
         }
+        private MessageAddressList addresses;
 
         public Message()
         {
@@ -150,44 +115,13 @@ namespace DataWF.Module.Messanger
         }
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
+        public long? Id
         {
-            get { return GetProperty<int?>(nameof(Id)); }
-            set { SetProperty(value, nameof(Id)); }
+            get { return GetProperty<long?>(); }
+            set { SetProperty(value); }
         }
 
-        [Browsable(false), Column("document_table")]
-        public string DocumentTable
-        {
-            get { return GetProperty<string>(nameof(DocumentTable)); }
-            set { SetProperty(value, nameof(DocumentTable)); }
-        }
-
-        [Browsable(false)]
-        public DBTable DocumentDBTable
-        {
-            get { return DBService.ParseTable(DocumentTable); }
-        }
-
-        [Browsable(false), Column("documentid")]
-        public string DocumentId
-        {
-            get { return GetProperty<string>(nameof(DocumentId)); }
-            set { SetProperty(value, nameof(DocumentId)); }
-        }
-
-        public DBItem Document
-        {
-            get { return cacheDocument ?? (cacheDocument = DocumentDBTable?.LoadItemById(DocumentId)); }
-            set
-            {
-                cacheDocument = value;
-                DocumentTable = cacheDocument?.Table.FullName;
-                DocumentId = cacheDocument?.PrimaryId.ToString();
-            }
-        }
-
-        [Browsable(false), Column("userid")]
+        [Browsable(false), Column("user_id")]
         public int? UserId
         {
             get { return GetProperty<int?>(nameof(UserId)); }
@@ -201,7 +135,7 @@ namespace DataWF.Module.Messanger
             set { SetPropertyReference(value); }
         }
 
-        [Column("data")]
+        [Column("text_data")]
         public string Data
         {
             get { return GetProperty<string>(nameof(Data)); }
