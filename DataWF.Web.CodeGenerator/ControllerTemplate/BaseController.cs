@@ -1,11 +1,14 @@
 ﻿using DataWF.Common;
 using DataWF.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 
 namespace DataWF.Web.Controller
 {
+
+    [Auth]
     public abstract class BaseController<T, K> : ControllerBase where T : DBItem, new()
     {
         protected DBTable<T> table;

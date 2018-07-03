@@ -9,19 +9,29 @@
     <Compile Remove="ClientTemplate\BaseClient.cs" />
     <Compile Remove="ClientTemplate\ClientException.cs" />
     <Compile Remove="ClientTemplate\ClientExceptionT.cs" />
+    <Compile Remove="ControllerTemplate\AuthAttribute.cs" />
+    <Compile Remove="ControllerTemplate\AuthController.cs" />
     <Compile Remove="ControllerTemplate\BaseController.cs" />
+    <Compile Remove="ControllerTemplate\LoginModel.cs" />
+    <Compile Remove="ControllerTemplate\TokenModel.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="ClientTemplate\BaseClient.cs" />
     <EmbeddedResource Include="ClientTemplate\ClientException.cs" />
     <EmbeddedResource Include="ClientTemplate\ClientExceptionT.cs" />
+    <EmbeddedResource Include="ControllerTemplate\AuthAttribute.cs" />
+    <EmbeddedResource Include="ControllerTemplate\AuthController.cs" />
     <EmbeddedResource Include="ControllerTemplate\BaseController.cs">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Include="ControllerTemplate\LoginModel.cs" />
+    <EmbeddedResource Include="ControllerTemplate\TokenModel.cs" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="2.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="2.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.1.1" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="2.8.2" />
     <PackageReference Include="NSwag.CodeGeneration.CSharp" Version="11.17.18" />
@@ -30,6 +40,7 @@
   <ItemGroup>
     <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />
     <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj" />
+    <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj" />
     <ProjectReference Include="..\DataWF.Web.Common\DataWF.Web.Common.csproj" />
   </ItemGroup>
 

@@ -7,7 +7,7 @@ using System.Reflection;
 
 namespace DataWF.Web.Common
 {
-    public class DBItemSwaggerParameterFilter : IParameterFilter
+    public class SwaggerEnumParameterFilter : IParameterFilter
     {
         public void Apply(IParameter parameter, ParameterFilterContext context)
         {
@@ -24,18 +24,21 @@ namespace DataWF.Web.Common
         }
     }
 
-    public class DBItemSwaggerOperationFilter : IOperationFilter
+    public class SwaggerSecurityDocumentFilter : IDocumentFilter
     {
-        public void Apply(Operation operation, OperationFilterContext context)
+        public void Apply(SwaggerDocument document, DocumentFilterContext context)
         {
-            foreach (var parameter in operation.Parameters)
+            document.Security = new List<IDictionary<string, IEnumerable<string>>>()
             {
-                //if(parameter.)
-            }
+                new Dictionary<string, IEnumerable<string>>()
+                {
+                    { "Bearer", new string[]{ } },
+                }
+            };
         }
     }
 
-    public class DBItemSwaggerSchemaFilter : ISchemaFilter
+    public class SwaggerDBTableSchemaFilter : ISchemaFilter
     {
         public void Apply(Schema schema, SchemaFilterContext context)
         {

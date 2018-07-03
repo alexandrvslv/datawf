@@ -57,6 +57,8 @@ namespace DataWF.Web.Common
                 { "DataWF.Common", SyntaxHelper.CreateUsingDirective("DataWF.Common") },
                 { "DataWF.Data", SyntaxHelper.CreateUsingDirective("DataWF.Data") },
                 { "Microsoft.AspNetCore.Mvc", SyntaxHelper.CreateUsingDirective("Microsoft.AspNetCore.Mvc") },
+                { "Microsoft.AspNetCore.Authentication.JwtBearer", SyntaxHelper.CreateUsingDirective("Microsoft.AspNetCore.Authentication.JwtBearer") },
+                { "Microsoft.AspNetCore.Authorization", SyntaxHelper.CreateUsingDirective("Microsoft.AspNetCore.Authorization") },
                 { "System", SyntaxHelper.CreateUsingDirective("System") },
                 { "System.Collections.Generic", SyntaxHelper.CreateUsingDirective("System.Collections.Generic") }
             };
@@ -182,14 +184,26 @@ namespace DataWF.Web.Common
 
         private IEnumerable<AttributeListSyntax> GetControllerAttributeList()
         {
-            var attributeArgument = SyntaxFactory.AttributeArgument(SyntaxFactory.LiteralExpression(
-                SyntaxKind.StringLiteralExpression,
-                SyntaxFactory.Literal("api/[controller]")));
+            //[Authorize(JwtBearerDefaults.AuthenticationScheme)]
+            yield return SyntaxFactory.AttributeList(
+                         SyntaxFactory.SingletonSeparatedList(
+                             SyntaxFactory.Attribute(
+                                 SyntaxFactory.IdentifierName("Authorize")).WithArgumentList(
+                                 SyntaxFactory.AttributeArgumentList(
+                                     SyntaxFactory.SingletonSeparatedList(
+                                         SyntaxFactory.AttributeArgument(
+                                             SyntaxFactory.ParseExpression("AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme")))))));
+
             yield return SyntaxFactory.AttributeList(
                          SyntaxFactory.SingletonSeparatedList(
                              SyntaxFactory.Attribute(
                                  SyntaxFactory.IdentifierName("Route")).WithArgumentList(
-                             SyntaxFactory.AttributeArgumentList(SyntaxFactory.SingletonSeparatedList(attributeArgument)))));
+                                 SyntaxFactory.AttributeArgumentList(
+                                     SyntaxFactory.SingletonSeparatedList(
+                                         SyntaxFactory.AttributeArgument(
+                                             SyntaxFactory.LiteralExpression(
+                                                 SyntaxKind.StringLiteralExpression,
+                                                 SyntaxFactory.Literal("api/[controller]"))))))));
             yield return SyntaxFactory.AttributeList(
                          SyntaxFactory.SingletonSeparatedList(
                              SyntaxFactory.Attribute(

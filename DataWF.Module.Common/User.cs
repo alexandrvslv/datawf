@@ -67,21 +67,36 @@ namespace DataWF.Module.Common
             }
         }
 
-        public static void SetCurrentByEnvironment()
+        public static User SetCurrentByEnvironment()
         {
             var user = DBTable.LoadByCode(Environment.UserName);
             SetCurrentUser(user);
+            return user;
         }
 
-        public static void SetCurrentByCredential(string login, string password, bool threaded = false)
+        public static User SetCurrentByCredential(string login, string password, bool threaded = false)
         {
             var user = GetUser(login, GetSha(password));
             SetCurrentUser(user ?? throw new KeyNotFoundException(), threaded);
+            return user;
         }
 
-        public static void SeCurrentByEmail(string email, SecureString password, bool threaded = false)
+        public static User SeCurrentByEmail(string email, SecureString password, bool threaded = false)
+        {
+            return SeCurrentByEmail(new NetworkCredential(email, password), threaded);
+        }
+
+        public static void SetCurrentByEmail(string email, bool threaded = false)
         {
             var user = DBTable.SelectOne(DBTable.ParseProperty(nameof(EMail)), email);
+            if (user == null)
+                throw new KeyNotFoundException();
+            SetCurrentUser(user, threaded);
+        }
+
+        public static User SeCurrentByEmail(NetworkCredential credentials, bool threaded = false)
+        {
+            var user = DBTable.SelectOne(DBTable.ParseProperty(nameof(EMail)), credentials.UserName);
             if (user == null)
                 throw new KeyNotFoundException();
             var config = SmtpSetting.Load();
@@ -89,9 +104,10 @@ namespace DataWF.Module.Common
             {
                 smtpClient.ServerCertificateValidationCallback = (s, c, h, e) => true;
                 smtpClient.Connect(config.Host, config.Port, config.SSL);
-                smtpClient.Authenticate(new NetworkCredential(email, password));
+                smtpClient.Authenticate(credentials);
                 SetCurrentUser(user, threaded);
             }
+            return user;
         }
 
         public static DBTable<User> DBTable
@@ -311,11 +327,15 @@ namespace DataWF.Module.Common
             get { return this == CurrentUser; }
         }
 
+        [Browsable(false)]
+        public string Token { get; set; }
 
         public override void Dispose()
         {
             base.Dispose();
         }
+
+
     }
 
     public static class UserExtension
