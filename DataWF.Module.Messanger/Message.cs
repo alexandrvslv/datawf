@@ -95,7 +95,7 @@ namespace DataWF.Module.Messanger
 
             foreach (var user in to)
             {
-                if (user != message.User && user.Status == DBStatus.Actual)
+                if (user != message.User)//&& user.Status == DBStatus.Actual
                 {
                     var address = new MessageAddress
                     {
