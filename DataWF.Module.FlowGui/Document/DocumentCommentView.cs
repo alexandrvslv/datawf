@@ -14,11 +14,17 @@ namespace DataWF.Module.FlowGui
         {
             Name = nameof(DocumentCommentView);
             List.GenerateColumns = false;
+            List.GenerateToString = false;
             List.ListInfo = new LayoutListInfo(
                 new LayoutColumn() { Name = $"{nameof(DocumentComment.Message)}.{nameof(Message.User)}", FillWidth = true },
                 new LayoutColumn() { Name = $"{nameof(DocumentComment.Message)}.{nameof(Message.DateCreate)}", FillWidth = true },
-                new LayoutColumn() { Name = $"{nameof(DocumentComment.Message)}.{nameof(Message.Data)}", Row = 1, Height = 60 })
-            { ColumnsVisible = false };
+                new LayoutColumn() { Name = $"{nameof(DocumentComment.Message)}.{nameof(Message.Data)}", Row = 1 })
+            {
+                ColumnsVisible = false,
+                CalcHeigh = true,
+                HeaderVisible = false,
+                Indent = 6
+            };
             editor = new MessageEditor();
             editor.OnSending = new Action<Message>(OnSend);
             editor.HeightRequest = 100;
@@ -27,7 +33,11 @@ namespace DataWF.Module.FlowGui
 
         private void OnSend(Message message)
         {
-            var comment = new DocumentComment() { Document = Document, Message = message };
+            var comment = new DocumentComment()
+            {
+                Document = Document,
+                Message = message
+            };
             comment.Save();
         }
 
