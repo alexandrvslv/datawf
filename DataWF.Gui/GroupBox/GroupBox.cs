@@ -9,11 +9,11 @@ namespace DataWF.Gui
 {
     public class GroupBox : Canvas, ILocalizable
     {
-        private GroupBoxItem map;
+        private GroupBoxItem items;
 
         public GroupBox()
         {
-            map = new GroupBoxItem(this) { CalcHeight = CalcHeight };
+            items = new GroupBoxItem(this) { CalcHeight = CalcHeight };
         }
 
         public GroupBox(params GroupBoxItem[] items) : this()
@@ -26,31 +26,31 @@ namespace DataWF.Gui
 
         public int Row
         {
-            get { return map.Row; }
-            set { map.Row = value; }
+            get { return items.Row; }
+            set { items.Row = value; }
         }
 
         public int Col
         {
-            get { return map.Col; }
-            set { map.Col = value; }
+            get { return items.Col; }
+            set { items.Col = value; }
         }
 
         [DefaultValue(false)]
         public bool FillWidth
         {
-            get { return map.FillWidth; }
-            set { map.FillWidth = value; }
+            get { return items.FillWidth; }
+            set { items.FillWidth = value; }
         }
 
         [DefaultValue(false)]
         public bool FillHeight
         {
-            get { return map.FillHeight; }
-            set { map.FillHeight = value; }
+            get { return items.FillHeight; }
+            set { items.FillHeight = value; }
         }
 
-        public GroupBoxItem Map { get { return map; } }
+        public GroupBoxItem Items { get { return items; } }
 
         protected double CalcHeight(ILayoutItem item)
         {
@@ -83,7 +83,7 @@ namespace DataWF.Gui
         public void Add(GroupBoxItem item)
         {
             if (item.Map == null)
-                map.Add(item);
+                items.Add(item);
             if (item.Count == 0)
             {
                 if (item.Widget != null && item.Widget.Parent != this)
@@ -126,8 +126,8 @@ namespace DataWF.Gui
             //        box.GroupBox.OnGetPreferredSize(widthConstraint, heightConstraint);
             //    }
             //}
-            var bound = map.GetBound(widthConstraint.AvailableSize, heightConstraint.AvailableSize);
-            foreach (var item in map.GetVisibleItems())
+            var bound = items.GetBound(widthConstraint.AvailableSize, heightConstraint.AvailableSize);
+            foreach (var item in items.GetVisibleItems())
             {
                 item.Widget.Surface.GetPreferredSize();
             }
@@ -137,7 +137,7 @@ namespace DataWF.Gui
         protected override void OnButtonReleased(ButtonEventArgs args)
         {
             base.OnButtonReleased(args);
-            foreach (var box in map.GetVisibleItems())
+            foreach (var box in items.GetVisibleItems())
             {
                 if (box.Visible)
                 {
@@ -157,7 +157,7 @@ namespace DataWF.Gui
             base.OnDraw(ctx, dirtyRect);
             using (var context = new GraphContext(ctx))
             {
-                foreach (ILayoutItem item in map.GetVisibleItems())
+                foreach (ILayoutItem item in items.GetVisibleItems())
                 {
                     ((GroupBoxItem)item).Paint(context);
                 }
@@ -176,30 +176,30 @@ namespace DataWF.Gui
         protected override void OnReallocate()
         {
             base.OnReallocate();
-            map.Width = Size.Width;
-            map.Height = Size.Height;
-            var mapBound = map.GetBound();
+            items.Width = Size.Width;
+            items.Height = Size.Height;
+            var mapBound = items.GetBound();
 
-            foreach (GroupBoxItem item in map.GetVisibleItems())
+            foreach (GroupBoxItem item in items.GetVisibleItems())
             {
-                map.GetBound(item, mapBound);
+                items.GetBound(item, mapBound);
             }
             QueueDraw();
         }
 
         public bool Contains(ILayoutItem item)
         {
-            return map.Contains(item);
+            return items.Contains(item);
         }
 
         public void Sort()
         {
-            map.Sort(new Comparison<ILayoutItem>(GroupBoxItem.Compare));
+            items.Sort(new Comparison<ILayoutItem>(GroupBoxItem.Compare));
         }
 
         public void Localize()
         {
-            foreach (GroupBoxItem item in map.GetItems())
+            foreach (GroupBoxItem item in items.GetItems())
             {
                 item.Localize();
             }
@@ -207,7 +207,7 @@ namespace DataWF.Gui
 
         protected override void Dispose(bool disposing)
         {
-            map.Dispose();
+            items.Dispose();
 
             base.Dispose(disposing);
         }
