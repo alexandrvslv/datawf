@@ -359,6 +359,7 @@ namespace DataWF.Data.Gui
             var dtree = new DataTree
             {
                 AllowCheck = true,
+                CheckRecursive = true,
                 DataKeys = DataTreeKeys.Schema | DataTreeKeys.TableGroup | DataTreeKeys.Table,
                 DataFilter = CurrentSchema
             };

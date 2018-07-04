@@ -1599,6 +1599,31 @@ namespace DataWF.Gui
             }
         }
 
+        public bool CheckRecursive
+        {
+            get { return (keys & LayoutListKeys.CheckRecursive) == LayoutListKeys.CheckRecursive; }
+            set
+            {
+                if (value)
+                    keys |= LayoutListKeys.CheckRecursive;
+                else
+                    keys &= ~LayoutListKeys.CheckRecursive;
+            }
+        }
+
+        public bool CheckClearBase
+        {
+            get { return (keys & LayoutListKeys.CheckClearBase) == LayoutListKeys.CheckClearBase; }
+            set
+            {
+                if (value)
+                    keys |= LayoutListKeys.CheckClearBase;
+                else
+                    keys &= ~LayoutListKeys.CheckClearBase;
+            }
+        }
+
+
         [DefaultValue(true)]
         public bool AllowImage
         {
@@ -3009,6 +3034,27 @@ namespace DataWF.Gui
 
             object val = ReadValue(item, cell);
 
+            if (cellEdit is CellEditorCheck check && !cell.ReadOnly && editState != EditListState.ReadOnly)
+            {
+
+                object data = null;
+                if (check.FormatValue(val).Equals(CheckedState.Checked))
+                    data = check.ValueNull != null && check.TreeState ? check.ValueNull : check.ValueFalse;
+                else if (check.FormatValue(val).Equals(CheckedState.Unchecked))
+                    data = check.ValueTrue;
+                else if (check.FormatValue(val).Equals(CheckedState.Indeterminate))
+                    data = check.ValueFalse;
+                OnCellValueChanged(new LayoutValueChangedEventArgs(editor)
+                {
+                    Cell = column,
+                    ListItem = listItem,
+                    Data = data
+                });
+
+                canvas.QueueDraw();
+                return;
+            }
+
             try
             {
                 editor.Initialize = true;
@@ -3913,30 +3959,6 @@ namespace DataWF.Gui
                     cell = (ILayoutCell)item;
                     item = fieldSource;
                 }
-
-                ILayoutCellEditor edit = GetCellEditor(item, null, cell);
-                if (edit is CellEditorCheck && cell.Editable && !cell.ReadOnly && editState != EditListState.ReadOnly)
-                {
-                    object val = ReadValue(item, cell);
-
-                    CellEditorCheck check = (CellEditorCheck)edit;
-                    object data = null;
-                    if (check.FormatValue(val).Equals(CheckedState.Checked))
-                        data = check.ValueNull != null && check.TreeState ? check.ValueNull : check.ValueFalse;
-                    else if (check.FormatValue(val).Equals(CheckedState.Unchecked))
-                        data = check.ValueTrue;
-                    else if (check.FormatValue(val).Equals(CheckedState.Indeterminate))
-                        data = check.ValueFalse;
-                    OnCellValueChanged(new LayoutValueChangedEventArgs(editor)
-                    {
-                        Cell = e.HitTest.Column,
-                        ListItem = e.HitTest.Item,
-                        Data = data
-                    });
-
-                    canvas.QueueDraw();
-                    return;
-                }
                 if (editMode == EditModes.ByClick)
                     OnCellEditBegin(SelectedItem, e.HitTest.Column);
 
@@ -3979,18 +4001,37 @@ namespace DataWF.Gui
 
         protected virtual void OnCellCheckClick(LayoutHitTestEventArgs e)
         {
-            if (CellCheckClick != null)
-            {
-                CellCheckClick(this, e);
-            }
+            CellCheckClick?.Invoke(this, e);
             object item = listSource[e.HitTest.Index];
-            if (item is ICheck)
+            if (item is ICheck check)
             {
-                ICheck f = (ICheck)item;
-                f.Check = !f.Check;
+                check.Check = !check.Check;
                 InvalidateCell(item, e.HitTest.Index, e.HitTest.Column);
+
+                if (item is IGroup group)
+                {
+                    if (CheckRecursive)
+                    {
+                        foreach (var node in GroupHelper.GetSubGroups(group))
+                        {
+                            if (node is ICheck checkNode)
+                            {
+                                checkNode.Check = check.Check;
+                            }
+                        }
+                    }
+                    if (check.Check && CheckClearBase)
+                    {
+                        foreach (var node in GroupHelper.GetAllParent<IGroup>(group))
+                        {
+                            if (node is ICheck checkNode)
+                            {
+                                checkNode.Check = false;
+                            }
+                        }
+                    }
+                }
             }
-            //OnSelectionChanged();
         }
 
         protected virtual void OnCellGlyphClick(LayoutHitTestEventArgs e)

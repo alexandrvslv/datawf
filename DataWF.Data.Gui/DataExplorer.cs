@@ -406,6 +406,7 @@ namespace DataWF.Data.Gui
             var list = new LayoutList
             {
                 AllowCheck = true,
+                CheckRecursive = true,
                 AutoToStringFill = true,
                 GenerateToString = true,
                 GenerateColumns = false,

@@ -119,7 +119,10 @@ namespace DataWF.Gui
         GenerateFields = 1 << 12,
         GenerateColumns = 1 << 13,
         GenerateName = 1 << 14,
-        GenerateMenu = 1 << 15
+        GenerateMenu = 1 << 15,
+        //
+        CheckRecursive = 1 << 16,
+        CheckClearBase = 1 << 17
     }
 
     public enum Orientation
