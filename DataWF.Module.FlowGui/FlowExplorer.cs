@@ -84,7 +84,6 @@ namespace DataWF.Module.FlowGui
             if (Work.DBTable?.Access.View ?? false) keys |= FlowTreeKeys.Work;
             tree = new FlowTree
             {
-                Status = DBStatus.Empty,
                 FlowKeys = keys,
                 UserKeys = userKeys,
                 FilterEntry = ((ToolSearchEntry)barMain["FilterText"]).Entry

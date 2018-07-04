@@ -3,7 +3,7 @@ using DataWF.Gui;
 using DataWF.Data;
 using DataWF.Module.Common;
 using Xwt;
-
+using DataWF.Common;
 
 namespace DataWF.Module.CommonGui
 {
@@ -31,14 +31,24 @@ namespace DataWF.Module.CommonGui
                 base.DataType = value;
                 if (DataType == typeof(Department))
                 {
-                    UserKeys = UserTreeKeys.Department;
+                    UserKeys &= ~UserTreeKeys.User;
+                    UserKeys &= ~UserTreeKeys.Position;
+                    UserKeys &= ~UserTreeKeys.Permission;
+                    UserKeys &= ~UserTreeKeys.Group;
+                    UserKeys |= UserTreeKeys.Department;
                 }
                 else if (DataType == typeof(User))
                 {
-                    UserKeys = UserTreeKeys.Department | UserTreeKeys.User;
+                    UserKeys &= ~UserTreeKeys.Position;
+                    UserKeys &= ~UserTreeKeys.Permission;
+                    UserKeys &= ~UserTreeKeys.Group;
+                    UserKeys |= UserTreeKeys.Department | UserTreeKeys.User;
                 }
                 else if (DataType == typeof(Position))
                 {
+                    UserKeys &= ~UserTreeKeys.User;
+                    UserKeys &= ~UserTreeKeys.Permission;
+                    UserKeys &= ~UserTreeKeys.Group;
                     UserKeys = UserTreeKeys.Department | UserTreeKeys.Position;
                 }
                 else if (DataType == typeof(UserGroup))

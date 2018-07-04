@@ -24,7 +24,8 @@ namespace DataWF.Module.CommonGui
         Group = 1 << 4,
         Permission = 1 << 5,
         Scheduler = 1 << 6,
-        Access = 1 << 7
+        Access = 1 << 7,
+        Current = 1 << 8
     }
 
     public class UserTree : LayoutList
@@ -32,7 +33,6 @@ namespace DataWF.Module.CommonGui
         private List<IDBTableView> views = new List<IDBTableView>();
         private UserTreeKeys userKeys;
         //private ListChangedEventHandler handler;
-        private DBStatus status = DBStatus.Empty;
         private Rectangle imgRect = new Rectangle();
         private Rectangle textRect = new Rectangle();
         private TextEntry filterEntry;
@@ -82,24 +82,16 @@ namespace DataWF.Module.CommonGui
             }
         }
 
-        [DefaultValue(DBStatus.Empty)]
-        public DBStatus Status
-        {
-            get { return status; }
-            set
-            {
-                if (status != value)
-                {
-                    status = value;
-                    //RefreshData();
-                }
-            }
-        }
-
         [DefaultValue(true)]
         public bool Access
         {
             get { return (userKeys & UserTreeKeys.Access) == UserTreeKeys.Access; }
+        }
+
+        [DefaultValue(true)]
+        public bool Current
+        {
+            get { return (userKeys & UserTreeKeys.Current) == UserTreeKeys.Current; }
         }
 
         [DefaultValue(false)]
@@ -294,7 +286,7 @@ namespace DataWF.Module.CommonGui
 
                 foreach (DBItem item in enumer)
                 {
-                    if ((status == DBStatus.Empty || (status & item.Status) != DBStatus.Empty) && (!Access || item.Access.View))
+                    if ((!Current || (DBStatus.Current & item.Status) != DBStatus.Empty) && (!Access || item.Access.View))
                     {
                         var element = InitItem(item);
                         if (ShowListNode)
@@ -330,7 +322,7 @@ namespace DataWF.Module.CommonGui
                 {
                     Helper.OnException(new Exception($"Warning - self reference!({item})"));
                 }
-                if (show && (status == DBStatus.Empty || (status & item.Status) != DBStatus.Empty) && (!Access || item.Access.View))
+                if (show && (!Current || (DBStatus.Current & item.Status) != DBStatus.Empty) && (!Access || item.Access.View))
                 {
                     var node = InitItem(item);
                     node.Group = pnode;
