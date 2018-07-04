@@ -128,16 +128,10 @@ namespace DataWF.Gui
             set
             {
                 check = value;
-                if (CheckRecursive)
-                {
-                    foreach (Node node in nodes)
-                        node.Check = value;
-                }
+
                 OnPropertyChanged(nameof(Check));
             }
         }
-
-        public bool CheckRecursive = true;
 
         [XmlIgnore]
         public object Tag { get; set; }
