@@ -56,16 +56,15 @@ namespace DataWF.Module.FlowGui
             return await Send(widget, new[] { document }, null, null, null);
         }
 
-        public static async Task<Command> Send(Widget widget, IEnumerable<Document> documnets, DocumentWork work, Stage stage, User user, DocumentSendType sendType = DocumentSendType.Next)
+        public static async Task<Command> Send(Widget widget, IEnumerable<Document> documnets, DocumentWork work, Stage stage, User user)
         {
             var sender = new DocumentSender();
             sender.Localize();
             sender.Initialize(documnets.ToList());
-            sender.SendType = sendType;
 
             // sender.Hidden += SenderSendComplete;
             if (stage != null && user != null)
-                sender.Send(stage, user, sendType);
+                sender.Send(stage, user, DocumentSendType.Next);
             return await sender.ShowAsync(widget, Point.Zero);
         }
 
@@ -84,35 +83,11 @@ namespace DataWF.Module.FlowGui
         private CellStyle styleComplete = new CellStyle();
         private CellStyle styleError = new CellStyle();
         private SelectableList<DocumentSendItem> items = new SelectableList<DocumentSendItem>();
-
-        private Stage CurrentStage
-        {
-            get { return currentStage; }
-            set
-            {
-                currentStage = value;
-
-                toolNext.DropDown.Items.Clear();
-                if (currentStage == null)
-                    return;
-                foreach (var sparam in currentStage.GetParams<StageReference>())
-                {
-                    var next = sparam.ReferenceStage;
-                    if (next != null)
-                    {
-                        toolNext.DropDown.Items.Add(new ToolMenuItem
-                        {
-                            Name = next.Code,
-                            Text = next.Name,
-                            Tag = sparam
-                        });
-                    }
-                }
-            }
-        }
-        private Stage WorkStage = null;
+        private GroupBox groupBox;
+        private Stage currentStage;
         private Document current = null;
         private DocumentSendType type = DocumentSendType.Next;
+        private Stage selectedStage;
 
         public DocumentSender()
         {
@@ -131,6 +106,8 @@ namespace DataWF.Module.FlowGui
             listUsers = new FlowTree()
             {
                 AllowCheck = true,
+                CheckRecursive = false,
+                CheckClearBase = true,
                 ShowUser = true
             };
 
@@ -189,6 +166,48 @@ namespace DataWF.Module.FlowGui
             Size = new Size(640, 640);
         }
 
+        public Work CurrentWork { get; private set; }
+
+        public Stage CurrentStage
+        {
+            get { return currentStage; }
+            set
+            {
+                currentStage = value;
+                CurrentWork = currentStage?.Work;
+                toolNext.DropDown.Items.Clear();
+                if (currentStage == null)
+                    return;
+                foreach (var sparam in currentStage.GetParams<StageReference>())
+                {
+                    var next = sparam.ReferenceStage;
+                    if (next != null)
+                    {
+                        toolNext.DropDown.Items.Add(new ToolMenuItem
+                        {
+                            Name = next.Code,
+                            Text = next.Name,
+                            Tag = sparam
+                        });
+                    }
+                }
+            }
+        }
+
+        public Stage SelectedStage
+        {
+            get { return selectedStage; }
+            private set
+            {
+                selectedStage = value;
+                if (selectedStage != null)
+                {
+                    foreach (var item in selectedStage.GetDepartment(current.Template))
+                        InitNode(item);
+                }
+            }
+        }
+
         public void Localize()
         {
             bar.Localize();
@@ -202,55 +221,46 @@ namespace DataWF.Module.FlowGui
         {
             if (documents.Count == 0)
                 return;
-            // Настройка списка документов
+
             current = documents[0];
-            // Определение текущего этапа
+            CurrentStage = current.WorkCurrent?.Stage ?? current.GetWorksUncompleted().FirstOrDefault()?.Stage;
 
-            var work = current.GetWorksUncompleted().FirstOrDefault();
-            var works = current.GetWorks().ToList();
-            if (current.WorkCurrent != null)
-                CurrentStage = current.WorkCurrent.Stage;
-            if (CurrentStage == null && work != null)
-                WorkStage = work.Stage;
+            toolReturn.Visible = true;
 
-            // Построение списка документов
             foreach (Document document in documents)
             {
                 if (current.Template != document.Template)
                     continue;
                 var dworks = document.GetWorks().ToList();
-                if (dworks.Count == 0)
-                {
-                    dworks = document.GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), DBLoadParam.Load).ToList();
-                }
                 var cwork = document.WorkCurrent;
-                if (cwork != null)
+                if (cwork == null || cwork.Stage != CurrentStage)
                 {
-
-                    foreach (var w in dworks)
+                    foreach (var uncomplete in document.GetWorksUncompleted())
                     {
-                        if (!w.IsComplete && w != cwork && w.User == cwork.User)
+                        if (cwork != null && uncomplete != cwork && uncomplete.Stage == CurrentStage)
                         {
-                            w.DateComplete = DateTime.Now;
-                            w.Save();
+                            cwork = uncomplete;
+                            break;
+                        }
+                        else if (cwork == null && uncomplete.Stage == CurrentStage)
+                        {
+                            cwork = uncomplete;
+                            break;
                         }
                     }
                 }
+                if (cwork == null)
+                    continue;
 
-                if (cwork != null && cwork.Stage != CurrentStage)
-                    continue;
-                var dwork = document.GetWorksUncompleted().FirstOrDefault();
-                if (WorkStage != null && dwork.Stage != WorkStage)
-                    continue;
+                toolReturn.Visible &= cwork.From != null;
 
                 if (!items.Select("Document", CompareType.Equal, document).Any())
                 {
-                    var item = new DocumentSendItem()
+                    items.Add(new DocumentSendItem()
                     {
                         Document = document,
-                        Work = document.WorkCurrent ?? dwork ?? document.GetLastWork()
-                    };
-                    items.Add(item);
+                        Work = cwork
+                    });
                 }
                 else
                 {
@@ -261,59 +271,43 @@ namespace DataWF.Module.FlowGui
             if (items.Count == 0)
                 return;
 
-            toolReturn.Sensitive = works.Count > 1;
-            toolRecovery.Sensitive = documents[0].Template.Access.Create;
-            // Варианты отправки
+            toolRecovery.Visible = documents[0].Template.Access.Create;
+            toolComplete.Visible = false;
+            toolNext.Visible =
+                toolForward.Visible = true;
+
             if (CurrentStage == null)
             {
-                toolNext.Sensitive = false;
-                toolReturn.Sensitive = false;
-                toolForward.Sensitive = work != null && !work.User.Online;
-
-                if (!toolForward.Sensitive && toolRecovery.Sensitive)
-                    SendType = DocumentSendType.Recovery;
-                else if (toolForward.Sensitive)
-                    SendType = DocumentSendType.Forward;
+                toolNext.Visible =
+                    toolForward.Visible = false;
+                SendType = DocumentSendType.Recovery;
             }
-            else if (CurrentStage.Keys != null && (CurrentStage.Keys.Value & StageKey.IsStop) == StageKey.IsStop)
+            else if ((CurrentStage.Keys.GetValueOrDefault() & StageKey.IsStop) == StageKey.IsStop
+                || ((CurrentStage.Keys.GetValueOrDefault() & StageKey.IsAutoComplete) != StageKey.IsAutoComplete
+                    && current.GetWorksUncompleted(CurrentStage).Count() > 1))
             {
-                toolComplete.Sensitive = true;
+                toolComplete.Visible = true;
                 SendType = DocumentSendType.Complete;
             }
             else
             {
-                foreach (var cwork in works)
-                {
-                    if (!cwork.IsComplete && !cwork.IsCurrent)
-                    {
-                        toolComplete.Sensitive = true;
-                        break;
-                    }
-                }
                 SendType = DocumentSendType.Next;
             }
         }
 
         public void Send(Stage stage, DBItem staff, DocumentSendType type)
         {
-            groupBox.Map["Users"].Visible = false;
+            groupBox.Items["Users"].Visible = false;
             //tools.Sensitive = false;
             SendType = type;
             var stageNode = InitNode(staff);
             Send();
         }
 
-        public void InitNodes(DBItem reference)
-        {
-            foreach (var item in reference.GetDepartment(current.Template))
-                InitNode(item);
-        }
-
         public TableItemNode InitNode(DBItem staff)
         {
             var staffNode = listUsers.InitItem(staff);
             listUsers.CheckNode(staffNode);
-            staffNode.CheckRecursive = false;
             staffNode.Check = true;
             listUsers.Nodes.Add(staffNode);
             return staffNode;
@@ -326,7 +320,7 @@ namespace DataWF.Module.FlowGui
             {
                 type = value;
                 GuiService.Localize(toolType, "DocumentSender", value.ToString());
-                groupBox.Map["Users"].Visible = true;
+                groupBox.Items["Users"].Visible = true;
                 listUsers.Nodes.Clear();
 
                 if (type == DocumentSendType.Next)
@@ -335,48 +329,36 @@ namespace DataWF.Module.FlowGui
                 }
                 else if (type == DocumentSendType.Return)
                 {
-                    DocumentWork prev = items[0].Work.From;
-                    //StageSender ss = new StageSender(prev.Stage, prev.User);
-                    //stages.Add(ss);
+                    groupBox.Items["Users"].Visible = false;
                 }
                 else if (type == DocumentSendType.Forward)
                 {
-                    toolType.Tag = DocumentSendType.Forward;
-                    SelectedStage = CurrentStage == null ? WorkStage : CurrentStage;
-                    if (SelectedStage == null)
-                    {
-                        InitNode(User.CurrentUser.Department);
-                    }
-                    else
-                    {
-                        InitNodes(SelectedStage);
-                    }
+                    SelectedStage = CurrentStage;
                 }
                 else if (type == DocumentSendType.Recovery)
                 {
-                    SelectedStage = current.Template?.Work?.GetStartStage();
-                    if (SelectedStage != null)
+                    var startStage = CurrentWork?.GetStartStage();
+                    if (startStage == null)
                     {
                         var stageNode = InitNode(User.CurrentUser);
                     }
+                    SelectedStage = startStage;
                 }
                 else if (type == DocumentSendType.Complete)
                 {
-                    groupBox.Map["Users"].Visible = false;
+                    groupBox.Items["Users"].Visible = false;
                 }
 
                 listUsers.Nodes.ExpandTop();
             }
         }
 
-        public Stage SelectedStage { get; private set; }
 
         private void ToolNextItemClick(object sender, ToolItemEventArgs e)
         {
             var reference = e.Item.Tag as StageReference;
             toolType.Text = $"{Locale.Get("DocumentSender", DocumentSendType.Next.ToString())} ({reference.ReferenceStage})";
             SelectedStage = reference.ReferenceStage;
-            InitNodes(reference);
         }
 
         private void ToolTypeItemClicked(object sender, ToolItemEventArgs e)
@@ -419,31 +401,6 @@ namespace DataWF.Module.FlowGui
             return null;
         }
 
-        protected string ExecuteProcedure(DBProcedure procedure, Document doc, Stage stage)
-        {
-            try
-            {
-                object values = ProcedureProgress.Execute(procedure, doc);
-                return values == null ? string.Empty : values.ToString();
-            }
-            catch (Exception ex)
-            {
-                return ex.Message;
-            }
-        }
-
-        private DocumentSendItem cuuItem = null;
-        private GroupBox groupBox;
-        private Stage currentStage;
-
-        private void OnSend(ExecuteDocumentArg arg)
-        {
-            if (arg.Result != null && arg.Result.ToString().Length != 0)
-            {
-                cuuItem.Message += arg.Result.ToString();
-            }
-        }
-
         public void SendBackground()
         {
             var nodes = listUsers.Nodes.GetChecked().Cast<TableItemNode>().Select(p => (DBItem)p.Item).ToList();
@@ -455,15 +412,15 @@ namespace DataWF.Module.FlowGui
                     {
                         if (SendType == DocumentSendType.Complete)
                         {
-                            if (sender.Work != null)
-                            {
-                                sender.Work.DateComplete = DateTime.Now;
-                            }
+                            sender.Document.Complete(sender.Work);
+                        }
+                        else if (SendType == DocumentSendType.Return)
+                        {
+                            sender.Document.Return(sender.Work);
                         }
                         else
                         {
                             sender.Message = string.Empty;
-                            cuuItem = sender;
                             sender.Document.Send(sender.Work, SelectedStage, nodes);
                         }
 

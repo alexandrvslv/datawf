@@ -10,7 +10,7 @@ namespace DataWF.Module.FlowGui
         {
             DockType = Gui.DockType.Top;
             toolCreateFrom.Visible = false;
-            FilterView.Box.Map["Document Type"].Visible = false;
+            FilterView.Box.Items["Document Type"].Visible = false;
             Filter.IsWork = CheckedState.Checked;
             FilterVisible = false;
             HideOnClose = true;

@@ -66,9 +66,9 @@ namespace DataWF.Module.FlowGui
         private ToolItem toolLogs;
         private ToolItem toolDelete;
         private ToolItem toolBarCode;
-        private ToolItem toolReturn;
-        private ToolItem toolForward;
-        private ToolItem toolNext;
+        //private ToolItem toolReturn;
+        //private ToolItem toolForward;
+        //private ToolItem toolNext;
         private ToolDropDown toolProcedures;
         private DockBox dock;
         private ToolLabel toolLabel = new ToolLabel();
@@ -94,10 +94,10 @@ namespace DataWF.Module.FlowGui
             toolDelete = new ToolItem(ToolDeleteClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Delete", Glyph = GlyphType.MinusSquare };
             toolLogs = new ToolItem(ToolLogsOnClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Logs", Glyph = GlyphType.History };
             toolBarCode = new ToolItem(ToolBarCodeClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "BarCode", Glyph = GlyphType.Barcode };
-            toolReturn = new ToolItem(ToolReturnClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Return", Glyph = GlyphType.StepBackward };
+            //toolReturn = new ToolItem(ToolReturnClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Return", Glyph = GlyphType.StepBackward };
             toolSend = new ToolItem(ToolAcceptClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Send/Accept", Glyph = GlyphType.CheckCircle };
-            toolForward = new ToolItem(ToolForwardClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Forward", Glyph = GlyphType.StepForward };
-            toolNext = new ToolItem(ToolNextClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Next", Glyph = GlyphType.Forward };
+            //toolForward = new ToolItem(ToolForwardClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Forward", Glyph = GlyphType.StepForward };
+            //toolNext = new ToolItem(ToolNextClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Next", Glyph = GlyphType.Forward };
 
             bar = new Toolsbar(
                //toolProcedures,
@@ -482,10 +482,10 @@ namespace DataWF.Module.FlowGui
                     LoadPage(panel.CurrentPage);
                 }
 
-                toolReturn.Sensitive = from;
+                //toolReturn.Sensitive = from;
                 toolSend.Sensitive = state != DocumentEditorState.Create;
-                toolNext.Sensitive = state == DocumentEditorState.Edit;
-                toolForward.Sensitive = state == DocumentEditorState.Edit;
+                //toolNext.Sensitive = state == DocumentEditorState.Edit;
+                //toolForward.Sensitive = state == DocumentEditorState.Edit;
                 toolProcedures.Sensitive = state == DocumentEditorState.Edit;
                 //toolTemplates.Sensitive = state != DocumentEditorState.Create;
                 toolRefresh.Sensitive = state != DocumentEditorState.Create;
@@ -799,21 +799,21 @@ namespace DataWF.Module.FlowGui
             return documentWidgets;
         }
 
-        private async void ToolReturnClick(object sender, EventArgs e)
-        {
-            var work = document.WorkCurrent ?? document.GetWorksUncompleted().FirstOrDefault() ?? document.GetLastWork();
-            await DocumentSender.Send(this, new[] { document }, work, work.From.Stage, work.From.User, DocumentSendType.Return);
-        }
+        //private async void ToolReturnClick(object sender, EventArgs e)
+        //{
+        //    var work = document.WorkCurrent ?? document.GetWorksUncompleted().FirstOrDefault() ?? document.GetLastWork();
+        //    await DocumentSender.Send(this, new[] { document }, work, work.From.Stage, work.From.User, DocumentSendType.Return);
+        //}
 
-        private async void ToolNextClick(object sender, EventArgs e)
-        {
-            await DocumentSender.Send(this, new[] { document }, document.WorkCurrent, null, null, DocumentSendType.Next);
-        }
+        //private async void ToolNextClick(object sender, EventArgs e)
+        //{
+        //    await DocumentSender.Send(this, new[] { document }, document.WorkCurrent, null, null, DocumentSendType.Next);
+        //}
 
-        private async void ToolForwardClick(object sender, EventArgs e)
-        {
-            await DocumentSender.Send(this, new[] { document }, document.WorkCurrent, null, null, DocumentSendType.Forward);
-        }
+        //private async void ToolForwardClick(object sender, EventArgs e)
+        //{
+        //    await DocumentSender.Send(this, new[] { document }, document.WorkCurrent, null, null, DocumentSendType.Forward);
+        //}
 
         public event EventHandler SendComplete;
 

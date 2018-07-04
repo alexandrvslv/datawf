@@ -721,75 +721,83 @@ namespace DataWF.Module.Flow
             return ExecuteProcedures(param, stage.GetProceduresByType(type));
         }
 
+        [ControllerMethod]
+        public void Complete(DocumentWork work)
+        {
+            if (work.User == null)
+            {
+                work.User = User.CurrentUser;
+            }
+
+            work.DateComplete = DateTime.Now;
+            if (work.Stage != null)
+            {
+                if ((work.Stage.Keys & StageKey.IsAutoComplete) == StageKey.IsAutoComplete)
+                {
+                    foreach (var unWork in GetWorksUncompleted(work.Stage).ToList())
+                    {
+                        if (unWork.From == work.From)
+                            work.DateComplete = work.DateComplete;
+                    }
+                }
+
+                if (!work.IsResend
+                    && GetWorksUncompleted(work.Stage).Count() == 0)
+                {
+                    var checkResult = ExecuteProceduresByStage(work.Stage, StageParamProcudureType.Check);
+                    if (checkResult != null)
+                        throw new InvalidOperationException($"Check Fail {checkResult}");
+
+                    ExecuteProceduresByStage(work.Stage, StageParamProcudureType.Finish);
+                }
+            }
+        }
+
+        [ControllerMethod]
+        public void Return(DocumentWork work)
+        {
+            if (work.From == null || work.From.Stage == null)
+                throw new InvalidOperationException("Can't Return to undefined Stage");
+            foreach (var unWork in GetWorksUncompleted().ToList())
+            {
+                if (unWork.From == work.From && unWork != work)
+                {
+                    unWork.DateComplete = DateTime.Now;
+                    if (DBTransaction.Current != null)
+                    {
+                        DBTransaction.Current.Rows.Add(work);
+                    }
+                }
+            }
+            work.IsResend = true;
+            Send(work, work.From.Stage, new[] { work.From.User });
+        }
+
         public List<DocumentWork> Send(DocumentWork from, Stage stage, IEnumerable<DBItem> staff)
         {
             if (!(staff?.Any() ?? false))
             {
                 throw new InvalidOperationException($"Destination not specified {stage}!");
             }
-            //if (stage != null)
-            //{
-            //    DocumentWork oldWork = GetByStage(stage);
-            //    if (oldWork != null && oldWork != from && !oldWork.IsComplete)
-            //    {
-            //        throw new InvalidOperationException($"Allready on Stage {stage}!");
-            //    }
-            //}
+
             if (from != null)
             {
-                if (from.User == null)
+                if (from.Stage == stage)
                 {
-                    from.User = User.CurrentUser;
+                    from.IsResend = true;
                 }
-
-                if (from.Stage != null)
-                {
-                    var checkResult = ExecuteProceduresByStage(from.Stage, StageParamProcudureType.Check);
-                    if (checkResult != null)
-                        throw new InvalidOperationException($"Check Fail {checkResult}");
-
-                    if (from.Stage == stage)
-                    {
-                        from.IsResend = true;
-                        // work.IsResend = true;
-                    }
-                    else
-                    {
-                        ExecuteProceduresByStage(from.Stage, StageParamProcudureType.Finish);
-                    }
-                }
+                Complete(from);
             }
 
             var result = new List<DocumentWork>();
             foreach (var item in staff)
             {
-                var work = CreateWork(from, stage, item);
-                result.Add(work);
-                if (DBTransaction.Current != null)
+                if (!GetWorksUncompleted().Any(p => p.Stage == stage && p.Staff == stage))
                 {
-                    DBTransaction.Current.Rows.Add(work);
+                    result.Add(CreateWork(from, stage, item));
                 }
             }
 
-            if (from != null)
-            {
-                from.DateComplete = DateTime.Now;
-                if (DBTransaction.Current != null)
-                {
-                    DBTransaction.Current.Rows.Add(from);
-                }
-                if (from.Stage != null && (from.Stage.Keys & StageKey.IsAutoComplete) == StageKey.IsAutoComplete)
-                {
-                    foreach (var work in GetWorksUncompleted(from.Stage))
-                    {
-                        work.DateComplete = from.DateComplete;
-                        if (DBTransaction.Current != null)
-                        {
-                            DBTransaction.Current.Rows.Add(work);
-                        }
-                    }
-                }
-            }
             CheckComplete();
 
             if (stage != null)
@@ -797,10 +805,6 @@ namespace DataWF.Module.Flow
                 ExecuteProceduresByStage(stage, StageParamProcudureType.Start);
             }
 
-            if (!IsComplete.GetValueOrDefault() && Status == DBStatus.Archive)
-            {
-                Status = DBStatus.Edit;
-            }
             return result;
         }
 
@@ -903,6 +907,10 @@ namespace DataWF.Module.Flow
                 if (!work.IsComplete)
                 {
                     IsComplete = false;
+                    if (Status == DBStatus.Archive)
+                    {
+                        Status = DBStatus.Edit;
+                    }
                     return;
                 }
             }
