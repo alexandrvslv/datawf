@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace DataWF.Common
@@ -167,6 +168,16 @@ namespace DataWF.Common
             }
 
             return ListHelper.Compare(ox, oy, comp, true);
+        }
+
+        public static IEnumerable<IGroup> GetSubGroups(IGroup group)
+        {
+            foreach (var item in group.GetGroups())
+            {
+                yield return item;
+                foreach (var subItem in GetSubGroups(item))
+                    yield return subItem;
+            }
         }
     }
 
