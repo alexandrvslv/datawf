@@ -187,6 +187,10 @@ namespace DataWF.Data
             {
                 temp &= ~DBUpdateState.Commit;
                 temp |= DBUpdateState.Update;
+                if (DBTransaction.Current != null)
+                {
+                    DBTransaction.Current.Rows.Add(this);
+                }
             }
             else if (temp == DBUpdateState.Update && !GetIsChanged())
             {
