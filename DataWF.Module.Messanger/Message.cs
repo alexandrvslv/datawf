@@ -121,7 +121,7 @@ namespace DataWF.Module.Messanger
             set { SetProperty(value); }
         }
 
-        [Browsable(false), Column("user_id")]
+        [Browsable(false), Column("user_id", Keys = DBColumnKeys.View)]
         public int? UserId
         {
             get { return GetProperty<int?>(nameof(UserId)); }

@@ -1,4 +1,5 @@
 ﻿using System;
+using DataWF.Common;
 using DataWF.Data;
 using DataWF.Gui;
 using DataWF.Module.Common;
@@ -18,7 +19,16 @@ namespace DataWF.Module.MessangerGui
 
         public MessageEditor()
         {
-            toolUsers = new ToolFieldEditor { Name = "User", Editor = new CellEditorUserTree() { DataType = typeof(User)} };
+            toolUsers = new ToolFieldEditor
+            {
+                Name = "User",
+                ContentMinWidth = 200,
+                Editor = new CellEditorUserTree()
+                {
+                    DataType = typeof(User),
+                    UserKeys = UserTreeKeys.Department | UserTreeKeys.User | UserTreeKeys.Current | UserTreeKeys.Access
+                }
+            };
             toolUsers.Field.BindData(this, "User");
 
             toolUsers.Field.ValueChanged += ToolUserValueChanged;
@@ -32,7 +42,13 @@ namespace DataWF.Module.MessangerGui
                 toolSend)
             { Name = "Bar" };
 
-            text = new Xwt.TextEntry{ Name = "text", MultiLine = true };
+            text = new TextEntry
+            {
+                Name = "text",
+                MultiLine = true,
+                BackgroundColor = GuiEnvironment.Theme["List"].BackBrush.Color,
+                TextColor = GuiEnvironment.Theme["List"].FontBrush.Color,
+            };
             MessageText = string.Empty;
 
             PackStart(tools, false, false);
