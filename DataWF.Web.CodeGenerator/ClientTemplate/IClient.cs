@@ -3,16 +3,21 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DataWF.Common
+namespace DataWF.Web.Client
 {
     public interface IBaseItem
     {
-        IBaseClient Client { get; set; }
+        IClient Client { get; set; }
     }
 
-    public interface IBaseClient
+    public interface IClient
     {
-        IBaseProvider Provider { get; set; }
+        IClientProvider Provider { get; set; }
+    }
+
+    public interface ICRUDClient
+    {
+        IClientProvider Provider { get; set; }
 
         Task DeleteAsync(object id);
         Task FindAsync(string filter);
@@ -22,10 +27,10 @@ namespace DataWF.Common
         Task PutAsync(object value);
     }
 
-    public interface IBaseProvider
+    public interface IClientProvider
     {
         string BaseUrl { get; set; }
-
-        IEnumerable<IBaseClient> Clients { get; }
+        IEnumerable<IClient> Clients { get; }
+        AuthorizationInfo Authorization { get; set; }
     }
 }

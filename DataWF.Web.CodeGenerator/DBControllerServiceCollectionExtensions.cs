@@ -3,8 +3,9 @@ using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.JsonPatch;
+using DataWF.Web.Common;
 
-namespace DataWF.Web.Common
+namespace DataWF.Web.CodeGenerator
 {
     public static class DBControllerServiceCollectionExtensions
     {

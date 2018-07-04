@@ -6,7 +6,7 @@ using System.IO;
 using System.Reflection;
 //using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
-namespace DataWF.Web.Common
+namespace DataWF.Web.CodeGenerator
 {
 
     public static class SyntaxHelper
@@ -68,6 +68,27 @@ namespace DataWF.Web.Common
                     yield return unit;
                 }
             }
+        }
+
+        public static PropertyDeclarationSyntax GenProperty(string type, string name, bool setter)
+        {
+            var accessors = setter
+                ? new[] {SyntaxFactory.AccessorDeclaration( SyntaxKind.GetAccessorDeclaration )
+                        .WithSemicolonToken( SyntaxFactory.Token(SyntaxKind.SemicolonToken )),
+                        SyntaxFactory.AccessorDeclaration( SyntaxKind.SetAccessorDeclaration )
+                        .WithSemicolonToken( SyntaxFactory.Token(SyntaxKind.SemicolonToken ))}
+                : new[] {SyntaxFactory.AccessorDeclaration( SyntaxKind.GetAccessorDeclaration )
+                        .WithSemicolonToken( SyntaxFactory.Token(SyntaxKind.SemicolonToken )) };
+            return SyntaxFactory.PropertyDeclaration(
+                                attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
+                                modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
+                                type: SyntaxFactory.ParseTypeName(type),
+                                explicitInterfaceSpecifier: null,
+                                identifier: SyntaxFactory.Identifier(name),
+                                accessorList: SyntaxFactory.AccessorList(SyntaxFactory.List(accessors)),
+                                expressionBody: null,
+                                initializer: null,
+                                semicolonToken: SyntaxFactory.Token(SyntaxKind.None));
         }
     }
 

@@ -26,7 +26,7 @@ namespace DataWF.Web.Controller
 
         [AllowAnonymous]
         [HttpPost()]
-        public IActionResult Login([FromBody]LoginModel login)
+        public ActionResult<string> Login([FromBody]LoginModel login)
         {
             var user = (User)null;
             var identity = (ClaimsIdentity)null;
@@ -55,14 +55,15 @@ namespace DataWF.Web.Controller
         private ClaimsIdentity GetIdentity(LoginModel login, out User user)
         {
             var credentials = new NetworkCredential(login.Email, login.Password);
-            user = DataWF.Module.Common.User.SeCurrentByEmail(credentials, true);
+            user = DataWF.Module.Common.User.SetCurrentByEmail(credentials, true);
             if (user != null)
             {
-                ClaimsIdentity claimsIdentity =
-                new ClaimsIdentity(claims: GetClaims(user),
-                authenticationType: JwtBearerDefaults.AuthenticationScheme,
-                nameType: JwtRegisteredClaimNames.NameId,
-                roleType: "");
+                ClaimsIdentity claimsIdentity = new ClaimsIdentity(
+                    identity: user,
+                    claims: GetClaims(user),
+                    authenticationType: JwtBearerDefaults.AuthenticationScheme,
+                    nameType: JwtRegisteredClaimNames.NameId,
+                    roleType: "");
                 return claimsIdentity;
             }
 

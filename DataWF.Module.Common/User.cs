@@ -33,12 +33,13 @@ using System.Runtime.Serialization;
 using System.Security;
 using MailKit.Net.Smtp;
 using System.Net;
+using System.Security.Principal;
 
 namespace DataWF.Module.Common
 {
 
     [DataContract, Table("ruser", "User", BlockSize = 100)]
-    public class User : DBItem, IComparable, IDisposable
+    public class User : DBItem, IComparable, IDisposable, IIdentity
     {
         [ThreadStatic]
         private static User threadCurrentUser;
@@ -83,7 +84,7 @@ namespace DataWF.Module.Common
 
         public static User SeCurrentByEmail(string email, SecureString password, bool threaded = false)
         {
-            return SeCurrentByEmail(new NetworkCredential(email, password), threaded);
+            return SetCurrentByEmail(new NetworkCredential(email, password), threaded);
         }
 
         public static void SetCurrentByEmail(string email, bool threaded = false)
@@ -94,7 +95,7 @@ namespace DataWF.Module.Common
             SetCurrentUser(user, threaded);
         }
 
-        public static User SeCurrentByEmail(NetworkCredential credentials, bool threaded = false)
+        public static User SetCurrentByEmail(NetworkCredential credentials, bool threaded = false)
         {
             var user = DBTable.SelectOne(DBTable.ParseProperty(nameof(EMail)), credentials.UserName);
             if (user == null)
@@ -329,6 +330,10 @@ namespace DataWF.Module.Common
 
         [Browsable(false)]
         public string Token { get; set; }
+
+        public string AuthenticationType { get; set; }
+
+        public bool IsAuthenticated => string.IsNullOrEmpty(Token);
 
         public override void Dispose()
         {

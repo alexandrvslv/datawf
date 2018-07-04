@@ -10,8 +10,8 @@ namespace DataWF.Web.Controller
     {
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            var email = ((ControllerBase)context.Controller).User.Claims.FirstOrDefault(p => p.Type == JwtRegisteredClaimNames.Email)?.Value;
-            System.Diagnostics.Debug.WriteLine(email);
+            var user = context.HttpContext.User?.Identity as User;
+            System.Diagnostics.Debug.WriteLine($"{context.ActionDescriptor.DisplayName}, {user}");
             //User.SetCurrentByEmail(email, true);
         }
     }

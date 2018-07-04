@@ -11,7 +11,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace DataWF.Web.Common
+namespace DataWF.Web.CodeGenerator
 {
 
     public partial class ControllerGenerator

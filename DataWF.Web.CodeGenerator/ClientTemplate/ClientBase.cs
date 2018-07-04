@@ -1,8 +1,6 @@
 ﻿using DataWF.Common;
 using Newtonsoft.Json;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -17,14 +15,14 @@ namespace DataWF.Web.Client
     /// Concept from https://github.com/RSuter/NSwag/wiki/SwaggerToCSharpClientGenerator
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public abstract partial class BaseClient<T, K> : IBaseClient
+    public partial class ClientBase : IClient
     {
-        private Lazy<JsonSerializerSettings> _settings;
+        private Lazy<JsonSerializerSettings> settings;
         private string baseUrl;
 
-        public BaseClient()
+        public ClientBase()
         {
-            _settings = new Lazy<JsonSerializerSettings>(() =>
+            settings = new Lazy<JsonSerializerSettings>(() =>
             {
                 var settings = new JsonSerializerSettings();
                 UpdateJsonSerializerSettings(settings);
@@ -32,15 +30,15 @@ namespace DataWF.Web.Client
             });
         }
 
-        protected JsonSerializerSettings JsonSerializerSettings { get { return _settings.Value; } }
-
-        public IBaseProvider Provider { get; set; }
+        public IClientProvider Provider { get; set; }
 
         public string BaseUrl
         {
             get { return Provider?.BaseUrl ?? baseUrl; }
             set { baseUrl = value; }
         }
+
+        protected JsonSerializerSettings JsonSerializerSettings { get { return settings.Value; } }
 
         partial void UpdateJsonSerializerSettings(JsonSerializerSettings settings);
         partial void PrepareRequest(HttpClient client, HttpRequestMessage request, StringBuilder urlBuilder);
@@ -79,23 +77,24 @@ namespace DataWF.Web.Client
         }
 
         public virtual async Task<R> Request<R>(CancellationToken cancellationToken,
-                                                string httpMethod = "GET",
-                                                string commandUrl = "/api",
-                                                string mediaType = "application/json",
-                                                object value = null,
-                                                params object[] parameters)
+            string httpMethod = "GET",
+            string commandUrl = "/api",
+            string mediaType = "application/json",
+            object value = null,
+            params object[] parameters)
         {
-
             var urlBuilder = ParseUrl(commandUrl, parameters);
             using (var client = await CreateHttpClientAsync(cancellationToken).ConfigureAwait(false))
             {
                 using (var request = new HttpRequestMessage())
                 {
-                    if (httpMethod == "POST" || httpMethod == "PUT")
+                    Provider?.Authorization?.FillRequest(request);
+                    
+                    if (value != null)
                     {
-                        var content_ = new StringContent(JsonConvert.SerializeObject(value, _settings.Value));
-                        content_.Headers.ContentType = MediaTypeHeaderValue.Parse(mediaType);
-                        request.Content = content_;
+                        var content = new StringContent(JsonConvert.SerializeObject(value, settings.Value));
+                        content.Headers.ContentType = MediaTypeHeaderValue.Parse(mediaType);
+                        request.Content = content;
                     }
                     request.Method = new HttpMethod(httpMethod);
                     if (httpMethod == "GET")
@@ -125,7 +124,11 @@ namespace DataWF.Web.Client
                             {
                                 try
                                 {
-                                    return JsonConvert.DeserializeObject<R>(responseData, _settings.Value);
+                                    if (typeof(R) == typeof(string))
+                                    {
+                                        return (R)(object)responseData;
+                                    }
+                                    return JsonConvert.DeserializeObject<R>(responseData, settings.Value);
                                 }
                                 catch (Exception exception_)
                                 {
@@ -146,47 +149,11 @@ namespace DataWF.Web.Client
             }
         }
 
-        public abstract Task<List<T>> GetAsync();
-
-        public abstract Task<List<T>> GetAsync(CancellationToken cancellationToken);
-
-        Task IBaseClient.GetAsync() { return GetAsync(); }
-
-        public abstract Task<T> PutAsync(T value);
-
-        public abstract Task<T> PutAsync(T value, CancellationToken cancellationToken);
-
-        public Task PutAsync(object value) { return PutAsync((K)value); }
-
-        public abstract Task<T> PostAsync(T value);
-
-        public abstract Task<T> PostAsync(T value, CancellationToken cancellationToken);
-
-        public Task PostAsync(object value) { return PostAsync((K)value); }
-
-        public abstract Task<List<T>> FindAsync(string filter);
-
-        public abstract Task<List<T>> FindAsync(string filter, CancellationToken cancellationToken);
-
-        Task IBaseClient.FindAsync(string filter) { return FindAsync(filter); }
-
-        public abstract Task<T> GetAsync(K id);
-
-        public abstract Task<T> GetAsync(K id, CancellationToken cancellationToken);
-
-        public Task GetAsync(object id) { return GetAsync((K)id); }
-
-        public abstract Task<bool> DeleteAsync(K id);
-
-        public abstract Task<bool> DeleteAsync(K id, CancellationToken cancellationToken);
-
-        public Task DeleteAsync(object id) { return DeleteAsync((K)id); }
-
         protected string ConvertToString(object value, System.Globalization.CultureInfo cultureInfo)
         {
-            if (value is System.Enum)
+            if (value is Enum)
             {
-                string name = System.Enum.GetName(value.GetType(), value);
+                string name = Enum.GetName(value.GetType(), value);
                 if (name != null)
                 {
                     var field = System.Reflection.IntrospectionExtensions.GetTypeInfo(value.GetType()).GetDeclaredField(name);
@@ -203,17 +170,15 @@ namespace DataWF.Web.Client
             }
             else if (value is byte[])
             {
-                return System.Convert.ToBase64String((byte[])value);
+                return Convert.ToBase64String((byte[])value);
             }
             else if (value.GetType().IsArray)
             {
-                var array = System.Linq.Enumerable.OfType<object>((System.Array)value);
-                return string.Join(",", System.Linq.Enumerable.Select(array, o => ConvertToString(o, cultureInfo)));
+                var array = Enumerable.OfType<object>((System.Array)value);
+                return string.Join(",", Enumerable.Select(array, o => ConvertToString(o, cultureInfo)));
             }
 
-            return System.Convert.ToString(value, cultureInfo);
+            return Convert.ToString(value, cultureInfo);
         }
-
-
     }
 }

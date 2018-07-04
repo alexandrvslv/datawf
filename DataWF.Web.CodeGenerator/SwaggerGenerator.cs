@@ -11,11 +11,11 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DCCRegistry.WebClient
+namespace DataWF.Web.CodeGenerator
 {
     public class SwaggerGenerator
     {
-        static async Task Generate(string url)
+        public async Task Generate(string url)
         {
             var document = await SwaggerDocument.FromUrlAsync(url);
 
@@ -30,7 +30,8 @@ namespace DCCRegistry.WebClient
 
                 OperationNameGenerator = new MultipleClientsOperationNameGenerator(),
                 GenerateBaseUrlProperty = false,
-                UseHttpClientCreationMethod = true
+                UseHttpClientCreationMethod = true,
+               
             };
             var destinationPath = Path.GetFullPath(@"..\..\..\");
             var generator = new SwaggerToCSharpClientGenerator(document, settings);

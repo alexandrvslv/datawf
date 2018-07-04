@@ -12,7 +12,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataWF.Web.Common
+namespace DataWF.Web.CodeGenerator
 {
     public class ClientGenerator
     {
@@ -77,7 +77,7 @@ namespace DataWF.Web.Common
                     identifier: SyntaxFactory.Identifier($"ClientProvider"),
                     typeParameterList: null,
                     baseList: SyntaxFactory.BaseList(SyntaxFactory.SingletonSeparatedList<BaseTypeSyntax>(
-                        SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName("IBaseProvider")))),
+                        SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName("IClientProvider")))),
                     constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
                     members: SyntaxFactory.List(GenProviderMemebers())
                     );
@@ -85,7 +85,6 @@ namespace DataWF.Web.Common
 
         private IEnumerable<MemberDeclarationSyntax> GenProviderMemebers()
         {
-
             yield return SyntaxFactory.ConstructorDeclaration(
                            attributeLists: SyntaxFactory.List(ClientAttributeList()),
                            modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
@@ -94,34 +93,17 @@ namespace DataWF.Web.Common
                            initializer: null,
                            body: SyntaxFactory.Block(GenProviderConstructorBody()));
 
-            yield return SyntaxFactory.PropertyDeclaration(
-                    attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
-                    modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
-                    type: SyntaxFactory.ParseTypeName("string"),
-                    explicitInterfaceSpecifier: null,
-                    identifier: SyntaxFactory.Identifier("BaseUrl"),
-                    accessorList: SyntaxFactory.AccessorList(SyntaxFactory.List(new[] {
-                        SyntaxFactory.AccessorDeclaration( SyntaxKind.GetAccessorDeclaration )
-                        .WithSemicolonToken( SyntaxFactory.Token(SyntaxKind.SemicolonToken )),
-                        SyntaxFactory.AccessorDeclaration( SyntaxKind.SetAccessorDeclaration )
-                        .WithSemicolonToken( SyntaxFactory.Token(SyntaxKind.SemicolonToken ))
-                    })),
-                    expressionBody: null,
-                    initializer: null,
-                    semicolonToken: SyntaxFactory.Token(SyntaxKind.None));
+            yield return SyntaxHelper.GenProperty("string", "BaseUrl", true);
+            yield return SyntaxHelper.GenProperty("AuthorizationInfo", "Authorization", true);            
 
             yield return SyntaxFactory.PropertyDeclaration(
                     attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
                     modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
-                    type: SyntaxFactory.ParseTypeName("IEnumerable<IBaseClient>"),
+                    type: SyntaxFactory.ParseTypeName("IEnumerable<IClient>"),
                     explicitInterfaceSpecifier: null,
                     identifier: SyntaxFactory.Identifier("Clients"),
                     accessorList: SyntaxFactory.AccessorList(SyntaxFactory.List(new[] {
-                        SyntaxFactory.AccessorDeclaration( SyntaxKind.GetAccessorDeclaration )
-                        .WithSemicolonToken( SyntaxFactory.Token(SyntaxKind.SemicolonToken )),
-                        SyntaxFactory.AccessorDeclaration( SyntaxKind.SetAccessorDeclaration )
-                        .AddModifiers( SyntaxFactory.Token( SyntaxKind.PrivateKeyword))
-                        .WithSemicolonToken( SyntaxFactory.Token(SyntaxKind.SemicolonToken))
+                        SyntaxFactory.AccessorDeclaration( SyntaxKind.GetAccessorDeclaration,  SyntaxFactory.Block(GenProviderClientsBody()))
                     })),
                     expressionBody: null,
                     initializer: null,
@@ -129,23 +111,15 @@ namespace DataWF.Web.Common
 
             foreach (var client in cacheClients.Keys)
             {
-                var typeDeclaration = SyntaxFactory.ParseTypeName($"{client}Client");
-                yield return SyntaxFactory.PropertyDeclaration(
-                    attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
-                    modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
-                    type: typeDeclaration,
-                    explicitInterfaceSpecifier: null,
-                    identifier: SyntaxFactory.Identifier(client),
-                    accessorList: SyntaxFactory.AccessorList(SyntaxFactory.List(new[] {
-                        SyntaxFactory.AccessorDeclaration( SyntaxKind.GetAccessorDeclaration )
-                        .WithSemicolonToken( SyntaxFactory.Token(SyntaxKind.SemicolonToken ))
-                        //,SyntaxFactory.AccessorDeclaration( SyntaxKind.SetAccessorDeclaration )
-                        //.AddModifiers( SyntaxFactory.Token( SyntaxKind.PrivateKeyword))
-                        //.WithSemicolonToken( SyntaxFactory.Token(SyntaxKind.SemicolonToken ))
-                    })),
-                    expressionBody: null,
-                    initializer: null,
-                    semicolonToken: SyntaxFactory.Token(SyntaxKind.None));
+                yield return SyntaxHelper.GenProperty($"{client}Client", client, false);
+            }
+        }
+
+        private IEnumerable<StatementSyntax> GenProviderClientsBody()
+        {
+            foreach (var client in cacheClients.Keys)
+            {
+                yield return SyntaxFactory.ParseStatement($"yield return {client};");
             }
         }
 
@@ -237,29 +211,36 @@ namespace DataWF.Web.Common
                 clientSyntax = GenClient(clientName);
             }
 
-            cacheClients[clientName] = clientSyntax.AddMembers(GenOperation(operationName, descriptor).ToArray());
+            cacheClients[clientName] = clientSyntax.AddMembers(GenOperation(descriptor).ToArray());
+        }
+
+        private string GetClientBaseType(string clientName)
+        {
+            if (document.Definitions.TryGetValue(clientName, out var schema))
+            {
+                var property = GetPrimaryKey(schema);
+                return $"Client<{clientName}, {(property == null ? "int" : GetTypeString(property, false))}>";
+            }
+            else
+            {
+                return $"ClientBase";
+            }
         }
 
         private ClassDeclarationSyntax GenClient(string clientName)
         {
-            if (!document.Definitions.TryGetValue(clientName, out var schema))
-            {
-                throw new InvalidOperationException($"Client <{clientName}> not found on Definitions");
-            }
-            var property = GetPrimaryKey(schema);
-
-            var baseType = SyntaxFactory.ParseTypeName($"BaseClient<{clientName}, {(property == null ? "int" : GetTypeString(property, false))}>");
+            var baseType = SyntaxFactory.ParseTypeName(GetClientBaseType(clientName));
 
             return SyntaxFactory.ClassDeclaration(
-                    attributeLists: SyntaxFactory.List(ClientAttributeList()),
-                    modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
-                    identifier: SyntaxFactory.Identifier($"{clientName}Client"),
-                    typeParameterList: null,
-                    baseList: SyntaxFactory.BaseList(SyntaxFactory.SingletonSeparatedList<BaseTypeSyntax>(
-                        SyntaxFactory.SimpleBaseType(baseType))),
-                    constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
-                    members: SyntaxFactory.List<MemberDeclarationSyntax>(GenClientConstructor(clientName))
-                    );
+                        attributeLists: SyntaxFactory.List(ClientAttributeList()),
+                        modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
+                        identifier: SyntaxFactory.Identifier($"{clientName}Client"),
+                        typeParameterList: null,
+                        baseList: SyntaxFactory.BaseList(SyntaxFactory.SingletonSeparatedList<BaseTypeSyntax>(
+                            SyntaxFactory.SimpleBaseType(baseType))),
+                        constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
+                        members: SyntaxFactory.List<MemberDeclarationSyntax>(GenClientConstructor(clientName))
+                        );
         }
 
         private JsonProperty GetPrimaryKey(JsonSchema4 schema)
@@ -301,17 +282,18 @@ namespace DataWF.Web.Common
             return returnType;
         }
 
-        private IEnumerable<MemberDeclarationSyntax> GenOperation(string operationName, SwaggerOperationDescription descriptor)
+        private IEnumerable<MemberDeclarationSyntax> GenOperation(SwaggerOperationDescription descriptor)
         {
+            var operationName = GetOperationName(descriptor, out var clientName);
             var actualName = $"{operationName}Async";
-
+            var baseType = GetClientBaseType(clientName);
             var returnType = GetReturningType(descriptor);
             returnType = returnType.Length > 0 ? $"Task<{returnType}>" : "Task";
 
             yield return SyntaxFactory.MethodDeclaration(
                 attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
                     modifiers: SyntaxFactory.TokenList(
-                        AbstractOperations.Contains(actualName)
+                        baseType != "ClientBase" && AbstractOperations.Contains(actualName)
                         ? new[] { SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.OverrideKeyword) }
                         : new[] { SyntaxFactory.Token(SyntaxKind.PublicKeyword) }),
                     returnType: SyntaxFactory.ParseTypeName(returnType),
@@ -326,7 +308,7 @@ namespace DataWF.Web.Common
             yield return SyntaxFactory.MethodDeclaration(
                 attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
                     modifiers: SyntaxFactory.TokenList(
-                        AbstractOperations.Contains(actualName)
+                        baseType != "ClientBase" && AbstractOperations.Contains(actualName)
                         ? new[] { SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.OverrideKeyword), SyntaxFactory.Token(SyntaxKind.AsyncKeyword) }
                         : new[] { SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.AsyncKeyword) }),
                     returnType: SyntaxFactory.ParseTypeName(returnType),
@@ -344,16 +326,9 @@ namespace DataWF.Web.Common
             var builder = new StringBuilder();
             builder.Append($"return {actualName}(");
 
-            if (descriptor.Operation.Parameters.Any(p => p.Kind == SwaggerParameterKind.Body))
-            {
-                builder.Append("value, ");
-            }
             foreach (var parameter in descriptor.Operation.Parameters)
             {
-                if (parameter.Kind != SwaggerParameterKind.Body)
-                {
-                    builder.Append($"{parameter.Name}, ");
-                }
+                builder.Append($"{parameter.Name}, ");
             }
             builder.Append("CancellationToken.None);");
             return SyntaxFactory.ParseStatement(builder.ToString());
@@ -367,20 +342,13 @@ namespace DataWF.Web.Common
             var returnType = GetReturningType(descriptor);
             var builder = new StringBuilder();
             builder.Append($"return await Request<{returnType}>(cancellationToken, \"{method}\", \"{path}\", \"{mediatype}\"");
-            if (descriptor.Operation.Parameters.Any(p => p.Kind == SwaggerParameterKind.Body))
-            {
-                builder.Append(", value");
-            }
-            else
+            if (!descriptor.Operation.Parameters.Any(p => p.Kind == SwaggerParameterKind.Body))
             {
                 builder.Append(", null");
             }
             foreach (var parameter in descriptor.Operation.Parameters)
             {
-                if (parameter.Kind != SwaggerParameterKind.Body)
-                {
-                    builder.Append($", {parameter.Name}");
-                }
+                builder.Append($", {parameter.Name}");
             }
             builder.Append(");");
             return SyntaxFactory.ParseStatement(builder.ToString());
@@ -415,7 +383,6 @@ namespace DataWF.Web.Common
             }
             return tree;
         }
-
 
 
         private CompilationUnitSyntax GenDefinition(JsonSchema4 schema)
