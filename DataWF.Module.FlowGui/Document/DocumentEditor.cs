@@ -66,9 +66,6 @@ namespace DataWF.Module.FlowGui
         private ToolItem toolLogs;
         private ToolItem toolDelete;
         private ToolItem toolBarCode;
-        //private ToolItem toolReturn;
-        //private ToolItem toolForward;
-        //private ToolItem toolNext;
         private ToolDropDown toolProcedures;
         private DockBox dock;
         private ToolLabel toolLabel = new ToolLabel();
@@ -94,10 +91,7 @@ namespace DataWF.Module.FlowGui
             toolDelete = new ToolItem(ToolDeleteClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Delete", Glyph = GlyphType.MinusSquare };
             toolLogs = new ToolItem(ToolLogsOnClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Logs", Glyph = GlyphType.History };
             toolBarCode = new ToolItem(ToolBarCodeClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "BarCode", Glyph = GlyphType.Barcode };
-            //toolReturn = new ToolItem(ToolReturnClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Return", Glyph = GlyphType.StepBackward };
             toolSend = new ToolItem(ToolAcceptClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Send/Accept", Glyph = GlyphType.CheckCircle };
-            //toolForward = new ToolItem(ToolForwardClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Forward", Glyph = GlyphType.StepForward };
-            //toolNext = new ToolItem(ToolNextClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Next", Glyph = GlyphType.Forward };
 
             bar = new Toolsbar(
                //toolProcedures,
@@ -108,11 +102,7 @@ namespace DataWF.Module.FlowGui
                toolLogs,
                toolBarCode,
                new ToolSeparator(),
-               //toolReturn,
                toolSend
-               //toolForward,
-               //toolNext,
-               //toolLabel
                )
             { Name = "tools" };
             toolsItems = bar.Items.Cast<ToolItem>();
@@ -399,7 +389,10 @@ namespace DataWF.Module.FlowGui
                     }
                     foreach (var page in dock.GetPages())
                     {
-                        page.Visible = page.Tag == null || page.Tag.Equals(template) || page.Tag.Equals(DocumentType);
+                        if (page.Tag == null || !page.Tag.Equals(DocumentType))
+                        {
+                            page.Visible = page.Tag == null || page.Tag.Equals(stage);
+                        }
                     }
                     //foreach (TemplateMenuItem item in toolTemplates.DropDownItems)
                     //    item.Visible = item.Tag == template || item.Tag == stage;
@@ -431,10 +424,10 @@ namespace DataWF.Module.FlowGui
                     //{
                     //    item.Visible = item.Tag == template;
                     //}
-                    foreach (DockPage page in dock.GetPages())
-                    {
-                        page.Visible = page.Tag == null || page.Tag.Equals(template) || page.Tag.Equals(DocumentType);
-                    }
+                    //foreach (DockPage page in dock.GetPages())
+                    //{
+                    //    page.Visible = page.Tag == null || page.Tag.Equals(template) || page.Tag.Equals(DocumentType);
+                    //}
                     //foreach (TemplateMenuItem item in toolTemplates.DropDownItems)
                     //    item.Visible = item.Tag == template;
                 }
@@ -456,8 +449,6 @@ namespace DataWF.Module.FlowGui
                 state = value;
                 Text = document.ToString();// +"(" + this.Tag.ToString() + ")";
 
-                pageHeader.Tag = document.Template;
-
                 bool from = false;
                 dock.PageSelected -= DockPageSelected;
                 {
@@ -477,15 +468,12 @@ namespace DataWF.Module.FlowGui
                 foreach (var panel in dock.GetDockPanels())
                 {
                     if (panel.CurrentPage == null)
-                        panel.CurrentPage = panel.FirstOrDefault();
+                        panel.CurrentPage = panel.FirstOrDefault(p => p.Visible);
 
                     LoadPage(panel.CurrentPage);
                 }
 
-                //toolReturn.Sensitive = from;
                 toolSend.Sensitive = state != DocumentEditorState.Create;
-                //toolNext.Sensitive = state == DocumentEditorState.Edit;
-                //toolForward.Sensitive = state == DocumentEditorState.Edit;
                 toolProcedures.Sensitive = state == DocumentEditorState.Edit;
                 //toolTemplates.Sensitive = state != DocumentEditorState.Create;
                 toolRefresh.Sensitive = state != DocumentEditorState.Create;
@@ -539,10 +527,6 @@ namespace DataWF.Module.FlowGui
                     }
                 }
 
-                //if (document.Id != null && document.Id != null)
-                //    Name = "DocumentEditor" + document.Id.ToString();
-
-                //var works = document.GetWorks();
                 toolDelete.Visible = document.Access.Delete;// works.Count == 0 || (works.Count == 1 && works[0].IsUser);
 
                 CheckState(DocumentEditorState.None);
@@ -559,12 +543,7 @@ namespace DataWF.Module.FlowGui
                 documentType = value;
                 if (documentType != null)
                 {
-                    //if (dock.Map.Count == 0)
-                    //{
-                    //    XmlDeserialize(GetFileName());
-                    //}
                     pageHeader = dock.GetPage(nameof(DocumentHeader)) ?? dock.Put(new DocumentHeader(), DockType.Left);
-                    //pageHeader.Panel.DockItem.Width = 350;//pageHeader.Panel.MapItem.FillWidth = true;
 
                     GetPages(documentType).ForEach(p => p.Tag = value);
                 }
@@ -798,22 +777,6 @@ namespace DataWF.Module.FlowGui
             }
             return documentWidgets;
         }
-
-        //private async void ToolReturnClick(object sender, EventArgs e)
-        //{
-        //    var work = document.WorkCurrent ?? document.GetWorksUncompleted().FirstOrDefault() ?? document.GetLastWork();
-        //    await DocumentSender.Send(this, new[] { document }, work, work.From.Stage, work.From.User, DocumentSendType.Return);
-        //}
-
-        //private async void ToolNextClick(object sender, EventArgs e)
-        //{
-        //    await DocumentSender.Send(this, new[] { document }, document.WorkCurrent, null, null, DocumentSendType.Next);
-        //}
-
-        //private async void ToolForwardClick(object sender, EventArgs e)
-        //{
-        //    await DocumentSender.Send(this, new[] { document }, document.WorkCurrent, null, null, DocumentSendType.Forward);
-        //}
 
         public event EventHandler SendComplete;
 
