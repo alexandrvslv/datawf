@@ -24,7 +24,7 @@ namespace DataWF.Module.MessangerGui
                 Name = "tree",
                 ReadOnly = false,
                 Text = "User tree",
-                UserKeys = UserTreeKeys.User
+                UserKeys = UserTreeKeys.Department | UserTreeKeys.Position | UserTreeKeys.User | UserTreeKeys.Access | UserTreeKeys.Current
             };
             tree.CellDoubleClick += TreeCellDoubleClick;
             tree.ListInfo.HotTrackingCell = false;
@@ -99,7 +99,7 @@ namespace DataWF.Module.MessangerGui
             if (md == null)
             {
                 md = new Messanger();
-                md.User = user;
+                md.Staff = user;
             }
             if (GuiService.Main != null)
                 GuiService.Main.DockPanel.Put(md);

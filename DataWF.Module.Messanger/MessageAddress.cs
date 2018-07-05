@@ -65,7 +65,7 @@ namespace DataWF.Module.Messanger
         }
 
         [Browsable(false)]
-        [DataMember, Column("user_id")]
+        [DataMember, Column("user_id"), Index("dmessage_address_user_id")]
         public int? UserId
         {
             get { return GetProperty<int?>(); }
@@ -76,6 +76,44 @@ namespace DataWF.Module.Messanger
         public User User
         {
             get { return GetPropertyReference<User>(); }
+            set
+            {
+                SetPropertyReference(value);
+                Position = value?.Position;
+            }
+        }
+
+        [Browsable(false)]
+        [DataMember, Column("position_id", Keys = DBColumnKeys.View), Index("dmessage_address_position_id")]
+        public int? PositionId
+        {
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
+        }
+
+        [Reference(nameof(PositionId))]
+        public Position Position
+        {
+            get { return GetPropertyReference<Position>(); }
+            set
+            {
+                SetPropertyReference(value);
+                Department = value?.Department;
+            }
+        }
+
+        [Browsable(false)]
+        [DataMember, Column("department_id", Keys = DBColumnKeys.View), Index("dmessage_address_department_id")]
+        public int? DepartmentId
+        {
+            get { return GetProperty<int?>(); }
+            set { SetProperty(value); }
+        }
+
+        [Reference(nameof(DepartmentId))]
+        public Department Department
+        {
+            get { return GetPropertyReference<Department>(); }
             set { SetPropertyReference(value); }
         }
 
@@ -84,6 +122,21 @@ namespace DataWF.Module.Messanger
         {
             get { return GetProperty<DateTime?>(); }
             set { SetProperty(value); }
+        }
+
+        [Browsable(false)]
+        public DBItem Staff
+        {
+            get { return (DBItem)User ?? (DBItem)Position ?? (DBItem)Department; }
+            set
+            {
+                if (value is Department)
+                    Department = (Department)value;
+                else if (value is Position)
+                    Position = (Position)value;
+                else if (value is User)
+                    User = (User)value;
+            }
         }
     }
 

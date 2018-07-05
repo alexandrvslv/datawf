@@ -74,16 +74,16 @@ namespace DataWF.Module.Messanger
         [ControllerMethod]
         public static Message SendToPosition(User from, Position to, string data)
         {
-            return Send(from, to.GetUsers(), data);
+            return Send(from, new[] { to }, data);
         }
 
         [ControllerMethod]
         public static Message SendToDepartment(User from, Department to, string data)
         {
-            return Send(from, to.GetUsers(), data);
+            return Send(from, new[] { to }, data);
         }
 
-        public static Message Send(User from, IEnumerable<User> to, string data)
+        public static Message Send(User from, IEnumerable<DBItem> to, string data)
         {
             var message = new Message()
             {
@@ -93,14 +93,14 @@ namespace DataWF.Module.Messanger
             };
             message.Save();
 
-            foreach (var user in to)
+            foreach (var staff in to)
             {
-                if (user != message.User)//&& user.Status == DBStatus.Actual
+                if (staff != message.User)//&& user.Status == DBStatus.Actual
                 {
                     var address = new MessageAddress
                     {
                         Message = message,
-                        User = user
+                        Staff = staff
                     };
                     address.Save();
                 }

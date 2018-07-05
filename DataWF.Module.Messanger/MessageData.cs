@@ -36,8 +36,7 @@ namespace DataWF.Module.Messanger
         { }
 
         public MessageDataList(Message message)
-            : this(string.Format("({0} = {1}",
-                                 MessageData.DBTable.ParseProperty(nameof(MessageData.MessageId)).Name, message.PrimaryId))
+            : this($"({MessageData.DBTable.ParseProperty(nameof(MessageData.MessageId)).Name} = {message.PrimaryId})")
         { }
     }
 

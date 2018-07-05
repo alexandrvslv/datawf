@@ -11,9 +11,8 @@ namespace DataWF.Module.MessangerGui
 
     public class Messanger : VPanel, IDockContent, ISync, IReadOnly
     {
-        private User user;
+        private DBItem staff;
         private MessageList list;
-        private DBItem document;
         private MessageEditor spliter;
         private MessageLayoutList plist;
 
@@ -60,20 +59,20 @@ namespace DataWF.Module.MessangerGui
             get { return DockType.Right; }
         }
 
-        public User User
+        public DBItem Staff
         {
-            get { return user; }
+            get { return staff; }
             set
             {
-                if (user == value)
+                if (staff == value)
                     return;
-                user = value;
-                Text = user.ToString();
-                Name = "Messanger" + user.Id;
-                spliter.User = user;
+                staff = value;
+                Text = staff.ToString();
+                Name = "Messanger" + staff.PrimaryId;
+                spliter.Staff = staff;
                 spliter.toolUsers.Visible = false;
 
-                list = new MessageList(user, User.CurrentUser);
+                list = new MessageList(staff as User, User.CurrentUser);
                 plist.ListSource = list;
                 //list.Table.LoadComplete += TableLoadComplete;
             }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using DataWF.Common;
 using DataWF.Data;
 using DataWF.Gui;
@@ -25,13 +26,11 @@ namespace DataWF.Module.MessangerGui
                 ContentMinWidth = 200,
                 Editor = new CellEditorUserTree()
                 {
-                    DataType = typeof(User),
-                    UserKeys = UserTreeKeys.Department | UserTreeKeys.User | UserTreeKeys.Current | UserTreeKeys.Access
+                    UserKeys = UserTreeKeys.Department | UserTreeKeys.Department | UserTreeKeys.User | UserTreeKeys.Current | UserTreeKeys.Access
                 }
             };
-            toolUsers.Field.BindData(this, "User");
+            toolUsers.Field.BindData(this, nameof(Staff));
 
-            toolUsers.Field.ValueChanged += ToolUserValueChanged;
             toolHistory = new ToolItem(ToolHistoryClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "History" };
             toolSend = new ToolItem(ToolSendClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Send" };
 
@@ -57,10 +56,10 @@ namespace DataWF.Module.MessangerGui
             Name = nameof(MessageEditor);
         }
 
-        private void ToolUserValueChanged(object sender, EventArgs e)
+        public bool UsersVisible
         {
-            //if (toolUsers.DataValue != null)
-            //    user = toolUsers.DataValue as User;
+            get { return toolUsers.Visible; }
+            set { toolUsers.Visible = value; }
         }
 
         public string MessageText
@@ -69,17 +68,17 @@ namespace DataWF.Module.MessangerGui
             set { text.Text = value; }
         }
 
-        public User User { get; set; }
+        public DBItem Staff { get; set; }
 
         public Action<Message> OnSending { get; set; }
 
         private async void ToolHistoryClick(object sender, EventArgs e)
         {
-            if (User != null)
+            if (Staff is User user)
             {
                 string query = string.Format("where ({0}={1} and {2} in (select {3} from {4} where {5}={6})) or ({0}={6} and {2} in (select {3} from {4} where {5}={1}))",
                                    MessageAddress.DBTable.ParseProperty(nameof(MessageAddress.UserId)).Name,
-                                   User.Id,
+                                   user.Id,
                                    MessageAddress.DBTable.ParseProperty(nameof(MessageAddress.MessageId)).Name,
                                    Message.DBTable.ParseProperty(nameof(Message.Id)).Name,
                                    Message.DBTable.Name,
@@ -89,13 +88,18 @@ namespace DataWF.Module.MessangerGui
             }
         }
 
+        public virtual IEnumerable<DBItem> GetStaff()
+        {
+            yield return Staff;
+        }
+
         private void ToolSendClick(object sender, EventArgs e)
         {
-            if (!string.IsNullOrEmpty(MessageText) && User != null)
+            if (!string.IsNullOrEmpty(MessageText))
             {
                 using (var transaction = new DBTransaction())
                 {
-                    var message = Message.SendToUser(User.CurrentUser, User, MessageText);
+                    var message = Message.Send(User.CurrentUser, GetStaff(), MessageText);
                     OnSending?.Invoke(message);
                     transaction.Commit();
                 }
