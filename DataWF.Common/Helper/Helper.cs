@@ -980,8 +980,8 @@ namespace DataWF.Common
         public static object TextParse(string value, Type type, string format = "binary")
         {
             object result = null;
-            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
-                type = type.GetGenericArguments()?.FirstOrDefault();
+            if (TypeHelper.IsNullable(type))
+                type = type.GetGenericArguments().First();
             if (type == typeof(string) || type == null)
                 result = value;
             else if (type == typeof(Type))
