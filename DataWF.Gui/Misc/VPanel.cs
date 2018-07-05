@@ -1,11 +1,12 @@
 ﻿using System;
+using System.ComponentModel;
 using DataWF.Common;
 using Xwt;
 using Xwt.Drawing;
 
 namespace DataWF.Gui
 {
-    public class VPanel : VBox, IText, IGlyph, ILocalizable, ISerializableElement
+    public class VPanel : VBox, IText, IGlyph, ILocalizable, ISerializableElement, INotifyPropertyChanged
     {
         private string text;
 
@@ -163,6 +164,13 @@ namespace DataWF.Gui
                     return result;
             }
             return null;
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void OnPropertyChanged(string property)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
     }
 
