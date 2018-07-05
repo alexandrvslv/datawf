@@ -104,6 +104,8 @@ namespace DataWF.Common
 
         private void ReceiveCallback(IAsyncResult result)
         {
+            if (!online)
+                return;
             try
             {
                 receiveEvent.Set();
