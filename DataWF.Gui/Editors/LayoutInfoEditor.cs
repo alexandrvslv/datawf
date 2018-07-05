@@ -6,11 +6,6 @@ using Xwt;
 
 namespace DataWF.Gui
 {
-    public class ToolsbarEditor : VPanel
-    {
-
-    }
-
     public class LayoutInfoEditor : VPanel
     {
         private LayoutList contextList;

@@ -10,6 +10,8 @@ namespace DataWF.Gui
 {
     public class Toolsbar : Canvas, ILocalizable
     {
+        public static ToolsbarMenu DefaultMenu { get; private set; }
+
         protected ToolItem items;
         protected ToolItem cacheHitItem;
         protected ToolItem hitItem;
@@ -87,6 +89,7 @@ namespace DataWF.Gui
                 items.GrowMode = value;
             }
         }
+
 
         protected internal virtual void OnItemMove(ToolItemEventArgs args)
         {
@@ -224,9 +227,13 @@ namespace DataWF.Gui
         {
             base.OnButtonReleased(args);
             hitItem = HitTest(args.Position);
-            if (hitItem != null)
+            if (hitItem != null && args.Button == PointerButton.Left)
             {
                 hitItem.OnButtonReleased(args);
+            }
+            if (args.Button == PointerButton.Right)
+            {
+                OnContextMenuShow(args);
             }
         }
 
@@ -234,6 +241,14 @@ namespace DataWF.Gui
         {
             Items.Dispose();
             base.Dispose(disposing);
+        }
+
+        protected virtual void OnContextMenuShow(ButtonEventArgs e)
+        {
+            if (DefaultMenu == null)
+                DefaultMenu = new ToolsbarMenu();
+            DefaultMenu.ContextBar = this;
+            DefaultMenu.Show(this, e.Position);
         }
 
         public void Localize()

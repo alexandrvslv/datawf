@@ -177,7 +177,7 @@ namespace DataWF.Gui
             Text = node.ToString();
             Selection.Current = node;
             toolTree.Field.DropDown.Hide();
-            toolTree.Value = node;
+            toolTree.DataValue = node;
 
             node.Apply(Editor);
 
