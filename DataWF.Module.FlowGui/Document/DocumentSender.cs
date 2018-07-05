@@ -488,20 +488,14 @@ namespace DataWF.Module.FlowGui
             {
                 var exec = new TaskExecutor();
                 exec.Name = string.Format("Document Sender ({0})", items.Count);
-                exec.Callback += ExecCallback;
+                exec.Callback += (e) => SendCallback();
                 exec.Action = () =>
                 {
                     SendBackground();
-                    SendCallback();
                     return null;
                 };
                 GuiService.Main.AddTask(this, exec);
             }
-        }
-
-        private void ExecCallback(RProcedureEventArgs e)
-        {
-            SendCallback();
         }
 
         protected override void OnAcceptClick(object sender, EventArgs e)
