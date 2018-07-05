@@ -1,4 +1,5 @@
 ﻿using DataWF.Common;
+using System;
 
 namespace DataWF.Gui
 {
@@ -17,6 +18,8 @@ namespace DataWF.Gui
         string Text { get; set; }
 
         string Format { get; set; }
+
+        Type DataType { get; }
 
         IInvoker Invoker { get; set; }
 

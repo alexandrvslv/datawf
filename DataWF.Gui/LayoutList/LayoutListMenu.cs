@@ -5,23 +5,14 @@ using Xwt;
 
 namespace DataWF.Gui
 {
-    public class LayoutMenu : ToolWindow
-    {
-        //Menu MenuColumns = new Menu();
-        //public Menu MenuFieldMenu = new Menu();
-        //public Menu MenuFieldHideMenu = new Menu();
-        //public GlyphMenuItem FieldColumns = new GlyphMenuItem();
-        //public GlyphMenuItem FieldHide = new GlyphMenuItem();
-        //public GlyphMenuItem FieldHided = new GlyphMenuItem();
-        //public GlyphMenuItem FieldClear = new GlyphMenuItem();
-        //public GlyphMenuItem FieldReset = new GlyphMenuItem();
-        //public LogicType Logic = LogicType.Undefined;
 
-        public LayoutMenu()
+    public class LayoutListMenu : ToolWindow
+    {
+        public LayoutListMenu()
         {
             Target = new LayoutInfoEditor();
             Size = new Size(800, 600);
-            Title = Locale.Get(nameof(LayoutMenu), "List Constructor");
+            Title = Locale.Get(nameof(LayoutListMenu), "List Constructor");
         }
 
         public LayoutInfoEditor Editor
@@ -64,11 +55,9 @@ namespace DataWF.Gui
             return CacheMenuColumn.TryGetValue(column, out var menuItem) ? menuItem : null;
         }
 
-        
-
         public static ToolMenuItem BuilMenuItem(LayoutField f)
         {
-            var item = LayoutMenu.GetCached(f);
+            var item = LayoutListMenu.GetCached(f);
             if (item == null)
             {
                 item = new ToolMenuItem();

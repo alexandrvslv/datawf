@@ -101,11 +101,10 @@ namespace DataWF.Module.CommonGui
                 }
                 query.BuildPropertyParam(nameof(UserLog.LogType), CompareType.In, f);
 
-                if (dateField.DataValue != null)
+                if (Date != null)
                 {
-                    var interval = (DateInterval)dateField.DataValue;
-                    query.BuildPropertyParam(nameof(UserLog.DateCreate), CompareType.GreaterOrEqual, interval.Min);
-                    query.BuildPropertyParam(nameof(UserLog.DateCreate), CompareType.LessOrEqual, interval.Max.AddDays(1));
+                    query.BuildPropertyParam(nameof(UserLog.DateCreate), CompareType.GreaterOrEqual, Date.Min);
+                    query.BuildPropertyParam(nameof(UserLog.DateCreate), CompareType.LessOrEqual, Date.Max.AddDays(1));
                 }
                 if (filter is User && mode == DataLogMode.User)
                 {

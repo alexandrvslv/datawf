@@ -9,6 +9,7 @@ using System.Threading;
 using DataWF.Data;
 using Xwt;
 using Mono.TextEditor;
+using System.ComponentModel;
 
 namespace DataWF.Data.Gui
 {
@@ -64,7 +65,7 @@ namespace DataWF.Data.Gui
                     DataSource = DBService.Schems
                 }
             };
-
+            toolSchems.Field.BindData(this, nameof(CurrentSchema));
             //var fieldstring = new DataField<string>();
             //var fieldschema = new DataField<DBSchema>();
             //ListStore store = new ListStore(fieldstring, fieldschema);
@@ -151,13 +152,20 @@ namespace DataWF.Data.Gui
 
         public DBSchema CurrentSchema
         {
-            get { return toolSchems.DataValue as DBSchema; }
-            set { toolSchems.DataValue = value; }
+            get { return schema; }
+            set
+            {
+                if (schema == value)
+                    return;
+                schema = value;
+                OnPropertyChanged(nameof(CurrentSchema));
+            }
         }
 
         #region IProjectEditor implementation
 
         private ProjectHandler project;
+        private DBSchema schema;
 
         public ProjectHandler Project
         {

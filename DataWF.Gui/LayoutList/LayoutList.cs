@@ -17,7 +17,7 @@ namespace DataWF.Gui
     [ToolboxItem(true)]
     public partial class LayoutList : VPanel, ILocalizable, ILayoutList, ISerializableElement
     {
-        public static LayoutMenu DefaultMenu { get; set; }
+        public static LayoutListMenu DefaultMenu { get; set; }
 
         protected LayoutListKeys keys = LayoutListKeys.AllowFilter |
                                    LayoutListKeys.AllowSort |
@@ -148,6 +148,7 @@ namespace DataWF.Gui
         public string Description;
         private VBox filterBox;
         private bool treeMode;
+        private InvokeBinder binder;
 
         public LayoutList()
         {
@@ -156,7 +157,7 @@ namespace DataWF.Gui
 
             editor.Sensitive = false;
             editor.Visible = false;
-            editor.ValueChanged += ControlOnValueChanged;
+            editor.PropertyChanged += ControlOnValueChanged;
 
             canvas = new LayoutListCanvas(this);
             canvas.MinWidth = 150;
@@ -174,7 +175,7 @@ namespace DataWF.Gui
             handlCalcWidth = CalculateWidth;
             handleColumnsBound = OnColumnsBoundChanged;
             handleListChanged = OnListChanged;
-            handleProperty = OnPropertyChanged;
+            handleProperty = OnFieldsPropertyChanged;
 
             cacheDraw.LayoutList = this;
             cacheHitt.HitTest = hitt;
@@ -800,6 +801,7 @@ namespace DataWF.Gui
                 });
 
             }
+            binder?.Dispose();
             base.Dispose(disposing);
 
             void ClearCache()
@@ -896,7 +898,7 @@ namespace DataWF.Gui
         protected virtual void OnContextMenuShow(LayoutHitTestInfo e)
         {
             if (DefaultMenu == null)
-                DefaultMenu = new LayoutMenu();
+                DefaultMenu = new LayoutListMenu();
             if (editor.Visible)
             {
                 OnCellEditEnd(new CancelEventArgs(true));
@@ -1853,6 +1855,7 @@ namespace DataWF.Gui
 
         public virtual void SetPositionText()
         {
+            OnPropertyChanged(nameof(SelectedItem));
             if (listSource != null && PositionChanged != null)
             {
                 PositionChanged(this, new NotifyProperty(string.Format("{0}/{1}", selection.CurrentRow?.Index, listSource.Count)));
@@ -2170,18 +2173,17 @@ namespace DataWF.Gui
 
                 fieldSource = value;
 
-                if (fieldSource == null)
+                if (fieldSource != null)
                 {
-                    return;
+                    Mode = LayoutListMode.Fields;
+
+                    if (fieldSource is INotifyPropertyChanged)
+                        ((INotifyPropertyChanged)fieldSource).PropertyChanged += handleProperty;
+
+                    FieldType = fieldSource.GetType();
+                    RefreshBounds(true);
                 }
-
-                Mode = LayoutListMode.Fields;
-
-                if (fieldSource is INotifyPropertyChanged)
-                    ((INotifyPropertyChanged)fieldSource).PropertyChanged += handleProperty;
-
-                FieldType = fieldSource.GetType();
-                RefreshBounds(true);
+                OnPropertyChanged(nameof(FieldSource));
             }
         }
 
@@ -2335,7 +2337,7 @@ namespace DataWF.Gui
                         group = info.Nodes[s] ?? CreateField(info, group, s);
                         RefreshField(group);
                         if (group != null)
-                            ptype = group.Invoker.DataType;
+                            ptype = group.DataType;
                         else
                             break;
                         i = name.IndexOf('.', i + 1);
@@ -2343,7 +2345,7 @@ namespace DataWF.Gui
                 }
                 else
                 {
-                    ptype = group.Invoker.DataType;
+                    ptype = group.DataType;
                 }
             }
             var field = info.Nodes[name] ?? CreateField(info, group, name);
@@ -2417,14 +2419,14 @@ namespace DataWF.Gui
                         parent = info.Columns[name.Substring(0, i)] as LayoutColumn ?? CreateColumn(name.Substring(0, i));
                         RefreshColumn(parent);
                         if (parent != null)
-                            ptype = parent.Invoker.DataType;
+                            ptype = parent.DataType;
                         else
                             break;
                         i = name.IndexOf('.', i + 1);
                     }
                 }
                 else
-                    ptype = parent.Invoker.DataType;
+                    ptype = parent.DataType;
             }
 
             var column = info.Columns[name] as LayoutColumn ?? CreateColumn(name);
@@ -2482,7 +2484,7 @@ namespace DataWF.Gui
                     ((LayoutColumn)cell).Visible = TypeHelper.GetBrowsable(member);
                 }
                 ((LayoutColumn)cell).Validate = TypeHelper.GetPassword(member);
-                if (((LayoutColumn)cell).Map == null && cell.Invoker.DataType.IsPrimitive)
+                if (((LayoutColumn)cell).Map == null && cell.DataType.IsPrimitive)
                 {
                     ((LayoutColumn)cell).Width *= 0.7;
                 }
@@ -2498,8 +2500,8 @@ namespace DataWF.Gui
 
         public virtual CollectedType GetCellCollect(LayoutColumn cell)
         {
-            if (cell != null && cell.Collect == CollectedType.None && cell.Invoker != null &&
-                (cell.Invoker.DataType == typeof(decimal) || cell.Invoker.DataType == typeof(float) || cell.Invoker.DataType == typeof(double)))
+            if (cell != null && cell.Collect == CollectedType.None && cell.DataType != null &&
+                (cell.DataType == typeof(decimal) || cell.DataType == typeof(float) || cell.DataType == typeof(double)))
                 cell.Collect = CollectedType.Sum;
             return cell.Collect;
         }
@@ -2522,13 +2524,13 @@ namespace DataWF.Gui
 
         public bool GetVisible(ILayoutCell cell)
         {
-            return HideCollections && TypeHelper.IsEnumerable(cell.Invoker.DataType) ? false : true;
+            return HideCollections && TypeHelper.IsEnumerable(cell.DataType) ? false : true;
         }
 
         public virtual string GetHeaderLocale(ILayoutCell cell)
         {
-            return (cell.Owner != null && cell.Owner.Invoker != null)
-                ? Locale.GetTypeCategory(cell.Owner.Invoker.DataType)
+            return (cell.Owner != null && cell.Owner.DataType != null)
+                ? Locale.GetTypeCategory(cell.Owner.DataType)
                                 : Locale.GetTypeCategory(cell is LayoutField ? FieldType : ListType);
         }
 
@@ -2562,8 +2564,8 @@ namespace DataWF.Gui
             PropertyInfo[] pis = null;
             if (owner == null)
                 pis = basetype.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            else if (owner.Invoker != null)
-                pis = owner.Invoker.DataType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            else if (owner.DataType != null)
+                pis = owner.DataType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
             if (pis == null)
                 return strings;
 
@@ -3121,7 +3123,7 @@ namespace DataWF.Gui
             if (listItem == null)
                 return null;
             var celled = GetCellEditor(listItem, value, cell);
-            return celled?.FormatValue(value, listItem, cell.Invoker.DataType);
+            return celled?.FormatValue(value, listItem, cell.DataType);
         }
 
         public virtual object ParseValue(object listItem, object value, ILayoutCell cell)
@@ -3129,7 +3131,7 @@ namespace DataWF.Gui
             if (listItem == null)
                 return null;
             var celled = GetCellEditor(listItem, value, cell);
-            return celled.ParseValue(value, listItem, cell.Invoker.DataType);
+            return celled.ParseValue(value, listItem, cell.DataType);
         }
 
         public virtual object GetItem(int index)
@@ -4672,13 +4674,13 @@ namespace DataWF.Gui
 
         #endregion
 
-        protected virtual void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        protected virtual void OnFieldsPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (fieldSource == null && listSource == null)
                 return;
             if (GuiService.InvokeRequired)
             {
-                Application.Invoke(() => OnPropertyChanged(sender, e));
+                Application.Invoke(() => OnFieldsPropertyChanged(sender, e));
             }
             else
             {
@@ -4818,19 +4820,21 @@ namespace DataWF.Gui
 
         public virtual bool IsComplex(ILayoutCell cell)
         {
-            var type = cell?.Invoker?.DataType ?? typeof(object);
+            var type = cell?.DataType ?? typeof(object);
             if (type.IsPrimitive ||
                 type.IsEnum ||
                 type == typeof(string) ||
                 type == typeof(byte[]) ||
                 type == typeof(decimal) ||
                 type == typeof(Image) ||
-                (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>)) ||
+                TypeHelper.IsNullable(type) ||
                 TypeHelper.IsList(type))
                 return false;
             else
                 return true;
         }
+
+
 
         public StringBuilder ToTabbedList(IEnumerable items)
         {
@@ -5000,7 +5004,7 @@ namespace DataWF.Gui
 
         public virtual ILayoutCellEditor InitCellEditor(ILayoutCell cell)
         {
-            Type type = cell.Invoker.DataType;
+            Type type = cell.DataType;
             if (cell.Format == null)
             {
                 if (type == typeof(decimal) || type == typeof(double) || type == typeof(float))
@@ -5019,6 +5023,20 @@ namespace DataWF.Gui
         public override void Deserialize(ISerializeReader reader)
         {
             var key = reader.ReadAttribute("Key", typeof(string));
+        }
+
+        public void Bind<T>(T data, string property, string viewProperty)
+        {
+            if (binder?.GetData()?.GetType() != data?.GetType() || property != binder?.DataInvoker?.Name)
+            {
+                binder?.Dispose();
+                binder = null;
+                if (data != null && !string.IsNullOrEmpty(property))
+                {
+                    binder = new InvokeBinder<T, LayoutList>(data, property, this, viewProperty);
+                }
+            }
+            binder?.Bind(data, this);
         }
     }
 

@@ -169,6 +169,9 @@ namespace DataWF.Gui
         }
 
         [XmlIgnore]
+        public Type DataType { get { return Invoker?.DataType; } }
+
+        [XmlIgnore]
         public ILayoutCellEditor CellEditor
         {
             get { return editor; }

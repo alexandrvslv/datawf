@@ -17,16 +17,12 @@ namespace DataWF.Gui
         protected bool headerVisible = true;
         protected bool dropDownWindow = true;
         protected bool dropDownAutoHide;
-        //protected bool dropDownByKey = true;
-        private LayoutEditor _editor;
         protected Widget content;
-        public string ListProperty = "ToString";
         public bool ListAutoSort = true;
         protected string filter = string.Empty;
 
         public CellEditorText()
         {
-            EditType = typeof(TextEntry);
         }
 
         public bool Masked { get; set; }
@@ -92,15 +88,9 @@ namespace DataWF.Gui
             }
         }
 
-        public Type EditType { get; set; }
-
         public virtual Type DataType { get; set; }
 
-        public LayoutEditor Editor
-        {
-            get { return _editor; }
-            protected set { _editor = value; }
-        }
+        public LayoutEditor Editor { get; protected set; }
 
         public object EditItem { get; set; }
 
@@ -111,7 +101,7 @@ namespace DataWF.Gui
             {
                 if (Editor != null)
                 {
-                    Editor.Value = ParseValue(value, EditItem, DataType);
+                    Editor.Value = ParseValue(value);
                     EditorText = FormatValue(value) as string;
                 }
             }
@@ -142,9 +132,7 @@ namespace DataWF.Gui
 
                     try
                     {
-                        if (sender != Editor.Widget && EditorText != text)
-                            EditorText = text;
-                        Editor.Value = ParseValue(EditorText);
+                        Value = text;
                     }
                     catch (Exception ex)
                     {
@@ -274,20 +262,26 @@ namespace DataWF.Gui
         public virtual void InitializeEditor(LayoutEditor editor, object value, object dataSource)
         {
             editor.Initialize = true;
-            InitDefault(editor, value, dataSource);
-            editor.Widget = InitEditorContent();
-            if (DropDownWindow)
+            try
             {
-                InitDropDown();
+                InitDefault(editor, value, dataSource);
+                editor.Widget = InitEditorContent();
+                if (DropDownWindow)
+                {
+                    InitDropDown();
+                }
+                Value = value;
+                if (editor.Widget is TextEntry textEntry)
+                {
+                    textEntry.SelectionStart = 0;
+                    textEntry.SelectionLength = textEntry.Text.Length;
+                }
+                editor.IsValueChanged = false;
             }
-            Value = value;
-            if (editor.Widget is TextEntry)
+            finally
             {
-                ((TextEntry)editor.Widget).SelectionStart = 0;
-                ((TextEntry)editor.Widget).SelectionLength = ((TextEntry)editor.Widget).Text.Length;
+                editor.Initialize = false;
             }
-            editor.IsValueChanged = false;
-            editor.Initialize = false;
         }
 
         protected void OnDropDownAccept(object sender, EventArgs e)

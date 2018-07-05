@@ -38,6 +38,8 @@ namespace DataWF.Data.Gui
         protected TableLayoutList detailList;
         protected TableLayoutList detailRow;
         protected GroupBox map;
+        private DBTable table;
+        private DateInterval date = new DateInterval(DateTime.Today.AddMonths(-1), DateTime.Today);
 
         public DataLogView()
         {
@@ -64,11 +66,10 @@ namespace DataWF.Data.Gui
             dateField = new ToolFieldEditor()
             {
                 Editor = new CellEditorDate { TwoDate = true, DataType = typeof(DateInterval) },
-                DataValue = new DateInterval(DateTime.Today.AddMonths(-1), DateTime.Today),
                 Name = "Date",
                 ContentMinWidth = 200
             };
-            dateField.Field.ValueChanged += DateValueChanged;
+            dateField.Field.BindData(this, nameof(Date));
 
             dataField = new ToolFieldEditor()
             {
@@ -76,7 +77,7 @@ namespace DataWF.Data.Gui
                 Name = "Table",
                 ContentMinWidth = 200
             };
-            dataField.Field.ValueChanged += DataValueChanged;
+            dataField.Field.BindData(this, nameof(Table));
 
             toolProgress = new ToolTableLoader() { };
 
@@ -137,6 +138,76 @@ namespace DataWF.Data.Gui
             Name = "DataLog";
         }
 
+        public DateInterval Date
+        {
+            get { return date; }
+            set
+            {
+                if (date != value)
+                {
+                    date = value;
+                    OnPropertyChanged(nameof(Date));
+                    UpdateFilter();
+                }
+            }
+        }
+
+        public DBTable Table
+        {
+            get { return table; }
+            set
+            {
+                if (table != value)
+                {
+                    table = value;
+                    OnPropertyChanged(nameof(Table));
+                    UpdateFilter();
+                }
+            }
+        }
+
+        public DataLogMode Mode
+        {
+            get { return mode; }
+            set
+            {
+                mode = value;
+                toolMode.Text = "Mode: " + Mode.ToString();
+                UpdateFilter();
+            }
+        }
+
+        public DBItem Filter
+        {
+            get { return filter; }
+            set
+            {
+                if (value == null)
+                    return;
+                filter = value;
+
+                if (filter.Access.Admin || filter.Access.Edit)
+                {
+                    toolRollback.Visible = filter.Access.Edit;
+                    Table = filter.Table;
+                }
+                else
+                {
+                    Remove(split);
+                    Remove(bar);
+                    Content = new Label()
+                    {
+                        Text = "Access denied!",
+                        TextColor = Colors.DarkRed,
+                        Font = Font.WithSize(24),
+                        TextAlignment = Alignment.Center,
+                    };
+                }
+            }
+        }
+
+
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -152,16 +223,6 @@ namespace DataWF.Data.Gui
         protected void ToolModeClick(object sender, ToolItemEventArgs e)
         {
             Mode = (DataLogMode)e.Item.Tag;
-        }
-
-        protected void DateValueChanged(object sender, EventArgs e)
-        {
-            UpdateFilter();
-        }
-
-        protected void DataValueChanged(object sender, EventArgs e)
-        {
-            UpdateFilter();
         }
 
         public static void RowReject(DBItem row, ref Command dr, Window form)
@@ -238,57 +299,7 @@ namespace DataWF.Data.Gui
             SelectData();
         }
 
-        public DataLogMode Mode
-        {
-            get { return mode; }
-            set
-            {
-                mode = value;
-                toolMode.Text = "Mode: " + Mode.ToString();
-                UpdateFilter();
-            }
-        }
 
-        public DBItem Filter
-        {
-            get { return filter; }
-            set
-            {
-                if (value == null)
-                    return;
-                filter = value;
-
-                if (filter.Access.Admin || filter.Access.Edit)
-                {
-                    toolRollback.Visible = filter.Access.Edit;
-                    Table = filter.Table;
-                }
-                else
-                {
-                    Remove(split);
-                    Remove(bar);
-                    Content = new Label()
-                    {
-                        Text = "Access denied!",
-                        TextColor = Colors.DarkRed,
-                        Font = Font.WithSize(24),
-                        TextAlignment = Alignment.Center,
-                    };
-                }
-            }
-        }
-
-        public DBTable Table
-        {
-            get { return dataField.DataValue as DBTable; }
-            set
-            {
-                if (Table != value)
-                {
-                    dataField.DataValue = value;
-                }
-            }
-        }
 
         public virtual void UpdateFilter()
         {
@@ -296,7 +307,7 @@ namespace DataWF.Data.Gui
                 return;
             if ((Mode == DataLogMode.Default || mode == DataLogMode.Document) && filter == null)
                 return;
-            var interval = dateField.DataValue == null ? new DateInterval(DateTime.Today) : (DateInterval)dateField.DataValue;
+            var interval = Date == null ? new DateInterval(DateTime.Today) : Date;
             interval.Max = interval.Max.AddDays(1);
             list.ListSource.Clear();
             toolProgress.Visible = true;
@@ -309,7 +320,7 @@ namespace DataWF.Data.Gui
                     {
                         query.BuildParam(logTable.BaseKey, CompareType.Equal, filter.PrimaryId).IsDefault = true;
                     }
-                    if (dateField.DataValue != null)
+                    if (Date != null)
                     {
                         query.BuildParam(logTable.DateKey, CompareType.Between, interval);
                     }
@@ -326,7 +337,7 @@ namespace DataWF.Data.Gui
                         using (var query = new QQuery("", refed.Table.LogTable))
                         {
                             query.BuildParam(refed.Table.LogTable.GetLogColumn(refed.Column), CompareType.Equal, filter.PrimaryId);
-                            if (dateField.DataValue != null)
+                            if (Date != null)
                             {
                                 query.BuildParam(refed.Table.LogTable.DateKey, CompareType.Between, interval);
                             }

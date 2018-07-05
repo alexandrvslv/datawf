@@ -99,12 +99,12 @@ namespace DataWF.Gui
             var filter = new LayoutFilter(column);
             filter.Comparer = CompareType.Equal;
             filter.Value = value;
-            if (column.Invoker.DataType == typeof(string)
-                || column.Invoker.DataType == typeof(object))
+            if (column.DataType == typeof(string)
+                || column.DataType == typeof(object))
             {
                 filter.Comparer = CompareType.Like;
             }
-            else if (column.Invoker.DataType == typeof(DateTime))
+            else if (column.DataType == typeof(DateTime))
             {
                 filter.Comparer = CompareType.Between;
             }

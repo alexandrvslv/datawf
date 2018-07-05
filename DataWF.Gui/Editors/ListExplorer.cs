@@ -31,8 +31,8 @@ namespace DataWF.Gui
             Editor.ItemSelect += OnEditorItemSelect;
             Editor.GetCellEditor += OnGetCellEditor;
 
-            toolTree = new ToolFieldEditor() { FillWidth = true };
-            toolTree.Field.BindData(Selection, nameof(ListExplorerCursor.Current), new CellEditorList());
+            toolTree = new ToolFieldEditor() { FillWidth = true, Editor = new CellEditorList() };
+            toolTree.Field.BindData(Selection, nameof(ListExplorerCursor.Current));
             toolPrev = new ToolItem(ToolPrevClick) { Glyph = GlyphType.ArrowLeft };
             toolNext = new ToolItem(ToolNextClick) { Glyph = GlyphType.ArrowRight };
 
@@ -177,7 +177,7 @@ namespace DataWF.Gui
             Text = node.ToString();
             Selection.Current = node;
             toolTree.Field.DropDown.Hide();
-            toolTree.DataValue = node;
+            toolTree.Value = node;
 
             node.Apply(Editor);
 

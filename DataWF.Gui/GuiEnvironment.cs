@@ -161,11 +161,11 @@ namespace DataWF.Gui
 
         public static ILayoutCellEditor GetCellEditor(ILayoutCell cell)
         {
-            var type = cell?.Invoker?.DataType;
+            var type = cell?.DataType;
             if (type == null)
                 return null;
-            if (type.IsGenericType && type.IsValueType)
-                type = type.GetGenericArguments()?.FirstOrDefault();
+            if (TypeHelper.IsNullable(type))
+                type = type.GetGenericArguments().First();
             ILayoutCellEditor editor = null;
             if (CellEditorFabric.TryGetValue(type, out var generator))
             {

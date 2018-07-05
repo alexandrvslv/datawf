@@ -83,7 +83,7 @@ namespace DataWF.Gui
                         while ((count = stream.Read(buf, sum, buf.Length - sum)) > 0)
                             sum += count;  // sum is a buffer offset for next reading
 
-                        Editor.Value = buf;
+                        Value = buf;
                     }
                 }
                 string name = Path.GetFileName(fdOpen.FileName);
@@ -99,9 +99,9 @@ namespace DataWF.Gui
             {
                 fdSave.InitialFileName = invoker.Get(base.EditItem) as string;
             }
-            if (Editor.Value != null && fdSave.Run(Editor.ParentWindow))
+            if (Value != null && fdSave.Run(Editor.ParentWindow))
             {
-                File.WriteAllBytes(fdSave.FileName, (byte[])Editor.Value);
+                File.WriteAllBytes(fdSave.FileName, (byte[])Value);
             }
         }
 

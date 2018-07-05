@@ -12,6 +12,7 @@ namespace DataWF.Gui
     public class CellEditorList : CellEditorText
     {
         protected IList listSource;
+        public string ListProperty = nameof(ToString);
 
         public CellEditorList() : base()
         {

@@ -272,13 +272,13 @@ namespace DataWF.Data.Gui
             listParams.ListInfo.HeaderVisible = false;
             listParams.RetriveCellEditor += ListParamsRetriveCellEditor;
 
-            var dataTree = new CellEditorDataTree();
-            dataTree.DataKeys = DataTreeKeys.Schema | DataTreeKeys.TableGroup | DataTreeKeys.Table;
-            dataTree.DataType = typeof(DBTable);
 
-            toolTable.Editor = dataTree;
-            toolTable.Field.ValueChanged += FieldValueChanged;
-            toolTable.Field.DataType = typeof(DBTable);
+            toolTable.Editor = new CellEditorDataTree
+            {
+                DataKeys = DataTreeKeys.Schema | DataTreeKeys.TableGroup | DataTreeKeys.Table,
+                DataType = typeof(DBTable)
+            };
+            toolTable.Field.BindData(this, nameof(Table));
         }
 
         ILayoutCellEditor ListParamsRetriveCellEditor(object listItem, object value, ILayoutCell cell)
@@ -314,17 +314,7 @@ namespace DataWF.Data.Gui
 
         private Dictionary<QParam, ILayoutCellEditor> editors = new Dictionary<QParam, ILayoutCellEditor>();
 
-        private void FieldValueChanged(object sender, EventArgs e)
-        {
-            var value = toolTable.Field.DataValue as DBTable;
-            if (value != null)
-            {
-                if (Query == null)
-                    Query = new QQuery(string.Empty, value);
-                else
-                    Table = value;
-            }
-        }
+
 
         #region IProjectEditor implementation
 
@@ -387,10 +377,12 @@ namespace DataWF.Data.Gui
             {
                 if (table != value)
                 {
+                    if (Query == null)
+                        Query = new QQuery(string.Empty, value);
+
                     toolAdd.DropDownItems.Clear();
 
                     table = value;
-                    toolTable.Field.DataValue = value;
                     //if (toolTable.DropDownItems.Count == 0)
                     //    toolTable.DropDownItems.Add(InitTableTool(value));
                     if (state == SearchState.Edit)
@@ -411,6 +403,8 @@ namespace DataWF.Data.Gui
                     }
                     var column = (LayoutColumn)listParams.ListInfo.Columns[nameof(QParam.Column)];
                     ((CellEditorList)column.CellEditor).DataSource = value?.Columns;
+
+                    OnPropertyChanged(nameof(Table));
                 }
             }
         }

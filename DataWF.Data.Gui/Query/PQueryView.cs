@@ -28,7 +28,7 @@ namespace DataWF.Data.Gui
                 string str = procedure.Name;
                 foreach (var field in fields)
                 {
-                    parameters[field.Field.Name] = field.Field.DataValue;
+                    parameters[field.Field.Name] = field.Field.Value;
 
                 }
                 if (fields.Count > 0)

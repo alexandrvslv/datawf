@@ -56,7 +56,7 @@ namespace DataWF.Gui
                 TextWidget.SelectionStart = index + filter.Length;
                 TextWidget.SelectionLength = value.Length - TextWidget.SelectionStart;
 
-                Editor.Value = list[0].Tag;
+                Value = list[0].Tag;
             }
             else if (filter.Length > 0)
             {
@@ -102,10 +102,7 @@ namespace DataWF.Gui
                 ((NetTree)sender).SelectedNode.Tag != null &&
                 (((NetTree)sender).SelectedNode.Tag.GetType() == typeof(IPAddress)))
             {
-                Editor.Value = ParseValue(((NetTree)sender).SelectedNode.Tag);
-                HandleText = false;
-                EditorText = FormatValue(Editor.Value) as string;
-                HandleText = true;
+                Value = ((NetTree)sender).SelectedNode.Tag;
             }
         }
 

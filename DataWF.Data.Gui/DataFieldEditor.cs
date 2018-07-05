@@ -17,38 +17,29 @@ namespace DataWF.Data.Gui
 
         public override object ReadValue(object listItem)
         {
-            if (listItem is DBItem && Property.IndexOf('.') >= 0)
+            if (listItem is DBItem && Invoker.Name.IndexOf('.') >= 0)
             {
-                return ((DBItem)listItem)[Property];
+                return ((DBItem)listItem)[Invoker.Name];
             }
             return base.ReadValue(listItem);
         }
 
-        public void BindData(DBItem dataSource, string column, DBTable refer = null)
+        public void BindData(DBItem dataSource, DBColumn column, DBTable refer = null)
         {
-            if (Property != column && dataSource != null)
+            if (Column != column && dataSource?.GetType() != DataSource.GetType())
             {
-                Property = column;
-                Bind = true;
-                DBColumn dcolumn = dataSource == null ? null : dataSource.Table.ParseColumn(column);
-                if (dcolumn != null)
+                Binding?.Dispose();
+                if (column != null)
                 {
-                    Invoker = dcolumn;
-                    CellEditor = TableLayoutList.InitCellEditor(dcolumn);
+                    CellEditor = TableLayoutList.InitCellEditor(column);
                     if (CellEditor is CellEditorTable && refer != null)
                     {
                         ((CellEditorTable)CellEditor).Table = refer;
                     }
-                }
-                else
-                {
-                    base.BindData(dataSource, column);
+                    Binding = new InvokeBinder<DBItem, FieldEditor>(dataSource, column, this, EmitInvoker.Initialize<FieldEditor>(nameof(Value)));
                 }
             }
-
             DataSource = dataSource;
-            ReadValue();
-            Localize();
         }
 
         public override void Localize()
@@ -67,35 +58,5 @@ namespace DataWF.Data.Gui
         {
             base.Dispose(disposing);
         }
-    }
-
-    public class ToolDataFieldEditor : ToolContentItem
-    {
-        public int fieldWidth = 100;
-
-        public ToolDataFieldEditor()
-            : base(new DataFieldEditor())
-        {
-            Field.Text = string.Empty;
-            Field.MinWidth = fieldWidth;
-        }
-
-        public DataFieldEditor Field
-        {
-            get { return base.Content as DataFieldEditor; }
-        }
-
-        public int FieldWidth
-        {
-            get { return fieldWidth; }
-            set
-            {
-                if (fieldWidth != value)
-                {
-                    fieldWidth = value;
-                }
-            }
-        }
-
     }
 }

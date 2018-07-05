@@ -55,7 +55,7 @@ namespace DataWF.Data.Gui
 
             Application.Invoke(() =>
             {
-                LayoutList.DefaultMenu = new LayoutMenu();
+                LayoutList.DefaultMenu = new LayoutListMenu();
                 var menuExportTxt = new ToolItem(MenuExportTxtClick) { Glyph = GlyphType.FileTextO, Text = Locale.Get("TableEditor", "Export Text") };
                 var menuExportODS = new ToolItem(MenuExportOdsClick) { Glyph = GlyphType.FileWordO, Text = Locale.Get("TableEditor", "Export Excel") };
                 var menuExportXlsx = new ToolItem(MenuExportXlsxClick) { Glyph = GlyphType.FileExcelO, Text = Locale.Get("TableEditor", "Export Odf") };

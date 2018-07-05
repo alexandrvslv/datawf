@@ -25,7 +25,7 @@ namespace DataWF.Gui
         protected override void OnTextChanged(object sender, EventArgs e)
         {
             if (HandleText)
-                Editor.Value = ParseValue(((CheckBox)sender).State, EditItem, DataType);
+                Value = ((CheckBox)sender).State;
         }
 
         public override object ParseValue(object value, object dataSource, Type valueType)

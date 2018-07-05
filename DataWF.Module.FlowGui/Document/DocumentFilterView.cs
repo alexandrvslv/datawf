@@ -132,9 +132,9 @@ namespace DataWF.Module.FlowGui
                 {
                     filter = value;
                     //fields.FieldSource = value;
-                    templates.Bind(filter, nameof(DocumentFilter.Template));
-                    works.Bind(filter, nameof(DocumentFilter.Stage));
-                    users.Bind(filter, nameof(DocumentFilter.Staff));
+                    templates.Bind(filter, nameof(DocumentFilter.Template), nameof(UserTree.SelectedDBItem));
+                    works.Bind(filter, nameof(DocumentFilter.Stage), nameof(UserTree.SelectedDBItem));
+                    users.Bind(filter, nameof(DocumentFilter.Staff), nameof(UserTree.SelectedDBItem));
                 }
             }
         }

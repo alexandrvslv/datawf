@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using Xwt;
 using DataWF.Common;
 using Xwt.Drawing;
@@ -13,15 +14,15 @@ namespace DataWF.Gui
         DropDownEx
     }
 
-    public class LayoutEditor : Canvas, ILayoutEditor
+    public class LayoutEditor : Canvas, ILayoutEditor, INotifyPropertyChanged
     {
         const int w = 17;
         private static Dictionary<string, object> GlobalCache = new Dictionary<string, object>(StringComparer.Ordinal);
         protected Dictionary<string, object> Cache = new Dictionary<string, object>(StringComparer.Ordinal);
         protected ILayoutCellEditor currentEditor;
-        protected bool changed;
         protected object value;
         protected Widget widget;
+        protected bool changed;
         protected bool dropDownVisible = true;
         protected bool dropDownExVisible = true;
         protected PEditorHover hover = PEditorHover.None;
@@ -74,7 +75,11 @@ namespace DataWF.Gui
         public bool IsValueChanged
         {
             get { return changed; }
-            set { changed = value; }
+            set
+            {
+                changed = value;
+                Backup = Value;
+            }
         }
 
         public virtual object Value
@@ -85,7 +90,7 @@ namespace DataWF.Gui
                 if (this.value == value)
                     return;
                 this.value = value;
-                OnValueChanged(null);
+                OnValueChanged();
             }
         }
 
@@ -177,11 +182,13 @@ namespace DataWF.Gui
             }
         }
 
+        public object Backup { get; set; }
+
         public event EventHandler DropDownClick;
 
         public event EventHandler DropDownExClick;
 
-        public event EventHandler ValueChanged;
+        public event PropertyChangedEventHandler PropertyChanged;
 
         protected void OnDropClick()
         {
@@ -194,15 +201,20 @@ namespace DataWF.Gui
             DropDownExClick?.Invoke(this, EventArgs.Empty);
         }
 
-        protected virtual void OnValueChanged(EventArgs e)
+        protected virtual void OnValueChanged()
         {
             if (!Initialize)
             {
                 changed = true;
                 if (DropDown != null && DropDown.Visible && DropDownAutoHide)
                     DropDown.Hide();
-                ValueChanged?.Invoke(this, e);
+                OnPropertyChanged(nameof(Value));
             }
+        }
+
+        protected virtual void OnPropertyChanged(string property)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
 
         public void ClearValue()
@@ -273,7 +285,7 @@ namespace DataWF.Gui
                 }
                 if (dropDownVisible)
                 {
-                    CellDisplayState state = CellDisplayState.Default;
+                    var state = CellDisplayState.Default;
                     if (hover == PEditorHover.DropDown)
                         state = CellDisplayState.Hover;
                     rectg = new Rectangle(rectd.X, rectd.Y, 16, 16);
@@ -281,7 +293,7 @@ namespace DataWF.Gui
                 }
                 if (dropDownExVisible)
                 {
-                    CellDisplayState state = CellDisplayState.Default;
+                    var state = CellDisplayState.Default;
                     if (hover == PEditorHover.DropDownEx)
                         state = CellDisplayState.Hover;
                     rectg = new Rectangle(recte.X, recte.Y, 16, 16);

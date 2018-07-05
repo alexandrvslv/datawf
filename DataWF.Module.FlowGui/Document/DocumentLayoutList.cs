@@ -146,8 +146,8 @@ namespace DataWF.Module.FlowGui
                     filter = Document.Template;
                 }
             }
-            else if (cell.Invoker?.DataType == typeof(Document)
-                     || (cell.Invoker is DBColumn && ((DBColumn)cell.Invoker).ReferenceTable == Document.DBTable))
+            else if (cell.DataType == typeof(Document)
+                     || (cell.Invoker is DBColumn column && column.ReferenceTable == Document.DBTable))
             {
                 documented = true;
             }

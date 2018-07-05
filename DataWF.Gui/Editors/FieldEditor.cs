@@ -10,29 +10,15 @@ namespace DataWF.Gui
     {
         protected Label label;
         protected ILayoutCellEditor cellEditor;
-        private string property;
         private CellStyle style;
+        private Type dataType;
 
         public FieldEditor()
         {
             DropDownExVisible = false;
-            Name = "FieldEditor";
+            Name = nameof(FieldEditor);
             Cell = this;
         }
-
-        public bool MultyLine
-        {
-            get { return (cellEditor as CellEditorText)?.MultiLine ?? false; }
-            set
-            {
-                if (cellEditor is CellEditorText)
-                {
-                    (cellEditor as CellEditorText).MultiLine = value;
-                }
-            }
-        }
-
-        public bool Bind { get; set; }
 
         public string Text
         {
@@ -88,83 +74,53 @@ namespace DataWF.Gui
                     cellEditor.Format = value;
             }
         }
-        public IInvoker Invoker { get; set; }
+
+        public IInvoker Invoker { get { return Binding?.DataInvoker; } set { Binding.DataInvoker = value; } }
         public bool Editable { get; set; }
         public bool Validate { get; set; }
         public bool Password { get; set; }
         public string Description { get; set; }
-        public string LocalizeCategory { get; set; }
-
-        protected override void OnValueChanged(EventArgs e)
-        {
-            if (Bind && !Initialize && DataSource != null && Invoker != null)
-            {
-                WriteValue(DataSource, DataValue);
-            }
-            base.OnValueChanged(e);
-        }
-
-        public void BindData(object dataSource, string property, ILayoutCellEditor custom = null)
-        {
-            Bind = true;
-            if (Property != property && dataSource != null)
-            {
-                Property = property;
-                Invoker = EmitInvoker.Initialize(dataSource.GetType(), property);
-                CellEditor = custom ?? (cellEditor ?? GuiEnvironment.GetCellEditor(this));
-            }
-            DataSource = dataSource;
-            ReadValue();
-        }
 
         public object DataSource
         {
-            get { return cellEditor?.EditItem; }
-            set
-            {
-                if (DataSource == value)
-                    return;
-                if (DataSource is INotifyPropertyChanged)
-                {
-                    ((INotifyPropertyChanged)DataSource).PropertyChanged -= OnPropertyChanged;
-                }
-                if (CellEditor == null)
-                    RefreshEditor();
-                cellEditor.EditItem = value;
-
-                if (DataSource is INotifyPropertyChanged)
-                {
-                    ((INotifyPropertyChanged)DataSource).PropertyChanged += OnPropertyChanged;
-                }
-                //RefreshPEditor();
-            }
+            get { return Binding?.GetData(); }
+            set { Binding?.Bind(value, this); }
         }
 
         public object DataValue
         {
-            get { return cellEditor?.Value; }
+            get { return base.Value; }
             set
             {
-                if (DataValue == value)
+                if (Value == value)
                     return;
-                if (CellEditor == null)
-                    RefreshEditor();
-                Initialize = true;
                 DataType = value?.GetType();
-                cellEditor.Value = cellEditor.ParseValue(value);
-                Initialize = false;
+                cellEditor.Value = value;
+            }
+        }
+
+        public override object Value
+        {
+            get => base.Value;
+            set
+            {
+                base.Value = value;
+                OnPropertyChanged(nameof(DataValue));
             }
         }
 
         public Type DataType
         {
-            get { return cellEditor?.DataType; }
+            get { return dataType; }
             set
             {
-                if (DataType == value || value == null)
+                if (dataType == value || value == null)
                     return;
+                dataType = value;
                 if (cellEditor == null)
-                    RefreshEditor();
+                {
+                    CellEditor = GuiEnvironment.GetCellEditor(this);
+                }
                 cellEditor.DataType = value;
             }
         }
@@ -177,25 +133,35 @@ namespace DataWF.Gui
             {
                 if (cellEditor == value)
                     return;
-                var cacheType = cellEditor?.DataType;
-                var cacheItem = cellEditor?.EditItem;
+                if (cellEditor != null)
+                {
+                    cellEditor.FreeEditor();
+                }
                 cellEditor = value;
-                cellEditor.InitializeEditor(this, DataValue, cacheItem);
+                if (cellEditor != null)
+                {
+                    cellEditor.InitializeEditor(this, Value, DataSource);
+                }
             }
         }
 
-        public void Init(ILayoutCellEditor editor, object value)
-        {
-            CellEditor = editor;
-            DataValue = value;
-        }
+        public InvokeBinder Binding { get; protected set; }
 
-        private void RefreshEditor()
+        public void BindData<T>(T dataSource, string property)
         {
-            if (CellEditor == null)
+            if (property != Invoker?.Name || dataSource?.GetType() != DataSource?.GetType())
             {
-                CellEditor = new CellEditorText();
+                Binding?.Dispose();
+                if (!string.IsNullOrEmpty(property) && dataSource != null)
+                {
+                    Binding = new InvokeBinder<T, FieldEditor>(dataSource, property, this, nameof(DataValue));
+                    if (DataType == null)
+                    {
+                        DataType = Invoker?.DataType;
+                    }
+                }
             }
+            DataSource = dataSource;
         }
 
         public double LabelSize
@@ -214,30 +180,9 @@ namespace DataWF.Gui
             }
         }
 
-        protected string Property { get => property; set => property = value; }
-
-
-        protected override void Dispose(bool disposing)
-        {
-            label?.Dispose();
-            base.Dispose(disposing);
-        }
-
         public ILayoutCellEditor GetEditor(object source)
         {
             return CellEditor;
-        }
-
-        protected void ReadValue()
-        {
-            if (Invoker != null && DataSource != null)
-            {
-                DataValue = ReadValue(DataSource);
-            }
-            else
-            {
-                DataValue = null;
-            }
         }
 
         public virtual object ReadValue(object listItem)
@@ -250,20 +195,27 @@ namespace DataWF.Gui
             Invoker.Set(listItem, value);
         }
 
-        private void OnPropertyChanged(object obj, PropertyChangedEventArgs arg)
-        {
-            if (Bind && !Initialize && (arg.PropertyName.Length == 0 || Property.IndexOf(arg.PropertyName, StringComparison.OrdinalIgnoreCase) >= 0))
-            {
-                ReadValue();
-            }
-        }
+
 
         public virtual void Localize()
         {
-            if (DataSource != null && Property != null && string.IsNullOrEmpty(label.Text))
+            if (DataSource != null && Binding != null && string.IsNullOrEmpty(label.Text))
             {
-                Text = Locale.Get(DataSource.GetType(), Property);
+                Text = Locale.Get(DataSource.GetType(), Binding.DataInvoker.Name);
             }
         }
+
+        protected override void Dispose(bool disposing)
+        {
+            Application.Invoke(() =>
+            {
+                if (cellEditor.Editor != null)
+                    cellEditor?.FreeEditor();
+                Binding?.Dispose();
+                label?.Dispose();
+            });
+            base.Dispose(disposing);
+        }
+
     }
 }
