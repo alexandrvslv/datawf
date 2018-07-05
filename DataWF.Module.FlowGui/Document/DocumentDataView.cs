@@ -15,19 +15,18 @@ namespace DataWF.Module.FlowGui
 {
     public class DocumentDataView<T> : DocumentDetailView<T> where T : DocumentData, new()
     {
-        private ToolItem toolView;
         private ToolItem toolTemplate;
         private ToolItem toolInsertTemplate;
 
         public DocumentDataView()
         {
-            toolView = new ToolItem(ToolViewClick) { Name = "View", DisplayStyle = ToolItemDisplayStyle.Text, Glyph = GlyphType.PictureO };
+            toolEdit.Visible = true;// = new ToolItem(OnToolEditClick) { Name = "Edit", DisplayStyle = ToolItemDisplayStyle.Text, Glyph = GlyphType.PictureO };
             toolTemplate = new ToolItem(ToolTemplateClick) { Name = "Template", DisplayStyle = ToolItemDisplayStyle.Text, GlyphColor = Colors.LightBlue, Glyph = GlyphType.Book };
             toolInsertTemplate = new ToolItem(ToolInsertTemplateClick) { Name = "Template", DisplayStyle = ToolItemDisplayStyle.ImageAndText, Glyph = GlyphType.Book };
             toolInsert.Name = "File";
             toolInsert.InsertAfter(toolInsertTemplate);
             Name = nameof(DocumentDataView<T>);
-            toolStatus.InsertAfter(new[] { toolView, toolTemplate });
+            toolStatus.InsertAfter(new[] { toolEdit, toolTemplate });
             Glyph = GlyphType.File;
         }
 
@@ -65,7 +64,7 @@ namespace DataWF.Module.FlowGui
 
         public override void OnItemSelect(ListEditorEventArgs e)
         {
-            ToolViewClick(this, e);
+            ViewDocument();
         }
 
         protected override void OnToolEditClick(object sender, EventArgs e)
@@ -130,7 +129,12 @@ namespace DataWF.Module.FlowGui
             }
         }
 
-        private void ToolViewClick(object sender, EventArgs e)
+        private void ListCellDoubleClick(object sender, LayoutHitTestEventArgs e)
+        {
+            ViewDocument();
+        }
+
+        private void ViewDocument()
         {
             if (Current == null || Current.FileData == null)
                 return;
@@ -159,11 +163,5 @@ namespace DataWF.Module.FlowGui
                 Current.Execute();
             }
         }
-
-        private void ListCellDoubleClick(object sender, LayoutHitTestEventArgs e)
-        {
-            ToolViewClick(this, EventArgs.Empty);
-        }
-
     }
 }
