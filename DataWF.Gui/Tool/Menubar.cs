@@ -100,6 +100,12 @@ namespace DataWF.Gui
             }
         }
 
+        public new void Hide()
+        {
+            TransientFor = null;
+            base.Hide();
+        }
+
         protected override void OnClosed()
         {
             BaseGetFocus(null, null);
