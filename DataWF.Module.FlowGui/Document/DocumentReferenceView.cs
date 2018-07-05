@@ -33,6 +33,7 @@ namespace DataWF.Module.FlowGui
             Bar.Items.Add(toolAttach);
             Bar.Items.Add(toolDetach);
 
+            HideOnClose = true;
             Name = nameof(DocumentReferenceView);
         }
 

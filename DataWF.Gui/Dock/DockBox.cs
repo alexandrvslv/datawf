@@ -621,8 +621,10 @@ namespace DataWF.Gui
             DockPage page = PickPage(widget);
             if (page != null)
             {
-                page.Panel.CurrentPage = page;
-                page.Panel.DockItem.Visible = true;
+                if (page.Visible)
+                    page.Panel.CurrentPage = page;
+                else
+                    page.Visible = true;
             }
             else
             {

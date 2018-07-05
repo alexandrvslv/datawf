@@ -98,12 +98,12 @@ namespace DataWF.Gui
             {
                 var item = pagesHistory.Last;
 
-                while (item != null && (item.Value == page || item.Value.Panel != this))
+                while (item != null && (item.Value == page || item.Value.Panel != this || !item.Value.Visible))
                     item = item.Previous;
-                if (item != null && item.Value.Panel == this)
+                if (item != null && item.Value.Panel == this && item.Value.Visible)
                     npage = item.Value;
                 else
-                    npage = (DockPage)items.GetItems().FirstOrDefault(p => p != page);
+                    npage = (DockPage)items.GetVisibleItems().FirstOrDefault(p => p != page);
             }
             else
             {
@@ -185,7 +185,6 @@ namespace DataWF.Gui
                     if (DockItem != null && !DockItem.Visible)
                     {
                         DockItem.Visible = true;
-                        //Parent.ResumeLayout(true);
                     }
                     pagesHistory.AddLast(currentPage);
                     currentPage.Checked = true;
@@ -265,10 +264,13 @@ namespace DataWF.Gui
                     return;
             }
             PageClose?.Invoke(this, new DockPageEventArgs(page));
-
-            Items.Remove(page);
-            if (!page.HideOnClose)
+            if (page.HideOnClose)
             {
+                page.Visible = false;
+            }
+            else
+            {
+                Items.Remove(page);
                 page.Widget.Dispose();
             }
         }
@@ -420,6 +422,13 @@ namespace DataWF.Gui
         }
 
         #endregion
+
+        protected override void OnContextMenuShow(ButtonEventArgs e)
+        {
+            if (widgetBounds.Contains(e.Position))
+                return;
+            base.OnContextMenuShow(e);
+        }
 
     }
 }

@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace DataWF.Module.FlowGui
 {
     public class DocumentDetailView<T> : ListEditor, IDocument, ISync where T : DocumentDetail, new()
-    {        
+    {
         protected Document document;
         protected DBTableView<T> view;
 
@@ -18,13 +18,14 @@ namespace DataWF.Module.FlowGui
         {
             view = new DBTableView<T>(Table, new QParam(LogicType.And, Table.ParseProperty(nameof(DocumentDetail.DocumentId)), CompareType.Equal, 0), DBViewKeys.Empty);
             DataSource = view;
+
             List.EditMode = EditModes.ByF2;
             toolLog.Visible = Table.IsLoging;
             toolLoad.Visible =
                 toolRefresh.Visible =
                 toolSave.Visible =
                 toolStatus.Visible = false;
-
+            HideOnClose = true;
             Name = nameof(DocumentDetailView<T>);
         }
 
