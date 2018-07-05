@@ -478,7 +478,7 @@ namespace DataWF.Data
 
         public T LoadById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable cols = null)
         {
-            object val = PrimaryKey?.ParseValue(id) ?? id;
+            object val = PrimaryKey?.ParseValue(id);
 
             if (val == null || PrimaryKey == null)
                 return null;
