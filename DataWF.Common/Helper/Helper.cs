@@ -847,14 +847,8 @@ namespace DataWF.Common
             string result = null;
             if (format != null && format.Equals("size", StringComparison.OrdinalIgnoreCase))
             {
-                if (value is long longValue)
-                    result = LengthFormat(longValue);
-                else if (value is ulong ulongValue)
-                    result = LengthFormat(ulongValue);
-                else if (value is int intValue)
-                    result = LengthFormat(intValue);
-                else if (value is decimal decimalValue)
-                    result = LengthFormat(decimalValue);
+                result = LenghtFormat(value);
+
             }
             else if (value is CultureInfo cultureInfo)
                 result = cultureInfo.Name;
@@ -868,7 +862,7 @@ namespace DataWF.Common
             }
             else if (value is byte[] byteArray)
             {
-                result = LengthFormat(byteArray.LongLength);
+                result = LenghtFormat(byteArray.LongLength);
             }
             else if (value is IList)
             {
@@ -951,30 +945,57 @@ namespace DataWF.Common
             return result;
         }
 
-        public static string LengthFormat(ulong l)
+        public static string LenghtFormat(ulong l)
         {
-            return LengthFormat((decimal)l);
+            return LenghtFormat((decimal)l);
         }
 
-        public static string LengthFormat(long l)
+        public static string LenghtFormat(long l)
         {
-            return LengthFormat((decimal)l);
+            return LenghtFormat((decimal)l);
         }
 
-        public static string LengthFormat(int l)
+        public static string LenghtFormat(int l)
         {
-            return LengthFormat((decimal)l);
+            return LenghtFormat((decimal)l);
         }
 
-        public static string LengthFormat(decimal l)
+        public static string LenghtFormat(decimal l)
         {
-            int i = 0;
-            while (Math.Abs(l) >= 1024 && i < 3)
+            var i = ByteSize.B;
+            while (Math.Abs(l) >= 1024 && (int)i < 4)
             {
                 l = l / 1024;
-                i++;
+                i = (ByteSize)((int)i + 1);
             }
-            return string.Format("{0:0.00} {1}", l, i == 0 ? "B" : i == 1 ? "KB" : i == 2 ? "MB" : "GB");
+            return $"{l:0.00} {i}";
+        }
+
+        private enum ByteSize
+        {
+            B,
+            KB,
+            MB,
+            GB,
+            PB
+        }
+
+        public static string LenghtFormat(object value)
+        {
+            if (value is decimal decimalValue)
+                return LenghtFormat(decimalValue);
+            else if (value is int intValue)
+                return LenghtFormat(intValue);
+            else if (value is long longValue)
+                return LenghtFormat(longValue);
+            else if (value is ulong ulongValue)
+                return LenghtFormat(ulongValue);
+            else if (value is Array arrayValue)
+                return LenghtFormat(arrayValue.Length);
+            else if (value is IList listValue)
+                return LenghtFormat(listValue.Count);
+            else
+                return TextDisplayFormat(value, null);
         }
 
         public static object TextParse(string value, Type type, string format = "binary")
@@ -1220,11 +1241,11 @@ namespace DataWF.Common
             var proc = System.Diagnostics.Process.GetCurrentProcess();
             var temp = proc.WorkingSet64;
             string descript = string.Format("Diff:{0} Working:{1} Virtual:{2} Private:{3} Peak:{4}",
-                                  Helper.LengthFormat(temp - WorkingSet64),
-                                  Helper.LengthFormat(proc.WorkingSet64),
-                                  Helper.LengthFormat(proc.VirtualMemorySize64),
-                                  Helper.LengthFormat(proc.PrivateMemorySize64),
-                                  Helper.LengthFormat(proc.PeakWorkingSet64));
+                                  Helper.LenghtFormat(temp - WorkingSet64),
+                                  Helper.LenghtFormat(proc.WorkingSet64),
+                                  Helper.LenghtFormat(proc.VirtualMemorySize64),
+                                  Helper.LenghtFormat(proc.PrivateMemorySize64),
+                                  Helper.LenghtFormat(proc.PeakWorkingSet64));
             logs.Add(new StateInfo("Memory", status, descript, StatusType.Warning));
             WorkingSet64 = temp;
         }
