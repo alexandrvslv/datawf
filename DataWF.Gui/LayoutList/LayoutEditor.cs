@@ -4,6 +4,7 @@ using System.ComponentModel;
 using Xwt;
 using DataWF.Common;
 using Xwt.Drawing;
+using System.Threading.Tasks;
 
 namespace DataWF.Gui
 {
@@ -363,6 +364,17 @@ namespace DataWF.Gui
                 dropDown.Mode = mode;
                 dropDown.Show(this, new Point(0, Bounds.Height));
             }
+        }
+
+        public async Task<Command> ShowDropDownAsync()
+        {
+            if (dropDown != null && !dropDown.Visible)
+            {
+                if (dropDown.ScreenBounds.Width < Bounds.Width && Bounds.Width > 200)
+                    dropDown.Size = new Size(Bounds.Width, dropDown.ScreenBounds.Height);
+                return await dropDown.ShowAsync(this, new Point(0, Bounds.Height));
+            }
+            return null;
         }
 
         public T GetCached<T>()
