@@ -416,7 +416,7 @@ namespace DataWF.Module.FlowGui
         public DocumentEditor GetEditor(Type documentType, bool create)
         {
             var dock = this.GetParent<DockBox>();
-            if (dock == null)
+            if (dock == null || documentType == null)
                 return null;
 
             if (editor == null || editor.DocumentType != documentType)
