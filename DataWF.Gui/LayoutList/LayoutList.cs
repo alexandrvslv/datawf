@@ -777,6 +777,20 @@ namespace DataWF.Gui
                         }
                     }
                     break;
+                case Key.S:
+                case Key.s:
+                    if (!editor.Sensitive
+                        && e.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
+                    {
+                        if (CurrentCell != null)
+                        {
+                            if (CurrentCell.Collect == CollectedType.None)
+                                CurrentCell.Collect = CollectedType.Sum;
+                        }
+                        listInfo.CollectingRow = !listInfo.CollectingRow;
+                        e.Handled = true;
+                    }
+                    break;
                 default:
                     if (!editor.Sensitive && CurrentCell != null
                         && e.Modifiers == ModifierKeys.None
@@ -4004,7 +4018,8 @@ namespace DataWF.Gui
             {
                 OnCellMouseClick(e);
             }
-            else if (e.HitTest.MouseButton == PointerButton.Right)
+            else if (e.HitTest.MouseButton == PointerButton.Right
+                && (!editor.Sensitive || (e.HitTest.Item != editor.CurrentEditor.EditItem && e.HitTest.Column != CurrentCell)))
             {
                 OnContextMenuShow(e.HitTest);
             }
