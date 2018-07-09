@@ -107,7 +107,7 @@ namespace DataWF.Module.MessangerGui
             }
             else
             {
-                MessageDialog.ShowMessage(ParentWindow, "User or Message not specified!");
+                MessageDialog.ShowMessage(ParentWindow, "Message not specified!");
             }
         }
 
