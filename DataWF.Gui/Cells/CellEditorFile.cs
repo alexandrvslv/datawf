@@ -89,7 +89,7 @@ namespace DataWF.Gui
                 string name = Path.GetFileName(fdOpen.FileName);
                 if (invoker != null)
                     invoker.Set(EditItem, name);
-                EditorText = name;
+                EntryText = name;
             }
         }
 

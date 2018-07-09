@@ -25,7 +25,7 @@ namespace DataWF.Gui
             return base.ParseValue(value, dataSource, valueType);
         }
 
-        public override string EditorText
+        public override string EntryText
         {
             get { return (Editor?.Widget as PasswordEntry)?.Password; }
             set

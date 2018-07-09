@@ -80,10 +80,10 @@ namespace DataWF.Gui
                 if (count == 1)
                 {
                     Value = ParseValue(flist.First(), EditItem, DataType);
-                    string value = TextWidget.Text;
+                    string value = EntryWidget.Text;
                     int index = value.IndexOf(filter, StringComparison.OrdinalIgnoreCase);
-                    TextWidget.SelectionStart = index + filter.Length;
-                    TextWidget.SelectionLength = value.Length - TextWidget.SelectionStart;
+                    EntryWidget.SelectionStart = index + filter.Length;
+                    EntryWidget.SelectionLength = value.Length - EntryWidget.SelectionStart;
 
                     DropDown.Hide();
                 }

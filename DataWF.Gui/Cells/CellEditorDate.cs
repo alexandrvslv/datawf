@@ -58,11 +58,11 @@ namespace DataWF.Gui
         {
             base.OnTextKeyPressed(sender, e);
             //var box = sender as MaskedTextBox;
-            if (e.Key == Key.BackSpace || e.Key == Key.Delete)
-            {
-                e.Handled = true;
-            }
-            var box = sender as TextEntry;
+            //if (e.Key == Key.BackSpace || e.Key == Key.Delete)
+            //{
+            //    e.Handled = true;
+            //}
+            //var box = sender as TextEntry;
             //if (Keyboard.CurrentModifiers == ModifierKeys.None && !box.ReadOnly && box.SelectionLength > 1)
             //{
             //    int start = box.SelectionStart;
@@ -93,7 +93,7 @@ namespace DataWF.Gui
             {
                 HandleText = false;
                 Value = twoDate ? Selector.Value : (object)Selector.Value.Min;
-                EditorText = FormatValue(Value) as string;
+                EntryText = FormatValue(Value) as string;
                 HandleText = true;
             }
         }

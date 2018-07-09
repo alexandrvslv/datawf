@@ -212,7 +212,7 @@ namespace DataWF.Data.Gui
             if (list == null)
             {
                 var query = new QQuery("", Table);
-                query.SimpleFilter(EditorText);
+                query.SimpleFilter(EntryText);
                 TableEditor.Loader.LoadAsync(query);
                 list = query.Select();
             }

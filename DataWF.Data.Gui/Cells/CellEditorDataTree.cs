@@ -76,9 +76,9 @@ namespace DataWF.Data.Gui
             {
                 string value = FormatValue(list[0].Tag, EditItem, DataType) as string;
                 int index = value.IndexOf(filter, StringComparison.OrdinalIgnoreCase);
-                TextWidget.Text = value;
-                TextWidget.SelectionStart = index + filter.Length;
-                TextWidget.SelectionLength = value.Length - TextWidget.SelectionStart;
+                EntryWidget.Text = value;
+                EntryWidget.SelectionStart = index + filter.Length;
+                EntryWidget.SelectionLength = value.Length - EntryWidget.SelectionStart;
                 Editor.Value = list[0].Tag;
             }
             else if (filter.Length > 0)

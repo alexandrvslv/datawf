@@ -70,15 +70,15 @@ namespace DataWF.Gui
             }
         }
 
-        public virtual string EditorText
+        public virtual string EntryText
         {
-            get { return TextWidget?.Text; }
+            get { return EntryWidget?.Text; }
             set
             {
                 bool flag = HandleText;
                 HandleText = false;
-                if (TextWidget != null)
-                    TextWidget.Text = value;
+                if (EntryWidget != null)
+                    EntryWidget.Text = value;
                 if (DropDown != null && DropDown.Target is RichTextView)
                 {
                     ((RichTextView)DropDown.Target).LoadText(value ?? string.Empty, Xwt.Formats.TextFormat.Plain);
@@ -102,12 +102,12 @@ namespace DataWF.Gui
                 if (Editor != null)
                 {
                     Editor.Value = ParseValue(value);
-                    EditorText = FormatValue(value) as string;
+                    EntryText = FormatValue(value) as string;
                 }
             }
         }
 
-        public TextEntry TextWidget
+        public TextEntry EntryWidget
         {
             get { return Editor.Widget as TextEntry; }
         }
@@ -121,7 +121,7 @@ namespace DataWF.Gui
         {
             if (HandleText && Editor != null)
             {
-                var text = sender == Editor.Widget ? EditorText : sender is RichTextView ? ((RichTextView)sender).PlainText.TrimEnd() : string.Empty;
+                var text = sender == Editor.Widget ? EntryText : sender is RichTextView ? ((RichTextView)sender).PlainText.TrimEnd() : string.Empty;
                 HandleText = false;
                 if (Filtering && !text.Equals(filter, StringComparison.OrdinalIgnoreCase))
                 {
@@ -295,7 +295,7 @@ namespace DataWF.Gui
             {
                 return ((RichTextView)DropDown.Target).PlainText;
             }
-            return null;
+            return Value;
         }
 
         protected virtual void OnTextKeyReleased(object sender, KeyEventArgs e)
@@ -324,7 +324,7 @@ namespace DataWF.Gui
                 }
 
                 // only allow one decimal point
-                bool dpoint = EditorText.IndexOf('.') != -1 || EditorText.IndexOf(',') != -1;
+                bool dpoint = EntryText.IndexOf('.') != -1 || EntryText.IndexOf(',') != -1;
                 if (!dpoint && (e.Key == Key.Comma || e.Key == Key.Period))
                 {
                     e.Handled = false;
@@ -341,11 +341,11 @@ namespace DataWF.Gui
             }
             if (Editor != null)
             {
-                if (TextWidget != null)
+                if (EntryWidget != null)
                 {
-                    TextWidget.Changed -= OnTextChanged;
-                    TextWidget.KeyPressed -= OnTextKeyPressed;
-                    TextWidget.KeyReleased -= OnTextKeyReleased;
+                    EntryWidget.Changed -= OnTextChanged;
+                    EntryWidget.KeyPressed -= OnTextKeyPressed;
+                    EntryWidget.KeyReleased -= OnTextKeyReleased;
                 }
                 Editor.Image = null;
                 Editor.DropDown = null;
