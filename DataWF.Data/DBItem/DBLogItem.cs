@@ -92,7 +92,10 @@ namespace DataWF.Data
 
         public void Upload()
         {
+            if (BaseItem == null)
+                baseItem = BaseTable.NewItem(DBUpdateState.Insert, false);
             Upload(BaseItem);
+            BaseItem.Save();
         }
 
         public void Upload(DBItem value)
