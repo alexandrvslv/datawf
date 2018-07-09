@@ -122,7 +122,7 @@ namespace DataWF.Module.Flow
             set
             {
                 SetPropertyReference(value);
-                FileData = (byte[])value?.Data.Clone();
+                FileData = (byte[])value?.File?.Data.Clone();
                 RefreshName();
             }
         }
@@ -211,18 +211,17 @@ namespace DataWF.Module.Flow
             return fileName;
         }
 
+        [ControllerMethod]
         public byte[] Parse()
         {
-            return Parse(new DocumentExecuteArgs() { Document = Document, ProcedureCategory = TemplateData.Template.Code });
+            return Parse(new DocumentExecuteArgs { Document = Document, ProcedureCategory = TemplateData.Template.Code });
         }
 
         public byte[] Parse(DocumentExecuteArgs param)
         {
-            if (IsTemplate)
-            {
-                Execute(this, param);
-            }
-            return FileData;
+            if (TemplateData == null || TemplateData.File == null)
+                return FileData;
+            return FileData = DocumentParser.Execute(TemplateData.File.Data, FileName, param);
         }
 
         public string Execute()
@@ -277,10 +276,9 @@ namespace DataWF.Module.Flow
             {
                 Load(path, stream);
             }
-
         }
 
-        public static BackgroundWorker ExecuteAsync(DocumentData data, DocumentExecuteArgs param)
+        public BackgroundWorker ExecuteAsync(DocumentExecuteArgs param)
         {
             var worker = new BackgroundWorker();
             //worker.WorkerSupportsCancellation = false;
@@ -288,7 +286,7 @@ namespace DataWF.Module.Flow
             {
                 try
                 {
-                    Execute(data, param);
+                    Parse(param);
                     e.Result = param;
                 }
                 catch (Exception ex)
@@ -301,24 +299,19 @@ namespace DataWF.Module.Flow
             //worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(worker_RunWorkerCompleted);
         }
 
-        public static void Execute(DocumentData data, DocumentExecuteArgs param)
-        {
-            if (data.FileData == null || data.TemplateData == null)
-                return;
-            data.FileData = DocumentParser.Execute(data.TemplateData.Data, data.FileName, param);
-        }
+
 
         public void RefreshName()
         {
-            if (IsTemplate && TemplateData.DataName != null)
+            if (IsTemplate && TemplateData?.File != null)
             {
                 if (string.IsNullOrEmpty(Document.Number))
                 {
-                    FileName = $"{Path.GetFileNameWithoutExtension(TemplateData.DataName)}{DateTime.Now.ToString("yy-MM-dd_hh-mm-ss")}{Path.GetExtension(TemplateData.DataName)}";
+                    FileName = $"{Path.GetFileNameWithoutExtension(TemplateData.File.DataName)}{DateTime.Now.ToString("yy-MM-dd_hh-mm-ss")}{TemplateData.File.FileType}";
                 }
                 else
                 {
-                    FileName = $"{Path.GetFileNameWithoutExtension(TemplateData.DataName)}{Document.Number}.{Path.GetExtension(TemplateData.DataName)}";
+                    FileName = $"{Path.GetFileNameWithoutExtension(TemplateData.File.DataName)}{Document.Number}{TemplateData.File.FileType}";
                 }
             }
         }

@@ -18,22 +18,21 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System.ComponentModel;
 using System.IO;
 using DataWF.Data;
 using System.Runtime.Serialization;
 
 namespace DataWF.Module.Flow
 {
-    [DataContract, Table("rtemplate_data", "Template", BlockSize = 100)]
-    public class TemplateData : DBItem
+    [DataContract, Table("rtemplate_file", "Template", BlockSize = 100)]
+    public class TemplateFile : DBItem
     {
-        public static DBTable<TemplateData> DBTable
+        public static DBTable<TemplateFile> DBTable
         {
-            get { return GetTable<TemplateData>(); }
+            get { return GetTable<TemplateFile>(); }
         }
 
-        public TemplateData()
+        public TemplateFile()
         {
             Build(DBTable);
         }
@@ -45,34 +44,23 @@ namespace DataWF.Module.Flow
             set { SetValue(value, Table.PrimaryKey); }
         }
 
-        [Browsable(false)]
-        [DataMember, Column("template_id")]
-        public int? TemplateId
+        [DataMember, Column("template_file", Keys = DBColumnKeys.File)]
+        public byte[] Data
         {
-            get { return GetProperty<int?>(); }
+            get { return GetProperty<byte[]>(); }
             set { SetProperty(value); }
         }
 
-        [Reference(nameof(TemplateId))]
-        public Template Template
+        [DataMember, Column("template_file_name", 1024, Keys = DBColumnKeys.FileName | DBColumnKeys.View)]
+        public string DataName
         {
-            get { return GetPropertyReference<Template>(); }
-            set { SetPropertyReference(value); }
-        }
-
-        [Browsable(false)]
-        [DataMember, Column("file_id", Keys = DBColumnKeys.View)]
-        public int? FileId
-        {
-            get { return GetProperty<int?>(); }
+            get { return GetProperty<string>(); }
             set { SetProperty(value); }
         }
 
-        [Reference(nameof(FileId))]
-        public TemplateFile File
+        public string FileType
         {
-            get { return GetPropertyReference<TemplateFile>(); }
-            set { SetPropertyReference(value); }
+            get { return Path.GetExtension(DataName); }
         }
     }
 }
