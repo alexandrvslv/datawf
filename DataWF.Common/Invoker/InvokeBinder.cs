@@ -70,6 +70,11 @@ namespace DataWF.Common
             Data = (D)data;
         }
 
+        public override void Unbind()
+        {
+            Bind(null, null);
+        }
+
         private void DataPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (ViewInvoker == null)
@@ -127,6 +132,8 @@ namespace DataWF.Common
         {
             return View;
         }
+
+
     }
 }
 

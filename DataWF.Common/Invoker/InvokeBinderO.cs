@@ -8,10 +8,13 @@ namespace DataWF.Common
         public IInvoker ViewInvoker { get; set; }
 
         public abstract void Bind(object data, object view);
+        public abstract void Unbind();
+
         public abstract void Dispose();
 
         public abstract object GetData();
         public abstract object GetView();
+
     }
 }
 
