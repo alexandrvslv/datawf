@@ -188,8 +188,8 @@ namespace DataWF.TestGui
                     {
                         var drive = current.Group == null ? current.Drive : null;
                         var text = drive == null ? current.File.Info.FullName : string.Format("{0} free {1} of {2}", current.File.Info.FullName,
-                                       Helper.LengthFormat(drive.TotalFreeSpace),
-                                       Helper.LengthFormat(drive.TotalSize));
+                                       Helper.LenghtFormat(drive.TotalFreeSpace),
+                                       Helper.LenghtFormat(drive.TotalSize));
                         statusLablel.Text = text;
                         for (int i = 0; i < current.Nodes.Count; i++)
                             if (!current.Nodes[i].Check)

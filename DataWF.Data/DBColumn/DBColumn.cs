@@ -841,7 +841,7 @@ namespace DataWF.Data
                     return rez;
                 }
                 else
-                    return Helper.LengthFormat(((byte[])val).LongLength);
+                    return Helper.LenghtFormat(((byte[])val).LongLength);
             }
             if (Format != null)
             {

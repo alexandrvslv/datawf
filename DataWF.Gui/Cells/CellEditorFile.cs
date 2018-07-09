@@ -21,21 +21,13 @@ namespace DataWF.Gui
             DropDownExVisible = true;
             fdOpen = new OpenFileDialog();
             fdSave = new SaveFileDialog();
+            Format = "size";
         }
 
         public string PropertyFileName
         {
             get { return propertyFileName; }
             set { propertyFileName = value; }
-        }
-
-        public override object FormatValue(object value, object dataSource, Type valueType)
-        {
-            if (value is byte[])
-            {
-                return Helper.LengthFormat(((byte[])value).LongLength);
-            }
-            return base.FormatValue(value, dataSource, valueType);
         }
 
         public override void InitDropDown()

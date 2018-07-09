@@ -17,7 +17,7 @@ namespace DataWF.Gui
         protected DateTime stamp;
         private string text;
         private TextLayout textLayout;
-        protected Dictionary<LayoutColumn, object> cache = new Dictionary<LayoutColumn, object>();
+        protected Dictionary<LayoutColumn, decimal> cache = new Dictionary<LayoutColumn, decimal>();
         public LayoutListInfo Info;
         public int GridRows;
         public Rectangle Bound;
@@ -26,7 +26,7 @@ namespace DataWF.Gui
         public LayoutGroup()
         { }
 
-        public Dictionary<LayoutColumn, object> CollectedCache
+        public Dictionary<LayoutColumn, decimal> CollectedCache
         {
             get { return cache; }
         }

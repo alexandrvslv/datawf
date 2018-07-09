@@ -38,7 +38,7 @@ namespace DataWF.Gui
         private PointerButton _cacheButton = 0;
         private Point location = new Point(0, 0);
         private Rectangle _recMove = new Rectangle();
-        private Dictionary<LayoutColumn, object> collectedCache = new Dictionary<LayoutColumn, object>();
+        private Dictionary<LayoutColumn, decimal> collectedCache = new Dictionary<LayoutColumn, decimal>();
         private int _p0;
         private object dragItem;
 
@@ -2503,7 +2503,10 @@ namespace DataWF.Gui
         public virtual CollectedType GetCellCollect(LayoutColumn cell)
         {
             if (cell != null && cell.Collect == CollectedType.None && cell.DataType != null &&
-                (cell.DataType == typeof(decimal) || cell.DataType == typeof(float) || cell.DataType == typeof(double)))
+                (cell.DataType == typeof(decimal)
+                || cell.DataType == typeof(float)
+                || cell.DataType == typeof(double)
+                || TypeHelper.IsList(cell.DataType)))
                 cell.Collect = CollectedType.Sum;
             return cell.Collect;
         }
@@ -4467,6 +4470,7 @@ namespace DataWF.Gui
                 if (column.Collect != CollectedType.None)
                 {
                     object value = GetCollectedValue(column, e.Group);
+                    value = column.CellEditor.FormatValue(value);
                     e.Bound = GetCellBound(column, -1, e.RowBound);
 
                     var state = CellDisplayState.Default;
@@ -4477,7 +4481,7 @@ namespace DataWF.Gui
                     if (aggre != null && aggre.Group == e.Group && aggre.Column == column)
                         state = CellDisplayState.Selected;
 
-                    e.Context.DrawCell(style, value, e.Bound, bounds.Cell, state);
+                    e.Context.DrawCell(style, value, e.Bound, GetCellTextBound(e), state);
                 }
             }
             if (listInfo.HeaderVisible)
@@ -4489,11 +4493,11 @@ namespace DataWF.Gui
             }
         }
 
-        public object GetCollectedValue(LayoutColumn col, LayoutGroup listGroup)
+        public decimal GetCollectedValue(LayoutColumn col, LayoutGroup listGroup)
         {
             if (col.Collect == CollectedType.None)
-                return null;
-            object temp = null;
+                return 0M;
+            decimal temp = 0M;
             int f = 0;
             int l = listSource.Count - 1;
             if (listGroup != null)
@@ -4512,52 +4516,34 @@ namespace DataWF.Gui
             for (int i = f; i <= l; i++)
             {
                 object o = ReadValue(i, col);
-                if (o != null && o != DBNull.Value)
-                    if (o is int)
-                    {
-                        if (temp == null)
-                            temp = (int)0;
-                        temp = (int)temp + (int)o;
-                    }
-                    else if (o is decimal)
-                    {
-                        if (temp == null)
-                            temp = 0M;
-                        if (col.Collect == CollectedType.Sum || col.Collect == CollectedType.Avg)
-                            temp = (decimal)temp + (decimal)o;
-                        else if (col.Collect == CollectedType.Max)
-                            temp = (decimal)temp < (decimal)o ? o : temp;
-                        else if (col.Collect == CollectedType.Min)
-                            temp = (decimal)temp > (decimal)o ? o : temp;
-                    }
-                    else if (o is double)
-                    {
-                        if (temp == null)
-                            temp = 0D;
-                        if (col.Collect == CollectedType.Sum || col.Collect == CollectedType.Avg)
-                            temp = (double)temp + (double)o;
-                        else if (col.Collect == CollectedType.Max)
-                            temp = (double)temp < (double)o ? o : temp;
-                        else if (col.Collect == CollectedType.Min)
-                            temp = (double)temp > (double)o ? o : temp;
-                    }
-                    else if (o is IList)
-                    {
-                        IList list = (IList)o;
-                        if (temp == null)
-                            temp = 0L;
-                        if (col.Collect == CollectedType.Sum || col.Collect == CollectedType.Avg)
-                            temp = (long)temp + list.Count;
-                        else if (col.Collect == CollectedType.Max)
-                            temp = (long)temp < list.Count ? list.Count : temp;
-                        else if (col.Collect == CollectedType.Min)
-                            temp = (long)temp > list.Count ? list.Count : temp;
-
-                    }
+                if (o == null && o == DBNull.Value)
+                    continue;
+                var mValue = 0M;
+                if (o is int intValue)
+                {
+                    mValue = intValue;
+                }
+                else if (o is decimal dmValue)
+                {
+                    mValue = dmValue;
+                }
+                else if (o is double dValue)
+                {
+                    mValue = (decimal)dValue;
+                }
+                else if (o is IList list)
+                {
+                    mValue = list.Count;
+                }
+                if (col.Collect == CollectedType.Sum || col.Collect == CollectedType.Avg)
+                    temp = temp + mValue;
+                else if (col.Collect == CollectedType.Max)
+                    temp = temp < mValue ? mValue : temp;
+                else if (col.Collect == CollectedType.Min)
+                    temp = temp > mValue ? mValue : temp;
             }
-            if (col.Collect == CollectedType.Avg && temp is decimal)
-                temp = (decimal)temp / (decimal)((l - f) + 1);
-            temp = temp == null ? null : temp.ToString();
+            if (col.Collect == CollectedType.Avg && temp > 0)
+                temp = temp / (decimal)((l - f) + 1);
             if (listGroup != null)
                 listGroup.CollectedCache[col] = temp;
             else
