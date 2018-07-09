@@ -661,7 +661,7 @@ namespace DataWF.Gui
                 case Key.Down:
                 case Key.PageUp:
                 case Key.PageDown:
-                    if (editor.Sensitive)
+                    if (editor.Sensitive || ListSource?.Count == 0)
                         return;
                     if (e.Key == Key.Up)
                     {
@@ -678,13 +678,16 @@ namespace DataWF.Gui
                     if (column == null)
                     {
                         column = bounds.VisibleColumns.Count == 0 ? null : bounds.VisibleColumns[0];
+                        if (column == null)
+                            return;
                     }
                     var item = selection.HoverRow != null && e.Modifiers == ModifierKeys.Control
-                                            ? selection.HoverRow.Item
-                                            : selection.CurrentRow.Item;
+                                            ? selection.HoverRow?.Item
+                                            : selection.CurrentRow?.Item;
+
                     var itemIndex = selection.HoverRow != null && e.Modifiers == ModifierKeys.Control
-                                            ? selection.HoverRow.Index
-                                            : selection.CurrentRow.Index;
+                                            ? selection.HoverRow?.Index ?? -1
+                                            : selection.CurrentRow?.Index ?? -1;
                     if (column.Name == nameof(object.ToString)
                         && TreeMode
                         && item is IGroup group
@@ -1855,7 +1858,6 @@ namespace DataWF.Gui
 
         public virtual void SetPositionText()
         {
-            OnPropertyChanged(nameof(SelectedItem));
             if (listSource != null && PositionChanged != null)
             {
                 PositionChanged(this, new NotifyProperty(string.Format("{0}/{1}", selection.CurrentRow?.Index, listSource.Count)));
@@ -3895,6 +3897,10 @@ namespace DataWF.Gui
                     {
                         InvalidateRow(item.Index);
                     }
+                    if (e.Type != LayoutSelectionChange.Hover)
+                    {
+                        OnPropertyChanged(nameof(SelectedItem));
+                    }
                 }
                 else if (e.Mode == LayoutSelectionMode.Column)
                     InvalidateColumn((LayoutColumn)e.Value);
@@ -5037,6 +5043,11 @@ namespace DataWF.Gui
                 }
             }
             binder?.Bind(data, this);
+        }
+
+        public void Unbind()
+        {
+            binder?.Unbind();
         }
     }
 
