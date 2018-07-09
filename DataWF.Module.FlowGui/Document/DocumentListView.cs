@@ -21,16 +21,13 @@ namespace DataWF.Module.FlowGui
         private string label;
         private DocumentFilter filter;
         private DocumentList documents;
-        protected DocumentFilterView filterView;
         private TableLoader loader;
         protected ToolItem toolLoad;
         protected Toolsbar bar;
         protected ToolLabel toolCount;
         protected ToolItem toolCreate;
-        protected ToolItem toolCreateFrom;
         protected ToolItem toolCopy;
         protected ToolItem toolSend;
-        protected ToolItem toolFilter;
         protected ToolItem toolPreview;
         protected ToolTableLoader toolProgress;
         protected ToolDropDown toolParam;
@@ -39,12 +36,12 @@ namespace DataWF.Module.FlowGui
         protected ToolItem filterCurrent;
         protected ToolItem filterClear;
 
+        protected ToolFieldEditor filterToolView;
         protected ToolFieldEditor filterCustomer;
         protected ToolFieldEditor filterNumber;
         protected ToolFieldEditor filterTitle;
         protected ToolFieldEditor filterDate;
         private DocumentLayoutList list;
-        private HBox hSplit;
         private DocumentEditor editor;
 
         public DocumentListView()
@@ -60,6 +57,7 @@ namespace DataWF.Module.FlowGui
                 Filter.IsCurrent = filterCurrent.Checked;
             })
             { Name = "TODO", DisplayStyle = ToolItemDisplayStyle.Text, CheckOnClick = true };
+            filterToolView = new ToolFieldEditor { FillWidth = true, Name = nameof(Filter), DisplayStyle = ToolItemDisplayStyle.Text };
             filterCustomer = new ToolFieldEditor { FillWidth = true, Name = nameof(DocumentFilter.Customer), DisplayStyle = ToolItemDisplayStyle.Text };
             filterNumber = new ToolFieldEditor { FillWidth = true, Name = nameof(DocumentFilter.Number), DisplayStyle = ToolItemDisplayStyle.Text };
             filterTitle = new ToolFieldEditor { FillWidth = true, Name = nameof(DocumentFilter.Title), DisplayStyle = ToolItemDisplayStyle.Text };
@@ -68,6 +66,7 @@ namespace DataWF.Module.FlowGui
             var filterGroup = new ToolItem { Row = 1, Name = "FilterBar" };
             filterGroup.AddRange(new ToolItem[]
             {
+                filterToolView,
                 filterCustomer,
                 filterNumber,
                 filterTitle,
@@ -82,25 +81,21 @@ namespace DataWF.Module.FlowGui
             loader = new TableLoader();
 
             toolCreate = new ToolItem(ToolCreateClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Create", GlyphColor = Colors.Green, Glyph = GlyphType.PlusCircle };
-            toolCreateFrom = new ToolItem(ToolCreateFromClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "CreateFrom", GlyphColor = Colors.Green, Glyph = GlyphType.PlusCircle };
             toolCopy = new ToolItem(ToolCopyClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Copy", Glyph = GlyphType.CopyAlias };
             toolLoad = new ToolItem(ToolLoadClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Load", Glyph = GlyphType.Download };
             toolSend = new ToolItem(ToolAcceptClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Send/Accept", Glyph = GlyphType.CheckCircle };
 
             toolCount = new ToolLabel { Text = "0" };
             toolPreview = new ToolItem(ToolPreviewClick) { CheckOnClick = true, Checked = true, Name = "Preview", Glyph = GlyphType.List };
-            toolFilter = new ToolItem(ToolFilterClick) { Name = "Filter", CheckOnClick = true, Glyph = GlyphType.Filter };
             toolParam = new ToolDropDown(ToolParamClick) { Name = "Parameters", Glyph = GlyphType.Spinner };
             toolProgress = new ToolTableLoader { Loader = loader };
 
             bar = new Toolsbar(
                 toolCreate,
-                toolCreateFrom,
                 toolCopy,
                 toolLoad,
                 new ToolSeparator { FillWidth = true },
                 toolCount,
-                toolFilter,
                 toolPreview,
                 toolProgress,
                 filterGroup)
@@ -116,17 +111,12 @@ namespace DataWF.Module.FlowGui
             list.PositionChanged += ListOnPositionChanged;
             list.SelectionChanged += ListOnSelectionChanged;
 
-            filterView = new DocumentFilterView() { Visible = false };
-
-            hSplit = new HBox();
-            hSplit.PackStart(filterView, false, false);
-            hSplit.PackStart(list, true, true);
             //hSplit.Panel1.Resize = false;
             //hSplit.Panel2.Resize = true;
             //hSplit.Panel2.Content = vSplit;
 
             PackStart(bar, false, false);
-            PackStart(hSplit, true, true);
+            PackStart(list, true, true);
             Name = "DocumentListView";
             Filter = new DocumentFilter();
             Documents = new DocumentList();
@@ -144,9 +134,9 @@ namespace DataWF.Module.FlowGui
         public override void Localize()
         {
             base.Localize();
-            if (filterView.Parent == null)
+            if (FilterView?.Parent == null)
             {
-                filterView.Localize();
+                FilterView?.Localize();
             }
             GuiService.Localize(this, nameof(DocumentListView), "Documents List");
             //CheckDocumentTemplates();
@@ -154,7 +144,7 @@ namespace DataWF.Module.FlowGui
 
         public DocumentFilterView FilterView
         {
-            get { return filterView; }
+            get { return ((CellEditorDocumentFilter)filterToolView.Editor).DocumentFilter; }
         }
 
         public DocumentFilter Filter
@@ -169,8 +159,8 @@ namespace DataWF.Module.FlowGui
                         filter.PropertyChanged -= OnFilterPropertyChanged;
                     }
                     filter = value;
-                    filterView.Filter = value;
 
+                    filterToolView.Field.BindData(this, nameof(Filter));
                     filterCustomer.Field.BindData(filter, nameof(DocumentFilter.Customer));
                     filterNumber.Field.BindData(filter, nameof(DocumentFilter.Number));
                     filterTitle.Field.BindData(filter, nameof(DocumentFilter.Title));
@@ -240,17 +230,6 @@ namespace DataWF.Module.FlowGui
             get { return list.SelectedItem as Document; }
         }
 
-        public bool FilterVisible
-        {
-            get { return toolFilter.Checked; }
-            set
-            {
-                filterView.Visible = toolFilter.Checked = value;
-                //hSplit.Panel1.Content = value ? filterView : null;
-                //QueueForReallocate();
-            }
-        }
-
         public virtual Template FilterTemplate
         {
             get { return filter?.Template; }
@@ -266,7 +245,6 @@ namespace DataWF.Module.FlowGui
                     Documents.UpdateFilter();
                 }
 
-                toolCreate.Sensitive = FilterTemplate != null && !FilterTemplate.IsCompaund && FilterTemplate.Access.Create;
                 filterWork.Checked = filter?.IsWork == CheckedState.Checked;
                 filterCurrent.Checked = filter?.IsCurrent ?? false;
 
@@ -304,7 +282,8 @@ namespace DataWF.Module.FlowGui
 
         private void ListOnSelectionChanged(object sender, LayoutSelectionEventArgs e)
         {
-            if (e.Type == LayoutSelectionChange.Remove)
+            if (e.Type == LayoutSelectionChange.Remove
+                || e.Type == LayoutSelectionChange.Reset)
                 return;
             Preview();
         }
@@ -367,45 +346,25 @@ namespace DataWF.Module.FlowGui
             Filter?.Clear();
         }
 
-        private void ToolFilterClick(object sender, EventArgs e)
-        {
-            FilterVisible = toolFilter.Checked;
-        }
-
         private async void ToolLoadClick(object sender, EventArgs e)
         {
             await loader.LoadAsync();
         }
 
-        protected virtual void ToolCreateFromClick(object sender, EventArgs e)
+        protected async virtual void ToolCreateClick(object sender, EventArgs e)
         {
-            var tree = new FlowTree { FlowKeys = FlowTreeKeys.Template };
-            var toolCreateWindow = new ToolWindow
+            FilterView.UnbindTemplates();
+            var command = await filterToolView.Field.ShowDropDownAsync();
+            if (command == Command.Ok)
             {
-                Target = tree,
-                Title = Locale.Get(nameof(DocumentListView), "Create From Selection")
-            };
-            toolCreateWindow.ButtonAcceptClick += (s, a) =>
-            {
-                var template = tree.SelectedDBItem as Template;
+                var template = FilterView.Templates.SelectedDBItem as Template;
 
-                if (template == null || template.IsCompaund)
-                    return;
-                ViewDocumentsAsync(CreateDocuments(template, Filter.Referencing, List.Selection.GetItems<Document>()));
-            };
-            toolCreateWindow.Show(bar, toolCreateFrom.Bound.BottomLeft);
-        }
-
-        protected virtual void ToolCreateClick(object sender, EventArgs e)
-        {
-            var template = FilterTemplate;
-            if (template != null)
-            {
-                foreach (Template item in FilterView.Templates.SelectedDBItems)
+                if (template != null && !template.IsCompaund)
                 {
-                    ViewDocumentsAsync(CreateDocuments(item, Filter.Referencing));
+                    ViewDocumentsAsync(CreateDocuments(template, Filter.Referencing, List.Selection.GetItems<Document>()));
                 }
-            }
+            };
+            FilterView.BindTemplates();
         }
 
         protected void ToolCopyClick(object sender, EventArgs e)

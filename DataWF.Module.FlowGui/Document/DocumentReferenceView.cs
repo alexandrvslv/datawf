@@ -27,7 +27,6 @@ namespace DataWF.Module.FlowGui
             filterCustomer.Visible = false;
 
             AutoLoad = false;
-            FilterVisible = true;
             LabelText = null;
 
             Bar.Items.Add(toolAttach);

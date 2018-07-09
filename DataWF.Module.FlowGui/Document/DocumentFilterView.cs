@@ -132,11 +132,21 @@ namespace DataWF.Module.FlowGui
                 {
                     filter = value;
                     //fields.FieldSource = value;
-                    templates.Bind(filter, nameof(DocumentFilter.Template), nameof(UserTree.SelectedDBItem));
+                    BindTemplates();
                     works.Bind(filter, nameof(DocumentFilter.Stage), nameof(UserTree.SelectedDBItem));
                     users.Bind(filter, nameof(DocumentFilter.Staff), nameof(UserTree.SelectedDBItem));
                 }
             }
+        }
+
+        public void BindTemplates()
+        {
+            templates.Bind(filter, nameof(DocumentFilter.Template), nameof(UserTree.SelectedDBItem));
+        }
+
+        public void UnbindTemplates()
+        {
+            templates.Unbind();
         }
 
         public FlowTree Templates { get => templates; }

@@ -30,6 +30,10 @@ namespace DataWF.Module.FlowGui
             {
                 return new CellEditorFlowTree();
             };
+            GuiEnvironment.CellEditorFabric[typeof(DocumentFilter)] = (Cell) =>
+            {
+                return new CellEditorDocumentFilter();
+            };
         }
     }
 }

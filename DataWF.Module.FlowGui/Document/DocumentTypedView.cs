@@ -1,4 +1,5 @@
-﻿using DataWF.Common;
+﻿using System;
+using DataWF.Common;
 using DataWF.Gui;
 using DataWF.Module.Flow;
 
@@ -9,10 +10,9 @@ namespace DataWF.Module.FlowGui
         public DocumentTypedView()
         {
             DockType = Gui.DockType.Top;
-            toolCreateFrom.Visible = false;
             FilterView.Box.Items["Document Type"].Visible = false;
             Filter.IsWork = CheckedState.Checked;
-            FilterVisible = false;
+            filterToolView.Visible = false;
             HideOnClose = true;
         }
 
@@ -37,6 +37,14 @@ namespace DataWF.Module.FlowGui
             var dock = this.GetParent<DockBox>();
             dock.HideExcept(dock.GetPage(editor)?.Panel.DockItem);
             return editor;
+        }
+
+        protected override void ToolCreateClick(object sender, EventArgs e)
+        {
+            if (FilterTemplate != null)
+            {
+                ViewDocumentsAsync(CreateDocuments(FilterTemplate, Filter.Referencing));
+            }
         }
 
         public override void Serialize(ISerializeWriter writer)

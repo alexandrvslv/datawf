@@ -60,7 +60,6 @@ namespace DataWF.Module.FlowGui
             Filter.IsCurrent = true;
             Name = "Documents";
             Worker = this;
-            FilterVisible = true;
 
             //Task.Run(() =>
             //{
@@ -126,11 +125,11 @@ namespace DataWF.Module.FlowGui
 
                 if (di != 0)
                 {
-                    IncrementNode(filterView.Templates.Find(document.Template), di);
+                    IncrementNode(FilterView.Templates.Find(document.Template), di);
                     if (work.User != null)
-                        IncrementNode(filterView.Users.Find(work.User), di);
+                        IncrementNode(FilterView.Users.Find(work.User), di);
                     if (work.Stage != null)
-                        IncrementNode(filterView.Works.Find(work.Stage), di);
+                        IncrementNode(FilterView.Works.Find(work.Stage), di);
                 }
             }
         }
