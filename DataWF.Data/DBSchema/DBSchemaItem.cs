@@ -33,7 +33,7 @@ namespace DataWF.Data
         protected DBSchema schema;
         protected LocaleItem litem;
         protected AccessValue access;
-        protected INotifyListChanged container;
+        protected INotifyListPropertyChanged container;
         private bool isSynchronized;
 
         public DBSchemaItem()
@@ -52,7 +52,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false), XmlIgnore, JsonIgnore]
-        public INotifyListChanged Container
+        public INotifyListPropertyChanged Container
         {
             get { return container; }
             set { container = value; }

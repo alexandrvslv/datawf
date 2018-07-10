@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Reflection;
 using System.Collections;
 using System.ComponentModel;
+using System.Collections.Specialized;
 
 namespace DataWF.Common
 {
@@ -13,7 +15,7 @@ namespace DataWF.Common
 
         public ListTreeView()
         {
-            groupParam = QueryParameter.CreateTreeFilter(typeof(T));
+            groupParam = QueryParameter.CreateTreeFilter<T>();
             query.Parameters.Add(groupParam);
         }
 
@@ -25,7 +27,7 @@ namespace DataWF.Common
 
     public class SelectableListView<T> : SelectableList<T>, IFilterable
     {
-        protected ListChangedEventHandler _listChangedHandler;
+        protected NotifyCollectionChangedEventHandler _listChangedHandler;
         protected List<InvokerComparer> _comparers;
         protected Query query = new Query();
 
@@ -35,7 +37,7 @@ namespace DataWF.Common
         public SelectableListView()
         {
             propertyHandler = null;
-            _listChangedHandler = new ListChangedEventHandler(SourceListChanged);
+            _listChangedHandler = new NotifyCollectionChangedEventHandler(SourceListChanged);
         }
 
         public SelectableListView(IList baseCollection)
@@ -48,7 +50,7 @@ namespace DataWF.Common
         {
             if (ssourceList != null)
             {
-                ssourceList.ListChanged -= _listChangedHandler;
+                ssourceList.CollectionChanged -= _listChangedHandler;
             }
 
             sourceList = baseCollection;
@@ -56,7 +58,7 @@ namespace DataWF.Common
 
             if (ssourceList != null)
             {
-                ssourceList.ListChanged += _listChangedHandler;
+                ssourceList.CollectionChanged += _listChangedHandler;
             }
             Update((IEnumerable<T>)sourceList);
         }
@@ -64,7 +66,7 @@ namespace DataWF.Common
         ~SelectableListView()
         {
             if (ssourceList != null)
-                ssourceList.ListChanged -= _listChangedHandler;
+                ssourceList.CollectionChanged -= _listChangedHandler;
         }
 
         public override object NewItem()
@@ -90,7 +92,7 @@ namespace DataWF.Common
             if (comparer != null)
                 ListHelper.QuickSort<T>(items, comparer);
 
-            OnListChanged(ListChangedType.Reset, -1);
+            OnListChanged(NotifyCollectionChangedAction.Reset);
         }
 
         public virtual void UpdateFilter()
@@ -105,12 +107,28 @@ namespace DataWF.Common
             }
         }
 
-        protected virtual void SourceListChanged(object sender, ListChangedEventArgs e)
+        protected virtual void SourceListChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            T item = e is ListPropertyChangedEventArgs ? (T)((ListPropertyChangedEventArgs)e).Sender : e.NewIndex != -1 ? (T)sourceList[e.NewIndex] : default(T);
-            switch (e.ListChangedType)
+            T item = default(T);
+            if (e is NotifyListPropertyChangedEventArgs property)
             {
-                case ListChangedType.ItemChanged:
+                item = (T)property.Item;
+            }
+            else
+            {
+                item = e.NewItems != null ? e.NewItems.Cast<T>().FirstOrDefault() : e.OldItems != null ? e.OldItems.Cast<T>().FirstOrDefault() : default(T);
+                property = null;
+            }
+
+            switch (e.Action)
+            {
+                case NotifyCollectionChangedAction.Move:
+                case NotifyCollectionChangedAction.Reset:
+                    if (item == null)
+                    {
+                        UpdateFilter();
+                        return;
+                    }
                     int index = IndexOf(item);
                     bool checkItem = ListHelper.CheckItem(item, query);
                     if (index >= 0 && !checkItem)
@@ -132,24 +150,26 @@ namespace DataWF.Common
                                     if (newindex > items.Count)
                                         newindex = items.Count;
                                     items.Insert(newindex, item);
-                                    OnListChanged(ListChangedType.ItemChanged, index, -1, item);
+                                    OnListChanged(NotifyCollectionChangedAction.Move, item, newindex, property?.Property, index);
                                 }
-                                OnListChanged(ListChangedType.ItemChanged, newindex, -1, item);
+                                OnListChanged(NotifyCollectionChangedAction.Reset, item, newindex, property?.Property);
                             }
                             else
-                                OnListChanged(ListChangedType.ItemChanged, index, -1, item);
+                                OnListChanged(NotifyCollectionChangedAction.Reset, item, index, property?.Property);
                         }
                     }
                     break;
-                case ListChangedType.ItemDeleted:
+                case NotifyCollectionChangedAction.Remove:
                     Remove(item);
                     break;
-                case ListChangedType.ItemAdded:
+                case NotifyCollectionChangedAction.Add:
+                case NotifyCollectionChangedAction.Replace:
+                    if (e.Action == NotifyCollectionChangedAction.Replace)
+                    {
+                        Remove(e.OldItems[0]);
+                    }
                     if (ListHelper.CheckItem(item, query))
                         base.Add(item);
-                    break;
-                case ListChangedType.Reset:
-                    UpdateFilter();
                     break;
             }
         }

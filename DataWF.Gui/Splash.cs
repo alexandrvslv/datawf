@@ -6,6 +6,8 @@ using DataWF.Common;
 using Xwt;
 using Xwt.Drawing;
 using System.Threading.Tasks;
+using System.Collections.Specialized;
+using System.Linq;
 
 namespace DataWF.Gui
 {
@@ -48,7 +50,7 @@ namespace DataWF.Gui
             //Icon = Image.FromResource(GetType(), "datawf.png");
             Size = new Size(340, 220);
 
-            Helper.Logs.ListChanged += OnLogListChanged;
+            Helper.Logs.CollectionChanged += OnLogListChanged;
 
             Task.Run(() => LoadConfiguration());
         }
@@ -86,7 +88,7 @@ namespace DataWF.Gui
             }
             else
             {
-                Helper.Logs.ListChanged -= OnLogListChanged;
+                Helper.Logs.CollectionChanged -= OnLogListChanged;
                 labelEvent.Text = "Initialization Complete!";
                 if (DialogResult == null)
                 {
@@ -100,7 +102,7 @@ namespace DataWF.Gui
             }
         }
 
-        private void OnLogListChanged(object sender, ListChangedEventArgs e)
+        private void OnLogListChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             if (GuiService.InvokeRequired)
             {
@@ -108,9 +110,9 @@ namespace DataWF.Gui
             }
             else
             {
-                if (e.ListChangedType == ListChangedType.ItemAdded)
+                if (e.Action == NotifyCollectionChangedAction.Add)
                 {
-                    var log = Helper.Logs[e.NewIndex];
+                    var log = e.NewItems?.Cast<StateInfo>().FirstOrDefault();
                     if (log.Type != StatusType.Warning)
                     {
                         labelEvent.Text = $"{log.Module} {log.Message}\n{log.Description}";

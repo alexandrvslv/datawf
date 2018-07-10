@@ -228,6 +228,12 @@ namespace DataWF.Common
             }
         }
 
+        public void Refresh(T item)
+        {
+            Remove(item);
+            Add(item);
+        }
+
         public void Add(object item)
         {
             Add((T)item);

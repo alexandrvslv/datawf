@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using DataWF.Module.Common;
 using System.Runtime.Serialization;
+using System.Collections.Specialized;
 
 namespace DataWF.Module.Flow
 {
@@ -83,10 +84,10 @@ namespace DataWF.Module.Flow
             return index;
         }
 
-        public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, object item = null, string property = null)
+        public override void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            base.OnListChanged(type, newIndex, oldIndex, item, property);
-            if (document != null && (property == null || property == DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.IsComplete)).Name))
+            base.OnPropertyChanged(sender, e);
+            if (document != null && (e.PropertyName == null || e.PropertyName == DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.IsComplete)).Name))
                 document.RefreshCache();
         }
     }

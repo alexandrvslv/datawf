@@ -292,7 +292,7 @@ namespace DataWF.Gui
         public Color GlyphColor { get; set; }
 
         [XmlIgnore]
-        public INotifyListChanged Container { get; set; }
+        public INotifyListPropertyChanged Container { get; set; }
 
         #endregion
 

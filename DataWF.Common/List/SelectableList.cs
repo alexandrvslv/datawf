@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
@@ -37,6 +38,10 @@ namespace DataWF.Common
             this.comparer = comparer;
             AddRangeInternal(items);
         }
+
+        public event NotifyCollectionChangedEventHandler CollectionChanged;
+        public event PropertyChangedEventHandler PropertyChanged;
+
 
         [XmlIgnore, Browsable(false)]
         public ListIndexes<T> Indexes
@@ -189,36 +194,42 @@ namespace DataWF.Common
             get { return items == null; }
         }
 
-        public virtual void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, object sender = null, string property = null)
+        protected virtual void OnPropertyChanged(string property)
         {
-            ListChanged?.Invoke(this, new ListPropertyChangedEventArgs(type, newIndex, oldIndex) { Property = property, Sender = sender });
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+        }
+
+        public virtual void OnListChanged(NotifyCollectionChangedAction type, object item = null, int index = -1, string property = null, int oldIndex = -1, object oldItem = null)
+        {
+            CollectionChanged?.Invoke(this, NotifyListPropertyChangedEventArgs.Build(type, item, oldItem, index, oldIndex, property));
+            OnPropertyChanged(nameof(SyncRoot));
         }
 
         public virtual void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
+            var item = (T)sender;
             var lindex = indexes.GetIndex(e.PropertyName);
             if (lindex != null)
             {
-                lindex.Remove((T)sender);
-                lindex.Add((T)sender);
+                lindex.Refresh(item);
             }
-            int index = items.IndexOf((T)sender);
+            int index = items.IndexOf(item);
             if (IsSorted)
             {
-                int newindex = GetIndexBySort((T)sender);
+                int newindex = GetIndexBySort(item);
                 if (index != newindex)
                 {
                     if (newindex > index)
                         newindex--;
                     items.RemoveAt(index);
-                    items.Insert(newindex, (T)sender);
-                    OnListChanged(ListChangedType.ItemMoved, newindex, index, sender, e.PropertyName);
+                    items.Insert(newindex, item);
+                    OnListChanged(NotifyCollectionChangedAction.Move, sender, newindex, e.PropertyName, index);
                     return;
                 }
             }
             if (index >= 0)
             {
-                OnListChanged(ListChangedType.ItemChanged, index, -1, sender, e.PropertyName);
+                OnListChanged(NotifyCollectionChangedAction.Reset, sender, index, e.PropertyName);
             }
         }
 
@@ -239,9 +250,9 @@ namespace DataWF.Common
                 for (int i = 0; i < items.Count; i++)
                 {
                     var item = items[i];
-                    if (item is IContainerNotifyPropertyChanged && ((IContainerNotifyPropertyChanged)item).Container == this)
+                    if (item is IContainerNotifyPropertyChanged containered && containered.Container == this)
                     {
-                        ((IContainerNotifyPropertyChanged)item).Container = null;
+                        containered.Container = null;
                     }
                     else
                     {
@@ -258,7 +269,7 @@ namespace DataWF.Common
             if (items.Count > 0)
             {
                 ClearInternal();
-                OnListChanged(ListChangedType.Reset);
+                OnListChanged(NotifyCollectionChangedAction.Reset);
             }
         }
 
@@ -272,14 +283,14 @@ namespace DataWF.Common
 
             if (propertyHandler != null)
             {
-                if (item is IContainerNotifyPropertyChanged)
+                if (item is IContainerNotifyPropertyChanged containered)
                 {
-                    if (((IContainerNotifyPropertyChanged)item).Container == null)
+                    if (containered.Container == null)
                     {
-                        ((IContainerNotifyPropertyChanged)item).Container = this;
+                        containered.Container = this;
                         return;
                     }
-                    if (((IContainerNotifyPropertyChanged)item).Container == this)
+                    if (containered.Container == this)
                     {
                         return;
                     }
@@ -296,7 +307,7 @@ namespace DataWF.Common
         public virtual void Insert(int index, T item)
         {
             InsertInternal(index, item);
-            OnListChanged(ListChangedType.ItemAdded, index, -1, item);
+            OnListChanged(NotifyCollectionChangedAction.Add, item, index);
         }
 
         public virtual int AddInternal(T item)
@@ -334,17 +345,17 @@ namespace DataWF.Common
             int index = AddInternal(item);
             if (index >= 0)
             {
-                OnListChanged(ListChangedType.ItemAdded, index, -1, item);
+                OnListChanged(NotifyCollectionChangedAction.Add, item, index);
             }
         }
 
-        public void RemoveInternal(T item, int index)
+        public virtual void RemoveInternal(T item, int index)
         {
             if (propertyHandler != null)
             {
-                if (item is IContainerNotifyPropertyChanged && ((IContainerNotifyPropertyChanged)item).Container == this)
+                if (item is IContainerNotifyPropertyChanged containered && containered.Container == this)
                 {
-                    ((IContainerNotifyPropertyChanged)item).Container = null;
+                    containered.Container = null;
                 }
                 else
                 {
@@ -358,7 +369,7 @@ namespace DataWF.Common
         public void Remove(T item, int index)
         {
             RemoveInternal(item, index);
-            OnListChanged(ListChangedType.ItemDeleted, -1, index, item);
+            OnListChanged(NotifyCollectionChangedAction.Remove, item, index);
         }
 
         public void Remove(object item)
@@ -454,7 +465,7 @@ namespace DataWF.Common
             if (this.comparer != null && this.comparer.Equals(comparer))
                 return;
             ApplySortInternal(comparer);
-            OnListChanged(ListChangedType.Reset);
+            OnListChanged(NotifyCollectionChangedAction.Reset);
         }
 
         public T Find(Query query)
@@ -472,8 +483,6 @@ namespace DataWF.Common
             return Select(property, comparer, value).FirstOrDefault();
         }
 
-        public event ListChangedEventHandler ListChanged;
-
         public void RemoveSort()
         {
             comparer = null;
@@ -488,7 +497,7 @@ namespace DataWF.Common
         public void Sort()
         {
             SortInternal();
-            OnListChanged(ListChangedType.Reset);
+            OnListChanged(NotifyCollectionChangedAction.Reset);
         }
 
         public void Sort(Comparison<T> comp)
@@ -569,7 +578,7 @@ namespace DataWF.Common
         public void AddRange(IEnumerable<T> list)
         {
             AddRangeInternal(list);
-            OnListChanged(ListChangedType.Reset, -1);
+            OnListChanged(NotifyCollectionChangedAction.Reset);
         }
     }
 }

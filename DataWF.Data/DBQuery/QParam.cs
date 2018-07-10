@@ -27,6 +27,7 @@ using System.Text;
 using System.Linq;
 using System.Xml.Serialization;
 using Newtonsoft.Json;
+using System.Collections.Specialized;
 
 namespace DataWF.Data
 {
@@ -149,12 +150,12 @@ namespace DataWF.Data
                 if (ValueLeft != value)
                 {
                     if (ValueLeft is QQuery)
-                        ((QQuery)ValueLeft).Parameters.ListChanged -= ValueListChanged;
+                        ((QQuery)ValueLeft).Parameters.CollectionChanged -= ValueListChanged;
 
                     values.Insert(0, value);
 
                     if (value is QQuery)
-                        ((QQuery)value).Parameters.ListChanged += ValueListChanged;
+                        ((QQuery)value).Parameters.CollectionChanged += ValueListChanged;
 
                     OnPropertyChanged(nameof(ValueLeft));
                 }
@@ -169,18 +170,18 @@ namespace DataWF.Data
                 if (ValueRight != value)
                 {
                     if (ValueRight is QQuery)
-                        ((QQuery)ValueRight).Parameters.ListChanged -= ValueListChanged;
+                        ((QQuery)ValueRight).Parameters.CollectionChanged -= ValueListChanged;
 
                     values.Insert(1, value);
 
                     if (value is QQuery)
-                        ((QQuery)value).Parameters.ListChanged += ValueListChanged;
+                        ((QQuery)value).Parameters.CollectionChanged += ValueListChanged;
                 }
                 OnPropertyChanged(nameof(ValueRight));
             }
         }
 
-        private void ValueListChanged(object sender, ListChangedEventArgs e)
+        private void ValueListChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             OnPropertyChanged(sender == ValueLeft ? nameof(ValueLeft) : nameof(ValueRight));
         }
@@ -249,13 +250,13 @@ namespace DataWF.Data
                 if (parameters == null)
                 {
                     parameters = new QItemList<QParam>(this);
-                    parameters.ListChanged += ParametersListChanged;
+                    parameters.CollectionChanged += ParametersListChanged;
                 }
                 return parameters;
             }
         }
 
-        public void ParametersListChanged(object sender, ListChangedEventArgs e)
+        public void ParametersListChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             //if (e.ListChangedType == ListChangedType.ItemAdded)
             //{

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Specialized;
 using System.ComponentModel;
 
 namespace DataWF.Common
@@ -24,7 +25,7 @@ namespace DataWF.Common
             }
             item.Count += inc;
             item.Length += size;
-            items.OnListChanged(ListChangedType.Reset);
+            items.OnListChanged(NotifyCollectionChangedAction.Reset);
         }
 
     }

@@ -20,7 +20,6 @@ namespace DataWF.Gui
         private Widget widget;
         private Orientation orientation = Orientation.Horizontal;
         private bool viewClose = true;
-        private bool viewImage = true;
         private Rectangle widgetBounds;
         private TextLayout selectText;
 

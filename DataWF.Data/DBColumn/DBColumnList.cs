@@ -23,6 +23,7 @@ using System.Globalization;
 using System.ComponentModel;
 using DataWF.Common;
 using System.Linq;
+using System.Collections.Specialized;
 
 namespace DataWF.Data
 {
@@ -44,23 +45,23 @@ namespace DataWF.Data
             Indexes.Add(referenceTableInvoker);
         }
 
-        public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, object sender = null, string property = null)
+        protected override void OnPropertyChanged(string property)
         {
-            base.OnListChanged(type, newIndex, oldIndex, sender, property);
+            base.OnPropertyChanged(property);
             if (Table != null && Table.Schema != null)
             {
                 Table.ClearCache();
-                if (newIndex >= 0)
-                {
-                    DBColumn column = (DBColumn)sender;
+            }
+        }
 
-                    if (type == ListChangedType.ItemDeleted && column.Index != null)
-                    {
-                        column.Clear();
-                        column.Index.Dispose();
-                        column.Index = null;
-                    }
-                }
+        public override void RemoveInternal(DBColumn item, int index)
+        {
+            base.RemoveInternal(item, index);
+            if (item.Index != null)
+            {
+                item.Clear();
+                item.Index.Dispose();
+                item.Index = null;
             }
         }
 

@@ -23,6 +23,7 @@ using DataWF.Common;
 using System.Xml.Serialization;
 using System.Text;
 using Newtonsoft.Json;
+using System.Collections.Specialized;
 
 namespace DataWF.Data
 {
@@ -99,20 +100,23 @@ namespace DataWF.Data
             set { BaseTable.IsLoging = value; }
         }
 
-        public void CheckItem(ListChangedType type, DBItem item, string property)
+        public void CheckItem(NotifyCollectionChangedAction type, DBItem item, string property)
         {
             var view = (T)item.GetVirtual(this);
-            if (type == ListChangedType.ItemChanged)
+            if (type == NotifyCollectionChangedAction.Reset)
             {
-                if ((view == null || !view.Attached) && Query.Contains(property) && BaseTable.CheckItem(item, FilterQuery))
-                    Add(view ?? New(item));
+                if (item != null)
+                {
+                    if ((view == null || !view.Attached) && Query.Contains(property) && BaseTable.CheckItem(item, FilterQuery))
+                        Add(view ?? New(item));
+                }
             }
-            else if (type == ListChangedType.ItemAdded)
+            else if (type == NotifyCollectionChangedAction.Add)
             {
                 if ((view == null || !view.Attached) && BaseTable.CheckItem(item, FilterQuery))
                     Add(view ?? New(item));
             }
-            else if (type == ListChangedType.ItemDeleted && view != null)
+            else if (type == NotifyCollectionChangedAction.Remove && view != null)
             {
                 Remove(view);
             }
@@ -157,9 +161,9 @@ namespace DataWF.Data
                 BaseTable.Add(item.Main);
         }
 
-        public override void OnItemChanged(DBItem item, string property, ListChangedType type)
+        public override void OnItemChanged(DBItem item, string property, NotifyCollectionChangedAction type)
         {
-            if (type == ListChangedType.ItemChanged && query.Contains(property))
+            if (type == NotifyCollectionChangedAction.Reset && item != null && query.Contains(property))
             {
                 var r = ((T)item).Main;
                 if (r != null && !BaseTable.CheckItem(r, FilterQuery))

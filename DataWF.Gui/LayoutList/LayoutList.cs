@@ -11,6 +11,7 @@ using Xwt;
 using Xwt.Drawing;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Collections.Specialized;
 
 namespace DataWF.Gui
 {
@@ -78,7 +79,7 @@ namespace DataWF.Gui
         private int gridCols = 1;
         private int gridRows = 1;
         #region Events
-        protected ListChangedEventHandler handleListChanged;
+
         protected PropertyChangedEventHandler handleProperty;
         protected EventHandler handleColumnsBound;
         protected EventHandler _hCacheList;
@@ -174,7 +175,6 @@ namespace DataWF.Gui
             handleCalcHeigh = CalculateHeight;
             handlCalcWidth = CalculateWidth;
             handleColumnsBound = OnColumnsBoundChanged;
-            handleListChanged = OnListChanged;
             handleProperty = OnFieldsPropertyChanged;
 
             cacheDraw.LayoutList = this;
@@ -752,8 +752,7 @@ namespace DataWF.Gui
                         {
                             var aggre = (PSelectionAggregate)selection.CurrentValue;
                             var value = GetCollectedValue(aggre.Column, aggre.Group);
-                            if (value != null)
-                                CopyToClipboard(value.ToString());
+                            CopyToClipboard(value.ToString());
                         }
                         e.Handled = true;
                     }
@@ -2085,10 +2084,14 @@ namespace DataWF.Gui
 
                 if (listSource != null)
                 {
-                    if (listSource is INotifyListChanged)
-                        ((INotifyListChanged)listSource).ListChanged -= handleListChanged;
-                    else if (listSource is IBindingList)
-                        ((IBindingList)listSource).ListChanged -= handleListChanged;
+                    if (listSource is INotifyCollectionChanged notified)
+                    {
+                        notified.CollectionChanged -= OnListChanged;
+                    }
+                    else if (listSource is IBindingList binding)
+                    {
+                        binding.ListChanged -= OnListChanged;
+                    }
                 }
                 OnCellEditEnd(new CancelEventArgs());
 
@@ -2100,10 +2103,15 @@ namespace DataWF.Gui
 
                 if (listSource != null)
                 {
-                    if (listSource is INotifyListChanged)
-                        ((INotifyListChanged)listSource).ListChanged += handleListChanged;
-                    else if (listSource is IBindingList)
-                        ((IBindingList)listSource).ListChanged += handleListChanged;
+                    if (listSource is INotifyCollectionChanged notified)
+                    {
+                        notified.CollectionChanged += OnListChanged;
+                    }
+                    else if (listSource is IBindingList binding)
+                    {
+                        binding.ListChanged += OnListChanged;
+                    }
+
                     var type = TypeHelper.GetItemType(listSource);
                     if (ListType != type)
                         ListType = type;
@@ -3605,13 +3613,13 @@ namespace DataWF.Gui
             {
                 var temp = listSource;
                 listSource = listBackup;
-                if (temp is INotifyListChanged)
+                if (temp is INotifyCollectionChanged notify)
                 {
-                    ((INotifyListChanged)temp).ListChanged -= handleListChanged;
+                    notify.CollectionChanged -= OnListChanged;
                 }
-                if (temp is IDisposable)
+                if (temp is IDisposable disposable)
                 {
-                    ((IDisposable)listBackup).Dispose();
+                    disposable.Dispose();
                 }
                 listBackup = null;
             }
@@ -3622,9 +3630,9 @@ namespace DataWF.Gui
             var type = typeof(SelectableListView<>).MakeGenericType(ListType);
             listBackup = listSource;
             listSource = (IList)EmitInvoker.CreateObject(type, new Type[] { typeof(IList) }, new object[] { listSource }, true);
-            if (listSource is INotifyListChanged)
+            if (listSource is INotifyListPropertyChanged notify)
             {
-                ((INotifyListChanged)listSource).ListChanged += handleListChanged;
+                notify.CollectionChanged += OnListChanged;
             }
             return (IFilterable)listSource;
         }
@@ -4110,7 +4118,7 @@ namespace DataWF.Gui
                 return;
             selection.RemoveBy(value);
             listSource.Remove(value);
-            if (!(listSource is INotifyListChanged)
+            if (!(listSource is INotifyListPropertyChanged)
                 && !(listSource is IBindingList))
                 RefreshBounds(true);
         }
@@ -4120,7 +4128,7 @@ namespace DataWF.Gui
             if (listSource == null)
                 return;
             listSource.Add(value);
-            if (!(listSource is INotifyListChanged)
+            if (!(listSource is INotifyListPropertyChanged)
                 && !(listSource is IBindingList))
                 RefreshBounds(true);
         }
@@ -4703,7 +4711,7 @@ namespace DataWF.Gui
 
         public virtual void ClearFilter()
         {
-            filterView?.ClearFilter();
+            filterView?.ClearFilters();
         }
 
         protected internal virtual void RemoveFilter(LayoutColumn column)

@@ -41,7 +41,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false), XmlIgnore, JsonIgnore]
-        public INotifyListChanged Container { get; set; }
+        public INotifyListPropertyChanged Container { get; set; }
 
 
         [Browsable(false), XmlIgnore, JsonIgnore]

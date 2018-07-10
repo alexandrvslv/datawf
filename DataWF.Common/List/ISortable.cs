@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace DataWF.Common
 {
-    public interface ISortable
+    public interface ISortable : IList
     {
         bool Disposed { get; }
 

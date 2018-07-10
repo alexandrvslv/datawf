@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Collections.Generic;
 using Xwt;
 using Xwt.Drawing;
+using System.Collections.Specialized;
 
 namespace DataWF.Data.Gui
 {
@@ -181,7 +182,7 @@ namespace DataWF.Data.Gui
             get { return (dataKeys & DataTreeKeys.Sequence) == DataTreeKeys.Sequence; }
         }
 
-        public void OnItemsListChanged(object sender, ListPropertyChangedEventArgs arg)
+        public void OnItemsListChanged(object sender, NotifyListPropertyChangedEventArgs arg)
         {
             if ((!ShowTableGroup && sender is DBTableGroupList)
                 || (!ShowTable && sender is DBTableList)
@@ -191,18 +192,18 @@ namespace DataWF.Data.Gui
                 || (!ShowColumnGroup && sender is DBColumnGroupList))
                 return;
 
-            if (arg.ListChangedType == ListChangedType.Reset)
+            if (arg.Action == NotifyCollectionChangedAction.Reset)
             {
                 RefreshData();
                 return;
             }
 
-            if (arg.ListChangedType == ListChangedType.ItemAdded
-                || arg.ListChangedType == ListChangedType.ItemChanged
-                || arg.ListChangedType == ListChangedType.ItemDeleted)
+            if (arg.Action == NotifyCollectionChangedAction.Add
+                || arg.Action == NotifyCollectionChangedAction.Replace
+                || arg.Action == NotifyCollectionChangedAction.Remove)
             {
-                var item = (DBSchemaItem)arg.Sender;
-                if (arg.ListChangedType != ListChangedType.ItemDeleted)
+                var item = (DBSchemaItem)arg.Item;
+                if (arg.Action != NotifyCollectionChangedAction.Remove)
                 {
                     var node = Init(item);
 

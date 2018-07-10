@@ -15,6 +15,11 @@ namespace DataWF.Common
             };
         }
 
+        public static QueryParameter CreateTreeFilter<T>()
+        {
+            return CreateTreeFilter(typeof(T));
+        }
+
         public object Value { get; set; }
 
         public CompareType Comparer { get; set; } = CompareType.Equal;

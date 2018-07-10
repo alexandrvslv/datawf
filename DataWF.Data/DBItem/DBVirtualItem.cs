@@ -19,6 +19,7 @@
 */
 
 using System;
+using System.Collections.Specialized;
 using System.ComponentModel;
 
 namespace DataWF.Data
@@ -127,7 +128,7 @@ namespace DataWF.Data
         private void OnMainPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (Attached)
-                table.OnItemChanged(this, e.PropertyName, ListChangedType.ItemChanged);
+                table.OnItemChanged(this, e.PropertyName, NotifyCollectionChangedAction.Reset);
             // raise events
             //TODO PropertyChanged?.Invoke(this, e);
         }

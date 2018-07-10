@@ -25,6 +25,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Data;
 using System.Linq;
+using System.Collections.Specialized;
 
 namespace DataWF.Data
 {
@@ -170,7 +171,7 @@ namespace DataWF.Data
             set
             {
                 filterQuery = value;
-                filterQuery.Parameters.ListChanged += (s, e) =>
+                filterQuery.Parameters.CollectionChanged += (s, e) =>
                 {
                     CheckFilterQuery();
                 };
@@ -275,85 +276,84 @@ namespace DataWF.Data
 
         public override void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            OnItemChanged((T)sender, e.PropertyName, ListChangedType.ItemChanged);
+            OnItemChanged((T)sender, e.PropertyName, NotifyCollectionChangedAction.Reset);
         }
 
-        public void OnItemChanged(T item, string property, ListChangedType type)
+        public void OnItemChanged(T item, string property, NotifyCollectionChangedAction type)
         {
-            if (type == ListChangedType.Reset)
+            if (type == NotifyCollectionChangedAction.Reset
+                && item == null)
             {
                 UpdateFilter();
+                return;
             }
-            else
+            lock (items)
             {
-                lock (items)
+                int index = -1, newindex = -1;
+                try
                 {
-                    int index = -1, newindex = -1;
-                    try
+                    index = newindex = items.BinarySearch(item, comparer);
+                }
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
+                    return;
+                }
+                if (index < 0)
+                {
+                    if ((keys & DBViewKeys.Static) == DBViewKeys.Static)
                     {
-                        index = newindex = items.BinarySearch(item, comparer);
-                    }
-                    catch (Exception ex)
-                    {
-                        Helper.OnException(ex);
                         return;
                     }
-                    if (index < 0)
-                    {
-                        if ((keys & DBViewKeys.Static) == DBViewKeys.Static)
-                        {
-                            return;
-                        }
-                        newindex = (-index) - 1;
-                        if (newindex > items.Count)
-                            newindex = items.Count;
-                    }
-                    if (index < 0 || !item.Equals(items[index]))
-                    {
-                        index = type == ListChangedType.ItemAdded ? -1 : items.IndexOf(item);// && !exist ? -1 : 
-                    }
+                    newindex = (-index) - 1;
+                    if (newindex > items.Count)
+                        newindex = items.Count;
+                }
+                if (index < 0 || !item.Equals(items[index]))
+                {
+                    index = type == NotifyCollectionChangedAction.Add ? -1 : items.IndexOf(item);// && !exist ? -1 : 
+                }
 
-                    switch (type)
-                    {
-                        case ListChangedType.ItemChanged:
-                            if (index < 0)
+                switch (type)
+                {
+                    case NotifyCollectionChangedAction.Reset:
+                        if (index < 0)
+                        {
+                            if (table.CheckItem(item, query))
+                                Insert(newindex, item);
+                        }
+                        else if (!table.CheckItem(item, query))
+                        {
+                            RemoveAt(index);
+                        }
+                        else
+                        {
+                            if (newindex != index)
                             {
-                                if (table.CheckItem(item, query))
-                                    Insert(newindex, item);
-                            }
-                            else if (!table.CheckItem(item, query))
-                            {
-                                RemoveAt(index);
+                                if (newindex > index)
+                                    newindex--;
+                                items.RemoveAt(index);
+                                items.Insert(newindex, item);
+                                // RaiseListChanged(ListChangedType.ItemMoved, newindex, index);
+                                OnListChanged(type, item, newindex, property);
                             }
                             else
-                            {
-                                if (newindex != index)
-                                {
-                                    if (newindex > index)
-                                        newindex--;
-                                    items.RemoveAt(index);
-                                    items.Insert(newindex, item);
-                                    // RaiseListChanged(ListChangedType.ItemMoved, newindex, index);
-                                    OnListChanged(ListChangedType.ItemChanged, newindex, -1, item, property);
-                                }
-                                else
-                                    OnListChanged(type, index, -1, item, property);
-                            }
-                            break;
-                        case ListChangedType.ItemDeleted:
-                            if (index >= 0)
-                                RemoveAt(index);
-                            break;
-                        case ListChangedType.ItemAdded:
-                            if (index < 0 && table.CheckItem(item, query))
-                                Insert(newindex, item);
-                            break;
-                    }
+                                OnListChanged(type, item, index, property);
+                        }
+                        break;
+                    case NotifyCollectionChangedAction.Remove:
+                        if (index >= 0)
+                            RemoveAt(index);
+                        break;
+                    case NotifyCollectionChangedAction.Add:
+                        if (index < 0 && table.CheckItem(item, query))
+                            Insert(newindex, item);
+                        break;
                 }
             }
         }
 
-        public void OnItemChanged(DBItem item, string property, ListChangedType type)
+        public void OnItemChanged(DBItem item, string property, NotifyCollectionChangedAction type)
         {
             if (item is T)
             {
@@ -383,7 +383,7 @@ namespace DataWF.Data
                 AddRangeInternal(table.Cast<T>());
             }
             SortInternal();
-            OnListChanged(ListChangedType.Reset, -1);
+            OnListChanged(NotifyCollectionChangedAction.Reset);
         }
 
         private void CheckFilterQuery()
@@ -503,13 +503,13 @@ namespace DataWF.Data
         public void Sort(params DBColumn[] p)
         {
             items.Sort(new DBComparerList(p));
-            OnListChanged(ListChangedType.Reset, -1);
+            OnListChanged(NotifyCollectionChangedAction.Reset);
         }
 
         public void Sort(params string[] columns)
         {
             items.Sort(new DBComparerList(table, columns));
-            OnListChanged(ListChangedType.Reset, -1);
+            OnListChanged(NotifyCollectionChangedAction.Reset);
         }
 
         public bool ClearFilter()

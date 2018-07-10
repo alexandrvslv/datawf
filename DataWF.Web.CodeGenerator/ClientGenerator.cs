@@ -6,6 +6,7 @@ using NJsonSchema;
 using NSwag;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -94,7 +95,7 @@ namespace DataWF.Web.CodeGenerator
                            body: SyntaxFactory.Block(GenProviderConstructorBody()));
 
             yield return SyntaxHelper.GenProperty("string", "BaseUrl", true);
-            yield return SyntaxHelper.GenProperty("AuthorizationInfo", "Authorization", true);            
+            yield return SyntaxHelper.GenProperty("AuthorizationInfo", "Authorization", true);
 
             yield return SyntaxFactory.PropertyDeclaration(
                     attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
@@ -429,7 +430,7 @@ namespace DataWF.Web.CodeGenerator
 
         private MemberDeclarationSyntax GenDefinitionClass(JsonSchema4 schema)
         {
-            var baseType = SyntaxFactory.ParseTypeName($"INotifyPropertyChanged");
+            var baseType = SyntaxFactory.ParseTypeName(nameof(IContainerNotifyPropertyChanged));
 
             if (schema.InheritedSchema != null)
             {
@@ -466,9 +467,9 @@ namespace DataWF.Web.CodeGenerator
                     attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
                     modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
                     declaration: SyntaxFactory.VariableDeclaration(
-                        type: SyntaxFactory.ParseTypeName("PropertyChangedEventHandler"),
-                        variables: SyntaxFactory.SeparatedList<VariableDeclaratorSyntax>(new[] { SyntaxFactory.VariableDeclarator("PropertyChanged") })));
-
+                        type: SyntaxFactory.ParseTypeName(nameof(PropertyChangedEventHandler)),
+                        variables: SyntaxFactory.SeparatedList(new[] { SyntaxFactory.VariableDeclarator(nameof(INotifyPropertyChanged.PropertyChanged)) })));
+                yield return SyntaxHelper.GenProperty(nameof(INotifyListPropertyChanged), nameof(IContainerNotifyPropertyChanged.Container), true);
                 yield return SyntaxFactory.MethodDeclaration(
                     attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
                     modifiers: SyntaxFactory.TokenList(
@@ -480,7 +481,9 @@ namespace DataWF.Web.CodeGenerator
                     typeParameterList: null,
                     parameterList: SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(GenPropertyChangedParameter())),
                     constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
-                    body: SyntaxFactory.Block(SyntaxFactory.ParseStatement($"PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));")),
+                    body: SyntaxFactory.Block(new[] {
+                        SyntaxFactory.ParseStatement($"Container?.Invoke(this, new PropertyChangedEventArgs(propertyName));"),
+                        SyntaxFactory.ParseStatement($"PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));") }),
                     semicolonToken: SyntaxFactory.Token(SyntaxKind.SemicolonToken));
             }
         }

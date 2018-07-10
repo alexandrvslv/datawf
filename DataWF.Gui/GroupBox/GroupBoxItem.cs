@@ -70,9 +70,9 @@ namespace DataWF.Gui
             set { groupBox = value; }
         }
 
-        public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, object sender = null, string property = null)
+        protected override void OnPropertyChanged(string property)
         {
-            base.OnListChanged(type, newIndex, oldIndex, sender, property);
+            base.OnPropertyChanged(property);
             GroupBox?.QueueForReallocate();
         }
 
@@ -123,7 +123,8 @@ namespace DataWF.Gui
                 if (Visible != value)
                 {
                     base.Visible = value;
-
+                    if (widget != null)
+                        widget.Visible = Visible && Expand;
                 }
             }
         }
@@ -205,23 +206,22 @@ namespace DataWF.Gui
             return rectExpand;
         }
 
-        protected override void OnPropertyChanged(string property)
-        {
-            switch (property)
-            {
-                case nameof(Visible):
-                    if (widget != null)
-                        widget.Visible = visible && expand;
-                    break;
-                case nameof(Row):
-                case nameof(Col):
-                    if (Map != null)
-                        Map.Sort();
-                    break;
+        //protected override void OnPropertyChanged(string property)
+        //{
+        //    switch (property)
+        //    {
+        //        case nameof(Visible):
 
-            }
-            base.OnPropertyChanged(property);
-        }
+        //            break;
+        //        case nameof(Row):
+        //        case nameof(Col):
+        //            if (Map != null)
+        //                Map.Sort();
+        //            break;
+
+        //    }
+        //    base.OnPropertyChanged(property);
+        //}
 
         public override bool FillHeight
         {

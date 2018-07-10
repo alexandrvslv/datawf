@@ -45,7 +45,7 @@ namespace DataWF.Module.Common
             }
             catch (LdapException ex)
             {
-                // Log exception
+                Helper.OnException(ex);
             }
             return false;
         }

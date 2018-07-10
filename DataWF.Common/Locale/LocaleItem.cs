@@ -70,7 +70,7 @@ namespace DataWF.Common
         public LocaleCategory Category { get { return Container as LocaleCategory; } }
 
         [XmlIgnore, Browsable(false)]
-        public INotifyListChanged Container { get; set; }
+        public INotifyListPropertyChanged Container { get; set; }
 
         public void Merge(LocaleItem item)
         {
@@ -82,11 +82,9 @@ namespace DataWF.Common
             return name;
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private void OnPropertyChanged(string property)
+        protected override void OnPropertyChanged(string property)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+            base.OnPropertyChanged(property);
             Container?.OnPropertyChanged(this, new PropertyChangedEventArgs(property));
         }
 

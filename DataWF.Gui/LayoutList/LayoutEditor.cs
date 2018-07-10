@@ -260,8 +260,8 @@ namespace DataWF.Gui
             size.Height = 20;
             size.Width += DropDownVisible ? w : 0;
             size.Width += DropDownExVisible ? w : 0;
-            if (widget != null)
-                size.Width += widget.Surface.GetPreferredSize(widthConstraint, heightConstraint).Width;
+            //if (widget != null)
+            //    size.Width += widget.Surface.GetPreferredSize(widthConstraint, heightConstraint).Width;
             return size;
         }
 

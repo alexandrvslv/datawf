@@ -23,6 +23,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Globalization;
@@ -985,7 +986,7 @@ namespace DataWF.Data
                 RemoveTag();
 
             if (Attached)
-                table.OnItemChanged(this, property, ListChangedType.ItemChanged);
+                table.OnItemChanged(this, property, NotifyCollectionChangedAction.Reset);
             // raise events
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(column?.Property ?? property));
         }

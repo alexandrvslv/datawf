@@ -7,6 +7,7 @@ using System.ComponentModel;
 using Xwt.Drawing;
 using System.Threading;
 using Xwt;
+using System.Collections.Specialized;
 
 namespace DataWF.Data.Gui
 {
@@ -206,7 +207,7 @@ namespace DataWF.Data.Gui
                 rows.Add(change);
             }
             //wait.Set();
-            rows.OnListChanged(ListChangedType.Reset, -1);
+            rows.OnListChanged(NotifyCollectionChangedAction.Reset);
         }
 
         private void ToolRefreshClick(object sender, EventArgs e)

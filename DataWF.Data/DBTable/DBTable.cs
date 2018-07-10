@@ -34,6 +34,7 @@ using System.IO;
 using System.Globalization;
 using System.Diagnostics;
 using Newtonsoft.Json;
+using System.Collections.Specialized;
 
 namespace DataWF.Data
 {
@@ -522,7 +523,7 @@ namespace DataWF.Data
 
         public abstract void CopyTo(DBItem[] array, int arrayIndex);
 
-        public abstract void OnItemChanged(DBItem item, string property, ListChangedType type);
+        public abstract void OnItemChanged(DBItem item, string property, NotifyCollectionChangedAction type);
 
         public abstract void Trunc();
 

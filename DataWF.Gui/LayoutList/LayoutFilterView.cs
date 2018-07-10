@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using DataWF.Common;
@@ -87,7 +88,7 @@ namespace DataWF.Gui
                 //}
             };
             ListSource = new LayoutFilterList(list);
-            Filters.ListChanged += (sender, e) => { List.OnFilterChange(); };
+            Filters.CollectionChanged += (sender, e) => { List.OnFilterChange(); };
         }
 
         public LayoutFilterList Filters { get { return (LayoutFilterList)ListSource; } }
@@ -123,10 +124,10 @@ namespace DataWF.Gui
             var toremove = Filters.Select((nameof(LayoutFilter)), CompareType.Equal, column.Name).ToList();
             foreach (var item in toremove)
                 Filters.RemoveInternal(item, Filters.IndexOf(item));
-            Filters.OnListChanged(ListChangedType.Reset);
+            Filters.OnListChanged(NotifyCollectionChangedAction.Reset);
         }
 
-        internal void ClearFilter()
+        public void ClearFilters()
         {
             Filters.Clear();
         }

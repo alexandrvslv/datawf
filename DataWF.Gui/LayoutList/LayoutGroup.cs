@@ -115,7 +115,7 @@ namespace DataWF.Gui
         }
 
         [XmlIgnore]
-        public INotifyListChanged Container { get; set; }
+        public INotifyListPropertyChanged Container { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
 

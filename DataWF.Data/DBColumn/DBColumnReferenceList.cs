@@ -43,7 +43,7 @@ namespace DataWF.Data
             return Select(nameof(DBColumnReference.ColumnName), CompareType.Equal, column).Any();
         }
 
-        public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, object item = null, string property = null)
+        protected override void OnPropertyChanged(string property)
         {
             Names = string.Empty;
             foreach (var element in items)
@@ -52,7 +52,7 @@ namespace DataWF.Data
                 if (!IsLast(element))
                     Names += ", ";
             }
-            base.OnListChanged(type, newIndex, oldIndex, item, property);
+            base.OnPropertyChanged(property);
         }
     }
 }

@@ -27,6 +27,7 @@ using System.Text;
 using System.Collections;
 using System.Globalization;
 using System.Linq;
+using System.Collections.Specialized;
 
 namespace DataWF.Data
 {
@@ -72,7 +73,7 @@ namespace DataWF.Data
         {
             tables = new QItemList<QTable>(this);
             parameters = new QParamList(this);
-            parameters.ListChanged += OnParametersListChanged;
+            parameters.CollectionChanged += OnParametersListChanged;
             columns = new QItemList<QItem>(this);
             orders = new QItemList<QOrder>(this);
             groups = new QItemList<QColumn>(this);
@@ -1065,7 +1066,7 @@ namespace DataWF.Data
             get
             {
                 if (allParameters == null)
-                    OnParametersListChanged(this, new ListChangedEventArgs(ListChangedType.Reset, -1));
+                    OnParametersListChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
                 return allParameters;
             }
         }
@@ -1101,7 +1102,7 @@ namespace DataWF.Data
                 }
         }
 
-        public void OnParametersListChanged(object sender, ListChangedEventArgs e)
+        public void OnParametersListChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             //var pe = (ListPropertyChangedEventArgs)e;
             //if (e.ListChangedType == ListChangedType.ItemAdded)
@@ -1112,7 +1113,7 @@ namespace DataWF.Data
             //}
             if (allParameters == null)
                 allParameters = new SelectableList<QParam>();
-            if (e.ListChangedType == ListChangedType.Reset || e.ListChangedType == ListChangedType.ItemDeleted)
+            if (e.Action == NotifyCollectionChangedAction.Reset || e.Action == NotifyCollectionChangedAction.Remove)
             {
                 refmode = false;
                 allParameters.ClearInternal();
@@ -1121,7 +1122,7 @@ namespace DataWF.Data
             foreach (QParam p in parameters)
                 AddAllParam(p);
 
-            allParameters.OnListChanged(ListChangedType.Reset, -1);
+            allParameters.OnListChanged(NotifyCollectionChangedAction.Reset);
         }
 
         public override string Format(IDbCommand command = null)

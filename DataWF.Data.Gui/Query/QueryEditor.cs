@@ -8,6 +8,8 @@ using DataWF.Common;
 using DataWF.Data;
 using Xwt;
 using Xwt.Formats;
+using System.Collections.Specialized;
+using System.Linq;
 
 namespace DataWF.Data.Gui
 {
@@ -350,7 +352,7 @@ namespace DataWF.Data.Gui
                 {
                     Table = value.Table;
 
-                    value.AllParameters.ListChanged += ParametersListChanged;
+                    value.AllParameters.CollectionChanged += ParametersListChanged;
                     listParams.ListSource = value.AllParameters.DefaultView;
                     listColumns.ListSource = value.Columns;
                     listTables.ListSource = value.Tables;
@@ -358,11 +360,11 @@ namespace DataWF.Data.Gui
             }
         }
 
-        private void ParametersListChanged(object sender, ListChangedEventArgs e)
+        private void ParametersListChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            if (e.ListChangedType == ListChangedType.ItemChanged && ((ListPropertyChangedEventArgs)e).Property == "Comparer")
+            if (e.Action == NotifyCollectionChangedAction.Replace && ((NotifyListPropertyChangedEventArgs)e).Property == "Comparer")
             {
-                var parameter = query.AllParameters[e.NewIndex];
+                var parameter = e.NewItems.Cast<QParam>().FirstOrDefault();
                 editors.Remove(parameter);
                 parameter.Value = null;
             }

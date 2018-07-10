@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Xml.Serialization;
@@ -23,7 +24,7 @@ namespace DataWF.Gui
         //protected Rectangle bound;
         public Func<ILayoutItem, double> CalcHeight;
         public Func<ILayoutItem, double> CalcWidth;
-        private INotifyListChanged container;
+        private INotifyListPropertyChanged container;
         private double scale = 1;
         private double indent;
 
@@ -188,7 +189,7 @@ namespace DataWF.Gui
         }
 
         [XmlIgnore, Browsable(false)]
-        public INotifyListChanged Container
+        public INotifyListPropertyChanged Container
         {
             get { return container; }
             set
@@ -227,6 +228,12 @@ namespace DataWF.Gui
             }
         }
 
+        protected override void OnPropertyChanged(string property)
+        {
+            base.OnPropertyChanged(property);
+            Container?.OnPropertyChanged(this, new PropertyChangedEventArgs(property));
+        }
+
         public void Remove()
         {
             Map?.Remove(this);
@@ -245,15 +252,6 @@ namespace DataWF.Gui
         }
 
         #endregion
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected virtual void OnPropertyChanged(string property)
-        {
-            var args = new PropertyChangedEventArgs(property);
-            PropertyChanged?.Invoke(this, args);
-            Container?.OnPropertyChanged(this, args);
-        }
 
         public bool Contains(string property)
         {
@@ -492,14 +490,14 @@ namespace DataWF.Gui
             tempMap.InsertInternal(index, newColumn);
         }
 
-        public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, object sender = null, string property = null)
-        {
-            base.OnListChanged(type, newIndex, oldIndex, sender, property);
-            if (Map != null)
-            {
-                Map.OnListChanged(type, newIndex, oldIndex, sender, property);
-            }
-        }
+        //public override void OnListChanged(NotifyCollectionChangedAction type, object sender = null, int index = -1, string property = null)
+        //{
+        //    base.OnListChanged(type, sender, index, property);
+        //    if (Map != null)
+        //    {
+        //        Map.OnListChanged(type, sender, index, property);
+        //    }
+        //}
 
         public virtual Rectangle GetBound()
         {

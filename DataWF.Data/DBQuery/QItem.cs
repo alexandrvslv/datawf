@@ -40,7 +40,7 @@ namespace DataWF.Data
             this.text = name;
         }
 
-        public INotifyListChanged Container { get; set; }
+        public INotifyListPropertyChanged Container { get; set; }
 
 
         [Browsable(false)]

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace DataWF.Common
 {
-    public interface ISelectable : ISortable, INotifyListChanged
+    public interface ISelectable : ISortable, INotifyListPropertyChanged
     {
         IEnumerable Select(Query checkers);
 
@@ -12,7 +12,7 @@ namespace DataWF.Common
         IEnumerable Select(string property, CompareType comparer, object value);
     }
 
-    public interface ISelectable<T> : ISortable<T>, INotifyListChanged
+    public interface ISelectable<T> : ISortable<T>, INotifyListPropertyChanged
     {
         IEnumerable<T> Select(Query checkers);
 

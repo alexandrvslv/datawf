@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Xml.Serialization;
 using DataWF.Common;
@@ -84,37 +85,30 @@ namespace DataWF.Gui
             }
         }
 
-        public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, object sender = null, string property = null)
+        public override void InsertInternal(int index, ToolItem item)
         {
-            base.OnListChanged(type, newIndex, oldIndex, sender, property);
-            var toolItem = (ToolItem)sender;
-            if (type == ListChangedType.ItemAdded)
-            {
-                toolItem.Bar = bar;
-            }
-            else if (type == ListChangedType.ItemDeleted)
-            {
-                toolItem.Bar = null;
-            }
-            else if (type == ListChangedType.Reset)
-            {
-                if (items.Count == 0 && bar != null)
-                {
-                    bar.Clear();
-                }
-                else
-                {
-                    foreach (var item in this)
-                    {
-                        item.Bar = bar;
-                    }
-                }
-            }
-            else if (type == ListChangedType.ItemChanged)
-            {
-                bar.QueueForReallocate();
-                bar.QueueDraw();
-            }
+            base.InsertInternal(index, item);
+            item.Bar = bar;
+        }
+
+        public override void RemoveInternal(ToolItem item, int index)
+        {
+            base.RemoveInternal(item, index);
+            item.Bar = null;
+        }
+
+        public override void Clear()
+        {
+            base.Clear();
+            bar?.Clear();
+
+        }
+
+        protected override void OnPropertyChanged(string property)
+        {
+            base.OnPropertyChanged(property);
+            bar?.QueueForReallocate();
+            bar?.QueueDraw();
         }
 
         public ToolItemDisplayStyle DisplayStyle

@@ -13,6 +13,7 @@ using Xwt.Drawing;
 using System.Threading.Tasks;
 using DataWF.Module.CommonGui;
 using DataWF.Data.Gui;
+using System.Collections.Specialized;
 
 namespace DataWF.Module.FlowGui
 {
@@ -54,7 +55,7 @@ namespace DataWF.Module.FlowGui
             qDocs.BuildPropertyParam(nameof(Document.Id), CompareType.In, qDocWorks);
 
             works = new DocumentWorkList(qWork.ToWhere(), DBViewKeys.Empty);
-            works.ListChanged += WorksListChanged;
+            works.CollectionChanged += WorksListChanged;
 
             AllowPreview = true;
             Filter.IsCurrent = true;
@@ -109,19 +110,26 @@ namespace DataWF.Module.FlowGui
             });
         }
 
-        private void WorksListChanged(object sender, ListChangedEventArgs e)
+        private void WorksListChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            DocumentWork work = e.NewIndex >= 0 ? works[e.NewIndex] : null;
-            Document document = work?.Document;
+            var work = (DocumentWork)((NotifyListPropertyChangedEventArgs)e).Item;
+            var document = work?.Document;
             int di = 0;
-            if (e.ListChangedType == ListChangedType.ItemAdded)
+            if (e.Action == NotifyCollectionChangedAction.Add)
+            {
                 di = 1;
-            else if (e.ListChangedType == ListChangedType.ItemDeleted)
+            }
+            else if (e.Action == NotifyCollectionChangedAction.Remove)
+            {
                 di = -1;
+            }
+
             if (document != null && work.IsUser)
             {
                 if (di > 0 && GuiService.Main != null)
+                {
                     CheckNewDocument(document);
+                }
 
                 if (di != 0)
                 {

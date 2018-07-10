@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Threading;
 using DataWF.Common;
@@ -38,16 +39,16 @@ namespace DataWF.Module.MessangerGui
 
             if (MessageAddress.DBTable != null)
             {
-                MessageAddress.DBTable.DefaultView.ListChanged += OnListChanged;
+                MessageAddress.DBTable.DefaultView.CollectionChanged += OnListChanged;
             }
             SynchMessage();
         }
 
-        public void OnListChanged(object sender, ListChangedEventArgs e)
+        public void OnListChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            if (e.ListChangedType == ListChangedType.ItemAdded)
+            if (e.Action == NotifyCollectionChangedAction.Add)
             {
-                Application.Invoke(() => OnLoad(MessageAddress.DBTable.DefaultView[e.NewIndex]));
+                Application.Invoke(() => OnLoad(MessageAddress.DBTable.DefaultView[e.NewStartingIndex]));
             }
         }
 

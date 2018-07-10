@@ -20,6 +20,7 @@
 using DataWF.Common;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Xml.Serialization;
 
@@ -84,12 +85,12 @@ namespace DataWF.Data
             return flag;
         }
 
-        public override void OnListChanged(ListChangedType type, int newIndex = -1, int oldIndex = -1, object item = null, string property = null)
+        public override void OnListChanged(NotifyCollectionChangedAction type, object item = null, int index = -1, string property = null, int oldIndex = -1, object oldItem = null)
         {
-            base.OnListChanged(type, newIndex, oldIndex, item, property);
-            if (Schema != null && Schema.Container != null)
+            base.OnListChanged(type, item, index, property, oldIndex, oldItem);
+            if (Schema != null && Schema.Container is DBSchemaList schemaList)
             {
-                ((DBSchemaList)Schema.Container).OnItemsListChanged(this, new ListPropertyChangedEventArgs(type, newIndex, oldIndex) { Sender = item, Property = property });
+                schemaList.OnItemsListChanged(this, NotifyListPropertyChangedEventArgs.Build(type, item, oldItem, index, oldIndex, property));
             }
         }
 

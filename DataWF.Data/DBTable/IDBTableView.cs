@@ -23,10 +23,11 @@ using DataWF.Common;
 using System.ComponentModel;
 using System.Data;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 
 namespace DataWF.Data
 {
-    public interface IDBTableView : IDBTableContent, ISortable, INotifyListChanged, IDisposable, IFilterable
+    public interface IDBTableView : IDBTableContent, ISortable, INotifyListPropertyChanged, IDisposable, IFilterable
     {
         IDbCommand Command { get; set; }
 
@@ -48,7 +49,7 @@ namespace DataWF.Data
 
         new bool IsSynchronized { get; set; }
 
-        void OnItemChanged(DBItem item, string property, ListChangedType type);
+        void OnItemChanged(DBItem item, string property, NotifyCollectionChangedAction type);
 
         IEnumerable<DBItem> Load(DBLoadParam param = DBLoadParam.None);
 

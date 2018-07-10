@@ -30,15 +30,15 @@ namespace DataWF.Gui
                     {
                         temp.Add(new EnumItem() { Value = enumItem });
                     }
-                    temp.ListChanged += TempListChanged;
+                    temp.PropertyChanged += TempListChanged;
                     listSource = temp;
                 }
             }
         }
 
-        private void TempListChanged(object sender, ListChangedEventArgs e)
+        private void TempListChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.ListChangedType == ListChangedType.ItemChanged && List != null && List.AllowCheck)
+            if (List != null && List.AllowCheck)
             {
                 string res = "";
                 foreach (EnumItem enumItem in listSource)

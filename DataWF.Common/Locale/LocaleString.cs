@@ -84,7 +84,7 @@ namespace DataWF.Common
         }
 
         [XmlIgnore, Browsable(false)]
-        public INotifyListChanged Container { get; set; }
+        public INotifyListPropertyChanged Container { get; set; }
 
         public override string ToString()
         {

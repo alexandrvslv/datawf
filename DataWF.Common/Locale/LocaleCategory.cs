@@ -44,13 +44,11 @@ namespace DataWF.Common
         }
 
         [XmlIgnore, Browsable(false)]
-        public INotifyListChanged Container { get; set; }
+        public INotifyListPropertyChanged Container { get; set; }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private void OnPropertyChanged(string property)
+        protected override void OnPropertyChanged(string property)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+            base.OnPropertyChanged(property);
             Container?.OnPropertyChanged(this, new PropertyChangedEventArgs(property));
         }
 

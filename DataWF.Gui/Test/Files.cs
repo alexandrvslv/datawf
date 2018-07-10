@@ -8,6 +8,8 @@ using DataWF.Common;
 using Xwt;
 using Xwt.Drawing;
 using System.Threading.Tasks;
+using System.Collections.Specialized;
+using System.Linq;
 
 namespace DataWF.TestGui
 {
@@ -33,7 +35,7 @@ namespace DataWF.TestGui
             directoryTree.Name = "dTree";
             directoryTree.Text = "Directory Tree";
             directoryTree.SelectionChanged += DTreeSelectionChanged;
-            directoryTree.Nodes.ListChanged += NodesListChanged;
+            directoryTree.Nodes.CollectionChanged += NodesListChanged;
 
             directoryView.Mode = LayoutListMode.List;
             directoryView.Name = "flist";
@@ -201,14 +203,14 @@ namespace DataWF.TestGui
             }
         }
 
-        private void NodesListChanged(object sender, ListChangedEventArgs e)
+        private void NodesListChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            if (e.ListChangedType == ListChangedType.ItemChanged)
+            if (e.Action == NotifyCollectionChangedAction.Replace)
             {
-                var ex = (ListPropertyChangedEventArgs)e;
+                var ex = (NotifyListPropertyChangedEventArgs)e;
                 if (ex.Property == "Expand")
                 {
-                    var node = directoryTree.Nodes[e.NewIndex] as DirectoryNode;
+                    var node = e.NewItems.Cast<DirectoryNode>().FirstOrDefault();
                     if (node.Drive == null)
                         node.Glyph = node.Expand ? Locale.GetGlyph("Files", "DirectoryOpen", GlyphType.FolderOpen) :
                             Locale.GetGlyph("Files", "Directory", GlyphType.Folder);

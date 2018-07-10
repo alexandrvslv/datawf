@@ -29,6 +29,7 @@ namespace DataWF.Gui
                     return;
                 panel = value;
                 panel.DockItem = this;
+                panel.Visible = Visible;
                 if (box != null && panel.Parent == null)
                 {
                     box.Add(Panel);

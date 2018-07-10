@@ -17,6 +17,7 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using System.Collections.Specialized;
 using System.ComponentModel;
 
 namespace DataWF.Data
@@ -26,7 +27,7 @@ namespace DataWF.Data
         DBTable BaseTable { get; set; }
         QQuery FilterQuery { get; }
         void Refresh();
-        void CheckItem(ListChangedType type, DBItem item, string property);
+        void CheckItem(NotifyCollectionChangedAction type, DBItem item, string property);
         DBVirtualColumn GetColumnByBase(DBColumn column);
     }
 }

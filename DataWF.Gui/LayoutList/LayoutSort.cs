@@ -26,7 +26,7 @@ namespace DataWF.Gui
         }
 
         [XmlIgnore, Browsable(false)]
-        public INotifyListChanged Container { get; set; }
+        public INotifyListPropertyChanged Container { get; set; }
 
         [XmlIgnore, Browsable(false)]
         public LayoutListInfo Info

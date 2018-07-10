@@ -11,6 +11,7 @@ using DataWF.Module.Common;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
+using System.Collections.Specialized;
 
 namespace DataWF.Module.CommonGui
 {
@@ -153,25 +154,25 @@ namespace DataWF.Module.CommonGui
             InitItem(GroupPermission.DBTable?.DefaultView, ShowPermission, GlyphType.Database, Colors.LightSteelBlue);
         }
 
-        private void HandleViewListChanged(object sender, ListChangedEventArgs e)
+        private void HandleViewListChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             if (listSource == null)
             {
                 return;
             }
-            var pe = e as ListPropertyChangedEventArgs;
+            var pe = e as NotifyListPropertyChangedEventArgs;
             Application.Invoke(() =>
             {
                 IDBTableView view = (IDBTableView)sender;
                 string name = GetName(view);
                 var nodeParent = (TableItemNode)Nodes.Find(name);
-                if (e.ListChangedType == ListChangedType.Reset)
+                if (e.Action == NotifyCollectionChangedAction.Reset)
                 {
                     InitItem((IDBTableContent)view);
                 }
-                else if (e.ListChangedType == ListChangedType.ItemDeleted)
+                else if (e.Action == NotifyCollectionChangedAction.Remove)
                 {
-                    var item = (DBItem)pe.Sender;
+                    var item = (DBItem)pe.Item;
                     var node = Find(item);
                     if (node != null)
                     {
@@ -182,12 +183,11 @@ namespace DataWF.Module.CommonGui
                         Nodes.Remove(node);
                     }
                 }
-                else if (pe.Sender != null)
+                else if (pe.Item != null)
                 {
                     TableItemNode node = null;
-                    var item = (DBItem)pe.Sender;
+                    var item = (DBItem)pe.Item;
 
-                    item = (DBItem)view[e.NewIndex];
                     if (item.PrimaryId == null)
                         return;
                     node = InitItem(item);
@@ -267,7 +267,7 @@ namespace DataWF.Module.CommonGui
             TableItemNode node = null;
             if (show)
             {
-                view.ListChanged += HandleViewListChanged;
+                view.CollectionChanged += HandleViewListChanged;
                 views.Add(view);
                 if (ShowListNode)
                 {
@@ -305,7 +305,7 @@ namespace DataWF.Module.CommonGui
             }
             else
             {
-                view.ListChanged -= HandleViewListChanged;
+                view.CollectionChanged -= HandleViewListChanged;
                 views.Remove(view);
                 node = (TableItemNode)Nodes.Find(GetName(view));
                 if (node != null)
@@ -524,7 +524,7 @@ namespace DataWF.Module.CommonGui
         {
             foreach (var view in views)
             {
-                view.ListChanged -= HandleViewListChanged;
+                view.CollectionChanged -= HandleViewListChanged;
             }
             base.Dispose(disposing);
         }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data;
 using System.IO;
@@ -115,7 +116,7 @@ namespace DataWF.Data
             }
             item.OnAttached();
 
-            OnItemChanged(item, null, ListChangedType.ItemAdded);
+            OnItemChanged(item, null, NotifyCollectionChangedAction.Add);
 
         }
 
@@ -129,7 +130,7 @@ namespace DataWF.Data
             if (!item.Attached)
                 return false;
 
-            OnItemChanged(item, null, ListChangedType.ItemDeleted);
+            OnItemChanged(item, null, NotifyCollectionChangedAction.Remove);
             foreach (var column in Columns)
             {
                 if (column.Index != null)
@@ -166,7 +167,7 @@ namespace DataWF.Data
                             column.Index.Clear();
                     }
                 }
-                OnItemChanged(null, null, ListChangedType.Reset);
+                OnItemChanged(null, null, NotifyCollectionChangedAction.Reset);
 
                 foreach (DBItem row in temp)
                 {
@@ -216,7 +217,7 @@ namespace DataWF.Data
             queryViews.Add(view);
         }
 
-        public override void OnItemChanged(DBItem item, string property, ListChangedType type)
+        public override void OnItemChanged(DBItem item, string property, NotifyCollectionChangedAction type)
         {
             if (property == nameof(DBItem.Attached)
                 || property == nameof(DBItem.UpdateState))
@@ -224,7 +225,7 @@ namespace DataWF.Data
 
             foreach (var collection in virtualViews)
             {
-                if (type == ListChangedType.Reset)
+                if (item == null)
                 {
                     collection.Refresh();
                 }
