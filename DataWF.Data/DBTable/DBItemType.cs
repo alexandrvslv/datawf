@@ -40,12 +40,13 @@ namespace DataWF.Data
             set
             {
                 type = value;
-                Constructor = EmitInvoker.Initialize(type, Type.EmptyTypes, true);
+                Constructor = EmitInvoker.Initialize(type, Type.EmptyTypes, false);
             }
         }
 
         [XmlIgnore, JsonIgnore]
         public EmitConstructor Constructor { get; set; }
+        
     }
 
     public class DBItemTypeConverter : TypeConverter
