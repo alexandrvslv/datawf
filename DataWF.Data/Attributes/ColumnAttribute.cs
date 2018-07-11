@@ -136,9 +136,10 @@ namespace DataWF.Data
             {
                 Column = CreateColumn(name);
             }
-            if (Column.DisplayName.Equals(Column.Name, StringComparison.Ordinal))
+            if (Column.DisplayName.Equals(Column.Name, StringComparison.Ordinal)
+                || (Column.DisplayName.Equals(Property.Name, StringComparison.Ordinal) && ReferenceProperty != null))
             {
-                Column.DisplayName = culture == null ? Property.Name : $"{Property.Name} {culture.TwoLetterISOLanguageName.ToUpperInvariant()}";
+                Column.DisplayName = culture == null ? ReferenceProperty?.Name ?? Property.Name : $"{Property.Name} {culture.TwoLetterISOLanguageName.ToUpperInvariant()}";
             }
             if (!(Column is DBVirtualColumn))
             {
