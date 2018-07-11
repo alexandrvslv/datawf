@@ -22,7 +22,7 @@ namespace DataWF.Module.FlowGui
         {
             if (e.PropertyName == nameof(UserTree.SelectedDBItem))
             {
-                EntryText = DocumentFilter.Templates?.SelectedDBItem.ToString();
+                EntryText = DocumentFilter.Templates?.SelectedDBItem?.ToString();
             }
         }
 
