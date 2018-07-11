@@ -353,9 +353,9 @@ namespace DataWF.Gui
             }
         }
 
-        protected override void OnHidden()
+        protected new void Hide()
         {
-            base.OnHidden();
+            base.Hide();
 
             var temp = Owner;
             Owner = null;
