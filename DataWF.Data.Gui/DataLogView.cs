@@ -18,7 +18,7 @@ namespace DataWF.Data.Gui
             question.Buttons.Add(Command.Cancel);
         }
         protected DBItem filter;
-        protected DataLogMode mode = DataLogMode.Default;
+        protected DataLogMode mode = DataLogMode.None;
         protected SelectableList<DBLogItem> listSource;
 
         protected VPaned split;
@@ -299,11 +299,9 @@ namespace DataWF.Data.Gui
             SelectData();
         }
 
-
-
         public virtual void UpdateFilter()
         {
-            if (Table == null || Table.LogTable == null)
+            if (mode == DataLogMode.None || Table == null || Table.LogTable == null)
                 return;
             if ((Mode == DataLogMode.Default || mode == DataLogMode.Document) && filter == null)
                 return;
@@ -409,6 +407,7 @@ namespace DataWF.Data.Gui
 
     public enum DataLogMode
     {
+        None,
         Default,
         Document,
         Table,
