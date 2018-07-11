@@ -34,11 +34,6 @@ namespace DataWF.Module.FlowGui
             set { FieldSource = value; }
         }
 
-        public DocumentList Documents
-        {
-            get { return listSource as DocumentList; }
-        }
-
         //protected override void OnHeaderMouseUp(PListHitTestEventArgs e)
         //{
         //    base.OnHeaderMouseUp(e);
@@ -90,14 +85,23 @@ namespace DataWF.Module.FlowGui
             get { return template; }
             set
             {
-                if (template == value)
+                if (template == value && template != null)
                     return;
                 template = value;
-                if (Mode == LayoutListMode.List && TypeHelper.IsBaseType(ListType, typeof(Document)))
+                if (Mode == LayoutListMode.List)
                 {
-                    ListType = template?.DocumentTypeInfo?.Type ?? typeof(Document);
+                    var type = template?.DocumentTypeInfo?.Type ?? typeof(Document);
+                    if (ListType != type)
+                    {
+                        var curSource = ListSource;
+                        ListSource = DBTable.CreateView(type);
+
+                        if (curSource is IDisposable disp)
+                        {
+                            disp.Dispose();
+                        }
+                    }
                     //TreeMode = ListInfo.Tree;
-                    RefreshBounds(true);
                 }
             }
         }
@@ -106,10 +110,8 @@ namespace DataWF.Module.FlowGui
         {
             var style = base.OnGetCellStyle(listItem, value, col);
 
-            if (ListSource is DocumentList && listItem is Document)
+            if (listItem is Document document)
             {
-                Document document = (Document)listItem;
-
                 if (document.WorkCurrent != null && document.WorkCurrent.DateRead == DateTime.MinValue)
                 {
                     if (styleBold == null)
@@ -119,7 +121,7 @@ namespace DataWF.Module.FlowGui
                         {
                             styleBold = style.Clone();
                             styleBold.Name = "DocumentBold";
-                            styleBold.Font = style.Font.WithStyle(FontStyle.Oblique);
+                            styleBold.Font = style.Font.WithWeight(FontWeight.Bold);
                             GuiEnvironment.Theme.Add(styleBold);
                         }
                     }
@@ -127,31 +129,6 @@ namespace DataWF.Module.FlowGui
                 }
             }
             return style;
-        }
-
-        protected bool GetIsDocument(ILayoutCell cell, out Template filter)
-        {
-            filter = null;
-            var documented = false;
-            if (cell == null)
-            {
-                if (ListSource is DocumentList)
-                {
-                    documented = true;
-                    filter = template;
-                }
-                else if (Document != null)
-                {
-                    documented = true;
-                    filter = Document.Template;
-                }
-            }
-            else if (cell.DataType == typeof(Document)
-                     || (cell.Invoker is DBColumn column && column.ReferenceTable == Document.DBTable))
-            {
-                documented = true;
-            }
-            return documented;
         }
 
         /* public void PrintDoc(Template prm)

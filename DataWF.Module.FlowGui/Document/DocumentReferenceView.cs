@@ -24,14 +24,13 @@ namespace DataWF.Module.FlowGui
             toolAttach = new ToolItem(ToolAttachClick) { Name = "Attach", Glyph = GlyphType.PlusSquareO, GlyphColor = Colors.Green };
             toolDetach = new ToolItem(ToolDetachClick) { Name = "Deattach", Glyph = GlyphType.MinusSquareO, GlyphColor = Colors.Red };
 
-            filterCustomer.Visible = false;
-
-            AutoLoad = false;
-            LabelText = null;
-
             Bar.Items.Add(toolAttach);
             Bar.Items.Add(toolDetach);
 
+            filterCustomer.Visible = false;
+            toolPreview.Checked = false;
+            AutoLoad = false;
+            LabelText = null;
             HideOnClose = true;
             Name = nameof(DocumentReferenceView);
         }

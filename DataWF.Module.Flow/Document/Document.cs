@@ -40,38 +40,6 @@ namespace DataWF.Module.Flow
         public StageProcedure StageProcedure { get; set; }
     }
 
-    public class DocumentList : DBTableView<Document>
-    {
-        protected static long stampCache = 0;
-        protected long stamp;
-
-        public long Stamp { get { return stamp; } }
-
-        public DocumentList(string filter = "", DBViewKeys mode = DBViewKeys.None)
-            : base(filter, mode)
-        {
-            stampCache++;
-            stamp = stampCache;
-        }
-
-        public DocumentList(Customer customer)
-            : this($"{Document.DBTable.ParseProperty(nameof(Document.Customer)).Name}={customer.Id}", DBViewKeys.None)
-        {
-        }
-
-        //public override void Insert(int index, Document item)
-        //{
-        //    base.Insert(index, item);
-        //}
-
-
-    }
-
-    public enum DocumentFindType
-    {
-        Customer
-    }
-
     [DataContract, Table("ddocument", "Document", BlockSize = 200)]
     public class Document : DBGroupItem, IDisposable
     {
@@ -154,6 +122,14 @@ namespace DataWF.Module.Flow
 
         public event EventHandler<DBItemEventArgs> ReferenceChanged;
 
+        public override void OnAttached()
+        {
+            base.OnAttached();
+            return;
+            if (UpdateState == DBUpdateState.Default && (WorkStage == null || WorkStage.Length == 0))
+                GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), DBLoadParam.Load);
+        }
+
         internal void OnReferenceChanged(DBItem item)
         {
             if (!item.Attached)
@@ -227,7 +203,7 @@ namespace DataWF.Module.Flow
                 if (Customer == null)
                 {
                     Customer = value?.Customer;
-                    Address = value?.Address;
+                    //Address = value?.Address;
                 }
             }
         }
@@ -267,24 +243,24 @@ namespace DataWF.Module.Flow
             set
             {
                 SetPropertyReference(value);
-                Address = Customer?.Address;
+                //Address = Customer?.Address;
             }
         }
 
-        [Browsable(false)]
-        [DataMember, Column("address_id")]
-        public int? AddressId
-        {
-            get { return GetProperty<int?>(nameof(AddressId)); }
-            set { SetProperty(value, nameof(AddressId)); }
-        }
+        //[Browsable(false)]
+        //[DataMember, Column("address_id")]
+        //public int? AddressId
+        //{
+        //    get { return GetProperty<int?>(nameof(AddressId)); }
+        //    set { SetProperty(value, nameof(AddressId)); }
+        //}
 
-        [Reference(nameof(AddressId))]
-        public virtual Address Address
-        {
-            get { return GetPropertyReference<Address>(); }
-            set { SetPropertyReference(value); }
-        }
+        //[Reference(nameof(AddressId))]
+        //public virtual Address Address
+        //{
+        //    get { return GetPropertyReference<Address>(); }
+        //    set { SetPropertyReference(value); }
+        //}
 
         [DataMember, Column("title", Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
         public virtual string Title

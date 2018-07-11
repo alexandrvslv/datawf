@@ -37,13 +37,7 @@ namespace DataWF.Module.Flow
     public sealed class FlowEnvironment : IDisposable
     {
         private static FlowEnvironment instance = new FlowEnvironment();
-        private static DocumentList currentDocuments = null;
         private string schemaCode = "new";
-
-        public static DocumentList CurrentDocuments
-        {
-            get { return currentDocuments ?? (currentDocuments = new DocumentList()); }
-        }
 
         public DBSchemaList Schems
         {

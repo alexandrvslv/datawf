@@ -20,7 +20,6 @@ namespace DataWF.Module.FlowGui
         private OpenFileDialog ofDialog;
         private string label;
         private DocumentFilter filter;
-        private DocumentList documents;
         private TableLoader loader;
         protected ToolItem toolLoad;
         protected Toolsbar bar;
@@ -119,7 +118,6 @@ namespace DataWF.Module.FlowGui
             PackStart(list, true, true);
             Name = "DocumentListView";
             Filter = new DocumentFilter();
-            Documents = new DocumentList();
         }
 
         [DefaultValue(true)]
@@ -169,11 +167,8 @@ namespace DataWF.Module.FlowGui
                     if (filter != null)
                     {
                         filter.PropertyChanged += OnFilterPropertyChanged;
-                        if (documents != null)
-                        {
-                            documents.Query = filter.QDoc;
-                            OnFilterPropertyChanged(this, null);
-                        }
+                        OnFilterPropertyChanged(this, null);
+
                     }
                 }
             }
@@ -184,29 +179,9 @@ namespace DataWF.Module.FlowGui
             get { return loader; }
         }
 
-        public DocumentList Documents
+        public IDBTableView Documents
         {
-            get { return documents; }
-            set
-            {
-                if (documents == value)
-                    return;
-                //if (documents != null)
-                //    documents.ListChanged -= DocumentsListChanged;
-
-                documents = value;
-                list.ListSource = documents;
-                loader.View = documents;
-
-                if (documents != null)
-                {
-                    //documents.ListChanged += DocumentsListChanged;
-                    if (Filter != null)
-                    {
-                        documents.Query = filter.QDoc;
-                    }
-                }
-            }
+            get { return (IDBTableView)list.ListSource; }
         }
 
         public DocumentLayoutList List
@@ -240,25 +215,21 @@ namespace DataWF.Module.FlowGui
         {
             try
             {
-                if (Documents != null)
-                {
-                    Documents.UpdateFilter();
-                }
-
                 filterWork.Checked = filter?.IsWork == CheckedState.Checked;
                 filterCurrent.Checked = filter?.IsCurrent ?? false;
-
                 list.Template = FilterTemplate;
-
-                FilterChanged?.Invoke(this, EventArgs.Empty);
 
                 if (Documents != null)
                 {
+                    Documents.Query = filter.QDoc;
+                    Documents.UpdateFilter();
                     if (AutoLoad && !filter.IsCurrent && !filter.IsEmpty)
                     {
+                        loader.View = Documents;
                         loader.LoadAsync(filter.QDoc);
                     }
                 }
+                FilterChanged?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
@@ -310,25 +281,10 @@ namespace DataWF.Module.FlowGui
 
         public event EventHandler FilterChanged;
 
-        private void DocumentsListChanged(object sender, ListChangedEventArgs e)
-        {
-            if (e.ListChangedType == ListChangedType.Reset)
-                return;
-            if (e.ListChangedType == ListChangedType.ItemAdded)
-            {
-                var document = documents[e.NewIndex];
-                if (document == null)
-                    return;
-                if (document.UpdateState == DBUpdateState.Default && (document.WorkStage == null || document.WorkStage.Length == 0))
-                    document.GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), DBLoadParam.Load);
-            }
-        }
-
         public List<Document> GetSelected()
         {
             return list.Selection.GetItems<Document>();
         }
-
 
         private void ListCellMouseDoubleClick(object sender, LayoutHitTestEventArgs e)
         {
@@ -445,9 +401,8 @@ namespace DataWF.Module.FlowGui
             {
                 filter?.Dispose();
                 loader?.Dispose();
-                documents?.Dispose();
+                Documents?.Dispose();
                 Filter = null;
-                Documents = null;
             });
             base.Dispose(disposing);
         }
@@ -565,14 +520,14 @@ namespace DataWF.Module.FlowGui
             }
             else if (documents.Count > 1)
             {
-                var list = new DocumentList("", DBViewKeys.Static | DBViewKeys.Empty);
+                var list = new DBTableView<Document>((QParam)null, DBViewKeys.Static | DBViewKeys.Empty);
                 list.AddRange(documents);
 
                 var dlist = new DocumentListView();
                 dlist.List.GenerateColumns = false;
                 dlist.List.AutoToStringFill = true;
                 dlist.Filter.Template = documents[0].Template;
-                dlist.Documents = list;
+                dlist.List.ListSource = list;
 
                 using (var form = new ToolWindow
                 {

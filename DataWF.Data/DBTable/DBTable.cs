@@ -887,6 +887,11 @@ namespace DataWF.Data
                 rows[i].Accept();
         }
 
+        public static IDBTableView CreateView(Type type)
+        {
+            return (IDBTableView)EmitInvoker.Initialize(typeof(DBTableView<>).MakeGenericType(type), new Type[] { }, true).Create();
+        }
+
         [Browsable(false)]
         public abstract IDBTableView DefaultItemsView { get; }
 
@@ -944,20 +949,27 @@ namespace DataWF.Data
 
         public bool CheckItem(DBItem item, QItemList<QParam> parameters)
         {
+            bool first = true;
             bool result = true;
-            for (int i = 0; i < parameters.Count; i++)
+            foreach (var param in parameters)
             {
-                var param = parameters[i];
-                if (i == parameters.Count - 1 && !result && param.Logic.Type == LogicTypes.And)
+                if (!first && !result && param.Logic.Type == LogicTypes.And)
                     break;
                 bool check = CheckItem(item, param);
 
-                if (i == 0)
+                if (first)
+                {
                     result = check;
+                    first = false;
+                }
                 else if (param.Logic.Type == LogicTypes.Or)
-                    result = param.Logic.Not ? result | !check : result | check;
+                {
+                    result |= param.Logic.Not ? !check : check;
+                }
                 else if (param.Logic.Type == LogicTypes.And)
-                    result = param.Logic.Not ? result & !check : result & check;
+                {
+                    result &= param.Logic.Not ? !check : check;
+                }
             }
             return result;
         }
