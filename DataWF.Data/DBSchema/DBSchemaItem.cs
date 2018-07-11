@@ -174,9 +174,8 @@ namespace DataWF.Data
 
         public void OnPropertyChanged(string propertyName, DDLType type = DDLType.Default)
         {
-            var args = new PropertyChangedEventArgs(propertyName);
-            PropertyChanged?.Invoke(this, args);
-            Container?.OnPropertyChanged(this, args);
+            Container?.OnPropertyChanged(this, propertyName);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
             if (type != DDLType.Default)
                 DBService.OnDBSchemaChanged(this, type);
         }

@@ -54,9 +54,8 @@ namespace DataWF.Data
 
         private void OnPropertyChanged(string property)
         {
-            var arg = new PropertyChangedEventArgs(property);
-            PropertyChanged?.Invoke(this, arg);
-            Container?.OnPropertyChanged(this, arg);
+            Container?.OnPropertyChanged(this, property);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
 
         public override string ToString()

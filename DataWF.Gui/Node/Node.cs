@@ -300,9 +300,8 @@ namespace DataWF.Gui
 
         protected void OnPropertyChanged(string property)
         {
-            var args = new PropertyChangedEventArgs(property);
-            PropertyChanged?.Invoke(this, args);
-            Container?.OnPropertyChanged(this, args);
+            Container?.OnPropertyChanged(this, property);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
 
         public IEnumerable<Node> GetNodes()

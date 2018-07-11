@@ -129,10 +129,10 @@ namespace DataWF.Gui
             return Select(nameof(Node.Name), CompareType.Equal, name).FirstOrDefault();
         }
 
-        public override void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        public override void OnPropertyChanged(object sender, string propertyName)
         {
             //
-            if (e.PropertyName.Equals(nameof(Node.Expand), StringComparison.Ordinal))
+            if (propertyName.Equals(nameof(Node.Expand), StringComparison.Ordinal))
             {
                 OnListChanged(NotifyCollectionChangedAction.Reset);
                 //for (int i = 0; i < node.Childs.Count; i++)
@@ -142,7 +142,7 @@ namespace DataWF.Gui
                 //    base.OnNotifyPropertyChanged(n, e);
                 //}
             }
-            else if (e.PropertyName.Equals(nameof(Node.Visible), StringComparison.Ordinal))
+            else if (propertyName.Equals(nameof(Node.Visible), StringComparison.Ordinal))
             {
                 OnListChanged(NotifyCollectionChangedAction.Reset);
                 //base.OnNotifyPropertyChanged(sender, e);
@@ -152,9 +152,9 @@ namespace DataWF.Gui
                 //    this.OnNotifyPropertyChanged(n, e);
                 //}
             }
-            else if (e.PropertyName.Equals(nameof(Node.Group), StringComparison.Ordinal))
+            else if (propertyName.Equals(nameof(Node.Group), StringComparison.Ordinal))
             {
-                var lindex = indexes.GetIndex(e.PropertyName);
+                var lindex = indexes.GetIndex(propertyName);
                 if (lindex != null)
                 {
                     lindex.Remove((T)sender);
@@ -162,10 +162,7 @@ namespace DataWF.Gui
                 }
                 OnListChanged(NotifyCollectionChangedAction.Reset);
             }
-            //else
-            {
-                base.OnPropertyChanged(sender, e);
-            }
+            base.OnPropertyChanged(sender, propertyName);
         }
 
         public IEnumerable<T> GetTopLevel()

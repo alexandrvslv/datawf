@@ -39,19 +39,23 @@ namespace DataWF.Data
         protected DBTable table;
         private Query filterQuery;
 
+        public DBTableView()
+           : this(DBTable.GetTable(typeof(T), null, false, true), (QParam)null, DBViewKeys.None, DBStatus.Empty)
+        { }
+
         public DBTableView(string defaultFilter, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
             : this(DBTable.GetTable(typeof(T), null, false, true), defaultFilter, mode, statusFilter)
         { }
 
-        public DBTableView(QParam defaultFilter = null, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
+        public DBTableView(QParam defaultFilter, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
             : this(DBTable.GetTable(typeof(T), null, false, true), defaultFilter, mode, statusFilter)
         { }
 
-        public DBTableView(DBTable table, string defaultFilter = null, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
+        public DBTableView(DBTable table, string defaultFilter, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
             : this(table, !string.IsNullOrEmpty(defaultFilter) ? new QParam(table, defaultFilter) : null, mode, statusFilter)
         { }
 
-        public DBTableView(DBTable table, QParam defaultFilter = null, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
+        public DBTableView(DBTable table, QParam defaultFilter, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
         {
             propertyHandler = null;
             table.AddView(this);
@@ -274,92 +278,93 @@ namespace DataWF.Data
             //table.LoadAsync(Query, param, this);
         }
 
-        public override void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        public override void OnPropertyChanged(object sender, string propertyName)
         {
-            OnItemChanged((T)sender, e.PropertyName, NotifyCollectionChangedAction.Reset);
+            OnItemChanged((T)sender, propertyName, NotifyCollectionChangedAction.Reset);
         }
 
-        public void OnItemChanged(T item, string property, NotifyCollectionChangedAction type)
+        public void OnItemChanged(DBItem item, string propertyName, NotifyCollectionChangedAction type)
         {
-            if (type == NotifyCollectionChangedAction.Reset
-                && item == null)
+            if (item == null || item is T)
             {
-                UpdateFilter();
-                return;
+                OnItemChanged((T)item, propertyName, type);
             }
+        }
+
+        public void OnItemChanged(T item, string propertyName, NotifyCollectionChangedAction type)
+        {
             lock (items)
             {
-                int index = -1, newindex = -1;
-                try
-                {
-                    index = newindex = items.BinarySearch(item, comparer);
-                }
-                catch (Exception ex)
-                {
-                    Helper.OnException(ex);
-                    return;
-                }
-                if (index < 0)
-                {
-                    if ((keys & DBViewKeys.Static) == DBViewKeys.Static)
-                    {
-                        return;
-                    }
-                    newindex = (-index) - 1;
-                    if (newindex > items.Count)
-                        newindex = items.Count;
-                }
-                if (index < 0 || !item.Equals(items[index]))
-                {
-                    index = type == NotifyCollectionChangedAction.Add ? -1 : items.IndexOf(item);// && !exist ? -1 : 
-                }
-
                 switch (type)
                 {
                     case NotifyCollectionChangedAction.Reset:
-                        if (index < 0)
+                        if (item == null)
                         {
-                            if (table.CheckItem(item, query))
-                                Insert(newindex, item);
-                        }
-                        else if (!table.CheckItem(item, query))
-                        {
-                            RemoveAt(index);
+                            UpdateFilter();
                         }
                         else
                         {
-                            if (newindex != index)
+                            GetIndex(out var index, out var newIndex);
+                            if (index < 0)
                             {
-                                if (newindex > index)
-                                    newindex--;
-                                items.RemoveAt(index);
-                                items.Insert(newindex, item);
-                                // RaiseListChanged(ListChangedType.ItemMoved, newindex, index);
-                                OnListChanged(type, item, newindex, property);
+                                if (table.CheckItem(item, query))
+                                    Insert(newIndex, item);
+                            }
+                            else if (!table.CheckItem(item, query))
+                            {
+                                RemoveAt(index);
                             }
                             else
-                                OnListChanged(type, item, index, property);
+                            {
+                                if (newIndex != index)
+                                {
+                                    if (newIndex > index)
+                                        newIndex--;
+                                    items.RemoveAt(index);
+                                    items.Insert(newIndex, item);
+                                    OnListChanged(NotifyCollectionChangedAction.Move, item, newIndex, propertyName, index, item);
+                                }
+                                else
+                                {
+                                    OnListChanged(type, item, index, propertyName);
+                                }
+                            }
                         }
                         break;
                     case NotifyCollectionChangedAction.Remove:
-                        if (index >= 0)
-                            RemoveAt(index);
+                        {
+                            GetIndex(out var index, out var newindex);
+                            if (index >= 0)
+                                RemoveAt(index);
+                        }
                         break;
                     case NotifyCollectionChangedAction.Add:
-                        if (index < 0 && table.CheckItem(item, query))
-                            Insert(newindex, item);
+                        {
+                            if ((keys & DBViewKeys.Static) != DBViewKeys.Static && table.CheckItem(item, query))
+                                Add(item);
+                        }
                         break;
+                }
+            }
+
+            void GetIndex(out int index, out int newIndex)
+            {
+                index = newIndex = items.BinarySearch(item, comparer);
+
+                if (index < 0)
+                {
+                    newIndex = (-index) - 1;
+                    if (newIndex > items.Count)
+                        newIndex = items.Count;
+                }
+                if (index < 0 || !item.Equals(items[index]))
+                {
+                    index = items.IndexOf(item);
                 }
             }
         }
 
-        public void OnItemChanged(DBItem item, string property, NotifyCollectionChangedAction type)
-        {
-            if (item is T)
-            {
-                OnItemChanged((T)item, property, type);
-            }
-        }
+
 
         private void SetItems(List<DBItem> list)
         {
@@ -392,7 +397,10 @@ namespace DataWF.Data
 
             foreach (var filter in FilterQuery.Parameters)
             {
-                if (filter.Invoker == null || filter.Value == null || filter.Value == DBNull.Value || filter.Value.ToString().Length == 0)
+                if (filter.Invoker == null
+                    || filter.Value == null
+                    || filter.Value == DBNull.Value
+                    || filter.Value.ToString().Length == 0)
                     if (filter.Comparer.Type != CompareTypes.Is)
                         continue;
                 var pcolumn = filter.Invoker as DBColumn;
@@ -468,8 +476,6 @@ namespace DataWF.Data
             var edited = GetEdited().ToList();
             foreach (T item in edited)
             {
-                if (IsStatic && (item.UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete)
-                    Remove(item);
                 item.Accept();
             }
         }
@@ -479,8 +485,6 @@ namespace DataWF.Data
             var edited = GetEdited().ToList();
             foreach (T item in edited)
             {
-                if (IsStatic && (item.UpdateState & DBUpdateState.Insert) == DBUpdateState.Insert)
-                    Remove(item);
                 item.Reject();
             }
         }

@@ -230,8 +230,8 @@ namespace DataWF.Gui
 
         protected override void OnPropertyChanged(string property)
         {
+            Container?.OnPropertyChanged(this, property);
             base.OnPropertyChanged(property);
-            Container?.OnPropertyChanged(this, new PropertyChangedEventArgs(property));
         }
 
         public void Remove()

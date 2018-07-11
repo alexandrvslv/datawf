@@ -84,10 +84,10 @@ namespace DataWF.Module.Flow
             return index;
         }
 
-        public override void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        public override void OnPropertyChanged(object sender, string propertyName)
         {
-            base.OnPropertyChanged(sender, e);
-            if (document != null && (e.PropertyName == null || e.PropertyName == DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.IsComplete)).Name))
+            base.OnPropertyChanged(sender, propertyName);
+            if (document != null && (string.IsNullOrEmpty(propertyName) || propertyName == DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.IsComplete)).Name))
                 document.RefreshCache();
         }
     }

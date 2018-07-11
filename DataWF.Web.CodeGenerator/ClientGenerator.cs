@@ -482,7 +482,7 @@ namespace DataWF.Web.CodeGenerator
                     parameterList: SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(GenPropertyChangedParameter())),
                     constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
                     body: SyntaxFactory.Block(new[] {
-                        SyntaxFactory.ParseStatement($"Container?.Invoke(this, new PropertyChangedEventArgs(propertyName));"),
+                        SyntaxFactory.ParseStatement($"Container?.OnPropertyChanged(this, propertyName);"),
                         SyntaxFactory.ParseStatement($"PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));") }),
                     semicolonToken: SyntaxFactory.Token(SyntaxKind.SemicolonToken));
             }

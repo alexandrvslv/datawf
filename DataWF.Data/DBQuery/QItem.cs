@@ -127,11 +127,10 @@ namespace DataWF.Data
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected void OnPropertyChanged(string pname)
+        protected void OnPropertyChanged(string propertyName)
         {
-            var args = new PropertyChangedEventArgs(pname);
-            PropertyChanged?.Invoke(this, args);
-            Container?.OnPropertyChanged(this, args);
+            Container?.OnPropertyChanged(this, propertyName);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         #endregion

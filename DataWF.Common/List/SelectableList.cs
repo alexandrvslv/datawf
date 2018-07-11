@@ -194,21 +194,27 @@ namespace DataWF.Common
             get { return items == null; }
         }
 
-        protected virtual void OnPropertyChanged(string property)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
-        }
-
         public virtual void OnListChanged(NotifyCollectionChangedAction type, object item = null, int index = -1, string property = null, int oldIndex = -1, object oldItem = null)
         {
             CollectionChanged?.Invoke(this, NotifyListPropertyChangedEventArgs.Build(type, item, oldItem, index, oldIndex, property));
             OnPropertyChanged(nameof(SyncRoot));
         }
 
-        public virtual void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+
+        protected virtual void OnPropertyChanged(string property)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+        }
+
+        protected virtual void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            OnPropertyChanged(sender, e.PropertyName);
+        }
+
+        public virtual void OnPropertyChanged(object sender, string propertyName)
         {
             var item = (T)sender;
-            var lindex = indexes.GetIndex(e.PropertyName);
+            var lindex = indexes.GetIndex(propertyName);
             if (lindex != null)
             {
                 lindex.Refresh(item);
@@ -223,13 +229,13 @@ namespace DataWF.Common
                         newindex--;
                     items.RemoveAt(index);
                     items.Insert(newindex, item);
-                    OnListChanged(NotifyCollectionChangedAction.Move, sender, newindex, e.PropertyName, index);
+                    OnListChanged(NotifyCollectionChangedAction.Move, sender, newindex, propertyName, index);
                     return;
                 }
             }
             if (index >= 0)
             {
-                OnListChanged(NotifyCollectionChangedAction.Reset, sender, index, e.PropertyName);
+                OnListChanged(NotifyCollectionChangedAction.Reset, sender, index, propertyName);
             }
         }
 
