@@ -260,9 +260,9 @@ namespace DataWF.Module.Flow
             return true;
         }
 
-        public void Load(string filename, Stream stream)
+        public void Load(string fileName, Stream stream)
         {
-            FileName = Path.GetFileName(FileName);
+            FileName = Path.GetFileName(fileName);
             using (var memory = new MemoryStream())
             {
                 stream.CopyTo(memory);
