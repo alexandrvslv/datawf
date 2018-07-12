@@ -1188,35 +1188,35 @@ namespace DataWF.Data
             }
         }
 
-        public List<DBItem> GetChilds(int recurs = 2, DBLoadParam param = DBLoadParam.None)
+        public IEnumerable<DBItem> GetChilds(int recurs = 2, DBLoadParam param = DBLoadParam.None)
         {
-            var rows = new List<DBItem>();
             recurs--;
-            var relations = Table.GetChildRelations();
-            foreach (DBForeignKey relation in relations)
+            if (recurs < 0)//
             {
-                if (relation.Table.Name.IndexOf("drlog", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                yield break;
+            }
+            foreach (var relation in Table.GetChildRelations())
+            {
+                if (relation.Table is DBLogTable ||
                     relation.Table.Type != DBTableType.Table ||
                     relation.Column.ColumnType != DBColumnTypes.Default)
                     continue;
-                if (recurs >= 0 || relation.Table == Table)
+
+                foreach (DBItem item in GetReferencing(relation, param))
                 {
-                    var list = GetReferencing(relation, param);
-                    foreach (DBItem item in list)
+                    if (item != this)
                     {
-                        if (item != this)
+                        foreach (var child in item.GetChilds(recurs, param))
                         {
-                            var childs = GetChilds(recurs, param);
-                            foreach (var child in childs)
-                                if (!rows.Contains(child))
-                                    rows.Add(child);
-                            if (!rows.Contains(item))
-                                rows.Add(item);
+                            if (child != this)
+                            {
+                                yield return child;
+                            }
                         }
+                        yield return item;
                     }
                 }
             }
-            return rows;
         }
 
         public void Merge(IEnumerable<DBItem> list)

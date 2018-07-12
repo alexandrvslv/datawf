@@ -6,33 +6,33 @@ using System.Threading;
 using DataWF.Gui;
 using DataWF.Data;
 using Xwt;
+using System.Linq;
 
 namespace DataWF.Data.Gui
 {
     public class RowDeleting : ToolWindow
     {
-        private List<DBItem> rowsDelete = null;
+        private List<DBItem> rowsDelete = new List<DBItem>();
         private SelectableList<DBItem> rows = new SelectableList<DBItem>();
         private DBItem row;
         private string message = string.Empty;
 
         private LayoutList list;
-        private ToolLabel toolExecute;
         private ToolProgressBar toolProgress;
 
         public RowDeleting()
         {
-            toolExecute = new ToolLabel();
-            toolProgress = new ToolProgressBar { Name = "toolProgress" };
+            toolProgress = new ToolProgressBar { Name = "toolProgress", DisplayStyle = ToolItemDisplayStyle.Text };
 
             list = new LayoutList()
             {
-                AutoToStringFill = true,
+                GenerateToString = false,
                 GenerateColumns = false,
                 Name = "list",
                 Text = "Reference List",
                 ListInfo = new LayoutListInfo(
                     new[]{
+                        new LayoutColumn{Name = nameof(ToString), FillWidth = true},
                         new LayoutColumn{Name = nameof(DBItem.Table), Width = 100, Visible = false},
                         new LayoutColumn{Name = nameof(DBItem.Status), Width = 100 },
                         new LayoutColumn { Name = nameof(DBItem.UpdateState), Width = 100 },
@@ -43,7 +43,6 @@ namespace DataWF.Data.Gui
                 ListSource = rows
             };
 
-            bar.Add(toolExecute);
             bar.Add(toolProgress);
 
             Label.Text = "Row Deleting";
@@ -51,7 +50,7 @@ namespace DataWF.Data.Gui
             Name = "RowDeleting";
             Target = list;
             Mode = ToolShowMode.Modal;
-
+            Size = new Size(800, 600);
             Localizing();
         }
 
@@ -65,13 +64,19 @@ namespace DataWF.Data.Gui
                 row = value;
                 Label.Text = row.ToString();
                 toolProgress.Visible = true;
+                toolProgress.Text = Locale.Get("RowDeleting", "Loading");
                 ThreadPool.QueueUserWorkItem((o) =>
                 {
                     try
                     {
-                        rowsDelete = row.GetChilds(2, DBLoadParam.Load);
+                        rowsDelete.Clear();
                         rows.Clear();
-                        rows.AddRange(rowsDelete);
+                        rows.Add(row);
+                        foreach (var item in row.GetChilds(3, DBLoadParam.Load).Distinct())
+                        {
+                            rowsDelete.Add(item);
+                            rows.Add(item);
+                        }
                         Callback();
                     }
                     catch (Exception ex)
@@ -86,13 +91,17 @@ namespace DataWF.Data.Gui
         {
             try
             {
-                foreach (DBItem r in rowsDelete)
+                using (var transaction = DBTransaction.GetTransaction(row, row.Table.Schema.Connection))
                 {
-                    r.Delete();
-                    r.Save();
+                    foreach (DBItem r in rowsDelete)
+                    {
+                        r.Delete();
+                        r.Save();
+                    }
+                    row.Delete();
+                    row.Save();
+                    transaction.Commit();
                 }
-                row.Delete();
-                row.Save();
             }
             catch (Exception ex)
             {
@@ -112,21 +121,17 @@ namespace DataWF.Data.Gui
                 }
                 else if (!row.Attached)
                 {
-                    toolExecute.Text = Locale.Get("RowDeleting", "Delete Complete!");
-                    MessageDialog.ShowMessage(Content.ParentWindow, toolExecute.Text);
+                    MessageDialog.ShowMessage(Content.ParentWindow, Locale.Get("RowDeleting", "Delete Complete!"));
                     Hide();
                 }
-                else
-                {
-                    toolExecute.Text = Locale.Get("RowDeleting", "Start Delete?");
-                }
+
                 message = string.Empty;
             });
         }
 
         protected override void OnAcceptClick(object sender, EventArgs e)
         {
-            toolExecute.Text = Locale.Get("RowDeleting", "Deleting");
+            toolProgress.Text = Locale.Get("RowDeleting", "Deleting");
             toolProgress.Visible = true;
             ButtonAcceptEnabled = false;
             ThreadPool.QueueUserWorkItem((o) =>
@@ -157,7 +162,6 @@ namespace DataWF.Data.Gui
         {
             Label.Text = Locale.Get("RowDeleting", "Row Deleting");
             ButtonAcceptText = Locale.Get("RowDeleting", "Start Deleting");
-            toolExecute.Text = Locale.Get("RowDeleting", "Loading");
         }
 
         //public object Picture
