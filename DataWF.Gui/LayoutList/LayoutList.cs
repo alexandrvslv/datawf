@@ -290,8 +290,8 @@ namespace DataWF.Gui
 
         protected internal virtual void CanvasButtonPress(ButtonEventArgs e)
         {
-            if (!HasFocus)
-                SetFocus();
+            //if (!HasFocus)
+            //    SetFocus();
             _cacheButton = e.Button;
             var hInfo = HitTest(e.X, e.Y, e.Button,
                                          Keyboard.CurrentModifiers == ModifierKeys.Control,
@@ -357,6 +357,7 @@ namespace DataWF.Gui
                 UseState = LayoutListState.Default;
                 if (buf == LayoutListState.MoveColumn || buf == LayoutListState.Select)
                     RefreshBounds(false);
+                return;
             }
             switch (hitt.Location)
             {
@@ -564,10 +565,10 @@ namespace DataWF.Gui
                 OnColumnMouseLeave(e);
             if (selection.HoverRow != null)
                 OnCellMouseLeave(e);
-            UseState = LayoutListState.Default;
-            _cacheButton = 0;
-            if (canvas.Cursor != CursorType.Arrow)
-                canvas.Cursor = CursorType.Arrow;
+            //UseState = LayoutListState.Default;
+            //_cacheButton = 0;
+            //if (canvas.Cursor != CursorType.Arrow)
+            //    canvas.Cursor = CursorType.Arrow;
             OnToolTipCancel(EventArgs.Empty);
             base.OnLostFocus(e);
         }
@@ -2578,14 +2579,14 @@ namespace DataWF.Gui
                 var buf = new List<string>();
                 Type t = listMode == LayoutListMode.Fields ? FieldType : ListType;
                 if (t != null)
-                    buf = GetPropertiesByCell(args.Cell, t);
+                    buf = GetPropertiesByCell(args.Cell, t, listMode == LayoutListMode.Fields);
                 args.Properties = buf;
             }
             if (GetProperties != null)
                 GetProperties(this, args);
         }
 
-        public List<string> GetPropertiesByCell(ILayoutCell owner, Type basetype)
+        public List<string> GetPropertiesByCell(ILayoutCell owner, Type basetype, bool noReadOnly)
         {
             List<string> strings = new List<string>();
             PropertyInfo[] pis = null;
@@ -2598,7 +2599,10 @@ namespace DataWF.Gui
 
             foreach (PropertyInfo p in pis)
             {
-                if (!p.CanRead || p.GetIndexParameters().Length > 0 || !TypeHelper.GetBrowsable(p))
+                if (!p.CanRead
+                    || p.GetIndexParameters().Length > 0
+                    || !TypeHelper.GetBrowsable(p)
+                    || (noReadOnly && p.SetMethod == null))
                     continue;
                 if (HideCollections && TypeHelper.IsEnumerable(p.PropertyType))
                     continue;
