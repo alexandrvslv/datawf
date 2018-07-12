@@ -17,6 +17,7 @@ namespace DataWF.Gui
             Content = Bar;
             Decorated = false;
             Padding = new WidgetSpacing(8, 8, 8, 8);
+            Resizable = true;
             InitialLocation = WindowLocation.Manual;
             ShowInTaskbar = false;
             Name = nameof(Menubar);
@@ -76,6 +77,7 @@ namespace DataWF.Gui
                     ((Window)TransientFor).Content.GotFocus += BaseGetFocus;
                 }
             }
+            Size = Bar.Items.GetBound(0,0).Size;
             var location = owner?.ConvertToScreenCoordinates(point) ?? point;
             var screen = TransientFor?.Screen ?? Desktop.PrimaryScreen;
             if ((ScreenBounds.Width + location.X) > screen.Bounds.Right)
