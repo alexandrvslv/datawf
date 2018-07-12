@@ -295,7 +295,7 @@ namespace DataWF.Module.Flow
         public string WorkUser
         {
             get { return GetProperty<string>(); }
-            set { SetProperty(value); }
+            private set { SetProperty(value); }
         }
 
         [Browsable(false)]
@@ -303,7 +303,7 @@ namespace DataWF.Module.Flow
         public string WorkStage
         {
             get { return GetProperty<string>(nameof(WorkStage)); }
-            set { SetProperty(value, nameof(WorkStage)); }
+            private set { SetProperty(value, nameof(WorkStage)); }
         }
 
         [Browsable(false)]
