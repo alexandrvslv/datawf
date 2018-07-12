@@ -117,6 +117,7 @@ namespace DataWF.Module.FlowGui
             PackStart(bar, false, false);
             PackStart(list, true, true);
             Name = "DocumentListView";
+            Documents = new DBTableView<Document>();
             Filter = new DocumentFilter();
         }
 
@@ -179,9 +180,10 @@ namespace DataWF.Module.FlowGui
             get { return loader; }
         }
 
-        public IDBTableView Documents
+        public DBTableView<Document> Documents
         {
-            get { return (IDBTableView)list.ListSource; }
+            get { return list.Documents; }
+            set { list.Documents = value; }
         }
 
         public DocumentLayoutList List
@@ -217,17 +219,25 @@ namespace DataWF.Module.FlowGui
             {
                 filterWork.Checked = filter?.IsWork == CheckedState.Checked;
                 filterCurrent.Checked = filter?.IsCurrent ?? false;
-                list.Template = FilterTemplate;
 
                 if (Documents != null)
                 {
-                    Documents.Query = filter.QDoc;
-                    Documents.UpdateFilter();
+                    if (Documents.Query != filter.QDoc)
+                    {
+                        Documents.Query = filter.QDoc;
+                    }
+                    else
+                    {
+                        Documents.UpdateFilter();
+                    }
+
                     if (AutoLoad && !filter.IsCurrent && !filter.IsEmpty)
                     {
                         loader.View = Documents;
                         loader.LoadAsync(filter.QDoc);
                     }
+                    list.Template = FilterTemplate;
+
                 }
                 FilterChanged?.Invoke(this, EventArgs.Empty);
             }
@@ -358,7 +368,7 @@ namespace DataWF.Module.FlowGui
 
                 if (GuiService.Main == null || !mainDock)
                 {
-                    editor.ShowWindow(this);
+                    editor.ShowWindow(this.ParentWindow, new Size(1024, 768));
                 }
             }
             if (mainDock)

@@ -79,6 +79,12 @@ namespace DataWF.Module.FlowGui
             return column;
         }
 
+        public DBTableView<Document> Documents
+        {
+            get => ListSource as DBTableView<Document>;
+            set => ListSource = value;
+        }
+
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Template Template
         {
@@ -88,18 +94,13 @@ namespace DataWF.Module.FlowGui
                 if (template == value && template != null)
                     return;
                 template = value;
-                if (Mode == LayoutListMode.List)
+                if (Mode == LayoutListMode.List && Documents != null)
                 {
                     var type = template?.DocumentTypeInfo?.Type ?? typeof(Document);
                     if (ListType != type)
                     {
-                        var curSource = ListSource;
-                        ListSource = DBTable.CreateView(type);
-
-                        if (curSource is IDisposable disp)
-                        {
-                            disp.Dispose();
-                        }
+                        Documents.ItemType = type;
+                        ListType = type;
                     }
                     //TreeMode = ListInfo.Tree;
                 }

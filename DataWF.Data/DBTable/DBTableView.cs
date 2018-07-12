@@ -285,7 +285,7 @@ namespace DataWF.Data
 
         public void OnItemChanged(DBItem item, string propertyName, NotifyCollectionChangedAction type)
         {
-            if (item == null || item is T)
+            if (item == null || TypeHelper.IsBaseType(item.GetType(), ItemType))
             {
                 OnItemChanged((T)item, propertyName, type);
             }
@@ -504,9 +504,9 @@ namespace DataWF.Data
             Table.Save(GetEdited().ToList());
         }
 
-        public void Sort(params DBColumn[] p)
+        public void Sort(params DBColumn[] columns)
         {
-            items.Sort(new DBComparerList(p));
+            items.Sort(new DBComparerList(columns));
             OnListChanged(NotifyCollectionChangedAction.Reset);
         }
 
