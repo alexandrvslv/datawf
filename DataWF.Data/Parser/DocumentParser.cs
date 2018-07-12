@@ -49,7 +49,9 @@ namespace DataWF.Data
             var ext = Path.GetExtension(filename);
             if (cache.TryGetValue(ext, out var parser))
                 return parser.Parse(data, param);
-            throw new NotSupportedException(ext);
+            else
+                return data;
+            //throw new NotSupportedException(ext);
         }
 
         public abstract byte[] Parse(byte[] data, ExecuteArgs param);
