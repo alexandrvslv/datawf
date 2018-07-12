@@ -353,10 +353,9 @@ namespace DataWF.Gui
             }
         }
 
-        protected new void Hide()
+        protected override void OnHidden()
         {
-            base.Hide();
-
+            base.OnHidden();
             var temp = Owner;
             Owner = null;
 
@@ -369,12 +368,17 @@ namespace DataWF.Gui
                     if (!byDeactivate)
                         ((ToolWindow)temp).byDeactivate = true;
                 }
-                temp.Visible = true;
+                // temp.Visible = true;
             }
 
             if (timerHide.Enabled)
                 timerHide.Stop();
             byDeactivate = false;
+        }
+
+        public new void Hide()
+        {
+            base.Hide();
 
             if (token != null)
             {
