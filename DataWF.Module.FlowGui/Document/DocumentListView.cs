@@ -41,7 +41,7 @@ namespace DataWF.Module.FlowGui
         protected ToolFieldEditor filterTitle;
         protected ToolFieldEditor filterDate;
         private DocumentLayoutList list;
-        private DocumentEditor editor;
+        private DocumentEditor previewEditor;
 
         public DocumentListView()
         {
@@ -275,9 +275,9 @@ namespace DataWF.Module.FlowGui
                 || !toolPreview.Checked
                 || CurrentDocument == null)
                 return;
-            var editor = GetEditor(CurrentDocument.GetType(), true);
+            var editor = GetPreviewEditor(CurrentDocument.GetType(), true);
 
-            if (editor.EditorState != DocumentEditorState.Send)
+            if (editor != null && editor.EditorState != DocumentEditorState.Send)
             {
                 editor.SetList(GetSelected());
                 editor.Document = CurrentDocument;
@@ -299,7 +299,7 @@ namespace DataWF.Module.FlowGui
         private void ListCellMouseDoubleClick(object sender, LayoutHitTestEventArgs e)
         {
             if (e.HitTest.Index >= 0)
-                ShowDocument(list.SelectedItem as Document, true);
+                ShowDocument(list.SelectedItem as Document);
         }
 
         private void ToolParamClick(object sender, EventArgs e)
@@ -356,48 +356,49 @@ namespace DataWF.Module.FlowGui
             set { toolPreview.Sensitive = value; }
         }
 
-        public virtual DocumentEditor ShowDocument(Document document, bool mainDock)
+        public virtual DocumentEditor ShowDocument(Document document)
         {
             string name = "DocumentEditor" + document.Id.ToString();
+            var dock = this.GetParent<DockBox>();
             var editor = GuiService.Main?.DockPanel.Find(name) as DocumentEditor;
             if (editor == null)
             {
                 editor = new DocumentEditor { Name = name };
                 editor.XmlDeserialize(DocumentEditor.GetFileName(document.GetType()));
                 editor.Document = document;
-
-                if (GuiService.Main == null || !mainDock)
-                {
-                    editor.ShowWindow(this.ParentWindow, new Size(1024, 768));
-                }
             }
-            if (mainDock)
+
+            if (dock != null)
             {
-                GuiService.Main.DockPanel.Put(editor, DockType.Content);
+                dock.Put(editor, DockType.Content);
+            }
+            else
+            {
+                editor.ShowWindow(ParentWindow, new Size(1024, 768));
             }
 
             return editor;
         }
 
-        public DocumentEditor GetEditor(Type documentType, bool create)
+        public DocumentEditor GetPreviewEditor(Type documentType, bool create)
         {
             var dock = this.GetParent<DockBox>();
             if (dock == null || documentType == null)
                 return null;
 
-            if (editor == null || editor.DocumentType != documentType)
+            if (previewEditor == null || previewEditor.DocumentType != documentType)
             {
                 var name = nameof(DocumentEditor) + documentType.Name;
-                editor = (DocumentEditor)dock.Find(name);
-                if (editor == null && create)
+                previewEditor = (DocumentEditor)dock.Find(name);
+                if (previewEditor == null && create)
                 {
-                    editor = new DocumentEditor() { Name = name };
-                    editor.XmlDeserialize(DocumentEditor.GetFileName(documentType));
+                    previewEditor = new DocumentEditor() { Name = name };
+                    previewEditor.XmlDeserialize(DocumentEditor.GetFileName(documentType));
                 }
-                editor.HideOnClose = true;
+                previewEditor.HideOnClose = true;
             }
-            dock.Put(editor);
-            return editor;
+            dock.Put(previewEditor);
+            return previewEditor;
         }
 
         private void EditorSendComplete(object sender, EventArgs e)
@@ -409,9 +410,9 @@ namespace DataWF.Module.FlowGui
         {
             Application.Invoke(() =>
             {
+                Documents?.Dispose();
                 filter?.Dispose();
                 loader?.Dispose();
-                Documents?.Dispose();
                 Filter = null;
             });
             base.Dispose(disposing);
@@ -526,18 +527,18 @@ namespace DataWF.Module.FlowGui
         {
             if (documents.Count == 1)
             {
-                ShowDocument(documents[0], false);
+                ShowDocument(documents[0]);
             }
             else if (documents.Count > 1)
             {
-                var list = new DBTableView<Document>((QParam)null, DBViewKeys.Static | DBViewKeys.Empty);
+                var list = new DBTableView<Document>((QParam)null, DBViewKeys.Static | DBViewKeys.Empty)
+                {
+                    ItemType = documents[0].Template.DocumentTypeInfo.Type
+                };
                 list.AddRange(documents);
 
-                var dlist = new DocumentListView();
-                dlist.List.GenerateColumns = false;
-                dlist.List.AutoToStringFill = true;
-                dlist.Filter.Template = documents[0].Template;
-                dlist.List.ListSource = list;
+
+                var dlist = new ListEditor { DataSource = list };
 
                 using (var form = new ToolWindow
                 {
@@ -566,7 +567,7 @@ namespace DataWF.Module.FlowGui
                 MessageDialog.ShowWarning(Locale.Get(nameof(DocumentListView), "Some data not saved!"));
                 return false;
             }
-            var editor = GetEditor(CurrentDocument?.GetType(), false);
+            var editor = GetPreviewEditor(CurrentDocument?.GetType(), false);
             if (editor != null)
             {
                 this.GetParent<DockBox>().ClosePage(editor);

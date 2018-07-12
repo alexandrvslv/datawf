@@ -31,9 +31,9 @@ namespace DataWF.Module.FlowGui
             }
         }
 
-        public override DocumentEditor ShowDocument(Document document, bool mainDock)
+        public override DocumentEditor ShowDocument(Document document)
         {
-            var editor = base.ShowDocument(document, mainDock);
+            var editor = base.ShowDocument(document);
             var dock = this.GetParent<DockBox>();
             dock.HideExcept(dock.GetPage(editor)?.Panel.DockItem);
             return editor;
