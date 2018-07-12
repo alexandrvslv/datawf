@@ -290,7 +290,7 @@ namespace DataWF.Module.Flow
             get { return WorkCurrent?.Stage; }
         }
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [DataMember, Column("work_user", ColumnType = DBColumnTypes.Internal)]
         public string WorkUser
         {
