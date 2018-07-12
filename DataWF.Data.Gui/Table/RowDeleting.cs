@@ -72,7 +72,7 @@ namespace DataWF.Data.Gui
                         rowsDelete.Clear();
                         rows.Clear();
                         rows.Add(row);
-                        foreach (var item in row.GetChilds(3, DBLoadParam.Load).Distinct())
+                        foreach (var item in row.GetChilds(10, DBLoadParam.Load).Distinct())
                         {
                             rowsDelete.Add(item);
                             rows.Add(item);
