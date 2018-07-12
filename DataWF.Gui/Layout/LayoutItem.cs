@@ -9,7 +9,7 @@ using Xwt;
 
 namespace DataWF.Gui
 {
-    public class LayoutItem<T> : NamedList<T>, ILayoutItem, IComparable where T : LayoutItem<T>, new()
+    public class LayoutItem<T> : NamedList<T>, ILayoutItem, IGroup, IComparable where T : LayoutItem<T>, new()
     {
         private static readonly double min = 5;
         protected internal double height = 22D;
@@ -226,6 +226,33 @@ namespace DataWF.Gui
                     OnPropertyChanged(nameof(Indent));
                 }
             }
+        }
+
+        [Browsable(false)]
+        public bool IsExpanded { get { return GroupHelper.GetAllParentExpand(this); } }
+
+        [XmlIgnore, Browsable(false)]
+        public IGroup Group
+        {
+            get { return Map; }
+            set
+            {
+                if (value != null)
+                    ((T)value).Add((T)this);
+                else
+                    Remove();
+            }
+        }
+
+        [XmlIgnore, DefaultValue(true)]
+        public bool Expand { get; set; } = true;
+
+        [Browsable(false)]
+        public bool IsCompaund { get { return items.Count > 0; } }
+
+        public IEnumerable<IGroup> GetGroups()
+        {
+            return this;
         }
 
         protected override void OnPropertyChanged(string property)
@@ -877,11 +904,24 @@ namespace DataWF.Gui
             return w;
         }
 
+        public IEnumerable<T> GetAllItems()
+        {
+            foreach (var item in this)
+            {
+                yield return item;
+                if (item.IsCompaund)
+                {
+                    foreach (var subItem in item.GetAllItems())
+                        yield return subItem;
+                }
+            }
+        }
+
         public IEnumerable<T> GetItems()
         {
             foreach (var item in this)
             {
-                if (item.Count > 0)
+                if (item.IsCompaund)
                 {
                     foreach (var subItem in item.GetItems())
                         yield return subItem;
@@ -1051,6 +1091,8 @@ namespace DataWF.Gui
             }
             base.Dispose();
         }
+
+
     }
 
     public enum LayoutGrowMode

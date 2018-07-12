@@ -63,10 +63,15 @@ namespace DataWF.Gui
                 GenerateToString = false,
                 EditMode = EditModes.ByClick,
                 ListInfo = new LayoutListInfo(
-                    new LayoutColumn { Name = nameof(LayoutColumn.ToString), Editable = false },
+                    new LayoutColumn { Name = nameof(LayoutColumn.ToString), Editable = false, Width = 180 },
                     new LayoutColumn { Name = nameof(LayoutColumn.Text), FillWidth = true },
                     new LayoutColumn { Name = nameof(LayoutColumn.Visible), Width = 50 },
                     new LayoutColumn { Name = nameof(LayoutColumn.Format) })
+                {
+                    HeaderVisible = false,
+                    LevelIndent = 5,
+                    Tree = true
+                }
             });
             columns.List.SelectionChanged += ColumnsItemSelect;
             ToolInsert.ItemClick += ToolInsertItemClick;
@@ -148,9 +153,13 @@ namespace DataWF.Gui
             get => contextList;
             set
             {
+                if (contextList?.ListInfo != null)
+                {
+                    contextList.ListInfo.Columns.PropertyChanged -= ColumnsPropertyChanged;
+                }
                 contextList = value;
                 options.FieldSource = contextList?.ListInfo;
-                columns.DataSource = contextList?.ListInfo?.Columns.GetItems().Cast<LayoutColumn>().ToList();
+                columns.DataSource = contextList?.ListInfo?.Columns.GetAllItems().ToList();
                 sorts.DataSource = contextList?.ListInfo?.Sorters;
                 fields.DataSource = contextList?.FieldInfo?.Nodes;
                 gFields.Visible = fields.DataSource != null;
@@ -158,7 +167,16 @@ namespace DataWF.Gui
 
                 toolGroup.Visible = value.Mode == LayoutListMode.Fields || TypeHelper.IsInterface(value.ListType, typeof(IGroup));
                 toolGroup.Checked = value.Mode == LayoutListMode.Fields ? value.Grouping : value.TreeMode;
+                if (contextList?.ListInfo != null)
+                {
+                    contextList.ListInfo.Columns.PropertyChanged += ColumnsPropertyChanged;
+                }
             }
+        }
+
+        private void ColumnsPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            columns.DataSource = contextList?.ListInfo?.Columns.GetAllItems().ToList();
         }
 
         public LayoutColumn ContextColumn
@@ -221,7 +239,7 @@ namespace DataWF.Gui
             var column = (LayoutColumn)columns.List.SelectedItem;
             if (column.Invoker != null && ContextList.IsComplex(column))
             {
-                var propertiest = ContextList.GetPropertiesByCell(column, null);
+                var propertiest = ContextList.GetPropertiesByCell(column, null, false);
                 foreach (string item in propertiest)
                 {
                     string property = (item.IndexOf('.') < 0 ? (column.Name + ".") : string.Empty) + item;
