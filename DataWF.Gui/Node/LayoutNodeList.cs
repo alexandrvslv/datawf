@@ -10,8 +10,8 @@ namespace DataWF.Gui
 {
     public class LayoutNodeList<T> : SelectableList<T> where T : Node, new()
     {
-        static readonly Invoker<Node, string> nameInvoker = new Invoker<Node, string>(nameof(Node.Name), item => item.Name);
-        static readonly Invoker<Node, Node> groupInvoker = new Invoker<Node, Node>(nameof(Node.Group), item => item.Group);
+        static readonly Invoker<T, string> nameInvoker = new Invoker<T, string>(nameof(Node.Name), item => item.Name);
+        static readonly Invoker<T, Node> groupInvoker = new Invoker<T, Node>(nameof(Node.Group), item => item.Group);
         private int order;
         private bool sense = true;
 

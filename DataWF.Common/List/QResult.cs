@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
-    public class QField : IInvoker<object[], object>
+    public class QField : IIndexInvoker<object[], object, int>
     {
-        public int Index;
+        public int Index { get; set; }
 
         public bool CanWrite { get { return true; } }
 
@@ -17,10 +17,26 @@ namespace DataWF.Common
         public Type TargetType { get { return typeof(object[]); } }
 
         public string Name { get; set; }
+        object IIndexInvoker.Index { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        public IListIndex CreateIndex()
+        {
+            return new ListIndex<object[], object>(this);
+        }
+
+        public object Get(object[] target, int index)
+        {
+            return target[index];
+        }
 
         public object Get(object[] target)
         {
-            return target[Index];
+            return Get(target, Index);
+        }
+
+        public object Get(object target, object index)
+        {
+            return Get((object[])target, (int)index);
         }
 
         public object Get(object target)
@@ -30,12 +46,23 @@ namespace DataWF.Common
 
         public void Set(object[] target, object value)
         {
-            target[Index] = value;
+            Set(target, Index, value);
         }
 
         public void Set(object target, object value)
         {
             Set((object[])target, value);
+        }
+
+
+        public void Set(object[] target, int index, object value)
+        {
+            target[index] = value;
+        }
+
+        public void Set(object target, object index, object value)
+        {
+            Set((object[])target, (int)index, value);
         }
     }
 

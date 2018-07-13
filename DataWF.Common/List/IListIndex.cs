@@ -1,0 +1,25 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+
+namespace DataWF.Common
+{
+    public interface IListIndex
+    {
+        void Add(object item);
+        void Clear();
+        void Remove(object item);
+        object SelectOne(object value);
+        IEnumerable Scan(QueryParameter parameter);
+    }
+
+    public interface IListIndex<T> : IListIndex
+    {
+        void Add(T item);
+        void Remove(T item);
+        new IEnumerable<T> Scan(QueryParameter parameter);
+        new T SelectOne(object value);
+        void Refresh(T item);
+    }
+
+}
+

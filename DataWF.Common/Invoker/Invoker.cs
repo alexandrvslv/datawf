@@ -26,6 +26,11 @@ namespace DataWF.Common
 
         public Action<T, V> SetAction { get; protected set; }
 
+        public IListIndex CreateIndex()
+        {
+            return new ListIndex<T, V>(this);
+        }
+
         public V Get(T target)
         {
             return GetAction(target);

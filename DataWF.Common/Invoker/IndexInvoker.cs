@@ -71,5 +71,10 @@ namespace DataWF.Common
         {
             Set((T)target, (K)index, (V)value);
         }
+
+        public IListIndex CreateIndex()
+        {
+            return new ListIndex<T, V>(this);
+        }
     }
 }

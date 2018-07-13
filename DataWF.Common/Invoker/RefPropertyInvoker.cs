@@ -34,6 +34,11 @@ namespace DataWF.Common
 
         internal SetHandler<T, V> SetAction { get; private set; }
 
+        public IListIndex CreateIndex()
+        {
+            throw new NotImplementedException();
+        }
+
         public V Get(ref T target)
         {
             return GetAction(target);

@@ -29,7 +29,9 @@ namespace DataWF.Data
 {
     public class DBVirtualTable<T> : DBTable<T>, IDBVirtualTable where T : DBVirtualItem, new()
     {
-        static readonly Invoker<DBVirtualColumn, string> baseNameInvoker = new Invoker<DBVirtualColumn, string>(nameof(DBVirtualColumn.BaseName), item => item.BaseName);
+        static readonly Invoker<DBColumn, string> baseNameInvoker = new Invoker<DBColumn, string>(
+            nameof(DBVirtualColumn.BaseName),
+            item => item is DBVirtualColumn vitem ? vitem.BaseName : null);
 
         private DBTable baseTable;
         protected string baseTableName;

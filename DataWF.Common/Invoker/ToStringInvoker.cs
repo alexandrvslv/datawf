@@ -34,5 +34,9 @@ namespace DataWF.Common
             throw new NotImplementedException();
         }
 
+        public IListIndex CreateIndex()
+        {
+            return new ListIndex<object, string>(this);
+        }
     }
 }

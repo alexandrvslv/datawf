@@ -44,6 +44,11 @@ namespace DataWF.Gui
 
         public object Source { get; set; }
 
+        public IListIndex CreateIndex()
+        {
+            return new ListIndex<LayoutField, object>(this);
+        }
+
         public object Get(LayoutField target)
         {
             return Source == null ? null : target.ReadValue(Source);

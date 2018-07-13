@@ -15,6 +15,8 @@ namespace DataWF.Common
         object Get(object target);
 
         void Set(object target, object value);
+
+        IListIndex CreateIndex();
     }
 
     public interface IInvoker<T, V> : IInvoker

@@ -33,7 +33,7 @@ namespace DataWF.Data
         static readonly Invoker<DBColumn, string> propertyInvoker = new Invoker<DBColumn, string>(nameof(DBColumn.Property), item => item.Property);
         static readonly Invoker<DBColumn, bool> isViewInvoker = new Invoker<DBColumn, bool>(nameof(DBColumn.IsView), item => item.IsView);
         static readonly Invoker<DBColumn, bool> isReferenceInvoker = new Invoker<DBColumn, bool>(nameof(DBColumn.IsReference), item => item.IsReference);
-        static readonly Invoker<DBColumn, DBTable> referenceTableInvoker = new Invoker<DBColumn, DBTable>(nameof(DBColumn.ReferenceTable), item => item.ReferenceTable);
+        static readonly Invoker<DBColumn, string> referenceTableInvoker = new Invoker<DBColumn, string>(nameof(DBColumn.ReferenceTable), item => item.ReferenceTable?.Name);
 
         public DBColumnList(DBTable table)
             : base(table)
@@ -167,7 +167,7 @@ namespace DataWF.Data
 
         public IEnumerable<DBColumn> GetByReference(DBTable table)
         {
-            return Select(nameof(DBColumn.ReferenceTable), CompareType.Equal, table);
+            return Select(nameof(DBColumn.ReferenceTable), CompareType.Equal, table.Name);
         }
 
         public IEnumerable<DBColumn> GetIsReference()

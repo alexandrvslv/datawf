@@ -146,6 +146,19 @@ namespace DataWF.Common
         public abstract void Trunc(int maxIndex);
     }
 
+    public class DBNullablePull<T> : Pull<DBNullable<T>>, IEnumerable<DBNullable<T>> where T : struct
+    {
+        public DBNullablePull(int BlockSize) : base(BlockSize)
+        {
+            ItemType = typeof(T);
+        }
+
+        public override void Set(int index, object value)
+        {
+            SetValue(index, DBNullable<T>.CheckNull(value));
+        }
+    }
+
     public class NullablePull<T> : Pull<T?>, IEnumerable<T?> where T : struct
     {
         public NullablePull(int BlockSize) : base(BlockSize)

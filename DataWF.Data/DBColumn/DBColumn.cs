@@ -771,7 +771,7 @@ namespace DataWF.Data
 
             if (value == null)
                 return "null";
-            else if(value is bool)
+            else if (value is bool)
                 return value.ToString().ToLowerInvariant();
             else if (value is string)
                 return $"\"{((string)value).Replace("\"", "\\\"")}\"";
@@ -973,6 +973,9 @@ namespace DataWF.Data
             return val;
         }
 
-
+        public IListIndex CreateIndex()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

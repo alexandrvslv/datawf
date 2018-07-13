@@ -5,20 +5,25 @@ namespace DataWF.Common
 {
     public class ListIndexes<T> : IListIndexes<T>
     {
-        protected Dictionary<string, ListIndex<T>> indexes = new Dictionary<string, ListIndex<T>>(StringComparer.OrdinalIgnoreCase);
+        protected Dictionary<string, IListIndex<T>> indexes = new Dictionary<string, IListIndex<T>>(StringComparer.OrdinalIgnoreCase);
 
         public void Add(IInvoker invoker)
         {
             if (!indexes.TryGetValue(invoker.Name, out var index))
             {
-                index = new ListIndex<T>(invoker);
+                index = (IListIndex<T>)invoker.CreateIndex();
                 indexes.Add(invoker.Name, index);
             }
         }
 
-        public ListIndex<T> GetIndex(string property)
+        public IListIndex<T> GetIndex(string property)
         {
             return indexes.TryGetValue(property, out var index) ? index : null;
+        }
+
+        public ListIndex<T, K> GetIndex<K>(string property)
+        {
+            return (ListIndex<T, K>)GetIndex(property);
         }
 
         public void AddItem(T item)

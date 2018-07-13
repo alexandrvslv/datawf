@@ -18,6 +18,11 @@ namespace DataWF.Common
 
         public string Name { get; set; }
 
+        public IListIndex CreateIndex()
+        {
+            return new ListIndex<IGroup, bool>(this);
+        }
+
         public bool Get(IGroup target)
         {
             return target.IsExpanded;

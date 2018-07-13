@@ -153,6 +153,15 @@ namespace DataWF.Common
             });
         }
 
+        public T SelectOne<K>(string property, K value)
+        {
+            if (indexes.GetIndex(property) is ListIndex<T, K> index)
+            {
+                return index.SelectOne(value);
+            }
+            return SelectOne(property, CompareType.Equal, value);
+        }
+
         public T SelectOne(string property, object value)
         {
             return SelectOne(property, CompareType.Equal, value);

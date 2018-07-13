@@ -65,31 +65,34 @@ namespace DataWF.Common
 
         public void SetValue(MemberInfo info, object target, object value)
         {
-            if (info is PropertyInfo)
+            switch (info)
             {
-                ((PropertyInfo)info).SetValue(target, value);
-            }
-            if (info is FieldInfo)
-            {
-                ((FieldInfo)info).SetValue(target, value);
+                case PropertyInfo pInfo:
+                    pInfo.SetValue(target, value);
+                    break;
+                case FieldInfo fInfo:
+                    fInfo.SetValue(target, value);
+                    break;
             }
         }
 
         public object GetValue(MemberInfo info, object target)
         {
-            if (info is PropertyInfo)
+            switch (info)
             {
-                return ((PropertyInfo)info).GetValue(target);
-            }
-            if (info is FieldInfo)
-            {
-                return ((FieldInfo)info).GetValue(target);
-            }
-            if (info is MethodInfo)
-            {
-                return ((MethodInfo)info).Invoke(target, null);
+                case PropertyInfo pInfo:
+                    return pInfo.GetValue(target);
+                case FieldInfo fInfo:
+                    return fInfo.GetValue(target);
+                case MethodInfo mInfo:
+                    return mInfo.Invoke(target, null);
             }
             return null;
+        }
+
+        public IListIndex CreateIndex()
+        {
+            throw new NotImplementedException();
         }
     }
 }

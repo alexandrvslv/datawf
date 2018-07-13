@@ -19,6 +19,11 @@ namespace DataWF.Test.Common
 
         public string Name { get; set; }
 
+        public IListIndex CreateIndex()
+        {
+            return new ListIndex<TestClass, int>(this);
+        }
+
         public int Get(TestClass target)
         {
             return target.Field;

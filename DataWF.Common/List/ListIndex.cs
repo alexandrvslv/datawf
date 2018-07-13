@@ -1,36 +1,26 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace DataWF.Common
 {
-    public interface IListIndex
+    public class ListIndex<T, K> : IListIndex<T>
     {
-        void Add(object item);
-        void Clear();
-        void Remove(object item);
-        object SelectOne(object value);
-        IEnumerable Scan(QueryParameter parameter);
-    }
+        public Dictionary<DBNullable<K>, List<T>> Dictionary;
+        public IInvoker<T, K> Invoker;
 
-    public class ListIndex<T> : IListIndex
-    {
-        public Hashtable Hash;
-        public IInvoker Invoker;
-
-        public ListIndex(IInvoker accessor)
+        public ListIndex(IInvoker<T, K> accessor)
         {
             Invoker = accessor;
-            //var type = typeof(Dictionary<,>);
-            //Type dictionary = type.MakeGenericType(accessor.ValueType, accessor.Info.DeclaringType);
-            //if (accessor.ValueType == typeof(string))
-            //    Dict = (IDictionary)ReflectionAccessor.CreateObject(dictionary, new Type[] { typeof(IEqualityComparer<string>) }, new object[] { StringComparer.OrdinalIgnoreCase }, true);
-            //else
-            //    Dict = (IDictionary)ReflectionAccessor.CreateObject(dictionary, new Type[] { }, new object[] { }, true);
-            if (accessor.DataType == typeof(string))
-                Hash = new Hashtable(StringComparer.OrdinalIgnoreCase);
+            if (typeof(K) == typeof(string))
+            {
+                Dictionary = new Dictionary<DBNullable<K>, List<T>>((IEqualityComparer<DBNullable<K>>)DBNullableComparer.StringOrdinalIgnoreCase);
+            }
             else
-                Hash = new Hashtable();
+            {
+                Dictionary = new Dictionary<DBNullable<K>, List<T>>();
+            }
         }
 
         public bool CheckParameter(QueryParameter param)
@@ -44,157 +34,160 @@ namespace DataWF.Common
 
         public void Add(T item)
         {
-            if (!Invoker.TargetType.IsInstanceOfType(item))
-                return;
-            var value = Invoker.Get(item);
-            value = value ?? DBNull.Value;
-
-            var refs = Hash[value] as List<T>;
-            if (refs == null)
+            var key = Invoker.Get(item);
+            if (!Dictionary.TryGetValue(key, out var refs))
             {
-                refs = new List<T>();
-                Hash.Add(value, refs);
+                Dictionary[key] = refs = new List<T>();
             }
             refs.Add(item);
         }
 
-        internal void Remove(T item)
+        public void Remove(T item)
         {
-            object val = Invoker.Get(item);
-            val = val ?? DBNull.Value;
-
-            lock (Hash)
+            lock (Dictionary)
             {
-                var refs = Hash[val] as List<T>;
+                Dictionary.TryGetValue(Invoker.Get(item), out var refs);
                 if (refs == null || !refs.Remove(item))
                 {
-                    foreach (DictionaryEntry entry in Hash)
+                    foreach (var entry in Dictionary)
                     {
-                        val = entry.Key;
-                        refs = (List<T>)entry.Value;
-                        if (refs.Remove(item))
+                        if (entry.Value.Remove(item))
                             break;
                     }
                 }
-                //if (refs.Count == 0)
-                //    index.Remove(val);
             }
         }
 
-        public T SelectOne(object value)
+        public T SelectOne(K key)
         {
-            if (value == null)
-                value = DBNull.Value;
+            Dictionary.TryGetValue(key, out var list);
+            return list == null ? default(T) : list.FirstOrDefault();
+        }
 
-            var list = Hash[value] as List<T>;
-            return list != null && list.Count > 0 ? list[0] : default(T);
+        public T SelectOne(DBNullable<K> key)
+        {
+            Dictionary.TryGetValue(key, out var list);
+            return list == null ? default(T) : list.FirstOrDefault();
         }
 
         public IEnumerable<T> Scan(QueryParameter param)
         {
-            if (param.Value == null)
-                param.Value = DBNull.Value;
             if (!CheckParameter(param))
             {
                 yield break;
             }
-            var index = Hash;
+            var index = Dictionary;
             switch (param.Comparer.Type)
             {
                 case CompareTypes.Equal:
-                    if (param.Comparer.Not)
                     {
-                        foreach (DictionaryEntry entry in index)
+                        var key = DBNullable<K>.CheckNull(param.Value);
+                        if (param.Comparer.Not)
                         {
-                            if (!entry.Key.Equals(param.Value))
+                            foreach (var entry in index)
                             {
-                                foreach (T item in (IEnumerable<T>)entry.Value)
+                                if (!entry.Key.Equals(key))
+                                {
+                                    foreach (var item in entry.Value)
+                                        yield return item;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (index.TryGetValue(key, out var value))
+                            {
+                                foreach (var item in value)
                                     yield return item;
                             }
                         }
                     }
-                    else
-                    {
-                        var value = index[param.Value] as List<T>;
-                        if (value != null)
-                        {
-                            foreach (T item in value)
-                                yield return item;
-                        }
-                    }
                     break;
                 case CompareTypes.Greater:
-                    foreach (DictionaryEntry entry in index)
                     {
-                        if (((IComparable)entry.Key).CompareTo(param.Value) > 0)
+                        var key = DBNullable<K>.CheckNull(param.Value);
+                        foreach (var entry in index)
+
                         {
-                            foreach (T item in (IEnumerable<T>)entry.Value)
-                                yield return item;
+                            if (((IComparable)entry.Key).CompareTo(key) > 0)
+                            {
+                                foreach (var item in entry.Value)
+                                    yield return item;
+                            }
                         }
                     }
                     break;
                 case CompareTypes.GreaterOrEqual:
-                    foreach (DictionaryEntry entry in index)
                     {
-                        if (((IComparable)entry.Key).CompareTo(param.Value) >= 0)
+                        var key = DBNullable<K>.CheckNull(param.Value);
+                        foreach (var entry in index)
                         {
-                            foreach (T item in (IEnumerable<T>)entry.Value)
-                                yield return item;
+                            if (((IComparable)entry.Key).CompareTo(key) >= 0)
+                            {
+                                foreach (var item in entry.Value)
+                                    yield return item;
+                            }
                         }
                     }
                     break;
                 case CompareTypes.Less:
-                    foreach (DictionaryEntry entry in index)
                     {
-                        if (((IComparable)entry.Key).CompareTo(param.Value) < 0)
+                        var key = DBNullable<K>.CheckNull(param.Value);
+                        foreach (var entry in index)
                         {
-                            foreach (T item in (IEnumerable<T>)entry.Value)
-                                yield return item;
+                            if (((IComparable)entry.Key).CompareTo(key) < 0)
+                            {
+                                foreach (var item in entry.Value)
+                                    yield return item;
+                            }
                         }
                     }
                     break;
                 case CompareTypes.LessOrEqual:
-                    foreach (DictionaryEntry entry in index)
                     {
-                        if (((IComparable)entry.Key).CompareTo(param.Value) <= 0)
+                        var key = DBNullable<K>.CheckNull(param.Value);
+                        foreach (var entry in index)
                         {
-                            foreach (T item in (IEnumerable<T>)entry.Value)
-                                yield return item;
+                            if (((IComparable)entry.Key).CompareTo(param.Value) <= 0)
+                            {
+                                foreach (var item in entry.Value)
+                                    yield return item;
+                            }
                         }
                     }
                     break;
                 case CompareTypes.Like:
-                    if (param.Value is string)
                     {
-                        param.Value = ((string)param.Value).Trim(new char[] { '%' });
-                        foreach (DictionaryEntry entry in index)
+                        var key = DBNullable<K>.CheckNull(param.Value);
+                        var stringkey = key.ToString().Trim(new char[] { '%' });
+                        foreach (var entry in index)
                         {
-                            if (((string)entry.Key).IndexOf((string)param.Value, StringComparison.OrdinalIgnoreCase) != -1)
+                            if (entry.Key.NotNull && ((string)(object)entry.Key.Value).IndexOf(stringkey, StringComparison.OrdinalIgnoreCase) != -1)
                             {
-                                foreach (T item in (IEnumerable<T>)entry.Value)
+                                foreach (var item in entry.Value)
                                     yield return item;
                             }
                         }
                     }
                     break;
                 case CompareTypes.Is:
+                    var nullKey = DBNullable<K>.NullKey;
                     if (param.Comparer.Not)
                     {
-                        foreach (DictionaryEntry entry in index)
+                        foreach (var entry in index)
                         {
-                            if (!entry.Key.Equals(DBNull.Value))
+                            if (!entry.Key.Equals(nullKey))
                             {
-                                foreach (T item in (IEnumerable<T>)entry.Value)
+                                foreach (var item in entry.Value)
                                     yield return item;
                             }
                         }
                     }
                     else
                     {
-                        var value = index[DBNull.Value] as List<T>;
-                        if (value != null)
+                        if (index.TryGetValue(nullKey, out var value))
                         {
-                            foreach (T item in value)
+                            foreach (var item in value)
                                 yield return item;
                         }
                     }
@@ -203,11 +196,11 @@ namespace DataWF.Common
                     var list = param.Value as IList;
                     if (param.Comparer.Not)
                     {
-                        foreach (DictionaryEntry entry in index)
+                        foreach (var entry in index)
                         {
-                            if (!list.Contains(entry.Key))
+                            if (!list.Contains(entry.Key.Value))
                             {
-                                foreach (T item in (IEnumerable<T>)entry.Value)
+                                foreach (var item in entry.Value)
                                     yield return item;
                             }
                         }
@@ -216,8 +209,7 @@ namespace DataWF.Common
                     {
                         foreach (var inItem in list)
                         {
-                            var value = index[inItem] as List<T>;
-                            if (value != null)
+                            if (index.TryGetValue(DBNullable<K>.CheckNull(inItem), out var value))
                             {
                                 foreach (T item in value)
                                     yield return item;
@@ -246,7 +238,12 @@ namespace DataWF.Common
 
         object IListIndex.SelectOne(object value)
         {
-            return SelectOne(value);
+            return SelectOne(DBNullable<K>.CheckNull(value));
+        }
+
+        T IListIndex<T>.SelectOne(object value)
+        {
+            return SelectOne(DBNullable<K>.CheckNull(value));
         }
 
         IEnumerable IListIndex.Scan(QueryParameter parameter)
@@ -256,7 +253,7 @@ namespace DataWF.Common
 
         public void Clear()
         {
-            Hash.Clear();
+            Dictionary.Clear();
         }
     }
 }
