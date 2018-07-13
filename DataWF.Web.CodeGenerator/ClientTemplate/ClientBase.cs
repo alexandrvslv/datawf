@@ -1,6 +1,9 @@
 ﻿using DataWF.Common;
 using Newtonsoft.Json;
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -89,10 +92,10 @@ namespace DataWF.Web.Client
                 using (var request = new HttpRequestMessage())
                 {
                     Provider?.Authorization?.FillRequest(request);
-                    
+
                     if (value != null)
                     {
-                        var content = new StringContent(JsonConvert.SerializeObject(value, settings.Value));
+                        var content = new StringContent(JsonConvert.SerializeObject(value, settings.Value), Encoding.UTF8);
                         content.Headers.ContentType = MediaTypeHeaderValue.Parse(mediaType);
                         request.Content = content;
                     }
@@ -107,40 +110,20 @@ namespace DataWF.Web.Client
 
                     using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false))
                     {
-                        var headers_ = Enumerable.ToDictionary(response.Headers, h_ => h_.Key, h_ => h_.Value);
-                        if (response.Content != null && response.Content.Headers != null)
-                        {
-                            foreach (var item_ in response.Content.Headers)
-                                headers_[item_.Key] = item_.Value;
-                        }
-
                         ProcessResponse(client, response);
 
                         var status = response.StatusCode;
                         if (status == System.Net.HttpStatusCode.OK)
                         {
-                            var responseData = response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                            if (responseData != null)
-                            {
-                                try
-                                {
-                                    if (typeof(R) == typeof(string))
-                                    {
-                                        return (R)(object)responseData;
-                                    }
-                                    return JsonConvert.DeserializeObject<R>(responseData, settings.Value);
-                                }
-                                catch (Exception exception_)
-                                {
-                                    throw new ClientException("Could not deserialize the response body.", (int)response.StatusCode, responseData, headers_, exception_);
-                                }
-                            }
+                            return await ParseResponse<R>(response).ConfigureAwait(false);
                         }
-                        else
-                        if (status != System.Net.HttpStatusCode.OK && status != System.Net.HttpStatusCode.NoContent)
+                        else if (status != System.Net.HttpStatusCode.NoContent)
                         {
-                            var responseData_ = response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                            throw new ClientException("The HTTP status code of the response was not expected (" + (int)response.StatusCode + ").", (int)response.StatusCode, responseData_, headers_, null);
+                            var responseData = response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                            throw new ClientException("The HTTP status code of the response was not expected (" + (int)response.StatusCode + ").",
+                                (int)response.StatusCode,
+                                responseData,
+                                GetHeaders(response), null);
                         }
 
                         return default(R);
@@ -148,6 +131,83 @@ namespace DataWF.Web.Client
                 }
             }
         }
+
+        public Dictionary<string, IEnumerable<string>> GetHeaders(HttpResponseMessage response)
+        {
+            var headers = Enumerable.ToDictionary(response.Headers, h => h.Key, h => h.Value);
+            if (response.Content != null && response.Content.Headers != null)
+            {
+                foreach (var item in response.Content.Headers)
+                    headers[item.Key] = item.Value;
+            }
+            return headers;
+        }
+
+        protected async Task<R> ParseResponse<R>(HttpResponseMessage response)
+        {
+            using (var responseStream = response.Content == null ? null : await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
+            {
+                if (responseStream != null)
+                {
+                    try
+                    {
+                        using (var reader = new StreamReader(responseStream))
+                        {
+                            if (typeof(R) == typeof(string))
+                            {
+                                return (R)(object)reader.ReadToEnd();
+                            }
+                            var serializer = new JsonSerializer();
+                            using (var jreader = new JsonTextReader(reader))
+                            {
+                                while (jreader.Read())
+                                {
+                                    // deserialize only when there's "{" character in the stream
+                                    if (jreader.TokenType == JsonToken.StartArray)
+                                    {
+                                        var items = (IList)EmitInvoker.CreateObject<R>();
+                                        var itemType = TypeHelper.GetItemType(typeof(R));
+                                        while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
+                                        {
+                                            if (jreader.TokenType == JsonToken.StartObject)
+                                            {
+                                                items.Add(Deserialize(serializer, jreader, itemType));
+                                            }
+                                        }
+                                        return (R)items;
+                                    }
+                                    if (jreader.TokenType == JsonToken.StartObject)
+                                    {
+                                        return Deserialize<R>(serializer, jreader);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        var responseData = response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                        throw new ClientException("Could not deserialize the response body.", (int)response.StatusCode, responseData, GetHeaders(response), ex);
+                    }
+                }
+            }
+            return default(R);
+        }
+
+        protected virtual R Deserialize<R>(JsonSerializer serializer, JsonTextReader jreader)
+        {
+            return (R)Deserialize(serializer, jreader, typeof(R));
+        }
+
+        protected virtual object Deserialize(JsonSerializer serializer, JsonTextReader jreader, Type type)
+        {
+            var item = serializer.Deserialize(jreader, type);
+            CheckItem(item);
+            return item;
+        }
+
+        protected virtual void CheckItem(object item)
+        { }
 
         protected string ConvertToString(object value, System.Globalization.CultureInfo cultureInfo)
         {

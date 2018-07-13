@@ -291,20 +291,20 @@ namespace DataWF.Web.CodeGenerator
             var returnType = GetReturningType(descriptor);
             returnType = returnType.Length > 0 ? $"Task<{returnType}>" : "Task";
 
-            yield return SyntaxFactory.MethodDeclaration(
-                attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
-                    modifiers: SyntaxFactory.TokenList(
-                        baseType != "ClientBase" && AbstractOperations.Contains(actualName)
-                        ? new[] { SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.OverrideKeyword) }
-                        : new[] { SyntaxFactory.Token(SyntaxKind.PublicKeyword) }),
-                    returnType: SyntaxFactory.ParseTypeName(returnType),
-                    explicitInterfaceSpecifier: null,
-                    identifier: SyntaxFactory.Identifier(actualName),
-                    typeParameterList: null,
-                    parameterList: SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(GenOperationParameter(descriptor, false))),
-                    constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
-                    body: SyntaxFactory.Block(GenOperationWrapperBody(actualName, descriptor)),
-                    semicolonToken: SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+            //yield return SyntaxFactory.MethodDeclaration(
+            //    attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
+            //        modifiers: SyntaxFactory.TokenList(
+            //            baseType != "ClientBase" && AbstractOperations.Contains(actualName)
+            //            ? new[] { SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.OverrideKeyword) }
+            //            : new[] { SyntaxFactory.Token(SyntaxKind.PublicKeyword) }),
+            //        returnType: SyntaxFactory.ParseTypeName(returnType),
+            //        explicitInterfaceSpecifier: null,
+            //        identifier: SyntaxFactory.Identifier(actualName),
+            //        typeParameterList: null,
+            //        parameterList: SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(GenOperationParameter(descriptor, false))),
+            //        constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
+            //        body: SyntaxFactory.Block(GenOperationWrapperBody(actualName, descriptor)),
+            //        semicolonToken: SyntaxFactory.Token(SyntaxKind.SemicolonToken));
 
             yield return SyntaxFactory.MethodDeclaration(
                 attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
@@ -322,20 +322,20 @@ namespace DataWF.Web.CodeGenerator
                     semicolonToken: SyntaxFactory.Token(SyntaxKind.SemicolonToken));
         }
 
-        private StatementSyntax GenOperationWrapperBody(string actualName, SwaggerOperationDescription descriptor)
-        {
-            var builder = new StringBuilder();
-            builder.Append($"return {actualName}(");
+        //private StatementSyntax GenOperationWrapperBody(string actualName, SwaggerOperationDescription descriptor)
+        //{
+        //    var builder = new StringBuilder();
+        //    builder.Append($"return {actualName}(");
 
-            foreach (var parameter in descriptor.Operation.Parameters)
-            {
-                builder.Append($"{parameter.Name}, ");
-            }
-            builder.Append("CancellationToken.None);");
-            return SyntaxFactory.ParseStatement(builder.ToString());
-        }
+        //    foreach (var parameter in descriptor.Operation.Parameters)
+        //    {
+        //        builder.Append($"{parameter.Name}, ");
+        //    }
+        //    builder.Append("CancellationToken.None);");
+        //    return SyntaxFactory.ParseStatement(builder.ToString());
+        //}
 
-        private StatementSyntax GenOperationBody(SwaggerOperationDescription descriptor)
+        private IEnumerable<StatementSyntax> GenOperationBody(SwaggerOperationDescription descriptor)
         {
             var method = descriptor.Method.ToString().ToUpperInvariant();
             var path = descriptor.Path;
@@ -343,16 +343,21 @@ namespace DataWF.Web.CodeGenerator
             var returnType = GetReturningType(descriptor);
             var builder = new StringBuilder();
             builder.Append($"return await Request<{returnType}>(cancellationToken, \"{method}\", \"{path}\", \"{mediatype}\"");
-            if (!descriptor.Operation.Parameters.Any(p => p.Kind == SwaggerParameterKind.Body))
+            var bodyParameter = descriptor.Operation.Parameters.FirstOrDefault(p => p.Kind == SwaggerParameterKind.Body);
+            if (bodyParameter == null)
             {
                 builder.Append(", null");
+            }
+            else
+            {
+                yield return SyntaxFactory.ParseStatement($"CheckItem({bodyParameter.Name});");
             }
             foreach (var parameter in descriptor.Operation.Parameters)
             {
                 builder.Append($", {parameter.Name}");
             }
             builder.Append(");");
-            return SyntaxFactory.ParseStatement(builder.ToString());
+            yield return SyntaxFactory.ParseStatement(builder.ToString());
         }
 
         private IEnumerable<ParameterSyntax> GenOperationParameter(SwaggerOperationDescription descriptor, bool cancelationToken)
@@ -469,7 +474,12 @@ namespace DataWF.Web.CodeGenerator
                     declaration: SyntaxFactory.VariableDeclaration(
                         type: SyntaxFactory.ParseTypeName(nameof(PropertyChangedEventHandler)),
                         variables: SyntaxFactory.SeparatedList(new[] { SyntaxFactory.VariableDeclarator(nameof(INotifyPropertyChanged.PropertyChanged)) })));
-                yield return SyntaxHelper.GenProperty(nameof(INotifyListPropertyChanged), nameof(IContainerNotifyPropertyChanged.Container), true);
+                yield return SyntaxHelper.GenProperty(nameof(INotifyListPropertyChanged), nameof(IContainerNotifyPropertyChanged.Container), true)
+                    .WithAttributeLists(SyntaxFactory.List(new[]{
+                    SyntaxFactory.AttributeList(
+                        SyntaxFactory.SingletonSeparatedList(
+                            SyntaxFactory.Attribute(
+                                SyntaxFactory.IdentifierName("JsonIgnore")))) }));
                 yield return SyntaxFactory.MethodDeclaration(
                     attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
                     modifiers: SyntaxFactory.TokenList(
@@ -551,14 +561,19 @@ namespace DataWF.Web.CodeGenerator
 
         private static IEnumerable<StatementSyntax> GenPropertySet(JsonProperty property)
         {
-            yield return SyntaxFactory.ParseStatement($"if(_{property.Name} == value) return;");
-            yield return SyntaxFactory.ParseStatement($"_{property.Name} = value;");
+            yield return SyntaxFactory.ParseStatement($"if({GetFieldName(property)} == value) return;");
+            yield return SyntaxFactory.ParseStatement($"{GetFieldName(property)} = value;");
             yield return SyntaxFactory.ParseStatement($"OnPropertyChanged();");
+        }
+
+        private static string GetFieldName(JsonProperty property)
+        {
+            return string.Concat("_", char.ToLowerInvariant(property.Name[0]).ToString(), property.Name.Substring(1));
         }
 
         private static IEnumerable<StatementSyntax> GenPropertyGet(JsonProperty property)
         {
-            yield return SyntaxFactory.ParseStatement($"return _{property.Name};");
+            yield return SyntaxFactory.ParseStatement($"return {GetFieldName(property)};");
         }
 
         private FieldDeclarationSyntax GenDefinitionClassField(JsonProperty property)
@@ -566,7 +581,7 @@ namespace DataWF.Web.CodeGenerator
             return SyntaxFactory.FieldDeclaration(SyntaxFactory.List<AttributeListSyntax>(),
                 SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PrivateKeyword)),
                 SyntaxFactory.VariableDeclaration(GetTypeDeclaration(property, true))
-                                 .AddVariables(SyntaxFactory.VariableDeclarator("_" + property.Name)));
+                                 .AddVariables(SyntaxFactory.VariableDeclarator(GetFieldName(property))));
         }
 
         private string GetTypeString(JsonSchema4 value, bool nullable)
