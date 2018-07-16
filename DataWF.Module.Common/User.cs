@@ -78,7 +78,7 @@ namespace DataWF.Module.Common
         public static User SetCurrentByCredential(string login, string password, bool threaded = false)
         {
             var user = GetUser(login, GetSha(password));
-            SetCurrentUser(user ?? throw new KeyNotFoundException(), threaded);
+            SetCurrentUser(user ?? throw new KeyNotFoundException("User not found!"), threaded);
             return user;
         }
 
@@ -91,7 +91,7 @@ namespace DataWF.Module.Common
         {
             var user = DBTable.SelectOne(DBTable.ParseProperty(nameof(EMail)), email);
             if (user == null)
-                throw new KeyNotFoundException();
+                throw new KeyNotFoundException("User not found!");
             SetCurrentUser(user, threaded);
         }
 
@@ -99,7 +99,7 @@ namespace DataWF.Module.Common
         {
             var user = DBTable.SelectOne(DBTable.ParseProperty(nameof(EMail)), credentials.UserName);
             if (user == null)
-                throw new KeyNotFoundException();
+                throw new KeyNotFoundException("User not found!");
             var config = SmtpSetting.Load();
             using (var smtpClient = new SmtpClient())
             {
@@ -142,16 +142,28 @@ namespace DataWF.Module.Common
             return GetString(MD5.Create().ComputeHash(Encoding.Default.GetBytes(input)));
         }
 
+        private static UserPasswordSpec PasswordSpec = UserPasswordSpec.Lenght6 | UserPasswordSpec.CharSpecial | UserPasswordSpec.CharNumbers;
+
         public static string ValidateText(User User, string password, bool checkOld)
         {
             string message = string.Empty;
-            if (password.Length < 8)//(?=^.{6,255}$)
+            if (PasswordSpec.HasFlag(UserPasswordSpec.Lenght6) && password.Length < 6)
+                message += Locale.Get("Login", " Must be more than 6 characters long.");
+            if (PasswordSpec.HasFlag(UserPasswordSpec.Lenght8) && password.Length < 8)
                 message += Locale.Get("Login", " Must be more than 8 characters long.");
-            if (!Regex.IsMatch(password, @"(?=.*\d)(?=.*[A-Z])(?=.*[a-z])(?=.*[^A-Za-z0-9])^.*", RegexOptions.CultureInvariant))
-                message += Locale.Get("Login", " Should contain a number, uppercase and lowercase letters and special character.");
-            if (Regex.IsMatch(password, @"(.)\1{2,}", RegexOptions.CultureInvariant))
+            if (PasswordSpec.HasFlag(UserPasswordSpec.Lenght10) && password.Length < 10)
+                message += Locale.Get("Login", " Must be more than 10 characters long.");
+            if (PasswordSpec.HasFlag(UserPasswordSpec.CharNumbers) && !Regex.IsMatch(password, @"(?=.*\d)^.*", RegexOptions.CultureInvariant))
+                message += Locale.Get("Login", " Should contain a number.");
+            if (PasswordSpec.HasFlag(UserPasswordSpec.CharUppercase) && !Regex.IsMatch(password, @"(?=.*[A-Z])^.*", RegexOptions.CultureInvariant))
+                message += Locale.Get("Login", " Should contain a uppercase.");
+            if (PasswordSpec.HasFlag(UserPasswordSpec.CharLowercase) && !Regex.IsMatch(password, @"(?=.*[a-z])^.*", RegexOptions.CultureInvariant))
+                message += Locale.Get("Login", " Should contain a lowercase letters.");
+            if (PasswordSpec.HasFlag(UserPasswordSpec.CharSpecial) && !Regex.IsMatch(password, @"(?=.*[^A-Za-z0-9])^.*", RegexOptions.CultureInvariant))
+                message += Locale.Get("Login", " Should contain a special character.");
+            if (PasswordSpec.HasFlag(UserPasswordSpec.CharRepet) && Regex.IsMatch(password, @"(.)\1{2,}", RegexOptions.CultureInvariant))
                 message += Locale.Get("Login", " Remove repeted characters.");
-            if (User.Login != null && password.IndexOf(User.Login, StringComparison.OrdinalIgnoreCase) >= 0)
+            if (PasswordSpec.HasFlag(UserPasswordSpec.Login) && User.Login != null && password.IndexOf(User.Login, StringComparison.OrdinalIgnoreCase) >= 0)
                 message += Locale.Get("Login", " Should not contain your Login.");
 
             var proc = User.Table.Schema?.Procedures["simple"];
@@ -341,6 +353,21 @@ namespace DataWF.Module.Common
         }
 
 
+    }
+
+    [Flags]
+    public enum UserPasswordSpec
+    {
+        None = 0,
+        CharNumbers = 2,
+        CharUppercase = 4,
+        CharLowercase = 8,
+        CharSpecial = 16,
+        CharRepet = 32,
+        Login = 64,
+        Lenght6 = 128,
+        Lenght8 = 256,
+        Lenght10 = 512,
     }
 
     public static class UserExtension
