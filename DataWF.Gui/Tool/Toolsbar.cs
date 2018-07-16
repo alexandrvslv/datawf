@@ -104,12 +104,16 @@ namespace DataWF.Gui
         protected override Size OnGetPreferredSize(SizeConstraint widthConstraint, SizeConstraint heightConstraint)
         {
             var size = base.OnGetPreferredSize(widthConstraint, heightConstraint);
-            var bound = items.GetBound(0, 0);
-            foreach (var item in items.GetVisibleItems().OfType<ToolContentItem>())
+            if (!items.Disposed)
             {
-                item.Content?.Surface.GetPreferredSize();
+                var bound = items.GetBound(0, 0);
+                foreach (var item in items.GetVisibleItems().OfType<ToolContentItem>())
+                {
+                    item.Content?.Surface.GetPreferredSize();
+                }
+                return bound.Size;
             }
-            return bound.Size;
+            return size;
         }
 
         public void Reallocate()
