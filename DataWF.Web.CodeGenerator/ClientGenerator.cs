@@ -215,22 +215,23 @@ namespace DataWF.Web.CodeGenerator
             cacheClients[clientName] = clientSyntax.AddMembers(GenOperation(descriptor).ToArray());
         }
 
-        private string GetClientBaseType(string clientName)
+        private string GetClientBaseType(string clientName, out JsonProperty id)
         {
             if (document.Definitions.TryGetValue(clientName, out var schema))
             {
-                var property = GetPrimaryKey(schema);
-                return $"Client<{clientName}, {(property == null ? "int" : GetTypeString(property, false))}>";
+                id = GetPrimaryKey(schema);
+                return $"Client<{clientName}, {(id == null ? "int" : GetTypeString(id, false))}>";
             }
             else
             {
+                id = null;
                 return $"ClientBase";
             }
         }
 
         private ClassDeclarationSyntax GenClient(string clientName)
         {
-            var baseType = SyntaxFactory.ParseTypeName(GetClientBaseType(clientName));
+            var baseType = SyntaxFactory.ParseTypeName(GetClientBaseType(clientName, out var id));
 
             return SyntaxFactory.ClassDeclaration(
                         attributeLists: SyntaxFactory.List(ClientAttributeList()),
@@ -240,7 +241,7 @@ namespace DataWF.Web.CodeGenerator
                         baseList: SyntaxFactory.BaseList(SyntaxFactory.SingletonSeparatedList<BaseTypeSyntax>(
                             SyntaxFactory.SimpleBaseType(baseType))),
                         constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
-                        members: SyntaxFactory.List<MemberDeclarationSyntax>(GenClientConstructor(clientName))
+                        members: SyntaxFactory.List<MemberDeclarationSyntax>(GenClientConstructor(clientName, id))
                         );
         }
 
@@ -257,14 +258,19 @@ namespace DataWF.Web.CodeGenerator
             return null;
         }
 
-        private IEnumerable<ConstructorDeclarationSyntax> GenClientConstructor(string clientName)
+        private IEnumerable<ConstructorDeclarationSyntax> GenClientConstructor(string clientName, JsonProperty id)
         {
+            var initialize = id == null ? null : SyntaxFactory.ConstructorInitializer(
+                    SyntaxKind.BaseConstructorInitializer,
+                    SyntaxFactory.ArgumentList(
+                        SyntaxFactory.SeparatedList(new[] {
+                            SyntaxFactory.Argument(SyntaxFactory.ParseExpression($"\"{id.Name}\"")) })));
             yield return SyntaxFactory.ConstructorDeclaration(
                 attributeLists: SyntaxFactory.List(ClientAttributeList()),
                 modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
                 identifier: SyntaxFactory.Identifier($"{clientName}Client"),
                 parameterList: SyntaxFactory.ParameterList(),
-                initializer: null,
+                initializer: initialize,
                 body: SyntaxFactory.Block());
         }
 
@@ -287,7 +293,7 @@ namespace DataWF.Web.CodeGenerator
         {
             var operationName = GetOperationName(descriptor, out var clientName);
             var actualName = $"{operationName}Async";
-            var baseType = GetClientBaseType(clientName);
+            var baseType = GetClientBaseType(clientName, out var id);
             var returnType = GetReturningType(descriptor);
             returnType = returnType.Length > 0 ? $"Task<{returnType}>" : "Task";
 
@@ -342,15 +348,12 @@ namespace DataWF.Web.CodeGenerator
             var mediatype = "application/json";
             var returnType = GetReturningType(descriptor);
             var builder = new StringBuilder();
+
             builder.Append($"return await Request<{returnType}>(cancellationToken, \"{method}\", \"{path}\", \"{mediatype}\"");
             var bodyParameter = descriptor.Operation.Parameters.FirstOrDefault(p => p.Kind == SwaggerParameterKind.Body);
             if (bodyParameter == null)
             {
                 builder.Append(", null");
-            }
-            else
-            {
-                yield return SyntaxFactory.ParseStatement($"CheckItem({bodyParameter.Name});");
             }
             foreach (var parameter in descriptor.Operation.Parameters)
             {

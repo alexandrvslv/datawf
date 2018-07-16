@@ -10,28 +10,80 @@ namespace DataWF.Web.Client
 {
     public abstract partial class Client<T, K> : ClientBase, ICRUDClient where T : class
     {
-        public static string IdProperty;
-
-        public Client()
+        public Client(string idProperty)
         {
             if (IdProperty != null)
+            {
                 Items.Indexes.Add(EmitInvoker.Initialize<T>(IdProperty));
+            }
         }
+
+        public readonly string IdProperty;
 
         public SelectableList<T> Items { get; set; } = new SelectableList<T>();
 
-        protected override void CheckItem(object item)
+        public Type ItemType { get { return typeof(T); } }
+
+        public override object DeserializeByType(JsonSerializer serializer, JsonTextReader jreader, Type type)
         {
-            if (item?.GetType() == typeof(T))
+            if (TypeHelper.IsBaseType(type, ItemType))
             {
-                Items.Add((T)item);
+                var dictionary = new Dictionary<IInvoker, object>();
+                var invoker = (IInvoker)null;
+                var id = default(K);
+                var newItem = (T)null;
+                var add = true;
+                while (jreader.Read() && jreader.TokenType != JsonToken.EndObject)
+                {
+                    if (jreader.TokenType == JsonToken.PropertyName)
+                    {
+                        invoker = EmitInvoker.Initialize(type, (string)jreader.Value);
+                    }
+                    else if (jreader.TokenType == JsonToken.StartObject)
+                    {
+                        if (invoker != null)
+                        {
+                            dictionary[invoker] = DeserializeObject(serializer, jreader, invoker.DataType);
+                        }
+                    }
+                    else if (invoker != null)
+                    {
+                        dictionary[invoker] = jreader.Value;
+                        if (invoker.Name == IdProperty)
+                        {
+                            id = (K)jreader.Value;
+                        }
+                    }
+                }
+                if (id != null)
+                {
+                    newItem = Select(id);
+                    add = false;
+                }
+                if (newItem == null)
+                {
+                    newItem = (T)EmitInvoker.CreateObject(type);
+                }
+                foreach (var entry in dictionary)
+                {
+                    entry.Key.Set(newItem, entry.Value);
+                }
+                if (add)
+                {
+                    Items.Add(newItem);
+                }
             }
-            base.CheckItem(item);
+            return base.DeserializeByType(serializer, jreader, type);
+        }
+
+        public virtual T Select(K id)
+        {
+            return Items.SelectOne(IdProperty, id);
         }
 
         public virtual T Get(K id)
         {
-            return Items.SelectOne(IdProperty, id) ?? GetAsync(id, CancellationToken.None).Result;
+            return Select(id) ?? GetAsync(id, CancellationToken.None).Result;
         }
 
         public abstract Task<List<T>> GetAsync(CancellationToken cancellationToken);

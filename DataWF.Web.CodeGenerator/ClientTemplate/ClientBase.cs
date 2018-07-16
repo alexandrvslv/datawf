@@ -165,20 +165,11 @@ namespace DataWF.Web.Client
                                     // deserialize only when there's "{" character in the stream
                                     if (jreader.TokenType == JsonToken.StartArray)
                                     {
-                                        var items = (IList)EmitInvoker.CreateObject<R>();
-                                        var itemType = TypeHelper.GetItemType(typeof(R));
-                                        while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
-                                        {
-                                            if (jreader.TokenType == JsonToken.StartObject)
-                                            {
-                                                items.Add(Deserialize(serializer, jreader, itemType));
-                                            }
-                                        }
-                                        return (R)items;
+                                        return DeserializeArray<R>(serializer, jreader);
                                     }
                                     if (jreader.TokenType == JsonToken.StartObject)
                                     {
-                                        return Deserialize<R>(serializer, jreader);
+                                        return DeserializeObject<R>(serializer, jreader);
                                     }
                                 }
                             }
@@ -194,20 +185,50 @@ namespace DataWF.Web.Client
             return default(R);
         }
 
-        protected virtual R Deserialize<R>(JsonSerializer serializer, JsonTextReader jreader)
+        protected virtual R DeserializeArray<R>(JsonSerializer serializer, JsonTextReader jreader)
         {
-            return (R)Deserialize(serializer, jreader, typeof(R));
+            var items = (IList)EmitInvoker.CreateObject<R>();
+            var itemType = TypeHelper.GetItemType(typeof(R));
+            var client = GetClient(itemType);
+            while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
+            {
+                if (jreader.TokenType == JsonToken.StartObject)
+                {
+                    items.Add(client == null
+                        ? DeserializeByType(serializer, jreader, itemType)
+                        : client.DeserializeByType(serializer, jreader, itemType));
+                }
+            }
+            return (R)items;
         }
 
-        protected virtual object Deserialize(JsonSerializer serializer, JsonTextReader jreader, Type type)
+        public virtual object DeserializeByType(JsonSerializer serializer, JsonTextReader jreader, Type type)
         {
-            var item = serializer.Deserialize(jreader, type);
-            CheckItem(item);
-            return item;
+            return serializer.Deserialize(jreader, type);
         }
 
-        protected virtual void CheckItem(object item)
-        { }
+        protected virtual R DeserializeObject<R>(JsonSerializer serializer, JsonTextReader jreader)
+        {
+            return (R)DeserializeObject(serializer, jreader, typeof(R));
+        }
+
+        protected virtual object DeserializeObject(JsonSerializer serializer, JsonTextReader jreader, Type type)
+        {
+            var client = GetClient(type);
+            if (client != null)
+            {
+                return client.DeserializeByType(serializer, jreader, type);
+            }
+            else
+            {
+                return DeserializeByType(serializer, jreader, type);
+            }
+        }
+
+        protected ClientBase GetClient(Type type)
+        {
+            return Provider?.Clients.OfType<ICRUDClient>().FirstOrDefault(p => TypeHelper.IsBaseType(p.ItemType, type)) as ClientBase;
+        }
 
         protected string ConvertToString(object value, System.Globalization.CultureInfo cultureInfo)
         {
