@@ -15,6 +15,10 @@ namespace DataWF.Common
     {
         public IEqualityComparer<T> Comparer;
 
+        public DBNullableComparer()
+            : this(EqualityComparer<T>.Default)
+        { }
+
         public DBNullableComparer(IEqualityComparer<T> comparer)
         {
             Comparer = comparer;
@@ -27,7 +31,7 @@ namespace DataWF.Common
 
         public int GetHashCode(DBNullable<T> obj)
         {
-            return obj.NotNull.GetHashCode() ^ (obj.NotNull ? obj.Value.GetHashCode() : 0);
+            return obj.NotNull.GetHashCode() ^ (obj.NotNull ? Comparer.GetHashCode(obj.Value) : 0);
         }
     }
 }
