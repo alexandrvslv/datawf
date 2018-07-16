@@ -791,7 +791,11 @@ namespace DataWF.Data
                 var result = transaction.ExecuteQuery(command, dmlCommand == dmlInsertSequence ? DBExecuteType.Scalar : DBExecuteType.NoReader);
                 transaction.DbConnection.System.UploadCommand(item, command);
                 if (PrimaryKey != null && item.PrimaryId == null)
+                {
                     item[PrimaryKey] = result;
+                    Sequence.SetCurrent(result);
+                }
+
                 if (LogTable != null)
                 {
                     args.LogItem = new DBLogItem(item);
@@ -815,24 +819,28 @@ namespace DataWF.Data
         {
             if (rows == null)
                 rows = GetChangedItems().ToList();
-            if (rows.Count == 0)
-                return;
 
-            ListHelper.QuickSort(rows, new InvokerComparer(typeof(DBItem), nameof(DBItem.UpdateState)));
+            if (rows.Count > 0)
+            {
+                ListHelper.QuickSort(rows, new InvokerComparer(typeof(DBItem), nameof(DBItem.UpdateState)));
 
-            var transaction = DBTransaction.GetTransaction(this, Schema.Connection);
-            try
-            {
-                foreach (DBItem row in rows)
-                    SaveItem(row);
-                if (transaction.Owner == this)
-                    transaction.Commit();
+                var transaction = DBTransaction.GetTransaction(this, Schema.Connection);
+                try
+                {
+                    foreach (DBItem row in rows)
+                        SaveItem(row);
+
+                    if (transaction.Owner == this)
+                        transaction.Commit();
+                }
+                finally
+                {
+                    if (transaction.Owner == this)
+                        transaction.Dispose();
+                }
             }
-            finally
-            {
-                if (transaction.Owner == this)
-                    transaction.Dispose();
-            }
+
+            Sequence?.Save();
         }
 
         public int GetRowCount(DBTransaction transaction, string @where)

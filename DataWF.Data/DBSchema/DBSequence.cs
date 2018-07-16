@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Text;
+using System.Threading;
 using System.Xml.Serialization;
 using DataWF.Common;
 
@@ -30,6 +31,8 @@ namespace DataWF.Data
     public class DBSequence : DBSchemaItem
     {
         private string cacheQuery;
+        private long current = 1;
+        private int changed = 0;
 
         public DBSequence()
         { }
@@ -37,7 +40,15 @@ namespace DataWF.Data
         public DBSequence(string name) : base(name)
         { }
 
-        public long Current { get; set; } = 1;
+        public long Current
+        {
+            get => current;
+            set
+            {
+                Interlocked.CompareExchange(ref current, value, current);
+                Interlocked.CompareExchange(ref changed, 1, 0);
+            }
+        }
 
         public int Increment { get; set; } = 1;
 
@@ -50,7 +61,7 @@ namespace DataWF.Data
         [DefaultValue(0)]
         public int Scale { get; set; }
 
-        public string GenerateQuery
+        public string NextQuery
         {
             get { return cacheQuery = cacheQuery ?? Schema.Connection.System.SequenceNextValue(this); }
         }
@@ -74,13 +85,21 @@ namespace DataWF.Data
             return ddl.ToString();
         }
 
+        public long NextIncrement()
+        {
+            Interlocked.CompareExchange(ref changed, 1, 0);
+            return Interlocked.Add(ref current, Increment);
+        }
+
         public long NextValue()
         {
             long result = 0;
             var transaction = DBTransaction.GetTransaction(this, Schema?.Connection);
             try
             {
-                Current = result = Convert.ToInt64(transaction.ExecuteQuery(transaction.AddCommand(GenerateQuery)));
+                result = ParseCurrent(transaction.ExecuteQuery(transaction.AddCommand(NextQuery)));
+                Interlocked.CompareExchange(ref current, result, current);
+                Interlocked.CompareExchange(ref changed, 0, 1);
                 if (transaction.Owner == this)
                     transaction.Commit();
             }
@@ -90,6 +109,52 @@ namespace DataWF.Data
                     transaction.Dispose();
             }
             return result;
+        }
+
+        public void Save()
+        {
+            if (changed == 0)
+                return;
+            NextIncrement();
+            Interlocked.CompareExchange(ref changed, 0, 1);
+            var transaction = DBTransaction.GetTransaction(this, Schema?.Connection);
+            try
+            {
+                transaction.ExecuteQuery(transaction.AddCommand(FormatSql(DDLType.Alter)));
+                if (transaction.Owner == this)
+                    transaction.Commit();
+            }
+            finally
+            {
+                if (transaction.Owner == this)
+                    transaction.Dispose();
+            }
+
+        }
+
+        private static long ParseCurrent(object result)
+        {
+            return result is long longvalue ? longvalue :
+                result is int intValue ? (long)intValue :
+                result is short shortValue ? (short)shortValue :
+                result is decimal decimalValue ? (long)decimalValue :
+                result is double doubleValue ? (long)doubleValue :
+                long.Parse(result.ToString());
+        }
+
+        public long SetCurrent(object result)
+        {
+            long temp = ParseCurrent(result);
+            SetCurrent(temp);
+            return temp;
+        }
+
+        public void SetCurrent(long temp)
+        {
+            if (current < temp)
+            {
+                Current = temp;
+            }
         }
     }
 }

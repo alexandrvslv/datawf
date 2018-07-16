@@ -1000,16 +1000,24 @@ namespace DataWF.Data
 
         public void GenerateId()
         {
-            if (Table.PrimaryKey != null && PrimaryId == null && Table.Sequence != null)
+            if (Table.Sequence == null || Table.PrimaryKey == null)
+                return;
+            if (PrimaryId == null)
             {
                 PrimaryId = Table.Sequence.NextValue();
+            }
+            else
+            {
+                Table.Sequence.SetCurrent(PrimaryId);
             }
         }
 
         public void Clear()
         {
             foreach (DBColumn column in table.Columns)
+            {
                 SetValue(null, column);
+            }
         }
 
         [Browsable(false)]
