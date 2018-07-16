@@ -32,7 +32,8 @@ namespace DataWF.Module.Counterpart
             {
                 //pass the current culture's Locale ID (http://msdn.microsoft.com/en-us/library/0h88fahh.aspx)
                 //to the RegionInfo contructor to gain access to the information for that culture
-                if (culture.Parent == CultureInfo.InvariantCulture)
+                if (culture.Parent == CultureInfo.InvariantCulture
+                    || culture.IsNeutralCulture)
                     continue;
                 try
                 {
