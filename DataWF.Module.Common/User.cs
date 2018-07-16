@@ -147,6 +147,8 @@ namespace DataWF.Module.Common
         public static string ValidateText(User User, string password, bool checkOld)
         {
             string message = string.Empty;
+            if (password == null)
+                return message;
             if (PasswordSpec.HasFlag(UserPasswordSpec.Lenght6) && password.Length < 6)
                 message += Locale.Get("Login", " Must be more than 6 characters long.");
             if (PasswordSpec.HasFlag(UserPasswordSpec.Lenght8) && password.Length < 8)
@@ -315,13 +317,18 @@ namespace DataWF.Module.Common
         [DataMember, Column("password", 256, Keys = DBColumnKeys.Password), PasswordPropertyText(true)]
         public string Password
         {
-            get { return GetProperty<string>(nameof(Password)); }
+            get { return GetProperty<string>(); }
             set
             {
+                if (value == null || value.Length == 40)
+                {
+                    SetProperty(value);
+                    return;
+                }
                 var rez = ValidateText(this, value, false);
                 if (rez.Length > 0)
                     throw new ArgumentException(rez);
-                SetProperty(GetSha(value), nameof(Password));
+                SetProperty(GetSha(value));
             }
         }
 
@@ -346,6 +353,9 @@ namespace DataWF.Module.Common
         public string AuthenticationType { get; set; }
 
         public bool IsAuthenticated => string.IsNullOrEmpty(Token);
+
+        public string NameRU { get; set; }
+        public string NameEN { get; set; }
 
         public override void Dispose()
         {

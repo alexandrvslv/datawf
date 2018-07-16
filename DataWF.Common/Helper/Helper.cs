@@ -998,6 +998,40 @@ namespace DataWF.Common
                 return TextDisplayFormat(value, null);
         }
 
+        public static object Parse(object value, Type type)
+        {
+            object buf = null;
+            if (value == null || value == DBNull.Value)
+                buf = null;
+            else if (type == value.GetType())
+                buf = value;
+            else if (value is string text && type != typeof(string))
+                buf = TextParse(text, type);
+            else if (value is long longValue)
+            {
+                if (type == typeof(int))
+                    buf = (int)longValue;
+                else if (type == typeof(short))
+                    buf = (short)longValue;
+                else if (type == typeof(byte))
+                    buf = (byte)longValue;
+                else if (type.IsEnum)
+                    buf = (int)longValue;
+            }
+            else if (value is decimal mValue)
+            {
+                if (type == typeof(double))
+                    buf = (double)mValue;
+                if (type == typeof(float))
+                    buf = (float)mValue;
+            }
+            else
+            {
+                buf = TextParse(value.ToString(), type, null);
+            }
+            return buf;
+        }
+
         public static object TextParse(string value, Type type, string format = "binary")
         {
             object result = null;

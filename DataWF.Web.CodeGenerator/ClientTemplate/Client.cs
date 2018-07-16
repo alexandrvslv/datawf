@@ -12,6 +12,7 @@ namespace DataWF.Web.Client
     {
         public Client(string idProperty)
         {
+            IdProperty = idProperty;
             if (IdProperty != null)
             {
                 Items.Indexes.Add(EmitInvoker.Initialize<T>(IdProperty));
@@ -30,7 +31,7 @@ namespace DataWF.Web.Client
             {
                 var dictionary = new Dictionary<IInvoker, object>();
                 var invoker = (IInvoker)null;
-                var id = default(K);
+                var id = (object)null;
                 var newItem = (T)null;
                 var add = true;
                 while (jreader.Read() && jreader.TokenType != JsonToken.EndObject)
@@ -51,13 +52,13 @@ namespace DataWF.Web.Client
                         dictionary[invoker] = jreader.Value;
                         if (invoker.Name == IdProperty)
                         {
-                            id = (K)jreader.Value;
+                            id = jreader.Value;
                         }
                     }
                 }
                 if (id != null)
                 {
-                    newItem = Select(id);
+                    newItem = Select((K)Helper.Parse(id, typeof(K)));
                     add = false;
                 }
                 if (newItem == null)
@@ -66,12 +67,13 @@ namespace DataWF.Web.Client
                 }
                 foreach (var entry in dictionary)
                 {
-                    entry.Key.Set(newItem, entry.Value);
+                    entry.Key.Set(newItem, Helper.Parse(entry.Value, entry.Key.DataType));
                 }
                 if (add)
                 {
                     Items.Add(newItem);
                 }
+                return newItem;
             }
             return base.DeserializeByType(serializer, jreader, type);
         }

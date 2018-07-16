@@ -78,6 +78,18 @@ namespace DataWF.Module.Common
             set { SetName(nameof(Name), value); }
         }
 
+        public string NameRU
+        {
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
+        }
+
+        public string NameEN
+        {
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
+        }
+
         [ControllerMethod]
         public IEnumerable<User> GetUsers()
         {
