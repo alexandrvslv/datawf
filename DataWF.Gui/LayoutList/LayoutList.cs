@@ -156,7 +156,6 @@ namespace DataWF.Gui
             CanGetFocus = true;
             //filters = new LayoutFilterView(this);
 
-            editor.Sensitive = false;
             editor.Visible = false;
             editor.PropertyChanged += ControlOnValueChanged;
 
@@ -584,14 +583,14 @@ namespace DataWF.Gui
             switch (e.Key)
             {
                 case Key.Escape:
-                    if (editor.Sensitive)
+                    if (editor.Visible)
                     {
                         OnCellEditEnd(new CancelEventArgs(true));
                         e.Handled = true;
                     }
                     break;
                 case Key.F2:
-                    if (!editor.Sensitive && editMode != EditModes.None && CurrentCell != null)
+                    if (!editor.Visible && editMode != EditModes.None && CurrentCell != null)
                     {
                         OnCellEditBegin();
                         e.Handled = true;
@@ -599,7 +598,7 @@ namespace DataWF.Gui
                     break;
                 case Key.Return:
                 case Key.NumPadEnter:
-                    if (editor.Sensitive)
+                    if (editor.Visible)
                     {
                         if (!(editor.Widget is TextEntry box) || !box.MultiLine)
                         {
@@ -662,7 +661,7 @@ namespace DataWF.Gui
                 case Key.Down:
                 case Key.PageUp:
                 case Key.PageDown:
-                    if (editor.Sensitive || ListSource?.Count == 0)
+                    if (editor.Visible || ListSource?.Count == 0)
                         return;
                     if (e.Key == Key.Up)
                     {
@@ -743,7 +742,7 @@ namespace DataWF.Gui
                     break;
                 case Key.C:
                 case Key.c:
-                    if (!editor.Sensitive && e.Modifiers == ModifierKeys.Control)
+                    if (!editor.Visible && e.Modifiers == ModifierKeys.Control)
                     {
                         if (CurrentCell != null)
                         {
@@ -760,7 +759,7 @@ namespace DataWF.Gui
                     return;
                 case Key.V:
                 case Key.v:
-                    if (!editor.Sensitive && e.Modifiers == ModifierKeys.Control)
+                    if (!editor.Visible && e.Modifiers == ModifierKeys.Control)
                     {
                         if (CurrentCell != null)
                         {
@@ -768,7 +767,7 @@ namespace DataWF.Gui
                             if (text != null)
                             {
                                 OnCellEditBegin();
-                                if (editor.Sensitive)
+                                if (editor.Visible)
                                 {
                                     editor.CurrentEditor.Value = text;
                                 }
@@ -779,7 +778,7 @@ namespace DataWF.Gui
                     break;
                 case Key.S:
                 case Key.s:
-                    if (!editor.Sensitive
+                    if (!editor.Visible
                         && e.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
                     {
                         if (CurrentCell != null)
@@ -792,7 +791,7 @@ namespace DataWF.Gui
                     }
                     break;
                 default:
-                    if (!editor.Sensitive && CurrentCell != null
+                    if (!editor.Visible && CurrentCell != null
                         && e.Modifiers == ModifierKeys.None
                         && editMode == EditModes.ByClick)
                     {
@@ -947,7 +946,7 @@ namespace DataWF.Gui
 
         public bool IsEditMode
         {
-            get { return editor.Sensitive; }
+            get { return editor.Visible; }
         }
 
         public event PListGetEditorHandler RetriveCellEditor
@@ -1967,7 +1966,7 @@ namespace DataWF.Gui
             get { return selection.CurrentRow?.Column; }
             set
             {
-                if (editor.Sensitive)
+                if (editor.Visible)
                     OnCellEditEnd(new CancelEventArgs());
 
                 if (scroll.HorizontalScrollControl.UpperValue > 0 && value != null)
@@ -2281,7 +2280,7 @@ namespace DataWF.Gui
                 cell = (ILayoutCell)item;
                 item = fieldSource;
             }
-            return editor.Sensitive && editor.CurrentEditor?.EditItem == item && (cell == null || editor.Cell == cell);
+            return editor.Visible && editor.CurrentEditor?.EditItem == item && (cell == null || editor.Cell == cell);
         }
 
         protected bool IsSelectionRectangleVisible
@@ -3095,8 +3094,7 @@ namespace DataWF.Gui
                 cellEdit.ReadOnly = (cell.ReadOnly || editState == EditListState.ReadOnly) && editState != EditListState.EditAny;
                 cellEdit.InitializeEditor(editor, val, item);
                 editor.Style = OnGetCellStyle(item, val, cell);
-                editor.Sensitive =
-                    editor.Visible = true;
+                editor.Visible = true;
             }
             finally
             {
@@ -3107,7 +3105,7 @@ namespace DataWF.Gui
 
         protected virtual void OnCellEditEnd(CancelEventArgs e)
         {
-            if (!editor.Sensitive)
+            if (!editor.Visible)
                 return;
             if (editor.CurrentEditor != null && !e.Cancel)
             {
@@ -3131,7 +3129,7 @@ namespace DataWF.Gui
                 editor.CurrentEditor = null;
             }
             editor.Visible = false;
-            editor.Sensitive = false;
+            editor.Visible = false;
             CurrentEditor = null;
             SetFocus();
         }
@@ -4031,7 +4029,7 @@ namespace DataWF.Gui
                 OnCellMouseClick(e);
             }
             else if (e.HitTest.MouseButton == PointerButton.Right
-                && (!editor.Sensitive || (e.HitTest.Item != editor.CurrentEditor.EditItem && e.HitTest.Column != CurrentCell)))
+                && (!editor.Visible || (e.HitTest.Item != editor.CurrentEditor.EditItem && e.HitTest.Column != CurrentCell)))
             {
                 OnContextMenuShow(e.HitTest);
             }
