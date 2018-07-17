@@ -80,9 +80,11 @@ namespace DataWF.Common
         //    string[] split = property.Sp_lit(new char[] { '.' });
         //    return split[split.Length - 1];
         //}
-        public static bool IsNullable(Type type)
+        public static Type CheckNullable(Type type)
         {
-            return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
+            return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>)
+                ? type.GetGenericArguments()[0]
+                : type;
         }
 
         public static bool IsDictionary(Type type)

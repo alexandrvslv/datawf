@@ -164,8 +164,7 @@ namespace DataWF.Gui
             var type = cell?.DataType;
             if (type == null)
                 return null;
-            if (TypeHelper.IsNullable(type))
-                type = type.GetGenericArguments().First();
+            type = TypeHelper.CheckNullable(type);
             ILayoutCellEditor editor = null;
             if (CellEditorFabric.TryGetValue(type, out var generator))
             {

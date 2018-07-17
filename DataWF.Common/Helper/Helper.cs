@@ -1000,7 +1000,8 @@ namespace DataWF.Common
 
         public static object Parse(object value, Type type)
         {
-            object buf = null;
+            object buf = value;
+            type = TypeHelper.CheckNullable(type);
             if (value == null || value == DBNull.Value)
                 buf = null;
             else if (type == value.GetType())
@@ -1035,8 +1036,7 @@ namespace DataWF.Common
         public static object TextParse(string value, Type type, string format = "binary")
         {
             object result = null;
-            if (TypeHelper.IsNullable(type))
-                type = type.GetGenericArguments().First();
+            type = TypeHelper.CheckNullable(type);
             if (type == typeof(string) || type == null)
                 result = value;
             else if (type == typeof(Type))

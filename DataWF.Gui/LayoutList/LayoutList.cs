@@ -4846,7 +4846,7 @@ namespace DataWF.Gui
                 type == typeof(byte[]) ||
                 type == typeof(decimal) ||
                 type == typeof(Image) ||
-                TypeHelper.IsNullable(type) ||
+                TypeHelper.CheckNullable(type) != type ||
                 TypeHelper.IsList(type))
                 return false;
             else
