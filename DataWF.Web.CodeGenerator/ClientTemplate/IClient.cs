@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DataWF.Common;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
@@ -34,5 +35,10 @@ namespace DataWF.Web.Client
         Task GetAsync(object id);
         Task PostAsync(object value);
         Task PutAsync(object value);
+    }
+
+    public interface ICRUDClient<T> : ICRUDClient
+    {
+        SelectableList<T> Items { get; }
     }
 }

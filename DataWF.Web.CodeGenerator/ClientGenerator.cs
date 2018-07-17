@@ -215,20 +215,6 @@ namespace DataWF.Web.CodeGenerator
             cacheClients[clientName] = clientSyntax.AddMembers(GenOperation(descriptor).ToArray());
         }
 
-        private string GetClientBaseType(string clientName, out JsonProperty id)
-        {
-            if (document.Definitions.TryGetValue(clientName, out var schema))
-            {
-                id = GetPrimaryKey(schema);
-                return $"Client<{clientName}, {(id == null ? "int" : GetTypeString(id, false))}>";
-            }
-            else
-            {
-                id = null;
-                return $"ClientBase";
-            }
-        }
-
         private ClassDeclarationSyntax GenClient(string clientName)
         {
             var baseType = SyntaxFactory.ParseTypeName(GetClientBaseType(clientName, out var id));
@@ -245,16 +231,30 @@ namespace DataWF.Web.CodeGenerator
                         );
         }
 
+        private string GetClientBaseType(string clientName, out JsonProperty id)
+        {
+            if (document.Definitions.TryGetValue(clientName, out var schema))
+            {
+                id = GetPrimaryKey(schema);
+                return $"Client<{clientName}, {(id == null ? "int" : GetTypeString(id, false))}>";
+            }
+            id = null;
+            return $"ClientBase";
+        }
+
         private JsonProperty GetPrimaryKey(JsonSchema4 schema)
         {
             if (schema.ExtensionData != null && schema.ExtensionData.TryGetValue("x-id", out var propertyName))
             {
                 return schema.Properties[propertyName.ToString()];
             }
-            else if (schema.AllOf != null)
-            {
-                return GetPrimaryKey(schema.AllOf.FirstOrDefault());
-            }
+
+            foreach (var baseClass in schema.AllInheritedSchemas)
+                if (baseClass.ExtensionData != null && baseClass.ExtensionData.TryGetValue("x-id", out propertyName))
+                {
+                    return baseClass.Properties[propertyName.ToString()];
+                }
+
             return null;
         }
 
@@ -264,7 +264,7 @@ namespace DataWF.Web.CodeGenerator
                     SyntaxKind.BaseConstructorInitializer,
                     SyntaxFactory.ArgumentList(
                         SyntaxFactory.SeparatedList(new[] {
-                            SyntaxFactory.Argument(SyntaxFactory.ParseExpression($"\"{id.Name}\"")) })));
+                            SyntaxFactory.Argument(SyntaxFactory.ParseExpression($"new Invoker<{clientName},{GetTypeString(id, true)}>(nameof({clientName}.{id.Name}), (p)=>p.{id.Name})")) })));
             yield return SyntaxFactory.ConstructorDeclaration(
                 attributeLists: SyntaxFactory.List(ClientAttributeList()),
                 modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),

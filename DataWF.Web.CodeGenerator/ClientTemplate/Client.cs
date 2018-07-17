@@ -8,18 +8,18 @@ using System.Threading.Tasks;
 
 namespace DataWF.Web.Client
 {
-    public abstract partial class Client<T, K> : ClientBase, ICRUDClient where T : class
+    public abstract partial class Client<T, K> : ClientBase, ICRUDClient<T> where T : class where K : struct
     {
-        public Client(string idProperty)
+        public Client(Invoker<T, K?> idInvoker)
         {
-            IdProperty = idProperty;
-            if (IdProperty != null)
+            IdInvoker = idInvoker;
+            if (IdInvoker != null)
             {
-                Items.Indexes.Add(EmitInvoker.Initialize<T>(IdProperty));
+                Items.Indexes.Add(IdInvoker);
             }
         }
 
-        public readonly string IdProperty;
+        public readonly Invoker<T, K?> IdInvoker;
 
         public SelectableList<T> Items { get; set; } = new SelectableList<T>();
 
@@ -33,7 +33,7 @@ namespace DataWF.Web.Client
                 var invoker = (IInvoker)null;
                 var id = (object)null;
                 var newItem = (T)null;
-                var add = true;
+                var add = false;
                 while (jreader.Read() && jreader.TokenType != JsonToken.EndObject)
                 {
                     if (jreader.TokenType == JsonToken.PropertyName)
@@ -50,7 +50,7 @@ namespace DataWF.Web.Client
                     else if (invoker != null)
                     {
                         dictionary[invoker] = jreader.Value;
-                        if (invoker.Name == IdProperty)
+                        if (invoker.Name == IdInvoker.Name)
                         {
                             id = jreader.Value;
                         }
@@ -59,11 +59,11 @@ namespace DataWF.Web.Client
                 if (id != null)
                 {
                     newItem = Select((K)Helper.Parse(id, typeof(K)));
-                    add = false;
                 }
                 if (newItem == null)
                 {
                     newItem = (T)EmitInvoker.CreateObject(type);
+                    add = true;
                 }
                 foreach (var entry in dictionary)
                 {
@@ -80,7 +80,7 @@ namespace DataWF.Web.Client
 
         public virtual T Select(K id)
         {
-            return Items.SelectOne(IdProperty, id);
+            return Items.SelectOne(IdInvoker.Name, id);
         }
 
         public virtual T Get(K id)
