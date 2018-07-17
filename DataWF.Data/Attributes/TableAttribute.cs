@@ -189,9 +189,11 @@ namespace DataWF.Data
             if (cacheItemTypes.Contains(itemType))
                 return;
             cacheItemTypes.Add(itemType);
-            if (itemType.Type.BaseType != typeof(DBItem) && itemType.Type.BaseType != typeof(DBGroupItem))
-                InitializeType(itemType.Type.BaseType);
-            InitializeType(itemType.Type);
+            var types = TypeHelper.GetTypeHierarchi(itemType.Type);
+            foreach (var item in types)
+            {
+                InitializeType(item);
+            }
         }
 
         public void InitializeType(Type type)
