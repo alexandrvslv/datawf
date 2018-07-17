@@ -23,7 +23,7 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Module.Messanger
 {
-    public class MessageDetail : DBItem
+    public abstract class MessageDetail : DBItem
     {
         [Browsable(false)]
         [DataMember, Column("message_id")]

@@ -85,35 +85,87 @@ namespace DataWF.Web.CodeGenerator
                     var tableAttribute = DBTable.GetTableAttribute(itemType, true);
                     if (tableAttribute != null)
                     {
-                        var controller = GetOrGenerateController(tableAttribute);
-                        if (tableAttribute.ItemType != itemType)
-                        {
-                            trees[tableAttribute.ItemType.Name] = controller.AddMembers(GetControllerMemebers(itemType, tableAttribute).ToArray());
-                        }
+                        var controller = GetOrGenerateController(tableAttribute, itemType);
+                        //if (tableAttribute.ItemType != itemType)
+                        //{
+                        //    trees[tableAttribute.ItemType.Name] = controller.AddMembers(GetControllerMemebers(tableAttribute, itemType).ToArray());
+                        //}
                     }
                 }
             }
         }
 
-        //https://carlos.mendible.com/2017/03/02/create-a-class-with-net-core-and-roslyn/
-        private ClassDeclarationSyntax GetOrGenerateController(TableAttribute tableAttribute)
+        private ClassDeclarationSyntax GetOrGenerateBaseController(TableAttribute tableAttribute, Type itemType)
         {
-            if (!trees.TryGetValue(tableAttribute.ItemType.Name, out var controller))
+            var baseName = itemType.Name + "Base";
+
+            if (!trees.TryGetValue(baseName, out var baseController))
             {
-                string controllerClassName = $"{tableAttribute.ItemType.Name}Controller";
+                string controllerClassName = $"{baseName}Controller";
                 var primaryKeyType = tableAttribute.GetPrimaryKey()?.GetDataType() ?? typeof(int);
+                baseController = SyntaxFactory.ClassDeclaration(
+                    attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
+                    modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.AbstractKeyword)),
+                    identifier: SyntaxFactory.Identifier(controllerClassName),
+                    typeParameterList: SyntaxFactory.TypeParameterList(
+                        SyntaxFactory.SeparatedList(new[] {
+                            SyntaxFactory.TypeParameter("T"),
+                            SyntaxFactory.TypeParameter("K") })),
+                    baseList: SyntaxFactory.BaseList(
+                        SyntaxFactory.SeparatedList<BaseTypeSyntax>(new[] {
+                        SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"{(HideBaseType(itemType)? "" :itemType.BaseType.Name)}BaseController<T, K>"))
+                        })),
+                    constraintClauses: SyntaxFactory.List(new[] { SyntaxFactory.TypeParameterConstraintClause(
+                        name: SyntaxFactory.IdentifierName("T"),
+                        constraints: SyntaxFactory.SeparatedList<TypeParameterConstraintSyntax>(new []{
+                            SyntaxFactory.TypeConstraint(SyntaxFactory.ParseTypeName(itemType.Name)),
+                             SyntaxFactory.TypeConstraint(SyntaxFactory.ParseTypeName("new()"))
+                        }))
+                    }),
+                    members: SyntaxFactory.List(GetControllerMemebers(tableAttribute, itemType, true))
+                    );
+
+                trees[baseName] = baseController;
+            }
+            return baseController;
+        }
+
+        public bool HideBaseType(Type itemType)
+        {
+            return itemType.BaseType == typeof(DBItem) || itemType.BaseType == typeof(DBVirtualItem) || itemType.BaseType == typeof(DBGroupItem);
+        }
+
+        //https://carlos.mendible.com/2017/03/02/create-a-class-with-net-core-and-roslyn/
+        private ClassDeclarationSyntax GetOrGenerateController(TableAttribute tableAttribute, Type itemType)
+        {
+            var baseType = itemType;
+            while (baseType != typeof(DBItem) && baseType != typeof(DBVirtualItem))
+            {
+                if (baseType.IsAbstract || baseType == tableAttribute.ItemType)
+                {
+                    GetOrGenerateBaseController(tableAttribute, baseType);
+                }
+                baseType = baseType.BaseType;
+            }
+
+            if (!trees.TryGetValue(itemType.Name, out var controller))
+            {
+                var controllerClassName = $"{itemType.Name}Controller";
+                var primaryKeyType = tableAttribute.GetPrimaryKey()?.GetDataType() ?? typeof(int);
+                var baseName = $"{(itemType == tableAttribute.ItemType ? itemType.Name : HideBaseType(itemType) ? "" : itemType.BaseType.Name)}BaseController<{itemType.Name}, {primaryKeyType.Name}>";
+
                 controller = SyntaxFactory.ClassDeclaration(
                     attributeLists: SyntaxFactory.List(GetControllerAttributeList()),
                     modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
                     identifier: SyntaxFactory.Identifier(controllerClassName),
                     typeParameterList: null,
                     baseList: SyntaxFactory.BaseList(SyntaxFactory.SingletonSeparatedList<BaseTypeSyntax>(
-                        SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"BaseController<{tableAttribute.ItemType.Name}, {primaryKeyType.Name}>")))),
+                        SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName(baseName)))),
                     constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
-                    members: SyntaxFactory.List(GetControllerMemebers(tableAttribute.ItemType, tableAttribute))
+                    members: SyntaxFactory.List(GetControllerMemebers(tableAttribute, itemType, false))
                     );
 
-                trees[tableAttribute.ItemType.Name] = controller;
+                trees[itemType.Name] = controller;
             }
             return controller;
         }
@@ -169,15 +221,17 @@ namespace DataWF.Web.CodeGenerator
             return list;
         }
 
-        public IEnumerable<MemberDeclarationSyntax> GetControllerMemebers(Type type, TableAttribute table)
+        public IEnumerable<MemberDeclarationSyntax> GetControllerMemebers(TableAttribute table, Type type, bool baseClass)
         {
             AddUsing(type);
+            if (table.ItemType == type && !baseClass)
+                yield break;
             foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
             {
                 if (method.GetCustomAttribute<ControllerMethodAttribute>() != null
                     && (!method.IsVirtual || method.GetBaseDefinition() == null))
                 {
-                    yield return GetControllerMethod(method, table);
+                    yield return GetControllerMethod(method, table, baseClass);
                 }
             }
         }
@@ -211,7 +265,7 @@ namespace DataWF.Web.CodeGenerator
         }
 
         //https://stackoverflow.com/questions/37710714/roslyn-add-new-method-to-an-existing-class
-        private MethodDeclarationSyntax GetControllerMethod(MethodInfo method, TableAttribute table)
+        private MethodDeclarationSyntax GetControllerMethod(MethodInfo method, TableAttribute table, bool baseClass)
         {
             AddUsing(method.DeclaringType);
             AddUsing(method.ReturnType);
@@ -227,18 +281,18 @@ namespace DataWF.Web.CodeGenerator
                           typeParameterList: null,
                           parameterList: SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(GetControllerMethodParameters(method, table))),
                           constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
-                          body: SyntaxFactory.Block(GetControllerMethodBody(method)),
+                          body: SyntaxFactory.Block(GetControllerMethodBody(method, baseClass)),
                           semicolonToken: SyntaxFactory.Token(SyntaxKind.SemicolonToken));
             // Annotate that this node should be formatted
             //.WithAdditionalAnnotations(Formatter.Annotation);
         }
 
-        private IEnumerable<StatementSyntax> GetControllerMethodBody(MethodInfo method)
+        private IEnumerable<StatementSyntax> GetControllerMethodBody(MethodInfo method, bool baseClass)
         {
             var returning = method.ReturnType == typeof(void) ? "void" : $"ActionResult<{TypeHelper.FormatCode(method.ReturnType)}>";
             if (!method.IsStatic)
             {
-                yield return SyntaxFactory.ParseStatement($"var idValue = table.LoadById<{TypeHelper.FormatCode(method.DeclaringType)}>(id);");
+                yield return SyntaxFactory.ParseStatement($"var idValue = table.LoadById<{(baseClass ? "T" : TypeHelper.FormatCode(method.DeclaringType))}>(id);");
 
                 foreach (var parameter in parametersInfo)
                 {

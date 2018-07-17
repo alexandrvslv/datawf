@@ -24,8 +24,7 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Module.Flow
 {
-    [DataContract]
-    public class DocumentDetail : DBItem
+    public abstract class DocumentDetail : DBItem
     {
         [Browsable(false)]
         [DataMember, Column("document_id")]
