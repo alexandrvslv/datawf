@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace DataWF.Common
 {
-    public class ListIndex<T, K> : IListIndex<T>
+    public class ListIndex<T, K> : IListIndex<T, K>
     {
         public Dictionary<DBNullable<K>, List<T>> Dictionary;
         public IInvoker<T, K> Invoker;

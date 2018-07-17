@@ -21,5 +21,10 @@ namespace DataWF.Common
         void Refresh(T item);
     }
 
+    public interface IListIndex<T, K> : IListIndex<T>
+    {
+        T SelectOne(K value);
+    }
+
 }
 
