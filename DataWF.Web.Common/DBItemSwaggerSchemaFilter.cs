@@ -51,8 +51,10 @@ namespace DataWF.Web.Common
                     var baseSchema = context.SchemaRegistry.GetOrRegister(context.SystemType.BaseType);
                     schema.AllOf = new List<Schema> { baseSchema };
                 }
-                foreach (var property in context.SystemType.GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public))
+                foreach (var property in context.SystemType.GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public ))
                 {
+                    if (property.GetMethod.GetBaseDefinition().DeclaringType != context.SystemType)
+                        continue;
                     var column = DBColumn.GetColumnAttribute(property);
                     if (column != null)
                     {
@@ -89,7 +91,8 @@ namespace DataWF.Web.Common
                 columnSchema.ReadOnly = true;
             }
             if ((column.Keys & DBColumnKeys.Notnull) == DBColumnKeys.Notnull
-                || (column.Keys & DBColumnKeys.Primary) != DBColumnKeys.Primary)
+                && (column.Keys & DBColumnKeys.Primary) != DBColumnKeys.Primary
+                && (column.Keys & DBColumnKeys.System) != DBColumnKeys.System)
             {
                 if (schema.Required == null)
                     schema.Required = new List<string>();
@@ -98,6 +101,11 @@ namespace DataWF.Web.Common
             if ((column.Keys & DBColumnKeys.Primary) == DBColumnKeys.Primary)
             {
                 schema.Extensions.Add("x-id", column.Property.Name);
+                //columnSchema. = true;
+            }
+            if ((column.Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType)
+            {
+                schema.Extensions.Add("x-type", column.Property.Name);
                 //columnSchema. = true;
             }
             if ((column.Keys & DBColumnKeys.Culture) == DBColumnKeys.Culture)
