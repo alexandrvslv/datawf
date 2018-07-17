@@ -265,8 +265,8 @@ namespace DataWF.Module.Flow
         [DataMember, Column("title", Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
         public virtual string Title
         {
-            get { return GetName(nameof(Title)); }
-            set { SetName(nameof(Title), value); }
+            get { return GetName(); }
+            set { SetName(value); }
         }
 
         [Browsable(false)]

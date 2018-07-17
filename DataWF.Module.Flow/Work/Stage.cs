@@ -89,10 +89,10 @@ namespace DataWF.Module.Flow
         }
 
         [DataMember, Column("name", 512, Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
-        public override string Name
+        public string Name
         {
-            get { return GetName(nameof(Name)); }
-            set { SetName(nameof(Name), value); }
+            get { return GetName(); }
+            set { SetName(value); }
         }
 
         [Browsable(false)]

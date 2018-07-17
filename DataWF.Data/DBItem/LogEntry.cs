@@ -128,7 +128,7 @@ namespace DataWF.Data
             {
                 if (log.Status == DBStatus.New)
                 {
-                    string name = ((IUserLog)log.UserLog)?.User?.Name;
+                    string name = ((IUserLog)log.UserLog)?.User?.ToString();
                     if (user.IndexOf(name, StringComparison.Ordinal) < 0)
                         user += name + "; ";
                     foreach (var logColumn in log.LogTable.GetLogColumns())

@@ -69,10 +69,10 @@ namespace DataWF.Module.Counterpart
         }
 
         [VirtualColumn("name", Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
-        public override string Name
+        public string Name
         {
-            get { return GetName(nameof(Name)); }
-            set { SetName(nameof(Name), value); }
+            get { return GetName(); }
+            set { SetName(value); }
         }
 
     }

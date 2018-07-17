@@ -78,15 +78,15 @@ namespace DataWF.Module.Counterpart
         [DataMember, Column("shortname", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
         public string ShortName
         {
-            get { return GetName(nameof(ShortName)); }
-            set { SetName(nameof(ShortName), value); }
+            get { return GetName(); }
+            set { SetName(value); }
         }
 
         [DataMember, Column("name", 1024, Keys = DBColumnKeys.Culture)]
-        public override string Name
+        public string Name
         {
-            get { return GetName(nameof(Name)); }
-            set { SetName(nameof(Name), value); }
+            get { return GetName(); }
+            set { SetName(value); }
         }
 
         [Browsable(false)]

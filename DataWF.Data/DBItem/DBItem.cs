@@ -560,7 +560,7 @@ namespace DataWF.Data
         {
             foreach (LocaleString c in value)
             {
-                SetName(@group, c.Culture, c.Value);
+                SetName(c.Culture, c.Value, @group);
             }
         }
 
@@ -581,7 +581,7 @@ namespace DataWF.Data
                 foreach (string s in temp)
                 {
                     string ts = s.Trim();
-                    string val = this.GetName(@group, ts);
+                    string val = this.GetName(CultureInfo.GetCultureInfo(ts), @group);
                     if (val != null)
                         cs.Add(val, ts);
                 }
@@ -589,17 +589,12 @@ namespace DataWF.Data
             return cs;
         }
 
-        public string GetName(string @group, string culture)
+        public string GetName([CallerMemberName] string @group = null)
         {
-            return GetName(@group, CultureInfo.GetCultureInfo(culture));
+            return GetName(Locale.Instance.Culture, @group);
         }
 
-        public string GetName(string @group)
-        {
-            return GetName(@group, Locale.Instance.Culture);
-        }
-
-        public string GetName(string @group, CultureInfo culture)
+        public string GetName(CultureInfo culture, [CallerMemberName] string @group = null)
         {
             if (culture == null)
                 return null;
@@ -611,17 +606,12 @@ namespace DataWF.Data
             return null;
         }
 
-        public void SetName(string @group, string s, string value)
+        public void SetName(string value, [CallerMemberName] string @group = null)
         {
-            SetName(@group, CultureInfo.GetCultureInfo(s), value);
+            SetName(Locale.Instance.Culture, value, @group);
         }
 
-        public void SetName(string @group, string value)
-        {
-            SetName(@group, Locale.Instance.Culture, value);
-        }
-
-        public void SetName(string @group, CultureInfo culture, string value)
+        public void SetName(CultureInfo culture, string value, [CallerMemberName] string @group = null)
         {
             if (culture == null)
                 return;
@@ -712,12 +702,12 @@ namespace DataWF.Data
             }
         }
 
-        [DataMember, Browsable(false)]
-        public virtual string Name
-        {
-            get { return GetName(nameof(Name)); }
-            set { SetName(nameof(Name), value); }
-        }
+        //[DataMember, Browsable(false)]
+        //public virtual string Name
+        //{
+        //    get { return GetName(nameof(Name)); }
+        //    set { SetName(nameof(Name), value); }
+        //}
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public virtual DBTable Table

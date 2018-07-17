@@ -98,7 +98,7 @@ namespace DataWF.Data
                 var row = this;
                 while (row != null)
                 {
-                    buf = row.Name + (buf.Length == 0 ? string.Empty : (separator + buf));
+                    buf = row.ToString() + (buf.Length == 0 ? string.Empty : (separator + buf));
                     row = row.Group;
                 }
                 return buf;

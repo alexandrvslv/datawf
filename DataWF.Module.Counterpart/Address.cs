@@ -83,8 +83,8 @@ namespace DataWF.Module.Counterpart
         [DataMember, Column("street", 1024, Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
         public string Street
         {
-            get { return GetName(nameof(Street)); }
-            set { SetName(nameof(Street), value); }
+            get { return GetName(); }
+            set { SetName(value); }
         }
     }
 }

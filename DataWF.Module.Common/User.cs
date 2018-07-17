@@ -241,10 +241,10 @@ namespace DataWF.Module.Common
         }
 
         [DataMember, Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
-        public override string Name
+        public string Name
         {
-            get { return GetName(nameof(Name)); }
-            set { SetName(nameof(Name), value); }
+            get { return GetName(); }
+            set { SetName(value); }
         }
 
         [DataMember, Column("department_id"), Browsable(false)]
@@ -280,7 +280,7 @@ namespace DataWF.Module.Common
         }
 
         [ReadOnly(true)]
-        [DataMember, Column("super", Default = "false", Keys = DBColumnKeys.Notnull)]
+        [DataMember, Column("super", Default = "False", Keys = DBColumnKeys.Notnull)]
         public bool? Super
         {
             get { return GetProperty<bool?>(); }
@@ -354,8 +354,17 @@ namespace DataWF.Module.Common
 
         public bool IsAuthenticated => string.IsNullOrEmpty(Token);
 
-        public string NameRU { get; set; }
-        public string NameEN { get; set; }
+        public string NameRU
+        {
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
+        }
+
+        public string NameEN
+        {
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
+        }
 
         public override void Dispose()
         {

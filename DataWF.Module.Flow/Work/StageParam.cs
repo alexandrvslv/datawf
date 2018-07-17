@@ -108,6 +108,13 @@ namespace DataWF.Module.Flow
             set { SetProperty(value); }
         }
 
+        [DataMember, Column("name", 1024)]
+        public string Name
+        {
+            get { return GetName(); }
+            set { SetName(value); }
+        }
+
         [Browsable(false)]
         public object Param
         {
