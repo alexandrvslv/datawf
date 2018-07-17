@@ -936,10 +936,21 @@ namespace DataWF.Data
             }
             else if (type == typeof(string))
                 val = value;
-            else if (type == typeof(int) || type.IsEnum)
+            else if (type == typeof(int))
             {
                 if (int.TryParse(value, out int i))
                     val = i;
+            }
+            else if (type.IsEnum)
+            {
+                if (int.TryParse(value, out int i))
+                {
+                    val = i;
+                }
+                else
+                {
+                    val = Enum.Parse(type, value, true);
+                }
             }
             else if (type == typeof(byte))
             {
