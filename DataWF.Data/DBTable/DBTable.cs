@@ -905,7 +905,7 @@ namespace DataWF.Data
 
         public abstract IDBTableView CreateItemsView(string query = "", DBViewKeys mode = DBViewKeys.None, DBStatus filter = DBStatus.Empty);
 
-        public abstract DBItem NewItem(DBUpdateState state = DBUpdateState.Insert, bool def = true);
+        public abstract DBItem NewItem(DBUpdateState state = DBUpdateState.Insert, bool def = true, int typeIndex = 0);
 
         public IEnumerable<DBColumn> ParseColumns(ICollection<string> columns)
         {

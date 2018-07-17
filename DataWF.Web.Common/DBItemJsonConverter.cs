@@ -85,49 +85,56 @@ namespace DataWF.Web.Common
             {
                 throw new JsonSerializationException($"Can't find table of {objectType?.Name ?? "null"}");
             }
-            var column = (DBColumn)null;
-            var dictionary = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
-            var key = (string)null;
+            var dictionary = new Dictionary<DBColumn, object>();
+            var key = (DBColumn)null;
             while (reader.Read() && reader.TokenType != JsonToken.EndObject)
             {
                 if (reader.TokenType == JsonToken.PropertyName)
                 {
-                    key = (string)reader.Value;
+                    key = table.ParseProperty((string)reader.Value);
                 }
-                else
+                else if (key != null)
                 {
-                    dictionary[key] = reader.Value;
+                    if (reader.TokenType == JsonToken.StartObject)
+                    {
+                        dictionary[key] = ReadJson(reader, key.ReferenceProperty.DataType, null, serializer);
+                    }
+                    else
+                    {
+                        dictionary[key] = reader.Value;
+                    }
                 }
-
             }
 
-            if (!dictionary.TryGetValue(table.PrimaryKey.Property, out var value) || value == null)
-            {
-                item = table.NewItem();
-            }
-            else
+            if (table.PrimaryKey != null && dictionary.TryGetValue(table.PrimaryKey, out var value) && value != null)
             {
                 item = table.LoadItemById(value);
             }
 
+            if (item == null)
+            {
+                if (table.ItemTypeKey != null && dictionary.TryGetValue(table.ItemTypeKey, out var itemType) && itemType != null)
+                    item = table.NewItem(DBUpdateState.Insert, true, (int)table.ItemTypeKey.ParseValue(itemType));
+                else
+                    item = table.NewItem(DBUpdateState.Insert, true);
+            }
+
             foreach (var entry in dictionary)
             {
-                column = table.ParseProperty(entry.Key);
-                if (column == null)
-                    continue;
-                value = column.ParseValue(entry.Value);
-                if (column.ReferenceProperty != null)
+                value = entry.Key.ParseValue(entry.Value);
+                if (entry.Key.ReferenceProperty != null)
                 {
-                    value = column.ReferenceTable.LoadItemById(value);
-                    column.ReferenceProperty.Set(item, value);
+                    if (!(value is DBItem))
+                        value = entry.Key.ReferenceTable.LoadItemById(value);
+                    entry.Key.ReferenceProperty.Set(item, value);
                 }
-                else if (column.PropertyInvoker == null)
+                else if (entry.Key.PropertyInvoker == null)
                 {
-                    throw new InvalidOperationException($"Column {column} Property Information not found!");
+                    throw new InvalidOperationException($"Column {entry.Key} Property Information not found!");
                 }
                 else
                 {
-                    column.PropertyInvoker.Set(item, value);
+                    entry.Key.PropertyInvoker.Set(item, value);
                 }
             }
             return item;

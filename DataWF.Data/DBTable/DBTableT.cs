@@ -600,9 +600,9 @@ namespace DataWF.Data
             return srow;
         }
 
-        public override DBItem NewItem(DBUpdateState state = DBUpdateState.Insert, bool def = true)
+        public override DBItem NewItem(DBUpdateState state = DBUpdateState.Insert, bool def = true, int typeIndex = 0)
         {
-            return New(state, def);
+            return New(state, def, typeIndex);
         }
 
         public T New(DBUpdateState state = DBUpdateState.Insert, bool def = true, int typeIndex = 0)
