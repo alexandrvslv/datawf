@@ -431,10 +431,10 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             {
                 ddl.AppendLine(FormatCreateView(table.Name));
                 ddl.Append("select ");
-                foreach (DBVirtualColumn column in table.Columns)
+                foreach (var column in table.Columns)
                 {
                     if (column.ColumnType == DBColumnTypes.Default)
-                        ddl.Append(column.BaseName + " as " + column.Name);
+                        ddl.Append(column.Name + " as " + column.Name);
                     else if (column.ColumnType == DBColumnTypes.Query)
                         ddl.Append(column.Query + " as " + column.Name);
                     else

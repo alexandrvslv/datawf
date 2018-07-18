@@ -24,56 +24,18 @@ using DataWF.Common;
 
 namespace DataWF.Module.Counterpart
 {
-    [VirtualTable("rcountry", typeof(Location), "typeid = 2")]
-    public class Country : DBVirtualItem
+    [ItemType((int)Counterpart.LocationType.Country)]
+    public class Country : Location
     {
-        public static DBVirtualTable<Country> DBTable
-        {
-            get { return (DBVirtualTable<Country>)GetTable<Country>(); }
-        }
+        public Country()
+        { }
 
-        [VirtualColumn("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
-        {
-            get { return GetValue<int?>(Table.PrimaryKey); }
-            set { SetValue(value, Table.PrimaryKey); }
-        }
+        public static DBTable<Country> DBVirtualTable => GetTable<Country>();
 
-        [VirtualColumn("code", Keys = DBColumnKeys.Code)]
-        public string Code
+        public Continent Continent
         {
-            get { return GetValue<string>(Table.CodeKey); }
-            set { SetValue(value, Table.CodeKey); }
+            get { return Parent as Continent; }
+            set { Parent = value; }
         }
-
-        [VirtualColumn("codei")]
-        public string CodeI
-        {
-            get { return GetProperty<string>(nameof(CodeI)); }
-            set { SetProperty(value, nameof(CodeI)); }
-        }
-
-        [Browsable(false)]
-        [VirtualColumn("parent_id")]
-        public int? ContinentId
-        {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
-        }
-
-        [Reference(nameof(ContinentId))]
-        public Location Continent
-        {
-            get { return GetPropertyReference<Location>(); }
-            set { SetPropertyReference(value); }
-        }
-
-        [VirtualColumn("name", Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
-        public string Name
-        {
-            get { return GetName(); }
-            set { SetName(value); }
-        }
-
     }
 }

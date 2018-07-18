@@ -51,30 +51,26 @@ namespace DataWF.Data
             cacheItemTypes.Clear();
         }
 
-        public static TableAttribute GetTableAttribute<T>(bool inherite = false)
+        public static TableAttribute GetTableAttribute<T>()
         {
-            return GetTableAttribute(typeof(T), inherite);
+            return GetTableAttribute(typeof(T));
         }
 
-        public static TableAttribute GetTableAttribute(Type type, bool inherite = false)
+        public static TableAttribute GetTableAttribute(Type type)
         {
             if (!cacheTables.TryGetValue(type, out TableAttribute table))
             {
                 table = type.GetCustomAttribute<TableAttribute>();
-                if (table == null)
-                {
-                    table = type.GetCustomAttribute<VirtualTableAttribute>();
-                }
                 if (table != null)
                 {
                     table.Initialize(type);
                 }
                 cacheTables[type] = table;
             }
-            if (table == null && inherite)
+            if (table == null)
             {
                 var itemType = GetItemTypeAttribute(type);
-                table = itemType?.Table;
+                table = itemType?.TableAttribute;
             }
             return table;
         }
@@ -98,14 +94,17 @@ namespace DataWF.Data
             return (DBTable<T>)GetTable(typeof(T), schema, generate);
         }
 
-        public static DBTable GetTable(Type type, DBSchema schema = null, bool generate = false, bool inherite = false)
+        public static DBTable GetTable(Type type, DBSchema schema = null, bool generate = false)
         {
-            var config = GetTableAttribute(type, inherite);
-            if (config != null)
+            var tableAttribute = GetTableAttribute(type);
+            if (tableAttribute != null)
             {
-                if (config.Table == null && generate)
-                    config.Generate(schema);
-                return config.Table;
+                if (tableAttribute.Table == null && generate)
+                    tableAttribute.Generate(schema);
+                var itemAttribute = GetItemTypeAttribute(type);
+                if (itemAttribute != null)
+                    return itemAttribute.Table;
+                return tableAttribute.Table;
             }
             return null;
         }
@@ -140,7 +139,7 @@ namespace DataWF.Data
         protected DBTableType type = DBTableType.Table;
         private int block = 500;
         internal object locker = new object();
-        protected List<IDBVirtualTable> virtualViews = new List<IDBVirtualTable>(0);
+        protected List<IDBVirtualTable> virtualTables = new List<IDBVirtualTable>(0);
         private DBItemType itemType;
 
         protected DBTable(string name = null) : base(name)
@@ -156,7 +155,7 @@ namespace DataWF.Data
         public string LogTableName { get; set; }
 
         [XmlIgnore, JsonIgnore]
-        public DBLogTable LogTable
+        public virtual DBLogTable LogTable
         {
             get
             {
@@ -488,19 +487,19 @@ namespace DataWF.Data
         }
 
         [Category("Column")]
-        public DBColumnList Columns { get; set; }
+        public virtual DBColumnList Columns { get; set; }
 
         [Category("Column")]
-        public DBColumnGroupList ColumnGroups { get; set; }
+        public virtual DBColumnGroupList ColumnGroups { get; set; }
 
         [Category("Performance")]
-        public DBConstraintList<DBConstraint> Constraints { get; set; }
+        public virtual DBConstraintList<DBConstraint> Constraints { get; set; }
 
         [Category("Performance")]
-        public DBIndexList Indexes { get; set; }
+        public virtual DBIndexList Indexes { get; set; }
 
         [Category("Performance")]
-        public DBForeignList Foreigns { get; set; }
+        public virtual DBForeignList Foreigns { get; set; }
 
         public abstract int Count { get; }
 
@@ -529,7 +528,7 @@ namespace DataWF.Data
 
         public IEnumerable<DBTable> GetChilds()
         {
-            foreach (var item in virtualViews)
+            foreach (var item in virtualTables)
             {
                 yield return (DBTable)item;
             }
@@ -815,6 +814,11 @@ namespace DataWF.Data
             }
         }
 
+        public virtual int NextHash()
+        {
+            return Interlocked.Increment(ref Hash);
+        }
+
         public void Save(IList rows = null)
         {
             if (rows == null)
@@ -905,7 +909,21 @@ namespace DataWF.Data
 
         public abstract IDBTableView CreateItemsView(string query = "", DBViewKeys mode = DBViewKeys.None, DBStatus filter = DBStatus.Empty);
 
-        public abstract DBItem NewItem(DBUpdateState state = DBUpdateState.Insert, bool def = true, int typeIndex = 0);
+        public virtual DBItem NewItem(DBUpdateState state = DBUpdateState.Insert, bool def = true, int typeIndex = 0)
+        {
+            var type = GetItemType(typeIndex);
+            var item = (DBItem)type.Constructor.Create();
+            if (item.Table == null)
+            {
+                item.Build(this);
+            }
+            if (def)
+            {
+                item.SetDefaults();
+            }
+            item.update = state;
+            return item;
+        }
 
         public IEnumerable<DBColumn> ParseColumns(ICollection<string> columns)
         {
@@ -1119,12 +1137,12 @@ namespace DataWF.Data
 
         public void RemoveVirtual(IDBVirtualTable view)
         {
-            virtualViews.Remove(view);
+            virtualTables.Remove(view);
         }
 
         public void AddVirtual(IDBVirtualTable view)
         {
-            virtualViews.Add(view);
+            virtualTables.Add(view);
         }
 
         [Browsable(false)]
@@ -1523,6 +1541,11 @@ namespace DataWF.Data
                 };
             }
             return null;
+        }
+
+        public virtual DBItemType GetItemType(int typeIndex)
+        {
+            return typeIndex == 0 ? ItemType : ItemTypes[typeIndex];
         }
 
         public int GetTypeIndex(Type type)

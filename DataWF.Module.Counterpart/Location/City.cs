@@ -1,5 +1,5 @@
 ﻿/*
- DBTable.cs
+ Location.cs
  
  Author:
       Alexandr <alexandr_vslv@mail.ru>
@@ -17,15 +17,13 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using System.Collections.Specialized;
-using System.ComponentModel;
 
-namespace DataWF.Data
+using DataWF.Data;
+
+namespace DataWF.Module.Counterpart
 {
-    public interface IDBVirtualTable
+    [ItemType((int)Counterpart.LocationType.City)]
+    public class City : Location
     {
-        DBTable BaseTable { get; set; }
-        QQuery FilterQuery { get; }
-        void CheckItem(DBItem item, string property, NotifyCollectionChangedAction type);
     }
 }

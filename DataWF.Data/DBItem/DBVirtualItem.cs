@@ -39,13 +39,6 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
-        public override DBTable Table
-        {
-            get { return base.Table; }
-            set { table = value; }
-        }
-
-        [Browsable(false)]
         public DBItem Main
         {
             get { return main; }

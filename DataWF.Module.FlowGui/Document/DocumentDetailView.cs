@@ -33,7 +33,7 @@ namespace DataWF.Module.FlowGui
 
         public DBTable Table
         {
-            get { return DBTable.GetTable(typeof(T), null, false, true); }
+            get { return DBTable.GetTable(typeof(T), null, false); }
         }
 
         public virtual Document Document

@@ -110,14 +110,9 @@ namespace DataWF.Data
                 return;
             }
             items.Add(item);
-            foreach (var column in Columns)
-            {
-                column.Index?.Add(item);
-            }
             item.OnAttached();
 
             OnItemChanged(item, null, NotifyCollectionChangedAction.Add);
-
         }
 
         public override bool Remove(DBItem item)
@@ -125,17 +120,15 @@ namespace DataWF.Data
             return Remove((T)item);
         }
 
-        public bool Remove(T item)
+        public virtual bool Remove(T item)
         {
             if (!item.Attached)
+            {
                 return false;
+            }
 
             OnItemChanged(item, null, NotifyCollectionChangedAction.Remove);
-            foreach (var column in Columns)
-            {
-                if (column.Index != null)
-                    column.Index.Remove(item);
-            }
+
             items.Remove(item);
             item.OnDetached();
             return true;
@@ -223,20 +216,15 @@ namespace DataWF.Data
                 || property == nameof(DBItem.UpdateState))
                 return;
 
-            foreach (var collection in virtualViews)
+            foreach (var collection in virtualTables)
             {
-                if (item == null)
-                {
-                    collection.Refresh();
-                }
-                else
-                {
-                    collection.CheckItem(type, item, property);
-                }
+                collection.CheckItem(item, property, type);
             }
 
             for (int i = 0; i < queryViews.Count; i++)
+            {
                 queryViews[i].OnItemChanged(item, property, type);
+            }
         }
 
         public override void Trunc()
@@ -584,7 +572,7 @@ namespace DataWF.Data
                 var typeIndex = 0;
                 if (transaction.ReaderItemTypeKey >= 0)
                     typeIndex = transaction.Reader.GetInt32(transaction.ReaderItemTypeKey);
-                srow = New(transaction.ReaderState, false, typeIndex);
+                srow = (T)NewItem(transaction.ReaderState, false, typeIndex);
             }
 
             for (int i = 0; i < transaction.ReaderColumns.Count; i++)
@@ -598,24 +586,6 @@ namespace DataWF.Data
                 }
             }
             return srow;
-        }
-
-        public override DBItem NewItem(DBUpdateState state = DBUpdateState.Insert, bool def = true, int typeIndex = 0)
-        {
-            return New(state, def, typeIndex);
-        }
-
-        public T New(DBUpdateState state = DBUpdateState.Insert, bool def = true, int typeIndex = 0)
-        {
-            var type = GetItemType(typeIndex);
-            var item = (T)type.Constructor.Create();
-            item.Build(this, state, def);
-            return item;
-        }
-
-        public virtual DBItemType GetItemType(int typeIndex)
-        {
-            return typeIndex == 0 ? ItemType : ItemTypes[typeIndex];
         }
 
         public override IEnumerable<DBItem> GetChangedItems()

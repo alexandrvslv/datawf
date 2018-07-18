@@ -35,8 +35,7 @@ namespace DataWF.Data
         //private string property;
         public SortIndex(DBTable list, string property)
         {
-            this.row = new DBItem();
-            row.Build(list, DBUpdateState.Default);
+            this.row = list.NewItem(DBUpdateState.Default);
             this.list = list;
             //this.property = property;
             if (list.Columns.Contains(property))

@@ -53,5 +53,11 @@ namespace DataWF.Data
             }
             return base.AddInternal(item);
         }
+
+        public override void Dispose()
+        {
+            Table = null;
+            base.Dispose();
+        }
     }
 }

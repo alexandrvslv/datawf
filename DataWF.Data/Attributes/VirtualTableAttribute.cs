@@ -47,24 +47,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public TableAttribute BaseTable { get; internal set; }
 
-        public override DBTable CreateTable()
-        {
-            if (BaseTable == null)
-            {
-                throw new InvalidOperationException("BaseType of table with table attribute not specified!");
-            }
-            if (BaseTable.Table == null)
-            {
-                BaseTable.Generate(Schema);
-            }
-            var table = (DBTable)EmitInvoker.CreateObject(typeof(DBVirtualTable<>).MakeGenericType(ItemType));
-            table.Name = TableName;
-            table.Schema = Schema;
-            ((IDBVirtualTable)table).BaseTable = BaseTable.Table;
-            table.DisplayName = ItemType.Name;
-            table.Query = Query;
-            return table;
-        }
+        
 
         public override void Initialize(Type type)
         {

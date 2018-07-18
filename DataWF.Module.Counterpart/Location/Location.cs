@@ -30,13 +30,12 @@ namespace DataWF.Module.Counterpart
 {
     public enum LocationType
     {
-        None = 0,
+        Default = 0,
         Continent = 1,
         Country = 2,
         Currency = 3,
         Region = 4,
-        City = 5,
-        Vilage = 6
+        City = 5
     }
 
     public class LocationList : DBTableView<Location>
@@ -65,14 +64,12 @@ namespace DataWF.Module.Counterpart
             set { SetValue(value, Table.PrimaryKey); }
         }
 
-        [DataMember, Column("typeid", Keys = DBColumnKeys.ElementType), Index("rlocation_typeid_code", true)]
-        public LocationType? LocationType
+        public LocationType LocationType
         {
-            get { return GetValue<LocationType?>(Table.ElementTypeKey); }
-            set { SetValue(value, Table.ElementTypeKey); }
+            get { return ItemType == null ? LocationType.Default : (LocationType)ItemType; }
         }
 
-        [DataMember, Column("code", 40, Keys = DBColumnKeys.Code | DBColumnKeys.Indexing), Index("rlocation_typeid_code", true)]
+        [DataMember, Column("code", 40, Keys = DBColumnKeys.Code | DBColumnKeys.Indexing), Index("rlocation_typeid_code", false)]
         public string Code
         {
             get { return GetValue<string>(Table.CodeKey); }
@@ -107,6 +104,18 @@ namespace DataWF.Module.Counterpart
         {
             get { return GetName(); }
             set { SetName(value); }
+        }
+
+        public string NameRU
+        {
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
+        }
+
+        public string NameEN
+        {
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
         }
 
         public Location GetParent(LocationType parenttype)

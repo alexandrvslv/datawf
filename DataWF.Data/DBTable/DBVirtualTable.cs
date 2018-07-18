@@ -27,19 +27,50 @@ using System.Collections.Specialized;
 
 namespace DataWF.Data
 {
-    public class DBVirtualTable<T> : DBTable<T>, IDBVirtualTable where T : DBVirtualItem, new()
+    public class DBVirtualTable<T> : DBTable<T>, IDBVirtualTable where T : DBItem, new()
     {
-        static readonly Invoker<DBColumn, string> baseNameInvoker = new Invoker<DBColumn, string>(
-            nameof(DBVirtualColumn.BaseName),
-            item => item is DBVirtualColumn vitem ? vitem.BaseName : null);
-
         private DBTable baseTable;
         protected string baseTableName;
         private QQuery filterQuery;
 
         public DBVirtualTable()
         {
-            Columns.Indexes.Add(baseNameInvoker);
+            //Columns.Indexes.Add(baseNameInvoker);
+        }
+
+        [JsonIgnore, XmlIgnore]
+        public override DBColumnList Columns
+        {
+            get { return BaseTable.Columns; }
+            set { value?.Dispose(); }
+        }
+
+        [JsonIgnore, XmlIgnore]
+        public override DBColumnGroupList ColumnGroups
+        {
+            get { return BaseTable.ColumnGroups; }
+            set { value?.Dispose(); }
+        }
+
+        [JsonIgnore, XmlIgnore]
+        public override DBConstraintList<DBConstraint> Constraints
+        {
+            get { return BaseTable.Constraints; }
+            set { value?.Dispose(); }
+        }
+
+        [JsonIgnore, XmlIgnore]
+        public override DBIndexList Indexes
+        {
+            get { return BaseTable.Indexes; }
+            set { value?.Dispose(); }
+        }
+
+        [JsonIgnore, XmlIgnore]
+        public override DBForeignList Foreigns
+        {
+            get { return BaseTable.Foreigns; }
+            set { value?.Dispose(); }
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
@@ -49,7 +80,12 @@ namespace DataWF.Data
             {
                 if (BaseTable == null)
                     return null;
-                return filterQuery ?? (filterQuery = new QQuery(query, BaseTable));
+                if (filterQuery == null)
+                {
+                    filterQuery = new QQuery(query, BaseTable);
+                    filterQuery.TypeFilter = typeof(T);
+                }
+                return filterQuery;
             }
         }
 
@@ -78,20 +114,11 @@ namespace DataWF.Data
                 if (BaseTable == value)
                     return;
                 BaseTableName = value?.Name;
-                sequenceName = value.SequenceName;
                 baseTable = value;
-            }
-        }
 
-        [XmlIgnore, JsonIgnore]
-        public override DBSchema Schema
-        {
-            get => base.Schema;
-            set
-            {
-                base.Schema = value;
-                foreach (var column in Columns)
-                    column.CheckPull();
+                SequenceName = value.SequenceName;
+                GroupName = value.GroupName;
+                BlockSize = value.BlockSize;
             }
         }
 
@@ -102,85 +129,67 @@ namespace DataWF.Data
             set { BaseTable.IsLoging = value; }
         }
 
-        public void CheckItem(NotifyCollectionChangedAction type, DBItem item, string property)
+        [XmlIgnore, JsonIgnore]
+        public override DBLogTable LogTable
         {
-            var view = (T)item.GetVirtual(this);
-            if (type == NotifyCollectionChangedAction.Reset)
+            get { return BaseTable.LogTable; }
+            set { }
+        }
+
+        public void CheckItem(DBItem item, string property, NotifyCollectionChangedAction type)
+        {
+            if (item is T view)
             {
-                if (item != null)
+                switch (type)
                 {
-                    if ((view == null || !view.Attached) && Query.Contains(property) && BaseTable.CheckItem(item, FilterQuery))
-                        Add(view ?? New(item));
+                    case NotifyCollectionChangedAction.Reset:
+                        if (FilterQuery.Parameters.Count != 0 && (FilterQuery.Contains(property) && !BaseTable.CheckItem(item, FilterQuery)))
+                        {
+                            Remove(view);
+                        }
+                        else
+                        {
+                            OnItemChanged(view, property, type);
+                        }
+
+                        break;
+                    case NotifyCollectionChangedAction.Add:
+                        if (BaseTable.CheckItem(item, FilterQuery))
+                        {
+                            Add(view);
+                        }
+                        break;
+                    case NotifyCollectionChangedAction.Remove:
+                        Remove(view);
+                        break;
                 }
             }
-            else if (type == NotifyCollectionChangedAction.Add)
+            else if (item == null && type == NotifyCollectionChangedAction.Reset)
             {
-                if ((view == null || !view.Attached) && BaseTable.CheckItem(item, FilterQuery))
-                    Add(view ?? New(item));
-            }
-            else if (type == NotifyCollectionChangedAction.Remove && view != null)
-            {
-                Remove(view);
+                Refresh();
             }
         }
 
         public void Refresh()
         {
             items.Clear();
-            foreach (DBItem item in BaseTable.SelectItems(FilterQuery))
+            foreach (T item in BaseTable.SelectItems(FilterQuery))
             {
-                var newRow = item.GetVirtual(this);
-                if (newRow == null)
-                    newRow = New(item);
-                Add((T)newRow);
-            }
-        }
-
-        public void GenerateColumns()
-        {
-            ColumnGroups.Clear();
-            foreach (DBColumnGroup @group in BaseTable.ColumnGroups)
-            {
-                var newGroup = (DBColumnGroup)@group.Clone();
-                ColumnGroups.Add(newGroup);
-            }
-            Columns.Clear();
-            foreach (DBColumn col in BaseTable.Columns)
-            {
-                var newCol = new DBVirtualColumn(col);
-                Columns.Add(newCol);
-                if (col.LocaleInfo.Count > 0)
-                {
-                    newCol.LocaleInfo.Add(col.LocaleInfo[0].Value, col.LocaleInfo[0].Culture);
-                }
+                Add(item);
             }
         }
 
         public override void Add(T item)
         {
-            base.Add(item);
-            if (item.Main != null && !item.Main.Attached)
-                BaseTable.Add(item.Main);
-        }
-
-        public override void OnItemChanged(DBItem item, string property, NotifyCollectionChangedAction type)
-        {
-            if (type == NotifyCollectionChangedAction.Reset && item != null && query.Contains(property))
+            if (!item.Attached)
             {
-                var r = ((T)item).Main;
-                if (r != null && !BaseTable.CheckItem(r, FilterQuery))
-                    Remove((T)item);
-                return;
+                BaseTable.Add(item);
             }
-            base.OnItemChanged(item, property, type);
-        }
-
-        public override void Dispose()
-        {
-            BaseTable.RemoveVirtual(this);
-            if (filterQuery != null)
-                filterQuery.Dispose();
-            base.Dispose();
+            else
+            {
+                items.Add(item);
+                OnItemChanged(item, null, NotifyCollectionChangedAction.Add);
+            }
         }
 
         public override string SqlName
@@ -188,14 +197,18 @@ namespace DataWF.Data
             get { return BaseTableName; }
         }
 
-        public override DBColumn CheckColumn(string name, Type t, ref bool newCol)
+        public override DBItem NewItem(DBUpdateState state = DBUpdateState.Insert, bool def = true, int typeIndex = 0)
         {
-            return BaseTable.CheckColumn(name, t, ref newCol);
+            return BaseTable.NewItem(state, def, typeIndex);
+        }
+
+        public override int NextHash()
+        {
+            return BaseTable.NextHash();
         }
 
         public override bool SaveItem(DBItem row)
         {
-            row = row is DBVirtualItem ? ((DBVirtualItem)row).Main : row;
             return BaseTable.SaveItem(row);
         }
 
@@ -205,31 +218,18 @@ namespace DataWF.Data
             base.Clear();
         }
 
-        public T New(DBItem main)
-        {
-            T row = new T();
-            row.Main = main;
-            row.Build(this, main.UpdateState, false);
-            return row;
-        }
-
         public override string FormatSql(DDLType ddlType)
         {
             var ddl = new StringBuilder();
-            Schema.System.Format(ddl, this, ddlType);
+            Schema.System.Format(ddl, (IDBVirtualTable)this, ddlType);
             return ddl.ToString();
         }
 
-        public DBVirtualColumn GetColumnByBase(int index)
+        public override void Dispose()
         {
-            DBTable table = BaseTable;
-            DBColumn column = index >= 0 ? table.Columns[index] : null;
-            return column != null ? GetColumnByBase(column) : null;
-        }
-
-        public DBVirtualColumn GetColumnByBase(DBColumn column)
-        {
-            return (DBVirtualColumn)Columns.SelectOne(nameof(DBVirtualColumn.BaseName), column.Name);
+            BaseTable?.RemoveVirtual(this);
+            filterQuery?.Dispose();
+            base.Dispose();
         }
     }
 }

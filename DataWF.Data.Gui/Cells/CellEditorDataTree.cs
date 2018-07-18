@@ -119,11 +119,7 @@ namespace DataWF.Data.Gui
             {
                 DataFilter = (DBTable)EditItem;
             }
-            else if (EditItem is DBVirtualColumn)
-            {
-                DataFilter = ((DBVirtualColumn)EditItem).VirtualTable.BaseTable;
-            }
-
+            
             var tree = GetToolTarget();
             tree.DataKeys = key;
             tree.DataFilter = DataFilter;

@@ -49,8 +49,8 @@ namespace DataWF.Data.Gui
             };
             GuiEnvironment.CellEditorFabric[typeof(DBItem)] = (cell) =>
             {
-                var table = DBTable.GetTableAttribute(cell.Invoker.DataType, true);
-                return table == null ? null : new CellEditorTable() { Table = table.Table };
+                var table = DBTable.GetTable(cell.Invoker.DataType);
+                return table == null ? null : new CellEditorTable() { Table = table };
             };
 
             Application.Invoke(() =>

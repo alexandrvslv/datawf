@@ -43,7 +43,11 @@ namespace DataWF.Data
         private SelectableList<ColumnAttribute> cacheColumns = new SelectableList<ColumnAttribute>();
         private SelectableList<ReferenceAttribute> cacheReferences = new SelectableList<ReferenceAttribute>();
         private SelectableList<IndexAttribute> cacheIndexes = new SelectableList<IndexAttribute>();
+
+
+
         private SelectableList<ItemTypeAttribute> cacheItemTypes = new SelectableList<ItemTypeAttribute>();
+        private List<Type> chacedTypes = new List<Type>();
 
         public TableAttribute(string name, string groupName)
         {
@@ -101,6 +105,13 @@ namespace DataWF.Data
             return table;
         }
 
+        public DBTable Generate()
+        {
+            if (Schema == null)
+                throw new InvalidOperationException("Can't generate as Schema not defined!");
+            return Generate(Schema);
+        }
+
         public DBTable Generate(DBSchema schema)
         {
             Schema = schema ?? throw new ArgumentNullException(nameof(schema));
@@ -130,11 +141,6 @@ namespace DataWF.Data
             Table.BlockSize = BlockSize;
             Table.Sequence = Table.GenerateSequence();
 
-            foreach (var itemType in cacheItemTypes)
-            {
-                Table.ItemTypes[itemType.Id] = new DBItemType { Type = itemType.Type };
-            }
-
             cacheColumns.Sort((a, b) => a.Order.CompareTo(b.Order));
             foreach (var column in cacheColumns)
             {
@@ -154,6 +160,13 @@ namespace DataWF.Data
                 Schema.Tables.Add(Table);
             }
             Table.IsLoging = IsLoging;
+
+            foreach (var itemType in cacheItemTypes)
+            {
+                Table.ItemTypes[itemType.Id] = new DBItemType { Type = itemType.Type };
+                itemType.Generate();
+            }
+
             return Table;
         }
 
@@ -177,6 +190,8 @@ namespace DataWF.Data
             cacheColumns.Clear();
             cacheReferences.Clear();
             cacheIndexes.Clear();
+            chacedTypes.Clear();
+
             var types = TypeHelper.GetTypeHierarchi(type);
             foreach (var item in types)
             {
@@ -198,6 +213,9 @@ namespace DataWF.Data
 
         public void InitializeType(Type type)
         {
+            if (chacedTypes.Contains(type))
+                return;
+
             var properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
             foreach (var property in properties)
             {
@@ -217,6 +235,7 @@ namespace DataWF.Data
                     cacheReferences.Add(reference);
                 }
             }
+            chacedTypes.Add(type);
         }
 
         private bool InitializeIndex(PropertyInfo property, ColumnAttribute column, out IndexAttribute index)
@@ -247,17 +266,17 @@ namespace DataWF.Data
             return false;
         }
 
-        public virtual bool InitializeColumn(PropertyInfo property, out ColumnAttribute column)
+        public virtual bool InitializeColumn(PropertyInfo property, out ColumnAttribute columnAttribute)
         {
-            column = DBColumn.GetColumnAttribute(property);
-            if (column != null)
+            columnAttribute = DBColumn.GetColumnAttribute(property);
+            if (columnAttribute != null)
             {
-                column.Table = this;
-                column.Property = property;
-                if (column.DataType == null)
-                    column.DataType = property.PropertyType;
-                if (column.Order <= 0)
-                    column.Order = cacheColumns.Count;
+                columnAttribute.Table = this;
+                columnAttribute.Property = property;
+                if (columnAttribute.DataType == null)
+                    columnAttribute.DataType = property.PropertyType;
+                if (columnAttribute.Order <= 0)
+                    columnAttribute.Order = cacheColumns.Count;
                 return true;
             }
             return false;

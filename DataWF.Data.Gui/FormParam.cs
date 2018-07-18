@@ -39,7 +39,7 @@ namespace DataWF.Data.Gui
                 table.Columns.Add(col);
             }
 
-            var row = table.New();
+            var row = table.NewItem();
 
             window.propertyes.FieldSource = row;
             window.propertyes.ResetFields();

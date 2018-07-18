@@ -38,7 +38,13 @@
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>  
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="Attributes\VirtualColumnAttribute.cs" />
+    <Compile Remove="Attributes\VirtualTableAttribute.cs" />
+    <Compile Remove="DBColumn\DBVirtualColumn.cs" />
+    <Compile Remove="DBItem\DBVirtualItem.cs" />
+  </ItemGroup>  
   <ItemGroup>
     <PackageReference Include="DocumentFormat.OpenXml" Version="2.8.1" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="2.1.0" />

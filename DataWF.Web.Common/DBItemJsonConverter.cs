@@ -80,7 +80,7 @@ namespace DataWF.Web.Common
             {
                 throw new JsonSerializationException($"Expect {nameof(DBItem)} but {nameof(existingValue)} is {existingValue?.GetType().Name ?? "null"}");
             }
-            var table = DBTable.GetTable(objectType, null, false, true);
+            var table = DBTable.GetTable(objectType, null, false);
             if (table == null)
             {
                 throw new JsonSerializationException($"Can't find table of {objectType?.Name ?? "null"}");

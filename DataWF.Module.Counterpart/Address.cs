@@ -66,8 +66,7 @@ namespace DataWF.Module.Counterpart
             set
             {
                 if (value?.LocationType != LocationType.Region
-                    && value?.LocationType != LocationType.City
-                    && value?.LocationType != LocationType.Vilage)
+                    && value?.LocationType != LocationType.City)
                     throw new ArgumentException("Location type mast be Region or Citi or Village");
                 SetPropertyReference(value);
             }

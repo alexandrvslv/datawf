@@ -167,23 +167,10 @@ namespace DataWF.Module.Flow
 
         public DBColumn GetColumn()
         {
-            DBColumn result = null;
-
             int index = ParamCode.IndexOf(' ');
             string code = ParamCode.Substring(0, index < 0 ? ParamCode.Length : index);
             DBColumn column = DBService.ParseColumn(code, Table.Schema);
-            if (column != null)
-            {
-                result = new DBVirtualColumn(column);
-                result.Index = column.Index;
-                result.Table = column.Table;
-                result.Access = this.Access;
-                //TODO reference if (index >= 0)
-                //    result.Reference = ParamCode.Substring(index + 1);
-
-                //result.LocaleInfo = (LocaleItem)column.LocaleInfo.Clone();
-            }
-            return result;
+            return column;
         }
 
         public override string ToString()

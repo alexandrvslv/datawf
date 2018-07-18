@@ -17,14 +17,14 @@ namespace DataWF.Module.Counterpart
         public static void GenerateLocations()
         {
             Location.DBTable.Load();
-            var euas = new Location { LocationType = LocationType.Continent, Code = "EUAS", Name = "Eurasia" }; euas.Attach();
-            new Location { LocationType = LocationType.Continent, Code = "AF", CodeI = "", Name = "Africa" }.Attach();
-            new Location { LocationType = LocationType.Continent, Code = "AN", Name = "Antarctica" }.Attach();
-            new Location { LocationType = LocationType.Continent, Code = "AS", Name = "Asia" }.Attach();
-            new Location { LocationType = LocationType.Continent, Code = "EU", Name = "Europa" }.Attach();
-            new Location { LocationType = LocationType.Continent, Code = "NA", Name = "North america" }.Attach();
-            new Location { LocationType = LocationType.Continent, Code = "OC", Name = "Oceania" }.Attach();
-            new Location { LocationType = LocationType.Continent, Code = "SA", Name = "South america" }.Attach();
+            var euas = new Continent { Code = "EUAS", Name = "Eurasia" }; euas.Attach();
+            new Continent { Code = "AF", CodeI = "", Name = "Africa" }.Attach();
+            new Continent { Code = "AN", Name = "Antarctica" }.Attach();
+            new Continent { Code = "AS", Name = "Asia" }.Attach();
+            new Continent { Code = "EU", Name = "Europa" }.Attach();
+            new Continent { Code = "NA", Name = "North america" }.Attach();
+            new Continent { Code = "OC", Name = "Oceania" }.Attach();
+            new Continent { Code = "SA", Name = "South america" }.Attach();
 
             CultureInfo.CurrentUICulture = CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("ru-RU");
             var cultures = CultureInfo.GetCultures(CultureTypes.AllCultures & ~CultureTypes.NeutralCultures);
@@ -44,22 +44,20 @@ namespace DataWF.Module.Counterpart
                     if (Location.DBTable.Select(Location.DBTable.Columns["name_en"], CompareType.Equal, region.EnglishName).Count() == 0)
                     {
                         //not there so add the EnglishName (http://msdn.microsoft.com/en-us/library/system.globalization.regioninfo.englishname.aspx)
-                        var country = new Location
+                        var country = new Country
                         {
-                            LocationType = LocationType.Country,
                             Code = region.TwoLetterISORegionName,
-                            CodeI = region.ThreeLetterISORegionName
+                            CodeI = region.ThreeLetterISORegionName,
+                            NameEN = region.EnglishName,
+                            NameRU = region.DisplayName
                         };
-                        country["name_en"] = region.EnglishName;
-                        country["name_ru"] = region.DisplayName;
                         country.Attach();
                         var currency = Location.DBTable.LoadByCode(region.ISOCurrencySymbol);
                         if (currency == null)
                         {
-                            currency = new Location
+                            currency = new Currency
                             {
-                                LocationType = LocationType.Currency,
-                                Parent = Location.DBTable.Select(Location.DBTable.Columns["name_en"], CompareType.Equal, region.EnglishName).First(),
+                                Country = country,
                                 Code = region.ISOCurrencySymbol,
                                 CodeI = region.CurrencySymbol
                             };
@@ -78,11 +76,11 @@ namespace DataWF.Module.Counterpart
             var kazakh = Location.DBTable.LoadByCode("EUAS");
             kazakh.Parent = euas;
 
-            new Location { LocationType = LocationType.City, Parent = russia, Code = "495", Name = "Moskow" }.Attach();
-            new Location { LocationType = LocationType.City, Parent = kazakh, Code = "727", Name = "Almaty" }.Attach();
-            new Location { LocationType = LocationType.City, Parent = kazakh, Code = "7172", Name = "Astana" }.Attach();
-            new Location { LocationType = LocationType.City, Parent = kazakh, Code = "7122", Name = "Atyrau" }.Attach();
-            new Location { LocationType = LocationType.City, Parent = kazakh, Code = "7292", Name = "Aktau" }.Attach();
+            new City { Parent = russia, Code = "495", Name = "Moskow" }.Attach();
+            new City { Parent = kazakh, Code = "727", Name = "Almaty" }.Attach();
+            new City { Parent = kazakh, Code = "7172", Name = "Astana" }.Attach();
+            new City { Parent = kazakh, Code = "7122", Name = "Atyrau" }.Attach();
+            new City { Parent = kazakh, Code = "7292", Name = "Aktau" }.Attach();
 
             Location.DBTable.Save();
         }

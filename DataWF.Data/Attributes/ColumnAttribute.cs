@@ -141,13 +141,10 @@ namespace DataWF.Data
             {
                 Column.DisplayName = culture == null ? ReferenceProperty?.Name ?? Property.Name : $"{Property.Name} {culture.TwoLetterISOLanguageName.ToUpperInvariant()}";
             }
-            if (!(Column is DBVirtualColumn))
-            {
-                Column.DataType = GetDataType();
-                Column.Size = Size;
-                Column.Scale = Scale;
-                Column.ColumnType = ColumnType;
-            }
+            Column.DataType = GetDataType();
+            Column.Size = Size;
+            Column.Scale = Scale;
+            Column.ColumnType = ColumnType;
             Column.Keys = Keys;
             Column.Property = culture == null ? Property.Name : $"{Property.Name}{culture.TwoLetterISOLanguageName.ToUpper()}";
             Column.PropertyInvoker = culture == null //TODO Check if property with culture defined in class

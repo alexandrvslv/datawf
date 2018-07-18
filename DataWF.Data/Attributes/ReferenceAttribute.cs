@@ -85,7 +85,7 @@ namespace DataWF.Data
             {
                 Column.Column.IsReference = true;
 
-                var referenceTable = DBTable.GetTable(ReferenceType, Table.Schema, true, true);
+                var referenceTable = DBTable.GetTable(ReferenceType, Table.Schema, true);
                 if (referenceTable == null)
                 {
                     throw new Exception($"{nameof(ReferenceType)}({ColumnProperty} - {ReferenceType}) Table not found! Target table: {Table.Table}");

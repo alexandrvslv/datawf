@@ -160,11 +160,6 @@ namespace DataWF.Data
             return string.IsNullOrEmpty(groupName) ? null : Select(nameof(DBColumn.GroupName), CompareType.Equal, groupName);
         }
 
-        public DBColumn GetByBase(string code)
-        {
-            return SelectOne(nameof(DBVirtualColumn.BaseName), CompareType.Equal, code);
-        }
-
         public IEnumerable<DBColumn> GetByReference(DBTable table)
         {
             return Select(nameof(DBColumn.ReferenceTable), CompareType.Equal, table.Name);

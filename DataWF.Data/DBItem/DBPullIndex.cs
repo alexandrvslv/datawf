@@ -191,8 +191,8 @@ namespace DataWF.Data
         {
             var key = Convert(value);
             List<DBItem> list;
-            if (store.TryGetValue(key, out list))
-                return (T)list[0];
+            if (store.TryGetValue(key, out list) && list[0] is T item)
+                return item;
             else
                 return null;
         }
@@ -203,7 +203,12 @@ namespace DataWF.Data
             if (store.TryGetValue(key, out list))
             {
                 for (int i = 0; i < list.Count; i++)
-                    yield return (T)list[i];
+                {
+                    if (list[i] is T item)
+                    {
+                        yield return item;
+                    }
+                }
             }
             else
             {
@@ -213,12 +218,15 @@ namespace DataWF.Data
 
         public IEnumerable<T> Search<T>(Func<DBNullable<K>, bool> comparer) where T : DBItem, new()
         {
-            foreach (var pair in store)
+            foreach (var entry in store)
             {
-                if (comparer(pair.Key))
+                if (comparer(entry.Key))
                 {
-                    for (int i = 0; i < pair.Value.Count; i++)
-                        yield return (T)pair.Value[i];
+                    for (int i = 0; i < entry.Value.Count; i++)
+                    {
+                        if (entry.Value[i] is T item)
+                            yield return item;
+                    }
                 }
             }
         }

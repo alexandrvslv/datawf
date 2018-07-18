@@ -68,10 +68,6 @@ namespace DataWF.Data
         public static ColumnAttribute GetColumnAttribute(PropertyInfo property)
         {
             var config = property.GetCustomAttribute<ColumnAttribute>();
-            if (config == null)
-            {
-                config = property.GetCustomAttribute<VirtualColumnAttribute>();
-            }
             return config;
         }
 

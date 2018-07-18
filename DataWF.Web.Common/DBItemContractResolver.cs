@@ -17,7 +17,7 @@ namespace DataWF.Web.Common
         {
             if (TypeHelper.IsBaseType(objectType, typeof(DBItem)))
             {
-                var table = DBTable.GetTable(objectType, null, false, true);
+                var table = DBTable.GetTable(objectType, null, false);
                 if (table != null)
                 {
                     var result = new JsonObjectContract(objectType)

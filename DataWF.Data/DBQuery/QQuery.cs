@@ -85,7 +85,7 @@ namespace DataWF.Data
             Table = table;
         }
 
-        public QQuery(Type type) : this(DBTable.GetTable(type, null, false, true))
+        public QQuery(Type type) : this(DBTable.GetTable(type, null, false))
         { }
 
         public void Sort<T>(List<T> list)

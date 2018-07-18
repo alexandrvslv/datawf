@@ -52,33 +52,14 @@ namespace DataWF.Data
         internal string cacheToString = string.Empty;
         protected DBTable table;
         protected DBItemState state = DBItemState.New;
-        protected DBUpdateState update = DBUpdateState.Default;
+        protected internal DBUpdateState update = DBUpdateState.Insert;
         private AccessValue access;
 
         public DBItem()
         {
         }
 
-        //public DBItem(DBTable table, DBUpdateState state = DBUpdateState.Insert, bool def = true)
-        //{
-        //    Build(table, state, def);
-        //}
-
-        public DBItem GetVirtual(DBTable table)// where T : DBItem, new()
-        {
-            if (PropertyChanged != null)
-            {
-                var delegates = PropertyChanged.GetInvocationList();
-                foreach (var d in delegates)
-                {
-                    var target = d.Target as DBItem;
-                    if (target != null && target.Table == table)
-                        return target;
-                }
-            }
-            return null;
-        }
-
+        
         public object GetTag(DBColumn column)
         {
             return column.GetTag(hindex);
@@ -117,18 +98,6 @@ namespace DataWF.Data
             {
                 column.Index.Remove(this, value);
             }
-            if (PropertyChanged != null)
-            {
-                var delegates = PropertyChanged.GetInvocationList();
-                foreach (var handler in delegates)
-                    if (handler.Target is DBVirtualItem && ((DBVirtualItem)handler.Target).Attached)
-                    {
-                        var target = (DBVirtualItem)handler.Target;
-                        var dcolumn = target.VirtualTable.GetColumnByBase(column);
-                        if (dcolumn != null && dcolumn.Index != null)
-                            dcolumn.Index.Remove(target, value);
-                    }
-            }
         }
 
         public virtual void AddIndex(DBColumn column, object value)
@@ -136,18 +105,6 @@ namespace DataWF.Data
             if (Attached && column.Index != null)
             {
                 column.Index.Add(this, value);
-            }
-            if (PropertyChanged != null)
-            {
-                var delegates = PropertyChanged.GetInvocationList();
-                foreach (var handler in delegates)
-                    if (handler.Target is DBItem && ((DBItem)handler.Target).Attached)
-                    {
-                        var target = (DBItem)handler.Target;
-                        var dcolumn = target.Table.Columns.GetByBase(column.Name);
-                        if (dcolumn != null && dcolumn.Index != null)
-                            dcolumn.Index.Add(target, value);
-                    }
             }
         }
 
@@ -483,7 +440,7 @@ namespace DataWF.Data
 
         public IEnumerable<T> GetReferencing<T>(string property, DBLoadParam param) where T : DBItem, new()
         {
-            var table = DBTable.GetTableAttribute<T>(true)?.Table;
+            var table = DBTable.GetTable<T>();
             return GetReferencing<T>(table, table.ParseProperty(property), param);
         }
 
@@ -542,18 +499,22 @@ namespace DataWF.Data
             return Format(table.Columns[code]);
         }
 
-        public virtual void Build(DBTable table, DBUpdateState state = DBUpdateState.Insert, bool def = true)
+        public void Build(DBTable table)
         {
             Table = table;
-            if (def)
+            if (Table.ItemTypeKey != null)
             {
-                foreach (DBColumn column in table.Columns)
-                {
-                    if (column.DefaultValue != null)
-                        SetValue(column.ParseValue(column.DefaultValue), column, false);
-                }
+                ItemType = table.GetTypeIndex(GetType());
             }
-            update = state;
+        }
+
+        public void SetDefaults()
+        {
+            foreach (DBColumn column in table.Columns)
+            {
+                if (column.DefaultValue != null)
+                    SetValue(column.ParseValue(column.DefaultValue), column, false);
+            }
         }
 
         public void SetCultureStrings(string @group, LocaleItem value)
@@ -718,7 +679,7 @@ namespace DataWF.Data
                 if (table != value)
                 {
                     table = value;
-                    hindex = Pull.GetHIndexUnsafe(++table.Hash, table.BlockSize);
+                    hindex = Pull.GetHIndexUnsafe(table.NextHash(), table.BlockSize);
                 }
             }
         }
@@ -930,6 +891,13 @@ namespace DataWF.Data
 
         public virtual void OnAttached()
         {
+            if (Attached)
+                return;
+            foreach (var column in table.Columns)
+            {
+                column.Index?.Add(this);
+            }
+
             State |= DBItemState.Attached;
             OnPropertyChanged(nameof(Attached), null);
             DBService.OnAdded(this);
@@ -937,6 +905,14 @@ namespace DataWF.Data
 
         public virtual void OnDetached()
         {
+            if (!Attached)
+                return;
+
+            foreach (var column in table.Columns)
+            {
+                column.Index?.Remove(this);
+            }
+
             State &= ~DBItemState.Attached;
             OnPropertyChanged(nameof(Attached), null);
             DBService.OnRemoved(this);

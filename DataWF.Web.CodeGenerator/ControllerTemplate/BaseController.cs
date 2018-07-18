@@ -35,6 +35,7 @@ namespace DataWF.Web.Controller
             {
                 using (var query = new QQuery(filter, table))
                 {
+                    query.TypeFilter = typeof(T);
                     return new ActionResult<IEnumerable<T>>(table.LoadByStamp(query));
                 }
             }

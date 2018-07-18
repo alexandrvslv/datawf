@@ -100,7 +100,7 @@ namespace DataWF.Data.Gui
                         table.BlockSize = 1;
                     }
                     if (row == null)
-                        row = table.New();
+                        row = table.NewItem();
 
                     DBColumn col = new DBColumn();
                     col.Name = param.Name;

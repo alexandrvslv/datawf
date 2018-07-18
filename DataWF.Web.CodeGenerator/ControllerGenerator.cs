@@ -82,7 +82,7 @@ namespace DataWF.Web.CodeGenerator
 
                 foreach (var itemType in assembly.GetExportedTypes())
                 {
-                    var tableAttribute = DBTable.GetTableAttribute(itemType, true);
+                    var tableAttribute = DBTable.GetTableAttribute(itemType);
                     if (tableAttribute != null)
                     {
                         var controller = GetOrGenerateController(tableAttribute, itemType);
@@ -132,14 +132,14 @@ namespace DataWF.Web.CodeGenerator
 
         public bool HideBaseType(Type itemType)
         {
-            return itemType.BaseType == typeof(DBItem) || itemType.BaseType == typeof(DBVirtualItem) || itemType.BaseType == typeof(DBGroupItem);
+            return itemType.BaseType == typeof(DBItem) || itemType.BaseType == typeof(DBGroupItem);
         }
 
         //https://carlos.mendible.com/2017/03/02/create-a-class-with-net-core-and-roslyn/
         private ClassDeclarationSyntax GetOrGenerateController(TableAttribute tableAttribute, Type itemType)
         {
             var baseType = itemType;
-            while (baseType != typeof(DBItem) && baseType != typeof(DBVirtualItem))
+            while (baseType != typeof(DBItem) && baseType != typeof(DBGroupItem))
             {
                 if (baseType.IsAbstract || baseType == tableAttribute.ItemType)
                 {
@@ -470,7 +470,7 @@ namespace DataWF.Web.CodeGenerator
                 ValueName = info.Name;
                 if (TypeHelper.IsBaseType(Type, typeof(DBItem)))
                 {
-                    Table = DBTable.GetTableAttribute(Type, true);
+                    Table = DBTable.GetTableAttribute(Type);
                     var primaryKey = Table?.GetPrimaryKey();
                     if (primaryKey != null)
                     {

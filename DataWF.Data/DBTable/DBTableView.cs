@@ -40,15 +40,15 @@ namespace DataWF.Data
         private Query filterQuery;
 
         public DBTableView()
-           : this(DBTable.GetTable(typeof(T), null, false, true), (QParam)null, DBViewKeys.None, DBStatus.Empty)
+           : this(DBTable.GetTable(typeof(T), null, false), (QParam)null, DBViewKeys.None, DBStatus.Empty)
         { }
 
         public DBTableView(string defaultFilter, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
-            : this(DBTable.GetTable(typeof(T), null, false, true), defaultFilter, mode, statusFilter)
+            : this(DBTable.GetTable(typeof(T), null, false), defaultFilter, mode, statusFilter)
         { }
 
         public DBTableView(QParam defaultFilter, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
-            : this(DBTable.GetTable(typeof(T), null, false, true), defaultFilter, mode, statusFilter)
+            : this(DBTable.GetTable(typeof(T), null, false), defaultFilter, mode, statusFilter)
         { }
 
         public DBTableView(DBTable table, string defaultFilter, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
