@@ -326,6 +326,8 @@ namespace DataWF.Data
         {
             foreach (var table in Tables)
             {
+                if (table is IDBVirtualTable)
+                    continue;
                 foreach (var constraint in table.Constraints)
                     yield return constraint;
             }
@@ -335,6 +337,8 @@ namespace DataWF.Data
         {
             foreach (var table in Tables)
             {
+                if (table is IDBVirtualTable)
+                    continue;
                 foreach (var constraint in table.Foreigns)
                     yield return constraint;
             }
@@ -344,6 +348,8 @@ namespace DataWF.Data
         {
             foreach (var table in Tables)
             {
+                if (table is IDBVirtualTable)
+                    continue;
                 foreach (var index in table.Indexes)
                     yield return index;
             }
