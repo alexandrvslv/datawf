@@ -12,6 +12,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using SF = Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace DataWF.Web.CodeGenerator
 {
@@ -72,65 +73,97 @@ namespace DataWF.Web.CodeGenerator
 
         private ClassDeclarationSyntax GenProvider()
         {
-            return SyntaxFactory.ClassDeclaration(
-                    attributeLists: SyntaxFactory.List(ClientAttributeList()),
-                    modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
-                    identifier: SyntaxFactory.Identifier($"ClientProvider"),
+            return SF.ClassDeclaration(
+                    attributeLists: SF.List(ClientAttributeList()),
+                    modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
+                    identifier: SF.Identifier($"ClientProvider"),
                     typeParameterList: null,
-                    baseList: SyntaxFactory.BaseList(SyntaxFactory.SingletonSeparatedList<BaseTypeSyntax>(
-                        SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName("IClientProvider")))),
-                    constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
-                    members: SyntaxFactory.List(GenProviderMemebers())
+                    baseList: SF.BaseList(SF.SingletonSeparatedList<BaseTypeSyntax>(
+                        SF.SimpleBaseType(SF.ParseTypeName("IClientProvider")))),
+                    constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
+                    members: SF.List(GenProviderMemebers())
                     );
         }
 
         private IEnumerable<MemberDeclarationSyntax> GenProviderMemebers()
         {
-            yield return SyntaxFactory.ConstructorDeclaration(
-                           attributeLists: SyntaxFactory.List(ClientAttributeList()),
-                           modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
-                           identifier: SyntaxFactory.Identifier($"ClientProvider"),
-                           parameterList: SyntaxFactory.ParameterList(),
+            yield return SyntaxHelper.GenProperty("ClientProvider", "Default", true, "new ClientProvider()")
+                .AddModifiers(SF.Token(SyntaxKind.StaticKeyword));
+
+            yield return SF.ConstructorDeclaration(
+                           attributeLists: SF.List(ClientAttributeList()),
+                           modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
+                           identifier: SF.Identifier($"ClientProvider"),
+                           parameterList: SF.ParameterList(),
                            initializer: null,
-                           body: SyntaxFactory.Block(GenProviderConstructorBody()));
+                           body: SF.Block(GenProviderConstructorBody()));
 
             yield return SyntaxHelper.GenProperty("string", "BaseUrl", true);
             yield return SyntaxHelper.GenProperty("AuthorizationInfo", "Authorization", true);
 
-            yield return SyntaxFactory.PropertyDeclaration(
-                    attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
-                    modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
-                    type: SyntaxFactory.ParseTypeName("IEnumerable<IClient>"),
+            yield return SF.PropertyDeclaration(
+                    attributeLists: SF.List<AttributeListSyntax>(),
+                    modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
+                    type: SF.ParseTypeName("IEnumerable<IClient>"),
                     explicitInterfaceSpecifier: null,
-                    identifier: SyntaxFactory.Identifier("Clients"),
-                    accessorList: SyntaxFactory.AccessorList(SyntaxFactory.List(new[] {
-                        SyntaxFactory.AccessorDeclaration( SyntaxKind.GetAccessorDeclaration,  SyntaxFactory.Block(GenProviderClientsBody()))
+                    identifier: SF.Identifier("Clients"),
+                    accessorList: SF.AccessorList(SF.List(new[] {
+                        SF.AccessorDeclaration( SyntaxKind.GetAccessorDeclaration,  SF.Block(GenProviderClientsBody()))
                     })),
                     expressionBody: null,
                     initializer: null,
-                    semicolonToken: SyntaxFactory.Token(SyntaxKind.None));
+                    semicolonToken: SF.Token(SyntaxKind.None));
 
             foreach (var client in cacheClients.Keys)
             {
                 yield return SyntaxHelper.GenProperty($"{client}Client", client, false);
             }
+
+            yield return SF.MethodDeclaration(
+               attributeLists: SF.List<AttributeListSyntax>(),
+                   modifiers: SF.TokenList(new[] { SF.Token(SyntaxKind.PublicKeyword) }),
+                   returnType: SF.ParseTypeName("ICRUDClient<T>"),
+                   explicitInterfaceSpecifier: null,
+                   identifier: SF.Identifier("GetClient"),
+                   typeParameterList: SF.TypeParameterList(SF.SingletonSeparatedList(SF.TypeParameter("T"))),
+                   parameterList: SF.ParameterList(),
+                   constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
+                   body: SF.Block(new[] { SF.ParseStatement("return Clients.OfType<ICRUDClient<T>>().FirstOrDefault();") }),
+                   semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
+
+            yield return SF.MethodDeclaration(
+               attributeLists: SF.List<AttributeListSyntax>(),
+                   modifiers: SF.TokenList(new[] { SF.Token(SyntaxKind.PublicKeyword) }),
+                   returnType: SF.ParseTypeName("ICRUDClient"),
+                   explicitInterfaceSpecifier: null,
+                   identifier: SF.Identifier("GetClient"),
+                   typeParameterList: null,
+                   parameterList: SF.ParameterList(SF.SingletonSeparatedList(SF.Parameter(
+                       attributeLists: SF.List<AttributeListSyntax>(),
+                       modifiers: SF.TokenList(),
+                       type: SF.ParseTypeName("Type"),
+                       identifier: SF.Identifier("type"),
+                       @default: null))),
+                   constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
+                   body: SF.Block(new[] { SF.ParseStatement("return Clients.OfType<ICRUDClient>().FirstOrDefault(p=>p.ItemType == type);") }),
+                   semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
         }
 
         private IEnumerable<StatementSyntax> GenProviderClientsBody()
         {
             foreach (var client in cacheClients.Keys)
             {
-                yield return SyntaxFactory.ParseStatement($"yield return {client};");
+                yield return SF.ParseStatement($"yield return {client};");
             }
         }
 
         private IEnumerable<StatementSyntax> GenProviderConstructorBody()
         {
-            //SyntaxFactory.EqualsValueClause(SyntaxFactory.ParseExpression())
-            yield return SyntaxFactory.ParseStatement($"BaseUrl = \"{uri.Scheme}://{uri.Authority}\";");
+            //SF.EqualsValueClause(SF.ParseExpression())
+            yield return SF.ParseStatement($"BaseUrl = \"{uri.Scheme}://{uri.Authority}\";");
             foreach (var client in cacheClients.Keys)
             {
-                yield return SyntaxFactory.ParseStatement($"{client} = new {client}Client{{Provider = this}};");
+                yield return SF.ParseStatement($"{client} = new {client}Client{{Provider = this}};");
             }
         }
 
@@ -217,17 +250,17 @@ namespace DataWF.Web.CodeGenerator
 
         private ClassDeclarationSyntax GenClient(string clientName)
         {
-            var baseType = SyntaxFactory.ParseTypeName(GetClientBaseType(clientName, out var id));
+            var baseType = SF.ParseTypeName(GetClientBaseType(clientName, out var id));
 
-            return SyntaxFactory.ClassDeclaration(
-                        attributeLists: SyntaxFactory.List(ClientAttributeList()),
-                        modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
-                        identifier: SyntaxFactory.Identifier($"{clientName}Client"),
+            return SF.ClassDeclaration(
+                        attributeLists: SF.List(ClientAttributeList()),
+                        modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
+                        identifier: SF.Identifier($"{clientName}Client"),
                         typeParameterList: null,
-                        baseList: SyntaxFactory.BaseList(SyntaxFactory.SingletonSeparatedList<BaseTypeSyntax>(
-                            SyntaxFactory.SimpleBaseType(baseType))),
-                        constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
-                        members: SyntaxFactory.List<MemberDeclarationSyntax>(GenClientConstructor(clientName, id))
+                        baseList: SF.BaseList(SF.SingletonSeparatedList<BaseTypeSyntax>(
+                            SF.SimpleBaseType(baseType))),
+                        constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
+                        members: SF.List<MemberDeclarationSyntax>(GenClientConstructor(clientName, id))
                         );
         }
 
@@ -260,18 +293,18 @@ namespace DataWF.Web.CodeGenerator
 
         private IEnumerable<ConstructorDeclarationSyntax> GenClientConstructor(string clientName, JsonProperty id)
         {
-            var initialize = id == null ? null : SyntaxFactory.ConstructorInitializer(
+            var initialize = id == null ? null : SF.ConstructorInitializer(
                     SyntaxKind.BaseConstructorInitializer,
-                    SyntaxFactory.ArgumentList(
-                        SyntaxFactory.SeparatedList(new[] {
-                            SyntaxFactory.Argument(SyntaxFactory.ParseExpression($"new Invoker<{clientName},{GetTypeString(id, true)}>(nameof({clientName}.{id.Name}), (p)=>p.{id.Name})")) })));
-            yield return SyntaxFactory.ConstructorDeclaration(
-                attributeLists: SyntaxFactory.List(ClientAttributeList()),
-                modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
-                identifier: SyntaxFactory.Identifier($"{clientName}Client"),
-                parameterList: SyntaxFactory.ParameterList(),
+                    SF.ArgumentList(
+                        SF.SeparatedList(new[] {
+                            SF.Argument(SF.ParseExpression($"new Invoker<{clientName},{GetTypeString(id, true)}>(nameof({clientName}.{id.Name}), (p)=>p.{id.Name})")) })));
+            yield return SF.ConstructorDeclaration(
+                attributeLists: SF.List(ClientAttributeList()),
+                modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
+                identifier: SF.Identifier($"{clientName}Client"),
+                parameterList: SF.ParameterList(),
                 initializer: initialize,
-                body: SyntaxFactory.Block());
+                body: SF.Block());
         }
 
         private IEnumerable<AttributeListSyntax> ClientAttributeList()
@@ -297,35 +330,35 @@ namespace DataWF.Web.CodeGenerator
             var returnType = GetReturningType(descriptor);
             returnType = returnType.Length > 0 ? $"Task<{returnType}>" : "Task";
 
-            //yield return SyntaxFactory.MethodDeclaration(
-            //    attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
-            //        modifiers: SyntaxFactory.TokenList(
+            //yield return SF.MethodDeclaration(
+            //    attributeLists: SF.List<AttributeListSyntax>(),
+            //        modifiers: SF.TokenList(
             //            baseType != "ClientBase" && AbstractOperations.Contains(actualName)
-            //            ? new[] { SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.OverrideKeyword) }
-            //            : new[] { SyntaxFactory.Token(SyntaxKind.PublicKeyword) }),
-            //        returnType: SyntaxFactory.ParseTypeName(returnType),
+            //            ? new[] { SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.OverrideKeyword) }
+            //            : new[] { SF.Token(SyntaxKind.PublicKeyword) }),
+            //        returnType: SF.ParseTypeName(returnType),
             //        explicitInterfaceSpecifier: null,
-            //        identifier: SyntaxFactory.Identifier(actualName),
+            //        identifier: SF.Identifier(actualName),
             //        typeParameterList: null,
-            //        parameterList: SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(GenOperationParameter(descriptor, false))),
-            //        constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
-            //        body: SyntaxFactory.Block(GenOperationWrapperBody(actualName, descriptor)),
-            //        semicolonToken: SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+            //        parameterList: SF.ParameterList(SF.SeparatedList(GenOperationParameter(descriptor, false))),
+            //        constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
+            //        body: SF.Block(GenOperationWrapperBody(actualName, descriptor)),
+            //        semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
 
-            yield return SyntaxFactory.MethodDeclaration(
-                attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
-                    modifiers: SyntaxFactory.TokenList(
+            yield return SF.MethodDeclaration(
+                attributeLists: SF.List<AttributeListSyntax>(),
+                    modifiers: SF.TokenList(
                         baseType != "ClientBase" && AbstractOperations.Contains(actualName)
-                        ? new[] { SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.OverrideKeyword), SyntaxFactory.Token(SyntaxKind.AsyncKeyword) }
-                        : new[] { SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.AsyncKeyword) }),
-                    returnType: SyntaxFactory.ParseTypeName(returnType),
+                        ? new[] { SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.OverrideKeyword), SF.Token(SyntaxKind.AsyncKeyword) }
+                        : new[] { SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.AsyncKeyword) }),
+                    returnType: SF.ParseTypeName(returnType),
                     explicitInterfaceSpecifier: null,
-                    identifier: SyntaxFactory.Identifier(actualName),
+                    identifier: SF.Identifier(actualName),
                     typeParameterList: null,
-                    parameterList: SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(GenOperationParameter(descriptor, true))),
-                    constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
-                    body: SyntaxFactory.Block(GenOperationBody(descriptor)),
-                    semicolonToken: SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+                    parameterList: SF.ParameterList(SF.SeparatedList(GenOperationParameter(descriptor, true))),
+                    constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
+                    body: SF.Block(GenOperationBody(descriptor)),
+                    semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
         }
 
         //private StatementSyntax GenOperationWrapperBody(string actualName, SwaggerOperationDescription descriptor)
@@ -338,7 +371,7 @@ namespace DataWF.Web.CodeGenerator
         //        builder.Append($"{parameter.Name}, ");
         //    }
         //    builder.Append("CancellationToken.None);");
-        //    return SyntaxFactory.ParseStatement(builder.ToString());
+        //    return SF.ParseStatement(builder.ToString());
         //}
 
         private IEnumerable<StatementSyntax> GenOperationBody(SwaggerOperationDescription descriptor)
@@ -346,10 +379,18 @@ namespace DataWF.Web.CodeGenerator
             var method = descriptor.Method.ToString().ToUpperInvariant();
             var path = descriptor.Path;
             var mediatype = "application/json";
+            var responceSchema = (JsonSchema4)null;
+            if (descriptor.Operation.Responses.TryGetValue("200", out var responce))
+                responceSchema = responce.Schema;
             var returnType = GetReturningType(descriptor);
             var builder = new StringBuilder();
-
-            builder.Append($"return await Request<{returnType}>(cancellationToken, \"{method}\", \"{path}\", \"{mediatype}\"");
+            builder.Append($"return await Request");
+            if (responceSchema?.Type == JsonObjectType.Array)
+                builder.Append("Array");
+            builder.Append($"<{returnType}");
+            if (responceSchema?.Type == JsonObjectType.Array)
+                builder.Append($", {GetTypeString(responceSchema.Item, false)}");
+            builder.Append($">(cancellationToken, \"{method}\", \"{path}\", \"{mediatype}\"");
             var bodyParameter = descriptor.Operation.Parameters.FirstOrDefault(p => p.Kind == SwaggerParameterKind.Body);
             if (bodyParameter == null)
             {
@@ -360,25 +401,25 @@ namespace DataWF.Web.CodeGenerator
                 builder.Append($", {parameter.Name}");
             }
             builder.Append(");");
-            yield return SyntaxFactory.ParseStatement(builder.ToString());
+            yield return SF.ParseStatement(builder.ToString());
         }
 
         private IEnumerable<ParameterSyntax> GenOperationParameter(SwaggerOperationDescription descriptor, bool cancelationToken)
         {
             foreach (var parameter in descriptor.Operation.Parameters)
             {
-                yield return SyntaxFactory.Parameter(attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
-                                                         modifiers: SyntaxFactory.TokenList(),
+                yield return SF.Parameter(attributeLists: SF.List<AttributeListSyntax>(),
+                                                         modifiers: SF.TokenList(),
                                                          type: GetTypeDeclaration(parameter, false),
-                                                         identifier: SyntaxFactory.Identifier(parameter.Name),
+                                                         identifier: SF.Identifier(parameter.Name),
                                                          @default: null);
             }
             if (cancelationToken)
             {
-                yield return SyntaxFactory.Parameter(attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
-                                                            modifiers: SyntaxFactory.TokenList(),
-                                                            type: SyntaxFactory.ParseTypeName("CancellationToken"),
-                                                            identifier: SyntaxFactory.Identifier("cancellationToken"),
+                yield return SF.Parameter(attributeLists: SF.List<AttributeListSyntax>(),
+                                                            modifiers: SF.TokenList(),
+                                                            type: SF.ParseTypeName("CancellationToken"),
+                                                            identifier: SF.Identifier("cancellationToken"),
                                                             @default: null);
             }
         }
@@ -402,12 +443,12 @@ namespace DataWF.Web.CodeGenerator
 
         private MemberDeclarationSyntax GenDefinitionEnum(JsonSchema4 schema)
         {
-            return SyntaxFactory.EnumDeclaration(
-                    attributeLists: SyntaxFactory.List(DefinitionAttributeList()),
-                    modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
-                    identifier: SyntaxFactory.Identifier(schema.Id),
+            return SF.EnumDeclaration(
+                    attributeLists: SF.List(DefinitionAttributeList()),
+                    modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
+                    identifier: SF.Identifier(schema.Id),
                     baseList: null,
-                    members: SyntaxFactory.SeparatedList(GetDefinitionEnumMemebers(schema))
+                    members: SF.SeparatedList(GetDefinitionEnumMemebers(schema))
                     );
         }
 
@@ -416,11 +457,11 @@ namespace DataWF.Web.CodeGenerator
             int i = 0;
             foreach (var item in schema.Enumeration)
             {
-                yield return SyntaxFactory.EnumMemberDeclaration(attributeLists: SyntaxFactory.List(GenDefinitionEnumMemberAttribute(item)),
-                        identifier: SyntaxFactory.Identifier(item.ToString()),
-                        equalsValue: SyntaxFactory.EqualsValueClause(
-                            SyntaxFactory.Token(SyntaxKind.EqualsToken),
-                            SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(i++))));
+                yield return SF.EnumMemberDeclaration(attributeLists: SF.List(GenDefinitionEnumMemberAttribute(item)),
+                        identifier: SF.Identifier(item.ToString()),
+                        equalsValue: SF.EqualsValueClause(
+                            SF.Token(SyntaxKind.EqualsToken),
+                            SF.LiteralExpression(SyntaxKind.NumericLiteralExpression, SF.Literal(i++))));
 
             }
         }
@@ -428,32 +469,32 @@ namespace DataWF.Web.CodeGenerator
         private IEnumerable<AttributeListSyntax> GenDefinitionEnumMemberAttribute(object item)
         {
             //[System.Runtime.Serialization.EnumMember(Value = "Empty")]
-            yield return SyntaxFactory.AttributeList(
-                         SyntaxFactory.SingletonSeparatedList(
-                         SyntaxFactory.Attribute(
-                         SyntaxFactory.IdentifierName("EnumMember")).WithArgumentList(
-                             SyntaxFactory.AttributeArgumentList(SyntaxFactory.SingletonSeparatedList(
-                                 SyntaxFactory.AttributeArgument(SyntaxFactory.ParseExpression($"Value = \"{item.ToString()}\"")))))));
+            yield return SF.AttributeList(
+                         SF.SingletonSeparatedList(
+                         SF.Attribute(
+                         SF.IdentifierName("EnumMember")).WithArgumentList(
+                             SF.AttributeArgumentList(SF.SingletonSeparatedList(
+                                 SF.AttributeArgument(SF.ParseExpression($"Value = \"{item.ToString()}\"")))))));
         }
 
         private MemberDeclarationSyntax GenDefinitionClass(JsonSchema4 schema)
         {
-            var baseType = SyntaxFactory.ParseTypeName(nameof(IContainerNotifyPropertyChanged));
+            var baseType = SF.ParseTypeName(nameof(IContainerNotifyPropertyChanged));
 
             if (schema.InheritedSchema != null)
             {
                 GetOrGenerateDefinion(schema.InheritedSchema.Id);
-                baseType = SyntaxFactory.ParseTypeName(schema.InheritedSchema.Id);
+                baseType = SF.ParseTypeName(schema.InheritedSchema.Id);
             }
-            return SyntaxFactory.ClassDeclaration(
-                    attributeLists: SyntaxFactory.List(DefinitionAttributeList()),
-                    modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
-                    identifier: SyntaxFactory.Identifier(schema.Id),
+            return SF.ClassDeclaration(
+                    attributeLists: SF.List(DefinitionAttributeList()),
+                    modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
+                    identifier: SF.Identifier(schema.Id),
                     typeParameterList: null,
-                    baseList: SyntaxFactory.BaseList(SyntaxFactory.SingletonSeparatedList<BaseTypeSyntax>(
-                        SyntaxFactory.SimpleBaseType(baseType))),
-                    constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
-                    members: SyntaxFactory.List(GenDefinitionClassMemebers(schema)));
+                    baseList: SF.BaseList(SF.SingletonSeparatedList<BaseTypeSyntax>(
+                        SF.SimpleBaseType(baseType))),
+                    constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
+                    members: SF.List(GenDefinitionClassMemebers(schema)));
         }
 
         private IEnumerable<MemberDeclarationSyntax> GenDefinitionClassMemebers(JsonSchema4 schema)
@@ -471,66 +512,66 @@ namespace DataWF.Web.CodeGenerator
 
             if (schema.InheritedSchema == null)
             {
-                yield return SyntaxFactory.EventFieldDeclaration(
-                    attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
-                    modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
-                    declaration: SyntaxFactory.VariableDeclaration(
-                        type: SyntaxFactory.ParseTypeName(nameof(PropertyChangedEventHandler)),
-                        variables: SyntaxFactory.SeparatedList(new[] { SyntaxFactory.VariableDeclarator(nameof(INotifyPropertyChanged.PropertyChanged)) })));
+                yield return SF.EventFieldDeclaration(
+                    attributeLists: SF.List<AttributeListSyntax>(),
+                    modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
+                    declaration: SF.VariableDeclaration(
+                        type: SF.ParseTypeName(nameof(PropertyChangedEventHandler)),
+                        variables: SF.SeparatedList(new[] { SF.VariableDeclarator(nameof(INotifyPropertyChanged.PropertyChanged)) })));
                 yield return SyntaxHelper.GenProperty(nameof(INotifyListPropertyChanged), nameof(IContainerNotifyPropertyChanged.Container), true)
-                    .WithAttributeLists(SyntaxFactory.List(new[]{
-                    SyntaxFactory.AttributeList(
-                        SyntaxFactory.SingletonSeparatedList(
-                            SyntaxFactory.Attribute(
-                                SyntaxFactory.IdentifierName("JsonIgnore")))) }));
-                yield return SyntaxFactory.MethodDeclaration(
-                    attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
-                    modifiers: SyntaxFactory.TokenList(
-                        SyntaxFactory.Token(SyntaxKind.ProtectedKeyword),
-                        SyntaxFactory.Token(SyntaxKind.VirtualKeyword)),
-                    returnType: SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword)),
+                    .WithAttributeLists(SF.List(new[]{
+                    SF.AttributeList(
+                        SF.SingletonSeparatedList(
+                            SF.Attribute(
+                                SF.IdentifierName("JsonIgnore")))) }));
+                yield return SF.MethodDeclaration(
+                    attributeLists: SF.List<AttributeListSyntax>(),
+                    modifiers: SF.TokenList(
+                        SF.Token(SyntaxKind.ProtectedKeyword),
+                        SF.Token(SyntaxKind.VirtualKeyword)),
+                    returnType: SF.PredefinedType(SF.Token(SyntaxKind.VoidKeyword)),
                     explicitInterfaceSpecifier: null,
-                    identifier: SyntaxFactory.Identifier("OnPropertyChanged"),
+                    identifier: SF.Identifier("OnPropertyChanged"),
                     typeParameterList: null,
-                    parameterList: SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(GenPropertyChangedParameter())),
-                    constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
-                    body: SyntaxFactory.Block(new[] {
-                        SyntaxFactory.ParseStatement($"Container?.OnPropertyChanged(this, propertyName);"),
-                        SyntaxFactory.ParseStatement($"PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));") }),
-                    semicolonToken: SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+                    parameterList: SF.ParameterList(SF.SeparatedList(GenPropertyChangedParameter())),
+                    constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
+                    body: SF.Block(new[] {
+                        SF.ParseStatement($"Container?.OnPropertyChanged(this, propertyName);"),
+                        SF.ParseStatement($"PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));") }),
+                    semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
             }
         }
 
         private IEnumerable<ParameterSyntax> GenPropertyChangedParameter()
         {
-            var @default = SyntaxFactory.EqualsValueClause(
-                    SyntaxFactory.Token(SyntaxKind.EqualsToken),
-                    SyntaxFactory.LiteralExpression(SyntaxKind.NullLiteralExpression));
-            yield return SyntaxFactory.Parameter(
-                attributeLists: SyntaxFactory.List(new[]{
-                    SyntaxFactory.AttributeList(
-                        SyntaxFactory.SingletonSeparatedList(
-                            SyntaxFactory.Attribute(
-                                SyntaxFactory.IdentifierName("CallerMemberName")))) }),
-                modifiers: SyntaxFactory.TokenList(),
-                type: SyntaxFactory.ParseTypeName("string"),
-                identifier: SyntaxFactory.Identifier("propertyName"),
+            var @default = SF.EqualsValueClause(
+                    SF.Token(SyntaxKind.EqualsToken),
+                    SF.LiteralExpression(SyntaxKind.NullLiteralExpression));
+            yield return SF.Parameter(
+                attributeLists: SF.List(new[]{
+                    SF.AttributeList(
+                        SF.SingletonSeparatedList(
+                            SF.Attribute(
+                                SF.IdentifierName("CallerMemberName")))) }),
+                modifiers: SF.TokenList(),
+                type: SF.ParseTypeName("string"),
+                identifier: SF.Identifier("propertyName"),
                 @default: @default);
         }
 
         private PropertyDeclarationSyntax GenDefinitionClassProperty(JsonProperty property)
         {
             var typeDeclaration = GetTypeDeclaration(property, true);
-            return SyntaxFactory.PropertyDeclaration(
-                attributeLists: SyntaxFactory.List(GenClassPropertyAttributes(property)),
-                modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
+            return SF.PropertyDeclaration(
+                attributeLists: SF.List(GenClassPropertyAttributes(property)),
+                modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
                 type: typeDeclaration,
                 explicitInterfaceSpecifier: null,
-                identifier: SyntaxFactory.Identifier(property.Id),
-                accessorList: SyntaxFactory.AccessorList(SyntaxFactory.List(GenPropertyAccessors(property))),
+                identifier: SF.Identifier(property.Id),
+                accessorList: SF.AccessorList(SF.List(GenPropertyAccessors(property))),
                 expressionBody: null,
                 initializer: null,
-                semicolonToken: SyntaxFactory.Token(SyntaxKind.None)
+                semicolonToken: SF.Token(SyntaxKind.None)
                );
         }
 
@@ -539,34 +580,34 @@ namespace DataWF.Web.CodeGenerator
             if (property.Type == JsonObjectType.None ||
                 property.IsReadOnly)
             {
-                yield return SyntaxFactory.AttributeList(
-                             SyntaxFactory.SingletonSeparatedList(
-                             SyntaxFactory.Attribute(
-                             SyntaxFactory.IdentifierName("JsonProperty")).WithArgumentList(
-                                 SyntaxFactory.AttributeArgumentList(SyntaxFactory.SingletonSeparatedList(
-                                     SyntaxFactory.AttributeArgument(SyntaxFactory.ParseExpression($"NullValueHandling = NullValueHandling.Ignore")))))));
+                yield return SF.AttributeList(
+                             SF.SingletonSeparatedList(
+                             SF.Attribute(
+                             SF.IdentifierName("JsonProperty")).WithArgumentList(
+                                 SF.AttributeArgumentList(SF.SingletonSeparatedList(
+                                     SF.AttributeArgument(SF.ParseExpression($"NullValueHandling = NullValueHandling.Ignore")))))));
             }
         }
 
         private IEnumerable<AccessorDeclarationSyntax> GenPropertyAccessors(JsonProperty property)
         {
-            yield return SyntaxFactory.AccessorDeclaration(
+            yield return SF.AccessorDeclaration(
                 kind: SyntaxKind.GetAccessorDeclaration,
-                body: SyntaxFactory.Block(
+                body: SF.Block(
                     GenPropertyGet(property)
                 ));
-            yield return SyntaxFactory.AccessorDeclaration(
+            yield return SF.AccessorDeclaration(
                 kind: SyntaxKind.SetAccessorDeclaration,
-                body: SyntaxFactory.Block(
+                body: SF.Block(
                     GenPropertySet(property)
                 ));
         }
 
         private static IEnumerable<StatementSyntax> GenPropertySet(JsonProperty property)
         {
-            yield return SyntaxFactory.ParseStatement($"if({GetFieldName(property)} == value) return;");
-            yield return SyntaxFactory.ParseStatement($"{GetFieldName(property)} = value;");
-            yield return SyntaxFactory.ParseStatement($"OnPropertyChanged();");
+            yield return SF.ParseStatement($"if({GetFieldName(property)} == value) return;");
+            yield return SF.ParseStatement($"{GetFieldName(property)} = value;");
+            yield return SF.ParseStatement($"OnPropertyChanged();");
         }
 
         private static string GetFieldName(JsonProperty property)
@@ -576,15 +617,15 @@ namespace DataWF.Web.CodeGenerator
 
         private static IEnumerable<StatementSyntax> GenPropertyGet(JsonProperty property)
         {
-            yield return SyntaxFactory.ParseStatement($"return {GetFieldName(property)};");
+            yield return SF.ParseStatement($"return {GetFieldName(property)};");
         }
 
         private FieldDeclarationSyntax GenDefinitionClassField(JsonProperty property)
         {
-            return SyntaxFactory.FieldDeclaration(SyntaxFactory.List<AttributeListSyntax>(),
-                SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PrivateKeyword)),
-                SyntaxFactory.VariableDeclaration(GetTypeDeclaration(property, true))
-                                 .AddVariables(SyntaxFactory.VariableDeclarator(GetFieldName(property))));
+            return SF.FieldDeclaration(SF.List<AttributeListSyntax>(),
+                SF.TokenList(SF.Token(SyntaxKind.PrivateKeyword)),
+                SF.VariableDeclaration(GetTypeDeclaration(property, true))
+                                 .AddVariables(SF.VariableDeclarator(GetFieldName(property))));
         }
 
         private string GetTypeString(JsonSchema4 value, bool nullable)
@@ -636,7 +677,7 @@ namespace DataWF.Web.CodeGenerator
 
         private TypeSyntax GetTypeDeclaration(JsonSchema4 value, bool nullable)
         {
-            return SyntaxFactory.ParseTypeName(GetTypeString(value, nullable));
+            return SF.ParseTypeName(GetTypeString(value, nullable));
         }
 
         private IEnumerable<AttributeListSyntax> DefinitionAttributeList()

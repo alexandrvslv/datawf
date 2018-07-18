@@ -19,6 +19,8 @@ namespace DataWF.Web.Client
         string BaseUrl { get; set; }
         IEnumerable<IClient> Clients { get; }
         AuthorizationInfo Authorization { get; set; }
+        ICRUDClient<T> GetClient<T>();
+        ICRUDClient GetClient(Type type);
     }
 
     public interface IClient
@@ -35,10 +37,12 @@ namespace DataWF.Web.Client
         Task GetAsync(object id);
         Task PostAsync(object value);
         Task PutAsync(object value);
+        object DeserializeItem(JsonSerializer serializer, JsonTextReader jreader);
     }
 
     public interface ICRUDClient<T> : ICRUDClient
     {
         SelectableList<T> Items { get; }
+        new T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader);
     }
 }

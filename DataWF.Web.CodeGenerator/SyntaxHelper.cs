@@ -70,7 +70,7 @@ namespace DataWF.Web.CodeGenerator
             }
         }
 
-        public static PropertyDeclarationSyntax GenProperty(string type, string name, bool setter)
+        public static PropertyDeclarationSyntax GenProperty(string type, string name, bool setter, string initializer = null)
         {
             var accessors = setter
                 ? new[] {SyntaxFactory.AccessorDeclaration( SyntaxKind.GetAccessorDeclaration )
@@ -87,8 +87,8 @@ namespace DataWF.Web.CodeGenerator
                                 identifier: SyntaxFactory.Identifier(name),
                                 accessorList: SyntaxFactory.AccessorList(SyntaxFactory.List(accessors)),
                                 expressionBody: null,
-                                initializer: null,
-                                semicolonToken: SyntaxFactory.Token(SyntaxKind.None));
+                                initializer: initializer == null ? null : SyntaxFactory.EqualsValueClause(SyntaxFactory.ParseExpression(initializer)),
+                                semicolonToken: initializer == null ? SyntaxFactory.Token(SyntaxKind.None) : SyntaxFactory.Token(SyntaxKind.SemicolonToken));
         }
     }
 

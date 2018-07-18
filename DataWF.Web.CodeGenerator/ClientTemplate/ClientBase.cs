@@ -44,14 +44,41 @@ namespace DataWF.Web.Client
         protected JsonSerializerSettings JsonSerializerSettings { get { return settings.Value; } }
 
         partial void UpdateJsonSerializerSettings(JsonSerializerSettings settings);
-        partial void PrepareRequest(HttpClient client, HttpRequestMessage request, StringBuilder urlBuilder);
+
+
         partial void ProcessResponse(HttpClient client, HttpResponseMessage response);
 
-        protected virtual async Task<HttpClient> CreateHttpClientAsync(CancellationToken cancellationToken)
+        protected virtual HttpClient CreateHttpClient()
         {
             var client = new HttpClient();
             // TODO: Customize HTTP client
             return client;
+        }
+
+        protected virtual HttpRequestMessage CreateRequest(string httpMethod = "GET",
+            string commandUrl = "/api",
+            string mediaType = "application/json",
+            object value = null,
+            params object[] parameters)
+        {
+            var request = new HttpRequestMessage()
+            {
+                RequestUri = new Uri(ParseUrl(commandUrl, parameters).ToString(), UriKind.RelativeOrAbsolute),
+                Method = new HttpMethod(httpMethod)
+            };
+            Provider?.Authorization?.FillRequest(request);
+
+            if (value != null)
+            {
+                var content = new StringContent(JsonConvert.SerializeObject(value, settings.Value), Encoding.UTF8);
+                content.Headers.ContentType = MediaTypeHeaderValue.Parse(mediaType);
+                request.Content = content;
+            }
+            if (httpMethod == "GET")
+            {
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(mediaType));
+            }
+            return request;
         }
 
         protected virtual StringBuilder ParseUrl(string url, params object[] parameters)
@@ -86,36 +113,111 @@ namespace DataWF.Web.Client
             object value = null,
             params object[] parameters)
         {
-            var urlBuilder = ParseUrl(commandUrl, parameters);
-            using (var client = await CreateHttpClientAsync(cancellationToken).ConfigureAwait(false))
+            using (var client = CreateHttpClient())
             {
-                using (var request = new HttpRequestMessage())
+                using (var request = CreateRequest(httpMethod, commandUrl, mediaType, value, parameters))
                 {
-                    Provider?.Authorization?.FillRequest(request);
-
-                    if (value != null)
-                    {
-                        var content = new StringContent(JsonConvert.SerializeObject(value, settings.Value), Encoding.UTF8);
-                        content.Headers.ContentType = MediaTypeHeaderValue.Parse(mediaType);
-                        request.Content = content;
-                    }
-                    request.Method = new HttpMethod(httpMethod);
-                    if (httpMethod == "GET")
-                    {
-                        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(mediaType));
-                    }
-                    PrepareRequest(client, request, urlBuilder);
-                    var url = urlBuilder.ToString();
-                    request.RequestUri = new Uri(url, UriKind.RelativeOrAbsolute);
-
                     using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false))
                     {
                         ProcessResponse(client, response);
-
                         var status = response.StatusCode;
                         if (status == System.Net.HttpStatusCode.OK)
                         {
-                            return await ParseResponse<R>(response).ConfigureAwait(false);
+                            try
+                            {
+                                using (var responseStream = response.Content == null ? null : await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
+                                {
+                                    using (var reader = new StreamReader(responseStream))
+                                    {
+                                        if (typeof(R) == typeof(string))
+                                        {
+                                            return (R)(object)reader.ReadToEnd();
+                                        }
+                                        var serializer = new JsonSerializer();
+                                        using (var jreader = new JsonTextReader(reader))
+                                        {
+                                            while (jreader.Read())
+                                            {
+                                                if (jreader.TokenType == JsonToken.StartObject)
+                                                {
+                                                    return DeserializeObject<R>(serializer, jreader);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                var responseData = response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                                throw new ClientException("Could not deserialize the response body.", (int)response.StatusCode, responseData, GetHeaders(response), ex);
+                            }
+
+                            return default(R);
+                        }
+                        else if (status != System.Net.HttpStatusCode.NoContent)
+                        {
+                            var responseData = response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                            throw new ClientException("The HTTP status code of the response was not expected (" + (int)response.StatusCode + ").",
+                                (int)response.StatusCode,
+                                responseData,
+                                GetHeaders(response), null);
+                        }
+
+                        return default(R);
+                    }
+                }
+            }
+        }
+
+        public virtual async Task<R> RequestArray<R, I>(CancellationToken cancellationToken,
+            string httpMethod = "GET",
+            string commandUrl = "/api",
+            string mediaType = "application/json",
+            object value = null,
+            params object[] parameters) where R : IList<I>
+        {
+            using (var client = CreateHttpClient())
+            {
+                using (var request = CreateRequest(httpMethod, commandUrl, mediaType, value, parameters))
+                {
+                    using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false))
+                    {
+                        ProcessResponse(client, response);
+                        var status = response.StatusCode;
+                        if (status == System.Net.HttpStatusCode.OK)
+                        {
+                            try
+                            {
+                                using (var responseStream = response.Content == null ? null : await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
+                                {
+                                    using (var reader = new StreamReader(responseStream))
+                                    {
+                                        if (typeof(R) == typeof(string))
+                                        {
+                                            return (R)(object)reader.ReadToEnd();
+                                        }
+                                        var serializer = new JsonSerializer();
+                                        using (var jreader = new JsonTextReader(reader))
+                                        {
+                                            while (jreader.Read())
+                                            {
+                                                if (jreader.TokenType == JsonToken.StartArray)
+                                                {
+                                                    return DeserializeArray<R, I>(serializer, jreader);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                var responseData = response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                                throw new ClientException("Could not deserialize the response body.", (int)response.StatusCode, responseData, GetHeaders(response), ex);
+                            }
+
+                            return default(R);
                         }
                         else if (status != System.Net.HttpStatusCode.NoContent)
                         {
@@ -143,91 +245,39 @@ namespace DataWF.Web.Client
             return headers;
         }
 
-        protected async Task<R> ParseResponse<R>(HttpResponseMessage response)
+        protected virtual R DeserializeArray<R, I>(JsonSerializer serializer, JsonTextReader jreader) where R : IList<I>
         {
-            using (var responseStream = response.Content == null ? null : await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
-            {
-                if (responseStream != null)
-                {
-                    try
-                    {
-                        using (var reader = new StreamReader(responseStream))
-                        {
-                            if (typeof(R) == typeof(string))
-                            {
-                                return (R)(object)reader.ReadToEnd();
-                            }
-                            var serializer = new JsonSerializer();
-                            using (var jreader = new JsonTextReader(reader))
-                            {
-                                while (jreader.Read())
-                                {
-                                    // deserialize only when there's "{" character in the stream
-                                    if (jreader.TokenType == JsonToken.StartArray)
-                                    {
-                                        return DeserializeArray<R>(serializer, jreader);
-                                    }
-                                    if (jreader.TokenType == JsonToken.StartObject)
-                                    {
-                                        return DeserializeObject<R>(serializer, jreader);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        var responseData = response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                        throw new ClientException("Could not deserialize the response body.", (int)response.StatusCode, responseData, GetHeaders(response), ex);
-                    }
-                }
-            }
-            return default(R);
-        }
-
-        protected virtual R DeserializeArray<R>(JsonSerializer serializer, JsonTextReader jreader)
-        {
-            var items = (IList)EmitInvoker.CreateObject<R>();
-            var itemType = TypeHelper.GetItemType(typeof(R));
-            var client = GetClient(itemType);
+            var client = Provider.GetClient<I>();
+            var items = EmitInvoker.CreateObject<R>();
             while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
             {
                 if (jreader.TokenType == JsonToken.StartObject)
                 {
-                    items.Add(client == null
-                        ? DeserializeByType(serializer, jreader, itemType)
-                        : client.DeserializeByType(serializer, jreader, itemType));
+                    if (client != null)
+                        items.Add(client.DeserializeItem(serializer, jreader));
+                    else
+                        items.Add(DeserializeObject<I>(serializer, jreader));
+
                 }
             }
-            return (R)items;
+            return items;
         }
 
-        public virtual object DeserializeByType(JsonSerializer serializer, JsonTextReader jreader, Type type)
+        public virtual R DeserializeObject<R>(JsonSerializer serializer, JsonTextReader jreader)
         {
+            var crudClient = Provider.GetClient<R>();
+            if (crudClient != null)
+                return crudClient.DeserializeItem(serializer, jreader);
+
+            return serializer.Deserialize<R>(jreader);
+        }
+
+        public virtual object DeserializeObject(JsonSerializer serializer, JsonTextReader jreader, Type type)
+        {
+            var crudClient = Provider.GetClient(type);
+            if (crudClient != null)
+                return crudClient.DeserializeItem(serializer, jreader);
             return serializer.Deserialize(jreader, type);
-        }
-
-        protected virtual R DeserializeObject<R>(JsonSerializer serializer, JsonTextReader jreader)
-        {
-            return (R)DeserializeObject(serializer, jreader, typeof(R));
-        }
-
-        protected virtual object DeserializeObject(JsonSerializer serializer, JsonTextReader jreader, Type type)
-        {
-            var client = GetClient(type);
-            if (client != null)
-            {
-                return client.DeserializeByType(serializer, jreader, type);
-            }
-            else
-            {
-                return DeserializeByType(serializer, jreader, type);
-            }
-        }
-
-        protected ClientBase GetClient(Type type)
-        {
-            return Provider?.Clients.OfType<ICRUDClient>().FirstOrDefault(p => TypeHelper.IsBaseType(p.ItemType, type)) as ClientBase;
         }
 
         protected string ConvertToString(object value, System.Globalization.CultureInfo cultureInfo)
