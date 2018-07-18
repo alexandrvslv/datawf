@@ -95,10 +95,10 @@ namespace DataWF.Module.Finance
         }
 
         [Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
-        public override string Name
+        public string Name
         {
-            get { return GetName("name", Locale.Instance.Culture); }
-            set { SetName("name", Locale.Instance.Culture, value); }
+            get { return GetName(); }
+            set { SetName(value); }
         }
 
         [Browsable(false)]

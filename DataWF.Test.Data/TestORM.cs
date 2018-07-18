@@ -93,7 +93,10 @@ namespace DataWF.Test.Data
             Assert.IsNotNull(Position.DBTable, "Attribute Generator Fail. On Position Table");
 
             var idColumn = Employer.DBTable.Columns["id"];
-            Assert.IsNotNull(schema, "Attribute Generator Fail. On Column Employer Id");
+            Assert.IsNotNull(idColumn, "Attribute Generator Fail. On Column Employer Id");
+            var positionColumn = Employer.DBTable.Columns["positionid"];
+            Assert.IsNotNull(positionColumn, "Attribute Generator Fail. On Column Employer Position");
+            Assert.IsNotNull(positionColumn.ReferenceTable, "Attribute Generator Fail. On Column Employer Position Reference");
             schema.Connection = connection;
 
             schema.DropDatabase();
@@ -258,10 +261,10 @@ namespace DataWF.Test.Data
             }
 
             [Column("name", 200, Keys = DBColumnKeys.Culture)]
-            public override string Name
+            public string Name
             {
-                get { return GetName(nameof(Name)); }
-                set { SetName(nameof(Name), value); }
+                get { return GetName(); }
+                set { SetName(value); }
             }
 
             [Column("description")]
@@ -375,10 +378,10 @@ namespace DataWF.Test.Data
             }
 
             [Column("name", 20, Keys = DBColumnKeys.Culture)]
-            public override string Name
+            public string Name
             {
-                get { return GetName(nameof(Name)); }
-                set { SetName(nameof(Name), value); }
+                get { return GetName(); }
+                set { SetName(value); }
             }
         }
     }
