@@ -50,7 +50,12 @@ namespace DataWF.Common
                 foreach (var property in btype.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly))
                 {
                     if (TypeHelper.IsNonSerialize(property))
+                    {
+                        var exist = Properties.SelectOne(nameof(PropertySerializationInfo.PropertyName), property.Name);
+                        if (exist != null)
+                            Properties.Remove(exist);
                         continue;
+                    }
                     var info = new PropertySerializationInfo(property);
                     if (info.IsAttribute && !info.IsText)
                     {
