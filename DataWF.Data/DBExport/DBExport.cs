@@ -76,7 +76,7 @@ namespace DataWF.Data
             {
                 builder.AppendLine($"    public class {table.DisplayName.Replace(" ", "")}Generator {{");
                 builder.AppendLine($"        public void Generate() {{");
-                builder.AppendLine($"            using(var transaction = new DBTransaction({table.DisplayName}.DBTable.Schema.Connection)){{");
+                builder.AppendLine($"            using(var transaction = new DBTransaction({table.ItemType.Type.Name}.DBTable.Schema.Connection)){{");
                 var enumer = table.SelectItems("");
                 if (table.GroupKey != null)
                 {
@@ -91,6 +91,8 @@ namespace DataWF.Data
                     builder.AppendLine($"                new {type.Name}{{");
                     foreach (var column in table.Columns)
                     {
+                        if ((column.Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType)
+                            continue;
                         if (column.Property != null)
                         {
                             builder.AppendLine($"                    {column.Property} = {column.FormatCode(row.GetValue(column))},");
@@ -98,6 +100,7 @@ namespace DataWF.Data
                     }
                     builder.AppendLine("                }.Save();");
                 }
+                builder.AppendLine($"                {table.ItemType.Type.Name}.DBTable.Save();");
                 builder.AppendLine("                transaction.Commit();");
                 builder.AppendLine("            }");
                 builder.AppendLine("        }");
