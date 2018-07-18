@@ -362,8 +362,9 @@ namespace DataWF.Data
                     }
                     catch (Exception ex)
                     {
-                        if (ex.Message.Contains("already exist"))
+                        if (ex.Message.IndexOf("already exist", StringComparison.OrdinalIgnoreCase) < 0)
                         {
+                            throw ex;
                         }
                     }
                 }
