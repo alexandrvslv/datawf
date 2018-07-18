@@ -143,10 +143,10 @@ namespace DataWF.Gui
                 if (edit is CellEditorFields)
                 {
                     edit = new CellEditorList();
-                    var list = new List<object>();
-                    for (int i = 0; i < listSource.Count; i++)
+                    var list = new SelectableList<object>();
+                    for (int i = 0; i < List.ListSource.Count; i++)
                     {
-                        object value = ReadValue(i, filter.Column);
+                        object value = List.ReadValue(i, filter.Column);
                         if (!list.Contains(value))
                             list.Add(value);
                     }

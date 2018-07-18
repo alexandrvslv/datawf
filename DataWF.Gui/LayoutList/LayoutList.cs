@@ -2112,7 +2112,7 @@ namespace DataWF.Gui
                         binding.ListChanged += OnListChanged;
                     }
 
-                    var type = TypeHelper.GetItemType(listSource);
+                    var type = TypeHelper.GetItemType(listSource.GetType());
                     if (ListType != type)
                         ListType = type;
                     else
