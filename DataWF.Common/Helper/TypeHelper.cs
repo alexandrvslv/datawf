@@ -532,7 +532,7 @@ namespace DataWF.Common
             }
             else
             {
-                t = type.GetProperty("Item", new Type[] { typeof(int) })?.PropertyType;
+                t = type.GetProperty("Item", new Type[] { typeof(int) })?.PropertyType ?? t;
             }
             return t;
         }
