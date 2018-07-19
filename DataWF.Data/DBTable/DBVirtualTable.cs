@@ -179,6 +179,19 @@ namespace DataWF.Data
             }
         }
 
+        public override bool Remove(T item)
+        {
+            if (item.Attached)
+            {
+                return BaseTable.Remove(item);
+            }
+            else
+            {
+                OnItemChanged(item, null, NotifyCollectionChangedAction.Remove);
+                return items.Remove(item);
+            }
+        }
+
         public override void Add(T item)
         {
             if (!item.Attached)
