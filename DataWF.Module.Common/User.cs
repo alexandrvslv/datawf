@@ -354,6 +354,8 @@ namespace DataWF.Module.Common
 
         public bool IsAuthenticated => string.IsNullOrEmpty(Token);
 
+        string IIdentity.Name => EMail;
+
         public string NameRU
         {
             get { return GetProperty<string>(); }

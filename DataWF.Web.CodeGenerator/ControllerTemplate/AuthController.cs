@@ -15,6 +15,7 @@ namespace DataWF.Web.Controller
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route("api/[controller]")]
     [ApiController]
+    [Auth]
     public class AuthController : ControllerBase
     {
         private readonly IOptions<JwtAuth> jwtAuth;
@@ -52,6 +53,12 @@ namespace DataWF.Web.Controller
             return Ok(user.Token);
         }
 
+        [HttpGet()]
+        public ActionResult<User> Get()
+        {
+            return Ok(DataWF.Module.Common.User.CurrentUser);
+        }
+
         private ClaimsIdentity GetIdentity(LoginModel login, out User user)
         {
             var credentials = new NetworkCredential(login.Email, login.Password);
@@ -73,8 +80,8 @@ namespace DataWF.Web.Controller
 
         private IEnumerable<Claim> GetClaims(User person)
         {
-            yield return new Claim(JwtRegisteredClaimNames.NameId, person.EMail);
-            yield return new Claim(JwtRegisteredClaimNames.Email, person.EMail);
+            yield return new Claim(ClaimTypes.Name, person.EMail);
+            yield return new Claim(ClaimTypes.Email, person.EMail);
         }
     }
 }

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
 
 namespace DataWF.Web.Controller
 {
@@ -10,9 +11,10 @@ namespace DataWF.Web.Controller
     {
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            var user = context.HttpContext.User?.Identity as User;
-            System.Diagnostics.Debug.WriteLine($"{context.ActionDescriptor.DisplayName}, {user}");
-            //User.SetCurrentByEmail(email, true);
+            var emailClaim = context.HttpContext.User?.FindFirst(ClaimTypes.Email);
+            if (emailClaim != null)
+                User.SetCurrentByEmail(emailClaim.Value, true);
+            System.Diagnostics.Debug.WriteLine($"{context.ActionDescriptor.DisplayName}, {User.CurrentUser}");
         }
     }
 }
