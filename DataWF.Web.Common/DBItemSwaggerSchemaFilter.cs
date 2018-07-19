@@ -51,7 +51,7 @@ namespace DataWF.Web.Common
                     var baseSchema = context.SchemaRegistry.GetOrRegister(context.SystemType.BaseType);
                     schema.AllOf = new List<Schema> { baseSchema };
                 }
-                foreach (var property in context.SystemType.GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public ))
+                foreach (var property in context.SystemType.GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public))
                 {
                     if (property.GetMethod.GetBaseDefinition().DeclaringType != context.SystemType)
                         continue;
@@ -67,7 +67,10 @@ namespace DataWF.Web.Common
                     if (reference != null)
                     {
                         var referenceSchema = context.SchemaRegistry.GetOrRegister(property.PropertyType);
-                        schema.Properties.Add(property.Name, referenceSchema);
+                        var schemaProperty = new Schema() { Ref = referenceSchema.Ref };
+                        schemaProperty.Extensions.Add("x-id", reference.ColumnProperty);
+                        schema.Properties.Add(property.Name, schemaProperty);
+
                     }
                 }
             }

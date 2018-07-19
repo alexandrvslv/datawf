@@ -400,7 +400,7 @@ namespace DataWF.Web.CodeGenerator
             {
                 builder.Append($", {parameter.Name}");
             }
-            builder.Append(");");
+            builder.Append(").ConfigureAwait(false);");
             yield return SF.ParseStatement(builder.ToString());
         }
 
@@ -603,21 +603,40 @@ namespace DataWF.Web.CodeGenerator
                 ));
         }
 
-        private static IEnumerable<StatementSyntax> GenPropertySet(JsonProperty property)
+        private IEnumerable<StatementSyntax> GenPropertySet(JsonProperty property)
         {
             yield return SF.ParseStatement($"if({GetFieldName(property)} == value) return;");
             yield return SF.ParseStatement($"{GetFieldName(property)} = value;");
             yield return SF.ParseStatement($"OnPropertyChanged();");
+
+            if (property.ExtensionData != null && property.ExtensionData.TryGetValue("x-id", out var idProperty))
+            {
+                yield return SF.ParseStatement($"{idProperty} = value?.Id;");
+            }
         }
 
-        private static string GetFieldName(JsonProperty property)
+        private string GetFieldName(JsonProperty property)
         {
-            return string.Concat("_", char.ToLowerInvariant(property.Name[0]).ToString(), property.Name.Substring(1));
+            return GetFieldName(property.Name);
         }
 
-        private static IEnumerable<StatementSyntax> GenPropertyGet(JsonProperty property)
+        private string GetFieldName(string property)
         {
-            yield return SF.ParseStatement($"return {GetFieldName(property)};");
+            return string.Concat("_", char.ToLowerInvariant(property[0]).ToString(), property.Substring(1));
+        }
+
+        private IEnumerable<StatementSyntax> GenPropertyGet(JsonProperty property)
+        {
+            var fieldName = GetFieldName(property);
+            if (property.ExtensionData != null && property.ExtensionData.TryGetValue("x-id", out var idProperty))
+            {
+                var idFiledName = GetFieldName((string)idProperty);
+                yield return SF.ParseStatement($"if({fieldName} == null && {idFiledName} != null){{");
+                yield return SF.ParseStatement($"var client = ({GetTypeString(property, false)}Client)ClientProvider.Default.GetClient<{GetTypeString(property, false)}>();");
+                yield return SF.ParseStatement($"{fieldName} = client.Get({idFiledName});");
+                yield return SF.ParseStatement("}");
+            }
+            yield return SF.ParseStatement($"return {fieldName};");
         }
 
         private FieldDeclarationSyntax GenDefinitionClassField(JsonProperty property)

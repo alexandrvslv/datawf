@@ -84,9 +84,14 @@ namespace DataWF.Web.Client
             return Items.SelectOne(IdInvoker.Name, id);
         }
 
+        public virtual T Get(object id)
+        {
+            return Get((K)id);
+        }
+
         public virtual T Get(K id)
         {
-            return Select(id) ?? GetAsync(id, CancellationToken.None).Result;
+            return Select(id) ?? GetAsync(id, CancellationToken.None).GetAwaiter().GetResult();
         }
 
         public abstract Task<List<T>> GetAsync(CancellationToken cancellationToken);

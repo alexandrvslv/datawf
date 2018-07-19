@@ -43,6 +43,7 @@ namespace DataWF.Web.Client
     public interface ICRUDClient<T> : ICRUDClient
     {
         SelectableList<T> Items { get; }
+        T Get(object id);
         new T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader);
     }
 }
