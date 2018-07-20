@@ -79,9 +79,9 @@ namespace DataWF.Data.Gui
 
         public bool ReadOnly { get { return false; } set { } }
 
-        protected async virtual void ToolLoadClick(object sender, EventArgs e)
+        protected virtual void ToolLoadClick(object sender, EventArgs e)
         {
-            await loader.LoadAsync();
+            loader.LoadAsync();
         }
 
         private void TableViewCellDoubleClick(object sender, LayoutHitTestEventArgs e)

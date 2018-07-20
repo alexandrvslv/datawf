@@ -423,7 +423,7 @@ namespace DataWF.Data.Gui
             }
         }
 
-        private async void ToolReferencesClick(object sender, EventArgs e)
+        private void ToolReferencesClick(object sender, EventArgs e)
         {
             var tool = (MenuItemRelation)sender;
 
@@ -435,7 +435,7 @@ namespace DataWF.Data.Gui
             tool.View.DefaultParam = new QParam(LogicType.And, tool.Relation.Column, CompareType.Equal, OwnerRow.PrimaryId);
             baseColumn = tool.Relation.Column;
             TableView = tool.View;
-            await loader.LoadAsync(tool.View.Query);
+            loader.LoadAsync(tool.View.Query);
             //if (ReferenceClick != null)
             //    ReferenceClick(this, new TableEditReferenceEventArgs(relation));
             //else
@@ -580,12 +580,12 @@ namespace DataWF.Data.Gui
             loader.Cancel();
         }
 
-        protected async override void OnFilterChanged(object sender, EventArgs e)
+        protected override void OnFilterChanged(object sender, EventArgs e)
         {
             if (DBList.Mode != LayoutListMode.Fields)
             {
                 if (List.FilterList?.Count > 0)
-                    await loader.LoadAsync(DBList.View.Query);
+                    loader.LoadAsync(DBList.View.Query);
                 else
                     loader.Cancel();
             }
@@ -883,13 +883,13 @@ namespace DataWF.Data.Gui
             _currentControl = null;
         }
 
-        protected async override void OnToolLoadClick(object sender, EventArgs e)
+        protected override void OnToolLoadClick(object sender, EventArgs e)
         {
             if (view == null)
                 return;
 
             if (!loader.IsLoad())
-                await loader.LoadAsync();
+                loader.LoadAsync();
             else
                 loader.Cancel();
         }

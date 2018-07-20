@@ -110,7 +110,7 @@ namespace DataWF.Data.Gui
                 Application.Invoke(() => OnLoadColumns(arg));
         }
 
-        public async Task LoadAsync(QQuery query)
+        public async void LoadAsync(QQuery query)
         {
             Cancel();
             if (query != null && query.Table == view.Table)
@@ -120,11 +120,11 @@ namespace DataWF.Data.Gui
             }
         }
 
-        public async Task LoadAsync()
+        public void LoadAsync()
         {
             if (view == null || view.Table.IsSynchronized)
                 return;
-            await LoadAsync(view.Query);
+            LoadAsync(view.Query);
         }
 
         private void Loader()
@@ -137,7 +137,7 @@ namespace DataWF.Data.Gui
                 try
                 {
                     DBTableLoadProgress(view.Table, new DBLoadProgressEventArgs(view, 0, 0, null));
-                    using (var temp = new DBTransaction(view.Table.Schema.Connection) { View = view})//DBLoadParam.GetCount | DBLoadParam.ReferenceRow
+                    using (var temp = new DBTransaction(view.Table.Schema.Connection) { View = view })//DBLoadParam.GetCount | DBLoadParam.ReferenceRow
                     {
                         transaction = temp;
                         View.Table.LoadItems(query);

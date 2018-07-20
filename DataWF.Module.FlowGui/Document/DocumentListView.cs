@@ -312,9 +312,9 @@ namespace DataWF.Module.FlowGui
             Filter?.Clear();
         }
 
-        private async void ToolLoadClick(object sender, EventArgs e)
+        private void ToolLoadClick(object sender, EventArgs e)
         {
-            await loader.LoadAsync();
+            loader.LoadAsync();
         }
 
         protected async virtual void ToolCreateClick(object sender, EventArgs e)
