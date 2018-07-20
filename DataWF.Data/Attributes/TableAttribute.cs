@@ -165,6 +165,7 @@ namespace DataWF.Data
             {
                 Table.ItemTypes[itemType.Id] = new DBItemType { Type = itemType.Type };
                 itemType.Generate();
+                
             }
 
             return Table;
@@ -227,6 +228,7 @@ namespace DataWF.Data
                 {
                     cacheIndexes.Add(index);
                 }
+                InitializeDefault(property);
             }
             foreach (var property in properties)
             {
@@ -240,7 +242,7 @@ namespace DataWF.Data
 
         private bool InitializeIndex(PropertyInfo property, ColumnAttribute column, out IndexAttribute index)
         {
-            index = property.GetCustomAttribute<IndexAttribute>();
+            index = property.GetCustomAttribute<IndexAttribute>(false);
             if (index != null)
             {
                 index = cacheIndexes.SelectOne(nameof(IndexAttribute.IndexName), index.IndexName) ?? index;
@@ -253,7 +255,7 @@ namespace DataWF.Data
 
         public virtual bool InitializeReference(PropertyInfo property, out ReferenceAttribute reference)
         {
-            reference = property.GetCustomAttribute<ReferenceAttribute>();
+            reference = property.GetCustomAttribute<ReferenceAttribute>(false);
             if (reference != null)
             {
                 reference.Table = this;
@@ -268,7 +270,7 @@ namespace DataWF.Data
 
         public virtual bool InitializeColumn(PropertyInfo property, out ColumnAttribute columnAttribute)
         {
-            columnAttribute = DBColumn.GetColumnAttribute(property);
+            columnAttribute = property.GetCustomAttribute<ColumnAttribute>(false);
             if (columnAttribute != null)
             {
                 columnAttribute.Table = this;
@@ -277,9 +279,25 @@ namespace DataWF.Data
                     columnAttribute.DataType = property.PropertyType;
                 if (columnAttribute.Order <= 0)
                     columnAttribute.Order = cacheColumns.Count;
+
                 return true;
             }
             return false;
+        }
+
+        public virtual void InitializeDefault(PropertyInfo property)
+        {
+            var defaultAttribute = property.GetCustomAttribute<DefaultValueAttribute>(false);
+            if (defaultAttribute != null)
+            {
+                var columnAttribute = GetColumnByProperty(property.Name);
+                if (columnAttribute != null)
+                {
+                    if (columnAttribute.DefaultValues == null)
+                        columnAttribute.DefaultValues = new Dictionary<Type, string>();
+                    columnAttribute.DefaultValues[property.DeclaringType] = defaultAttribute.Value.ToString();
+                }
+            }
         }
 
         public ColumnAttribute GetColumn(string name)

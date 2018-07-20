@@ -125,7 +125,7 @@ namespace DataWF.Module.Flow
             set => SetProperty(value);
         }
 
-        [DataMember, Column("document_type", 250, Default = "0")]
+        [DataMember, DefaultValue(0), Column("document_type", 250)]
         public int? DocumentType
         {
             get { return GetProperty<int?>(); }
@@ -239,7 +239,7 @@ namespace DataWF.Module.Flow
         }
 
 
-        [DataMember, Column("is_file", Default = "False")]
+        [DataMember, DefaultValue(false), Column("is_file")]
         public bool? IsFile
         {
             get { return GetProperty<bool?>(); }

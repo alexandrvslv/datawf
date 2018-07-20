@@ -340,7 +340,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [DataMember, Column("is_comlete", Default = "False")]
+        [DataMember, DefaultValue(false), Column("is_comlete")]
         public bool? IsComplete
         {
             get { return GetProperty<bool?>(nameof(IsComplete)); }

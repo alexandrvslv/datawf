@@ -42,7 +42,6 @@
   <ItemGroup>
     <Compile Remove="Attributes\VirtualColumnAttribute.cs" />
     <Compile Remove="Attributes\VirtualTableAttribute.cs" />
-    <Compile Remove="DBColumn\DBVirtualColumn.cs" />
     <Compile Remove="DBItem\DBVirtualItem.cs" />
   </ItemGroup>  
   <ItemGroup>

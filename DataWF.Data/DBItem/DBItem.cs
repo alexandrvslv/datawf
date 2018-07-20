@@ -59,7 +59,7 @@ namespace DataWF.Data
         {
         }
 
-        
+
         public object GetTag(DBColumn column)
         {
             return column.GetTag(hindex);
@@ -601,14 +601,14 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
-        [DataMember, Column("item_type", GroupName = "system", Keys = DBColumnKeys.ItemType | DBColumnKeys.System, Order = 98, Default = "0")]
+        [DataMember, DefaultValue(0), Column("item_type", GroupName = "system", Keys = DBColumnKeys.ItemType | DBColumnKeys.System, Order = 98)]
         public int? ItemType
         {
             get { return Table.ItemTypeKey == null ? 0 : GetValue<int?>(Table.ItemTypeKey); }
             set { SetValue(value, Table.ItemTypeKey); }
         }
 
-        [DataMember, Column("status_id", Default = "1", GroupName = "system", Keys = DBColumnKeys.State | DBColumnKeys.System | DBColumnKeys.Indexing, Order = 99)]
+        [DataMember, DefaultValue(DBStatus.New), Column("status_id", GroupName = "system", Keys = DBColumnKeys.State | DBColumnKeys.System | DBColumnKeys.Indexing, Order = 99)]
         public DBStatus Status
         {
             get { return Table.StatusKey == null ? DBStatus.Empty : GetValue<DBStatus?>(Table.StatusKey).GetValueOrDefault(); }

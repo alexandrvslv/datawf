@@ -65,16 +65,11 @@ namespace DataWF.Data
     public class DBColumn : DBTableItem, IComparable, IComparable<DBColumn>, ICloneable, IInvoker<DBItem, object>
     {
         public static DBColumn EmptyKey = new DBColumn();
-        public static ColumnAttribute GetColumnAttribute(PropertyInfo property)
-        {
-            var config = property.GetCustomAttribute<ColumnAttribute>();
-            return config;
-        }
+
 
         #region Variable
         private QExpression expression;
         protected DBTable cacheReferenceTable;
-        protected DBColumnList list;
         CultureInfo cacheCulture;
         DBColumnGroup cacheGroup;
         private Pull pull;
@@ -130,7 +125,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
-        public string Property
+        public virtual string Property
         {
             get { return property; }
             set
@@ -144,10 +139,10 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public IInvoker PropertyInvoker { get; internal set; }
+        public virtual IInvoker PropertyInvoker { get; internal set; }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public IInvoker ReferenceProperty { get; internal set; }
+        public virtual IInvoker ReferenceProperty { get; internal set; }
 
         [Browsable(false)]
         public bool CanWrite { get { return true; } }
@@ -290,7 +285,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false), Category("Add")]
-        public string GroupName
+        public virtual string GroupName
         {
             get { return gname; }
             set
@@ -324,7 +319,7 @@ namespace DataWF.Data
         }
 
         [Category("Database"), DefaultValue(DBColumnKeys.None)]
-        public DBColumnKeys Keys
+        public virtual DBColumnKeys Keys
         {
             get { return keys; }
             set
@@ -383,8 +378,6 @@ namespace DataWF.Data
                 if (order == value)
                     return;
                 order = value;
-                if (list != null)
-                    list.SortInternal();
                 OnPropertyChanged(nameof(Order));
             }
         }
@@ -478,7 +471,7 @@ namespace DataWF.Data
         public Type TargetType { get { return typeof(DBItem); } }
 
         [Browsable(false), Category("Database")]
-        public Type DataType
+        public virtual Type DataType
         {
             get { return dataType; }
             set
@@ -543,12 +536,12 @@ namespace DataWF.Data
                 if (cdefault == value)
                     return;
                 cdefault = value;
-                OnPropertyChanged(nameof(DefaultValue), DDLType.Alter);
+                OnPropertyChanged(nameof(DefaultValue), DDLType.Default);
             }
         }
 
         [Category("Database"), DefaultValue(DBColumnTypes.Default)]
-        public DBColumnTypes ColumnType
+        public virtual DBColumnTypes ColumnType
         {
             get { return ctype; }
             set
@@ -574,7 +567,7 @@ namespace DataWF.Data
         }
 
         [Category("Database"), DefaultValue(0)]
-        public int Size
+        public virtual int Size
         {
             get { return size; }
             set
@@ -602,7 +595,7 @@ namespace DataWF.Data
         }
 
         [Category("Database"), DefaultValue(0)]
-        public int Scale
+        public virtual int Scale
         {
             get { return scale; }
             set

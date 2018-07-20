@@ -71,24 +71,44 @@ namespace DataWF.Data
             }
             set
             {
-                cacheBaseColumn = value;
                 BaseName = value?.Name;
+                cacheBaseColumn = value;
                 if (value != null)
                 {
                     if (string.IsNullOrEmpty(Name))
                     {
                         Name = value.Name;
                     }
-                    Size = value.Size;
-                    Scale = value.Scale;
-                    IsReference = value.IsReference;
-                    DataType = value.DataType;
-                    GroupName = value.GroupName;
-                    ColumnType = value.ColumnType;
-                    //Keys = value.Keys;
                 }
             }
         }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public override string Property { get => BaseColumn.Property; set => base.Property = value; }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public override IInvoker PropertyInvoker { get => BaseColumn.PropertyInvoker; internal set => base.PropertyInvoker = value; }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public override IInvoker ReferenceProperty { get => BaseColumn.ReferenceProperty; internal set => base.ReferenceProperty = value; }
+
+        [XmlIgnore, JsonIgnore]
+        public override DBColumnKeys Keys { get => BaseColumn.Keys; set => base.Keys = value; }
+
+        [XmlIgnore, JsonIgnore]
+        public override int Size { get => BaseColumn.Size; set => base.Size = value; }
+
+        [XmlIgnore, JsonIgnore]
+        public override int Scale { get => BaseColumn.Scale; set => base.Scale = value; }
+
+        [XmlIgnore, JsonIgnore, ReadOnly(true)]
+        public override Type DataType { get => BaseColumn.DataType; set => base.DataType = value; }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public override string GroupName { get => BaseColumn.GroupName; set => base.GroupName = value; }
+
+        [XmlIgnore, JsonIgnore]
+        public override DBColumnTypes ColumnType { get => BaseColumn.ColumnType; set => base.ColumnType = value; }
 
         protected internal override void CheckPull()
         {

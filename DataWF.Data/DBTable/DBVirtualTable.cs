@@ -38,11 +38,12 @@ namespace DataWF.Data
             //Columns.Indexes.Add(baseNameInvoker);
         }
 
+
         [JsonIgnore, XmlIgnore]
-        public override DBColumnList Columns
+        public override DBColumnList<DBColumn> Columns
         {
-            get { return BaseTable.Columns; }
-            set { value?.Dispose(); }
+            get { return base.Columns; }
+            set { base.Columns = value; }
         }
 
         [JsonIgnore, XmlIgnore]
@@ -111,16 +112,27 @@ namespace DataWF.Data
             get { return baseTable ?? (baseTable = Schema?.Tables[baseTableName]); }
             set
             {
-                if (BaseTable == value)
-                    return;
-                BaseTableName = value?.Name;
-                baseTable = value;
+                if (BaseTable != value)
+                {
+                    Columns.Clear();
 
-                SequenceName = value.SequenceName;
-                GroupName = value.GroupName;
-                BlockSize = value.BlockSize;
+                    BaseTableName = value?.Name;
+                    baseTable = value;
+                    if (value != null)
+                    {
+                        GroupName = value.GroupName;
+                        BlockSize = value.BlockSize;
+                    }
+                }
+                GenerateColumns();
             }
         }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public override int BlockSize { get => BaseTable.BlockSize; set => base.BlockSize = value; }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public override string SequenceName { get => BaseTable.SequenceName; set => base.SequenceName = value; }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public override bool IsLoging
@@ -212,6 +224,8 @@ namespace DataWF.Data
 
         public override DBItem NewItem(DBUpdateState state = DBUpdateState.Insert, bool def = true, int typeIndex = 0)
         {
+            if (typeIndex == 0)
+                typeIndex = BaseTable.GetTypeIndex(typeof(T));
             return BaseTable.NewItem(state, def, typeIndex);
         }
 
@@ -243,6 +257,26 @@ namespace DataWF.Data
             BaseTable?.RemoveVirtual(this);
             filterQuery?.Dispose();
             base.Dispose();
+        }
+
+        public void GenerateColumns()
+        {
+            if (BaseTable == null)
+                return;
+            foreach (DBColumn column in BaseTable.Columns)
+            {
+                var exist = (DBVirtualColumn)ParseColumn(column.Name);
+                if (exist == null)
+                {
+                    exist = new DBVirtualColumn(column);
+                    Columns.Add(exist);
+                    exist.DisplayName = column.DisplayName;
+                }
+                else
+                {
+                    exist.BaseColumn = column;
+                }
+            }
         }
     }
 }

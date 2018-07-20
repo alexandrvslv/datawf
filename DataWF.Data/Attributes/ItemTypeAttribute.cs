@@ -40,6 +40,8 @@ namespace DataWF.Data
 
         public TableAttribute TableAttribute { get; private set; }
 
+        public IDBVirtualTable VirtualTable { get { return (IDBVirtualTable)Table; } }
+
         public DBTable Table
         {
             get { return cacheTable ?? (cacheTable = DBService.ParseTable(Type.Name)); }
@@ -66,10 +68,24 @@ namespace DataWF.Data
         {
             if (Table == null)
                 Table = CreateTable();
+
             if (!TableAttribute.Schema.Tables.Contains(Type.Name))
             {
                 TableAttribute.Schema.Tables.Add(Table);
             }
+            VirtualTable.BaseTable = TableAttribute.Table;
+            foreach (var columnAttribute in TableAttribute.Columns)
+            {
+                if (columnAttribute.DefaultValues != null && columnAttribute.DefaultValues.TryGetValue(Type, out var defaultValue))
+                {
+                    var virtualColumn = Table.ParseColumn(columnAttribute.ColumnName);
+                    if (virtualColumn != null)
+                    {
+                        virtualColumn.DefaultValue = defaultValue;
+                    }
+                }
+            }
+
             return Table;
         }
 

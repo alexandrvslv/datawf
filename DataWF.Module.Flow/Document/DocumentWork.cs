@@ -243,7 +243,7 @@ namespace DataWF.Module.Flow
             set { SetProperty(value); }
         }
 
-        [DataMember, Column("is_complete", Default = "False")]
+        [DataMember, Column("is_complete")]
         public bool IsComplete
         {
             get { return DateComplete != null; }

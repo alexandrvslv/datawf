@@ -145,7 +145,7 @@ namespace DataWF.Data
         protected DBTable(string name = null) : base(name)
         {
             ColumnGroups = new DBColumnGroupList(this);
-            Columns = new DBColumnList(this);
+            Columns = new DBColumnList<DBColumn>(this);
             Indexes = new DBIndexList(this);
             Constraints = new DBConstraintList<DBConstraint>(this);
             Foreigns = new DBForeignList(this);
@@ -222,7 +222,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
-        public int BlockSize
+        public virtual int BlockSize
         {
             get { return block; }
             set { block = value; }
@@ -258,7 +258,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false), Category("Group")]
-        public string GroupName
+        public virtual string GroupName
         {
             get { return groupName; }
             set
@@ -288,7 +288,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
-        public string SequenceName
+        public virtual string SequenceName
         {
             get { return sequenceName; }
             set
@@ -487,7 +487,7 @@ namespace DataWF.Data
         }
 
         [Category("Column")]
-        public virtual DBColumnList Columns { get; set; }
+        public virtual DBColumnList<DBColumn> Columns { get; set; }
 
         [Category("Column")]
         public virtual DBColumnGroupList ColumnGroups { get; set; }

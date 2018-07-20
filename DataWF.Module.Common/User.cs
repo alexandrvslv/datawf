@@ -280,7 +280,7 @@ namespace DataWF.Module.Common
         }
 
         [ReadOnly(true)]
-        [DataMember, Column("super", Default = "False")]
+        [DataMember, DefaultValue(false), Column("super")]
         public bool? Super
         {
             get { return GetProperty<bool?>(); }

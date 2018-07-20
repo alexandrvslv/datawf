@@ -28,6 +28,7 @@ using DataWF.Data;
 using DataWF.Common;
 using Newtonsoft.Json;
 using System.Reflection;
+using System.Collections.Generic;
 
 namespace DataWF.Data
 {
@@ -41,15 +42,16 @@ namespace DataWF.Data
         public ColumnAttribute()
         { }
 
-        public ColumnAttribute(string name, int size = 0, short scale = 0, string def = null)
+        public ColumnAttribute(string name, int size = 0, short scale = 0)
         {
             ColumnName = name;
             Size = size;
             Scale = scale;
-            Default = def;
         }
 
         public int Order { get; set; }
+
+        public Dictionary<Type, string> DefaultValues { get; internal set; }
 
         public string ColumnName { get; set; }
 
@@ -63,8 +65,6 @@ namespace DataWF.Data
 
         [DefaultValue((short)0)]
         public short Scale { get; set; }
-
-        public string Default { get; set; }
 
         public DBColumnKeys Keys { get; set; }
 
@@ -149,11 +149,13 @@ namespace DataWF.Data
             Column.Property = culture == null ? Property.Name : $"{Property.Name}{culture.TwoLetterISOLanguageName.ToUpper()}";
             Column.PropertyInvoker = culture == null //TODO Check if property with culture defined in class
                 ? EmitInvoker.Initialize(Property, false) : Column;
-            Column.DefaultValue = Default;
             Column.Culture = culture;
             Column.GroupName = groupName;
             Column.ReferenceProperty = ReferenceProperty == null ? null : EmitInvoker.Initialize(ReferenceProperty, false);
-
+            if (DefaultValues != null && DefaultValues.TryGetValue(Property.DeclaringType, out var defaultValue))
+            {
+                Column.DefaultValue = defaultValue;
+            }
 
             if (!table.Columns.Contains(Column.Name))
             {

@@ -27,13 +27,13 @@ using System.Collections.Specialized;
 
 namespace DataWF.Data
 {
-    public class DBColumnList : DBTableItemList<DBColumn>
+    public class DBColumnList<T> : DBTableItemList<T> where T : DBColumn, new()
     {
-        static readonly Invoker<DBColumn, string> groupNameInvoker = new Invoker<DBColumn, string>(nameof(DBColumn.GroupName), item => item.GroupName);
-        static readonly Invoker<DBColumn, string> propertyInvoker = new Invoker<DBColumn, string>(nameof(DBColumn.Property), item => item.Property);
-        static readonly Invoker<DBColumn, bool> isViewInvoker = new Invoker<DBColumn, bool>(nameof(DBColumn.IsView), item => item.IsView);
-        static readonly Invoker<DBColumn, bool> isReferenceInvoker = new Invoker<DBColumn, bool>(nameof(DBColumn.IsReference), item => item.IsReference);
-        static readonly Invoker<DBColumn, string> referenceTableInvoker = new Invoker<DBColumn, string>(nameof(DBColumn.ReferenceTable), item => item.ReferenceTable?.Name);
+        static readonly Invoker<T, string> groupNameInvoker = new Invoker<T, string>(nameof(DBColumn.GroupName), item => item.GroupName);
+        static readonly Invoker<T, string> propertyInvoker = new Invoker<T, string>(nameof(DBColumn.Property), item => item.Property);
+        static readonly Invoker<T, bool> isViewInvoker = new Invoker<T, bool>(nameof(DBColumn.IsView), item => item.IsView);
+        static readonly Invoker<T, bool> isReferenceInvoker = new Invoker<T, bool>(nameof(DBColumn.IsReference), item => item.IsReference);
+        static readonly Invoker<T, string> referenceTableInvoker = new Invoker<T, string>(nameof(DBColumn.ReferenceTable), item => item.ReferenceTable?.Name);
 
         public DBColumnList(DBTable table)
             : base(table)
@@ -54,7 +54,7 @@ namespace DataWF.Data
             }
         }
 
-        public override void RemoveInternal(DBColumn item, int index)
+        public override void RemoveInternal(T item, int index)
         {
             base.RemoveInternal(item, index);
             if (item.Index != null)
@@ -65,7 +65,7 @@ namespace DataWF.Data
             }
         }
 
-        public override DBColumn this[string name]
+        public override T this[string name]
         {
             get
             {
@@ -85,7 +85,7 @@ namespace DataWF.Data
             base.Clear();
         }
 
-        public override void InsertInternal(int index, DBColumn item)
+        public override void InsertInternal(int index, T item)
         {
             if (Contains(item))
             {
@@ -103,7 +103,7 @@ namespace DataWF.Data
             base.InsertInternal(index, item);
 
             item.CheckPull();
-            if (item.IsPrimaryKey)
+            if (item.IsPrimaryKey && !(item is DBVirtualColumn))
             {
                 DBConstraint primary = null;
                 foreach (var constraint in Table.Constraints.GetByColumn(Table.PrimaryKey))
@@ -146,7 +146,7 @@ namespace DataWF.Data
             if (Contains(name))
                 return this[name];
             var column = new DBColumn(name, t, size) { Table = Table };
-            Add(column);
+            Add((T)column);
             return column;
         }
 

@@ -188,7 +188,7 @@ namespace DataWF.Data.Gui
                 || (!ShowTable && sender is DBTableList)
                 || (!ShowProcedures && sender is DBProcedureList)
                 || (!ShowSequences && sender is DBSequenceList)
-                || (!ShowColumn && sender is DBColumnList)
+                || (!ShowColumn && sender is DBColumnList<DBColumn>)
                 || (!ShowColumnGroup && sender is DBColumnGroupList))
                 return;
 
