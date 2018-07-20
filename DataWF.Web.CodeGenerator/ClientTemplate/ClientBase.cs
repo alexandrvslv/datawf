@@ -27,7 +27,10 @@ namespace DataWF.Web.Client
         {
             settings = new Lazy<JsonSerializerSettings>(() =>
             {
-                var settings = new JsonSerializerSettings();
+                var settings = new JsonSerializerSettings()
+                {
+                    MissingMemberHandling = MissingMemberHandling.Ignore
+                };
                 UpdateJsonSerializerSettings(settings);
                 return settings;
             });

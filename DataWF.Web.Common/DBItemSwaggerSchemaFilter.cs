@@ -3,6 +3,7 @@ using DataWF.Data;
 using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Reflection;
 
 namespace DataWF.Web.Common
@@ -53,9 +54,7 @@ namespace DataWF.Web.Common
                 }
                 foreach (var property in context.SystemType.GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public))
                 {
-                    if (property.GetMethod.GetBaseDefinition().DeclaringType != context.SystemType)
-                        continue;
-                    var column = DBColumn.GetColumnAttribute(property);
+                    var column = property.GetCustomAttribute<ColumnAttribute>(false);
                     if (column != null)
                     {
                         column.Property = property;
@@ -63,7 +62,7 @@ namespace DataWF.Web.Common
                             column.DataType = property.PropertyType;
                         ApplyColumn(schema, context, column);
                     }
-                    var reference = property.GetCustomAttribute<ReferenceAttribute>();
+                    var reference = property.GetCustomAttribute<ReferenceAttribute>(false);
                     if (reference != null)
                     {
                         var referenceSchema = context.SchemaRegistry.GetOrRegister(property.PropertyType);
@@ -74,8 +73,6 @@ namespace DataWF.Web.Common
                     }
                 }
             }
-            else
-            { }
         }
 
         public void ApplyColumn(Schema schema, SchemaFilterContext context, ColumnAttribute column)
@@ -84,12 +81,12 @@ namespace DataWF.Web.Common
                 || (column.Keys & DBColumnKeys.Password) == DBColumnKeys.Password)
                 return;
             var columnSchema = context.SchemaRegistry.GetOrRegister(column.GetDataType());
-
             if (column.DataType == typeof(string) && column.Size > 0)
             {
                 columnSchema.MaxLength = column.Size;
             }
-            if ((column.Keys & DBColumnKeys.System) == DBColumnKeys.System)
+            if ((column.Keys & DBColumnKeys.System) == DBColumnKeys.System
+                || column.Property.GetSetMethod() == null)
             {
                 columnSchema.ReadOnly = true;
             }
@@ -104,12 +101,10 @@ namespace DataWF.Web.Common
             if ((column.Keys & DBColumnKeys.Primary) == DBColumnKeys.Primary)
             {
                 schema.Extensions.Add("x-id", column.Property.Name);
-                //columnSchema. = true;
             }
             if ((column.Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType)
             {
                 schema.Extensions.Add("x-type", column.Property.Name);
-                //columnSchema. = true;
             }
             if ((column.Keys & DBColumnKeys.Culture) == DBColumnKeys.Culture)
             {
@@ -121,6 +116,11 @@ namespace DataWF.Web.Common
             else
             {
                 schema.Properties.Add(column.Property.Name, columnSchema);
+            }
+            var defaultValue = column.Property.GetCustomAttribute<DefaultValueAttribute>();
+            if (defaultValue != null && defaultValue != null)
+            {
+                columnSchema.Default = defaultValue.Value.ToString();
             }
         }
     }

@@ -96,15 +96,7 @@ namespace DataWF.Web.Client
 
         public abstract Task<List<T>> GetAsync(CancellationToken cancellationToken);
 
-        public Task GetAsync() { return GetAsync(CancellationToken.None); }
-
-        public abstract Task<T> PutAsync(T value, CancellationToken cancellationToken);
-
-        public Task PutAsync(object value) { return PutAsync((T)value, CancellationToken.None); }
-
-        public abstract Task<T> PostAsync(T value, CancellationToken cancellationToken);
-
-        public Task PostAsync(object value) { return PostAsync((T)value, CancellationToken.None); }
+        public Task GetAsync() => GetAsync(CancellationToken.None);
 
         public abstract Task<List<T>> FindAsync(string filter, CancellationToken cancellationToken);
 
@@ -112,9 +104,25 @@ namespace DataWF.Web.Client
 
         public abstract Task<T> GetAsync(K id, CancellationToken cancellationToken);
 
+        public Task<T> GetAsync(object id, CancellationToken cancellationToken) => GetAsync((K)id, cancellationToken);
+
         public Task GetAsync(object id) { return GetAsync((K)id, CancellationToken.None); }
 
+        public abstract Task<T> PutAsync(T value, CancellationToken cancellationToken);
+
+        public Task<T> PutAsync(object value, CancellationToken cancellationToken) => PutAsync((T)value, cancellationToken);
+
+        public Task PutAsync(object value) { return PutAsync((T)value, CancellationToken.None); }
+
+        public abstract Task<T> PostAsync(T value, CancellationToken cancellationToken);
+
+        public Task<T> PostAsync(object value, CancellationToken cancellationToken) => PostAsync((T)value, cancellationToken);
+
+        public Task PostAsync(object value) { return PostAsync((T)value, CancellationToken.None); }
+
         public abstract Task<bool> DeleteAsync(K id, CancellationToken cancellationToken);
+
+        public Task<bool> DeleteAsync(object id, CancellationToken cancellationToken) => DeleteAsync((K)id, cancellationToken);
 
         public Task DeleteAsync(object id) { return DeleteAsync((K)id, CancellationToken.None); }
 

@@ -577,15 +577,24 @@ namespace DataWF.Web.CodeGenerator
 
         private IEnumerable<AttributeListSyntax> GenClassPropertyAttributes(JsonProperty property)
         {
-            if (property.Type == JsonObjectType.None ||
-                property.IsReadOnly)
+            if (property.Name == "WorkStage")
+            { }
+            if (property.IsReadOnly || property.ExtensionData != null && property.ExtensionData.TryGetValue("readOnly", out var isReadOnly) && (bool)isReadOnly)
             {
                 yield return SF.AttributeList(
                              SF.SingletonSeparatedList(
-                             SF.Attribute(
-                             SF.IdentifierName("JsonProperty")).WithArgumentList(
-                                 SF.AttributeArgumentList(SF.SingletonSeparatedList(
-                                     SF.AttributeArgument(SF.ParseExpression($"NullValueHandling = NullValueHandling.Ignore")))))));
+                                 SF.Attribute(
+                                     SF.IdentifierName("JsonIgnore"))));
+            }
+
+            if (property.Type == JsonObjectType.None || property.Default != null)
+            {
+                yield return SF.AttributeList(
+                             SF.SingletonSeparatedList(
+                                 SF.Attribute(
+                                     SF.IdentifierName("JsonProperty")).WithArgumentList(
+                                     SF.AttributeArgumentList(SF.SingletonSeparatedList(
+                                         SF.AttributeArgument(SF.ParseExpression($"NullValueHandling = NullValueHandling.Ignore")))))));
             }
         }
 
@@ -641,10 +650,30 @@ namespace DataWF.Web.CodeGenerator
 
         private FieldDeclarationSyntax GenDefinitionClassField(JsonProperty property)
         {
-            return SF.FieldDeclaration(SF.List<AttributeListSyntax>(),
-                SF.TokenList(SF.Token(SyntaxKind.PrivateKeyword)),
-                SF.VariableDeclaration(GetTypeDeclaration(property, true))
-                                 .AddVariables(SF.VariableDeclarator(GetFieldName(property))));
+            return SF.FieldDeclaration(attributeLists: SF.List<AttributeListSyntax>(),
+                modifiers: SF.TokenList(SF.Token(SyntaxKind.PrivateKeyword)),
+               declaration: SF.VariableDeclaration(
+                   type: GetTypeDeclaration(property, true),
+                   variables: SF.SingletonSeparatedList(
+                       SF.VariableDeclarator(
+                           identifier: SF.ParseToken(GetFieldName(property)),
+                           argumentList: null,
+                           initializer: property.Default != null
+                           ? SF.EqualsValueClause(GenFieldDefault(property))
+                           : null))));
+        }
+
+        private ExpressionSyntax GenFieldDefault(JsonProperty property)
+        {
+            var text = property.Default.ToString();
+            var type = GetTypeString(property, false);
+            if (type == "bool")
+                text = text.ToLowerInvariant();
+            else if (type == "string")
+                text = $"\"{text}\"";
+            else if (property.ActualSchema != null && property.ActualSchema.IsEnumeration)
+                text = $"{type}.{text}";
+            return SF.ParseExpression(text);
         }
 
         private string GetTypeString(JsonSchema4 value, bool nullable)
@@ -656,8 +685,16 @@ namespace DataWF.Web.CodeGenerator
                 case JsonObjectType.Boolean:
                     return "bool" + (nullable ? "?" : string.Empty);
                 case JsonObjectType.Number:
+                    if (value.IsEnumeration)
+                    {
+                        goto case JsonObjectType.Object;
+                    }
                     return value.Format + (nullable ? "?" : string.Empty);
                 case JsonObjectType.String:
+                    if (value.IsEnumeration)
+                    {
+                        goto case JsonObjectType.Object;
+                    }
                     switch (value.Format)
                     {
                         case "byte":

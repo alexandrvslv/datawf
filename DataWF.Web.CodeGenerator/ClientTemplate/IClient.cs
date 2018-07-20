@@ -44,6 +44,12 @@ namespace DataWF.Web.Client
     {
         SelectableList<T> Items { get; }
         T Get(object id);
+        Task<List<T>> FindAsync(string filter, CancellationToken cancellationToken);
+        Task<List<T>> GetAsync(CancellationToken cancellationToken);
+        Task<T> GetAsync(object id, CancellationToken cancellationToken);
+        Task<T> PostAsync(T value, CancellationToken cancellationToken);
+        Task<T> PutAsync(T value, CancellationToken cancellationToken);
+        Task<bool> DeleteAsync(object id, CancellationToken cancellationToken);
         new T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader);
     }
 }
