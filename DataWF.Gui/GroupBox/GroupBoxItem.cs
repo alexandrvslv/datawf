@@ -13,7 +13,6 @@ namespace DataWF.Gui
         private Rectangle rectHeader = new Rectangle();
         private Rectangle rectGlyph = new Rectangle();
         private Rectangle rectText = new Rectangle();
-        private bool expand = true;
         private bool autos = true;
         public int HeaderHeight = 23;
         private int dHeight = 100;
@@ -156,18 +155,19 @@ namespace DataWF.Gui
             set { dHeight = value; }
         }
 
-        [DefaultValue(true)]
-        public bool Expand
+        public override bool Expand
         {
-            get { return expand; }
+            get { return base.Expand; }
             set
             {
-                if (expand != value)
+                if (Expand != value)
                 {
-                    expand = value;
                     if (widget != null)
-                        widget.Visible = visible && expand;
-                    if (Map != null && value && RadioGroup > -1)
+                    {
+                        widget.Visible = Visible && value;
+                    }
+
+                    if (value && Map != null && value && RadioGroup > -1)
                     {
                         foreach (var item in Map)
                         {
@@ -177,10 +177,8 @@ namespace DataWF.Gui
                             }
                         }
                     }
-                    OnPropertyChanged(nameof(Expand));
+                    base.Expand = value;
                     GroupBox?.QueueDraw();
-                    //if (map != null)
-                    //    map.ResizeLayout();
                 }
             }
         }
@@ -225,7 +223,7 @@ namespace DataWF.Gui
 
         public override bool FillHeight
         {
-            get { return base.FillHeight && expand; }
+            get { return base.FillHeight && Expand; }
             set { base.FillHeight = value; }
         }
 

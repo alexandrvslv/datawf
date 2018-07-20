@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 using DataWF.Common;
 using Xwt;
@@ -27,6 +28,7 @@ namespace DataWF.Gui
         private INotifyListPropertyChanged container;
         private double scale = 1;
         private double indent;
+        private bool expand = true;
 
         public LayoutItem() : base()
         {
@@ -63,7 +65,7 @@ namespace DataWF.Gui
                 if (name == value)
                     return;
                 name = value;
-                OnPropertyChanged(nameof(Name));
+                OnPropertyChanged();
             }
         }
 
@@ -76,7 +78,7 @@ namespace DataWF.Gui
                 if (row == value)
                     return;
                 row = value;
-                OnPropertyChanged(nameof(Row));
+                OnPropertyChanged();
             }
         }
 
@@ -89,7 +91,7 @@ namespace DataWF.Gui
                 if (col == value)
                     return;
                 col = value;
-                OnPropertyChanged(nameof(Col));
+                OnPropertyChanged();
             }
         }
 
@@ -102,7 +104,7 @@ namespace DataWF.Gui
                 if (value.Equals(height) || value < min)
                     return;
                 height = value;
-                OnPropertyChanged(nameof(Height));
+                OnPropertyChanged();
             }
         }
 
@@ -115,7 +117,7 @@ namespace DataWF.Gui
                 if (value.Equals(width) || value < min)
                     return;
                 width = value;
-                OnPropertyChanged(nameof(Width));
+                OnPropertyChanged();
             }
         }
 
@@ -128,7 +130,7 @@ namespace DataWF.Gui
                 if (visible == value)
                     return;
                 visible = value;
-                OnPropertyChanged(nameof(Visible));
+                OnPropertyChanged();
             }
         }
 
@@ -143,7 +145,7 @@ namespace DataWF.Gui
 
                 fillW = value;
 
-                OnPropertyChanged(nameof(FillWidth));
+                OnPropertyChanged();
             }
         }
 
@@ -158,7 +160,7 @@ namespace DataWF.Gui
 
                 fillH = value;
 
-                OnPropertyChanged(nameof(FillHeight));
+                OnPropertyChanged();
             }
         }
 
@@ -210,7 +212,7 @@ namespace DataWF.Gui
                 if (tag == value)
                     return;
                 tag = value;
-                OnPropertyChanged(nameof(Tag));
+                OnPropertyChanged();
             }
         }
 
@@ -223,7 +225,7 @@ namespace DataWF.Gui
                 if (indent != value)
                 {
                     indent = value;
-                    OnPropertyChanged(nameof(Indent));
+                    OnPropertyChanged();
                 }
             }
         }
@@ -245,7 +247,17 @@ namespace DataWF.Gui
         }
 
         [XmlIgnore, DefaultValue(true)]
-        public bool Expand { get; set; } = true;
+        public virtual bool Expand
+        {
+            get { return expand; }
+            set
+            {
+                if (expand == value)
+                    return;
+                expand = value;
+                OnPropertyChanged();
+            }
+        }
 
         [Browsable(false)]
         public bool IsCompaund { get { return items.Count > 0; } }
@@ -255,7 +267,7 @@ namespace DataWF.Gui
             return this;
         }
 
-        protected override void OnPropertyChanged(string property)
+        protected override void OnPropertyChanged([CallerMemberName]string property = null)
         {
             Container?.OnPropertyChanged(this, property);
             base.OnPropertyChanged(property);
