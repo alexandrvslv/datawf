@@ -48,6 +48,8 @@ namespace DataWF.Common
 
         public void SetCollection(IList baseCollection)
         {
+            if (sourceList == baseCollection)
+                return;
             if (ssourceList != null)
             {
                 ssourceList.CollectionChanged -= _listChangedHandler;
