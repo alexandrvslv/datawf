@@ -8,38 +8,8 @@ using System.Reflection;
 
 namespace DataWF.Web.Common
 {
-    public class SwaggerEnumParameterFilter : IParameterFilter
-    {
-        public void Apply(IParameter parameter, ParameterFilterContext context)
-        {
-            if (parameter is NonBodyParameter nonBodyParameter && string.IsNullOrEmpty(nonBodyParameter.Type))
-            {
-                var type = context.ApiParameterDescription.Type;
-                if (type.IsEnum)
-                {
-                    nonBodyParameter.Type = "string";
-                    var schema = context.SchemaRegistry.GetOrRegister(context.ApiParameterDescription.Type);
-                    nonBodyParameter.Extensions.Add("schema", schema);
-                }
-            }
-        }
-    }
 
-    public class SwaggerSecurityDocumentFilter : IDocumentFilter
-    {
-        public void Apply(SwaggerDocument document, DocumentFilterContext context)
-        {
-            document.Security = new List<IDictionary<string, IEnumerable<string>>>()
-            {
-                new Dictionary<string, IEnumerable<string>>()
-                {
-                    { "Bearer", new string[]{ } },
-                }
-            };
-        }
-    }
-
-    public class SwaggerDBTableSchemaFilter : ISchemaFilter
+    public class SwaggerDBSchemaFilter : ISchemaFilter
     {
         public void Apply(Schema schema, SchemaFilterContext context)
         {
