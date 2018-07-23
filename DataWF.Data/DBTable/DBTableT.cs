@@ -736,10 +736,10 @@ namespace DataWF.Data
                         foreach (DBItem item in query.Select())
                         {
                             var reference = item.GetReference<T>(qcolumn.Column, DBLoadParam.None);
-                            if (reference != null && reference.Table != this)
-                            {
-                                throw new Exception(string.Format("Value {0} Table {1}", reference.Table, this));
-                            }
+                            //if (reference != null && reference.Table != this)
+                            //{
+                            //    throw new Exception(string.Format("Value {0} Table {1}", reference.Table, this));
+                            //}
                             if (reference != null)
                             {
 

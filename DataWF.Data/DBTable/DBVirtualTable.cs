@@ -25,6 +25,7 @@ using System.Text;
 using Newtonsoft.Json;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace DataWF.Data
 {
@@ -288,6 +289,14 @@ namespace DataWF.Data
             BaseTable?.RemoveVirtual(this);
             filterQuery?.Dispose();
             base.Dispose();
+        }
+
+        public override IEnumerable<DBForeignKey> GetChildRelations()
+        {
+            foreach (var item in base.GetChildRelations())
+                yield return item;
+            foreach (var item in BaseTable.GetChildRelations())
+                yield return item;
         }
 
         public void Generate()

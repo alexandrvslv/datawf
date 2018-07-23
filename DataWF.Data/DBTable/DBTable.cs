@@ -1158,8 +1158,7 @@ namespace DataWF.Data
             virtualTables.Add(view);
         }
 
-        [Browsable(false)]
-        public IEnumerable<DBForeignKey> GetChildRelations()
+        public virtual IEnumerable<DBForeignKey> GetChildRelations()
         {
             if (Schema == null)
                 yield break;
