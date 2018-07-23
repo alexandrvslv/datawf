@@ -103,7 +103,7 @@ namespace DataWF.Module.Common
             get
             {
                 return ((User.CurrentUser?.Super.Value ?? false))//Status == DBStatus.Actual ||
-                    && (User.CurrentUser?.Access.Get(this).Create ?? false);
+                    || (User.CurrentUser?.Access.Get(this).Create ?? false);
             }
         }
 
