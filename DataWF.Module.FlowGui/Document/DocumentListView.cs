@@ -553,7 +553,7 @@ namespace DataWF.Module.FlowGui
                     {
                         foreach (Document document in documents)
                         {
-                            document.SaveComplex();
+                            document.Save();
                         }
                     }
                 }

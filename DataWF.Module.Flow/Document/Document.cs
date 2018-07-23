@@ -171,7 +171,7 @@ namespace DataWF.Module.Flow
 
         [Browsable(false)]
         [DataMember, Column("template_id", Keys = DBColumnKeys.View), Index("ddocument_template_id", Unique = false)]
-        public int? TemplateId
+        public virtual int? TemplateId
         {
             get { return GetProperty<int?>(); }
             set { SetProperty(value); }
@@ -179,7 +179,7 @@ namespace DataWF.Module.Flow
 
         [ReadOnly(true)]
         [Reference(nameof(TemplateId))]
-        public Template Template
+        public virtual Template Template
         {
             get { return GetPropertyReference<Template>(); }
             set { SetPropertyReference(value); }
@@ -600,8 +600,8 @@ namespace DataWF.Module.Flow
                 DocumentCustomer.DBTable.Save(GetCustomers().ToList());
         }
 
-        [ControllerMethod]
-        public void SaveComplex()
+
+        public override void Save()
         {
             if (saving.Contains(this))//prevent recursion
                 return;
@@ -810,7 +810,7 @@ namespace DataWF.Module.Flow
             if (create)
             {
                 var newdoc = template.CreateDocument(this);
-                newdoc.SaveComplex();
+                newdoc.Save();
                 return newdoc;
             }
             return null;

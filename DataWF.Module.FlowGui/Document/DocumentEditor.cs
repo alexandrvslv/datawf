@@ -677,7 +677,7 @@ namespace DataWF.Module.FlowGui
             {
                 if (document.IsEdited())
                 {
-                    document.SaveComplex();
+                    document.Save();
                 }
                 document.IsChanged = false;
             }
@@ -839,7 +839,7 @@ namespace DataWF.Module.FlowGui
                 }
                 else if (dr == Command.Yes)
                 {
-                    Document.SaveComplex();
+                    Document.Save();
                 }
             }
             return true;

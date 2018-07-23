@@ -365,23 +365,23 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
 
         public virtual void Format(StringBuilder ddl, DBConstraint constraint)
         {
-            if (constraint.Type == DBConstaintType.Primary)
+            if (constraint.Type == DBConstraintType.Primary)
             {
                 ddl.AppendFormat("constraint {0} primary key ({1})", constraint.Name, constraint.Columns.Names);
             }
-            if (constraint.Type == DBConstaintType.Unique)
+            if (constraint.Type == DBConstraintType.Unique)
             {
                 ddl.AppendFormat("constraint {0} unique ({1})", constraint.Name, constraint.Columns.Names);
             }
-            if (constraint.Type == DBConstaintType.Default)
+            if (constraint.Type == DBConstraintType.Default)
             {
                 ddl.AppendFormat("constraint {0} default {1}", constraint.Name, constraint.Value);
             }
-            if (constraint.Type == DBConstaintType.Check)
+            if (constraint.Type == DBConstraintType.Check)
             {
                 ddl.AppendFormat("constraint {0} check ({1})", constraint.Name, constraint.Value);
             }
-            if (constraint.Type == DBConstaintType.Foreign)
+            if (constraint.Type == DBConstraintType.Foreign)
             {
                 Format(ddl, (DBForeignKey)constraint);
             }

@@ -24,6 +24,7 @@ using System.Xml.Serialization;
 using System.Text;
 using Newtonsoft.Json;
 using System.Collections.Specialized;
+using System.Linq;
 
 namespace DataWF.Data
 {
@@ -56,8 +57,8 @@ namespace DataWF.Data
         [JsonIgnore, XmlIgnore]
         public override DBConstraintList<DBConstraint> Constraints
         {
-            get { return BaseTable.Constraints; }
-            set { value?.Dispose(); }
+            get { return base.Constraints; }
+            set { base.Constraints = value; }
         }
 
         [JsonIgnore, XmlIgnore]
@@ -70,8 +71,8 @@ namespace DataWF.Data
         [JsonIgnore, XmlIgnore]
         public override DBForeignList Foreigns
         {
-            get { return BaseTable.Foreigns; }
-            set { value?.Dispose(); }
+            get { return base.Foreigns; }
+            set { base.Foreigns = value; }
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
@@ -124,7 +125,7 @@ namespace DataWF.Data
                         BlockSize = value.BlockSize;
                     }
                 }
-                GenerateColumns();
+                Generate();
             }
         }
 
@@ -259,7 +260,7 @@ namespace DataWF.Data
             base.Dispose();
         }
 
-        public void GenerateColumns()
+        public void Generate()
         {
             if (BaseTable == null)
                 return;
@@ -275,6 +276,40 @@ namespace DataWF.Data
                 else
                 {
                     exist.BaseColumn = column;
+                }
+            }
+
+            foreach (DBForeignKey reference in BaseTable.Foreigns)
+            {
+                var existColumn = ParseColumn(reference.Column.Name);
+
+                var exist = Foreigns.GetByColumns(existColumn, reference.Reference);
+                if (exist == null)
+                {
+                    exist = new DBForeignKey()
+                    {
+                        Column = existColumn,
+                        Reference = reference.Reference
+                    };
+                    exist.GenerateName();
+                    Foreigns.Add(exist);
+                }
+            }
+
+            foreach (DBConstraint constraint in BaseTable.Constraints)
+            {
+                var existColumn = ParseColumn(constraint.Column.Name);
+                var exist = Constraints.GetByColumnAndTYpe(existColumn, constraint.Type).FirstOrDefault();
+                if (exist == null)
+                {
+                    exist = new DBConstraint
+                    {
+                        Column = existColumn,
+                        Type = constraint.Type,
+                        Value = constraint.Value
+                    };
+                    exist.GenerateName();
+                    Constraints.Add(exist);
                 }
             }
         }

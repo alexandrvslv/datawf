@@ -1481,7 +1481,7 @@ namespace DataWF.Data
                 constraint.Column = column;
                 if (constraintInfo.Type.Equals("PRIMARY KEY", StringComparison.OrdinalIgnoreCase))
                 {
-                    constraint.Type = DBConstaintType.Primary;
+                    constraint.Type = DBConstraintType.Primary;
                     column.Keys |= DBColumnKeys.Primary;
                 }
 

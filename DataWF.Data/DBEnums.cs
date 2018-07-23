@@ -50,7 +50,7 @@ namespace DataWF.Data
         NoReader
     }
 
-    public enum DBConstaintType
+    public enum DBConstraintType
     {
         Primary,
         Foreign,

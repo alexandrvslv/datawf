@@ -27,7 +27,7 @@ namespace DataWF.Data
 {
     public class DBConstraint : DBTableItem, IDBTableContent
     {
-        protected DBConstaintType type;
+        protected DBConstraintType type;
         protected string value;
 
         public DBConstraint()
@@ -40,7 +40,7 @@ namespace DataWF.Data
             name = string.Format("{0}{1}{2}", type.ToString().Substring(0, 2).ToLower(), Table.Name, Columns.Names);
         }
 
-        public DBConstaintType Type
+        public DBConstraintType Type
         {
             get { return type; }
             set

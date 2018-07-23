@@ -19,6 +19,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using System.Collections.Generic;
+using System.Linq;
 
 namespace DataWF.Data
 {
@@ -34,6 +35,11 @@ namespace DataWF.Data
         public IEnumerable<T> GetByColumn(DBColumn column)
         {
             return Select(nameof(DBConstraint.ColumnName), CompareType.Equal, column.FullName);
+        }
+
+        public IEnumerable<T> GetByColumnAndTYpe(DBColumn column, DBConstraintType type)
+        {
+            return Select(nameof(DBConstraint.ColumnName), CompareType.Equal, column.FullName).Where(p => p.Type == type);
         }
 
         public IEnumerable<T> GetByValue(string value)

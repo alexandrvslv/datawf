@@ -424,7 +424,7 @@ namespace DataWF.Module.FlowGui
                             sender.Document.Send(sender.Work, SelectedStage, nodes);
                         }
 
-                        sender.Document.SaveComplex();
+                        sender.Document.Save();
                         transaction.Commit();
                     }
                     catch (Exception ex)

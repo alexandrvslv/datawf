@@ -103,12 +103,12 @@ namespace DataWF.Data
             base.InsertInternal(index, item);
 
             item.CheckPull();
-            if (item.IsPrimaryKey && !(item is DBVirtualColumn))
+            if (item.IsPrimaryKey)
             {
                 DBConstraint primary = null;
                 foreach (var constraint in Table.Constraints.GetByColumn(Table.PrimaryKey))
                 {
-                    if (constraint.Type == DBConstaintType.Primary)
+                    if (constraint.Type == DBConstraintType.Primary)
                     {
                         primary = constraint;
                         break;
@@ -116,7 +116,7 @@ namespace DataWF.Data
                 }
                 if (primary == null && Table.PrimaryKey != null)
                 {
-                    primary = new DBConstraint() { Column = Table.PrimaryKey, Type = DBConstaintType.Primary };
+                    primary = new DBConstraint() { Column = Table.PrimaryKey, Type = DBConstraintType.Primary };
                     primary.GenerateName();
                     Table.Constraints.Add(primary);
                     Table.DefaultComparer = new DBComparer(Table.PrimaryKey) { Hash = true };

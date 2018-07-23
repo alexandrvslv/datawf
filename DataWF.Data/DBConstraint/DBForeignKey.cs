@@ -14,7 +14,7 @@ namespace DataWF.Data
 
         public DBForeignKey() : base()
         {
-            Type = DBConstaintType.Foreign;
+            Type = DBConstraintType.Foreign;
             References = new DBColumnReferenceList();
         }
 

@@ -1171,9 +1171,10 @@ namespace DataWF.Data
             }
             foreach (var relation in Table.GetChildRelations())
             {
-                if (relation.Table is DBLogTable ||
-                    relation.Table.Type != DBTableType.Table ||
-                    relation.Column.ColumnType != DBColumnTypes.Default)
+                if (relation.Table is DBLogTable
+                    || relation.Table is IDBVirtualTable
+                    || relation.Table.Type != DBTableType.Table
+                    || relation.Column.ColumnType != DBColumnTypes.Default)
                     continue;
 
                 foreach (DBItem item in GetReferencing(relation, param))

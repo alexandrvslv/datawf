@@ -329,7 +329,9 @@ namespace DataWF.Data.Gui
                 {
                     foreach (var refed in filter.Table.GetChildRelations())
                     {
-                        if (refed.Table.LogTable == null || (Table != filter.Table && refed.Table != Table))
+                        if (refed.Table.LogTable == null 
+                        || refed.Table is IDBVirtualTable
+                        || (Table != filter.Table && refed.Table != Table))
                             continue;
 
                         using (var query = new QQuery("", refed.Table.LogTable))

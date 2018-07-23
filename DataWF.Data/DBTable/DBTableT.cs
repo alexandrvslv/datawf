@@ -127,10 +127,9 @@ namespace DataWF.Data
                 return false;
             }
 
-            OnItemChanged(item, null, NotifyCollectionChangedAction.Remove);
-
             items.Remove(item);
             item.OnDetached();
+            OnItemChanged(item, null, NotifyCollectionChangedAction.Remove);
             return true;
         }
 
