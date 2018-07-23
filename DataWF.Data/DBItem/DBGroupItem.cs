@@ -37,7 +37,7 @@ namespace DataWF.Data
         [Browsable(false)]
         public object GroupId
         {
-            get { return GetValue(table.GroupKey); }
+            get { return GetValue(Table.GroupKey); }
             set { SetGroupValue(value); }
         }
 
@@ -52,7 +52,7 @@ namespace DataWF.Data
             {
                 throw new InvalidOperationException("Self reference prevention!");
             }
-            SetValue(value, table.GroupKey);
+            SetValue(value, Table.GroupKey);
         }
 
         public T GetGroupReference<T>() where T : DBGroupItem, new()
@@ -130,7 +130,7 @@ namespace DataWF.Data
         {
             get
             {
-                if (table.GroupKey == null)
+                if (Table.GroupKey == null)
                     return false;
                 return GetSubGroups<DBGroupItem>(DBLoadParam.None).Any();
             }
@@ -138,7 +138,7 @@ namespace DataWF.Data
 
         public bool GroupCompare(string column, string value)
         {
-            DBColumn col = table.Columns[column];
+            DBColumn col = Table.Columns[column];
             foreach (DBItem item in GroupHelper.GetAllParent<DBGroupItem>(this))
             {
                 if (!item[col].ToString().Equals(value, StringComparison.OrdinalIgnoreCase))

@@ -111,7 +111,6 @@ namespace DataWF.Module.Messanger
 
         public Message()
         {
-            Build(DBTable);
         }
 
         [Column("unid", Keys = DBColumnKeys.Primary)]

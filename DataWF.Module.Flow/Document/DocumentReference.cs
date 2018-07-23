@@ -113,7 +113,6 @@ namespace DataWF.Module.Flow
 
         public DocumentReference()
         {
-            Build(DBTable);
         }
         [Browsable(false)]
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]

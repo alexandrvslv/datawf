@@ -76,7 +76,6 @@ namespace DataWF.Module.Flow
 
         public StageParam()
         {
-            Build(DBTable);
         }
 
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]

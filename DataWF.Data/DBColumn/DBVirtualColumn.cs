@@ -84,6 +84,9 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
+        public override string CultureCode { get => BaseColumn.CultureCode; set => base.CultureCode = value; }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public override string Property { get => BaseColumn.Property; set => base.Property = value; }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
@@ -104,6 +107,9 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore, ReadOnly(true)]
         public override Type DataType { get => BaseColumn.DataType; set => base.DataType = value; }
 
+        [XmlIgnore, JsonIgnore]
+        public override DBDataType DBDataType { get => BaseColumn.DBDataType; set => base.DBDataType = value; }
+
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public override string GroupName { get => BaseColumn.GroupName; set => base.GroupName = value; }
 
@@ -118,6 +124,36 @@ namespace DataWF.Data
         public override string SqlName
         {
             get { return BaseName; }
+        }
+
+        public override bool GetOld(int hindex, out object obj)
+        {
+            return BaseColumn.GetOld(hindex, out obj);
+        }
+
+        public override object GetTag(int hindex)
+        {
+            return BaseColumn.GetTag(hindex);
+        }
+
+        public override void RemoveOld(int hindex)
+        {
+            BaseColumn.RemoveOld(hindex);
+        }
+
+        public override void RemoveTag(int hindex)
+        {
+            BaseColumn.RemoveTag(hindex);
+        }
+
+        public override void SetOld(int hindex, object value)
+        {
+            BaseColumn.SetOld(hindex, value);
+        }
+
+        public override void SetTag(int hindex, object value)
+        {
+            BaseColumn.SetTag(hindex, value);
         }
     }
 }

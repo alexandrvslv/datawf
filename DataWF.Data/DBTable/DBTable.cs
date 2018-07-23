@@ -276,8 +276,8 @@ namespace DataWF.Data
         {
             get
             {
-                if (tableGroup == null && groupName != null)
-                    tableGroup = Schema?.TableGroups[groupName];
+                if (tableGroup == null && GroupName != null)
+                    tableGroup = Schema?.TableGroups[GroupName];
                 return tableGroup;
             }
             set
@@ -304,7 +304,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public DBSequence Sequence
         {
-            get { return cacheSequence ?? (cacheSequence = Schema?.Sequences[sequenceName]); }
+            get { return cacheSequence ?? (cacheSequence = Schema?.Sequences[SequenceName]); }
             set
             {
                 cacheSequence = value;
@@ -613,6 +613,23 @@ namespace DataWF.Data
             column.ReaderDataType = type;
             return column;
         }
+
+        public virtual void RemoveIndex(DBItem item, DBColumn column, object value)
+        {
+            if (item.Attached && column.Index != null)
+            {
+                column.Index.Remove(item, value);
+            }
+        }
+
+        public virtual void AddIndex(DBItem item, DBColumn column, object value)
+        {
+            if (item.Attached && column.Index != null)
+            {
+                column.Index.Add(item, value);
+            }
+        }
+
         public abstract DBItem this[int index] { get; }
 
         public abstract void Add(DBItem item);
@@ -832,7 +849,7 @@ namespace DataWF.Data
                 try
                 {
                     foreach (DBItem row in rows)
-                        SaveItem(row);
+                        row.Save();
 
                     if (transaction.Owner == this)
                         transaction.Commit();
@@ -915,11 +932,7 @@ namespace DataWF.Data
             var item = (DBItem)type.Constructor.Create();
             if (item.Table == null)
             {
-                item.Build(this);
-            }
-            if (def)
-            {
-                item.SetDefaults();
+                item.Build(this, def);
             }
             item.update = state;
             return item;
@@ -1325,14 +1338,14 @@ namespace DataWF.Data
         public override object Clone()
         {
             var table = (DBTable)EmitInvoker.CreateObject(GetType(), true);
-            table.name = name;
+            table.name = Name;
             //bc.bname = this.bname;
-            table.query = query;
+            table.query = Query;
             table.caching = caching;
-            table.type = type;
-            table.groupName = groupName;
-            table.sequenceName = sequenceName;
-            table.schema = schema;
+            table.type = Type;
+            table.groupName = GroupName;
+            table.sequenceName = SequenceName;
+            table.schema = Schema;
             foreach (var @group in ColumnGroups)
             {
                 var newCol = (DBColumnGroup)@group.Clone();
@@ -1548,7 +1561,7 @@ namespace DataWF.Data
             return typeIndex == 0 ? ItemType : ItemTypes[typeIndex];
         }
 
-        public int GetTypeIndex(Type type)
+        public virtual int GetTypeIndex(Type type)
         {
             foreach (var entry in ItemTypes)
             {

@@ -41,7 +41,6 @@ namespace DataWF.Module.Counterpart
 
         public Address()
         {
-            Build(DBTable);
         }
 
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]

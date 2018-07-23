@@ -50,7 +50,6 @@ namespace DataWF.Module.Messanger
 
         public MessageData()
         {
-            Build(DBTable);
         }
 
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -201,7 +202,7 @@ namespace DataWF.Test.Data
             table.Load();
             for (int i = 0; i < 1000; i++)
             {
-                var row = table.New();
+                var row = table.NewItem();
                 row["id"] = i;
                 row["test_date"] = DateTime.Now.AddDays(-i);
                 row["test_varchar"] = "string value " + i;
@@ -228,7 +229,6 @@ namespace DataWF.Test.Data
 
             public Position()
             {
-                Build(DBTable);
             }
 
             [Column("id", Keys = DBColumnKeys.Primary)]
@@ -290,7 +290,6 @@ namespace DataWF.Test.Data
 
             public Employer()
             {
-                Build(DBTable);
             }
 
             [Column("id", Keys = DBColumnKeys.Primary)]
@@ -321,7 +320,7 @@ namespace DataWF.Test.Data
                 set { SetPropertyReference(value); }
             }
 
-            [Column("typeid", Keys = DBColumnKeys.ElementType, Default = "1")]
+            [Column("typeid", Keys = DBColumnKeys.ElementType), DefaultValue(EmployerType.Type2)]
             public EmployerType? Type
             {
                 get { return GetProperty<EmployerType?>(); }

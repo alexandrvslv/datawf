@@ -57,6 +57,9 @@ namespace DataWF.Data
 
         public DBItem()
         {
+            var table = DBTable.GetTable(GetType());
+            if (table != null)
+                Build(table);
         }
 
 
@@ -90,22 +93,6 @@ namespace DataWF.Data
         public void SetOld(DBColumn column, object value)
         {
             column.SetOld(hindex, value);
-        }
-
-        public virtual void RemoveIndex(DBColumn column, object value)
-        {
-            if (Attached && column.Index != null)
-            {
-                column.Index.Remove(this, value);
-            }
-        }
-
-        public virtual void AddIndex(DBColumn column, object value)
-        {
-            if (Attached && column.Index != null)
-            {
-                column.Index.Add(this, value);
-            }
         }
 
         public object GetValue(DBColumn column)
@@ -188,11 +175,11 @@ namespace DataWF.Data
                 RefreshOld(column, value, field);
             }
 
-            RemoveIndex(column, field);
+            Table.RemoveIndex(this, column, field);
 
             column.Pull.Set(hindex, value);
 
-            AddIndex(column, value);
+            Table.AddIndex(this, column, value);
 
             OnPropertyChanged(column.Name, column, value);
 
@@ -257,7 +244,7 @@ namespace DataWF.Data
 
         protected virtual internal void RemoveOld()
         {
-            foreach (DBColumn column in table.Columns)
+            foreach (DBColumn column in Table.Columns)
             {
                 RemoveOld(column);
             }
@@ -266,7 +253,7 @@ namespace DataWF.Data
         protected virtual internal void RemoveTag()
         {
             access = null;
-            foreach (DBColumn column in table.Columns)
+            foreach (DBColumn column in Table.Columns)
             {
                 object o = GetTag(column);
                 if (o != null)
@@ -282,14 +269,14 @@ namespace DataWF.Data
             int pi = 0, i = code.IndexOf('.');
             while (i > 0)
             {
-                var item = row.GetReference(row.table.Columns[code.Substring(pi, i - pi)]);
+                var item = row.GetReference(row.Table.Columns[code.Substring(pi, i - pi)]);
                 if (item == null)
                     return null;
                 row = item;
                 pi = i + 1;
                 i = code.IndexOf('.', pi);
             }
-            return row.GetReference(row.table.Columns[code.Substring(pi)]);
+            return row.GetReference(row.Table.Columns[code.Substring(pi)]);
         }
 
         public DBItem GetReference(DBColumn column, DBLoadParam param = DBLoadParam.Load)
@@ -314,14 +301,14 @@ namespace DataWF.Data
             int pi = 0, i = code.IndexOf('.');
             while (i > 0)
             {
-                var item = row.GetReference<T>(row.table.Columns[code.Substring(pi, i - pi)], param);
+                var item = row.GetReference<T>(row.Table.Columns[code.Substring(pi, i - pi)], param);
                 if (item == null)
                     return null;
                 row = item;
                 pi = i + 1;
                 i = code.IndexOf('.', pi);
             }
-            return row.GetReference<T>(row.table.Columns[code.Substring(pi)], param);
+            return row.GetReference<T>(row.Table.Columns[code.Substring(pi)], param);
         }
 
         public T GetPropertyReference<T>([CallerMemberName] string property = null) where T : DBItem, new()
@@ -401,7 +388,7 @@ namespace DataWF.Data
 
         public bool GetBool(string ColumnCode)
         {
-            return GetBool(table.Columns[ColumnCode]);
+            return GetBool(Table.Columns[ColumnCode]);
         }
 
         public void SetBool(DBColumn Column, bool value)
@@ -414,7 +401,7 @@ namespace DataWF.Data
 
         public void SetBool(string ColumnCode, bool value)
         {
-            SetBool(table.Columns[ColumnCode], value);
+            SetBool(Table.Columns[ColumnCode], value);
         }
 
         public void Delete()
@@ -496,12 +483,16 @@ namespace DataWF.Data
 
         public string Format(string code)
         {
-            return Format(table.Columns[code]);
+            return Format(Table.Columns[code]);
         }
 
-        public void Build(DBTable table)
+        public void Build(DBTable table, bool setDefauilts = true)
         {
             Table = table;
+            if (setDefauilts)
+            {
+                SetDefaults();
+            }
             if (Table.ItemTypeKey != null)
             {
                 ItemType = table.GetTypeIndex(GetType());
@@ -510,7 +501,7 @@ namespace DataWF.Data
 
         public void SetDefaults()
         {
-            foreach (DBColumn column in table.Columns)
+            foreach (DBColumn column in Table.Columns)
             {
                 if (column.DefaultValue != null)
                     SetValue(column.ParseValue(column.DefaultValue), column, false);
@@ -530,7 +521,7 @@ namespace DataWF.Data
             var cs = new LocaleItem();
             if (string.IsNullOrEmpty(cultures))
             {
-                foreach (DBColumn col in table.Columns.GetByGroup(@group))
+                foreach (DBColumn col in Table.Columns.GetByGroup(@group))
                 {
                     if (col.IsCulture)
                         cs.Add(this[col].ToString(), col.Culture);
@@ -559,7 +550,7 @@ namespace DataWF.Data
         {
             if (culture == null)
                 return null;
-            foreach (var column in table.Columns.GetByGroup(@group))
+            foreach (var column in Table.Columns.GetByGroup(@group))
             {
                 if (column.Culture != null && column.Culture.ThreeLetterISOLanguageName == culture.ThreeLetterISOLanguageName)
                     return GetValue<string>(column);
@@ -576,7 +567,7 @@ namespace DataWF.Data
         {
             if (culture == null)
                 return;
-            foreach (var column in table.Columns.GetByGroup(@group))
+            foreach (var column in Table.Columns.GetByGroup(@group))
             {
                 if (column.Culture.ThreeLetterISOLanguageName == culture.ThreeLetterISOLanguageName)
                 {
@@ -638,9 +629,9 @@ namespace DataWF.Data
             {
                 if (access == null)
                 {
-                    if (table.AccessKey != null)
+                    if (Table.AccessKey != null)
                     {
-                        var accessData = GetValue<byte[]>(table.AccessKey);
+                        var accessData = GetValue<byte[]>(Table.AccessKey);
                         if (accessData == null)
                             access = Table.Access;
                         else
@@ -655,9 +646,9 @@ namespace DataWF.Data
             }
             set
             {
-                if (value != null && table.AccessKey != null)
+                if (value != null && Table.AccessKey != null)
                 {
-                    SetValue(value.Write(), table.AccessKey);
+                    SetValue(value.Write(), Table.AccessKey);
                     access = value;
                 }
             }
@@ -679,15 +670,15 @@ namespace DataWF.Data
                 if (table != value)
                 {
                     table = value;
-                    hindex = Pull.GetHIndexUnsafe(table.NextHash(), table.BlockSize);
+                    hindex = Pull.GetHIndexUnsafe(value.NextHash(), value.BlockSize);
                 }
             }
         }
 
         public object this[int columnIndex]
         {
-            get { return this[table.Columns[columnIndex]]; }
-            set { this[table.Columns[columnIndex]] = value; }
+            get { return this[Table.Columns[columnIndex]]; }
+            set { this[Table.Columns[columnIndex]] = value; }
         }
 
         public object this[string code]
@@ -700,14 +691,14 @@ namespace DataWF.Data
                 int pi = 0, i = code.IndexOf('.');
                 while (i > 0)
                 {
-                    var item = row.GetReference(row.table.Columns[code.Substring(pi, i - pi)]);
+                    var item = row.GetReference(row.Table.Columns[code.Substring(pi, i - pi)]);
                     if (item == null)
                         return null;
                     row = item;
                     pi = i + 1;
                     i = code.IndexOf('.', pi);
                 }
-                return row[row.table.Columns[code.Substring(pi)]];
+                return row[row.Table.Columns[code.Substring(pi)]];
             }
             set
             {
@@ -715,14 +706,14 @@ namespace DataWF.Data
                 int pi = 0, i = code.IndexOf('.');
                 while (i > 0)
                 {
-                    var item = row.GetReference(row.table.Columns[code.Substring(pi, i - pi)]);
+                    var item = row.GetReference(row.Table.Columns[code.Substring(pi, i - pi)]);
                     if (item == null)
                         return;
                     row = item;
                     pi = i + 1;
                     i = code.IndexOf('.', pi);
                 }
-                row[row.table.Columns[code.Substring(pi)]] = value;
+                row[row.Table.Columns[code.Substring(pi)]] = value;
             }
         }
 
@@ -893,11 +884,6 @@ namespace DataWF.Data
         {
             if (Attached)
                 return;
-            foreach (var column in table.Columns)
-            {
-                column.Index?.Add(this);
-            }
-
             State |= DBItemState.Attached;
             OnPropertyChanged(nameof(Attached), null);
             DBService.OnAdded(this);
@@ -907,12 +893,6 @@ namespace DataWF.Data
         {
             if (!Attached)
                 return;
-
-            foreach (var column in table.Columns)
-            {
-                column.Index?.Remove(this);
-            }
-
             State &= ~DBItemState.Attached;
             OnPropertyChanged(nameof(Attached), null);
             DBService.OnRemoved(this);
@@ -952,7 +932,7 @@ namespace DataWF.Data
                 RemoveTag();
 
             if (Attached)
-                table.OnItemChanged(this, property, NotifyCollectionChangedAction.Reset);
+                Table.OnItemChanged(this, property, NotifyCollectionChangedAction.Reset);
             // raise events
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(column?.Property ?? property));
         }
@@ -980,7 +960,7 @@ namespace DataWF.Data
 
         public void Clear()
         {
-            foreach (DBColumn column in table.Columns)
+            foreach (DBColumn column in Table.Columns)
             {
                 SetValue(null, column);
             }
@@ -995,12 +975,12 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public byte[] Image
         {
-            get { return this[table.ImageKey] as byte[]; }
+            get { return this[Table.ImageKey] as byte[]; }
             set
             {
-                if (table.ImageKey == null)
+                if (Table.ImageKey == null)
                     return;
-                this[table.ImageKey] = value;
+                this[Table.ImageKey] = value;
             }
         }
 
@@ -1033,7 +1013,7 @@ namespace DataWF.Data
 
         public int CompareTo(DBItem obj)
         {
-            return obj == null ? 1 : obj.table == table ? hindex.CompareTo(obj.hindex) :
+            return obj == null ? 1 : obj.Table == Table ? hindex.CompareTo(obj.hindex) :
                 GetHashCode().CompareTo(obj.GetHashCode());
         }
 

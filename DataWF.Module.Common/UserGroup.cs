@@ -52,7 +52,6 @@ namespace DataWF.Module.Common
 
         public UserGroup()
         {
-            Build(DBTable);
         }
 
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]

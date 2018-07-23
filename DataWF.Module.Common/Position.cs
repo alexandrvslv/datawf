@@ -37,7 +37,6 @@ namespace DataWF.Module.Common
 
         public Position()
         {
-            Build(DBTable);
         }
 
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]

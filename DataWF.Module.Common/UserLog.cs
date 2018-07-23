@@ -229,7 +229,6 @@ namespace DataWF.Module.Common
 
         public UserLog()
         {
-            Build(DBTable);
         }
 
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]

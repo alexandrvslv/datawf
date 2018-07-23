@@ -246,7 +246,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false), Category("Add")]
-        public string CultureCode
+        public virtual string CultureCode
         {
             get { return culture; }
             set
@@ -254,7 +254,7 @@ namespace DataWF.Data
                 if (value == culture)
                     return;
                 culture = value;
-                if (value != null && value.Length != 0)
+                if (!string.IsNullOrEmpty(value))
                     keys |= DBColumnKeys.View;
                 cacheCulture = null;
                 OnPropertyChanged(nameof(CultureCode));
@@ -266,8 +266,8 @@ namespace DataWF.Data
         {
             get
             {
-                if (cacheCulture == null && culture != null && culture.Length != 0)
-                    cacheCulture = CultureInfo.GetCultureInfo(culture);
+                if (cacheCulture == null && !string.IsNullOrEmpty(CultureCode))
+                    cacheCulture = CultureInfo.GetCultureInfo(CultureCode);
                 return cacheCulture;
             }
             set
@@ -433,7 +433,7 @@ namespace DataWF.Data
         }
 
         [Category("Database")]
-        public DBDataType DBDataType
+        public virtual DBDataType DBDataType
         {
             get { return type; }
             set
@@ -680,12 +680,12 @@ namespace DataWF.Data
         }
 
 
-        public object GetTag(int hindex)
+        public virtual object GetTag(int hindex)
         {
             return tags == null ? null : tags.TryGetValue(hindex, out var obj) ? obj : null;
         }
 
-        public void RemoveTag(int hindex)
+        public virtual void RemoveTag(int hindex)
         {
             if (tags != null)
             {
@@ -693,7 +693,7 @@ namespace DataWF.Data
             }
         }
 
-        public void SetTag(int hindex, object value)
+        public virtual void SetTag(int hindex, object value)
         {
             if (value == null)
                 RemoveTag(hindex);
@@ -705,13 +705,13 @@ namespace DataWF.Data
             }
         }
 
-        public bool GetOld(int hindex, out object obj)
+        public virtual bool GetOld(int hindex, out object obj)
         {
             obj = null;
             return olds != null ? olds.TryGetValue(hindex, out obj) : false;
         }
 
-        public void RemoveOld(int hindex)
+        public virtual void RemoveOld(int hindex)
         {
             if (olds != null)
             {
@@ -719,7 +719,7 @@ namespace DataWF.Data
             }
         }
 
-        public void SetOld(int hindex, object value)
+        public virtual void SetOld(int hindex, object value)
         {
             if (olds == null)
                 olds = new Dictionary<int, object>();

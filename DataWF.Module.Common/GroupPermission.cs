@@ -103,8 +103,6 @@ namespace DataWF.Module.Common
 
         public GroupPermission()
         {
-            Build(DBTable);
-            Type = PermissionType.GTable;
         }
 
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
@@ -128,7 +126,7 @@ namespace DataWF.Module.Common
             set { SetGroupReference(value); }
         }
 
-        [DataMember, Column("type_id", Keys = DBColumnKeys.ElementType)]
+        [DataMember, DefaultValue(PermissionType.GTable), Column("type_id", Keys = DBColumnKeys.ElementType)]
         public PermissionType? Type
         {
             get { return GetValue<PermissionType?>(Table.ElementTypeKey); }

@@ -54,7 +54,6 @@ namespace DataWF.Module.Common
 
         public Statistic()
         {
-            Build(DBTable);
         }
 
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]

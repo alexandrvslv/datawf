@@ -159,7 +159,6 @@ namespace DataWF.Module.Flow
 
         public Document()
         {
-            Build(DBTable);
         }
 
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]

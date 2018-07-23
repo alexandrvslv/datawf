@@ -200,8 +200,13 @@ namespace DataWF.Data
             }
             else
             {
-                OnItemChanged(item, null, NotifyCollectionChangedAction.Remove);
-                return items.Remove(item);
+                if (items.Remove(item))
+                {
+                    OnItemChanged(item, null, NotifyCollectionChangedAction.Remove);
+                    RemoveIndexes(item);
+                    return true;
+                }
+                return false;
             }
         }
 
@@ -214,8 +219,23 @@ namespace DataWF.Data
             else
             {
                 items.Add(item);
+                AddIndexes(item);
                 OnItemChanged(item, null, NotifyCollectionChangedAction.Add);
             }
+        }
+
+        public override void AddIndex(DBItem item, DBColumn column, object value)
+        {
+            var virtualColumn = column is DBVirtualColumn ? column : Columns[column.Name];
+            BaseTable.AddIndex(item, ((DBVirtualColumn)virtualColumn).BaseColumn, value);
+            base.AddIndex(item, virtualColumn, value);
+        }
+
+        public override void RemoveIndex(DBItem item, DBColumn column, object value)
+        {
+            var virtualColumn = column is DBVirtualColumn ? column : Columns[column.Name];
+            BaseTable.RemoveIndex(item, ((DBVirtualColumn)virtualColumn).BaseColumn, value);
+            base.RemoveIndex(item, virtualColumn, value);
         }
 
         public override string SqlName
@@ -226,8 +246,18 @@ namespace DataWF.Data
         public override DBItem NewItem(DBUpdateState state = DBUpdateState.Insert, bool def = true, int typeIndex = 0)
         {
             if (typeIndex == 0)
-                typeIndex = BaseTable.GetTypeIndex(typeof(T));
+                typeIndex = GetTypeIndex(typeof(T));
             return BaseTable.NewItem(state, def, typeIndex);
+        }
+
+        public override DBItemType GetItemType(int typeIndex)
+        {
+            return BaseTable.GetItemType(typeIndex);
+        }
+
+        public override int GetTypeIndex(Type type)
+        {
+            return BaseTable.GetTypeIndex(type);
         }
 
         public override int NextHash()
@@ -235,10 +265,10 @@ namespace DataWF.Data
             return BaseTable.NextHash();
         }
 
-        public override bool SaveItem(DBItem row)
-        {
-            return BaseTable.SaveItem(row);
-        }
+        //public override bool SaveItem(DBItem row)
+        //{
+        //    return BaseTable.SaveItem(row);
+        //}
 
         public override void Clear()
         {
@@ -289,7 +319,8 @@ namespace DataWF.Data
                     exist = new DBForeignKey()
                     {
                         Column = existColumn,
-                        Reference = reference.Reference
+                        Reference = reference.Reference,
+                        Property = reference.Property
                     };
                     exist.GenerateName();
                     Foreigns.Add(exist);

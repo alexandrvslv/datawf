@@ -31,45 +31,43 @@ namespace DataWf.Test.Module.Counterparty
             schema.DropDatabase();
             schema.CreateDatabase();
 
-            Location.DBTable.Add(new Location { LocationType = LocationType.Continent, Code = "AF", Name = "Africa" });
-            Location.DBTable.Add(new Location { LocationType = LocationType.Continent, Code = "AN", Name = "Antarctica" });
-            Location.DBTable.Add(new Location { LocationType = LocationType.Continent, Code = "AS", Name = "Asia" });
-            Location.DBTable.Add(new Location { LocationType = LocationType.Continent, Code = "EU", Name = "Europa" });
-            Location.DBTable.Add(new Location { LocationType = LocationType.Continent, Code = "EUAS", Name = "Eurasia" });
-            Location.DBTable.Add(new Location { LocationType = LocationType.Continent, Code = "NA", Name = "North america" });
-            Location.DBTable.Add(new Location { LocationType = LocationType.Continent, Code = "OC", Name = "Oceania" });
-            Location.DBTable.Add(new Location { LocationType = LocationType.Continent, Code = "SA", Name = "South america" });
+            Location.DBTable.Add(new Continent { Code = "AF", Name = "Africa" });
+            Location.DBTable.Add(new Continent { Code = "AN", Name = "Antarctica" });
+            Location.DBTable.Add(new Continent { Code = "AS", Name = "Asia" });
+            Location.DBTable.Add(new Continent { Code = "EU", Name = "Europa" });
+            Location.DBTable.Add(new Continent { Code = "EUAS", Name = "Eurasia" });
+            Location.DBTable.Add(new Continent { Code = "NA", Name = "North america" });
+            Location.DBTable.Add(new Continent { Code = "OC", Name = "Oceania" });
+            Location.DBTable.Add(new Continent { Code = "SA", Name = "South america" });
 
-            var russia = new Location
+            var russia = new Country
             {
-                LocationType = LocationType.Country,
                 Parent = Location.DBTable.LoadByCode("EUAS"),
                 Code = "RU",
                 Name = "Russia"
             };
             Location.DBTable.Add(russia);
-            var ruble = new Location
+            var ruble = new Currency
             {
-                LocationType = LocationType.Currency,
                 Parent = russia,
                 Code = "RUB",
                 Name = "Ruble"
             };
             Location.DBTable.Add(ruble);
 
-            Assert.AreEqual(1, Country.DBTable.Count);
-            Assert.AreEqual(1, Currency.DBTable.Count);
+            Assert.AreEqual(1, DBTable.GetTable<Country>().Count);
+            Assert.AreEqual(1, DBTable.GetTable<Currency>().Count);
 
             Location.DBTable.Save();
 
-            Assert.AreEqual(1, Country.DBTable.Count);
-            Assert.AreEqual(1, Currency.DBTable.Count);
+            Assert.AreEqual(1, DBTable.GetTable<Country>().Count);
+            Assert.AreEqual(1, DBTable.GetTable<Currency>().Count);
 
             Location.DBTable.Clear();
             Location.DBTable.Load();
 
-            Assert.AreEqual(1, Country.DBTable.Count);
-            Assert.AreEqual(1, Currency.DBTable.Count);
+            Assert.AreEqual(1, DBTable.GetTable<Country>().Count);
+            Assert.AreEqual(1, DBTable.GetTable<Currency>().Count);
 
 
 

@@ -54,8 +54,6 @@ namespace DataWF.Module.Common
 
         public Scheduler()
         {
-            Build(DBTable);
-            Type = SchedulerType.Interval;
         }
 
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
@@ -86,7 +84,7 @@ namespace DataWF.Module.Common
             set { SetProperty(value, nameof(Order)); }
         }
 
-        [DataMember, Column("type_id", Keys = DBColumnKeys.ElementType)]
+        [DataMember, DefaultValue(SchedulerType.Interval), Column("type_id", Keys = DBColumnKeys.ElementType)]
         public SchedulerType? Type
         {
             get { return GetProperty<SchedulerType?>(nameof(SchedulerType)); }

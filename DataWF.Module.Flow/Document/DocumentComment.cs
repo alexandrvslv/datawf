@@ -13,7 +13,6 @@ namespace DataWF.Module.Flow
 
         public DocumentComment()
         {
-            Build(DBTable);
         }
 
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]

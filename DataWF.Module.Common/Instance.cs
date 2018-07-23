@@ -57,7 +57,6 @@ namespace DataWF.Module.Common
 
         public Instance()
         {
-            Build(DBTable);
         }
 
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]

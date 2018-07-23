@@ -104,7 +104,6 @@ namespace DataWF.Module.Flow
 
         public DocumentWork()
         {
-            Build(DBTable);
         }
 
         [Browsable(false)]

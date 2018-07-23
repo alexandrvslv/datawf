@@ -46,7 +46,6 @@ namespace DataWF.Module.Flow
 
         public Work()
         {
-            Build(DBTable);
         }
 
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]

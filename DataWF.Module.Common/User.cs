@@ -221,7 +221,6 @@ namespace DataWF.Module.Common
 
         public User()
         {
-            Build(DBTable);
         }
 
         public UserLog LogStart;

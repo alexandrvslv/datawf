@@ -64,7 +64,6 @@ namespace DataWF.Module.Counterpart
 
         public PersoneIdentify()
         {
-            Build(DBTable);
         }
 
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]

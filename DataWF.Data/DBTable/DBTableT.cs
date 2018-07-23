@@ -101,7 +101,7 @@ namespace DataWF.Data
 
         public virtual void Add(T item)
         {
-            if (item.Table != this)
+            if (item.Table != this && (item.Table is IDBVirtualTable virtualTable && virtualTable.BaseTable != this))
             {
                 throw new ArgumentException("Wrong Table item!");
             }
@@ -110,9 +110,18 @@ namespace DataWF.Data
                 return;
             }
             items.Add(item);
+            AddIndexes(item);
             item.OnAttached();
 
             OnItemChanged(item, null, NotifyCollectionChangedAction.Add);
+        }
+
+        protected void AddIndexes(T item)
+        {
+            foreach (var column in Columns.Where(p => p.Index != null))
+            {
+                column.Index.Add(item);
+            }
         }
 
         public override bool Remove(DBItem item)
@@ -128,9 +137,19 @@ namespace DataWF.Data
             }
 
             items.Remove(item);
+            RemoveIndexes(item);
             item.OnDetached();
+
             OnItemChanged(item, null, NotifyCollectionChangedAction.Remove);
             return true;
+        }
+
+        protected void RemoveIndexes(T item)
+        {
+            foreach (var column in Columns.Where(p => p.Index != null))
+            {
+                column.Index.Remove(item);
+            }
         }
 
         public void CopyTo(T[] array, int arrayIndex)

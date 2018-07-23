@@ -51,7 +51,6 @@ namespace DataWF.Module.Flow
 
         public DocumentCustomer()
         {
-            Build(DBTable);
         }
 
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
