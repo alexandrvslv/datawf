@@ -42,38 +42,41 @@ namespace DataWF.Web.Common
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            if (!(value is DBItem item))
+            if (value is DBItem item)
             {
-                throw new JsonSerializationException($"Expect {nameof(DBItem)} but {nameof(value)} is {value?.GetType().Name ?? "null"}");
-            }
-            writer.WriteStartObject();
-            var table = item.Table;
-            var valueType = value.GetType();
-            foreach (var column in table.Columns)
-            {
-                if (!IsSerializeableColumn(column))
-                    continue;
-                if (TypeHelper.IsBaseType(valueType, column.PropertyInvoker.TargetType))
+                writer.WriteStartObject();
+                var table = item.Table;
+                var valueType = value.GetType();
+                foreach (var column in table.Columns)
                 {
-                    writer.WritePropertyName(column.Property);
-                    if (column.DataType.IsEnum)
+                    if (!IsSerializeableColumn(column))
+                        continue;
+                    if (TypeHelper.IsBaseType(valueType, column.PropertyInvoker.TargetType))
                     {
-                        writer.WriteValue(column.PropertyInvoker.Get(item)?.ToString());
-                    }
-                    else
-                    {
-                        writer.WriteValue(column.PropertyInvoker.Get(item));
+                        writer.WritePropertyName(column.Property);
+                        if (column.DataType.IsEnum)
+                        {
+                            writer.WriteValue(column.PropertyInvoker.Get(item)?.ToString());
+                        }
+                        else
+                        {
+                            writer.WriteValue(column.PropertyInvoker.Get(item));
+                        }
                     }
                 }
+                writer.WriteEndObject();
             }
-            writer.WriteEndObject();
+            else
+            {
+                serializer.Serialize(writer, value);
+            }
         }
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             if (!TypeHelper.IsBaseType(objectType, typeof(DBItem)))
             {
-                throw new JsonSerializationException($"Expect {nameof(DBItem)} but {nameof(objectType)} is {objectType?.Name ?? "null"}");
+                return serializer.Deserialize(reader, objectType);
             }
             var item = existingValue as DBItem;
             if (existingValue != null && item == null)

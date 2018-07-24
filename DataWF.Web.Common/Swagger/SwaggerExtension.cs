@@ -8,12 +8,14 @@ using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using Newtonsoft.Json.Serialization;
 
 namespace DataWF.Web.Common
 {
     public static class SwaggerExtension
     {
-        public static IServiceCollection SetSwagger(this IServiceCollection services, IConfiguration configuration, string name, string version)
+        public static IServiceCollection InitWithAuth(this IServiceCollection services, IConfiguration configuration)
         {
             var jwtConfig = new JwtAuth();
             var config = configuration.GetSection("JwtAuth");
@@ -45,9 +47,29 @@ namespace DataWF.Web.Common
             services.AddMvc()
                .AddJsonOptions(options =>
                {
-                   options.SerializerSettings.Converters.Add(new DBItemJsonConverter());
+                   options.SerializerSettings.ContractResolver = new DBItemContractResolver();
+                   options.SerializerSettings.Error = SerializationErrors;
+                   options.SerializerSettings.TraceWriter = new DiagnosticsTraceWriter() { };
+                   //options.SerializerSettings.Converters.Add(new DBItemJsonConverter());
+
                });
-            return services.AddSwaggerGen(c =>
+
+            //foreach (var validator in services.Where(s => s.ServiceType == typeof(IObjectModelValidator)).ToList())
+            //{
+            //    services.Remove(validator);
+            //}
+            return services;//.AddSingleton<IObjectModelValidator>(new DBItemValidator());
+
+        }
+
+        private static void SerializationErrors(object sender, ErrorEventArgs e)
+        {
+            //throw new NotImplementedException();
+        }
+
+        public static IServiceCollection InitWithAuthAndSwagger(this IServiceCollection services, IConfiguration configuration, string name, string version)
+        {
+            return services.InitWithAuth(configuration).AddSwaggerGen(c =>
              {
                  c.SwaggerDoc(version, new Info { Title = name, Version = version });
                  c.SchemaFilter<SwaggerDBSchemaFilter>();

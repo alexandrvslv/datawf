@@ -26,22 +26,28 @@ namespace DataWF.Web.Common
                         DefaultCreator = () => table.NewItem()
                     };
 
-                    foreach (DBColumn column in table.Columns)
+
+                    foreach (var property in base.CreateProperties(objectType, Newtonsoft.Json.MemberSerialization.OptIn))
                     {
-                        if (column.PropertyInvoker != null && column.Access.View && (column.Keys & DBColumnKeys.Access) != DBColumnKeys.Access)
-                        {
-                            var property = objectType.GetProperty(column.Property);
-                            if (property != null)
-                            {
-                                var jsonProperty = base.CreateProperty(property, Newtonsoft.Json.MemberSerialization.OptIn);
-                                result.Properties.Add(jsonProperty);
-                            }
-                            else
-                            {
-                                ///result.ExtensionDataGetter = new ExtensionDataGetter()
-                            }
-                        }
+                        result.Properties.Add(property);
                     }
+
+                    //foreach (DBColumn column in table.Columns)
+                    //{
+                    //    if (column.PropertyInvoker != null && column.Access.View && (column.Keys & DBColumnKeys.Access) != DBColumnKeys.Access)
+                    //    {
+                    //        var property = objectType.GetProperty(column.Property);
+                    //        if (property != null)
+                    //        {
+                    //            var jsonProperty = base.CreateProperty(property, Newtonsoft.Json.MemberSerialization.OptIn);
+                    //            result.Properties.Add(jsonProperty);
+                    //        }
+                    //        else
+                    //        {
+                    //            ///result.ExtensionDataGetter = new ExtensionDataGetter()
+                    //        }
+                    //    }
+                    //}
                     return result;
                 }
             }
