@@ -2,6 +2,7 @@
 using DataWF.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System;
 using System.Collections.Generic;
 
@@ -131,6 +132,11 @@ namespace DataWF.Web.Controller
         {
             Helper.OnException((Exception)error);
             return base.BadRequest(error);
+        }
+
+        public override BadRequestObjectResult BadRequest(ModelStateDictionary modelState)
+        {
+            return base.BadRequest(modelState);
         }
 
     }
