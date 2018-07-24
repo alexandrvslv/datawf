@@ -45,8 +45,7 @@ namespace DataWF.Data
             get => current;
             set
             {
-                Interlocked.CompareExchange(ref current, value, current);
-                Interlocked.CompareExchange(ref changed, 1, 0);
+                Interlocked.CompareExchange(ref current, value, current);                
             }
         }
 
@@ -139,6 +138,7 @@ namespace DataWF.Data
                 result is short shortValue ? (short)shortValue :
                 result is decimal decimalValue ? (long)decimalValue :
                 result is double doubleValue ? (long)doubleValue :
+                result is float floatValue ? (long)floatValue :
                 long.Parse(result.ToString());
         }
 
@@ -154,6 +154,7 @@ namespace DataWF.Data
             if (current < temp)
             {
                 Current = temp;
+                Interlocked.CompareExchange(ref changed, 1, 0);
             }
         }
     }
