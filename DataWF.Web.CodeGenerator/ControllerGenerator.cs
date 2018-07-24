@@ -95,13 +95,13 @@ namespace DataWF.Web.CodeGenerator
             }
         }
 
-        private ClassDeclarationSyntax GetOrGenerateBaseController(TableAttribute tableAttribute, Type itemType)
+        private ClassDeclarationSyntax GetOrGenerateBaseController(TableAttribute tableAttribute, Type itemType, out string controllerClassName)
         {
-            var baseName = itemType.Name + "Base";
+            string name = "Base" + itemType.Name;
+            controllerClassName = $"{name}Controller";
 
-            if (!trees.TryGetValue(baseName, out var baseController))
+            if (!trees.TryGetValue(name, out var baseController))
             {
-                string controllerClassName = $"{baseName}Controller";
                 var primaryKeyType = tableAttribute.GetPrimaryKey()?.GetDataType() ?? typeof(int);
                 baseController = SyntaxFactory.ClassDeclaration(
                     attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
@@ -113,7 +113,7 @@ namespace DataWF.Web.CodeGenerator
                             SyntaxFactory.TypeParameter("K") })),
                     baseList: SyntaxFactory.BaseList(
                         SyntaxFactory.SeparatedList<BaseTypeSyntax>(new[] {
-                        SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"{(HideBaseType(itemType)? "" :itemType.BaseType.Name)}BaseController<T, K>"))
+                        SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"Base{(IsPrimaryType(itemType.BaseType)? "" :itemType.BaseType.Name)}Controller<T, K>"))
                         })),
                     constraintClauses: SyntaxFactory.List(new[] { SyntaxFactory.TypeParameterConstraintClause(
                         name: SyntaxFactory.IdentifierName("T"),
@@ -125,25 +125,30 @@ namespace DataWF.Web.CodeGenerator
                     members: SyntaxFactory.List(GetControllerMemebers(tableAttribute, itemType, true))
                     );
 
-                trees[baseName] = baseController;
+                trees[name] = baseController;
             }
             return baseController;
         }
 
-        public bool HideBaseType(Type itemType)
+        public bool IsPrimaryType(Type itemType)
         {
-            return itemType.BaseType == typeof(DBItem) || itemType.BaseType == typeof(DBGroupItem);
+            return itemType == typeof(DBItem) || itemType == typeof(DBGroupItem);
         }
 
         //https://carlos.mendible.com/2017/03/02/create-a-class-with-net-core-and-roslyn/
         private ClassDeclarationSyntax GetOrGenerateController(TableAttribute tableAttribute, Type itemType)
         {
+            var baseName = (string)null;
             var baseType = itemType;
-            while (baseType != typeof(DBItem) && baseType != typeof(DBGroupItem))
+            var primaryKeyType = tableAttribute.GetPrimaryKey()?.GetDataType() ?? typeof(int);
+
+            while (baseType != null && !IsPrimaryType(baseType))
             {
-                if (baseType.IsAbstract || baseType == tableAttribute.ItemType)
+                if (baseType == tableAttribute.ItemType || baseType != itemType)
                 {
-                    GetOrGenerateBaseController(tableAttribute, baseType);
+                    GetOrGenerateBaseController(tableAttribute, baseType, out var baseClassName);
+                    if (baseName == null)
+                        baseName = $"{baseClassName}<{itemType.Name}, {primaryKeyType.Name}>";
                 }
                 baseType = baseType.BaseType;
             }
@@ -151,9 +156,6 @@ namespace DataWF.Web.CodeGenerator
             if (!trees.TryGetValue(itemType.Name, out var controller))
             {
                 var controllerClassName = $"{itemType.Name}Controller";
-                var primaryKeyType = tableAttribute.GetPrimaryKey()?.GetDataType() ?? typeof(int);
-                var baseName = $"{(itemType == tableAttribute.ItemType ? itemType.Name : HideBaseType(itemType) ? "" : itemType.BaseType.Name)}BaseController<{itemType.Name}, {primaryKeyType.Name}>";
-
                 controller = SyntaxFactory.ClassDeclaration(
                     attributeLists: SyntaxFactory.List(GetControllerAttributeList()),
                     modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
