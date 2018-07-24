@@ -457,8 +457,13 @@ namespace DataWF.Web.CodeGenerator
             int i = 0;
             foreach (var item in schema.Enumeration)
             {
+                var sitem = item.ToString();
+                if (!Char.IsLetter(sitem[0]))
+                {
+                    sitem = schema.Id[0] + sitem;
+                }
                 yield return SF.EnumMemberDeclaration(attributeLists: SF.List(GenDefinitionEnumMemberAttribute(item)),
-                        identifier: SF.Identifier(item.ToString()),
+                        identifier: SF.Identifier(sitem),
                         equalsValue: SF.EqualsValueClause(
                             SF.Token(SyntaxKind.EqualsToken),
                             SF.LiteralExpression(SyntaxKind.NumericLiteralExpression, SF.Literal(i++))));
@@ -488,7 +493,7 @@ namespace DataWF.Web.CodeGenerator
             }
             return SF.ClassDeclaration(
                     attributeLists: SF.List(DefinitionAttributeList()),
-                    modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
+                    modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.PartialKeyword)),
                     identifier: SF.Identifier(schema.Id),
                     typeParameterList: null,
                     baseList: SF.BaseList(SF.SingletonSeparatedList<BaseTypeSyntax>(
