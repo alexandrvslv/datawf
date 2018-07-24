@@ -609,42 +609,46 @@ namespace DataWF.Module.Flow
             var param = new DocumentExecuteArgs() { Document = this, ProcedureCategory = Template.Code };
             try
             {
-                var works = GetWorks().ToList();
-                bool isnew = works.Count == 0;
-
                 base.Save();
 
-                if (isnew)
+                if (Template != null)
                 {
-                    var flow = Template.Work;
-                    var work = Send(null, flow?.GetStartStage(), new[] { User.CurrentUser }).First();
-                    base.Save();
-                }
+                    var works = GetWorks().ToList();
+                    bool isnew = works.Count == 0;
 
-                var relations = Document.DBTable.GetChildRelations();
-                foreach (var relation in relations)
-                {
-                    if (relation.Table != DocumentData.DBTable)
+
+                    if (isnew)
                     {
-                        var references = GetReferencing(relation, DBLoadParam.None);
-                        var updatind = new List<DBItem>();
-                        foreach (DBItem reference in references)
-                            if (reference.IsChanged)
-                                updatind.Add(reference);
-                        if (updatind.Count > 0)
-                            relation.Table.Save(updatind);
+                        var flow = Template.Work;
+                        var work = Send(null, flow?.GetStartStage(), new[] { User.CurrentUser }).First();
+                        base.Save();
                     }
+
+                    var relations = Document.DBTable.GetChildRelations();
+                    foreach (var relation in relations)
+                    {
+                        if (relation.Table != DocumentData.DBTable)
+                        {
+                            var references = GetReferencing(relation, DBLoadParam.None);
+                            var updatind = new List<DBItem>();
+                            foreach (DBItem reference in references)
+                                if (reference.IsChanged)
+                                    updatind.Add(reference);
+                            if (updatind.Count > 0)
+                                relation.Table.Save(updatind);
+                        }
+                    }
+                    if (isnew)//Templating
+                    {
+                        var data = GetTemplatedData();
+                        if (data != null)
+                            data.Parse(param);
+                    }
+                    Save(DocInitType.Data);
+                    Saved?.Invoke(null, new DocumentEventArgs(this));
+                    if (transaction.Owner == this)
+                        transaction.Commit();
                 }
-                if (isnew)//Templating
-                {
-                    var data = GetTemplatedData();
-                    if (data != null)
-                        data.Parse(param);
-                }
-                Save(DocInitType.Data);
-                Saved?.Invoke(null, new DocumentEventArgs(this));
-                if (transaction.Owner == this)
-                    transaction.Commit();
             }
             catch (Exception ex)
             {
