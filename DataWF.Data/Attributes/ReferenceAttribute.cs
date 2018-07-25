@@ -71,6 +71,8 @@ namespace DataWF.Data
 
         public PropertyInfo Property { get; set; }
 
+        public string PropertyName { get { return Property?.Name; } }
+
         public DBForeignKey Generate()
         {
             if (ForeignKey != null)

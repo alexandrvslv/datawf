@@ -34,7 +34,8 @@ namespace DataWF.Data
     public class TableAttribute : Attribute
     {
         static readonly Invoker<ColumnAttribute, string> columnNameInvoker = new Invoker<ColumnAttribute, string>(nameof(ColumnAttribute.ColumnName), (item) => item.ColumnName);
-        static readonly Invoker<ColumnAttribute, string> propertyInvoker = new Invoker<ColumnAttribute, string>(nameof(ColumnAttribute.Property), (item) => item.Property.Name);
+        static readonly Invoker<ColumnAttribute, string> columnPropertyInvoker = new Invoker<ColumnAttribute, string>(nameof(ColumnAttribute.PropertyName), (item) => item.PropertyName);
+        static readonly Invoker<ReferenceAttribute, string> referencePropertyInvoker = new Invoker<ReferenceAttribute, string>(nameof(ReferenceAttribute.PropertyName), (item) => item.PropertyName);
         static readonly Invoker<IndexAttribute, string> IndexNameinvoker = new Invoker<IndexAttribute, string>(nameof(IndexAttribute.IndexName), (item) => item.IndexName);
 
         private DBSchema cacheSchema;
@@ -44,7 +45,7 @@ namespace DataWF.Data
         private SelectableList<ReferenceAttribute> cacheReferences;
         private SelectableList<IndexAttribute> cacheIndexes;
         private SelectableList<ItemTypeAttribute> cacheItemTypes;
-        private List<Type> chacedTypes = new List<Type>();
+        private List<Type> cachedTypes = new List<Type>();
 
         public TableAttribute(string name, string groupName)
         {
@@ -80,21 +81,22 @@ namespace DataWF.Data
             internal set { cacheGroup = value; }
         }
 
+        [XmlIgnore, JsonIgnore]
         public Type ItemType { get; internal set; }
 
-        public IEnumerable<ColumnAttribute> Columns
-        {
-            get { return cacheColumns; }
-        }
+        [XmlIgnore, JsonIgnore]
+        public IEnumerable<ColumnAttribute> Columns { get { return cacheColumns; } }
 
-        public IEnumerable<ReferenceAttribute> References
-        {
-            get { return cacheReferences; }
-        }
+        [XmlIgnore, JsonIgnore]
+        public IEnumerable<ReferenceAttribute> References { get { return cacheReferences; } }
+
+        [XmlIgnore, JsonIgnore]
+        public IEnumerable<Type> Types { get { return cachedTypes; } }
 
         public int BlockSize { get; set; } = 200;
 
         public bool IsLoging { get; set; } = true;
+
 
         public virtual DBTable CreateTable()
         {
@@ -188,8 +190,9 @@ namespace DataWF.Data
                 return;
             cacheColumns = new SelectableList<ColumnAttribute>();
             cacheColumns.Indexes.Add(columnNameInvoker);
-            cacheColumns.Indexes.Add(propertyInvoker);
+            cacheColumns.Indexes.Add(columnPropertyInvoker);
             cacheReferences = new SelectableList<ReferenceAttribute>();
+            cacheReferences.Indexes.Add(referencePropertyInvoker);
             cacheIndexes = new SelectableList<IndexAttribute>();
             cacheIndexes.Indexes.Add(IndexNameinvoker);
             cacheItemTypes = new SelectableList<ItemTypeAttribute>();
@@ -216,7 +219,7 @@ namespace DataWF.Data
 
         public void InitializeType(Type type)
         {
-            if (chacedTypes.Contains(type))
+            if (cachedTypes.Contains(type))
                 return;
 
             var properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
@@ -239,7 +242,7 @@ namespace DataWF.Data
                     cacheReferences.Add(reference);
                 }
             }
-            chacedTypes.Add(type);
+            cachedTypes.Add(type);
         }
 
         private bool InitializeIndex(PropertyInfo property, ColumnAttribute column, out IndexAttribute index)
@@ -309,7 +312,12 @@ namespace DataWF.Data
 
         public ColumnAttribute GetColumnByProperty(string property)
         {
-            return cacheColumns.SelectOne(nameof(ColumnAttribute.Property), property);
+            return cacheColumns.SelectOne(nameof(ColumnAttribute.PropertyName), property);
+        }
+
+        public ReferenceAttribute GetRefenreceByProperty(string property)
+        {
+            return cacheReferences.SelectOne(nameof(ReferenceAttribute.PropertyName), property);
         }
     }
 }

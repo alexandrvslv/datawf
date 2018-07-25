@@ -86,13 +86,15 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public PropertyInfo Property { get; set; }
 
+        public string PropertyName { get { return Property?.Name; } }
+
         [XmlIgnore, JsonIgnore]
         public PropertyInfo ReferenceProperty { get; internal set; }
 
         [XmlIgnore, JsonIgnore]
         public Type DataType { get; set; }
 
-       public Type GetDataType()
+        public Type GetDataType()
         {
             var type = DataType;
             if (DataType.IsGenericType)
