@@ -155,7 +155,7 @@ namespace DataWF.Common
 
         public T SelectOne<K>(string property, K value)
         {
-            if (indexes.GetIndex(property) is ListIndex<T, K> index)
+            if (indexes.GetIndex(property) is IListIndex<T, K> index)
             {
                 return index.SelectOne(value);
             }

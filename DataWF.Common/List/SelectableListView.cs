@@ -37,7 +37,7 @@ namespace DataWF.Common
         public SelectableListView()
         {
             propertyHandler = null;
-            _listChangedHandler = new NotifyCollectionChangedEventHandler(SourceListChanged);
+
         }
 
         public SelectableListView(IList baseCollection)
@@ -50,7 +50,7 @@ namespace DataWF.Common
         {
             if (sourceList == baseCollection)
                 return;
-            if (ssourceList != null)
+            if (ssourceList != null && _listChangedHandler != null)
             {
                 ssourceList.CollectionChanged -= _listChangedHandler;
             }
@@ -60,7 +60,13 @@ namespace DataWF.Common
 
             if (ssourceList != null)
             {
+                if (_listChangedHandler == null)
+                    _listChangedHandler = SourceListChanged;
                 ssourceList.CollectionChanged += _listChangedHandler;
+            }
+            else
+            {
+                _listChangedHandler = null;
             }
             Update((IEnumerable<T>)sourceList);
         }
@@ -79,9 +85,22 @@ namespace DataWF.Common
         public override void Add(T item)
         {
             if (!sourceList.Contains(item))
+            {
                 sourceList.Add(item);
-            else
-                base.Add(item);
+                if (_listChangedHandler != null)
+                {
+                    return;
+                }
+            }
+
+
+            base.Add(item);
+        }
+
+        public void FilterCollection(IEnumerable<T> items)
+        {
+            ClearInternal();
+            AddRange(items);
         }
 
         protected void Update(IEnumerable list)
