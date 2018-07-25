@@ -49,24 +49,24 @@ namespace DataWF.Gui
             return new ListIndex<LayoutField, object>(this);
         }
 
-        public object Get(LayoutField target)
+        public object GetValue(LayoutField target)
         {
             return Source == null ? null : target.ReadValue(Source);
         }
 
-        public object Get(object target)
+        public object GetValue(object target)
         {
-            return Get((LayoutField)target);
+            return GetValue((LayoutField)target);
         }
 
-        public void Set(LayoutField target, object value)
+        public void SetValue(LayoutField target, object value)
         {
             target.WriteValue(Source, value);
         }
 
-        public void Set(object target, object value)
+        public void SetValue(object target, object value)
         {
-            Set((LayoutField)target, value);
+            SetValue((LayoutField)target, value);
         }
     }
 

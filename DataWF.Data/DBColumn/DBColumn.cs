@@ -733,24 +733,24 @@ namespace DataWF.Data
             olds?.Clear();
         }
 
-        public object Get(DBItem target)
+        public object GetValue(DBItem target)
         {
             return target.GetValue(this);
         }
 
-        public void Set(DBItem target, object value)
+        public void SetValue(DBItem target, object value)
         {
             target.SetValue(value, this);
         }
 
-        public object Get(object target)
+        public object GetValue(object target)
         {
-            return Get((DBItem)target);
+            return GetValue((DBItem)target);
         }
 
-        public void Set(object target, object value)
+        public void SetValue(object target, object value)
         {
-            Set((DBItem)target, value);
+            SetValue((DBItem)target, value);
         }
 
         public string FormatCode(object value)

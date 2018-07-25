@@ -131,19 +131,19 @@ namespace DataWF.Test.Common
         public void PropertyReflection()
         {
             var invoker = new ReflectionInvoker(typeof(TestClass), "X");
-            var x = (int)invoker.Get(testReference);
+            var x = (int)invoker.GetValue(testReference);
             Assert.AreEqual(value, x, "Reflection Fail Get Operation");
             x++;
-            invoker.Set(testReference, x);
+            invoker.SetValue(testReference, x);
             Assert.AreEqual(value + 1, testReference.X, "Reflection Fail Set Operation");
         }
 
         private void TestProperty(IInvoker<TestClass, int> invoker, [CallerMemberName]string name = null)
         {
-            var x = invoker.Get(testReference);
+            var x = invoker.GetValue(testReference);
             Assert.AreEqual(value, x, $"{name} Fail Get Operation");
             x++;
-            invoker.Set(testReference, x);
+            invoker.SetValue(testReference, x);
             Assert.AreEqual(value + 1, testReference.X, $"{name} Fail Set Operation");
         }
 
@@ -227,19 +227,19 @@ namespace DataWF.Test.Common
         public void InlinePropertyReflection()
         {
             var invoker = new ReflectionInvoker(typeof(TestClass), "Group.Struct.Width");
-            var width = (int)invoker.Get(testReference);
+            var width = (int)invoker.GetValue(testReference);
             Assert.AreEqual(value, width, "Reflection Fail Get Operation");
             width++;
-            invoker.Set(testReference, width);
+            invoker.SetValue(testReference, width);
             Assert.AreEqual(value + 1, testReference.Group.Struct.Width, "Reflection Fail Set Operation");
         }
 
         private void TestInlineProperty(IInvoker<TestClass, int> invoker, [CallerMemberName]string name = null)
         {
-            var width = invoker.Get(testReference);
+            var width = invoker.GetValue(testReference);
             Assert.AreEqual(value, width, $"{name} Fail Get Operation");
             width++;
-            invoker.Set(testReference, width);
+            invoker.SetValue(testReference, width);
             Assert.AreEqual(value + 1, testReference.Group.Struct.Width, $"{name} Fail Set Operation");
         }
 
@@ -332,19 +332,19 @@ namespace DataWF.Test.Common
         public void FieldReflection()
         {
             var invoker = new ReflectionInvoker(typeof(TestClass), "Field");
-            var x = (int)invoker.Get(testReference);
+            var x = (int)invoker.GetValue(testReference);
             Assert.AreEqual(value, x, "Reflection Fail Get Operation");
             x++;
-            invoker.Set(testReference, x);
+            invoker.SetValue(testReference, x);
             Assert.AreEqual(value + 1, testReference.Field, "Reflection Fail Set Operation");
         }
 
         private void TestField(IInvoker<TestClass, int> invoker, [CallerMemberName]string name = null)
         {
-            var x = invoker.Get(testReference);
+            var x = invoker.GetValue(testReference);
             Assert.AreEqual(value, x, $"{name} Fail Get Operation");
             x++;
-            invoker.Set(testReference, x);
+            invoker.SetValue(testReference, x);
             Assert.AreEqual(value + 1, testReference.Field, $"{name} Fail Set Operation");
         }
 
@@ -420,19 +420,19 @@ namespace DataWF.Test.Common
         public void InlineFieldReflection()
         {
             var invoker = new ReflectionInvoker(typeof(TestClass), "Struct.Field");
-            var x = (int)invoker.Get(testReference);
+            var x = (int)invoker.GetValue(testReference);
             Assert.AreEqual(value, x, "Reflection Fail Get Operation");
             x++;
-            invoker.Set(testReference, x);
+            invoker.SetValue(testReference, x);
             Assert.AreEqual(value + 1, testReference.Struct.Field, "Reflection Fail Set Operation");
         }
 
         private void TestInlineField(IInvoker<TestClass, int> invoker, [CallerMemberName]string name = null)
         {
-            var x = invoker.Get(testReference);
+            var x = invoker.GetValue(testReference);
             Assert.AreEqual(value, x, $"{name} Fail Get Operation");
             x++;
-            invoker.Set(testReference, x);
+            invoker.SetValue(testReference, x);
             Assert.AreEqual(value + 1, testReference.Struct.Field, $"{name} Fail Set Operation");
         }
 
@@ -490,9 +490,9 @@ namespace DataWF.Test.Common
             watch.Start();
             for (int i = 0; i < count; i++)
             {
-                var width = invoker.Get(testReference);
+                var width = invoker.GetValue(testReference);
                 width = default(V);
-                invoker.Set(testReference, width);
+                invoker.SetValue(testReference, width);
             }
             watch.Stop();
             BenchmarkResult.Add(category, name, watch.Elapsed);
@@ -505,9 +505,9 @@ namespace DataWF.Test.Common
             watch.Start();
             for (int i = 0; i < count; i++)
             {
-                var width = invoker.Get(testReference);
+                var width = invoker.GetValue(testReference);
                 width = 0;
-                invoker.Set(testReference, width);
+                invoker.SetValue(testReference, width);
             }
             watch.Stop();
             BenchmarkResult.Add($"{category}(Boxing)", name, watch.Elapsed);

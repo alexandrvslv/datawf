@@ -32,44 +32,44 @@ namespace DataWF.Common
 
         internal Action<T, K, V> SetAction { get; private set; }
 
-        public V Get(T target, K index)
+        public V GetValue(T target, K index)
         {
             return GetAction(target, index);
         }
 
-        public V Get(T target)
+        public V GetValue(T target)
         {
-            return Get(target, Index);
+            return GetValue(target, Index);
         }
 
-        public object Get(object target)
+        public object GetValue(object target)
         {
-            return Get((T)target, Index);
+            return GetValue((T)target, Index);
         }
 
-        public object Get(object target, object index)
+        public object GetValue(object target, object index)
         {
-            return Get((T)target, (K)index);
+            return GetValue((T)target, (K)index);
         }
 
-        public void Set(T target, K index, V value)
+        public void SetValue(T target, K index, V value)
         {
             SetAction(target, index, value);
         }
 
-        public void Set(T target, V value)
+        public void SetValue(T target, V value)
         {
-            Set(target, Index, value);
+            SetValue(target, Index, value);
         }
 
-        public void Set(object target, object value)
+        public void SetValue(object target, object value)
         {
-            Set((T)target, Index, (V)value);
+            SetValue((T)target, Index, (V)value);
         }
 
-        public void Set(object target, object index, object value)
+        public void SetValue(object target, object index, object value)
         {
-            Set((T)target, (K)index, (V)value);
+            SetValue((T)target, (K)index, (V)value);
         }
 
         public IListIndex CreateIndex()

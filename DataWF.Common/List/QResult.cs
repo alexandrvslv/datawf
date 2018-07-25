@@ -24,45 +24,45 @@ namespace DataWF.Common
             return new ListIndex<object[], object>(this);
         }
 
-        public object Get(object[] target, int index)
+        public object GetValue(object[] target, int index)
         {
             return target[index];
         }
 
-        public object Get(object[] target)
+        public object GetValue(object[] target)
         {
-            return Get(target, Index);
+            return GetValue(target, Index);
         }
 
-        public object Get(object target, object index)
+        public object GetValue(object target, object index)
         {
-            return Get((object[])target, (int)index);
+            return GetValue((object[])target, (int)index);
         }
 
-        public object Get(object target)
+        public object GetValue(object target)
         {
-            return Get((object[])target);
+            return GetValue((object[])target);
         }
 
-        public void Set(object[] target, object value)
+        public void SetValue(object[] target, object value)
         {
-            Set(target, Index, value);
+            SetValue(target, Index, value);
         }
 
-        public void Set(object target, object value)
+        public void SetValue(object target, object value)
         {
-            Set((object[])target, value);
+            SetValue((object[])target, value);
         }
 
 
-        public void Set(object[] target, int index, object value)
+        public void SetValue(object[] target, int index, object value)
         {
             target[index] = value;
         }
 
-        public void Set(object target, object index, object value)
+        public void SetValue(object target, object index, object value)
         {
-            Set((object[])target, (int)index, value);
+            SetValue((object[])target, (int)index, value);
         }
     }
 

@@ -298,7 +298,7 @@ namespace DataWF.Common
             for (int j = 0; j < items.Count; j++)
             {
                 var item = items[j];
-                if (CheckItem(param.Invoker.Get(item), param.Value, param.Comparer, param.Comparision))
+                if (CheckItem(param.Invoker.GetValue(item), param.Value, param.Comparer, param.Comparision))
                 {
                     yield return item;
                 }
@@ -310,7 +310,7 @@ namespace DataWF.Common
             for (int j = 0; j < items.Count; j++)
             {
                 var item = items[j];
-                if (CheckItem(param.Invoker.Get(item), param.Value, param.Comparer, param.Comparision))
+                if (CheckItem(param.Invoker.GetValue(item), param.Value, param.Comparer, param.Comparision))
                 {
                     yield return item;
                 }
@@ -410,7 +410,7 @@ namespace DataWF.Common
             for (int i = 0; i < checkers.Parameters.Count; i++)
             {
                 var parameter = checkers.Parameters[i];
-                bool rez = CheckItem(parameter.Invoker.Get(item), parameter.Value, parameter.Comparer, parameter.Comparision);
+                bool rez = CheckItem(parameter.Invoker.GetValue(item), parameter.Value, parameter.Comparer, parameter.Comparision);
                 if (i == 0)
                     flag = rez;
                 else if (parameter.Logic.Type == LogicTypes.Or)

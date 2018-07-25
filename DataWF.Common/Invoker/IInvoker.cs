@@ -1,8 +1,9 @@
-﻿using System;
+﻿using Newtonsoft.Json.Serialization;
+using System;
 
 namespace DataWF.Common
 {
-    public interface IInvoker
+    public interface IInvoker : IValueProvider
     {
         Type DataType { get; }
 
@@ -12,17 +13,13 @@ namespace DataWF.Common
 
         bool CanWrite { get; }
 
-        object Get(object target);
-
-        void Set(object target, object value);
-
         IListIndex CreateIndex();
     }
 
     public interface IInvoker<T, V> : IInvoker
     {
-        V Get(T target);
+        V GetValue(T target);
 
-        void Set(T target, V value);
+        void SetValue(T target, V value);
     }
 }

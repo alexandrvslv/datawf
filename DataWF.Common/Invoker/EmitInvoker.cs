@@ -189,7 +189,7 @@ namespace DataWF.Common
 
         public static int CompareKey(IInvoker accesor, object x, object key, IComparer comparer)
         {
-            return ListHelper.Compare(accesor.Get(x), key, comparer, false);
+            return ListHelper.Compare(accesor.GetValue(x), key, comparer, false);
         }
 
         public static T CreateObject<T>(bool cache = true)
@@ -223,7 +223,7 @@ namespace DataWF.Common
         {
             if (info == null)
                 return null;
-            return ((IIndexInvoker)Initialize(info, true))?.Get(item, pars);
+            return ((IIndexInvoker)Initialize(info, true))?.GetValue(item, pars);
         }
 
         public static object GetValue(Type type, string name, object item)
@@ -235,14 +235,14 @@ namespace DataWF.Common
         {
             if (info == null)
                 return null;
-            return Initialize(info, true)?.Get(item);
+            return Initialize(info, true)?.GetValue(item);
         }
 
         public static object GetValue(MemberInfo info, object item, object index)
         {
             if (info == null)
                 return null;
-            return ((IIndexInvoker)Initialize(info, true))?.Get(item, index);
+            return ((IIndexInvoker)Initialize(info, true))?.GetValue(item, index);
         }
 
         public static void SetValue(Type type, string name, object item, object value)
@@ -254,12 +254,12 @@ namespace DataWF.Common
         {
             var invoker = Initialize(info, true);
             if (invoker.CanWrite)
-                invoker.Set(item, value);
+                invoker.SetValue(item, value);
         }
 
         public static void SetValue(MemberInfo info, object item, object value, object index)
         {
-            ((IIndexInvoker)Initialize(info, true))?.Set(item, index, value);
+            ((IIndexInvoker)Initialize(info, true))?.SetValue(item, index, value);
         }
 
         public static string GetMethodName(MethodInfo info)

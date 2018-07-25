@@ -34,7 +34,7 @@ namespace DataWF.Common
 
         public void Add(T item)
         {
-            var key = Invoker.Get(item);
+            var key = Invoker.GetValue(item);
             if (!Dictionary.TryGetValue(key, out var refs))
             {
                 Dictionary[key] = refs = new List<T>();
@@ -46,7 +46,7 @@ namespace DataWF.Common
         {
             lock (Dictionary)
             {
-                Dictionary.TryGetValue(Invoker.Get(item), out var refs);
+                Dictionary.TryGetValue(Invoker.GetValue(item), out var refs);
                 if (refs == null || !refs.Remove(item))
                 {
                     foreach (var entry in Dictionary)

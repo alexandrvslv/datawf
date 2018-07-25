@@ -62,7 +62,7 @@ namespace DataWF.Data
 
         public override object GetValue(DBItem row = null)
         {
-            return Invoker == null ? null : Invoker.Get(row);
+            return Invoker == null ? null : Invoker.GetValue(row);
         }
         public override string Format(IDbCommand command = null)
         {

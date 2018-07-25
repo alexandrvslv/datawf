@@ -88,7 +88,7 @@ namespace DataWF.Common
             var member = info.GetAttribute(Reader.Name);
             if (member != null)
             {
-                member.Invoker.Set(element, Helper.TextParse(Reader.Value, member.PropertyType));
+                member.Invoker.SetValue(element, Helper.TextParse(Reader.Value, member.PropertyType));
             }
         }
 
@@ -111,9 +111,9 @@ namespace DataWF.Common
                 else
                 {
                     var mInfo = GetTypeInfo(mtype ?? member.PropertyType);
-                    value = Read(member.Invoker.Get(element), mInfo);
+                    value = Read(member.Invoker.GetValue(element), mInfo);
                 }
-                member.Invoker.Set(element, value);
+                member.Invoker.SetValue(element, value);
             }
             else
             {

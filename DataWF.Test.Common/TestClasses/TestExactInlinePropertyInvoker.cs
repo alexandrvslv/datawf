@@ -24,17 +24,17 @@ namespace DataWF.Test.Common
             return new ListIndex<TestClass, int>(this);
         }
 
-        public int Get(TestClass target)
+        public int GetValue(TestClass target)
         {
             return target.Group?.Struct.Width ?? 0;
         }
 
-        public object Get(object target)
+        public object GetValue(object target)
         {
-            return Get((TestClass)target);
+            return GetValue((TestClass)target);
         }
 
-        public void Set(TestClass target, int value)
+        public void SetValue(TestClass target, int value)
         {
             var temp = target.Group;
             if (temp != null)
@@ -45,9 +45,9 @@ namespace DataWF.Test.Common
             }
         }
 
-        public void Set(object target, object value)
+        public void SetValue(object target, object value)
         {
-            Set((TestClass)target, (int)value);
+            SetValue((TestClass)target, (int)value);
         }
     }
 }

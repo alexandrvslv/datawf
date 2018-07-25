@@ -28,7 +28,7 @@ namespace DataWF.Common
 
         public MemberInfo Last { get; private set; }
 
-        public object Get(object target)
+        public object GetValue(object target)
         {
             var temp = target;
             foreach (var info in List)
@@ -40,7 +40,7 @@ namespace DataWF.Common
             return temp;
         }
 
-        public void Set(object target, object value)
+        public void SetValue(object target, object value)
         {
             object temp = null;
             foreach (var info in List)

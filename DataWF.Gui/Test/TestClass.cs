@@ -61,7 +61,7 @@ namespace DataWF.TestGui
             watch.Start();
             for (int i = 0; i <= c; i++)
             {
-                val = actionBinder.Get(test);
+                val = actionBinder.GetValue(test);
                 //tc.Order = val;
             }
             watch.Stop();
@@ -120,7 +120,7 @@ namespace DataWF.TestGui
             watch.Start();
             for (int i = 0; i <= c; i++)
             {
-                oval = aOrder.Get(test);
+                oval = aOrder.GetValue(test);
             }
             watch.Stop();
             list.Add(new TestResult("Property Get", "Emit Invoke", watch.Elapsed));
@@ -129,7 +129,7 @@ namespace DataWF.TestGui
             watch.Start();
             for (int i = 0; i <= c; i++)
             {
-                val = (int)aOrder.Get(test);
+                val = (int)aOrder.GetValue(test);
             }
             watch.Stop();
             list.Add(new TestResult("Property Get", "Emit Invoke UNBOX", watch.Elapsed));
@@ -165,7 +165,7 @@ namespace DataWF.TestGui
             watch.Start();
             for (int i = 0; i <= c; i++)
             {
-                oval = aItem.Get(test);
+                oval = aItem.GetValue(test);
             }
             watch.Stop();
             list.Add(new TestResult("Property Index", "Emit Invoke", watch.Elapsed));
@@ -174,7 +174,7 @@ namespace DataWF.TestGui
             watch.Start();
             for (int i = 0; i <= c; i++)
             {
-                sval = (string)aItem.Get(test);
+                sval = (string)aItem.GetValue(test);
             }
             watch.Stop();
             list.Add(new TestResult("Property Index", "Emit Invoke UNBOX", watch.Elapsed));

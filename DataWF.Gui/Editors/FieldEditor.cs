@@ -187,12 +187,12 @@ namespace DataWF.Gui
 
         public virtual object ReadValue(object listItem)
         {
-            return Invoker.Get(listItem);
+            return Invoker.GetValue(listItem);
         }
 
         public void WriteValue(object listItem, object value)
         {
-            Invoker.Set(listItem, value);
+            Invoker.SetValue(listItem, value);
         }
 
 

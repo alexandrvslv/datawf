@@ -31,25 +31,25 @@ namespace DataWF.Common
             return new ListIndex<T, V>(this);
         }
 
-        public V Get(T target)
+        public V GetValue(T target)
         {
             return GetAction(target);
         }
 
-        public object Get(object target)
+        public object GetValue(object target)
         {
             //Debug.WriteLineIf(target != null && !typeof(T).IsInstanceOfType(target), $"expected {typeof(T)} but get {target.GetType()}");
-            return Get((T)target);
+            return GetValue((T)target);
         }
 
-        public void Set(T target, V value)
+        public void SetValue(T target, V value)
         {
             SetAction(target, value);
         }
 
-        public void Set(object target, object value)
+        public void SetValue(object target, object value)
         {
-            Set((T)target, (V)value);
+            SetValue((T)target, (V)value);
         }
     }
 }

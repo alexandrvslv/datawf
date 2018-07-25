@@ -92,7 +92,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public Type DataType { get; set; }
 
-        public Type GetDataType()
+       public Type GetDataType()
         {
             var type = DataType;
             if (DataType.IsGenericType)

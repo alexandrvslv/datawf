@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Serialization;
+using System;
 
 namespace DataWF.Common
 {
@@ -14,22 +15,22 @@ namespace DataWF.Common
 
         public string Name { get { return nameof(Object.ToString); } set { } }
 
-        public string Get(object target)
+        public string GetValue(object target)
         {
             return target?.ToString();
         }
 
-        object IInvoker.Get(object target)
+        object IValueProvider.GetValue(object target)
         {
-            return Get(target);
+            return GetValue(target);
         }
 
-        public void Set(object target, object value)
+        public void SetValue(object target, object value)
         {
             throw new NotSupportedException();
         }
 
-        public void Set(object target, string value)
+        public void SetValue(object target, string value)
         {
             throw new NotImplementedException();
         }

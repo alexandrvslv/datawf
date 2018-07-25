@@ -781,7 +781,7 @@ namespace DataWF.Data
 
             foreach (T row in list)
             {
-                if (CheckItem(row, invoker.Get(row), value, comparer))
+                if (CheckItem(row, invoker.GetValue(row), value, comparer))
                     yield return row;
             }
         }

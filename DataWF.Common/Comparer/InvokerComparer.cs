@@ -112,8 +112,8 @@ namespace DataWF.Common
         {
             if (_comparer != null)
                 return _comparer.Compare(x, y);
-            object xValue = x == null ? null : invoker.Get(x);
-            object yValue = y == null ? null : invoker.Get(y);
+            object xValue = x == null ? null : invoker.GetValue(x);
+            object yValue = y == null ? null : invoker.GetValue(y);
             int rez = ListHelper.Compare(xValue, yValue, null, _direction, false);
             //if (hash && rez == 0 && xWord != null && yWord != null)
             //    rez = xWord.GetHashCode().CompareTo(yWord.GetHashCode());
@@ -122,7 +122,7 @@ namespace DataWF.Common
 
         public int CompareVal(object x, object key)
         {
-            object val = invoker.Get(x);
+            object val = invoker.GetValue(x);
             return ListHelper.Compare(val, key, _comparer, false);
         }
 
@@ -206,7 +206,7 @@ namespace DataWF.Common
         #region IComparer<T>
         public int CompareVal(T x, object key)
         {
-            object val = invoker.Get(x);
+            object val = invoker.GetValue(x);
             return ListHelper.Compare(val, key, _comparer, false);
         }
 

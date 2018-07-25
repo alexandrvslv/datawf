@@ -44,7 +44,7 @@ namespace DataWF.Common
             return GetAction(target);
         }
 
-        public object Get(object target)
+        public object GetValue(object target)
         {
             T item = (T)target;
             return Get(ref item);
@@ -55,7 +55,7 @@ namespace DataWF.Common
             SetAction(ref target, value);
         }
 
-        public void Set(object target, object value)
+        public void SetValue(object target, object value)
         {
             T item = (T)target;
             Set(ref item, (V)value);

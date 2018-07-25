@@ -52,7 +52,7 @@ namespace DataWF.Gui
 
             if (invoker != null)
             {
-                fdOpen.InitialFileName = invoker.Get(dataSource) as string;
+                fdOpen.InitialFileName = invoker.GetValue(dataSource) as string;
             }
         }
 
@@ -80,7 +80,7 @@ namespace DataWF.Gui
                 }
                 string name = Path.GetFileName(fdOpen.FileName);
                 if (invoker != null)
-                    invoker.Set(EditItem, name);
+                    invoker.SetValue(EditItem, name);
                 EntryText = name;
             }
         }
@@ -89,7 +89,7 @@ namespace DataWF.Gui
         {
             if (invoker != null)
             {
-                fdSave.InitialFileName = invoker.Get(base.EditItem) as string;
+                fdSave.InitialFileName = invoker.GetValue(base.EditItem) as string;
             }
             if (Value != null && fdSave.Run(Editor.ParentWindow))
             {

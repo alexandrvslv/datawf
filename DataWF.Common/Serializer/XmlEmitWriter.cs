@@ -95,7 +95,7 @@ namespace DataWF.Common
 
                 foreach (var attribute in info.Attributes)
                 {
-                    var value = attribute.Invoker.Get(element);
+                    var value = attribute.Invoker.GetValue(element);
                     if (value == null || attribute.CheckDefault(value))
                         continue;
                     WriteAttribute(attribute.PropertyName, value);
@@ -103,7 +103,7 @@ namespace DataWF.Common
 
                 foreach (var property in info.Properties)
                 {
-                    var value = property.Invoker.Get(element);
+                    var value = property.Invoker.GetValue(element);
                     if (value == null)
                         continue;
 

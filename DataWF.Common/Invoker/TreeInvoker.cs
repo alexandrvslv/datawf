@@ -23,22 +23,22 @@ namespace DataWF.Common
             return new ListIndex<IGroup, bool>(this);
         }
 
-        public bool Get(IGroup target)
+        public bool GetValue(IGroup target)
         {
             return target.IsExpanded;
         }
 
-        public object Get(object target)
+        public object GetValue(object target)
         {
-            return Get((IGroup)target);
+            return GetValue((IGroup)target);
         }
 
-        public void Set(IGroup target, bool value)
+        public void SetValue(IGroup target, bool value)
         {
             throw new NotSupportedException();
         }
 
-        public void Set(object target, object value)
+        public void SetValue(object target, object value)
         {
             throw new NotImplementedException();
         }

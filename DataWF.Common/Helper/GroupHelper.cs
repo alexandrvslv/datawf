@@ -73,7 +73,7 @@ namespace DataWF.Common
             IGroup g = item;
             while (g != null)
             {
-                object val = invoker.Get(g);
+                object val = invoker.GetValue(g);
                 if (val != null)
                     rez = val + separator + rez;
                 g = g.Group;

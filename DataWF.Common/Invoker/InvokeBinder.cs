@@ -84,12 +84,12 @@ namespace DataWF.Common
                 if (view is INotifyPropertyChanged notify)
                 {
                     notify.PropertyChanged -= ViewPropertyChanged;
-                    ViewInvoker.Set(view, DataInvoker?.Get(data));
+                    ViewInvoker.SetValue(view, DataInvoker?.GetValue(data));
                     notify.PropertyChanged += ViewPropertyChanged;
                 }
                 else
                 {
-                    ViewInvoker.Set(view, DataInvoker?.Get(data));
+                    ViewInvoker.SetValue(view, DataInvoker?.GetValue(data));
                 }
             }
         }
@@ -101,12 +101,12 @@ namespace DataWF.Common
                 if (data is INotifyPropertyChanged notify)
                 {
                     notify.PropertyChanged -= DataPropertyChanged;
-                    DataInvoker.Set(data, ViewInvoker?.Get(view));
+                    DataInvoker.SetValue(data, ViewInvoker?.GetValue(view));
                     notify.PropertyChanged += DataPropertyChanged;
                 }
                 else
                 {
-                    DataInvoker.Set(data, ViewInvoker?.Get(view));
+                    DataInvoker.SetValue(data, ViewInvoker?.GetValue(view));
                 }
             }
         }
