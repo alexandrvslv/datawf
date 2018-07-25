@@ -65,7 +65,7 @@ namespace DataWF.Web.Client
             }
             foreach (var entry in dictionary)
             {
-                entry.Key.Set(newItem, Helper.Parse(entry.Value, entry.Key.DataType));
+                entry.Key.SetValue(newItem, Helper.Parse(entry.Value, entry.Key.DataType));
             }
             if (add)
             {
@@ -81,7 +81,7 @@ namespace DataWF.Web.Client
 
         public virtual T Select(K id)
         {
-            return Items.SelectOne(IdInvoker.Name, id);
+            return Items.SelectOne(IdInvoker.Name, (K?)id);
         }
 
         public virtual T Get(object id)
