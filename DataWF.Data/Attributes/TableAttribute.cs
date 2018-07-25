@@ -40,20 +40,14 @@ namespace DataWF.Data
         private DBSchema cacheSchema;
         private DBTable cacheTable;
         private DBTableGroup cacheGroup;
-        private SelectableList<ColumnAttribute> cacheColumns = new SelectableList<ColumnAttribute>();
-        private SelectableList<ReferenceAttribute> cacheReferences = new SelectableList<ReferenceAttribute>();
-        private SelectableList<IndexAttribute> cacheIndexes = new SelectableList<IndexAttribute>();
-
-
-
-        private SelectableList<ItemTypeAttribute> cacheItemTypes = new SelectableList<ItemTypeAttribute>();
+        private SelectableList<ColumnAttribute> cacheColumns;
+        private SelectableList<ReferenceAttribute> cacheReferences;
+        private SelectableList<IndexAttribute> cacheIndexes;
+        private SelectableList<ItemTypeAttribute> cacheItemTypes;
         private List<Type> chacedTypes = new List<Type>();
 
         public TableAttribute(string name, string groupName)
         {
-            cacheColumns.Indexes.Add(columnNameInvoker);
-            cacheColumns.Indexes.Add(propertyInvoker);
-            cacheIndexes.Indexes.Add(IndexNameinvoker);
             TableName = name;
             GroupName = groupName ?? "Default";
         }
@@ -91,6 +85,11 @@ namespace DataWF.Data
         public IEnumerable<ColumnAttribute> Columns
         {
             get { return cacheColumns; }
+        }
+
+        public IEnumerable<ReferenceAttribute> References
+        {
+            get { return cacheReferences; }
         }
 
         public int BlockSize { get; set; } = 200;
@@ -165,7 +164,7 @@ namespace DataWF.Data
             {
                 Table.ItemTypes[itemType.Id] = new DBItemType { Type = itemType.Type };
                 itemType.Generate();
-                
+
             }
 
             return Table;
@@ -187,12 +186,15 @@ namespace DataWF.Data
         {
             if (ItemType != null)
                 return;
-            ItemType = type;
-            cacheColumns.Clear();
-            cacheReferences.Clear();
-            cacheIndexes.Clear();
-            chacedTypes.Clear();
+            cacheColumns = new SelectableList<ColumnAttribute>();
+            cacheColumns.Indexes.Add(columnNameInvoker);
+            cacheColumns.Indexes.Add(propertyInvoker);
+            cacheReferences = new SelectableList<ReferenceAttribute>();
+            cacheIndexes = new SelectableList<IndexAttribute>();
+            cacheIndexes.Indexes.Add(IndexNameinvoker);
+            cacheItemTypes = new SelectableList<ItemTypeAttribute>();
 
+            ItemType = type;
             var types = TypeHelper.GetTypeHierarchi(type);
             foreach (var item in types)
             {

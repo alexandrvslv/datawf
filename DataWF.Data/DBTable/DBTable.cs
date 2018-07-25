@@ -51,6 +51,17 @@ namespace DataWF.Data
             cacheItemTypes.Clear();
         }
 
+        public static TableAttribute GetTableAttributeInherit(Type type)
+        {
+            var tableAttribute = GetTableAttribute(type);
+            while (tableAttribute == null && type != null)
+            {
+                type = type.BaseType;
+                tableAttribute = type == null ? null : GetTableAttribute(type);
+            }
+            return tableAttribute;
+        }
+
         public static TableAttribute GetTableAttribute<T>()
         {
             return GetTableAttribute(typeof(T));
@@ -60,11 +71,8 @@ namespace DataWF.Data
         {
             if (!cacheTables.TryGetValue(type, out TableAttribute table))
             {
-                table = type.GetCustomAttribute<TableAttribute>();
-                if (table != null)
-                {
-                    table.Initialize(type);
-                }
+                table = type.GetCustomAttribute<TableAttribute>(false);
+                table?.Initialize(type);
                 cacheTables[type] = table;
             }
             if (table == null)
@@ -79,7 +87,7 @@ namespace DataWF.Data
         {
             if (!cacheItemTypes.TryGetValue(type, out ItemTypeAttribute itemType))
             {
-                itemType = type.GetCustomAttribute<ItemTypeAttribute>();
+                itemType = type.GetCustomAttribute<ItemTypeAttribute>(false);
                 if (itemType != null)
                 {
                     itemType.Initialize(type);

@@ -51,12 +51,7 @@ namespace DataWF.Data
         public void Initialize(Type type)
         {
             Type = type;
-            do
-            {
-                type = type.BaseType;
-                TableAttribute = type == null ? null : DBTable.GetTableAttribute(type);
-            }
-            while (TableAttribute == null && type != null);
+            TableAttribute = DBTable.GetTableAttributeInherit(type.BaseType);
             if (TableAttribute == null)
             {
                 throw new Exception($"Class with {nameof(ItemTypeAttribute)} must have are {nameof(Type.BaseType)} with {nameof(Data.TableAttribute)}!");
