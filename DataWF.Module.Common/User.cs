@@ -63,7 +63,10 @@ namespace DataWF.Module.Common
                 currentUser = value;
             if (value != null)
             {
-                UserLog.LogUser(value, UserLogType.Authorization, "GetUser");
+                if (value.LogStart == null)
+                {
+                    UserLog.LogUser(value, UserLogType.Authorization, "GetUser");
+                }
                 CurrentUserChanged?.Invoke();
             }
         }
