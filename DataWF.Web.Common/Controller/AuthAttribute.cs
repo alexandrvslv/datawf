@@ -5,7 +5,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 
-namespace DataWF.Web.Controller
+namespace DataWF.Web.Common
 {
     public class AuthAttribute : ActionFilterAttribute
     {

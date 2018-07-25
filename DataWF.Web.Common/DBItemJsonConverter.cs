@@ -56,11 +56,11 @@ namespace DataWF.Web.Common
                         writer.WritePropertyName(column.Property);
                         if (column.DataType.IsEnum)
                         {
-                            writer.WriteValue(column.PropertyInvoker.Get(item)?.ToString());
+                            writer.WriteValue(column.PropertyInvoker.GetValue(item)?.ToString());
                         }
                         else
                         {
-                            writer.WriteValue(column.PropertyInvoker.Get(item));
+                            writer.WriteValue(column.PropertyInvoker.GetValue(item));
                         }
                     }
                 }
@@ -74,10 +74,6 @@ namespace DataWF.Web.Common
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            if (!TypeHelper.IsBaseType(objectType, typeof(DBItem)))
-            {
-                return serializer.Deserialize(reader, objectType);
-            }
             var item = existingValue as DBItem;
             if (existingValue != null && item == null)
             {
@@ -129,7 +125,7 @@ namespace DataWF.Web.Common
                 {
                     if (!(value is DBItem))
                         value = entry.Key.ReferenceTable.LoadItemById(value);
-                    entry.Key.ReferenceProperty.Set(item, value);
+                    entry.Key.ReferenceProperty.SetValue(item, value);
                 }
                 else if (entry.Key.PropertyInvoker == null)
                 {
@@ -137,7 +133,7 @@ namespace DataWF.Web.Common
                 }
                 else
                 {
-                    entry.Key.PropertyInvoker.Set(item, value);
+                    entry.Key.PropertyInvoker.SetValue(item, value);
                 }
             }
             return item;

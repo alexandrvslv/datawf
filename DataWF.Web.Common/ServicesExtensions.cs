@@ -13,7 +13,7 @@ using Newtonsoft.Json.Serialization;
 
 namespace DataWF.Web.Common
 {
-    public static class SwaggerExtension
+    public static class ServicesExtensions
     {
         public static IServiceCollection InitWithAuth(this IServiceCollection services, IConfiguration configuration)
         {
@@ -51,15 +51,14 @@ namespace DataWF.Web.Common
                    options.SerializerSettings.Error = SerializationErrors;
                    options.SerializerSettings.TraceWriter = new DiagnosticsTraceWriter() { };
                    //options.SerializerSettings.Converters.Add(new DBItemJsonConverter());
-
                });
 
-            //foreach (var validator in services.Where(s => s.ServiceType == typeof(IObjectModelValidator)).ToList())
-            //{
-            //    services.Remove(validator);
-            //}
-            return services;//.AddSingleton<IObjectModelValidator>(new DBItemValidator());
-
+            foreach (var validator in services.Where(s => s.ServiceType == typeof(IObjectModelValidator)).ToList())
+            {
+                services.Remove(validator);
+            }
+            services.AddSingleton<IObjectModelValidator>(new DBItemValidator());
+            return services;
         }
 
         private static void SerializationErrors(object sender, ErrorEventArgs e)
@@ -69,7 +68,7 @@ namespace DataWF.Web.Common
 
         public static IServiceCollection InitWithAuthAndSwagger(this IServiceCollection services, IConfiguration configuration, string name, string version)
         {
-            return services.InitWithAuth(configuration).AddSwaggerGen(c =>
+            services.InitWithAuth(configuration).AddSwaggerGen(c =>
              {
                  c.SwaggerDoc(version, new Info { Title = name, Version = version });
                  c.SchemaFilter<SwaggerDBSchemaFilter>();
@@ -77,9 +76,9 @@ namespace DataWF.Web.Common
                  c.UseReferencedDefinitionsForEnums();
                  c.DescribeAllEnumsAsStrings();
                  c.ResolveConflictingActions(parameters =>
-                 {
-                     return parameters.FirstOrDefault();
-                 });
+                  {
+                      return parameters.FirstOrDefault();
+                  });
 
                  var apiKey = new ApiKeyScheme
                  {
@@ -96,6 +95,9 @@ namespace DataWF.Web.Common
                     { JwtBearerDefaults.AuthenticationScheme, new string[] { } }
                  });
              });
+
+
+            return services;
         }
     }
 }

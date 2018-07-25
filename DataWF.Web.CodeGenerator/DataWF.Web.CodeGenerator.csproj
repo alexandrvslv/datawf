@@ -12,11 +12,6 @@
     <Compile Remove="ClientTemplate\ClientException.cs" />
     <Compile Remove="ClientTemplate\ClientExceptionT.cs" />
     <Compile Remove="ClientTemplate\IClient.cs" />
-    <Compile Remove="ControllerTemplate\AuthAttribute.cs" />
-    <Compile Remove="ControllerTemplate\AuthController.cs" />
-    <Compile Remove="ControllerTemplate\BaseController.cs" />
-    <Compile Remove="ControllerTemplate\LoginModel.cs" />
-    <Compile Remove="ControllerTemplate\TokenModel.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -26,13 +21,6 @@
     <EmbeddedResource Include="ClientTemplate\ClientException.cs" />
     <EmbeddedResource Include="ClientTemplate\ClientExceptionT.cs" />
     <EmbeddedResource Include="ClientTemplate\IClient.cs" />
-    <EmbeddedResource Include="ControllerTemplate\AuthAttribute.cs" />
-    <EmbeddedResource Include="ControllerTemplate\AuthController.cs" />
-    <EmbeddedResource Include="ControllerTemplate\BaseController.cs">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ControllerTemplate\LoginModel.cs" />
-    <EmbeddedResource Include="ControllerTemplate\TokenModel.cs" />
   </ItemGroup>
 
   <ItemGroup>

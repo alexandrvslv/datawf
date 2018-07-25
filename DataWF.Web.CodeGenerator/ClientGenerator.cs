@@ -293,11 +293,12 @@ namespace DataWF.Web.CodeGenerator
 
         private IEnumerable<ConstructorDeclarationSyntax> GenClientConstructor(string clientName, JsonProperty id)
         {
+            var propertyName = id == null ? null : GetPropertyName(id);
             var initialize = id == null ? null : SF.ConstructorInitializer(
                     SyntaxKind.BaseConstructorInitializer,
                     SF.ArgumentList(
                         SF.SeparatedList(new[] {
-                            SF.Argument(SF.ParseExpression($"new Invoker<{clientName},{GetTypeString(id, true)}>(nameof({clientName}.{id.Name}), (p)=>p.{id.Name})")) })));
+                            SF.Argument(SF.ParseExpression($"new Invoker<{clientName},{GetTypeString(id, true)}>(nameof({clientName}.{propertyName}), (p)=>p.{propertyName})")) })));
             yield return SF.ConstructorDeclaration(
                 attributeLists: SF.List(ClientAttributeList()),
                 modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
@@ -446,7 +447,7 @@ namespace DataWF.Web.CodeGenerator
             return SF.EnumDeclaration(
                     attributeLists: SF.List(DefinitionAttributeList()),
                     modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
-                    identifier: SF.Identifier(schema.Id),
+                    identifier: SF.Identifier(GetDefinitionName(schema)),
                     baseList: null,
                     members: SF.SeparatedList(GetDefinitionEnumMemebers(schema))
                     );
@@ -460,7 +461,7 @@ namespace DataWF.Web.CodeGenerator
                 var sitem = item.ToString();
                 if (!Char.IsLetter(sitem[0]))
                 {
-                    sitem = schema.Id[0] + sitem;
+                    sitem = GetDefinitionName(schema)[0] + sitem;
                 }
                 yield return SF.EnumMemberDeclaration(attributeLists: SF.List(GenDefinitionEnumMemberAttribute(item)),
                         identifier: SF.Identifier(sitem),
@@ -489,12 +490,12 @@ namespace DataWF.Web.CodeGenerator
             if (schema.InheritedSchema != null)
             {
                 GetOrGenerateDefinion(schema.InheritedSchema.Id);
-                baseType = SF.ParseTypeName(schema.InheritedSchema.Id);
+                baseType = SF.ParseTypeName(GetDefinitionName(schema.InheritedSchema));
             }
             return SF.ClassDeclaration(
                     attributeLists: SF.List(DefinitionAttributeList()),
                     modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.PartialKeyword)),
-                    identifier: SF.Identifier(schema.Id),
+                    identifier: SF.Identifier(GetDefinitionName(schema)),
                     typeParameterList: null,
                     baseList: SF.BaseList(SF.SingletonSeparatedList<BaseTypeSyntax>(
                         SF.SimpleBaseType(baseType))),
@@ -506,7 +507,7 @@ namespace DataWF.Web.CodeGenerator
         {
             foreach (var property in schema.Properties)
             {
-                property.Value.Id = property.Key;
+                //    property.Value.Id = property.Key;
                 yield return GenDefinitionClassField(property.Value);
             }
 
@@ -572,7 +573,7 @@ namespace DataWF.Web.CodeGenerator
                 modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
                 type: typeDeclaration,
                 explicitInterfaceSpecifier: null,
-                identifier: SF.Identifier(property.Id),
+                identifier: SF.Identifier(GetPropertyName(property)),
                 accessorList: SF.AccessorList(SF.List(GenPropertyAccessors(property))),
                 expressionBody: null,
                 initializer: null,
@@ -582,8 +583,6 @@ namespace DataWF.Web.CodeGenerator
 
         private IEnumerable<AttributeListSyntax> GenClassPropertyAttributes(JsonProperty property)
         {
-            if (property.Name == "WorkStage")
-            { }
             if (property.IsReadOnly || property.ExtensionData != null && property.ExtensionData.TryGetValue("readOnly", out var isReadOnly) && (bool)isReadOnly)
             {
                 yield return SF.AttributeList(
@@ -629,6 +628,21 @@ namespace DataWF.Web.CodeGenerator
             }
         }
 
+        private string GetPropertyName(JsonProperty property)
+        {
+            return GetDefinitionName(property.Name);
+        }
+
+        private string GetDefinitionName(JsonSchema4 schema)
+        {
+            return GetDefinitionName(schema.Id);
+        }
+
+        private string GetDefinitionName(string name)
+        {
+            return string.Concat(char.ToUpperInvariant(name[0]).ToString(), name.Substring(1));
+        }
+
         private string GetFieldName(JsonProperty property)
         {
             return GetFieldName(property.Name);
@@ -647,7 +661,7 @@ namespace DataWF.Web.CodeGenerator
                 var idFiledName = GetFieldName((string)idProperty);
                 yield return SF.ParseStatement($"if({fieldName} == null && {idFiledName} != null){{");
                 yield return SF.ParseStatement($"var client = ({GetTypeString(property, false)}Client)ClientProvider.Default.GetClient<{GetTypeString(property, false)}>();");
-                yield return SF.ParseStatement($"{fieldName} = client.Get({idFiledName});");
+                yield return SF.ParseStatement($"{fieldName} = client.Get({idFiledName}.Value);");
                 yield return SF.ParseStatement("}");
             }
             yield return SF.ParseStatement($"return {fieldName};");
@@ -727,9 +741,9 @@ namespace DataWF.Web.CodeGenerator
                     {
                         GetOrGenerateDefinion(value.Id);
                         if (value.IsEnumeration)
-                            return value.Id + (nullable ? "?" : string.Empty);
+                            return GetDefinitionName(value) + (nullable ? "?" : string.Empty);
                         else
-                            return value.Id;
+                            return GetDefinitionName(value);
                     }
                     break;
             }

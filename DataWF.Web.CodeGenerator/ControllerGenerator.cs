@@ -56,6 +56,7 @@ namespace DataWF.Web.CodeGenerator
             usings = new Dictionary<string, UsingDirectiveSyntax>(StringComparer.Ordinal) {
                 { "DataWF.Common", SyntaxHelper.CreateUsingDirective("DataWF.Common") },
                 { "DataWF.Data", SyntaxHelper.CreateUsingDirective("DataWF.Data") },
+                { "DataWF.Web.Common", SyntaxHelper.CreateUsingDirective("DataWF.Web.Common") },
                 { "Microsoft.AspNetCore.Mvc", SyntaxHelper.CreateUsingDirective("Microsoft.AspNetCore.Mvc") },
                 { "Microsoft.AspNetCore.Authentication.JwtBearer", SyntaxHelper.CreateUsingDirective("Microsoft.AspNetCore.Authentication.JwtBearer") },
                 { "Microsoft.AspNetCore.Authorization", SyntaxHelper.CreateUsingDirective("Microsoft.AspNetCore.Authorization") },

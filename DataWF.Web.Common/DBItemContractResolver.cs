@@ -1,61 +1,53 @@
 ﻿using DataWF.Common;
 using DataWF.Data;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
+using System.Linq;
 
 namespace DataWF.Web.Common
 {
     public class DBItemContractResolver : DefaultContractResolver
     {
+        private JsonConverter dbConverter = new DBItemJsonConverter();
         public override JsonContract ResolveContract(Type type)
         {
             var contract = base.ResolveContract(type);
             return contract;
         }
 
+
         protected override JsonObjectContract CreateObjectContract(Type objectType)
         {
             if (TypeHelper.IsBaseType(objectType, typeof(DBItem)))
             {
-                var table = DBTable.GetTable(objectType, null, false);
+                var table = DBTable.GetTableAttributeInherit(objectType);
                 if (table != null)
                 {
                     var result = new JsonObjectContract(objectType)
                     {
-                        Converter = new DBItemJsonConverter(),
-                        DefaultCreator = () => table.NewItem()
+                        Converter = dbConverter
                     };
 
-
-                    foreach (var property in base.CreateProperties(objectType, Newtonsoft.Json.MemberSerialization.OptIn))
+                    foreach (var column in table.Columns.Where(p => TypeHelper.IsBaseType(p.Property.DeclaringType, objectType)))
                     {
-                        result.Properties.Add(property);
+                        var jsonProperty = base.CreateProperty(column.Property, MemberSerialization.OptIn);
+                        jsonProperty.ValueProvider = EmitInvoker.Initialize(column.Property);
+                        jsonProperty.Ignored = (column.Keys & DBColumnKeys.Access) == DBColumnKeys.Access;                        
+                        result.Properties.Add(jsonProperty);
                     }
 
-                    //foreach (DBColumn column in table.Columns)
-                    //{
-                    //    if (column.PropertyInvoker != null && column.Access.View && (column.Keys & DBColumnKeys.Access) != DBColumnKeys.Access)
-                    //    {
-                    //        var property = objectType.GetProperty(column.Property);
-                    //        if (property != null)
-                    //        {
-                    //            var jsonProperty = base.CreateProperty(property, Newtonsoft.Json.MemberSerialization.OptIn);
-                    //            result.Properties.Add(jsonProperty);
-                    //        }
-                    //        else
-                    //        {
-                    //            ///result.ExtensionDataGetter = new ExtensionDataGetter()
-                    //        }
-                    //    }
-                    //}
+                    foreach (var reference in table.References.Where(p => TypeHelper.IsBaseType(p.Property.DeclaringType, objectType)))
+                    {
+                        var jsonProperty = base.CreateProperty(reference.Property, MemberSerialization.OptIn);
+                        jsonProperty.ValueProvider = EmitInvoker.Initialize(reference.Property);
+                        jsonProperty.NullValueHandling = NullValueHandling.Ignore;
+                        result.Properties.Add(jsonProperty);
+                    }
                     return result;
                 }
             }
-            var baseResult = base.CreateObjectContract(objectType);
-            if (objectType == typeof(DBItem))
-                baseResult.Properties.Clear();
-            return baseResult;
-
+            return base.CreateObjectContract(objectType);
         }
     }
 }

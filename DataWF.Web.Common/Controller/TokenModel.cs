@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace DataWF.Web.Controller
+namespace DataWF.Web.Common
 {
     public class TokenModel
     {

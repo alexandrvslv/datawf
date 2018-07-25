@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System;
 using System.Collections.Generic;
 
-namespace DataWF.Web.Controller
+namespace DataWF.Web.Common
 {
 
     [Auth]
@@ -30,7 +30,7 @@ namespace DataWF.Web.Controller
         }
 
         [HttpGet("Find/{filter}")]
-        public ActionResult<IEnumerable<T>> Find(string filter)
+        public ActionResult<IEnumerable<T>> Find([FromRoute]string filter)
         {
             try
             {
@@ -47,7 +47,7 @@ namespace DataWF.Web.Controller
         }
 
         [HttpGet("{id}")]
-        public ActionResult<T> Get(K id)
+        public ActionResult<T> Get([FromRoute]K id)
         {
             try
             {
@@ -65,7 +65,7 @@ namespace DataWF.Web.Controller
         }
 
         [HttpPost]
-        public ActionResult<T> Post(T value)
+        public ActionResult<T> Post([FromBody]T value)
         {
             try
             {
@@ -91,7 +91,7 @@ namespace DataWF.Web.Controller
         }
 
         [HttpPut]
-        public ActionResult<T> Put(T value)
+        public ActionResult<T> Put([FromBody]T value)
         {
             try
             {
@@ -111,7 +111,7 @@ namespace DataWF.Web.Controller
         }
 
         [HttpDelete("{id}")]
-        public ActionResult<bool> Delete(K id)
+        public ActionResult<bool> Delete([FromRoute]K id)
         {
             try
             {
@@ -137,6 +137,21 @@ namespace DataWF.Web.Controller
         public override BadRequestObjectResult BadRequest(ModelStateDictionary modelState)
         {
             return base.BadRequest(modelState);
+        }
+
+        public override ActionResult ValidationProblem(ValidationProblemDetails descriptor)
+        {
+            return base.ValidationProblem(descriptor);
+        }
+
+        public override ActionResult ValidationProblem()
+        {
+            return base.ValidationProblem();
+        }
+
+        public override ActionResult ValidationProblem(ModelStateDictionary modelStateDictionary)
+        {
+            return base.ValidationProblem(modelStateDictionary);
         }
 
     }
