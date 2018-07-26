@@ -86,7 +86,7 @@ namespace DataWF.Module.FlowGui
         private GroupBox groupBox;
         private Stage currentStage;
         private Document current = null;
-        private DocumentSendType type = DocumentSendType.Next;
+        private DocumentSendType type = DocumentSendType.Undefined;
         private Stage selectedStage;
 
         public DocumentSender()
@@ -199,11 +199,20 @@ namespace DataWF.Module.FlowGui
             get { return selectedStage; }
             private set
             {
+                if (selectedStage == value)
+                    return;
                 selectedStage = value;
-                if (selectedStage != null)
+                listUsers.Nodes.Clear();
+
+                if (value != null)
                 {
-                    foreach (var item in selectedStage.GetDepartment(current.Template))
+                    groupBox.Items["Users"].Visible = true;
+                    foreach (var item in value.GetDepartment(current.Template))
                         InitNode(item);
+                }
+                else
+                {
+                    groupBox.Items["Users"].Visible = false;
                 }
             }
         }
@@ -318,18 +327,19 @@ namespace DataWF.Module.FlowGui
             get { return type; }
             set
             {
+                if (type == value)
+                    return;
                 type = value;
                 GuiService.Localize(toolType, "DocumentSender", value.ToString());
-                groupBox.Items["Users"].Visible = true;
-                listUsers.Nodes.Clear();
 
                 if (type == DocumentSendType.Next)
                 {
-                    ToolNextItemClick(this, new ToolItemEventArgs() { Item = toolNext.DropDown.Items[0] });
+                    if (SelectedStage == null)
+                        ToolNextItemClick(this, new ToolItemEventArgs() { Item = toolNext.DropDown.Items[0] });
                 }
                 else if (type == DocumentSendType.Return)
                 {
-                    groupBox.Items["Users"].Visible = false;
+                    SelectedStage = null;
                 }
                 else if (type == DocumentSendType.Forward)
                 {
@@ -337,16 +347,15 @@ namespace DataWF.Module.FlowGui
                 }
                 else if (type == DocumentSendType.Recovery)
                 {
-                    var startStage = CurrentWork?.GetStartStage();
-                    if (startStage == null)
+                    SelectedStage = CurrentWork?.GetStartStage();
+                    if (SelectedStage == null)
                     {
                         var stageNode = InitNode(User.CurrentUser);
                     }
-                    SelectedStage = startStage;
                 }
                 else if (type == DocumentSendType.Complete)
                 {
-                    groupBox.Items["Users"].Visible = false;
+                    SelectedStage = null;
                 }
 
                 listUsers.Nodes.ExpandTop();
@@ -357,8 +366,10 @@ namespace DataWF.Module.FlowGui
         private void ToolNextItemClick(object sender, ToolItemEventArgs e)
         {
             var reference = e.Item.Tag as StageReference;
-            toolType.Text = $"{Locale.Get("DocumentSender", DocumentSendType.Next.ToString())} ({reference.ReferenceStage})";
             SelectedStage = reference.ReferenceStage;
+            SendType = DocumentSendType.Next;
+            toolType.Text = $"{Locale.Get("DocumentSender", DocumentSendType.Next.ToString())} ({reference.ReferenceStage})";
+
         }
 
         private void ToolTypeItemClicked(object sender, ToolItemEventArgs e)
@@ -449,6 +460,7 @@ namespace DataWF.Module.FlowGui
                 var restor = items.Select("Work", CompareType.Equal, null);
                 var sended = send.Union(restor).ToList();
                 MessageDialog.ShowMessage(this, string.Format("Sended {0} of {1} documents", sended.Count, items.Count));
+
                 if (sended.Count == items.Count)
                 {
                     Hide();
@@ -463,7 +475,7 @@ namespace DataWF.Module.FlowGui
             var nodes = listUsers.Nodes.GetChecked().ToList();
             if (nodes.Count == 0 && SendType != DocumentSendType.Complete && SendType != DocumentSendType.Return)
             {
-                MessageDialog.ShowMessage(this, Locale.Get("DocumentSender", "Select Stage!"));
+                MessageDialog.ShowMessage(this, Locale.Get(nameof(DocumentSender), "Please, Select Stage!"));
                 return;
             }
             //listDocuments.Sensitive = false;
