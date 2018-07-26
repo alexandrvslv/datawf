@@ -621,6 +621,12 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
+        public bool IsTypeKey
+        {
+            get { return (Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType; }
+        }
+
+        [Browsable(false)]
         public bool IsNotNull
         {
             get { return (Keys & DBColumnKeys.Notnull) == DBColumnKeys.Notnull; }
