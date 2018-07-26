@@ -21,6 +21,7 @@ namespace DataWF.Web.Client
         AuthorizationInfo Authorization { get; set; }
         ICRUDClient<T> GetClient<T>();
         ICRUDClient GetClient(Type type);
+        ICRUDClient GetClient(Type type, int typeId);
     }
 
     public interface IClient
@@ -31,13 +32,14 @@ namespace DataWF.Web.Client
     public interface ICRUDClient : IClient
     {
         Type ItemType { get; }
+        int TypeId { get; }
         Task DeleteAsync(object id);
         Task FindAsync(string filter);
         Task GetAsync();
         Task GetAsync(object id);
         Task PostAsync(object value);
         Task PutAsync(object value);
-        object DeserializeItem(JsonSerializer serializer, JsonTextReader jreader);
+        object DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, Dictionary<IInvoker, object> dictionary = null, object id = null);
     }
 
     public interface ICRUDClient<T> : ICRUDClient
@@ -50,6 +52,6 @@ namespace DataWF.Web.Client
         Task<T> PostAsync(T value, CancellationToken cancellationToken);
         Task<T> PutAsync(T value, CancellationToken cancellationToken);
         Task<bool> DeleteAsync(object id, CancellationToken cancellationToken);
-        new T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader);
+        new T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, Dictionary<IInvoker, object> dictionary = null, object id = null);
     }
 }

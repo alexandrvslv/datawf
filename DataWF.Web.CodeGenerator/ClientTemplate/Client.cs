@@ -10,28 +10,27 @@ namespace DataWF.Web.Client
 {
     public abstract partial class Client<T, K> : ClientBase, ICRUDClient<T> where T : class, new() where K : struct
     {
-        public Client(Invoker<T, K?> idInvoker)
+        public Client(Invoker<T, K?> idInvoker, Invoker<T, int?> typeInvoker, int typeId = 0)
         {
             IdInvoker = idInvoker;
-            if (IdInvoker != null)
-            {
-                Items.Indexes.Add(IdInvoker);
-            }
+            Items.Indexes.Add(IdInvoker);
+            TypeInvoker = typeInvoker;
+            TypeId = typeId;
         }
 
-        public readonly Invoker<T, K?> IdInvoker;
+        public Invoker<T, K?> IdInvoker { get; }
+        public Invoker<T, int?> TypeInvoker { get; }
+        public int TypeId { get; }
+        public Type ItemType { get { return typeof(T); } }
 
         public SelectableList<T> Items { get; set; } = new SelectableList<T>();
 
-        public Type ItemType { get { return typeof(T); } }
-
-        public T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader)
+        public T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, Dictionary<IInvoker, object> dictionary = null, object id = null)
         {
-            var dictionary = new Dictionary<IInvoker, object>();
+            dictionary = dictionary ?? new Dictionary<IInvoker, object>();
+            var item = (T)null;
             var invoker = (IInvoker)null;
-            var id = (object)null;
-            var newItem = (T)null;
-            var add = false;
+            var typeId = (object)null;
             while (jreader.Read() && jreader.TokenType != JsonToken.EndObject)
             {
                 if (jreader.TokenType == JsonToken.PropertyName)
@@ -48,35 +47,62 @@ namespace DataWF.Web.Client
                 else if (invoker != null)
                 {
                     dictionary[invoker] = jreader.Value;
-                    if (invoker.Name == IdInvoker.Name)
+                    if (invoker.Name == IdInvoker?.Name)
                     {
                         id = jreader.Value;
                     }
+                    else if (invoker.Name == TypeInvoker?.Name)
+                    {
+                        typeId = jreader.Value;
+                        if (typeId != null)
+                        {
+                            var type = (int)Helper.Parse(typeId, typeof(int));
+                            if (type != TypeId)
+                            {
+                                var client = Provider.GetClient(typeof(T), type);
+                                item = (T)client.DeserializeItem(serializer, jreader, dictionary, id);
+                                if (Select(IdInvoker.GetValue(item).Value) == null)
+                                {
+                                    Items.Add(item);
+                                }
+                                return item;
+                            }
+                        }
+                    }
                 }
             }
+
+            return DeserializeItem(dictionary, id);
+        }
+
+        public T DeserializeItem(Dictionary<IInvoker, object> dictionary, object id)
+        {
+            var add = false;
+            var item = (T)null;
             if (id != null)
             {
-                newItem = Select((K)Helper.Parse(id, typeof(K)));
+                item = Select((K)Helper.Parse(id, typeof(K)));
             }
-            if (newItem == null)
+
+            if (item == null)
             {
-                newItem = new T();
+                item = new T();
                 add = true;
             }
             foreach (var entry in dictionary)
             {
-                entry.Key.SetValue(newItem, Helper.Parse(entry.Value, entry.Key.DataType));
+                entry.Key.SetValue(item, Helper.Parse(entry.Value, entry.Key.DataType));
             }
             if (add)
             {
-                Items.Add(newItem);
+                Items.Add(item);
             }
-            return newItem;
+            return item;
         }
 
-        object ICRUDClient.DeserializeItem(JsonSerializer serializer, JsonTextReader jreader)
+        object ICRUDClient.DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, Dictionary<IInvoker, object> dictionary, object id)
         {
-            return DeserializeItem(serializer, jreader);
+            return DeserializeItem(serializer, jreader, dictionary, id);
         }
 
         public virtual T Select(K id)

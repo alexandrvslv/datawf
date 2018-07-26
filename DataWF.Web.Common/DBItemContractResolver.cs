@@ -33,17 +33,18 @@ namespace DataWF.Web.Common
                     {
                         var jsonProperty = base.CreateProperty(column.Property, MemberSerialization.OptIn);
                         jsonProperty.ValueProvider = EmitInvoker.Initialize(column.Property);
-                        jsonProperty.Ignored = (column.Keys & DBColumnKeys.Access) == DBColumnKeys.Access;                        
+                        jsonProperty.Ignored = column.ColumnType != DBColumnTypes.Default || (column.Keys & DBColumnKeys.Access) == DBColumnKeys.Access;
                         result.Properties.Add(jsonProperty);
+
+                        if (column.ReferenceProperty != null)
+                        {
+                            jsonProperty = base.CreateProperty(column.ReferenceProperty, MemberSerialization.OptIn);
+                            jsonProperty.ValueProvider = EmitInvoker.Initialize(column.ReferenceProperty);
+                            jsonProperty.NullValueHandling = NullValueHandling.Ignore;
+                            result.Properties.Add(jsonProperty);
+                        }
                     }
 
-                    foreach (var reference in table.References.Where(p => TypeHelper.IsBaseType(p.Property.DeclaringType, objectType)))
-                    {
-                        var jsonProperty = base.CreateProperty(reference.Property, MemberSerialization.OptIn);
-                        jsonProperty.ValueProvider = EmitInvoker.Initialize(reference.Property);
-                        jsonProperty.NullValueHandling = NullValueHandling.Ignore;
-                        result.Properties.Add(jsonProperty);
-                    }
                     return result;
                 }
             }

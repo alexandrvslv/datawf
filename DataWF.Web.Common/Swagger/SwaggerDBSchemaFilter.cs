@@ -21,7 +21,9 @@ namespace DataWF.Web.Common
             {
                 var temp = DBTable.GetTableAttributeInherit(context.SystemType);
                 if (temp != null)
+                {
                     tables.Push(temp);
+                }
 
                 Schema baseSchema = null;
                 if (context.SystemType.BaseType != typeof(object))
@@ -29,8 +31,16 @@ namespace DataWF.Web.Common
                     baseSchema = context.SchemaRegistry.GetOrRegister(context.SystemType.BaseType);
                 }
                 ApplyTableType(schema, context.SystemType, context, baseSchema);
+
+                if (context.SystemType != typeof(DBItem) && context.SystemType != typeof(DBGroupItem))
+                {
+                    var itemType = DBTable.GetItemTypeAttribute(context.SystemType);
+                    schema.Extensions.Add("x-type-id", itemType?.Id ?? 0);
+                }
                 if (temp != null)
+                {
                     tables.Pop();
+                }
             }
         }
 

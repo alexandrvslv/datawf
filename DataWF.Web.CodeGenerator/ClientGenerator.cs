@@ -147,6 +147,21 @@ namespace DataWF.Web.CodeGenerator
                    constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
                    body: SF.Block(new[] { SF.ParseStatement("return Clients.OfType<ICRUDClient>().FirstOrDefault(p=>p.ItemType == type);") }),
                    semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
+
+            yield return SF.MethodDeclaration(
+               attributeLists: SF.List<AttributeListSyntax>(),
+                   modifiers: SF.TokenList(new[] { SF.Token(SyntaxKind.PublicKeyword) }),
+                   returnType: SF.ParseTypeName("ICRUDClient"),
+                   explicitInterfaceSpecifier: null,
+                   identifier: SF.Identifier("GetClient"),
+                   typeParameterList: null,
+                   parameterList: SF.ParameterList(SF.SeparatedList(new[]{
+                       SF.Parameter( attributeLists: SF.List<AttributeListSyntax>(), modifiers: SF.TokenList(), type: SF.ParseTypeName("Type"), identifier: SF.Identifier("type"), @default: null),
+                       SF.Parameter( attributeLists: SF.List<AttributeListSyntax>(), modifiers: SF.TokenList(), type: SF.ParseTypeName("int"), identifier: SF.Identifier("typeId"), @default: null)
+                   })),
+                   constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
+                   body: SF.Block(new[] { SF.ParseStatement("return Clients.OfType<ICRUDClient>().FirstOrDefault(p => TypeHelper.IsBaseType(p.ItemType, type) && p.TypeId == typeId);") }),
+                   semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
         }
 
         private IEnumerable<StatementSyntax> GenProviderClientsBody()
@@ -250,7 +265,7 @@ namespace DataWF.Web.CodeGenerator
 
         private ClassDeclarationSyntax GenClient(string clientName)
         {
-            var baseType = SF.ParseTypeName(GetClientBaseType(clientName, out var id));
+            var baseType = SF.ParseTypeName(GetClientBaseType(clientName, out var idKey, out var typeKey, out var typeId));
 
             return SF.ClassDeclaration(
                         attributeLists: SF.List(ClientAttributeList()),
@@ -260,18 +275,22 @@ namespace DataWF.Web.CodeGenerator
                         baseList: SF.BaseList(SF.SingletonSeparatedList<BaseTypeSyntax>(
                             SF.SimpleBaseType(baseType))),
                         constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
-                        members: SF.List<MemberDeclarationSyntax>(GenClientConstructor(clientName, id))
+                        members: SF.List<MemberDeclarationSyntax>(GenClientConstructor(clientName, idKey, typeKey, typeId))
                         );
         }
 
-        private string GetClientBaseType(string clientName, out JsonProperty id)
+        private string GetClientBaseType(string clientName, out JsonProperty idKey, out JsonProperty typeKey, out int typeId)
         {
+            idKey = null;
+            typeKey = null;
+            typeId = 0;
             if (document.Definitions.TryGetValue(clientName, out var schema))
             {
-                id = GetPrimaryKey(schema);
-                return $"Client<{clientName}, {(id == null ? "int" : GetTypeString(id, false))}>";
+                idKey = GetPrimaryKey(schema);
+                typeKey = GetTypeKey(schema);
+                typeId = GetTypeId(schema);
+                return $"Client<{clientName}, {(idKey == null ? "int" : GetTypeString(idKey, false))}>";
             }
-            id = null;
             return $"ClientBase";
         }
 
@@ -291,14 +310,44 @@ namespace DataWF.Web.CodeGenerator
             return null;
         }
 
-        private IEnumerable<ConstructorDeclarationSyntax> GenClientConstructor(string clientName, JsonProperty id)
+        private JsonProperty GetTypeKey(JsonSchema4 schema)
         {
-            var propertyName = id == null ? null : GetPropertyName(id);
-            var initialize = id == null ? null : SF.ConstructorInitializer(
+            if (schema.ExtensionData != null && schema.ExtensionData.TryGetValue("x-type", out var propertyName))
+            {
+                return schema.Properties[propertyName.ToString()];
+            }
+
+            foreach (var baseClass in schema.AllInheritedSchemas)
+                if (baseClass.ExtensionData != null && baseClass.ExtensionData.TryGetValue("x-type", out propertyName))
+                {
+                    return baseClass.Properties[propertyName.ToString()];
+                }
+
+            return null;
+        }
+
+        private int GetTypeId(JsonSchema4 schema)
+        {
+            if (schema.ExtensionData != null && schema.ExtensionData.TryGetValue("x-type-id", out var id))
+            {
+                return (int)Helper.Parse(id, typeof(int));
+            }
+
+            return 0;
+        }
+
+        private IEnumerable<ConstructorDeclarationSyntax> GenClientConstructor(string clientName, JsonProperty idKey, JsonProperty typeKey, int typeId)
+        {
+            var idName = idKey == null ? null : GetPropertyName(idKey);
+            var typeName = typeKey == null ? null : GetPropertyName(typeKey);
+            var initialize = idKey == null ? null : SF.ConstructorInitializer(
                     SyntaxKind.BaseConstructorInitializer,
                     SF.ArgumentList(
                         SF.SeparatedList(new[] {
-                            SF.Argument(SF.ParseExpression($"new Invoker<{clientName},{GetTypeString(id, true)}>(nameof({clientName}.{propertyName}), (p)=>p.{propertyName})")) })));
+                            SF.Argument(SF.ParseExpression($"new Invoker<{clientName},{GetTypeString(idKey, true)}>(nameof({clientName}.{idName}), p=>p.{idName})")),
+                            SF.Argument(SF.ParseExpression($"new Invoker<{clientName},{GetTypeString(typeKey, true)}>(nameof({clientName}.{typeName}), p=>p.{typeName})")),
+                            SF.Argument(SF.ParseExpression($"{typeId}")),
+                        })));
             yield return SF.ConstructorDeclaration(
                 attributeLists: SF.List(ClientAttributeList()),
                 modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
@@ -327,7 +376,7 @@ namespace DataWF.Web.CodeGenerator
         {
             var operationName = GetOperationName(descriptor, out var clientName);
             var actualName = $"{operationName}Async";
-            var baseType = GetClientBaseType(clientName, out var id);
+            var baseType = GetClientBaseType(clientName, out var id, out var typeKey, out var typeId);
             var returnType = GetReturningType(descriptor);
             returnType = returnType.Length > 0 ? $"Task<{returnType}>" : "Task";
 

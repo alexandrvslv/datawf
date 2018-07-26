@@ -237,17 +237,6 @@ namespace DataWF.Web.Client
             }
         }
 
-        public Dictionary<string, IEnumerable<string>> GetHeaders(HttpResponseMessage response)
-        {
-            var headers = Enumerable.ToDictionary(response.Headers, h => h.Key, h => h.Value);
-            if (response.Content != null && response.Content.Headers != null)
-            {
-                foreach (var item in response.Content.Headers)
-                    headers[item.Key] = item.Value;
-            }
-            return headers;
-        }
-
         protected virtual R DeserializeArray<R, I>(JsonSerializer serializer, JsonTextReader jreader) where R : IList<I>
         {
             var client = Provider.GetClient<I>();
@@ -268,19 +257,30 @@ namespace DataWF.Web.Client
 
         public virtual R DeserializeObject<R>(JsonSerializer serializer, JsonTextReader jreader)
         {
-            var crudClient = Provider.GetClient<R>();
-            if (crudClient != null)
-                return crudClient.DeserializeItem(serializer, jreader);
+            var client = Provider.GetClient<R>();
+            if (client != null)
+                return client.DeserializeItem(serializer, jreader);
 
             return serializer.Deserialize<R>(jreader);
         }
 
         public virtual object DeserializeObject(JsonSerializer serializer, JsonTextReader jreader, Type type)
         {
-            var crudClient = Provider.GetClient(type);
-            if (crudClient != null)
-                return crudClient.DeserializeItem(serializer, jreader);
+            var client = Provider.GetClient(type);
+            if (client != null)
+                return client.DeserializeItem(serializer, jreader);
             return serializer.Deserialize(jreader, type);
+        }
+
+        public Dictionary<string, IEnumerable<string>> GetHeaders(HttpResponseMessage response)
+        {
+            var headers = Enumerable.ToDictionary(response.Headers, h => h.Key, h => h.Value);
+            if (response.Content != null && response.Content.Headers != null)
+            {
+                foreach (var item in response.Content.Headers)
+                    headers[item.Key] = item.Value;
+            }
+            return headers;
         }
 
         protected string ConvertToString(object value, System.Globalization.CultureInfo cultureInfo)

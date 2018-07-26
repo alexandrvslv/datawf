@@ -98,6 +98,8 @@ namespace DataWF.Data
             // if (col.Order == -1 || col.Order > this.Count)
             if (item.IsPrimaryKey)
                 index = 0;
+            if (item.IsTypeKey)
+                index = 0;
             item.Order = index;
 
             base.InsertInternal(index, item);
