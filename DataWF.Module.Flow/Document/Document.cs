@@ -606,16 +606,17 @@ namespace DataWF.Module.Flow
                 return;
             saving.Add(this);
             var transaction = DBTransaction.GetTransaction(this, Table.Schema.Connection);
-            var param = new DocumentExecuteArgs() { Document = this, ProcedureCategory = Template.Code };
+
             try
             {
                 base.Save();
 
-                if (Template != null)
+                if (Template != null && !UpdateState.HasFlag(DBUpdateState.Delete))
                 {
+                    var param = new DocumentExecuteArgs() { Document = this, ProcedureCategory = Template.Code };
+
                     var works = GetWorks().ToList();
                     bool isnew = works.Count == 0;
-
 
                     if (isnew)
                     {
@@ -715,8 +716,8 @@ namespace DataWF.Module.Flow
                 {
                     foreach (var unWork in GetWorksUncompleted(work.Stage).ToList())
                     {
-                        if (unWork.From == work.From)
-                            work.DateComplete = work.DateComplete;
+                        //if (unWork.From == work.From)
+                        unWork.DateComplete = work.DateComplete;
                     }
                 }
 
