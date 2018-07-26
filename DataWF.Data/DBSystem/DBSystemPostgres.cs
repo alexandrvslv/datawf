@@ -124,7 +124,7 @@ namespace DataWF.Data
                     ddl.AppendLine($"create sequence {sequence.Name} start with {sequence.Current} increment by {sequence.Increment}");
                     break;
                 case DDLType.Alter:
-                    ddl.AppendLine($"alter sequence {sequence.Name} restart with {sequence.Current} increment by {sequence.Increment}");
+                    ddl.AppendLine($"alter sequence {sequence.Name} restart with {sequence.Current + 1} increment by {sequence.Increment}");
                     break;
                 case DDLType.Drop:
                     ddl.AppendLine($"drop sequence {sequence.Name}");

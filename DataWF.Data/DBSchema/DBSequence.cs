@@ -45,7 +45,7 @@ namespace DataWF.Data
             get => current;
             set
             {
-                Interlocked.CompareExchange(ref current, value, current);                
+                Interlocked.CompareExchange(ref current, value, current);
             }
         }
 
@@ -84,13 +84,17 @@ namespace DataWF.Data
             return ddl.ToString();
         }
 
-        public long NextIncrement()
+        /// <summary>
+        /// NextInternal no query excution, use if fast increment required, but require restart database sequence(by Save())
+        /// </summary>
+        /// <returns></returns>
+        public long NextInternal()
         {
             Interlocked.CompareExchange(ref changed, 1, 0);
             return Interlocked.Add(ref current, Increment);
         }
 
-        public long NextValue()
+        public long Next()
         {
             long result = 0;
             var transaction = DBTransaction.GetTransaction(this, Schema?.Connection);
@@ -114,7 +118,6 @@ namespace DataWF.Data
         {
             if (changed == 0)
                 return;
-            NextIncrement();
             Interlocked.CompareExchange(ref changed, 0, 1);
             var transaction = DBTransaction.GetTransaction(this, Schema?.Connection);
             try
@@ -154,7 +157,6 @@ namespace DataWF.Data
             if (current < temp)
             {
                 Current = temp;
-                Interlocked.CompareExchange(ref changed, 1, 0);
             }
         }
     }
