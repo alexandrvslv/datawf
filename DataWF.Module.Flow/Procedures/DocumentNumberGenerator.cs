@@ -43,7 +43,7 @@ namespace DataWF.Module.Flow
                 DBService.Save();
             }
             //return DBService.ExecuteQuery(FlowEnvironment.Config.Schema, FlowEnvironment.Config.Schema.Sequence.Create(name, 0, 1));
-            return sequence.NextValue();
+            return sequence.Next();
         }
 
         public virtual string Generate(Template template)
