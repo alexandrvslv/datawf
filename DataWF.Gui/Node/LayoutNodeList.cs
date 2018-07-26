@@ -40,7 +40,9 @@ namespace DataWF.Gui
                     return;
                 sense = value;
                 if (sense)
+                {
                     OnListChanged(NotifyCollectionChangedAction.Reset);
+                }
             }
         }
 

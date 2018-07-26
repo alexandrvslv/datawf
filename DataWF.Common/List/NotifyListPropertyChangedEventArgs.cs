@@ -12,19 +12,15 @@ namespace DataWF.Common
             switch (type)
             {
                 case NotifyCollectionChangedAction.Reset:
-                    if (item != null)
-                    {
-                        return new NotifyListPropertyChangedEventArgs(item, property);
-                    }
-                    else
-                    {
-                        return new NotifyListPropertyChangedEventArgs();
-                    }
+                    return new NotifyListPropertyChangedEventArgs();
                 case NotifyCollectionChangedAction.Add:
                 case NotifyCollectionChangedAction.Remove:
                     return new NotifyListPropertyChangedEventArgs(type, item, index);
                 case NotifyCollectionChangedAction.Replace:
-                    return new NotifyListPropertyChangedEventArgs(item, oldItem, index);
+                    if (property != null)
+                        return new NotifyListPropertyChangedEventArgs(item, property, index);
+                    else
+                        return new NotifyListPropertyChangedEventArgs(item, oldItem, index);
                 default:
                     return new NotifyListPropertyChangedEventArgs(item, index, oldIndex);
             }
@@ -34,8 +30,8 @@ namespace DataWF.Common
             : base(NotifyCollectionChangedAction.Reset)
         { }
 
-        public NotifyListPropertyChangedEventArgs(object item, string property)
-            : base(NotifyCollectionChangedAction.Reset)
+        public NotifyListPropertyChangedEventArgs(object item, string property, int index)
+            : base(NotifyCollectionChangedAction.Replace, item, item, index)
         {
             Item = item;
             Property = property;
@@ -44,7 +40,7 @@ namespace DataWF.Common
         public NotifyListPropertyChangedEventArgs(object item, object oldItem, int index)
           : base(NotifyCollectionChangedAction.Replace, item, oldItem, index)
         {
-            Item = item;
+            Item = null;
         }
 
         public NotifyListPropertyChangedEventArgs(object item, int index, int oldIndex, string property)

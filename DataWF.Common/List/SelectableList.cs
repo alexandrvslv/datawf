@@ -244,7 +244,7 @@ namespace DataWF.Common
             }
             if (index >= 0)
             {
-                OnListChanged(NotifyCollectionChangedAction.Reset, sender, index, propertyName);
+                OnListChanged(NotifyCollectionChangedAction.Replace, sender, index, propertyName);
             }
         }
 
@@ -430,6 +430,7 @@ namespace DataWF.Common
 
                 RemoveInternal(item, index);
                 InsertInternal(index, value);
+                OnListChanged(NotifyCollectionChangedAction.Replace, value, index, null, index, item);
             }
         }
 

@@ -280,10 +280,10 @@ namespace DataWF.Data
 
         public override void OnPropertyChanged(object sender, string propertyName)
         {
-            OnItemChanged((T)sender, propertyName, NotifyCollectionChangedAction.Reset);
+            OnItemChanged((T)sender, propertyName, NotifyCollectionChangedAction.Replace);
         }
 
-        public void OnItemChanged(DBItem item, string propertyName, NotifyCollectionChangedAction type)
+        public void OnTableChanged(DBItem item, string propertyName, NotifyCollectionChangedAction type)
         {
             if (item == null || TypeHelper.IsBaseType(item.GetType(), ItemType))
             {
@@ -298,11 +298,10 @@ namespace DataWF.Data
                 switch (type)
                 {
                     case NotifyCollectionChangedAction.Reset:
-                        if (item == null)
-                        {
-                            UpdateFilter();
-                        }
-                        else
+                        UpdateFilter();
+                        break;
+                    case NotifyCollectionChangedAction.Replace:
+                        if (item != null)
                         {
                             GetIndex(out var index, out var newIndex);
                             if (index < 0)

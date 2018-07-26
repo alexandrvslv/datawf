@@ -49,7 +49,7 @@ namespace DataWF.Data
 
         new bool IsSynchronized { get; set; }
 
-        void OnItemChanged(DBItem item, string property, NotifyCollectionChangedAction type);
+        void OnTableChanged(DBItem item, string property, NotifyCollectionChangedAction type);
 
         IEnumerable<DBItem> Load(DBLoadParam param = DBLoadParam.None);
 

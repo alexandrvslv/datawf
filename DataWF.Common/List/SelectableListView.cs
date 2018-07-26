@@ -137,19 +137,27 @@ namespace DataWF.Common
             }
             else
             {
+                property = null;
+            }
+            if (item == null)
+            {
                 item = e.NewItems != null ? e.NewItems.Cast<T>().FirstOrDefault() : e.OldItems != null ? e.OldItems.Cast<T>().FirstOrDefault() : default(T);
                 property = null;
             }
 
             switch (e.Action)
             {
-                case NotifyCollectionChangedAction.Move:
+
                 case NotifyCollectionChangedAction.Reset:
-                    if (item == null)
+                    UpdateFilter();
+                    return;
+                case NotifyCollectionChangedAction.Move:
+                case NotifyCollectionChangedAction.Replace:
+                    if (e.Action == NotifyCollectionChangedAction.Replace && (property == null || property.Item == null))
                     {
-                        UpdateFilter();
-                        return;
+                        items.Remove((T)e.OldItems[0]);
                     }
+
                     int index = IndexOf(item);
                     bool checkItem = ListHelper.CheckItem(item, query);
                     if (index >= 0 && !checkItem)
@@ -173,10 +181,15 @@ namespace DataWF.Common
                                     items.Insert(newindex, item);
                                     OnListChanged(NotifyCollectionChangedAction.Move, item, newindex, property?.Property, index);
                                 }
-                                OnListChanged(NotifyCollectionChangedAction.Reset, item, newindex, property?.Property);
+                                else
+                                {
+                                    OnListChanged(NotifyCollectionChangedAction.Replace, item, newindex, property?.Property);
+                                }
                             }
                             else
-                                OnListChanged(NotifyCollectionChangedAction.Reset, item, index, property?.Property);
+                            {
+                                //OnListChanged(NotifyCollectionChangedAction.Replace, item, index, property?.Property);
+                            }
                         }
                     }
                     break;
@@ -184,13 +197,11 @@ namespace DataWF.Common
                     Remove(item);
                     break;
                 case NotifyCollectionChangedAction.Add:
-                case NotifyCollectionChangedAction.Replace:
-                    if (e.Action == NotifyCollectionChangedAction.Replace)
-                    {
-                        Remove(e.OldItems[0]);
-                    }
                     if (ListHelper.CheckItem(item, query))
+                    {
                         base.Add(item);
+                    }
+
                     break;
             }
         }
