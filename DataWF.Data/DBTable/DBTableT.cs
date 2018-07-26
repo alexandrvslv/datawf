@@ -101,7 +101,7 @@ namespace DataWF.Data
 
         public virtual void Add(T item)
         {
-            if (item.Table != this && (item.Table is IDBVirtualTable virtualTable && virtualTable.BaseTable != this))
+            if (item.Table != this)
             {
                 throw new ArgumentException("Wrong Table item!");
             }
@@ -113,7 +113,7 @@ namespace DataWF.Data
             AddIndexes(item);
             item.OnAttached();
 
-            OnItemChanged(item, null, NotifyCollectionChangedAction.Add);
+            CheckViews(item, null, NotifyCollectionChangedAction.Add);
         }
 
         protected void AddIndexes(T item)
@@ -140,7 +140,7 @@ namespace DataWF.Data
             RemoveIndexes(item);
             item.OnDetached();
 
-            OnItemChanged(item, null, NotifyCollectionChangedAction.Remove);
+            CheckViews(item, null, NotifyCollectionChangedAction.Remove);
             return true;
         }
 
@@ -178,7 +178,7 @@ namespace DataWF.Data
                             column.Index.Clear();
                     }
                 }
-                OnItemChanged(null, null, NotifyCollectionChangedAction.Reset);
+                CheckViews(null, null, NotifyCollectionChangedAction.Reset);
 
                 foreach (DBItem row in temp)
                 {
@@ -228,20 +228,44 @@ namespace DataWF.Data
             queryViews.Add(view);
         }
 
-        public override void OnItemChanged(DBItem item, string property, NotifyCollectionChangedAction type)
-        {
-            if (property == nameof(DBItem.Attached)
-                || property == nameof(DBItem.UpdateState))
-                return;
 
-            foreach (var collection in virtualTables)
+        public override void OnItemChanging(DBItem item, string property, DBColumn column, object value)
+        {
+            if (column != null && column.Index != null)
             {
-                collection.CheckItem(item, property, type);
+                column.Index.Remove(item, value);
+                foreach (var collection in virtualTables)
+                {
+                    collection.OnItemChanging(item, property, column, value);
+                }
+            }
+        }
+
+        public override void OnItemChanged(DBItem item, string property, DBColumn column, object value)
+        {
+            if (column != null && column.Index != null)
+            {
+                column.Index.Add(item, value);
+                foreach (var collection in virtualTables)
+                {
+                    collection.OnItemChanged(item, property, column, value);
+                }
             }
 
+            if (property == nameof(DBItem.Attached) || property == nameof(DBItem.UpdateState))
+                return;
+            CheckViews(item, property, NotifyCollectionChangedAction.Replace);
+        }
+
+        public void CheckViews(DBItem item, string property, NotifyCollectionChangedAction type)
+        {
+            foreach (var collection in virtualTables)
+            {
+                collection.OnBaseChanged(item, property, type);
+            }
             for (int i = 0; i < queryViews.Count; i++)
             {
-                queryViews[i].OnItemChanged(item, property, type);
+                queryViews[i].OnTableChanged(item, property, type);
             }
         }
 

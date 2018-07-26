@@ -530,7 +530,9 @@ namespace DataWF.Data
 
         public abstract void CopyTo(DBItem[] array, int arrayIndex);
 
-        public abstract void OnItemChanged(DBItem item, string property, NotifyCollectionChangedAction type);
+        public abstract void OnItemChanged(DBItem item, string proeprty, DBColumn column, object value);
+
+        public abstract void OnItemChanging(DBItem item, string proeprty, DBColumn column, object value);
 
         public abstract void Trunc();
 
@@ -620,22 +622,6 @@ namespace DataWF.Data
             }
             column.ReaderDataType = type;
             return column;
-        }
-
-        public virtual void RemoveIndex(DBItem item, DBColumn column, object value)
-        {
-            if (item.Attached && column.Index != null)
-            {
-                column.Index.Remove(item, value);
-            }
-        }
-
-        public virtual void AddIndex(DBItem item, DBColumn column, object value)
-        {
-            if (item.Attached && column.Index != null)
-            {
-                column.Index.Add(item, value);
-            }
         }
 
         public abstract DBItem this[int index] { get; }
@@ -877,6 +863,8 @@ namespace DataWF.Data
             object val = transaction.ExecuteQuery(transaction.AddCommand(BuildQuery(@where, null, "count(*)")), DBExecuteType.Scalar);
             return val is Exception ? -1 : int.Parse(val.ToString());
         }
+
+
         #region IComparable Members
 
         int IComparable.CompareTo(object obj)

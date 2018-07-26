@@ -150,20 +150,20 @@ namespace DataWF.Data
             set { }
         }
 
-        public void CheckItem(DBItem item, string property, NotifyCollectionChangedAction type)
+        public void OnBaseChanged(DBItem item, string property, NotifyCollectionChangedAction type)
         {
             if (item is T view)
             {
                 switch (type)
                 {
-                    case NotifyCollectionChangedAction.Reset:
+                    case NotifyCollectionChangedAction.Replace:
                         if (FilterQuery.Parameters.Count != 0 && (FilterQuery.Contains(property) && !BaseTable.CheckItem(item, FilterQuery)))
                         {
                             Remove(view);
                         }
                         else
                         {
-                            OnItemChanged(view, property, type);
+                            CheckViews(view, property, type);
                         }
 
                         break;
@@ -178,7 +178,7 @@ namespace DataWF.Data
                         break;
                 }
             }
-            else if (item == null && type == NotifyCollectionChangedAction.Reset)
+            else if (type == NotifyCollectionChangedAction.Reset)
             {
                 Refresh();
             }
@@ -203,7 +203,7 @@ namespace DataWF.Data
             {
                 if (items.Remove(item))
                 {
-                    OnItemChanged(item, null, NotifyCollectionChangedAction.Remove);
+                    CheckViews(item, null, NotifyCollectionChangedAction.Remove);
                     RemoveIndexes(item);
                     return true;
                 }
@@ -221,22 +221,18 @@ namespace DataWF.Data
             {
                 items.Add(item);
                 AddIndexes(item);
-                OnItemChanged(item, null, NotifyCollectionChangedAction.Add);
+                CheckViews(item, null, NotifyCollectionChangedAction.Add);
             }
         }
 
-        public override void AddIndex(DBItem item, DBColumn column, object value)
+        public override void OnItemChanged(DBItem item, string property, DBColumn column, object value)
         {
-            var virtualColumn = column is DBVirtualColumn ? column : Columns[column.Name];
-            BaseTable.AddIndex(item, ((DBVirtualColumn)virtualColumn).BaseColumn, value);
-            base.AddIndex(item, virtualColumn, value);
+            base.OnItemChanged(item, property, column == null ? null : Columns[column.Name], value);
         }
 
-        public override void RemoveIndex(DBItem item, DBColumn column, object value)
+        public override void OnItemChanging(DBItem item, string property, DBColumn column, object value)
         {
-            var virtualColumn = column is DBVirtualColumn ? column : Columns[column.Name];
-            BaseTable.RemoveIndex(item, ((DBVirtualColumn)virtualColumn).BaseColumn, value);
-            base.RemoveIndex(item, virtualColumn, value);
+            base.OnItemChanging(item, property, column == null ? null : Columns[column.Name], value);
         }
 
         public override string SqlName
@@ -266,15 +262,14 @@ namespace DataWF.Data
             return BaseTable.NextHash();
         }
 
-        //public override bool SaveItem(DBItem row)
-        //{
-        //    return BaseTable.SaveItem(row);
-        //}
+        public override bool SaveItem(DBItem row)
+        {
+            return BaseTable.SaveItem(row);
+        }
 
         public override void Clear()
         {
             BaseTable.Clear();
-            base.Clear();
         }
 
         public override string FormatSql(DDLType ddlType)

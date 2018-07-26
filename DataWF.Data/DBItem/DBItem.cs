@@ -38,7 +38,7 @@ namespace DataWF.Data
 
     [DataContract]
     //[JsonConverter(typeof(DBItemJsonConverter))]
-    public class DBItem : ICloneable, IComparable<DBItem>, IDisposable, IAccessable, ICheck, INotifyPropertyChanged, IEditable, IStatusable, IDBTableContent
+    public class DBItem : ICloneable, IComparable<DBItem>, IDisposable, IAccessable, ICheck, INotifyPropertyChanged, INotifyPropertyChanging, IEditable, IStatusable, IDBTableContent
     {
         public static readonly DBItem EmptyItem = new DBItem() { cacheToString = "Loading" };
 
@@ -167,19 +167,12 @@ namespace DataWF.Data
             DBItemEventArgs args = null;
             if (check)
             {
-                args = OnPropertyChanging(column.Name, column, value);
-                if (args.Cancel)
-                {
-                    return;
-                }
                 RefreshOld(column, value, field);
             }
 
-            Table.RemoveIndex(this, column, field);
+            OnPropertyChanging(column.Name, column, field);
 
             column.Pull.Set(hindex, value);
-
-            Table.AddIndex(this, column, value);
 
             OnPropertyChanged(column.Name, column, value);
 
@@ -669,8 +662,8 @@ namespace DataWF.Data
             {
                 if (table != value)
                 {
-                    table = value;
-                    hindex = Pull.GetHIndexUnsafe(value.NextHash(), value.BlockSize);
+                    table = value is IDBVirtualTable virtualTable ? virtualTable.BaseTable : value;
+                    hindex = Pull.GetHIndexUnsafe(table.NextHash(), table.BlockSize);
                 }
             }
         }
@@ -911,29 +904,31 @@ namespace DataWF.Data
         #region INotifyPropertyChanged Members
 
         public event PropertyChangedEventHandler PropertyChanged;
-        public event DBItemEditEventHandler PropertyChanging;
+        public event PropertyChangingEventHandler PropertyChanging;
 
-        public virtual DBItemEventArgs OnPropertyChanging(string property, DBColumn column = null, object value = null)
+        public virtual void OnPropertyChanging(string property, DBColumn column = null, object value = null)
         {
-            var args = new DBItemEventArgs(this, column, column.Name, value);
-            DBService.OnEditing(args);
-            PropertyChanging?.Invoke(args);
-            return args;
+            if (Attached)
+            {
+                Table.OnItemChanging(this, property, column, value);
+            }
+            PropertyChanging?.Invoke(this, new PropertyChangingEventArgs(column.Property ?? property));
         }
 
         public virtual void OnPropertyChanged(string property, DBColumn column = null, object value = null)
         {
-            // clear ToString internal cache 
             if (column != null && (column.Keys & DBColumnKeys.View) == DBColumnKeys.View)
+            {
                 cacheToString = string.Empty;
-
-            // clear objects cache if value changed
+            }
             if (property.Length == 0)
+            {
                 RemoveTag();
-
+            }
             if (Attached)
-                Table.OnItemChanged(this, property, NotifyCollectionChangedAction.Reset);
-            // raise events
+            {
+                Table.OnItemChanged(this, property, column, value);
+            }
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(column?.Property ?? property));
         }
         #endregion
@@ -950,7 +945,7 @@ namespace DataWF.Data
                 return;
             if (PrimaryId == null)
             {
-                PrimaryId = Table.Sequence.NextValue();
+                PrimaryId = Table.Sequence.Next();
             }
             else
             {

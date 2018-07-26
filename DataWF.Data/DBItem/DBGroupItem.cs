@@ -50,7 +50,7 @@ namespace DataWF.Data
         {
             if (value != null && value == PrimaryId)
             {
-                throw new InvalidOperationException("Self reference prevention!");
+                throw new InvalidOperationException("Self reference validation!");
             }
             SetValue(value, Table.GroupKey);
         }
@@ -60,7 +60,7 @@ namespace DataWF.Data
             if (group == DBItem.EmptyItem)
             {
                 var value = GetValue(Table.GroupKey);
-                group = value == null ? null : Table.LoadItemById(value);
+                group = value == null ? null : Table.GroupKey.ReferenceTable.LoadItemById(value);
             }
             return (T)group;
         }
@@ -69,7 +69,7 @@ namespace DataWF.Data
         {
             if (value != null && value.GroupId != null && value.GroupId == PrimaryId)
             {
-                throw new InvalidOperationException("Circle reference prevention!");
+                throw new InvalidOperationException("Circle reference validation!");
             }
             SetGroupValue(value?.PrimaryId);
             group = value;

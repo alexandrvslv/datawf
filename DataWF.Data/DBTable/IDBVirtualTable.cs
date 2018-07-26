@@ -26,6 +26,8 @@ namespace DataWF.Data
     {
         DBTable BaseTable { get; set; }
         QQuery FilterQuery { get; }
-        void CheckItem(DBItem item, string property, NotifyCollectionChangedAction type);
+        void OnBaseChanged(DBItem item, string property, NotifyCollectionChangedAction type);
+        void OnItemChanging(DBItem item, string property, DBColumn column, object value);
+        void OnItemChanged(DBItem item, string property, DBColumn column, object value);
     }
 }
