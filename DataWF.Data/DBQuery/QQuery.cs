@@ -1185,12 +1185,16 @@ namespace DataWF.Data
         {
             var buf = new StringBuilder();
             //parameters._ApplySort("Order");
-            if (Table is IDBVirtualTable && command != null)
+            if (command != null
+                && Table is IDBVirtualTable vtable
+                && vtable.FilterQuery.Parameters.Count > 0)
             {
                 if (parameters.Count > 0)
                     buf.Append("(");
-                foreach (QParam param in ((IDBVirtualTable)Table).FilterQuery.parameters)
+                foreach (QParam param in vtable.FilterQuery.Parameters)
                 {
+                    if (Contains(param.Column))
+                        continue;
                     string bufRez = param.Format(command);
                     if (bufRez.Length > 0)
                         buf.Append((buf.Length <= 1 ? "" : param.Logic.Format() + " ") + bufRez + " ");
