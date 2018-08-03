@@ -15,3 +15,4 @@ test-results
 packages/
 .vs/
 .vscode/
+DataWF.Test.Web.Service/Controllers/
