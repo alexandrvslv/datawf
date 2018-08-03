@@ -17,14 +17,4 @@
     <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj" />
     <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="ControllerGenerator.cs">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Compile>
-    <Compile Update="Controller\BaseController.cs">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Compile>
-  </ItemGroup>
-
 </Project>
