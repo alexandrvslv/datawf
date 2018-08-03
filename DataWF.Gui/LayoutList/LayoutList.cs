@@ -432,111 +432,111 @@ namespace DataWF.Gui
                     OnSelectRectangle(cacheHitt);
                     break;
                 default:
-                    if (hitt.Location == LayoutHitTestLocation.Group)
+                    switch (hitt.Location)
                     {
-                        if (canvas.Cursor != CursorType.Arrow)
-                            canvas.Cursor = CursorType.Arrow;
-
-                        if (selection.HoverRow != null)
-                            OnCellMouseLeave(cacheHitt);
-
-                        if (selection.HoverColumn != null)
-                            OnColumnMouseLeave(cacheHitt);
-
-                        selection.SetHover(hitt.Group);
-                    }
-                    else if (hitt.Location == LayoutHitTestLocation.Aggregate)
-                    {
-                        if (canvas.Cursor != CursorType.Arrow)
-                            canvas.Cursor = CursorType.Arrow;
-
-                        if (selection.HoverRow != null)
-                            OnCellMouseLeave(cacheHitt);
-
-                        if (selection.HoverColumn != null)
-                            OnColumnMouseLeave(cacheHitt);
-
-                        selection.SetHover(new PSelectionAggregate() { Group = hitt.Group, Column = hitt.Column });
-                    }
-                    else if (hitt.Location == LayoutHitTestLocation.Header)
-                    {
-                        if (selection.HoverRow != null)
-                            OnCellMouseLeave(cacheHitt);
-
-                        if (selection.HoverColumn != null)
-                            OnColumnMouseLeave(cacheHitt);
-
-                        if (AllowHeaderSize)
-                        {
-                            if (hitt.Anchor == LayoutAlignType.Right)
-                            {
-                                canvas.Cursor = CursorType.ResizeLeftRight;
-                            }
-                            else if (canvas.Cursor != CursorType.Arrow)
-                            {
+                        case LayoutHitTestLocation.Group:
+                            if (canvas.Cursor != CursorType.Arrow)
                                 canvas.Cursor = CursorType.Arrow;
-                            }
-                        }
-                    }
-                    else if (hitt.Location == LayoutHitTestLocation.Column)
-                    {
-                        if (selection.HoverColumn != hitt.Column)
-                        {
+
+                            if (selection.HoverRow != null)
+                                OnCellMouseLeave(cacheHitt);
+
                             if (selection.HoverColumn != null)
                                 OnColumnMouseLeave(cacheHitt);
-                            OnColumnMouseHover(cacheHitt);
-                        }
-                        else
-                        {
-                            OnColumnMouseMove(cacheHitt);
-                        }
-                    }
-                    else if (hitt.Location == LayoutHitTestLocation.Cell)
-                    {
-                        var item = selection.HoverValue;
-                        if (item == null || !(item is LayoutSelectionRow) || ((LayoutSelectionRow)item).Index != hitt.Index || ((LayoutSelectionRow)item).Column != hitt.Column)
-                        {
-                            if (item is LayoutSelectionRow)
+
+                            selection.SetHover(hitt.Group);
+                            break;
+                        case LayoutHitTestLocation.Aggregate:
+                            if (canvas.Cursor != CursorType.Arrow)
+                                canvas.Cursor = CursorType.Arrow;
+
+                            if (selection.HoverRow != null)
                                 OnCellMouseLeave(cacheHitt);
-                            else if (item is LayoutColumn)
+
+                            if (selection.HoverColumn != null)
                                 OnColumnMouseLeave(cacheHitt);
-                            OnCellMouseHover(cacheHitt);
-                        }
-                        else
-                        {
-                            OnCellMouseMove(cacheHitt);
-                        }
-                        if (AllowCellSize)
-                        {
-                            if (hitt.Anchor == LayoutAlignType.Bottom && hitt.Index == 0)
+
+                            selection.SetHover(new PSelectionAggregate() { Group = hitt.Group, Column = hitt.Column });
+                            break;
+                        case LayoutHitTestLocation.Header:
+                            if (selection.HoverRow != null)
+                                OnCellMouseLeave(cacheHitt);
+
+                            if (selection.HoverColumn != null)
+                                OnColumnMouseLeave(cacheHitt);
+
+                            if (AllowHeaderSize)
                             {
-                                canvas.Cursor = CursorType.ResizeUpDown;
+                                if (hitt.Anchor == LayoutAlignType.Right)
+                                {
+                                    canvas.Cursor = CursorType.ResizeLeftRight;
+                                }
+                                else if (canvas.Cursor != CursorType.Arrow)
+                                {
+                                    canvas.Cursor = CursorType.Arrow;
+                                }
                             }
-                            else if (hitt.Anchor == LayoutAlignType.Right && !hitt.Column.FillWidth)
+
+                            break;
+                        case LayoutHitTestLocation.Column:
+                            if (selection.HoverColumn != hitt.Column)
                             {
-                                canvas.Cursor = CursorType.ResizeLeftRight;
+                                if (selection.HoverColumn != null)
+                                    OnColumnMouseLeave(cacheHitt);
+                                OnColumnMouseHover(cacheHitt);
+                            }
+                            else
+                            {
+                                OnColumnMouseMove(cacheHitt);
+                            }
+
+                            break;
+                        case LayoutHitTestLocation.Cell:
+                            var item = selection.HoverValue;
+                            if (item == null || !(item is LayoutSelectionRow) || ((LayoutSelectionRow)item).Index != hitt.Index || ((LayoutSelectionRow)item).Column != hitt.Column)
+                            {
+                                if (item is LayoutSelectionRow)
+                                    OnCellMouseLeave(cacheHitt);
+                                else if (item is LayoutColumn)
+                                    OnColumnMouseLeave(cacheHitt);
+                                OnCellMouseHover(cacheHitt);
+                            }
+                            else
+                            {
+                                OnCellMouseMove(cacheHitt);
+                            }
+                            if (AllowCellSize)
+                            {
+                                if (hitt.Anchor == LayoutAlignType.Bottom && hitt.Index == 0)
+                                {
+                                    canvas.Cursor = CursorType.ResizeUpDown;
+                                }
+                                else if (hitt.Anchor == LayoutAlignType.Right && !hitt.Column.FillWidth)
+                                {
+                                    canvas.Cursor = CursorType.ResizeLeftRight;
+                                }
+                                else if (canvas.Cursor != CursorType.Arrow)
+                                {
+                                    canvas.Cursor = CursorType.Arrow;
+                                }
                             }
                             else if (canvas.Cursor != CursorType.Arrow)
                             {
                                 canvas.Cursor = CursorType.Arrow;
                             }
-                        }
-                        else if (canvas.Cursor != CursorType.Arrow)
-                        {
-                            canvas.Cursor = CursorType.Arrow;
-                        }
 
+                            break;
+                        default:
+                            if (selection.HoverRow != null)
+                                OnCellMouseLeave(cacheHitt);
+                            if (selection.HoverColumn != null)
+                                OnColumnMouseLeave(cacheHitt);
+                            selection.SetHover(null);
+                            if (canvas.Cursor != CursorType.Arrow)
+                                canvas.Cursor = CursorType.Arrow;
+                            break;
                     }
-                    else
-                    {
-                        if (selection.HoverRow != null)
-                            OnCellMouseLeave(cacheHitt);
-                        if (selection.HoverColumn != null)
-                            OnColumnMouseLeave(cacheHitt);
-                        selection.SetHover(null);
-                        if (canvas.Cursor != CursorType.Arrow)
-                            canvas.Cursor = CursorType.Arrow;
-                    }
+
                     break;
             }
         }
@@ -841,7 +841,7 @@ namespace DataWF.Gui
 
         public void QueueDraw(double x, double y, double w, double h)
         {
-            canvas.QueueDraw(new Rectangle(x, y, w, h));
+            canvas.QueueDraw();//new Rectangle(x, y, w, h));
         }
 
         private void ControlOnValueChanged(object sender, EventArgs e)
@@ -3094,6 +3094,7 @@ namespace DataWF.Gui
                 cellEdit.ReadOnly = (cell.ReadOnly || editState == EditListState.ReadOnly) && editState != EditListState.EditAny;
                 cellEdit.InitializeEditor(editor, val, item);
                 editor.Style = OnGetCellStyle(item, val, cell);
+                SetEditorBound();
                 editor.Visible = true;
             }
             finally
