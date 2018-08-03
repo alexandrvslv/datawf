@@ -141,7 +141,14 @@ namespace DataWF.Gui
         {
             if (e.LoadedAssembly.GetCustomAttributes<AssemblyMetadataAttribute>().Any(m => m.Key == "gui"))// || m.Key == "module"
             {
-                foreach (var item in e.LoadedAssembly?.GetExportedTypes())
+                var types = (Type[])null;
+                try { types = e.LoadedAssembly?.GetExportedTypes(); }
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
+                    return;
+                }
+                foreach (var item in types)
                 {
                     if (TypeHelper.IsInterface(item, typeof(IModuleInitialize)))
                     {
