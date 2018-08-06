@@ -204,10 +204,18 @@ namespace DataWF.Common
             get { return items == null; }
         }
 
+        public virtual void OnListChanged(NotifyListPropertyChangedEventArgs args)
+        {
+            if (args != null)
+            {
+                CollectionChanged.Invoke(this, args);
+            }
+            OnPropertyChanged(nameof(SyncRoot));
+        }
+
         public virtual void OnListChanged(NotifyCollectionChangedAction type, object item = null, int index = -1, string property = null, int oldIndex = -1, object oldItem = null)
         {
-            CollectionChanged?.Invoke(this, NotifyListPropertyChangedEventArgs.Build(type, item, oldItem, index, oldIndex, property));
-            OnPropertyChanged(nameof(SyncRoot));
+            OnListChanged(CollectionChanged != null ? NotifyListPropertyChangedEventArgs.Build(type, item, oldItem, index, oldIndex, property) : null);
         }
 
 

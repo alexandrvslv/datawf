@@ -37,11 +37,16 @@ namespace DataWF.Common
         public SelectableListView()
         {
             propertyHandler = null;
-
         }
 
-        public SelectableListView(IList baseCollection)
-            : this()
+        public SelectableListView(bool handle) : this()
+        {
+            if (handle)
+                _listChangedHandler = SourceListChanged;
+        }
+
+        public SelectableListView(IList baseCollection, bool handle = true)
+            : this(handle)
         {
             SetCollection(baseCollection);
         }
@@ -58,10 +63,8 @@ namespace DataWF.Common
             sourceList = baseCollection;
             ssourceList = baseCollection as ISelectable;
 
-            if (ssourceList != null)
+            if (ssourceList != null && _listChangedHandler != null)
             {
-                if (_listChangedHandler == null)
-                    _listChangedHandler = SourceListChanged;
                 ssourceList.CollectionChanged += _listChangedHandler;
             }
             else
@@ -71,10 +74,14 @@ namespace DataWF.Common
             Update((IEnumerable<T>)sourceList);
         }
 
-        ~SelectableListView()
+        public Query FilterQuery
         {
-            if (ssourceList != null)
-                ssourceList.CollectionChanged -= _listChangedHandler;
+            get { return query; }
+        }
+
+        public InvokerComparerList SortDescriptions
+        {
+            get { return null; }
         }
 
         public override object NewItem()
@@ -128,7 +135,7 @@ namespace DataWF.Common
             }
         }
 
-        protected virtual void SourceListChanged(object sender, NotifyCollectionChangedEventArgs e)
+        public virtual void SourceListChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             T item = default(T);
             if (e is NotifyListPropertyChangedEventArgs property)
@@ -206,11 +213,6 @@ namespace DataWF.Common
             }
         }
 
-        public Query FilterQuery
-        {
-            get { return query; }
-        }
-
         public virtual void RemoveFilter()
         {
             if (query.Parameters.Count > 0)
@@ -220,9 +222,11 @@ namespace DataWF.Common
             }
         }
 
-        public InvokerComparerList SortDescriptions
+        public override void Dispose()
         {
-            get { return null; }
+            if (ssourceList != null && _listChangedHandler != null)
+                ssourceList.CollectionChanged -= _listChangedHandler;
+            base.Dispose();
         }
 
     }
