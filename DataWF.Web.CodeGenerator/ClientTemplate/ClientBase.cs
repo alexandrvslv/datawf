@@ -38,6 +38,8 @@ namespace DataWF.Web.Client
 
         public IClientProvider Provider { get; set; }
 
+        public ClientStatus Status { get; set; }
+
         public string BaseUrl
         {
             get { return Provider?.BaseUrl ?? baseUrl; }
@@ -47,7 +49,6 @@ namespace DataWF.Web.Client
         protected JsonSerializerSettings JsonSerializerSettings { get { return settings.Value; } }
 
         partial void UpdateJsonSerializerSettings(JsonSerializerSettings settings);
-
 
         partial void ProcessResponse(HttpClient client, HttpResponseMessage response);
 
@@ -64,6 +65,12 @@ namespace DataWF.Web.Client
             object value = null,
             params object[] parameters)
         {
+            Status =
+                httpMethod.Equals("POST", StringComparison.OrdinalIgnoreCase) ? ClientStatus.Post :
+                httpMethod.Equals("PUT", StringComparison.OrdinalIgnoreCase) ? ClientStatus.Put :
+                httpMethod.Equals("DELETE", StringComparison.OrdinalIgnoreCase) ? ClientStatus.Delete :
+                ClientStatus.Get;
+
             var request = new HttpRequestMessage()
             {
                 RequestUri = new Uri(ParseUrl(commandUrl, parameters).ToString(), UriKind.RelativeOrAbsolute),
@@ -124,6 +131,7 @@ namespace DataWF.Web.Client
                     {
                         ProcessResponse(client, response);
                         var status = response.StatusCode;
+                        var result = default(R);
                         if (status == System.Net.HttpStatusCode.OK)
                         {
                             try
@@ -134,16 +142,19 @@ namespace DataWF.Web.Client
                                     {
                                         if (typeof(R) == typeof(string))
                                         {
-                                            return (R)(object)reader.ReadToEnd();
+                                            result = (R)(object)reader.ReadToEnd();
                                         }
-                                        var serializer = new JsonSerializer();
-                                        using (var jreader = new JsonTextReader(reader))
+                                        else
                                         {
-                                            while (jreader.Read())
+                                            var serializer = new JsonSerializer();
+                                            using (var jreader = new JsonTextReader(reader))
                                             {
-                                                if (jreader.TokenType == JsonToken.StartObject)
+                                                while (jreader.Read())
                                                 {
-                                                    return DeserializeObject<R>(serializer, jreader);
+                                                    if (jreader.TokenType == JsonToken.StartObject)
+                                                    {
+                                                        result = DeserializeObject<R>(serializer, jreader);
+                                                    }
                                                 }
                                             }
                                         }
@@ -155,8 +166,6 @@ namespace DataWF.Web.Client
                                 var responseData = response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                                 throw new ClientException("Could not deserialize the response body.", (int)response.StatusCode, responseData, GetHeaders(response), ex);
                             }
-
-                            return default(R);
                         }
                         else if (status != System.Net.HttpStatusCode.NoContent)
                         {
@@ -166,8 +175,8 @@ namespace DataWF.Web.Client
                                 responseData,
                                 GetHeaders(response), null);
                         }
-
-                        return default(R);
+                        Status = ClientStatus.Compleate;
+                        return result;
                     }
                 }
             }
@@ -188,6 +197,7 @@ namespace DataWF.Web.Client
                     {
                         ProcessResponse(client, response);
                         var status = response.StatusCode;
+                        var result = default(R);
                         if (status == System.Net.HttpStatusCode.OK)
                         {
                             try
@@ -196,10 +206,6 @@ namespace DataWF.Web.Client
                                 {
                                     using (var reader = new StreamReader(responseStream))
                                     {
-                                        if (typeof(R) == typeof(string))
-                                        {
-                                            return (R)(object)reader.ReadToEnd();
-                                        }
                                         var serializer = new JsonSerializer();
                                         using (var jreader = new JsonTextReader(reader))
                                         {
@@ -207,7 +213,7 @@ namespace DataWF.Web.Client
                                             {
                                                 if (jreader.TokenType == JsonToken.StartArray)
                                                 {
-                                                    return DeserializeArray<R, I>(serializer, jreader);
+                                                    result = DeserializeArray<R, I>(serializer, jreader);
                                                 }
                                             }
                                         }
@@ -219,8 +225,6 @@ namespace DataWF.Web.Client
                                 var responseData = response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                                 throw new ClientException("Could not deserialize the response body.", (int)response.StatusCode, responseData, GetHeaders(response), ex);
                             }
-
-                            return default(R);
                         }
                         else if (status != System.Net.HttpStatusCode.NoContent)
                         {
@@ -230,8 +234,8 @@ namespace DataWF.Web.Client
                                 responseData,
                                 GetHeaders(response), null);
                         }
-
-                        return default(R);
+                        Status = ClientStatus.Compleate;
+                        return result;
                     }
                 }
             }

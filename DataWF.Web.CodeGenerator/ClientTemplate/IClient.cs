@@ -27,6 +27,7 @@ namespace DataWF.Web.Client
     public interface IClient
     {
         IClientProvider Provider { get; set; }
+        ClientStatus Status { get; set; }
     }
 
     public interface ICRUDClient : IClient
@@ -53,5 +54,15 @@ namespace DataWF.Web.Client
         Task<T> PutAsync(T value, CancellationToken cancellationToken);
         Task<bool> DeleteAsync(object id, CancellationToken cancellationToken);
         new T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, Dictionary<IInvoker, object> dictionary = null, object id = null);
+    }
+
+    public enum ClientStatus
+    {
+        None,
+        Compleate,
+        Get,
+        Put,
+        Post,
+        Delete,
     }
 }
