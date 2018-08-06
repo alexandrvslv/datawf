@@ -19,6 +19,7 @@ namespace DataWF.Common
         protected InvokerComparer<T> searchComparer;
         protected PropertyChangedEventHandler propertyHandler;
         protected SelectableListView<T> defaultView;
+        private bool isSynchronized;
 
         public SelectableList(int capacity)
         {
@@ -106,8 +107,8 @@ namespace DataWF.Common
         [Browsable(false), XmlIgnore]
         public virtual bool IsSynchronized
         {
-            get { return true; }
-            set { }
+            get { return isSynchronized; }
+            set { isSynchronized = value; }
         }
 
         [Browsable(false)]
