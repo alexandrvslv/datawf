@@ -145,7 +145,7 @@ namespace DataWF.Data
                     };
                     procedure = AddOrUpdate(procedure);
                     procedure.DisplayName = type.Name;
-
+                    procedure.TempAssembly = assembly;
                     procedure.Codes.Clear();
                     procedure.Codes.AddRange(type.GetCustomAttributes<CodeAttribute>());
                     AddCodes(procedure);
