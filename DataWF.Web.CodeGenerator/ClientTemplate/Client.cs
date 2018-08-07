@@ -115,6 +115,11 @@ namespace DataWF.Web.Client
             return Get((K)id);
         }
 
+        public async virtual Task<T> Get(T item)
+        {
+            return await GetAsync(IdInvoker.GetValue(item), CancellationToken.None).ConfigureAwait(false);
+        }
+
         public virtual T Get(K id)
         {
             return Select(id) ?? GetAsync(id, CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult();

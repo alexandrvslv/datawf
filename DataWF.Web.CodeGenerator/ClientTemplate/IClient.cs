@@ -8,10 +8,15 @@ using Newtonsoft.Json;
 
 namespace DataWF.Web.Client
 {
-    public interface IBaseItem
+    public interface IItem
     {
         object PrimaryId { get; set; }
         IClient Client { get; set; }
+    }
+
+    public interface IItem<K>
+    {
+        K Id { get; set; }
     }
 
     public interface IClientProvider
@@ -46,6 +51,7 @@ namespace DataWF.Web.Client
     public interface ICRUDClient<T> : ICRUDClient
     {
         SelectableList<T> Items { get; }
+        Task<T> Get(T item);
         T Get(object id);
         Task<List<T>> FindAsync(string filter, CancellationToken cancellationToken);
         Task<List<T>> GetAsync(CancellationToken cancellationToken);
