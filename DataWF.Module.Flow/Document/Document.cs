@@ -284,9 +284,13 @@ namespace DataWF.Module.Flow
             set { SetPropertyReference(value); }
         }
 
-        public Stage Stage
+        public Stage CurrentStage
         {
             get { return WorkCurrent?.Stage; }
+            set
+            {
+                Send(WorkCurrent, value);
+            }
         }
 
         //[Browsable(false)]
@@ -682,7 +686,13 @@ namespace DataWF.Module.Flow
             {
                 throw new InvalidOperationException("Next Stage not Defined!");
             }
-            return Send(work, stageReference.ReferenceStage, stageReference.GetDepartment(Template));
+            return Send(work, stageReference.ReferenceStage);
+        }
+
+        [ControllerMethod]
+        public List<DocumentWork> Send(DocumentWork from, Stage stage)
+        {
+            return Send(from, stage, stage.GetDepartment(Template));
         }
 
         [ControllerMethod]
