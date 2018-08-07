@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -7,7 +8,7 @@ namespace DataWF.Common
 {
     public class ListIndex<T, K> : IListIndex<T, K>
     {
-        public Dictionary<DBNullable<K>, List<T>> Dictionary;
+        public ConcurrentDictionary<DBNullable<K>, List<T>> Dictionary;
         public IInvoker<T, K> Invoker;
 
         public ListIndex(IInvoker<T, K> accessor)
@@ -15,11 +16,11 @@ namespace DataWF.Common
             Invoker = accessor;
             if (typeof(K) == typeof(string))
             {
-                Dictionary = new Dictionary<DBNullable<K>, List<T>>((IEqualityComparer<DBNullable<K>>)DBNullableComparer.StringOrdinalIgnoreCase);
+                Dictionary = new ConcurrentDictionary<DBNullable<K>, List<T>>((IEqualityComparer<DBNullable<K>>)DBNullableComparer.StringOrdinalIgnoreCase);
             }
             else
             {
-                Dictionary = new Dictionary<DBNullable<K>, List<T>>();
+                Dictionary = new ConcurrentDictionary<DBNullable<K>, List<T>>();
             }
         }
 
@@ -46,14 +47,20 @@ namespace DataWF.Common
         {
             lock (Dictionary)
             {
-                Dictionary.TryGetValue(Invoker.GetValue(item), out var refs);
-                if (refs == null || !refs.Remove(item))
+                var key = Invoker.GetValue(item);
+                if (!Dictionary.TryGetValue(key, out var refs) || !refs.Remove(item))
                 {
                     foreach (var entry in Dictionary)
                     {
-                        if (entry.Value.Remove(item))
+                        key = entry.Key;
+                        refs = entry.Value;
+                        if (refs.Remove(item))
                             break;
                     }
+                }
+                if (refs != null && refs.Count == 0)
+                {
+                    Dictionary.TryRemove(key, out refs);
                 }
             }
         }
