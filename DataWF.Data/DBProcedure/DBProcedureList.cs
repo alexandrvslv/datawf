@@ -109,7 +109,7 @@ namespace DataWF.Data
         public DBProcedure GenerateGroup(Assembly assembly)
         {
             var uri = new UriBuilder(assembly.CodeBase);
-            var path = Uri.UnescapeDataString(uri.Path);
+            var path = Uri.UnescapeDataString(uri.Path).Replace(".DLL", ".dll");
             var filename = Path.GetFileName(path);
 
             var gname = assembly.GetName().Name;
@@ -124,6 +124,7 @@ namespace DataWF.Data
                 };
                 Add(procedure);
             }
+            procedure.TempAssembly = assembly;
             return procedure;
         }
 
