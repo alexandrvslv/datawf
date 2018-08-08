@@ -335,9 +335,8 @@ namespace DataWF.Data
                 {
                     if (schema != null)
                     {
-                        schema.Connection.ExecuteGoQuery(builder.ToString());
+                        CommitChanges(schema, builder);
                         schema = null;
-                        builder.Clear();
                     }
                     schema = item.Item.Schema;
                 }
@@ -354,24 +353,30 @@ namespace DataWF.Data
             }
             if (schema != null)
             {
-                foreach (var command in schema.Connection.SplitGoQuery(builder.ToString()))
-                {
-                    try
-                    {
-                        schema.Connection.ExecuteQuery(command);
-                    }
-                    catch (Exception ex)
-                    {
-                        if (ex.Message.IndexOf("already exist", StringComparison.OrdinalIgnoreCase) < 0)
-                        {
-                            throw ex;
-                        }
-                    }
-                }
+                CommitChanges(schema, builder);
             }
             Serialization.Serialize(Changes, $"SchemaDiff_{DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss")}.xml");
             Changes.Clear();
             Save();
+        }
+
+        public static void CommitChanges(DBSchema schema, StringBuilder builder)
+        {
+            foreach (var command in schema.Connection.SplitGoQuery(builder.ToString()))
+            {
+                try
+                {
+                    schema.Connection.ExecuteQuery(command);
+                }
+                catch (Exception ex)
+                {
+                    if (ex.Message.IndexOf("already exist", StringComparison.OrdinalIgnoreCase) < 0)
+                    {
+                        throw ex;
+                    }
+                }
+            }
+            builder.Clear();
         }
 
         public static string BuildChangesQuery(DBSchema schema)
