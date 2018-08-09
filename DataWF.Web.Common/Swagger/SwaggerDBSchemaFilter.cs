@@ -13,7 +13,7 @@ namespace DataWF.Web.Common
 
     public class SwaggerDBSchemaFilter : ISchemaFilter
     {
-        private Stack<TableAttribute> tables = new Stack<TableAttribute>();
+        private Stack<TableAttributeCache> tables = new Stack<TableAttributeCache>();
 
         public void Apply(Schema schema, SchemaFilterContext context)
         {
@@ -35,7 +35,7 @@ namespace DataWF.Web.Common
                 if (context.SystemType != typeof(DBItem) && context.SystemType != typeof(DBGroupItem))
                 {
                     var itemType = DBTable.GetItemTypeAttribute(context.SystemType);
-                    schema.Extensions.Add("x-type-id", itemType?.Id ?? 0);
+                    schema.Extensions.Add("x-type-id", itemType?.Attribute.Id ?? 0);
                 }
                 if (temp != null)
                 {
@@ -62,54 +62,52 @@ namespace DataWF.Web.Common
                         schema.Properties.Add(column.ReferenceProperty.Name, schemaProperty);
                     }
                 }
+                foreach (var refing in table.Referencings.Where(p => p.Property.DeclaringType == type))
+                {
+                    var refingSchema = context.SchemaRegistry.GetOrRegister(refing.Property.PropertyType);
+                    //var schemaProperty = new Schema() { Ref = referenceSchema.Ref };
+                    schema.Properties.Add(refing.Property.Name, refingSchema);
+                }
             }
             if (baseSchema != null)
                 schema.AllOf = new List<Schema> { baseSchema };
             return baseSchema;
         }
 
-        public void ApplyColumn(Schema schema, Schema columnSchema, ColumnAttribute column)
+        public void ApplyColumn(Schema schema, Schema columnSchema, ColumnAttributeCache column)
         {
-            if ((column.Keys & DBColumnKeys.Access) == DBColumnKeys.Access
-                || (column.Keys & DBColumnKeys.Password) == DBColumnKeys.Password)
+            if ((column.Attribute.Keys & DBColumnKeys.Access) == DBColumnKeys.Access
+                || (column.Attribute.Keys & DBColumnKeys.Password) == DBColumnKeys.Password)
                 return;
 
-            if (column.DataType == typeof(string) && column.Size > 0)
+            if (column.Attribute.DataType == typeof(string) && column.Attribute.Size > 0)
             {
-                columnSchema.MaxLength = column.Size;
+                columnSchema.MaxLength = column.Attribute.Size;
             }
-            if ((column.Keys & DBColumnKeys.System) == DBColumnKeys.System
+            if ((column.Attribute.Keys & DBColumnKeys.System) == DBColumnKeys.System
                 || column.Property.GetSetMethod() == null)
             {
                 columnSchema.ReadOnly = true;
             }
-            if ((column.Keys & DBColumnKeys.Notnull) == DBColumnKeys.Notnull
-                && (column.Keys & DBColumnKeys.Primary) != DBColumnKeys.Primary
-                && (column.Keys & DBColumnKeys.System) != DBColumnKeys.System)
+            if ((column.Attribute.Keys & DBColumnKeys.Notnull) == DBColumnKeys.Notnull
+                && (column.Attribute.Keys & DBColumnKeys.Primary) != DBColumnKeys.Primary
+                && (column.Attribute.Keys & DBColumnKeys.System) != DBColumnKeys.System)
             {
                 if (schema.Required == null)
                     schema.Required = new List<string>();
                 schema.Required.Add(column.PropertyName);
             }
-            if ((column.Keys & DBColumnKeys.Primary) == DBColumnKeys.Primary)
+            if ((column.Attribute.Keys & DBColumnKeys.Primary) == DBColumnKeys.Primary)
             {
                 schema.Extensions.Add("x-id", column.PropertyName);
             }
-            if ((column.Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType)
+            if ((column.Attribute.Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType)
             {
                 schema.Extensions.Add("x-type", column.PropertyName);
             }
-            if ((column.Keys & DBColumnKeys.Culture) == DBColumnKeys.Culture)
-            {
-                foreach (var culture in Locale.Instance.Cultures)
-                {
-                    schema.Properties.Add(column.PropertyName + culture.TwoLetterISOLanguageName.ToUpper(), columnSchema);
-                }
-            }
-            else
-            {
-                schema.Properties.Add(column.PropertyName, columnSchema);
-            }
+
+            schema.Properties.Add(column.PropertyName, columnSchema);
+
             var defaultValue = column.Property.GetCustomAttribute<DefaultValueAttribute>();
             if (defaultValue != null && defaultValue != null)
             {
