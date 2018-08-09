@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DataWF.Web.Client
+namespace NewNameSpace
 {
     public abstract partial class Client<T, K> : ClientBase, ICRUDClient<T> where T : class, new() where K : struct
     {
@@ -42,6 +42,13 @@ namespace DataWF.Web.Client
                     if (invoker != null)
                     {
                         dictionary[invoker] = DeserializeObject(serializer, jreader, invoker.DataType);
+                    }
+                }
+                else if (jreader.TokenType == JsonToken.StartArray)
+                {
+                    if (invoker != null)
+                    {
+                        dictionary[invoker] = DeserializeArray(serializer, jreader, invoker.DataType);
                     }
                 }
                 else if (invoker != null)

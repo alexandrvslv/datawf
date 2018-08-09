@@ -19,22 +19,24 @@ namespace DataWF.Web.CodeGenerator
     public class ClientGenerator
     {
         private readonly List<string> AbstractOperations = new List<string> { "GetAsync", "PutAsync", "PostAsync", "FindAsync", "DeleteAsync" };
-        private string Namespace = "DataWF.Web.Client";
         private Dictionary<string, CompilationUnitSyntax> cacheModels = new Dictionary<string, CompilationUnitSyntax>();
         private Dictionary<string, ClassDeclarationSyntax> cacheClients = new Dictionary<string, ClassDeclarationSyntax>();
         private List<UsingDirectiveSyntax> usings = new List<UsingDirectiveSyntax>();
         private SwaggerDocument document;
-        private Uri uri;
         private CompilationUnitSyntax provider;
 
-        public ClientGenerator(string url, string output)
+        public ClientGenerator(string url, string output, string nameSpace = "DataWF.Web.Client")
         {
+            Namespace = nameSpace;
             Output = string.IsNullOrEmpty(output) ? null : Path.GetFullPath(output);
-            uri = new Uri(url);
+            Url = new Uri(url);
         }
+
+        private Uri Url { get; }
 
         public string Output { get; }
 
+        private string Namespace { get; }
 
         public void Generate()
         {
@@ -53,8 +55,7 @@ namespace DataWF.Web.CodeGenerator
                 SyntaxHelper.CreateUsingDirective("Newtonsoft.Json")
             };
 
-
-            document = SwaggerDocument.FromUrlAsync(uri.OriginalString).GetAwaiter().GetResult();
+            document = SwaggerDocument.FromUrlAsync(Url.OriginalString).GetAwaiter().GetResult();
             foreach (var definition in document.Definitions)
             {
                 definition.Value.Id = definition.Key;
@@ -175,7 +176,7 @@ namespace DataWF.Web.CodeGenerator
         private IEnumerable<StatementSyntax> GenProviderConstructorBody()
         {
             //SF.EqualsValueClause(SF.ParseExpression())
-            yield return SF.ParseStatement($"BaseUrl = \"{uri.Scheme}://{uri.Authority}\";");
+            yield return SF.ParseStatement($"BaseUrl = \"{Url.Scheme}://{Url.Authority}\";");
             foreach (var client in cacheClients.Keys)
             {
                 yield return SF.ParseStatement($"{client} = new {client}Client{{Provider = this}};");
@@ -187,7 +188,7 @@ namespace DataWF.Web.CodeGenerator
             var list = new List<SyntaxTree>();
             var assembly = typeof(ClientGenerator).Assembly;
             var baseName = assembly.GetName().Name + ".ClientTemplate.";
-            list.AddRange(SyntaxHelper.LoadResources(assembly, baseName, save ? Output : null).Select(p => p.SyntaxTree));
+            list.AddRange(SyntaxHelper.LoadResources(assembly, baseName, Namespace, save ? Output : null).Select(p => p.SyntaxTree));
 
             list.Add(provider.SyntaxTree);
             if (save)
@@ -632,7 +633,10 @@ namespace DataWF.Web.CodeGenerator
 
         private IEnumerable<AttributeListSyntax> GenClassPropertyAttributes(JsonProperty property)
         {
-            if (property.IsReadOnly || property.ExtensionData != null && property.ExtensionData.TryGetValue("readOnly", out var isReadOnly) && (bool)isReadOnly)
+            if (property.IsReadOnly
+                || (property.ExtensionData != null && property.ExtensionData.TryGetValue("readOnly", out var isReadOnly) && (bool)isReadOnly)
+                || property.Type == JsonObjectType.None)
+
             {
                 yield return SF.AttributeList(
                              SF.SingletonSeparatedList(
@@ -640,7 +644,7 @@ namespace DataWF.Web.CodeGenerator
                                      SF.IdentifierName("JsonIgnore"))));
             }
 
-            if (property.Type == JsonObjectType.None || property.Default != null)
+            if (property.IsArray || property.Default != null)
             {
                 yield return SF.AttributeList(
                              SF.SingletonSeparatedList(
@@ -649,6 +653,7 @@ namespace DataWF.Web.CodeGenerator
                                      SF.AttributeArgumentList(SF.SingletonSeparatedList(
                                          SF.AttributeArgument(SF.ParseExpression($"NullValueHandling = NullValueHandling.Ignore")))))));
             }
+
         }
 
         private IEnumerable<AccessorDeclarationSyntax> GenPropertyAccessors(JsonProperty property)

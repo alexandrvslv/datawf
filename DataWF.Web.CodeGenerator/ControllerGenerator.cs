@@ -96,14 +96,14 @@ namespace DataWF.Web.CodeGenerator
             }
         }
 
-        private ClassDeclarationSyntax GetOrGenerateBaseController(TableAttribute tableAttribute, Type itemType, out string controllerClassName)
+        private ClassDeclarationSyntax GetOrGenerateBaseController(TableAttributeCache tableAttribute, Type itemType, out string controllerClassName)
         {
             string name = "Base" + itemType.Name;
             controllerClassName = $"{name}Controller";
 
             if (!trees.TryGetValue(name, out var baseController))
             {
-                var primaryKeyType = tableAttribute.GetPrimaryKey()?.GetDataType() ?? typeof(int);
+                var primaryKeyType = tableAttribute.PrimaryKey?.GetDataType() ?? typeof(int);
                 baseController = SyntaxFactory.ClassDeclaration(
                     attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
                     modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.AbstractKeyword)),
@@ -137,11 +137,11 @@ namespace DataWF.Web.CodeGenerator
         }
 
         //https://carlos.mendible.com/2017/03/02/create-a-class-with-net-core-and-roslyn/
-        private ClassDeclarationSyntax GetOrGenerateController(TableAttribute tableAttribute, Type itemType)
+        private ClassDeclarationSyntax GetOrGenerateController(TableAttributeCache tableAttribute, Type itemType)
         {
             var baseName = (string)null;
             var baseType = itemType;
-            var primaryKeyType = tableAttribute.GetPrimaryKey()?.GetDataType() ?? typeof(int);
+            var primaryKeyType = tableAttribute.PrimaryKey?.GetDataType() ?? typeof(int);
 
             while (baseType != null && !IsPrimaryType(baseType))
             {
@@ -210,7 +210,7 @@ namespace DataWF.Web.CodeGenerator
             }
             var assembly = typeof(ControllerGenerator).Assembly;
             var baseName = assembly.GetName().Name + ".ControllerTemplate.";
-            list.AddRange(SyntaxHelper.LoadResources(assembly, baseName, save ? Output : null).Select(P => P.SyntaxTree));
+            list.AddRange(SyntaxHelper.LoadResources(assembly, baseName, Namespace, save ? Output : null).Select(P => P.SyntaxTree));
 
             foreach (var entry in trees)
             {
@@ -224,7 +224,7 @@ namespace DataWF.Web.CodeGenerator
             return list;
         }
 
-        public IEnumerable<MemberDeclarationSyntax> GetControllerMemebers(TableAttribute table, Type type, bool baseClass)
+        public IEnumerable<MemberDeclarationSyntax> GetControllerMemebers(TableAttributeCache table, Type type, bool baseClass)
         {
             AddUsing(type);
             if (table.ItemType == type && !baseClass)
@@ -268,7 +268,7 @@ namespace DataWF.Web.CodeGenerator
         }
 
         //https://stackoverflow.com/questions/37710714/roslyn-add-new-method-to-an-existing-class
-        private MethodDeclarationSyntax GetControllerMethod(MethodInfo method, TableAttribute table, bool baseClass)
+        private MethodDeclarationSyntax GetControllerMethod(MethodInfo method, TableAttributeCache table, bool baseClass)
         {
             AddUsing(method.DeclaringType);
             AddUsing(method.ReturnType);
@@ -348,11 +348,11 @@ namespace DataWF.Web.CodeGenerator
                                  SyntaxFactory.IdentifierName("HttpGet"))));
         }
 
-        private IEnumerable<ParameterSyntax> GetControllerMethodParameters(MethodInfo method, TableAttribute table)
+        private IEnumerable<ParameterSyntax> GetControllerMethodParameters(MethodInfo method, TableAttributeCache table)
         {
             yield return SyntaxFactory.Parameter(attributeLists: SyntaxFactory.List(GetParameterAttributes()),
                                                              modifiers: SyntaxFactory.TokenList(),
-                                                             type: SyntaxFactory.ParseTypeName((table.GetPrimaryKey()?.GetDataType() ?? typeof(int)).Name),
+                                                             type: SyntaxFactory.ParseTypeName((table.PrimaryKey?.GetDataType() ?? typeof(int)).Name),
                                                              identifier: SyntaxFactory.Identifier("id"),
                                                              @default: null);
             parametersInfo = new List<MethodParametrInfo>();
@@ -461,7 +461,7 @@ namespace DataWF.Web.CodeGenerator
         private ParameterInfo info;
 
         public Type Type { get; private set; }
-        public TableAttribute Table { get; private set; }
+        public TableAttributeCache Table { get; private set; }
         public string ValueName { get; private set; }
         public ParameterInfo Info
         {
@@ -474,7 +474,7 @@ namespace DataWF.Web.CodeGenerator
                 if (TypeHelper.IsBaseType(Type, typeof(DBItem)))
                 {
                     Table = DBTable.GetTableAttribute(Type);
-                    var primaryKey = Table?.GetPrimaryKey();
+                    var primaryKey = Table?.PrimaryKey;
                     if (primaryKey != null)
                     {
                         Type = primaryKey.GetDataType();

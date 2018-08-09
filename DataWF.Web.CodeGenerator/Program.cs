@@ -37,7 +37,7 @@ namespace DataWF.Web.CodeGenerator
             }
             if (type.Equals("client", StringComparison.OrdinalIgnoreCase))
             {
-                var generator = new ClientGenerator(path, output);
+                var generator = new ClientGenerator(path, output, nameSpace);
                 generator.Generate();
                 generator.GetUnits(true);
             }

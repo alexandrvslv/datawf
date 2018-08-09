@@ -45,7 +45,7 @@ namespace DataWF.Web.CodeGenerator
                                         .NormalizeWhitespace("    ", true);
         }
 
-        public static IEnumerable<CompilationUnitSyntax> LoadResources(Assembly assembly, string nameSpace, string output = null)
+        public static IEnumerable<CompilationUnitSyntax> LoadResources(Assembly assembly, string path, string newNameSpace, string output)
         {
             if (output != null)
             {
@@ -54,16 +54,16 @@ namespace DataWF.Web.CodeGenerator
 
             foreach (var name in assembly.GetManifestResourceNames())
             {
-                if (!name.StartsWith(nameSpace))
+                if (!name.StartsWith(path))
                     continue;
                 using (var manifestStream = assembly.GetManifestResourceStream(name))
                 using (var reader = new StreamReader(manifestStream))
                 {
-                    var text = reader.ReadToEnd();
+                    var text = reader.ReadToEnd().Replace("NewNameSpace", newNameSpace);
                     var unit = SyntaxFactory.ParseCompilationUnit(text);
                     if (output != null)
                     {
-                        File.WriteAllText(Path.Combine(output, name.Substring(nameSpace.Length)), text);
+                        File.WriteAllText(Path.Combine(output, name.Substring(path.Length)), text);
                     }
                     yield return unit;
                 }

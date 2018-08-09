@@ -11,7 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DataWF.Web.Client
+namespace NewNameSpace
 {
     /// <summary>
     /// Base Client Template
@@ -253,6 +253,24 @@ namespace DataWF.Web.Client
                         items.Add(client.DeserializeItem(serializer, jreader));
                     else
                         items.Add(DeserializeObject<I>(serializer, jreader));
+
+                }
+            }
+            return items;
+        }
+
+        protected virtual IList DeserializeArray(JsonSerializer serializer, JsonTextReader jreader, Type type)
+        {
+            var client = Provider.GetClient(type.GetGenericArguments()[0]);
+            var items = (IList)EmitInvoker.CreateObject(type);
+            while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
+            {
+                if (jreader.TokenType == JsonToken.StartObject)
+                {
+                    if (client != null)
+                        items.Add(client.DeserializeItem(serializer, jreader));
+                    else
+                        items.Add(DeserializeObject(serializer, jreader, type));
 
                 }
             }

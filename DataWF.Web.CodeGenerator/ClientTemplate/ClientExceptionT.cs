@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace DataWF.Web.Client
+namespace NewNameSpace
 {
     public partial class ClientException<TResult> : ClientException
     {

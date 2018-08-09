@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net.Http;
 
-namespace DataWF.Web.Client
+namespace NewNameSpace
 {
     public class AuthorizationInfo
     {
