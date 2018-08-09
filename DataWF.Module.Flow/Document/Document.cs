@@ -363,27 +363,50 @@ namespace DataWF.Module.Flow
             return GetReferencing<DocumentReference>(nameof(DocumentReference.DocumentId), DBLoadParam.None);
         }
 
+        [Referencing(nameof(DocumentWork.DocumentId))]
+        public IEnumerable<DocumentWork> Works
+        {
+            get { return GetWorks(); }
+            set { SetReferencing<DocumentWork>(value, nameof(DocumentWork.DocumentId)); }
+        }
+
         [ControllerMethod(true)]
         public IEnumerable<DocumentWork> GetWorks()
         {
+            var param = DBLoadParam.None;
             if ((initype & DocInitType.Workflow) != DocInitType.Workflow)
             {
                 initype |= DocInitType.Workflow;
-                GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), DBLoadParam.Load);
+                param = DBLoadParam.Load;
             }
 
-            return GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), DBLoadParam.None);
+            return GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), param);
+        }
+
+        [Referencing(nameof(DocumentData.DocumentId))]
+        public IEnumerable<DocumentData> Datas
+        {
+            get { return GetDatas(); }
+            set { SetReferencing<DocumentData>(value, nameof(DocumentData.DocumentId)); }
         }
 
         [ControllerMethod(true)]
         public virtual IEnumerable<DocumentData> GetDatas()
         {
+            var loadParam = DBLoadParam.None;
             if ((initype & DocInitType.Data) != DocInitType.Data)
             {
                 initype |= DocInitType.Data;
-                GetReferencing<DocumentData>(nameof(DocumentData.DocumentId), DBLoadParam.Load);
+                loadParam = DBLoadParam.Load;
             }
-            return GetReferencing<DocumentData>(nameof(DocumentData.DocumentId), DBLoadParam.None);
+            return GetReferencing<DocumentData>(nameof(DocumentData.DocumentId), loadParam);
+        }
+
+        [Referencing(nameof(DocumentCustomer.DocumentId))]
+        public IEnumerable<DocumentCustomer> Customers
+        {
+            get { return GetCustomers(); }
+            set { SetReferencing<DocumentCustomer>(value, nameof(DocumentCustomer.DocumentId)); }
         }
 
         [ControllerMethod]
@@ -396,6 +419,13 @@ namespace DataWF.Module.Flow
                 GetReferencing<DocumentCustomer>(nameof(DocumentCustomer.DocumentId), DBLoadParam.Load);
             }
             return GetReferencing<DocumentCustomer>(nameof(DocumentCustomer.DocumentId), DBLoadParam.None);
+        }
+
+        [Referencing(nameof(DocumentComment.DocumentId))]
+        public IEnumerable<DocumentComment> Comments
+        {
+            get { return GetComments(); }
+            set { SetReferencing<DocumentComment>(value, nameof(DocumentComment.DocumentId)); }
         }
 
         [ControllerMethod(true)]
