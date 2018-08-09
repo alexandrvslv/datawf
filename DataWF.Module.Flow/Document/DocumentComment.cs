@@ -26,7 +26,7 @@ namespace DataWF.Module.Flow
         [DataMember, Column("message_id")]
         public long? MessageId
         {
-            get { return GetProperty<int?>(); }
+            get { return GetProperty<long?>(); }
             set { SetProperty(value); }
         }
 
