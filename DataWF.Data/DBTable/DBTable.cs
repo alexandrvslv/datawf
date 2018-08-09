@@ -41,9 +41,8 @@ namespace DataWF.Data
 
     public abstract class DBTable : DBSchemaItem, ICollection<DBItem>, IComparable, IAccessable, IDisposable
     {
-
-        private static Dictionary<Type, TableAttribute> cacheTables = new Dictionary<Type, TableAttribute>();
-        private static Dictionary<Type, ItemTypeAttribute> cacheItemTypes = new Dictionary<Type, ItemTypeAttribute>();
+        private static Dictionary<Type, TableAttributeCache> cacheTables = new Dictionary<Type, TableAttributeCache>();
+        private static Dictionary<Type, ItemTypeAttributeCache> cacheItemTypes = new Dictionary<Type, ItemTypeAttributeCache>();
 
         public static void ClearChache()
         {
@@ -51,7 +50,7 @@ namespace DataWF.Data
             cacheItemTypes.Clear();
         }
 
-        public static TableAttribute GetTableAttributeInherit(Type type)
+        public static TableAttributeCache GetTableAttributeInherit(Type type)
         {
             var tableAttribute = GetTableAttribute(type);
             while (tableAttribute == null && type != null)
@@ -62,17 +61,21 @@ namespace DataWF.Data
             return tableAttribute;
         }
 
-        public static TableAttribute GetTableAttribute<T>()
+        public static TableAttributeCache GetTableAttribute<T>()
         {
             return GetTableAttribute(typeof(T));
         }
 
-        public static TableAttribute GetTableAttribute(Type type)
+        public static TableAttributeCache GetTableAttribute(Type type)
         {
-            if (!cacheTables.TryGetValue(type, out TableAttribute table))
+            if (!cacheTables.TryGetValue(type, out var table))
             {
-                table = type.GetCustomAttribute<TableAttribute>(false);
-                table?.Initialize(type);
+                var tableAttribute = type.GetCustomAttribute<TableAttribute>(false);
+                if (tableAttribute != null)
+                {
+                    table = new TableAttributeCache() { Attribute = tableAttribute };
+                    table.Initialize(type);
+                }
                 cacheTables[type] = table;
             }
             if (table == null)
@@ -83,13 +86,14 @@ namespace DataWF.Data
             return table;
         }
 
-        public static ItemTypeAttribute GetItemTypeAttribute(Type type)
+        public static ItemTypeAttributeCache GetItemTypeAttribute(Type type)
         {
-            if (!cacheItemTypes.TryGetValue(type, out ItemTypeAttribute itemType))
+            if (!cacheItemTypes.TryGetValue(type, out var itemType))
             {
-                itemType = type.GetCustomAttribute<ItemTypeAttribute>(false);
-                if (itemType != null)
+                var itemTypeAttribute = type.GetCustomAttribute<ItemTypeAttribute>(false);
+                if (itemTypeAttribute != null)
                 {
+                    itemType = new ItemTypeAttributeCache { Attribute = itemTypeAttribute };
                     itemType.Initialize(type);
                 }
                 cacheItemTypes[type] = itemType;
@@ -163,6 +167,9 @@ namespace DataWF.Data
         public string LogTableName { get; set; }
 
         [XmlIgnore, JsonIgnore]
+        public TableAttributeCache TableAttribute { get; internal set; }
+
+        [XmlIgnore, JsonIgnore]
         public virtual DBLogTable LogTable
         {
             get
@@ -189,7 +196,8 @@ namespace DataWF.Data
 
         public DBColumn ParseProperty(string property)
         {
-            return Columns.GetByProperty(property) ?? Foreigns.GetByProperty(property)?.Column;
+            return Columns.GetByProperty(property)
+                ?? Foreigns.GetByProperty(property)?.Column;
         }
 
         [Browsable(false)]

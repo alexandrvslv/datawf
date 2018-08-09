@@ -88,13 +88,7 @@ namespace DataWF.Data
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public override string Property { get => BaseColumn.Property; set => base.Property = value; }
-
-        [XmlIgnore, JsonIgnore, Browsable(false)]
-        public override IInvoker PropertyInvoker { get => BaseColumn.PropertyInvoker; internal set => base.PropertyInvoker = value; }
-
-        [XmlIgnore, JsonIgnore, Browsable(false)]
-        public override IInvoker ReferenceProperty { get => BaseColumn.ReferenceProperty; internal set => base.ReferenceProperty = value; }
-
+        
         [XmlIgnore, JsonIgnore]
         public override DBColumnKeys Keys { get => BaseColumn.Keys; set => base.Keys = value; }
 

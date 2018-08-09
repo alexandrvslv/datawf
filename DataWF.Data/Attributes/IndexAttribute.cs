@@ -29,9 +29,6 @@ namespace DataWF.Data
     [AttributeUsage(AttributeTargets.Property)]
     public class IndexAttribute : Attribute
     {
-        List<ColumnAttribute> columns = new List<ColumnAttribute>();
-        DBIndex cacheIndex;
-
         public IndexAttribute()
         { }
 
@@ -45,38 +42,5 @@ namespace DataWF.Data
 
         [DefaultValue(false)]
         public bool Unique { get; set; }
-
-        [XmlIgnore, JsonIgnore]
-        public List<ColumnAttribute> Columns
-        {
-            get { return columns; }
-        }
-
-        public DBIndex Index
-        {
-            get { return cacheIndex ?? (cacheIndex = Table?.Table?.Indexes[IndexName]); }
-            internal set { cacheIndex = value; }
-        }
-
-        [XmlIgnore, JsonIgnore]
-        public TableAttribute Table { get; internal set; }
-
-        public DBIndex Generate()
-        {
-            if (Index != null)
-                return Index;
-            Index = new DBIndex()
-            {
-                Name = IndexName,
-                Unique = Unique,
-                Table = Table.Table
-            };
-            foreach (var column in columns)
-            {
-                Index.Columns.Add(column.Column);
-            }
-            Table.Table.Indexes.Add(Index);
-            return Index;
-        }
     }
 }

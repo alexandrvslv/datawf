@@ -18,16 +18,19 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using System;
+using System.Reflection;
+using DataWF.Common;
 
 namespace DataWF.Data
 {
+    [AttributeUsage(AttributeTargets.Property)]
     public class ReferencingAttribute : Attribute
     {
-        public ReferencingAttribute(Type referenceType)
+        public ReferencingAttribute(string referenceProperty)
         {
-            ReferenceType = referenceType;
+            ReferenceProperty = referenceProperty;
         }
 
-        public Type ReferenceType { get; }
+        public string ReferenceProperty { get; }
     }
 }

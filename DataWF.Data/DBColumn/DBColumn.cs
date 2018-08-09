@@ -137,13 +137,7 @@ namespace DataWF.Data
                 }
             }
         }
-
-        [XmlIgnore, JsonIgnore, Browsable(false)]
-        public virtual IInvoker PropertyInvoker { get; internal set; }
-
-        [XmlIgnore, JsonIgnore, Browsable(false)]
-        public virtual IInvoker ReferenceProperty { get; internal set; }
-
+      
         [Browsable(false)]
         public bool CanWrite { get { return true; } }
 

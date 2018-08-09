@@ -400,16 +400,34 @@ namespace DataWF.Data
         public void Delete()
         {
             if ((UpdateState & DBUpdateState.Insert) == DBUpdateState.Insert)
+            {
                 Detach();
+            }
             else
+            {
                 UpdateState |= DBUpdateState.Delete;
+            }
+        }
+
+        public void SetReferencing<T>(IEnumerable<T> items, string property) where T : DBItem, new()
+        {
+            GenerateId();
+            var table = DBTable.GetTable<T>();
+            var column = table.ParseProperty(property);
+            foreach (var item in items)
+            {
+                item.SetReference(this, column);
+                item.Attach();
+            }
         }
 
         public IEnumerable<T> GetReferencing<T>(QQuery query, DBLoadParam param) where T : DBItem, new()
         {
             query.TypeFilter = typeof(T);
             if ((param & DBLoadParam.Load) == DBLoadParam.Load)
+            {
                 return (IEnumerable<T>)query.Load(param);
+            }
             return (IEnumerable<T>)query.Select();
         }
 
@@ -585,7 +603,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
-        [DataMember, DefaultValue(0), Column("item_type", GroupName = "system", Keys = DBColumnKeys.ItemType | DBColumnKeys.System, Order = 98)]
+        [DataMember, DefaultValue(0), Column("item_type", GroupName = "system", Keys = DBColumnKeys.ItemType | DBColumnKeys.System, Order = 0)]
         public int? ItemType
         {
             get { return Table.ItemTypeKey == null ? 0 : GetValue<int?>(Table.ItemTypeKey); }
