@@ -11,5 +11,9 @@ namespace DataWF.Web.Common
         [Required(ErrorMessage = "Password Not Specified")]
         [DataType(DataType.Password)]
         public string Password { get; set; }
+
+        public bool Online { get; set; }
     }
+
+
 }

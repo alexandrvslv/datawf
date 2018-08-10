@@ -194,6 +194,22 @@ namespace DataWF.Common
             return GetString(System.Security.Cryptography.SHA1.Create().ComputeHash(Encoding.Default.GetBytes(input)));
         }
 
+        public static string GetSha256(string input)
+        {
+            if (input == null)
+                return null;
+
+            return GetString(System.Security.Cryptography.SHA256.Create().ComputeHash(Encoding.Default.GetBytes(input)));
+        }
+
+        public static string GetSha512(string input)
+        {
+            if (input == null)
+                return null;
+
+            return GetString(System.Security.Cryptography.SHA512.Create().ComputeHash(Encoding.Default.GetBytes(input)));
+        }
+
         public static string GetMd5(string input)
         {
             if (input == null)

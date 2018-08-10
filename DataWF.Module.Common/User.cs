@@ -80,22 +80,23 @@ namespace DataWF.Module.Common
 
         public static User SetCurrentByCredential(string login, string password, bool threaded = false)
         {
-            var user = GetUser(login, GetSha(password));
+            var user = GetUser(login, Helper.GetSha256(password));
             SetCurrentUser(user ?? throw new KeyNotFoundException("User not found!"), threaded);
             return user;
         }
 
-        public static User SeCurrentByEmail(string email, SecureString password, bool threaded = false)
+        public static User SetCurrentByEmail(string email, SecureString password, bool threaded = false)
         {
             return SetCurrentByEmail(new NetworkCredential(email, password), threaded);
         }
 
-        public static void SetCurrentByEmail(string email, bool threaded = false)
+        public static User SetCurrentByEmail(string email, bool threaded = false)
         {
             var user = DBTable.SelectOne(DBTable.ParseProperty(nameof(EMail)), email);
             if (user == null)
                 throw new KeyNotFoundException("User not found!");
             SetCurrentUser(user, threaded);
+            return user;
         }
 
         public static User SetCurrentByEmail(NetworkCredential credentials, bool threaded = false)
@@ -119,31 +120,7 @@ namespace DataWF.Module.Common
             get { return GetTable<User>(); }
         }
 
-        private static string GetString(byte[] data)
-        {
-            var builder = new StringBuilder();
-            for (int i = 0; i < data.Length; i++)
-            {
-                builder.Append(data[i].ToString("x2"));
-            }
-            return builder.ToString();
-        }
 
-        private static string GetSha(string input)
-        {
-            if (input == null)
-                return null;
-
-            return GetString(SHA1.Create().ComputeHash(Encoding.Default.GetBytes(input)));
-        }
-
-        private static string GetMd5(string input)
-        {
-            if (input == null)
-                return null;
-
-            return GetString(MD5.Create().ComputeHash(Encoding.Default.GetBytes(input)));
-        }
 
         private static UserPasswordSpec PasswordSpec = UserPasswordSpec.Lenght6 | UserPasswordSpec.CharSpecial | UserPasswordSpec.CharNumbers;
 
@@ -187,7 +164,7 @@ namespace DataWF.Module.Common
 
             if (checkOld)
             {
-                string encoded = GetSha(password);
+                string encoded = Helper.GetSha256(password);
                 var list = GetOld(User);
                 foreach (var item in list)
                     if (item.TextData == encoded)
@@ -330,7 +307,7 @@ namespace DataWF.Module.Common
                 var rez = ValidateText(this, value, false);
                 if (rez.Length > 0)
                     throw new ArgumentException(rez);
-                SetProperty(GetSha(value));
+                SetProperty(Helper.GetSha256(value));
             }
         }
 
@@ -350,11 +327,14 @@ namespace DataWF.Module.Common
         }
 
         [Browsable(false)]
-        public string Token { get; set; }
+        public string AccessToken { get; set; }
+
+        [Browsable(false)]
+        public string RefreshToken { get; set; }
 
         public string AuthenticationType { get; set; }
 
-        public bool IsAuthenticated => string.IsNullOrEmpty(Token);
+        public bool IsAuthenticated => string.IsNullOrEmpty(AccessToken);
 
         string IIdentity.Name => EMail;
 
