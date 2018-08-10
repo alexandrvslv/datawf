@@ -39,15 +39,14 @@ namespace DataWF.Common
             propertyHandler = null;
         }
 
-        public SelectableListView(bool handle) : this()
+        public SelectableListView(IList baseCollection)
+            : this(baseCollection, true)
+        { }
+
+        public SelectableListView(IList baseCollection, bool handle)
         {
             if (handle)
                 _listChangedHandler = SourceListChanged;
-        }
-
-        public SelectableListView(IList baseCollection, bool handle = true)
-            : this(handle)
-        {
             SetCollection(baseCollection);
         }
 
