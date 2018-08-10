@@ -98,8 +98,6 @@ namespace DataWF.Web.Common
                 {
                     throw new InvalidOperationException("ID must by specified by value or null!");
                 }
-                if (!value.IsChanged)
-                    return Ok(false);
                 value.Save();
             }
             catch (Exception ex)
