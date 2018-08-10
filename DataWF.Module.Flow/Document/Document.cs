@@ -640,7 +640,6 @@ namespace DataWF.Module.Flow
                 return;
             saving.Add(this);
             var transaction = DBTransaction.GetTransaction(this, Table.Schema.Connection);
-
             try
             {
                 base.Save();
