@@ -126,7 +126,7 @@ namespace DataWF.Module.Flow
             }
         }
 
-        [DataMember, Column("file_name", 1024, Keys = DBColumnKeys.View)]
+        [DataMember, Column("file_name", 1024, Keys = DBColumnKeys.View | DBColumnKeys.FileName)]
         public string FileName
         {
             get { return GetProperty<string>(); }
@@ -140,7 +140,7 @@ namespace DataWF.Module.Flow
             set { SetProperty(value); }
         }
 
-        [DataMember, Column("file_data")]
+        [DataMember, Column("file_data", Keys = DBColumnKeys.File)]
         public virtual byte[] FileData
         {
             get { return buf ?? (buf = GetZip(Table.Columns.GetByProperty(nameof(FileData)))); }
