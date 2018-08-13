@@ -85,6 +85,7 @@ namespace DataWF.Web.Common
                 columnSchema.MaxLength = column.Attribute.Size;
             }
             if ((column.Attribute.Keys & DBColumnKeys.System) == DBColumnKeys.System
+                || (column.Attribute.Keys & DBColumnKeys.File) == DBColumnKeys.File
                 || column.Property.GetSetMethod() == null)
             {
                 columnSchema.ReadOnly = true;
