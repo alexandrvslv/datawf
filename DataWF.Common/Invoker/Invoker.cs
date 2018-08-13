@@ -51,5 +51,10 @@ namespace DataWF.Common
         {
             SetValue((T)target, (V)value);
         }
+
+        public override string ToString()
+        {
+            return $"{typeof(T).Name}.{Name} {typeof(V).Name}";
+        }
     }
 }
