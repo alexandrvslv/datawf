@@ -773,7 +773,7 @@ namespace DataWF.Data
                 if (update != value)
                 {
                     update = value;
-                    OnPropertyChanged(nameof(UpdateState), null, value);
+                    OnPropertyChanged(nameof(UpdateState));
                     //var arg = new DBItemEventArgs(this) { State = update };
                     //DBService.OnStateEdited(arg);
                 }
@@ -939,7 +939,7 @@ namespace DataWF.Data
             {
                 cacheToString = string.Empty;
             }
-            if (property.Length == 0)
+            if (string.IsNullOrEmpty(property))
             {
                 RemoveTag();
             }
@@ -999,10 +999,7 @@ namespace DataWF.Data
 
         public virtual void Save()
         {
-            if (IsChanged)
-            {
-                Table.SaveItem(this);
-            }
+            Table.SaveItem(this);
         }
 
         public int CompareTo(object obj)
