@@ -290,7 +290,7 @@ namespace DataWF.Web.CodeGenerator
                 idKey = GetPrimaryKey(schema);
                 typeKey = GetTypeKey(schema);
                 typeId = GetTypeId(schema);
-                return $"Client<{clientName}, {(idKey == null ? "int" : GetTypeString(idKey, false))}>";
+                return $"Client<{clientName}, {(idKey == null ? "int" : GetTypeString(idKey, false, "List"))}>";
             }
             return $"ClientBase";
         }
@@ -345,8 +345,8 @@ namespace DataWF.Web.CodeGenerator
                     SyntaxKind.BaseConstructorInitializer,
                     SF.ArgumentList(
                         SF.SeparatedList(new[] {
-                            SF.Argument(SF.ParseExpression($"new Invoker<{clientName},{GetTypeString(idKey, true)}>(nameof({clientName}.{idName}), p=>p.{idName})")),
-                            SF.Argument(SF.ParseExpression($"new Invoker<{clientName},{GetTypeString(typeKey, true)}>(nameof({clientName}.{typeName}), p=>p.{typeName})")),
+                            SF.Argument(SF.ParseExpression($"new Invoker<{clientName},{GetTypeString(idKey, true, "List")}>(nameof({clientName}.{idName}), p=>p.{idName})")),
+                            SF.Argument(SF.ParseExpression($"new Invoker<{clientName},{GetTypeString(typeKey, true, "List")}>(nameof({clientName}.{typeName}), p=>p.{typeName})")),
                             SF.Argument(SF.ParseExpression($"{typeId}")),
                         })));
             yield return SF.ConstructorDeclaration(
@@ -368,7 +368,7 @@ namespace DataWF.Web.CodeGenerator
             var returnType = "string";
             if (descriptor.Operation.Responses.TryGetValue("200", out var responce) && responce.Schema != null)
             {
-                returnType = $"{GetTypeString(responce.Schema, false)}";
+                returnType = $"{GetTypeString(responce.Schema, false, "List")}";
             }
             return returnType;
         }
@@ -440,7 +440,7 @@ namespace DataWF.Web.CodeGenerator
                 builder.Append("Array");
             builder.Append($"<{returnType}");
             if (responceSchema?.Type == JsonObjectType.Array)
-                builder.Append($", {GetTypeString(responceSchema.Item, false)}");
+                builder.Append($", {GetTypeString(responceSchema.Item, false, "List")}");
             builder.Append($">(cancellationToken, \"{method}\", \"{path}\", \"{mediatype}\"");
             var bodyParameter = descriptor.Operation.Parameters.FirstOrDefault(p => p.Kind == SwaggerParameterKind.Body);
             if (bodyParameter == null)
@@ -461,7 +461,7 @@ namespace DataWF.Web.CodeGenerator
             {
                 yield return SF.Parameter(attributeLists: SF.List<AttributeListSyntax>(),
                                                          modifiers: SF.TokenList(),
-                                                         type: GetTypeDeclaration(parameter, false),
+                                                         type: GetTypeDeclaration(parameter, false, "List"),
                                                          identifier: SF.Identifier(parameter.Name),
                                                          @default: null);
             }
@@ -555,6 +555,19 @@ namespace DataWF.Web.CodeGenerator
 
         private IEnumerable<MemberDeclarationSyntax> GenDefinitionClassMemebers(JsonSchema4 schema)
         {
+            var typeId = GetTypeId(schema);
+            if (typeId != 0)
+            {
+                yield return SF.ConstructorDeclaration(
+                          attributeLists: SF.List<AttributeListSyntax>(),
+                          modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
+                          identifier: SF.Identifier(GetDefinitionName(schema)),
+                          parameterList: SF.ParameterList(),
+                          initializer: null,
+                          body: SF.Block(new[] {
+                              SF.ParseStatement($"{GetPropertyName(GetTypeKey(schema))} = {typeId};")
+                          }));
+            }
             foreach (var property in schema.Properties)
             {
                 //    property.Value.Id = property.Key;
@@ -617,7 +630,7 @@ namespace DataWF.Web.CodeGenerator
 
         private PropertyDeclarationSyntax GenDefinitionClassProperty(JsonProperty property)
         {
-            var typeDeclaration = GetTypeDeclaration(property, true);
+            var typeDeclaration = GetTypeDeclaration(property, true, "SelectableList");
             return SF.PropertyDeclaration(
                 attributeLists: SF.List(GenClassPropertyAttributes(property)),
                 modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
@@ -635,7 +648,8 @@ namespace DataWF.Web.CodeGenerator
         {
             if (property.IsReadOnly
                 || (property.ExtensionData != null && property.ExtensionData.TryGetValue("readOnly", out var isReadOnly) && (bool)isReadOnly)
-                || property.Type == JsonObjectType.None)
+                || property.Type == JsonObjectType.Object && !property.IsEnumeration
+                || (property.Type == JsonObjectType.None && property.ActualTypeSchema.Type == JsonObjectType.Object && !property.ActualTypeSchema.IsEnumeration))
 
             {
                 yield return SF.AttributeList(
@@ -714,7 +728,7 @@ namespace DataWF.Web.CodeGenerator
             {
                 var idFiledName = GetFieldName((string)idProperty);
                 yield return SF.ParseStatement($"if({fieldName} == null && {idFiledName} != null){{");
-                yield return SF.ParseStatement($"var client = ({GetTypeString(property, false)}Client)ClientProvider.Default.GetClient<{GetTypeString(property, false)}>();");
+                yield return SF.ParseStatement($"var client = ({GetTypeString(property, false, "List")}Client)ClientProvider.Default.GetClient<{GetTypeString(property, false, "List")}>();");
                 yield return SF.ParseStatement($"{fieldName} = client.Get({idFiledName}.Value);");
                 yield return SF.ParseStatement("}");
             }
@@ -726,7 +740,7 @@ namespace DataWF.Web.CodeGenerator
             return SF.FieldDeclaration(attributeLists: SF.List<AttributeListSyntax>(),
                 modifiers: SF.TokenList(SF.Token(SyntaxKind.PrivateKeyword)),
                declaration: SF.VariableDeclaration(
-                   type: GetTypeDeclaration(property, true),
+                   type: GetTypeDeclaration(property, true, "SelectableList"),
                    variables: SF.SingletonSeparatedList(
                        SF.VariableDeclarator(
                            identifier: SF.ParseToken(GetFieldName(property)),
@@ -739,7 +753,7 @@ namespace DataWF.Web.CodeGenerator
         private ExpressionSyntax GenFieldDefault(JsonProperty property)
         {
             var text = property.Default.ToString();
-            var type = GetTypeString(property, false);
+            var type = GetTypeString(property, false, "SelectableList");
             if (type == "bool")
                 text = text.ToLowerInvariant();
             else if (type == "string")
@@ -749,18 +763,26 @@ namespace DataWF.Web.CodeGenerator
             return SF.ParseExpression(text);
         }
 
-        private string GetTypeString(JsonSchema4 value, bool nullable)
+        private string GetTypeString(JsonSchema4 value, bool nullable, string listType)
         {
             switch (value.Type)
             {
                 case JsonObjectType.Integer:
-                    return Helper.ToInitcap(value.Format) + (nullable ? "?" : string.Empty);
+                    if (value.Format == "int64")
+                    {
+                        return "long" + (nullable ? "?" : string.Empty);
+                    }
+                    return "int" + (nullable ? "?" : string.Empty);
                 case JsonObjectType.Boolean:
                     return "bool" + (nullable ? "?" : string.Empty);
                 case JsonObjectType.Number:
                     if (value.IsEnumeration)
                     {
                         goto case JsonObjectType.Object;
+                    }
+                    if (string.IsNullOrEmpty(value.Format))
+                    {
+                        return "decimal" + (nullable ? "?" : string.Empty);
                     }
                     return value.Format + (nullable ? "?" : string.Empty);
                 case JsonObjectType.String:
@@ -780,12 +802,12 @@ namespace DataWF.Web.CodeGenerator
                             return "string";
                     }
                 case JsonObjectType.Array:
-                    return $"List<{GetTypeString(value.Item, false)}>";
+                    return $"{listType}<{GetTypeString(value.Item, false, listType)}>";
                 case JsonObjectType.None:
                     if (value.ActualTypeSchema != null)
                     {
                         if (value.ActualTypeSchema.Type != JsonObjectType.None)
-                            return GetTypeString(value.ActualTypeSchema, nullable);
+                            return GetTypeString(value.ActualTypeSchema, nullable, listType);
                         else
                         { }
                     }
@@ -804,9 +826,9 @@ namespace DataWF.Web.CodeGenerator
             return "string";
         }
 
-        private TypeSyntax GetTypeDeclaration(JsonSchema4 value, bool nullable)
+        private TypeSyntax GetTypeDeclaration(JsonSchema4 value, bool nullable, string listType)
         {
-            return SF.ParseTypeName(GetTypeString(value, nullable));
+            return SF.ParseTypeName(GetTypeString(value, nullable, listType));
         }
 
         private IEnumerable<AttributeListSyntax> DefinitionAttributeList()
