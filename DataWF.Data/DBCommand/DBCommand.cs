@@ -30,7 +30,7 @@ namespace DataWF.Data
 {
     public class DBCommand
     {
-        public static DBCommand Build(DBTable table, string procName, DBCommandTypes type, IList<DBColumn> columns = null)
+        public static DBCommand Build(DBTable table, string procName, DBCommandTypes type, IEnumerable<DBColumn> columns = null)
         {
             if (table.PrimaryKey == null && (type == DBCommandTypes.Delete || type == DBCommandTypes.Update))
                 return null;

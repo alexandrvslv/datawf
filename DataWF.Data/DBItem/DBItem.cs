@@ -26,7 +26,9 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Data;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
@@ -1302,6 +1304,54 @@ namespace DataWF.Data
         public void SetTimeSpan(DBColumn column, TimeSpan value)
         {
             this[column] = value;
+        }
+
+        public void SetStream(Stream stream, DBColumn column, int bufferSize = 8192)
+        {
+            Table.System.WriteSequential(this, column, stream, bufferSize);
+        }
+
+        public Stream GetZipMemoryStream(DBColumn column, int bufferSize = 8192)
+        {
+            var memoryStream = GetMemoryStream(column, bufferSize);
+            return Helper.IsGZip(memoryStream) ? Helper.GetGZipStrem(memoryStream) : memoryStream;
+        }
+
+        public MemoryStream GetMemoryStream(DBColumn column, int bufferSize = 8192)
+        {
+            var memoryStream = (MemoryStream)null;
+            var temp = GetValue<byte[]>(column);
+            if (temp != null)
+            {
+                memoryStream = new MemoryStream(temp);
+                memoryStream.Position = 0;
+                return memoryStream;
+            }
+            memoryStream = new MemoryStream();
+            Table.System.ReadSequential(this, column, memoryStream, bufferSize);
+            return memoryStream;
+        }
+
+        public Stream GetZipFileStream(DBColumn column, string path, int bufferSize = 8192)
+        {
+            var fileStream = GetFileStream(column, path, bufferSize);
+            return Helper.IsGZip(fileStream) ? Helper.GetGZipStrem(fileStream) : fileStream;
+        }
+
+        public FileStream GetFileStream(DBColumn column, string path, int bufferSize = 8192)
+        {
+            var fileStream = File.Open(path, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+
+            var temp = GetValue<byte[]>(column);
+            if (temp != null)
+            {
+                fileStream.Write(temp, 0, temp.Length);
+                fileStream.Position = 0;
+                return fileStream;
+            }
+
+            Table.System.ReadSequential(this, column, fileStream, bufferSize);
+            return fileStream;
         }
 
         public byte[] GetZip(DBColumn column)

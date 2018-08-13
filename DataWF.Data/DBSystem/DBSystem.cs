@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.IO;
 using System.Linq;
 using System.Text;
 using DataWF.Common;
@@ -668,7 +669,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
 
         public abstract void FormatInsertSequence(StringBuilder command, DBTable table, DBItem row);
 
-        public virtual void FormatUpdate(StringBuilder command, DBTable table, DBItem row, IList<DBColumn> columns)
+        public virtual void FormatUpdate(StringBuilder command, DBTable table, DBItem row, IEnumerable<DBColumn> columns)
         {
             bool flag = false;
             command.AppendFormat("update {0} set ", table.SqlName);
@@ -682,7 +683,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             }
             if (flag)
             {
-                command.Remove(command.Length - 2, 2);
+                command.Length -= 2;
                 command.AppendFormat(" where {0}={1}", table.PrimaryKey.SqlName, row == null ? ParameterPrefix + table.PrimaryKey.Name : FormatText(row.PrimaryId));
             }
         }
@@ -699,7 +700,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             }
         }
 
-        public virtual string FormatCommand(DBTable table, DBCommandTypes type, DBItem row, IList<DBColumn> columns = null)
+        public virtual string FormatCommand(DBTable table, DBCommandTypes type, DBItem row, IEnumerable<DBColumn> columns = null)
         {
             var command = new StringBuilder();
             if (columns == null)
@@ -852,6 +853,45 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             }
             else
                 return value.ToString().Replace(",", ".");
+        }
+
+        public virtual void ReadSequential(DBItem item, DBColumn column, Stream stream, int bufferSize = 8192)
+        {
+            var command = item.Table.CreateItemCommmand(item.PrimaryId, new[] { column });
+            var transaction = DBTransaction.GetTransaction(item, item.Table.Schema.Connection);
+            try
+            {
+                using (transaction.Reader = (IDataReader)transaction.ExecuteQuery(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess))
+                {
+                    var buffer = new byte[bufferSize];
+                    int position = 0;
+                    int readed;
+                    while ((readed = (int)transaction.Reader.GetBytes(0, position, buffer, 0, bufferSize)) > 0)
+                    {
+                        stream.Write(buffer, 0, readed);
+                        position += readed;
+                    }
+                    transaction.Reader.Close();
+                }
+                transaction.Reader = null;
+                stream.Position = 0;
+            }
+            catch (Exception ex)
+            {
+                Helper.OnException(ex);
+            }
+            finally
+            {
+                if (transaction.Owner == item)
+                    transaction.Dispose();
+            }
+        }
+
+        public virtual void WriteSequential(DBItem item, DBColumn column, Stream stream, int bufferSize = 8192)
+        {
+            item.SetValue(Helper.WriteGZip(stream, bufferSize), column);
+            item.Save();
+
         }
     }
 }

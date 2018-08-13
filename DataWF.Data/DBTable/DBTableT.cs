@@ -297,12 +297,12 @@ namespace DataWF.Data
             return new DBTableView<T>(this, query, mode, filter);
         }
 
-        public override IEnumerable LoadItems(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable cols = null, IDBTableView synch = null)
+        public override IEnumerable LoadItems(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable<DBColumn> cols = null, IDBTableView synch = null)
         {
             return Load(whereText, param, cols, synch);
         }
 
-        public IEnumerable<T> Load(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable cols = null, IDBTableView synch = null)
+        public IEnumerable<T> Load(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable<DBColumn> cols = null, IDBTableView synch = null)
         {
             if (string.IsNullOrEmpty(whereText) || whereText.Trim().Equals("where", StringComparison.OrdinalIgnoreCase))
                 whereText = string.Empty;
@@ -347,7 +347,7 @@ namespace DataWF.Data
 
         public List<T> Load(IDbCommand command, DBLoadParam param = DBLoadParam.None, IDBTableView view = null)
         {
-            DBTransaction transaction = DBTransaction.GetTransaction(command, Schema?.Connection, true, param, view);
+            var transaction = DBTransaction.GetTransaction(command, Schema?.Connection, true, param, view);
             transaction.AddCommand(command);
             if (transaction.Canceled)
                 return null;
@@ -468,7 +468,7 @@ namespace DataWF.Data
              });
         }
 
-        public Task<IEnumerable<T>> LoadAsync(string query, DBLoadParam param = DBLoadParam.None, IEnumerable columns = null, IDBTableView synch = null)
+        public Task<IEnumerable<T>> LoadAsync(string query, DBLoadParam param = DBLoadParam.None, IEnumerable<DBColumn> columns = null, IDBTableView synch = null)
         {
             return Task.Run<IEnumerable<T>>(() =>
             {
@@ -489,25 +489,22 @@ namespace DataWF.Data
             LoadItem(id);
         }
 
-        public T LoadItem(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable cols = null)
+        public T LoadItem(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null)
         {
-            string idName = System.ParameterPrefix + PrimaryKey.Name;
-            var command = System.CreateCommand(Schema.Connection, CreateQuery(string.Format("where {0}={1}", PrimaryKey.Name, idName), cols));
-            System.CreateParameter(command, idName, id);
-            return Load(command).FirstOrDefault();
+            return Load(CreateItemCommmand(id, cols)).FirstOrDefault();
         }
 
-        public override DBItem LoadItemById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable cols = null)
+        public override DBItem LoadItemById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null)
         {
             return LoadById(id, param, cols);
         }
 
-        public T1 LoadById<T1>(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable cols = null) where T1 : T
+        public T1 LoadById<T1>(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null) where T1 : T
         {
             return (T1)LoadById(id, param, cols);
         }
 
-        public T LoadById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable cols = null)
+        public T LoadById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null)
         {
             object val = PrimaryKey?.ParseValue(id);
 

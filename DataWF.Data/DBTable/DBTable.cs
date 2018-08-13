@@ -640,13 +640,13 @@ namespace DataWF.Data
 
         public abstract IEnumerable LoadItems(QQuery query, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null);
 
-        public abstract IEnumerable LoadItems(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable cols = null, IDBTableView synch = null);
+        public abstract IEnumerable LoadItems(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable<DBColumn> cols = null, IDBTableView synch = null);
 
         public abstract IEnumerable LoadItems(IDbCommand command, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null);
 
         public abstract DBItem LoadItemByCode(string code, DBColumn column, DBLoadParam param);
 
-        public abstract DBItem LoadItemById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable cols = null);
+        public abstract DBItem LoadItemById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null);
 
         public abstract void ReloadItem(object id);
 
@@ -845,7 +845,7 @@ namespace DataWF.Data
 
             if (rows.Count > 0)
             {
-                
+
                 var transaction = DBTransaction.GetTransaction(this, Schema.Connection);
                 try
                 {
@@ -1202,7 +1202,7 @@ namespace DataWF.Data
         {
         }
 
-        public string BuildQuery(string whereFilter, IEnumerable cols, string function = null)
+        public string BuildQuery(string whereFilter, IEnumerable<DBColumn> cols, string function = null)
         {
             var select = new StringBuilder("select ");
             if (!string.IsNullOrEmpty(function))
@@ -1258,7 +1258,15 @@ namespace DataWF.Data
             return System?.FormatQTable(this);
         }
 
-        public string CreateQuery(string whereText, IEnumerable cols = null)
+        public IDbCommand CreateItemCommmand(object id, IEnumerable<DBColumn> cols = null)
+        {
+            string idName = System.ParameterPrefix + PrimaryKey.Name;
+            var command = System.CreateCommand(Schema.Connection, CreateQuery(string.Format("where {0}={1}", PrimaryKey.Name, idName), cols));
+            System.CreateParameter(command, idName, id);
+            return command;
+        }
+
+        public string CreateQuery(string whereText, IEnumerable<DBColumn> cols = null)
         {
             string rez;
             if (string.IsNullOrEmpty(whereText) || whereText.Trim().StartsWith("where ", StringComparison.OrdinalIgnoreCase))
@@ -1614,7 +1622,9 @@ namespace DataWF.Data
 
         public void GenerateDefaultColumns()
         {
-            Columns.AddRange(new[]{
+            Columns.AddRange(new[]
+            {
+                new DBColumn { Name = "type_id", Keys = DBColumnKeys.ItemType, DBDataType = DBDataType.Int },
                 new DBColumn { Name = "unid", Keys = DBColumnKeys.Primary, DBDataType = DBDataType.Int },
                 new DBColumn { Name = "datec", Keys = DBColumnKeys.Date, DBDataType = DBDataType.DateTime },
                 new DBColumn { Name = "dateu", Keys = DBColumnKeys.Stamp, DBDataType = DBDataType.DateTime },

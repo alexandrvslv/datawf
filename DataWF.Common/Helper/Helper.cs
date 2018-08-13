@@ -241,18 +241,18 @@ namespace DataWF.Common
             return ascii[0];
         }
 
-        //http://stackoverflow.com/questions/210650/validate-image-from-file-in-c-sharp
+        ///http://stackoverflow.com/questions/210650/validate-image-from-file-in-c-sharp
         public static bool IsImage(byte[] buf)
         {
             if (buf != null)
             {
-                if (Encoding.ASCII.GetString(buf, 0, 2) == "BM" ||
-                    Encoding.ASCII.GetString(buf, 0, 3) == "GIF" ||
-                    (buf[0] == (byte)137 && buf[1] == (byte)80 && buf[2] == (byte)78 && buf[3] == (byte)71) || //png
-                    (buf[0] == (byte)73 && buf[1] == (byte)73 && buf[2] == (byte)42) || // TIFF
-                    (buf[0] == (byte)77 && buf[1] == (byte)77 && buf[2] == (byte)42) || // TIFF2
-                    (buf[0] == (byte)255 && buf[1] == (byte)216 && buf[2] == (byte)255 && buf[3] == (byte)224) || //jpeg
-                    (buf[0] == (byte)255 && buf[1] == (byte)216 && buf[2] == (byte)255 && buf[3] == (byte)225)) //jpeg canon
+                if (Encoding.ASCII.GetString(buf, 0, 2) == "BM"
+                    || Encoding.ASCII.GetString(buf, 0, 3) == "GIF"
+                    || (buf[0] == 73 && buf[1] == 73 && buf[2] == 42) // TIFF
+                    || (buf[0] == 77 && buf[1] == 77 && buf[2] == 42) // TIFF2
+                    || (buf[0] == 137 && buf[1] == 80 && buf[2] == 78 && buf[3] == (byte)71) //png
+                    || (buf[0] == 255 && buf[1] == 216 && buf[2] == 255 && buf[3] == 224) //jpeg
+                    || (buf[0] == 255 && buf[1] == 216 && buf[2] == 255 && buf[3] == 225)) //jpeg canon
                     return true;
             }
             return false;
@@ -337,16 +337,9 @@ namespace DataWF.Common
             }
         }
 
-        public static MemoryStream ReadGZipStrem(Stream data, bool close = true)
+        public static Stream GetGZipStrem(Stream data)
         {
-            using (var stream = new GZipInputStream(data))
-            {
-                var outStream = new MemoryStream();
-                stream.CopyTo(outStream);
-                if (close)
-                    data.Close();
-                return outStream;
-            }
+            return new GZipInputStream(data);
         }
 
         public static byte[] ReadGZip(byte[] data)
@@ -355,7 +348,7 @@ namespace DataWF.Common
                 return null;
             using (var stream = new MemoryStream(data))
             {
-                using (var zipStream = new GZipInputStream(stream))
+                using (var zipStream = GetGZipStrem(stream))
                 {
                     using (var outStream = new MemoryStream())
                     {
@@ -381,16 +374,27 @@ namespace DataWF.Common
             }
         }
 
-        public static byte[] WriteGZip(Stream data)
+        public static byte[] WriteGZip(Stream data, int bufferSize = 8192)
         {
             if (data == null)
                 return null;
+            if (data.CanSeek)
+            {
+                if (IsGZip(data))
+                {
+                    using (var outStream = new MemoryStream())
+                    {
+                        data.CopyTo(outStream, bufferSize);
+                        return outStream.ToArray();
+                    }
+                }
+                data.Position = 0;
+            }
             using (var outStream = new MemoryStream())
             {
                 using (var zipStream = new GZipOutputStream(outStream))
                 {
-                    data.Position = 0;
-                    data.CopyTo(zipStream);
+                    data.CopyTo(zipStream, bufferSize);
                     zipStream.Finish();
                     return outStream.ToArray();
                 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.IO;
 using System.Text;
 using DataWF.Common;
 using Npgsql;
@@ -214,5 +215,29 @@ namespace DataWF.Data
             }
             return value;
         }
+
+        //public override void ReadSequential(DBItem item, DBColumn column, Stream stream, int bufferSize = 8192)
+        //{
+        //    var Conn = (NpgsqlConnection)CreateConnection(item.Table.Schema.Connection);
+        //    // Retrieve a Large Object Manager for this connection
+        //    var manager = new NpgsqlLargeObjectManager(Conn);
+
+        //    // Create a new empty file, returning the identifier to later access it
+        //    //uint oid = manager.OpenRead();
+
+        //    // Reading and writing Large Objects requires the use of a transaction
+        //    using (var transaction = Conn.BeginTransaction())
+        //    {
+        //        // Open the file for reading and writing
+        //        using (var managerStream = manager.OpenRead(oid))
+        //        {
+        //            managerStream.CopyTo(stream, bufferSize);
+        //            // buf2 now contains 1, 2, 3
+        //        }
+        //        // Save the changes to the object
+        //        transaction.Commit();
+        //    }
+
+        //}
     }
 }

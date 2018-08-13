@@ -89,7 +89,7 @@ namespace DataWF.Gui
                 {
                     Stream stream;
                     if (Helper.IsGZip(fileStream))
-                        stream = Helper.ReadGZipStrem(fileStream);
+                        stream = Helper.GetGZipStrem(fileStream);
                     else
                         stream = fileStream;
                     newList = Serialization.Deserialize(stream) as StateInfoList;

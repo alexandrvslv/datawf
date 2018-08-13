@@ -341,6 +341,7 @@ namespace DataWF.Data
             {
                 subTransactions = new Dictionary<DBConnection, DBTransaction>();
             }
+            //TODO Check several subtransaction with same config (IDBConnections leak!!!)
             else if (subTransactions.TryGetValue(config, out var subTransaction) && subTransaction.Reader == null)
             {
                 return subTransaction;
@@ -449,7 +450,7 @@ namespace DataWF.Data
             return ExecuteQuery(AddCommand(CommandText), type);
         }
 
-        public object ExecuteQuery(IDbCommand command, DBExecuteType type = DBExecuteType.Scalar)
+        public object ExecuteQuery(IDbCommand command, DBExecuteType type = DBExecuteType.Scalar, CommandBehavior behavior = CommandBehavior.Default)
         {
             object buf = null;
             var watch = new Stopwatch();
@@ -464,7 +465,7 @@ namespace DataWF.Data
                         buf = command.ExecuteScalar();
                         break;
                     case DBExecuteType.Reader:
-                        buf = command.ExecuteReader();
+                        buf = command.ExecuteReader(behavior);
                         break;
                     case DBExecuteType.NoReader:
                         buf = command.ExecuteNonQuery();
