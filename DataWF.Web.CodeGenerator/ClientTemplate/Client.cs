@@ -37,48 +37,44 @@ namespace NewNameSpace
                 {
                     invoker = EmitInvoker.Initialize<T>((string)jreader.Value);
                 }
-                else if (jreader.TokenType == JsonToken.StartObject)
+                else if (invoker != null)
                 {
-                    if (invoker != null)
+                    if (jreader.TokenType == JsonToken.StartObject)
                     {
                         dictionary[invoker] = DeserializeObject(serializer, jreader, invoker.DataType);
                     }
-                }
-                else if (jreader.TokenType == JsonToken.StartArray)
-                {
-                    if (invoker != null)
+                    else if (jreader.TokenType == JsonToken.StartArray)
                     {
                         dictionary[invoker] = DeserializeArray(serializer, jreader, invoker.DataType);
                     }
-                }
-                else if (invoker != null)
-                {
-                    dictionary[invoker] = jreader.Value;
-                    if (invoker.Name == IdInvoker?.Name)
+                    else
                     {
-                        id = jreader.Value;
-                    }
-                    else if (invoker.Name == TypeInvoker?.Name)
-                    {
-                        typeId = jreader.Value;
-                        if (typeId != null)
+                        dictionary[invoker] = serializer.Deserialize(jreader, invoker.DataType);
+                        if (invoker.Name == IdInvoker?.Name)
                         {
-                            var type = (int)Helper.Parse(typeId, typeof(int));
-                            if (type != TypeId)
+                            id = jreader.Value;
+                        }
+                        else if (invoker.Name == TypeInvoker?.Name)
+                        {
+                            typeId = jreader.Value;
+                            if (typeId != null)
                             {
-                                var client = Provider.GetClient(typeof(T), type);
-                                item = (T)client.DeserializeItem(serializer, jreader, dictionary, id);
-                                if (Select(IdInvoker.GetValue(item).Value) == null)
+                                var type = (int)Helper.Parse(typeId, typeof(int));
+                                if (type != TypeId)
                                 {
-                                    Items.Add(item);
+                                    var client = Provider.GetClient(typeof(T), type);
+                                    item = (T)client.DeserializeItem(serializer, jreader, dictionary, id);
+                                    if (Select(IdInvoker.GetValue(item).Value) == null)
+                                    {
+                                        Items.Add(item);
+                                    }
+                                    return item;
                                 }
-                                return item;
                             }
                         }
                     }
                 }
             }
-
             return DeserializeItem(dictionary, id);
         }
 
@@ -98,7 +94,7 @@ namespace NewNameSpace
             }
             foreach (var entry in dictionary)
             {
-                entry.Key.SetValue(item, Helper.Parse(entry.Value, entry.Key.DataType));
+                entry.Key.SetValue(item, entry.Value);
             }
             if (add)
             {
