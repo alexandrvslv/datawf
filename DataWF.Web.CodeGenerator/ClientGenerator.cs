@@ -429,12 +429,18 @@ namespace DataWF.Web.CodeGenerator
         {
             var method = descriptor.Method.ToString().ToUpperInvariant();
             var path = descriptor.Path;
-            var mediatype = "application/json";
             var responceSchema = (JsonSchema4)null;
+            var mediatype = "application/json";
             if (descriptor.Operation.Responses.TryGetValue("200", out var responce))
+            {
                 responceSchema = responce.Schema;
+                mediatype = responce.Content.Keys.FirstOrDefault() ?? "application/json";
+            }
+
             var returnType = GetReturningType(descriptor);
+
             var builder = new StringBuilder();
+
             builder.Append($"return await Request");
             if (responceSchema?.Type == JsonObjectType.Array)
                 builder.Append("Array");
@@ -442,12 +448,16 @@ namespace DataWF.Web.CodeGenerator
             if (responceSchema?.Type == JsonObjectType.Array)
                 builder.Append($", {GetTypeString(responceSchema.Item, false, "List")}");
             builder.Append($">(cancellationToken, \"{method}\", \"{path}\", \"{mediatype}\"");
-            var bodyParameter = descriptor.Operation.Parameters.FirstOrDefault(p => p.Kind == SwaggerParameterKind.Body);
+            var bodyParameter = descriptor.Operation.Parameters.FirstOrDefault(p => p.Kind != SwaggerParameterKind.Path);
             if (bodyParameter == null)
             {
                 builder.Append(", null");
             }
-            foreach (var parameter in descriptor.Operation.Parameters)
+            else
+            {
+                builder.Append($", {bodyParameter.Name}");
+            }
+            foreach (var parameter in descriptor.Operation.Parameters.Where(p => p.Kind == SwaggerParameterKind.Path))
             {
                 builder.Append($", {parameter.Name}");
             }
@@ -822,6 +832,8 @@ namespace DataWF.Web.CodeGenerator
                             return GetDefinitionName(value);
                     }
                     break;
+                case JsonObjectType.File:
+                    return "string";
             }
             return "string";
         }

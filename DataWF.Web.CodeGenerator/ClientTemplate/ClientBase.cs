@@ -78,7 +78,15 @@ namespace NewNameSpace
             };
             Provider?.Authorization?.FillRequest(request);
 
-            if (value != null)
+            if (value is string filePath && parameters.Length > 1)
+            {
+                var fileName = (string)parameters[1];
+                var content = new MultipartFormDataContent();
+                content.Headers.ContentType = MediaTypeHeaderValue.Parse(mediaType);
+                content.Add(new StreamContent(File.Open(filePath, FileMode.Open)), Path.GetFileNameWithoutExtension(fileName), fileName);
+                request.Content = content;
+            }
+            else if (value != null)
             {
                 var content = new StringContent(JsonConvert.SerializeObject(value, settings.Value), Encoding.UTF8);
                 content.Headers.ContentType = MediaTypeHeaderValue.Parse(mediaType);
@@ -140,7 +148,19 @@ namespace NewNameSpace
                                 {
                                     using (var reader = new StreamReader(responseStream))
                                     {
-                                        if (typeof(R) == typeof(string))
+                                        if (mediaType.Equals("application/octet-stream"))
+                                        {
+                                            var headers = GetHeaders(response);
+                                            var fileName = headers.TryGetValue("FileName", out var names) ? names.FirstOrDefault() : "somefile.someextension";
+                                            var filePath = Path.Combine(Path.GetTempPath(), AppDomain.CurrentDomain.FriendlyName, fileName);
+
+                                            using (var fileStream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.Write))
+                                            {
+                                                await responseStream.CopyToAsync(fileStream, 8192, cancellationToken).ConfigureAwait(false);
+                                            }
+                                            return (R)(object)filePath;
+                                        }
+                                        else if (typeof(R) == typeof(string))
                                         {
                                             result = (R)(object)reader.ReadToEnd();
                                         }
@@ -163,8 +183,7 @@ namespace NewNameSpace
                             }
                             catch (Exception ex)
                             {
-                                var responseData = response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                                throw new ClientException("Could not deserialize the response body.", (int)response.StatusCode, responseData, GetHeaders(response), ex);
+                                OnResponceDeserializeException(response, ex);
                             }
                         }
                         else if (status != System.Net.HttpStatusCode.NoContent)
@@ -222,8 +241,7 @@ namespace NewNameSpace
                             }
                             catch (Exception ex)
                             {
-                                var responseData = response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                                throw new ClientException("Could not deserialize the response body.", (int)response.StatusCode, responseData, GetHeaders(response), ex);
+                                OnResponceDeserializeException(response, ex);
                             }
                         }
                         else if (status != System.Net.HttpStatusCode.NoContent)
@@ -336,5 +354,13 @@ namespace NewNameSpace
 
             return Convert.ToString(value, cultureInfo);
         }
+
+        private async void OnResponceDeserializeException(HttpResponseMessage response, Exception ex)
+        {
+            var responseData = response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            throw new ClientException("Could not deserialize the response body.", (int)response.StatusCode, responseData, GetHeaders(response), ex);
+        }
+
+
     }
 }
