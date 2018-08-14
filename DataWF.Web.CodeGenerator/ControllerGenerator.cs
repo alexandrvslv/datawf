@@ -103,7 +103,9 @@ namespace DataWF.Web.CodeGenerator
 
             if (!trees.TryGetValue(name, out var baseController))
             {
+                var fileColumn = tableAttribute.Columns.FirstOrDefault(p => (p.Attribute.Keys & DBColumnKeys.File) == DBColumnKeys.File);
                 var primaryKeyType = tableAttribute.PrimaryKey?.GetDataType() ?? typeof(int);
+                var baseType = $"Base{(IsPrimaryType(itemType.BaseType) ? "" : itemType.BaseType.Name)}Controller<T, K>";
                 baseController = SyntaxFactory.ClassDeclaration(
                     attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
                     modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.AbstractKeyword)),
@@ -114,8 +116,7 @@ namespace DataWF.Web.CodeGenerator
                             SyntaxFactory.TypeParameter("K") })),
                     baseList: SyntaxFactory.BaseList(
                         SyntaxFactory.SeparatedList<BaseTypeSyntax>(new[] {
-                        SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName($"Base{(IsPrimaryType(itemType.BaseType)? "" :itemType.BaseType.Name)}Controller<T, K>"))
-                        })),
+                        SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName(baseType)) })),
                     constraintClauses: SyntaxFactory.List(new[] { SyntaxFactory.TypeParameterConstraintClause(
                         name: SyntaxFactory.IdentifierName("T"),
                         constraints: SyntaxFactory.SeparatedList<TypeParameterConstraintSyntax>(new []{
