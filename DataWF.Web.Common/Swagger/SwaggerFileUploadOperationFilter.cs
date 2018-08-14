@@ -12,7 +12,7 @@ namespace DataWF.Web.Common
     {
         public void Apply(Operation operation, OperationFilterContext context)
         {
-            if (operation.OperationId.EndsWith("UploadFileByIdPost", StringComparison.OrdinalIgnoreCase))
+            if (operation.OperationId.EndsWith("UploadFileByIdByFileNamePost", StringComparison.OrdinalIgnoreCase))
             {
                 operation.Consumes.Add("multipart/form-data");
                 operation.Parameters.Add(new NonBodyParameter
