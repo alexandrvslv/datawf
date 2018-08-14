@@ -159,20 +159,18 @@ namespace DataWF.Module.Flow
             }
         }
 
-        [ControllerMethod]
         public Stream GetFile()
         {
             if (FileName == null)
             {
                 return null;
             }
-
             return GetZipMemoryStream(Table.ParseProperty(nameof(FileData)));
         }
 
-        [ControllerMethod]
         public void SetFile(Stream stream, string fileName)
         {
+            FileName = fileName;
             SetStream(stream, Table.ParseProperty(nameof(FileData)));
         }
 

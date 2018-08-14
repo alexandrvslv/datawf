@@ -10,7 +10,6 @@ using System.Reflection;
 
 namespace DataWF.Web.Common
 {
-
     public class SwaggerDBSchemaFilter : ISchemaFilter
     {
         private Stack<TableAttributeCache> tables = new Stack<TableAttributeCache>();

@@ -72,6 +72,7 @@ namespace DataWF.Web.Common
              {
                  c.SwaggerDoc(version, new Info { Title = name, Version = version });
                  c.SchemaFilter<SwaggerDBSchemaFilter>();
+                 c.OperationFilter<SwaggerFileUploadOperationFilter>();
                  c.ParameterFilter<SwaggerEnumParameterFilter>();
                  c.UseReferencedDefinitionsForEnums();
                  c.DescribeAllEnumsAsStrings();
