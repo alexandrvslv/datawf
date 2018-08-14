@@ -141,8 +141,9 @@ namespace DataWF.Web.Common
             return Ok(true);
         }
 
-        [HttpGet("LoadFile/{id}")]
-        public ActionResult<FileResult> LoadFile([FromRoute]K id)
+        [HttpGet("DownloadFile/{id}")]
+        [ProducesResponseType(typeof(FileStreamResult), 200)]
+        public IActionResult DownloadFile([FromRoute]K id)
         {
             if (fileColumn == null || fileNameColumn == null)
             {
@@ -160,7 +161,7 @@ namespace DataWF.Web.Common
                 {
                     return new EmptyResult();
                 }
-                return File(item.GetValue<byte[]>(fileColumn), System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
+                return File(item.GetZipMemoryStream(fileColumn), System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
             }
             catch (Exception ex)
             {
@@ -168,9 +169,9 @@ namespace DataWF.Web.Common
             }
         }
 
-        [HttpPost("UploadFile/{id}")]
+        [HttpPost("UploadFile/{id}/{fileName}")]
         [DisableFormValueModelBinding]
-        public async Task<ActionResult> UploadFile([FromRoute]K id)
+        public async Task<ActionResult> UploadFile([FromRoute]K id, [FromRoute]string fileName)
         {
             if (fileColumn == null || fileNameColumn == null)
             {
@@ -194,11 +195,11 @@ namespace DataWF.Web.Common
                     {
                         return NotFound();
                     }
-                    if (!string.IsNullOrEmpty(upload.FileName))
+                    if (string.IsNullOrEmpty(fileName) && !string.IsNullOrEmpty(upload.FileName))
                     {
-                        item.SetValue(upload.FileName, fileNameColumn);
+                        fileName = upload.FileName;
                     }
-
+                    item.SetValue(fileName, fileNameColumn);
                     item.SetStream(upload.Stream, fileColumn);
                 }
                 return Ok();

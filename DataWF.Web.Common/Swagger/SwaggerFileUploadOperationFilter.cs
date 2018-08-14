@@ -12,8 +12,7 @@ namespace DataWF.Web.Common
     {
         public void Apply(Operation operation, OperationFilterContext context)
         {
-            var formAttribute = context.MethodInfo.GetCustomAttribute<DisableFormValueModelBindingAttribute>();
-            if (formAttribute != null)
+            if (operation.OperationId.EndsWith("UploadFileByIdPost", StringComparison.OrdinalIgnoreCase))
             {
                 operation.Consumes.Add("multipart/form-data");
                 operation.Parameters.Add(new NonBodyParameter
@@ -24,6 +23,11 @@ namespace DataWF.Web.Common
                     Required = true,
                     Type = "file"
                 });
+            }
+            else if (operation.OperationId.EndsWith("DownloadFileByIdGet", StringComparison.OrdinalIgnoreCase))
+            {
+                operation.Produces = new string[] { System.Net.Mime.MediaTypeNames.Application.Octet };
+                operation.Responses["200"].Schema = new Schema { Type = "file" };
             }
         }
     }
