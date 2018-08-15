@@ -5007,11 +5007,10 @@ namespace DataWF.Gui
                     post = true;
                     Task.Run(() =>
                     {
-                        //listEvent.WaitOne(400);
                         Task.Delay(400);
                         Application.Invoke(() => OnListChangedApp(source, arg));
                         post = false;
-                    });
+                    }).ConfigureAwait(false);
                 }
             }
             else
