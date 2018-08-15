@@ -96,8 +96,8 @@ namespace DataWF.Data
                 throw new InvalidOperationException($"Columns name duplication {item.Name}");
             }
             // if (col.Order == -1 || col.Order > this.Count)
-            if (item.IsPrimaryKey)
-                index = 0;
+            if (item.IsPrimaryKey && index > 1)
+                index = 1;
             if (item.IsTypeKey)
                 index = 0;
             item.Order = index;
