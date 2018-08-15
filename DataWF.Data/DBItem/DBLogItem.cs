@@ -58,7 +58,7 @@ namespace DataWF.Data
 
         public DBItem UserLog
         {
-            get { return DBLogTable.UserLogTable.LoadItemById(UserLogId); }
+            get { return DBLogTable.UserLogTable?.LoadItemById(UserLogId); }
             set { UserLogId = (long?)value?.PrimaryId; }
         }
 
