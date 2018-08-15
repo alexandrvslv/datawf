@@ -207,11 +207,12 @@ namespace DataWF.Gui
                     {
                         categoryName = group.categoryName;
                         group.nodes.Add(this);
-
-                        if (group.Container != null)
-                            group.Container.Add(this);
                     }
                     OnPropertyChanged(nameof(Group));
+                    if (Container == null && group.Container != null)
+                    {
+                        group.Container.Add(this);
+                    }
                 }
             }
         }
