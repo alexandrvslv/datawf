@@ -128,12 +128,13 @@ namespace DataWF.Gui
 
         public T Find(string name)
         {
-            return Select(nameof(Node.Name), CompareType.Equal, name).FirstOrDefault();
+            return SelectOne(nameof(Node.Name), CompareType.Equal, name);
         }
 
         public override void OnPropertyChanged(object sender, string propertyName)
         {
-            //
+            base.OnPropertyChanged(sender, propertyName);
+
             if (propertyName.Equals(nameof(Node.Expand), StringComparison.Ordinal))
             {
                 OnListChanged(NotifyCollectionChangedAction.Reset);
@@ -156,15 +157,8 @@ namespace DataWF.Gui
             }
             else if (propertyName.Equals(nameof(Node.Group), StringComparison.Ordinal))
             {
-                var lindex = indexes.GetIndex(propertyName);
-                if (lindex != null)
-                {
-                    lindex.Remove((T)sender);
-                    lindex.Add((T)sender);
-                }
                 OnListChanged(NotifyCollectionChangedAction.Reset);
             }
-            base.OnPropertyChanged(sender, propertyName);
         }
 
         public IEnumerable<T> GetTopLevel()
