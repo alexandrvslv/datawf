@@ -116,7 +116,7 @@ namespace DataWF.Data.Gui
             if (query != null && query.Table == view.Table)
             {
                 queries.Push(query);
-                await Task.Run(() => Loader());
+                await Task.Run(() => Loader()).ConfigureAwait(false);
             }
         }
 

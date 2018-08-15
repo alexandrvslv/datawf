@@ -60,6 +60,9 @@ namespace DataWF.TestGui
 
         private async void ORMTestClick(object sender, EventArgs e)
         {
+            var list = new DataExplorer();
+            dock.Put(list);
+
             await Task.Run(() =>
             {
                 var schema = DBSchema.Generate(typeof(User).Assembly, "common_data");
@@ -71,10 +74,7 @@ namespace DataWF.TestGui
                 };
                 schema.DropDatabase();
                 schema.CreateDatabase();
-            });
-
-            var list = new DataExplorer();
-            dock.Put(list);
+            }).ConfigureAwait(false);
         }
 
         private void TestInvokerClick(object sender, EventArgs e)

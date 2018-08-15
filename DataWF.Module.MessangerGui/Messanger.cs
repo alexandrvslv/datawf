@@ -51,7 +51,7 @@ namespace DataWF.Module.MessangerGui
 
         public async Task SyncAsync()
         {
-            await Task.Run(() => Sync());
+            await Task.Run(() => Sync()).ConfigureAwait(false);
         }
 
         public DockType DockType

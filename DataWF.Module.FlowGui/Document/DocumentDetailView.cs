@@ -74,7 +74,7 @@ namespace DataWF.Module.FlowGui
         {
             if (!view.IsSynchronized)
             {
-                await Task.Run(() => Sync());
+                await Task.Run(() => Sync()).ConfigureAwait(false);
             }
         }
 

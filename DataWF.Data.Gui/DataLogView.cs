@@ -329,7 +329,7 @@ namespace DataWF.Data.Gui
                 {
                     foreach (var refed in filter.Table.GetChildRelations())
                     {
-                        if (refed.Table.LogTable == null 
+                        if (refed.Table.LogTable == null
                         || refed.Table is IDBVirtualTable
                         || (Table != filter.Table && refed.Table != Table))
                             continue;
@@ -347,7 +347,7 @@ namespace DataWF.Data.Gui
                     }
                 }
                 Application.Invoke(() => toolProgress.Visible = false);
-            });
+            }).ConfigureAwait(false);
         }
 
         public DockType DockType

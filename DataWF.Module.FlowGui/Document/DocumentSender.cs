@@ -494,7 +494,7 @@ namespace DataWF.Module.FlowGui
                     {
                         Helper.OnException(ex);
                     }
-                });
+                }).ConfigureAwait(false);
             }
             else
             {

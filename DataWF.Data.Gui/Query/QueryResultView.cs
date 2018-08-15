@@ -189,7 +189,7 @@ namespace DataWF.Data.Gui
 
         public async Task SyncAsync()
         {
-            await Task.Run(() => Sync());
+            await Task.Run(() => Sync()).ConfigureAwait(false);
         }
 
         public bool ReadOnly

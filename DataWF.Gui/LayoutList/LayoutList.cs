@@ -5007,7 +5007,7 @@ namespace DataWF.Gui
                     post = true;
                     Task.Run(() =>
                     {
-                        Task.Delay(400);
+                        System.Threading.Thread.Sleep(300);
                         Application.Invoke(() => OnListChangedApp(source, arg));
                         post = false;
                     }).ConfigureAwait(false);

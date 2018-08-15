@@ -105,7 +105,7 @@ namespace DataWF.Module.FlowGui
 
         public async Task SyncAsync()
         {
-            await Task.Run(() => Sync());
+            await Task.Run(() => Sync()).ConfigureAwait(false);
         }
 
         private void ToolAttachClick(object sender, EventArgs e)
