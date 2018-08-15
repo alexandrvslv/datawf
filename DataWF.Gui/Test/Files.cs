@@ -55,6 +55,7 @@ namespace DataWF.TestGui
 
             var task = new Task(CheckQueue, TaskCreationOptions.LongRunning);
             task.Start();
+            GuiService.Localize(this, "Files", "Files", GlyphType.FilesO);
 
             Task.Run(() =>
                 {
@@ -70,9 +71,8 @@ namespace DataWF.TestGui
                             Helper.OnException(e);
                         }
                     }
-                });
+                }).ConfigureAwait(false);
 
-            GuiService.Localize(this, "Files", "Files", GlyphType.FilesO);
         }
 
         private DirectoryNode InitDrive(DriveInfo drive)
@@ -107,7 +107,7 @@ namespace DataWF.TestGui
 
         private void CheckSubDirectory(DirectoryNode node)
         {
-            if (!node.Check && !actions.Contains(node))
+            if (!actions.Contains(node))
             {
                 actions.Enqueue(node);
                 flag.Set();
@@ -121,38 +121,34 @@ namespace DataWF.TestGui
                 flag.WaitOne();
                 while (actions.Count > 0)
                 {
-                    var check = actions.Dequeue();
-                    if (check != null)
+                    var node = actions.Dequeue();
+                    if (node != null)
                     {
-                        check.Check = true;
                         Application.Invoke(() =>
                         {
-                            statusLablel.Text = string.Format("Check: {0}", check.Name);
+                            statusLablel.Text = string.Format("Check: {0}", node.Name);
                         });
 
-                        var directory = (DirectoryInfo)check.File.Info;
-                        try
+                        CheckNode(node);
+                        if (node == Current)
                         {
-                            var directories = directory.GetDirectories();
-                            foreach (var item in directories)
-                            {
-                                if ((item.Attributes & FileAttributes.Hidden) != FileAttributes.Hidden &&
-                                                         (item.Attributes & FileAttributes.System) != FileAttributes.System)
-                                {
-                                    Node snode = InitDirectory(item);
-                                    snode.Group = check;
-                                }
-                            }
+                            files.Clear();
+                            files.AddRange(node.Nodes.OfType<DirectoryNode>().Select(p => p.File));
+
+                            var directory = (DirectoryInfo)node.File.Info;
+                            files.AddRange(directory.GetFiles().Select(p => new FileItem() { Info = p }));
                         }
-                        catch (Exception ex)
+                        for (int i = 0; i < node.Nodes.Count; i++)
                         {
-                            check.Text += ex.Message;
+                            var check = (DirectoryNode)node.Nodes[i];
+                            CheckNode(check);
                         }
+
                     }
 
                     Application.Invoke(() =>
                     {
-                        statusLablel.Text = string.Format("Nodes: {0} Queue: {1}",
+                        statusLablel.Text += string.Format("      Nodes: {0} Queue: {1}",
                                                           directoryTree.Nodes.Count,
                                                          actions.Count);
                     });
@@ -161,22 +157,32 @@ namespace DataWF.TestGui
             }
         }
 
-        private void LoadFolder(DirectoryNode node)
+        private void CheckNode(DirectoryNode check)
         {
-            Task.Run(() =>
+            if (!check.Check)
             {
-                files.Clear();
-                foreach (DirectoryNode item in node.Nodes)
-                    files.Add(item.File);
-
-                var directory = (DirectoryInfo)node.File.Info;
-                var dfiles = directory.GetFiles();
-                foreach (var file in dfiles)
-                    files.Add(new FileItem() { Info = file });
-
-            });
-            //fList.ListSource = files;
+                check.Check = true;
+                var directory = (DirectoryInfo)check.File.Info;
+                try
+                {
+                    var directories = directory.GetDirectories();
+                    foreach (var item in directories)
+                    {
+                        if ((item.Attributes & FileAttributes.Hidden) != FileAttributes.Hidden &&
+                                                 (item.Attributes & FileAttributes.System) != FileAttributes.System)
+                        {
+                            Node snode = InitDirectory(item);
+                            snode.Group = check;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    check.Text += ex.Message;
+                }
+            }
         }
+
 
         public DirectoryNode Current
         {
@@ -193,11 +199,8 @@ namespace DataWF.TestGui
                                        Helper.LenghtFormat(drive.TotalFreeSpace),
                                        Helper.LenghtFormat(drive.TotalSize));
                         statusLablel.Text = text;
-                        for (int i = 0; i < current.Nodes.Count; i++)
-                            if (!current.Nodes[i].Check)
-                                CheckSubDirectory((DirectoryNode)current.Nodes[i]);
 
-                        LoadFolder(current);
+                        CheckSubDirectory(current);
                     }
                 }
             }
