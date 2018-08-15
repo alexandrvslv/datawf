@@ -52,7 +52,7 @@ namespace DataWF.Gui
 
             Helper.Logs.CollectionChanged += OnLogListChanged;
 
-            Task.Run(() => LoadConfiguration());
+            Task.Run(() => LoadConfiguration()).ConfigureAwait(false);
         }
 
         public virtual void LoadConfiguration()
