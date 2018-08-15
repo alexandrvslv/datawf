@@ -56,14 +56,7 @@ namespace DataWF.Web.Common
                     if (!IsSerializeableColumn(column))
                         continue;
                     writer.WritePropertyName(column.PropertyName);
-                    if (column.GetDataType().IsEnum)
-                    {
-                        writer.WriteValue(column.PropertyInvoker.GetValue(item)?.ToString());
-                    }
-                    else
-                    {
-                        writer.WriteValue(column.PropertyInvoker.GetValue(item));
-                    }
+                    serializer.Serialize(writer, column.PropertyInvoker.GetValue(item));
                 }
                 foreach (var refing in tableAttribute.Referencings)
                 {
@@ -73,12 +66,7 @@ namespace DataWF.Web.Common
                     if (refs != null)
                     {
                         writer.WritePropertyName(refing.Property.Name);
-                        writer.WriteStartArray();
-                        foreach (var refItem in refs)
-                        {
-                            serializer.Serialize(writer, refItem);
-                        }
-                        writer.WriteEndArray();
+                        serializer.Serialize(writer, refs);
                     }
                 }
                 writer.WriteEndObject();
@@ -115,18 +103,7 @@ namespace DataWF.Web.Common
                 }
                 else if (key != null)
                 {
-                    if (reader.TokenType == JsonToken.StartObject)
-                    {
-                        dictionary[key] = serializer.Deserialize(reader, key.DataType);
-                    }
-                    else if (reader.TokenType == JsonToken.StartArray)
-                    {
-                        dictionary[key] = serializer.Deserialize(reader, key.DataType);
-                    }
-                    else
-                    {
-                        dictionary[key] = serializer.Deserialize(reader, key.DataType);
-                    }
+                    dictionary[key] = serializer.Deserialize(reader, key.DataType);
                 }
             }
 

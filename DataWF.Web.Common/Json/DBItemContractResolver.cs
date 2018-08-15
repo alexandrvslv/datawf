@@ -1,6 +1,7 @@
 ﻿using DataWF.Common;
 using DataWF.Data;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Linq;
@@ -10,6 +11,12 @@ namespace DataWF.Web.Common
     public class DBItemContractResolver : DefaultContractResolver
     {
         private JsonConverter dbConverter = new DBItemJsonConverter();
+        private JsonConverter stringConverter = new StringEnumConverter();
+
+        public DBItemContractResolver()
+        {
+        }
+
         public override JsonContract ResolveContract(Type type)
         {
             var contract = base.ResolveContract(type);
@@ -57,7 +64,12 @@ namespace DataWF.Web.Common
                     return result;
                 }
             }
-            return base.CreateObjectContract(objectType);
+            var contract = base.CreateObjectContract(objectType);
+            //if (objectType.IsEnum)
+            //{
+            //    contract.Converter = stringConverter;
+            //}
+            return contract;
         }
     }
 }

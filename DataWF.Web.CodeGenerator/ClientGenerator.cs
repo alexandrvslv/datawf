@@ -516,18 +516,21 @@ namespace DataWF.Web.CodeGenerator
         private IEnumerable<EnumMemberDeclarationSyntax> GetDefinitionEnumMemebers(JsonSchema4 schema)
         {
             int i = 0;
+            var definitionName = GetDefinitionName(schema);
             foreach (var item in schema.Enumeration)
             {
                 var sitem = item.ToString();
                 if (!Char.IsLetter(sitem[0]))
                 {
-                    sitem = GetDefinitionName(schema)[0] + sitem;
+                    sitem = definitionName[0] + sitem;
                 }
                 yield return SF.EnumMemberDeclaration(attributeLists: SF.List(GenDefinitionEnumMemberAttribute(item)),
                         identifier: SF.Identifier(sitem),
-                        equalsValue: SF.EqualsValueClause(
-                            SF.Token(SyntaxKind.EqualsToken),
-                            SF.LiteralExpression(SyntaxKind.NumericLiteralExpression, SF.Literal(i++))));
+                        equalsValue: null);
+                //SF.EqualsValueClause(
+                //    SF.Token(SyntaxKind.EqualsToken),
+                //    SF.LiteralExpression(SyntaxKind.NumericLiteralExpression, SF.Literal(i++)))
+
 
             }
         }

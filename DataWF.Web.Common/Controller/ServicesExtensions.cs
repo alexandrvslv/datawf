@@ -50,7 +50,7 @@ namespace DataWF.Web.Common
                    options.SerializerSettings.ContractResolver = new DBItemContractResolver();
                    options.SerializerSettings.Error = SerializationErrors;
                    options.SerializerSettings.TraceWriter = new DiagnosticsTraceWriter() { };
-                   //options.SerializerSettings.Converters.Add(new DBItemJsonConverter());
+                   //options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
                });
 
             foreach (var validator in services.Where(s => s.ServiceType == typeof(IObjectModelValidator)).ToList())
