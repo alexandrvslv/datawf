@@ -12,6 +12,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.CodeDom.Compiler;
 using System.Linq;
+using System.Runtime.Serialization;
 
 namespace DataWF.Common
 {
@@ -1334,42 +1335,6 @@ namespace DataWF.Common
                 charArray.Add(newChar);
             }
             return new string(charArray.ToArray());
-        }
-    }
-
-    public class EnumItem : ICheck, INotifyPropertyChanged
-    {
-        private bool check;
-
-        public override string ToString()
-        {
-            if (Name == null)
-                Name = Locale.Get(Value);
-            return Name;
-        }
-
-        public int Index { get; set; }
-        public string Name { get; set; }
-        public object Value { get; set; }
-
-        public bool Check
-        {
-            get { return check; }
-            set
-            {
-                if (this.check != value)
-                {
-                    this.check = value;
-                    OnPropertyChanged(nameof(Check));
-                }
-            }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private void OnPropertyChanged(string property)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
     }
 
