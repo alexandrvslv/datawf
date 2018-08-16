@@ -125,7 +125,7 @@ namespace DataWF.Data
         [Browsable(false)]
         public virtual string Property
         {
-            get { return property ?? Name; }
+            get { return property; }
             set
             {
                 if (property != value)

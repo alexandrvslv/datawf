@@ -170,11 +170,11 @@ namespace DataWF.Data
                 RefreshOld(column, value, field);
             }
 
-            OnPropertyChanging(column.Property, column, field);
+            OnPropertyChanging(column.Property ?? column.Name, column, field);
 
             column.Pull.Set(hindex, value);
 
-            OnPropertyChanged(column.Property, column, value);
+            OnPropertyChanged(column.Property ?? column.Name, column, value);
 
             if (check)
             {
@@ -930,7 +930,7 @@ namespace DataWF.Data
             {
                 Table.OnItemChanging(this, property, column, value);
             }
-            PropertyChanging?.Invoke(this, new PropertyChangingEventArgs(column.Property ?? property));
+            PropertyChanging?.Invoke(this, new PropertyChangingEventArgs(property));
         }
 
         public virtual void OnPropertyChanged(string property, DBColumn column = null, object value = null)
