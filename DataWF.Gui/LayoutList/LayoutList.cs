@@ -2092,6 +2092,10 @@ namespace DataWF.Gui
                     {
                         binding.ListChanged -= OnListChanged;
                     }
+                    if (listSource is INotifyListPropertyChanged property)
+                    {
+                        property.ItemPropertyChanged -= OnListChanged;
+                    }
                 }
                 OnCellEditEnd(new CancelEventArgs());
 
@@ -2110,6 +2114,10 @@ namespace DataWF.Gui
                     else if (listSource is IBindingList binding)
                     {
                         binding.ListChanged += OnListChanged;
+                    }
+                    if (listSource is INotifyListPropertyChanged property)
+                    {
+                        property.ItemPropertyChanged += OnListChanged;
                     }
 
                     var type = TypeHelper.GetItemType(listSource.GetType());
@@ -4851,8 +4859,6 @@ namespace DataWF.Gui
             else
                 return true;
         }
-
-
 
         public StringBuilder ToTabbedList(IEnumerable items)
         {

@@ -131,11 +131,11 @@ namespace DataWF.Gui
             return SelectOne(nameof(Node.Name), CompareType.Equal, name);
         }
 
-        public override void OnPropertyChanged(object sender, string propertyName)
+        public override void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            base.OnPropertyChanged(sender, propertyName);
+            base.OnItemPropertyChanged(sender, e);
 
-            if (propertyName.Equals(nameof(Node.Expand), StringComparison.Ordinal))
+            if (e.PropertyName.Equals(nameof(Node.Expand), StringComparison.Ordinal))
             {
                 OnListChanged(NotifyCollectionChangedAction.Reset);
                 //for (int i = 0; i < node.Childs.Count; i++)
@@ -145,7 +145,7 @@ namespace DataWF.Gui
                 //    base.OnNotifyPropertyChanged(n, e);
                 //}
             }
-            else if (propertyName.Equals(nameof(Node.Visible), StringComparison.Ordinal))
+            else if (e.PropertyName.Equals(nameof(Node.Visible), StringComparison.Ordinal))
             {
                 OnListChanged(NotifyCollectionChangedAction.Reset);
                 //base.OnNotifyPropertyChanged(sender, e);
@@ -155,7 +155,7 @@ namespace DataWF.Gui
                 //    this.OnNotifyPropertyChanged(n, e);
                 //}
             }
-            else if (propertyName.Equals(nameof(Node.Group), StringComparison.Ordinal))
+            else if (e.PropertyName.Equals(nameof(Node.Group), StringComparison.Ordinal))
             {
                 OnListChanged(NotifyCollectionChangedAction.Reset);
             }

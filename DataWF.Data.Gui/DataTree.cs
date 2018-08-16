@@ -1,13 +1,12 @@
-﻿using DataWF.Data;
+﻿using DataWF.Common;
 using DataWF.Gui;
-using DataWF.Common;
 using System;
-using System.Collections;
-using System.ComponentModel;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Linq;
 using Xwt;
 using Xwt.Drawing;
-using System.Collections.Specialized;
 
 namespace DataWF.Data.Gui
 {
@@ -182,54 +181,82 @@ namespace DataWF.Data.Gui
             get { return (dataKeys & DataTreeKeys.Sequence) == DataTreeKeys.Sequence; }
         }
 
-        public void OnItemsListChanged(object sender, NotifyListPropertyChangedEventArgs arg)
+        public void OnItemListChanged(object sender, PropertyChangedEventArgs arg)
         {
-            if ((!ShowTableGroup && sender is DBTableGroupList)
-                || (!ShowTable && sender is DBTableList)
-                || (!ShowProcedures && sender is DBProcedureList)
-                || (!ShowSequences && sender is DBSequenceList)
-                || (!ShowColumn && sender is DBColumnList<DBColumn>)
-                || (!ShowColumnGroup && sender is DBColumnGroupList))
-                return;
+            var newItem = (DBSchemaItem)sender;
+            var node = Init(newItem);
 
-            if (arg.Action == NotifyCollectionChangedAction.Reset)
+            Node onode = newItem is DBTableItem tableItem ? Find(tableItem.Table) : Find(newItem.Schema);
+            if (newItem is DBTableGroup tableGroup && tableGroup.Group != null && ShowTableGroup)
             {
-                RefreshData();
-                return;
+                onode = Find(((DBTableGroup)newItem).Group);
+            }
+            else if (newItem is DBTable table && table.Group != null && ShowTableGroup)
+            {
+                onode = Find(((DBTable)newItem).Group);
+            }
+            else if (newItem is DBColumn column && column.Group != null && ShowColumnGroup)
+            {
+                onode = Find(((DBColumn)newItem).Group);
             }
 
-            if (arg.Action == NotifyCollectionChangedAction.Add
-                || arg.Action == NotifyCollectionChangedAction.Replace
-                || arg.Action == NotifyCollectionChangedAction.Remove)
+            if (onode != null)
             {
-                var item = (DBSchemaItem)arg.Item;
-                if (arg.Action != NotifyCollectionChangedAction.Remove)
-                {
-                    var node = Init(item);
-
-                    Node onode = item is DBTableItem ? Find(((DBTableItem)item).Table) : Find(item.Schema);
-                    if (item is DBTableGroup && ((DBTableGroup)item).Group != null && ShowTableGroup)
-                        onode = Find(((DBTableGroup)item).Group);
-                    else if (item is DBTable && ((DBTable)item).Group != null && ShowTableGroup)
-                        onode = Find(((DBTable)item).Group);
-                    else if (item is DBColumn && ((DBColumn)item).Group != null && ShowColumnGroup)
-                        onode = Find(((DBColumn)item).Group);
-                    if (onode != null)
-                        node.Group = onode;
-                    else
-                        Nodes.Add(node);
-                }
-                else
-                {
-                    var node = Find(item);
-                    if (node != null)
-                    {
-                        Nodes.Remove(node);
-                    }
-                }
+                node.Group = onode;
+            }
+            else
+            {
+                Nodes.Add(node);
             }
         }
 
+        public void OnItemsListChanged(object sender, EventArgs e)
+        {
+            if (e is NotifyCollectionChangedEventArgs cArgs)
+            {
+                if ((!ShowTableGroup && sender is DBTableGroupList)
+                    || (!ShowTable && sender is DBTableList)
+                    || (!ShowProcedures && sender is DBProcedureList)
+                    || (!ShowSequences && sender is DBSequenceList)
+                    || (!ShowColumn && sender is DBColumnList<DBColumn>)
+                    || (!ShowColumnGroup && sender is DBColumnGroupList))
+                    return;
+
+                var newItem = cArgs.NewItems?.Cast<DBSchemaItem>().FirstOrDefault();
+                var oldItem = cArgs.OldItems?.Cast<DBSchemaItem>().FirstOrDefault();
+
+                switch (cArgs.Action)
+                {
+
+                    case NotifyCollectionChangedAction.Reset:
+                        RefreshData();
+                        break;
+                    case NotifyCollectionChangedAction.Add:
+                        OnItemListChanged(newItem, new PropertyChangedEventArgs(string.Empty));
+                        break;
+                    case NotifyCollectionChangedAction.Remove:
+                        Remove(oldItem);
+                        break;
+                    case NotifyCollectionChangedAction.Replace:
+                        Remove(oldItem);
+                        OnItemListChanged(newItem, new PropertyChangedEventArgs(string.Empty));
+                        break;
+
+                }
+            }
+            else if (e is PropertyChangedEventArgs pArgs)
+            {
+                OnItemListChanged(sender, pArgs);
+            }
+        }
+        public void Remove(DBSchemaItem oldItem)
+        {
+            var node = Find(oldItem);
+            if (node != null)
+            {
+                Nodes.Remove(node);
+            }
+        }
         public DBSchemaItem SelectedDBItem
         {
             get { return (SelectedNode as SchemaItemNode)?.Item; }

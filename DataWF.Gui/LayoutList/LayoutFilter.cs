@@ -125,8 +125,9 @@ namespace DataWF.Gui
 
         private void OnPropertyChanged(string property)
         {
-            Container?.OnPropertyChanged(this, property);
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+            var arg = new PropertyChangedEventArgs(property);
+            Container?.OnItemPropertyChanged(this, arg);
+            PropertyChanged?.Invoke(this, arg);
         }
     }
 }

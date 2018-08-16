@@ -1,10 +1,9 @@
 ﻿using DataWF.Common;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using Xwt.Drawing;
 using System.Xml.Serialization;
+using Xwt.Drawing;
 
 namespace DataWF.Gui
 {
@@ -301,8 +300,9 @@ namespace DataWF.Gui
 
         protected void OnPropertyChanged(string property)
         {
-            Container?.OnPropertyChanged(this, property);
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+            var arg = new PropertyChangedEventArgs(property);
+            Container?.OnItemPropertyChanged(this, arg);
+            PropertyChanged?.Invoke(this, arg);
         }
 
         public IEnumerable<Node> GetNodes()

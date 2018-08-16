@@ -17,15 +17,14 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using System;
-using System.ComponentModel;
-using DataWF.Common;
-using System.Xml.Serialization;
-using System.Text;
 using Newtonsoft.Json;
-using System.Collections.Specialized;
-using System.Linq;
+using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Linq;
+using System.Text;
+using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
@@ -150,43 +149,9 @@ namespace DataWF.Data
             set { }
         }
 
-        public void OnBaseChanged(DBItem item, string property, NotifyCollectionChangedAction type)
-        {
-            if (item is T view)
-            {
-                switch (type)
-                {
-                    case NotifyCollectionChangedAction.Replace:
-                        if (FilterQuery.Parameters.Count != 0 && (FilterQuery.Contains(property) && !BaseTable.CheckItem(item, FilterQuery)))
-                        {
-                            Remove(view);
-                        }
-                        else
-                        {
-                            CheckViews(view, property, type);
-                        }
-
-                        break;
-                    case NotifyCollectionChangedAction.Add:
-                        if (BaseTable.CheckItem(item, FilterQuery))
-                        {
-                            Add(view);
-                        }
-                        break;
-                    case NotifyCollectionChangedAction.Remove:
-                        Remove(view);
-                        break;
-                }
-            }
-            else if (type == NotifyCollectionChangedAction.Reset)
-            {
-                Refresh();
-            }
-        }
-
         public void Refresh()
         {
-            items.Clear();
+            Clear();
             foreach (T item in BaseTable.SelectItems(FilterQuery))
             {
                 Add(item);
@@ -203,7 +168,7 @@ namespace DataWF.Data
             {
                 if (items.Remove(item))
                 {
-                    CheckViews(item, null, NotifyCollectionChangedAction.Remove);
+                    CheckViews(item, NotifyCollectionChangedAction.Remove);
                     RemoveIndexes(item);
                     return true;
                 }
@@ -221,18 +186,54 @@ namespace DataWF.Data
             {
                 items.Add(item);
                 AddIndexes(item);
-                CheckViews(item, null, NotifyCollectionChangedAction.Add);
+                CheckViews(item, NotifyCollectionChangedAction.Add);
+            }
+        }
+
+        public void OnTableChanged(DBItem item, NotifyCollectionChangedAction type)
+        {
+            if (item is T view)
+            {
+                switch (type)
+                {
+                    case NotifyCollectionChangedAction.Add:
+                        if (BaseTable.CheckItem(item, FilterQuery))
+                        {
+                            Add(view);
+                        }
+                        break;
+                    case NotifyCollectionChangedAction.Remove:
+                        Remove(view);
+                        break;
+                }
+            }
+            else if (type == NotifyCollectionChangedAction.Reset)
+            {
+                Refresh();
             }
         }
 
         public override void OnItemChanged(DBItem item, string property, DBColumn column, object value)
         {
-            base.OnItemChanged(item, property, column == null ? null : Columns[column.Name], value);
+            if (item is T)
+            {
+                if (FilterQuery.Parameters.Count != 0 && (FilterQuery.Contains(column?.Name) && !BaseTable.CheckItem(item, FilterQuery)))
+                {
+                    Remove(item);
+                }
+                else
+                {
+                    base.OnItemChanged(item, property, column == null ? null : Columns[column.Name], value);
+                }
+            }
         }
 
         public override void OnItemChanging(DBItem item, string property, DBColumn column, object value)
         {
-            base.OnItemChanging(item, property, column == null ? null : Columns[column.Name], value);
+            if (item is T)
+            {
+                base.OnItemChanging(item, property, column == null ? null : Columns[column.Name], value);
+            }
         }
 
         public override string SqlName
@@ -269,7 +270,9 @@ namespace DataWF.Data
 
         public override void Clear()
         {
-            BaseTable.Clear();
+            items.Clear();
+            ClearColumnsData(false);
+            CheckViews(null, NotifyCollectionChangedAction.Reset);
         }
 
         public override string FormatSql(DDLType ddlType)

@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Xml.Serialization;
 
 namespace DataWF.Common
@@ -97,8 +94,9 @@ namespace DataWF.Common
 
         private void OnPropertyChanged(string property)
         {
-            Container?.OnPropertyChanged(this, property);
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+            var arg = new PropertyChangedEventArgs(property);
+            Container?.OnItemPropertyChanged(this, arg);
+            PropertyChanged?.Invoke(this, arg);
         }
 
     }

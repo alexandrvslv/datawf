@@ -17,24 +17,20 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using DataWF.Common;
+using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
-using DataWF.Common;
 using System.Data;
-using System.Xml.Serialization;
-using System.Reflection;
-using System.Threading;
-using System.Text;
-using System.Linq;
-using System.Text.RegularExpressions;
 using System.IO;
-using System.Globalization;
-using System.Diagnostics;
-using Newtonsoft.Json;
-using System.Collections.Specialized;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
@@ -44,7 +40,7 @@ namespace DataWF.Data
         private static Dictionary<Type, TableAttributeCache> cacheTables = new Dictionary<Type, TableAttributeCache>();
         private static Dictionary<Type, ItemTypeAttributeCache> cacheItemTypes = new Dictionary<Type, ItemTypeAttributeCache>();
 
-        public static void ClearChache()
+        public static void ClearAttributeCache()
         {
             cacheTables.Clear();
             cacheItemTypes.Clear();
@@ -1256,6 +1252,18 @@ namespace DataWF.Data
         public string FormatQTable()
         {
             return System?.FormatQTable(this);
+        }
+
+        protected void ClearColumnsData(bool pool)
+        {
+            foreach (var column in Columns)
+            {
+                if (pool)
+                {
+                    column.Pull.Clear();
+                }
+                column.Index?.Clear();
+            }
         }
 
         public IDbCommand CreateItemCommmand(object id, IEnumerable<DBColumn> cols = null)

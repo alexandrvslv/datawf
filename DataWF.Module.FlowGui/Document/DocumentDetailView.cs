@@ -31,9 +31,9 @@ namespace DataWF.Module.FlowGui
 
         DBItem IDocument.Document { get => Document; set => Document = (Document)value; }
 
-        public DBTable Table
+        public DBTable<T> Table
         {
-            get { return DBTable.GetTable(typeof(T), null, false); }
+            get { return DBTable.GetTable<T>(null, false); }
         }
 
         public virtual Document Document

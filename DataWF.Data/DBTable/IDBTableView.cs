@@ -17,13 +17,12 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using DataWF.Common;
 using System;
 using System.Collections;
-using DataWF.Common;
-using System.ComponentModel;
-using System.Data;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Data;
 
 namespace DataWF.Data
 {
@@ -49,7 +48,9 @@ namespace DataWF.Data
 
         new bool IsSynchronized { get; set; }
 
-        void OnTableChanged(DBItem item, string property, NotifyCollectionChangedAction type);
+        void OnTableChanged(DBItem item, NotifyCollectionChangedAction type);
+
+        void OnItemChanged(DBItem item, string property, DBColumn column);
 
         IEnumerable<DBItem> Load(DBLoadParam param = DBLoadParam.None);
 

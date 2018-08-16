@@ -27,7 +27,7 @@ namespace DataWF.Common
             type = typeof(T);
             if (TypeHelper.IsInterface(type, typeof(INotifyPropertyChanged)))
             {
-                propertyHandler = new PropertyChangedEventHandler(OnPropertyChanged);
+                propertyHandler = OnItemPropertyChanged;
             }
         }
 
@@ -42,7 +42,7 @@ namespace DataWF.Common
 
         public event NotifyCollectionChangedEventHandler CollectionChanged;
         public event PropertyChangedEventHandler PropertyChanged;
-
+        public event PropertyChangedEventHandler ItemPropertyChanged;
 
         [XmlIgnore, Browsable(false)]
         public ListIndexes<T> Indexes
@@ -204,57 +204,69 @@ namespace DataWF.Common
             get { return items == null; }
         }
 
-        public virtual void OnListChanged(NotifyListPropertyChangedEventArgs args)
+        public virtual void OnListChanged(NotifyCollectionChangedEventArgs args)
         {
-            if (args != null)
-            {
-                CollectionChanged.Invoke(this, args);
-            }
+            CollectionChanged?.Invoke(this, args);
             OnPropertyChanged(nameof(SyncRoot));
         }
 
-        public virtual void OnListChanged(NotifyCollectionChangedAction type, object item = null, int index = -1, string property = null, int oldIndex = -1, object oldItem = null)
+        public virtual void OnListChanged(NotifyCollectionChangedAction type, object item = null, int index = -1, int oldIndex = -1, object oldItem = null)
         {
-            OnListChanged(CollectionChanged != null ? NotifyListPropertyChangedEventArgs.Build(type, item, oldItem, index, oldIndex, property) : null);
+            NotifyCollectionChangedEventArgs args = null;
+            switch (type)
+            {
+                case NotifyCollectionChangedAction.Reset:
+                    args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset);
+                    break;
+                case NotifyCollectionChangedAction.Add:
+                case NotifyCollectionChangedAction.Remove:
+                    args = new NotifyCollectionChangedEventArgs(type, item, index);
+                    break;
+                case NotifyCollectionChangedAction.Replace:
+                    args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, item, oldItem, index);
+                    break;
+                case NotifyCollectionChangedAction.Move:
+                    args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, item, index, oldIndex);
+                    break;
+            }
+            OnListChanged(args);
         }
-
 
         protected virtual void OnPropertyChanged(string property)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
 
-        protected virtual void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            OnPropertyChanged(sender, e.PropertyName);
-        }
-
-        public virtual void OnPropertyChanged(object sender, string propertyName)
+        public virtual void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             var item = (T)sender;
-            var lindex = indexes.GetIndex(propertyName);
+            OnItemPropertyChanged(item, IsSorted ? items.IndexOf(item) : -1, e);
+        }
+
+        public void OnItemPropertyChanged(T item, int index, PropertyChangedEventArgs e)
+        {
+            var lindex = indexes.GetIndex(e.PropertyName);
             if (lindex != null)
             {
                 lindex.Refresh(item);
             }
-            int index = items.IndexOf(item);
             if (IsSorted)
             {
+                if (index < 0)
+                    index = items.IndexOf(item);
                 int newindex = GetIndexBySort(item);
                 if (index != newindex)
                 {
                     if (newindex > index)
                         newindex--;
+                    if (newindex > items.Count)
+                        newindex = items.Count;
                     items.RemoveAt(index);
                     items.Insert(newindex, item);
-                    OnListChanged(NotifyCollectionChangedAction.Move, sender, newindex, propertyName, index);
-                    return;
+                    OnListChanged(NotifyCollectionChangedAction.Move, item, newindex, index);
                 }
             }
-            if (index >= 0)
-            {
-                OnListChanged(NotifyCollectionChangedAction.Replace, sender, index, propertyName);
-            }
+            ItemPropertyChanged?.Invoke(item, e);
         }
 
         public bool IsFirst(T item)
@@ -439,7 +451,7 @@ namespace DataWF.Common
 
                 RemoveInternal(item, index);
                 InsertInternal(index, value);
-                OnListChanged(NotifyCollectionChangedAction.Replace, value, index, null, index, item);
+                OnListChanged(NotifyCollectionChangedAction.Replace, value, index, index, item);
             }
         }
 

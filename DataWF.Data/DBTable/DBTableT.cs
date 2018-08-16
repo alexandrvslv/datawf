@@ -1,14 +1,12 @@
-﻿using System;
+﻿using DataWF.Common;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data;
-using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using DataWF.Common;
 
 namespace DataWF.Data
 {
@@ -113,7 +111,7 @@ namespace DataWF.Data
             AddIndexes(item);
             item.OnAttached();
 
-            CheckViews(item, null, NotifyCollectionChangedAction.Add);
+            CheckViews(item, NotifyCollectionChangedAction.Add);
         }
 
         protected void AddIndexes(T item)
@@ -140,7 +138,7 @@ namespace DataWF.Data
             RemoveIndexes(item);
             item.OnDetached();
 
-            CheckViews(item, null, NotifyCollectionChangedAction.Remove);
+            CheckViews(item, NotifyCollectionChangedAction.Remove);
             return true;
         }
 
@@ -169,16 +167,8 @@ namespace DataWF.Data
                 Hash = -1;
                 var temp = items.ToArray();
                 items.Clear();
-                if (!(this is IDBVirtualTable))
-                {
-                    foreach (var column in Columns)
-                    {
-                        column.Pull.Clear();
-                        if (column.Index != null)
-                            column.Index.Clear();
-                    }
-                }
-                CheckViews(null, null, NotifyCollectionChangedAction.Reset);
+                ClearColumnsData(true);
+                CheckViews(null, NotifyCollectionChangedAction.Reset);
 
                 foreach (DBItem row in temp)
                 {
@@ -231,41 +221,51 @@ namespace DataWF.Data
 
         public override void OnItemChanging(DBItem item, string property, DBColumn column, object value)
         {
-            if (column != null && column.Index != null)
+            if (column?.Index != null)
             {
                 column.Index.Remove(item, value);
-                foreach (var collection in virtualTables)
-                {
-                    collection.OnItemChanging(item, property, column, value);
-                }
+            }
+            foreach (var table in virtualTables)
+            {
+                table.OnItemChanging(item, property, column, value);
             }
         }
 
         public override void OnItemChanged(DBItem item, string property, DBColumn column, object value)
         {
-            if (column != null && column.Index != null)
+            if (property == nameof(DBItem.Attached) || property == nameof(DBItem.UpdateState))
             {
-                column.Index.Add(item, value);
-                foreach (var collection in virtualTables)
-                {
-                    collection.OnItemChanged(item, property, column, value);
-                }
+                return;
             }
 
-            if (property == nameof(DBItem.Attached) || property == nameof(DBItem.UpdateState))
-                return;
-            CheckViews(item, property, NotifyCollectionChangedAction.Replace);
+            if (column?.Index != null)
+            {
+                column.Index.Add(item, value);
+            }
+            foreach (var table in virtualTables)
+            {
+                table.OnItemChanged(item, property, column, value);
+            }
+            CheckViews(item, property, column);
         }
 
-        public void CheckViews(DBItem item, string property, NotifyCollectionChangedAction type)
+        public void CheckViews(DBItem item, string property, DBColumn column)
+        {
+            for (int i = 0; i < queryViews.Count; i++)
+            {
+                queryViews[i].OnItemChanged(item, property, column);
+            }
+        }
+
+        public void CheckViews(DBItem item, NotifyCollectionChangedAction type)
         {
             foreach (var collection in virtualTables)
             {
-                collection.OnBaseChanged(item, property, type);
+                collection.OnTableChanged(item, type);
             }
             for (int i = 0; i < queryViews.Count; i++)
             {
-                queryViews[i].OnTableChanged(item, property, type);
+                queryViews[i].OnTableChanged(item, type);
             }
         }
 

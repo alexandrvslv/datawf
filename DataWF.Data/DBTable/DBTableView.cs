@@ -17,15 +17,14 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using DataWF.Common;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using DataWF.Common;
+using System.Collections.Specialized;
 using System.ComponentModel;
-using System.IO;
 using System.Data;
 using System.Linq;
-using System.Collections.Specialized;
 
 namespace DataWF.Data
 {
@@ -36,26 +35,26 @@ namespace DataWF.Data
         protected QQuery query;
 
         protected IDbCommand command;
-        protected DBTable table;
+        protected DBTable<T> table;
         private Query filterQuery;
 
         public DBTableView()
-           : this(DBTable.GetTable(typeof(T), null, false), (QParam)null, DBViewKeys.None, DBStatus.Empty)
+           : this(DBTable.GetTable<T>(null, false), (QParam)null, DBViewKeys.None, DBStatus.Empty)
         { }
 
         public DBTableView(string defaultFilter, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
-            : this(DBTable.GetTable(typeof(T), null, false), defaultFilter, mode, statusFilter)
+            : this(DBTable.GetTable<T>(null, false), defaultFilter, mode, statusFilter)
         { }
 
         public DBTableView(QParam defaultFilter, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
-            : this(DBTable.GetTable(typeof(T), null, false), defaultFilter, mode, statusFilter)
+            : this(DBTable.GetTable<T>(null, false), defaultFilter, mode, statusFilter)
         { }
 
-        public DBTableView(DBTable table, string defaultFilter, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
+        public DBTableView(DBTable<T> table, string defaultFilter, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
             : this(table, !string.IsNullOrEmpty(defaultFilter) ? new QParam(table, defaultFilter) : null, mode, statusFilter)
         { }
 
-        public DBTableView(DBTable table, QParam defaultFilter, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
+        public DBTableView(DBTable<T> table, QParam defaultFilter, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
         {
             propertyHandler = null;
             table.AddView(this);
@@ -272,26 +271,47 @@ namespace DataWF.Data
             return table.LoadItems(Query, param, this).Cast<T>();
         }
 
-        public void LoadAsynch(DBLoadParam param = DBLoadParam.None)
+        public async void LoadAsynch(DBLoadParam param = DBLoadParam.None)
         {
-            throw new NotImplementedException();
-            //table.LoadAsync(Query, param, this);
+            await table.LoadAsync(Query, param, this).ConfigureAwait(false);
         }
 
-        public override void OnPropertyChanged(object sender, string propertyName)
+        public void OnItemChanged(DBItem item, string propertyName, DBColumn column)
         {
-            OnItemChanged((T)sender, propertyName, NotifyCollectionChangedAction.Replace);
-        }
-
-        public void OnTableChanged(DBItem item, string propertyName, NotifyCollectionChangedAction type)
-        {
-            if (item == null || TypeHelper.IsBaseType(item.GetType(), ItemType))
+            if (item is T titem)
             {
-                OnItemChanged((T)item, propertyName, type);
+                OnItemChanged(titem, propertyName, column);
             }
         }
 
-        public void OnItemChanged(T item, string propertyName, NotifyCollectionChangedAction type)
+        public void OnItemChanged(T item, string propertyName, DBColumn column)
+        {
+            var indexes = GetIndex(item);
+
+            if (indexes.Item1 < 0)
+            {
+                if (table.CheckItem(item, query))
+                    Insert(indexes.Item2, item);
+            }
+            else if (!table.CheckItem(item, query))
+            {
+                RemoveAt(indexes.Item1);
+            }
+            else
+            {
+                OnItemPropertyChanged(item, indexes.Item1, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+
+        public void OnTableChanged(DBItem item, NotifyCollectionChangedAction type)
+        {
+            if (item == null || item is T)
+            {
+                OnTableChanged((T)item, type);
+            }
+        }
+
+        public void OnTableChanged(T item, NotifyCollectionChangedAction type)
         {
             lock (items)
             {
@@ -300,70 +320,39 @@ namespace DataWF.Data
                     case NotifyCollectionChangedAction.Reset:
                         UpdateFilter();
                         break;
-                    case NotifyCollectionChangedAction.Replace:
-                        if (item != null)
-                        {
-                            GetIndex(out var index, out var newIndex);
-                            if (index < 0)
-                            {
-                                if (table.CheckItem(item, query))
-                                    Insert(newIndex, item);
-                            }
-                            else if (!table.CheckItem(item, query))
-                            {
-                                RemoveAt(index);
-                            }
-                            else
-                            {
-                                if (newIndex != index)
-                                {
-                                    if (newIndex > index)
-                                        newIndex--;
-                                    items.RemoveAt(index);
-                                    items.Insert(newIndex, item);
-                                    OnListChanged(NotifyCollectionChangedAction.Move, item, newIndex, propertyName, index, item);
-                                }
-                                else
-                                {
-                                    OnListChanged(type, item, index, propertyName);
-                                }
-                            }
-                        }
-                        break;
                     case NotifyCollectionChangedAction.Remove:
+                        var indexes = GetIndex(item);
+                        if (indexes.Item1 >= 0)
                         {
-                            GetIndex(out var index, out var newindex);
-                            if (index >= 0)
-                                RemoveAt(index);
+                            RemoveAt(indexes.Item1);
                         }
                         break;
                     case NotifyCollectionChangedAction.Add:
+                        if ((keys & DBViewKeys.Static) != DBViewKeys.Static && table.CheckItem(item, query))
                         {
-                            if ((keys & DBViewKeys.Static) != DBViewKeys.Static && table.CheckItem(item, query))
-                                Add(item);
+                            Add(item);
                         }
                         break;
-                }
-            }
-
-            void GetIndex(out int index, out int newIndex)
-            {
-                index = newIndex = items.BinarySearch(item, comparer);
-
-                if (index < 0)
-                {
-                    newIndex = (-index) - 1;
-                    if (newIndex > items.Count)
-                        newIndex = items.Count;
-                }
-                if (index < 0 || !item.Equals(items[index]))
-                {
-                    index = items.IndexOf(item);
                 }
             }
         }
 
-
+        public (int, int) GetIndex(T item)
+        {
+            var index = items.BinarySearch(item, comparer);
+            var newIndex = index;
+            if (index < 0)
+            {
+                newIndex = (-index) - 1;
+                if (newIndex > items.Count)
+                    newIndex = items.Count;
+            }
+            if (index < 0 || !item.Equals(items[index]))
+            {
+                index = items.IndexOf(item);
+            }
+            return (index, newIndex);
+        }
 
         private void SetItems(List<DBItem> list)
         {

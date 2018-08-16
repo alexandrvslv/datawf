@@ -17,10 +17,9 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using DataWF.Common;
 using System;
 using System.ComponentModel;
-using DataWF.Data;
-using DataWF.Common;
 using System.Data;
 
 namespace DataWF.Data
@@ -129,8 +128,9 @@ namespace DataWF.Data
 
         protected void OnPropertyChanged(string propertyName)
         {
-            Container?.OnPropertyChanged(this, propertyName);
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            var arg = new PropertyChangedEventArgs(propertyName);
+            Container?.OnItemPropertyChanged(this, arg);
+            PropertyChanged?.Invoke(this, arg);
         }
 
         #endregion

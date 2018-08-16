@@ -85,7 +85,7 @@ namespace DataWF.Common
         protected override void OnPropertyChanged(string property)
         {
             base.OnPropertyChanged(property);
-            Container?.OnPropertyChanged(this, property);
+            Container?.OnItemPropertyChanged(this, new PropertyChangedEventArgs(property));
         }
 
         public LocaleString Add(string value, CultureInfo culture)

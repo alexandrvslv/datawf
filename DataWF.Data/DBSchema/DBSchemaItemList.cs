@@ -85,12 +85,21 @@ namespace DataWF.Data
             return flag;
         }
 
-        public override void OnListChanged(NotifyCollectionChangedAction type, object item = null, int index = -1, string property = null, int oldIndex = -1, object oldItem = null)
+        public override void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            base.OnListChanged(type, item, index, property, oldIndex, oldItem);
+            base.OnItemPropertyChanged(sender, e);
             if (Schema != null && Schema.Container is DBSchemaList schemaList)
             {
-                schemaList.OnItemsListChanged(this, NotifyListPropertyChangedEventArgs.Build(type, item, oldItem, index, oldIndex, property));
+                schemaList.OnItemsListChanged(this, e);
+            }
+        }
+
+        public override void OnListChanged(NotifyCollectionChangedEventArgs args)
+        {
+            base.OnListChanged(args);
+            if (Schema != null && Schema.Container is DBSchemaList schemaList)
+            {
+                schemaList.OnItemsListChanged(this, args);
             }
         }
 

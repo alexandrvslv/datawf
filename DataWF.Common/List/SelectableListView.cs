@@ -1,11 +1,8 @@
-﻿using System;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Reflection;
-using System.Collections;
-using System.ComponentModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Linq;
 
 namespace DataWF.Common
 {
@@ -28,6 +25,7 @@ namespace DataWF.Common
     public class SelectableListView<T> : SelectableList<T>, IFilterable
     {
         protected NotifyCollectionChangedEventHandler _listChangedHandler;
+        protected PropertyChangedEventHandler _listItemChangedHandler;
         protected List<InvokerComparer> _comparers;
         protected Query query = new Query();
 
@@ -46,7 +44,10 @@ namespace DataWF.Common
         public SelectableListView(IList baseCollection, bool handle)
         {
             if (handle)
+            {
                 _listChangedHandler = SourceListChanged;
+                _listItemChangedHandler = SourceItemChanged;
+            }
             SetCollection(baseCollection);
         }
 
@@ -57,6 +58,7 @@ namespace DataWF.Common
             if (ssourceList != null && _listChangedHandler != null)
             {
                 ssourceList.CollectionChanged -= _listChangedHandler;
+                ssourceList.ItemPropertyChanged -= _listItemChangedHandler;
             }
 
             sourceList = baseCollection;
@@ -65,10 +67,12 @@ namespace DataWF.Common
             if (ssourceList != null && _listChangedHandler != null)
             {
                 ssourceList.CollectionChanged += _listChangedHandler;
+                ssourceList.ItemPropertyChanged += _listItemChangedHandler;
             }
             else
             {
                 _listChangedHandler = null;
+                _listItemChangedHandler = null;
             }
             Update((IEnumerable<T>)sourceList);
         }
@@ -136,79 +140,51 @@ namespace DataWF.Common
 
         public virtual void SourceListChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            T item = default(T);
-            if (e is NotifyListPropertyChangedEventArgs property)
-            {
-                item = (T)property.Item;
-            }
-            else
-            {
-                property = null;
-            }
-            if (item == null)
-            {
-                item = e.NewItems != null ? e.NewItems.Cast<T>().FirstOrDefault() : e.OldItems != null ? e.OldItems.Cast<T>().FirstOrDefault() : default(T);
-                property = null;
-            }
+            T newItem = e.NewItems == null ? default(T) : e.NewItems.Cast<T>().FirstOrDefault();
+            T oldItem = e.OldItems == null ? default(T) : e.OldItems.Cast<T>().FirstOrDefault();
 
             switch (e.Action)
             {
-
                 case NotifyCollectionChangedAction.Reset:
                     UpdateFilter();
-                    return;
-                case NotifyCollectionChangedAction.Move:
-                case NotifyCollectionChangedAction.Replace:
-                    if (e.Action == NotifyCollectionChangedAction.Replace && (property == null || property.Item == null))
-                    {
-                        items.Remove((T)e.OldItems[0]);
-                    }
-
-                    int index = IndexOf(item);
-                    bool checkItem = ListHelper.CheckItem(item, query);
-                    if (index >= 0 && !checkItem)
-                    {
-                        this.Remove(item, index);
-                    }
-                    else if (checkItem)
-                    {
-                        if (index < 0)
-                            base.Add(item);
-                        else
-                        {
-                            if (comparer != null)
-                            {
-                                int newindex = GetIndexBySort(item);
-                                if (newindex != index)
-                                {
-                                    items.RemoveAt(index);
-                                    if (newindex > items.Count)
-                                        newindex = items.Count;
-                                    items.Insert(newindex, item);
-                                    OnListChanged(NotifyCollectionChangedAction.Move, item, newindex, property?.Property, index);
-                                }
-                                else
-                                {
-                                    OnListChanged(NotifyCollectionChangedAction.Replace, item, newindex, property?.Property);
-                                }
-                            }
-                            else
-                            {
-                                //OnListChanged(NotifyCollectionChangedAction.Replace, item, index, property?.Property);
-                            }
-                        }
-                    }
                     break;
+                case NotifyCollectionChangedAction.Move:
+                    SourceItemChanged(newItem, new PropertyChangedEventArgs(string.Empty));
+                    break;
+                case NotifyCollectionChangedAction.Replace:
+                    Remove(oldItem);
+                    goto case NotifyCollectionChangedAction.Add;
                 case NotifyCollectionChangedAction.Remove:
-                    Remove(item);
+                    Remove(oldItem);
                     break;
                 case NotifyCollectionChangedAction.Add:
-                    if (ListHelper.CheckItem(item, query))
+                    if (ListHelper.CheckItem(newItem, query))
                     {
-                        base.Add(item);
+                        base.Add(newItem);
                     }
-
                     break;
+            }
+        }
+
+        public virtual void SourceItemChanged(object sender, PropertyChangedEventArgs e)
+        {
+            var item = (T)sender;
+            int index = IndexOf(item);
+            bool checkItem = ListHelper.CheckItem(item, query);
+            if (checkItem)
+            {
+                if (index < 0)
+                {
+                    base.Add(item);
+                }
+                else
+                {
+                    base.OnItemPropertyChanged(item, index, e);
+                }
+            }
+            else if (index >= 0)
+            {
+                Remove(item, index);
             }
         }
 
@@ -224,7 +200,11 @@ namespace DataWF.Common
         public override void Dispose()
         {
             if (ssourceList != null && _listChangedHandler != null)
+            {
                 ssourceList.CollectionChanged -= _listChangedHandler;
+                ssourceList.ItemPropertyChanged -= _listItemChangedHandler;
+            }
+
             base.Dispose();
         }
 

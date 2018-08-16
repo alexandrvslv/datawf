@@ -362,12 +362,12 @@ namespace DataWF.Data.Gui
 
         private void ParametersListChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            if (e.Action == NotifyCollectionChangedAction.Replace && ((NotifyListPropertyChangedEventArgs)e).Property == "Comparer")
-            {
-                var parameter = e.NewItems.Cast<QParam>().FirstOrDefault();
-                editors.Remove(parameter);
-                parameter.Value = null;
-            }
+            //TODO if (e.Action == NotifyCollectionChangedAction.Replace && ((NotifyListItemChangedEventArgs)e).Property == "Comparer")
+            //{
+            //    var parameter = e.NewItems.Cast<QParam>().FirstOrDefault();
+            //    editors.Remove(parameter);
+            //    parameter.Value = null;
+            //}
 
             textQuery.LoadText(Query.Format(), TextFormat.Plain);
         }

@@ -18,14 +18,12 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using DataWF.Data;
 using DataWF.Common;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+using DataWF.Data;
 using DataWF.Module.Common;
+using System;
+using System.ComponentModel;
 using System.Runtime.Serialization;
-using System.Collections.Specialized;
 
 namespace DataWF.Module.Flow
 {
@@ -84,11 +82,15 @@ namespace DataWF.Module.Flow
             return index;
         }
 
-        public override void OnPropertyChanged(object sender, string propertyName)
+        public override void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            base.OnPropertyChanged(sender, propertyName);
-            if (document != null && (string.IsNullOrEmpty(propertyName) || propertyName == DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.IsComplete)).Name))
+            base.OnItemPropertyChanged(sender, e);
+            if (document != null 
+                && (string.IsNullOrEmpty(e.PropertyName)
+                || e.PropertyName == nameof(DocumentWork.IsComplete)))
+            {
                 document.RefreshCache();
+            }
         }
     }
 

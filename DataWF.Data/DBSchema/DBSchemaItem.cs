@@ -20,7 +20,6 @@
 using DataWF.Common;
 using Newtonsoft.Json;
 using System;
-using System.Collections;
 using System.ComponentModel;
 using System.Xml.Serialization;
 
@@ -174,8 +173,9 @@ namespace DataWF.Data
 
         public void OnPropertyChanged(string propertyName, DDLType type = DDLType.Default)
         {
-            Container?.OnPropertyChanged(this, propertyName);
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            var arg = new PropertyChangedEventArgs(propertyName);
+            Container?.OnItemPropertyChanged(this, arg);
+            PropertyChanged?.Invoke(this, arg);
             if (type != DDLType.Default)
                 DBService.OnDBSchemaChanged(this, type);
         }

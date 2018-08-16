@@ -1,15 +1,13 @@
-﻿using System;
+﻿using DataWF.Common;
+using DataWF.Gui;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
-using System.Threading;
-using DataWF.Gui;
-using DataWF.Common;
-using Xwt;
-using Xwt.Drawing;
-using System.Threading.Tasks;
-using System.Collections.Specialized;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Xwt;
 
 namespace DataWF.TestGui
 {
@@ -35,7 +33,7 @@ namespace DataWF.TestGui
             directoryTree.Name = "dTree";
             directoryTree.Text = "Directory Tree";
             directoryTree.SelectionChanged += DTreeSelectionChanged;
-            directoryTree.Nodes.CollectionChanged += NodesListChanged;
+            directoryTree.Nodes.ItemPropertyChanged += NodesItemPropertyChanged;
 
             directoryView.Mode = LayoutListMode.List;
             directoryView.Name = "flist";
@@ -206,17 +204,15 @@ namespace DataWF.TestGui
             }
         }
 
-        private void NodesListChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void NodesItemPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.Action == NotifyCollectionChangedAction.Replace)
+            if (e.PropertyName == nameof(Node.Expand))
             {
-                var ex = (NotifyListPropertyChangedEventArgs)e;
-                if (ex.Property == "Expand")
+                var node = (DirectoryNode)sender;
+                if (node.Drive == null)
                 {
-                    var node = e.NewItems.Cast<DirectoryNode>().FirstOrDefault();
-                    if (node.Drive == null)
-                        node.Glyph = node.Expand ? Locale.GetGlyph("Files", "DirectoryOpen", GlyphType.FolderOpen) :
-                            Locale.GetGlyph("Files", "Directory", GlyphType.Folder);
+                    node.Glyph = node.Expand ? Locale.GetGlyph("Files", "DirectoryOpen", GlyphType.FolderOpen) :
+                        Locale.GetGlyph("Files", "Directory", GlyphType.Folder);
                 }
             }
         }

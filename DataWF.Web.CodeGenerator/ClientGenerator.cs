@@ -618,8 +618,9 @@ namespace DataWF.Web.CodeGenerator
                     parameterList: SF.ParameterList(SF.SeparatedList(GenPropertyChangedParameter())),
                     constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
                     body: SF.Block(new[] {
-                        SF.ParseStatement($"Container?.OnPropertyChanged(this, propertyName);"),
-                        SF.ParseStatement($"PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));") }),
+                        SF.ParseStatement($"var arg = new PropertyChangedEventArgs(propertyName);"),
+                        SF.ParseStatement($"Container?.OnItemPropertyChanged(this, arg);"),
+                        SF.ParseStatement($"PropertyChanged?.Invoke(this, arg);") }),
                     semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
             }
         }

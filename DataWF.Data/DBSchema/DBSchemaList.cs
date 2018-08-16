@@ -17,10 +17,8 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using DataWF.Common;
 using System;
 using System.Collections.Specialized;
-using System.ComponentModel;
 
 namespace DataWF.Data
 {
@@ -29,7 +27,7 @@ namespace DataWF.Data
         public DBSchemaList() : base()
         { }
 
-        public event EventHandler<NotifyListPropertyChangedEventArgs> ItemsListChanged;
+        public event EventHandler<EventArgs> ItemsListChanged;
 
         public override int AddInternal(DBSchema item)
         {
@@ -41,18 +39,15 @@ namespace DataWF.Data
             return index;
         }
 
-        protected internal void OnItemsListChanged(object sender, NotifyListPropertyChangedEventArgs arg)
+        protected internal void OnItemsListChanged(object sender, EventArgs arg)
         {
             ItemsListChanged?.Invoke(sender, arg);
         }
 
-        public override void OnListChanged(NotifyCollectionChangedAction type, object item = null, int index = -1, string property = null, int oldIndex = -1, object oldItem = null)
+        public override void OnListChanged(NotifyCollectionChangedEventArgs args)
         {
-            base.OnListChanged(type, item, index, property, oldIndex, oldItem);
-            if (ItemsListChanged != null)
-            {
-                OnItemsListChanged(this, NotifyListPropertyChangedEventArgs.Build(type, item, oldItem, index, oldIndex, property));
-            }
+            base.OnListChanged(args);
+            OnItemsListChanged(this, args);
         }
     }
 }

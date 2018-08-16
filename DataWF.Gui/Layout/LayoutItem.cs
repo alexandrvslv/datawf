@@ -1,11 +1,10 @@
-﻿using System;
+﻿using DataWF.Common;
+using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
-using DataWF.Common;
 using Xwt;
 
 namespace DataWF.Gui
@@ -269,7 +268,7 @@ namespace DataWF.Gui
 
         protected override void OnPropertyChanged([CallerMemberName]string property = null)
         {
-            Container?.OnPropertyChanged(this, property);
+            Container?.OnItemPropertyChanged(this, new PropertyChangedEventArgs(property));
             base.OnPropertyChanged(property);
         }
 

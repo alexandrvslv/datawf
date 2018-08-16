@@ -1,17 +1,17 @@
-﻿using System;
-using System.Collections;
-using System.ComponentModel;
+﻿using DataWF.Common;
 using DataWF.Data;
 using DataWF.Data.Gui;
 using DataWF.Gui;
-using DataWF.Common;
+using DataWF.Module.Common;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Linq;
+using System.Text;
 using Xwt;
 using Xwt.Drawing;
-using DataWF.Module.Common;
-using System.Text;
-using System.Collections.Generic;
-using System.Linq;
-using System.Collections.Specialized;
 
 namespace DataWF.Module.CommonGui
 {
@@ -147,65 +147,89 @@ namespace DataWF.Module.CommonGui
         private void RefreshData()
         {
             InitItem(Department.DBTable?.DefaultView, ShowDepartment, GlyphType.Home, Colors.SandyBrown);
-            //CheckDBView(Position.DBTable?.DefaultView, ShowPosition);
-            //CheckDBView(User.DBTable?.DefaultView, ShowUser);
+            //InitItem(Position.DBTable?.DefaultView, ShowPosition);
+            //InitItem(User.DBTable?.DefaultView, ShowUser);
             InitItem(UserGroup.DBTable?.DefaultView, ShowGroup, GlyphType.Users, Colors.LightSeaGreen);
             InitItem(Scheduler.DBTable?.DefaultView, ShowScheduler, GlyphType.TimesCircle, Colors.LightPink);
             InitItem(GroupPermission.DBTable?.DefaultView, ShowPermission, GlyphType.Database, Colors.LightSteelBlue);
         }
 
-        private void HandleViewListChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            var newItem = (DBItem)sender;
+            if (newItem.PrimaryId == null)
+            {
+                return;
+            }
+            var view = newItem.Table.DefaultItemsView;
+
+            var nodeParent = (TableItemNode)Nodes.Find(GetName(view));
+            if (newItem is User user)
+            {
+                if (ShowPosition)
+                {
+                    nodeParent = Find(user.Position);
+                }
+                else
+                {
+                    nodeParent = Find(user.Department);
+                }
+            }
+            if (newItem is Position position)
+            {
+                nodeParent = Find(position.Department);
+            }
+
+            if (newItem is DBGroupItem group && group.Group != null)
+            {
+                nodeParent = (TableItemNode)Nodes.Find(GetName(group.Group));
+            }
+            var node = InitItem(newItem);
+
+            if (node != null && nodeParent != null)
+            {
+                node.Group = nodeParent;
+            }
+        }
+
+        private void OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             if (listSource == null)
             {
                 return;
             }
-            var pe = e as NotifyListPropertyChangedEventArgs;
-            Application.Invoke(() =>
+            var view = (IDBTableView)sender;
+            var newItem = e.NewItems?.Cast<DBItem>().FirstOrDefault();
+            var oldItem = e.OldItems?.Cast<DBItem>().FirstOrDefault();
+            switch (e.Action)
             {
-                IDBTableView view = (IDBTableView)sender;
-                string name = GetName(view);
-                var nodeParent = (TableItemNode)Nodes.Find(name);
-                if (e.Action == NotifyCollectionChangedAction.Reset)
-                {
-                    InitItem((IDBTableContent)view);
-                }
-                else if (e.Action == NotifyCollectionChangedAction.Remove)
-                {
-                    var item = (DBItem)pe.Item;
-                    var node = Find(item);
-                    if (node != null)
-                    {
-                        if (node.Group != null)
-                        {
-                            node.Group = null;
-                        }
-                        Nodes.Remove(node);
-                    }
-                }
-                else if (pe.Item != null)
-                {
-                    TableItemNode node = null;
-                    var item = (DBItem)pe.Item;
+                case NotifyCollectionChangedAction.Reset:
+                    InitItem(view);
+                    break;
+                case NotifyCollectionChangedAction.Remove:
+                    Remove(oldItem);
+                    break;
+                case NotifyCollectionChangedAction.Replace:
+                    Remove(oldItem);
+                    OnItemPropertyChanged(newItem, new PropertyChangedEventArgs(string.Empty));
+                    break;
+                case NotifyCollectionChangedAction.Add:
+                    OnItemPropertyChanged(newItem, new PropertyChangedEventArgs(string.Empty));
+                    break;
+            }
+        }
 
-                    if (item.PrimaryId == null)
-                        return;
-                    node = InitItem(item);
-                    if (item is DBGroupItem && ((DBGroupItem)item).Group != null)
-                        nodeParent = (TableItemNode)Nodes.Find(GetName(((DBGroupItem)item).Group));
-
-                    //if (nodeParent == null && rowview.Group!=null && node.Group != null && node.Group.Tag)
-                    //    nodeParent = node.Group;
-                    if (node != null && nodeParent != null)
-                    {
-                        node.Group = nodeParent;
-                    }
-                    if (node != null)
-                    {
-                        InvalidateRow(listSource.IndexOf(node));
-                    }
+        private void Remove(DBItem oldItem)
+        {
+            var node = Find(oldItem);
+            if (node != null)
+            {
+                if (node.Group != null)
+                {
+                    node.Group = null;
                 }
-            });
+                Nodes.Remove(node);
+            }
         }
 
         protected override void OnCellGlyphClick(LayoutHitTestEventArgs e)
@@ -267,7 +291,8 @@ namespace DataWF.Module.CommonGui
             TableItemNode node = null;
             if (show)
             {
-                view.CollectionChanged += HandleViewListChanged;
+                view.CollectionChanged += OnCollectionChanged;
+                view.ItemPropertyChanged += OnItemPropertyChanged;
                 views.Add(view);
                 if (ShowListNode)
                 {
@@ -305,7 +330,8 @@ namespace DataWF.Module.CommonGui
             }
             else
             {
-                view.CollectionChanged -= HandleViewListChanged;
+                view.CollectionChanged -= OnCollectionChanged;
+                view.ItemPropertyChanged -= OnItemPropertyChanged;
                 views.Remove(view);
                 node = (TableItemNode)Nodes.Find(GetName(view));
                 if (node != null)
@@ -524,7 +550,8 @@ namespace DataWF.Module.CommonGui
         {
             foreach (var view in views)
             {
-                view.CollectionChanged -= HandleViewListChanged;
+                view.CollectionChanged -= OnCollectionChanged;
+                view.ItemPropertyChanged -= OnItemPropertyChanged;
             }
             base.Dispose(disposing);
         }

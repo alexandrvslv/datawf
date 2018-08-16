@@ -1,19 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Threading;
+﻿using DataWF.Common;
 using DataWF.Data;
+using DataWF.Data.Gui;
+using DataWF.Gui;
 using DataWF.Module.Common;
 using DataWF.Module.Flow;
-using DataWF.Gui;
-using DataWF.Common;
-using Xwt;
-using Xwt.Drawing;
-using System.Threading.Tasks;
-using DataWF.Module.CommonGui;
-using DataWF.Data.Gui;
+using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Xwt.Drawing;
 
 namespace DataWF.Module.FlowGui
 {
@@ -112,28 +109,31 @@ namespace DataWF.Module.FlowGui
 
         private void WorksListChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            var work = (DocumentWork)((NotifyListPropertyChangedEventArgs)e).Item;
-            var document = work?.Document;
+            var newItem = e.NewItems?.Cast<DocumentWork>().FirstOrDefault();
+            var oldItem = e.OldItems?.Cast<DocumentWork>().FirstOrDefault();
+            var work = (DocumentWork)null;
             int di = 0;
             if (e.Action == NotifyCollectionChangedAction.Add)
             {
                 di = 1;
+                work = newItem;
             }
             else if (e.Action == NotifyCollectionChangedAction.Remove)
             {
                 di = -1;
+                work = oldItem;
             }
 
-            if (document != null && work.IsUser)
+            if (work?.Document != null && work.IsUser)
             {
                 if (di > 0 && GuiService.Main != null)
                 {
-                    CheckNewDocument(document);
+                    CheckNewDocument(work.Document);
                 }
 
                 if (di != 0)
                 {
-                    IncrementNode(FilterView.Templates.Find(document.Template), di);
+                    IncrementNode(FilterView.Templates.Find(work.Document.Template), di);
                     if (work.User != null)
                         IncrementNode(FilterView.Users.Find(work.User), di);
                     if (work.Stage != null)

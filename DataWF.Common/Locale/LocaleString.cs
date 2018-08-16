@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Globalization;
 using System.ComponentModel;
+using System.Globalization;
 using System.Xml.Serialization;
 
 namespace DataWF.Common
@@ -112,8 +112,9 @@ namespace DataWF.Common
 
         protected void OnPropertyChanged(string property)
         {
-            Container?.OnPropertyChanged(this, property);
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+            var arg = new PropertyChangedEventArgs(property);
+            Container?.OnItemPropertyChanged(this, arg);
+            PropertyChanged?.Invoke(this, arg);
         }
     }
 
