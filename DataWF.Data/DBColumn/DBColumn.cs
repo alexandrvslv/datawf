@@ -18,16 +18,14 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Common;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
-using System.Data;
-using System.Linq;
-using System.Reflection;
-using Newtonsoft.Json;
 
 namespace DataWF.Data
 {
@@ -127,7 +125,7 @@ namespace DataWF.Data
         [Browsable(false)]
         public virtual string Property
         {
-            get { return property; }
+            get { return property ?? Name; }
             set
             {
                 if (property != value)
@@ -137,7 +135,7 @@ namespace DataWF.Data
                 }
             }
         }
-      
+
         [Browsable(false)]
         public bool CanWrite { get { return true; } }
 
