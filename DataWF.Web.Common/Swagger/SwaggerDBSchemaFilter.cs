@@ -76,22 +76,23 @@ namespace DataWF.Web.Common
         public void ApplyColumn(Schema schema, Schema columnSchema, ColumnAttributeCache column)
         {
             if ((column.Attribute.Keys & DBColumnKeys.Access) == DBColumnKeys.Access
-                || (column.Attribute.Keys & DBColumnKeys.Password) == DBColumnKeys.Password)
+                || (column.Attribute.Keys & DBColumnKeys.Password) == DBColumnKeys.Password
+                || (column.Attribute.Keys & DBColumnKeys.File) == DBColumnKeys.File)
                 return;
 
             if (column.Attribute.DataType == typeof(string) && column.Attribute.Size > 0)
             {
                 columnSchema.MaxLength = column.Attribute.Size;
             }
-            if ((column.Attribute.Keys & DBColumnKeys.System) == DBColumnKeys.System
-                || (column.Attribute.Keys & DBColumnKeys.File) == DBColumnKeys.File
+            if ((column.Attribute.Keys & DBColumnKeys.Date) == DBColumnKeys.Date
+                || (column.Attribute.Keys & DBColumnKeys.Stamp) == DBColumnKeys.Stamp
                 || column.Property.GetSetMethod() == null)
             {
                 columnSchema.ReadOnly = true;
             }
-            if ((column.Attribute.Keys & DBColumnKeys.Notnull) == DBColumnKeys.Notnull
-                && (column.Attribute.Keys & DBColumnKeys.Primary) != DBColumnKeys.Primary
-                && (column.Attribute.Keys & DBColumnKeys.System) != DBColumnKeys.System)
+            if (((column.Attribute.Keys & DBColumnKeys.Notnull) == DBColumnKeys.Notnull
+                || (column.Attribute.Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType)
+                && (column.Attribute.Keys & DBColumnKeys.Primary) != DBColumnKeys.Primary)
             {
                 if (schema.Required == null)
                     schema.Required = new List<string>();

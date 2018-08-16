@@ -671,8 +671,7 @@ namespace DataWF.Web.CodeGenerator
                                  SF.Attribute(
                                      SF.IdentifierName("JsonIgnore"))));
             }
-
-            if (property.IsArray || property.Default != null)
+            else if (!property.IsRequired)
             {
                 yield return SF.AttributeList(
                              SF.SingletonSeparatedList(

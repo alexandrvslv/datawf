@@ -18,13 +18,13 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using DataWF.Common;
+using DataWF.Data;
+using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using DataWF.Common;
-using DataWF.Data;
-using Newtonsoft.Json;
 
 namespace DataWF.Web.Common
 {
@@ -114,10 +114,15 @@ namespace DataWF.Web.Common
 
             if (item == null)
             {
+                var table = DBTable.GetTable(objectType);
                 if (tableAttribute.TypeKey != null && dictionary.TryGetValue(tableAttribute.TypeKey.PropertyInvoker, out var itemType) && itemType != null)
-                    item = tableAttribute.Table.NewItem(DBUpdateState.Insert, true, (int)tableAttribute.TypeKey.Column.ParseValue(itemType));
+                {
+                    item = table.NewItem(DBUpdateState.Insert, true, (int)itemType);
+                }
                 else
-                    item = tableAttribute.Table.NewItem(DBUpdateState.Insert, true);
+                {
+                    item = table.NewItem(DBUpdateState.Insert, true);
+                }
             }
 
             foreach (var entry in dictionary)
