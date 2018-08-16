@@ -23,10 +23,8 @@ using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -172,11 +170,11 @@ namespace DataWF.Data
                 RefreshOld(column, value, field);
             }
 
-            OnPropertyChanging(column.Name, column, field);
+            OnPropertyChanging(column.Property, column, field);
 
             column.Pull.Set(hindex, value);
 
-            OnPropertyChanged(column.Name, column, value);
+            OnPropertyChanged(column.Property, column, value);
 
             if (check)
             {
@@ -949,7 +947,7 @@ namespace DataWF.Data
             {
                 Table.OnItemChanged(this, property, column, value);
             }
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(column?.Property ?? property));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
         #endregion
 
