@@ -9,6 +9,7 @@ using Xwt;
 using Xwt.Drawing;
 using DataWF.Data;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace DataWF.Module.FlowGui
 {
@@ -89,8 +90,8 @@ namespace DataWF.Module.FlowGui
                 {
                     using (var transaction = new DBTransaction())
                     {
-                        document.GetReferencing<DocumentReference>(nameof(DocumentReference.DocumentId), DBLoadParam.Load);
-                        document.GetReferencing<DocumentReference>(nameof(DocumentReference.ReferenceId), DBLoadParam.Load);
+                        document.GetReferencing().LastOrDefault();
+                        document.GetReferenced().LastOrDefault();
                         Documents.Load();
                     }
                     //refs.Documents.UpdateFilter();

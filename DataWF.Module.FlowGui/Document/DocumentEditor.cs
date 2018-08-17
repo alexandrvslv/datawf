@@ -174,7 +174,7 @@ namespace DataWF.Module.FlowGui
             {
                 if (page.Widget is ILoader)
                     ((ILoader)page.Widget).Loader.LoadAsync();
-                if (page.Widget is ISync)
+                else if (page.Widget is ISync)
                     await ((ISync)page.Widget).SyncAsync();
             }
         }
