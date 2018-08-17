@@ -1,8 +1,7 @@
 ﻿using DataWF.Common;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 
 namespace DataWF.Gui
 {
@@ -15,6 +14,8 @@ namespace DataWF.Gui
             ListAutoSort = false;
             Filtering = true;
         }
+
+        public SelectableList<EnumItem> EnumItems => listSource as SelectableList<EnumItem>;
 
         public override Type DataType
         {
@@ -56,7 +57,7 @@ namespace DataWF.Gui
         public override object FormatValue(object value, object dataSource, Type valueType)
         {
             if (value is Enum)
-                return Locale.Get(value);
+                return EnumItems.FirstOrDefault(p => p.Value.Equals(value))?.Name;
             return base.FormatValue(value, dataSource, valueType);
         }
 
