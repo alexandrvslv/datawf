@@ -2,10 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml.Serialization;
 
 namespace DataWF.Common
 {
-    [JsonConverter(typeof(AccessValueJson))]
     public class AccessValue
     {
         public static IEnumerable<IAccessGroup> Groups = new List<IAccessGroup>();
@@ -15,6 +15,7 @@ namespace DataWF.Common
             return new AccessValue(value);
         }
 
+        [JsonIgnore, XmlIgnore]
         public List<AccessItem> Items = new List<AccessItem>(1);
 
         public AccessValue()
