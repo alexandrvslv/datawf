@@ -408,12 +408,13 @@ namespace DataWF.Module.Flow
         [Browsable(false)]
         public IEnumerable<DocumentCustomer> GetCustomers()
         {
+            var loadParam = DBLoadParam.None;
             if ((initype & DocInitType.Customer) != DocInitType.Customer)
             {
                 initype |= DocInitType.Customer;
-                GetReferencing<DocumentCustomer>(nameof(DocumentCustomer.DocumentId), DBLoadParam.Load);
+                loadParam = DBLoadParam.Load;
             }
-            return GetReferencing<DocumentCustomer>(nameof(DocumentCustomer.DocumentId), DBLoadParam.None);
+            return GetReferencing<DocumentCustomer>(nameof(DocumentCustomer.DocumentId), loadParam);
         }
 
         [Referencing(nameof(DocumentComment.DocumentId))]
@@ -426,13 +427,51 @@ namespace DataWF.Module.Flow
         [ControllerMethod(true)]
         public IEnumerable<DocumentComment> GetComments()
         {
+            var loadParam = DBLoadParam.None;
             if ((initype & DocInitType.Comment) != DocInitType.Comment)
             {
                 initype |= DocInitType.Comment;
-                GetReferencing<DocumentComment>(nameof(DocumentComment.DocumentId), DBLoadParam.Load);
+                loadParam = DBLoadParam.Load;
             }
+            return GetReferencing<DocumentComment>(nameof(DocumentComment.DocumentId), loadParam);
+        }
 
-            return GetReferencing<DocumentComment>(nameof(DocumentComment.DocumentId), DBLoadParam.None);
+        [Referencing(nameof(DocumentReference.ReferenceId))]
+        public IEnumerable<DocumentReference> Referencing
+        {
+            get { return GetReferencing(); }
+            set { SetReferencing<DocumentReference>(value, nameof(DocumentReference.ReferenceId)); }
+        }
+
+        [ControllerMethod(true)]
+        public IEnumerable<DocumentReference> GetReferencing()
+        {
+            var loadParam = DBLoadParam.None;
+            if ((initype & DocInitType.Refing) != DocInitType.Refing)
+            {
+                initype |= DocInitType.Refing;
+                loadParam = DBLoadParam.Load;
+            }
+            return GetReferencing<DocumentReference>(nameof(DocumentReference.ReferenceId), loadParam);
+        }
+
+        [Referencing(nameof(DocumentReference.DocumentId))]
+        public IEnumerable<DocumentReference> Referenced
+        {
+            get { return GetReferenced(); }
+            set { SetReferencing<DocumentReference>(value, nameof(DocumentReference.DocumentId)); }
+        }
+
+        [ControllerMethod(true)]
+        public IEnumerable<DocumentReference> GetReferenced()
+        {
+            var loadParam = DBLoadParam.None;
+            if ((initype & DocInitType.Refed) != DocInitType.Refed)
+            {
+                initype |= DocInitType.Refed;
+                loadParam = DBLoadParam.Load;
+            }
+            return GetReferencing<DocumentReference>(nameof(DocumentReference.DocumentId), loadParam);
         }
 
         [Browsable(false)]
