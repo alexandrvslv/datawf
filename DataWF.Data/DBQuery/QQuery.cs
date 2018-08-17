@@ -923,7 +923,7 @@ namespace DataWF.Data
             {
                 if (value is DBGroupItem)
                 {
-                    value = ((DBGroupItem)value).GetSubGroupFull<DBGroupItem>(true);
+                    value = ((DBGroupItem)value).GetSubGroupFull(true);
                     comparer = CompareType.In;
                 }
                 else
@@ -1242,7 +1242,7 @@ namespace DataWF.Data
             return Table.LoadItems(this, param);
         }
 
-        public IEnumerable Select()
+        public IEnumerable<DBItem> Select()
         {
             return Table.SelectItems(this);
         }

@@ -1,14 +1,12 @@
-﻿using System;
+﻿using DataWF.Common;
+using DataWF.Gui;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using Xwt.Drawing;
-using DataWF.Gui;
-using DataWF.Common;
-using DataWF.Data;
-using Xwt;
-using System.Text;
 using System.IO;
+using System.Linq;
+using System.Text;
+using Xwt;
 
 namespace DataWF.Data.Gui
 {
@@ -701,7 +699,7 @@ namespace DataWF.Data.Gui
                     {
                         foreach (var relation in selectedRow.Table.GetChildRelations())
                         {
-                            var childs = selectedRow.GetReferencing<DBItem>(relation, DBLoadParam.Load | DBLoadParam.Synchronize).ToList();
+                            var childs = selectedRow.GetReferencing(relation, DBLoadParam.Load | DBLoadParam.Synchronize).ToList();
                             if (childs.Count == 0)
                                 continue;
                             rowsText.Clear();

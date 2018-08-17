@@ -21,7 +21,6 @@
 using DataWF.Common;
 using Newtonsoft.Json;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -470,11 +469,6 @@ namespace DataWF.Data
             return table.Select(query);
         }
 
-        public IEnumerable<T> GetReferencing<T>(DBTable table, string query, DBLoadParam param) where T : DBItem, new()
-        {
-            return GetReferencing<T>((DBTable<T>)table, new QQuery(query, table), param);
-        }
-
         public IEnumerable<T> GetReferencing<T>(string property, DBLoadParam param) where T : DBItem, new()
         {
             var table = DBTable.GetTable<T>();
@@ -513,12 +507,14 @@ namespace DataWF.Data
         public IEnumerable<DBItem> GetReferencing(QQuery query, DBLoadParam param)
         {
             if ((param & DBLoadParam.Load) == DBLoadParam.Load)
-                return (IEnumerable<DBItem>)query.Load();
-            else
-                return (IEnumerable<DBItem>)query.Select();
+            {
+                return query.Load();
+            }
+
+            return query.Select();
         }
 
-        public IEnumerable GetReferencing(DBForeignKey relation, DBLoadParam param)
+        public IEnumerable<DBItem> GetReferencing(DBForeignKey relation, DBLoadParam param)
         {
             return GetReferencing(relation.Table, relation.Column, param);
         }
@@ -1248,7 +1244,7 @@ namespace DataWF.Data
                     foreach (DBForeignKey relation in relations)
                         if (relation.Table.Type == DBTableType.Table)
                         {
-                            var refings = item.GetReferencing<DBItem>(relation, DBLoadParam.Load | DBLoadParam.Synchronize).ToList();
+                            var refings = item.GetReferencing(relation, DBLoadParam.Load | DBLoadParam.Synchronize).ToList();
                             if (refings.Count > 0)
                             {
                                 foreach (DBItem refing in refings)

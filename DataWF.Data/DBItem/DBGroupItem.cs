@@ -132,7 +132,7 @@ namespace DataWF.Data
             {
                 if (Table.GroupKey == null)
                     return false;
-                return GetSubGroups<DBGroupItem>(DBLoadParam.None).Any();
+                return GetSubGroups(DBLoadParam.None).Any();
             }
         }
 
@@ -180,6 +180,13 @@ namespace DataWF.Data
             return GroupHelper.IsExpand(this);
         }
 
+        public IEnumerable<DBGroupItem> GetSubGroups(DBLoadParam param)
+        {
+            if (PrimaryId == null)
+                return new List<DBGroupItem>(0);
+            return GetReferencing(Table, Table.GroupKey, param).Cast<DBGroupItem>();
+        }
+
         public IEnumerable<T> GetSubGroups<T>(DBLoadParam param) where T : DBGroupItem, new()
         {
             if (PrimaryId == null)
@@ -187,15 +194,15 @@ namespace DataWF.Data
             return GetReferencing<T>((DBTable<T>)Table, Table.GroupKey, param);
         }
 
-        public List<T> GetSubGroupFull<T>(bool addCurrent = false) where T : DBGroupItem, new()
+        public List<DBGroupItem> GetSubGroupFull(bool addCurrent = false)
         {
-            var buf = GetSubGroups<T>(DBLoadParam.None);
-            var rez = new List<T>();
+            var buf = GetSubGroups(DBLoadParam.None);
+            var rez = new List<DBGroupItem>();
             if (addCurrent)
-                rez.Add((T)this);
+                rez.Add(this);
             rez.AddRange(buf);
             foreach (var row in buf)
-                rez.AddRange(row.GetSubGroupFull<T>());
+                rez.AddRange(row.GetSubGroupFull());
             return rez;
         }
 
@@ -203,14 +210,14 @@ namespace DataWF.Data
         {
             string rez = "";
             rez = PrimaryId.ToString();
-            foreach (var row in GetSubGroupFull<DBGroupItem>())
+            foreach (var row in GetSubGroupFull())
                 rez += "," + row.PrimaryId;
             return rez;
         }
 
         public IEnumerable<IGroup> GetGroups()
         {
-            return GetSubGroups<DBGroupItem>(DBLoadParam.Load);
+            return GetSubGroups(DBLoadParam.Load);
         }
     }
 }

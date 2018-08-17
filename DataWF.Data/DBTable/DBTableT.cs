@@ -1,4 +1,5 @@
 ﻿using DataWF.Common;
+using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -7,6 +8,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
@@ -26,7 +28,7 @@ namespace DataWF.Data
             SetItemType(typeof(T));
         }
 
-        [Browsable(false)]
+        [JsonIgnore, XmlIgnore, Browsable(false)]
         public int Capacity
         {
             get { return items.Capacity; }
@@ -416,7 +418,7 @@ namespace DataWF.Data
                             transaction.View.Add(row);
                     }
                 }
-               
+
                 //Check IsSynchronized
                 if (transaction.View?.Table == this)
                     transaction.View.IsSynchronized = true;

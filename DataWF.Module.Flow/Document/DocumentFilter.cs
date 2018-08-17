@@ -276,12 +276,12 @@ namespace DataWF.Module.Flow
                 {
                     if (paramTemplate == null)
                     {
-                        paramTemplate = QQuery.CreateParam(Document.DBTable.ParseProperty(nameof(Document.TemplateId)), CompareType.In, Template.GetSubGroupFull<Template>(true));
+                        paramTemplate = QQuery.CreateParam(Document.DBTable.ParseProperty(nameof(Document.TemplateId)), CompareType.In, Template.GetSubGroupFull(true));
                         paramTemplate.IsDefault = true;
                     }
                     else
                     {
-                        paramTemplate.Value = Template.GetSubGroupFull<Template>(true);
+                        paramTemplate.Value = Template.GetSubGroupFull(true);
                     }
                 }
                 OnPropertyChanged(nameof(Template));
