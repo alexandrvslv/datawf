@@ -90,8 +90,8 @@ namespace DataWF.Module.FlowGui
                     {
                         try
                         {
-                            Document.DBTable.Load(qDocs, DBLoadParam.Synchronize, null);
-                            DocumentWork.DBTable.Load(qWork, DBLoadParam.Synchronize, works);
+                            Document.DBTable.Load(qDocs, DBLoadParam.Synchronize, null).LastOrDefault();
+                            DocumentWork.DBTable.Load(qWork, DBLoadParam.Synchronize, works).LastOrDefault();
                             Helper.LogWorkingSet("Documents");
                         }
                         catch (Exception ex)
@@ -159,7 +159,7 @@ namespace DataWF.Module.FlowGui
             bool add = false;
             if (doc != null)
             {
-                var work = doc.WorkCurrent;
+                var work = doc.CurrentWork;
                 if (work != null && work.DateRead == DateTime.MinValue)
                 {
                     stage = work.Stage;

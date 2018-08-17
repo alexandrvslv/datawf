@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Threading;
-using DataWF.Common;
+﻿using DataWF.Common;
 using DataWF.Data;
 using DataWF.Gui;
 using DataWF.Module.Common;
 using DataWF.Module.CommonGui;
 using DataWF.Module.Messanger;
+using System;
+using System.Collections.Specialized;
+using System.Linq;
 using Xwt;
-using Xwt.Drawing;
 
 namespace DataWF.Module.MessangerGui
 {
@@ -74,7 +72,7 @@ namespace DataWF.Module.MessangerGui
             var query = new QQuery(string.Empty, MessageAddress.DBTable);
             query.BuildPropertyParam(nameof(MessageAddress.UserId), CompareType.Equal, User.CurrentUser?.Id);
             query.BuildPropertyParam(nameof(MessageAddress.DateRead), CompareType.Is, DBNull.Value);
-            MessageAddress.DBTable.LoadAsync(query, DBLoadParam.Synchronize, null);
+            MessageAddress.DBTable.Load(query, DBLoadParam.Synchronize, null).LastOrDefault();
         }
 
         public DockType DockType

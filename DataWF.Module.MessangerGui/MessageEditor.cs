@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using DataWF.Common;
-using DataWF.Data;
+﻿using DataWF.Data;
 using DataWF.Gui;
 using DataWF.Module.Common;
 using DataWF.Module.CommonGui;
 using DataWF.Module.Messanger;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Xwt;
 
 namespace DataWF.Module.MessangerGui
@@ -84,7 +84,8 @@ namespace DataWF.Module.MessangerGui
                                    Message.DBTable.Name,
                                    Message.DBTable.ParseProperty(nameof(Message.UserId)).Name,
                                    User.CurrentUser.Id);
-                await MessageAddress.DBTable.LoadAsync(query, DBLoadParam.Load | DBLoadParam.Synchronize, null, null);
+                var items = await MessageAddress.DBTable.LoadAsync(query, DBLoadParam.Load | DBLoadParam.Synchronize, null, null);
+                items.LastOrDefault();
             }
         }
 

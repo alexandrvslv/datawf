@@ -17,15 +17,14 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using DataWF.Common;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Text;
-using System.Linq;
-using System.Threading;
-using DataWF.Common;
 using System.IO;
+using System.Linq;
+using System.Text;
 
 namespace DataWF.Data
 {
@@ -80,7 +79,7 @@ namespace DataWF.Data
                 var enumer = table.SelectItems("");
                 if (table.GroupKey != null)
                 {
-                    var groupList = enumer.Cast<IGroup>().ToList();
+                    var groupList = enumer.Cast<DBGroupItem>().ToList();
                     groupList.Sort(GroupHelper.Compare);
                     enumer = groupList;
                 }
@@ -149,7 +148,6 @@ namespace DataWF.Data
             {
                 builder.AppendLine();
                 builder.AppendLine("-- -===================== " + table.Name + " ======================");
-                table.LoadItems();
                 if ((Mode & ExportMode.DropTable) == ExportMode.DropTable)
                 {
                     builder.AppendLine(table.FormatSql(DDLType.Create));
@@ -159,7 +157,7 @@ namespace DataWF.Data
                 {
                     if ((Mode & ExportMode.Patch) == ExportMode.Patch)
                     {
-                        foreach (DBItem row in table)
+                        foreach (DBItem row in table.LoadItems())
                         {
                             if (row.Stamp != null && row.Stamp >= Stamp)//((DateTime)row.Stamp >= param.PatchDate)
                             {

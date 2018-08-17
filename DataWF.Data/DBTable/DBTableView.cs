@@ -268,12 +268,13 @@ namespace DataWF.Data
 
         public IEnumerable<T> Load(DBLoadParam param = DBLoadParam.None)
         {
-            return table.LoadItems(Query, param, this).Cast<T>();
+            return table.Load(Query, param, this).ToList();
         }
 
         public async void LoadAsynch(DBLoadParam param = DBLoadParam.None)
         {
-            await table.LoadAsync(Query, param, this).ConfigureAwait(false);
+            var items = await table.LoadAsync(Query, param, this).ConfigureAwait(false);
+            items.LastOrDefault();
         }
 
         public void OnItemChanged(DBItem item, string propertyName, DBColumn column)
@@ -369,11 +370,11 @@ namespace DataWF.Data
             ClearInternal();
             if (!query.IsEmpty())
             {
-                AddRangeInternal(table.SelectItems(query).Cast<T>());
+                AddRangeInternal(table.Select(query));
             }
             else
             {
-                AddRangeInternal(table.Cast<T>());
+                AddRangeInternal(table);
             }
             SortInternal();
             OnListChanged(NotifyCollectionChangedAction.Reset);
@@ -524,15 +525,18 @@ namespace DataWF.Data
             UpdateFilter();
         }
 
-        public override int AddInternal(T item)
+        public override void InsertInternal(int index, T item)
         {
             lock (items)
             {
+#if DEBUG
+                if (Contains(item))
+                {
+                }
+#endif 
                 if (AutoAttach && !item.Attached)
                     table.Add(item);
-                int index = GetIndexBySort(item);
-                InsertInternal(index, item);
-                return index;
+                base.InsertInternal(index, item);
             }
         }
 

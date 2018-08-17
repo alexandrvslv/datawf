@@ -85,7 +85,7 @@ namespace DataWF.Module.Flow
         public override void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             base.OnItemPropertyChanged(sender, e);
-            if (document != null 
+            if (document != null
                 && (string.IsNullOrEmpty(e.PropertyName)
                 || e.PropertyName == nameof(DocumentWork.IsComplete)))
             {
@@ -284,9 +284,10 @@ namespace DataWF.Module.Flow
         {
             get
             {
-                return !IsComplete && (User == User.CurrentUser
-                  || (User == null && Position == User.CurrentUser?.Position)
-                  || (Position == null && Department == User.CurrentUser?.Department));
+                var currentUser = User.CurrentUser;
+                return !IsComplete && (User == currentUser
+                  || (User == null && Position == currentUser?.Position)
+                  || (Position == null && Department == currentUser?.Department));
             }
         }
 

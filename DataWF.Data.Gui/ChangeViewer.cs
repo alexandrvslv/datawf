@@ -1,13 +1,9 @@
-﻿using DataWF.Data;
-using DataWF.Data.Gui;
+﻿using DataWF.Common;
 using DataWF.Gui;
-using DataWF.Common;
 using System;
-using System.ComponentModel;
-using Xwt.Drawing;
+using System.Collections.Specialized;
 using System.Threading;
 using Xwt;
-using System.Collections.Specialized;
 
 namespace DataWF.Data.Gui
 {
@@ -178,9 +174,8 @@ namespace DataWF.Data.Gui
             rows.Clear();
             wait.Reset();
             string filter = table.GetStatusParam(DBStatus.Accept).Format();
-            var filtered = table.LoadItems("where " + filter);
             if (!wait.WaitOne(0))
-                foreach (DBItem row in filtered)
+                foreach (DBItem row in table.LoadItems("where " + filter))
                 {
                     if (wait.WaitOne(0))
                         break;
@@ -197,8 +192,7 @@ namespace DataWF.Data.Gui
             QQuery qdelete = new QQuery("", table.LogTable);
             qdelete.BuildParam(table.LogTable.ElementTypeKey, CompareType.Equal, DBLogType.Delete);
             qdelete.BuildParam(table.LogTable.StatusKey, CompareType.Equal, DBStatus.New);
-            var list = table.LogTable.Load(qdelete, DBLoadParam.Synchronize);
-            foreach (var log in list)
+            foreach (var log in table.LogTable.Load(qdelete, DBLoadParam.Synchronize))
             {
                 LogMap change = new LogMap();
                 change.Table = table;

@@ -17,18 +17,15 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using System;
-using System.ComponentModel;
-using DataWF.Data;
 using DataWF.Common;
-using System.Collections.Generic;
-using System.Collections;
-using System.Data;
-using System.Linq;
+using DataWF.Data;
 using DataWF.Module.Common;
 using DataWF.Module.Counterpart;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 using System.Runtime.Serialization;
-using System.IO;
 
 namespace DataWF.Module.Flow
 {
@@ -110,8 +107,8 @@ namespace DataWF.Module.Flow
             var qDocs = new QQuery(string.Empty, Document.DBTable);
             qDocs.BuildPropertyParam(nameof(Document.Id), CompareType.In, qWork);
 
-            Document.DBTable.Load(qDocs, DBLoadParam.Synchronize);
-            DocumentWork.DBTable.Load(qWork, DBLoadParam.Synchronize);
+            Document.DBTable.Load(qDocs, DBLoadParam.Synchronize).LastOrDefault();
+            DocumentWork.DBTable.Load(qWork, DBLoadParam.Synchronize).LastOrDefault();
         }
 
         public static event DocumentSaveDelegate Saved;
@@ -269,27 +266,25 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [DataMember, Column("work_id", ColumnType = DBColumnTypes.Internal)]
-        public long? WorkId
+        [DataMember, Column("work_id", ColumnType = DBColumnTypes.Code)]
+        public long? CurrentWorkId
         {
-            get { return GetProperty<long?>(); }
-            set { SetProperty(value); }
+            get { return CurrentWork?.Id; }
         }
 
         [Browsable(false)]
-        [Reference(nameof(WorkId))]
-        public DocumentWork WorkCurrent
+        [Reference(nameof(CurrentWorkId))]
+        public DocumentWork CurrentWork
         {
-            get { return GetPropertyReference<DocumentWork>(); }
-            set { SetPropertyReference(value); }
+            get { return Works.FirstOrDefault(p => p.IsCurrent); }
         }
 
         public Stage CurrentStage
         {
-            get { return WorkCurrent?.Stage; }
+            get { return CurrentWork?.Stage; }
             set
             {
-                Send(WorkCurrent, value);
+                Send(CurrentWork, value);
             }
         }
 
@@ -312,13 +307,13 @@ namespace DataWF.Module.Flow
         [Browsable(false)]
         public DateTime? WorkDate
         {
-            get { return WorkCurrent?.DateCreate; }
+            get { return CurrentWork?.DateCreate; }
         }
 
         [Browsable(false)]
         public bool IsCurrent
         {
-            get { return WorkCurrent != null; }
+            get { return CurrentWork != null; }
         }
 
         [Browsable(false)]
@@ -443,7 +438,7 @@ namespace DataWF.Module.Flow
         [Browsable(false)]
         public override AccessValue Access
         {
-            get { return Template?.Access ?? base.Access; }
+            get { return CurrentStage?.Access ?? Template?.Access ?? base.Access; }
         }
 
         [Browsable(false)]
@@ -910,7 +905,6 @@ namespace DataWF.Module.Flow
                 workUsers = works.LastOrDefault()?.User?.Name ?? "empty";
             WorkUser = workUsers;
             WorkStage = workStages;
-            WorkCurrent = current;
         }
 
         public override string ToString()

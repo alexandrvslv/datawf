@@ -1,8 +1,8 @@
-﻿using DataWF.Data;
-using DataWF.Common;
+﻿using DataWF.Common;
+using DataWF.Data;
 using System;
+using System.Linq;
 using System.Threading;
-using System.Timers;
 
 namespace DataWF.Module.Common
 {
@@ -29,7 +29,7 @@ namespace DataWF.Module.Common
         public SchedulerExecute(int timer = 60000)
         {
             this.timer = timer;
-            items.Table.LoadItems("", DBLoadParam.Synchronize | DBLoadParam.CheckDeleted | DBLoadParam.ReferenceRow);
+            items.Table.LoadItems("", DBLoadParam.Synchronize | DBLoadParam.CheckDeleted | DBLoadParam.ReferenceRow).LastOrDefault();
         }
 
         public bool Running

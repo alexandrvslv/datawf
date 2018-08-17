@@ -69,7 +69,7 @@ namespace DataWF.Module.Flow
             QWork = new QQuery(string.Empty, DocumentWork.DBTable);
             QWork.Columns.Add(new QColumn(DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DocumentId))));
             paramWork = QQuery.CreateParam(Document.DBTable.PrimaryKey, CompareType.In, QWork);
-            paramWorkId = QQuery.CreateParam(Document.DBTable.ParseProperty(nameof(Document.WorkId)), CompareType.IsNot, null);
+            paramWorkId = QQuery.CreateParam(Document.DBTable.ParseProperty(nameof(Document.CurrentWorkId)), CompareType.IsNot, null);
         }
 
         public DocumentSearchDate DateType

@@ -107,8 +107,7 @@ namespace DataWF.Module.Common
 
             if (type == SocketMessageType.Login)
             {
-                Instance.DBTable.Load();
-
+                Instance.DBTable.Load().LastOrDefault();
             }
 
             foreach (Instance item in Instance.DBTable)

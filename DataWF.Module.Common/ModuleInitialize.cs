@@ -1,8 +1,6 @@
 ﻿using DataWF.Common;
 using DataWF.Data;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 
 namespace DataWF.Module.Common
 {
@@ -10,22 +8,22 @@ namespace DataWF.Module.Common
     {
         public void Initialize()
         {
-            Book.DBTable.Load();
+            Book.DBTable.Load().LastOrDefault();
 
-            Department.DBTable.Load();
-            Position.DBTable.Load();
+            Department.DBTable.Load().LastOrDefault();
+            Position.DBTable.Load().LastOrDefault();
 
-            UserGroup.DBTable.Load();
+            UserGroup.DBTable.Load().LastOrDefault();
             UserGroup.SetCurrent();
 
             User.DBTable.DefaultComparer = new DBComparer(User.DBTable.CodeKey) { Hash = true };
-            User.DBTable.Load();            
+            User.DBTable.Load().LastOrDefault();
 
             UserLog.DBTable.DefaultComparer = new DBComparer(UserLog.DBTable.PrimaryKey) { Hash = true };
             DBLogTable.UserLogTable = UserLog.DBTable;
             DBService.RowLoging += UserLog.OnDBItemLoging;
 
-            GroupPermission.DBTable.Load();
+            GroupPermission.DBTable.Load().LastOrDefault();
             GroupPermission.CachePermission();
         }
     }

@@ -17,17 +17,16 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using DataWF.Common;
-using System.Text.RegularExpressions;
-using System.Data;
-using System.Text;
+using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Data;
 using System.Globalization;
 using System.Linq;
-using System.Collections.Specialized;
+using System.Text;
 
 namespace DataWF.Data
 {
@@ -1238,7 +1237,7 @@ namespace DataWF.Data
             return parameters.Count == 0;
         }
 
-        public IEnumerable Load(DBLoadParam param = DBLoadParam.Load)
+        public IEnumerable<DBItem> Load(DBLoadParam param = DBLoadParam.Load)
         {
             return Table.LoadItems(this, param);
         }

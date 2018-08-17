@@ -17,23 +17,18 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using DataWF.Data;
 using DataWF.Common;
+using DataWF.Data;
+using MailKit.Net.Smtp;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Xml.Serialization;
 using System.Linq;
-using Novell.Directory.Ldap;
-using System.Diagnostics;
+using System.Net;
 using System.Runtime.Serialization;
 using System.Security;
-using MailKit.Net.Smtp;
-using System.Net;
 using System.Security.Principal;
+using System.Text.RegularExpressions;
 
 namespace DataWF.Module.Common
 {
@@ -165,13 +160,14 @@ namespace DataWF.Module.Common
             if (checkOld)
             {
                 string encoded = Helper.GetSha256(password);
-                var list = GetOld(User);
-                foreach (var item in list)
+                foreach (var item in GetOld(User))
+                {
                     if (item.TextData == encoded)
                     {
                         message += Locale.Get("Login", " Password was same before.");
                         break;
                     }
+                }
             }
 
             return message;

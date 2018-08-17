@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using DataWF.Common;
+﻿using DataWF.Common;
 using DataWF.Data;
 using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 
 namespace DataWF.Test.Data
 {
@@ -199,7 +197,7 @@ namespace DataWF.Test.Data
             var table = schema.Tables["test_table"] as DBTable<DBItem>;
             Assert.IsNotNull(table, "DBInformation Load Fail");
 
-            table.Load();
+            table.Load().LastOrDefault();
             for (int i = 0; i < 1000; i++)
             {
                 var row = table.NewItem();
@@ -210,6 +208,15 @@ namespace DataWF.Test.Data
                 table.Add(row);
             }
             table.Save();
+
+            table.Clear();
+
+            int c = 0;
+            foreach (var item in table.Load(string.Empty))
+            {
+                if (++c == 5)
+                    break;
+            }
         }
 
         public enum EmployerType

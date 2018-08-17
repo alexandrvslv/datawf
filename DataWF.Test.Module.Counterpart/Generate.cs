@@ -1,8 +1,9 @@
-﻿using NUnit.Framework;
-using System;
+﻿using DataWF.Data;
 using DataWF.Module.Common;
 using DataWF.Module.Counterpart;
-using DataWF.Data;
+using NUnit.Framework;
+using System;
+using System.Linq;
 
 namespace DataWf.Test.Module.Counterparty
 {
@@ -64,7 +65,7 @@ namespace DataWf.Test.Module.Counterparty
             Assert.AreEqual(1, DBTable.GetTable<Currency>().Count);
 
             Location.DBTable.Clear();
-            Location.DBTable.Load();
+            Location.DBTable.Load().LastOrDefault();
 
             Assert.AreEqual(1, DBTable.GetTable<Country>().Count);
             Assert.AreEqual(1, DBTable.GetTable<Currency>().Count);

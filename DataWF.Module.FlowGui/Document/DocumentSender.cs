@@ -22,7 +22,7 @@ namespace DataWF.Module.FlowGui
     {
         public async static Task<Command> Send(Widget widget, Document document)
         {
-            var work = document.WorkCurrent;
+            var work = document.CurrentWork;
             if (work != null)
             {
                 if (work.User == null)
@@ -232,7 +232,7 @@ namespace DataWF.Module.FlowGui
                 return;
 
             current = documents[0];
-            CurrentStage = current.WorkCurrent?.Stage ?? current.GetWorksUncompleted().FirstOrDefault()?.Stage;
+            CurrentStage = current.CurrentWork?.Stage ?? current.GetWorksUncompleted().FirstOrDefault()?.Stage;
 
             toolReturn.Visible = true;
 
@@ -241,7 +241,7 @@ namespace DataWF.Module.FlowGui
                 if (current.Template != document.Template)
                     continue;
                 var dworks = document.GetWorks().ToList();
-                var cwork = document.WorkCurrent;
+                var cwork = document.CurrentWork;
                 if (cwork == null || cwork.Stage != CurrentStage)
                 {
                     foreach (var uncomplete in document.GetWorksUncompleted())

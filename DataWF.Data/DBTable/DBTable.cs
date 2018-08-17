@@ -558,7 +558,7 @@ namespace DataWF.Data
                                   column.ReferenceTable.PrimaryKey.Name,
                                   column.Name,
                                   command.CommandText.Substring(command.CommandText.IndexOf(" from ", StringComparison.OrdinalIgnoreCase))), null));
-                    column.ReferenceTable.LoadItems(sub);
+                    column.ReferenceTable.LoadItems(sub).LastOrDefault();
                 }
             }
         }
@@ -634,11 +634,11 @@ namespace DataWF.Data
 
         public abstract DBItem LoadItemFromReader(DBTransaction transaction);
 
-        public abstract IEnumerable LoadItems(QQuery query, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null);
+        public abstract IEnumerable<DBItem> LoadItems(QQuery query, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null);
 
-        public abstract IEnumerable LoadItems(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable<DBColumn> cols = null, IDBTableView synch = null);
+        public abstract IEnumerable<DBItem> LoadItems(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable<DBColumn> cols = null, IDBTableView synch = null);
 
-        public abstract IEnumerable LoadItems(IDbCommand command, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null);
+        public abstract IEnumerable<DBItem> LoadItems(IDbCommand command, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null);
 
         public abstract DBItem LoadItemByCode(string code, DBColumn column, DBLoadParam param);
 
@@ -981,11 +981,11 @@ namespace DataWF.Data
                 }
             }
         }
-        public abstract IEnumerable SelectItems(DBColumn column, CompareType comparer, object val);
+        public abstract IEnumerable<DBItem> SelectItems(DBColumn column, CompareType comparer, object val);
 
-        public abstract IEnumerable SelectItems(string qQuery);
+        public abstract IEnumerable<DBItem> SelectItems(string qQuery);
 
-        public abstract IEnumerable SelectItems(QQuery qQuery);
+        public abstract IEnumerable<DBItem> SelectItems(QQuery qQuery);
 
         public bool CheckItem(DBItem item, QItemList<QParam> parameters)
         {
@@ -1260,7 +1260,7 @@ namespace DataWF.Data
             {
                 if (pool)
                 {
-                    column.Pull.Clear();
+                    column.Clear();
                 }
                 column.Index?.Clear();
             }

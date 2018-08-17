@@ -453,7 +453,7 @@ namespace DataWF.Module.FlowGui
                 dock.PageSelected -= DockPageSelected;
                 {
                     Template = document.Template;
-                    var cwork = document.WorkCurrent;
+                    var cwork = document.CurrentWork;
                     if (cwork != null)
                         Stage = cwork;
                     else if (document.GetLastWork() != null)
@@ -519,7 +519,7 @@ namespace DataWF.Module.FlowGui
 
                 if (document.IsCurrent)
                 {
-                    var cwork = document.WorkCurrent;
+                    var cwork = document.CurrentWork;
                     if (cwork.UpdateState == DBUpdateState.Default && cwork.DateRead == DateTime.MinValue)
                     {
                         cwork.DateRead = DateTime.Now;
@@ -566,7 +566,7 @@ namespace DataWF.Module.FlowGui
                 state = (DocumentEditorState)obj;
             if (document != null)
             {
-                var work = document.WorkCurrent;
+                var work = document.CurrentWork;
                 EditorState = !document.Attached || document.UpdateState == DBUpdateState.Insert
                     ? DocumentEditorState.Create
                     : work != null && work.IsCurrent

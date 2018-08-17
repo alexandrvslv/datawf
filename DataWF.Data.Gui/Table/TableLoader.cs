@@ -1,11 +1,10 @@
-﻿using System;
-using System.ComponentModel;
-using System.Threading;
-using DataWF.Common;
-using DataWF.Data;
+﻿using DataWF.Common;
+using System;
 using System.Collections.Concurrent;
-using Xwt;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Xwt;
 
 namespace DataWF.Data.Gui
 {
@@ -140,7 +139,7 @@ namespace DataWF.Data.Gui
                     using (var temp = new DBTransaction(view.Table.Schema.Connection) { View = view })//DBLoadParam.GetCount | DBLoadParam.ReferenceRow
                     {
                         transaction = temp;
-                        View.Table.LoadItems(query);
+                        View.Table.LoadItems(query).LastOrDefault();
                     }
                 }
                 catch (Exception e)

@@ -113,7 +113,7 @@ namespace DataWF.Module.FlowGui
 
             if (listItem is Document document)
             {
-                if (document.WorkCurrent != null && document.WorkCurrent.DateRead == DateTime.MinValue)
+                if (document.CurrentWork != null && document.CurrentWork.DateRead == DateTime.MinValue)
                 {
                     if (styleBold == null)
                     {

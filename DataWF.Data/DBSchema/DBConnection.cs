@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -425,7 +426,7 @@ namespace DataWF.Data
             var table = new DBTable<T>(tableName) { Schema = schema };
             using (var transaction = DBTransaction.GetTransaction(this, this, true))
             {
-                table.Load(transaction.AddCommand(query));
+                table.Load(transaction.AddCommand(query)).LastOrDefault();
             }
             return table;
         }

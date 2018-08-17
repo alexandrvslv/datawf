@@ -17,9 +17,8 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using DataWF.Data;
 using DataWF.Common;
-using System.Linq;
+using DataWF.Data;
 
 namespace DataWF.Module.Flow
 {
@@ -31,8 +30,7 @@ namespace DataWF.Module.Flow
             filter.BuildPropertyParam(nameof(DocumentWork.IsComplete), CompareType.Equal, false);
             filter.BuildPropertyParam(nameof(DocumentWork.IsSystem), CompareType.Equal, true);
             //string filter = string.Format("{0}!='{1}' and {2} in (select {3} from {4} where {5} = '{6}')",
-            var wors = DocumentWork.DBTable.Load(filter, DBLoadParam.Load | DBLoadParam.Synchronize);
-            foreach (DocumentWork work in wors)
+            foreach (DocumentWork work in DocumentWork.DBTable.Load(filter, DBLoadParam.Load | DBLoadParam.Synchronize))
             {
                 if (work.Stage == null || work.Document == null)
                     continue;
