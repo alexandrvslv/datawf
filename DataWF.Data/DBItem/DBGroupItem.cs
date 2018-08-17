@@ -184,7 +184,7 @@ namespace DataWF.Data
         {
             if (PrimaryId == null)
                 return new List<T>(0);
-            return GetReferencing<T>(Table, Table.GroupKey, param);
+            return GetReferencing<T>((DBTable<T>)Table, Table.GroupKey, param);
         }
 
         public List<T> GetSubGroupFull<T>(bool addCurrent = false) where T : DBGroupItem, new()

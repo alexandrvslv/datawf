@@ -740,7 +740,8 @@ namespace DataWF.Data
 
         public object GetValue(DBItem target)
         {
-            return Pull != null ? Pull.Get(target.hindex) : Attribute.PropertyInvoker.GetValue(target);
+            return Pull != null ? Pull.Get(target.hindex) :
+                TypeHelper.IsBaseType(target.GetType(), Attribute.PropertyInvoker.TargetType) ? Attribute.PropertyInvoker.GetValue(target) : null;
         }
 
         public T GetValue<T>(DBItem target)
