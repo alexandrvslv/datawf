@@ -33,7 +33,9 @@ namespace DataWF.Module.Flow
         Data = 4,
         Workflow = 8,
         Customer = 16,
-        Comment = 32
+        Comment = 32,
+        Refing = 64,
+        Refed = 128
         //Logs,
     }
 
