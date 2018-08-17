@@ -62,7 +62,7 @@ namespace DataWF.Web.Common
                 {
                     if (!TypeHelper.IsBaseType(valueType, refing.PropertyInvoker.TargetType))
                         continue;
-                    var refs = refing.PropertyInvoker.GetValue(item) as IEnumerable;
+                    var refs = refing.PropertyInvoker.GetValue(item) as IEnumerable<DBItem> ;
                     if (refs != null)
                     {
                         writer.WritePropertyName(refing.Property.Name);
