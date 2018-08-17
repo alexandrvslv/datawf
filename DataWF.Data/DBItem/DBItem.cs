@@ -97,12 +97,12 @@ namespace DataWF.Data
 
         public object GetValue(DBColumn column)
         {
-            return column.Pull.Get(hindex);
+            return column.GetValue(this);
         }
 
         public T GetValue<T>(DBColumn column)
         {
-            return column.Pull.GetValue<T>(hindex);
+            return column.GetValue<T>(this);
         }
 
         public T GetProperty<T>([CallerMemberName] string property = null)
@@ -144,9 +144,19 @@ namespace DataWF.Data
             UpdateState = temp;
         }
 
-        public void SetProperty(object value, [CallerMemberName] string property = null)
+        public void SetProperty<T>(T value, [CallerMemberName] string property = null)
         {
-            SetValue(value, Table.Columns.GetByProperty(property));
+            SetValue<T>(value, Table.Columns.GetByProperty(property));
+        }
+
+        //public void SetProperty(object value, [CallerMemberName] string property = null)
+        //{
+        //    SetValue(value, Table.Columns.GetByProperty(property));
+        //}
+
+        public void SetValue<T>(T value, DBColumn column)
+        {
+            SetValue<T>(value, column, column.ColumnType == DBColumnTypes.Default);
         }
 
         public void SetValue(object value, DBColumn column)
@@ -154,11 +164,40 @@ namespace DataWF.Data
             SetValue(value, column, column.ColumnType == DBColumnTypes.Default);
         }
 
+        public void SetValue<T>(T value, DBColumn column, bool check, object tag = null)
+        {
+            SetTag(column, tag);
+
+            var field = column.GetValue<T>(this);
+
+            if (DBService.Equal<T>(field, value))
+            {
+                return;
+            }
+            DBItemEventArgs args = null;
+            if (check)
+            {
+                RefreshOld(column, value, field);
+            }
+
+            OnPropertyChanging(column.Property ?? column.Name, column, field);
+
+            column.SetValue<T>(this, value);
+
+            OnPropertyChanged(column.Property ?? column.Name, column, value);
+
+            if (check)
+            {
+                CheckState();
+                DBService.OnEdited(args);
+            }
+        }
+
         public void SetValue(object value, DBColumn column, bool check, object tag = null)
         {
             SetTag(column, tag);
 
-            var field = GetValue(column);
+            var field = column.GetValue(this);
 
             if (DBService.Equal(field, value))
             {
@@ -172,7 +211,7 @@ namespace DataWF.Data
 
             OnPropertyChanging(column.Property ?? column.Name, column, field);
 
-            column.Pull.Set(hindex, value);
+            column.SetValue(this, value);
 
             OnPropertyChanged(column.Property ?? column.Name, column, value);
 
@@ -610,8 +649,11 @@ namespace DataWF.Data
             set { SetValue(value, Table.ItemTypeKey); }
         }
 
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        DBStatus IStatusable.Status { get => Status ?? DBStatus.Empty; set => Status = value; }
+
         [DataMember, DefaultValue(DBStatus.New), Column("status_id", GroupName = "system", Keys = DBColumnKeys.State | DBColumnKeys.System | DBColumnKeys.Indexing, Order = 99)]
-        public DBStatus Status
+        public DBStatus? Status
         {
             get { return Table.StatusKey == null ? DBStatus.Empty : GetValue<DBStatus?>(Table.StatusKey).GetValueOrDefault(); }
             set { SetValue(value, Table.StatusKey); }
@@ -1060,8 +1102,8 @@ namespace DataWF.Data
 
         public string GetRowText(IEnumerable<DBColumn> parameters, bool showColumn, string separator)
         {
-            if (!Access.View)
-                return "********";
+            //if (!Access.View)
+            //    return "********";
             var builder = new StringBuilder();
             if (parameters == null)
                 parameters = Table.Columns;

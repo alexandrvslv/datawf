@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections;
+﻿using DataWF.Common;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.IO;
 using System.Linq;
 using System.Text;
-using DataWF.Common;
 
 namespace DataWF.Data
 {
@@ -725,7 +724,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
 
         public string FormatInsert(DBTable table, bool fill)
         {
-            IList rows = fill ? table.LoadItems().Cast<DBItem>().ToList() : table.SelectItems("").Cast<DBItem>().ToList();
+            var rows = fill ? table.LoadItems().ToList() : table.SelectItems("").ToList();
             if (table.GroupKey != null)
             {
                 ListHelper.QuickSort(rows, new TreeComparer(null));
@@ -733,10 +732,10 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             return DMLInsert(rows, "");
         }
 
-        public string DMLInsert(IEnumerable rows, string sep)
+        public string DMLInsert(IEnumerable<DBItem> rows, string sep)
         {
             var builder = new StringBuilder();
-            foreach (DBItem row in rows)
+            foreach (var row in rows)
             {
                 FormatInsert(builder, row.Table, row);
                 builder.AppendLine(sep);
@@ -803,7 +802,9 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
 
         public virtual string FormatQColumn(DBColumn column)
         {
-            if (column.ColumnType == DBColumnTypes.Internal || column.ColumnType == DBColumnTypes.Expression)
+            if (column.ColumnType == DBColumnTypes.Internal
+                || column.ColumnType == DBColumnTypes.Expression
+                || column.ColumnType == DBColumnTypes.Code)
                 return string.Empty;
             else if (column.ColumnType == DBColumnTypes.Query && column.Table.Type != DBTableType.View)
                 return string.Format("({0}) as \"{1}\"", column.Query, column.Name);

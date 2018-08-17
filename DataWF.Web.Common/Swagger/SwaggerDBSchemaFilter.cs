@@ -51,7 +51,7 @@ namespace DataWF.Web.Common
                 schema.Properties.Clear();
                 foreach (var column in table.Columns.Where(p => p.Property.DeclaringType == type))
                 {
-                    var columnSchema = context.SchemaRegistry.GetOrRegister(column.GetDataType());
+                    var columnSchema = context.SchemaRegistry.GetOrRegister(column.Property.PropertyType);
                     ApplyColumn(schema, columnSchema, column);
                     if (column.ReferenceProperty != null)
                     {
@@ -75,8 +75,7 @@ namespace DataWF.Web.Common
 
         public void ApplyColumn(Schema schema, Schema columnSchema, ColumnAttributeCache column)
         {
-            if ((column.Attribute.Keys & DBColumnKeys.Access) == DBColumnKeys.Access
-                || (column.Attribute.Keys & DBColumnKeys.Password) == DBColumnKeys.Password
+            if ((column.Attribute.Keys & DBColumnKeys.Password) == DBColumnKeys.Password
                 || (column.Attribute.Keys & DBColumnKeys.File) == DBColumnKeys.File)
                 return;
 
@@ -84,7 +83,8 @@ namespace DataWF.Web.Common
             {
                 columnSchema.MaxLength = column.Attribute.Size;
             }
-            if ((column.Attribute.Keys & DBColumnKeys.Date) == DBColumnKeys.Date
+            if ((column.Attribute.Keys & DBColumnKeys.Access) == DBColumnKeys.Access
+                || (column.Attribute.Keys & DBColumnKeys.Date) == DBColumnKeys.Date
                 || (column.Attribute.Keys & DBColumnKeys.Stamp) == DBColumnKeys.Stamp
                 || column.Property.GetSetMethod() == null)
             {

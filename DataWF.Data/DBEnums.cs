@@ -114,7 +114,8 @@ namespace DataWF.Data
         Default,
         Query,
         Internal,
-        Expression
+        Expression,
+        Code
     }
 
     [Flags()]

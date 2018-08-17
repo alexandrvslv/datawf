@@ -160,7 +160,9 @@ namespace DataWF.Data
 
         public override string FormatQColumn(DBColumn column)
         {
-            if (column.ColumnType == DBColumnTypes.Internal || column.ColumnType == DBColumnTypes.Expression)
+            if (column.ColumnType == DBColumnTypes.Internal 
+                || column.ColumnType == DBColumnTypes.Expression
+                || column.ColumnType == DBColumnTypes.Code)
                 return string.Empty;
             else if (column.ColumnType == DBColumnTypes.Query && column.Table.Type != DBTableType.View)
                 return base.FormatQColumn(column);

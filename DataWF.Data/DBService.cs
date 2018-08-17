@@ -17,20 +17,12 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using DataWF.Common;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
-using System.Diagnostics;
-using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Xml.Serialization;
-using DataWF.Common;
 
 namespace DataWF.Data
 {
@@ -125,10 +117,11 @@ namespace DataWF.Data
                 || item.Schema.Container == null
                 || item.Schema.IsSynchronizing)
                 return;
-            if (item is IDBTableContent)
+            if (item is IDBTableContent tabled)
             {
-                var table = ((IDBTableContent)item).Table;
-                if (table is IDBVirtualTable || table.Container == null)
+                if (tabled.Table is IDBVirtualTable || tabled.Table.Container == null)
+                    return;
+                if (item is DBColumn column && column.ColumnType != DBColumnTypes.Default)
                     return;
             }
             DBSchemaChange change = null;
@@ -568,6 +561,24 @@ namespace DataWF.Data
                 //     if(xp.GetChildTables())
             }
             return string.Compare(x.Name, y.Name, StringComparison.Ordinal);
+        }
+
+        public static bool Equal<T>(T x, T y)
+        {
+            if (x == null)
+            {
+                return y == null;
+            }
+
+            if (x is byte[])
+            {
+                return Helper.CompareByte((byte[])(object)x, (byte[])(object)y);
+            }
+            if (x is string && y is string)
+            {
+                return string.Equals((string)(object)x, (string)(object)y, StringComparison.Ordinal);
+            }
+            return EqualityComparer<T>.Default.Equals(x, y);
         }
 
         public static bool Equal(object x, object y)

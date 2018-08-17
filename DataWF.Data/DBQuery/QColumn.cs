@@ -17,9 +17,6 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 
 namespace DataWF.Data
@@ -102,7 +99,10 @@ namespace DataWF.Data
         {
             if (Column == null)
                 return text;
-            else if (command != null && (Column.ColumnType == DBColumnTypes.Internal || Column.ColumnType == DBColumnTypes.Expression))
+            else if (command != null
+                && (Column.ColumnType == DBColumnTypes.Internal
+                || Column.ColumnType == DBColumnTypes.Expression
+                || Column.ColumnType == DBColumnTypes.Code))
                 return string.Empty;
             else if (Column.ColumnType == DBColumnTypes.Query && Column.Table.Type != DBTableType.View)
                 return string.Format("({0}) as {1}", Column.Query, text);
@@ -112,7 +112,7 @@ namespace DataWF.Data
 
         public override object GetValue(DBItem row)
         {
-            return temp ?? row.GetValue(Column);
+            return temp ?? Column.GetValue(row);
         }
 
         public string Prefix

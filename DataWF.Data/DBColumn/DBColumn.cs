@@ -155,6 +155,10 @@ namespace DataWF.Data
 
         internal protected virtual void CheckPull()
         {
+            if (Container == null
+                || ColumnType == DBColumnTypes.Expression
+                || ColumnType == DBColumnTypes.Code)
+                return;
             if (Pull != null && Pull.ItemType != DataType)
             {
                 Pull.Clear();
@@ -163,7 +167,7 @@ namespace DataWF.Data
             if (Pull == null && Table != null)
             {
                 if (DataType == null)
-                    throw new InvalidOperationException($"{nameof(DataType)} must by specified!");
+                    throw new InvalidOperationException($"{nameof(DataType)} not specified!");
                 Pull = Pull.Fabric(DataType, Table.BlockSize);
             }
         }
@@ -541,7 +545,7 @@ namespace DataWF.Data
                 if (ctype == value)
                     return;
                 ctype = value;
-                OnPropertyChanged(nameof(ColumnType), value == DBColumnTypes.Default ? DDLType.Create : DDLType.Alter);
+                OnPropertyChanged(nameof(ColumnType), value == DBColumnTypes.Default ? DDLType.Create : DDLType.Default);
             }
         }
 
@@ -629,6 +633,9 @@ namespace DataWF.Data
         {
             get { return (Keys & DBColumnKeys.System) == DBColumnKeys.System; }
         }
+
+        [JsonIgnore, XmlIgnore]
+        public ColumnAttributeCache Attribute { get; internal set; }
 
         #region IComparable Members
 
@@ -733,17 +740,41 @@ namespace DataWF.Data
 
         public object GetValue(DBItem target)
         {
-            return target.GetValue(this);
+            return Pull != null ? Pull.Get(target.hindex) : Attribute.PropertyInvoker.GetValue(target);
         }
 
-        public void SetValue(DBItem target, object value)
+        public T GetValue<T>(DBItem target)
         {
-            target.SetValue(value, this);
+            return Pull != null ? Pull.GetValue<T>(target.hindex) : (T)Attribute.PropertyInvoker.GetValue(target);
         }
 
         public object GetValue(object target)
         {
             return GetValue((DBItem)target);
+        }
+
+        public void SetValue(DBItem target, object value)
+        {
+            if (Pull != null)
+            {
+                Pull?.Set(target.hindex, value);
+            }
+            else
+            {
+                Attribute.PropertyInvoker.SetValue(target, value);
+            }
+        }
+
+        public void SetValue<T>(DBItem target, T value)
+        {
+            if (Pull != null)
+            {
+                Pull?.SetValue<T>(target.hindex, value);
+            }
+            else
+            {
+                Attribute.PropertyInvoker.SetValue(target, value);
+            }
         }
 
         public void SetValue(object target, object value)

@@ -18,12 +18,11 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System;
-using System.Globalization;
-using System.Linq;
 using DataWF.Common;
-using System.Reflection;
+using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Reflection;
 
 namespace DataWF.Data
 {
@@ -125,6 +124,7 @@ namespace DataWF.Data
             {
                 Column.DisplayName = DisplayName;
             }
+            Column.Attribute = this;
             Column.DataType = GetDataType();
             Column.Size = Attribute.Size;
             Column.Scale = Attribute.Scale;
