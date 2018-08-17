@@ -460,19 +460,19 @@ namespace DataWF.Data
             }
         }
 
-        public IEnumerable<T> GetReferencing<T>(QQuery query, DBLoadParam param) where T : DBItem, new()
+        public IEnumerable<T> GetReferencing<T>(DBTable<T> table, QQuery query, DBLoadParam param) where T : DBItem, new()
         {
-            query.TypeFilter = typeof(T);
+            //query.TypeFilter = typeof(T);
             if ((param & DBLoadParam.Load) == DBLoadParam.Load)
             {
-                return (IEnumerable<T>)query.Load(param);
+                return table.Load(query);
             }
-            return (IEnumerable<T>)query.Select();
+            return table.Select(query);
         }
 
         public IEnumerable<T> GetReferencing<T>(DBTable table, string query, DBLoadParam param) where T : DBItem, new()
         {
-            return GetReferencing<T>(new QQuery(query, table), param);
+            return GetReferencing<T>((DBTable<T>)table, new QQuery(query, table), param);
         }
 
         public IEnumerable<T> GetReferencing<T>(string property, DBLoadParam param) where T : DBItem, new()
@@ -481,29 +481,33 @@ namespace DataWF.Data
             return GetReferencing<T>(table, table.ParseProperty(property), param);
         }
 
-        public IEnumerable<T> GetReferencing<T>(DBTable table, DBColumn column, DBLoadParam param) where T : DBItem, new()
+        public IEnumerable<T> GetReferencing<T>(DBTable<T> table, DBColumn column, DBLoadParam param) where T : DBItem, new()
         {
-            var query = new QQuery("", table);
-            query.BuildParam(column, CompareType.Equal, PrimaryId);
-            return GetReferencing<T>(query, param);
+            using (var query = new QQuery("", table))
+            {
+                query.BuildParam(column, CompareType.Equal, PrimaryId);
+                return GetReferencing<T>(table, query, param);
+            }
         }
 
         public IEnumerable<T> GetReferencing<T>(string tableCode, string columnCode, DBLoadParam param) where T : DBItem, new()
         {
-            DBTable table = DBService.ParseTable(tableCode, Table.Schema);
+            var table = (DBTable<T>)DBService.ParseTable(tableCode, Table.Schema);
             return table != null ? GetReferencing<T>(table, table.ParseColumn(columnCode), param) : null;
         }
 
         public IEnumerable<T> GetReferencing<T>(DBForeignKey relation, DBLoadParam param) where T : DBItem, new()
         {
-            return GetReferencing<T>(relation.Table, relation.Column, param);
+            return GetReferencing<T>((DBTable<T>)relation.Table, relation.Column, param);
         }
 
         public IEnumerable<DBItem> GetReferencing(DBTable table, DBColumn column, DBLoadParam param)
         {
-            var query = new QQuery("", table);
-            query.BuildParam(column, CompareType.Equal, PrimaryId);
-            return GetReferencing(query, param);
+            using (var query = new QQuery("", table))
+            {
+                query.BuildParam(column, CompareType.Equal, PrimaryId);
+                return GetReferencing(query, param);
+            }
         }
 
         public IEnumerable<DBItem> GetReferencing(QQuery query, DBLoadParam param)
