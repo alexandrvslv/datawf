@@ -928,6 +928,33 @@ namespace DataWF.Gui
             }
         }
 
+        public T GetItem(string name)
+        {
+            if (name == null)
+            {
+                return null;
+            }
+
+            var find = this[name];
+            if (find != null)
+            {
+                return find;
+            }
+
+            foreach (var item in this)
+            {
+                if (item.IsCompaund)
+                {
+                    find = item.GetItem(name);
+                    if (find != null)
+                    {
+                        return find;
+                    }
+                }
+            }
+            return null;
+        }
+
         public IEnumerable<T> GetItems()
         {
             foreach (var item in this)

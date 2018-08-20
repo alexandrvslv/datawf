@@ -1,12 +1,11 @@
 ﻿using DataWF.Common;
 using System;
-using System.ComponentModel;
-using System.Xml.Serialization;
-using System.Reflection;
-using Xwt.Drawing;
-using Xwt;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Xml.Serialization;
+using Xwt;
+using Xwt.Drawing;
 
 namespace DataWF.Gui
 {
@@ -16,7 +15,7 @@ namespace DataWF.Gui
         protected CellStyle columnStyle;
         protected IInvoker invoker;
         protected ILayoutCellEditor editor;
-        protected ILayoutCell owner;
+        protected LayoutColumn owner;
         protected LayoutColumnList columns;
         protected TextLayout textLayout;
         protected bool readOnly;
@@ -82,7 +81,6 @@ namespace DataWF.Gui
             return Clone();
         }
 
-
         [XmlIgnore, Browsable(false)]
         public LayoutColumnList Columns
         {
@@ -115,9 +113,9 @@ namespace DataWF.Gui
         }
 
         [XmlIgnore]
-        public ILayoutCell Owner
+        public LayoutColumn Owner
         {
-            get { return owner ?? (owner = Info?.Columns[ownerName] as ILayoutCell); }
+            get { return owner ?? (owner = Info?.Columns.GetItem(ownerName)); }
             set
             {
                 if (owner != value)
@@ -127,6 +125,9 @@ namespace DataWF.Gui
                 }
             }
         }
+
+        [XmlIgnore]
+        ILayoutCell ILayoutCell.Owner { get => Owner; set => Owner = (LayoutColumn)value; }
 
         [Browsable(false), DefaultValue("Column")]
         public string ColumnStyleName { get; set; } = "Column";
@@ -258,6 +259,7 @@ namespace DataWF.Gui
             set { description = value; }
         }
 
+
         public override void Dispose()
         {
             base.Dispose();
@@ -303,6 +305,5 @@ namespace DataWF.Gui
         {
             invoker?.SetValue(listItem, value);
         }
-
     }
 }

@@ -2,16 +2,16 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
-using System.Linq;
+using System.Threading.Tasks;
 using Xwt;
 using Xwt.Drawing;
-using System.Diagnostics;
-using System.Threading.Tasks;
-using System.Collections.Specialized;
 
 namespace DataWF.Gui
 {
@@ -107,6 +107,7 @@ namespace DataWF.Gui
         public event EventHandler ColumnGrouping;
         public event EventHandler ColumnApplySort;
         public event EventHandler ColumnLeave;
+        public event EventHandler<LayoutListItemEventArgs> ItemRemoved;
         public event EventHandler<LayoutHitTestEventArgs> ColumnMouseMove;
         public event EventHandler<LayoutHitTestEventArgs> ColumnMouseDown;
         public event EventHandler<LayoutHitTestEventArgs> ColumnMouseHover;
@@ -2422,7 +2423,7 @@ namespace DataWF.Gui
         public LayoutColumn CheckParent(LayoutListInfo info, string propertyName)
         {
             string parentName = propertyName.Substring(0, propertyName.LastIndexOf('.'));
-            LayoutColumn parent = info.Columns[parentName] as LayoutColumn;
+            var parent = info.Columns.GetItem(parentName);
             if (parent == null || parent.Invoker == null)
             {
                 parent = BuildColumn(info, null, parentName);
@@ -2448,7 +2449,7 @@ namespace DataWF.Gui
                     parent = null;
                     while (i > 0)
                     {
-                        parent = info.Columns[name.Substring(0, i)] as LayoutColumn ?? CreateColumn(name.Substring(0, i));
+                        parent = info.Columns.GetItem(name.Substring(0, i)) as LayoutColumn ?? CreateColumn(name.Substring(0, i));
                         RefreshColumn(parent);
                         if (parent != null)
                             ptype = parent.DataType;
@@ -2461,7 +2462,7 @@ namespace DataWF.Gui
                     ptype = parent.DataType;
             }
 
-            var column = info.Columns[name] as LayoutColumn ?? CreateColumn(name);
+            var column = info.Columns.GetItem(name) as LayoutColumn ?? CreateColumn(name);
             column.Owner = parent;
             RefreshColumn(column);
             return column;
@@ -2521,9 +2522,7 @@ namespace DataWF.Gui
                     ((LayoutColumn)cell).Width *= 0.7;
                 }
             }
-
         }
-
 
         public virtual bool GetCellValidate(ILayoutCell cell)
         {
@@ -2644,7 +2643,7 @@ namespace DataWF.Gui
             RefreshProperties();
             foreach (LayoutColumn item in ListInfo.Columns.GetItems().ToList())
             {
-                BuildColumn(ListInfo, item.Owner as LayoutColumn, item.Name);
+                BuildColumn(ListInfo, item.Owner, item.Name);
             }
             GeneratingHeadColumn();
             groups.Clear();
@@ -4129,6 +4128,7 @@ namespace DataWF.Gui
                 return;
             selection.RemoveBy(value);
             listSource.Remove(value);
+            ItemRemoved?.Invoke(this, new LayoutListItemEventArgs { Item = value });
             if (!(listSource is INotifyListPropertyChanged)
                 && !(listSource is IBindingList))
                 RefreshBounds(true);

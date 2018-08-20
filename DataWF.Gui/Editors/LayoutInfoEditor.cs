@@ -1,7 +1,7 @@
-﻿using System;
+﻿using DataWF.Common;
+using System;
 using System.ComponentModel;
 using System.Linq;
-using DataWF.Common;
 using Xwt;
 
 namespace DataWF.Gui
@@ -74,6 +74,7 @@ namespace DataWF.Gui
                 }
             });
             columns.List.SelectionChanged += ColumnsItemSelect;
+            columns.List.ItemRemoved += OnColumnRemoved;
             ToolInsert.ItemClick += ToolInsertItemClick;
             fields = new ListEditor(new LayoutList
             {
@@ -210,6 +211,11 @@ namespace DataWF.Gui
             get { return (ToolMenuItem)((ToolDropDown)columns.Bar["Add"]).DropDown["Insert"]; }
         }
 
+        private ToolItem ToolRemove
+        {
+            get { return columns.Bar["Delete"]; }
+        }
+
         private void ToolInsertItemClick(object sender, ToolItemEventArgs e)
         {
             var column = (LayoutColumn)e.Item.Tag;
@@ -217,6 +223,14 @@ namespace DataWF.Gui
             if (column.Visible && column.Map == null && column.Owner != null)
             {
                 ((LayoutColumn)column.Owner).InsertAfter(column);
+            }
+        }
+
+        private void OnColumnRemoved(object sender, LayoutListItemEventArgs e)
+        {
+            if (e.Item is LayoutColumn column)
+            {
+                column.Remove();
             }
         }
 

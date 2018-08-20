@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 
 namespace DataWF.Gui
 {
@@ -6,6 +7,11 @@ namespace DataWF.Gui
     {
         public LayoutHitTestEventArgs() : base() { }
         public LayoutHitTestInfo HitTest { get; set; }
+    }
+
+    public class LayoutListItemEventArgs : EventArgs
+    {
+        public object Item { get; set; }
     }
 
 }
