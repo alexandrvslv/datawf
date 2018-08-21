@@ -118,22 +118,22 @@ namespace DataWF.Common
         }
 
         #region Use Index
-        IEnumerable ISelectable.Select(Query query)
+        IEnumerable ISelectable.Select(IQuery query)
+        {
+            return ListHelper.Select<T>(items, (Query<T>)query, indexes);
+        }
+
+        public IEnumerable<T> Select(Query<T> query)
         {
             return ListHelper.Select<T>(items, query, indexes);
         }
 
-        public IEnumerable<T> Select(Query query)
+        IEnumerable ISelectable.Select(IQueryParameter parameter)
         {
-            return ListHelper.Select<T>(items, query, indexes);
+            return ListHelper.Select<T>(items, (QueryParameter<T>)parameter, indexes);
         }
 
-        IEnumerable ISelectable.Select(QueryParameter parameter)
-        {
-            return ListHelper.Select<T>(items, parameter, indexes);
-        }
-
-        public IEnumerable<T> Select(QueryParameter parameter)
+        public IEnumerable<T> Select(QueryParameter<T> parameter)
         {
             return ListHelper.Select<T>(items, parameter, indexes);
         }
@@ -145,9 +145,8 @@ namespace DataWF.Common
 
         public IEnumerable<T> Select(string property, CompareType comparer, object value)
         {
-            return Select(new QueryParameter
+            return Select(new QueryParameter<T>
             {
-                Type = typeof(T),
                 Comparer = comparer,
                 Value = value,
                 Property = property
@@ -471,7 +470,7 @@ namespace DataWF.Common
                 if (column.EndsWith(" DESC", StringComparison.OrdinalIgnoreCase))
                     direction = ListSortDirection.Descending;
                 var index = column.IndexOf(" ", StringComparison.Ordinal);
-                comparerList.Comparers.Add(new InvokerComparer<T>(index > 0 ? column.Substring(0, index) : column, direction));
+                comparerList.Add(new InvokerComparer<T>(index > 0 ? column.Substring(0, index) : column, direction));
             }
             ApplySortInternal(comparerList);
         }
@@ -505,7 +504,7 @@ namespace DataWF.Common
             OnListChanged(NotifyCollectionChangedAction.Reset);
         }
 
-        public T Find(Query query)
+        public T Find(Query<T> query)
         {
             return Select(query).FirstOrDefault();
         }

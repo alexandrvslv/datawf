@@ -1,56 +1,74 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 
 namespace DataWF.Common
 {
-    public class Query
+    public class Query<T> : IQuery
     {
-        private QueryParameterList parameters;
-        private List<QueryOrder> orders;
+        private QueryParameterList<T> parameters;
+        private InvokerComparerList<T> orders;
 
         public Query()
         { }
 
-        public Query(IEnumerable<QueryParameter> parameters)
+        public Query(IEnumerable<QueryParameter<T>> parameters)
         {
             Parameters.AddRange(parameters);
         }
 
-        public QueryParameterList Parameters
+        public QueryParameterList<T> Parameters
         {
-            get { return parameters ?? (parameters = new QueryParameterList()); }
+            get { return parameters ?? (parameters = new QueryParameterList<T>()); }
             set { parameters = value; }
         }
 
-        public List<QueryOrder> Orders
+        public InvokerComparerList<T> Orders
         {
-            get { return orders ?? (orders = new List<QueryOrder>()); }
+            get { return orders ?? (orders = new InvokerComparerList<T>()); }
             set { orders = value; }
         }
 
-        public void Sort<T>(IList<T> list)
+        IEnumerable<IQueryParameter> IQuery.Parameters
+        {
+            get { return Parameters; }
+        }
+
+        public void Clear()
+        {
+            Parameters.Clear();
+        }
+
+        public IQueryParameter Add(LogicType logic, string property, CompareType comparer, object value)
+        {
+            return Parameters.Add(logic, property, comparer, value);
+        }
+
+        public IQueryParameter AddTreeParameter()
+        {
+            var parameter = new QueryParameter<T>()
+            {
+                Invoker = new TreeInvoker<IGroup>(),
+                Comparer = CompareType.Equal,
+                Value = true
+            };
+            Parameters.Add(parameter);
+            return parameter;
+        }
+
+        public void Sort(IList<T> list)
         {
             if (Orders.Count > 0)
             {
-                var comparer = new InvokerComparerList<T>();
-                foreach (QueryOrder order in Orders)
-                    comparer.Comparers.Add(new InvokerComparer<T>(order.Property, order.Direction));
-                ListHelper.QuickSort(list, comparer);
+                ListHelper.QuickSort(list, Orders);
             }
         }
 
         public void Sort(IList list)
         {
-            if (Orders.Count > 0 && list.Count > 0)
-            {
-                var comparer = new InvokerComparerList();
-                foreach (QueryOrder order in Orders)
-                    comparer.Comparers.Add(new InvokerComparer(list[0].GetType(), order.Property, order.Direction));
-                ListHelper.QuickSort(list, comparer);
-            }
+            Sort((IList<T>)list);
         }
+
+
     }
 
 }

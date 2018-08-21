@@ -40,11 +40,11 @@ namespace DataWF.Gui
             list.FilterQuery.Parameters.Clear();
             if (filter.Length > 0)
             {
-                list.FilterQuery.Parameters.Add(typeof(Node), LogicType.And, "FullPath", CompareType.Like, filter);
+                list.FilterQuery.Parameters.Add(LogicType.And, "FullPath", CompareType.Like, filter);
             }
             else
             {
-                list.FilterQuery.Parameters.Add(typeof(Node), LogicType.Undefined, "IsExpanded", CompareType.Equal, true);
+                list.FilterQuery.Parameters.Add(LogicType.Undefined, "IsExpanded", CompareType.Equal, true);
             }
             list.UpdateFilter();
             if (list.Count == 1 && list[0].Tag.GetType() == typeof(IPAddress))

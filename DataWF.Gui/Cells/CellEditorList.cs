@@ -1,10 +1,9 @@
-﻿using System;
-using DataWF.Common;
+﻿using DataWF.Common;
+using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
-using Xwt;
 using System.Linq;
+using Xwt;
 
 namespace DataWF.Gui
 {
@@ -40,20 +39,12 @@ namespace DataWF.Gui
 
         protected virtual IEnumerable ListFind(string filter)
         {
-            var parameter = new QueryParameter()
+            if (listSource is ISelectable selectable)
             {
-                Type = listSource[0].GetType(),
-                Property = ListProperty,
-                Value = filter,
-                Comparer = CompareType.Like
-            };
-
-            if (listSource is ISelectable)
-            {
-                return ((ISelectable)listSource).Select(parameter);
+                return selectable.Select(ListProperty, CompareType.Like, filter);
             }
 
-            return ListHelper.Search(listSource, parameter);
+            return ListHelper.Search(listSource, EmitInvoker.Initialize(listSource[0].GetType(), ListProperty), filter, CompareType.Like, null);
         }
 
         protected virtual void ListSelect(IEnumerable flist)

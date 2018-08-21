@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections;
-using System.ComponentModel;
-using System.Globalization;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
+using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
@@ -293,7 +291,23 @@ namespace DataWF.Common
             //    filterable = ((ISelectable)dataSource).
         }
 
-        public static IEnumerable Search(IList items, QueryParameter param)
+        public static IEnumerable Search(IList items, IQueryParameter param)
+        {
+            return Search(items, param.Invoker, param.Value, param.Comparer, param.Comparision);
+        }
+        public static IEnumerable Search(IList items, IInvoker invoker, object value, CompareType compare, IComparer comparer)
+        {
+            for (int j = 0; j < items.Count; j++)
+            {
+                var item = items[j];
+                if (CheckItem(invoker.GetValue(item), value, compare, comparer))
+                {
+                    yield return item;
+                }
+            }
+        }
+
+        public static IEnumerable<T> Search<T>(IList<T> items, QueryParameter<T> param)
         {
             for (int j = 0; j < items.Count; j++)
             {
@@ -305,19 +319,7 @@ namespace DataWF.Common
             }
         }
 
-        public static IEnumerable<T> Search<T>(IList<T> items, QueryParameter param)
-        {
-            for (int j = 0; j < items.Count; j++)
-            {
-                var item = items[j];
-                if (CheckItem(param.Invoker.GetValue(item), param.Value, param.Comparer, param.Comparision))
-                {
-                    yield return item;
-                }
-            }
-        }
-
-        public static IEnumerable<T> Select<T>(IList<T> items, Query query, ListIndexes<T> indexes = null)
+        public static IEnumerable<T> Select<T>(IList<T> items, Query<T> query, ListIndexes<T> indexes = null)
         {
             IEnumerable<T> buffer = null;
             if (query.Parameters.Count == 0)
@@ -358,7 +360,7 @@ namespace DataWF.Common
             return buffer;
         }
 
-        public static IEnumerable<T> Select<T>(IList<T> items, QueryParameter param, ListIndexes<T> indexes = null)
+        public static IEnumerable<T> Select<T>(IList<T> items, QueryParameter<T> param, ListIndexes<T> indexes = null)
         {
             var index = indexes?.GetIndex(param.Property);
             if (index != null)
@@ -368,17 +370,21 @@ namespace DataWF.Common
             return Search<T>(items, param);
         }
 
-        public static IEnumerable Select(IList items, Query query, IListIndexes indexes = null)
+        public static IEnumerable Select(IList items, IQuery query, IListIndexes indexes = null)
         {
-            if (query.Parameters.Count == 0)
+            if (query.Parameters.Count() == 0)
             {
                 foreach (var item in items)
+                {
                     yield return item;
+                }
             }
-            else if (query.Parameters.Count == 1)
+            else if (query.Parameters.Count() == 1)
             {
-                foreach (var item in Select(items, query.Parameters[0], indexes))
+                foreach (var item in Select(items, query.Parameters.First(), indexes))
+                {
                     yield return item;
+                }
             }
             else
             {
@@ -386,12 +392,14 @@ namespace DataWF.Common
                 {
                     var item = items[j];
                     if (CheckItem(item, query))
+                    {
                         yield return item;
+                    }
                 }
             }
         }
 
-        public static IEnumerable Select(IList items, QueryParameter param, IListIndexes indexes = null)
+        public static IEnumerable Select(IList items, IQueryParameter param, IListIndexes indexes = null)
         {
             IListIndex index = indexes?.GetIndex(param.Property);
             if (index == null)
@@ -404,21 +412,20 @@ namespace DataWF.Common
             }
         }
 
-        public static bool CheckItem(object item, Query checkers)
+        public static bool CheckItem(object item, IQuery checkers)
         {
-            bool flag = true;
-            for (int i = 0; i < checkers.Parameters.Count; i++)
+            bool? flag = null;
+            foreach (var parameter in checkers.Parameters)
             {
-                var parameter = checkers.Parameters[i];
                 bool rez = CheckItem(parameter.Invoker.GetValue(item), parameter.Value, parameter.Comparer, parameter.Comparision);
-                if (i == 0)
+                if (flag == null)
                     flag = rez;
                 else if (parameter.Logic.Type == LogicTypes.Or)
                     flag = parameter.Logic.Not ? flag | !rez : flag | rez;
                 else if (parameter.Logic.Type == LogicTypes.And)
                     flag = parameter.Logic.Not ? flag & !rez : flag & rez;
             }
-            return flag;
+            return flag ?? true;
         }
 
         private static void swap(IList array, int Left, int Right)

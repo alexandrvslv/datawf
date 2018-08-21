@@ -2,7 +2,7 @@
 
 namespace DataWF.Common
 {
-    public class TreeInvoker : IInvoker<IGroup, bool>
+    public class TreeInvoker<T> : IInvoker<T, bool> where T : IGroup
     {
         public TreeInvoker()
         {
@@ -14,26 +14,26 @@ namespace DataWF.Common
 
         public Type DataType { get; set; }
 
-        public Type TargetType { get { return typeof(IGroup); } }
+        public Type TargetType { get { return typeof(T); } }
 
         public string Name { get; set; }
 
         public IListIndex CreateIndex()
         {
-            return new ListIndex<IGroup, bool>(this);
+            return new ListIndex<T, bool>(this);
         }
 
-        public bool GetValue(IGroup target)
+        public bool GetValue(T target)
         {
             return target.IsExpanded;
         }
 
         public object GetValue(object target)
         {
-            return GetValue((IGroup)target);
+            return GetValue((T)target);
         }
 
-        public void SetValue(IGroup target, bool value)
+        public void SetValue(T target, bool value)
         {
             throw new NotSupportedException();
         }

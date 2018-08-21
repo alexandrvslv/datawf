@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using DataWF.Common;
+using System;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
-using DataWF.Common;
 using Xwt;
-using Xwt.Drawing;
 
 namespace DataWF.Gui
 {
@@ -89,6 +87,7 @@ namespace DataWF.Gui
             };
             ListSource = new LayoutFilterList(list);
             Filters.CollectionChanged += (sender, e) => { List.OnFilterChange(); };
+            Filters.ItemPropertyChanged += (sender, e) => { List.OnFilterChange(); };
         }
 
         public LayoutFilterList Filters { get { return (LayoutFilterList)ListSource; } }

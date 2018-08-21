@@ -36,7 +36,7 @@ namespace DataWF.Data
 
         protected IDbCommand command;
         protected DBTable<T> table;
-        private Query filterQuery;
+        private Query<T> filterQuery;
 
         public DBTableView()
            : this(DBTable.GetTable<T>(null, false), (QParam)null, DBViewKeys.None, DBStatus.Empty)
@@ -59,7 +59,7 @@ namespace DataWF.Data
             propertyHandler = null;
             table.AddView(this);
             this.table = table;
-            FilterQuery = new Query();
+            FilterQuery = new Query<T>();
             Query = new QQuery();
             TypeFilter = typeof(T);
             DefaultParam = defaultFilter;
@@ -168,7 +168,9 @@ namespace DataWF.Data
             }
         }
 
-        public Query FilterQuery
+        Common.IQuery IFilterable.FilterQuery => FilterQuery;
+
+        public Query<T> FilterQuery
         {
             get { return filterQuery; }
             set

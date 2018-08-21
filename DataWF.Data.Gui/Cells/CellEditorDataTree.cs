@@ -1,6 +1,5 @@
-﻿using DataWF.Data;
+﻿using DataWF.Common;
 using DataWF.Gui;
-using DataWF.Common;
 using System;
 using Xwt;
 
@@ -68,9 +67,9 @@ namespace DataWF.Data.Gui
 
             list.FilterQuery.Parameters.Clear();
             if (filter.Length > 0)
-                list.FilterQuery.Parameters.Add(typeof(Node), LogicType.And, nameof(Node.FullPath), CompareType.Like, filter);
+                list.FilterQuery.Parameters.Add(LogicType.And, nameof(Node.FullPath), CompareType.Like, filter);
             else
-                list.FilterQuery.Parameters.Add(typeof(Node), LogicType.Undefined, nameof(Node.IsExpanded), CompareType.Equal, true);
+                list.FilterQuery.Parameters.Add(LogicType.Undefined, nameof(Node.IsExpanded), CompareType.Equal, true);
             list.UpdateFilter();
             if (list.Count == 1 && list[0].Tag.GetType() == DataType)
             {
@@ -119,7 +118,7 @@ namespace DataWF.Data.Gui
             {
                 DataFilter = (DBTable)EditItem;
             }
-            
+
             var tree = GetToolTarget();
             tree.DataKeys = key;
             tree.DataFilter = DataFilter;
@@ -154,7 +153,7 @@ namespace DataWF.Data.Gui
                 && DataTree.SelectedDBItem != null
                 && (TypeHelper.IsBaseType(DataTree.SelectedDBItem.GetType(), DataType) || DataType == null))
             {
-                Value = DataTree.SelectedDBItem; 
+                Value = DataTree.SelectedDBItem;
             }
         }
 

@@ -24,7 +24,7 @@ namespace DataWF.Common
             }
         }
 
-        public bool CheckParameter(QueryParameter param)
+        public bool CheckParameter(QueryParameter<T> param)
         {
             return !(!(param.Value is IComparable)
                 && (param.Comparer.Type == CompareTypes.Greater
@@ -77,7 +77,12 @@ namespace DataWF.Common
             return list == null ? default(T) : list.FirstOrDefault();
         }
 
-        public IEnumerable<T> Scan(QueryParameter param)
+        public IEnumerable Scan(IQueryParameter param)
+        {
+            return Scan((QueryParameter<T>)param);
+        }
+
+        public IEnumerable<T> Scan(QueryParameter<T> param)
         {
             if (!CheckParameter(param))
             {
@@ -251,11 +256,6 @@ namespace DataWF.Common
         T IListIndex<T>.SelectOne(object value)
         {
             return SelectOne(DBNullable<K>.CheckNull(value));
-        }
-
-        IEnumerable IListIndex.Scan(QueryParameter parameter)
-        {
-            return Scan(parameter);
         }
 
         public void Clear()

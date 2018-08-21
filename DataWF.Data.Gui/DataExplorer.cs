@@ -1,17 +1,14 @@
-﻿using DataWF.Gui;
-using DataWF.Common;
-using DataWF.Data;
+﻿using DataWF.Common;
+using DataWF.Gui;
+using Mono.Cecil;
 using System;
-using Xwt.Drawing;
-using System.Text;
-using System.Threading;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
-using Xwt;
 using System.Linq;
-using Mono.Cecil;
-using System.Threading.Tasks;
+using System.Reflection;
+using System.Text;
+using Xwt;
+using Xwt.Drawing;
 
 namespace DataWF.Data.Gui
 {
@@ -899,13 +896,13 @@ namespace DataWF.Data.Gui
                 foreach (string fileName in dialog.FileNames)
                 {
                     string name = Path.GetFileName(fileName);
-                    var query = new Query(new[]
+                    var query = new Query<DBProcedure>(new[]
                         {
-                        new QueryParameter(){
+                        new QueryParameter<DBProcedure>(){
                             Invoker = EmitInvoker.Initialize<DBProcedure>(nameof(DBProcedure.DataName)),
                             Value = name
                         },
-                        new QueryParameter(){
+                        new QueryParameter<DBProcedure>(){
                             Invoker = EmitInvoker.Initialize<DBProcedure>(nameof(DBProcedure.ProcedureType)),
                             Value = ProcedureTypes.File
                         },

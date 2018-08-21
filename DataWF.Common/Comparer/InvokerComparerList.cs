@@ -1,43 +1,29 @@
-﻿using System;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Text;
-using System.Collections;
 
 namespace DataWF.Common
 {
     /// <summary>
     /// Comparer list. for compound sorting and grouping
     /// </summary>
-    public class InvokerComparerList : IComparerList
+    public class InvokerComparerList : List<IComparer>, IComparerList
     {
-        protected List<IComparer> comparers;
-
-        public List<IComparer> Comparers
-        {
-            get { return comparers; }
-        }
-
         public InvokerComparerList() : this(new List<IComparer>())
         {
         }
 
-        public InvokerComparerList(List<IComparer> comparers)
+        public InvokerComparerList(IEnumerable<IComparer> comparers)
+            : base(comparers)
         {
-            this.comparers = comparers;
-        }
-
-        public void Add(IComparer comparer)
-        {
-            comparers.Add(comparer);
         }
 
         public virtual int Compare(object x, object y)
         {
             if ((x == null && y == null) || (x != null && x.Equals(y)))
                 return 0;
-            for (int i = 0; i < comparers.Count; i++)
+            for (int i = 0; i < Count; i++)
             {
-                int retval = comparers[i].Compare(x, y);
+                int retval = this[i].Compare(x, y);
                 if (retval != 0)
                     return retval;
             }
@@ -49,11 +35,11 @@ namespace DataWF.Common
             if (obj is InvokerComparerList)
             {
                 var list = (InvokerComparerList)obj;
-                if (list.comparers.Count == comparers.Count)
+                if (list.Count == Count)
                 {
-                    for (int i = 0; i < comparers.Count; i++)
+                    for (int i = 0; i < Count; i++)
                     {
-                        if (!list.comparers[i].Equals(comparers[i]))
+                        if (!list[i].Equals(this[i]))
                             return false;
                     }
                     return true;
@@ -69,34 +55,23 @@ namespace DataWF.Common
         }
     }
 
-    public class InvokerComparerList<T> : IComparerList<T>
+    public class InvokerComparerList<T> : List<IComparer<T>>, IComparerList<T>
     {
-        protected List<IComparer<T>> comparers;
 
-        public InvokerComparerList() : this(new List<IComparer<T>>())
+        public InvokerComparerList()
         {
         }
 
-        public InvokerComparerList(List<IComparer<T>> comparers)
+        public InvokerComparerList(IEnumerable<IComparer<T>> comparers)
+            : base(comparers)
         {
-            this.comparers = comparers;
-        }
-
-        public List<IComparer<T>> Comparers
-        {
-            get { return comparers; }
-        }
-
-        public void Add(IComparer<T> comparer)
-        {
-            comparers.Add(comparer);
         }
 
         public virtual int Compare(T x, T y)
         {
-            for (int i = 0; i < comparers.Count; i++)
+            for (int i = 0; i < Count; i++)
             {
-                int retval = comparers[i].Compare(x, y);
+                int retval = this[i].Compare(x, y);
                 if (retval != 0)
                     return retval;
             }
@@ -108,11 +83,11 @@ namespace DataWF.Common
             if (obj is InvokerComparerList<T>)
             {
                 var list = (InvokerComparerList<T>)obj;
-                if (list.comparers.Count == comparers.Count)
+                if (list.Count == Count)
                 {
-                    for (int i = 0; i < comparers.Count; i++)
+                    for (int i = 0; i < Count; i++)
                     {
-                        if (!list.comparers[i].Equals(comparers[i]))
+                        if (!list[i].Equals(this[i]))
                             return false;
                     }
                     return true;

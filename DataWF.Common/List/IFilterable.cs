@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections;
 
 namespace DataWF.Common
 {
     public interface IFilterable : IList
     {
-        Query FilterQuery { get; }
+        IQuery FilterQuery { get; }
         void UpdateFilter();
     }
 }

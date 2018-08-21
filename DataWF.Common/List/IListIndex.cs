@@ -9,14 +9,14 @@ namespace DataWF.Common
         void Clear();
         void Remove(object item);
         object SelectOne(object value);
-        IEnumerable Scan(QueryParameter parameter);
+        IEnumerable Scan(IQueryParameter parameter);
     }
 
     public interface IListIndex<T> : IListIndex
     {
         void Add(T item);
         void Remove(T item);
-        new IEnumerable<T> Scan(QueryParameter parameter);
+        IEnumerable<T> Scan(QueryParameter<T> parameter);
         new T SelectOne(object value);
         void Refresh(T item);
     }

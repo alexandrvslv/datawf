@@ -1,6 +1,6 @@
-﻿using System.Linq;
-using DataWF.Common;
+﻿using DataWF.Common;
 using NUnit.Framework;
+using System.Linq;
 
 namespace DataWF.Test.Common
 {
@@ -95,14 +95,14 @@ namespace DataWF.Test.Common
         [Test]
         public void TestQuery()
         {
-            var query = new Query(new [] {
-                new QueryParameter()
+            var query = new Query<TestClass>(new[] {
+                new QueryParameter<TestClass>()
                 {
                     Invoker = EmitInvoker.Initialize<TestClass>(nameof(TestClass.Name)),
                     Comparer = CompareType.Like,
                     Value = "Threading"
                 },
-                new QueryParameter()
+                new QueryParameter<TestClass>()
                 {
                     Invoker = EmitInvoker.Initialize<TestClass>(nameof(TestClass.Field)),
                     Comparer = CompareType.NotEqual,
@@ -112,14 +112,14 @@ namespace DataWF.Test.Common
             var result = list.Select(query);
             Assert.AreEqual(1, result.Count(), "Select by Query Name and Field Fail");
 
-            query = new Query(new []{
-                new QueryParameter()
+            query = new Query<TestClass>(new[]{
+                new QueryParameter<TestClass>()
                 {
                     Invoker = EmitInvoker.Initialize<TestClass>(nameof(TestClass.Name)),
                     Comparer = CompareType.Like,
                     Value = "Threading"
                 },
-                new QueryParameter()
+                new QueryParameter<TestClass>()
                 {
                     Logic = LogicType.AndNot,
                     Invoker = EmitInvoker.Initialize<TestClass>(nameof(TestClass.Field)),
@@ -130,14 +130,14 @@ namespace DataWF.Test.Common
             result = list.Select(query);
             Assert.AreEqual(1, result.Count(), "Select by Query Name and not Field Fail");
 
-            query = new Query(new [] {
-                new QueryParameter()
+            query = new Query<TestClass>(new[] {
+                new QueryParameter<TestClass>()
                 {
                     Invoker = EmitInvoker.Initialize<TestClass>(nameof(TestClass.Name)),
                     Comparer = CompareType.Like,
                     Value = "Threading"
                 },
-                new QueryParameter()
+                new QueryParameter<TestClass>()
                 {
                     Logic = LogicType.Or,
                     Invoker = EmitInvoker.Initialize<TestClass>(nameof(TestClass.Field)),

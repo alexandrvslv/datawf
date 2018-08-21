@@ -6,6 +6,17 @@ namespace DataWF.Common
 {
     public static class GroupHelper
     {
+        public static QueryParameter<G> CreateTreeFilter<G>() where G : IGroup
+        {
+            return new QueryParameter<G>()
+            {
+                Invoker = new TreeInvoker<G>(),
+                Comparer = CompareType.Equal,
+                Value = true
+            };
+        }
+
+
         public static bool IsExpand(IGroup item)
         {
             if (item.Group == null)

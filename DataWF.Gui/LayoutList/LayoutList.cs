@@ -3660,7 +3660,7 @@ namespace DataWF.Gui
             var filtered = ListSource as IFilterable;
             if (filtered != null)
             {
-                filtered.FilterQuery.Parameters.Clear();
+                filtered.FilterQuery.Clear();
             }
 
             if ((TreeMode && TypeHelper.IsInterface(listType, typeof(IGroup))) || filterView?.Filters.Count > 0)
@@ -3668,13 +3668,20 @@ namespace DataWF.Gui
                 if (filtered == null)
                 {
                     filtered = SetFilteredCollection();
-                    filtered.FilterQuery.Parameters.Clear();
+                    filtered.FilterQuery.Clear();
                 }
 
                 if (filterView?.Filters.Count > 0)
-                    filtered.FilterQuery.Parameters.AddRange(filterView.Filters.GetParameters());
+                {
+                    foreach (var filter in filterView.Filters)
+                    {
+                        filtered.FilterQuery.Add(filter.Logic, filter.Name, filter.Comparer, filter.Value);
+                    }
+                }
                 else if (TreeMode && TypeHelper.IsInterface(listType, typeof(IGroup)))
-                    filtered.FilterQuery.Parameters.Add(QueryParameter.CreateTreeFilter(listType));
+                {
+                    filtered.FilterQuery.AddTreeParameter();
+                }
             }
             else
             {

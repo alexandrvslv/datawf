@@ -18,7 +18,7 @@ namespace DataWF.Common
         //bool hash = true;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Dwf.Tool.InvokerComparer"/> class.
+        /// Initializes a new instance of the <see cref="DataWF.Common.InvokerComparer"/> class.
         /// </summary>
         /// <param name='comparer'>
         /// Comparer.
@@ -29,7 +29,7 @@ namespace DataWF.Common
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Dwf.Tool.InvokerComparer"/> class.
+        /// Initializes a new instance of the <see cref="DataWF.Common.InvokerComparer"/> class.
         /// </summary>
         /// <param name='type'>
         /// type.
@@ -47,7 +47,7 @@ namespace DataWF.Common
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Dwf.Tool.InvokerComparer"/> class.
+        /// Initializes a new instance of the <see cref="DataWF.Common.InvokerComparer"/> class.
         /// </summary>
         /// <param name='info'>
         /// property Info.
@@ -61,7 +61,7 @@ namespace DataWF.Common
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Dwf.Tool.InvokerComparer"/> class.
+        /// Initializes a new instance of the <see cref="DataWF.Common.InvokerComparer"/> class.
         /// </summary>
         /// <param name='info'>
         /// Property Info.
@@ -78,7 +78,7 @@ namespace DataWF.Common
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Dwf.Tool.InvokerComparer"/> class.
+        /// Initializes a new instance of the <see cref="DataWF.Common.InvokerComparer"/> class.
         /// </summary>
         /// <param name='accesor'>
         /// Accesor.

@@ -1,7 +1,7 @@
-﻿using System;
+﻿using DataWF.Common;
+using System;
 using System.ComponentModel;
 using System.Xml.Serialization;
-using DataWF.Common;
 
 namespace DataWF.Gui
 {
@@ -105,20 +105,6 @@ namespace DataWF.Gui
                     OnPropertyChanged(nameof(Value));
                 }
             }
-        }
-
-        public QueryParameter GetParameter()
-        {
-            if (string.IsNullOrEmpty(name) || List == null || (Value == null && Comparer.Type != CompareTypes.Is))
-                return null;
-            return new QueryParameter()
-            {
-                Property = Name,
-                Logic = Logic,
-                Invoker = Column?.Invoker ?? EmitInvoker.Initialize(List.ListType, name),
-                Comparer = Comparer,
-                Value = value
-            };
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

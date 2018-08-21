@@ -531,13 +531,13 @@ namespace DataWF.Module.CommonGui
         private void FilterEntryChanged(object sender, EventArgs e)
         {
             var entry = (TextEntry)sender;
-            IFilterable list = listSource as IFilterable;
-            list.FilterQuery.Parameters.Clear();
+            var list = listSource as SelectableListView<Node>;
+            list.FilterQuery.Clear();
 
             if (entry.Text?.Length != 0)
             {
                 TreeMode = false;
-                list.FilterQuery.Parameters.Add(typeof(Node), LogicType.And, nameof(Node.FullPath), CompareType.Like, entry.Text);
+                list.FilterQuery.Parameters.Add(LogicType.And, nameof(Node.FullPath), CompareType.Like, entry.Text);
             }
             else
             {

@@ -8,11 +8,11 @@ namespace DataWF.Common
 {
     public class ListTreeView<T> : SelectableListView<T> where T : IGroup
     {
-        QueryParameter groupParam;
+        QueryParameter<T> groupParam;
 
         public ListTreeView()
         {
-            groupParam = QueryParameter.CreateTreeFilter<T>();
+            groupParam = GroupHelper.CreateTreeFilter<T>();
             query.Parameters.Add(groupParam);
         }
 
@@ -27,7 +27,7 @@ namespace DataWF.Common
         protected NotifyCollectionChangedEventHandler _listChangedHandler;
         protected PropertyChangedEventHandler _listItemChangedHandler;
         protected List<InvokerComparer> _comparers;
-        protected Query query = new Query();
+        protected Query<T> query = new Query<T>();
 
         protected IList sourceList;
         protected ISelectable ssourceList;
@@ -77,7 +77,7 @@ namespace DataWF.Common
             Update((IEnumerable<T>)sourceList);
         }
 
-        public Query FilterQuery
+        public Query<T> FilterQuery
         {
             get { return query; }
         }
@@ -86,6 +86,8 @@ namespace DataWF.Common
         {
             get { return null; }
         }
+
+        IQuery IFilterable.FilterQuery => FilterQuery;
 
         public override object NewItem()
         {

@@ -18,11 +18,10 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Common;
-using System.ComponentModel;
-using System.Collections.Generic;
 using System;
-using System.Reflection;
+using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 
 namespace DataWF.Data
 {
@@ -43,9 +42,9 @@ namespace DataWF.Data
 
         public IEnumerable<DBProcedure> SelectByFile(string fileName)
         {
-            var query = new Query();
-            query.Parameters.Add(new QueryParameter() { Property = nameof(DBProcedure.ProcedureType), Value = ProcedureTypes.Source });
-            query.Parameters.Add(new QueryParameter() { Property = nameof(DBProcedure.DataName), Value = fileName });
+            var query = new Query<DBProcedure>();
+            query.Parameters.Add(new QueryParameter<DBProcedure>() { Property = nameof(DBProcedure.ProcedureType), Value = ProcedureTypes.Source });
+            query.Parameters.Add(new QueryParameter<DBProcedure>() { Property = nameof(DBProcedure.DataName), Value = fileName });
             return Select(query);
         }
 

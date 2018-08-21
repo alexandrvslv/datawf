@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using DataWF.Common;
+﻿using DataWF.Common;
 
 namespace DataWF.Gui
 {
@@ -22,16 +21,6 @@ namespace DataWF.Gui
         public LayoutFilter GetByName(string name)
         {
             return SelectOne(nameof(LayoutFilter.Name), name);
-        }
-
-        internal IEnumerable<QueryParameter> GetParameters()
-        {
-            foreach (var filter in this)
-            {
-                var param = filter.GetParameter();
-                if (param != null)
-                    yield return param;
-            }
         }
     }
 
