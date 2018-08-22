@@ -9,9 +9,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 using SF = Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace DataWF.Web.CodeGenerator
@@ -295,19 +293,20 @@ namespace DataWF.Web.CodeGenerator
             return $"ClientBase";
         }
 
-        private JsonProperty GetPrimaryKey(JsonSchema4 schema)
+        private JsonProperty GetPrimaryKey(JsonSchema4 schema, bool inherit = true)
         {
             if (schema.ExtensionData != null && schema.ExtensionData.TryGetValue("x-id", out var propertyName))
             {
                 return schema.Properties[propertyName.ToString()];
             }
-
-            foreach (var baseClass in schema.AllInheritedSchemas)
-                if (baseClass.ExtensionData != null && baseClass.ExtensionData.TryGetValue("x-id", out propertyName))
-                {
-                    return baseClass.Properties[propertyName.ToString()];
-                }
-
+            if (inherit)
+            {
+                foreach (var baseClass in schema.AllInheritedSchemas)
+                    if (baseClass.ExtensionData != null && baseClass.ExtensionData.TryGetValue("x-id", out propertyName))
+                    {
+                        return baseClass.Properties[propertyName.ToString()];
+                    }
+            }
             return null;
         }
 
@@ -548,22 +547,32 @@ namespace DataWF.Web.CodeGenerator
 
         private MemberDeclarationSyntax GenDefinitionClass(JsonSchema4 schema)
         {
-            var baseType = SF.ParseTypeName(nameof(IContainerNotifyPropertyChanged));
-
-            if (schema.InheritedSchema != null)
-            {
-                GetOrGenerateDefinion(schema.InheritedSchema.Id);
-                baseType = SF.ParseTypeName(GetDefinitionName(schema.InheritedSchema));
-            }
             return SF.ClassDeclaration(
                     attributeLists: SF.List(DefinitionAttributeList()),
                     modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.PartialKeyword)),
                     identifier: SF.Identifier(GetDefinitionName(schema)),
                     typeParameterList: null,
-                    baseList: SF.BaseList(SF.SingletonSeparatedList<BaseTypeSyntax>(
-                        SF.SimpleBaseType(baseType))),
+                    baseList: SF.BaseList(SF.SeparatedList(GenDefinitionClassBases(schema))),
                     constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
                     members: SF.List(GenDefinitionClassMemebers(schema)));
+        }
+
+        private IEnumerable<BaseTypeSyntax> GenDefinitionClassBases(JsonSchema4 schema)
+        {
+            var baseType = SF.ParseTypeName(nameof(IContainerNotifyPropertyChanged));
+            if (schema.InheritedSchema != null)
+            {
+                GetOrGenerateDefinion(schema.InheritedSchema.Id);
+                baseType = SF.ParseTypeName(GetDefinitionName(schema.InheritedSchema));
+            }
+            yield return SF.SimpleBaseType(baseType);
+
+            var idKey = GetPrimaryKey(schema, false);
+            if (idKey != null)
+            {
+                yield return SF.SimpleBaseType(SF.ParseTypeName(nameof(IPrimaryKey)));
+                yield return SF.SimpleBaseType(SF.ParseTypeName(nameof(IQueryFormatable)));
+            }
         }
 
         private IEnumerable<MemberDeclarationSyntax> GenDefinitionClassMemebers(JsonSchema4 schema)
@@ -590,6 +599,41 @@ namespace DataWF.Web.CodeGenerator
             foreach (var property in schema.Properties)
             {
                 yield return GenDefinitionClassProperty(property.Value);
+            }
+
+            var idKey = GetPrimaryKey(schema, false);
+            if (idKey != null)
+            {
+                yield return SF.PropertyDeclaration(
+                    attributeLists: SF.List<AttributeListSyntax>(),
+                    modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
+                    type: SF.ParseTypeName("object"),
+                    explicitInterfaceSpecifier: null,
+                    identifier: SF.Identifier(nameof(IPrimaryKey.PrimaryKey)),
+                    accessorList: SF.AccessorList(SF.List(new[]
+                    {
+                        SF.AccessorDeclaration(
+                            kind: SyntaxKind.GetAccessorDeclaration,
+                            body: SF.Block(new[]{ SF.ParseStatement($"return {idKey.Name};") })),
+                        SF.AccessorDeclaration(
+                            kind: SyntaxKind.SetAccessorDeclaration,
+                            body: SF.Block(new[]{ SF.ParseStatement($"{idKey.Name} = ({GetTypeString(idKey, true, "List")})value;")}))
+                    })),
+                    expressionBody: null,
+                    initializer: null,
+                    semicolonToken: SF.Token(SyntaxKind.None));
+
+                yield return SF.MethodDeclaration(
+                    attributeLists: SF.List<AttributeListSyntax>(),
+                    modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
+                    returnType: SF.ParseTypeName("string"),
+                    explicitInterfaceSpecifier: null,
+                    identifier: SF.Identifier("Format"),
+                    typeParameterList: null,
+                    parameterList: SF.ParameterList(),
+                    constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
+                    body: SF.Block(new[] { SF.ParseStatement($"return {idKey.Name}.ToString();") }),
+                    semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
             }
 
             if (schema.InheritedSchema == null)

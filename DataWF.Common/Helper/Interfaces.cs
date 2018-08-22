@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace DataWF.Common
 {
@@ -232,5 +231,10 @@ namespace DataWF.Common
     {
         INamed Get(string name);
         void Set(INamed value);
+    }
+
+    public interface IPrimaryKey
+    {
+        object PrimaryKey { get; set; }
     }
 }
