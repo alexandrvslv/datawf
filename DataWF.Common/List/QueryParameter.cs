@@ -2,6 +2,7 @@
 using System.Collections;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Xml.Serialization;
 
 namespace DataWF.Common
@@ -14,7 +15,7 @@ namespace DataWF.Common
         private string property;
         private IInvoker invoker;
 
-        [XmlIgnore]
+        [JsonIgnore, XmlIgnore]
         public object Tag { get; set; }
 
         public string Property
@@ -30,6 +31,7 @@ namespace DataWF.Common
             }
         }
 
+        [JsonIgnore, XmlIgnore]
         public IInvoker Invoker
         {
             get { return invoker ?? (invoker = EmitInvoker.Initialize<T>(Property)); }
@@ -38,6 +40,11 @@ namespace DataWF.Common
                 invoker = value;
                 Property = invoker?.Name;
             }
+        }
+
+        public bool IsEmpty
+        {
+            get { return Comparer.Type != CompareTypes.Is && (Value == null || (Value is string strFilter && strFilter.Length == 0)); }
         }
 
         public object Value
@@ -63,6 +70,40 @@ namespace DataWF.Common
                     comparer = value;
                     OnPropertyChanged();
                 }
+            }
+        }
+
+        public void Format(StringBuilder builder, bool logic = true)
+        {
+            if (logic)
+            {
+                builder.Append($" {Logic.Format()} ");
+            }
+            builder.Append($"{Property} {Comparer.Format()} {FormatValue()}");
+        }
+
+        private string FormatValue()
+        {
+            if (Invoker == null)
+            {
+                return Value.ToString();
+            }
+            if (Value == null)
+            {
+                return "null";
+            }
+            if (Value is IQueryFormatable formatable)
+            {
+                return formatable.Format();
+            }
+            var type = TypeHelper.CheckNullable(Invoker.DataType);
+            if (type == typeof(string))
+            {
+                return $"'{Value}'";
+            }
+            else
+            {
+                return Value.ToString();
             }
         }
 

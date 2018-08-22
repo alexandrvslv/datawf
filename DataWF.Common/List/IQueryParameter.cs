@@ -11,4 +11,9 @@ namespace DataWF.Common
         LogicType Logic { get; set; }
         object Value { get; set; }
     }
+
+    public interface IQueryFormatable
+    {
+        string Format();
+    }
 }
