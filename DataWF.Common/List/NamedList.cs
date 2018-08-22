@@ -1,6 +1,5 @@
-﻿using DataWF.Common;
-
-namespace DataWF.Gui
+﻿
+namespace DataWF.Common
 {
     public class NamedList<T> : SelectableList<T>, INamedList where T : INamed, new()
     {

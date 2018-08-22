@@ -1,12 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace DataWF.Common
 {
     public class TypeSerializationInfo
     {
-        static readonly Invoker<PropertySerializationInfo, string> propertyNameInvoker = new Invoker<PropertySerializationInfo, string>(nameof(PropertySerializationInfo.PropertyName),
-                                                                                  item => item.PropertyName);
+        static readonly Invoker<PropertySerializationInfo, bool> isAttributeInvoker = new Invoker<PropertySerializationInfo, bool>(nameof(PropertySerializationInfo.IsAttribute), (item) => item.IsAttribute);
+
         public TypeSerializationInfo(Type type)
         {
             Type = type;
@@ -37,11 +38,8 @@ namespace DataWF.Common
             }
             IsDictionary = TypeHelper.IsDictionary(type);
 
-            Properties = new SelectableList<PropertySerializationInfo>();
-            Properties.Indexes.Add(propertyNameInvoker);
-
-            Attributes = new SelectableList<PropertySerializationInfo>();
-            Attributes.Indexes.Add(propertyNameInvoker);
+            Properties = new NamedList<PropertySerializationInfo>();
+            Properties.Indexes.Add(isAttributeInvoker);
 
             foreach (var btype in TypeHelper.GetTypeHierarchi(type))
             {
@@ -51,22 +49,14 @@ namespace DataWF.Common
                 {
                     if (TypeHelper.IsNonSerialize(property))
                     {
-                        var exist = Properties.SelectOne(nameof(PropertySerializationInfo.PropertyName), property.Name);
+                        var exist = GetProperty(property.Name);
                         if (exist != null)
                             Properties.Remove(exist);
                         continue;
                     }
                     var info = new PropertySerializationInfo(property);
-                    if (info.IsAttribute && !info.IsText)
                     {
-                        var exist = GetAttribute(info.PropertyName);
-                        if (exist != null)
-                            Attributes.Remove(exist);
-                        Attributes.Add(info);
-                    }
-                    else
-                    {
-                        var exist = GetProperty(info.PropertyName);
+                        var exist = GetProperty(info.Name);
                         if (exist != null)
                             Properties.Remove(exist);
                         Properties.Add(info);
@@ -99,18 +89,15 @@ namespace DataWF.Common
 
         public bool IsDictionary { get; private set; }
 
-        public SelectableList<PropertySerializationInfo> Attributes { get; private set; }
+        public IEnumerable<PropertySerializationInfo> GetAttributes() => Properties.Select(isAttributeInvoker.Name, CompareType.Equal, true);
 
-        public SelectableList<PropertySerializationInfo> Properties { get; private set; }
+        public IEnumerable<PropertySerializationInfo> GetContents() => Properties.Select(isAttributeInvoker.Name, CompareType.Equal, false);
 
-        internal PropertySerializationInfo GetAttribute(string name)
+        public NamedList<PropertySerializationInfo> Properties { get; private set; }
+
+        public PropertySerializationInfo GetProperty(string name)
         {
-            return Attributes.SelectOne(nameof(PropertySerializationInfo.PropertyName), name);
-        }
-
-        internal PropertySerializationInfo GetProperty(string name)
-        {
-            return Properties.SelectOne(nameof(PropertySerializationInfo.PropertyName), name);
+            return Properties[name];
         }
     }
 }

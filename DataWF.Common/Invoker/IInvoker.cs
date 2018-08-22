@@ -3,13 +3,11 @@ using System;
 
 namespace DataWF.Common
 {
-    public interface IInvoker : IValueProvider
+    public interface IInvoker : IValueProvider, INamed
     {
         Type DataType { get; }
 
         Type TargetType { get; }
-
-        string Name { get; set; }
 
         bool CanWrite { get; }
 

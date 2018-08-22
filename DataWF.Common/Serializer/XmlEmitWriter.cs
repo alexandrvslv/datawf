@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Xml;
-using System.Reflection;
 using System.Collections;
 using System.IO;
+using System.Xml;
 
 namespace DataWF.Common
 {
@@ -93,29 +92,29 @@ namespace DataWF.Common
                     }
                 }
 
-                foreach (var attribute in info.Attributes)
+                foreach (var attribute in info.GetAttributes())
                 {
                     var value = attribute.Invoker.GetValue(element);
                     if (value == null || attribute.CheckDefault(value))
                         continue;
-                    WriteAttribute(attribute.PropertyName, value);
+                    WriteAttribute(attribute.Name, value);
                 }
 
-                foreach (var property in info.Properties)
+                foreach (var property in info.GetContents())
                 {
                     var value = property.Invoker.GetValue(element);
                     if (value == null)
                         continue;
 
-                    var mtype = property.PropertyType;
+                    var mtype = property.DataType;
 
                     if (property.IsText)
                     {
-                        Writer.WriteElementString(property.PropertyName, Helper.TextBinaryFormat(value));
+                        Writer.WriteElementString(property.Name, Helper.TextBinaryFormat(value));
                     }
                     else
                     {
-                        Write(value, property.PropertyName, value.GetType() != mtype && mtype != typeof(Type));
+                        Write(value, property.Name, value.GetType() != mtype && mtype != typeof(Type));
                     }
                 }
 

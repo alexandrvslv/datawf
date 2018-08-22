@@ -5,9 +5,10 @@ namespace DataWF.Common
 {
     public struct DBNullable<T> : IComparable, IComparable<DBNullable<T>>, IEquatable<DBNullable<T>>//where T : struct,
     {
+        public static readonly DBNullable<T> NullKey = new DBNullable<T>();
+
         private bool notNull;
         private T value;
-        public static readonly DBNullable<T> NullKey = new DBNullable<T>();
 
         public static DBNullable<T> CheckNull(object value)
         {

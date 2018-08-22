@@ -1,28 +1,30 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Reflection;
 
 namespace DataWF.Common
 {
-    public class PropertySerializationInfo
+    public class PropertySerializationInfo : INamed
     {
+        public PropertySerializationInfo()
+        { }
+
         public PropertySerializationInfo(PropertyInfo property)
         {
             Property = property;
-            IsAttribute = TypeHelper.IsXmlAttribute(property);
             IsText = TypeHelper.IsXmlText(property);
+            IsAttribute = TypeHelper.IsXmlAttribute(property) && !IsText;
             Default = TypeHelper.GetDefault(property);
             Invoker = EmitInvoker.Initialize(property);
-            PropertyName = property.Name;
+            Name = property.Name;
         }
 
         public IInvoker Invoker { get; private set; }
 
         public PropertyInfo Property { get; private set; }
 
-        public string PropertyName { get; private set; }
+        public string Name { get; set; }
 
-        public Type PropertyType { get { return Property.PropertyType; } }
+        public Type DataType { get { return Property.PropertyType; } }
 
         public bool IsAttribute { get; private set; }
 

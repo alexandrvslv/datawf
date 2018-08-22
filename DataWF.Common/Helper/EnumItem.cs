@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
-using System.Reflection;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Serialization;
 
 namespace DataWF.Common
@@ -16,14 +16,15 @@ namespace DataWF.Common
                 var type = Value.GetType();
                 var name = Value.ToString();
                 var memeberName = type.GetMember(name)?.FirstOrDefault()?.GetCustomAttribute<EnumMemberAttribute>()?.Value;
-
                 Name = Locale.Get(Locale.GetTypeCategory(type), memeberName ?? name);
             }
             return Name;
         }
 
         public int Index { get; set; }
+
         public string Name { get; set; }
+
         public object Value { get; set; }
 
         public bool Check

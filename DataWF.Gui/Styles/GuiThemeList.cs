@@ -1,4 +1,5 @@
-﻿using Xwt.Drawing;
+﻿using DataWF.Common;
+using Xwt.Drawing;
 
 namespace DataWF.Gui
 {
