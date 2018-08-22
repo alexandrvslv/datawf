@@ -32,15 +32,19 @@ namespace DataWF.Common
 
         public QueryParameter<T> Add(LogicType logic, string property, CompareType comparer, object value)
         {
-            var param = new QueryParameter<T>
+            var parameter = new QueryParameter<T>
             {
                 Logic = logic,
                 Property = property,
                 Comparer = comparer,
                 Value = value
             };
-            Add(param);
-            return param;
+            if (parameter.Invoker.DataType == typeof(string))
+            {
+                parameter.Comparer = CompareType.Like;
+            }
+            Add(parameter);
+            return parameter;
         }
     }
 }

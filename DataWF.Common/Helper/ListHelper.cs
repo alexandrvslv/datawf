@@ -332,11 +332,15 @@ namespace DataWF.Common
             }
             else
             {
-                for (int i = 0; i < query.Parameters.Count; i++)
+                bool? flag = null;
+                foreach (var parameter in query.Parameters)
                 {
-                    var parameter = query.Parameters[i];
+                    if (parameter.IsEmpty)
+                    {
+                        continue;
+                    }
                     var temp = Select<T>(items, parameter, indexes);
-                    if (i == 0)
+                    if (flag == null)
                         buffer = temp;
                     else if (parameter.Logic.Type == LogicTypes.Undefined)
                     {
@@ -417,6 +421,11 @@ namespace DataWF.Common
             bool? flag = null;
             foreach (var parameter in checkers.Parameters)
             {
+                if (parameter.IsEmpty)
+                {
+                    continue;
+                }
+
                 bool rez = CheckItem(parameter.Invoker.GetValue(item), parameter.Value, parameter.Comparer, parameter.Comparision);
                 if (flag == null)
                     flag = rez;
