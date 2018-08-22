@@ -1,10 +1,9 @@
 ﻿using DataWF.Common;
+using Newtonsoft.Json;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 
 namespace NewNameSpace
 {
@@ -45,7 +44,7 @@ namespace NewNameSpace
         Task GetAsync(object id);
         Task PostAsync(object value);
         Task PutAsync(object value);
-        object DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, Dictionary<IInvoker, object> dictionary = null, object id = null);
+        object DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, Dictionary<PropertySerializationInfo, object> dictionary = null, object id = null);
     }
 
     public interface ICRUDClient<T> : ICRUDClient
@@ -59,7 +58,7 @@ namespace NewNameSpace
         Task<T> PostAsync(T value, CancellationToken cancellationToken);
         Task<T> PutAsync(T value, CancellationToken cancellationToken);
         Task<bool> DeleteAsync(object id, CancellationToken cancellationToken);
-        new T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, Dictionary<IInvoker, object> dictionary = null, object id = null);
+        new T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, Dictionary<PropertySerializationInfo, object> dictionary = null, object id = null);
     }
 
     public enum ClientStatus

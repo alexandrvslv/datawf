@@ -1,7 +1,6 @@
 ﻿using DataWF.Common;
 using Newtonsoft.Json;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,8 +15,10 @@ namespace NewNameSpace
             Items.Indexes.Add(IdInvoker);
             TypeInvoker = typeInvoker;
             TypeId = typeId;
+            SerializationInfo = new TypeSerializationInfo(typeof(T));
         }
 
+        public TypeSerializationInfo SerializationInfo;
         public Invoker<T, K?> IdInvoker { get; }
         public Invoker<T, int?> TypeInvoker { get; }
         public int TypeId { get; }
@@ -25,44 +26,43 @@ namespace NewNameSpace
 
         public SelectableList<T> Items { get; set; } = new SelectableList<T>();
 
-        public T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, Dictionary<IInvoker, object> dictionary = null, object id = null)
+        public T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, Dictionary<PropertySerializationInfo, object> dictionary = null, object id = null)
         {
-            dictionary = dictionary ?? new Dictionary<IInvoker, object>();
+            dictionary = dictionary ?? new Dictionary<PropertySerializationInfo, object>();
             var item = (T)null;
-            var invoker = (IInvoker)null;
-            var typeId = (object)null;
+            var property = (PropertySerializationInfo)null;
             while (jreader.Read() && jreader.TokenType != JsonToken.EndObject)
             {
                 if (jreader.TokenType == JsonToken.PropertyName)
                 {
-                    invoker = EmitInvoker.Initialize<T>((string)jreader.Value);
+                    property = SerializationInfo.GetProperty((string)jreader.Value);
                 }
-                else if (invoker != null)
+                else if (property != null)
                 {
                     if (jreader.TokenType == JsonToken.StartObject)
                     {
-                        dictionary[invoker] = DeserializeObject(serializer, jreader, invoker.DataType);
+                        dictionary[property] = DeserializeObject(serializer, jreader, property.DataType);
                     }
                     else if (jreader.TokenType == JsonToken.StartArray)
                     {
-                        dictionary[invoker] = DeserializeArray(serializer, jreader, invoker.DataType);
+                        dictionary[property] = DeserializeArray(serializer, jreader, property.DataType);
                     }
                     else
                     {
-                        dictionary[invoker] = serializer.Deserialize(jreader, invoker.DataType);
-                        if (invoker.Name == IdInvoker?.Name)
+                        var value = dictionary[property] = serializer.Deserialize(jreader, property.DataType);
+                        if (property.Name == IdInvoker?.Name)
                         {
-                            id = jreader.Value;
+                            id = value;
                         }
-                        else if (invoker.Name == TypeInvoker?.Name)
+                        else if (property.Name == TypeInvoker?.Name)
                         {
-                            typeId = jreader.Value;
-                            if (typeId != null)
+                            if (value != null)
                             {
-                                var type = (int)Helper.Parse(typeId, typeof(int));
-                                if (type != TypeId)
+                                var typeId = (int)value;
+
+                                if (typeId != TypeId)
                                 {
-                                    var client = Provider.GetClient(typeof(T), type);
+                                    var client = Provider.GetClient(typeof(T), typeId);
                                     item = (T)client.DeserializeItem(serializer, jreader, dictionary, id);
                                     if (Select(IdInvoker.GetValue(item).Value) == null)
                                     {
@@ -78,13 +78,13 @@ namespace NewNameSpace
             return DeserializeItem(dictionary, id);
         }
 
-        public T DeserializeItem(Dictionary<IInvoker, object> dictionary, object id)
+        public virtual T DeserializeItem(Dictionary<PropertySerializationInfo, object> dictionary, object id)
         {
             var add = false;
-            var item = (T)null;
+            var item = default(T);
             if (id != null)
             {
-                item = Select((K)Helper.Parse(id, typeof(K)));
+                item = Select((K)id);
             }
 
             if (item == null)
@@ -94,7 +94,7 @@ namespace NewNameSpace
             }
             foreach (var entry in dictionary)
             {
-                entry.Key.SetValue(item, entry.Value);
+                entry.Key.Invoker.SetValue(item, entry.Value);
             }
             if (add)
             {
@@ -103,7 +103,7 @@ namespace NewNameSpace
             return item;
         }
 
-        object ICRUDClient.DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, Dictionary<IInvoker, object> dictionary, object id)
+        object ICRUDClient.DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, Dictionary<PropertySerializationInfo, object> dictionary, object id)
         {
             return DeserializeItem(serializer, jreader, dictionary, id);
         }
@@ -160,6 +160,6 @@ namespace NewNameSpace
 
         public Task DeleteAsync(object id) { return DeleteAsync((K)id, CancellationToken.None); }
 
-        
+
     }
 }
