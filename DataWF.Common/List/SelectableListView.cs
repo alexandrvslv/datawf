@@ -16,7 +16,7 @@ namespace DataWF.Common
             query.Parameters.Add(groupParam);
         }
 
-        public ListTreeView(IList baseCollection) : this()
+        public ListTreeView(IList<T> baseCollection) : this()
         {
             SetCollection(baseCollection);
         }
@@ -29,8 +29,8 @@ namespace DataWF.Common
         protected List<InvokerComparer> _comparers;
         protected Query<T> query = new Query<T>();
 
-        protected IList sourceList;
-        protected ISelectable ssourceList;
+        protected IList<T> sourceList;
+        protected ISelectable<T> ssourceList;
 
         public SelectableListView()
         {
@@ -38,10 +38,10 @@ namespace DataWF.Common
         }
 
         public SelectableListView(IList baseCollection)
-            : this(baseCollection, true)
+            : this((IList<T>)baseCollection, true)
         { }
 
-        public SelectableListView(IList baseCollection, bool handle)
+        public SelectableListView(IList<T> baseCollection, bool handle)
         {
             if (handle)
             {
@@ -51,7 +51,7 @@ namespace DataWF.Common
             SetCollection(baseCollection);
         }
 
-        public void SetCollection(IList baseCollection)
+        public void SetCollection(IList<T> baseCollection)
         {
             if (sourceList == baseCollection)
                 return;
@@ -62,7 +62,7 @@ namespace DataWF.Common
             }
 
             sourceList = baseCollection;
-            ssourceList = baseCollection as ISelectable;
+            ssourceList = baseCollection as ISelectable<T>;
 
             if (ssourceList != null && _listChangedHandler != null)
             {
@@ -115,7 +115,7 @@ namespace DataWF.Common
             AddRange(items);
         }
 
-        protected void Update(IEnumerable list)
+        protected void Update(IEnumerable<T> list)
         {
             ClearInternal();
 
@@ -136,7 +136,7 @@ namespace DataWF.Common
             }
             else
             {
-                Update(query.Parameters.Count > 0 ? (ssourceList != null ? ssourceList.Select(query) : ListHelper.Select<T>((IList<T>)sourceList, query, null)) : sourceList);
+                Update(ssourceList != null ? ssourceList.Select(query) : ListHelper.Select<T>(sourceList, query, null));
             }
         }
 
