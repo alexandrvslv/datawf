@@ -213,7 +213,9 @@ namespace DataWF.Common
         {
             var types = new Type[parameters.Length];
             for (int i = 0; i < parameters.Length; i++)
-                types[i] = parameters[i].GetType();
+            {
+                types[i] = parameters[i]?.GetType() ?? typeof(object);
+            }
 
             return Invoke((MethodInfo)TypeHelper.GetMemberInfo(type, name, false, types), item, parameters);
         }

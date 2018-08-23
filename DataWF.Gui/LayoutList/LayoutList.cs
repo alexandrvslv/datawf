@@ -2388,7 +2388,7 @@ namespace DataWF.Gui
 
         public virtual LayoutField CreateField(LayoutFieldInfo info, LayoutField group, string name)
         {
-            var member = TypeHelper.GetMemberInfo(FieldType, name);
+            var member = TypeHelper.GetMemberInfoList(FieldType, name).LastOrDefault();
             var categoryName = TypeHelper.GetCategory(member);
             if (group != null)
                 categoryName = group.CategoryName;
@@ -2498,7 +2498,7 @@ namespace DataWF.Gui
 
         public virtual void CheckMemeberInfo(ILayoutCell cell, Type type)
         {
-            var member = TypeHelper.GetMemberInfo(type, cell.Name);
+            var member = TypeHelper.GetMemberInfoList(type, cell.Name).LastOrDefault();
             if (member == null)
                 return;
             if (cell.Invoker == null)

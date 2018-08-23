@@ -1,14 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Reflection;
-using System.Xml;
-using System.ComponentModel;
+﻿using Portable.Xaml.Markup;
+using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
-using System.Xml.Serialization;
 using System.Linq;
-using Portable.Xaml.Markup;
+using System.Reflection;
+using System.Text;
+using System.Xml;
+using System.Xml.Serialization;
 
 namespace DataWF.Common
 {
@@ -65,7 +65,9 @@ namespace DataWF.Common
                 var memberName = property.Substring(s, (i > 0 ? i : property.Length) - s);
                 last = GetMemberInfo(last == null ? type : GetMemberType(last), memberName, false);
                 if (last == null)
-                    throw new ArgumentException();
+                {
+                    break;
+                }
                 list.Add(last);
                 s = i + 1;
             }
@@ -341,78 +343,72 @@ namespace DataWF.Common
             MemberInfo mi = null;
             if (casheNames.TryGetValue(cachename, out mi))
                 return mi;
-            int i = name.IndexOf('.');
-            while (i > 0)
+
+            if (type.IsInterface && name == nameof(ToString))
             {
-                mi = GetMemberInfo(type, name.Substring(0, i), generic, types);
-                if (mi == null)
-                    break;
-
-                type = GetMemberType(mi);
-                mi = null;
-                name = name.Substring(i + 1);
-                i = name.IndexOf('.');
-            }
-
-            if (type.IsInterface && name == "ToString")
                 mi = typeof(object).GetMethod(name, types);
+            }
+            if (mi == null)
+            {
+                mi = GetPropertyInfo(type, name, generic, types);
+            }
             if (mi == null)
             {
                 mi = type.GetField(name, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
             }
             if (mi == null)
             {
-                var props = type.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-                foreach (var p in props)
-                {
-                    if (p.Name.Equals(name, StringComparison.Ordinal) && p.IsGenericMethod == generic)
-                    {
-                        mi = p;
-                        var ps = p.GetParameters();
-
-                        if (ps.Length >= types.Length)
-                        {
-                            var flag = true;
-                            for (int j = 0; j < types.Length; j++)
-                            {
-                                if (ps[j].ParameterType != types[j])
-                                {
-                                    flag = false;
-                                    break;
-                                }
-                            }
-                            if (flag) break;
-                        }
-                    }
-                }
-            }
-            if (mi == null)
-            {
-                var props = type.GetProperties(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-                foreach (var p in props)
-                {
-                    if (p.Name.Equals(name, StringComparison.Ordinal))
-                    {
-                        mi = p;
-                        var ps = p.GetIndexParameters();
-                        if (ps.Length >= types.Length)
-                        {
-                            var flag = ps.Length == types.Length;
-                            for (int j = 0; j < types.Length; j++)
-                            {
-                                if (ps[j].ParameterType != types[j])
-                                {
-                                    flag = false;
-                                    break;
-                                }
-                            }
-                            if (flag) break;
-                        }
-                    }
-                }
+                mi = GetMethodInfo(type, name, generic, types);
             }
             casheNames[cachename] = mi;
             return mi;
+        }
+
+        private static PropertyInfo GetPropertyInfo(Type type, string name, bool generic, Type[] types)
+        {
+            foreach (var property in type.GetProperties(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                var method = property.CanWrite ? property.GetGetMethod() : property.GetSetMethod();
+                if (property.Name.Equals(name, StringComparison.Ordinal) && method.IsGenericMethod == generic)
+                {
+                    if (CompareParameters(property.GetIndexParameters(), types))
+                        return property;
+                }
+            }
+
+            return null;
+        }
+
+        private static MethodInfo GetMethodInfo(Type type, string name, bool generic, Type[] types)
+        {
+            foreach (var method in type.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                if (method.Name.Equals(name, StringComparison.Ordinal) && method.IsGenericMethod == generic)
+                {
+                    if (CompareParameters(method.GetParameters(), types))
+                        return method;
+                }
+            }
+
+            return null;
+        }
+
+        private static bool CompareParameters(ParameterInfo[] parameters, Type[] types)
+        {
+            if (parameters.Length >= types.Length)
+            {
+                var flag = true;
+                for (int j = 0; j < types.Length; j++)
+                {
+                    if (parameters[j].ParameterType != types[j])
+                    {
+                        flag = false;
+                        break;
+                    }
+                }
+                return flag;
+            }
+            return false;
         }
 
         public static void SetValue(MemberInfo info, object item, object val)

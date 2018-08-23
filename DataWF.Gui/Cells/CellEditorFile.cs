@@ -1,6 +1,6 @@
-﻿using System;
+﻿using DataWF.Common;
+using System;
 using System.IO;
-using DataWF.Common;
 using Xwt;
 
 namespace DataWF.Gui
@@ -58,7 +58,7 @@ namespace DataWF.Gui
 
         protected virtual IInvoker GetFileNameInvoker(object dataSource)
         {
-            return EmitInvoker.Initialize(TypeHelper.GetMemberInfo(dataSource.GetType(), propertyFileName, false), true);
+            return EmitInvoker.Initialize(dataSource.GetType(), propertyFileName);
         }
 
         private void OnDropDownClick(object sender, EventArgs e)
