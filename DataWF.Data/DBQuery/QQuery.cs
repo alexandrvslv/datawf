@@ -1249,7 +1249,7 @@ namespace DataWF.Data
 
         public bool Contains(string column)
         {
-            return columns.Select("Value1.Text", CompareType.Equal, column).Any();
+            return parameters.Select("Column.Name", CompareType.Equal, column).Any();
         }
 
         public QParam GetByColumn(DBColumn column)

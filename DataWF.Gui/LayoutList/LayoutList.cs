@@ -3637,9 +3637,11 @@ namespace DataWF.Gui
 
         protected IFilterable SetFilteredCollection()
         {
-            var type = typeof(SelectableListView<>).MakeGenericType(ListType);
             listBackup = listSource;
-            listSource = (IList)EmitInvoker.CreateObject(type, new Type[] { typeof(IList) }, new object[] { listSource }, true);
+            listSource = (IList)EmitInvoker.CreateObject(
+                typeof(SelectableListView<>).MakeGenericType(ListType),
+                new Type[] { typeof(IList) },
+                new object[] { listSource }, true);
             if (listSource is INotifyListPropertyChanged notify)
             {
                 notify.CollectionChanged += OnListChanged;

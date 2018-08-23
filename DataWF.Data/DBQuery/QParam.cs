@@ -233,7 +233,7 @@ namespace DataWF.Data
             }
         }
 
-        public string Value1Name
+        public string ValueLeftText
         {
             get { return QColumn?.FullName; }
         }
