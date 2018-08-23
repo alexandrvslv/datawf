@@ -1025,7 +1025,7 @@ namespace DataWF.Common
             type = TypeHelper.CheckNullable(type);
             if (value == null || value == DBNull.Value)
                 buf = null;
-            else if (type == value.GetType())
+            else if (TypeHelper.IsBaseType(value.GetType(), type))
                 buf = value;
             else if (value is string text && type != typeof(string))
                 buf = TextParse(text, type);

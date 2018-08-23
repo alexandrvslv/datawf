@@ -51,7 +51,7 @@ namespace DataWF.Web.Common
                 schema.Properties.Clear();
                 foreach (var column in table.Columns.Where(p => p.Property.DeclaringType == type))
                 {
-                    var columnSchema = context.SchemaRegistry.GetOrRegister(column.Property.PropertyType);
+                    var columnSchema = context.SchemaRegistry.GetOrRegister(TypeHelper.CheckNullable(column.Property.PropertyType));
                     ApplyColumn(schema, columnSchema, column);
                     if (column.ReferenceProperty != null)
                     {

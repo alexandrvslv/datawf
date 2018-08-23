@@ -368,8 +368,8 @@ namespace DataWF.Common
         {
             foreach (var property in type.GetProperties(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
             {
-                var method = property.CanWrite ? property.GetGetMethod() : property.GetSetMethod();
-                if (property.Name.Equals(name, StringComparison.Ordinal) && method.IsGenericMethod == generic)
+                //var method = property.CanWrite ? property.GetGetMethod() : property.GetSetMethod();
+                if (property.Name.Equals(name, StringComparison.Ordinal))//&& method.IsGenericMethod == generic
                 {
                     if (CompareParameters(property.GetIndexParameters(), types))
                         return property;
