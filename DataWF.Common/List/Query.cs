@@ -104,6 +104,11 @@ namespace DataWF.Common
         {
             Sort((IList<T>)list);
         }
+
+        public void ClearValues()
+        {
+            Parameters.ClearValues();
+        }
     }
 }
 

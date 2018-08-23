@@ -26,7 +26,7 @@ namespace DataWF.Common
 
         public bool CheckParameter(QueryParameter<T> param)
         {
-            return !(!(param.Value is IComparable)
+            return !(!(param.TypedValue is IComparable)
                 && (param.Comparer.Type == CompareTypes.Greater
                     || param.Comparer.Type == CompareTypes.GreaterOrEqual
                     || param.Comparer.Type == CompareTypes.Less
@@ -93,7 +93,7 @@ namespace DataWF.Common
             {
                 case CompareTypes.Equal:
                     {
-                        var key = DBNullable<K>.CheckNull(param.Value);
+                        var key = DBNullable<K>.CheckNull(param.TypedValue);
                         if (param.Comparer.Not)
                         {
                             foreach (var entry in index)
@@ -117,7 +117,7 @@ namespace DataWF.Common
                     break;
                 case CompareTypes.Greater:
                     {
-                        var key = DBNullable<K>.CheckNull(param.Value);
+                        var key = DBNullable<K>.CheckNull(param.TypedValue);
                         foreach (var entry in index)
 
                         {
@@ -131,7 +131,7 @@ namespace DataWF.Common
                     break;
                 case CompareTypes.GreaterOrEqual:
                     {
-                        var key = DBNullable<K>.CheckNull(param.Value);
+                        var key = DBNullable<K>.CheckNull(param.TypedValue);
                         foreach (var entry in index)
                         {
                             if (((IComparable)entry.Key).CompareTo(key) >= 0)
@@ -144,7 +144,7 @@ namespace DataWF.Common
                     break;
                 case CompareTypes.Less:
                     {
-                        var key = DBNullable<K>.CheckNull(param.Value);
+                        var key = DBNullable<K>.CheckNull(param.TypedValue);
                         foreach (var entry in index)
                         {
                             if (((IComparable)entry.Key).CompareTo(key) < 0)
@@ -157,10 +157,10 @@ namespace DataWF.Common
                     break;
                 case CompareTypes.LessOrEqual:
                     {
-                        var key = DBNullable<K>.CheckNull(param.Value);
+                        var key = DBNullable<K>.CheckNull(param.TypedValue);
                         foreach (var entry in index)
                         {
-                            if (((IComparable)entry.Key).CompareTo(param.Value) <= 0)
+                            if (((IComparable)entry.Key).CompareTo(param.TypedValue) <= 0)
                             {
                                 foreach (var item in entry.Value)
                                     yield return item;
@@ -170,7 +170,7 @@ namespace DataWF.Common
                     break;
                 case CompareTypes.Like:
                     {
-                        var key = DBNullable<K>.CheckNull(param.Value);
+                        var key = DBNullable<K>.CheckNull(param.TypedValue);
                         var stringkey = key.ToString().Trim(new char[] { '%' });
                         foreach (var entry in index)
                         {

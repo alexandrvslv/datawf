@@ -13,6 +13,8 @@ namespace DataWF.Common
 
         void Clear();
 
+        void ClearValues();
+
         void Sort(IList list);
     }
 }

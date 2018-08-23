@@ -10,6 +10,7 @@ namespace DataWF.Common
         IComparer Comparision { get; set; }
         LogicType Logic { get; set; }
         object Value { get; set; }
+        object TypedValue { get; set; }
         bool IsEmpty { get; }
     }
 

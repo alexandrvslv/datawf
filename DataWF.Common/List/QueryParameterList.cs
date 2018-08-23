@@ -1,10 +1,13 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.ComponentModel;
 
 namespace DataWF.Common
 {
     public class QueryParameterList<T> : SelectableList<QueryParameter<T>>
     {
         static readonly Invoker<QueryParameter<T>, string> propertyInvoker = new Invoker<QueryParameter<T>, string>(nameof(QueryParameter<T>.Property), (item) => item.Property);
+        private bool clearing;
 
         public QueryParameterList()
         {
@@ -45,6 +48,26 @@ namespace DataWF.Common
             }
             Add(parameter);
             return parameter;
+        }
+
+        public override void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (clearing)
+            {
+                return;
+            }
+            base.OnItemPropertyChanged(sender, e);
+        }
+
+        public void ClearValues()
+        {
+            clearing = true;
+            foreach (var item in this)
+            {
+                item.Value = null;
+            }
+            clearing = false;
+            OnListChanged(NotifyCollectionChangedAction.Reset);
         }
     }
 }

@@ -147,9 +147,9 @@ namespace DataWF.Common
         {
             return Select(new QueryParameter<T>
             {
+                Property = property,
                 Comparer = comparer,
-                Value = value,
-                Property = property
+                Value = value
             });
         }
 

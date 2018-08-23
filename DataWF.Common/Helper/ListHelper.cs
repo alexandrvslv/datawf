@@ -293,8 +293,9 @@ namespace DataWF.Common
 
         public static IEnumerable Search(IList items, IQueryParameter param)
         {
-            return Search(items, param.Invoker, param.Value, param.Comparer, param.Comparision);
+            return Search(items, param.Invoker, param.TypedValue, param.Comparer, param.Comparision);
         }
+
         public static IEnumerable Search(IList items, IInvoker invoker, object value, CompareType compare, IComparer comparer)
         {
             for (int j = 0; j < items.Count; j++)
@@ -312,7 +313,7 @@ namespace DataWF.Common
             for (int j = 0; j < items.Count; j++)
             {
                 var item = items[j];
-                if (CheckItem(param.Invoker.GetValue(item), param.Value, param.Comparer, param.Comparision))
+                if (CheckItem(param.Invoker.GetValue(item), param.TypedValue, param.Comparer, param.Comparision))
                 {
                     yield return item;
                 }
@@ -321,12 +322,8 @@ namespace DataWF.Common
 
         public static IEnumerable<T> Select<T>(IList<T> items, Query<T> query, ListIndexes<T> indexes = null)
         {
-            IEnumerable<T> buffer = null;
-            if (query.Parameters.Count == 0)
-            {
-                buffer = items;
-            }
-            else if (query.Parameters.Count == 1)
+            IEnumerable<T> buffer = items;
+            if (query.Parameters.Count == 1)
             {
                 buffer = Select<T>(items, query.Parameters[0], indexes);
             }
@@ -341,7 +338,10 @@ namespace DataWF.Common
                     }
                     var temp = Select<T>(items, parameter, indexes);
                     if (flag == null)
+                    {
                         buffer = temp;
+                        flag = true;
+                    }
                     else if (parameter.Logic.Type == LogicTypes.Undefined)
                     {
                         buffer = buffer.Concat(temp);
@@ -426,7 +426,7 @@ namespace DataWF.Common
                     continue;
                 }
 
-                bool rez = CheckItem(parameter.Invoker.GetValue(item), parameter.Value, parameter.Comparer, parameter.Comparision);
+                bool rez = CheckItem(parameter.Invoker.GetValue(item), parameter.TypedValue, parameter.Comparer, parameter.Comparision);
                 if (flag == null)
                     flag = rez;
                 else if (parameter.Logic.Type == LogicTypes.Or)

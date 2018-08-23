@@ -14,6 +14,7 @@ namespace DataWF.Common
         private LogicType logic = LogicType.And;
         private string property;
         private IInvoker invoker;
+        private object typedValue;
 
         [JsonIgnore, XmlIgnore]
         public object Tag { get; set; }
@@ -55,9 +56,17 @@ namespace DataWF.Common
                 if (parameter != value)
                 {
                     parameter = value;
+                    TypedValue = Helper.Parse(parameter, Invoker.DataType);
                     OnPropertyChanged();
                 }
             }
+        }
+
+        [JsonIgnore, XmlIgnore]
+        public object TypedValue
+        {
+            get { return typedValue; }
+            set { typedValue = value; }
         }
 
         public CompareType Comparer
