@@ -545,7 +545,7 @@ namespace DataWF.Data
             }
             if (Table.ItemTypeKey != null)
             {
-                ItemType = table.GetTypeIndex(GetType());
+                SetValue<int?>(table.GetTypeIndex(GetType()), table.ItemTypeKey, false);
             }
         }
 
