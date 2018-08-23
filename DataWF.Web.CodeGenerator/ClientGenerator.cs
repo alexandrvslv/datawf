@@ -605,7 +605,8 @@ namespace DataWF.Web.CodeGenerator
             if (idKey != null)
             {
                 yield return SF.PropertyDeclaration(
-                    attributeLists: SF.List<AttributeListSyntax>(),
+                    attributeLists: SF.List(new[] {
+                        SF.AttributeList(SF.SingletonSeparatedList(SF.Attribute(SF.IdentifierName("JsonIgnore")))) }),
                     modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
                     type: SF.ParseTypeName("object"),
                     explicitInterfaceSpecifier: null,
