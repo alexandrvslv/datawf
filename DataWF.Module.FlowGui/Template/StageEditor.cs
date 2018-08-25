@@ -26,7 +26,7 @@ namespace DataWF.Module.FlowGui
                 new GroupBoxItem
                 {
                     Name = "Attributes",
-                    Col = 0,
+                    Column = 0,
                     Row = 0,
                     Width = 400,
                     FillHeight = true,
@@ -37,7 +37,7 @@ namespace DataWF.Module.FlowGui
                     new GroupBoxItem
                     {
                         Name = "Relations",
-                        Col = 0,
+                        Column = 0,
                         Row = 0,
                         RadioGroup = 1,
                         FillWidth = true,
@@ -50,7 +50,7 @@ namespace DataWF.Module.FlowGui
                     new GroupBoxItem
                     {
                         Name = "Procedures",
-                        Col = 0,
+                        Column = 0,
                         Row = 1,
                         RadioGroup = 1,
                         Expand = false,
@@ -64,7 +64,7 @@ namespace DataWF.Module.FlowGui
                 )
                 {
                     Name = "Group",
-                    Col = 1,
+                    Column = 1,
                     Row = 0,
                 }
             )

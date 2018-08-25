@@ -62,7 +62,7 @@ namespace DataWF.Gui
                 Name = property,
                 Width = width,
                 Row = row,
-                Col = col
+                Column = col
             };
             Add(column);
             return column;
@@ -273,7 +273,7 @@ namespace DataWF.Gui
                 Invoker = invoker,
                 CellEditor = CellEditor,
                 Text = Text,
-                Col = Col,
+                Column = Column,
                 Row = Row,
                 Collect = Collect,
                 Editable = Editable,

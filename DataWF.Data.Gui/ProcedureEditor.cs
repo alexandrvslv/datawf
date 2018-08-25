@@ -84,7 +84,7 @@ namespace DataWF.Data.Gui
             Text = "Procedure Editor";
 
             groupAttributes.Autosize = true;
-            groupAttributes.Col = 0;
+            groupAttributes.Column = 0;
             groupAttributes.Widget = fields;
             groupAttributes.DefaultHeight = 110;
             groupAttributes.FillWidth = false;
@@ -94,7 +94,7 @@ namespace DataWF.Data.Gui
             groupAttributes.Height = 100;
             groupAttributes.Text = "Attributes";
 
-            groupParams.Col = 1;
+            groupParams.Column = 1;
             groupParams.Widget = parameterView;
             groupParams.DefaultHeight = 100;
             groupParams.FillWidth = true;
@@ -104,7 +104,7 @@ namespace DataWF.Data.Gui
             groupParams.Height = 100;
             groupParams.Text = "Params";
 
-            groupSource.Col = 0;
+            groupSource.Column = 0;
             groupSource.DefaultHeight = 381;
             groupSource.FillWidth = true;
             groupSource.FillHeight = true;

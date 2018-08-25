@@ -10,7 +10,7 @@ namespace DataWF.Data.Gui
             get { return (LayoutDBColumn)Owner; }
         }
 
-        public DBColumn Column
+        public DBColumn DBColumn
         {
             get { return Invoker as DBColumn; }
         }
@@ -19,7 +19,7 @@ namespace DataWF.Data.Gui
         {
             if (OwnerColumn != null)
                 item = OwnerColumn.GetReference(item);
-            return item?.GetReference(Column);
+            return item?.GetReference(DBColumn);
         }
 
         public override object ReadValue(object listItem)
@@ -29,7 +29,7 @@ namespace DataWF.Data.Gui
             {
                 dbItem = OwnerColumn.GetReference(dbItem);
             }
-            return dbItem?.GetValue(Column);
+            return dbItem?.GetValue(DBColumn);
         }
 
         public override void WriteValue(object listItem, object value)
@@ -40,7 +40,7 @@ namespace DataWF.Data.Gui
                 dbItem = OwnerColumn.GetReference(dbItem);
             }
             if (dbItem != null)
-                dbItem.SetValue(value, Column);
+                dbItem.SetValue(value, DBColumn);
         }
     }
 

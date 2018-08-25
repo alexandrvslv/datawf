@@ -26,7 +26,7 @@ namespace DataWF.Module.FlowGui
                 new GroupBoxItem
                 {
                     Name = "Attributes",
-                    Col = 0,
+                    Column = 0,
                     Row = 0,
                     Width = 400,
                     FillHeight = true,
@@ -35,7 +35,7 @@ namespace DataWF.Module.FlowGui
                 new GroupBoxItem
                 {
                     Name = "Stages",
-                    Col = 1,
+                    Column = 1,
                     Row = 0,
                     FillWidth = true,
                     FillHeight = true,
@@ -49,7 +49,7 @@ namespace DataWF.Module.FlowGui
                 new GroupBoxItem
                 {
                     Name = "Stage Parameters",
-                    Col = 0,
+                    Column = 0,
                     Row = 1,
                     FillWidth = true,
                     FillHeight = true,

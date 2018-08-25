@@ -126,7 +126,7 @@ namespace DataWF.Gui
                 FillWidth = true,
                 Expand = false
             };
-            var mColumns = new GroupBoxItem(gColumns, gFields, gSorters) { Col = 1 };
+            var mColumns = new GroupBoxItem(gColumns, gFields, gSorters) { Column = 1 };
 
             gOptions = new GroupBoxItem()
             {

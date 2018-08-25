@@ -15,7 +15,7 @@ namespace DataWF.Gui
         protected internal double height = 22D;
         protected internal double width = 120D;
         protected int row = -1;
-        protected int col = -1;
+        protected int column = -1;
         protected bool visible = true;
         protected bool fillW;
         protected bool fillH;
@@ -82,14 +82,14 @@ namespace DataWF.Gui
         }
 
         [DefaultValue(-1)]
-        public int Col
+        public int Column
         {
-            get { return col; }
+            get { return column; }
             set
             {
-                if (col == value)
+                if (column == value)
                     return;
-                col = value;
+                column = value;
                 OnPropertyChanged();
             }
         }
@@ -279,7 +279,7 @@ namespace DataWF.Gui
 
         public override string ToString()
         {
-            return string.Format("({0},{1}) {2}", row, col, name);
+            return string.Format("({0},{1}) {2}", row, column, name);
         }
 
         #region IComparable implementation
@@ -301,7 +301,7 @@ namespace DataWF.Gui
             if (item == this)
                 throw new InvalidOperationException("Layout self reference!");
             if (string.IsNullOrEmpty(item.Name))
-                item.Name = $"item_{item.Col}_{item.Row}";
+                item.Name = $"item_{item.Column}_{item.Row}";
             base.InsertInternal(index, item);
         }
 
@@ -314,16 +314,16 @@ namespace DataWF.Gui
                 item.Row = GrowMode == Orientation.Vertical
                     ? GetRowMaxIndex() + 1 : 0;
             }
-            if (item.Col < 0)
+            if (item.Column < 0)
             {
-                item.Col = GetRowColumnCount(item.Row);
+                item.Column = GetRowColumnCount(item.Row);
             }
             return base.AddInternal(item);
         }
 
         public void InsertCol(int index, T item)
         {
-            item.Col = index;
+            item.Column = index;
             Map.Insert(item, false);
         }
 
@@ -338,23 +338,23 @@ namespace DataWF.Gui
             Map.Insert(item, true);
         }
 
-        public virtual void InsertBefore(T column)
+        public virtual void InsertBefore(T item)
         {
-            InsertBefore(new[] { column });
+            InsertBefore(new[] { item });
         }
 
-        public virtual void InsertBefore(IEnumerable<T> columns)
+        public virtual void InsertBefore(IEnumerable<T> items)
         {
             var row = Row;
-            var col = Col;
-            foreach (var column in columns)
+            var column = Column;
+            foreach (var item in items)
             {
-                column.Row = row;
-                column.Col = col;
-                Map.Insert(column, Map.GrowMode == Orientation.Vertical);
+                item.Row = row;
+                item.Column = column;
+                Map.Insert(item, Map.GrowMode == Orientation.Vertical);
                 if (GrowMode == Orientation.Horizontal)
                 {
-                    col++;
+                    column++;
                 }
                 else
                 {
@@ -363,29 +363,29 @@ namespace DataWF.Gui
             }
         }
 
-        public virtual void InsertAfter(T column)
+        public virtual void InsertAfter(T item)
         {
-            InsertAfter(new[] { column });
+            InsertAfter(new[] { item });
         }
 
-        public virtual void InsertAfter(IEnumerable<T> columns)
+        public virtual void InsertAfter(IEnumerable<T> items)
         {
             var row = Row;
-            var col = Col;
-            foreach (var column in columns)
+            var column = Column;
+            foreach (var item in items)
             {
                 if (Map.GrowMode == Orientation.Horizontal)
                 {
-                    col++;
+                    column++;
                 }
                 else
                 {
                     row++;
                 }
 
-                column.Row = row;
-                column.Col = col;
-                Map.Insert(column, Map.GrowMode == Orientation.Vertical);
+                item.Row = row;
+                item.Column = column;
+                Map.Insert(item, Map.GrowMode == Orientation.Vertical);
             }
         }
 
@@ -393,19 +393,19 @@ namespace DataWF.Gui
         {
             item.Remove();
             if (inserRow)
-                item.Col = 0;
-            var exs = Get(item.Row, item.Col);
+                item.Column = 0;
+            var exs = Get(item.Row, item.Column);
             if (exs != null)
             {
                 var buffer = inserRow
-                ? ((IEnumerable<T>)this).Where(p => item.Row <= p.Row && item.Col <= p.Col).ToArray()
-                : ((IEnumerable<T>)this).Where(p => item.Row == p.Row && item.Col <= p.Col).ToArray();
+                ? ((IEnumerable<T>)this).Where(p => item.Row <= p.Row && item.Column <= p.Column).ToArray()
+                : ((IEnumerable<T>)this).Where(p => item.Row == p.Row && item.Column <= p.Column).ToArray();
                 foreach (var col in buffer)
                 {
                     if (inserRow)
                         col.Row++;
                     else
-                        col.Col++;
+                        col.Column++;
                 }
             }
             if (string.IsNullOrEmpty(item.Name))
@@ -424,11 +424,11 @@ namespace DataWF.Gui
             else
             {
                 newItem.Row = Row;
-                newItem.Col = Col;
+                newItem.Column = Column;
                 //move only by change indexes
                 bool inserRow = false;
                 if (type == LayoutAlignType.Right)
-                    newItem.Col++;
+                    newItem.Column++;
                 else if (type == LayoutAlignType.Top)
                     inserRow = true;
                 else if (type == LayoutAlignType.Bottom)
@@ -468,18 +468,18 @@ namespace DataWF.Gui
             Replace(map);
 
             Row = 0;
-            Col = 0;
+            Column = 0;
             newItem.Row = 0;
-            newItem.Col = 0;
+            newItem.Column = 0;
 
             if (anch == LayoutAlignType.Top)
                 Row = 1;
             else if (anch == LayoutAlignType.Bottom)
                 newItem.Row = 1;
             else if (anch == LayoutAlignType.Right)
-                newItem.Col = 1;
+                newItem.Column = 1;
             else if (anch == LayoutAlignType.Left)
-                Col = 1;
+                Column = 1;
 
             map.Add((T)this);
             map.Add(newItem);
@@ -492,13 +492,13 @@ namespace DataWF.Gui
                 return false;
             if (item.Map != this)
                 return item.Map.Remove(item);
-            var buffer = ((IEnumerable<T>)this).Where(p => (p.Row == item.Row && p.Col > item.Col) || p.Row > item.Row).ToArray();
+            var buffer = ((IEnumerable<T>)this).Where(p => (p.Row == item.Row && p.Column > item.Column) || p.Row > item.Row).ToArray();
             var removeRow = !((IEnumerable<T>)this).Select(p => p.Row == item.Row).Any();
             base.Remove(item);
             foreach (var element in buffer)
             {
                 if (element.Row == item.Row)
-                    element.Col--;
+                    element.Column--;
                 else if (removeRow && element.Row > item.Row)
                     element.Row--;
             }
@@ -524,7 +524,7 @@ namespace DataWF.Gui
             tempMap.RemoveInternal((T)this, index);
             newColumn.Remove();
             newColumn.Row = Row;
-            newColumn.Col = Col;
+            newColumn.Column = Column;
             tempMap.InsertInternal(index, newColumn);
         }
 
@@ -647,9 +647,9 @@ namespace DataWF.Gui
 
         public bool IsVisible()
         {
-            foreach (ILayoutItem col in this)
+            foreach (var item in this)
             {
-                if (col.Visible)
+                if (item.Visible)
                     return true;
             }
             return false;
@@ -664,7 +664,7 @@ namespace DataWF.Gui
             {
                 if (entry.Row == Row)
                 {
-                    if (entry.Visible && entry.Col > Col)
+                    if (entry.Visible && entry.Column > Column)
                         return false;
                 }
                 else if (entry.Row > Row)
@@ -990,11 +990,11 @@ namespace DataWF.Gui
             }
         }
 
-        public T Get(int row, int col)
+        public T Get(int row, int column)
         {
             foreach (var item in this)
             {
-                if (item.Row == row && item.Col == col)
+                if (item.Row == row && item.Column == column)
                     return item;
             }
             return null;
@@ -1066,7 +1066,7 @@ namespace DataWF.Gui
                     if (entry.Count > 0 && entry != item)
                     {
                         entry.GetVisibleIndex(null, out sc, out sr);
-                        if (item == null || entry.Col < item.Col)
+                        if (item == null || entry.Column < item.Column)
                             c += sc;
                         if (item == null || entry.Row < item.Row)
                             r += sr;
@@ -1093,7 +1093,7 @@ namespace DataWF.Gui
                 if (rez == 0)
                     rez = x.Row.CompareTo(y.Row);
                 if (rez == 0)
-                    rez = x.Col.CompareTo(y.Col);
+                    rez = x.Column.CompareTo(y.Column);
             }
             return rez;
         }
@@ -1104,7 +1104,7 @@ namespace DataWF.Gui
             {
                 if (entry.Row == Row)
                 {
-                    if (entry.Col < Col)
+                    if (entry.Column < Column)
                         return false;
                     else// if (col.Col > column.Col)
                         break;

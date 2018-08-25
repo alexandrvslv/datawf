@@ -1,6 +1,5 @@
 ﻿using DataWF.Common;
 using System.Collections.Generic;
-using Xwt;
 
 namespace DataWF.Gui
 {
@@ -14,13 +13,13 @@ namespace DataWF.Gui
 
         int Row { get; set; }
 
-        int Col { get; set; }
+        int Column { get; set; }
 
         bool Visible { get; set; }
 
-        bool FillWidth { get; set; }
-
         bool FillHeight { get; set; }
+
+        bool FillWidth { get; set; }
 
         ILayoutItem Map { get; }
 

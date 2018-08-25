@@ -374,7 +374,7 @@ namespace DataWF.Gui
 
         public void Put(DockPage page)
         {
-            page.Col = -1;
+            page.Column = -1;
             page.Row = -1;
             Items.Add(page);
             CurrentPage = page;

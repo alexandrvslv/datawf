@@ -33,8 +33,8 @@ namespace DataWF.Data.Gui
 			listLinks.ListInfo.HotSelection = true;
 
 			box = new GroupBox(
-				new GroupBoxItem { Col = 0, Widget = listProjects, FillHeight = true, Name = "Projects", Width = 370, Height = 400 },
-				new GroupBoxItem { Col = 1, Widget = listLinks, FillWidth = true, FillHeight = true, Name = "Links", Width = 370, Height = 400 })
+				new GroupBoxItem { Column = 0, Widget = listProjects, FillHeight = true, Name = "Projects", Width = 370, Height = 400 },
+				new GroupBoxItem { Column = 1, Widget = listLinks, FillWidth = true, FillHeight = true, Name = "Links", Width = 370, Height = 400 })
 			{ Name = "StartPage" };
 
 			label = new Label

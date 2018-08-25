@@ -44,6 +44,12 @@ namespace DataWF.Common
             return Parameters.Add(logic, property, comparer, value);
         }
 
+        public QueryParameter<T> AddOrUpdate(string property, object value)
+        {
+            var parameter = Parameters[property];
+            return AddOrUpdate(parameter?.Logic ?? LogicType.And, property, parameter?.Comparer ?? CompareType.Equal, value);
+        }
+
         public QueryParameter<T> AddOrUpdate(LogicType logic, string property, CompareType comparer, object value)
         {
             var parameter = Parameters[property];

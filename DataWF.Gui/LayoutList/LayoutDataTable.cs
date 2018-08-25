@@ -10,7 +10,7 @@ namespace DataWF.Gui
 {
     public class LayoutDataColumn : LayoutColumn
     {
-        public DataColumn Column { get; set; }
+        public DataColumn DataColumn { get; set; }
     }
 
     public class LayoutDataTable : LayoutList
@@ -47,7 +47,7 @@ namespace DataWF.Gui
                     return new LayoutDataColumn()
                     {
                         Name = name,
-                        Column = column,
+                        DataColumn = column,
                         Invoker = new IndexInvoker<DataRowView, object, int>(name,
                                                                       (row, index) => row[index],
                                                                       (row, index, value) => row[index] = value)

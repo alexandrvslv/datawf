@@ -124,9 +124,9 @@ namespace DataWF.Data.Gui
             detailRow = new TableLayoutList();
 
             map = new GroupBox(
-                new GroupBoxItem { Name = "Details", Widget = detailList, Col = 0, FillWidth = true, FillHeight = true },
+                new GroupBoxItem { Name = "Details", Widget = detailList, Column = 0, FillWidth = true, FillHeight = true },
                 //new GroupBoxItem { Name = "Difference", Widget = detailText, Col = 1, FillWidth = true, FillHeight = true },
-                new GroupBoxItem { Name = "Record", Widget = detailRow, Col = 2, FillWidth = true, FillHeight = true });
+                new GroupBoxItem { Name = "Record", Widget = detailRow, Column = 2, FillWidth = true, FillHeight = true });
             //list.ListInfo.Columns.Add(list.BuildColumn(null, "Text"));
 
             split = new VPaned();

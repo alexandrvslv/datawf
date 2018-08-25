@@ -67,7 +67,7 @@ namespace DataWF.Gui
             {
                 Name = "Module",
                 FillWidth = true,
-                Col = 2,
+                Column = 2,
                 Height = 25,
                 StyleName = "Notify"
             };

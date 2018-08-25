@@ -32,8 +32,8 @@ namespace DataWF.Gui
 
         public int Col
         {
-            get { return items.Col; }
-            set { items.Col = value; }
+            get { return items.Column; }
+            set { items.Column = value; }
         }
 
         [DefaultValue(false)]

@@ -75,7 +75,7 @@ namespace DataWF.Data.Gui
             {
                 Name = "Setting",
                 Widget = setting,
-                Col = 0,
+                Column = 0,
                 Row = 0,
                 Autosize = false,
                 DefaultHeight = 250,
@@ -86,7 +86,7 @@ namespace DataWF.Data.Gui
             {
                 Name = "Tables",
                 Widget = listTables,
-                Col = 1,
+                Column = 1,
                 Row = 0,
                 Autosize = false,
                 FillWidth = true,
@@ -97,7 +97,7 @@ namespace DataWF.Data.Gui
             {
                 Name = "Columns",
                 Widget = listColumns,
-                Col = 0,
+                Column = 0,
                 Row = 1,
                 FillWidth = true,
                 FillHeight = true

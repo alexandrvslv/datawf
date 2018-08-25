@@ -60,7 +60,7 @@ namespace DataWF.Module.CommonGui
 
             groupGroups = new GroupBoxItem()
             {
-                Col = 2,
+                Column = 2,
                 Widget = groups,
                 Width = 252,
                 Name = "Groups"
