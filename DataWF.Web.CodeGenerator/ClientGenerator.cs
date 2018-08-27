@@ -559,14 +559,17 @@ namespace DataWF.Web.CodeGenerator
 
         private IEnumerable<BaseTypeSyntax> GenDefinitionClassBases(JsonSchema4 schema)
         {
-            var baseType = SF.ParseTypeName(nameof(IContainerNotifyPropertyChanged));
+
             if (schema.InheritedSchema != null)
             {
                 GetOrGenerateDefinion(schema.InheritedSchema.Id);
-                baseType = SF.ParseTypeName(GetDefinitionName(schema.InheritedSchema));
+                yield return SF.SimpleBaseType(SF.ParseTypeName(GetDefinitionName(schema.InheritedSchema)));
             }
-            yield return SF.SimpleBaseType(baseType);
-
+            else
+            {
+                yield return SF.SimpleBaseType(SF.ParseTypeName(nameof(IContainerNotifyPropertyChanged)));
+                yield return SF.SimpleBaseType(SF.ParseTypeName(nameof(ISynchronized)));
+            }
             var idKey = GetPrimaryKey(schema, false);
             if (idKey != null)
             {
@@ -646,11 +649,9 @@ namespace DataWF.Web.CodeGenerator
                         type: SF.ParseTypeName(nameof(PropertyChangedEventHandler)),
                         variables: SF.SeparatedList(new[] { SF.VariableDeclarator(nameof(INotifyPropertyChanged.PropertyChanged)) })));
                 yield return SyntaxHelper.GenProperty(nameof(INotifyListPropertyChanged), nameof(IContainerNotifyPropertyChanged.Container), true)
-                    .WithAttributeLists(SF.List(new[]{
-                    SF.AttributeList(
-                        SF.SingletonSeparatedList(
-                            SF.Attribute(
-                                SF.IdentifierName("JsonIgnore")))) }));
+                    .WithAttributeLists(SF.List(new[] { SF.AttributeList(SF.SingletonSeparatedList(SF.Attribute(SF.IdentifierName("JsonIgnore")))) }));
+                yield return SyntaxHelper.GenProperty("bool?", nameof(ISynchronized.IsSynchronized), true)
+                    .WithAttributeLists(SF.List(new[] { SF.AttributeList(SF.SingletonSeparatedList(SF.Attribute(SF.IdentifierName("JsonIgnore")))) }));
                 yield return SF.MethodDeclaration(
                     attributeLists: SF.List<AttributeListSyntax>(),
                     modifiers: SF.TokenList(
@@ -663,6 +664,8 @@ namespace DataWF.Web.CodeGenerator
                     parameterList: SF.ParameterList(SF.SeparatedList(GenPropertyChangedParameter())),
                     constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
                     body: SF.Block(new[] {
+                        SF.ParseStatement($"if({nameof(ISynchronized.IsSynchronized)} != null)"),
+                        SF.ParseStatement($"{nameof(ISynchronized.IsSynchronized)} = false;"),
                         SF.ParseStatement($"var arg = new PropertyChangedEventArgs(propertyName);"),
                         SF.ParseStatement($"Container?.OnItemPropertyChanged(this, arg);"),
                         SF.ParseStatement($"PropertyChanged?.Invoke(this, arg);") }),

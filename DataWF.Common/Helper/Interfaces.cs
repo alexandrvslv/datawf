@@ -237,4 +237,10 @@ namespace DataWF.Common
     {
         object PrimaryKey { get; set; }
     }
+
+    public interface ISynchronized
+    {
+        bool? IsSynchronized { get; set; }
+    }
 }
+

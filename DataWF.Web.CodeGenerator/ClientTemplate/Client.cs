@@ -100,6 +100,10 @@ namespace NewNameSpace
             {
                 Items.Add(item);
             }
+            if (item is ISynchronized isSynch)
+            {
+                isSynch.IsSynchronized = true;
+            }
             return item;
         }
 
