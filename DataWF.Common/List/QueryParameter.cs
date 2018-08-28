@@ -26,6 +26,11 @@ namespace DataWF.Common
             {
                 if (property != value)
                 {
+                    if (invoker != null && invoker.Name != value)
+                    {
+                        invoker = null;
+                    }
+
                     property = value;
                     OnPropertyChanged();
                 }
