@@ -799,7 +799,7 @@ namespace DataWF.Web.CodeGenerator
         private FieldDeclarationSyntax GenDefinitionClassField(JsonProperty property)
         {
             return SF.FieldDeclaration(attributeLists: SF.List<AttributeListSyntax>(),
-                modifiers: SF.TokenList(SF.Token(SyntaxKind.PrivateKeyword)),
+                modifiers: SF.TokenList(SF.Token(SyntaxKind.ProtectedKeyword)),
                declaration: SF.VariableDeclaration(
                    type: GetTypeDeclaration(property, true, "SelectableList"),
                    variables: SF.SingletonSeparatedList(

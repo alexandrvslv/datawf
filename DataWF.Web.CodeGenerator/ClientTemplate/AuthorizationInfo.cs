@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Net.Http;
 
 namespace NewNameSpace
@@ -15,6 +16,15 @@ namespace NewNameSpace
             {
                 request.Headers.Add("Authorization", $"{Key} {Token}");
             }
+        }
+
+        public event EventHandler<CancelEventArgs> UnauthorizedError;
+
+        public bool OnUnauthorizedError()
+        {
+            var cancel = new CancelEventArgs(true);
+            UnauthorizedError?.Invoke(this, cancel);
+            return !cancel.Cancel;
         }
     }
 }

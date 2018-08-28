@@ -138,40 +138,38 @@ namespace NewNameSpace
                     using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false))
                     {
                         ProcessResponse(client, response);
-                        var status = response.StatusCode;
                         var result = default(R);
-                        if (status == System.Net.HttpStatusCode.OK)
+                        switch (response.StatusCode)
                         {
-                            try
-                            {
-                                using (var responseStream = response.Content == null ? null : await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
+                            case System.Net.HttpStatusCode.OK:
+                                try
                                 {
-                                    using (var reader = new StreamReader(responseStream))
+                                    using (var responseStream = response.Content == null ? null : await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
                                     {
-                                        if (mediaType.Equals("application/octet-stream"))
+                                        using (var reader = new StreamReader(responseStream))
                                         {
-                                            var headers = GetHeaders(response);
-                                            var fileName = headers.TryGetValue("FileName", out var names) ? names.FirstOrDefault() : "somefile.someextension";
-                                            var filePath = Path.Combine(Path.GetTempPath(), AppDomain.CurrentDomain.FriendlyName, fileName);
+                                            if (mediaType.Equals("application/octet-stream"))
+                                            {
+                                                var headers = GetHeaders(response);
+                                                var fileName = headers.TryGetValue("FileName", out var names) ? names.FirstOrDefault() : "somefile.someextension";
+                                                var filePath = Path.Combine(Path.GetTempPath(), AppDomain.CurrentDomain.FriendlyName, fileName);
 
-                                            using (var fileStream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.Write))
-                                            {
-                                                await responseStream.CopyToAsync(fileStream, 8192, cancellationToken).ConfigureAwait(false);
-                                            }
-                                            return (R)(object)filePath;
-                                        }
-                                        else if (typeof(R) == typeof(string))
-                                        {
-                                            result = (R)(object)reader.ReadToEnd();
-                                        }
-                                        else
-                                        {
-                                            var serializer = new JsonSerializer();
-                                            using (var jreader = new JsonTextReader(reader))
-                                            {
-                                                while (jreader.Read())
+                                                using (var fileStream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.Write))
                                                 {
-                                                    if (jreader.TokenType == JsonToken.StartObject)
+                                                    await responseStream.CopyToAsync(fileStream, 8192, cancellationToken).ConfigureAwait(false);
+                                                }
+                                                return (R)(object)filePath;
+                                            }
+                                            else if (typeof(R) == typeof(string))
+                                            {
+                                                result = (R)(object)reader.ReadToEnd();
+                                            }
+                                            else
+                                            {
+                                                var serializer = new JsonSerializer();
+                                                using (var jreader = new JsonTextReader(reader))
+                                                {
+                                                    while (jreader.Read() && jreader.TokenType == JsonToken.StartObject)
                                                     {
                                                         result = DeserializeObject<R>(serializer, jreader);
                                                     }
@@ -180,19 +178,27 @@ namespace NewNameSpace
                                         }
                                     }
                                 }
-                            }
-                            catch (Exception ex)
-                            {
-                                OnResponceDeserializeException(response, ex);
-                            }
-                        }
-                        else if (status != System.Net.HttpStatusCode.NoContent)
-                        {
-                            var responseData = response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                            throw new ClientException("The HTTP status code of the response was not expected (" + (int)response.StatusCode + ").",
-                                (int)response.StatusCode,
-                                responseData,
-                                GetHeaders(response), null);
+                                catch (Exception ex)
+                                {
+                                    OnResponceDeserializeException(response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false), ex);
+                                }
+                                break;
+                            case System.Net.HttpStatusCode.Unauthorized:
+                                if (Provider?.Authorization?.OnUnauthorizedError() ?? false)
+                                {
+                                    return await Request<R>(cancellationToken, httpMethod, commandUrl, mediaType, value, parameters).ConfigureAwait(false);
+                                }
+                                else
+                                {
+                                    UnexpectedStatus(response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+                                }
+                                break;
+                            case System.Net.HttpStatusCode.NoContent:
+                                result = default(R);
+                                break;
+                            default:
+                                UnexpectedStatus(response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+                                break;
                         }
                         Status = ClientStatus.Compleate;
                         return result;
@@ -215,22 +221,20 @@ namespace NewNameSpace
                     using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false))
                     {
                         ProcessResponse(client, response);
-                        var status = response.StatusCode;
                         var result = default(R);
-                        if (status == System.Net.HttpStatusCode.OK)
+                        switch (response.StatusCode)
                         {
-                            try
-                            {
-                                using (var responseStream = response.Content == null ? null : await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
+                            case System.Net.HttpStatusCode.OK:
+                                try
                                 {
-                                    using (var reader = new StreamReader(responseStream))
+                                    using (var responseStream = response.Content == null ? null : await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
                                     {
-                                        var serializer = new JsonSerializer();
-                                        using (var jreader = new JsonTextReader(reader))
+                                        using (var reader = new StreamReader(responseStream))
                                         {
-                                            while (jreader.Read())
+                                            var serializer = new JsonSerializer();
+                                            using (var jreader = new JsonTextReader(reader))
                                             {
-                                                if (jreader.TokenType == JsonToken.StartArray)
+                                                while (jreader.Read() && jreader.TokenType == JsonToken.StartArray)
                                                 {
                                                     result = DeserializeArray<R, I>(serializer, jreader);
                                                 }
@@ -238,19 +242,27 @@ namespace NewNameSpace
                                         }
                                     }
                                 }
-                            }
-                            catch (Exception ex)
-                            {
-                                OnResponceDeserializeException(response, ex);
-                            }
-                        }
-                        else if (status != System.Net.HttpStatusCode.NoContent)
-                        {
-                            var responseData = response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                            throw new ClientException("The HTTP status code of the response was not expected (" + (int)response.StatusCode + ").",
-                                (int)response.StatusCode,
-                                responseData,
-                                GetHeaders(response), null);
+                                catch (Exception ex)
+                                {
+                                    OnResponceDeserializeException(response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false), ex);
+                                }
+                                break;
+                            case System.Net.HttpStatusCode.Unauthorized:
+                                if (Provider?.Authorization?.OnUnauthorizedError() ?? false)
+                                {
+                                    return await RequestArray<R, I>(cancellationToken, httpMethod, commandUrl, mediaType, value, parameters).ConfigureAwait(false);
+                                }
+                                else
+                                {
+                                    UnexpectedStatus(response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+                                }
+                                break;
+                            case System.Net.HttpStatusCode.NoContent:
+                                result = default(R);
+                                break;
+                            default:
+                                UnexpectedStatus(response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+                                break;
                         }
                         Status = ClientStatus.Compleate;
                         return result;
@@ -355,12 +367,21 @@ namespace NewNameSpace
             return Convert.ToString(value, cultureInfo);
         }
 
-        private async void OnResponceDeserializeException(HttpResponseMessage response, Exception ex)
+        private void OnResponceDeserializeException(HttpResponseMessage response, string responseData, Exception ex)
         {
-            var responseData = response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-            throw new ClientException("Could not deserialize the response body.", (int)response.StatusCode, responseData, GetHeaders(response), ex);
+            throw new ClientException("Could not deserialize the response body.",
+                (int)response.StatusCode,
+                responseData,
+                GetHeaders(response), ex);
         }
 
+        private void UnexpectedStatus(HttpResponseMessage response, string responseData)
+        {
+            throw new ClientException($"Unexpected status code :{response.StatusCode}({(int)response.StatusCode}).",
+                (int)response.StatusCode,
+                responseData,
+                GetHeaders(response), null);
+        }
 
     }
 }

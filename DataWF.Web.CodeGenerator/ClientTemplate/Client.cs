@@ -26,7 +26,7 @@ namespace NewNameSpace
 
         public SelectableList<T> Items { get; set; } = new SelectableList<T>();
 
-        public T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, Dictionary<PropertySerializationInfo, object> dictionary = null, object id = null)
+        public virtual T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, Dictionary<PropertySerializationInfo, object> dictionary = null, object id = null)
         {
             dictionary = dictionary ?? new Dictionary<PropertySerializationInfo, object>();
             var item = (T)null;

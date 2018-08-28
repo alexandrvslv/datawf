@@ -25,7 +25,7 @@ namespace NewNameSpace
         AuthorizationInfo Authorization { get; set; }
         ICRUDClient<T> GetClient<T>();
         ICRUDClient GetClient(Type type);
-        ICRUDClient GetClient(Type type, int typeId);
+        ICRUDClient GetClient(Type type, int typeId);        
     }
 
     public interface IClient
