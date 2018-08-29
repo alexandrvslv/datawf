@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -15,6 +16,7 @@ namespace DataWF.Common
         private string property;
         private IInvoker invoker;
         private object typedValue;
+        private ListSortDirection? sortDirection;
 
         [JsonIgnore, XmlIgnore]
         public object Tag { get; set; }
@@ -132,6 +134,25 @@ namespace DataWF.Common
                     OnPropertyChanged();
                 }
             }
+        }
+
+        public ListSortDirection? SortDirection
+        {
+            get { return sortDirection; }
+            set
+            {
+                if (sortDirection != value)
+                {
+                    sortDirection = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public IComparer<T> GetComparer()
+        {
+            return SortDirection == null ? null :
+                new InvokerComparer<T>(Invoker, SortDirection.Value);
         }
 
         [JsonIgnore, XmlIgnore]

@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace DataWF.Common
@@ -7,7 +8,7 @@ namespace DataWF.Common
     public class Query<T> : IQuery
     {
         private QueryParameterList<T> parameters;
-        private InvokerComparerList<T> orders;
+        //private InvokerComparerList<T> orders;
 
         public Query()
         { }
@@ -23,11 +24,11 @@ namespace DataWF.Common
             set { parameters = value; }
         }
 
-        public InvokerComparerList<T> Orders
-        {
-            get { return orders ?? (orders = new InvokerComparerList<T>()); }
-            set { orders = value; }
-        }
+        //public InvokerComparerList<T> Orders
+        //{
+        //    get { return orders ?? (orders = new InvokerComparerList<T>()); }
+        //    set { orders = value; }
+        //}
 
         IEnumerable<IQueryParameter> IQuery.Parameters
         {
@@ -37,6 +38,16 @@ namespace DataWF.Common
         public void Clear()
         {
             Parameters.Clear();
+        }
+
+        public void Add(IQueryParameter parameter)
+        {
+            Add((QueryParameter<T>)parameter);
+        }
+
+        public void Add(QueryParameter<T> parameter)
+        {
+            Parameters.Add(parameter);
         }
 
         public QueryParameter<T> Add(LogicType logic, string property, CompareType comparer, object value)
@@ -83,11 +94,26 @@ namespace DataWF.Common
             return parameter;
         }
 
+        public bool Remove(IQueryParameter parameter)
+        {
+            return Remove((QueryParameter<T>)parameter);
+        }
+
+        public bool Remove(QueryParameter<T> parameter)
+        {
+            return Parameters.Remove(parameter);
+        }
+
         public void Sort(IList<T> list)
         {
-            if (Orders.Count > 0)
+            var comparers = Parameters.Where(p => p.SortDirection != null).Select(p => p.GetComparer());
+            if (comparers.Any())
             {
-                ListHelper.QuickSort(list, Orders);
+                //if (list is ISortable sortable)
+                //{
+                //    sortable.ApplySort(Orders)
+                //}
+                ListHelper.QuickSort(list, new InvokerComparerList<T>(comparers));
             }
         }
 
@@ -106,7 +132,7 @@ namespace DataWF.Common
             return builder.ToString();
         }
 
-        public void Sort(IList list)
+        void IQuery.Sort(IList list)
         {
             Sort((IList<T>)list);
         }

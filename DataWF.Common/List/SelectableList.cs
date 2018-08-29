@@ -120,7 +120,7 @@ namespace DataWF.Common
         #region Use Index
         IEnumerable ISelectable.Select(IQuery query)
         {
-            return ListHelper.Select<T>(items, (Query<T>)query, indexes);
+            return ListHelper.Select(items, query, indexes);
         }
 
         public IEnumerable<T> Select(Query<T> query)
@@ -489,11 +489,9 @@ namespace DataWF.Common
 
         public void ApplySort(IComparer comparer)
         {
-            ApplySort(comparer == null
-                      ? null
-                      : comparer is IComparer<T>
-                      ? (IComparer<T>)comparer
-                      : new InvokerComparer<T>(comparer));
+            ApplySort(comparer == null ? null
+                      : comparer is IComparer<T> gcomparer ? gcomparer
+                      : new ComparerWrapper<T>(comparer));
         }
 
         public void ApplySort(IComparer<T> comparer)
