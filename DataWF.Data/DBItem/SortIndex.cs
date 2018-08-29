@@ -105,9 +105,9 @@ namespace DataWF.Data
                 row[column] = value;
             else if (comparer is InvokerComparer)
             {
-                if (value.GetType() != ((InvokerComparer)comparer).invoker.DataType)
-                    value = Helper.TextParse(value.ToString(), ((InvokerComparer)comparer).invoker.DataType, "");
-                ((InvokerComparer)comparer).invoker.SetValue(row, value);
+                if (value.GetType() != ((InvokerComparer)comparer).Invoker.DataType)
+                    value = Helper.TextParse(value.ToString(), ((InvokerComparer)comparer).Invoker.DataType, "");
+                ((InvokerComparer)comparer).Invoker.SetValue(row, value);
             }
         }
 
