@@ -55,7 +55,7 @@ namespace DataWF.Common
         }
     }
 
-    public class InvokerComparerList<T> : List<IComparer<T>>, IComparerList<T>
+    public class InvokerComparerList<T> : List<IComparer<T>>, IComparerList<T>, IComparer
     {
 
         public InvokerComparerList()
@@ -76,6 +76,11 @@ namespace DataWF.Common
                     return retval;
             }
             return 0;
+        }
+
+        public int Compare(object x, object y)
+        {
+            return Compare((T)x, (T)y);
         }
 
         public override bool Equals(object obj)
