@@ -14,6 +14,8 @@ namespace DataWF.Common
 
     public interface ISelectable<T> : ISortable<T>, INotifyListPropertyChanged
     {
+        ListIndexes<T> Indexes { get; }
+
         IEnumerable<T> Select(Query<T> checkers);
 
         IEnumerable<T> Select(QueryParameter<T> parameter);

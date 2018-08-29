@@ -218,6 +218,24 @@ namespace DataWF.Common
             return -low - 1;
         }
 
+        public static IEnumerable<T> TypeOf<T>(this IEnumerable enumerable)
+        {
+            if (enumerable is IEnumerable<T> already)
+                return already;
+            return TypeOfInternal<T>(enumerable);
+        }
+
+        public static IEnumerable<T> TypeOfInternal<T>(IEnumerable enumerable)
+        {
+            if (enumerable == null)
+                yield break;
+            foreach (var item in enumerable)
+            {
+                if (item is T typed)
+                    yield return typed;
+            }
+        }
+
         public static bool CheckItem(object x, object y, CompareType compare, IComparer comparer)
         {
             bool result = false;
@@ -291,16 +309,15 @@ namespace DataWF.Common
             //    filterable = ((ISelectable)dataSource).
         }
 
-        public static IEnumerable Search(IList items, IQueryParameter param)
+        public static IEnumerable Search(IEnumerable items, IQueryParameter param)
         {
             return Search(items, param.Invoker, param.TypedValue, param.Comparer, param.Comparision);
         }
 
-        public static IEnumerable Search(IList items, IInvoker invoker, object value, CompareType compare, IComparer comparer)
+        public static IEnumerable Search(IEnumerable items, IInvoker invoker, object value, CompareType compare, IComparer comparer)
         {
-            for (int j = 0; j < items.Count; j++)
+            foreach (var item in items)
             {
-                var item = items[j];
                 if (CheckItem(invoker.GetValue(item), value, compare, comparer))
                 {
                     yield return item;
@@ -308,11 +325,10 @@ namespace DataWF.Common
             }
         }
 
-        public static IEnumerable<T> Search<T>(IList<T> items, QueryParameter<T> param)
+        public static IEnumerable<T> Search<T>(IEnumerable<T> items, QueryParameter<T> param)
         {
-            for (int j = 0; j < items.Count; j++)
+            foreach (var item in items)
             {
-                var item = items[j];
                 if (CheckItem(param.Invoker.GetValue(item), param.TypedValue, param.Comparer, param.Comparision))
                 {
                     yield return item;
@@ -320,7 +336,7 @@ namespace DataWF.Common
             }
         }
 
-        public static IEnumerable<T> Select<T>(IList<T> items, Query<T> query, ListIndexes<T> indexes = null)
+        public static IEnumerable<T> Select<T>(IEnumerable<T> items, Query<T> query, ListIndexes<T> indexes = null)
         {
             IEnumerable<T> buffer = items;
             if (query.Parameters.Count == 1)
@@ -364,7 +380,7 @@ namespace DataWF.Common
             return buffer;
         }
 
-        public static IEnumerable<T> Select<T>(IList<T> items, QueryParameter<T> param, ListIndexes<T> indexes = null)
+        public static IEnumerable<T> Select<T>(IEnumerable<T> items, QueryParameter<T> param, ListIndexes<T> indexes = null)
         {
             var index = indexes?.GetIndex(param.Property);
             if (index != null)
@@ -374,7 +390,7 @@ namespace DataWF.Common
             return Search<T>(items, param);
         }
 
-        public static IEnumerable Select(IList items, IQuery query, IListIndexes indexes = null)
+        public static IEnumerable Select(IEnumerable items, IQuery query, IListIndexes indexes = null)
         {
             if (query.Parameters.Count() == 0)
             {
@@ -392,9 +408,8 @@ namespace DataWF.Common
             }
             else
             {
-                for (int j = 0; j < items.Count; j++)
+                foreach (var item in items)
                 {
-                    var item = items[j];
                     if (CheckItem(item, query))
                     {
                         yield return item;
@@ -403,7 +418,7 @@ namespace DataWF.Common
             }
         }
 
-        public static IEnumerable Select(IList items, IQueryParameter param, IListIndexes indexes = null)
+        public static IEnumerable Select(IEnumerable items, IQueryParameter param, IListIndexes indexes = null)
         {
             IListIndex index = indexes?.GetIndex(param.Property);
             if (index == null)

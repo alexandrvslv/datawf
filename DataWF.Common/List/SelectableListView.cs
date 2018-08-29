@@ -22,26 +22,21 @@ namespace DataWF.Common
         }
     }
 
-    public class SelectableListView<T> : SelectableList<T>, IFilterable
+    public class SelectableListView<T> : SelectableList<T>, IFilterable<T>
     {
         protected NotifyCollectionChangedEventHandler _listChangedHandler;
         protected PropertyChangedEventHandler _listItemChangedHandler;
-        protected List<InvokerComparer> _comparers;
         protected Query<T> query = new Query<T>();
 
-        protected IList<T> sourceList;
-        protected ISelectable<T> ssourceList;
+        protected IEnumerable source;
+        protected ISelectable selectableSource;
 
         public SelectableListView()
         {
             propertyHandler = null;
         }
 
-        public SelectableListView(IList baseCollection)
-            : this((IList<T>)baseCollection, true)
-        { }
-
-        public SelectableListView(IList<T> baseCollection, bool handle)
+        public SelectableListView(IEnumerable baseCollection, bool handle = true)
         {
             if (handle)
             {
@@ -51,30 +46,30 @@ namespace DataWF.Common
             SetCollection(baseCollection);
         }
 
-        public void SetCollection(IList<T> baseCollection)
+        public void SetCollection(IEnumerable baseCollection)
         {
-            if (sourceList == baseCollection)
+            if (source == baseCollection)
                 return;
-            if (ssourceList != null && _listChangedHandler != null)
+            if (selectableSource != null && _listChangedHandler != null)
             {
-                ssourceList.CollectionChanged -= _listChangedHandler;
-                ssourceList.ItemPropertyChanged -= _listItemChangedHandler;
+                selectableSource.CollectionChanged -= _listChangedHandler;
+                selectableSource.ItemPropertyChanged -= _listItemChangedHandler;
             }
 
-            sourceList = baseCollection;
-            ssourceList = baseCollection as ISelectable<T>;
+            source = baseCollection;
+            selectableSource = baseCollection as ISelectable;
 
-            if (ssourceList != null && _listChangedHandler != null)
+            if (selectableSource != null && _listChangedHandler != null)
             {
-                ssourceList.CollectionChanged += _listChangedHandler;
-                ssourceList.ItemPropertyChanged += _listItemChangedHandler;
+                selectableSource.CollectionChanged += _listChangedHandler;
+                selectableSource.ItemPropertyChanged += _listItemChangedHandler;
             }
             else
             {
                 _listChangedHandler = null;
                 _listItemChangedHandler = null;
             }
-            Update((IEnumerable<T>)sourceList);
+            UpdateInternal(source.TypeOf<T>());
         }
 
         public Query<T> FilterQuery
@@ -91,33 +86,26 @@ namespace DataWF.Common
 
         public override object NewItem()
         {
-            return ssourceList?.NewItem() ?? base.NewItem();
+            return selectableSource?.NewItem() ?? base.NewItem();
         }
 
         public override void Add(T item)
         {
-            if (!sourceList.Contains(item))
+            if (selectableSource != null && !selectableSource.Contains(item))
             {
-                sourceList.Add(item);
+                selectableSource.Add(item);
                 if (_listChangedHandler != null)
                 {
                     return;
                 }
             }
 
-
             base.Add(item);
         }
 
-        public void FilterCollection(IEnumerable<T> items)
+        protected void UpdateInternal(IEnumerable<T> list)
         {
-            ClearInternal();
-            AddRange(items);
-        }
-
-        protected void Update(IEnumerable<T> list)
-        {
-            ClearInternal();
+            ClearInternal();          
 
             foreach (T item in list)
                 InsertInternal(items.Count, item);
@@ -130,37 +118,38 @@ namespace DataWF.Common
 
         public virtual void UpdateFilter()
         {
-            if (sourceList.Count == 0)
-            {
-                Clear();
-            }
-            else
-            {
-                Update(ssourceList != null ? ssourceList.Select(query) : ListHelper.Select<T>(sourceList, query, null));
-            }
+            UpdateInternal(ListHelper.Select<T>(source.TypeOf<T>(), query, selectableSource is ISelectable<T> gSelectable ? gSelectable.Indexes : null));
         }
 
         public virtual void SourceListChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            T newItem = e.NewItems == null ? default(T) : e.NewItems.Cast<T>().FirstOrDefault();
-            T oldItem = e.OldItems == null ? default(T) : e.OldItems.Cast<T>().FirstOrDefault();
-
+            T newItem = e.NewItems == null ? default(T) : e.NewItems.TypeOf<T>().FirstOrDefault();
+            T oldItem = e.OldItems == null ? default(T) : e.OldItems.TypeOf<T>().FirstOrDefault();
             switch (e.Action)
             {
                 case NotifyCollectionChangedAction.Reset:
                     UpdateFilter();
                     break;
                 case NotifyCollectionChangedAction.Move:
-                    SourceItemChanged(newItem, new PropertyChangedEventArgs(string.Empty));
+                    if (newItem != null)
+                    {
+                        SourceItemChanged(newItem, new PropertyChangedEventArgs(string.Empty));
+                    }
                     break;
                 case NotifyCollectionChangedAction.Replace:
-                    Remove(oldItem);
+                    if (oldItem != null)
+                    {
+                        Remove(oldItem);
+                    }
                     goto case NotifyCollectionChangedAction.Add;
                 case NotifyCollectionChangedAction.Remove:
-                    Remove(oldItem);
+                    if (oldItem != null)
+                    {
+                        Remove(oldItem);
+                    }
                     break;
                 case NotifyCollectionChangedAction.Add:
-                    if (ListHelper.CheckItem(newItem, query))
+                    if (newItem != null && ListHelper.CheckItem(newItem, query))
                     {
                         base.Add(newItem);
                     }
@@ -195,16 +184,16 @@ namespace DataWF.Common
             if (query.Parameters.Count > 0)
             {
                 query.Parameters.Clear();
-                Update(sourceList);
+                UpdateInternal(source.TypeOf<T>());
             }
         }
 
         public override void Dispose()
         {
-            if (ssourceList != null && _listChangedHandler != null)
+            if (selectableSource != null && _listChangedHandler != null)
             {
-                ssourceList.CollectionChanged -= _listChangedHandler;
-                ssourceList.ItemPropertyChanged -= _listItemChangedHandler;
+                selectableSource.CollectionChanged -= _listChangedHandler;
+                selectableSource.ItemPropertyChanged -= _listItemChangedHandler;
             }
 
             base.Dispose();
