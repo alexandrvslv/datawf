@@ -46,7 +46,12 @@ namespace DataWF.Web.Common
             {
                 using (var query = new QQuery(filter, table))
                 {
-                    return new ActionResult<IEnumerable<T>>(table.LoadByStamp(query));
+                    if (table.IsSynchronized)
+                    {
+                        return new ActionResult<IEnumerable<T>>(table.Select(query));
+                    }
+
+                    return new ActionResult<IEnumerable<T>>(table.Load(query));
                 }
             }
             catch (Exception ex)
