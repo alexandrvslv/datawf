@@ -66,14 +66,11 @@ namespace DataWF.Common
             var parameter = Parameters[property];
             if (parameter == null)
             {
-                parameter = Parameters.Add(logic, property, comparer, value);
+                parameter = Parameters.Add(logic, property, comparer, null);
             }
-            else
-            {
-                parameter.Logic = logic;
-                parameter.Comparer = comparer;
-                parameter.Value = value;
-            }
+            parameter.Logic = logic;
+            parameter.Comparer = comparer;
+            parameter.Value = value;
             return parameter;
         }
 

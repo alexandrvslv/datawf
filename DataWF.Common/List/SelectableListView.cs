@@ -6,27 +6,12 @@ using System.Linq;
 
 namespace DataWF.Common
 {
-    public class ListTreeView<T> : SelectableListView<T> where T : IGroup
-    {
-        QueryParameter<T> groupParam;
-
-        public ListTreeView()
-        {
-            groupParam = GroupHelper.CreateTreeFilter<T>();
-            query.Parameters.Add(groupParam);
-        }
-
-        public ListTreeView(IList<T> baseCollection) : this()
-        {
-            SetCollection(baseCollection);
-        }
-    }
 
     public class SelectableListView<T> : SelectableList<T>, IFilterable<T>
     {
         protected NotifyCollectionChangedEventHandler _listChangedHandler;
         protected PropertyChangedEventHandler _listItemChangedHandler;
-        protected Query<T> query = new Query<T>();
+        protected Query<T> query;
 
         protected IEnumerable source;
         protected ISelectable selectableSource;
@@ -34,9 +19,11 @@ namespace DataWF.Common
         public SelectableListView()
         {
             propertyHandler = null;
+            FilterQuery = new Query<T>();
         }
 
         public SelectableListView(IEnumerable baseCollection, bool handle = true)
+            : this()
         {
             if (handle)
             {
@@ -75,6 +62,34 @@ namespace DataWF.Common
         public Query<T> FilterQuery
         {
             get { return query; }
+            set
+            {
+                if (query != value)
+                {
+                    if (query != null)
+                    {
+                        query.Parameters.ItemPropertyChanged -= FilterPropertyChanged;
+                    }
+                    query = value;
+                    if (query != null)
+                    {
+                        query.Parameters.ItemPropertyChanged += FilterPropertyChanged;
+                    }
+                }
+            }
+        }
+
+        private void FilterPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            switch (e.PropertyName)
+            {
+                case nameof(QueryParameter<T>.Value):
+                    UpdateFilter();
+                    break;
+                case nameof(QueryParameter<T>.SortDirection):
+                    FilterQuery.Sort(this);
+                    break;
+            }
         }
 
         public InvokerComparerList SortDescriptions
@@ -105,7 +120,7 @@ namespace DataWF.Common
 
         protected void UpdateInternal(IEnumerable<T> list)
         {
-            ClearInternal();          
+            ClearInternal();
 
             foreach (T item in list)
                 InsertInternal(items.Count, item);

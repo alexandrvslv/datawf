@@ -18,6 +18,18 @@ namespace DataWF.Common
         private object typedValue;
         private ListSortDirection? sortDirection;
 
+        public QueryParameter()
+        { }
+
+        public QueryParameter(string property)
+        {
+            Property = property;
+            if (Invoker?.DataType == typeof(string))
+            {
+                Comparer = CompareType.Like;
+            }
+        }
+
         [JsonIgnore, XmlIgnore]
         public object Tag { get; set; }
 
