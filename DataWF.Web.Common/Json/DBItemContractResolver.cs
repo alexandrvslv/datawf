@@ -65,10 +65,10 @@ namespace DataWF.Web.Common
                 }
             }
             var contract = base.CreateObjectContract(objectType);
-            //if (objectType.IsEnum)
-            //{
-            //    contract.Converter = stringConverter;
-            //}
+            if (objectType.IsEnum)
+            {
+                contract.Converter = stringConverter;
+            }
             return contract;
         }
     }
