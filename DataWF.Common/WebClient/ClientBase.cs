@@ -1,5 +1,4 @@
-﻿using DataWF.Common;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,7 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace NewNameSpace
+namespace DataWF.Common
 {
     /// <summary>
     /// Base Client Template
@@ -169,9 +168,20 @@ namespace NewNameSpace
                                                 var serializer = new JsonSerializer();
                                                 using (var jreader = new JsonTextReader(reader))
                                                 {
-                                                    while (jreader.Read() && jreader.TokenType == JsonToken.StartObject)
+                                                    while (jreader.Read())
                                                     {
-                                                        result = DeserializeObject<R>(serializer, jreader);
+                                                        switch (jreader.TokenType)
+                                                        {
+                                                            case JsonToken.StartObject:
+                                                                result = DeserializeObject<R>(serializer, jreader, value is R rvalue ? rvalue : default(R));
+                                                                break;
+                                                            case JsonToken.StartArray:
+                                                                result = (R)DeserializeArray(serializer, jreader, typeof(R));
+                                                                break;
+                                                            default:
+                                                                result = serializer.Deserialize<R>(jreader);
+                                                                break;
+                                                        }
                                                     }
                                                 }
                                             }
@@ -275,53 +285,57 @@ namespace NewNameSpace
         {
             var client = Provider.GetClient<I>();
             var items = EmitInvoker.CreateObject<R>();
-            while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
+            if (client != null)
             {
-                if (jreader.TokenType == JsonToken.StartObject)
+                while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
                 {
-                    if (client != null)
-                        items.Add(client.DeserializeItem(serializer, jreader));
-                    else
-                        items.Add(DeserializeObject<I>(serializer, jreader));
+                    items.Add(client.DeserializeItem(serializer, jreader, default(I)));
+                }
+            }
+            else
+            {
+                while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
+                {
+                    items.Add(serializer.Deserialize<I>(jreader));
 
                 }
             }
+
             return items;
         }
 
         protected virtual IList DeserializeArray(JsonSerializer serializer, JsonTextReader jreader, Type type)
         {
-            var client = Provider.GetClient(type.GetGenericArguments()[0]);
+            var itemType = type.GetGenericArguments()[0];
+            var client = Provider.GetClient(itemType);
             var items = (IList)EmitInvoker.CreateObject(type);
-            while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
+            if (client != null)
             {
-                if (jreader.TokenType == JsonToken.StartObject)
+                while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
                 {
-                    if (client != null)
-                        items.Add(client.DeserializeItem(serializer, jreader));
-                    else
-                        items.Add(DeserializeObject(serializer, jreader, type));
-
+                    items.Add(client.DeserializeItem(serializer, jreader, null));
                 }
             }
+            else
+            {
+                while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
+                {
+                    items.Add(serializer.Deserialize(jreader, itemType));
+                }
+            }
+
             return items;
         }
 
-        public virtual R DeserializeObject<R>(JsonSerializer serializer, JsonTextReader jreader)
+        public virtual R DeserializeObject<R>(JsonSerializer serializer, JsonTextReader jreader, R item)
         {
             var client = Provider.GetClient<R>();
             if (client != null)
-                return client.DeserializeItem(serializer, jreader);
+            {
+                return client.DeserializeItem(serializer, jreader, item);
+            }
 
             return serializer.Deserialize<R>(jreader);
-        }
-
-        public virtual object DeserializeObject(JsonSerializer serializer, JsonTextReader jreader, Type type)
-        {
-            var client = Provider.GetClient(type);
-            if (client != null)
-                return client.DeserializeItem(serializer, jreader);
-            return serializer.Deserialize(jreader, type);
         }
 
         public Dictionary<string, IEnumerable<string>> GetHeaders(HttpResponseMessage response)

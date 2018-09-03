@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.Net.Http;
 
-namespace NewNameSpace
+namespace DataWF.Common
 {
     public class AuthorizationInfo
     {

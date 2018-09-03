@@ -6,24 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="ClientTemplate\AuthorizationInfo.cs" />
-    <Compile Remove="ClientTemplate\Client.cs" />
-    <Compile Remove="ClientTemplate\ClientBase.cs" />
-    <Compile Remove="ClientTemplate\ClientException.cs" />
-    <Compile Remove="ClientTemplate\ClientExceptionT.cs" />
-    <Compile Remove="ClientTemplate\IClient.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="ClientTemplate\AuthorizationInfo.cs" />
-    <EmbeddedResource Include="ClientTemplate\Client.cs" />
-    <EmbeddedResource Include="ClientTemplate\ClientBase.cs" />
-    <EmbeddedResource Include="ClientTemplate\ClientException.cs" />
-    <EmbeddedResource Include="ClientTemplate\ClientExceptionT.cs" />
-    <EmbeddedResource Include="ClientTemplate\IClient.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="2.1.2" />
     <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="2.1.2" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.1.2" />

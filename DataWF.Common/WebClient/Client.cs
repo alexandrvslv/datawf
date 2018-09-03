@@ -1,11 +1,10 @@
-﻿using DataWF.Common;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace NewNameSpace
+namespace DataWF.Common
 {
     public abstract partial class Client<T, K> : ClientBase, ICRUDClient<T> where T : class, new() where K : struct
     {
@@ -26,10 +25,9 @@ namespace NewNameSpace
 
         public SelectableList<T> Items { get; set; } = new SelectableList<T>();
 
-        public virtual T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, Dictionary<PropertySerializationInfo, object> dictionary = null, object id = null)
+        public virtual T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, T item, Dictionary<PropertySerializationInfo, object> dictionary = null, object id = null)
         {
             dictionary = dictionary ?? new Dictionary<PropertySerializationInfo, object>();
-            var item = (T)null;
             var property = (PropertySerializationInfo)null;
             while (jreader.Read() && jreader.TokenType != JsonToken.EndObject)
             {
@@ -63,7 +61,7 @@ namespace NewNameSpace
                                 if (typeId != TypeId)
                                 {
                                     var client = Provider.GetClient(typeof(T), typeId);
-                                    item = (T)client.DeserializeItem(serializer, jreader, dictionary, id);
+                                    item = (T)client.DeserializeItem(serializer, jreader, item, dictionary, id);
                                     if (Select(IdInvoker.GetValue(item).Value) == null)
                                     {
                                         Items.Add(item);
@@ -75,14 +73,14 @@ namespace NewNameSpace
                     }
                 }
             }
-            return DeserializeItem(dictionary, id);
+            return DeserializeItem(item, dictionary, id);
         }
 
-        public virtual T DeserializeItem(Dictionary<PropertySerializationInfo, object> dictionary, object id)
+        public virtual T DeserializeItem(T item, Dictionary<PropertySerializationInfo, object> dictionary, object id)
         {
             var add = false;
-            var item = default(T);
-            if (id != null)
+            
+            if (id != null && item == null)
             {
                 item = Select((K)id);
             }
@@ -107,9 +105,18 @@ namespace NewNameSpace
             return item;
         }
 
-        object ICRUDClient.DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, Dictionary<PropertySerializationInfo, object> dictionary, object id)
+        public object DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, object item, Dictionary<PropertySerializationInfo, object> dictionary, object id)
         {
-            return DeserializeItem(serializer, jreader, dictionary, id);
+            return DeserializeItem(serializer, jreader, item as T, dictionary, id);
+        }
+
+        public override R DeserializeObject<R>(JsonSerializer serializer, JsonTextReader jreader, R item)
+        {
+            if (typeof(R) == typeof(T))
+            {
+                return (R)(object)DeserializeItem(serializer, jreader, (T)(object)item);
+            }
+            return base.DeserializeObject(serializer, jreader, item);
         }
 
         public virtual T Select(K id)

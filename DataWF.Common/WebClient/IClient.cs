@@ -1,23 +1,11 @@
-﻿using DataWF.Common;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace NewNameSpace
+namespace DataWF.Common
 {
-    public interface IItem
-    {
-        object PrimaryId { get; set; }
-        IClient Client { get; set; }
-    }
-
-    public interface IItem<K>
-    {
-        K Id { get; set; }
-    }
-
     public interface IClientProvider
     {
         string BaseUrl { get; set; }
@@ -25,7 +13,7 @@ namespace NewNameSpace
         AuthorizationInfo Authorization { get; set; }
         ICRUDClient<T> GetClient<T>();
         ICRUDClient GetClient(Type type);
-        ICRUDClient GetClient(Type type, int typeId);        
+        ICRUDClient GetClient(Type type, int typeId);
     }
 
     public interface IClient
@@ -44,7 +32,7 @@ namespace NewNameSpace
         Task GetAsync(object id);
         Task PostAsync(object value);
         Task PutAsync(object value);
-        object DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, Dictionary<PropertySerializationInfo, object> dictionary = null, object id = null);
+        object DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, object item = null, Dictionary<PropertySerializationInfo, object> dictionary = null, object id = null);
     }
 
     public interface ICRUDClient<T> : ICRUDClient
@@ -58,7 +46,7 @@ namespace NewNameSpace
         Task<T> PostAsync(T value, CancellationToken cancellationToken);
         Task<T> PutAsync(T value, CancellationToken cancellationToken);
         Task<bool> DeleteAsync(object id, CancellationToken cancellationToken);
-        new T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, Dictionary<PropertySerializationInfo, object> dictionary = null, object id = null);
+        T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, T item, Dictionary<PropertySerializationInfo, object> dictionary = null, object id = null);
     }
 
     public enum ClientStatus
