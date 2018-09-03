@@ -18,14 +18,13 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using DataWF.Common;
+using DataWF.Data;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
-using DataWF.Data;
-using DataWF.Common;
-using System.Runtime.Serialization;
 using System.Linq;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Flow
 {
@@ -173,10 +172,11 @@ namespace DataWF.Module.Flow
         //    return GetReferencing<TemplateParam>(nameof(TemplateParam.TemplateId), DBLoadParam.None);
         //}
 
-        [ControllerMethod]
-        public IEnumerable<TemplateData> GetDatas()
+        [Referencing(nameof(TemplateData.TemplateId))]
+        public IEnumerable<TemplateData> Datas
         {
-            return GetReferencing<TemplateData>(nameof(TemplateData.TemplateId), DBLoadParam.None);
+            get { return GetReferencing<TemplateData>(nameof(TemplateData.TemplateId), DBLoadParam.None); }
+            set { SetReferencing<TemplateData>(value, nameof(TemplateData.TemplateId)); }
         }
 
         //[Browsable(false)]
@@ -218,7 +218,7 @@ namespace DataWF.Module.Flow
             var document = CreateDocument();
             document.GenerateId();
             document.DocumentDate = DateTime.Now;
-            if (document.Template.GetDatas().Any())
+            if (document.Template.Datas.Any())
             {
                 var data = document.CreateTemplatedData();
                 data.Attach();

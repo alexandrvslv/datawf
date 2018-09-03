@@ -560,7 +560,7 @@ namespace DataWF.Module.Flow
         [ControllerMethod]
         public virtual DocumentData CreateTemplatedData()
         {
-            return GenerateFromTemplate<DocumentData>(Template.GetDatas().FirstOrDefault());
+            return GenerateFromTemplate<DocumentData>(Template.Datas.FirstOrDefault());
         }
 
         public T GenerateFromTemplate<T>(TemplateData templateData) where T : DocumentData, new()

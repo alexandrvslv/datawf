@@ -1,15 +1,13 @@
-﻿using DataWF.Data;
-using DataWF.Data.Gui;
+﻿using DataWF.Common;
+using DataWF.Data;
 using DataWF.Gui;
-using DataWF.Common;
+using DataWF.Module.Flow;
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
-using DataWF.Module.Flow;
 using Xwt;
 using Xwt.Drawing;
-using System.Linq;
-using System.Collections.Generic;
 
 namespace DataWF.Module.FlowGui
 {
@@ -44,7 +42,7 @@ namespace DataWF.Module.FlowGui
                 base.Document = value;
                 if (value != null)
                 {
-                    toolTemplate.Visible = value.Template.GetDatas().Any();
+                    toolTemplate.Visible = value.Template.Datas.Any();
                 }
             }
         }

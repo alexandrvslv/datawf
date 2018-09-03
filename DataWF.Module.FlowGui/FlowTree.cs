@@ -1,16 +1,11 @@
-﻿using System;
-using System.Collections;
-using System.ComponentModel;
+﻿using DataWF.Common;
 using DataWF.Data;
 using DataWF.Data.Gui;
-using DataWF.Gui;
-using DataWF.Common;
-using Xwt;
-using Xwt.Drawing;
-using DataWF.Module.Flow;
-using DataWF.Module.Common;
 using DataWF.Module.CommonGui;
-using System.Collections.Generic;
+using DataWF.Module.Flow;
+using System;
+using System.ComponentModel;
+using Xwt.Drawing;
 
 namespace DataWF.Module.FlowGui
 {
@@ -102,7 +97,7 @@ namespace DataWF.Module.FlowGui
                     node.Glyph = GlyphType.Book;
                     node.GlyphColor = Colors.LightBlue;
                 }
-                InitItems(((Template)item).GetDatas(), node, ShowTemplateData);
+                InitItems(((Template)item).Datas, node, ShowTemplateData);
             }
             else if (item is Work)
             {
@@ -130,7 +125,7 @@ namespace DataWF.Module.FlowGui
             var item = (DBItem)node.Item;
             if (item is Template)
             {
-                InitItems(((Template)item).GetDatas(), node, ShowTemplateData);
+                InitItems(((Template)item).Datas, node, ShowTemplateData);
             }
             else if (item is Work)
             {
