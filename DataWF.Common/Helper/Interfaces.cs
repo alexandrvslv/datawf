@@ -238,6 +238,11 @@ namespace DataWF.Common
         object PrimaryKey { get; set; }
     }
 
+    public interface IPrimaryKey<K> : IPrimaryKey
+    {
+        new K PrimaryKey { get; set; }
+    }
+
     public interface ISynchronized
     {
         bool? IsSynchronized { get; set; }
