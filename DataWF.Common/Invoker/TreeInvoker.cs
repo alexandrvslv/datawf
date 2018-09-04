@@ -7,12 +7,11 @@ namespace DataWF.Common
         public TreeInvoker()
         {
             Name = nameof(IGroup.IsExpanded);
-            DataType = typeof(bool);
         }
 
         public bool CanWrite { get { return false; } }
 
-        public Type DataType { get; set; }
+        public Type DataType { get { return typeof(bool); } }
 
         public Type TargetType { get { return typeof(T); } }
 

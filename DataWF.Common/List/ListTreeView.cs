@@ -2,17 +2,18 @@
 
 namespace DataWF.Common
 {
-    public class ListTreeView<T> : SelectableListView<T> where T : IGroup
+    public class TreeListView<T> : SelectableListView<T> where T : IGroup
     {
         QueryParameter<T> groupParam;
 
-        public ListTreeView()
+        public TreeListView() : base()
         {
             groupParam = GroupHelper.CreateTreeFilter<T>();
-            query.Parameters.Add(groupParam);
+            FilterQuery.Parameters.Add(groupParam);
+            ApplySort((IComparer<T>)new TreeComparer<T>());
         }
 
-        public ListTreeView(IList<T> baseCollection) : this()
+        public TreeListView(IEnumerable<T> baseCollection) : this()
         {
             SetCollection(baseCollection);
         }
