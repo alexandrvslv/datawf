@@ -1,15 +1,13 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json.Serialization;
 using Swashbuckle.AspNetCore.Swagger;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Configuration;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
-using Newtonsoft.Json.Serialization;
 
 namespace DataWF.Web.Common
 {
@@ -74,6 +72,8 @@ namespace DataWF.Web.Common
                  c.SchemaFilter<SwaggerDBSchemaFilter>();
                  c.OperationFilter<SwaggerFileUploadOperationFilter>();
                  c.ParameterFilter<SwaggerEnumParameterFilter>();
+                 c.MapType<System.IO.Stream>(() => new Schema { Type = "file" });
+                 c.MapType<Microsoft.AspNetCore.Mvc.FileStreamResult>(() => new Schema { Type = "file" });
                  c.UseReferencedDefinitionsForEnums();
                  c.DescribeAllEnumsAsStrings();
                  c.ResolveConflictingActions(parameters =>

@@ -77,12 +77,12 @@ namespace DataWF.Common
             };
             Provider?.Authorization?.FillRequest(request);
 
-            if (value is string filePath && parameters.Length > 1)
+            if (value is Stream stream && parameters.Length > 1)
             {
                 var fileName = (string)parameters[1];
                 var content = new MultipartFormDataContent();
                 content.Headers.ContentType = MediaTypeHeaderValue.Parse(mediaType);
-                content.Add(new StreamContent(File.Open(filePath, FileMode.Open)), Path.GetFileNameWithoutExtension(fileName), fileName);
+                content.Add(new StreamContent(stream), Path.GetFileNameWithoutExtension(fileName), fileName);//File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 request.Content = content;
             }
             else if (value != null)
@@ -150,14 +150,13 @@ namespace DataWF.Common
                                             if (mediaType.Equals("application/octet-stream"))
                                             {
                                                 var headers = GetHeaders(response);
-                                                var fileName = headers.TryGetValue("FileName", out var names) ? names.FirstOrDefault() : "somefile.someextension";
-                                                var filePath = Path.Combine(Path.GetTempPath(), AppDomain.CurrentDomain.FriendlyName, fileName);
+                                                string fileName = GetFileName(headers);
+                                                var filePath = Path.Combine(Path.GetTempPath(), fileName);
 
-                                                using (var fileStream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.Write))
-                                                {
-                                                    await responseStream.CopyToAsync(fileStream, 8192, cancellationToken).ConfigureAwait(false);
-                                                }
-                                                return (R)(object)filePath;
+                                                var fileStream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite);
+                                                await responseStream.CopyToAsync(fileStream, 8192, cancellationToken).ConfigureAwait(false);
+                                                await fileStream.FlushAsync();
+                                                return (R)(object)fileStream;
                                             }
                                             else if (typeof(R) == typeof(string))
                                             {
@@ -215,6 +214,15 @@ namespace DataWF.Common
                     }
                 }
             }
+        }
+
+        private static string GetFileName(Dictionary<string, IEnumerable<string>> headers)
+        {
+            var fileName = headers.TryGetValue("Content-Disposition", out var disposition)
+                ? disposition.FirstOrDefault() : "somefile.someextension";
+            fileName = fileName.Replace("attachment; filename=", "");
+            var index = fileName.IndexOf(";");
+            return fileName.Substring(0, index > -1 ? index : fileName.Length).Trim(' ', '\"');
         }
 
         public virtual async Task<R> RequestArray<R, I>(CancellationToken cancellationToken,

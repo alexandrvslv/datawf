@@ -44,6 +44,7 @@ namespace DataWF.Web.CodeGenerator
                 SyntaxHelper.CreateUsingDirective("System.Collections.Generic") ,
                 SyntaxHelper.CreateUsingDirective("System.ComponentModel") ,
                 SyntaxHelper.CreateUsingDirective("System.Linq") ,
+                SyntaxHelper.CreateUsingDirective("System.IO") ,
                 SyntaxHelper.CreateUsingDirective("System.Runtime.Serialization") ,
                 SyntaxHelper.CreateUsingDirective("System.Runtime.CompilerServices") ,
                 SyntaxHelper.CreateUsingDirective("System.Threading") ,
@@ -884,7 +885,7 @@ namespace DataWF.Web.CodeGenerator
                     }
                     break;
                 case JsonObjectType.File:
-                    return "string";
+                    return "Stream";
             }
             return "string";
         }
