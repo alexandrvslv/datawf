@@ -3291,7 +3291,7 @@ namespace DataWF.Gui
             }
 
             if (TreeMode)
-                return new TreeComparer(comparers);
+                return new TreeComparer<IGroup>(comparers);
             else
                 return comparers;
         }

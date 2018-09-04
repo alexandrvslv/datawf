@@ -727,7 +727,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             var rows = fill ? table.LoadItems().ToList() : table.SelectItems("").ToList();
             if (table.GroupKey != null)
             {
-                ListHelper.QuickSort(rows, new TreeComparer(null));
+                ListHelper.QuickSort(rows, new TreeComparer<DBGroupItem>());
             }
             return DMLInsert(rows, "");
         }
