@@ -214,7 +214,11 @@ namespace DataWF.Web.Common
 
         public override BadRequestObjectResult BadRequest(object error)
         {
-            Helper.OnException((Exception)error);
+            if (error is Exception exception)
+            {
+                Helper.OnException(exception);
+            }
+
             return base.BadRequest(error);
         }
 

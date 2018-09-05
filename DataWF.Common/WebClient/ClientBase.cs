@@ -81,7 +81,7 @@ namespace DataWF.Common
             {
                 var fileName = (string)parameters[1];
                 var content = new MultipartFormDataContent();
-                content.Headers.ContentType = MediaTypeHeaderValue.Parse(mediaType);
+               // content.Headers.ContentType = MediaTypeHeaderValue.Parse(mediaType);
                 content.Add(new StreamContent(stream), Path.GetFileNameWithoutExtension(fileName), fileName);//File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 request.Content = content;
             }
