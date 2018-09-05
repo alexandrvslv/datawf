@@ -335,6 +335,11 @@ namespace DataWF.Common
             }
         }
 
+        public static Stream GetGZipStrem(Stream stream)
+        {
+            return new GZipInputStream(stream);
+        }
+
         public static MemoryStream GetUnGZipStrem(Stream stream)
         {
             using (var zipStream = new GZipInputStream(stream))
