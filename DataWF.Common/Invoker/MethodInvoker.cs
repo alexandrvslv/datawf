@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Reflection.Emit;
 using System.Reflection;
+using System.Reflection.Emit;
 
 namespace DataWF.Common
 {
     public class MethodInvoker<T, V> : IndexInvoker<T, V, object[]>
     {
-
-        public MethodInvoker(MethodInfo infoGet, MethodInfo infoSet)
+        public MethodInvoker(MethodInfo infoGet)
             : base(infoGet.Name, GetMethodInvoker(infoGet))
         {
 
