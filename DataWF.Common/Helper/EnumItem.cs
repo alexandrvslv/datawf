@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 
@@ -9,16 +8,22 @@ namespace DataWF.Common
 {
     public class EnumItem : ICheck, INotifyPropertyChanged
     {
+        public static string Format(object item)
+        {
+            var text = item.ToString();
+            var attribute = item.GetType().GetRuntimeField(text).GetCustomAttribute<EnumMemberAttribute>(false);
+            if (attribute != null)
+                text = attribute.Value;
+            return text;
+        }
+
         private bool check;
 
         public override string ToString()
         {
             if (Name == null)
             {
-                var type = Value.GetType();
-                var name = Value.ToString();
-                var memeberName = type.GetMember(name)?.FirstOrDefault()?.GetCustomAttribute<EnumMemberAttribute>()?.Value;
-                Name = Locale.Get(Locale.GetTypeCategory(type), memeberName ?? name);
+                Name = Format(Value);
             }
             return Name;
         }
@@ -87,6 +92,11 @@ namespace DataWF.Common
         }
 
         public static Dictionary<T, EnumItem<T>> Cache = new Dictionary<T, EnumItem<T>>();
+
+        public static string Format(T item)
+        {
+            return ((EnumItem<T>)item).Text;
+        }
 
         public static bool operator ==(T item, EnumItem<T> enumItem) { return item.Equals(enumItem.Value); }
 
