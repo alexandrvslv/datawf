@@ -426,7 +426,7 @@ namespace DataWF.Common
             Remove(items[index], index);
         }
 
-        public int IndexOf(object item)
+        public virtual int IndexOf(object item)
         {
             return IndexOf((T)item);
         }
@@ -456,10 +456,14 @@ namespace DataWF.Common
 
         object IList.this[int index]
         {
-            get { return this[index]; }
+            get { return GetItem(index); }
             set { this[index] = (T)value; }
         }
 
+        public virtual object GetItem(int index)
+        {
+            return this[index];
+        }
 
         public void ApplySortInternal(params string[] property)
         {
