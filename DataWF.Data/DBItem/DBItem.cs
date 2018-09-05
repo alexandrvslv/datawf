@@ -1354,7 +1354,7 @@ namespace DataWF.Data
         public Stream GetZipMemoryStream(DBColumn column, int bufferSize = 8192)
         {
             var memoryStream = GetMemoryStream(column, bufferSize);
-            return Helper.IsGZip(memoryStream) ? Helper.GetGZipStrem(memoryStream) : memoryStream;
+            return Helper.IsGZip(memoryStream) ? Helper.GetUnGZipStrem(memoryStream) : memoryStream;
         }
 
         public MemoryStream GetMemoryStream(DBColumn column, int bufferSize = 8192)
@@ -1374,8 +1374,8 @@ namespace DataWF.Data
 
         public Stream GetZipFileStream(DBColumn column, string path, int bufferSize = 8192)
         {
-            var fileStream = GetFileStream(column, path, bufferSize);
-            return Helper.IsGZip(fileStream) ? Helper.GetGZipStrem(fileStream) : fileStream;
+            var fileStream = (Stream)GetFileStream(column, path, bufferSize);
+            return Helper.IsGZip(fileStream) ? Helper.GetUnGZipStrem(fileStream) : fileStream;
         }
 
         public FileStream GetFileStream(DBColumn column, string path, int bufferSize = 8192)

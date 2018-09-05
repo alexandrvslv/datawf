@@ -1,9 +1,7 @@
-﻿using System;
+﻿using DataWF.Common;
+using System;
 using System.IO;
-using DataWF.Gui;
-using DataWF.Common;
 using Xwt;
-using Xwt.Drawing;
 
 namespace DataWF.Gui
 {
@@ -89,7 +87,7 @@ namespace DataWF.Gui
                 {
                     Stream stream;
                     if (Helper.IsGZip(fileStream))
-                        stream = Helper.GetGZipStrem(fileStream);
+                        stream = Helper.GetUnGZipStrem(fileStream);
                     else
                         stream = fileStream;
                     newList = Serialization.Deserialize(stream) as StateInfoList;

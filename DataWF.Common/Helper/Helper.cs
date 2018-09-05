@@ -1,18 +1,15 @@
-﻿using ICSharpCode.SharpZipLib.GZip;
+﻿using ICSharpCode.SharpZipLib.Core;
+using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Zip;
-using ICSharpCode.SharpZipLib.Core;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.CodeDom.Compiler;
-using System.Linq;
-using System.Runtime.Serialization;
 
 namespace DataWF.Common
 {
@@ -338,9 +335,15 @@ namespace DataWF.Common
             }
         }
 
-        public static Stream GetGZipStrem(Stream data)
+        public static MemoryStream GetUnGZipStrem(Stream stream)
         {
-            return new GZipInputStream(data);
+            using (var zipStream = new GZipInputStream(stream))
+            {
+                var outStream = new MemoryStream();
+                zipStream.CopyTo(outStream);
+                outStream.Position = 0;
+                return outStream;
+            }
         }
 
         public static byte[] ReadGZip(byte[] data)
@@ -349,13 +352,9 @@ namespace DataWF.Common
                 return null;
             using (var stream = new MemoryStream(data))
             {
-                using (var zipStream = GetGZipStrem(stream))
+                using (var outstream = GetUnGZipStrem(stream))
                 {
-                    using (var outStream = new MemoryStream())
-                    {
-                        zipStream.CopyTo(outStream);
-                        return outStream.ToArray();
-                    }
+                    return outstream.ToArray();
                 }
             }
         }
