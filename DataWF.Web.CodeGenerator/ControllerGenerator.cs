@@ -98,14 +98,14 @@ namespace DataWF.Web.CodeGenerator
 
         private ClassDeclarationSyntax GetOrGenerateBaseController(TableAttributeCache tableAttribute, Type itemType, out string controllerClassName)
         {
-            string name = "Base" + itemType.Name;
+            string name = $"Base{(tableAttribute.FileKey != null ? "File" : "")}{itemType.Name}";
             controllerClassName = $"{name}Controller";
 
             if (!trees.TryGetValue(name, out var baseController))
             {
                 var fileColumn = tableAttribute.Columns.FirstOrDefault(p => (p.Attribute.Keys & DBColumnKeys.File) == DBColumnKeys.File);
                 var primaryKeyType = tableAttribute.PrimaryKey?.GetDataType() ?? typeof(int);
-                var baseType = $"Base{(IsPrimaryType(itemType.BaseType) ? "" : itemType.BaseType.Name)}Controller<T, K>";
+                var baseType = $"Base{(tableAttribute.FileKey != null ? "File" : "")}{(IsPrimaryType(itemType.BaseType) ? "" : itemType.BaseType.Name)}Controller<T, K>";
                 baseController = SyntaxFactory.ClassDeclaration(
                     attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
                     modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.AbstractKeyword)),

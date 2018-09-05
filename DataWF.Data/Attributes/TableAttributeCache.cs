@@ -17,14 +17,13 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using System;
 using DataWF.Common;
-using System.ComponentModel;
+using System;
 using System.Collections.Generic;
-using System.Reflection;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Globalization;
+using System.Reflection;
 
 namespace DataWF.Data
 {
@@ -47,6 +46,7 @@ namespace DataWF.Data
         private List<Type> cachedTypes = new List<Type>();
         private ColumnAttributeCache cachePrimaryKey;
         private ColumnAttributeCache cacheTypeKey;
+        private ColumnAttributeCache cacheFileKey;
 
         public TableAttribute Attribute { get; set; }
 
@@ -100,6 +100,18 @@ namespace DataWF.Data
                     cacheTypeKey = cacheColumns.FirstOrDefault(p => (p.Attribute.Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType);
                 }
                 return cacheTypeKey;
+            }
+        }
+
+        public ColumnAttributeCache FileKey
+        {
+            get
+            {
+                if (cacheFileKey == null)
+                {
+                    cacheFileKey = cacheColumns.FirstOrDefault(p => (p.Attribute.Keys & DBColumnKeys.File) == DBColumnKeys.File);
+                }
+                return cacheFileKey;
             }
         }
 
