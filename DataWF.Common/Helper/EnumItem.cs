@@ -11,10 +11,8 @@ namespace DataWF.Common
         public static string Format(object item)
         {
             var text = item.ToString();
-            var attribute = item.GetType().GetRuntimeField(text).GetCustomAttribute<EnumMemberAttribute>(false);
-            if (attribute != null)
-                text = attribute.Value;
-            return text;
+            var field = item.GetType().GetRuntimeField(text);
+            return field?.GetCustomAttribute<EnumMemberAttribute>(false)?.Value ?? text;
         }
 
         private bool check;
