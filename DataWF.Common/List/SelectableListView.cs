@@ -22,7 +22,12 @@ namespace DataWF.Common
             FilterQuery = new Query<T>();
         }
 
-        public SelectableListView(IEnumerable baseCollection, bool handle = true)
+        public SelectableListView(IEnumerable baseCollection)
+            : this(baseCollection, true)
+        {
+        }
+
+        public SelectableListView(IEnumerable baseCollection, bool handle)
             : this()
         {
             if (handle)
