@@ -4,6 +4,8 @@ namespace DataWF.Common
 {
     public class TreeInvoker<T> : IInvoker<T, bool> where T : IGroup
     {
+        public static readonly IInvoker<T, bool> Instance = new TreeInvoker<T>();
+
         public TreeInvoker()
         {
             Name = nameof(IGroup.IsExpanded);
