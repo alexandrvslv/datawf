@@ -274,8 +274,8 @@ namespace DataWF.Data
                     {
                         cacheIndexes.Add(index);
                     }
-                    InitializeDefault(property);
                 }
+                InitializeDefault(property);
             }
             foreach (var property in properties)
             {

@@ -64,7 +64,19 @@ namespace DataWF.Common
 
         public bool IsEmpty
         {
-            get { return Comparer.Type != CompareTypes.Is && (Value == null || (Value is string strFilter && strFilter.Length == 0)); }
+            get
+            {
+                return Comparer.Type != CompareTypes.Is
+                  && (Value == null || (Value is string strFilter && strFilter.Length == 0));
+            }
+        }
+
+        public bool IsEmptyFormat
+        {
+            get
+            {
+                return IsEmpty || string.IsNullOrEmpty(FormatValue());
+            }
         }
 
         public object Value
