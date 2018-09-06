@@ -7,7 +7,7 @@ namespace DataWF.Common
     {
         IEnumerable<IQueryParameter> Parameters { get; }
 
-        IQueryParameter Add(LogicType logic, string property, CompareType comparer, object value);
+        IQueryParameter Add(LogicType logic, IInvoker invoker, CompareType comparer, object value);
 
         IQueryParameter AddTreeParameter();
 

@@ -3640,7 +3640,7 @@ namespace DataWF.Gui
             listBackup = listSource;
             listSource = (IList)EmitInvoker.CreateObject(
                 typeof(SelectableListView<>).MakeGenericType(ListType),
-                new Type[] { typeof(IList) },
+                new Type[] { typeof(IEnumerable) },
                 new object[] { listSource }, true);
             if (listSource is INotifyListPropertyChanged notify)
             {
@@ -3677,7 +3677,7 @@ namespace DataWF.Gui
                 {
                     foreach (var filter in filterView.Filters)
                     {
-                        filtered.FilterQuery.Add(filter.Logic, filter.Name, filter.Comparer, filter.Value);
+                        filtered.FilterQuery.Add(filter.Logic, filter.Column.Invoker, filter.Comparer, filter.Value);
                     }
                 }
                 else if (TreeMode && TypeHelper.IsInterface(listType, typeof(IGroup)))

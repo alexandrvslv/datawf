@@ -67,9 +67,9 @@ namespace DataWF.Data.Gui
 
             list.FilterQuery.Parameters.Clear();
             if (filter.Length > 0)
-                list.FilterQuery.Parameters.Add(LogicType.And, nameof(Node.FullPath), CompareType.Like, filter);
+                list.FilterQuery.Parameters.Add(LogicType.And, LayoutNodeList<Node>.FullPathInvoker, CompareType.Like, filter);
             else
-                list.FilterQuery.Parameters.Add(LogicType.Undefined, nameof(Node.IsExpanded), CompareType.Equal, true);
+                list.FilterQuery.Parameters.Add(LogicType.Undefined, TreeInvoker<Node>.Instance, CompareType.Equal, true);
             list.UpdateFilter();
             if (list.Count == 1 && list[0].Tag.GetType() == DataType)
             {

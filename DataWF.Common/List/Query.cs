@@ -50,23 +50,23 @@ namespace DataWF.Common
             Parameters.Add(parameter);
         }
 
-        public QueryParameter<T> Add(LogicType logic, string property, CompareType comparer, object value)
+        public QueryParameter<T> Add(LogicType logic, IInvoker invoker, CompareType comparer, object value)
         {
-            return Parameters.Add(logic, property, comparer, value);
+            return Parameters.Add(logic, invoker, comparer, value);
         }
 
-        public QueryParameter<T> AddOrUpdate(string property, object value)
+        public QueryParameter<T> AddOrUpdate(IInvoker invoker, object value)
         {
-            var parameter = Parameters[property];
-            return AddOrUpdate(parameter?.Logic ?? LogicType.And, property, parameter?.Comparer ?? CompareType.Equal, value);
+            var parameter = Parameters[invoker.Name];
+            return AddOrUpdate(parameter?.Logic ?? LogicType.And, invoker, parameter?.Comparer ?? CompareType.Equal, value);
         }
 
-        public QueryParameter<T> AddOrUpdate(LogicType logic, string property, CompareType comparer, object value)
+        public QueryParameter<T> AddOrUpdate(LogicType logic, IInvoker invoker, CompareType comparer, object value)
         {
-            var parameter = Parameters[property];
+            var parameter = Parameters[invoker.Name];
             if (parameter == null)
             {
-                parameter = Parameters.Add(logic, property, comparer, null);
+                parameter = Parameters.Add(logic, invoker, comparer, null);
             }
             parameter.Logic = logic;
             parameter.Comparer = comparer;
@@ -74,9 +74,9 @@ namespace DataWF.Common
             return parameter;
         }
 
-        IQueryParameter IQuery.Add(LogicType logic, string property, CompareType comparer, object value)
+        IQueryParameter IQuery.Add(LogicType logic, IInvoker invoker, CompareType comparer, object value)
         {
-            return Parameters.Add(logic, property, comparer, value);
+            return Add(logic, invoker, comparer, value);
         }
 
         public IQueryParameter AddTreeParameter()

@@ -10,15 +10,16 @@ namespace DataWF.Gui
 {
     public class LayoutNodeList<T> : SelectableList<T> where T : Node, new()
     {
-        static readonly Invoker<T, string> nameInvoker = new Invoker<T, string>(nameof(Node.Name), item => item.Name);
-        static readonly Invoker<T, Node> groupInvoker = new Invoker<T, Node>(nameof(Node.Group), item => item.Group);
+        public static readonly Invoker<T, string> FullPathInvoker = new Invoker<T, string>(nameof(Node.FullPath), item => item.FullPath);
+        public static readonly Invoker<T, string> NameInvoker = new Invoker<T, string>(nameof(Node.Name), item => item.Name, (item, value) => item.Name = value);
+        public static readonly Invoker<T, Node> GroupInvoker = new Invoker<T, Node>(nameof(Node.Group), item => item.Group, (item, value) => item.Group = value);
         private int order;
         private bool sense = true;
 
         public LayoutNodeList() : base()
         {
-            Indexes.Add(nameInvoker);
-            Indexes.Add(groupInvoker);
+            Indexes.Add(NameInvoker);
+            Indexes.Add(GroupInvoker);
             //this.Indexes.Add("Expand");
             //this.Indexes.Add ("Visible");
         }

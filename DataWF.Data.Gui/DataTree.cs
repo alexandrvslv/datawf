@@ -609,7 +609,7 @@ namespace DataWF.Data.Gui
             if (entry.Text?.Length != 0)
             {
                 TreeMode = false;
-                list.FilterQuery.Parameters.Add(LogicType.And, nameof(Node.FullPath), CompareType.Like, entry.Text);
+                list.FilterQuery.Parameters.Add(LogicType.And, LayoutNodeList<Node>.FullPathInvoker, CompareType.Like, entry.Text);
             }
             else
             {

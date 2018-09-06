@@ -75,7 +75,7 @@ namespace DataWF.Common
                 if (parameter != value)
                 {
                     parameter = value;
-                    TypedValue = Comparer.Type != CompareTypes.In ? Helper.Parse(parameter, Invoker.DataType) : value;
+                    TypedValue = Comparer.Type != CompareTypes.In && Invoker != null ? Helper.Parse(parameter, Invoker.DataType) : value;
                     OnPropertyChanged();
                 }
             }
