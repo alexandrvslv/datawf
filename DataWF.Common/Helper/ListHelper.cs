@@ -667,23 +667,23 @@ namespace DataWF.Common
                 x = (int)x;
             if (y is Enum)
                 y = (int)y;
-            if (x.GetType() == y.GetType())
+            if (x is string xString)
             {
-                if (x is string)
-                    result = ((string)x).Equals((string)y, StringComparison.OrdinalIgnoreCase);
-                else if (hash)
-                    result = x.GetHashCode().Equals(y.GetHashCode());
-                else
-                    result = x.Equals(y);
+                result = xString.Equals(y.ToString(), StringComparison.OrdinalIgnoreCase);
+            }
+            else if (y is string yString)
+            {
+                result = yString.Equals(x.ToString(), StringComparison.OrdinalIgnoreCase);
             }
             else if (x.Equals(y))
             {
                 result = true;
             }
-            else
+            if (!result && hash)
             {
-                result = x.ToString().Equals(y.ToString(), StringComparison.OrdinalIgnoreCase);
+                result = x.GetHashCode().Equals(y.GetHashCode());
             }
+
             return result;
         }
 
