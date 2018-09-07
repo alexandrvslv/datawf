@@ -17,6 +17,7 @@ namespace DataWF.Common
         private IInvoker invoker;
         private object typedValue;
         private ListSortDirection? sortDirection;
+        private bool isEnabled = true;
 
         public QueryParameter()
         { }
@@ -62,12 +63,16 @@ namespace DataWF.Common
             }
         }
 
-        public bool IsEmpty
+        public bool IsEnabled
         {
-            get
+            get { return isEnabled; }
+            set
             {
-                return Comparer.Type != CompareTypes.Is
-                  && (Value == null || (Value is string strFilter && strFilter.Length == 0));
+                if (value != isEnabled)
+                {
+                    isEnabled = value;
+                    OnPropertyChanged();
+                }
             }
         }
 
@@ -75,7 +80,8 @@ namespace DataWF.Common
         {
             get
             {
-                return IsEmpty || string.IsNullOrEmpty(FormatValue());
+                return Comparer.Type != CompareTypes.Is
+                  && (Value == null || (Value is string strFilter && strFilter.Length == 0) || string.IsNullOrEmpty(FormatValue()));
             }
         }
 

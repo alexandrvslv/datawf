@@ -37,7 +37,7 @@ namespace DataWF.Common
 
         public bool IsNotEmpty
         {
-            get { return parameters.Any(p => !p.IsEmpty); }
+            get { return parameters.Any(p => p.IsEnabled); }
         }
 
         public void Clear()
@@ -125,7 +125,7 @@ namespace DataWF.Common
             var builder = new StringBuilder();
             foreach (var parametr in Parameters)
             {
-                if (!parametr.IsEmptyFormat)
+                if (parametr.IsEnabled && !parametr.IsEmptyFormat)
                 {
                     parametr.Format(builder, logic);
                     logic = true;

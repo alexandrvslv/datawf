@@ -348,7 +348,7 @@ namespace DataWF.Common
                 bool? flag = null;
                 foreach (var parameter in query.Parameters)
                 {
-                    if (parameter.IsEmpty)
+                    if (!parameter.IsEnabled)
                     {
                         continue;
                     }
@@ -436,7 +436,7 @@ namespace DataWF.Common
             bool? flag = null;
             foreach (var parameter in checkers.Parameters)
             {
-                if (parameter.IsEmpty)
+                if (!parameter.IsEnabled)
                 {
                     continue;
                 }

@@ -74,13 +74,25 @@ namespace DataWF.Common
                     if (query != null)
                     {
                         query.Parameters.ItemPropertyChanged -= FilterPropertyChanged;
+                        query.Parameters.CollectionChanged -= FilterCollectionChanged;
                     }
                     query = value;
                     if (query != null)
                     {
                         query.Parameters.ItemPropertyChanged += FilterPropertyChanged;
+                        query.Parameters.CollectionChanged += FilterCollectionChanged;
                     }
                 }
+            }
+        }
+
+        private void FilterCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.Action == NotifyCollectionChangedAction.Add
+                || e.Action == NotifyCollectionChangedAction.Remove
+                || e.Action == NotifyCollectionChangedAction.Reset)
+            {
+                UpdateFilter();
             }
         }
 
@@ -88,6 +100,7 @@ namespace DataWF.Common
         {
             switch (e.PropertyName)
             {
+                case nameof(QueryParameter<T>.IsEnabled):
                 case nameof(QueryParameter<T>.Value):
                     UpdateFilter();
                     break;

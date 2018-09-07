@@ -11,7 +11,7 @@ namespace DataWF.Common
         LogicType Logic { get; set; }
         object Value { get; set; }
         object TypedValue { get; set; }
-        bool IsEmpty { get; }
+        bool IsEnabled { get; set; }
     }
 
     public interface IQueryFormatable
