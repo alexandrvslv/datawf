@@ -68,6 +68,16 @@ namespace DataWF.Data
             }
         }
 
+        public DBTable CheckReference()
+        {
+            var referenceTable = DBTable.GetTable(ReferenceType, Table.Schema, true);
+            if (referenceTable == null)
+            {
+                throw new Exception($"{nameof(ReferenceType)}({Attribute.ColumnProperty} - {ReferenceType}) Table not found! Target table: {Table.Table}");
+            }
+            return referenceTable;
+        }
+
         public DBForeignKey Generate()
         {
             if (ForeignKey != null)
@@ -82,11 +92,7 @@ namespace DataWF.Data
             {
                 Column.Column.IsReference = true;
 
-                var referenceTable = DBTable.GetTable(ReferenceType, Table.Schema, true);
-                if (referenceTable == null)
-                {
-                    throw new Exception($"{nameof(ReferenceType)}({Attribute.ColumnProperty} - {ReferenceType}) Table not found! Target table: {Table.Table}");
-                }
+                var referenceTable = CheckReference();
                 if (referenceTable.PrimaryKey == null)
                 {
                     throw new Exception($"{nameof(ReferenceType)}({Attribute.ColumnProperty} - {ReferenceType}) Primary key not found! Target table: {Table.Table}");

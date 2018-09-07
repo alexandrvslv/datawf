@@ -241,7 +241,9 @@ namespace DataWF.Data
         public static void Load(string file)
         {
             Serialization.Deserialize("connections.xml", connections);
+            schems.HandleChanges = false;
             Serialization.Deserialize(file, schems);
+            schems.HandleChanges = true;
             Helper.LogWorkingSet("Schema");
             Changes.Clear();
             if (DataProvider != null)
@@ -320,33 +322,26 @@ namespace DataWF.Data
         {
             if (Changes.Count == 0)
                 return;
-            var schema = (DBSchema)null;
             var builder = new StringBuilder();
-            foreach (var item in Changes.OrderBy(p => p.Item.Schema))
+            foreach (var schema in schems)
             {
-                if (item.Item.Schema != schema)
+                foreach (var item in Changes.Where(p => p.Item.Schema == schema))
                 {
-                    if (schema != null)
+                    string val = item.Generate();
+                    if (item.Check && !string.IsNullOrEmpty(val))
                     {
-                        CommitChanges(schema, builder);
-                        schema = null;
+                        builder.Append("-- ");
+                        builder.AppendLine(item.ToString());
+                        builder.AppendLine(val);
+                        builder.AppendLine("go");
+                        builder.AppendLine();
                     }
-                    schema = item.Item.Schema;
+                    item.Item.OldName = null;
                 }
-                string val = item.Generate();
-                if (item.Check && !string.IsNullOrEmpty(val))
+                if (builder.Length > 0)
                 {
-                    builder.Append("-- ");
-                    builder.AppendLine(item.ToString());
-                    builder.AppendLine(val);
-                    builder.AppendLine("go");
-                    builder.AppendLine();
+                    CommitChanges(schema, builder);
                 }
-                item.Item.OldName = null;
-            }
-            if (schema != null)
-            {
-                CommitChanges(schema, builder);
             }
             Serialization.Serialize(Changes, $"SchemaDiff_{DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss")}.xml");
             Changes.Clear();

@@ -320,11 +320,15 @@ namespace DataWF.Data
             get { return keys; }
             set
             {
-                var isNotnull1 = (keys & DBColumnKeys.Notnull) == DBColumnKeys.Notnull;
-                keys = value;
-                var isNotnull2 = (keys & DBColumnKeys.Notnull) == DBColumnKeys.Notnull;
+                if (Keys != value)
+                {
+                    var isNotnull1 = (keys & DBColumnKeys.Notnull) == DBColumnKeys.Notnull;
+                    keys = value;
+                    var isNotnull2 = (keys & DBColumnKeys.Notnull) == DBColumnKeys.Notnull;
+                    
+                    OnPropertyChanged(nameof(Keys), isNotnull1 != isNotnull2 ? DDLType.Alter : DDLType.Default);
+                }
                 CheckIndex();
-                OnPropertyChanged(nameof(Keys), isNotnull1 != isNotnull2 ? DDLType.Alter : DDLType.Default);
             }
         }
 

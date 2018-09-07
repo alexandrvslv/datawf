@@ -24,8 +24,11 @@ namespace DataWF.Data
 {
     public class DBSchemaList : DBSchemaItemList<DBSchema>
     {
+
         public DBSchemaList() : base()
         { }
+
+        public bool HandleChanges { get; set; } = true;
 
         public event EventHandler<EventArgs> ItemsListChanged;
 
@@ -41,7 +44,10 @@ namespace DataWF.Data
 
         protected internal void OnItemsListChanged(object sender, EventArgs arg)
         {
-            ItemsListChanged?.Invoke(sender, arg);
+            if (HandleChanges)
+            {
+                ItemsListChanged?.Invoke(sender, arg);
+            }
         }
 
         public override void OnListChanged(NotifyCollectionChangedEventArgs args)
