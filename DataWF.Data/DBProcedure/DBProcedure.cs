@@ -17,19 +17,19 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using DataWF.Common;
+using Newtonsoft.Json;
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.IO;
-using System.Reflection;
-using DataWF.Common;
-using System.Xml;
-using System.Text;
-using System.Xml.Serialization;
 using System.Linq;
-using Newtonsoft.Json;
+using System.Reflection;
+using System.Text;
+using System.Xml;
+using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
@@ -70,8 +70,11 @@ namespace DataWF.Data
             set
             {
                 group = value;
-                GroupName = value?.name;
-                OnPropertyChanged(nameof(GroupName));
+                if (GroupName != value?.name)
+                {
+                    GroupName = value?.name;
+                    OnPropertyChanged(nameof(GroupName));
+                }
             }
         }
 
