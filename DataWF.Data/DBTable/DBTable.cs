@@ -189,6 +189,12 @@ namespace DataWF.Data
 
         //[Browsable(false), XmlIgnore, JsonIgnore]
         //public TableAttribute Info { get; protected set; }
+        public DBColumn ParseColumnProperty(string property)
+        {
+            return Columns[property]
+                ?? Columns.GetByProperty(property)
+                ?? Foreigns.GetByProperty(property)?.Column;
+        }
 
         public DBColumn ParseProperty(string property)
         {

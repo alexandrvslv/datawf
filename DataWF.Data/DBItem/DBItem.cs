@@ -744,14 +744,17 @@ namespace DataWF.Data
                 int pi = 0, i = code.IndexOf('.');
                 while (i > 0)
                 {
-                    var item = row.GetReference(row.Table.Columns[code.Substring(pi, i - pi)]);
+                    var scolumn = row.Table.ParseColumnProperty(code.Substring(pi, i - pi));
+                    if (scolumn == null)
+                        return null;
+                    var item = row.GetReference(scolumn);
                     if (item == null)
                         return null;
                     row = item;
                     pi = i + 1;
                     i = code.IndexOf('.', pi);
                 }
-                return row[row.Table.Columns[code.Substring(pi)]];
+                return row[row.Table.ParseColumnProperty(code.Substring(pi))];
             }
             set
             {
@@ -759,14 +762,14 @@ namespace DataWF.Data
                 int pi = 0, i = code.IndexOf('.');
                 while (i > 0)
                 {
-                    var item = row.GetReference(row.Table.Columns[code.Substring(pi, i - pi)]);
+                    var item = row.GetReference(row.Table.ParseColumnProperty(code.Substring(pi, i - pi)));
                     if (item == null)
                         return;
                     row = item;
                     pi = i + 1;
                     i = code.IndexOf('.', pi);
                 }
-                row[row.Table.Columns[code.Substring(pi)]] = value;
+                row[row.Table.ParseColumnProperty(code.Substring(pi))] = value;
             }
         }
 
