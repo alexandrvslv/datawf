@@ -96,6 +96,11 @@ namespace DataWF.Common
             return parameter;
         }
 
+        public bool Remove(string parameter)
+        {
+            return Remove(Parameters[parameter]);
+        }
+
         public bool Remove(IQueryParameter parameter)
         {
             return Remove((QueryParameter<T>)parameter);
@@ -106,16 +111,22 @@ namespace DataWF.Common
             return Parameters.Remove(parameter);
         }
 
-        public void Sort(IList<T> list)
+        public InvokerComparerList<T> GetComparer()
         {
             var comparers = Parameters.Where(p => p.SortDirection != null).Select(p => p.GetComparer());
             if (comparers.Any())
             {
-                //if (list is ISortable sortable)
-                //{
-                //    sortable.ApplySort(Orders)
-                //}
-                ListHelper.QuickSort(list, new InvokerComparerList<T>(comparers));
+                return new InvokerComparerList<T>(comparers);
+            }
+            return null;
+        }
+
+        public void Sort(IList<T> list)
+        {
+            var comparers = GetComparer();
+            if (comparers != null)
+            {
+                ListHelper.QuickSort(list, comparers);
             }
         }
 

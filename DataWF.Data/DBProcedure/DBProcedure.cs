@@ -56,6 +56,7 @@ namespace DataWF.Data
             Parameters.AddRange(parameters);
         }
 
+        [JsonIgnore, XmlIgnore]
         public DBProcedureList Store
         {
             get { return (DBProcedureList)container; }
@@ -87,7 +88,7 @@ namespace DataWF.Data
 
         public string DataName { get; set; }
 
-        [Browsable(false)]
+        [Browsable(false), JsonIgnore]
         public byte[] DataStore { get; set; }
 
         [XmlIgnore, JsonIgnore]
@@ -128,7 +129,7 @@ namespace DataWF.Data
 
         public ProcedureTypes ProcedureType { get; set; }
 
-        [Browsable(false)]
+        [Browsable(false), JsonIgnore, XmlIgnore]
         public IEnumerable<DBProcedure> Childs
         {
             get { return Store?.SelectByParent(this); }
@@ -143,6 +144,7 @@ namespace DataWF.Data
 
         public DateTime Stamp { get; set; } = DateTime.Now;
 
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public bool IsExpanded
         {
             get { return GroupHelper.GetAllParentExpand(this); }

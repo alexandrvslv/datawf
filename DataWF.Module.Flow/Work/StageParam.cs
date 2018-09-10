@@ -17,12 +17,10 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using DataWF.Data;
 using DataWF.Common;
+using DataWF.Data;
 using System.ComponentModel;
 using System.Runtime.Serialization;
-using DataWF.Module.Common;
-using System.Collections.Generic;
 
 namespace DataWF.Module.Flow
 {
@@ -119,37 +117,34 @@ namespace DataWF.Module.Flow
         {
             get
             {
-                if (_cache == null)
+                if (_cache == null && string.IsNullOrEmpty(ParamCode))
                 {
-                    if (!string.IsNullOrEmpty(ParamCode))
+                    StageParamType type = (StageParamType)ItemType;
+                    switch (type)
                     {
-                        StageParamType type = (StageParamType)ItemType;
-                        switch (type)
-                        {
-                            case StageParamType.Column:
-                                _cache = GetColumn();
-                                break;
-                            case StageParamType.Foreign:
-                                _cache = GetReference();
-                                break;
-                            case StageParamType.Procedure:
-                                _cache = DBService.ParseProcedure(ParamCode);
-                                break;
-                            case StageParamType.Reference:
-                                _cache = Stage.DBTable.LoadItemById(ParamCode);
-                                break;
-                            case StageParamType.Template:
-                                _cache = Template.DBTable.LoadItemById(ParamCode);
-                                break;
-                        }
+                        case StageParamType.Column:
+                            _cache = GetColumn();
+                            break;
+                        case StageParamType.Foreign:
+                            _cache = GetReference();
+                            break;
+                        case StageParamType.Procedure:
+                            _cache = DBService.ParseProcedure(ParamCode);
+                            break;
+                        case StageParamType.Reference:
+                            _cache = Stage.DBTable.LoadItemById(ParamCode);
+                            break;
+                        case StageParamType.Template:
+                            _cache = Template.DBTable.LoadItemById(ParamCode);
+                            break;
                     }
                 }
                 return _cache;
             }
             set
             {
-                ParamCode = value == null ? null : value is DBItem ? ((DBItem)value).PrimaryId.ToString() : ((DBSchemaItem)value).FullName;
-                _cache = null;
+                ParamCode = value == null ? null : value is DBItem item ? item.PrimaryId.ToString() : ((DBSchemaItem)value).FullName;
+                _cache = value;
             }
         }
 
@@ -219,6 +214,21 @@ namespace DataWF.Module.Flow
         {
             get => GetProperty<bool?>();
             set => SetProperty(value);
+        }
+    }
+
+    [ItemType((int)StageParamType.Template)]
+    public class StageTemplate : StageParam
+    {
+        public StageTemplate()
+        {
+            ItemType = (int)StageParamType.Template;
+        }
+
+        public Template Template
+        {
+            get { return Param as Template; }
+            set { Param = value; }
         }
     }
 

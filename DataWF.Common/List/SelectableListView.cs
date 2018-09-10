@@ -62,6 +62,7 @@ namespace DataWF.Common
                 _listItemChangedHandler = null;
             }
             UpdateInternal(source.TypeOf<T>());
+            OnListChanged(NotifyCollectionChangedAction.Reset);
         }
 
         public Query<T> FilterQuery
@@ -105,7 +106,7 @@ namespace DataWF.Common
                     UpdateFilter();
                     break;
                 case nameof(QueryParameter<T>.SortDirection):
-                    FilterQuery.Sort(this);
+                    ApplySort((IComparer<T>)FilterQuery.GetComparer());
                     break;
             }
         }
@@ -143,15 +144,18 @@ namespace DataWF.Common
             foreach (T item in list)
                 InsertInternal(items.Count, item);
 
-            if (comparer != null)
-                ListHelper.QuickSort<T>(items, comparer);
+            if (comparer == null || comparer is InvokerComparerList<T>)
+            {
+                var newComparer = FilterQuery.GetComparer();
+                ApplySortInternal(newComparer);
+            }
 
-            OnListChanged(NotifyCollectionChangedAction.Reset);
         }
 
         public virtual void UpdateFilter()
         {
             UpdateInternal(ListHelper.Select<T>(source.TypeOf<T>(), query, selectableSource is ISelectable<T> gSelectable ? gSelectable.Indexes : null));
+            OnListChanged(NotifyCollectionChangedAction.Reset);
         }
 
         public virtual void SourceListChanged(object sender, NotifyCollectionChangedEventArgs e)

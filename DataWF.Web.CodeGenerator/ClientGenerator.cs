@@ -269,7 +269,7 @@ namespace DataWF.Web.CodeGenerator
 
             return SF.ClassDeclaration(
                         attributeLists: SF.List(ClientAttributeList()),
-                        modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
+                        modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.PartialKeyword)),
                         identifier: SF.Identifier($"{clientName}Client"),
                         typeParameterList: null,
                         baseList: SF.BaseList(SF.SingletonSeparatedList<BaseTypeSyntax>(
