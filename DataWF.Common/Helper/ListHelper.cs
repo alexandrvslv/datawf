@@ -329,7 +329,7 @@ namespace DataWF.Common
         {
             foreach (var item in items)
             {
-                if (CheckItem(param.Invoker.GetValue(item), param.TypedValue, param.Comparer, param.Comparision))
+                if (item != null && CheckItem(param.Invoker.GetValue(item), param.TypedValue, param.Comparer, param.Comparision))
                 {
                     yield return item;
                 }
