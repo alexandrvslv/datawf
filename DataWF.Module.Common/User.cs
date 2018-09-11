@@ -279,8 +279,8 @@ namespace DataWF.Module.Common
         [DataMember, Column("email", 1024), Index("ruser_email", true)]
         public string EMail
         {
-            get { return GetProperty<string>(nameof(EMail)); }
-            set { SetProperty(value, nameof(EMail)); }
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
         }
 
         public bool IsBlock
@@ -325,8 +325,12 @@ namespace DataWF.Module.Common
         [Browsable(false)]
         public string AccessToken { get; set; }
 
-        [Browsable(false)]
-        public string RefreshToken { get; set; }
+        [Browsable(false), DataMember, Column("token_refresh", 2048, Keys = DBColumnKeys.Password| DBColumnKeys.NoLog)]
+        public string RefreshToken
+        {
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
+        }
 
         public string AuthenticationType { get; set; }
 
