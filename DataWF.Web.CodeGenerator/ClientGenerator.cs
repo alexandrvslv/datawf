@@ -311,6 +311,31 @@ namespace DataWF.Web.CodeGenerator
             return null;
         }
 
+        private JsonProperty GetExtensionKey(JsonSchema4 schema, string name, bool inherit = true)
+        {
+            var find = schema.Properties.Values.FirstOrDefault(p => p.ExtensionData != null
+                 && p.ExtensionData.TryGetValue("x-id", out var propertyName)
+                 && propertyName.Equals(name));
+            if (find != null)
+            {
+                return find;
+            }
+            if (inherit)
+            {
+                foreach (var baseClass in schema.AllInheritedSchemas)
+                {
+                    find = baseClass.Properties.Values.FirstOrDefault(p => p.ExtensionData != null
+                 && p.ExtensionData.TryGetValue("x-id", out var propertyName)
+                 && propertyName.Equals(name));
+                    if (find != null)
+                    {
+                        return find;
+                    }
+                }
+            }
+            return null;
+        }
+
         private JsonProperty GetTypeKey(JsonSchema4 schema)
         {
             if (schema.ExtensionData != null && schema.ExtensionData.TryGetValue("x-type", out var propertyName))
@@ -750,12 +775,22 @@ namespace DataWF.Web.CodeGenerator
         {
             yield return SF.ParseStatement($"if({GetFieldName(property)} == value) return;");
             yield return SF.ParseStatement($"{GetFieldName(property)} = value;");
-            yield return SF.ParseStatement($"OnPropertyChanged();");
-
-            if (property.ExtensionData != null && property.ExtensionData.TryGetValue("x-id", out var idProperty))
+            if (property.ExtensionData != null && property.ExtensionData.TryGetValue("x-id", out var refPropertyName))
             {
-                yield return SF.ParseStatement($"{idProperty} = value?.Id;");
+                var idProperty = GetPrimaryKey(property.Reference);
+                yield return SF.ParseStatement($"{refPropertyName} = value?.{GetPropertyName(idProperty)};");
             }
+            var objectProperty = GetExtensionKey((JsonSchema4)property.Parent, property.Name);
+            if (objectProperty != null)
+            {
+                var objectFieldName = GetFieldName(objectProperty);
+                yield return SF.ParseStatement($"if({objectFieldName} != null && {objectFieldName}.Id != value)");
+                yield return SF.ParseStatement("{");
+                yield return SF.ParseStatement($"{objectFieldName} = null;");
+                yield return SF.ParseStatement($"OnPropertyChanged(\"{ GetPropertyName(objectProperty)}\");");
+                yield return SF.ParseStatement("}");
+            }
+            yield return SF.ParseStatement($"OnPropertyChanged();");
         }
 
         private string GetPropertyName(JsonProperty property)
