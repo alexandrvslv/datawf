@@ -19,15 +19,13 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using DataWF.Common;
+using DataWF.Data;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using DataWF.Data;
-using DataWF.Common;
-using DataWF.Module.Common;
 using System.Runtime.Serialization;
-using System.Collections;
 
 namespace DataWF.Module.Flow
 {
@@ -92,6 +90,18 @@ namespace DataWF.Module.Flow
         {
             get { return GetName(); }
             set { SetName(value); }
+        }
+
+        public string NameEN
+        {
+            get => GetProperty<string>();
+            set => SetProperty(value);
+        }
+
+        public string NameRU
+        {
+            get => GetProperty<string>();
+            set => SetProperty(value);
         }
 
         [Browsable(false)]

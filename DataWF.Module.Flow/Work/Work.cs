@@ -69,6 +69,18 @@ namespace DataWF.Module.Flow
             set { SetName(value); }
         }
 
+        public string NameEN
+        {
+            get => GetProperty<string>();
+            set => SetProperty(value);
+        }
+
+        public string NameRU
+        {
+            get => GetProperty<string>();
+            set => SetProperty(value);
+        }
+
         [ControllerMethod]
         public List<Template> GetTemplates()
         {
