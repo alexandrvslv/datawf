@@ -546,11 +546,12 @@ namespace DataWF.Data
 
         public override void Dispose()
         {
-            base.Dispose();
             if (table != null)
             {
                 table.RemoveView(this);
             }
+            base.Dispose();
+            Query?.Dispose();
         }
 
         public IEnumerable<T> GetTop()
