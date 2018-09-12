@@ -1288,15 +1288,15 @@ namespace DataWF.Data
                 allParameters.Dispose();
             allParameters = null;
 
-            parameters.Dispose();
+            parameters?.Dispose();
             parameters = null;
-            columns.Dispose();
+            columns?.Dispose();
             columns = null;
-            orders.Dispose();
+            orders?.Dispose();
             orders = null;
-            groups.Dispose();
+            groups?.Dispose();
             groups = null;
-            tables.Dispose();
+            tables?.Dispose();
             tables = null;
         }
 
@@ -1305,8 +1305,6 @@ namespace DataWF.Data
             get { return refmode; }
             set { refmode = value; }
         }
-
-
 
         public void BuildColumn(DBColumn dBColumn)
         {
