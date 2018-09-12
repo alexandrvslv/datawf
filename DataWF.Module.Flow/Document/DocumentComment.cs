@@ -22,6 +22,9 @@ namespace DataWF.Module.Flow
             set { SetProperty(value); }
         }
 
+        [Index("ddocument_comment_document_id")]
+        public override long? DocumentId { get => base.DocumentId; set => base.DocumentId = value; }
+
         [Browsable(false)]
         [DataMember, Column("message_id")]
         public long? MessageId

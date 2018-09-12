@@ -60,6 +60,9 @@ namespace DataWF.Module.Flow
             set { SetValue(value, Table.PrimaryKey); }
         }
 
+        [Index("ddocument_customer_document_id")]
+        public override long? DocumentId { get => base.DocumentId; set => base.DocumentId = value; }
+
         [Browsable(false)]
         [DataMember, Column("customer_id", Keys = DBColumnKeys.View)]
         public int? CustomerId

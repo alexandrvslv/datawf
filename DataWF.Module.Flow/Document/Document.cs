@@ -165,6 +165,9 @@ namespace DataWF.Module.Flow
             set { SetValue(value, Table.PrimaryKey); }
         }
 
+        [Index("ddocument_item_type", false)]
+        public override int? ItemType { get => base.ItemType; set => base.ItemType = value; }
+
         [Browsable(false)]
         [DataMember, Column("template_id", Keys = DBColumnKeys.View), Index("ddocument_template_id", Unique = false)]
         public virtual int? TemplateId
@@ -182,7 +185,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [DataMember, Column("parent_id", Keys = DBColumnKeys.Group)]
+        [DataMember, Column("parent_id", Keys = DBColumnKeys.Group), Index("ddocument_parent_id", Unique = false)]
         public long? ParentId
         {
             get { return GetGroupValue<long?>(); }
@@ -392,7 +395,7 @@ namespace DataWF.Module.Flow
             if ((initype & DocInitType.Data) != DocInitType.Data)
             {
                 initype |= DocInitType.Data;
-                loadParam = DBLoadParam.Load;
+                //loadParam = DBLoadParam.Load;
             }
             return GetReferencing<DocumentData>(nameof(DocumentData.DocumentId), loadParam);
         }
@@ -412,7 +415,7 @@ namespace DataWF.Module.Flow
             if ((initype & DocInitType.Customer) != DocInitType.Customer)
             {
                 initype |= DocInitType.Customer;
-                loadParam = DBLoadParam.Load;
+                //loadParam = DBLoadParam.Load;
             }
             return GetReferencing<DocumentCustomer>(nameof(DocumentCustomer.DocumentId), loadParam);
         }
@@ -431,7 +434,7 @@ namespace DataWF.Module.Flow
             if ((initype & DocInitType.Comment) != DocInitType.Comment)
             {
                 initype |= DocInitType.Comment;
-                loadParam = DBLoadParam.Load;
+                //loadParam = DBLoadParam.Load;
             }
             return GetReferencing<DocumentComment>(nameof(DocumentComment.DocumentId), loadParam);
         }
@@ -450,7 +453,7 @@ namespace DataWF.Module.Flow
             if ((initype & DocInitType.Refing) != DocInitType.Refing)
             {
                 initype |= DocInitType.Refing;
-                loadParam = DBLoadParam.Load;
+                //loadParam = DBLoadParam.Load;
             }
             return GetReferencing<DocumentReference>(nameof(DocumentReference.ReferenceId), loadParam);
         }
@@ -469,7 +472,7 @@ namespace DataWF.Module.Flow
             if ((initype & DocInitType.Refed) != DocInitType.Refed)
             {
                 initype |= DocInitType.Refed;
-                loadParam = DBLoadParam.Load;
+               //loadParam = DBLoadParam.Load;
             }
             return GetReferencing<DocumentReference>(nameof(DocumentReference.DocumentId), loadParam);
         }

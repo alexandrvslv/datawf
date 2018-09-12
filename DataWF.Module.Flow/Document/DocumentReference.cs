@@ -122,8 +122,12 @@ namespace DataWF.Module.Flow
             set { SetProperty(value, nameof(Id)); }
         }
 
+        [Index("ddocument_reference_document_id")]
+        public override long? DocumentId { get => base.DocumentId; set => base.DocumentId = value; }
+
         [Browsable(false)]
         [DataMember, Column("reference_id", Keys = DBColumnKeys.View)]
+        [Index("ddocument_reference_reference_id")]
         public long? ReferenceId
         {
             get { return GetProperty<long?>(); }

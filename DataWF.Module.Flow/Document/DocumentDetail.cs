@@ -28,7 +28,7 @@ namespace DataWF.Module.Flow
     {
         [Browsable(false)]
         [DataMember, Column("document_id")]
-        public long? DocumentId
+        public virtual long? DocumentId
         {
             get { return GetProperty<long?>(); }
             set { SetProperty(value); }

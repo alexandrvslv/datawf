@@ -107,6 +107,12 @@ namespace DataWF.Module.Flow
             set { SetProperty(value, nameof(Id)); }
         }
 
+        [Index("ddocument_data_item_type", false)]
+        public override int? ItemType { get => base.ItemType; set => base.ItemType = value; }
+
+        [Index("ddocument_data_document_id")]
+        public override long? DocumentId { get => base.DocumentId; set => base.DocumentId = value; }
+
         [DataMember, Column("template_data_id")]
         public int? TemplateDataId
         {

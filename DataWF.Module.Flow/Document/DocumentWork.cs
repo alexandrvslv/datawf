@@ -116,6 +116,9 @@ namespace DataWF.Module.Flow
             set { SetProperty(value, nameof(Id)); }
         }
 
+        [Index("ddocument_work_document_id")]
+        public override long? DocumentId { get => base.DocumentId; set => base.DocumentId = value; }
+
         [Browsable(false)]
         [DataMember, Column("stage_id", Keys = DBColumnKeys.View), Index("ddocument_work_stage_id")]
         public int? StageId
