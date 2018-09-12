@@ -569,6 +569,22 @@ namespace DataWF.Data
             }
         }
 
+        public void FillReferencingBlock(IDbCommand command)
+        {
+            foreach (var reference in TableAttribute.Referencings)
+            {
+                if ((reference.ReferenceColumn.Attribute.Keys & DBColumnKeys.Group) != DBColumnKeys.Group
+                    && reference.ReferenceTable.Table != this && !reference.ReferenceTable.Table.IsSynchronized)
+                {
+                    var sub = DBCommand.CloneCommand(command, reference.ReferenceTable.Table.BuildQuery(string.Format("where {0} in (select {1} {2})",
+                                  reference.ReferenceColumn.Column.Name,
+                                  PrimaryKey.Name,
+                                  command.CommandText.Substring(command.CommandText.IndexOf(" from ", StringComparison.OrdinalIgnoreCase))), null));
+                    reference.ReferenceTable.Table.LoadItems(sub).LastOrDefault();
+                }
+            }
+        }
+
         public event EventHandler<DBLoadProgressEventArgs> LoadProgress;
 
         protected void RaiseLoadProgress(DBLoadProgressEventArgs arg)

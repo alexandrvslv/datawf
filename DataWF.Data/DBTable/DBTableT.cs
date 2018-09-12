@@ -351,11 +351,20 @@ namespace DataWF.Data
         {
             var transaction = DBTransaction.GetTransaction(command, Schema?.Connection, true, param, view);
             transaction.AddCommand(command);
+
+            if ((param & DBLoadParam.Referencing) == DBLoadParam.Referencing)
+            {
+                FillReferencingBlock(command);
+            }
+            if ((param & DBLoadParam.Reference) == DBLoadParam.Reference)
+            {
+                FillReferenceBlock(command);
+            }
+
             if (transaction.Canceled)
                 yield break;
             var whereInd = command.CommandText.IndexOf("where ", StringComparison.OrdinalIgnoreCase);
             var arg = new DBLoadProgressEventArgs(view, 0, 0, null);
-            IEnumerable<DBColumn> creference = null;
 
             if (view != null && view.Table == this && view.IsStatic)
                 view.Clear();
@@ -375,10 +384,6 @@ namespace DataWF.Data
                     //arg.TotalCount = Rows._items.Capacity;
                 }
                 //var buffer = new List<T>(arg.TotalCount == 0 ? 1 : arg.TotalCount);
-                if ((transaction.ReaderParam & DBLoadParam.ReferenceRow) == DBLoadParam.ReferenceRow)
-                {
-                    creference = Columns.GetIsReference();
-                }
                 if (transaction.Canceled)
                 {
                     yield break;
@@ -392,16 +397,7 @@ namespace DataWF.Data
                         lock (Lock)
                         {
                             row = LoadFromReader(transaction);
-                            if (creference != null)
-                            {
-                                foreach (var refer in creference)
-                                {
-                                    if (refer.ReferenceTable != this)
-                                    {
-                                        row.GetReference(refer, DBLoadParam.Load);
-                                    }
-                                }
-                            }
+
                             if (!row.Attached && (transaction.ReaderParam & DBLoadParam.NoAttach) != DBLoadParam.NoAttach)
                             {
                                 Add(row);

@@ -74,8 +74,9 @@ namespace DataWF.Data
         Synchronize = 4,
         GetCount = 8,
         CheckDeleted = 16,
-        ReferenceRow = 32,
-        NoAttach = 64
+        Reference = 32,
+        Referencing = 64,
+        NoAttach = 128
     }
 
     public enum DBDataType
