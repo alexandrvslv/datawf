@@ -84,8 +84,7 @@ namespace DataWF.Common
 
         public static void CreateTempDirectory(string dirName)
         {
-            string tempdir = Path.GetDirectoryName(GetDirectory(Environment.SpecialFolder.ApplicationData));
-            string fullpath = Path.Combine(tempdir, dirName);
+            string fullpath = Path.GetDirectoryName(GetDirectory(Environment.SpecialFolder.ApplicationData, dirName));
             string editpath = Path.Combine(fullpath, DocEdit);
             string viewpath = Path.Combine(fullpath, DocView);
             Directory.CreateDirectory(fullpath);
@@ -261,14 +260,19 @@ namespace DataWF.Common
             return Path.Combine(Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory), sub);
         }
 
-        public static string GetDirectory(Environment.SpecialFolder folder, bool appDirectory = true)
+        public static string GetDirectory(Environment.SpecialFolder folder, bool appDirectory)
+        {
+            return GetDirectory(folder, appDirectory ? AppName : null);
+        }
+
+        public static string GetDirectory(Environment.SpecialFolder folder, string appName = null)
         {
 #if PORTABLE
             return GetDirectory();
 #else
             string path = Environment.GetFolderPath(folder);
-            if (appDirectory)
-                path = Path.Combine(path, AppName);
+            if (appName != null)
+                path = Path.Combine(path, appName);
             if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
             return path;
