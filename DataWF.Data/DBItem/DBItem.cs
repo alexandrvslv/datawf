@@ -642,8 +642,10 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
-        [DataMember, DefaultValue(0), Column("item_type", GroupName = "system", Keys = DBColumnKeys.ItemType | DBColumnKeys.System, Order = 0)]
-        public int? ItemType
+        [DataMember]
+        [DefaultValue(0)]
+        [Column("item_type", GroupName = "system", Keys = DBColumnKeys.ItemType | DBColumnKeys.System, Order = 0)]       
+        public virtual int? ItemType
         {
             get { return Table.ItemTypeKey == null ? 0 : GetValue<int?>(Table.ItemTypeKey); }
             set { SetValue(value, Table.ItemTypeKey); }

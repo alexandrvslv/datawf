@@ -279,6 +279,10 @@ namespace DataWF.Data
                         cacheIndexes.Add(index);
                     }
                 }
+                else if (InitializeSeparateIndex(property, out var separateIndex))
+                {
+                    cacheIndexes.Add(separateIndex);
+                }
                 InitializeDefault(property);
             }
             foreach (var property in properties)
@@ -295,6 +299,23 @@ namespace DataWF.Data
 
             cachedTypes.Add(type);
         }
+
+        private bool InitializeSeparateIndex(PropertyInfo property, out IndexAttributeCache index)
+        {
+            var indexAttribute = property.GetCustomAttribute<IndexAttribute>(false);
+            if (indexAttribute != null)
+            {
+                index = cacheIndexes.SelectOne(nameof(IndexAttributeCache.IndexName), indexAttribute.IndexName)
+                    ?? new IndexAttributeCache { Attribute = indexAttribute };
+                index.Table = this;
+                var columnAttribute = GetColumnByProperty(property.Name);
+                index.Columns.Add(columnAttribute);
+                return true;
+            }
+            index = null;
+            return false;
+        }
+
 
         private bool InitializeIndex(PropertyInfo property, IEnumerable<ColumnAttributeCache> columns, out IndexAttributeCache index)
         {

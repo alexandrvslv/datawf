@@ -46,7 +46,7 @@ namespace DataWF.Data
                 return Index;
             Index = new DBIndex()
             {
-                Name = Attribute.IndexName,
+                Name = IndexName,
                 Unique = Attribute.Unique,
                 Table = Table.Table
             };
