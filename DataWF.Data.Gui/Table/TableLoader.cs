@@ -45,6 +45,8 @@ namespace DataWF.Data.Gui
             }
         }
 
+        public DBLoadParam LoadParam { get; set; }
+
         public IDBTableView View
         {
             get { return view; }
@@ -128,7 +130,7 @@ namespace DataWF.Data.Gui
 
         private void Loader()
         {
-            delayEvent.WaitOne(500);
+            delayEvent.WaitOne(400);
             QQuery query;
             if (queries.TryPop(out query))
             {
@@ -139,7 +141,7 @@ namespace DataWF.Data.Gui
                     using (var temp = new DBTransaction(view.Table.Schema.Connection) { View = view })//DBLoadParam.GetCount | DBLoadParam.ReferenceRow
                     {
                         transaction = temp;
-                        View.Table.LoadItems(query).LastOrDefault();
+                        View.Table.LoadItems(query, LoadParam).LastOrDefault();
                     }
                 }
                 catch (Exception e)

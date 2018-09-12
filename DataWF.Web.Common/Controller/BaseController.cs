@@ -45,7 +45,7 @@ namespace DataWF.Web.Common
                         return new ActionResult<IEnumerable<T>>(table.Select(query));
                     }
 
-                    return new ActionResult<IEnumerable<T>>(table.Load(query));
+                    return new ActionResult<IEnumerable<T>>(table.Load(query, DBLoadParam.Referencing));
                 }
             }
             catch (Exception ex)
@@ -144,8 +144,9 @@ namespace DataWF.Web.Common
             if (error is Exception exception)
             {
                 Helper.OnException(exception);
+                return base.BadRequest(exception.Message);
             }
-
+            
             return base.BadRequest(error);
         }
 

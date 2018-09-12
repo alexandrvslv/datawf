@@ -1,16 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using Xwt.Drawing;
+﻿using DataWF.Common;
+using DataWF.Data;
 using DataWF.Data.Gui;
 using DataWF.Gui;
-using DataWF.Common;
 using DataWF.Module.Flow;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using Xwt;
-using System.Linq;
-using DataWF.Data;
-using DataWF.Module.Common;
-using System.Threading.Tasks;
+using Xwt.Drawing;
 
 namespace DataWF.Module.FlowGui
 {
@@ -77,7 +74,9 @@ namespace DataWF.Module.FlowGui
             });
 
             ofDialog = new OpenFileDialog() { Multiselect = true };
+
             loader = new TableLoader();
+            loader.LoadParam = DBLoadParam.Referencing;
 
             toolCreate = new ToolItem(ToolCreateClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Create", GlyphColor = Colors.Green, Glyph = GlyphType.PlusCircle };
             toolCopy = new ToolItem(ToolCopyClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Copy", Glyph = GlyphType.CopyAlias };

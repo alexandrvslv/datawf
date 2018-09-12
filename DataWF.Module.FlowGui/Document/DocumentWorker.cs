@@ -90,8 +90,8 @@ namespace DataWF.Module.FlowGui
                     {
                         try
                         {
-                            Document.DBTable.Load(qDocs, DBLoadParam.Synchronize, null).LastOrDefault();
-                            DocumentWork.DBTable.Load(qWork, DBLoadParam.Synchronize, works).LastOrDefault();
+                            Document.DBTable.Load(qDocs, DBLoadParam.Referencing, null).LastOrDefault();
+                            //DocumentWork.DBTable.Load(qWork, DBLoadParam.Synchronize, works).LastOrDefault();
                             Helper.LogWorkingSet("Documents");
                         }
                         catch (Exception ex)

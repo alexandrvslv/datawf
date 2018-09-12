@@ -29,7 +29,7 @@ namespace DataWF.Module.Common
         public SchedulerExecute(int timer = 60000)
         {
             this.timer = timer;
-            items.Table.LoadItems("", DBLoadParam.Synchronize | DBLoadParam.CheckDeleted | DBLoadParam.ReferenceRow).LastOrDefault();
+            items.Table.LoadItems("", DBLoadParam.Synchronize | DBLoadParam.CheckDeleted | DBLoadParam.Reference).LastOrDefault();
         }
 
         public bool Running
