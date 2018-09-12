@@ -15,7 +15,7 @@ namespace DataWF.Common
         public FileWatcher(string filePath)
         {
             Watcher = new FileSystemWatcher();
-            Watcher.Path = Path.GetFullPath(filePath);
+            Watcher.Path = Path.GetDirectoryName(filePath);
             /* Watch for changes in LastAccess and LastWrite times, and 
                the renaming of files or directories. */
             Watcher.NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.LastWrite
