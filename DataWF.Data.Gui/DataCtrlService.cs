@@ -1,9 +1,7 @@
-﻿using Doc.Odf;
-using DataWF.Data;
+﻿using DataWF.Common;
 using DataWF.Gui;
-using DataWF.Common;
+using Doc.Odf;
 using System;
-using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -59,10 +57,10 @@ namespace DataWF.Data.Gui
             }
             elements.Add("таблица", prms);
 
-            var op = new TemplateParser(td);
+            var op = new OdtProcessor(td);
             op.PerformReplace(elements);
 
-            File.WriteAllBytes(filename, td.UnLoad());
+            td.Save(filename);
             Process.Start(filename);
         }
 

@@ -123,7 +123,7 @@ namespace DataWF.Data.Gui
                     if (table != null && table.IsLoging && table.StatusKey != null)
                     {
                         var filter = table.GetStatusParam(DBStatus.Accept);
-                        command.CommandText = table.BuildQuery("where " + filter.Format(), null, "count(*)");
+                        command.CommandText = table.BuildQuery("where " + filter.Format(), "a", null, "count(*)");
                         object count = transaction.ExecuteQuery(command, DBExecuteType.Scalar);
 
                         node.Count = int.Parse(count.ToString());
