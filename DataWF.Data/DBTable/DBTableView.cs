@@ -57,7 +57,6 @@ namespace DataWF.Data
         public DBTableView(DBTable<T> table, QParam defaultFilter, DBViewKeys mode = DBViewKeys.None, DBStatus statusFilter = DBStatus.Empty)
         {
             propertyHandler = null;
-            table.AddView(this);
             this.table = table;
             FilterQuery = new Query<T>();
             Query = new QQuery();
@@ -65,6 +64,7 @@ namespace DataWF.Data
             DefaultParam = defaultFilter;
             StatusFilter = statusFilter;
             keys = mode;
+            table.AddView(this);
             if ((keys & DBViewKeys.Empty) != DBViewKeys.Empty)
             {
                 UpdateFilter();
@@ -159,6 +159,8 @@ namespace DataWF.Data
             get { return query; }
             set
             {
+                if (value == null)
+                    throw new InvalidAsynchronousStateException();
                 if (value != null)
                 {
                     query = value;
