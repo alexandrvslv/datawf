@@ -39,22 +39,35 @@ namespace DataWF.Data
             cache[".xlsx"] = new XlsxSaxParser();
         }
 
-        public static byte[] Execute(DBProcedure proc, ExecuteArgs param)
+        public static string GetTempFileName(string fileName)
         {
-            return Execute((byte[])proc.Data.Clone(), proc.DataName, param);
+            fileName = Path.GetFileName(fileName);
+            return Path.Combine(GetTempPath(), $"{Path.GetFileNameWithoutExtension(fileName)}{DateTime.Now.ToString("yyMMddHHmmss")}{Path.GetExtension(fileName)}");
         }
 
-        public static byte[] Execute(byte[] data, string filename, ExecuteArgs param)
+        public static string GetTempPath()
         {
-            var ext = Path.GetExtension(filename);
+            string path = Path.Combine(Path.GetTempPath(), "parser");
+            Directory.CreateDirectory(path);
+            return path;
+        }
+
+        public static string Execute(DBProcedure proc, ExecuteArgs param)
+        {
+            return Execute(new MemoryStream(proc.Data), proc.DataName, param);
+        }
+
+        public static string Execute(Stream stream, string fileName, ExecuteArgs param)
+        {
+            var ext = Path.GetExtension(fileName);
             if (cache.TryGetValue(ext, out var parser))
-                return parser.Parse(data, param);
+                return parser.Parse(stream, fileName, param);
             else
-                return data;
+                return stream is FileStream fileStream ? fileStream.Name : null;
             //throw new NotSupportedException(ext);
         }
 
-        public abstract byte[] Parse(byte[] data, ExecuteArgs param);
+        public abstract string Parse(Stream stream, string fileName, ExecuteArgs param);
 
         public object ParseString(ExecuteArgs parameters, string code)
         {

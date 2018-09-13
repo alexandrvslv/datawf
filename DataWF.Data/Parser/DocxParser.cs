@@ -18,14 +18,14 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using DataWF.Common;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
-using DataWF.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Word = DocumentFormat.OpenXml.Wordprocessing;
 using System.Linq;
+using Word = DocumentFormat.OpenXml.Wordprocessing;
 
 //using DataControl;
 
@@ -33,24 +33,19 @@ namespace DataWF.Data
 {
     public class DocxParser : DocumentParser
     {
-        public override byte[] Parse(byte[] data, ExecuteArgs param)
+        public override string Parse(Stream stream, string fileName, ExecuteArgs param)
         {
-            byte[] temp = null;
-            using (var ms = new MemoryStream())
+            stream.Position = 0;
+            using (var wd = WordprocessingDocument.Open(stream, true))
             {
-                ms.Write(data, 0, data.Length);
-                ms.Position = 0;
-                using (var wd = WordprocessingDocument.Open(ms, true))
+                ParseDocxPart(wd.MainDocumentPart.Document, param);
+                foreach (var header in wd.MainDocumentPart.HeaderParts)
                 {
-                    ParseDocxPart(wd.MainDocumentPart.Document, param);
-                    foreach (var header in wd.MainDocumentPart.HeaderParts)
-                        ParseDocxPart(header.Header, param);
-
+                    ParseDocxPart(header.Header, param);
                 }
-                ms.Flush();
-                temp = ms.ToArray();
+                stream.Flush();
             }
-            return temp;
+            return stream is FileStream fileStream ? fileStream.Name : null;
         }
 
         public void ParseDocxPart(OpenXmlPartRootElement doc, ExecuteArgs param)

@@ -18,18 +18,18 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using DataWF.Common;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
-using DataWF.Common;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Text.RegularExpressions;
-using Excel = DocumentFormat.OpenXml.Spreadsheet;
-using System.Text;
-using System.Xml;
-using System.Linq;
 using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Xml;
+using Excel = DocumentFormat.OpenXml.Spreadsheet;
 
 //using DataControl;
 
@@ -39,18 +39,13 @@ namespace DataWF.Data
     {
         private static Regex excelRegex = new Regex("#.[^#]*#", RegexOptions.IgnoreCase);
 
-        public override byte[] Parse(byte[] data, ExecuteArgs param)
+        public override string Parse(Stream stream, string fileName, ExecuteArgs param)
         {
-            string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "wfdocuments");
-            if (!Directory.Exists(path))
-                Directory.CreateDirectory(path);
-            string fileName = Path.Combine(path, "temp" + DateTime.Now.ToString("yyMMddHHmmss"));
-            string newFileName = Path.Combine(path, "new_temp" + DateTime.Now.ToString("yyMMddHHmmss"));
-            File.WriteAllBytes(fileName, data);
+            string newFileName = GetTempFileName(fileName);
             var cacheNames = new Dictionary<string, DefinedName>();
             var inserts = new List<CellRange>();
 
-            using (var document = SpreadsheetDocument.Open(fileName, false))
+            using (var document = SpreadsheetDocument.Open(stream, false))
             using (var newDocument = SpreadsheetDocument.Create(newFileName, SpreadsheetDocumentType.Workbook))
             {
                 foreach (var docPart in document.Parts)
@@ -347,7 +342,7 @@ namespace DataWF.Data
                 }
                 newDocument.Save();
             }
-            return File.ReadAllBytes(newFileName);
+            return newFileName;
         }
 
         public object ReplaceExcelString(ExecuteArgs param, string value)

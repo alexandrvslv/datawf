@@ -22,6 +22,7 @@ using DataWF.Common;
 using Doc.Odf;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 //using DataControl;
 
@@ -29,14 +30,14 @@ namespace DataWF.Data
 {
     public class OdtParser : DocumentParser
     {
-        public override byte[] Parse(byte[] data, ExecuteArgs param)
+        public override string Parse(Stream stream, string fileName, ExecuteArgs param)
         {
-            TextDocument doc = new TextDocument(data);
-            TemplateParser processor = new TemplateParser(doc);
+            TextDocument doc = new TextDocument(stream);
+            OdtProcessor processor = new OdtProcessor(doc);
 
-            List<string> procedures = new List<string>();
-            List<string> fields = processor.GetFields();
-            Dictionary<string, object> elements = new Dictionary<string, object>();
+            var procedures = new List<string>();
+            var fields = processor.GetFields();
+            var elements = new Dictionary<string, object>();
             foreach (string documentField in fields)
             {
                 // adding group
@@ -49,17 +50,21 @@ namespace DataWF.Data
                     elements.Add(documentField, rez);
                 }
                 else
+                {
                     continue;
+                }
             }
             processor.PerformReplace(elements);
-            return doc.UnLoad();
+            var tempFile = GetTempFileName(fileName);
+            doc.Save(tempFile);
+            return tempFile;
         }
     }
 
 
-    public class TemplateParser
+    public class OdtProcessor
     {
-        public TemplateParser(TextDocument textDoc)
+        public OdtProcessor(TextDocument textDoc)
         {
             this.textDoc = textDoc;
         }

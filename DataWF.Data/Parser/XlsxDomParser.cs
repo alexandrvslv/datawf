@@ -18,12 +18,12 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using DocumentFormat.OpenXml.Packaging;
 using DataWF.Common;
+using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
 using System.IO;
 using System.Text.RegularExpressions;
 using Excel = DocumentFormat.OpenXml.Spreadsheet;
-using DocumentFormat.OpenXml;
 
 //using DataControl;
 
@@ -31,88 +31,83 @@ namespace DataWF.Data
 {
     public class XlsxDomParser : XlsxSaxParser
     {
-        public override byte[] Parse(byte[] data, ExecuteArgs param)
+        public override string Parse(Stream stream, string fileName, ExecuteArgs param)
         {
-            var temp = (byte[])data.Clone();
             bool flag = false;
-            using (MemoryStream ms = new MemoryStream())
+            stream.Position = 0;
+            using (var xl = SpreadsheetDocument.Open(stream, true))
             {
-                ms.Write(temp, 0, temp.Length);
-                ms.Position = 0;
-                using (var xl = SpreadsheetDocument.Open(ms, true))
+                //IEnumerable<DocumentFormat.OpenXml.Packaging.SharedStringTablePart> sp = xl.WorkbookPart.GetPartsOfType<DocumentFormat.OpenXml.Packaging.SharedStringTablePart>();
+                foreach (WorksheetPart part in xl.WorkbookPart.WorksheetParts)
                 {
-                    //IEnumerable<DocumentFormat.OpenXml.Packaging.SharedStringTablePart> sp = xl.WorkbookPart.GetPartsOfType<DocumentFormat.OpenXml.Packaging.SharedStringTablePart>();
-                    foreach (WorksheetPart part in xl.WorkbookPart.WorksheetParts)
+                    var stringTables = xl.WorkbookPart.SharedStringTablePart;
+                    Excel.Worksheet worksheet = part.Worksheet;
+                    Excel.SheetData sd = worksheet.GetFirstChild<Excel.SheetData>();
+                    var results = FindParsedCells(stringTables, sd);
+                    foreach (Excel.Cell cell in results)
                     {
-                        var stringTables = xl.WorkbookPart.SharedStringTablePart;
-                        Excel.Worksheet worksheet = part.Worksheet;
-                        Excel.SheetData sd = worksheet.GetFirstChild<Excel.SheetData>();
-                        var results = FindParsedCells(stringTables, sd);
-                        foreach (Excel.Cell cell in results)
-                        {
 
-                            string val = ReadCell(cell, stringTables);
-                            Regex re = new Regex("#.[^#]*#", RegexOptions.IgnoreCase);
-                            MatchCollection mc = re.Matches(val);
-                            foreach (Match m in mc)
+                        string val = ReadCell(cell, stringTables);
+                        Regex re = new Regex("#.[^#]*#", RegexOptions.IgnoreCase);
+                        MatchCollection mc = re.Matches(val);
+                        foreach (Match m in mc)
+                        {
+                            object rz = ParseString(param, m.Value.Trim("#<>".ToCharArray()));
+                            if (rz != null)
                             {
-                                object rz = ParseString(param, m.Value.Trim("#<>".ToCharArray()));
-                                if (rz != null)
+                                flag = true;
+                                QResult query = rz as QResult;
+                                Excel.Row newRow = null;
+                                if (query != null)
                                 {
-                                    flag = true;
-                                    QResult query = rz as QResult;
-                                    Excel.Row newRow = null;
-                                    if (query != null)
+                                    var sref = CellReference.Parse(cell.CellReference.Value);
+                                    int count = 0;
+                                    foreach (object[] dataRow in query.Values)
                                     {
-                                        var sref = CellReference.Parse(cell.CellReference.Value);
-                                        int count = 0;
-                                        foreach (object[] dataRow in query.Values)
+                                        count++;
+                                        int col = sref.Col;
+                                        newRow = GetRow(sd, sref.Row, newRow == null, cell.Parent as Excel.Row);
+                                        foreach (object kvp in dataRow)
                                         {
-                                            count++;
-                                            int col = sref.Col;
-                                            newRow = GetRow(sd, sref.Row, newRow == null, cell.Parent as Excel.Row);
-                                            foreach (object kvp in dataRow)
+                                            Excel.Cell ncell = GetCell(newRow, kvp, col, sref.Row, 0);
+                                            if (ncell.Parent == null)
+                                                newRow.Append(ncell);
+                                            col++;
+                                        }
+                                        sref.Row++;
+                                    }
+                                    if (newRow != null)
+                                    {
+                                        uint rcount = newRow.RowIndex.Value;
+                                        foreach (var item in newRow.ElementsAfter())
+                                            if (item is Excel.Row)
                                             {
-                                                Excel.Cell ncell = GetCell(newRow, kvp, col, sref.Row, 0);
-                                                if (ncell.Parent == null)
-                                                    newRow.Append(ncell);
-                                                col++;
+                                                rcount++;
+                                                ((Excel.Row)item).RowIndex = rcount;
+                                                foreach (var itemCell in item.ChildElements)
+                                                    if (itemCell is Excel.Cell)
+                                                    {
+                                                        var reference = CellReference.Parse(((Excel.Cell)itemCell).CellReference);
+                                                        reference.Row = (int)rcount;
+                                                        ((Excel.Cell)itemCell).CellReference = reference.ToString();
+                                                    }
                                             }
-                                            sref.Row++;
-                                        }
-                                        if (newRow != null)
-                                        {
-                                            uint rcount = newRow.RowIndex.Value;
-                                            foreach (var item in newRow.ElementsAfter())
-                                                if (item is Excel.Row)
-                                                {
-                                                    rcount++;
-                                                    ((Excel.Row)item).RowIndex = rcount;
-                                                    foreach (var itemCell in item.ChildElements)
-                                                        if (itemCell is Excel.Cell)
-                                                        {
-                                                            var reference = CellReference.Parse(((Excel.Cell)itemCell).CellReference);
-                                                            reference.Row = (int)rcount;
-                                                            ((Excel.Cell)itemCell).CellReference = reference.ToString();
-                                                        }
-                                                }
-                                        }
                                     }
-                                    else
-                                    {
-                                        val = val.Replace(m.Value, rz.ToString());
-                                        cell.CellValue = new Excel.CellValue(val);
-                                        cell.DataType = Excel.CellValues.String;
-                                    }
+                                }
+                                else
+                                {
+                                    val = val.Replace(m.Value, rz.ToString());
+                                    cell.CellValue = new Excel.CellValue(val);
+                                    cell.DataType = Excel.CellValues.String;
                                 }
                             }
                         }
                     }
                 }
-                ms.Flush();
-                temp = ms.ToArray();
             }
-            return flag ? temp : data;
+            stream.Flush();
+
+            return stream is FileStream fileStream ? fileStream.Name : null;
         }
 
         public Excel.Row GetRow(OpenXmlCompositeElement sheetData, int r, bool check, Excel.Row cloning)
