@@ -313,7 +313,7 @@ namespace DataWF.Data
                      && !whereText.Trim().StartsWith("select", StringComparison.OrdinalIgnoreCase))
                 whereText = "where " + whereText;
 
-            return Load(Schema.Connection.CreateCommand(CreateQuery(whereText, cols)), param, synch);
+            return Load(Schema.Connection.CreateCommand(CreateQuery(whereText, "a", cols)), param, synch);
         }
 
         public override IEnumerable<DBItem> LoadItems(QQuery query, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null)
@@ -354,11 +354,11 @@ namespace DataWF.Data
 
             if ((param & DBLoadParam.Referencing) == DBLoadParam.Referencing)
             {
-                FillReferencingBlock(command);
+                LoadReferencingBlock(command);
             }
             if ((param & DBLoadParam.Reference) == DBLoadParam.Reference)
             {
-                FillReferenceBlock(command);
+                LoadReferenceBlock(command);
             }
 
             if (transaction.Canceled)
@@ -374,7 +374,7 @@ namespace DataWF.Data
                 if ((transaction.ReaderParam & DBLoadParam.GetCount) == DBLoadParam.GetCount)
                 {
                     string w = whereInd == -1 ? string.Empty : command.CommandText.Substring(whereInd);
-                    var val = transaction.ExecuteQuery(transaction.AddCommand(DBCommand.CloneCommand(command, BuildQuery(w, null, "count(*)"))), DBExecuteType.Scalar);
+                    var val = transaction.ExecuteQuery(transaction.AddCommand(DBCommand.CloneCommand(command, BuildQuery(w, "a", null, "count(*)"))), DBExecuteType.Scalar);
                     arg.TotalCount = val is Exception ? -1 : int.Parse(val.ToString());
 
                     if (arg.TotalCount < 0 || arg.TotalCount == 0)
@@ -539,7 +539,7 @@ namespace DataWF.Data
             var row = SelectOne(column, code);
             if (row == null && (param & DBLoadParam.Load) == DBLoadParam.Load)//&& !IsSynchronized
             {
-                var command = System.CreateCommand(Schema.Connection, CreateQuery(string.Format("where {0}={1}{0}", column.Name, Schema.System.ParameterPrefix), Columns));
+                var command = System.CreateCommand(Schema.Connection, CreateQuery($"where a.{column.Name}={Schema.System.ParameterPrefix}{column.Name}", "a", Columns));
                 System.CreateParameter(command, Schema.System.ParameterPrefix + column.Name, code);
                 row = Load(command, param).FirstOrDefault();
             }

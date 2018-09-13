@@ -18,6 +18,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using System.Data;
+using System.Linq;
 
 namespace DataWF.Data
 {
@@ -84,6 +85,11 @@ namespace DataWF.Data
             set { }
         }
 
+        public QTable QTable
+        {
+            get { return Query.Tables.FirstOrDefault(p => p.Table == Table); }
+        }
+
         public override void Dispose()
         {
             columnn = null;
@@ -105,9 +111,9 @@ namespace DataWF.Data
                 || Column.ColumnType == DBColumnTypes.Code))
                 return string.Empty;
             else if (Column.ColumnType == DBColumnTypes.Query && Column.Table.Type != DBTableType.View)
-                return string.Format("({0}) as {1}", Column.Query, text);
+                return $"({Column.Query}) as {text}";
             else
-                return string.Format("{0}{1}{2}", prefix != null ? (prefix + ".") : "", text, alias != null ? (" as " + alias) : "");
+                return $"{(Prefix != null ? (Prefix + ".") : "")}{text}{(alias != null ? (" as " + alias) : "")}";
         }
 
         public override object GetValue(DBItem row)
@@ -117,7 +123,7 @@ namespace DataWF.Data
 
         public string Prefix
         {
-            get { return prefix; }
+            get { return prefix ?? QTable?.Alias; }
             set
             {
                 if (prefix != value)

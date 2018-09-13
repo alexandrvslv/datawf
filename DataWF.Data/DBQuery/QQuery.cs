@@ -37,6 +37,7 @@ namespace DataWF.Data
         QParamList Parameters { get; }
         QItemList<QItem> Columns { get; }
         QItemList<QOrder> Orders { get; }
+        QItemList<QTable> Tables { get; }
     }
 
     public class QParamList : QItemList<QParam>
@@ -1034,7 +1035,7 @@ namespace DataWF.Data
                 if (value != Table)
                 {
                     if (value != null)
-                        tables.Add(new QTable(value));
+                        tables.Add(new QTable(value, "a"));
                     else
                         tables.Clear();
                 }
@@ -1138,13 +1139,13 @@ namespace DataWF.Data
 
             if (defColumns || columns.Count == 0)
             {
-                var table = Table;
-                foreach (var col in table.Columns)
+                var table = tables.FirstOrDefault();
+                foreach (var col in table.Table.Columns.Where(p => (p.Keys & DBColumnKeys.File) != DBColumnKeys.File))
                 {
-                    string temp = table.FormatQColumn(col);
+                    string temp = table.Table.FormatQColumn(col, table.Alias);
                     if (temp != null && temp.Length > 0)
                     {
-                        if (!table.Columns.IsFirst(col))
+                        if (!table.Table.Columns.IsFirst(col))
                             cols.Append(", ");
                         cols.Append(temp);
                     }
@@ -1177,7 +1178,10 @@ namespace DataWF.Data
                 if (!tables.IsLast(table))
                     from.Append(", ");
             }
-            return $"select {cols.ToString()}\n    from {from} {(whr.Length > 0 ? "\n    where " : string.Empty)}{whr}{(order.Length > 0 ? "\n    order by " : string.Empty)}{order}";
+            return $@"select {cols.ToString()}
+    from {from} 
+{(whr.Length > 0 ? "    where " : string.Empty)}{whr}
+{(order.Length > 0 ? "    order by " : string.Empty)}{order}";
         }
 
         public string ToWhere(IDbCommand command = null)

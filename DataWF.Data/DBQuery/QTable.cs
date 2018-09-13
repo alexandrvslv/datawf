@@ -18,8 +18,6 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Common;
-using System;
-using System.ComponentModel;
 using System.Data;
 
 namespace DataWF.Data
@@ -92,7 +90,7 @@ namespace DataWF.Data
         {
             var schema = Table.Schema.Connection.Schema;
 
-            return $"{Join.Format()} {Table?.FormatQTable() ?? text} {alias}";
+            return $"{Join.Format()} {Table?.FormatQTable(alias) ?? ($"{text} {alias}")}";
         }
     }
 }

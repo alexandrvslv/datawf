@@ -800,7 +800,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             return value;
         }
 
-        public virtual string FormatQColumn(DBColumn column)
+        public virtual string FormatQColumn(DBColumn column, string tableAlias)
         {
             if (column.ColumnType == DBColumnTypes.Internal
                 || column.ColumnType == DBColumnTypes.Expression
@@ -809,17 +809,17 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             else if (column.ColumnType == DBColumnTypes.Query && column.Table.Type != DBTableType.View)
                 return string.Format("({0}) as \"{1}\"", column.Query, column.Name);
             else
-                return column.SqlName;
+                return $"{tableAlias}{(tableAlias != null ? "." : string.Empty)}{column.SqlName}";
         }
 
-        public virtual string FormatQTable(DBTable table)
+        public virtual string FormatQTable(DBTable table, string alias)
         {
             var schema = table.Schema?.Connection?.Schema;
             if (!string.IsNullOrEmpty(schema))
             {
-                return $"{schema}.{table.SqlName}";
+                return $"{schema}.{table.SqlName} {alias}";
             }
-            return table.SqlName;
+            return $"{table.SqlName} {alias}";
         }
 
         public virtual string FormatText(object value)
@@ -892,7 +892,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
         {
             item.SetValue(Helper.WriteGZip(stream, bufferSize), column);
             item.Save();
-
+            item.SetValue(null, column, false);
         }
     }
 }

@@ -19,7 +19,6 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using System;
 using System.ComponentModel;
 namespace DataWF.Data
 {
@@ -36,7 +35,7 @@ namespace DataWF.Data
             : base(column)
         {
         }
-        
+
         public QOrder(DBColumn column)
             : base(column)
         {
@@ -50,7 +49,7 @@ namespace DataWF.Data
 
         public override string Format(System.Data.IDbCommand command = null)
         {
-            return string.Format("{0} {1}", text, dir == ListSortDirection.Descending ? "desc" : "asc");
+            return string.Format("{0} {1}", base.Format(command), dir == ListSortDirection.Descending ? "desc" : "asc");
         }
     }
 }

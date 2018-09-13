@@ -158,26 +158,26 @@ namespace DataWF.Data
             base.WriteValue(column, value, parameter, connection);
         }
 
-        public override string FormatQColumn(DBColumn column)
+        public override string FormatQColumn(DBColumn column, string tableAlias)
         {
-            if (column.ColumnType == DBColumnTypes.Internal 
+            if (column.ColumnType == DBColumnTypes.Internal
                 || column.ColumnType == DBColumnTypes.Expression
                 || column.ColumnType == DBColumnTypes.Code)
                 return string.Empty;
             else if (column.ColumnType == DBColumnTypes.Query && column.Table.Type != DBTableType.View)
-                return base.FormatQColumn(column);
+                return base.FormatQColumn(column, tableAlias);
             else
-                return $"[{column.Name}]";
+                return $"{tableAlias}{(tableAlias != null ? "." : string.Empty)}[{column.SqlName}]";
         }
 
-        public override string FormatQTable(DBTable table)
+        public override string FormatQTable(DBTable table, string alias)
         {
             var schema = table.Schema?.Connection?.Schema;
             if (!string.IsNullOrEmpty(schema))
             {
-                return $"[{schema}].[{table.SqlName}]";
+                return $"[{schema}].[{table.SqlName}] {alias}";
             }
-            return $"[{table.SqlName}]";
+            return $"[{table.SqlName}] {alias}";
         }
     }
 }

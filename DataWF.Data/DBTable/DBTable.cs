@@ -554,32 +554,37 @@ namespace DataWF.Data
             }
         }
 
-        public void FillReferenceBlock(IDbCommand command)
+        public void LoadReferenceBlock(IDbCommand command)
         {
             foreach (var column in Columns.GetIsReference())
             {
-                if ((column.Keys & DBColumnKeys.Group) != DBColumnKeys.Group && column.ReferenceTable != this && !column.ReferenceTable.IsSynchronized)
+                if ((column.Keys & DBColumnKeys.Group) != DBColumnKeys.Group
+                    && column.ReferenceTable != this
+                    && !column.ReferenceTable.IsSynchronized)
                 {
                     var sub = DBCommand.CloneCommand(command, column.ReferenceTable.BuildQuery(string.Format("where {0} in (select {1} {2})",
                                   column.ReferenceTable.PrimaryKey.Name,
                                   column.Name,
-                                  command.CommandText.Substring(command.CommandText.IndexOf(" from ", StringComparison.OrdinalIgnoreCase))), null));
+                                  command.CommandText.Substring(command.CommandText.IndexOf(" from ", StringComparison.OrdinalIgnoreCase))), "b", null));
                     column.ReferenceTable.LoadItems(sub).LastOrDefault();
                 }
             }
         }
 
-        public void FillReferencingBlock(IDbCommand command)
+        public void LoadReferencingBlock(IDbCommand command)
         {
             foreach (var reference in TableAttribute.Referencings)
             {
                 if ((reference.ReferenceColumn.Attribute.Keys & DBColumnKeys.Group) != DBColumnKeys.Group
-                    && reference.ReferenceTable.Table != this && !reference.ReferenceTable.Table.IsSynchronized)
+                    && reference.ReferenceTable.Table != this
+                    && !reference.ReferenceTable.Table.IsSynchronized
+                    && !(reference.ReferenceTable.Table is IDBVirtualTable))
                 {
-                    var sub = DBCommand.CloneCommand(command, reference.ReferenceTable.Table.BuildQuery(string.Format("where {0} in (select {1} {2})",
-                                  reference.ReferenceColumn.Column.Name,
-                                  PrimaryKey.Name,
-                                  command.CommandText.Substring(command.CommandText.IndexOf(" from ", StringComparison.OrdinalIgnoreCase))), null));
+                    var where = command.CommandText.Substring(command.CommandText.IndexOf(" where ", StringComparison.OrdinalIgnoreCase));
+                    var sub = DBCommand.CloneCommand(command, reference.ReferenceTable.Table.BuildQuery($@"
+    left join {SqlName} a 
+        on a.{PrimaryKey.Name} = b.{reference.ReferenceColumn.Column.SqlName} 
+    {where}", "b", null));
                     reference.ReferenceTable.Table.LoadItems(sub).LastOrDefault();
                 }
             }
@@ -887,7 +892,7 @@ namespace DataWF.Data
 
         public int GetRowCount(DBTransaction transaction, string @where)
         {
-            object val = transaction.ExecuteQuery(transaction.AddCommand(BuildQuery(@where, null, "count(*)")), DBExecuteType.Scalar);
+            object val = transaction.ExecuteQuery(transaction.AddCommand(BuildQuery(@where, "a", null, "count(*)")), DBExecuteType.Scalar);
             return val is Exception ? -1 : int.Parse(val.ToString());
         }
 
@@ -1220,7 +1225,7 @@ namespace DataWF.Data
         {
         }
 
-        public string BuildQuery(string whereFilter, IEnumerable<DBColumn> cols, string function = null)
+        public string BuildQuery(string whereFilter, string alias, IEnumerable<DBColumn> cols, string function = null)
         {
             var select = new StringBuilder("select ");
             if (!string.IsNullOrEmpty(function))
@@ -1231,12 +1236,14 @@ namespace DataWF.Data
             else
             {
                 if (cols == null)
-                    cols = Columns;// query += "*";// cols = this.columns as IEnumerable;
+                {
+                    cols = Columns.Where(p => (p.Keys & DBColumnKeys.File) != DBColumnKeys.File);// query += "*";// cols = this.columns as IEnumerable;
+                }
 
                 bool f = false;
                 foreach (DBColumn column in cols)
                 {
-                    string temp = FormatQColumn(column);
+                    string temp = FormatQColumn(column, alias);
                     if (!string.IsNullOrEmpty(temp))
                     {
                         if (f)
@@ -1259,21 +1266,21 @@ namespace DataWF.Data
                     vquery = (whereFilter.Length != 0 ? " and (" : " where ") + vquery + (whereFilter.Length != 0 ? ")" : string.Empty);
             }
             select.Append(" from ");
-            select.Append(FormatQTable());
+            select.Append(FormatQTable(alias));
             select.Append(" ");
             select.Append(whereFilter);
             select.Append(vquery);
             return select.ToString();
         }
 
-        public string FormatQColumn(DBColumn column)
+        public string FormatQColumn(DBColumn column, string tableAlias)
         {
-            return System?.FormatQColumn(column);
+            return System?.FormatQColumn(column, tableAlias);
         }
 
-        public string FormatQTable()
+        public string FormatQTable(string alias)
         {
-            return System?.FormatQTable(this);
+            return System?.FormatQTable(this, alias);
         }
 
         protected void ClearColumnsData(bool pool)
@@ -1291,16 +1298,16 @@ namespace DataWF.Data
         public IDbCommand CreateItemCommmand(object id, IEnumerable<DBColumn> cols = null)
         {
             string idName = System.ParameterPrefix + PrimaryKey.Name;
-            var command = System.CreateCommand(Schema.Connection, CreateQuery(string.Format("where {0}={1}", PrimaryKey.Name, idName), cols));
+            var command = System.CreateCommand(Schema.Connection, BuildQuery($"where a.{PrimaryKey.SqlName}={idName}", "a", cols));
             System.CreateParameter(command, idName, id);
             return command;
         }
 
-        public string CreateQuery(string whereText, IEnumerable<DBColumn> cols = null)
+        public string CreateQuery(string whereText, string alias, IEnumerable<DBColumn> cols = null)
         {
             string rez;
             if (string.IsNullOrEmpty(whereText) || whereText.Trim().StartsWith("where ", StringComparison.OrdinalIgnoreCase))
-                rez = BuildQuery(whereText, cols);
+                rez = BuildQuery(whereText, alias, cols);
             else
                 rez = whereText;
 
