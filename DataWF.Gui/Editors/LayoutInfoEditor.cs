@@ -257,7 +257,7 @@ namespace DataWF.Gui
                 foreach (string item in propertiest)
                 {
                     string property = (item.IndexOf('.') < 0 ? (column.Name + ".") : string.Empty) + item;
-                    var itemColumn = ContextList.ListInfo.Columns[property];
+                    var itemColumn = ContextList.ListInfo.Columns.GetItem(property);
                     if (itemColumn == null)
                     {
                         itemColumn = ContextList.BuildColumn(ContextList.ListInfo, column, property);

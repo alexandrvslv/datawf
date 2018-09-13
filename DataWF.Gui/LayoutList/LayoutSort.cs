@@ -94,7 +94,7 @@ namespace DataWF.Gui
             get
             {
                 if (column == null)
-                    column = Info?.Columns[name] as LayoutColumn;
+                    column = Info?.Columns.GetItem(name) as LayoutColumn;
                 return column;
             }
             set

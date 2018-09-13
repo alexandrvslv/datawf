@@ -69,7 +69,7 @@ namespace DataWF.Gui
             get
             {
                 if (column == null)
-                    column = List?.ListInfo?.Columns[name] as LayoutColumn;
+                    column = List?.ListInfo?.Columns.GetItem(name) as LayoutColumn;
                 return column;
             }
             set

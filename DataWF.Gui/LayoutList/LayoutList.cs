@@ -3183,7 +3183,7 @@ namespace DataWF.Gui
 
         public object ReadValue(object listItem, string p)
         {
-            return ReadValue(listItem, ListInfo.Columns[p] as ILayoutCell);
+            return ReadValue(listItem, ListInfo.Columns.GetItem(p) as ILayoutCell);
         }
 
         public virtual object ReadValue(object listItem, ILayoutCell cell)
@@ -3241,7 +3241,7 @@ namespace DataWF.Gui
 
         public virtual void OnColumnSort(string columnName, ListSortDirection direction)
         {
-            OnColumnSort(listInfo.Columns[columnName] as LayoutColumn, direction);
+            OnColumnSort(listInfo.Columns.GetItem(columnName) as LayoutColumn, direction);
         }
 
         public virtual void OnColumnSort(LayoutColumn column, ListSortDirection direction)
@@ -3278,7 +3278,7 @@ namespace DataWF.Gui
             for (int i = 0; i < listInfo.Sorters.Count; i++)
             {
                 var sort = listInfo.Sorters[i];
-                var column = listInfo.Columns[sort.ColumnName] as LayoutColumn;
+                var column = listInfo.Columns.GetItem(sort.ColumnName) as LayoutColumn;
                 if (column != null)
                 {
                     comparers.Add(OnColumnCreateComparer(column, sort.Direction));
@@ -3306,7 +3306,7 @@ namespace DataWF.Gui
                 {
                     if (Mode == LayoutListMode.Fields)
                         TreeMode = false;
-                    OnColumnGrouping(listInfo.Columns[nameof(Node.Category)] as LayoutColumn, ListSortDirection.Ascending);
+                    OnColumnGrouping(listInfo.Columns.GetItem(nameof(Node.Category)) as LayoutColumn, ListSortDirection.Ascending);
                 }
                 else
                 {
