@@ -153,7 +153,7 @@ namespace DataWF.Common
                                                 string fileName = GetFileName(headers);
                                                 var filePath = Path.Combine(Path.GetTempPath(), fileName);
 
-                                                var fileStream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite);
+                                                var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
                                                 await responseStream.CopyToAsync(fileStream, 8192, cancellationToken).ConfigureAwait(false);
                                                 await fileStream.FlushAsync();
                                                 return (R)(object)fileStream;
