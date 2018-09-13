@@ -644,7 +644,7 @@ namespace DataWF.Data
         [Browsable(false)]
         [DataMember]
         [DefaultValue(0)]
-        [Column("item_type", GroupName = "system", Keys = DBColumnKeys.ItemType | DBColumnKeys.System, Order = 0)]       
+        [Column("item_type", GroupName = "system", Keys = DBColumnKeys.ItemType | DBColumnKeys.System, Order = 0)]
         public virtual int? ItemType
         {
             get { return Table.ItemTypeKey == null ? 0 : GetValue<int?>(Table.ItemTypeKey); }
@@ -1351,6 +1351,14 @@ namespace DataWF.Data
             this[column] = value;
         }
 
+        public void SetStream(string filepath, DBColumn column, int bufferSize = 8192)
+        {
+            using (var stream = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                SetStream(stream, column, bufferSize);
+            }
+        }
+
         public void SetStream(Stream stream, DBColumn column, int bufferSize = 8192)
         {
             Table.System.WriteSequential(this, column, stream, bufferSize);
@@ -1385,7 +1393,7 @@ namespace DataWF.Data
 
         public FileStream GetFileStream(DBColumn column, string path, int bufferSize = 8192)
         {
-            var fileStream = File.Open(path, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+            var fileStream = File.Open(path, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
 
             var temp = GetValue<byte[]>(column);
             if (temp != null)
