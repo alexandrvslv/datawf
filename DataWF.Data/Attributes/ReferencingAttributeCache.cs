@@ -58,5 +58,10 @@ namespace DataWF.Data
         public TableAttributeCache ReferenceTable { get; set; }
         public ColumnAttributeCache ReferenceColumn { get; set; }
         public IInvoker PropertyInvoker { get; set; }
+
+        public override string ToString()
+        {
+            return $"{PropertyName} {ReferenceTable?.Table}";
+        }
     }
 }
