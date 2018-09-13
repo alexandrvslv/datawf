@@ -353,12 +353,16 @@ namespace DataWF.Module.Flow
         [ControllerMethod(true)]
         public virtual IEnumerable<DocumentReference> GetReferences()
         {
+            var param = DBLoadParam.None;
             if ((initype & DocInitType.References) != DocInitType.References)
             {
                 initype |= DocInitType.References;
-                DocumentReference.DBTable.Load(CreateRefsFilter(Id));
+                //DocumentReference.DBTable.Load(CreateRefsFilter(Id));
             }
-            return GetReferencing<DocumentReference>(nameof(DocumentReference.DocumentId), DBLoadParam.None);
+            foreach (var item in Referenced)
+                yield return item;
+            foreach (var item in Referencing)
+                yield return item;
         }
 
         [Referencing(nameof(DocumentWork.DocumentId))]
@@ -375,7 +379,7 @@ namespace DataWF.Module.Flow
             if ((initype & DocInitType.Workflow) != DocInitType.Workflow)
             {
                 initype |= DocInitType.Workflow;
-                param = DBLoadParam.Load;
+                //param = DBLoadParam.Load;
             }
 
             return GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), param);
@@ -472,7 +476,7 @@ namespace DataWF.Module.Flow
             if ((initype & DocInitType.Refed) != DocInitType.Refed)
             {
                 initype |= DocInitType.Refed;
-               //loadParam = DBLoadParam.Load;
+                //loadParam = DBLoadParam.Load;
             }
             return GetReferencing<DocumentReference>(nameof(DocumentReference.DocumentId), loadParam);
         }
@@ -590,7 +594,7 @@ namespace DataWF.Module.Flow
             foreach (var file in files)
             {
                 var data = new T { Document = this };
-                data.Load(file);
+                data.SetData(file, true);
                 data.GenerateId();
                 data.Attach();
                 yield return data;
