@@ -25,6 +25,22 @@ namespace DataWF.Module.FlowGui
 
     public class DocumentEditor : VPanel, IDocked, IDockContent, ISerializableElement
     {
+        public static string Execute(DocumentData Current)
+        {
+            var fileName = Current.GetData();
+            if (!string.IsNullOrEmpty(fileName))
+            {
+                Execute(fileName);
+            }
+
+            return fileName;
+        }
+
+        public static void Execute(string fileName)
+        {
+            System.Diagnostics.Process.Start(fileName);
+        }
+
         public static Dictionary<Type, Type> TypeBinding = new Dictionary<Type, Type> {
             { typeof(DocumentReference), typeof(DocumentReferenceView) },
             { typeof(DocumentWork), typeof(DocumentWorkView) },
@@ -303,46 +319,47 @@ namespace DataWF.Module.FlowGui
         {
             if (arg.Document != this.Document)
                 return;
-            if (arg.Result is Window)
+            switch (arg.Result)
             {
-                var f = arg.Result as Window;
-                f.ShowInTaskbar = false;
-                f.Show();
-            }
-            else if (arg.Result is Widget)
-            {
-                var c = arg.Result as Widget;
-                if (c is IText)
-                    ((IText)c).Text = arg.Procedure.Name;
-                if (arg.Tag == this)
-                    dock.Put(c);
-            }
-            else if (arg.Result is Document && arg.Result != arg.Document)
-            {
-                var editor = new DocumentEditor();
-                editor.Document = (Document)arg.Result;
-                editor.ShowWindow(arg.Tag as DocumentEditor);
-            }
-            else if (arg.Result is DocumentData)
-            {
-                ((DocumentData)arg.Result).Execute();
-            }
-            else if (arg.Result is Exception)
-            {
-                if (GuiService.Main == null)
-                    Helper.OnException((Exception)arg.Result);
-                MessageDialog.ShowError(ParentWindow, "Document Procedure", string.Format(Locale.Get("DocumentEditor", "Method {0}\nExecution fail!"), arg.Procedure.Name));
-            }
-            else
-            {
-                if (arg.Result == null || arg.Result.ToString().Length == 0)
-                {
-                    MessageDialog.ShowMessage(ParentWindow, "Document Procedure", string.Format(Locale.Get("DocumentEditor", "Method {0}\nExecut successful!"), arg.Procedure.Name));
-                }
-                else
-                {
-                    ShowResultDialog(arg.Tag, arg.Procedure, arg.Result);
-                }
+                case Window window:
+                    window.ShowInTaskbar = false;
+                    window.Show();
+                    break;
+                case Widget widget:
+                    if (widget is IText)
+                        ((IText)widget).Text = arg.Procedure.Name;
+                    if (arg.Tag == this)
+                        dock.Put(widget);
+                    break;
+                case Document docResult:
+                    if (arg.Result != arg.Document)
+                    {
+                        var editor = new DocumentEditor();
+                        editor.Document = docResult;
+                        editor.ShowWindow(arg.Tag as DocumentEditor);
+                    }
+                    break;
+                case DocumentData docData:
+                    Execute(docData);
+                    break;
+                case Exception exception:
+                    if (GuiService.Main == null)
+                    {
+                        Helper.OnException(exception);
+                    }
+
+                    MessageDialog.ShowError(ParentWindow, "Document Procedure", string.Format(Locale.Get("DocumentEditor", "Method {0}\nExecution fail!"), arg.Procedure.Name));
+                    break;
+                default:
+                    if (arg.Result == null || arg.Result.ToString().Length == 0)
+                    {
+                        MessageDialog.ShowMessage(ParentWindow, "Document Procedure", string.Format(Locale.Get("DocumentEditor", "Method {0}\nExecut successful!"), arg.Procedure.Name));
+                    }
+                    else
+                    {
+                        ShowResultDialog(arg.Tag, arg.Procedure, arg.Result);
+                    }
+                    break;
             }
         }
 

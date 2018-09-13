@@ -1,20 +1,18 @@
-﻿using System;
+﻿using DataWF.Common;
+using DataWF.Data;
+using DataWF.Data.Gui;
+using DataWF.Gui;
+using DataWF.Module.Common;
+using DataWF.Module.Flow;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Xwt.Drawing;
 using System.IO;
-using System.Threading;
-using DataWF.Data;
-using DataWF.Gui;
-using DataWF.Common;
-using DataWF.Data.Gui;
-using DataWF.Module.Common;
-using DataWF.Module.Flow;
-using Xwt;
 using System.Linq;
-using DataWF.Module.CommonGui;
 using System.Threading.Tasks;
+using Xwt;
+using Xwt.Drawing;
 
 namespace DataWF.Module.FlowGui
 {
@@ -534,7 +532,7 @@ namespace DataWF.Module.FlowGui
         public void CreateReg()
         {
             var td = new Doc.Odf.TextDocument();//FlowEnvir.Config.PersonalSetting.RegTemplate.Data);
-            TemplateParser op = new TemplateParser(td);
+            OdtProcessor op = new OdtProcessor(td);
 
             Dictionary<string, object> elements = new Dictionary<string, object>();
 
@@ -576,8 +574,8 @@ namespace DataWF.Module.FlowGui
 
             op.PerformReplace(elements);
 
-            string filename = System.IO.Path.Combine(Helper.GetDirectory(Environment.SpecialFolder.LocalApplicationData), "Reg" + firstDoc.Id + ".odt");
-            File.WriteAllBytes(filename, td.UnLoad());
+            string filename = Path.Combine(Helper.GetDirectory(Environment.SpecialFolder.LocalApplicationData), "Reg" + firstDoc.Id + ".odt");
+            td.Save(filename);
             //System.Diagnostics.Process p = 
             Process.Start(filename);
         }

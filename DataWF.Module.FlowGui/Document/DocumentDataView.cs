@@ -5,7 +5,6 @@ using DataWF.Module.Flow;
 using System;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Xwt;
 using Xwt.Drawing;
 
@@ -72,8 +71,8 @@ namespace DataWF.Module.FlowGui
 
             //base.OnToolEditClick(sender, e);
 
-            string fullpath = Current.Execute();
-            if (fullpath.Length == 0)
+            string fullpath = DocumentEditor.Execute(Current);
+            if (string.IsNullOrEmpty(fullpath))
                 return;
 
             var rez = Command.Yes;
@@ -122,8 +121,7 @@ namespace DataWF.Module.FlowGui
         {
             if (Current?.TemplateData != null)
             {
-                Current.Parse();
-                Current.Execute();
+                DocumentEditor.Execute(Current.Parse());
             }
         }
 
@@ -136,20 +134,8 @@ namespace DataWF.Module.FlowGui
         {
             if (Current == null || Current.FileData == null)
                 return;
-            if (Current.IsText())
-            {
-                var text = new RichTextView()
-                {
-                    ReadOnly = true,
-                    //Font = Font.FromName("Courier, 10"),
-                    Name = Path.GetFileNameWithoutExtension(Current.FileName)
-                };
-                text.LoadText(Encoding.UTF8.GetString(Current.FileData), Xwt.Formats.TextFormat.Plain);
-
-                var window = new ToolWindow() { Target = text };
-                window.Show(this, Point.Zero);
-            }
-            else if (Current.IsImage())
+            var filePath = Current.GetData();
+            if (Helper.IsImage(filePath))
             {
                 var image = new ImageEditor();
                 image.LoadImage(Current.FileData);
@@ -158,8 +144,10 @@ namespace DataWF.Module.FlowGui
             }
             else
             {
-                Current.Execute();
+                DocumentEditor.Execute(filePath);
             }
         }
+
+
     }
 }
