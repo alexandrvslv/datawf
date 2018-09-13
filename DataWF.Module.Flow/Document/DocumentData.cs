@@ -18,14 +18,13 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using DataWF.Data;
 using DataWF.Common;
+using DataWF.Data;
 using System;
 using System.ComponentModel;
 using System.IO;
-using System.Text;
-using System.Xml.Serialization;
 using System.Runtime.Serialization;
+using System.Xml.Serialization;
 
 namespace DataWF.Module.Flow
 {
@@ -209,93 +208,54 @@ namespace DataWF.Module.Flow
 
         public string GetFullPath()
         {
-            return Path.Combine(Helper.GetDirectory(Environment.SpecialFolder.LocalApplicationData, true), "Temp", "Documents", FileName);
+            return Path.Combine(Path.GetTempPath(), "Documents", FileName);
         }
 
-        public string SaveData()
+        public string GetData()
         {
-            return SaveData(GetFullPath());
+            var file = GetFullPath();
+            using (var stream = GetData(file))
+            {
+                return file;
+            }
         }
 
-        public string SaveData(string fileName)
+        public Stream GetData(string fileName)
         {
-            return SaveData(fileName, FileData);
+            return GetFileStream(Table.Columns.GetByKey(DBColumnKeys.File), fileName);
         }
 
-        public string SaveData(string fileName, byte[] Data)
+        public void SetData(string filePath, bool cache)
         {
-            string directory = Path.GetDirectoryName(fileName);
-            if (!Directory.Exists(directory))
-                Directory.CreateDirectory(directory);
-            File.WriteAllBytes(fileName, Data);
-            return fileName;
+            if (cache)
+            {
+                FileData = File.ReadAllBytes(filePath);
+            }
+            else
+            {
+                SetStream(filePath, Table.Columns.GetByKey(DBColumnKeys.File));
+            }
         }
 
-        [ControllerMethod]
-        public byte[] Parse()
+        public string Parse()
         {
             return Parse(new DocumentExecuteArgs { Document = Document, ProcedureCategory = TemplateData.Template.Code });
         }
 
-        public byte[] Parse(DocumentExecuteArgs param)
+        public string Parse(DocumentExecuteArgs param)
         {
             if (TemplateData == null || TemplateData.File == null)
-                return FileData;
-            return FileData = DocumentParser.Execute(TemplateData.File.Data, FileName, param);
-        }
-
-        public string Execute()
-        {
-            return Execute(GetFullPath());
-        }
-
-        public string Execute(string file)
-        {
-            file = SaveData(file, FileData);
-            System.Diagnostics.Process.Start(file);
-            return file;
-        }
-
-        public bool IsImage()
-        {
-            return Helper.IsImage(FileData);
-        }
-
-        public bool IsText()
-        {
-            byte[] buf = FileData;
-            int c = 0;
-            if (buf != null)
             {
-                string first = Encoding.ASCII.GetString(buf, 0, 4);
-                if (first == "%PDF" || IsImage())
-                    return false;
-                for (int i = 0; i < 5000 && i < buf.Length; i++)
-                {
-                    c = (buf[i] == 0x0 || buf[i] == 181) ? c + 1 : 0;
-                    if (c > 4)
-                        return false;
-                }
+                return null;
             }
-            return true;
-        }
 
-        public void Load(string fileName, Stream stream)
-        {
-            FileName = Path.GetFileName(fileName);
-            using (var memory = new MemoryStream())
+            var filePath = (string)null;
+            using (var stream = GetData(GetFullPath()))
             {
-                stream.CopyTo(memory);
-                FileData = memory.ToArray();// File.ReadAllBytes(path);
+                filePath = DocumentParser.Execute(stream, FileName, param);
             }
-        }
-
-        public void Load(string path)
-        {
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            {
-                Load(path, stream);
-            }
+            SetData(filePath, false);
+            return filePath;
         }
 
         public BackgroundWorker ExecuteAsync(DocumentExecuteArgs param)
