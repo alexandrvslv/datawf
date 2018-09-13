@@ -255,6 +255,21 @@ namespace DataWF.Common
             return false;
         }
 
+        public static bool IsImage(Stream buf)
+        {
+            buf.Position = 0;
+            var buffer = new byte[4];
+            buf.Read(buffer, 0, 4);
+            buf.Position = 0;
+            return IsImage(buffer);
+        }
+
+        public static bool IsImage(string filePath)
+        {
+            using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Read, FileShare.ReadWrite))
+                return IsImage(fileStream);
+        }
+
         public static string GetDirectory(string sub = "")
         {
             return Path.Combine(Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory), sub);
@@ -304,9 +319,10 @@ namespace DataWF.Common
         public static bool IsGZip(Stream arr)
         {
             arr.Position = 0;
-            var buf = arr.ReadByte() == 31 && arr.ReadByte() == 139;
+            var buffer = new byte[2];
+            arr.Read(buffer, 0, 2);
             arr.Position = 0;
-            return buf;
+            return IsGZip(buffer);
         }
 
         public static byte[] ReadGZipWin(byte[] data)
@@ -389,6 +405,7 @@ namespace DataWF.Common
                 return null;
             if (data.CanSeek)
             {
+                data.Position = 0;
                 if (IsGZip(data))
                 {
                     using (var outStream = new MemoryStream())
@@ -397,7 +414,6 @@ namespace DataWF.Common
                         return outStream.ToArray();
                     }
                 }
-                data.Position = 0;
             }
             using (var outStream = new MemoryStream())
             {
@@ -521,82 +537,6 @@ namespace DataWF.Common
             v3 = *p;
             p++;
             v4 = *p;
-        }
-
-        /// <summary>
-        /// Reads the object property.
-        /// </summary>
-        /// <returns>
-        /// The object property.
-        /// </returns>
-        /// <param name='data'>
-        /// Data.
-        /// </param>
-        /// <param name='propertyInfo'>
-        /// Property info.
-        /// </param>
-        public static object ReadObjectProperty(object data, object propertyInfo)
-        {
-            object val = null;
-            if (data != null)
-            {
-                if (propertyInfo is PropertyInfo)
-                {
-                    val = ((PropertyInfo)propertyInfo).GetValue(data, null);
-                }
-                else if (propertyInfo != null)
-                {
-                    if (cacheTypeParam == null)
-                        cacheTypeParam = new Type[] { propertyInfo.GetType() };
-                    else
-                        cacheTypeParam[0] = propertyInfo.GetType();
-
-                    if (cacheObjectParam == null)
-                        cacheObjectParam = new object[] { propertyInfo };
-                    else
-                        cacheObjectParam[0] = propertyInfo;
-
-                    PropertyInfo pi = data.GetType().GetProperty("Item", cacheTypeParam);
-                    if (pi != null)
-                        val = pi.GetValue(data, cacheObjectParam);
-                }
-            }
-            return val;
-        }
-        /// <summary>
-        /// Writes the object property.
-        /// </summary>
-        /// <param name='data'>
-        /// Data.
-        /// </param>
-        /// <param name='value'>
-        /// Value.
-        /// </param>
-        /// <param name='propertyInfo'>
-        /// Property info.
-        /// </param>
-        public static void WriteObjectProperty(object data, object value, object propertyInfo)
-        {
-            if (data == null)
-                return;
-            if (propertyInfo is PropertyInfo)
-                ((PropertyInfo)propertyInfo).SetValue(data, value, null);
-            else if (propertyInfo != null)
-            {
-                if (cacheTypeParam == null)
-                    cacheTypeParam = new Type[] { propertyInfo.GetType() };
-                else
-                    cacheTypeParam[0] = propertyInfo.GetType();
-
-                if (cacheObjectParam == null)
-                    cacheObjectParam = new object[] { propertyInfo };
-                else
-                    cacheObjectParam[0] = propertyInfo;
-
-                PropertyInfo pi = data.GetType().GetProperty("Item", cacheTypeParam);
-                if (pi != null)
-                    pi.SetValue(data, value, cacheObjectParam);
-            }
         }
 
         public static object ReadBinary(BinaryReader reader)
