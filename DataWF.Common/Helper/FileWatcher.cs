@@ -1,12 +1,16 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace DataWF.Common
 {
     //TODO service?
-    public class FileWatcher : IDisposable
+    public class FileWatcher : IDisposable, INotifyPropertyChanged
     {
+        private bool isChanged;
+
         public static event EventHandler<RenamedEventArgs> Renamed;
         public static event EventHandler<FileSystemEventArgs> Changed;
         public static event EventHandler<EventArgs> EnabledChanged;
@@ -31,8 +35,7 @@ namespace DataWF.Common
             Watcher.Deleted += new FileSystemEventHandler(OnDeleted);
             Watcher.Renamed += new RenamedEventHandler(OnRenamed);
 
-            // Begin watching.
-            Watcher.EnableRaisingEvents = true;
+            Enabled = true;
         }
 
         private void OnRenamed(object sender, RenamedEventArgs e)
@@ -60,8 +63,8 @@ namespace DataWF.Common
 
         public void Dispose()
         {
-            Watcher?.Dispose();
             Deleted?.Invoke(Tag ?? this, EventArgs.Empty);
+            Watcher?.Dispose();
         }
 
         public string FilePath { get; set; }
@@ -77,6 +80,7 @@ namespace DataWF.Common
                 {
                     Watcher.EnableRaisingEvents = value;
                     EnabledChanged?.Invoke(Tag ?? this, EventArgs.Empty);
+                    OnPropertyChanged();
                 }
 
             }
@@ -84,6 +88,26 @@ namespace DataWF.Common
 
         public object Tag { get; set; }
 
-        public bool IsChanged { get; set; }
+        public bool IsChanged
+        {
+            get => isChanged;
+            set
+            {
+                if (IsChanged != value)
+                {
+                    isChanged = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+
     }
 }

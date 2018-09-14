@@ -233,16 +233,6 @@ namespace DataWF.Common
         void Set(INamed value);
     }
 
-    public interface IPrimaryKey
-    {
-        object PrimaryKey { get; set; }
-    }
-
-    public interface IPrimaryKey<K> : IPrimaryKey
-    {
-        new K PrimaryKey { get; set; }
-    }
-
     public interface ISynchronized
     {
         bool? IsSynchronized { get; set; }

@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -26,6 +27,7 @@ namespace DataWF.Common
     {
         Type ItemType { get; }
         int TypeId { get; }
+        void Add(object item);
         Task DeleteAsync(object id);
         Task FindAsync(string filter);
         Task GetAsync();
@@ -47,6 +49,12 @@ namespace DataWF.Common
         Task<T> PutAsync(T value, CancellationToken cancellationToken);
         Task<bool> DeleteAsync(object id, CancellationToken cancellationToken);
         T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, T item, Dictionary<PropertySerializationInfo, object> dictionary = null, object id = null);
+    }
+
+    public interface IFileClient
+    {
+        Task<Stream> DownloadFileAsync(object id);
+        Task<string> UploadFileAsync(object id, string fileName, Stream file);
     }
 
     public enum ClientStatus

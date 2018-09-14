@@ -61,12 +61,7 @@ namespace DataWF.Common
                                 if (typeId != TypeId)
                                 {
                                     var client = Provider.GetClient(typeof(T), typeId);
-                                    item = (T)client.DeserializeItem(serializer, jreader, item, dictionary, id);
-                                    if (Select(IdInvoker.GetValue(item).Value) == null)
-                                    {
-                                        Items.Add(item);
-                                    }
-                                    return item;
+                                    return (T)client.DeserializeItem(serializer, jreader, item, dictionary, id);
                                 }
                             }
                         }
@@ -79,7 +74,7 @@ namespace DataWF.Common
         public virtual T DeserializeItem(T item, Dictionary<PropertySerializationInfo, object> dictionary, object id)
         {
             var add = false;
-            
+
             if (id != null && item == null)
             {
                 item = Select((K)id);
@@ -97,6 +92,12 @@ namespace DataWF.Common
             if (add)
             {
                 Items.Add(item);
+                if (TypeId != 0)
+                {
+                    var baseClient = GetBaseClient();
+                    baseClient.Add(item);
+                }
+
             }
             if (item is ISynchronized isSynch)
             {
@@ -117,6 +118,24 @@ namespace DataWF.Common
                 return (R)(object)DeserializeItem(serializer, jreader, (T)(object)item);
             }
             return base.DeserializeObject(serializer, jreader, item);
+        }
+
+        public ICRUDClient GetBaseClient()
+        {
+            var type = typeof(T).BaseType;
+            while (type != typeof(object))
+            {
+                var client = Provider.GetClient(type);
+                if (client != null)
+                    return client;
+                type = type.BaseType;
+            }
+            return null;
+        }
+
+        public void Add(object item)
+        {
+            Items.Add((T)item);
         }
 
         public virtual T Select(K id)
