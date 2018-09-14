@@ -46,5 +46,10 @@ namespace DataWF.Data
         {
             return Select(nameof(DBConstraint.Value), CompareType.Equal, value);
         }
+
+        public override DDLType GetInsertType(T item)
+        {
+            return (item.Column?.ColumnType == DBColumnTypes.Default) ? DDLType.Create : DDLType.Default;
+        }
     }
 }
