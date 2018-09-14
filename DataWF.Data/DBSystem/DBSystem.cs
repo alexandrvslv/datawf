@@ -858,19 +858,22 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
 
         public virtual void ReadSequential(DBItem item, DBColumn column, Stream stream, int bufferSize = 8192)
         {
-            var command = item.Table.CreateItemCommmand(item.PrimaryId, new[] { column });
             var transaction = DBTransaction.GetTransaction(item, item.Table.Schema.Connection);
             try
             {
+                var command = transaction.AddCommand(item.Table.CreateItemCommmand(item.PrimaryId, new[] { column }));
                 using (transaction.Reader = (IDataReader)transaction.ExecuteQuery(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess))
                 {
-                    var buffer = new byte[bufferSize];
-                    int position = 0;
-                    int readed;
-                    while ((readed = (int)transaction.Reader.GetBytes(0, position, buffer, 0, bufferSize)) > 0)
+                    if (transaction.Reader.Read())
                     {
-                        stream.Write(buffer, 0, readed);
-                        position += readed;
+                        var buffer = new byte[bufferSize];
+                        int position = 0;
+                        int readed;
+                        while ((readed = (int)transaction.Reader.GetBytes(0, position, buffer, 0, bufferSize)) > 0)
+                        {
+                            stream.Write(buffer, 0, readed);
+                            position += readed;
+                        }
                     }
                     transaction.Reader.Close();
                 }
