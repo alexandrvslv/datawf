@@ -117,7 +117,7 @@ namespace DataWF.Module.Flow
         {
             get
             {
-                if (_cache == null && string.IsNullOrEmpty(ParamCode))
+                if (_cache == null && !string.IsNullOrEmpty(ParamCode))
                 {
                     StageParamType type = (StageParamType)ItemType;
                     switch (type)
