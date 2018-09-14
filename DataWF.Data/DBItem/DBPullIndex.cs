@@ -90,7 +90,7 @@ namespace DataWF.Data
 
         public DBNullable<K> ReadItem(DBItem row)
         {
-            return Convert(pull.Get(row.hindex));
+            return Convert(pull.Get(row.handler));
         }
 
         public DBNullable<K> Convert(object value)

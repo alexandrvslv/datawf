@@ -744,13 +744,13 @@ namespace DataWF.Data
 
         public object GetValue(DBItem target)
         {
-            return Pull != null ? Pull.Get(target.hindex) :
+            return Pull != null ? Pull.Get(target.handler) :
                 TypeHelper.IsBaseType(target.GetType(), Attribute.PropertyInvoker.TargetType) ? Attribute.PropertyInvoker.GetValue(target) : null;
         }
 
         public T GetValue<T>(DBItem target)
         {
-            return Pull != null ? Pull.GetValue<T>(target.hindex) : (T)Attribute.PropertyInvoker.GetValue(target);
+            return Pull != null ? Pull.GetValue<T>(target.handler) : (T)Attribute.PropertyInvoker.GetValue(target);
         }
 
         public object GetValue(object target)
@@ -762,7 +762,7 @@ namespace DataWF.Data
         {
             if (Pull != null)
             {
-                Pull?.Set(target.hindex, value);
+                Pull?.Set(target.handler, value);
             }
             else
             {
@@ -774,7 +774,7 @@ namespace DataWF.Data
         {
             if (Pull != null)
             {
-                Pull?.SetValue<T>(target.hindex, value);
+                Pull?.SetValue<T>(target.handler, value);
             }
             else
             {

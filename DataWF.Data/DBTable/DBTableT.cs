@@ -277,7 +277,7 @@ namespace DataWF.Data
             {
                 var maxIndex = 0;
                 foreach (var item in items)
-                    maxIndex = item.hindex > maxIndex ? item.hindex : maxIndex;
+                    maxIndex = item.handler > maxIndex ? item.handler : maxIndex;
                 if (Hash > maxIndex)
                 {
                     Hash = maxIndex;

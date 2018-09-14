@@ -21,6 +21,7 @@ using DataWF.Common;
 using Newtonsoft.Json;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -136,6 +137,7 @@ namespace DataWF.Data
         private DBSequence cacheSequence;
         public DBComparer DefaultComparer;
         public int Hash = -1;
+        protected internal ConcurrentQueue<int> FreeHandlers = new ConcurrentQueue<int>();
 
         protected string query;
         protected string comInsert;
@@ -714,6 +716,15 @@ namespace DataWF.Data
             return !e.Cancel;
         }
 
+        protected internal int GetNextHandler()
+        {
+            if (FreeHandlers.Count > 0 && FreeHandlers.TryDequeue(out var handler))
+            {
+                return handler;
+            }
+            return Pull.GetHIndexUnsafe(NextHash(), BlockSize);
+        }
+
         public event EventHandler<DBItemEventArgs> RowUpdated;
 
         public void OnUpdated(DBItemEventArgs e)
@@ -939,9 +950,10 @@ namespace DataWF.Data
 
         public void AcceptChanges()
         {
-            var rows = GetChangedItems().ToList();
-            for (int i = 0; i < rows.Count; i++)
-                rows[i].Accept();
+            foreach (var row in GetChangedItems().ToList())
+            {
+                row.Accept();
+            }
         }
 
         public static IDBTableView CreateView(Type type)

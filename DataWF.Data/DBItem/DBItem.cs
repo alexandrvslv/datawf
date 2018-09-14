@@ -47,7 +47,7 @@ namespace DataWF.Data
         }
 
         public object Tag;
-        internal int hindex = -1;
+        internal int handler = -1;
         internal string cacheToString = string.Empty;
         protected DBTable table;
         protected DBItemState state = DBItemState.New;
@@ -64,34 +64,34 @@ namespace DataWF.Data
 
         public object GetTag(DBColumn column)
         {
-            return column.GetTag(hindex);
+            return column.GetTag(handler);
         }
 
         public void SetTag(DBColumn column, object value)
         {
             if (value == null)
             {
-                column.RemoveTag(hindex);
+                column.RemoveTag(handler);
             }
             else
             {
-                column.SetTag(hindex, value);
+                column.SetTag(handler, value);
             }
         }
 
         public bool GetOld(DBColumn column, out object value)
         {
-            return column.GetOld(hindex, out value);
+            return column.GetOld(handler, out value);
         }
 
         public void RemoveOld(DBColumn column)
         {
-            column.RemoveOld(hindex);
+            column.RemoveOld(handler);
         }
 
         public void SetOld(DBColumn column, object value)
         {
-            column.SetOld(hindex, value);
+            column.SetOld(handler, value);
         }
 
         public object GetValue(DBColumn column)
@@ -223,7 +223,7 @@ namespace DataWF.Data
 
         public bool IsChangedKey(DBColumn column)
         {
-            return column.GetOld(hindex, out object value);
+            return column.GetOld(handler, out object value);
         }
 
         public virtual bool GetIsChanged()
@@ -235,7 +235,7 @@ namespace DataWF.Data
         {
             foreach (var column in Table.Columns)
             {
-                if (column.GetOld(hindex, out object value))
+                if (column.GetOld(handler, out object value))
                 {
                     yield return column;
                 }
@@ -725,7 +725,7 @@ namespace DataWF.Data
                 if (table != value)
                 {
                     table = value is IDBVirtualTable virtualTable ? virtualTable.BaseTable : value;
-                    hindex = Pull.GetHIndexUnsafe(table.NextHash(), table.BlockSize);
+                    handler = table.GetNextHandler();
                 }
             }
         }
@@ -837,7 +837,7 @@ namespace DataWF.Data
             RemoveOld(column);
         }
 
-        public void Accept()
+        public virtual void Accept()
         {
             if (IsChanged || (UpdateState & DBUpdateState.Commit) == DBUpdateState.Commit)
             {
@@ -1020,10 +1020,12 @@ namespace DataWF.Data
 
         public void Clear()
         {
+            Detach();
             foreach (DBColumn column in Table.Columns)
             {
-                SetValue(null, column);
+                column.SetValue(this, null);
             }
+            Table.FreeHandlers.Enqueue(handler);
         }
 
         [Browsable(false)]
@@ -1070,7 +1072,7 @@ namespace DataWF.Data
 
         public int CompareTo(DBItem obj)
         {
-            return obj == null ? 1 : obj.Table == Table ? hindex.CompareTo(obj.hindex) :
+            return obj == null ? 1 : obj.Table == Table ? handler.CompareTo(obj.handler) :
                 GetHashCode().CompareTo(obj.GetHashCode());
         }
 

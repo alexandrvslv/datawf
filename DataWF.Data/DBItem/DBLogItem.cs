@@ -18,11 +18,10 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System;
+using DataWF.Common;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using DataWF.Common;
 
 namespace DataWF.Data
 {
@@ -119,6 +118,18 @@ namespace DataWF.Data
 
             var id = LogTable.Schema.Connection.ExecuteQuery(query.ToWhere());
             return LogTable.LoadById(id);
+        }
+
+        public override void Reject()
+        {
+            base.Reject();
+            Clear();
+        }
+
+        public override void Accept()
+        {
+            base.Accept();
+            Clear();
         }
 
         public override string ToString()
