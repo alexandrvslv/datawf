@@ -112,7 +112,7 @@ namespace DataWF.Module.Flow
         }
 
         public static event DocumentSaveDelegate Saved;
-
+        public object saveLock = new object();
         private DocInitType initype = DocInitType.Default;
         private int changes = 0;
         //private DBItem parent = DBItem.EmptyItem;
@@ -269,7 +269,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [DataMember, Column("work_id", ColumnType = DBColumnTypes.Code)]
+        [DataMember, Column("current_work_id", ColumnType = DBColumnTypes.Code)]
         public long? CurrentWorkId
         {
             get { return CurrentWork?.Id; }
@@ -279,15 +279,27 @@ namespace DataWF.Module.Flow
         [Reference(nameof(CurrentWorkId))]
         public DocumentWork CurrentWork
         {
-            get { return Works.FirstOrDefault(p => p.IsCurrent); }
+            get { return Works.FirstOrDefault(p => p.IsCurrent) ?? Works.FirstOrDefault(p => !p.IsComplete); }
         }
 
+        [Browsable(false)]
+        [DataMember, Column("current_stage_id", ColumnType = DBColumnTypes.Code)]
+        public int? CurrentStageId
+        {
+            get { return CurrentStage?.Id; }
+            set { CurrentStage = Stage.DBTable.LoadById(value); }
+        }
+
+        [Reference(nameof(CurrentStageId))]
         public Stage CurrentStage
         {
             get { return CurrentWork?.Stage; }
             set
             {
-                Send(CurrentWork, value);
+                if (CurrentStage != value)
+                {
+                    Send(CurrentWork, value);
+                }
             }
         }
 
@@ -317,12 +329,6 @@ namespace DataWF.Module.Flow
         public bool IsCurrent
         {
             get { return CurrentWork != null; }
-        }
-
-        [Browsable(false)]
-        public Work Work
-        {
-            get { return Template.Work; }
         }
 
         [Browsable(false)]
@@ -680,7 +686,7 @@ namespace DataWF.Module.Flow
             if (saving.Contains(this))//prevent recursion
                 return;
             saving.Add(this);
-            var transaction = DBTransaction.GetTransaction(this, Table.Schema.Connection);
+            var transaction = DBTransaction.GetTransaction(saveLock, Table.Schema.Connection);
             try
             {
                 base.Save();
@@ -694,8 +700,7 @@ namespace DataWF.Module.Flow
 
                     if (isnew)
                     {
-                        var flow = Template.Work;
-                        var work = Send(null, flow?.GetStartStage(), new[] { User.CurrentUser }).First();
+                        CurrentStage = Template.Work?.GetStartStage();
                         base.Save();
                     }
 
@@ -717,7 +722,9 @@ namespace DataWF.Module.Flow
                     {
                         var data = GetTemplatedData();
                         if (data != null)
+                        {
                             data.Parse(param);
+                        }
                     }
                     Save(DocInitType.Data);
                     Saved?.Invoke(null, new DocumentEventArgs(this));
@@ -727,13 +734,13 @@ namespace DataWF.Module.Flow
             }
             catch (Exception ex)
             {
-                if (transaction.Owner == this)
+                if (transaction.Owner == saveLock)
                     transaction.Rollback();
                 throw ex;
             }
             finally
             {
-                if (transaction.Owner == this)
+                if (transaction.Owner == saveLock)
                     transaction.Dispose();
                 saving.Remove(this);
             }
@@ -762,7 +769,10 @@ namespace DataWF.Module.Flow
         [ControllerMethod]
         public List<DocumentWork> Send(DocumentWork from, Stage stage)
         {
-            return Send(from, stage, stage.GetDepartment(Template));
+            if ((stage.Keys & StageKey.IsStart) == StageKey.IsStart)
+                return Send(from, stage, new[] { User.CurrentUser });
+            else
+                return Send(from, stage, stage.GetDepartment(Template));
         }
 
         [ControllerMethod]
