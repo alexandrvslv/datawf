@@ -618,5 +618,12 @@ namespace DataWF.Common
             AddRangeInternal(list);
             OnListChanged(NotifyCollectionChangedAction.Reset);
         }
+
+        public void RemoveRange(IEnumerable<T> toDelete)
+        {
+            foreach (T item in toDelete)
+                Remove(item);
+        }
+
     }
 }
