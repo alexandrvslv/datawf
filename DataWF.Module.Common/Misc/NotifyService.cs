@@ -1,15 +1,12 @@
-﻿using DataWF.Data;
-using DataWF.Common;
+﻿using DataWF.Common;
+using DataWF.Data;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
-using System.Timers;
-using System.Net;
-using System.Threading.Tasks;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace DataWF.Module.Common
 {
@@ -23,22 +20,17 @@ namespace DataWF.Module.Common
             service.Login();
         }
 
-        class MessageItem
-        {
-            public DBTable Table;
-            public DBLogType Type;
-            public object Id;
-        }
-
         public static NotifyService Default;
 
         private static object loadLock = new object();
 
         private Instance instance;
-        private ConcurrentBag<MessageItem> buffer = new ConcurrentBag<MessageItem>();
+        private ConcurrentBag<NotifyMessageItem> buffer = new ConcurrentBag<NotifyMessageItem>();
         private ManualResetEvent runEvent = new ManualResetEvent(false);
         private int timer = 3000;
         private IPEndPoint endPoint;
+
+        public event EventHandler<NotifyEventArgs> SendChanges;
 
         public NotifyService() : base()
         {
@@ -69,9 +61,7 @@ namespace DataWF.Module.Common
         public void Login()
         {
             StartListener();
-
             endPoint = new IPEndPoint(EndPointHelper.GetInterNetworkIPs().First(), ListenerEndPoint.Port);
-
             instance = Instance.GetByNetId(endPoint, true);
 
             byte[] temp = instance.EndPoint.GetBytes();
@@ -121,9 +111,9 @@ namespace DataWF.Module.Common
 
         private void OnCommit(DBItemEventArgs arg)
         {
-            var log = arg.Item;
+            var item = arg.Item;
 
-            if (!(log is UserLog) && !(log is DBLogItem) && log.Table.Type == DBTableType.Table && log.Table.IsLoging)
+            if (!(item is UserLog) && !(item is DBLogItem) && item.Table.Type == DBTableType.Table && item.Table.IsLoging)
             {
                 var type = DBLogType.None;
                 if ((arg.State & DBUpdateState.Delete) == DBUpdateState.Delete)
@@ -134,7 +124,7 @@ namespace DataWF.Module.Common
                     type = DBLogType.Insert;
                 if (type != DBLogType.None)
                 {
-                    buffer.Add(new MessageItem() { Table = log.Table, Id = log.PrimaryId, Type = type });
+                    buffer.Add(new NotifyMessageItem() { Item = item, Type = type });
                 }
             }
         }
@@ -175,7 +165,7 @@ namespace DataWF.Module.Common
                     if (buffer.Count == 0)
                         continue;
 
-                    var list = new MessageItem[buffer.Count > 200 ? 200 : buffer.Count];
+                    var list = new NotifyMessageItem[buffer.Count > 200 ? 200 : buffer.Count];
 
                     for (int i = 0; i < list.Length; i++)
                     {
@@ -187,10 +177,12 @@ namespace DataWF.Module.Common
 
                     Array.Sort(list, (x, y) =>
                     {
-                        var res = x.Table.CompareTo(y.Table);
-                        res = res != 0 ? res : ListHelper.Compare(x.Id, y.Id, null, false);
+                        var res = x.Item.Table.CompareTo(y.Item.Table);
+                        res = res != 0 ? res : string.Compare(x.Item.GetType().Name, y.Item.GetType().Name, StringComparison.Ordinal);
+                        res = res != 0 ? res : ListHelper.Compare(x.Item.PrimaryId, y.Item.PrimaryId, null, false);
                         return res != 0 ? res : x.Type.CompareTo(y.Type);
                     });
+
                     var stream = new MemoryStream();
                     using (var writer = new BinaryWriter(stream))
                     {
@@ -198,30 +190,36 @@ namespace DataWF.Module.Common
                         object id = null;
                         foreach (var log in list)
                         {
-                            if (log.Table != table)
+                            if (log.Item.Table != table)
                             {
                                 id = null;
-                                table = log.Table;
+                                table = log.Item.Table;
                                 writer.Write((char)1);
                                 writer.Write(table.Name);
                             }
-                            if (!log.Id.Equals(id))
+                            if (!log.Item.PrimaryId.Equals(id))
                             {
-                                id = log.Id;
+                                id = log.Item.PrimaryId;
                                 writer.Write((char)2);
                                 writer.Write((int)log.Type);
-                                Helper.WriteBinary(writer, log.Id, true);
+                                Helper.WriteBinary(writer, log.Item.PrimaryId, true);
                             }
                         }
                         writer.Flush();
                         Send(stream.ToArray());
                     }
+                    OnSendChanges(list);
                 }
                 catch (Exception e)
                 {
                     Helper.OnException(e);
                 }
             }
+        }
+
+        protected virtual void OnSendChanges(NotifyMessageItem[] list)
+        {
+            SendChanges?.Invoke(this, new NotifyEventArgs(list));
         }
 
         public static void LoadData(byte[] buffer)
@@ -265,5 +263,21 @@ namespace DataWF.Module.Common
                 }
             }
         }
+    }
+
+    public class NotifyMessageItem
+    {
+        public DBItem Item;
+        public DBLogType Type;
+    }
+
+    public class NotifyEventArgs : EventArgs
+    {
+        public NotifyEventArgs(NotifyMessageItem[] data)
+        {
+            Data = data;
+        }
+
+        public NotifyMessageItem[] Data { get; }
     }
 }

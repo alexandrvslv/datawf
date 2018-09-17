@@ -1,13 +1,16 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json.Serialization;
 using Swashbuckle.AspNetCore.Swagger;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.WebSockets;
 
 namespace DataWF.Web.Common
 {
@@ -46,7 +49,7 @@ namespace DataWF.Web.Common
                .AddJsonOptions(options =>
                {
                    options.SerializerSettings.ContractResolver = new DBItemContractResolver();
-                   options.SerializerSettings.Error = SerializationErrors;
+                   //options.SerializerSettings.Error = SerializationErrors;
                    options.SerializerSettings.TraceWriter = new DiagnosticsTraceWriter() { };
                    //options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
                });
@@ -59,10 +62,10 @@ namespace DataWF.Web.Common
             return services;
         }
 
-        private static void SerializationErrors(object sender, ErrorEventArgs e)
-        {
-            //throw new NotImplementedException();
-        }
+        //private static void SerializationErrors(object sender, ErrorEventArgs e)
+        //{
+        //    //throw new NotImplementedException();
+        //}
 
         public static IServiceCollection InitWithAuthAndSwagger(this IServiceCollection services, IConfiguration configuration, string name, string version)
         {
@@ -100,5 +103,89 @@ namespace DataWF.Web.Common
 
             return services;
         }
+
+        public static IServiceCollection AddWebNotify(this IServiceCollection app)
+        {
+            var service = new WebNotifyService();
+            service.Login();
+            return app.AddSingleton(service);
+        }
+
+        public static IApplicationBuilder UseWebNotify(this IApplicationBuilder app, string path = "/api/WebNotify")
+        {
+            var webSocketOptions = new WebSocketOptions()
+            {
+                KeepAliveInterval = TimeSpan.FromSeconds(20),
+                ReceiveBufferSize = 4 * 1024
+            };
+            app.UseWebSockets(webSocketOptions);
+
+            //app.Use(async (context, next) =>
+            //{
+            //    if (context.Request.Path == path)
+            //    {
+            //        if (context.WebSockets.IsWebSocketRequest)
+            //        {
+            //            var service = app.ApplicationServices.GetService<WebNotifyController>();
+            //            await service.Get();
+            //        }
+            //        else
+            //        {
+            //            context.Response.StatusCode = 400;
+            //        }
+            //    }
+            //    else
+            //    {
+            //        await next();
+            //    }
+
+            //});
+            return app;
+        }
+
     }
+
+    //public class WebSocketMiddleware
+    //{
+    //    public WebSocketMiddleware(RequestDelegate next,
+    //                                   TemperatureSocketManager socketManager)
+    //    {
+    //        _next = next;
+    //        _socketManager = socketManager;
+    //    }
+
+    //    public async Task Invoke(HttpContext context)
+    //    {
+    //        if (!context.WebSockets.IsWebSocketRequest)
+    //        {
+    //            await _next.Invoke(context);
+    //            return;
+    //        }
+
+    //        var socket = await context.WebSockets.AcceptWebSocketAsync();
+    //        var id = _socketManager.AddSocket(socket);
+
+    //        await Receive(socket, async (result, buffer) =>
+    //        {
+    //            if (result.MessageType == WebSocketMessageType.Close)
+    //            {
+    //                await _socketManager.RemoveSocket(id);
+    //                return;
+    //            }
+    //        });
+    //    }
+
+    //    private async Task Receive(WebSocket socket, Action<WebSocketReceiveResult, byte[]> handleMessage)
+    //    {
+    //        var buffer = new byte[1024 * 4];
+
+    //        while (socket.State == WebSocketState.Open)
+    //        {
+    //            var result = await socket.ReceiveAsync(buffer: new ArraySegment<byte>(buffer),
+    //                                                    cancellationToken: CancellationToken.None);
+
+    //            handleMessage(result, buffer);
+    //        }
+    //    }
+    //}
 }
