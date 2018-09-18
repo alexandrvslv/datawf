@@ -18,8 +18,9 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System.IO;
+using DataWF.Common;
 using DataWF.Data;
+using System.IO;
 using System.Runtime.Serialization;
 
 namespace DataWF.Module.Flow
@@ -60,6 +61,16 @@ namespace DataWF.Module.Flow
         public string FileType
         {
             get { return Path.GetExtension(DataName); }
+        }
+
+        public Stream GetMemoryStream()
+        {
+            return GetZipMemoryStream(table.FileKey);
+        }
+
+        public FileStream GetFileStream()
+        {
+            return GetZipFileStream(table.FileKey, Helper.GetDocumentsFullPath(DataName));
         }
     }
 }

@@ -31,8 +31,6 @@ namespace DataWF.Common
     public static class Helper
     {
         public static string AppName = "DataWF";
-        private static object[] cacheObjectParam;
-        private static Type[] cacheTypeParam;
         private static StateInfoList logs = new StateInfoList();
         public static List<IModuleInitialize> ModuleInitializer = new List<IModuleInitialize>();
 
@@ -266,8 +264,19 @@ namespace DataWF.Common
 
         public static bool IsImage(string filePath)
         {
-            using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Read, FileShare.ReadWrite))
+            using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 return IsImage(fileStream);
+        }
+
+        public static string GetDocumentsFullPath(string fileName)
+        {
+            if (string.IsNullOrEmpty(fileName))
+            {
+                return null;
+            }
+            var path = Path.Combine(Path.GetTempPath(), "Documents");
+            Directory.CreateDirectory(path);
+            return Path.Combine(path, fileName);
         }
 
         public static string GetDirectory(string sub = "")
@@ -368,6 +377,20 @@ namespace DataWF.Common
                 zipStream.CopyTo(outStream);
                 outStream.Position = 0;
                 return outStream;
+            }
+        }
+
+        public static byte[] GetBytes(Stream stream)
+        {
+            if (stream is MemoryStream memStream)
+                return memStream.ToArray();
+            else
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    stream.CopyTo(memoryStream);
+                    return memoryStream.ToArray();
+                }
             }
         }
 

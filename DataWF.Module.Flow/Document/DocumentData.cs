@@ -24,7 +24,6 @@ using System;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.Serialization;
-using System.Xml.Serialization;
 
 namespace DataWF.Module.Flow
 {
@@ -92,7 +91,6 @@ namespace DataWF.Module.Flow
             get { return GetTable<DocumentData>(); }
         }
 
-        protected object templateDocument = null;
         private byte[] buf;
 
         public DocumentData()
@@ -123,12 +121,7 @@ namespace DataWF.Module.Flow
         public TemplateData TemplateData
         {
             get { return GetPropertyReference<TemplateData>(); }
-            set
-            {
-                SetPropertyReference(value);
-                FileData = (byte[])value?.File?.Data.Clone();
-                RefreshName();
-            }
+            set { SetPropertyReference(value); }
         }
 
         [DataMember, Column("file_name", 1024, Keys = DBColumnKeys.View | DBColumnKeys.FileName)]
@@ -148,20 +141,8 @@ namespace DataWF.Module.Flow
         [DataMember, Column("file_data", Keys = DBColumnKeys.File)]
         public virtual byte[] FileData
         {
-            get { return buf ?? (buf = GetZip(Table.Columns.GetByProperty(nameof(FileData)))); }
-            set
-            {
-                var column = Table.Columns.GetByProperty(nameof(FileData));
-                buf = value;
-                SetZip(column, value);
-
-                if (IsTemplate && templateDocument != null)
-                {
-                    if (templateDocument is IDisposable)
-                        ((IDisposable)templateDocument).Dispose();
-                    templateDocument = null;
-                }
-            }
+            get { return buf ?? (buf = GetZip(Table.FileKey)); }
+            set { SetValue(value, Table.FileKey); }
         }
 
         public Stream GetFile()
@@ -199,21 +180,13 @@ namespace DataWF.Module.Flow
             get { return TemplateDataId != null; }
         }
 
-        [XmlIgnore, Browsable(false)]
-        public object TemplateDocument
-        {
-            get { return templateDocument; }
-            set { templateDocument = value; }
-        }
-
-        public string GetFullPath()
-        {
-            return Path.Combine(Path.GetTempPath(), "Documents", FileName);
-        }
-
         public string GetData()
         {
-            var file = GetFullPath();
+            var file = Helper.GetDocumentsFullPath(FileName);
+            if (file == null)
+            {
+                return null;
+            }
             using (var stream = GetData(file))
             {
                 return file;
@@ -222,7 +195,7 @@ namespace DataWF.Module.Flow
 
         public Stream GetData(string fileName)
         {
-            return GetFileStream(Table.Columns.GetByKey(DBColumnKeys.File), fileName);
+            return GetZipFileStream(Table.FileKey, fileName);
         }
 
         public void SetData(string filePath, bool cache)
@@ -233,7 +206,7 @@ namespace DataWF.Module.Flow
             }
             else
             {
-                SetStream(filePath, Table.Columns.GetByKey(DBColumnKeys.File));
+                SetStream(filePath, Table.FileKey);
             }
         }
 
@@ -249,10 +222,21 @@ namespace DataWF.Module.Flow
                 return null;
             }
 
-            var filePath = (string)null;
-            using (var stream = GetData(GetFullPath()))
+            var filePath = Helper.GetDocumentsFullPath(FileName);
+            if (filePath == null)
             {
-                filePath = DocumentParser.Execute(stream, FileName, param);
+                using (var stream = TemplateData.File.GetFileStream())
+                {
+                    FileName = RefreshName();
+                    filePath = DocumentParser.Execute(stream, FileName, param);
+                }
+            }
+            else
+            {
+                using (var stream = GetData(filePath))
+                {
+                    filePath = DocumentParser.Execute(stream, FileName, param);
+                }
             }
             SetData(filePath, false);
             return filePath;
@@ -279,21 +263,37 @@ namespace DataWF.Module.Flow
             //worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(worker_RunWorkerCompleted);
         }
 
+        public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)
+        {
+            base.OnPropertyChanged(property, column, value);
+            if (property == nameof(TemplateDataId))
+            {
+                //var data = TemplateData;
+                //if (data != null)
+                //{
+                //    using (var template = data.File.GetMemoryStream())
+                //    {
+                //        FileData = template.ToArray();
+                //        FileName = RefreshName();
+                //    }
+                //}
+            }
+        }
 
-
-        public void RefreshName()
+        public string RefreshName()
         {
             if (IsTemplate && TemplateData?.File != null)
             {
-                if (string.IsNullOrEmpty(Document.Number))
+                if (string.IsNullOrEmpty(Document?.Number))
                 {
-                    FileName = $"{Path.GetFileNameWithoutExtension(TemplateData.File.DataName)}{DateTime.Now.ToString("yy-MM-dd_hh-mm-ss")}{TemplateData.File.FileType}";
+                    return $"{Path.GetFileNameWithoutExtension(TemplateData.File.DataName)}{DateTime.Now.ToString("yy-MM-dd_hh-mm-ss")}{TemplateData.File.FileType}";
                 }
                 else
                 {
-                    FileName = $"{Path.GetFileNameWithoutExtension(TemplateData.File.DataName)}{Document.Number}{TemplateData.File.FileType}";
+                    return $"{Path.GetFileNameWithoutExtension(TemplateData.File.DataName)}{Document.Number}{TemplateData.File.FileType}";
                 }
             }
+            return FileName;
         }
     }
 }

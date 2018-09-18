@@ -1366,12 +1366,6 @@ namespace DataWF.Data
             Table.System.WriteSequential(this, column, stream, bufferSize);
         }
 
-        public Stream GetZipMemoryStream(DBColumn column, int bufferSize = 8192)
-        {
-            var memoryStream = GetMemoryStream(column, bufferSize);
-            return Helper.IsGZip(memoryStream) ? Helper.GetGZipStrem(memoryStream) : memoryStream;
-        }
-
         public MemoryStream GetMemoryStream(DBColumn column, int bufferSize = 8192)
         {
             var memoryStream = (MemoryStream)null;
@@ -1387,16 +1381,9 @@ namespace DataWF.Data
             return memoryStream;
         }
 
-        public Stream GetZipFileStream(DBColumn column, string path, int bufferSize = 8192)
-        {
-            var fileStream = (Stream)GetFileStream(column, path, bufferSize);
-            return Helper.IsGZip(fileStream) ? Helper.GetGZipStrem(fileStream) : fileStream;
-        }
-
         public FileStream GetFileStream(DBColumn column, string path, int bufferSize = 8192)
         {
             var fileStream = File.Open(path, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
-
             var temp = GetValue<byte[]>(column);
             if (temp != null)
             {
@@ -1406,6 +1393,29 @@ namespace DataWF.Data
             }
 
             Table.System.ReadSequential(this, column, fileStream, bufferSize);
+            return fileStream;
+        }
+
+        public Stream GetZipMemoryStream(DBColumn column, int bufferSize = 8192)
+        {
+            var memoryStream = GetMemoryStream(column, bufferSize);
+            return Helper.IsGZip(memoryStream) ? Helper.GetGZipStrem(memoryStream) : memoryStream;
+        }
+
+        public FileStream GetZipFileStream(DBColumn column, string path, int bufferSize = 8192)
+        {
+            var fileStream = GetFileStream(column, path, bufferSize);
+            if (Helper.IsGZip(fileStream))
+            {
+                using (var gzip = Helper.GetGZipStrem(fileStream))
+                using (var newFileStream = File.Open(path + ".zip", FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite))
+                {
+                    gzip.CopyTo(newFileStream, bufferSize);
+                }
+                File.Delete(path);
+                File.Move(path + ".zip", path);
+                return File.Open(path, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+            }
             return fileStream;
         }
 

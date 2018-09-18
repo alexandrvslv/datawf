@@ -132,9 +132,17 @@ namespace DataWF.Module.FlowGui
 
         private void ViewDocument()
         {
-            if (Current == null || Current.FileData == null)
+            if (Current == null)
+            {
                 return;
+            }
+
             var filePath = Current.GetData();
+            if (string.IsNullOrEmpty(filePath))
+            {
+                return;
+            }
+
             if (Helper.IsImage(filePath))
             {
                 var image = new ImageEditor();
@@ -147,7 +155,5 @@ namespace DataWF.Module.FlowGui
                 DocumentEditor.Execute(filePath);
             }
         }
-
-
     }
 }
