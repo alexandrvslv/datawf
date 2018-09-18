@@ -68,7 +68,7 @@ namespace DataWF.Web.Common
             var toDelete = new List<WebNotifyClient>();
             foreach (var client in Clients)
             {
-                if (client.Socket.CloseStatus != null)
+                if (client.Socket.State != WebSocketState.Open)
                 {
                     toDelete.Add(client);
                     continue;
@@ -107,6 +107,8 @@ namespace DataWF.Web.Common
                     writer.WriteValue(item.Item.PrimaryId.ToString());
                     writer.WritePropertyName("Diff");
                     writer.WriteValue((int)item.Type);
+                    writer.WritePropertyName("User");
+                    writer.WriteValue(item.UserId);
                     writer.WriteEndObject();
                 }
                 writer.WriteEndArray();
@@ -120,23 +122,44 @@ namespace DataWF.Web.Common
         //https://github.com/radu-matei/websocket-manager/blob/blog-article/src/WebSocketManager/WebSocketManagerMiddleware.cs
         public async Task Receive(WebSocket socket)
         {
-            var buffer = new byte[1024 * 4];
+            var buffer = new ArraySegment<byte>(new byte[8192]);
             var client = GetBySocket(socket);
             while (socket.State == WebSocketState.Open)
             {
-                var result = await socket.ReceiveAsync(buffer: new ArraySegment<byte>(buffer),
-                                                       cancellationToken: CancellationToken.None);
-
-                switch (result.MessageType)
+                try
                 {
-                    case WebSocketMessageType.Text:
-                        var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                        ReceiveMessage?.Invoke(this, new WebNotifyEventArgs(client, message));
-                        break;
-                    case WebSocketMessageType.Close:
-                        Clients.Remove(GetBySocket(socket));
-                        return;
+                    WebSocketReceiveResult result = null;
+                    using (var stream = new MemoryStream())
+                    {
+                        do
+                        {
+                            result = await socket.ReceiveAsync(buffer, CancellationToken.None);
+                            if (result.Count > 0)
+                            {
+                                stream.Write(buffer.Array, buffer.Offset, result.Count);
+                            }
+                        }
+                        while (!result.EndOfMessage);
+
+                        switch (result.MessageType)
+                        {
+                            case WebSocketMessageType.Text:
+                                var message = Encoding.UTF8.GetString(stream.ToArray());
+                                ReceiveMessage?.Invoke(this, new WebNotifyEventArgs(client, message));
+                                break;
+                            case WebSocketMessageType.Close:
+                                Clients.Remove(GetBySocket(socket));
+                                return;
+                        }
+                    }
+
                 }
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
+                    Clients.Remove(GetBySocket(socket));
+                }
+
             }
         }
     }

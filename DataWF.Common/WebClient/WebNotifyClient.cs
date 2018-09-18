@@ -1,6 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Net.WebSockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -33,22 +34,38 @@ namespace DataWF.Common
             }
         }
 
-        public async Task<string> ReadString()
+        public async Task<byte[]> ReadString()
         {
-            var buffer = new byte[4 * 1024];
-            var builder = new StringBuilder();
-            WebSocketReceiveResult result = null;
-            do
+            //var buffer = new byte[4 * 1024];
+            var buffer = new ArraySegment<byte>(new byte[8192]);
+            using (var builder = new MemoryStream())
             {
-                result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-                if (result.Count > 0)
+                WebSocketReceiveResult result = null;
+                do
                 {
-                    builder.Append(Encoding.UTF8.GetString(buffer, 0, result.Count));
-                }
+                    result = await socket.ReceiveAsync(buffer, CancellationToken.None);
+                    if (result.Count > 0)
+                    {
+                        builder.Write(buffer.Array, buffer.Offset, result.Count);
+                    }
 
-            } while (!result.EndOfMessage);
-            return builder.ToString();
+                } while (!result.EndOfMessage);
+                return builder.ToArray();
+            }
         }
 
+    }
+
+    public class WebNotifyItem
+    {
+        public string Type { get; set; }
+        public List<WebNotifyEntry> Items { get; set; }
+    }
+
+    public class WebNotifyEntry
+    {
+        public string Id { get; set; }
+        public int Diff { get; set; }
+        public int User { get; set; }
     }
 }

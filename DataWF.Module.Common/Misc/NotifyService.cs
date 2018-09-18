@@ -124,7 +124,12 @@ namespace DataWF.Module.Common
                     type = DBLogType.Insert;
                 if (type != DBLogType.None)
                 {
-                    buffer.Add(new NotifyMessageItem() { Item = item, Type = type });
+                    buffer.Add(new NotifyMessageItem()
+                    {
+                        Item = item,
+                        Type = type,
+                        UserId = User.CurrentUser?.Id ?? 0
+                    });
                 }
             }
         }
@@ -202,7 +207,8 @@ namespace DataWF.Module.Common
                                 id = log.Item.PrimaryId;
                                 writer.Write((char)2);
                                 writer.Write((int)log.Type);
-                                Helper.WriteBinary(writer, log.Item.PrimaryId, true);
+                                writer.Write((int)log.UserId);
+                                Helper.WriteBinary(writer, id, true);
                             }
                         }
                         writer.Flush();
@@ -240,6 +246,7 @@ namespace DataWF.Module.Common
                             {
                                 reader.ReadChar();
                                 var type = (DBLogType)reader.ReadInt32();
+                                var user = reader.ReadInt32();
                                 var id = Helper.ReadBinary(reader);
                                 if (type == DBLogType.Insert)
                                 {
@@ -269,6 +276,7 @@ namespace DataWF.Module.Common
     {
         public DBItem Item;
         public DBLogType Type;
+        public int UserId;
     }
 
     public class NotifyEventArgs : EventArgs

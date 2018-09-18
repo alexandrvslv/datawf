@@ -138,6 +138,30 @@ namespace DataWF.Common
             Items.Add((T)item);
         }
 
+        public void Remove(object item)
+        {
+            Items.Add((T)item);
+        }
+
+        public void RemoveById(object id)
+        {
+            var item = Select(id);
+            if (item is T tItem)
+            {
+                Items.Remove(tItem);
+            }
+        }
+
+        public object ParseId(object id)
+        {
+            return Helper.Parse(id, IdInvoker.DataType);
+        }
+
+        public object Select(object id)
+        {
+            return Select((K)id);
+        }
+
         public virtual T Select(K id)
         {
             return Items.SelectOne(IdInvoker.Name, (K?)id);

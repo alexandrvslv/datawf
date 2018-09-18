@@ -28,6 +28,10 @@ namespace DataWF.Common
         Type ItemType { get; }
         int TypeId { get; }
         void Add(object item);
+        void Remove(object item);
+        void RemoveById(object id);
+        object Select(object id);
+        object ParseId(object id);
         Task DeleteAsync(object id);
         Task FindAsync(string filter);
         Task GetAsync();

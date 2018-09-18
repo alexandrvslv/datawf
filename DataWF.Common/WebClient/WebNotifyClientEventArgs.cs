@@ -4,11 +4,11 @@ namespace DataWF.Common
 {
     public class WebNotifyClientEventArgs : EventArgs
     {
-        public WebNotifyClientEventArgs(string message)
+        public WebNotifyClientEventArgs(byte[] message)
         {
             this.Message = message;
         }
 
-        public string Message { get; }
+        public byte[] Message { get; }
     }
 }
