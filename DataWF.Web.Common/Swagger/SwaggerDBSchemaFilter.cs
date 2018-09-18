@@ -92,7 +92,7 @@ namespace DataWF.Web.Common
             }
             if (((column.Attribute.Keys & DBColumnKeys.Notnull) == DBColumnKeys.Notnull
                 || (column.Attribute.Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType)
-                && (column.Attribute.Keys & DBColumnKeys.Primary) != DBColumnKeys.Primary)
+                || (column.Attribute.Keys & DBColumnKeys.Primary) == DBColumnKeys.Primary)
             {
                 if (schema.Required == null)
                     schema.Required = new List<string>();

@@ -148,7 +148,6 @@ namespace DataWF.Web.Common
                                 ReceiveMessage?.Invoke(this, new WebNotifyEventArgs(client, message));
                                 break;
                             case WebSocketMessageType.Close:
-                                Clients.Remove(GetBySocket(socket));
                                 return;
                         }
                     }
@@ -157,7 +156,6 @@ namespace DataWF.Web.Common
                 catch (Exception ex)
                 {
                     Helper.OnException(ex);
-                    Clients.Remove(GetBySocket(socket));
                 }
 
             }
