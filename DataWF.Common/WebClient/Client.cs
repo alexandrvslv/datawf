@@ -85,6 +85,12 @@ namespace DataWF.Common
                 item = new T();
                 add = true;
             }
+
+            if (item is ISynchronized isSynchBefore)//&& isSynchBefore.IsSynchronized == true
+            {
+                isSynchBefore.IsSynchronized = null;
+            }
+
             foreach (var entry in dictionary)
             {
                 entry.Key.Invoker.SetValue(item, entry.Value);

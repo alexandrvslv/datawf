@@ -6,7 +6,6 @@ using NJsonSchema;
 using NSwag;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -593,8 +592,8 @@ namespace DataWF.Web.CodeGenerator
             }
             else
             {
-                yield return SF.SimpleBaseType(SF.ParseTypeName(nameof(IContainerNotifyPropertyChanged)));
-                yield return SF.SimpleBaseType(SF.ParseTypeName(nameof(ISynchronized)));
+                //yield return SF.SimpleBaseType(SF.ParseTypeName(nameof(IContainerNotifyPropertyChanged)));
+                yield return SF.SimpleBaseType(SF.ParseTypeName(nameof(SynchronizedItem)));
             }
             var idKey = GetPrimaryKey(schema, false);
             if (idKey != null)
@@ -666,37 +665,42 @@ namespace DataWF.Web.CodeGenerator
                     semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
             }
 
-            if (schema.InheritedSchema == null)
-            {
-                yield return SF.EventFieldDeclaration(
-                    attributeLists: SF.List<AttributeListSyntax>(),
-                    modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
-                    declaration: SF.VariableDeclaration(
-                        type: SF.ParseTypeName(nameof(PropertyChangedEventHandler)),
-                        variables: SF.SeparatedList(new[] { SF.VariableDeclarator(nameof(INotifyPropertyChanged.PropertyChanged)) })));
-                yield return SyntaxHelper.GenProperty(nameof(INotifyListPropertyChanged), nameof(IContainerNotifyPropertyChanged.Container), true)
-                    .WithAttributeLists(SF.List(new[] { SF.AttributeList(SF.SingletonSeparatedList(SF.Attribute(SF.IdentifierName("JsonIgnore")))) }));
-                yield return SyntaxHelper.GenProperty("bool?", nameof(ISynchronized.IsSynchronized), true)
-                    .WithAttributeLists(SF.List(new[] { SF.AttributeList(SF.SingletonSeparatedList(SF.Attribute(SF.IdentifierName("JsonIgnore")))) }));
-                yield return SF.MethodDeclaration(
-                    attributeLists: SF.List<AttributeListSyntax>(),
-                    modifiers: SF.TokenList(
-                        SF.Token(SyntaxKind.ProtectedKeyword),
-                        SF.Token(SyntaxKind.VirtualKeyword)),
-                    returnType: SF.PredefinedType(SF.Token(SyntaxKind.VoidKeyword)),
-                    explicitInterfaceSpecifier: null,
-                    identifier: SF.Identifier("OnPropertyChanged"),
-                    typeParameterList: null,
-                    parameterList: SF.ParameterList(SF.SeparatedList(GenPropertyChangedParameter())),
-                    constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
-                    body: SF.Block(new[] {
-                        SF.ParseStatement($"if({nameof(ISynchronized.IsSynchronized)} != null)"),
-                        SF.ParseStatement($"{nameof(ISynchronized.IsSynchronized)} = false;"),
-                        SF.ParseStatement($"var arg = new PropertyChangedEventArgs(propertyName);"),
-                        SF.ParseStatement($"Container?.OnItemPropertyChanged(this, arg);"),
-                        SF.ParseStatement($"PropertyChanged?.Invoke(this, arg);") }),
-                    semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
-            }
+            //if (schema.InheritedSchema == null)
+            //{
+            //    yield return SF.EventFieldDeclaration(
+            //        attributeLists: SF.List<AttributeListSyntax>(),
+            //        modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
+            //        declaration: SF.VariableDeclaration(
+            //            type: SF.ParseTypeName(nameof(PropertyChangedEventHandler)),
+            //            variables: SF.SeparatedList(new[] { SF.VariableDeclarator(nameof(INotifyPropertyChanged.PropertyChanged)) })));
+            //    yield return SyntaxHelper.GenProperty(nameof(INotifyListPropertyChanged), nameof(IContainerNotifyPropertyChanged.Container), true)
+            //        .WithAttributeLists(SF.List(new[] { SF.AttributeList(SF.SingletonSeparatedList(SF.Attribute(SF.IdentifierName("JsonIgnore")))) }));
+            //    yield return SyntaxHelper.GenProperty("bool?", nameof(ISynchronized.IsSynchronized), true)
+            //        .WithAttributeLists(SF.List(new[] { SF.AttributeList(SF.SingletonSeparatedList(SF.Attribute(SF.IdentifierName("JsonIgnore")))) }));
+            //    yield return SyntaxHelper.GenProperty("IDictionary<string, object>", nameof(ISynchronized.Changes), false)
+            //        .WithAttributeLists(SF.List(new[] { SF.AttributeList(SF.SingletonSeparatedList(SF.Attribute(SF.IdentifierName("JsonIgnore")))) }));
+            //    yield return SF.MethodDeclaration(
+            //        attributeLists: SF.List<AttributeListSyntax>(),
+            //        modifiers: SF.TokenList(
+            //            SF.Token(SyntaxKind.ProtectedKeyword),
+            //            SF.Token(SyntaxKind.VirtualKeyword)),
+            //        returnType: SF.PredefinedType(SF.Token(SyntaxKind.VoidKeyword)),
+            //        explicitInterfaceSpecifier: null,
+            //        identifier: SF.Identifier("OnPropertyChanged"),
+            //        typeParameterList: null,
+            //        parameterList: SF.ParameterList(SF.SeparatedList(GenPropertyChangedParameter())),
+            //        constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
+            //        body: SF.Block(new[] {
+            //            SF.ParseStatement($"if({nameof(ISynchronized.IsSynchronized)} != null)"),
+            //            SF.ParseStatement("{"),
+            //            SF.ParseStatement($"{nameof(ISynchronized.IsSynchronized)} = false;"),
+
+            //            SF.ParseStatement("}"),
+            //            SF.ParseStatement($"var arg = new PropertyChangedEventArgs(propertyName);"),
+            //            SF.ParseStatement($"Container?.OnItemPropertyChanged(this, arg);"),
+            //            SF.ParseStatement($"PropertyChanged?.Invoke(this, arg);") }),
+            //        semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
+            //}
         }
 
         private IEnumerable<ParameterSyntax> GenPropertyChangedParameter()

@@ -7,9 +7,11 @@ using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
-    public class WebNotifyClient
+    public class WebNotifyClient : IDisposable
     {
         private ClientWebSocket socket;
+
+        public WebSocketState State => socket?.State ?? WebSocketState.Closed;
 
         public event EventHandler<WebNotifyClientEventArgs> OnReceiveMessage;
 
@@ -54,6 +56,21 @@ namespace DataWF.Common
             }
         }
 
+        public async Task Close()
+        {
+            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Goodby", CancellationToken.None).ConfigureAwait(false);
+        }
+
+        public void Dispose()
+        {
+            if (State == WebSocketState.Open)
+            {
+                Close().Wait();
+            }
+
+            socket?.Dispose();
+            socket = null;
+        }
     }
 
     public class WebNotifyItem

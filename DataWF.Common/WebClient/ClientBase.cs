@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
+
     /// <summary>
     /// Base Client Template
     /// Concept from https://github.com/RSuter/NSwag/wiki/SwaggerToCSharpClientGenerator
@@ -28,7 +29,9 @@ namespace DataWF.Common
             {
                 var settings = new JsonSerializerSettings()
                 {
-                    MissingMemberHandling = MissingMemberHandling.Ignore
+                    MissingMemberHandling = MissingMemberHandling.Ignore,
+                    ContractResolver = SynchronizedContractResolver.Instance,
+                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
                 };
                 UpdateJsonSerializerSettings(settings);
                 return settings;
@@ -81,7 +84,7 @@ namespace DataWF.Common
             {
                 var fileName = (string)parameters[1];
                 var content = new MultipartFormDataContent();
-               // content.Headers.ContentType = MediaTypeHeaderValue.Parse(mediaType);
+                // content.Headers.ContentType = MediaTypeHeaderValue.Parse(mediaType);
                 content.Add(new StreamContent(stream), Path.GetFileNameWithoutExtension(fileName), fileName);//File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 request.Content = content;
             }
