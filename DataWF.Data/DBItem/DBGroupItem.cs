@@ -120,7 +120,7 @@ namespace DataWF.Data
                 if (Expand != value)
                 {
                     state = value ? state | DBItemState.Expand : state & ~DBItemState.Expand;
-                    OnPropertyChanged(nameof(Expand), null);
+                    OnPropertyChanged();
                 }
             }
         }

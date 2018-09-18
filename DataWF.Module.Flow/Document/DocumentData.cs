@@ -20,9 +20,11 @@
 
 using DataWF.Common;
 using DataWF.Data;
+using DataWF.Module.Common;
 using System;
 using System.ComponentModel;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 
 namespace DataWF.Module.Flow
@@ -92,6 +94,7 @@ namespace DataWF.Module.Flow
         }
 
         private byte[] buf;
+        private User currentUser;
 
         public DocumentData()
         {
@@ -145,6 +148,26 @@ namespace DataWF.Module.Flow
             set { SetValue(value, Table.FileKey); }
         }
 
+        [Browsable(false)]
+        [DataMember, Column("current_user_id", ColumnType = DBColumnTypes.Code)]
+        public int? CurrentUserId
+        {
+            get { return currentUser?.Id; }
+            set { CurrentUser = User.DBTable.LoadById(value); }
+        }
+
+        [Browsable(false)]
+        [Reference(nameof(CurrentUserId))]
+        public User CurrentUser
+        {
+            get { return currentUser; }
+            set
+            {
+                currentUser = value;
+                Accept();
+            }
+        }
+
         public Stream GetFile()
         {
             if (FileName == null)
@@ -160,20 +183,20 @@ namespace DataWF.Module.Flow
             SetStream(stream, Table.ParseProperty(nameof(FileData)));
         }
 
-        public string FileSize
-        {
-            get
-            {
-                float len = FileData?.Length ?? 0;
-                int i = 0;
-                while (len >= 1024 && i < 3)
-                {
-                    len = len / 1024;
-                    i++;
-                }
-                return string.Format("{0:0.00} {1}", len, i == 0 ? "B" : i == 1 ? "KB" : i == 2 ? "MB" : "GB");
-            }
-        }
+        //public string FileSize
+        //{
+        //    get
+        //    {
+        //        float len = FileData?.Length ?? 0;
+        //        int i = 0;
+        //        while (len >= 1024 && i < 3)
+        //        {
+        //            len = len / 1024;
+        //            i++;
+        //        }
+        //        return string.Format("{0:0.00} {1}", len, i == 0 ? "B" : i == 1 ? "KB" : i == 2 ? "MB" : "GB");
+        //    }
+        //}
 
         public bool IsTemplate
         {
@@ -263,7 +286,7 @@ namespace DataWF.Module.Flow
             //worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(worker_RunWorkerCompleted);
         }
 
-        public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)
+        public override void OnPropertyChanged([CallerMemberName]string property = null, DBColumn column = null, object value = null)
         {
             base.OnPropertyChanged(property, column, value);
             if (property == nameof(TemplateDataId))

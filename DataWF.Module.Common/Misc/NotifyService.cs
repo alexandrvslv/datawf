@@ -118,19 +118,16 @@ namespace DataWF.Module.Common
                 var type = DBLogType.None;
                 if ((arg.State & DBUpdateState.Delete) == DBUpdateState.Delete)
                     type = DBLogType.Delete;
-                else if ((arg.State & DBUpdateState.Update) == DBUpdateState.Update)
-                    type = DBLogType.Update;
                 else if ((arg.State & DBUpdateState.Insert) == DBUpdateState.Insert)
                     type = DBLogType.Insert;
-                if (type != DBLogType.None)
+                else
+                    type = DBLogType.Update;
+                buffer.Add(new NotifyMessageItem()
                 {
-                    buffer.Add(new NotifyMessageItem()
-                    {
-                        Item = item,
-                        Type = type,
-                        UserId = User.CurrentUser?.Id ?? 0
-                    });
-                }
+                    Item = item,
+                    Type = type,
+                    UserId = User.CurrentUser?.Id ?? 0
+                });
             }
         }
 

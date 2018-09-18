@@ -271,8 +271,7 @@ namespace DataWF.Module.Common
                 if (online == value)
                     return;
                 online = value;
-                OnPropertyChanged(nameof(Status), null);
-                //OnPropertyChanged("Online");
+                OnPropertyChanged();
             }
         }
 
@@ -325,7 +324,7 @@ namespace DataWF.Module.Common
         [Browsable(false)]
         public string AccessToken { get; set; }
 
-        [Browsable(false), DataMember, Column("token_refresh", 2048, Keys = DBColumnKeys.Password| DBColumnKeys.NoLog)]
+        [Browsable(false), DataMember, Column("token_refresh", 2048, Keys = DBColumnKeys.Password | DBColumnKeys.NoLog)]
         public string RefreshToken
         {
             get { return GetProperty<string>(); }
@@ -371,53 +370,5 @@ namespace DataWF.Module.Common
         Lenght6 = 128,
         Lenght8 = 256,
         Lenght10 = 512,
-    }
-
-    public static class UserExtension
-    {
-        public static IEnumerable<User> GetUsers(this DBItem item, DBItem filter = null)
-        {
-            foreach (var access in item.Access.Items)
-            {
-                if (access.Create && (filter == null || filter.Access.Get(access.Group).Edit))
-                {
-                    foreach (User user in User.DBTable)
-                    {
-                        if (user.Access.Get(access.Group).Create)
-                            yield return user;
-                    }
-                }
-            }
-        }
-
-        public static IEnumerable<Position> GetPositions(this DBItem item, DBItem filter = null)
-        {
-            foreach (var access in item.Access.Items)
-            {
-                if (access.Create && (filter == null || filter.Access.Get(access.Group).Edit))
-                {
-                    foreach (Position position in Position.DBTable)
-                    {
-                        if (position.Access.Get(access.Group).Create)
-                            yield return position;
-                    }
-                }
-            }
-        }
-
-        public static IEnumerable<Department> GetDepartment(this DBItem item, DBItem filter = null)
-        {
-            foreach (var access in item.Access.Items)
-            {
-                if (access.Create && (filter == null || filter.Access.Get(access.Group).Edit))
-                {
-                    foreach (Department department in Department.DBTable)
-                    {
-                        if (department.Access.Get(access.Group).Create)
-                            yield return department;
-                    }
-                }
-            }
-        }
     }
 }

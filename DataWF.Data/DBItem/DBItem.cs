@@ -839,9 +839,9 @@ namespace DataWF.Data
 
         public virtual void Accept()
         {
+            DBService.OnAccept(this);
             if (IsChanged || (UpdateState & DBUpdateState.Commit) == DBUpdateState.Commit)
             {
-                DBService.OnAccept(this);
                 if ((UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete)
                 {
                     Detach();
@@ -980,7 +980,7 @@ namespace DataWF.Data
             PropertyChanging?.Invoke(this, new PropertyChangingEventArgs(property));
         }
 
-        public virtual void OnPropertyChanged(string property, DBColumn column = null, object value = null)
+        public virtual void OnPropertyChanged([CallerMemberName]string property = null, DBColumn column = null, object value = null)
         {
             if (column != null && (column.Keys & DBColumnKeys.View) == DBColumnKeys.View)
             {
@@ -1065,7 +1065,7 @@ namespace DataWF.Data
                 if (Check != value)
                 {
                     state = value ? state | DBItemState.Check : state & ~DBItemState.Check;
-                    OnPropertyChanged(nameof(Check));
+                    OnPropertyChanged();
                 }
             }
         }
