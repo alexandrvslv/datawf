@@ -726,9 +726,8 @@ namespace DataWF.Module.Flow
                             data.Parse(param);
                         }
                     }
-                    Save(DocInitType.Data);
                     Saved?.Invoke(null, new DocumentEventArgs(this));
-                    if (transaction.Owner == this)
+                    if (transaction.Owner == saveLock)
                         transaction.Commit();
                 }
             }
