@@ -147,6 +147,8 @@ namespace DataWF.Common
             var arg = result.AsyncState as UdpServerEventArgs;
             try
             {
+                if (sender == null)
+                    return;
                 arg.Length = sender.EndSend(result);
                 OnDataSend(arg);
             }
@@ -180,7 +182,9 @@ namespace DataWF.Common
             if (online)
                 StopListener();
             listener?.Dispose();
+            listener = null;
             sender?.Dispose();
+            sender = null;
             receiveEvent?.Dispose();
         }
     }
