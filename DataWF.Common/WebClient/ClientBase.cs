@@ -31,7 +31,6 @@ namespace DataWF.Common
                 {
                     MissingMemberHandling = MissingMemberHandling.Ignore,
                     ContractResolver = SynchronizedContractResolver.Instance,
-                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
                 };
                 UpdateJsonSerializerSettings(settings);
                 return settings;

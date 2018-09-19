@@ -24,19 +24,18 @@ namespace DataWF.Common
             }
 
             await socket.ConnectAsync(uri, CancellationToken.None).ConfigureAwait(false);
-
         }
 
         public async Task Listen()
         {
             while (socket.State != WebSocketState.Closed)
             {
-                var recieve = await ReadString();
+                var recieve = await ReadData();
                 OnReceiveMessage?.Invoke(this, new WebNotifyClientEventArgs(recieve));
             }
         }
 
-        public async Task<byte[]> ReadString()
+        public async Task<byte[]> ReadData()
         {
             //var buffer = new byte[4 * 1024];
             var buffer = new ArraySegment<byte>(new byte[8192]);
