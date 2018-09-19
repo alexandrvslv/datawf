@@ -80,6 +80,47 @@ namespace DataWF.Common
             get { return logs; }
         }
 
+        public static string DateRevelantString(DateTime date)
+        {
+            return DateRevelantString(DateTime.Now, date);
+        }
+
+        public static string DateRevelantString(DateTime stamp, DateTime date)
+        {
+            string f = string.Empty;
+            if (stamp.Year != date.Year)
+                f = date.ToString("yyyy");
+            else if (stamp.Month != date.Month)
+                f = date.ToString("MMMM");
+            else if (stamp.Day == date.Day)
+            {
+                var time = stamp - date;
+                if (time.Minutes < 5)
+                {
+                    f = "Just Now";
+                }
+                else if (time.Minutes < 30)
+                {
+                    f = "Few Minutes Ago";
+                }
+                else if (time.Hours < 5)
+                {
+                    f = "Few Hours Ago";
+                }
+                else
+                {
+                    f = "Today";
+                }
+            }
+            else if (stamp.Day == date.Day + 1)
+                f = "Yestorday";
+            else if (stamp.Day - (int)stamp.DayOfWeek < date.Day)
+                f = "This Week";
+            else
+                f = "This Month";
+            return f;
+        }
+
         public static void CreateTempDirectory(string dirName)
         {
             string fullpath = Path.GetDirectoryName(GetDirectory(Environment.SpecialFolder.ApplicationData, dirName));

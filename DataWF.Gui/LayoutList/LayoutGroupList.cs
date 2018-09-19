@@ -1,8 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using DataWF.Common;
 using System;
-using DataWF.Common;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace DataWF.Gui
@@ -90,18 +89,7 @@ namespace DataWF.Gui
                     if (val is DateTime && ((string)f).Length > 10)
                     {
                         DateTime date = (DateTime)val;
-                        if (stamp.Year != date.Year)
-                            f = date.Year.ToString();
-                        else if (stamp.Month != date.Month)
-                            f = date.ToString("MMMM");
-                        else if (stamp.Day == date.Day)
-                            f = Locale.Get("DateComapre", "Today");
-                        else if (stamp.Day == date.Day + 1)
-                            f = Locale.Get("DateComapre", "Yestorday");
-                        else if (stamp.Day - (int)stamp.DayOfWeek < date.Day)
-                            f = Locale.Get("DateComapre", "This Week");
-                        else
-                            f = Locale.Get("DateComapre", "This Month");
+                        f = Locale.Get("DateComapre", Helper.DateRevelantString(stamp, date));
                     }
                     format += f == null ? "" : (f.ToString() + " ");
                 }
