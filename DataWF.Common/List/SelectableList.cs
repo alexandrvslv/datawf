@@ -23,7 +23,7 @@ namespace DataWF.Common
 
         public SelectableList(int capacity)
         {
-            items = new List<T>();
+            items = new List<T>(capacity);
             type = typeof(T);
             if (TypeHelper.IsInterface(type, typeof(INotifyPropertyChanged)))
             {
