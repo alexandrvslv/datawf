@@ -756,7 +756,7 @@ namespace DataWF.Web.CodeGenerator
                                  SF.Attribute(
                                      SF.IdentifierName("JsonProperty")).WithArgumentList(
                                      SF.AttributeArgumentList(SF.SingletonSeparatedList(
-                                         SF.AttributeArgument(SF.ParseExpression($"NullValueHandling = NullValueHandling.Ignore")))))));
+                                         SF.AttributeArgument(SF.ParseExpression($"NullValueHandling = NullValueHandling.Include")))))));
             }
 
         }
