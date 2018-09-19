@@ -2,7 +2,6 @@
 using DataWF.Module.Common;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net.WebSockets;
 using System.Text;
@@ -16,6 +15,7 @@ namespace DataWF.Web.Common
         private SelectableList<WebNotifyClient> Clients = new SelectableList<WebNotifyClient>();
 
         public event EventHandler<WebNotifyEventArgs> ReceiveMessage;
+        public event EventHandler<WebNotifyEventArgs> RemoveClient;
 
         public void WebSocketrequest()
         {
@@ -64,18 +64,21 @@ namespace DataWF.Web.Common
         protected override async void OnSendChanges(NotifyMessageItem[] list)
         {
             base.OnSendChanges(list);
-            var buffer = WriteData(list);
-            var toDelete = new List<WebNotifyClient>();
+            var buffer = new ArraySegment<byte>(WriteData(list));
             foreach (var client in Clients)
             {
                 if (client.Socket.State != WebSocketState.Open)
                 {
-                    toDelete.Add(client);
                     continue;
                 }
-                await client.Socket.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None);
+                await client.Socket.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
             }
-            Clients.RemoveRange(toDelete);
+        }
+
+        private void Remove(WebNotifyClient client)
+        {
+            Clients.Remove(client);
+            RemoveClient?.Invoke(this, new WebNotifyEventArgs(client));
         }
 
         private static byte[] WriteData(NotifyMessageItem[] list)
@@ -148,6 +151,7 @@ namespace DataWF.Web.Common
                                 ReceiveMessage?.Invoke(this, new WebNotifyEventArgs(client, message));
                                 break;
                             case WebSocketMessageType.Close:
+                                Remove(client);
                                 return;
                         }
                     }
@@ -156,6 +160,7 @@ namespace DataWF.Web.Common
                 catch (Exception ex)
                 {
                     Helper.OnException(ex);
+                    Remove(client);
                 }
 
             }
@@ -164,16 +169,13 @@ namespace DataWF.Web.Common
 
     public class WebNotifyEventArgs : EventArgs
     {
-        private WebNotifyClient client;
-        private string message;
-
-        public WebNotifyEventArgs(WebNotifyClient client, string message)
+        public WebNotifyEventArgs(WebNotifyClient client, string message = null)
         {
-            this.Client = client;
-            this.Message = message;
+            Client = client;
+            Message = message;
         }
 
-        public WebNotifyClient Client { get => client; set => client = value; }
-        public string Message { get => message; set => message = value; }
+        public WebNotifyClient Client { get; set; }
+        public string Message { get; set; }
     }
 }
