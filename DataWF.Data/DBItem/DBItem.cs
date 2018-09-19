@@ -1277,6 +1277,23 @@ namespace DataWF.Data
             }
         }
 
+        public void SaveReferencing()
+        {
+            foreach (var relation in Table.GetChildRelations())
+            {
+                if (relation.Table != Table && !(relation.Table is IDBVirtualTable))
+                {
+                    var references = GetReferencing(relation, DBLoadParam.None);
+                    var updatind = new List<DBItem>();
+                    foreach (DBItem reference in references)
+                        if (reference.IsChanged)
+                            updatind.Add(reference);
+                    if (updatind.Count > 0)
+                        relation.Table.Save(updatind);
+                }
+            }
+        }
+
         public void AttachOrUpdate(DBLoadParam param = DBLoadParam.None)
         {
             var exist = FindAndUpdate(param);

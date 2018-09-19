@@ -684,7 +684,10 @@ namespace DataWF.Module.Flow
         public override void Save()
         {
             if (saving.Contains(this))//prevent recursion
+            {
                 return;
+            }
+
             saving.Add(this);
             var transaction = DBTransaction.GetTransaction(saveLock, Table.Schema.Connection);
             try
@@ -700,25 +703,29 @@ namespace DataWF.Module.Flow
 
                     if (isnew)
                     {
+                        if (DocumentDate == null)
+                        {
+                            DocumentDate = DateTime.Now;
+                        }
+
+                        if (GetTemplatedData() == null && Template.Datas.Any())
+                        {
+                            var data = CreateTemplatedData();
+                            data.Attach();
+                        }
+
+                        if (Parent != null && !Referencing.Any())
+                        {
+                            Parent.CreateReference(this);
+                        }
+
                         CurrentStage = Template.Work?.GetStartStage();
                         base.Save();
                     }
 
-                    var relations = Document.DBTable.GetChildRelations();
-                    foreach (var relation in relations)
-                    {
-                        if (relation.Table != DocumentData.DBTable)
-                        {
-                            var references = GetReferencing(relation, DBLoadParam.None);
-                            var updatind = new List<DBItem>();
-                            foreach (DBItem reference in references)
-                                if (reference.IsChanged)
-                                    updatind.Add(reference);
-                            if (updatind.Count > 0)
-                                relation.Table.Save(updatind);
-                        }
-                    }
-                    if (isnew)//Templating
+                    SaveReferencing();
+
+                    if (isnew)
                     {
                         var data = GetTemplatedData();
                         if (data != null)
@@ -728,19 +735,27 @@ namespace DataWF.Module.Flow
                     }
                     Saved?.Invoke(null, new DocumentEventArgs(this));
                     if (transaction.Owner == saveLock)
+                    {
                         transaction.Commit();
+                    }
                 }
             }
             catch (Exception ex)
             {
                 if (transaction.Owner == saveLock)
+                {
                     transaction.Rollback();
+                }
+
                 throw ex;
             }
             finally
             {
                 if (transaction.Owner == saveLock)
+                {
                     transaction.Dispose();
+                }
+
                 saving.Remove(this);
             }
         }

@@ -517,7 +517,6 @@ namespace DataWF.Module.FlowGui
                 }
             }
 
-
             documents.Add(template.CreateDocument(parent, fileNames.ToArray()));
             return documents;
         }
