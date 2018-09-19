@@ -389,10 +389,12 @@ namespace DataWF.Module.FlowGui
         {
             var item = listItem as DocumentSendItem;
             if (item != null && cell == null)
-                if (item.Work != null && item.Work.IsComplete)
+            {
+                if (item.Work != null && item.Work.Completed)
                     return styleComplete;
                 else if (item.Message != null && item.Message.Length != 0)
                     return styleError;
+            }
 
             return null;
         }

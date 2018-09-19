@@ -233,13 +233,6 @@ namespace DataWF.Module.Flow
             set { SetProperty(value); }
         }
 
-        [DataMember, Column("date_complete")]
-        public DateTime? DateComplete
-        {
-            get { return GetProperty<DateTime?>(); }
-            set { SetProperty(value); }
-        }
-
         [DataMember, Column("date_limit")]
         public DateTime? DateLimit
         {
@@ -247,11 +240,36 @@ namespace DataWF.Module.Flow
             set { SetProperty(value); }
         }
 
-        [DataMember, Column("is_complete")]
-        public bool IsComplete
+        [DataMember, Column("date_complete"), Index("ddocument_work_date_complete")]
+        public DateTime? DateComplete
         {
-            get { return DateComplete != null; }
+            get { return GetProperty<DateTime?>(); }
+            set
+            {
+                SetProperty(value);
+                if (value != null && !Completed)
+                {
+                    IsComplete = true;
+                }
+            }
         }
+
+        [DataMember, Column("is_complete"), Index("ddocument_work_is_complete"), DefaultValue(false)]
+        public bool? IsComplete
+        {
+            get { return GetProperty<bool?>(); }
+            set
+            {
+                SetProperty(value);
+                if (value ?? false && DateComplete == null)
+                {
+                    DateComplete = DateComplete = DateTime.Now;
+                }
+            }
+        }
+
+        [Browsable(false)]
+        public bool Completed { get { return IsComplete ?? false; } }
 
         [Browsable(false)]
         [DataMember, Column("is_system")]
@@ -288,7 +306,7 @@ namespace DataWF.Module.Flow
             get
             {
                 var currentUser = User.CurrentUser;
-                return !IsComplete && (User == currentUser
+                return !Completed && (User == currentUser
                   || (User == null && Position == currentUser?.Position)
                   || (Position == null && Department == currentUser?.Department));
             }

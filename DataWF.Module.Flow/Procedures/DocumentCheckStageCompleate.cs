@@ -34,7 +34,7 @@ namespace DataWF.Module.Flow
             {
                 if (work == darg.Work)
                     continue;
-                if (!work.IsComplete && work.Stage == darg.Stage)
+                if (!work.Completed && work.Stage == darg.Stage)
                 {
                     if (builder.Length == 0)
                     {

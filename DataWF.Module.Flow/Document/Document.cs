@@ -135,7 +135,7 @@ namespace DataWF.Module.Flow
             if (item is DocumentWork)
             {
                 var work = (DocumentWork)item;
-                if (work.IsComplete || work.UpdateState == DBUpdateState.Default)
+                if (work.Completed || work.UpdateState == DBUpdateState.Default)
                     RefreshCache();
             }
             else if (item is DocumentReference)
@@ -279,7 +279,7 @@ namespace DataWF.Module.Flow
         [Reference(nameof(CurrentWorkId))]
         public DocumentWork CurrentWork
         {
-            get { return Works.FirstOrDefault(p => p.IsCurrent) ?? Works.FirstOrDefault(p => !p.IsComplete); }
+            get { return Works.FirstOrDefault(p => p.IsCurrent) ?? Works.FirstOrDefault(p => !p.Completed); }
         }
 
         [Browsable(false)]
@@ -528,7 +528,7 @@ namespace DataWF.Module.Flow
         {
             foreach (DocumentWork work in GetWorks())
             {
-                if (!work.IsComplete && (filter == null || work.Stage == filter))
+                if (!work.Completed && (filter == null || work.Stage == filter))
                 {
                     yield return work;
                 }
@@ -547,7 +547,7 @@ namespace DataWF.Module.Flow
             foreach (DocumentWork work in GetWorks())
             {
                 string flow = work.Stage != null ? work.Stage.Work.Name : "<no name>";
-                if (!work.IsComplete
+                if (!work.Completed
                     && (workFlows == null || workFlows.IndexOf(flow, StringComparison.Ordinal) < 0))
                     workFlows = workFlows + flow + " ";
             }
@@ -953,7 +953,7 @@ namespace DataWF.Module.Flow
             {
                 var stage = dw.Stage?.ToString() ?? "none";
                 var user = dw.User?.Name ?? "empty";
-                if (!dw.IsComplete)
+                if (!dw.Completed)
                 {
                     if (workUsers.Length == 0 || workUsers.IndexOf(user, StringComparison.Ordinal) < 0)
                     {
@@ -987,7 +987,7 @@ namespace DataWF.Module.Flow
         {
             foreach (var work in GetWorks())
             {
-                if (!work.IsComplete)
+                if (!work.Completed)
                 {
                     IsComplete = false;
                     if (Status == DBStatus.Archive)
