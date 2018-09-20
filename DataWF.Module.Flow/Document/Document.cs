@@ -112,7 +112,6 @@ namespace DataWF.Module.Flow
         }
 
         public static event DocumentSaveDelegate Saved;
-        public object saveLock = new object();
         private DocInitType initype = DocInitType.Default;
         private int changes = 0;
         //private DBItem parent = DBItem.EmptyItem;
@@ -680,21 +679,26 @@ namespace DataWF.Module.Flow
                 DocumentCustomer.DBTable.Save(GetCustomers().ToList());
         }
 
-
         public override void Save()
         {
+            if ((UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete)
+            {
+                base.Save();
+                return;
+            }
+
             if (saving.Contains(this))//prevent recursion
             {
                 return;
             }
-
             saving.Add(this);
+
             var transaction = DBTransaction.GetTransaction(saveLock, Table.Schema.Connection);
             try
             {
                 base.Save();
 
-                if (Template != null && !UpdateState.HasFlag(DBUpdateState.Delete))
+                if (Template != null)
                 {
                     var param = new DocumentExecuteArgs() { Document = this, ProcedureCategory = Template.Code };
 

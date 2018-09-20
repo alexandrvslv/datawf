@@ -1,13 +1,9 @@
 ﻿using DataWF.Common;
 using DataWF.Data;
-using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Net.Http.Headers;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace DataWF.Web.Common
 {
@@ -127,8 +123,7 @@ namespace DataWF.Web.Common
                     return NotFound();
                 }
 
-                item.Delete();
-                item.Save();
+                item.Delete(7, DBLoadParam.Load);
             }
             catch (Exception ex)
             {
@@ -137,8 +132,6 @@ namespace DataWF.Web.Common
             return Ok(true);
         }
 
-
-
         public override BadRequestObjectResult BadRequest(object error)
         {
             if (error is Exception exception)
@@ -146,7 +139,7 @@ namespace DataWF.Web.Common
                 Helper.OnException(exception);
                 return base.BadRequest(exception.Message);
             }
-            
+
             return base.BadRequest(error);
         }
 
@@ -172,6 +165,6 @@ namespace DataWF.Web.Common
 
 
 
-       
+
     }
 }

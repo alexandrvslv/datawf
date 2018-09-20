@@ -53,6 +53,7 @@ namespace DataWF.Data
         protected DBItemState state = DBItemState.New;
         protected internal DBUpdateState update = DBUpdateState.Insert;
         private AccessValue access;
+        protected object saveLock = new object();
 
         public DBItem()
         {
@@ -449,6 +450,11 @@ namespace DataWF.Data
 
         public void SetReferencing<T>(IEnumerable<T> items, string property) where T : DBItem, new()
         {
+            if (items == null)
+            {
+                return;
+            }
+
             GenerateId();
             var table = DBTable.GetTable<T>();
             var column = table.ParseProperty(property);
@@ -1048,7 +1054,20 @@ namespace DataWF.Data
 
         public virtual void Save()
         {
-            Table.SaveItem(this);
+            if (OnSaving())
+            {
+                Table.SaveItem(this);
+                OnSaved();
+            }
+        }
+
+        protected virtual void OnSaved()
+        {
+        }
+
+        protected virtual bool OnSaving()
+        {
+            return true;
         }
 
         public int CompareTo(object obj)
@@ -1165,39 +1184,44 @@ namespace DataWF.Data
             return builder.ToString();
         }
 
-        public void Delete(int recurs = 2, DBLoadParam param = DBLoadParam.None)
+        public void Delete(int recurs, DBLoadParam param = DBLoadParam.None)
         {
+            var dependencies = GetChilds(recurs, param).ToList();
+            var transaction = DBTransaction.GetTransaction(saveLock, Table.Schema.Connection);
             try
             {
-                recurs--;
-                var relations = Table.GetChildRelations();
-                foreach (DBForeignKey relation in relations)
+                foreach (var item in dependencies)
                 {
-                    if (relation.Table.Name.IndexOf("drlog", StringComparison.OrdinalIgnoreCase) >= 0
-                        || relation.Table.Type != DBTableType.Table
-                        || relation.Column.ColumnType != DBColumnTypes.Default)
-                        continue;
-                    if (recurs >= 0 || relation.Table == Table)
+                    item.Delete();
+                    if (item.Attached)
                     {
-                        var list = GetReferencing(relation, param);
-                        foreach (DBItem item in list)
-                        {
-                            if (item.Attached)
-                                item.Delete(recurs, param);
-                        }
+                        item.Save();
                     }
                 }
-                if ((UpdateState & DBUpdateState.Insert) == DBUpdateState.Insert)
-                    Table.Remove(this);
-                else
+                Delete();
+                if (Attached)
                 {
-                    Delete();
                     Save();
+                }
+                if (transaction.Owner == saveLock)
+                {
+                    transaction.Commit();
                 }
             }
             catch (Exception ex)//TODO If Timeout Expired
             {
                 Helper.OnException(ex);
+                if (transaction.Owner == saveLock)
+                {
+                    transaction.Rollback();
+                }
+            }
+            finally
+            {
+                if (transaction.Owner == saveLock)
+                {
+                    transaction.Dispose();
+                }
             }
         }
 
