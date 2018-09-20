@@ -30,5 +30,9 @@
     <ProjectReference Include="..\DataWF.Module.Finance\DataWF.Module.Finance.csproj" />
     <ProjectReference Include="..\DataWF.Module.Flow\DataWF.Module.Flow.csproj" />
     <ProjectReference Include="..\DataWF.Module.Messanger\DataWF.Module.Messanger.csproj" />
-  </ItemGroup>  
+  </ItemGroup>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="dotnet $(ProjectDir)../DataWF.Web.CodeGenerator/$(OutDir)DataWF.Web.CodeGenerator.dll -t controller -p $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Common.dll $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Counterpart.dll $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Messanger.dll $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Flow.dll -o   $(ProjectDir)Controllers" />
+  </Target>  
 </Project>

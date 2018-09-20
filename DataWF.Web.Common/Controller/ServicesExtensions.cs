@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using DataWF.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
@@ -15,7 +16,13 @@ namespace DataWF.Web.Common
 {
     public static class ServicesExtensions
     {
-        public static IServiceCollection InitWithAuth(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddDataProvider(this IServiceCollection services, IDataProvider dataProvider)
+        {
+            DBService.Load(dataProvider);
+            return services.AddSingleton(dataProvider);
+        }
+
+        public static IServiceCollection AddAuth(this IServiceCollection services, IConfiguration configuration)
         {
             var jwtConfig = new JwtAuth();
             var config = configuration.GetSection("JwtAuth");
@@ -66,9 +73,9 @@ namespace DataWF.Web.Common
         //    //throw new NotImplementedException();
         //}
 
-        public static IServiceCollection InitWithAuthAndSwagger(this IServiceCollection services, IConfiguration configuration, string name, string version)
+        public static IServiceCollection AddAuthAndSwagger(this IServiceCollection services, IConfiguration configuration, string name, string version)
         {
-            services.InitWithAuth(configuration).AddSwaggerGen(c =>
+            services.AddAuth(configuration).AddSwaggerGen(c =>
              {
                  c.SwaggerDoc(version, new Info { Title = name, Version = version });
                  c.SchemaFilter<SwaggerDBSchemaFilter>();

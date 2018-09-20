@@ -1,16 +1,8 @@
 ﻿using DataWF.Web.Common;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Swashbuckle.AspNetCore.Swagger;
 
 namespace DataWF.Test.Web.Service
 {
@@ -26,7 +18,9 @@ namespace DataWF.Test.Web.Service
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.InitWithAuthAndSwagger(Configuration, "TestService", "v1");
+            services.AddDataProvider(new TestDataProvider());
+            services.AddAuthAndSwagger(Configuration, "TestService", "v1");
+            services.AddWebNotify();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -37,7 +31,7 @@ namespace DataWF.Test.Web.Service
                 app.UseDeveloperExceptionPage();
             }
             app.UseStaticFiles();
-
+            app.UseWebNotify();
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {

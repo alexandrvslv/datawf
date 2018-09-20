@@ -233,6 +233,12 @@ namespace DataWF.Data
                 DataProvider.Save();
         }
 
+        public static void Load(IDataProvider dataProvider)
+        {
+            DataProvider = dataProvider;
+            Load();
+        }
+
         public static void Load()
         {
             Load("data.xml");
