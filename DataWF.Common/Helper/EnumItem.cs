@@ -102,13 +102,13 @@ namespace DataWF.Common
 
         public static implicit operator T(EnumItem<T> item) { return item.Value; }
 
-        public static implicit operator EnumItem<T>(T item) { return Cache[item]; }
+        public static implicit operator EnumItem<T>(T item) { return Cache.TryGetValue(item, out var value) ? value : (Cache[item] = new EnumItem<T>(item)); }
 
         public EnumItem(T item)
         {
             Value = item;
             Text = item.ToString();
-            var attribute = typeof(T).GetRuntimeField(Text).GetCustomAttribute<EnumMemberAttribute>(false);
+            var attribute = typeof(T).GetRuntimeField(Text)?.GetCustomAttribute<EnumMemberAttribute>(false);
             if (attribute != null)
                 Text = attribute.Value;
         }
