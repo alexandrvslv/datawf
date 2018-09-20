@@ -65,21 +65,6 @@ namespace DataWF.Data
             }
         }
 
-        public override T this[string name]
-        {
-            get
-            {
-                if (name == null)
-                    return null;
-                return base[name];
-            }
-            set
-            {
-                int i = GetIndexByName(name);
-                this[i] = value;
-            }
-        }
-
         public new void Clear()
         {
             base.Clear();

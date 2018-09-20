@@ -46,24 +46,26 @@ namespace DataWF.Data
 
         public virtual T this[string name]
         {
-            get { return SelectOne(nameof(DBSchemaItem.Name), CompareType.Equal, name); }
+            get { return SelectOne(ItemNameInvoker.Name, CompareType.Equal, name); }
             set
             {
                 int i = GetIndexByName(name);
-                this[i] = value;
+                value.Name = name;
+                if (i < 0)
+                {
+                    Add(value);
+                }
+                else
+                {
+                    this[i] = value;
+                }
             }
         }
 
         protected int GetIndexByName(string name)
         {
-            for (int i = 0; i < this.Count; i++)
-                if (name == null && this[i].Name == null)
-                    return i;
-                else if (name == null || this[i].Name == null)
-                    continue;
-                else if (this[i].Name.Equals(name, StringComparison.OrdinalIgnoreCase))
-                    return i;
-            return -1;
+            var item = SelectOne(ItemNameInvoker.Name, CompareType.Equal, name);
+            return item == null ? -1 : IndexOf(item);
         }
 
         public bool Contains(string name)
