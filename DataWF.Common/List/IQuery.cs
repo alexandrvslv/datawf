@@ -6,6 +6,7 @@ namespace DataWF.Common
     public interface IQuery
     {
         IEnumerable<IQueryParameter> Parameters { get; }
+        IEnumerable<IComparer> Orders { get; }
 
         IQueryParameter Add(LogicType logic, IInvoker invoker, CompareType comparer, object value);
 

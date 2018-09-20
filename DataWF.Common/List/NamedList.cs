@@ -6,7 +6,9 @@ namespace DataWF.Common
         static readonly Invoker<T, string> nameInvoker = new Invoker<T, string>(nameof(INamed.Name), (item) => item.Name);
 
         public NamedList(int capacity) : base(capacity)
-        { }
+        {
+            Indexes.Add(nameInvoker);
+        }
 
         public NamedList()
         {

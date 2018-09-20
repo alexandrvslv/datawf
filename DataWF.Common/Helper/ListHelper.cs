@@ -382,7 +382,7 @@ namespace DataWF.Common
 
         public static IEnumerable<T> Select<T>(IEnumerable<T> items, QueryParameter<T> param, ListIndexes<T> indexes = null)
         {
-            var index = indexes?.GetIndex(param.Property);
+            var index = indexes?.GetIndex(param.Name);
             if (index != null)
             {
                 return index.Scan(param);
@@ -420,7 +420,7 @@ namespace DataWF.Common
 
         public static IEnumerable Select(IEnumerable items, IQueryParameter param, IListIndexes indexes = null)
         {
-            IListIndex index = indexes?.GetIndex(param.Property);
+            IListIndex index = indexes?.GetIndex(param.Name);
             if (index == null)
             {
                 return index.Scan(param);

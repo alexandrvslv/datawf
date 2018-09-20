@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
 using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -8,15 +7,14 @@ using System.Xml.Serialization;
 
 namespace DataWF.Common
 {
-    public class QueryParameter<T> : IQueryParameter, INotifyPropertyChanged
+    public class QueryParameter<T> : IQueryParameter, INotifyPropertyChanged, INamed
     {
         private object parameter;
         private CompareType comparer = CompareType.Equal;
         private LogicType logic = LogicType.And;
-        private string property;
+        private string name;
         private IInvoker invoker;
         private object typedValue;
-        private ListSortDirection? sortDirection;
         private bool isEnabled = true;
 
         public QueryParameter()
@@ -24,7 +22,7 @@ namespace DataWF.Common
 
         public QueryParameter(string property)
         {
-            Property = property;
+            Name = property;
             if (Invoker?.DataType == typeof(string))
             {
                 Comparer = CompareType.Like;
@@ -34,19 +32,19 @@ namespace DataWF.Common
         [JsonIgnore, XmlIgnore]
         public object Tag { get; set; }
 
-        public string Property
+        public string Name
         {
-            get { return property; }
+            get { return name; }
             set
             {
-                if (property != value)
+                if (name != value)
                 {
                     if (invoker != null && invoker.Name != value)
                     {
                         invoker = null;
                     }
 
-                    property = value;
+                    name = value;
                     OnPropertyChanged();
                 }
             }
@@ -55,11 +53,11 @@ namespace DataWF.Common
         [JsonIgnore, XmlIgnore]
         public IInvoker Invoker
         {
-            get { return invoker ?? (invoker = EmitInvoker.Initialize<T>(Property)); }
+            get { return invoker ?? (invoker = EmitInvoker.Initialize<T>(Name)); }
             set
             {
                 invoker = value;
-                Property = invoker?.Name;
+                Name = invoker?.Name;
             }
         }
 
@@ -125,7 +123,7 @@ namespace DataWF.Common
             {
                 builder.Append($" {Logic.Format()} ");
             }
-            builder.Append($"{Property} {Comparer.Format()} {FormatValue()}");
+            builder.Append($"{Name} {Comparer.Format()} {FormatValue()}");
         }
 
         private string FormatValue()
@@ -164,25 +162,6 @@ namespace DataWF.Common
                     OnPropertyChanged();
                 }
             }
-        }
-
-        public ListSortDirection? SortDirection
-        {
-            get { return sortDirection; }
-            set
-            {
-                if (sortDirection != value)
-                {
-                    sortDirection = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public IComparer<T> GetComparer()
-        {
-            return SortDirection == null ? null :
-                new InvokerComparer<T>(Invoker, SortDirection.Value);
         }
 
         [JsonIgnore, XmlIgnore]

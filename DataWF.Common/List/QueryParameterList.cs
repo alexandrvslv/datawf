@@ -4,14 +4,12 @@ using System.ComponentModel;
 
 namespace DataWF.Common
 {
-    public class QueryParameterList<T> : SelectableList<QueryParameter<T>>
+    public class QueryParameterList<T> : NamedList<QueryParameter<T>>
     {
-        static readonly Invoker<QueryParameter<T>, string> propertyInvoker = new Invoker<QueryParameter<T>, string>(nameof(QueryParameter<T>.Property), (item) => item.Property);
-        private bool clearing;
+        private bool suspend;
 
         public QueryParameterList()
         {
-            Indexes.Add(propertyInvoker);
         }
 
         public QueryParameterList(IEnumerable<QueryParameter<T>> items) : this()
@@ -19,9 +17,20 @@ namespace DataWF.Common
             AddRange(items);
         }
 
-        public QueryParameter<T> this[string property]
+        public bool Suspending
         {
-            get { return SelectOne(propertyInvoker.Name, property); }
+            get => suspend;
+            set
+            {
+                if (suspend != value)
+                {
+                    suspend = value;
+                    if (!suspend)
+                    {
+                        OnListChanged(NotifyCollectionChangedAction.Reset);
+                    }
+                }
+            }
         }
 
         public void Remove(string property)
@@ -52,22 +61,30 @@ namespace DataWF.Common
 
         public override void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (clearing)
+            if (Suspending)
             {
                 return;
             }
             base.OnItemPropertyChanged(sender, e);
         }
 
+        public override void OnListChanged(NotifyCollectionChangedEventArgs args)
+        {
+            if (Suspending)
+            {
+                return;
+            }
+            base.OnListChanged(args);
+        }
+
         public void ClearValues()
         {
-            clearing = true;
+            Suspending = true;
             foreach (var item in this)
             {
                 item.Value = null;
             }
-            clearing = false;
-            OnListChanged(NotifyCollectionChangedAction.Reset);
+            Suspending = false;
         }
     }
 }

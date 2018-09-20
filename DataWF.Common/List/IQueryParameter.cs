@@ -4,7 +4,7 @@ namespace DataWF.Common
 {
     public interface IQueryParameter
     {
-        string Property { get; set; }
+        string Name { get; set; }
         IInvoker Invoker { get; set; }
         CompareType Comparer { get; set; }
         IComparer Comparision { get; set; }

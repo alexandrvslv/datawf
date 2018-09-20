@@ -8,7 +8,7 @@ namespace DataWF.Common
     public class Query<T> : IQuery
     {
         private QueryParameterList<T> parameters;
-        //private InvokerComparerList<T> orders;
+        private QueryOrdersList<T> orders;
 
         public Query()
         { }
@@ -24,15 +24,20 @@ namespace DataWF.Common
             set { parameters = value; }
         }
 
-        //public InvokerComparerList<T> Orders
-        //{
-        //    get { return orders ?? (orders = new InvokerComparerList<T>()); }
-        //    set { orders = value; }
-        //}
+        public QueryOrdersList<T> Orders
+        {
+            get { return orders ?? (orders = new QueryOrdersList<T>()); }
+            set { orders = value; }
+        }
 
         IEnumerable<IQueryParameter> IQuery.Parameters
         {
             get { return Parameters; }
+        }
+
+        IEnumerable<IComparer> IQuery.Orders
+        {
+            get { return Orders; }
         }
 
         public bool IsNotEmpty
@@ -113,10 +118,9 @@ namespace DataWF.Common
 
         public InvokerComparerList<T> GetComparer()
         {
-            var comparers = Parameters.Where(p => p.SortDirection != null).Select(p => p.GetComparer());
-            if (comparers.Any())
+            if (Orders.Count > 0)
             {
-                return new InvokerComparerList<T>(comparers);
+                return new InvokerComparerList<T>(Orders);
             }
             return null;
         }

@@ -1,17 +1,26 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Xml.Serialization;
 
 namespace DataWF.Common
 {
     /// <summary>
     /// Comparer used ReflectionAccessor to get property of item.
     /// </summary>
-    public class InvokerComparer : IComparer
+    public class InvokerComparer : IComparer, INotifyPropertyChanged, INamed
     {
+        private ListSortDirection direction;
+        private IInvoker invoker;
+        private string name;
+
         //bool hash = true;
+        public InvokerComparer()
+        { }
 
         public InvokerComparer(Type type, string property, ListSortDirection direction = ListSortDirection.Ascending)
             : this(EmitInvoker.Initialize(type, property), direction)
@@ -35,8 +44,49 @@ namespace DataWF.Common
             Direction = direction;
         }
 
-        public ListSortDirection Direction { get; set; }
-        public IInvoker Invoker { get; set; }
+        public ListSortDirection Direction
+        {
+            get => direction;
+            set
+            {
+                if (direction != value)
+                {
+                    direction = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public string Name
+        {
+            get => name;
+            set
+            {
+                if (name != value)
+                {
+                    name = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        [JsonIgnore, XmlIgnore]
+        public virtual IInvoker Invoker
+        {
+            get => invoker;
+            set
+            {
+                invoker = value;
+                Name = invoker?.Name;
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
 
         public int Compare(object x, object y)
         {
@@ -79,6 +129,9 @@ namespace DataWF.Common
 
     public class InvokerComparer<T> : InvokerComparer, IComparer<T>
     {
+        public InvokerComparer()
+        { }
+
         public InvokerComparer(PropertyInfo info, ListSortDirection direction = ListSortDirection.Ascending)
             : base(info, null, direction)
         {
@@ -92,6 +145,12 @@ namespace DataWF.Common
         public InvokerComparer(string property, ListSortDirection direction = ListSortDirection.Ascending)
             : base(typeof(T), property, direction)
         {
+        }
+
+        public override IInvoker Invoker
+        {
+            get => base.Invoker ?? (base.Invoker = EmitInvoker.Initialize<T>(Name));
+            set => base.Invoker = value;
         }
 
         public int CompareVal(T x, object key)

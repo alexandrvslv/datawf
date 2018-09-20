@@ -43,8 +43,8 @@ namespace DataWF.Data
         public IEnumerable<DBProcedure> SelectByFile(string fileName)
         {
             var query = new Query<DBProcedure>();
-            query.Parameters.Add(new QueryParameter<DBProcedure>() { Property = nameof(DBProcedure.ProcedureType), Value = ProcedureTypes.Source });
-            query.Parameters.Add(new QueryParameter<DBProcedure>() { Property = nameof(DBProcedure.DataName), Value = fileName });
+            query.Parameters.Add(new QueryParameter<DBProcedure>() { Name = nameof(DBProcedure.ProcedureType), Value = ProcedureTypes.Source });
+            query.Parameters.Add(new QueryParameter<DBProcedure>() { Name = nameof(DBProcedure.DataName), Value = fileName });
             return Select(query);
         }
 

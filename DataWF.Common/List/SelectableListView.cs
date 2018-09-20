@@ -76,14 +76,28 @@ namespace DataWF.Common
                     {
                         query.Parameters.ItemPropertyChanged -= FilterPropertyChanged;
                         query.Parameters.CollectionChanged -= FilterCollectionChanged;
+                        query.Orders.ItemPropertyChanged -= FilterPropertyChanged;
+                        query.Orders.CollectionChanged -= OrdersCollectionChanged;
                     }
                     query = value;
                     if (query != null)
                     {
                         query.Parameters.ItemPropertyChanged += FilterPropertyChanged;
                         query.Parameters.CollectionChanged += FilterCollectionChanged;
+                        query.Orders.ItemPropertyChanged += FilterPropertyChanged;
+                        query.Orders.CollectionChanged += OrdersCollectionChanged;
                     }
                 }
+            }
+        }
+
+        private void OrdersCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.Action == NotifyCollectionChangedAction.Add
+                || e.Action == NotifyCollectionChangedAction.Remove
+                || e.Action == NotifyCollectionChangedAction.Reset)
+            {
+                ApplySort((IComparer<T>)FilterQuery.GetComparer());
             }
         }
 
@@ -105,7 +119,7 @@ namespace DataWF.Common
                 case nameof(QueryParameter<T>.Value):
                     UpdateFilter();
                     break;
-                case nameof(QueryParameter<T>.SortDirection):
+                case nameof(InvokerComparer<T>.Direction):
                     ApplySort((IComparer<T>)FilterQuery.GetComparer());
                     break;
             }
