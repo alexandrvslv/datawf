@@ -30,8 +30,9 @@ namespace DataWF.Common
                 var settings = new JsonSerializerSettings()
                 {
                     MissingMemberHandling = MissingMemberHandling.Ignore,
-                    ContractResolver = SynchronizedContractResolver.Instance,
+                    ContractResolver = SynchronizedContractResolver.Instance
                 };
+                settings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
                 UpdateJsonSerializerSettings(settings);
                 return settings;
             });
@@ -89,7 +90,8 @@ namespace DataWF.Common
             }
             else if (value != null)
             {
-                var content = new StringContent(JsonConvert.SerializeObject(value, settings.Value), Encoding.UTF8);
+                var contentText = JsonConvert.SerializeObject(value, settings.Value);
+                var content = new StringContent(contentText, Encoding.UTF8);
                 content.Headers.ContentType = MediaTypeHeaderValue.Parse(mediaType);
                 request.Content = content;
             }
