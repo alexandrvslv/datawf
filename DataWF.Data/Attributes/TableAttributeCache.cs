@@ -160,15 +160,16 @@ namespace DataWF.Data
             Table.BlockSize = Attribute.BlockSize;
             Table.Sequence = Table.GenerateSequence();
 
-            foreach (var reference in cacheReferences)
-            {
-                reference.CheckReference();
-            }
             cacheColumns.Sort((a, b) => a.Attribute.Order.CompareTo(b.Attribute.Order));
             foreach (var column in cacheColumns)
             {
                 column.Generate();
             }
+            foreach (var reference in cacheReferences)
+            {
+                reference.CheckReference();
+            }
+
             foreach (var reference in cacheReferences)
             {
                 reference.Generate();
