@@ -6,19 +6,15 @@ using System.Runtime.CompilerServices;
 
 namespace DataWF.Common
 {
-    //TODO service?
     public class FileWatcher : IDisposable, INotifyPropertyChanged
     {
         private bool isChanged;
-
-        public static event EventHandler<RenamedEventArgs> Renamed;
-        public static event EventHandler<FileSystemEventArgs> Changed;
-        public static event EventHandler<EventArgs> EnabledChanged;
-        public static event EventHandler<EventArgs> Deleted;
+        private FileWatcherService service;
 
         //https://stackoverflow.com/a/721743
-        public FileWatcher(string filePath)
+        public FileWatcher(FileWatcherService service, string filePath)
         {
+            Service = service;
             FilePath = filePath;
             Watcher = new FileSystemWatcher();
             Watcher.Path = Path.GetDirectoryName(filePath);
@@ -41,7 +37,7 @@ namespace DataWF.Common
         private void OnRenamed(object sender, RenamedEventArgs e)
         {
             Debug.WriteLine($"{e.OldFullPath} - {e.ChangeType}");
-            Renamed?.Invoke(Tag ?? this, e);
+            Service.OnRenamed(Tag ?? this, e);
             //FilePath = e.FullPath;
             //Watcher.Path = Path.GetDirectoryName(e.FullPath);
             //Watcher.Filter = Path.GetFileName(e.FullPath);
@@ -58,12 +54,12 @@ namespace DataWF.Common
         {
             Debug.WriteLine($"{e.FullPath} - {e.ChangeType}");
             IsChanged = true;
-            Changed?.Invoke(Tag ?? this, e);
+            Service.OnChanged(Tag ?? this, e);
         }
 
         public void Dispose()
         {
-            Deleted?.Invoke(Tag ?? this, EventArgs.Empty);
+            Service.OnDeleted(Tag ?? this, EventArgs.Empty);
             Watcher?.Dispose();
         }
 
@@ -79,7 +75,7 @@ namespace DataWF.Common
                 if (Enabled != value)
                 {
                     Watcher.EnableRaisingEvents = value;
-                    EnabledChanged?.Invoke(Tag ?? this, EventArgs.Empty);
+                    Service.OnEnabledChanged(Tag ?? this, EventArgs.Empty);
                     OnPropertyChanged();
                 }
 
@@ -100,6 +96,8 @@ namespace DataWF.Common
                 }
             }
         }
+
+        public FileWatcherService Service { get => service; set => service = value; }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
