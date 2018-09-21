@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -46,7 +47,7 @@ namespace DataWF.Data
         private object _locker = new object();
         private string systemName;
         private DBSystem system;
-        internal List<IDbConnection> Buffer = new List<IDbConnection>();
+        internal HashSet<IDbConnection> Buffer = new HashSet<IDbConnection>();
         private string path;
 
         public DBConnection()
@@ -296,6 +297,7 @@ namespace DataWF.Data
                         return connection;
                     }
                 }
+                Debug.WriteLine($"NewConnection#{Buffer.Count}");
                 var con = System.CreateConnection(this);
                 Buffer.Add(con);
                 con.Open();
