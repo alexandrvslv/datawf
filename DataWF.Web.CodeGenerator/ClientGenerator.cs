@@ -60,7 +60,7 @@ namespace DataWF.Web.CodeGenerator
             }
             foreach (var definition in document.Definitions)
             {
-                GetOrGenerateDefinion(definition.Key);
+                GetOrGenDefinion(definition.Key);
             }
             foreach (var operation in document.Operations)
             {
@@ -509,7 +509,7 @@ namespace DataWF.Web.CodeGenerator
             }
         }
 
-        private CompilationUnitSyntax GetOrGenerateDefinion(string key)
+        private CompilationUnitSyntax GetOrGenDefinion(string key)
         {
             if (!cacheModels.TryGetValue(key, out var tree))
             {
@@ -533,11 +533,11 @@ namespace DataWF.Web.CodeGenerator
                     modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
                     identifier: SF.Identifier(GetDefinitionName(schema)),
                     baseList: null,
-                    members: SF.SeparatedList(GetDefinitionEnumMemebers(schema))
+                    members: SF.SeparatedList(GenDefinitionEnumMemebers(schema))
                     );
         }
 
-        private IEnumerable<EnumMemberDeclarationSyntax> GetDefinitionEnumMemebers(JsonSchema4 schema)
+        private IEnumerable<EnumMemberDeclarationSyntax> GenDefinitionEnumMemebers(JsonSchema4 schema)
         {
             int i = 0;
             var definitionName = GetDefinitionName(schema);
@@ -587,7 +587,7 @@ namespace DataWF.Web.CodeGenerator
 
             if (schema.InheritedSchema != null)
             {
-                GetOrGenerateDefinion(schema.InheritedSchema.Id);
+                GetOrGenDefinion(schema.InheritedSchema.Id);
                 yield return SF.SimpleBaseType(SF.ParseTypeName(GetDefinitionName(schema.InheritedSchema)));
             }
             else
@@ -724,19 +724,19 @@ namespace DataWF.Web.CodeGenerator
         {
             var typeDeclaration = GetTypeDeclaration(property, true, "SelectableList");
             return SF.PropertyDeclaration(
-                attributeLists: SF.List(GenClassPropertyAttributes(property)),
+                attributeLists: SF.List(GenDefinitionClassPropertyAttributes(property)),
                 modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
                 type: typeDeclaration,
                 explicitInterfaceSpecifier: null,
                 identifier: SF.Identifier(GetPropertyName(property)),
-                accessorList: SF.AccessorList(SF.List(GenPropertyAccessors(property))),
+                accessorList: SF.AccessorList(SF.List(GenDefinitionClassPropertyAccessors(property))),
                 expressionBody: null,
                 initializer: null,
                 semicolonToken: SF.Token(SyntaxKind.None)
                );
         }
 
-        private IEnumerable<AttributeListSyntax> GenClassPropertyAttributes(JsonProperty property)
+        private IEnumerable<AttributeListSyntax> GenDefinitionClassPropertyAttributes(JsonProperty property)
         {
             if (property.IsReadOnly
                 || (property.ExtensionData != null && property.ExtensionData.TryGetValue("readOnly", out var isReadOnly) && (bool)isReadOnly)
@@ -761,7 +761,7 @@ namespace DataWF.Web.CodeGenerator
 
         }
 
-        private IEnumerable<AccessorDeclarationSyntax> GenPropertyAccessors(JsonProperty property)
+        private IEnumerable<AccessorDeclarationSyntax> GenDefinitionClassPropertyAccessors(JsonProperty property)
         {
             yield return SF.AccessorDeclaration(
                 kind: SyntaxKind.GetAccessorDeclaration,
@@ -771,13 +771,14 @@ namespace DataWF.Web.CodeGenerator
             yield return SF.AccessorDeclaration(
                 kind: SyntaxKind.SetAccessorDeclaration,
                 body: SF.Block(
-                    GenPropertySet(property)
+                    GenDefinitionClassPropertySet(property)
                 ));
         }
 
-        private IEnumerable<StatementSyntax> GenPropertySet(JsonProperty property)
+        private IEnumerable<StatementSyntax> GenDefinitionClassPropertySet(JsonProperty property)
         {
             yield return SF.ParseStatement($"if({GetFieldName(property)} == value) return;");
+            yield return SF.ParseStatement($"OnPropertyChanging();");
             yield return SF.ParseStatement($"{GetFieldName(property)} = value;");
             if (property.ExtensionData != null && property.ExtensionData.TryGetValue("x-id", out var refPropertyName))
             {
@@ -916,7 +917,7 @@ namespace DataWF.Web.CodeGenerator
                 case JsonObjectType.Object:
                     if (value.Id != null)
                     {
-                        GetOrGenerateDefinion(value.Id);
+                        GetOrGenDefinion(value.Id);
                         if (value.IsEnumeration)
                             return GetDefinitionName(value) + (nullable ? "?" : string.Empty);
                         else

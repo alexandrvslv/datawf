@@ -6,11 +6,13 @@ using System.Xml.Serialization;
 
 namespace DataWF.Common
 {
-    public abstract class SynchronizedItem : IContainerNotifyPropertyChanged, ISynchronized
+    public abstract class SynchronizedItem : IContainerNotifyPropertyChanged, INotifyPropertyChanging, ISynchronized
     {
         private bool? isSynchronized = true;
 
         public event PropertyChangedEventHandler PropertyChanged;
+
+        public event PropertyChangingEventHandler PropertyChanging;
 
         [JsonIgnore, XmlIgnore]
         public INotifyListPropertyChanged Container { get; set; }
@@ -33,6 +35,11 @@ namespace DataWF.Common
                     }
                 }
             }
+        }
+
+        protected virtual void OnPropertyChanging([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanging?.Invoke(this, new PropertyChangingEventArgs(propertyName));
         }
 
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
