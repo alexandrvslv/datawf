@@ -97,6 +97,7 @@ namespace DataWF.Common
                 || e.Action == NotifyCollectionChangedAction.Remove
                 || e.Action == NotifyCollectionChangedAction.Reset)
             {
+                comparer = null;
                 ApplySort((IComparer<T>)FilterQuery.GetComparer());
             }
         }
@@ -120,6 +121,7 @@ namespace DataWF.Common
                     UpdateFilter();
                     break;
                 case nameof(InvokerComparer<T>.Direction):
+                    comparer = null;
                     ApplySort((IComparer<T>)FilterQuery.GetComparer());
                     break;
             }
