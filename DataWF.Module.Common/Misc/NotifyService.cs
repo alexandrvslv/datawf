@@ -102,9 +102,12 @@ namespace DataWF.Module.Common
 
             foreach (Instance item in Instance.DBTable)
             {
-                if (item.Active.Value && item.EndPoint != null && !item.EndPoint.Equals(endPoint) && (address == null || item == address))
+                if (address == null || item == address)
                 {
-                    Send(buffer, item.EndPoint);
+                    if (item.Active.Value && item.EndPoint != null && !item.EndPoint.Equals(endPoint) && !IPAddress.Loopback.Equals(item.EndPoint.Address))
+                    {
+                        Send(buffer, item.EndPoint);
+                    }
                 }
             }
         }
