@@ -73,7 +73,7 @@ namespace DataWF.Common
 
         public virtual T DeserializeItem(T item, Dictionary<PropertySerializationInfo, object> dictionary, object id)
         {
-            var add = false;
+            var add = item != null && !Items.Contains(item);
 
             if (id != null && item == null)
             {
@@ -86,15 +86,11 @@ namespace DataWF.Common
                 add = true;
             }
 
-            if (item is ISynchronized isSynchBefore)//&& isSynchBefore.IsSynchronized == true
-            {
-                isSynchBefore.IsSynchronized = null;
-            }
-
             foreach (var entry in dictionary)
             {
                 entry.Key.Invoker.SetValue(item, entry.Value);
             }
+
             if (add)
             {
                 Items.Add(item);
@@ -216,7 +212,16 @@ namespace DataWF.Common
 
         public abstract Task<bool> DeleteAsync(K id, CancellationToken cancellationToken);
 
-        public Task<bool> DeleteAsync(object id, CancellationToken cancellationToken) => DeleteAsync((K)id, cancellationToken);
+        public async Task<bool> DeleteAsync(object id, CancellationToken cancellationToken)
+        {
+            var result = await DeleteAsync((K)id, cancellationToken);
+            if (result)
+            {
+                var item = Select(id);
+                Items.Remove(item);
+            }
+            return result;
+        }
 
         public Task DeleteAsync(object id) { return DeleteAsync((K)id, CancellationToken.None); }
 

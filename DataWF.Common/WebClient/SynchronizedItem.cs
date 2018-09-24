@@ -8,7 +8,7 @@ namespace DataWF.Common
 {
     public abstract class SynchronizedItem : IContainerNotifyPropertyChanged, INotifyPropertyChanging, ISynchronized
     {
-        private bool? isSynchronized = true;
+        private bool? isSynchronized = null;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -29,7 +29,7 @@ namespace DataWF.Common
                 if (isSynchronized != value)
                 {
                     isSynchronized = value;
-                    if (isSynchronized ?? true)
+                    if (isSynchronized ?? false)
                     {
                         Changes.Clear();
                     }
@@ -47,8 +47,10 @@ namespace DataWF.Common
             if (IsSynchronized != null)
             {
                 IsSynchronized = false;
-                Changes.Add(propertyName);
             }
+
+            Changes.Add(propertyName);
+
             var arg = new PropertyChangedEventArgs(propertyName);
             Container?.OnItemPropertyChanged(this, arg);
             PropertyChanged?.Invoke(this, arg);
