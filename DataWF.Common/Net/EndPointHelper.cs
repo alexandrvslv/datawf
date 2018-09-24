@@ -11,7 +11,8 @@ namespace DataWF.Common
 
             foreach (var ip in Dns.GetHostAddresses(prop.HostName))
             {
-                if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork
+                    && ip != IPAddress.Loopback)
                 {
                     yield return ip;
                 }
