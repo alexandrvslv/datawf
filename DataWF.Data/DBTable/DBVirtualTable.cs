@@ -176,6 +176,14 @@ namespace DataWF.Data
             }
         }
 
+        public override void Accept(DBItem item)
+        {
+            if (item is T tItem)
+            {
+                base.Accept(tItem);
+            }
+        }
+
         public override void Add(T item)
         {
             if (!item.Attached)

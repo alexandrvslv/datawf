@@ -17,11 +17,11 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using DataWF.Common;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using DataWF.Common;
 
 namespace DataWF.Data
 {
@@ -78,7 +78,7 @@ namespace DataWF.Data
         #region IComparer
         public int Compare(T x, object key)
         {
-            object xo = buffered ? x[property] : x[PropertyName];
+            object xo = buffered ? x.GetValue(property) : x[PropertyName];
             if (Format != null && property != null && property.DataType == typeof(DateTime) && xo != null && key != null && key is DateTime)
             {//TODO datetime check only date need sone new attribute to check time
                 return string.Compare(((DateTime)xo).ToString(Format), ((DateTime)key).ToString(Format), StringComparison.Ordinal);
@@ -144,8 +144,8 @@ namespace DataWF.Data
                 }
                 else
                 {
-                    xValue = buffered ? x[property] : x[PropertyName];
-                    yValue = buffered ? y[property] : y[PropertyName];
+                    xValue = buffered ? x.GetValue(property) : x[PropertyName];
+                    yValue = buffered ? y.GetValue(property) : y[PropertyName];
                 }
                 if (property.Format == "SL")
                 {

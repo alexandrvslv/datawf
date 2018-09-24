@@ -152,6 +152,18 @@ namespace DataWF.Data
             }
         }
 
+        public override void Accept(DBItem item)
+        {
+            foreach (var column in Columns.Where(p => p.Index != null))
+            {
+                column.Index.RefreshSort(item);
+            }
+            foreach (var collection in virtualTables)
+            {
+                collection.Accept(item);
+            }
+        }
+
         public void CopyTo(T[] array, int arrayIndex)
         {
             items.CopyTo(array, arrayIndex);

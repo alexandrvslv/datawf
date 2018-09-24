@@ -881,6 +881,8 @@ namespace DataWF.Data
             }
         }
 
+        public abstract void Accept(DBItem item);
+
         public virtual int NextHash()
         {
             return Interlocked.Increment(ref Hash);

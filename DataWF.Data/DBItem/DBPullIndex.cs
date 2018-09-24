@@ -25,6 +25,7 @@ namespace DataWF.Data
         public abstract void Refresh(ListChangedType type, DBItem row);
         public abstract void Refresh();
         public abstract void RefreshItem(DBItem row);
+        public abstract void RefreshSort(DBItem row);
         public abstract void Add(DBItem row);
         public abstract void Add(DBItem row, object value);
         public abstract void Remove(DBItem row);
@@ -118,6 +119,15 @@ namespace DataWF.Data
             Remove(row, Convert(value));
         }
 
+        public override void RefreshSort(DBItem row)
+        {
+            var key = ReadItem(row);
+            if (store.TryGetValue(key, out var val))
+            {
+                val.Sort(row.Table.DefaultComparer);
+            }
+        }
+
         public void Remove(DBItem row, DBNullable<K> key)
         {
             lock (store)
@@ -133,6 +143,11 @@ namespace DataWF.Data
                     else
                     {
                         var index = val.BinarySearch(row, row.Table.DefaultComparer);
+                        if (index < 0)
+                        {
+                            index = val.IndexOf(row);
+                        }
+
                         if (index >= 0)
                         {
                             val.RemoveAt(index);
@@ -140,11 +155,10 @@ namespace DataWF.Data
                         }
                     }
                 }
-
                 foreach (var de in store)
                 {
                     var list = de.Value;
-                    var index = list.BinarySearch(row, row.Table.DefaultComparer);
+                    var index = list.IndexOf(row);
                     if (index >= 0)
                     {
                         if (list.Count == 1)

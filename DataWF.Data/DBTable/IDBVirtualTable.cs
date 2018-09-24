@@ -18,7 +18,6 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using System.Collections.Specialized;
-using System.ComponentModel;
 
 namespace DataWF.Data
 {
@@ -29,5 +28,6 @@ namespace DataWF.Data
         void OnTableChanged(DBItem item, NotifyCollectionChangedAction type);
         void OnItemChanging(DBItem item, string property, DBColumn column, object value);
         void OnItemChanged(DBItem item, string property, DBColumn column, object value);
+        void Accept(DBItem item);
     }
 }

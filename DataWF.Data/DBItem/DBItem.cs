@@ -855,6 +855,7 @@ namespace DataWF.Data
                 }
                 else
                 {
+                    Table.Accept(this);
                     UpdateState = DBUpdateState.Default;
                 }
                 RemoveOld();
