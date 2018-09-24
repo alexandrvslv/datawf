@@ -16,10 +16,15 @@ namespace DataWF.Common
         protected IEnumerable source;
         protected ISelectable selectableSource;
 
-        public SelectableListView()
+        public SelectableListView() : this(new Query<T>())
+        {
+
+        }
+
+        public SelectableListView(Query<T> filter)
         {
             propertyHandler = null;
-            FilterQuery = new Query<T>();
+            FilterQuery = filter;
         }
 
         public SelectableListView(IEnumerable baseCollection)
@@ -56,13 +61,8 @@ namespace DataWF.Common
                 selectableSource.CollectionChanged += _listChangedHandler;
                 selectableSource.ItemPropertyChanged += _listItemChangedHandler;
             }
-            else
-            {
-                _listChangedHandler = null;
-                _listItemChangedHandler = null;
-            }
-            UpdateInternal(source.TypeOf<T>());
-            OnListChanged(NotifyCollectionChangedAction.Reset);
+
+            UpdateFilter();
         }
 
         public Query<T> FilterQuery
@@ -156,7 +156,10 @@ namespace DataWF.Common
         protected void UpdateInternal(IEnumerable<T> list)
         {
             ClearInternal();
-
+            if (list == null)
+            {
+                return;
+            }
             foreach (T item in list)
                 InsertInternal(items.Count, item);
 
@@ -170,7 +173,7 @@ namespace DataWF.Common
 
         public virtual void UpdateFilter()
         {
-            UpdateInternal(ListHelper.Select<T>(source.TypeOf<T>(), query, selectableSource is ISelectable<T> gSelectable ? gSelectable.Indexes : null));
+            UpdateInternal(source == null ? null : ListHelper.Select<T>(source.TypeOf<T>(), query, selectableSource is ISelectable<T> gSelectable ? gSelectable.Indexes : null));
             OnListChanged(NotifyCollectionChangedAction.Reset);
         }
 
