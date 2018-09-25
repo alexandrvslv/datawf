@@ -881,7 +881,6 @@ namespace DataWF.Common
             if (format != null && format.Equals("size", StringComparison.OrdinalIgnoreCase))
             {
                 result = LenghtFormat(value);
-
             }
             else if (value is CultureInfo cultureInfo)
                 result = cultureInfo.Name;
