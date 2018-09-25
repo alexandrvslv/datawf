@@ -71,6 +71,8 @@ namespace DataWF.Common
 
         public static IInvoker Initialize(Type type, string property)
         {
+            if (property == null)
+                return null;
             var list = TypeHelper.GetMemberInfoList(type, property);
             if (list.Count == 1)
             {
