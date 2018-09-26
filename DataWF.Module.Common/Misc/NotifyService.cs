@@ -127,14 +127,15 @@ namespace DataWF.Module.Common
                     type = DBLogType.Update;
                 buffer.Add(new NotifyMessageItem()
                 {
-                    Item = item,
+                    Table = item.Table,
+                    ItemId = item.PrimaryId,
                     Type = type,
                     UserId = User.CurrentUser?.Id ?? 0
                 });
             }
         }
 
-        private void OnMessageLoad(EndPointMessage message)
+        protected virtual void OnMessageLoad(EndPointMessage message)
         {
             var sender = Instance.DBTable.LoadById(message.SenderName);
             if (sender == null)
@@ -182,9 +183,9 @@ namespace DataWF.Module.Common
 
                     Array.Sort(list, (x, y) =>
                     {
-                        var res = x.Item.Table.CompareTo(y.Item.Table);
-                        res = res != 0 ? res : string.Compare(x.Item.GetType().Name, y.Item.GetType().Name, StringComparison.Ordinal);
-                        res = res != 0 ? res : ListHelper.Compare(x.Item.PrimaryId, y.Item.PrimaryId, null, false);
+                        var res = x.Table.CompareTo(y.Table);
+                        //res = res != 0 ? res : string.Compare(x.Item.GetType().Name, y.Item.GetType().Name, StringComparison.Ordinal);
+                        res = res != 0 ? res : ListHelper.Compare(x.ItemId, y.ItemId, null, false);
                         return res != 0 ? res : x.Type.CompareTo(y.Type);
                     });
 
@@ -195,16 +196,16 @@ namespace DataWF.Module.Common
                         object id = null;
                         foreach (var log in list)
                         {
-                            if (log.Item.Table != table)
+                            if (log.Table != table)
                             {
                                 id = null;
-                                table = log.Item.Table;
+                                table = log.Table;
                                 writer.Write((char)1);
                                 writer.Write(table.Name);
                             }
-                            if (!log.Item.PrimaryId.Equals(id))
+                            if (!log.ItemId.Equals(id))
                             {
-                                id = log.Item.PrimaryId;
+                                id = log.ItemId;
                                 writer.Write((char)2);
                                 writer.Write((int)log.Type);
                                 writer.Write((int)log.UserId);
@@ -274,7 +275,8 @@ namespace DataWF.Module.Common
 
     public class NotifyMessageItem
     {
-        public DBItem Item;
+        public DBTable Table;
+        public object ItemId;
         public DBLogType Type;
         public int UserId;
     }

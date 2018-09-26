@@ -1,7 +1,9 @@
 ﻿using DataWF.Common;
+using DataWF.Data;
 using DataWF.Module.Common;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.WebSockets;
 using System.Text;
@@ -58,20 +60,7 @@ namespace DataWF.Web.Common
             {
                 Clients.Remove(client);
                 await client.Socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Internal Server Close.", CancellationToken.None);
-            }
-        }
-
-        protected override async void OnSendChanges(NotifyMessageItem[] list)
-        {
-            base.OnSendChanges(list);
-            var buffer = new ArraySegment<byte>(WriteData(list));
-            foreach (var client in Clients)
-            {
-                if (client.Socket.State != WebSocketState.Open)
-                {
-                    continue;
-                }
-                await client.Socket.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
+                client.Dispose();
             }
         }
 
@@ -79,47 +68,7 @@ namespace DataWF.Web.Common
         {
             Clients.Remove(client);
             RemoveClient?.Invoke(this, new WebNotifyEventArgs(client));
-        }
-
-        private static byte[] WriteData(NotifyMessageItem[] list)
-        {
-            using (var stream = new MemoryStream())
-            using (var streamWriter = new StreamWriter(stream, Encoding.UTF8))
-            using (var writer = new JsonTextWriter(streamWriter))
-            {
-                writer.WriteStartArray();
-                Type itemType = null;
-                foreach (var item in list)
-                {
-                    if (item.Item.GetType() != itemType)
-                    {
-                        if (itemType != null)
-                        {
-                            writer.WriteEndArray();
-                            writer.WriteEndObject();
-                        }
-                        itemType = item.Item.GetType();
-                        writer.WriteStartObject();
-                        writer.WritePropertyName("Type");
-                        writer.WriteValue(itemType.Name);
-                        writer.WritePropertyName("Items");
-                        writer.WriteStartArray();
-                    }
-                    writer.WriteStartObject();
-                    writer.WritePropertyName("Id");
-                    writer.WriteValue(item.Item.PrimaryId.ToString());
-                    writer.WritePropertyName("Diff");
-                    writer.WriteValue((int)item.Type);
-                    writer.WritePropertyName("User");
-                    writer.WriteValue(item.UserId);
-                    writer.WriteEndObject();
-                }
-                writer.WriteEndArray();
-                writer.WriteEndObject();
-                writer.WriteEndArray();
-                writer.Flush();
-                return stream.ToArray();
-            }
+            client.Dispose();
         }
 
         //https://github.com/radu-matei/websocket-manager/blob/blog-article/src/WebSocketManager/WebSocketManagerMiddleware.cs
@@ -165,6 +114,113 @@ namespace DataWF.Web.Common
 
             }
         }
+
+        protected override async void OnSendChanges(NotifyMessageItem[] list)
+        {
+            base.OnSendChanges(list);
+            await SendToWebClient(list);
+        }
+
+        private async Task SendToWebClient(NotifyMessageItem[] list)
+        {
+            var buffer = new ArraySegment<byte>(WriteData(list));
+            foreach (var client in Clients)
+            {
+                if (client.Socket.State != WebSocketState.Open)
+                {
+                    continue;
+                }
+                await client.Socket.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
+            }
+        }
+
+        protected override async void OnMessageLoad(EndPointMessage message)
+        {
+            base.OnMessageLoad(message);
+            if (message.Type == SocketMessageType.Data)
+            {
+                var list = ParseMessage(message.Data);
+                if (list.Length > 0)
+                {
+                    await SendToWebClient(list);
+                }
+            }
+        }
+
+        private static NotifyMessageItem[] ParseMessage(byte[] data)
+        {
+            var list = new List<NotifyMessageItem>();
+            var stream = new MemoryStream(data);
+            using (var reader = new BinaryReader(stream))
+            {
+                while (reader.PeekChar() == 1)
+                {
+                    reader.ReadChar();
+                    var tableName = reader.ReadString();
+                    var table = DBService.ParseTable(tableName);
+
+                    while (reader.PeekChar() == 2)
+                    {
+                        reader.ReadChar();
+                        var item = new NotifyMessageItem
+                        {
+                            Table = table,
+                            Type = (DBLogType)reader.ReadInt32(),
+                            UserId = reader.ReadInt32(),
+                            ItemId = Helper.ReadBinary(reader),
+                        };
+                        if (table != null)
+                        {
+                            list.Add(item);
+                        }
+                    }
+                }
+            }
+            return list.ToArray();
+        }
+
+        private static byte[] WriteData(NotifyMessageItem[] list)
+        {
+            using (var stream = new MemoryStream())
+            using (var streamWriter = new StreamWriter(stream, Encoding.UTF8))
+            using (var writer = new JsonTextWriter(streamWriter))
+            {
+                writer.WriteStartArray();
+                Type itemType = null;
+                foreach (var item in list)
+                {
+                    if (item.Table.ItemType.Type != itemType)
+                    {
+                        if (itemType != null)
+                        {
+                            writer.WriteEndArray();
+                            writer.WriteEndObject();
+                        }
+                        itemType = item.Table.ItemType.Type;
+                        writer.WriteStartObject();
+                        writer.WritePropertyName("Type");
+                        writer.WriteValue(itemType.Name);
+                        writer.WritePropertyName("Items");
+                        writer.WriteStartArray();
+                    }
+                    writer.WriteStartObject();
+                    writer.WritePropertyName("Diff");
+                    writer.WriteValue((int)item.Type);
+                    writer.WritePropertyName("User");
+                    writer.WriteValue(item.UserId);
+                    writer.WritePropertyName("Id");
+                    writer.WriteValue(item.ItemId.ToString());
+                    writer.WriteEndObject();
+                }
+                writer.WriteEndArray();
+                writer.WriteEndObject();
+                writer.WriteEndArray();
+                writer.Flush();
+                return stream.ToArray();
+            }
+        }
+
+
     }
 
     public class WebNotifyEventArgs : EventArgs
