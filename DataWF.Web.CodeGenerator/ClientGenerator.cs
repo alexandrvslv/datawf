@@ -15,7 +15,7 @@ namespace DataWF.Web.CodeGenerator
 {
     public class ClientGenerator
     {
-        private readonly List<string> AbstractOperations = new List<string> { "GetAsync", "PutAsync", "PostAsync", "FindAsync", "DeleteAsync" };
+        private readonly List<string> VirtualOperations = new List<string> { "GetAsync", "PutAsync", "PostAsync", "FindAsync", "DeleteAsync" };
         private Dictionary<string, CompilationUnitSyntax> cacheModels = new Dictionary<string, CompilationUnitSyntax>();
         private Dictionary<string, ClassDeclarationSyntax> cacheClients = new Dictionary<string, ClassDeclarationSyntax>();
         private List<UsingDirectiveSyntax> usings = new List<UsingDirectiveSyntax>();
@@ -402,6 +402,7 @@ namespace DataWF.Web.CodeGenerator
             var operationName = GetOperationName(descriptor, out var clientName);
             var actualName = $"{operationName}Async";
             var baseType = GetClientBaseType(clientName, out var id, out var typeKey, out var typeId);
+            var isOverride = baseType != "ClientBase" && VirtualOperations.Contains(actualName);
             var returnType = GetReturningType(descriptor);
             returnType = returnType.Length > 0 ? $"Task<{returnType}>" : "Task";
 
@@ -423,16 +424,16 @@ namespace DataWF.Web.CodeGenerator
             yield return SF.MethodDeclaration(
                 attributeLists: SF.List<AttributeListSyntax>(),
                     modifiers: SF.TokenList(
-                        baseType != "ClientBase" && AbstractOperations.Contains(actualName)
+                        isOverride
                         ? new[] { SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.OverrideKeyword), SF.Token(SyntaxKind.AsyncKeyword) }
                         : new[] { SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.AsyncKeyword) }),
                     returnType: SF.ParseTypeName(returnType),
                     explicitInterfaceSpecifier: null,
                     identifier: SF.Identifier(actualName),
                     typeParameterList: null,
-                    parameterList: SF.ParameterList(SF.SeparatedList(GenOperationParameter(descriptor, true))),
+                    parameterList: SF.ParameterList(SF.SeparatedList(GenOperationParameter(descriptor))),
                     constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
-                    body: SF.Block(GenOperationBody(descriptor)),
+                    body: SF.Block(GenOperationBody(actualName, descriptor, isOverride)),
                     semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
         }
 
@@ -449,7 +450,7 @@ namespace DataWF.Web.CodeGenerator
         //    return SF.ParseStatement(builder.ToString());
         //}
 
-        private IEnumerable<StatementSyntax> GenOperationBody(SwaggerOperationDescription descriptor)
+        private IEnumerable<StatementSyntax> GenOperationBody(string actualName, SwaggerOperationDescription descriptor, bool isOverride)
         {
             var method = descriptor.Method.ToString().ToUpperInvariant();
             var path = descriptor.Path;
@@ -463,33 +464,52 @@ namespace DataWF.Web.CodeGenerator
 
             var returnType = GetReturningType(descriptor);
 
-            var builder = new StringBuilder();
-
-            builder.Append($"return await Request");
+            var requestBuilder = new StringBuilder();
+            requestBuilder.Append($"await Request");
             if (responceSchema?.Type == JsonObjectType.Array)
-                builder.Append("Array");
-            builder.Append($"<{returnType}");
+                requestBuilder.Append("Array");
+            requestBuilder.Append($"<{returnType}");
             if (responceSchema?.Type == JsonObjectType.Array)
-                builder.Append($", {GetTypeString(responceSchema.Item, false, "List")}");
-            builder.Append($">(cancellationToken, \"{method}\", \"{path}\", \"{mediatype}\"");
+                requestBuilder.Append($", {GetTypeString(responceSchema.Item, false, "List")}");
+            requestBuilder.Append($">(cancellationToken, \"{method}\", \"{path}\", \"{mediatype}\"");
             var bodyParameter = descriptor.Operation.Parameters.FirstOrDefault(p => p.Kind != SwaggerParameterKind.Path);
             if (bodyParameter == null)
             {
-                builder.Append(", null");
+                requestBuilder.Append(", null");
             }
             else
             {
-                builder.Append($", {bodyParameter.Name}");
+                requestBuilder.Append($", {bodyParameter.Name}");
             }
             foreach (var parameter in descriptor.Operation.Parameters.Where(p => p.Kind == SwaggerParameterKind.Path))
             {
-                builder.Append($", {parameter.Name}");
+                requestBuilder.Append($", {parameter.Name}");
             }
-            builder.Append(").ConfigureAwait(false);");
-            yield return SF.ParseStatement(builder.ToString());
+            requestBuilder.Append(").ConfigureAwait(false);");
+
+
+            if (isOverride)
+            {
+                //var result =
+                yield return SF.ParseStatement($"var result = {requestBuilder.ToString()}");
+                var paramBuilder = new StringBuilder();
+                foreach (var parameter in descriptor.Operation.Parameters)
+                {
+                    paramBuilder.Append(parameter.Name);
+                    paramBuilder.Append(", ");
+                }
+                paramBuilder.Append("cancellationToken");
+                yield return SF.ParseStatement($"await base.{actualName}({paramBuilder.ToString()}).ConfigureAwait(false);");
+                yield return SF.ParseStatement("return result;");
+            }
+            else
+            {
+                yield return SF.ParseStatement($"return {requestBuilder.ToString()}");
+            }
+
         }
 
-        private IEnumerable<ParameterSyntax> GenOperationParameter(SwaggerOperationDescription descriptor, bool cancelationToken)
+        private IEnumerable<ParameterSyntax> GenOperationParameter(SwaggerOperationDescription descriptor)
         {
             foreach (var parameter in descriptor.Operation.Parameters)
             {
@@ -499,14 +519,11 @@ namespace DataWF.Web.CodeGenerator
                                                          identifier: SF.Identifier(parameter.Name),
                                                          @default: null);
             }
-            if (cancelationToken)
-            {
-                yield return SF.Parameter(attributeLists: SF.List<AttributeListSyntax>(),
-                                                            modifiers: SF.TokenList(),
-                                                            type: SF.ParseTypeName("CancellationToken"),
-                                                            identifier: SF.Identifier("cancellationToken"),
-                                                            @default: null);
-            }
+            yield return SF.Parameter(attributeLists: SF.List<AttributeListSyntax>(),
+                                                        modifiers: SF.TokenList(),
+                                                        type: SF.ParseTypeName("CancellationToken"),
+                                                        identifier: SF.Identifier("cancellationToken"),
+                                                        @default: null);
         }
 
         private CompilationUnitSyntax GetOrGenDefinion(string key)
