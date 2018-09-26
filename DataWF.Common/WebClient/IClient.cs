@@ -39,6 +39,7 @@ namespace DataWF.Common
         Task PostAsync(object value);
         Task PutAsync(object value);
         object DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, object item = null, Dictionary<PropertySerializationInfo, object> dictionary = null, object id = null);
+        object NewItem();
     }
 
     public interface ICRUDClient<T> : ICRUDClient

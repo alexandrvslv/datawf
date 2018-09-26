@@ -135,6 +135,11 @@ namespace DataWF.Common
             return null;
         }
 
+        public object NewItem()
+        {
+            return new T();
+        }
+
         public void Add(object item)
         {
             Items.Add((T)item);
