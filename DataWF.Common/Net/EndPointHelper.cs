@@ -13,7 +13,7 @@ namespace DataWF.Common
         public static IEnumerable<IPAddress> GetInterNetworkIPs()
         {
             foreach (var netInterface in NetworkInterface.GetAllNetworkInterfaces()
-                .OrderByDescending(c => c.Speed)
+                //.OrderByDescending(c => c.Speed)
                 .Where(c => c.NetworkInterfaceType != NetworkInterfaceType.Loopback && c.OperationalStatus == OperationalStatus.Up))
             {
                 Debug.WriteLine($"Network Id:{netInterface.Id} Name:{netInterface.Name} Dsc:{netInterface.Description}");
