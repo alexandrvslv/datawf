@@ -7,14 +7,16 @@ namespace DataWF.Common
     {
         public static IEnumerable<IPAddress> GetInterNetworkIPs()
         {
-            var prop = System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties();
-
-            foreach (var ip in Dns.GetHostAddresses(prop.HostName))
+            //var prop = System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties();
+            foreach (var netInterface in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces())
             {
-                if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork
-                    && !IPAddress.Loopback.Equals(ip))
+                foreach (var ip in netInterface.GetIPProperties().GatewayAddresses)
                 {
-                    yield return ip;
+                    if (ip.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork
+                        && !IPAddress.Loopback.Equals(ip.Address))
+                    {
+                        yield return ip.Address;
+                    }
                 }
             }
         }
