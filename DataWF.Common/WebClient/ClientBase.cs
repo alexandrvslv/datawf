@@ -203,8 +203,11 @@ namespace DataWF.Common
                                 }
                                 else
                                 {
-                                    UnexpectedStatus(response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+                                    ErrorStatus("Unauthorized! Try Relogin!", response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
                                 }
+                                break;
+                            case System.Net.HttpStatusCode.NotFound:
+                                ErrorStatus("No Data Found!", response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
                                 break;
                             case System.Net.HttpStatusCode.NoContent:
                                 result = default(R);
@@ -276,8 +279,11 @@ namespace DataWF.Common
                                 }
                                 else
                                 {
-                                    UnexpectedStatus(response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+                                    ErrorStatus("Unauthorized! Try Relogin!", response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
                                 }
+                                break;
+                            case System.Net.HttpStatusCode.NotFound:
+                                ErrorStatus("No Data Found!", response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
                                 break;
                             case System.Net.HttpStatusCode.NoContent:
                                 result = default(R);
@@ -404,6 +410,14 @@ namespace DataWF.Common
         private void UnexpectedStatus(HttpResponseMessage response, string responseData)
         {
             throw new ClientException($"Unexpected status code :{response.StatusCode}({(int)response.StatusCode}).",
+                (int)response.StatusCode,
+                responseData,
+                GetHeaders(response), null);
+        }
+
+        private void ErrorStatus(string message, HttpResponseMessage response, string responseData)
+        {
+            throw new ClientException($"{message}",
                 (int)response.StatusCode,
                 responseData,
                 GetHeaders(response), null);
