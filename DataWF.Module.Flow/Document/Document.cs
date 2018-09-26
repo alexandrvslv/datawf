@@ -686,7 +686,7 @@ namespace DataWF.Module.Flow
                 base.Save();
                 return;
             }
-            if (Template != null)
+            if (Template == null)
             {
                 throw new InvalidOperationException($"{nameof(Template)} must be specified!");
             }
