@@ -686,7 +686,10 @@ namespace DataWF.Module.Flow
                 base.Save();
                 return;
             }
-
+            if (Template != null)
+            {
+                throw new InvalidOperationException($"{nameof(Template)} must be specified!");
+            }
             if (saving.Contains(this))//prevent recursion
             {
                 return;
@@ -697,51 +700,45 @@ namespace DataWF.Module.Flow
             try
             {
                 base.Save();
-
-                if (Template != null)
+                var param = new DocumentExecuteArgs() { Document = this, ProcedureCategory = Template.Code };
+                var works = GetWorks().ToList();
+                bool isnew = works.Count == 0;
+                if (isnew)
                 {
-                    var param = new DocumentExecuteArgs() { Document = this, ProcedureCategory = Template.Code };
-
-                    var works = GetWorks().ToList();
-                    bool isnew = works.Count == 0;
-
-                    if (isnew)
+                    if (DocumentDate == null)
                     {
-                        if (DocumentDate == null)
-                        {
-                            DocumentDate = DateTime.Now;
-                        }
-
-                        if (GetTemplatedData() == null && Template.Datas.Any())
-                        {
-                            var data = CreateTemplatedData();
-                            data.Attach();
-                        }
-
-                        if (Parent != null && !Referencing.Any())
-                        {
-                            Parent.CreateReference(this);
-                        }
-
-                        CurrentStage = Template.Work?.GetStartStage();
-                        base.Save();
+                        DocumentDate = DateTime.Now;
                     }
 
-                    SaveReferencing();
+                    if (GetTemplatedData() == null && Template.Datas.Any())
+                    {
+                        var data = CreateTemplatedData();
+                        data.Attach();
+                    }
 
-                    if (isnew)
+                    if (Parent != null && !Referencing.Any())
                     {
-                        var data = GetTemplatedData();
-                        if (data != null)
-                        {
-                            data.Parse(param);
-                        }
+                        Parent.CreateReference(this);
                     }
-                    Saved?.Invoke(null, new DocumentEventArgs(this));
-                    if (transaction.Owner == saveLock)
+
+                    CurrentStage = Template.Work?.GetStartStage();
+                    base.Save();
+                }
+
+                SaveReferencing();
+
+                if (isnew)
+                {
+                    var data = GetTemplatedData();
+                    if (data != null)
                     {
-                        transaction.Commit();
+                        data.Parse(param);
                     }
+                }
+                Saved?.Invoke(null, new DocumentEventArgs(this));
+                if (transaction.Owner == saveLock)
+                {
+                    transaction.Commit();
                 }
             }
             catch (Exception ex)
