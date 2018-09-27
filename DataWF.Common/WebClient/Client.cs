@@ -142,7 +142,10 @@ namespace DataWF.Common
 
         public void Add(object item)
         {
-            Items.Add((T)item);
+            if (Select(IdInvoker.GetValue(item)) == null)
+            {
+                Items.Add((T)item);
+            }
         }
 
         public void Remove(object item)
