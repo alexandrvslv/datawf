@@ -75,41 +75,54 @@ namespace DataWF.Web.Common
 
         public static IServiceCollection AddAuthAndSwagger(this IServiceCollection services, IConfiguration configuration, string name, string version)
         {
-            services.AddAuth(configuration).AddSwaggerGen(c =>
-             {
-                 c.SwaggerDoc(version, new Info { Title = name, Version = version });
-                 c.SchemaFilter<SwaggerDBSchemaFilter>();
-                 c.OperationFilter<SwaggerFileUploadOperationFilter>();
-                 c.ParameterFilter<SwaggerEnumParameterFilter>();
-                 c.MapType<System.IO.Stream>(() => new Schema { Type = "file" });
-                 c.MapType<System.IO.MemoryStream>(() => new Schema { Type = "file" });
-                 c.MapType<System.IO.FileStream>(() => new Schema { Type = "file" });
-                 c.MapType<Microsoft.AspNetCore.Mvc.FileStreamResult>(() => new Schema { Type = "file" });
-                 c.UseReferencedDefinitionsForEnums();
-                 c.DescribeAllEnumsAsStrings();
-                 c.ResolveConflictingActions(parameters =>
+            return services.AddAuth(configuration).AddSwaggerGen(c =>
+              {
+                  c.SwaggerDoc(version, new Info { Title = name, Version = version });
+                  c.SchemaFilter<SwaggerDBSchemaFilter>();
+                  c.OperationFilter<SwaggerFileUploadOperationFilter>();
+                  c.ParameterFilter<SwaggerEnumParameterFilter>();
+                  c.MapType<System.IO.Stream>(() => new Schema { Type = "file" });
+                  c.MapType<System.IO.MemoryStream>(() => new Schema { Type = "file" });
+                  c.MapType<System.IO.FileStream>(() => new Schema { Type = "file" });
+                  c.MapType<Microsoft.AspNetCore.Mvc.FileStreamResult>(() => new Schema { Type = "file" });
+                  c.UseReferencedDefinitionsForEnums();
+                  c.DescribeAllEnumsAsStrings();
+                  c.ResolveConflictingActions(parameters =>
+                   {
+                       return parameters.FirstOrDefault();
+                   });
+
+                  var apiKey = new ApiKeyScheme
                   {
-                      return parameters.FirstOrDefault();
-                  });
+                      Name = "Authorization",
+                      In = "header",
+                      Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
+                      Type = "apiKey"
+                  };
+                  apiKey.Extensions.Add("TokenPath", "/api/Auth");
 
-                 var apiKey = new ApiKeyScheme
-                 {
-                     Name = "Authorization",
-                     In = "header",
-                     Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
-                     Type = "apiKey"
-                 };
-                 apiKey.Extensions.Add("TokenPath", "/api/Auth");
-
-                 c.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, apiKey);
-                 c.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>>
-                 {
+                  c.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, apiKey);
+                  c.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>>
+                  {
                     { JwtBearerDefaults.AuthenticationScheme, new string[] { } }
-                 });
-             });
+                  });
+              });
+        }
 
-
-            return services;
+        public static IApplicationBuilder UseAuthAndSwagger(this IApplicationBuilder app, string name, string url = "/swagger/v1/swagger.json")
+        {
+            //app.UseHttpMethodOverride
+            return app.UseSwagger(c =>
+            {
+            })
+            .UseSwaggerUI(c =>
+            {
+                // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.), 
+                // specifying the Swagger JSON endpoint.
+                c.EnableValidator(null);
+                c.SwaggerEndpoint(url, name);
+                c.RoutePrefix = string.Empty;
+            }).UseAuthentication();
         }
 
         public static IServiceCollection AddWebNotify(this IServiceCollection app)
