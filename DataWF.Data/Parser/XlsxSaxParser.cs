@@ -155,9 +155,9 @@ namespace DataWF.Data
                                                         Procedure = procedure,
                                                         Value = procedure.Execute(param),
                                                     };
-                                                    if (defName.Value is QResult)
+                                                    if (defName.Value is QResult result && result.Values.Count > 0)
                                                     {
-                                                        var index = reference.Start.Row + ((QResult)defName.Value).Values.Count;
+                                                        var index = reference.Start.Row + result.Values.Count;
                                                         if (index > reference.End.Row)
                                                         {
                                                             defName.NewRange = new CellRange(reference.Start, new CellReference(reference.End.Col, index));
@@ -165,8 +165,8 @@ namespace DataWF.Data
                                                             //table.TotalsRowCount = (uint)newrange.Rows;
                                                         }
                                                         defName.Table = table;
+                                                        cacheNames.Add(defName.Range.Start.ToString(), defName);
                                                     }
-                                                    cacheNames.Add(defName.Range.Start.ToString(), defName);
                                                 }
                                                 WriteElement(writer, table);
                                             }
