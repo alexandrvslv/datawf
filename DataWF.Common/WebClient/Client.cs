@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -43,7 +44,8 @@ namespace DataWF.Common
                     }
                     else if (jreader.TokenType == JsonToken.StartArray)
                     {
-                        dictionary[property] = DeserializeArray(serializer, jreader, property.DataType);
+                        var list = item == null ? null : (IList)property.Invoker.GetValue(item);
+                        dictionary[property] = DeserializeArray(serializer, jreader, property.DataType, list);
                     }
                     else
                     {
@@ -51,6 +53,10 @@ namespace DataWF.Common
                         if (property.Name == IdInvoker?.Name)
                         {
                             id = value;
+                            if (item != null)
+                            {
+                                IdInvoker.SetValue(item, id);
+                            }
                         }
                         else if (property.Name == TypeInvoker?.Name)
                         {
@@ -83,6 +89,7 @@ namespace DataWF.Common
             if (item == null)
             {
                 item = new T();
+                IdInvoker.SetValue(item, id);
                 add = true;
             }
 

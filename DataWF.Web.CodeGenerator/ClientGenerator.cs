@@ -369,8 +369,8 @@ namespace DataWF.Web.CodeGenerator
                     SyntaxKind.BaseConstructorInitializer,
                     SF.ArgumentList(
                         SF.SeparatedList(new[] {
-                            SF.Argument(SF.ParseExpression($"new Invoker<{clientName},{GetTypeString(idKey, true, "List")}>(nameof({clientName}.{idName}), p=>p.{idName})")),
-                            SF.Argument(SF.ParseExpression($"new Invoker<{clientName},{GetTypeString(typeKey, true, "List")}>(nameof({clientName}.{typeName}), p=>p.{typeName})")),
+                            SF.Argument(SF.ParseExpression($"new Invoker<{clientName},{GetTypeString(idKey, true, "List")}>(nameof({clientName}.{idName}), p=>p.{idName}, (p,v)=>p.{idName}=v)")),
+                            SF.Argument(SF.ParseExpression($"new Invoker<{clientName},{GetTypeString(typeKey, true, "List")}>(nameof({clientName}.{typeName}), p=>p.{typeName}, (p,v)=>p.{typeName}=v)")),
                             SF.Argument(SF.ParseExpression($"{typeId}")),
                         })));
             yield return SF.ConstructorDeclaration(
@@ -856,17 +856,21 @@ namespace DataWF.Web.CodeGenerator
 
         private FieldDeclarationSyntax GenDefinitionClassField(JsonProperty property)
         {
-            return SF.FieldDeclaration(attributeLists: SF.List<AttributeListSyntax>(),
+            var type = GetTypeString(property, true, "SelectableList");
+            var field = SF.FieldDeclaration(attributeLists: SF.List<AttributeListSyntax>(),
                 modifiers: SF.TokenList(SF.Token(SyntaxKind.ProtectedKeyword)),
                declaration: SF.VariableDeclaration(
-                   type: GetTypeDeclaration(property, true, "SelectableList"),
+                   type: SF.ParseTypeName(type),
                    variables: SF.SingletonSeparatedList(
                        SF.VariableDeclarator(
                            identifier: SF.ParseToken(GetFieldName(property)),
                            argumentList: null,
                            initializer: property.Default != null
                            ? SF.EqualsValueClause(GenFieldDefault(property))
-                           : null))));
+                           : property.Type == JsonObjectType.Array
+                           ? SF.EqualsValueClause(SF.ParseExpression($"new {type}()")) : null))));
+
+            return field;
         }
 
         private ExpressionSyntax GenFieldDefault(JsonProperty property)

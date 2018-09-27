@@ -179,7 +179,7 @@ namespace DataWF.Common
                                                                 result = DeserializeObject<R>(serializer, jreader, value is R rvalue ? rvalue : default(R));
                                                                 break;
                                                             case JsonToken.StartArray:
-                                                                result = (R)DeserializeArray(serializer, jreader, typeof(R));
+                                                                result = (R)DeserializeArray(serializer, jreader, typeof(R), value as IList);
                                                                 break;
                                                             default:
                                                                 result = serializer.Deserialize<R>(jreader);
@@ -322,11 +322,12 @@ namespace DataWF.Common
             return items;
         }
 
-        protected virtual IList DeserializeArray(JsonSerializer serializer, JsonTextReader jreader, Type type)
+        protected virtual IList DeserializeArray(JsonSerializer serializer, JsonTextReader jreader, Type type, IList list)
         {
-            var itemType = type.GetGenericArguments()[0];
+            var itemType = TypeHelper.GetItemType(type);
             var client = Provider.GetClient(itemType);
-            var items = (IList)EmitInvoker.CreateObject(type);
+            var items = list ?? (IList)EmitInvoker.CreateObject(type);
+            items.Clear();
             if (client != null)
             {
                 while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
