@@ -82,6 +82,8 @@ namespace DataWF.Web.Common
                  c.OperationFilter<SwaggerFileUploadOperationFilter>();
                  c.ParameterFilter<SwaggerEnumParameterFilter>();
                  c.MapType<System.IO.Stream>(() => new Schema { Type = "file" });
+                 c.MapType<System.IO.MemoryStream>(() => new Schema { Type = "file" });
+                 c.MapType<System.IO.FileStream>(() => new Schema { Type = "file" });
                  c.MapType<Microsoft.AspNetCore.Mvc.FileStreamResult>(() => new Schema { Type = "file" });
                  c.UseReferencedDefinitionsForEnums();
                  c.DescribeAllEnumsAsStrings();

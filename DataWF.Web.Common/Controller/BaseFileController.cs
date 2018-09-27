@@ -27,7 +27,7 @@ namespace DataWF.Web.Common
 
         [HttpGet("DownloadFile/{id}")]
         [ProducesResponseType(typeof(FileStreamResult), 200)]
-        public IActionResult DownloadFile([FromRoute]K id)
+        public ActionResult<Stream> DownloadFile([FromRoute]K id)
         {
             if (fileColumn == null || fileNameColumn == null)
             {
