@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Collections;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml.Serialization;
@@ -16,6 +17,7 @@ namespace DataWF.Common
         private IInvoker invoker;
         private object typedValue;
         private bool isEnabled = true;
+        private bool emptyFormat;
 
         public QueryParameter()
         { }
@@ -78,9 +80,10 @@ namespace DataWF.Common
         {
             get
             {
-                return Comparer.Type != CompareTypes.Is
+                return emptyFormat ? true : Comparer.Type != CompareTypes.Is
                   && (Value == null || (Value is string strFilter && strFilter.Length == 0) || string.IsNullOrEmpty(FormatValue()));
             }
+            set { emptyFormat = value; }
         }
 
         public object Value
@@ -144,6 +147,10 @@ namespace DataWF.Common
             if (type == typeof(string))
             {
                 return $"'{Value}'";
+            }
+            else if (Value is IEnumerable enumerable)
+            {
+                return string.Concat('(', string.Join(", ", enumerable.Cast<object>().Select(p => p is string ps ? $"'ps'" : p.ToString())), ')');
             }
             else
             {
