@@ -233,6 +233,13 @@ namespace DataWF.Module.Flow
             }
         }
 
+        [ControllerMethod]
+        public FileStream RefreshData()
+        {
+            var filePath = Parse();
+            return new FileStream(Parse(), FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        }
+
         public string Parse()
         {
             return Parse(new DocumentExecuteArgs { Document = Document, ProcedureCategory = TemplateData.Template.Code });
@@ -242,7 +249,7 @@ namespace DataWF.Module.Flow
         {
             if (TemplateData == null || TemplateData.File == null)
             {
-                return null;
+                return GetData();
             }
 
             var filePath = Helper.GetDocumentsFullPath(FileName);
