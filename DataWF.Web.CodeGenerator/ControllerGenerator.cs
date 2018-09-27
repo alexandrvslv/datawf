@@ -297,33 +297,51 @@ namespace DataWF.Web.CodeGenerator
             if (!method.IsStatic)
             {
                 yield return SyntaxFactory.ParseStatement($"var idValue = table.LoadById<{(baseClass ? "T" : TypeHelper.FormatCode(method.DeclaringType))}>(id);");
+                yield return SyntaxFactory.ParseStatement("if (idValue == null)");
+                if (method.ReturnType != typeof(void))
+                {
+                    yield return SyntaxFactory.ParseStatement("{ return NotFound(); }");
+                }
+                else
+                {
+                    yield return SyntaxFactory.ParseStatement("{ NotFound(); }");
+                }
 
+                var parametersBuilder = new StringBuilder();
                 foreach (var parameter in parametersInfo)
                 {
                     if (parameter.Table != null)
                     {
                         yield return SyntaxFactory.ParseStatement($"var {parameter.ValueName} = DBItem.GetTable<{TypeHelper.FormatCode(parameter.Info.ParameterType)}>().LoadById({parameter.Info.Name});");
                     }
+                    parametersBuilder.Append($"{parameter.ValueName}, ");
                 }
-                var builder = new StringBuilder();
-                if (method.ReturnType != typeof(void))
-                {
-                    builder.Append($"return new {returning}(");
-                }
-                builder.Append($" idValue.{method.Name}(");
-
                 if (parametersInfo.Count > 0)
                 {
-                    foreach (var parameter in parametersInfo)
-                    {
-                        builder.Append($"{parameter.ValueName}, ");
-                    }
-                    builder.Length -= 2;
+                    parametersBuilder.Length -= 2;
                 }
-                if (method.ReturnType != typeof(void))
-                    builder.Append(")");
-                builder.AppendLine(");");
+                var builder = new StringBuilder();
+                if (TypeHelper.IsBaseType(method.ReturnType, typeof(Stream)))
+                {
+                    yield return SyntaxFactory.ParseStatement("var fileName = idValue.GetValue<string>(fileNameColumn);");
+                    yield return SyntaxFactory.ParseStatement("if (string.IsNullOrEmpty(fileName))");
+                    yield return SyntaxFactory.ParseStatement("{ return new EmptyResult(); }");
+                    builder.Append($"return File(idValue.{method.Name}({parametersBuilder}), System.Net.Mime.MediaTypeNames.Application.Octet, fileName);");
+                }
+                else
+                {
+                    if (method.ReturnType != typeof(void))
+                    {
+                        builder.Append($"return new {returning}(");
+                    }
+                    builder.Append($" idValue.{method.Name}({parametersBuilder}");
+                    if (method.ReturnType != typeof(void))
+                    {
+                        builder.Append(")");
+                    }
 
+                    builder.AppendLine(");");
+                }
                 yield return SyntaxFactory.ParseStatement(builder.ToString());
 
             }
