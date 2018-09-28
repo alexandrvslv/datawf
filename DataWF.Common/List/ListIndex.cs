@@ -8,7 +8,7 @@ namespace DataWF.Common
 {
     public class ListIndex<T, K> : IListIndex<T, K>
     {
-        public ConcurrentDictionary<DBNullable<K>, List<T>> Dictionary;
+        public Dictionary<DBNullable<K>, List<T>> Dictionary;
         public IInvoker<T, K> Invoker;
 
         public ListIndex(IInvoker<T, K> accessor)
@@ -16,11 +16,11 @@ namespace DataWF.Common
             Invoker = accessor;
             if (typeof(K) == typeof(string))
             {
-                Dictionary = new ConcurrentDictionary<DBNullable<K>, List<T>>((IEqualityComparer<DBNullable<K>>)DBNullableComparer.StringOrdinalIgnoreCase);
+                Dictionary = new Dictionary<DBNullable<K>, List<T>>((IEqualityComparer<DBNullable<K>>)DBNullableComparer.StringOrdinalIgnoreCase);
             }
             else
             {
-                Dictionary = new ConcurrentDictionary<DBNullable<K>, List<T>>();
+                Dictionary = new Dictionary<DBNullable<K>, List<T>>();
             }
         }
 
@@ -60,7 +60,7 @@ namespace DataWF.Common
                 }
                 if (refs != null && refs.Count == 0)
                 {
-                    Dictionary.TryRemove(key, out refs);
+                    Dictionary.Remove(key);//, out refs
                 }
             }
         }
