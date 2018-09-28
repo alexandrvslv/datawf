@@ -160,7 +160,12 @@ namespace DataWF.Data
             Table.BlockSize = Attribute.BlockSize;
             Table.Sequence = Table.GenerateSequence();
 
-            cacheColumns.Sort((a, b) => a.Attribute.Order.CompareTo(b.Attribute.Order));
+            cacheColumns.Sort((a, b) =>
+            {
+                var aOrder = a.Column.IsTypeKey ? -3 : a.Column.IsPrimaryKey ? -2 : a.Attribute.Order;
+                var bOrder = b.Column.IsTypeKey ? -3 : b.Column.IsPrimaryKey ? -2 : b.Attribute.Order;
+                return aOrder.CompareTo(bOrder);
+            });
             foreach (var column in cacheColumns)
             {
                 column.Generate();
