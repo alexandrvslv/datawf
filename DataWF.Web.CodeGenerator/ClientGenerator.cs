@@ -622,6 +622,8 @@ namespace DataWF.Web.CodeGenerator
 
         private IEnumerable<MemberDeclarationSyntax> GenDefinitionClassMemebers(JsonSchema4 schema)
         {
+            var idKey = GetPrimaryKey(schema);
+            var typeKey = GetTypeKey(schema);
             var typeId = GetTypeId(schema);
             if (typeId != 0)
             {
@@ -643,11 +645,10 @@ namespace DataWF.Web.CodeGenerator
 
             foreach (var property in schema.Properties)
             {
-                yield return GenDefinitionClassProperty(property.Value);
+                yield return GenDefinitionClassProperty(property.Value, idKey, typeKey);
             }
 
-            var idKey = GetPrimaryKey(schema, false);
-            if (idKey != null)
+            if (GetPrimaryKey(schema, false) != null)
             {
                 yield return SF.PropertyDeclaration(
                     attributeLists: SF.List(new[] {
@@ -737,11 +738,11 @@ namespace DataWF.Web.CodeGenerator
                 @default: @default);
         }
 
-        private PropertyDeclarationSyntax GenDefinitionClassProperty(JsonProperty property)
+        private PropertyDeclarationSyntax GenDefinitionClassProperty(JsonProperty property, JsonProperty idKey, JsonProperty typeKey)
         {
             var typeDeclaration = GetTypeDeclaration(property, true, "SelectableList");
             return SF.PropertyDeclaration(
-                attributeLists: SF.List(GenDefinitionClassPropertyAttributes(property)),
+                attributeLists: SF.List(GenDefinitionClassPropertyAttributes(property, idKey, typeKey)),
                 modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
                 type: typeDeclaration,
                 explicitInterfaceSpecifier: null,
@@ -753,7 +754,7 @@ namespace DataWF.Web.CodeGenerator
                );
         }
 
-        private IEnumerable<AttributeListSyntax> GenDefinitionClassPropertyAttributes(JsonProperty property)
+        private IEnumerable<AttributeListSyntax> GenDefinitionClassPropertyAttributes(JsonProperty property, JsonProperty idKey, JsonProperty typeKey)
         {
             if (property.IsReadOnly
                 || (property.ExtensionData != null && property.ExtensionData.TryGetValue("readOnly", out var isReadOnly) && (bool)isReadOnly)
@@ -774,6 +775,24 @@ namespace DataWF.Web.CodeGenerator
                                      SF.IdentifierName("JsonProperty")).WithArgumentList(
                                      SF.AttributeArgumentList(SF.SingletonSeparatedList(
                                          SF.AttributeArgument(SF.ParseExpression($"NullValueHandling = NullValueHandling.Include")))))));
+            }
+            if (property == typeKey)
+            {
+                yield return SF.AttributeList(
+                             SF.SingletonSeparatedList(
+                                 SF.Attribute(
+                                     SF.IdentifierName("JsonProperty")).WithArgumentList(
+                                     SF.AttributeArgumentList(SF.SingletonSeparatedList(
+                                         SF.AttributeArgument(SF.ParseExpression($"Order = -3")))))));
+            }
+            if (property == idKey)
+            {
+                yield return SF.AttributeList(
+                             SF.SingletonSeparatedList(
+                                 SF.Attribute(
+                                     SF.IdentifierName("JsonProperty")).WithArgumentList(
+                                     SF.AttributeArgumentList(SF.SingletonSeparatedList(
+                                         SF.AttributeArgument(SF.ParseExpression($"Order = -2")))))));
             }
 
         }
