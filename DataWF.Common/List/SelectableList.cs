@@ -120,7 +120,9 @@ namespace DataWF.Common
         #region Use Index
         IEnumerable ISelectable.Select(IQuery query)
         {
-            return ListHelper.Select(items, query, indexes);
+            return query is Query<T> typed
+                ? Select(typed)
+                : ListHelper.Select(items, query, indexes);
         }
 
         public IEnumerable<T> Select(Query<T> query)
@@ -203,9 +205,9 @@ namespace DataWF.Common
             get { return items == null; }
         }
 
-        public virtual void OnListChanged(NotifyCollectionChangedEventArgs args)
+        public virtual void OnListChanged(NotifyCollectionChangedEventArgs e)
         {
-            CollectionChanged?.Invoke(this, args);
+            CollectionChanged?.Invoke(this, e);
             OnPropertyChanged(nameof(SyncRoot));
         }
 
@@ -282,16 +284,15 @@ namespace DataWF.Common
         {
             if (propertyHandler != null)
             {
-                for (int i = 0; i < items.Count; i++)
+                foreach (var item in this)
                 {
-                    var item = items[i];
                     if (item is IContainerNotifyPropertyChanged containered && containered.Container == this)
                     {
                         containered.Container = null;
                     }
-                    else
+                    else if (item is INotifyPropertyChanged notify)
                     {
-                        ((INotifyPropertyChanged)item).PropertyChanged -= propertyHandler;
+                        notify.PropertyChanged -= propertyHandler;
                     }
                 }
             }
@@ -371,17 +372,22 @@ namespace DataWF.Common
 
         int IList.Add(object item)
         {
-            Add((T)item);
-            return IndexOf(item);
+            return Add((T)item);
         }
 
-        public virtual void Add(T item)
+        void ICollection<T>.Add(T item)
+        {
+            Add(item);
+        }
+
+        public virtual int Add(T item)
         {
             int index = AddInternal(item);
             if (index >= 0)
             {
                 OnListChanged(NotifyCollectionChangedAction.Add, item, index);
             }
+            return index;
         }
 
         public virtual void RemoveInternal(T item, int index)

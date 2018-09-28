@@ -6,32 +6,21 @@ namespace DataWF.Common
 {
     public class QueryParameterList<T> : NamedList<QueryParameter<T>>
     {
-        private bool suspend;
-
         public QueryParameterList()
         {
         }
 
-        public QueryParameterList(IEnumerable<QueryParameter<T>> items) : this()
+        public QueryParameterList(Query<T> query)
+        {
+            Query = query;
+        }
+
+        public QueryParameterList(Query<T> query, IEnumerable<QueryParameter<T>> items) : this(query)
         {
             AddRange(items);
         }
 
-        public bool Suspending
-        {
-            get => suspend;
-            set
-            {
-                if (suspend != value)
-                {
-                    suspend = value;
-                    if (!suspend)
-                    {
-                        OnListChanged(NotifyCollectionChangedAction.Reset);
-                    }
-                }
-            }
-        }
+        public Query<T> Query { get; set; }
 
         public void Remove(string property)
         {
@@ -61,30 +50,24 @@ namespace DataWF.Common
 
         public override void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (Suspending)
-            {
-                return;
-            }
             base.OnItemPropertyChanged(sender, e);
+            Query.OnParametersChanged(sender, e);
         }
 
-        public override void OnListChanged(NotifyCollectionChangedEventArgs args)
+        public override void OnListChanged(NotifyCollectionChangedEventArgs e)
         {
-            if (Suspending)
-            {
-                return;
-            }
-            base.OnListChanged(args);
+            base.OnListChanged(e);
+            Query.OnParametersChanged(this, e);
         }
 
         public void ClearValues()
         {
-            Suspending = true;
+            Query.Suspending = true;
             foreach (var item in this)
             {
                 item.Value = null;
             }
-            Suspending = false;
+            Query.Suspending = false;
         }
     }
 }

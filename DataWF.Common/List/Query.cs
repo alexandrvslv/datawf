@@ -1,5 +1,7 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 
@@ -9,6 +11,7 @@ namespace DataWF.Common
     {
         private QueryParameterList<T> parameters;
         private QueryOrdersList<T> orders;
+        private bool suspend;
 
         public Query()
         { }
@@ -18,16 +21,69 @@ namespace DataWF.Common
             Parameters.AddRange(parameters);
         }
 
+        public bool Suspending
+        {
+            get => suspend;
+            set
+            {
+                if (suspend != value)
+                {
+                    suspend = value;
+                    if (!suspend)
+                    {
+                        OnParametersChanged(Parameters, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+                    }
+                }
+            }
+        }
+
         public QueryParameterList<T> Parameters
         {
-            get { return parameters ?? (parameters = new QueryParameterList<T>()); }
-            set { parameters = value; }
+            get { return parameters ?? (Parameters = new QueryParameterList<T>(this)); }
+            set
+            {
+                if (parameters != value)
+                {
+                    parameters = value;
+                    if (parameters != null)
+                    {
+                        parameters.Query = this;
+                    }
+                }
+            }
         }
 
         public QueryOrdersList<T> Orders
         {
-            get { return orders ?? (orders = new QueryOrdersList<T>()); }
-            set { orders = value; }
+            get { return orders ?? (Orders = new QueryOrdersList<T>(this)); }
+            set
+            {
+                if (orders != value)
+                {
+                    orders = value;
+                    if (orders != null)
+                    {
+                        orders.Query = this;
+                    }
+                }
+            }
+        }
+
+        public event EventHandler OrdersChanged;
+
+        public event EventHandler ParametersChanged;
+
+        internal void OnOrdersChanged(object sender, EventArgs e)
+        {
+            OrdersChanged?.Invoke(sender, e);
+        }
+
+        internal void OnParametersChanged(object sender, EventArgs e)
+        {
+            if (!Suspending)
+            {
+                ParametersChanged?.Invoke(sender, e);
+            }
         }
 
         IEnumerable<IQueryParameter> IQuery.Parameters
@@ -40,9 +96,9 @@ namespace DataWF.Common
             get { return Orders; }
         }
 
-        public bool IsNotEmpty
+        public bool IsEnabled
         {
-            get { return parameters.Any(p => p.IsEnabled); }
+            get { return Parameters.Any(p => p.IsEnabled); }
         }
 
         public void Clear()
@@ -134,19 +190,25 @@ namespace DataWF.Common
             }
         }
 
-        public string Format()
+        public string Format(bool ckeckEmpty = true)
         {
             var logic = false;
             var builder = new StringBuilder();
-            foreach (var parametr in Parameters)
+            foreach (var parametr in GetEnabled())
             {
-                if (parametr.IsEnabled && !parametr.IsEmptyFormat)
+                if (ckeckEmpty && parametr.FormatEmpty)
                 {
-                    parametr.Format(builder, logic);
-                    logic = true;
+                    continue;
                 }
+                parametr.Format(builder, logic);
+                logic = true;
             }
             return builder.ToString();
+        }
+
+        public IEnumerable<QueryParameter<T>> GetEnabled()
+        {
+            return Parameters.Where(p => p.IsEnabled);
         }
 
         void IQuery.Sort(IList list)

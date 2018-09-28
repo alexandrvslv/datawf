@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -6,7 +7,6 @@ using System.Linq;
 
 namespace DataWF.Common
 {
-
     public class SelectableListView<T> : SelectableList<T>, IFilterable<T>
     {
         protected NotifyCollectionChangedEventHandler _listChangedHandler;
@@ -15,6 +15,7 @@ namespace DataWF.Common
 
         protected IEnumerable source;
         protected ISelectable selectableSource;
+        private string tempParameters;
 
         public SelectableListView() : this(new Query<T>())
         {
@@ -61,7 +62,6 @@ namespace DataWF.Common
                 selectableSource.CollectionChanged += _listChangedHandler;
                 selectableSource.ItemPropertyChanged += _listItemChangedHandler;
             }
-
             UpdateFilter();
         }
 
@@ -74,56 +74,59 @@ namespace DataWF.Common
                 {
                     if (query != null)
                     {
-                        query.Parameters.ItemPropertyChanged -= FilterPropertyChanged;
-                        query.Parameters.CollectionChanged -= FilterCollectionChanged;
-                        query.Orders.ItemPropertyChanged -= FilterPropertyChanged;
-                        query.Orders.CollectionChanged -= OrdersCollectionChanged;
+                        query.ParametersChanged -= ParametersChanged;
+                        query.OrdersChanged -= OrdersChanged;
                     }
                     query = value;
                     if (query != null)
                     {
-                        query.Parameters.ItemPropertyChanged += FilterPropertyChanged;
-                        query.Parameters.CollectionChanged += FilterCollectionChanged;
-                        query.Orders.ItemPropertyChanged += FilterPropertyChanged;
-                        query.Orders.CollectionChanged += OrdersCollectionChanged;
+                        query.ParametersChanged += ParametersChanged;
+                        query.OrdersChanged += OrdersChanged;
                     }
                 }
             }
         }
 
-        private void OrdersCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void OrdersChanged(object sender, EventArgs args)
         {
-            if (e.Action == NotifyCollectionChangedAction.Add
-                || e.Action == NotifyCollectionChangedAction.Remove
-                || e.Action == NotifyCollectionChangedAction.Reset)
+            if (args is NotifyCollectionChangedEventArgs e)
             {
-                comparer = null;
-                ApplySort((IComparer<T>)FilterQuery.GetComparer());
-            }
-        }
-
-        private void FilterCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (e.Action == NotifyCollectionChangedAction.Add
-                || e.Action == NotifyCollectionChangedAction.Remove
-                || e.Action == NotifyCollectionChangedAction.Reset)
-            {
-                UpdateFilter();
-            }
-        }
-
-        private void FilterPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            switch (e.PropertyName)
-            {
-                case nameof(QueryParameter<T>.IsEnabled):
-                case nameof(QueryParameter<T>.Value):
-                    UpdateFilter();
-                    break;
-                case nameof(InvokerComparer<T>.Direction):
+                if (e.Action == NotifyCollectionChangedAction.Add
+                    || e.Action == NotifyCollectionChangedAction.Remove
+                    || e.Action == NotifyCollectionChangedAction.Reset)
+                {
                     comparer = null;
                     ApplySort((IComparer<T>)FilterQuery.GetComparer());
-                    break;
+                }
+            }
+            else if (args is PropertyChangedEventArgs p)
+            {
+                if (p.PropertyName == nameof(InvokerComparer<T>.Direction))
+                {
+                    comparer = null;
+                    ApplySort((IComparer<T>)FilterQuery.GetComparer());
+                }
+            }
+        }
+
+        private void ParametersChanged(object sender, EventArgs args)
+        {
+            if (args is NotifyCollectionChangedEventArgs e)
+            {
+                if (e.Action == NotifyCollectionChangedAction.Add
+                    || e.Action == NotifyCollectionChangedAction.Remove
+                    || e.Action == NotifyCollectionChangedAction.Reset)
+                {
+                    CheckUpdateFilter(sender, args);
+                }
+            }
+            else if (args is PropertyChangedEventArgs p)
+            {
+                if (p.PropertyName == nameof(QueryParameter<T>.IsEnabled)
+                    || p.PropertyName == nameof(QueryParameter<T>.Value))
+                {
+                    CheckUpdateFilter(sender, args);
+                }
             }
         }
 
@@ -134,23 +137,25 @@ namespace DataWF.Common
 
         IQuery IFilterable.FilterQuery => FilterQuery;
 
+        public event EventHandler FilterChanged;
+
         public override object NewItem()
         {
             return selectableSource?.NewItem() ?? base.NewItem();
         }
 
-        public override void Add(T item)
+        public override int Add(T item)
         {
             if (selectableSource != null && !selectableSource.Contains(item))
             {
                 selectableSource.Add(item);
                 if (_listChangedHandler != null)
                 {
-                    return;
+                    return -1;
                 }
             }
 
-            base.Add(item);
+            return base.Add(item);
         }
 
         protected void UpdateInternal(IEnumerable<T> list)
@@ -161,7 +166,9 @@ namespace DataWF.Common
                 return;
             }
             foreach (T item in list)
+            {
                 InsertInternal(items.Count, item);
+            }
 
             if (comparer == null || comparer is InvokerComparerList<T>)
             {
@@ -171,9 +178,25 @@ namespace DataWF.Common
 
         }
 
+        public virtual void CheckUpdateFilter(object sender, EventArgs e)
+        {
+            var parameters = query.Format(false);
+            if (tempParameters?.Equals(parameters, StringComparison.Ordinal) ?? false)
+            {
+                return;
+            }
+            else
+            {
+                tempParameters = parameters;
+            }
+            UpdateFilter();
+            FilterChanged?.Invoke(sender, e);
+        }
+
         public virtual void UpdateFilter()
         {
-            UpdateInternal(source == null ? null : ListHelper.Select<T>(source.TypeOf<T>(), query, selectableSource is ISelectable<T> gSelectable ? gSelectable.Indexes : null));
+            var indexes = selectableSource is ISelectable<T> gSelectable ? gSelectable.Indexes : null;
+            UpdateInternal(source == null ? null : ListHelper.Select<T>(source.TypeOf<T>(), query, indexes));
             OnListChanged(NotifyCollectionChangedAction.Reset);
         }
 

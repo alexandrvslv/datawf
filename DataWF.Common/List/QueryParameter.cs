@@ -17,6 +17,8 @@ namespace DataWF.Common
         private IInvoker invoker;
         private object typedValue;
         private bool isEnabled = true;
+        private bool groupBegin = false;
+        private bool groupEnd = false;
         private bool emptyFormat;
 
         public QueryParameter()
@@ -52,6 +54,11 @@ namespace DataWF.Common
             }
         }
 
+        public string FormatName
+        {
+            get; set;
+        }
+
         [JsonIgnore, XmlIgnore]
         public IInvoker Invoker
         {
@@ -76,7 +83,7 @@ namespace DataWF.Common
             }
         }
 
-        public bool IsEmptyFormat
+        public bool FormatEmpty
         {
             get
             {
@@ -126,7 +133,7 @@ namespace DataWF.Common
             {
                 builder.Append($" {Logic.Format()} ");
             }
-            builder.Append($"{Name} {Comparer.Format()} {FormatValue()}");
+            builder.Append($"{(GroupBegin ? "(" : "")}{FormatName ?? Name} {Comparer.Format()} {FormatValue()}{(GroupEnd ? ")" : "")}");
         }
 
         private string FormatValue()
@@ -170,6 +177,11 @@ namespace DataWF.Common
                 }
             }
         }
+
+        public bool GroupBegin { get => groupBegin; set => groupBegin = value; }
+
+        public bool GroupEnd { get => groupEnd; set => groupEnd = value; }
+
 
         [JsonIgnore, XmlIgnore]
         public IComparer Comparision { get; set; }

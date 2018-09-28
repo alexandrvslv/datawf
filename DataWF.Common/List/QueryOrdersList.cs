@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 
 namespace DataWF.Common
@@ -9,10 +10,17 @@ namespace DataWF.Common
         {
         }
 
-        public QueryOrdersList(IEnumerable<InvokerComparer<T>> items) : this()
+        public QueryOrdersList(Query<T> query)
+        {
+            Query = query;
+        }
+
+        public QueryOrdersList(Query<T> query, IEnumerable<InvokerComparer<T>> items) : this(query)
         {
             AddRange(items);
         }
+
+        public Query<T> Query { get; set; }
 
         public void Remove(string property)
         {
@@ -43,6 +51,18 @@ namespace DataWF.Common
             }
             item.Direction = sortDirection;
             return item;
+        }
+
+        public override void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            base.OnItemPropertyChanged(sender, e);
+            Query.OnOrdersChanged(sender, e);
+        }
+
+        public override void OnListChanged(NotifyCollectionChangedEventArgs e)
+        {
+            base.OnListChanged(e);
+            Query.OnOrdersChanged(this, e);
         }
     }
 }
