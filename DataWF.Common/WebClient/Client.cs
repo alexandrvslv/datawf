@@ -23,12 +23,21 @@ namespace DataWF.Common
         public Invoker<T, int?> TypeInvoker { get; }
         public int TypeId { get; }
         public Type ItemType { get { return typeof(T); } }
-
         public SelectableList<T> Items { get; set; } = new SelectableList<T>();
-
-        public virtual T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, T item, Dictionary<PropertySerializationInfo, object> dictionary = null, object id = null)
+        public bool IsSynchronized
         {
-            dictionary = dictionary ?? new Dictionary<PropertySerializationInfo, object>();
+            get => Items.IsSynchronized;
+            set
+            {
+                Items.IsSynchronized = value;
+                Status = value ? ClientStatus.Compleate : ClientStatus.None;
+            }
+        }
+
+
+        public virtual T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, T item, object id = null)
+        {
+            var add = item != null && !Items.Contains(item);
             var property = (PropertySerializationInfo)null;
             while (jreader.Read() && jreader.TokenType != JsonToken.EndObject)
             {
@@ -36,78 +45,69 @@ namespace DataWF.Common
                 {
                     property = SerializationInfo.GetProperty((string)jreader.Value);
                 }
-                else if (property != null)
+                else
                 {
+                    object value = null;
                     if (jreader.TokenType == JsonToken.StartObject)
                     {
-                        dictionary[property] = DeserializeObject(serializer, jreader, property.DataType);
+                        var obj = item == null ? null : property?.Invoker.GetValue(item);
+                        value = DeserializeObject(serializer, jreader, property?.DataType, obj);
                     }
                     else if (jreader.TokenType == JsonToken.StartArray)
                     {
-                        var list = item == null ? null : (IList)property.Invoker.GetValue(item);
-                        dictionary[property] = DeserializeArray(serializer, jreader, property.DataType, list);
+                        var list = item == null ? null : (IList)property?.Invoker.GetValue(item);
+                        value = DeserializeArray(serializer, jreader, property?.DataType, list);
                     }
                     else
                     {
-                        var value = dictionary[property] = serializer.Deserialize(jreader, property.DataType);
+                        value = serializer.Deserialize(jreader, property?.DataType);
+                    }
+                    if (property != null)
+                    {
+                        if (property.Name == TypeInvoker?.Name && value != null)
+                        {
+                            var typeId = (int)value;
+                            if (typeId != TypeId)
+                            {
+                                var client = Provider.GetClient(typeof(T), typeId);
+                                return (T)client.DeserializeItem(serializer, jreader, item, id);
+                            }
+                            continue;
+                        }
                         if (property.Name == IdInvoker?.Name)
                         {
                             id = value;
-                            if (item != null)
+                            if (item == null)
                             {
-                                IdInvoker.SetValue(item, id);
+                                item = Select((K)id);
                             }
-                        }
-                        else if (property.Name == TypeInvoker?.Name)
-                        {
-                            if (value != null)
+                            if (item == null)
                             {
-                                var typeId = (int)value;
-
-                                if (typeId != TypeId)
+                                item = new T();
+                                add = true;
+                            }
+                            IdInvoker.SetValue(item, id);
+                            if (add)
+                            {
+                                Items.Add(item);
+                                if (TypeId != 0)
                                 {
-                                    var client = Provider.GetClient(typeof(T), typeId);
-                                    return (T)client.DeserializeItem(serializer, jreader, item, dictionary, id);
+                                    var baseClient = GetBaseClient();
+                                    baseClient.Add(item);
                                 }
                             }
+                            continue;
                         }
+                        if (item == null)
+                        {
+                            throw new Exception("Wrong Json properties sequence!");
+                        }
+
+                        property.Invoker.SetValue(item, value);
                     }
                 }
             }
-            return DeserializeItem(item, dictionary, id);
-        }
 
-        public virtual T DeserializeItem(T item, Dictionary<PropertySerializationInfo, object> dictionary, object id)
-        {
-            var add = item != null && !Items.Contains(item);
-
-            if (id != null && item == null)
-            {
-                item = Select((K)id);
-            }
-
-            if (item == null)
-            {
-                item = new T();
-                IdInvoker.SetValue(item, id);
-                add = true;
-            }
-
-            foreach (var entry in dictionary)
-            {
-                entry.Key.Invoker.SetValue(item, entry.Value);
-            }
-
-            if (add)
-            {
-                Items.Add(item);
-                if (TypeId != 0)
-                {
-                    var baseClient = GetBaseClient();
-                    baseClient.Add(item);
-                }
-
-            }
             if (item is ISynchronized isSynch)
             {
                 isSynch.IsSynchronized = true;
@@ -115,9 +115,9 @@ namespace DataWF.Common
             return item;
         }
 
-        public object DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, object item, Dictionary<PropertySerializationInfo, object> dictionary, object id)
+        public object DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, object item, object id)
         {
-            return DeserializeItem(serializer, jreader, item as T, dictionary, id);
+            return DeserializeItem(serializer, jreader, item as T, id);
         }
 
         public override R DeserializeObject<R>(JsonSerializer serializer, JsonTextReader jreader, R item)
@@ -201,7 +201,7 @@ namespace DataWF.Common
 
         public virtual Task<List<T>> GetAsync(CancellationToken cancellationToken)
         {
-            Items.IsSynchronized = true;
+            IsSynchronized = true;
             return Task.FromResult<List<T>>(null);
         }
 

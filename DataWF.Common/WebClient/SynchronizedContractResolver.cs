@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections;
+using System.Linq;
 using System.Reflection;
 
 namespace DataWF.Common
@@ -15,17 +16,33 @@ namespace DataWF.Common
             JsonProperty property = base.CreateProperty(member, memberSerialization);
 
             if (!property.Ignored
-                && property.NullValueHandling != null
-                && TypeHelper.IsInterface(property.DeclaringType, typeof(ISynchronized))
-                && !TypeHelper.IsInterface(property.PropertyType, typeof(IList)))//TODO Check List
+                && property.NullValueHandling != null)
             {
-                var propertyName = property.PropertyName;
-                property.ShouldSerialize =
-                    instance =>
+                if (TypeHelper.IsInterface(property.DeclaringType, typeof(ISynchronized)))
+                {
+                    var propertyName = property.PropertyName;
+
+                    if (!TypeHelper.IsEnumerable(property.PropertyType))
                     {
-                        var e = (ISynchronized)instance;
-                        return e.Changes.Contains(propertyName);
-                    };
+                        property.ShouldSerialize =
+                            instance =>
+                            {
+                                var e = (ISynchronized)instance;
+                                return e.Changes.Contains(propertyName);
+                            };
+                    }
+                    else if (TypeHelper.IsInterface(TypeHelper.GetItemType(property.PropertyType), typeof(ISynchronized)))
+                    {
+
+                        var propertyInvoker = EmitInvoker.Initialize(property.DeclaringType, propertyName);
+                        property.ShouldSerialize =
+                            instance =>
+                            {
+                                var collection = (IEnumerable)propertyInvoker.GetValue(instance);
+                                return collection != null && collection.TypeOf<ISynchronized>().Any(p => !(p.IsSynchronized ?? false));
+                            };
+                    }
+                }
             }
 
             return property;

@@ -23,7 +23,7 @@ namespace DataWF.Common
             writer.WriteStartArray();
             foreach (var item in (IEnumerable)value)
             {
-                if (item is ISynchronized isSynch && isSynch.IsSynchronized == true)
+                if (item is ISynchronized isSynch && (isSynch.IsSynchronized ?? false))
                 {
                     continue;
                 }

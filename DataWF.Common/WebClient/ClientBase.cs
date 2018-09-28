@@ -332,7 +332,15 @@ namespace DataWF.Common
             {
                 while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
                 {
-                    items.Add(client.DeserializeItem(serializer, jreader, null));
+                    var item = client.DeserializeItem(serializer, jreader, null);
+                    if (item == null)
+                    {
+                        continue;
+                    }
+                    if (list == null || !list.Contains(item))
+                    {
+                        items.Add(item);
+                    }
                 }
             }
             else
@@ -355,6 +363,17 @@ namespace DataWF.Common
             }
 
             return serializer.Deserialize<R>(jreader);
+        }
+
+        public virtual object DeserializeObject(JsonSerializer serializer, JsonTextReader jreader, Type type, object item)
+        {
+            var client = Provider.GetClient(type);
+            if (client != null)
+            {
+                return client.DeserializeItem(serializer, jreader, item);
+            }
+
+            return serializer.Deserialize(jreader, type);
         }
 
         public Dictionary<string, IEnumerable<string>> GetHeaders(HttpResponseMessage response)

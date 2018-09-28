@@ -25,6 +25,7 @@ namespace DataWF.Common
 
     public interface ICRUDClient : IClient
     {
+        bool IsSynchronized { get; set; }
         Type ItemType { get; }
         int TypeId { get; }
         void Add(object item);
@@ -38,7 +39,7 @@ namespace DataWF.Common
         Task GetAsync(object id);
         Task PostAsync(object value);
         Task PutAsync(object value);
-        object DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, object item = null, Dictionary<PropertySerializationInfo, object> dictionary = null, object id = null);
+        object DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, object item = null, object id = null);
         object NewItem();
     }
 
@@ -53,7 +54,7 @@ namespace DataWF.Common
         Task<T> PostAsync(T value, CancellationToken cancellationToken);
         Task<T> PutAsync(T value, CancellationToken cancellationToken);
         Task<bool> DeleteAsync(object id, CancellationToken cancellationToken);
-        T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, T item, Dictionary<PropertySerializationInfo, object> dictionary = null, object id = null);
+        T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, T item, object id = null);
     }
 
     public interface IFileClient
