@@ -339,43 +339,31 @@ namespace DataWF.Common
         public static IEnumerable<T> Select<T>(IEnumerable<T> items, Query<T> query, ListIndexes<T> indexes = null)
         {
             IEnumerable<T> buffer = items;
-            if (query.Parameters.Count == 1)
+            bool? flag = null;
+            foreach (var parameter in query.GetEnabled())
             {
-                buffer = Select<T>(items, query.Parameters[0], indexes);
-            }
-            else
-            {
-                bool? flag = null;
-                foreach (var parameter in query.Parameters)
+                var temp = Select<T>(items, parameter, indexes);
+                if (flag == null)
                 {
-                    if (!parameter.IsEnabled)
-                    {
-                        continue;
-                    }
-                    var temp = Select<T>(items, parameter, indexes);
-                    if (flag == null)
-                    {
-                        buffer = temp;
-                        flag = true;
-                    }
-                    else if (parameter.Logic.Type == LogicTypes.Undefined)
-                    {
-                        buffer = buffer.Concat(temp);
-                    }
-                    else if (parameter.Logic.Type == LogicTypes.Or)
-                    {
-                        buffer = parameter.Logic.Not
-                                          ? buffer.Except(temp)
-                                          : buffer.Union(temp);
-                    }
-                    else if (parameter.Logic.Type == LogicTypes.And)
-                    {
-                        buffer = parameter.Logic.Not
-                                          ? buffer.Except(temp).Union(temp.Except(buffer))
-                                          : buffer.Intersect(temp);
-                    }
+                    buffer = temp;
+                    flag = true;
                 }
-
+                else if (parameter.Logic.Type == LogicTypes.Undefined)
+                {
+                    buffer = buffer.Concat(temp);
+                }
+                else if (parameter.Logic.Type == LogicTypes.Or)
+                {
+                    buffer = parameter.Logic.Not
+                                      ? buffer.Except(temp)
+                                      : buffer.Union(temp);
+                }
+                else if (parameter.Logic.Type == LogicTypes.And)
+                {
+                    buffer = parameter.Logic.Not
+                                      ? buffer.Except(temp).Union(temp.Except(buffer))
+                                      : buffer.Intersect(temp);
+                }
             }
             return buffer;
         }
@@ -392,30 +380,34 @@ namespace DataWF.Common
 
         public static IEnumerable Select(IEnumerable items, IQuery query, IListIndexes indexes = null)
         {
-            if (query.Parameters.Count() == 0)
+            var buffer = items.OfType<object>();
+            bool? flag = null;
+            foreach (var parameter in query.Parameters.Where(p => p.IsEnabled))
             {
-                foreach (var item in items)
+                var temp = Select(items, parameter, indexes).OfType<object>();
+                if (flag == null)
                 {
-                    yield return item;
+                    buffer = temp;
+                    flag = true;
+                }
+                else if (parameter.Logic.Type == LogicTypes.Undefined)
+                {
+                    buffer = buffer.Concat(temp);
+                }
+                else if (parameter.Logic.Type == LogicTypes.Or)
+                {
+                    buffer = parameter.Logic.Not
+                                      ? buffer.Except(temp)
+                                      : buffer.Union(temp);
+                }
+                else if (parameter.Logic.Type == LogicTypes.And)
+                {
+                    buffer = parameter.Logic.Not
+                                      ? buffer.Except(temp).Union(temp.Except(buffer))
+                                      : buffer.Intersect(temp);
                 }
             }
-            else if (query.Parameters.Count() == 1)
-            {
-                foreach (var item in Select(items, query.Parameters.First(), indexes))
-                {
-                    yield return item;
-                }
-            }
-            else
-            {
-                foreach (var item in items)
-                {
-                    if (CheckItem(item, query))
-                    {
-                        yield return item;
-                    }
-                }
-            }
+            return buffer;
         }
 
         public static IEnumerable Select(IEnumerable items, IQueryParameter param, IListIndexes indexes = null)
