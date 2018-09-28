@@ -267,6 +267,18 @@ namespace DataWF.Module.Flow
             set { SetName(value); }
         }
 
+        public string TitleEN
+        {
+            get => GetProperty<string>();
+            set => SetProperty(value);
+        }
+
+        public string TitleRU
+        {
+            get => GetProperty<string>();
+            set => SetProperty(value);
+        }
+
         [Browsable(false)]
         [DataMember, Column("current_work_id", ColumnType = DBColumnTypes.Code)]
         public long? CurrentWorkId
