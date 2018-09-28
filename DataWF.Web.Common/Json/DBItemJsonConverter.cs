@@ -33,7 +33,7 @@ namespace DataWF.Web.Common
         public bool IsSerializeableColumn(ColumnAttributeCache column)
         {
             return column.PropertyInvoker != null
-                && (column.Attribute.Keys & DBColumnKeys.Access) != DBColumnKeys.Access
+                //&& (column.Attribute.Keys & DBColumnKeys.Access) != DBColumnKeys.Access
                 && (column.Attribute.Keys & DBColumnKeys.Password) != DBColumnKeys.Password
                 && (column.Attribute.Keys & DBColumnKeys.File) != DBColumnKeys.File;
         }
