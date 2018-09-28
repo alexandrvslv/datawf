@@ -22,10 +22,10 @@ namespace DataWF.Gui
             return SelectOne(nameof(Category.Name), CompareType.Equal, name);
         }
 
-        public override void Add(Category item)
+        public override int Add(Category item)
         {
             item.Order = items.Count;
-            base.Add(item);
+            return base.Add(item);
         }
     }
 }

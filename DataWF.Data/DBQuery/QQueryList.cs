@@ -28,10 +28,10 @@ namespace DataWF.Data
         {
         }
 
-        public override void Add(QQuery item)
+        public override int Add(QQuery item)
         {
             item.Order = Count;
-            base.Add(item);
+            return base.Add(item);
         }
 
         public override void Dispose()
