@@ -429,7 +429,10 @@ namespace DataWF.Data
 
                 //Check IsSynchronized
                 if (transaction.View?.Table == this)
+                {
                     transaction.View.IsSynchronized = true;
+                }
+
                 if (whereInd < 0)
                 {
                     IsSynchronized = true;
@@ -439,9 +442,11 @@ namespace DataWF.Data
             finally
             {
                 transaction.Reader = null;
+                RaiseLoadCompleate(transaction);
                 if (transaction.Owner == command)
+                {
                     transaction.Dispose();
-                base.RaiseLoadCompleate(new DBLoadCompleteEventArgs(transaction.View, null));
+                }
             }
         }
 

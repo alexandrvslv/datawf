@@ -501,12 +501,7 @@ namespace DataWF.Data
 
 
 
-        public static event DBExecuteDelegate Execute;
-
-        internal static void OnExecute(DBExecuteType type, string text, TimeSpan ms, object rez)
-        {
-            Execute?.Invoke(new DBExecuteEventArg { Time = ms, Query = text, Type = type, Rezult = rez });
-        }
+        
 
         public static int CompareDBTable(DBTable x, DBTable y)
         {

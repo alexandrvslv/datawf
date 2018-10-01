@@ -291,7 +291,7 @@ namespace DataWF.Data
                         }
                         catch (Exception ex)
                         {
-                            DBService.OnExecute(DBExecuteType.CreateConnection, "Get Connection", TimeSpan.Zero, ex);
+                            Helper.OnException(ex);
                             continue;
                         }
                         return connection;
@@ -312,7 +312,6 @@ namespace DataWF.Data
 
         public void CheckConnection()
         {
-            DBService.OnExecute(DBExecuteType.CheckConnection, "CheckConnection", TimeSpan.Zero, this);
             var connection = GetConnection();
             connection.Close();
         }

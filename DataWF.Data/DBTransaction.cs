@@ -85,8 +85,7 @@ namespace DataWF.Data
 
         public DBTransaction()
             : this(DBService.DefaultSchema.Connection)
-        {
-        }
+        { }
 
         public DBTransaction(DBConnection config)
             : this(config, config)
@@ -94,8 +93,7 @@ namespace DataWF.Data
 
         public DBTransaction(object owner, DBConnection config, bool noTransaction = false)
             : this(owner, config, config.GetConnection(), noTransaction)
-        {
-        }
+        { }
 
         public DBTransaction(object owner, DBConnection config, IDbConnection connection, bool noTransaction = false)
         {
@@ -105,6 +103,7 @@ namespace DataWF.Data
             Connection = connection;
             if (!noTransaction)
                 transaction = connection.BeginTransaction(config.IsolationLevel);
+            //Debug.WriteLine($"New DBTransaction owner:{owner} connection:{config} is NON{noTransaction}");
         }
 
         public object Owner { get; private set; }
@@ -258,8 +257,12 @@ namespace DataWF.Data
                     transaction = null;
                     Connection = null;
                     command = null;
+                    commands = null;
+                    ReaderColumns = null;
                     rows.Clear();
                 }
+
+                //Debug.WriteLine($"Dispose DBTransaction owner:{Owner} connection:{DbConnection}");
             }
 
         }
@@ -457,7 +460,7 @@ namespace DataWF.Data
             try
             {
                 //Debug.WriteLine(command.Connection.ConnectionString);
-                Debug.WriteLine(command.CommandText);
+                //Debug.WriteLine(command.CommandText);
                 watch.Start();
                 switch (type)
                 {
@@ -482,14 +485,21 @@ namespace DataWF.Data
             }
             finally
             {
-                DBService.OnExecute(type, command.CommandText, watch.Elapsed, buf);
+                OnExecute(type, command.CommandText, watch.Elapsed, buf);
                 if (buf is Exception)
+                {
                     throw (Exception)buf;
+                }
             }
             return buf;
         }
 
+        public event DBExecuteDelegate Execute;
 
+        internal void OnExecute(DBExecuteType type, string text, TimeSpan ms, object rez)
+        {
+            Execute?.Invoke(new DBExecuteEventArg { Time = ms, Query = text, Type = type, Rezult = rez });
+        }
     }
 }
 

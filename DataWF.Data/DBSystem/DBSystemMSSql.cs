@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
@@ -34,7 +33,6 @@ namespace DataWF.Data
 
         public override IDbConnection CreateConnection(DBConnection connection)
         {
-            DBService.OnExecute(DBExecuteType.CreateConnection, "New Connection", TimeSpan.Zero, connection.ToString());
             return new SqlConnection(GetConnectionString(connection));
         }
 
