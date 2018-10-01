@@ -17,14 +17,14 @@ namespace DataWF.TestGui
 
         public TestWindow()
         {
-            DBService.Execute += (e) =>
-            {
-                Helper.Logs.Add(new StateInfo(
-                    "DBService",
-                    "Execute" + e.Type,
-                    e.Query,
-                    e.Rezult is Exception ? StatusType.Error : StatusType.Information));
-            };
+            //DBService.Execute += (e) =>
+            //{
+            //    Helper.Logs.Add(new StateInfo(
+            //        "DBService",
+            //        "Execute" + e.Type,
+            //        e.Query,
+            //        e.Rezult is Exception ? StatusType.Error : StatusType.Information));
+            //};
 			bar.Items[0].InsertBefore(new[]{
                 new ToolItem(FilesClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Files" },
                 new ToolItem(ListEditorClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "List Editor" },

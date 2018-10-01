@@ -21,7 +21,7 @@ namespace DataWF.Test.Common
 
         public IListIndex CreateIndex()
         {
-            return new ListIndex<TestClass, int>(this);
+            return new ListIndex<TestClass, int>(this, int.MinValue);
         }
 
         public int GetValue(TestClass target)
