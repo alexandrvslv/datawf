@@ -21,7 +21,7 @@ namespace DataWF.Common
 
         public IListIndex CreateIndex()
         {
-            return new ListIndex<T, bool>(this);
+            return ListIndexFabric.Create<T, bool>(this);
         }
 
         public bool GetValue(T target)

@@ -37,7 +37,7 @@ namespace DataWF.Common
 
         public IListIndex CreateIndex()
         {
-            return new ListIndex<object, string>(this);
+            return ListIndexFabric.Create<object, string>(this);
         }
     }
 }

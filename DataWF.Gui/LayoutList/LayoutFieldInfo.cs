@@ -46,7 +46,7 @@ namespace DataWF.Gui
 
         public IListIndex CreateIndex()
         {
-            return new ListIndex<LayoutField, object>(this);
+            return new ListIndex<LayoutField, object>(this, null);
         }
 
         public object GetValue(LayoutField target)

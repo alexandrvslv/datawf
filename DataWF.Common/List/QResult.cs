@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
@@ -21,7 +18,7 @@ namespace DataWF.Common
 
         public IListIndex CreateIndex()
         {
-            return new ListIndex<object[], object>(this);
+            return ListIndexFabric.Create<object[], object>(this);
         }
 
         public object GetValue(object[] target, int index)

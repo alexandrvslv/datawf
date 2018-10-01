@@ -148,7 +148,7 @@ namespace DataWF.Data
         protected string sequenceName;
         protected bool caching = false;
         protected DBTableType type = DBTableType.Table;
-        private int block = 500;
+        protected int block = 500;
         internal object locker = new object();
         protected List<IDBVirtualTable> virtualTables = new List<IDBVirtualTable>(0);
         private DBItemType itemType;

@@ -50,7 +50,7 @@ namespace DataWF.Data
 
         public QParamList(IQItemList owner) : base(owner)
         {
-            Indexes.Add(groupInvoker);
+            //Indexes.Add(groupInvoker);
         }
     }
 

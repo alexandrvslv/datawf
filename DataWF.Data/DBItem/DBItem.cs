@@ -37,7 +37,7 @@ namespace DataWF.Data
 
     [DataContract]
     //[JsonConverter(typeof(DBItemJsonConverter))]
-    public class DBItem : ICloneable, IComparable<DBItem>, IDisposable, IAccessable, ICheck, INotifyPropertyChanged, INotifyPropertyChanging, IEditable, IStatusable, IDBTableContent
+    public class DBItem : ICloneable, IComparable<DBItem>, IDisposable, IAccessable, ICheck, INotifyPropertyChanged, INotifyPropertyChanging, IEditable, IStatusable, IDBTableContent, IPullHandler
     {
         public static readonly DBItem EmptyItem = new DBItem() { cacheToString = "Loading" };
 
@@ -1089,6 +1089,8 @@ namespace DataWF.Data
                 }
             }
         }
+
+        public int Handler { get => handler; set => handler = value; }
 
         public int CompareTo(DBItem obj)
         {

@@ -17,7 +17,7 @@ namespace DataWF.Common
 
         public DBNullable(T item)
         {
-            this.value = item;
+            value = item;
             notNull = item != null;
         }
 

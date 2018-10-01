@@ -71,7 +71,7 @@ namespace DataWF.Data
         CultureInfo cacheCulture;
         DBColumnGroup cacheGroup;
         private Pull pull;
-        private DBPullIndex index;
+        private PullIndex index;
         protected DBColumnKeys keys = DBColumnKeys.None;
         protected int size;
         protected int scale;
@@ -174,7 +174,7 @@ namespace DataWF.Data
 
         protected void CheckIndex()
         {
-            if (Index != null && Index.Pull != pull)
+            if (Index != null && Index.BasePull != pull)
             {
                 Index.Dispose();
                 index = null;
@@ -188,7 +188,7 @@ namespace DataWF.Data
                 || (Keys & DBColumnKeys.Reference) == DBColumnKeys.Reference;
             if (Index == null && build)
             {
-                Index = DBPullIndex.Fabric(Table, this);
+                Index = DBPullIndexFabric.Create(Table, this);
             }
             else if (Index != null && !build)
             {
@@ -198,7 +198,7 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
-        public DBPullIndex Index
+        public PullIndex Index
         {
             get { return index; }
             set { index = value; }
@@ -325,7 +325,7 @@ namespace DataWF.Data
                     var isNotnull1 = (keys & DBColumnKeys.Notnull) == DBColumnKeys.Notnull;
                     keys = value;
                     var isNotnull2 = (keys & DBColumnKeys.Notnull) == DBColumnKeys.Notnull;
-                    
+
                     OnPropertyChanged(nameof(Keys), isNotnull1 != isNotnull2 ? DDLType.Alter : DDLType.Default);
                 }
                 CheckIndex();

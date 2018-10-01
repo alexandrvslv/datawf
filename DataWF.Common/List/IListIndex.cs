@@ -23,7 +23,7 @@ namespace DataWF.Common
 
     public interface IListIndex<T, K> : IListIndex<T>
     {
-        T SelectOne(K value);
+        T SelectOne(K value);        
     }
 
 }

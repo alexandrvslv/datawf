@@ -24,7 +24,7 @@ using System.Data;
 
 namespace DataWF.Data
 {
-    public class QItem : IDisposable, IContainerNotifyPropertyChanged, IComparable
+    public class QItem : IDisposable, IContainerNotifyPropertyChanged, IComparable, IValued
     {
         protected int order = -1;
         protected string text;
@@ -113,7 +113,12 @@ namespace DataWF.Data
             return text;
         }
 
-        public virtual object GetValue(DBItem row = null)
+        public object GetValue()
+        {
+            return GetValue(null);
+        }
+
+        public virtual object GetValue(DBItem row)
         {
             return text;
         }
@@ -144,5 +149,7 @@ namespace DataWF.Data
         {
             return Format();
         }
+
+
     }
 }

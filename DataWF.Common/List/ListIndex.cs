@@ -1,26 +1,28 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace DataWF.Common
 {
     public class ListIndex<T, K> : IListIndex<T, K>
     {
-        public Dictionary<DBNullable<K>, List<T>> Dictionary;
-        public IInvoker<T, K> Invoker;
+        protected Dictionary<K, List<T>> Dictionary;
+        protected readonly IInvoker<T, K> Invoker;
+        protected readonly K NullKey;
 
-        public ListIndex(IInvoker<T, K> accessor)
+        public ListIndex(IInvoker<T, K> invoker, K nullKey, IEqualityComparer<K> comparer = null)
         {
-            Invoker = accessor;
-            if (typeof(K) == typeof(string))
+            NullKey = nullKey;
+            Invoker = invoker;
+            if (comparer != null)
             {
-                Dictionary = new Dictionary<DBNullable<K>, List<T>>((IEqualityComparer<DBNullable<K>>)DBNullableComparer.StringOrdinalIgnoreCase);
+                Dictionary = new Dictionary<K, List<T>>(comparer);//(IEqualityComparer<DBNullable<K>>)DBNullableComparer.StringOrdinalIgnoreCase
             }
             else
             {
-                Dictionary = new Dictionary<DBNullable<K>, List<T>>();
+                Dictionary = new Dictionary<K, List<T>>();
             }
         }
 
@@ -36,25 +38,38 @@ namespace DataWF.Common
         public void Add(T item)
         {
             var key = Invoker.GetValue(item);
-            if (!Dictionary.TryGetValue(key, out var refs))
+            CheckNull(ref key);
+            Add(item, key);
+        }
+
+        private void Add(T item, K key)
+        {
+            lock (Dictionary)
             {
-                Dictionary[key] = refs = new List<T>();
+                if (!Dictionary.TryGetValue(key, out var refs))
+                {
+                    Dictionary[key] = refs = new List<T>();
+                }
+                refs.Add(item);
             }
-            refs.Add(item);
         }
 
         public void Remove(T item)
         {
+            var key = Invoker.GetValue(item);
+            CheckNull(ref key);
+            Remove(item, key);
+        }
+
+        private void Remove(T item, K key)
+        {
             lock (Dictionary)
             {
-                var key = Invoker.GetValue(item);
                 if (!Dictionary.TryGetValue(key, out var refs) || !refs.Remove(item))
                 {
                     foreach (var entry in Dictionary)
                     {
-                        key = entry.Key;
-                        refs = entry.Value;
-                        if (refs.Remove(item))
+                        if (entry.Value.Remove(item))
                             break;
                     }
                 }
@@ -67,11 +82,11 @@ namespace DataWF.Common
 
         public T SelectOne(K key)
         {
-            Dictionary.TryGetValue(key, out var list);
-            return list == null ? default(T) : list.FirstOrDefault();
+            CheckNull(ref key);
+            return SelectOneInternal(key);
         }
 
-        public T SelectOne(DBNullable<K> key)
+        protected T SelectOneInternal(K key)
         {
             Dictionary.TryGetValue(key, out var list);
             return list == null ? default(T) : list.FirstOrDefault();
@@ -93,7 +108,7 @@ namespace DataWF.Common
             {
                 case CompareTypes.Equal:
                     {
-                        var key = DBNullable<K>.CheckNull(param.TypedValue);
+                        var key = CheckNull(param.TypedValue);
                         if (param.Comparer.Not)
                         {
                             foreach (var entry in index)
@@ -117,7 +132,7 @@ namespace DataWF.Common
                     break;
                 case CompareTypes.Greater:
                     {
-                        var key = DBNullable<K>.CheckNull(param.TypedValue);
+                        var key = CheckNull(param.TypedValue);
                         foreach (var entry in index)
 
                         {
@@ -131,7 +146,7 @@ namespace DataWF.Common
                     break;
                 case CompareTypes.GreaterOrEqual:
                     {
-                        var key = DBNullable<K>.CheckNull(param.TypedValue);
+                        var key = CheckNull(param.TypedValue);
                         foreach (var entry in index)
                         {
                             if (((IComparable)entry.Key).CompareTo(key) >= 0)
@@ -144,7 +159,7 @@ namespace DataWF.Common
                     break;
                 case CompareTypes.Less:
                     {
-                        var key = DBNullable<K>.CheckNull(param.TypedValue);
+                        var key = CheckNull(param.TypedValue);
                         foreach (var entry in index)
                         {
                             if (((IComparable)entry.Key).CompareTo(key) < 0)
@@ -157,7 +172,7 @@ namespace DataWF.Common
                     break;
                 case CompareTypes.LessOrEqual:
                     {
-                        var key = DBNullable<K>.CheckNull(param.TypedValue);
+                        var key = CheckNull(param.TypedValue);
                         foreach (var entry in index)
                         {
                             if (((IComparable)entry.Key).CompareTo(param.TypedValue) <= 0)
@@ -170,11 +185,11 @@ namespace DataWF.Common
                     break;
                 case CompareTypes.Like:
                     {
-                        var key = DBNullable<K>.CheckNull(param.TypedValue);
+                        var key = CheckNull(param.TypedValue);
                         var stringkey = key.ToString().Trim(new char[] { '%' });
                         foreach (var entry in index)
                         {
-                            if (entry.Key.NotNull && ((string)(object)entry.Key.Value).IndexOf(stringkey, StringComparison.OrdinalIgnoreCase) != -1)
+                            if (!entry.Key.Equals(entry) && (entry.Key.ToString()).IndexOf(stringkey, StringComparison.OrdinalIgnoreCase) != -1)
                             {
                                 foreach (var item in entry.Value)
                                     yield return item;
@@ -183,12 +198,11 @@ namespace DataWF.Common
                     }
                     break;
                 case CompareTypes.Is:
-                    var nullKey = DBNullable<K>.NullKey;
                     if (param.Comparer.Not)
                     {
                         foreach (var entry in index)
                         {
-                            if (!entry.Key.Equals(nullKey))
+                            if (!entry.Key.Equals(NullKey))
                             {
                                 foreach (var item in entry.Value)
                                     yield return item;
@@ -197,7 +211,7 @@ namespace DataWF.Common
                     }
                     else
                     {
-                        if (index.TryGetValue(nullKey, out var value))
+                        if (index.TryGetValue(NullKey, out var value))
                         {
                             foreach (var item in value)
                                 yield return item;
@@ -210,7 +224,7 @@ namespace DataWF.Common
                     {
                         foreach (var entry in index)
                         {
-                            if (!list.Contains(entry.Key.Value))
+                            if (!list.Contains(entry.Key))
                             {
                                 foreach (var item in entry.Value)
                                     yield return item;
@@ -221,7 +235,7 @@ namespace DataWF.Common
                     {
                         foreach (var inItem in list)
                         {
-                            if (index.TryGetValue(DBNullable<K>.CheckNull(inItem), out var value))
+                            if (index.TryGetValue(CheckNull(inItem), out var value))
                             {
                                 foreach (T item in value)
                                     yield return item;
@@ -230,6 +244,22 @@ namespace DataWF.Common
                     }
                     break;
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void CheckNull(ref K key)
+        {
+            if (EqualityComparer<K>.Default.Equals(key, default(K)))
+                key = NullKey;
+        }
+
+        private K CheckNull(object key)
+        {
+            if (key == null)
+                return NullKey;
+            if (key is K typed)
+                return EqualityComparer<K>.Default.Equals(typed, default(K)) ? NullKey : typed;
+            return NullKey;
         }
 
         public void Refresh(T item)
@@ -250,12 +280,12 @@ namespace DataWF.Common
 
         object IListIndex.SelectOne(object value)
         {
-            return SelectOne(DBNullable<K>.CheckNull(value));
+            return SelectOneInternal(CheckNull(value));
         }
 
         T IListIndex<T>.SelectOne(object value)
         {
-            return SelectOne(DBNullable<K>.CheckNull(value));
+            return SelectOneInternal(CheckNull(value));
         }
 
         public void Clear()

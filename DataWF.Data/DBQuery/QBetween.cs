@@ -17,11 +17,12 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using DataWF.Common;
 using System.Data;
 
 namespace DataWF.Data
 {
-    public class QBetween : QItem
+    public class QBetween : QItem, IBetween
     {
         private QItem value1;
         private QItem value2;
@@ -60,12 +61,22 @@ namespace DataWF.Data
             if (f1.Length == 0 || f2.Length == 0)
                 return string.Empty;
 
-            if (Query?.Table?.Schema?.System == DBSystem.MSSql 
+            if (Query?.Table?.Schema?.System == DBSystem.MSSql
                 || Query?.Table?.Schema?.System == DBSystem.Postgres
                 || Query?.Table?.Schema?.System == DBSystem.SQLite)
                 return f1 + " and " + f2;
             else
                 return string.Format("({0}, {1})", f1, f2);
+        }
+
+        public object MaxValue()
+        {
+            return Max.GetValue();
+        }
+
+        public object MinValue()
+        {
+            return Min.GetValue();
         }
 
         public QItem Min

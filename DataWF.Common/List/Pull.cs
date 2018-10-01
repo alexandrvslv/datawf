@@ -7,7 +7,9 @@ using System.Runtime.InteropServices;
 namespace DataWF.Common
 {
     public abstract class Pull
-    {
+    {            
+        private static Type[] ctorTypes = new Type[] { typeof(int) };
+
         public static Pull Fabric(Type type, int blockSize)
         {
             Type gtype = null;
@@ -19,7 +21,7 @@ namespace DataWF.Common
             {
                 gtype = typeof(Pull<>).MakeGenericType(type);
             }
-            return (Pull)EmitInvoker.CreateObject(gtype, new Type[] { typeof(int) }, new object[] { blockSize }, true);
+            return (Pull)EmitInvoker.CreateObject(gtype, ctorTypes, new object[] { blockSize }, true);
         }
 
         public static void Memset<T>(T[] array, T elem, int index)

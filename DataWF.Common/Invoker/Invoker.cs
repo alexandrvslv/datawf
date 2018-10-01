@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace DataWF.Common
 {
@@ -28,7 +25,7 @@ namespace DataWF.Common
 
         public IListIndex CreateIndex()
         {
-            return new ListIndex<T, V>(this);
+            return ListIndexFabric.Create<T, V>(this);
         }
 
         public V GetValue(T target)

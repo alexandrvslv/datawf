@@ -238,5 +238,21 @@ namespace DataWF.Common
         bool? IsSynchronized { get; set; }
         ISet<string> Changes { get; }
     }
+
+    public interface IPullHandler
+    {
+        int Handler { get; set; }
+    }
+
+    public interface IBetween
+    {
+        object MaxValue();
+        object MinValue();
+    }
+
+    public interface IValued
+    {
+        object GetValue();
+    }
 }
 

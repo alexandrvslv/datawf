@@ -74,7 +74,7 @@ namespace DataWF.Common
 
         public IListIndex CreateIndex()
         {
-            return new ListIndex<T, V>(this);
+            return ListIndexFabric.Create<T, V>(this);
         }
     }
 }
