@@ -51,7 +51,8 @@ namespace DataWF.Data
                 Password = connection.Password,
                 Host = connection.Host,
                 Database = connection.DataBase,
-                Port = (int)connection.Port
+                Port = (int)connection.Port,
+                Pooling = connection.Pool
             };
         }
 
