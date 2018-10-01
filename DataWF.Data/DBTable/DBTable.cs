@@ -615,9 +615,9 @@ namespace DataWF.Data
 
         public event EventHandler<DBLoadCompleteEventArgs> LoadComplete;
 
-        protected void RaiseLoadCompleate(DBLoadCompleteEventArgs args)
+        protected void RaiseLoadCompleate(DBTransaction transaction)
         {
-            LoadComplete?.Invoke(this, args);
+            LoadComplete?.Invoke(this, new DBLoadCompleteEventArgs(transaction.View, null));
         }
 
         public event EventHandler<DBLoadColumnsEventArgs> LoadColumns;
