@@ -326,8 +326,8 @@ namespace DataWF.Common
         {
             var itemType = TypeHelper.GetItemType(type);
             var client = Provider.GetClient(itemType);
-            var items = list ?? (IList)EmitInvoker.CreateObject(type);
-            items.Clear();
+            var items = (IList)EmitInvoker.CreateObject(type);
+
             if (client != null)
             {
                 while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
@@ -337,10 +337,7 @@ namespace DataWF.Common
                     {
                         continue;
                     }
-                    if (list == null || !list.Contains(item))
-                    {
-                        items.Add(item);
-                    }
+                    items.Add(item);
                 }
             }
             else
@@ -350,7 +347,24 @@ namespace DataWF.Common
                     items.Add(serializer.Deserialize(jreader, itemType));
                 }
             }
-
+            if (list != null)
+            {
+                foreach (var item in list)
+                {
+                    if (!items.Contains(item))
+                    {
+                        list.Remove(item);
+                    }
+                }
+                foreach (var item in items)
+                {
+                    if (!list.Contains(item))
+                    {
+                        list.Add(item);
+                    }
+                }
+                return list;
+            }
             return items;
         }
 
