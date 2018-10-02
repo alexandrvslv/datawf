@@ -18,26 +18,28 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Data;
-using DataWF.Common;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
-using System;
-using System.Collections;
-using System.Collections.Generic;
 
 namespace DataWF.Module.Common
 {
+
     [DataContract, Table("rposition", "User")]
     public class Position : DBGroupItem
     {
-        public static DBTable<Position> DBTable
-        {
-            get { return GetTable<Position>(); }
-        }
+        private static DBColumn departmentKey = DBColumn.EmptyKey;
+        private static DBColumn nameENKey = DBColumn.EmptyKey;
+        private static DBColumn nameRUKey = DBColumn.EmptyKey;
+        private static DBTable<Position> dbTable;
+
+        public static DBColumn DepartmentKey => DBTable.ParseProperty(nameof(Department), departmentKey);
+        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), nameENKey);
+        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), nameRUKey);
+        public static DBTable<Position> DBTable => dbTable ?? (dbTable = GetTable<Position>());
 
         public Position()
-        {
-        }
+        { }
 
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
@@ -49,15 +51,15 @@ namespace DataWF.Module.Common
         [DataMember, Column("department_id"), Index("rposition_department_id"), Browsable(false)]
         public int? DepartmentId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<int?>(DepartmentKey); }
+            set { SetValue(value, DepartmentKey); }
         }
 
         [Reference(nameof(DepartmentId))]
         public Department Department
         {
-            get { return GetPropertyReference<Department>(); }
-            set { SetPropertyReference(value); }
+            get { return GetReference<Department>(DepartmentKey); }
+            set { SetReference(value, DepartmentKey); }
         }
 
         [DataMember, Column("parent_id", Keys = DBColumnKeys.Group), Index("rposition_parent_id"), Browsable(false)]
@@ -89,16 +91,16 @@ namespace DataWF.Module.Common
             set { SetName(value); }
         }
 
-        public string NameRU
-        {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
-        }
-
         public string NameEN
         {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
+            get { return GetValue<string>(NameENKey); }
+            set { SetValue(value, NameENKey); }
+        }
+
+        public string NameRU
+        {
+            get { return GetValue<string>(NameRUKey); }
+            set { SetValue(value, NameRUKey); }
         }
 
         [ControllerMethod]

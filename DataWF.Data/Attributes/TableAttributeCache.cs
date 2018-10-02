@@ -117,7 +117,9 @@ namespace DataWF.Data
 
         public virtual DBTable CreateTable()
         {
-            var table = (DBTable)EmitInvoker.CreateObject(typeof(DBTable<>).MakeGenericType(ItemType));
+            var type = typeof(DBTable<>).MakeGenericType(ItemType);
+            // var logicType = ItemType.Assembly.ExportedTypes.FirstOrDefault(p => p.BaseType == type);
+            var table = (DBTable)EmitInvoker.CreateObject(type);
             table.Name = Attribute.TableName;
             table.Schema = Schema;
             return table;

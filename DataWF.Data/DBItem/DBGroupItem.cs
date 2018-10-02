@@ -46,13 +46,14 @@ namespace DataWF.Data
             return GetValue<T>(Table.GroupKey);
         }
 
-        public void SetGroupValue(object value)
+        public void SetGroupValue<T>(T value)
         {
-            if (value != null && value == PrimaryId)
+            if (value != null && value.Equals(PrimaryId))
             {
-                throw new InvalidOperationException("Self reference validation!");
+                throw new InvalidOperationException("Self reference detected!");
             }
             SetValue(value, Table.GroupKey);
+            group = DBItem.EmptyItem;
         }
 
         public T GetGroupReference<T>() where T : DBGroupItem, new()
@@ -69,9 +70,9 @@ namespace DataWF.Data
         {
             if (value != null && value.GroupId != null && value.GroupId == PrimaryId)
             {
-                throw new InvalidOperationException("Circle reference validation!");
+                throw new InvalidOperationException("Circle reference detected!");
             }
-            SetGroupValue(value?.PrimaryId);
+            SetValue(value?.PrimaryId, Table.GroupKey);
             group = value;
         }
 

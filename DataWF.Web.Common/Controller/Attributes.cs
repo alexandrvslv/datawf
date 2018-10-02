@@ -17,7 +17,7 @@ namespace DataWF.Web.Common
             var emailClaim = context.HttpContext.User?.FindFirst(ClaimTypes.Email);
             if (emailClaim != null)
                 User.SetCurrentByEmail(emailClaim.Value, true);
-            Debug.WriteLine($"{context.ActionDescriptor.DisplayName}, {User.CurrentUser}");
+            Debug.WriteLine($"{context.ActionDescriptor.DisplayName}({context.ActionDescriptor.Parameters.FirstOrDefault()?.Name}) {User.CurrentUser}");
         }
     }
 

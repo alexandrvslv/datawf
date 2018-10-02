@@ -1,11 +1,10 @@
-﻿using System;
+﻿using DataWF.Common;
+using Npgsql;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.IO;
 using System.Text;
-using DataWF.Common;
-using Npgsql;
 
 namespace DataWF.Data
 {
@@ -44,16 +43,20 @@ namespace DataWF.Data
 
         public override DbConnectionStringBuilder GetConnectionStringBuilder(DBConnection connection)
         {
-            return new NpgsqlConnectionStringBuilder()
+            var nConnection = new NpgsqlConnectionStringBuilder()
             {
                 Timeout = connection.TimeOut,
                 Username = connection.User,
                 Password = connection.Password,
                 Host = connection.Host,
                 Database = connection.DataBase,
-                Port = (int)connection.Port,
-                Pooling = connection.Pool
+                Port = (int)connection.Port
             };
+            if (connection.Pool != null)
+            {
+                nConnection.Pooling = (bool)connection.Pool;
+            }
+            return nConnection;
         }
 
         public override DbProviderFactory GetFactory()

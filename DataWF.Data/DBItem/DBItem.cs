@@ -62,7 +62,6 @@ namespace DataWF.Data
                 Build(table);
         }
 
-
         public object GetTag(DBColumn column)
         {
             return column.GetTag(handler);
@@ -589,7 +588,7 @@ namespace DataWF.Data
                 foreach (string s in temp)
                 {
                     string ts = s.Trim();
-                    string val = this.GetName(CultureInfo.GetCultureInfo(ts), @group);
+                    string val = GetValue<string>(Table.GetCultureColumn(@group, CultureInfo.GetCultureInfo(ts)));
                     if (val != null)
                         cs.Add(val, ts);
                 }
@@ -599,24 +598,12 @@ namespace DataWF.Data
 
         public string GetName([CallerMemberName] string @group = null)
         {
-            return GetName(Locale.Instance.Culture, @group);
-        }
-
-        public string GetName(CultureInfo culture, [CallerMemberName] string @group = null)
-        {
-            if (culture == null)
-                return null;
-            foreach (var column in Table.Columns.GetByGroup(@group))
-            {
-                if (column.Culture != null && column.Culture.ThreeLetterISOLanguageName == culture.ThreeLetterISOLanguageName)
-                    return GetValue<string>(column);
-            }
-            return null;
+            return GetValue<string>(Table.GetNameKey(@group));
         }
 
         public void SetName(string value, [CallerMemberName] string @group = null)
         {
-            SetName(Locale.Instance.Culture, value, @group);
+            SetValue(value, Table.GetNameKey(@group));
         }
 
         public void SetName(CultureInfo culture, string value, [CallerMemberName] string @group = null)

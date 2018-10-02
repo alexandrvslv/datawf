@@ -17,32 +17,29 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using DataWF.Common;
+using DataWF.Data;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using DataWF.Data;
-using DataWF.Common;
 using System.Runtime.Serialization;
 
 namespace DataWF.Module.Common
 {
-
     [DataContract, Table("rgroup", "User", BlockSize = 10)]
     public class UserGroup : DBItem, IDisposable, IAccessGroup
     {
+        private static DBColumn nameENKey = DBColumn.EmptyKey;
+        private static DBColumn nameRUKey = DBColumn.EmptyKey;
+        private static DBTable<UserGroup> dbTable;
+
+        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), nameENKey);
+        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), nameRUKey);
+        public static DBTable<UserGroup> DBTable => dbTable ?? (dbTable = GetTable<UserGroup>());
+
         internal static void SetCurrent()
         {
             AccessValue.Groups = UserGroup.DBTable;
-        }
-
-        public static DBTable<UserGroup> DBTable
-        {
-            get { return GetTable<UserGroup>(); }
-        }
-
-        public void AddUser(User user)
-        {
-            user.Access.SetFlag(this, AccessType.Create);
         }
 
         //[NonSerialized()]
@@ -51,8 +48,7 @@ namespace DataWF.Module.Common
         //private GroupUserList _gusers;
 
         public UserGroup()
-        {
-        }
+        { }
 
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
@@ -77,16 +73,16 @@ namespace DataWF.Module.Common
             set { SetName(value); }
         }
 
-        public string NameRU
-        {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
-        }
-
         public string NameEN
         {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
+            get { return GetValue<string>(NameENKey); }
+            set { SetValue(value, NameENKey); }
+        }
+
+        public string NameRU
+        {
+            get { return GetValue<string>(NameRUKey); }
+            set { SetValue(value, NameRUKey); }
         }
 
         [ControllerMethod]
@@ -105,6 +101,11 @@ namespace DataWF.Module.Common
                 return ((User.CurrentUser?.Super.Value ?? false))//Status == DBStatus.Actual ||
                     || (User.CurrentUser?.Access.Get(this).Create ?? false);
             }
+        }
+
+        public void AddUser(User user)
+        {
+            user.Access.SetFlag(this, AccessType.Create);
         }
 
         public override void Dispose()

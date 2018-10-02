@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using DataWF.Data;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
-using DataWF.Data;
-using DataWF.Module.Common;
 
 namespace DataWF.Module.Counterpart
 {
@@ -20,10 +15,13 @@ namespace DataWF.Module.Counterpart
     [DataContract, Table("dcustomer_address", "Customer", BlockSize = 100)]
     public class CustomerAddress : DBItem
     {
-        public static DBTable<CustomerAddress> DBTable
-        {
-            get { return GetTable<CustomerAddress>(); }
-        }
+        private static DBColumn customerKey = DBColumn.EmptyKey;
+        private static DBColumn addressKey = DBColumn.EmptyKey;
+        private static DBTable<CustomerAddress> dbTable;
+
+        public static DBColumn CustomerKey => DBTable.ParseProperty(nameof(CustomerId), customerKey);
+        public static DBColumn AddressKey => DBTable.ParseProperty(nameof(AddressId), addressKey);
+        public static DBTable<CustomerAddress> DBTable => dbTable ?? (dbTable = GetTable<CustomerAddress>());
 
         public CustomerAddress()
         {
@@ -40,30 +38,30 @@ namespace DataWF.Module.Counterpart
         [DataMember, Column("customer_id")]
         public int? CustomerId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<int?>(CustomerKey); }
+            set { SetValue(value, CustomerKey); }
         }
 
         [Reference(nameof(CustomerId))]
         public Customer Customer
         {
-            get { return GetPropertyReference<Customer>(); }
-            set { SetPropertyReference(value); }
+            get { return GetReference<Customer>(CustomerKey); }
+            set { SetReference(value, CustomerKey); }
         }
 
         [Browsable(false)]
         [DataMember, Column("address_id")]
         public int? AddressId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<int?>(AddressKey); }
+            set { SetValue(value, AddressKey); }
         }
 
         [Reference(nameof(AddressId))]
         public Address Address
         {
-            get { return GetPropertyReference<Address>(); }
-            set { SetPropertyReference(value); }
+            get { return GetReference<Address>(AddressKey); }
+            set { SetReference(value, AddressKey); }
         }
     }
 }

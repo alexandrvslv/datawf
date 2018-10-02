@@ -16,14 +16,13 @@
 // 
 //  You should have received a copy of the GNU Lesser General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+using DataWF.Common;
+using DataWF.Data;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using DataWF.Data;
-using DataWF.Common;
-using DataWF.Module.Common;
 using System.Runtime.Serialization;
-using System.Collections.Generic;
 
 namespace DataWF.Module.Counterpart
 {
@@ -57,10 +56,19 @@ namespace DataWF.Module.Counterpart
     [DataContract, Table("dpersone_indentify", "Customer", BlockSize = 100)]
     public class PersoneIdentify : DBItem
     {
-        public static DBTable<PersoneIdentify> DBTable
-        {
-            get { return GetTable<PersoneIdentify>(); }
-        }
+        private static DBColumn personeKey = DBColumn.EmptyKey;
+        private static DBColumn numberKey = DBColumn.EmptyKey;
+        private static DBColumn dateIssueKey = DBColumn.EmptyKey;
+        private static DBColumn dateExpireKey = DBColumn.EmptyKey;
+        private static DBColumn issyedByKey = DBColumn.EmptyKey;
+        private static DBTable<PersoneIdentify> dbTable;
+
+        public static DBColumn PersoneKey => DBTable.ParseProperty(nameof(PersoneId), personeKey);
+        public static DBColumn NumberKey => DBTable.ParseProperty(nameof(Number), numberKey);
+        public static DBColumn DateIssueKey => DBTable.ParseProperty(nameof(DateIssue), dateIssueKey);
+        public static DBColumn DateExpireKey => DBTable.ParseProperty(nameof(DateExpire), dateExpireKey);
+        public static DBColumn IssuedByKey => DBTable.ParseProperty(nameof(IssuedBy), issyedByKey);
+        public static DBTable<PersoneIdentify> DBTable => dbTable ?? (dbTable = GetTable<PersoneIdentify>());
 
         public PersoneIdentify()
         {
@@ -77,43 +85,43 @@ namespace DataWF.Module.Counterpart
         [DataMember, Column("persone_id")]
         public int? PersoneId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<int?>(PersoneKey); }
+            set { SetValue(value, PersoneKey); }
         }
 
         [Reference(nameof(PersoneId))]
         public Persone Persone
         {
-            get { return GetPropertyReference<Persone>(); }
-            set { SetPropertyReference(value); }
+            get { return GetReference<Persone>(PersoneKey); }
+            set { SetReference(value, PersoneKey); }
         }
 
         [DataMember, Column("identify_number", 30)]
         public string Number
         {
-            get { return GetProperty<string>(nameof(Number)); }
-            set { SetProperty(value, nameof(Number)); }
+            get { return GetValue<string>(NumberKey); }
+            set { SetValue(value, NumberKey); }
         }
 
         [DataMember, Column("date_issue")]
         public DateTime? DateIssue
         {
-            get { return GetProperty<DateTime?>(nameof(DateIssue)); }
-            set { SetProperty(value, nameof(DateIssue)); }
+            get { return GetValue<DateTime?>(DateIssueKey); }
+            set { SetValue(value, DateIssueKey); }
         }
 
         [DataMember, Column("date_expire")]
         public DateTime? DateExpire
         {
-            get { return GetProperty<DateTime?>(nameof(DateExpire)); }
-            set { SetProperty(value, nameof(DateExpire)); }
+            get { return GetValue<DateTime?>(DateExpireKey); }
+            set { SetValue(value, DateExpireKey); }
         }
 
         [DataMember, Column("issued_by")]
         public string IssuedBy
         {
-            get { return GetProperty<string>(nameof(IssuedBy)); }
-            set { SetProperty(value, nameof(IssuedBy)); }
+            get { return GetValue<string>(IssuedByKey); }
+            set { SetValue(value, IssuedByKey); }
         }
     }
 }

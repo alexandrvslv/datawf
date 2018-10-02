@@ -17,20 +17,31 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using DataWF.Data;
 using DataWF.Common;
+using DataWF.Data;
 using System;
 using System.ComponentModel;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Net;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Common
 {
+
     [DataContract, Table("rinstance", "User", BlockSize = 100)]
     public class Instance : DBItem
     {
-        public static DBTable<Instance> DBTable { get { return GetTable<Instance>(); } }
+        private static DBColumn userKey = DBColumn.EmptyKey;
+        private static DBColumn hostKey = DBColumn.EmptyKey;
+        private static DBColumn portKey = DBColumn.EmptyKey;
+        private static DBColumn activeKey = DBColumn.EmptyKey;
+        private static DBTable<Instance> dbTable;
+
+        public static DBColumn UserKey => DBTable.ParseProperty(nameof(UserId), userKey);
+        public static DBColumn HostKey => DBTable.ParseProperty(nameof(Host), hostKey);
+        public static DBColumn PortKey => DBTable.ParseProperty(nameof(Port), portKey);
+        public static DBColumn ActiveKey => DBTable.ParseProperty(nameof(Active), activeKey);
+        public static DBTable<Instance> DBTable => dbTable ?? (dbTable = GetTable<Instance>());
 
         public static Instance GetByNetId(IPEndPoint endPoint, bool create)
         {
@@ -56,8 +67,7 @@ namespace DataWF.Module.Common
         private IPEndPoint ipEndPoint;
 
         public Instance()
-        {
-        }
+        { }
 
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
@@ -69,36 +79,36 @@ namespace DataWF.Module.Common
         [DataMember, Column("user_id"), Browsable(false)]
         public int? UserId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<int?>(UserKey); }
+            set { SetValue(value, UserKey); }
         }
 
         [Reference(nameof(UserId))]
         public User User
         {
-            get { return GetPropertyReference<User>(); }
-            set { SetPropertyReference(value); }
+            get { return GetReference<User>(UserKey); }
+            set { SetReference(value, UserKey); }
         }
 
         [DataMember, Column("instance_host")]
         public string Host
         {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
+            get { return GetValue<string>(HostKey); }
+            set { SetValue(value, HostKey); }
         }
 
         [DataMember, Column("instance_port")]
         public int? Port
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<int?>(PortKey); }
+            set { SetValue(value, PortKey); }
         }
 
         [DataMember, Column("instance_active")]
         public bool? Active
         {
-            get { return GetProperty<bool?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<bool?>(ActiveKey); }
+            set { SetValue(value, ActiveKey); }
         }
 
         public IPEndPoint EndPoint

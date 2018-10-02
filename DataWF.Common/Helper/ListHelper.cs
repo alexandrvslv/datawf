@@ -426,13 +426,8 @@ namespace DataWF.Common
         public static bool CheckItem(object item, IQuery checkers)
         {
             bool? flag = null;
-            foreach (var parameter in checkers.Parameters)
+            foreach (var parameter in checkers.Parameters.Where(p => p.IsEnabled))
             {
-                if (!parameter.IsEnabled)
-                {
-                    continue;
-                }
-
                 bool rez = CheckItem(parameter.Invoker.GetValue(item), parameter.TypedValue, parameter.Comparer, parameter.Comparision);
                 if (flag == null)
                     flag = rez;

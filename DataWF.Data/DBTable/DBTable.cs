@@ -25,9 +25,11 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -123,6 +125,7 @@ namespace DataWF.Data
         protected DBCommand dmlDelete;
         protected DBLogTable logTable;
         protected DBTableGroup tableGroup;
+        protected DBColumn nameKey = DBColumn.EmptyKey;
         protected DBColumn accessKey = DBColumn.EmptyKey;
         protected DBColumn primaryKey = DBColumn.EmptyKey;
         protected DBColumn fileKey = DBColumn.EmptyKey;
@@ -197,6 +200,12 @@ namespace DataWF.Data
             return Columns[property]
                 ?? Columns.GetByProperty(property)
                 ?? Foreigns.GetByProperty(property)?.Column;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DBColumn ParseProperty(string property, DBColumn cache)
+        {
+            return cache == DBColumn.EmptyKey ? (cache = ParseProperty(property)) : cache;
         }
 
         public DBColumn ParseProperty(string property)
@@ -604,6 +613,26 @@ namespace DataWF.Data
                     reference.ReferenceTable.Table.LoadItems(sub).LastOrDefault();
                 }
             }
+        }
+
+        public DBColumn GetNameKey(string group)
+        {
+            if (group.Equals("Name", StringComparison.OrdinalIgnoreCase))
+            {
+                if (nameKey == DBColumn.EmptyKey)
+                {
+                    return nameKey = GetCultureColumn(group, Locale.Instance.Culture);
+                }
+                return nameKey;
+            }
+            return GetCultureColumn(group, Locale.Instance.Culture);
+        }
+
+        public DBColumn GetCultureColumn(string group, CultureInfo culture)
+        {
+            return Columns.GetByGroup(@group)
+                     .FirstOrDefault(column => column.Culture != null
+                     && column.Culture.ThreeLetterISOLanguageName == culture.ThreeLetterISOLanguageName);
         }
 
         public event EventHandler<DBLoadProgressEventArgs> LoadProgress;

@@ -16,11 +16,9 @@
 // 
 //  You should have received a copy of the GNU Lesser General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-using System;
+using DataWF.Data;
 using System.ComponentModel;
 using System.Runtime.Serialization;
-using DataWF.Data;
-using DataWF.Module.Common;
 
 namespace DataWF.Module.Counterpart
 {
@@ -34,10 +32,17 @@ namespace DataWF.Module.Counterpart
     [DataContract, Table("dcustomer_reference", "Customer")]
     public class CustomerReference : DBItem
     {
-        public static DBTable<CustomerReference> DBTable
-        {
-            get { return GetTable<CustomerReference>(); }
-        }
+        private static DBColumn companyKey = DBColumn.EmptyKey;
+        private static DBColumn personeKey = DBColumn.EmptyKey;
+        private static DBColumn emailKey = DBColumn.EmptyKey;
+        private static DBColumn phoneKey = DBColumn.EmptyKey;
+        private static DBTable<CustomerReference> dbTable;
+
+        public static DBColumn CompanyKey => DBTable.ParseProperty(nameof(CompanyId), companyKey);
+        public static DBColumn PersoneKey => DBTable.ParseProperty(nameof(PersoneId), personeKey);
+        public static DBColumn EMailKey => DBTable.ParseProperty(nameof(EMail), emailKey);
+        public static DBColumn PhoneKey => DBTable.ParseProperty(nameof(Phone), phoneKey);
+        public static DBTable<CustomerReference> DBTable => dbTable ?? (dbTable = GetTable<CustomerReference>());
 
         public CustomerReference()
         {
@@ -54,49 +59,52 @@ namespace DataWF.Module.Counterpart
         [DataMember, Column("company_id")]
         public int? CompanyId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<int?>(CompanyKey); }
+            set { SetValue(value, CompanyKey); }
         }
 
         [Reference(nameof(CompanyId))]
         public Company Company
         {
-            get { return GetPropertyReference<Company>(); }
-            set { SetPropertyReference(value); }
+            get { return GetReference<Company>(CompanyKey); }
+            set { SetReference(value, CompanyKey); }
         }
 
         [Browsable(false)]
         [DataMember, Column("persone_id")]
         public int? PersoneId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<int?>(PersoneKey); }
+            set { SetValue(value, PersoneKey); }
         }
 
         [Reference(nameof(PersoneId))]
         public Persone Persone
         {
-            get { return GetPropertyReference<Persone>(); }
+            get { return GetReference<Persone>(PersoneKey); }
             set
             {
-                SetPropertyReference(value);
-                EMail = Persone.EMail;
-                Phone = Persone.Phone;
+                SetReference(value, PersoneKey);
+                if (EMail == null)
+                {
+                    EMail = Persone.EMail;
+                    Phone = Persone.Phone;
+                }
             }
         }
 
         [DataMember, Column("email", 1024)]
         public string EMail
         {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
+            get { return GetValue<string>(EMailKey); }
+            set { SetValue(value, EMailKey); }
         }
 
         [DataMember, Column("phone", 1024)]
         public string Phone
         {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
+            get { return GetValue<string>(PhoneKey); }
+            set { SetValue(value, PhoneKey); }
         }
     }
 }

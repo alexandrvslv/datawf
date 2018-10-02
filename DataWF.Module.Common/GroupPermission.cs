@@ -44,6 +44,115 @@ namespace DataWF.Module.Common
             get { return GetTable<GroupPermission>(); }
         }
 
+        public static PermissionType GetPermissionType(object value, out string key)
+        {
+            key = null;
+            PermissionType type = PermissionType.GTable;
+            if (value is DBSchemaItem)
+            {
+                key = ((DBSchemaItem)value).FullName;
+                if (value is DBSchema)
+                    type = PermissionType.GSchema;
+                else if (value is DBTableGroup)
+                    type = PermissionType.GBlock;
+                else if (value is DBTable)
+                    type = PermissionType.GTable;
+                else if (value is DBColumn)
+                    type = PermissionType.GColumn;
+            }
+            else if (value is Type)
+            {
+                key = Helper.TextBinaryFormat(value);
+                type = PermissionType.GType;
+            }
+            else if (value is System.Reflection.MemberInfo)
+            {
+                key = Helper.TextBinaryFormat(value);
+                type = PermissionType.GTypeMember;
+            }
+            return type;
+        }
+
+        public static GroupPermission Get(GroupPermission group, DBSchemaItem item)
+        {
+            string code = null;
+            PermissionType type = GetPermissionType(item, out code);
+
+            var list = DBTable.Select(DBTable.CodeKey, CompareType.Equal, code).ToList();
+
+            var permission = list.FirstOrDefault();
+            if (list.Count > 1)
+            {
+                permission.Merge(list);
+            }
+
+            if (permission == null)
+            {
+                permission = new GroupPermission()
+                {
+                    Type = type,
+                    Code = code
+                };
+                permission.Attach();
+            }
+            item.Access = permission.Access;
+
+            if (group != null)
+            {
+                permission.Parent = group;
+            }
+
+            return permission;
+        }
+
+        public static void CachePermissionTableGroup(GroupPermission parent, DBTableGroup group)
+        {
+            var permission = Get(parent, group);
+
+            foreach (var subGroup in group.GetChilds())
+            {
+                CachePermissionTableGroup(permission, subGroup);
+            }
+            var tables = group.GetTables();
+            foreach (DBTable table in tables)
+            {
+                CachePermissionTable(permission, table);
+            }
+        }
+
+        public static void CachePermissionTable(GroupPermission parent, DBTable table)
+        {
+            if (table is DBLogTable || table is IDBVirtualTable)
+                return;
+            var permission = Get(parent, table);
+
+            foreach (DBColumn column in table.Columns)
+                Get(permission, column);
+        }
+
+        public static void CachePermission()
+        {
+            if (AccessValue.Groups == null || AccessValue.Groups.Count() == 0)
+                return;
+
+            foreach (DBSchema schema in DBService.Schems)
+            {
+                var permission = Get(null, schema);
+                var groups = schema.TableGroups.GetTopParents();
+
+                foreach (DBTableGroup group in groups)
+                {
+                    CachePermissionTableGroup(permission, group);
+                }
+                foreach (DBTable table in schema.Tables)
+                {
+                    if (table.Group == null)
+                        CachePermissionTable(permission, table);
+                }
+            }
+            DBTable.Save();
+        }
+
         public static GroupPermission Find(GroupPermission parent, object obj, bool generate)
         {
             var type = GetPermissionType(obj, out string code);
@@ -231,113 +340,6 @@ namespace DataWF.Module.Common
             }
         }
 
-        public static PermissionType GetPermissionType(object value, out string key)
-        {
-            key = null;
-            PermissionType type = PermissionType.GTable;
-            if (value is DBSchemaItem)
-            {
-                key = ((DBSchemaItem)value).FullName;
-                if (value is DBSchema)
-                    type = PermissionType.GSchema;
-                else if (value is DBTableGroup)
-                    type = PermissionType.GBlock;
-                else if (value is DBTable)
-                    type = PermissionType.GTable;
-                else if (value is DBColumn)
-                    type = PermissionType.GColumn;
-            }
-            else if (value is Type)
-            {
-                key = Helper.TextBinaryFormat(value);
-                type = PermissionType.GType;
-            }
-            else if (value is System.Reflection.MemberInfo)
-            {
-                key = Helper.TextBinaryFormat(value);
-                type = PermissionType.GTypeMember;
-            }
-            return type;
-        }
-
-        public static GroupPermission Get(GroupPermission group, DBSchemaItem item)
-        {
-            string code = null;
-            PermissionType type = GetPermissionType(item, out code);
-
-            var list = DBTable.Select(DBTable.CodeKey, CompareType.Equal, code).ToList();
-
-            var permission = list.FirstOrDefault();
-            if (list.Count > 1)
-            {
-                permission.Merge(list);
-            }
-
-            if (permission == null)
-            {
-                permission = new GroupPermission()
-                {
-                    Type = type,
-                    Code = code
-                };
-                permission.Attach();
-            }
-            item.Access = permission.Access;
-
-            if (group != null)
-            {
-                permission.Parent = group;
-            }
-
-            return permission;
-        }
-
-        public static void CachePermissionTableGroup(GroupPermission parent, DBTableGroup group)
-        {
-            var permission = Get(parent, group);
-
-            foreach (var subGroup in group.GetChilds())
-            {
-                CachePermissionTableGroup(permission, subGroup);
-            }
-            var tables = group.GetTables();
-            foreach (DBTable table in tables)
-            {
-                CachePermissionTable(permission, table);
-            }
-        }
-
-        public static void CachePermissionTable(GroupPermission parent, DBTable table)
-        {
-            if (table is DBLogTable || table is IDBVirtualTable)
-                return;
-            var permission = Get(parent, table);
-
-            foreach (DBColumn column in table.Columns)
-                Get(permission, column);
-        }
-
-        public static void CachePermission()
-        {
-            if (AccessValue.Groups == null || AccessValue.Groups.Count() == 0)
-                return;
-
-            foreach (DBSchema schema in DBService.Schems)
-            {
-                var permission = Get(null, schema);
-                var groups = schema.TableGroups.GetTopParents();
-
-                foreach (DBTableGroup group in groups)
-                {
-                    CachePermissionTableGroup(permission, group);
-                }
-                foreach (DBTable table in schema.Tables)
-                {
-                    if (table.Group == null)
-                        CachePermissionTable(permission, table);
-                }
-            }
-            DBTable.Save();
-        }
+        
     }
 }

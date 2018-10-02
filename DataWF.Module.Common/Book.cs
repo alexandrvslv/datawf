@@ -18,8 +18,6 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Data;
-using System.ComponentModel;
-using DataWF.Common;
 using System.Runtime.Serialization;
 
 namespace DataWF.Module.Common
@@ -27,14 +25,18 @@ namespace DataWF.Module.Common
     [DataContract, Table("rbook", "Reference Book", BlockSize = 100)]
     public class Book : DBGroupItem
     {
-        public static DBTable<Book> DBTable
-        {
-            get { return GetTable<Book>(); }
-        }
+        private static DBColumn valueKey = DBColumn.EmptyKey;
+        private static DBColumn nameENKey = DBColumn.EmptyKey;
+        private static DBColumn nameRUKey = DBColumn.EmptyKey;
+        private static DBTable<Book> dbTable;
+
+        public static DBColumn ValueKey => DBTable.ParseProperty(nameof(Value), valueKey);
+        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), nameENKey);
+        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), nameRUKey);
+        public static DBTable<Book> DBTable => dbTable ?? (dbTable = GetTable<Book>());
 
         public Book()
-        {
-        }
+        { }
 
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
@@ -71,11 +73,23 @@ namespace DataWF.Module.Common
             set { SetName(value); }
         }
 
+        public string NameEN
+        {
+            get { return GetValue<string>(NameENKey); }
+            set { SetValue(value, NameENKey); }
+        }
+
+        public string NameRU
+        {
+            get { return GetValue<string>(NameRUKey); }
+            set { SetValue(value, NameRUKey); }
+        }
+
         [DataMember, Column("book_value")]
         public string Value
         {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
+            get { return GetValue<string>(ValueKey); }
+            set { SetValue(value, ValueKey); }
         }
     }
 }

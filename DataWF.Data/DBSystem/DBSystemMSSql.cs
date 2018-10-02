@@ -53,7 +53,11 @@ namespace DataWF.Data
             }
             builder.DataSource = connection.Host + (connection.Port == 0 ? string.Empty : "," + connection.Port);
             builder.InitialCatalog = connection.DataBase;
-            builder.Pooling = connection.Pool;
+            if (connection.Pool != null)
+            {
+                builder.Pooling = connection.Pool.Value;
+            }
+
             builder.Encrypt = connection.Encrypt;
             return builder;
         }

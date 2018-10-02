@@ -7,6 +7,7 @@ using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -40,7 +41,7 @@ namespace DataWF.Data
         private string database = "";
         private string schem = "";
         private int timeout = 80;
-        private bool pool;
+        private bool? pool;
         private bool encrypt;
         private bool integrSec;
         private IsolationLevel level = IsolationLevel.ReadUncommitted;
@@ -199,7 +200,7 @@ namespace DataWF.Data
         }
 
         [Category("3. Additional")]
-        public bool Pool
+        public bool? Pool
         {
             get { return pool; }
             set
@@ -409,7 +410,7 @@ namespace DataWF.Data
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public void OnPropertyChanged(string property)
+        public void OnPropertyChanged([CallerMemberName]string property = null)
         {
             //Debug.WriteLine($"Connection set property {property} = {EmitInvoker.GetValue(GetType(), property, this)}");
             OnPropertyChanged(new PropertyChangedEventArgs(property));

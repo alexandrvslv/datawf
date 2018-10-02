@@ -18,13 +18,9 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System;
 using DataWF.Data;
 using System.ComponentModel;
-using DataWF.Common;
 using System.Runtime.Serialization;
-using System.Globalization;
-using System.Collections.Generic;
 
 namespace DataWF.Module.Counterpart
 {
@@ -47,10 +43,15 @@ namespace DataWF.Module.Counterpart
     [DataContract, Table("rlocation", "Address", BlockSize = 100)]
     public class Location : DBGroupItem
     {
-        public static DBTable<Location> DBTable
-        {
-            get { return GetTable<Location>(); }
-        }
+        private static DBTable<Location> dbTable;
+        private static DBColumn codeIKey = DBColumn.EmptyKey;
+        private static DBColumn nameENKey = DBColumn.EmptyKey;
+        private static DBColumn nameRUKey = DBColumn.EmptyKey;
+
+        public static DBColumn CodeIKey => DBTable.ParseProperty(nameof(CodeI), codeIKey);
+        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), nameENKey);
+        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), nameRUKey);
+        public static DBTable<Location> DBTable => dbTable ?? (dbTable = GetTable<Location>());
 
         public Location()
         {
@@ -79,8 +80,8 @@ namespace DataWF.Module.Counterpart
         [Index("rlocation_codei")]
         public string CodeI
         {
-            get { return GetProperty<string>(nameof(CodeI)); }
-            set { SetProperty(value, nameof(CodeI)); }
+            get { return GetValue<string>(CodeIKey); }
+            set { SetValue(value, CodeIKey); }
         }
 
         [Browsable(false)]
@@ -107,14 +108,14 @@ namespace DataWF.Module.Counterpart
 
         public string NameRU
         {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
+            get { return GetValue<string>(NameRUKey); }
+            set { SetValue(value, NameRUKey); }
         }
 
         public string NameEN
         {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
+            get { return GetValue<string>(NameENKey); }
+            set { SetValue(value, NameENKey); }
         }
 
         public Location GetParent(LocationType parenttype)

@@ -17,11 +17,10 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using DataWF.Data;
+using DataWF.Module.Common;
 using System;
 using System.ComponentModel;
-using DataWF.Data;
-using DataWF.Common;
-using DataWF.Module.Common;
 using System.Runtime.Serialization;
 
 namespace DataWF.Module.Counterpart
@@ -43,14 +42,31 @@ namespace DataWF.Module.Counterpart
     [DataContract, Table("dcustomer", "Customer", BlockSize = 100)]
     public class Customer : DBItem, IDisposable
     {
-        public static DBTable<Customer> DBTable
-        {
-            get { return GetTable<Customer>(); }
-        }
+        private static DBTable<Customer> dbTable;
+        private static DBColumn codeIKey = DBColumn.EmptyKey;
+        private static DBColumn nameENKey = DBColumn.EmptyKey;
+        private static DBColumn nameRUKey = DBColumn.EmptyKey;
+        private static DBColumn shortNameENKey = DBColumn.EmptyKey;
+        private static DBColumn shortNameRUKey = DBColumn.EmptyKey;
+        private static DBColumn emailKey = DBColumn.EmptyKey;
+        private static DBColumn phoneKey = DBColumn.EmptyKey;
+        private static DBColumn countryKey = DBColumn.EmptyKey;
+        private static DBColumn addressKey = DBColumn.EmptyKey;
+        private static DBColumn userKey = DBColumn.EmptyKey;
+
+        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), nameENKey);
+        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), nameRUKey);
+        public static DBColumn ShortNameENKey => DBTable.ParseProperty(nameof(ShortNameEN), shortNameENKey);
+        public static DBColumn ShortNameRUKey => DBTable.ParseProperty(nameof(ShortNameRU), shortNameRUKey);
+        public static DBColumn EMailKey => DBTable.ParseProperty(nameof(EMail), emailKey);
+        public static DBColumn PhoneKey => DBTable.ParseProperty(nameof(Phone), phoneKey);
+        public static DBColumn CountryKey => DBTable.ParseProperty(nameof(CountryId), countryKey);
+        public static DBColumn AddressKey => DBTable.ParseProperty(nameof(AddressId), addressKey);
+        public static DBColumn UserKey => DBTable.ParseProperty(nameof(UserId), userKey);
+        public static DBTable<Customer> DBTable => dbTable ?? (dbTable = GetTable<Customer>());
 
         public Customer()
-        {
-        }
+        { }
 
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
@@ -81,11 +97,95 @@ namespace DataWF.Module.Counterpart
             set { SetName(value); }
         }
 
+        public string ShortNameEN
+        {
+            get { return GetValue<string>(ShortNameENKey); }
+            set { SetValue(value, ShortNameENKey); }
+        }
+
+        public string ShortNameRU
+        {
+            get { return GetValue<string>(ShortNameRUKey); }
+            set { SetValue(value, ShortNameRUKey); }
+        }
+
         [DataMember, Column("name", 1024, Keys = DBColumnKeys.Culture)]
         public string Name
         {
             get { return GetName(); }
             set { SetName(value); }
+        }
+
+        public string NameEN
+        {
+            get { return GetValue<string>(NameENKey); }
+            set { SetValue(value, NameENKey); }
+        }
+
+        public string NameRU
+        {
+            get { return GetValue<string>(NameRUKey); }
+            set { SetValue(value, NameRUKey); }
+        }
+
+        [DataMember, Column("email", 1024), Index("dcustomer_email")]
+        public string EMail
+        {
+            get { return GetValue<string>(EMailKey); }
+            set { SetValue(value, EMailKey); }
+        }
+
+        [DataMember, Column("phone", 1024)]
+        public string Phone
+        {
+            get { return GetValue<string>(PhoneKey); }
+            set { SetValue(value, PhoneKey); }
+        }
+
+        [Browsable(false)]
+        [DataMember, Column("country_id")]
+        public int? CountryId
+        {
+            get { return GetValue<int?>(CountryKey); }
+            set { SetValue(value, CountryKey); }
+        }
+
+        [Reference(nameof(CountryId))]
+        public Country Country
+        {
+            get { return GetReference<Country>(CountryKey); }
+            set { SetReference(value, CountryKey); }
+        }
+
+        [Browsable(false)]
+        [DataMember, Column("address_id")]
+        public int? AddressId
+        {
+            get { return GetValue<int?>(AddressKey); }
+            set { SetValue(value, AddressKey); }
+        }
+
+        [Reference(nameof(AddressId))]
+        public Address Address
+        {
+            get { return GetReference<Address>(AddressKey); }
+            set { SetReference(value, AddressKey); }
+        }
+
+        [Browsable(false)]
+        [DataMember, Column("user_id")]
+        public int? UserId
+        {
+            get { return GetValue<int?>(UserKey); }
+            set { SetValue(value, UserKey); }
+        }
+
+        [Browsable(false)]
+        [Reference(nameof(UserId))]
+        public User User
+        {
+            get { return GetReference<User>(UserKey); }
+            set { SetReference(value, UserKey); }
         }
 
         [Browsable(false)]
@@ -94,66 +194,6 @@ namespace DataWF.Module.Counterpart
         {
             get { return GetProperty<string>(nameof(Key)); }
             set { SetProperty(value, nameof(Key)); }
-        }
-
-        [DataMember, Column("email", 1024), Index("dcustomer_email")]
-        public string EMail
-        {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
-        }
-
-        [DataMember, Column("phone", 1024)]
-        public string Phone
-        {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
-        }
-
-        [Browsable(false)]
-        [DataMember, Column("country_id")]
-        public int? CountryId
-        {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
-        }
-
-        [Reference(nameof(CountryId))]
-        public Country Country
-        {
-            get { return GetPropertyReference<Country>(); }
-            set { SetPropertyReference(value); }
-        }
-
-        [Browsable(false)]
-        [DataMember, Column("address_id")]
-        public int? AddressId
-        {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
-        }
-
-        [Reference(nameof(AddressId))]
-        public Address Address
-        {
-            get { return GetPropertyReference<Address>(); }
-            set { SetPropertyReference(value); }
-        }
-
-        [Browsable(false)]
-        [DataMember, Column("user_id")]
-        public int? UserId
-        {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
-        }
-
-        [Browsable(false)]
-        [Reference(nameof(UserId))]
-        public User User
-        {
-            get { return GetPropertyReference<User>(); }
-            set { SetPropertyReference(value); }
         }
 
 

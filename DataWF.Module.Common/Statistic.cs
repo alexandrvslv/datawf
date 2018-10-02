@@ -17,44 +17,25 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using System;
-using System.CodeDom.Compiler;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.IO;
-using System.Reflection;
 using DataWF.Data;
-using DataWF.Common;
+using System.ComponentModel;
 using System.Runtime.Serialization;
 
 namespace DataWF.Module.Common
 {
-    public class StatisticList : DBTableView<Statistic>
-    {
-        public StatisticList(string filter, DBViewKeys mode = DBViewKeys.None)
-            : base(Statistic.DBTable, filter, mode)
-        {
-            ApplySortInternal(new DBComparer(Statistic.DBTable.ParseProperty(nameof(Statistic.DateCreate)), ListSortDirection.Ascending));
-        }
-
-        public StatisticList()
-            : this(string.Empty)
-        {
-        }
-    }
-
     [DataContract, Table("dstats", "Reference Book")]
     public class Statistic : DBItem//, IComparable
     {
-        public static DBTable<Statistic> DBTable
-        {
-            get { return GetTable<Statistic>(); }
-        }
+        private static DBColumn schedulerKey = DBColumn.EmptyKey;
+        private static DBColumn resultKey = DBColumn.EmptyKey;
+        private static DBTable<Statistic> dbTable;
+
+        public static DBColumn SchedulerKey => DBTable.ParseProperty(nameof(SchedulerId), schedulerKey);
+        public static DBColumn ResultKey => DBTable.ParseProperty(nameof(Result), resultKey);
+        public static DBTable<Statistic> DBTable => dbTable ?? (dbTable = GetTable<Statistic>());
 
         public Statistic()
-        {
-        }
+        { }
 
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
@@ -81,22 +62,22 @@ namespace DataWF.Module.Common
         [DataMember, Column("scheduler_id")]
         public int? SchedulerId
         {
-            get { return GetProperty<int?>(nameof(SchedulerId)); }
-            set { SetProperty(value, nameof(SchedulerId)); }
+            get { return GetValue<int?>(SchedulerKey); }
+            set { SetValue(value, SchedulerKey); }
         }
 
         [Reference(nameof(SchedulerId))]
         public Scheduler Scheduler
         {
-            get { return GetPropertyReference<Scheduler>(); }
-            set { SetPropertyReference(value); }
+            get { return GetReference<Scheduler>(SchedulerKey); }
+            set { SetReference(value, SchedulerKey); }
         }
 
         [DataMember, Column("stat_result")]
         public decimal? Result
         {
-            get { return GetProperty<decimal?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<decimal?>(ResultKey); }
+            set { SetValue(value, ResultKey); }
         }
     }
 }

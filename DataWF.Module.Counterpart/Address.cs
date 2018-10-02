@@ -18,9 +18,8 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Data;
-using System.ComponentModel;
-using DataWF.Common;
 using System;
+using System.ComponentModel;
 using System.Runtime.Serialization;
 
 namespace DataWF.Module.Counterpart
@@ -34,14 +33,16 @@ namespace DataWF.Module.Counterpart
     [DataContract, Table("daddress", "Address", BlockSize = 100)]
     public class Address : DBItem
     {
-        public static DBTable<Address> DBTable
-        {
-            get { return GetTable<Address>(); }
-        }
+        private static DBColumn locationKey = DBColumn.EmptyKey;
+        private static DBColumn postIndexKey = DBColumn.EmptyKey;
+        private static DBTable<Address> dbTable;
+
+        public static DBColumn LocationKey => DBTable.ParseProperty(nameof(LocationId), locationKey);
+        public static DBColumn PostIndexKey => DBTable.ParseProperty(nameof(PostIndex), postIndexKey);
+        public static DBTable<Address> DBTable => dbTable ?? (dbTable = GetTable<Address>());
 
         public Address()
-        {
-        }
+        { }
 
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
@@ -54,28 +55,28 @@ namespace DataWF.Module.Counterpart
         [DataMember, Column("location_id", Keys = DBColumnKeys.View), Index("daddress_location_id")]
         public int? LocationId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<int?>(LocationKey); }
+            set { SetValue(value, LocationKey); }
         }
 
         [Reference(nameof(LocationId))]
         public Location Location
         {
-            get { return GetPropertyReference<Location>(); }
+            get { return GetReference<Location>(LocationKey); }
             set
             {
                 if (value?.LocationType != LocationType.Region
                     && value?.LocationType != LocationType.City)
                     throw new ArgumentException("Location type mast be Region or Citi or Village");
-                SetPropertyReference(value);
+                SetReference(value, LocationKey);
             }
         }
 
         [DataMember, Column("post_index", 20, Keys = DBColumnKeys.View), Index("daddress_post_index")]
         public string PostIndex
         {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
+            get { return GetValue<string>(PostIndexKey); }
+            set { SetValue(value, PostIndexKey); }
         }
 
         [DataMember, Column("street", 1024, Keys = DBColumnKeys.Culture | DBColumnKeys.View)]

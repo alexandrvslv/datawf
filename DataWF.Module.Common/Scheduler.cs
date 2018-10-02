@@ -17,44 +17,32 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using System;
-using System.CodeDom.Compiler;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.IO;
-using System.Reflection;
-using DataWF.Data;
 using DataWF.Common;
+using DataWF.Data;
+using System;
+using System.ComponentModel;
 using System.Runtime.Serialization;
 
 namespace DataWF.Module.Common
 {
-    public class SchedulerList : DBTableView<Scheduler>
-    {
-        public SchedulerList(string filter, DBViewKeys mode = DBViewKeys.None, DBStatus status = DBStatus.Empty)
-            : base(Scheduler.DBTable, filter, mode, status)
-        {
-            ApplySortInternal(new DBComparer(Scheduler.DBTable.ParseProperty(nameof(Scheduler.Order)), ListSortDirection.Ascending));
-        }
-
-        public SchedulerList()
-            : this(string.Empty)
-        {
-        }
-    }
 
     [DataContract, Table("rscheduler", "Reference Book", BlockSize = 20)]
     public class Scheduler : DBItem//, IComparable
     {
-        public static DBTable<Scheduler> DBTable
-        {
-            get { return GetTable<Scheduler>(); }
-        }
+        private static DBColumn orderKey = DBColumn.EmptyKey;
+        private static DBColumn intervalKey = DBColumn.EmptyKey;
+        private static DBColumn procedureKey = DBColumn.EmptyKey;
+        private static DBColumn dateExecuteKey = DBColumn.EmptyKey;
+        private static DBTable<Scheduler> dbTable;
+
+        public static DBColumn OrderKey => DBTable.ParseProperty(nameof(Order), orderKey);
+        public static DBColumn IntervalKey => DBTable.ParseProperty(nameof(Interval), intervalKey);
+        public static DBColumn ProcedureKey => DBTable.ParseProperty(nameof(ProcedureName), procedureKey);
+        public static DBColumn DateExecuteKey => DBTable.ParseProperty(nameof(DateExecute), dateExecuteKey);
+        public static DBTable<Scheduler> DBTable => dbTable ?? (dbTable = GetTable<Scheduler>());
 
         public Scheduler()
-        {
-        }
+        { }
 
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
@@ -80,30 +68,30 @@ namespace DataWF.Module.Common
         [DataMember, Column("orderid")]
         public int? Order
         {
-            get { return GetProperty<int?>(nameof(Order)); }
-            set { SetProperty(value, nameof(Order)); }
+            get { return GetValue<int?>(OrderKey); }
+            set { SetValue(value, OrderKey); }
         }
 
         [DataMember, DefaultValue(SchedulerType.Interval), Column("type_id", Keys = DBColumnKeys.ElementType)]
         public SchedulerType? Type
         {
-            get { return GetProperty<SchedulerType?>(nameof(SchedulerType)); }
-            set { SetProperty(value, nameof(SchedulerType)); }
+            get { return GetValue<SchedulerType?>(Table.ElementTypeKey); }
+            set { SetValue(value, Table.ElementTypeKey); }
         }
 
         [DataMember, Column("run_interval")]
         public TimeSpan? Interval
         {
-            get { return GetProperty<TimeSpan?>(nameof(Interval)); }
-            set { SetProperty(value, nameof(Interval)); }
+            get { return GetValue<TimeSpan?>(IntervalKey); }
+            set { SetValue(value, IntervalKey); }
         }
 
         [Browsable(false)]
         [DataMember, Column("procedure_name")]
         public string ProcedureName
         {
-            get { return GetProperty<string>(nameof(ProcedureName)); }
-            set { SetProperty(value, nameof(ProcedureName)); }
+            get { return GetValue<string>(ProcedureKey); }
+            set { SetValue(value, ProcedureKey); }
         }
 
         public DBProcedure Procedure
@@ -115,8 +103,8 @@ namespace DataWF.Module.Common
         [DataMember, Column("date_execute")]
         public DateTime? DateExecute
         {
-            get { return GetProperty<DateTime?>(nameof(DateExecute)); }
-            set { SetProperty(value, nameof(DateExecute)); }
+            get { return GetValue<DateTime?>(DateExecuteKey); }
+            set { SetValue(value, DateExecuteKey); }
         }
 
         public object Execute()

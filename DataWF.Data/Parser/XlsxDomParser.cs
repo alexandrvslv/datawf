@@ -33,7 +33,7 @@ namespace DataWF.Data
     {
         public override string Parse(Stream stream, string fileName, ExecuteArgs param)
         {
-            bool flag = false;
+           // bool flag = false;
             stream.Position = 0;
             using (var xl = SpreadsheetDocument.Open(stream, true))
             {
@@ -55,7 +55,7 @@ namespace DataWF.Data
                             object rz = ParseString(param, m.Value.Trim("#<>".ToCharArray()));
                             if (rz != null)
                             {
-                                flag = true;
+                                //flag = true;
                                 QResult query = rz as QResult;
                                 Excel.Row newRow = null;
                                 if (query != null)

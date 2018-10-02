@@ -57,7 +57,7 @@ namespace DataWF.Data
                 return queryViews.Count > 0 ? (DBTableView<T>)queryViews[0] : null;
             }
         }
-
+        
         [Browsable(false)]
         public override bool IsEdited
         {

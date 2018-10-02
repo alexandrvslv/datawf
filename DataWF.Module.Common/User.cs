@@ -32,16 +32,33 @@ using System.Text.RegularExpressions;
 
 namespace DataWF.Module.Common
 {
-
     [DataContract, Table("ruser", "User", BlockSize = 100)]
     public class User : DBItem, IComparable, IDisposable, IIdentity
     {
+        private static DBColumn departmentKey = DBColumn.EmptyKey;
+        private static DBColumn positionKey = DBColumn.EmptyKey;
+        private static DBColumn emailKey = DBColumn.EmptyKey;
+        private static DBColumn passwordKey = DBColumn.EmptyKey;
+        private static DBColumn superKey = DBColumn.EmptyKey;
+        private static DBColumn refreshTokenKey = DBColumn.EmptyKey;
+        private static DBColumn nameENKey = DBColumn.EmptyKey;
+        private static DBColumn nameRUKey = DBColumn.EmptyKey;
+        private static DBTable<User> dbTable;
+
+        public static DBColumn DepartmentKey => DBTable.ParseProperty(nameof(DepartmentId), departmentKey);
+        public static DBColumn PositionKey => DBTable.ParseProperty(nameof(PositionId), positionKey);
+        public static DBColumn EmailKey => DBTable.ParseProperty(nameof(EMail), emailKey);
+        public static DBColumn PasswordKey => DBTable.ParseProperty(nameof(Password), passwordKey);
+        public static DBColumn SuperKey => DBTable.ParseProperty(nameof(Super), superKey);
+        public static DBColumn RefreshTokenKey => DBTable.ParseProperty(nameof(RefreshToken), refreshTokenKey);
+        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), nameENKey);
+        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), nameRUKey);
+        public static DBTable<User> DBTable => dbTable ?? (dbTable = GetTable<User>());
+
         [ThreadStatic]
         private static User threadCurrentUser;
         private static User currentUser;
-
         public static Action CurrentUserChanged;
-
 
         public static User CurrentUser
         {
@@ -108,11 +125,6 @@ namespace DataWF.Module.Common
                 SetCurrentUser(user, threaded);
             }
             return user;
-        }
-
-        public static DBTable<User> DBTable
-        {
-            get { return GetTable<User>(); }
         }
 
 
@@ -196,10 +208,9 @@ namespace DataWF.Module.Common
         protected bool online = false;
 
         public User()
-        {
-        }
+        { }
 
-        public UserLog LogStart;
+        public UserLog LogStart { get; set; }
 
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
@@ -212,7 +223,7 @@ namespace DataWF.Module.Common
         public string Login
         {
             get { return GetValue<string>(Table.CodeKey); }
-            set { this[Table.CodeKey] = value; }
+            set { SetValue(value, Table.CodeKey); }
         }
 
         [DataMember, Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
@@ -225,31 +236,31 @@ namespace DataWF.Module.Common
         [DataMember, Column("department_id"), Browsable(false)]
         public int? DepartmentId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<int?>(DepartmentKey); }
+            set { SetValue(value, DepartmentKey); }
         }
 
         [Reference(nameof(DepartmentId))]
         public Department Department
         {
-            get { return GetPropertyReference<Department>(); }
-            set { SetPropertyReference(value); }
+            get { return GetReference<Department>(DepartmentKey); }
+            set { SetReference(value, DepartmentKey); }
         }
 
         [DataMember, Column("position_id"), Browsable(false)]
         public int? PositionId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<int?>(PositionKey); }
+            set { SetValue(value, PositionKey); }
         }
 
         [Reference(nameof(PositionId))]
         public Position Position
         {
-            get { return GetPropertyReference<Position>(); }
+            get { return GetReference<Position>(PositionKey); }
             set
             {
-                SetPropertyReference(value);
+                SetReference(value, PositionKey);
                 Department = value?.Department;
             }
         }
@@ -258,8 +269,8 @@ namespace DataWF.Module.Common
         [DataMember, DefaultValue(false), Column("super")]
         public bool? Super
         {
-            get { return GetProperty<bool?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<bool?>(SuperKey); }
+            set { SetValue(value, SuperKey); }
         }
 
         [Browsable(false)]
@@ -278,8 +289,8 @@ namespace DataWF.Module.Common
         [DataMember, Column("email", 1024), Index("ruser_email", true)]
         public string EMail
         {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
+            get { return GetValue<string>(EmailKey); }
+            set { SetValue(value, EmailKey); }
         }
 
         public bool IsBlock
@@ -291,7 +302,7 @@ namespace DataWF.Module.Common
         [DataMember, Column("password", 256, Keys = DBColumnKeys.Password), PasswordPropertyText(true)]
         public string Password
         {
-            get { return GetProperty<string>(); }
+            get { return GetValue<string>(PasswordKey); }
             set
             {
                 if (value == null || value.Length == 40)
@@ -302,18 +313,9 @@ namespace DataWF.Module.Common
                 var rez = ValidateText(this, value, false);
                 if (rez.Length > 0)
                     throw new ArgumentException(rez);
-                SetProperty(Helper.GetSha256(value));
+                SetValue(Helper.GetSha256(value), PasswordKey);
             }
         }
-
-        #region IComparable Members
-
-        public new int CompareTo(object obj)
-        {
-            return base.CompareTo(obj);// this.ToString().CompareTo(obj.ToString());
-        }
-
-        #endregion
 
         [Browsable(false)]
         public bool IsCurrent
@@ -327,8 +329,8 @@ namespace DataWF.Module.Common
         [Browsable(false), DataMember, Column("token_refresh", 2048, Keys = DBColumnKeys.Password | DBColumnKeys.NoLog)]
         public string RefreshToken
         {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
+            get { return GetValue<string>(RefreshTokenKey); }
+            set { SetValue(value, RefreshTokenKey); }
         }
 
         public string AuthenticationType { get; set; }
@@ -339,14 +341,14 @@ namespace DataWF.Module.Common
 
         public string NameRU
         {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
+            get { return GetValue<string>(NameENKey); }
+            set { SetValue(value, NameENKey); }
         }
 
         public string NameEN
         {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
+            get { return GetValue<string>(NameRUKey); }
+            set { SetValue(value, NameRUKey); }
         }
 
         public override void Dispose()
@@ -354,7 +356,10 @@ namespace DataWF.Module.Common
             base.Dispose();
         }
 
-
+        public new int CompareTo(object obj)
+        {
+            return base.CompareTo(obj);// this.ToString().CompareTo(obj.ToString());
+        }
     }
 
     [Flags]
