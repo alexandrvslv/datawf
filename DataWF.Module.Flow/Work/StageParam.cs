@@ -108,8 +108,8 @@ namespace DataWF.Module.Flow
         [DataMember, Column("name", 1024)]
         public string Name
         {
-            get { return GetName(); }
-            set { SetName(value); }
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
         }
 
         [Browsable(false)]
