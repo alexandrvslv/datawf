@@ -25,7 +25,7 @@ namespace DataWF.Common
 
             if (type.IsEnum)
             {
-                return int.MinValue;
+                return Enum.ToObject(type, int.MinValue);
             }
             if (type == typeof(bool))
             {
