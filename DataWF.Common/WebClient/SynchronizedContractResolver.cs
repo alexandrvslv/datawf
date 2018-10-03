@@ -15,8 +15,11 @@ namespace DataWF.Common
         {
             JsonProperty property = base.CreateProperty(member, memberSerialization);
 
-            if (!property.Ignored
-                && property.NullValueHandling != null)
+            if (property.Ignored)
+            {
+                return property;
+            }
+            if (property.NullValueHandling != null)
             {
                 if (TypeHelper.IsInterface(property.DeclaringType, typeof(ISynchronized)))
                 {
@@ -41,6 +44,10 @@ namespace DataWF.Common
                             };
                     }
                 }
+            }
+            else if (member.GetCustomAttribute<JsonIgnoreSerializationAttribute>() != null)
+            {
+                property.ShouldSerialize = instance => false;
             }
 
             return property;
