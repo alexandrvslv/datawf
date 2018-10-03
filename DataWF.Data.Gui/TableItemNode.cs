@@ -1,9 +1,5 @@
-﻿using DataWF.Data;
+﻿using DataWF.Common;
 using DataWF.Gui;
-using DataWF.Common;
-using Xwt.Drawing;
-using System;
-using System.Collections.Generic;
 
 namespace DataWF.Data.Gui
 {
@@ -20,7 +16,7 @@ namespace DataWF.Data.Gui
 
         public AccessValue Access
         {
-            get { return (Item as IAccessable)?.Access; }
+            get { return (AccessValue)(Item as IAccessable)?.Access; }
             set { (Item as IAccessable).Access = value; }
         }
 

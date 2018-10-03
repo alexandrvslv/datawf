@@ -38,7 +38,7 @@ using System.Xml.Serialization;
 namespace DataWF.Data
 {
 
-    public abstract class DBTable : DBSchemaItem, ICollection<DBItem>, IComparable, IAccessable, IDisposable
+    public abstract class DBTable : DBSchemaItem, ICollection<DBItem>, IComparable, IDisposable
     {
         private static Dictionary<Type, TableAttributeCache> cacheTables = new Dictionary<Type, TableAttributeCache>();
         private static Dictionary<Type, ItemTypeAttributeCache> cacheItemTypes = new Dictionary<Type, ItemTypeAttributeCache>();

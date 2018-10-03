@@ -10,7 +10,7 @@ namespace DataWF.Common
     public struct AccessItem
     {
         public readonly static AccessItem Empty = new AccessItem();
-        public static bool Default = true;
+        public static bool Default = false;
 
         public AccessItem(IAccessGroup group, AccessType data = AccessType.None) : this()
         {

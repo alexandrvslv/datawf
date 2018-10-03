@@ -370,7 +370,6 @@ namespace DataWF.Module.Flow
         [ControllerMethod(true)]
         public virtual IEnumerable<DocumentReference> GetReferences()
         {
-            var param = DBLoadParam.None;
             if ((initype & DocInitType.References) != DocInitType.References)
             {
                 initype |= DocInitType.References;

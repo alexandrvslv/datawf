@@ -19,6 +19,8 @@ namespace DataWF.Common
         }
 
         public TypeSerializationInfo SerializationInfo;
+        private IAccessValue access;
+
         public Invoker<T, K?> IdInvoker { get; }
         public Invoker<T, int?> TypeInvoker { get; }
         public int TypeId { get; }
@@ -34,6 +36,11 @@ namespace DataWF.Common
             }
         }
 
+        public IAccessValue Access
+        {
+            get => access ?? (access = AccessAsync(CancellationToken.None).GetAwaiter().GetResult());
+            set => throw new NotSupportedException();
+        }
 
         public virtual T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, T item, object id = null)
         {
@@ -204,6 +211,10 @@ namespace DataWF.Common
             IsSynchronized = true;
             return Task.FromResult<List<T>>(null);
         }
+
+        public virtual Task<IAccessValue> AccessAsync(CancellationToken cancellationToken) => Task.FromResult<IAccessValue>(null);
+
+        public virtual Task<IAccessValue> AccessAsync(string property, CancellationToken cancellationToken) => Task.FromResult<IAccessValue>(null);
 
         public Task GetAsync() => GetAsync(CancellationToken.None);
 

@@ -1,11 +1,10 @@
 ﻿using System;
-using System.ComponentModel;
 
 namespace DataWF.Common
 {
     public interface IAccessable
     {
-        AccessValue Access { get; set; }
+        IAccessValue Access { get; set; }
     }
 
     public interface IAccessGroup

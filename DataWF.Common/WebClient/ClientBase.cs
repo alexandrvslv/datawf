@@ -20,12 +20,12 @@ namespace DataWF.Common
     /// <typeparam name="T"></typeparam>
     public partial class ClientBase : IClient
     {
-        private Lazy<JsonSerializerSettings> settings;
+        private Lazy<JsonSerializerSettings> serializeSettings;
         private string baseUrl;
 
         public ClientBase()
         {
-            settings = new Lazy<JsonSerializerSettings>(() =>
+            serializeSettings = new Lazy<JsonSerializerSettings>(() =>
             {
                 var settings = new JsonSerializerSettings()
                 {
@@ -33,7 +33,6 @@ namespace DataWF.Common
                     ContractResolver = SynchronizedContractResolver.Instance
                 };
                 settings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
-                UpdateJsonSerializerSettings(settings);
                 return settings;
             });
         }
@@ -48,9 +47,7 @@ namespace DataWF.Common
             set { baseUrl = value; }
         }
 
-        protected JsonSerializerSettings JsonSerializerSettings { get { return settings.Value; } }
-
-        partial void UpdateJsonSerializerSettings(JsonSerializerSettings settings);
+        protected JsonSerializerSettings JsonSerializerSettings { get { return serializeSettings.Value; } }
 
         partial void ProcessResponse(HttpClient client, HttpResponseMessage response);
 
@@ -90,7 +87,7 @@ namespace DataWF.Common
             }
             else if (value != null)
             {
-                var contentText = JsonConvert.SerializeObject(value, settings.Value);
+                var contentText = JsonConvert.SerializeObject(value, JsonSerializerSettings);
                 var content = new StringContent(contentText, Encoding.UTF8);
                 content.Headers.ContentType = MediaTypeHeaderValue.Parse(mediaType);
                 request.Content = content;
@@ -168,7 +165,7 @@ namespace DataWF.Common
                                             }
                                             else
                                             {
-                                                var serializer = new JsonSerializer();
+                                                var serializer = JsonSerializer.Create(JsonSerializerSettings);
                                                 using (var jreader = new JsonTextReader(reader))
                                                 {
                                                     while (jreader.Read())
@@ -256,7 +253,7 @@ namespace DataWF.Common
                                     {
                                         using (var reader = new StreamReader(responseStream))
                                         {
-                                            var serializer = new JsonSerializer();
+                                            var serializer = JsonSerializer.Create(JsonSerializerSettings);
                                             using (var jreader = new JsonTextReader(reader))
                                             {
                                                 while (jreader.Read() && jreader.TokenType == JsonToken.StartArray)

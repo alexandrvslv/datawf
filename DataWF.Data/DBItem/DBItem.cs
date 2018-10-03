@@ -174,7 +174,6 @@ namespace DataWF.Data
             {
                 return;
             }
-            DBItemEventArgs args = null;
             if (check)
             {
                 RefreshOld(column, value, field);
@@ -202,7 +201,6 @@ namespace DataWF.Data
             {
                 return;
             }
-            DBItemEventArgs args = null;
             if (check)
             {
                 RefreshOld(column, value, field);
@@ -667,6 +665,8 @@ namespace DataWF.Data
             get { return Table.StampKey == null ? null : GetValue<DateTime?>(Table.StampKey); }
             set { SetValue(value, Table.StampKey); }
         }
+
+        IAccessValue IAccessable.Access { get => Access; set => Access = (AccessValue)value; }
 
         [XmlIgnore, JsonIgnore, NotMapped, Browsable(false)]
         [DataMember, Column("group_access", 512, DataType = typeof(byte[]), GroupName = "system", Keys = DBColumnKeys.Access | DBColumnKeys.System, Order = 102)]

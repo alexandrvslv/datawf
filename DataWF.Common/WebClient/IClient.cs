@@ -44,11 +44,13 @@ namespace DataWF.Common
         object NewItem();
     }
 
-    public interface ICRUDClient<T> : ICRUDClient
+    public interface ICRUDClient<T> : ICRUDClient, IAccessable
     {
         SelectableList<T> Items { get; }
         Task<T> Get(T item);
         T Get(object id);
+        Task<IAccessValue> AccessAsync(CancellationToken cancellationToken);
+        Task<IAccessValue> AccessAsync(string property, CancellationToken cancellationToken);
         Task<List<T>> FindAsync(string filter, CancellationToken cancellationToken);
         Task<List<T>> GetAsync(CancellationToken cancellationToken);
         Task<T> GetAsync(object id, CancellationToken cancellationToken);

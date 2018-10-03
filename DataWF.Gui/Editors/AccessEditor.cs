@@ -1,5 +1,4 @@
 ﻿using DataWF.Common;
-using Xwt;
 
 namespace DataWF.Gui
 {
@@ -131,7 +130,7 @@ namespace DataWF.Gui
                 {
                     if (accessable.Access == null)
                         accessable.Access = new AccessValue();
-                    Access = accessable.Access;
+                    Access = (AccessValue)accessable.Access;
                     Readonly = !Access.Edit && !Access.Admin;
                 }
             }

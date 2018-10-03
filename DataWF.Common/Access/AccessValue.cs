@@ -6,7 +6,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Common
 {
-    public class AccessValue
+    public class AccessValue : IAccessValue
     {
         public static IEnumerable<IAccessGroup> Groups = new List<IAccessGroup>();
 

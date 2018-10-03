@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace DataWF.Web.Common
 {
@@ -13,14 +14,40 @@ namespace DataWF.Web.Common
     {
         protected DBTable<T> table;
 
-        public BaseController(DBTable<T> dBTable)
+        public BaseController()
         {
-            table = dBTable;
-
+            table = DBTable.GetTable<T>();
         }
 
-        public BaseController() : this(DBTable.GetTable<T>())
+        [HttpGet("Access")]
+        public ActionResult<AccessValue> GetAccess()
         {
+            try
+            {
+                return table.Access;
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
+        }
+
+        [HttpGet("Access/{property}")]
+        public ActionResult<AccessValue> GetAccess([FromRoute]string property)
+        {
+            try
+            {
+                var column = table.ParseProperty(property);
+                if (column == null)
+                {
+                    return NotFound();
+                }
+                return column.Access;
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
         }
 
         [HttpGet]
@@ -34,14 +61,20 @@ namespace DataWF.Web.Common
         {
             try
             {
+                if (!table.Access.View)
+                {
+                    return Forbid();
+                }
                 using (var query = new QQuery(filter, table))
                 {
                     if (table.IsSynchronized)
                     {
-                        return new ActionResult<IEnumerable<T>>(table.Select(query));
+                        return new ActionResult<IEnumerable<T>>(table.Select(query)
+                            .Where(p => p.Access.View));
                     }
 
-                    return new ActionResult<IEnumerable<T>>(table.Load(query, DBLoadParam.Referencing));
+                    return new ActionResult<IEnumerable<T>>(table.Load(query, DBLoadParam.Referencing)
+                        .Where(p => p.Access.View));
                 }
             }
             catch (Exception ex)
@@ -55,12 +88,16 @@ namespace DataWF.Web.Common
         {
             try
             {
-                var item = table.LoadById(id);
-                if (item == null)
+                var value = table.LoadById(id);
+                if (value == null)
                 {
                     NotFound();
                 }
-                return Ok(item);
+                if (!value.Access.View)
+                {
+                    return Forbid();
+                }
+                return Ok(value);
             }
             catch (Exception ex)
             {
@@ -75,7 +112,12 @@ namespace DataWF.Web.Common
             {
                 if (value == null)
                 {
-                    throw new InvalidOperationException("ID not specified!");
+                    throw new InvalidOperationException("Some deserialization problem!");
+                }
+                if (!value.Access.Create)
+                {
+                    value.Reject();
+                    Forbid();
                 }
                 if (value.UpdateState == DBUpdateState.Insert)
                 {
@@ -84,7 +126,7 @@ namespace DataWF.Web.Common
                 else
                 {
                     value.Reject();
-                    throw new InvalidOperationException("Specified ID is in use!");
+                    throw new InvalidOperationException("Post is used to add! You can use the Put command!");
                 }
             }
             catch (Exception ex)
@@ -101,7 +143,13 @@ namespace DataWF.Web.Common
             {
                 if (value == null)
                 {
-                    throw new InvalidOperationException("ID must by specified by value or null!");
+                    throw new InvalidOperationException("Some deserialization problem!");
+                }
+                if (((value.UpdateState & DBUpdateState.Insert) == DBUpdateState.Insert && !value.Access.Create)
+                    || ((value.UpdateState & DBUpdateState.Update) == DBUpdateState.Update && !value.Access.Edit))
+                {
+                    value.Reject();
+                    Forbid();
                 }
                 value.Save();
             }
@@ -117,12 +165,17 @@ namespace DataWF.Web.Common
         {
             try
             {
-                var item = table.LoadById(id);
-                if (item == null)
+                var value = table.LoadById(id);
+                if (value == null)
                 {
                     return NotFound();
                 }
-                item.Delete(7, DBLoadParam.Load);
+                if (!value.Access.Delete)
+                {
+                    value.Reject();
+                    Forbid();
+                }
+                value.Delete(7, DBLoadParam.Load);
                 return Ok(true);
 
             }
@@ -137,12 +190,17 @@ namespace DataWF.Web.Common
         {
             try
             {
-                var item = table.LoadById(id);
-                if (item == null)
+                var value = table.LoadById(id);
+                if (value == null)
                 {
                     return NotFound();
                 }
-                return (T)item.Clone();
+                if (!value.Access.Create)
+                {
+                    value.Reject();
+                    Forbid();
+                }
+                return (T)value.Clone();
             }
             catch (Exception ex)
             {
@@ -155,7 +213,7 @@ namespace DataWF.Web.Common
             if (error is Exception exception)
             {
                 Helper.OnException(exception);
-                return base.BadRequest(exception.Message);
+                return base.BadRequest($"{exception.GetType().Name} {exception.Message}");
             }
 
             return base.BadRequest(error);

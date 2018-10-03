@@ -1,5 +1,5 @@
-﻿using System;
-using DataWF.Common;
+﻿using DataWF.Common;
+using System;
 using Xwt;
 
 namespace DataWF.Gui
@@ -28,7 +28,7 @@ namespace DataWF.Gui
             temp = null;
 
             if (value is IAccessable)
-                temp = ((IAccessable)value).Access;
+                temp = (AccessValue)((IAccessable)value).Access;
             if (value is AccessValue)
                 temp = (AccessValue)value;
             if (value is byte[])

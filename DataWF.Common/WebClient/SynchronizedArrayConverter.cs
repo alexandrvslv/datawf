@@ -4,6 +4,7 @@ using System.Collections;
 
 namespace DataWF.Common
 {
+
     public class SynchronizedArrayConverter : JsonConverter
     {
         public static readonly SynchronizedArrayConverter Instance = new SynchronizedArrayConverter();

@@ -15,7 +15,7 @@ namespace DataWF.Web.CodeGenerator
 {
     public class ClientGenerator
     {
-        private readonly List<string> VirtualOperations = new List<string> { "GetAsync", "PutAsync", "PostAsync", "FindAsync", "DeleteAsync", "CopyAsync" };
+        private readonly HashSet<string> VirtualOperations = new HashSet<string> { "GetAsync", "PutAsync", "PostAsync", "FindAsync", "DeleteAsync", "CopyAsync", "AccessAsync" };
         private Dictionary<string, CompilationUnitSyntax> cacheModels = new Dictionary<string, CompilationUnitSyntax>();
         private Dictionary<string, ClassDeclarationSyntax> cacheClients = new Dictionary<string, ClassDeclarationSyntax>();
         private List<UsingDirectiveSyntax> usings = new List<UsingDirectiveSyntax>();
@@ -397,13 +397,21 @@ namespace DataWF.Web.CodeGenerator
             return returnType;
         }
 
+        private string GetReturningTypeCheckAccess(SwaggerOperationDescription descriptor)
+        {
+            var returnType = GetReturningType(descriptor);
+            if (returnType == "AccessValue")
+                returnType = "IAccessValue";
+            return returnType;
+        }
+
         private IEnumerable<MemberDeclarationSyntax> GenOperation(SwaggerOperationDescription descriptor)
         {
             var operationName = GetOperationName(descriptor, out var clientName);
             var actualName = $"{operationName}Async";
             var baseType = GetClientBaseType(clientName, out var id, out var typeKey, out var typeId);
             var isOverride = baseType != "ClientBase" && VirtualOperations.Contains(actualName);
-            var returnType = GetReturningType(descriptor);
+            var returnType = GetReturningTypeCheckAccess(descriptor);
             returnType = returnType.Length > 0 ? $"Task<{returnType}>" : "Task";
 
             //yield return SF.MethodDeclaration(
@@ -556,7 +564,7 @@ namespace DataWF.Web.CodeGenerator
 
         private IEnumerable<EnumMemberDeclarationSyntax> GenDefinitionEnumMemebers(JsonSchema4 schema)
         {
-            int i = 0;
+            //int i = 0;
             var definitionName = GetDefinitionName(schema);
             foreach (var item in schema.Enumeration)
             {
@@ -765,7 +773,7 @@ namespace DataWF.Web.CodeGenerator
                 yield return SF.AttributeList(
                              SF.SingletonSeparatedList(
                                  SF.Attribute(
-                                     SF.IdentifierName("JsonIgnore"))));
+                                     SF.IdentifierName("JsonIgnoreSerialization"))));
             }
             else if (!property.IsRequired)
             {
@@ -959,9 +967,13 @@ namespace DataWF.Web.CodeGenerator
                     {
                         GetOrGenDefinion(value.Id);
                         if (value.IsEnumeration)
+                        {
                             return GetDefinitionName(value) + (nullable ? "?" : string.Empty);
+                        }
                         else
+                        {
                             return GetDefinitionName(value);
+                        }
                     }
                     break;
                 case JsonObjectType.File:

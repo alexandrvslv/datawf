@@ -70,10 +70,7 @@ namespace DataWF.Data
             }
         }
 
-        public override string ToString()
-        {
-            return LocaleInfo?.Value ?? name;
-        }
+        IAccessValue IAccessable.Access { get => Access; set => Access = (AccessValue)value; }
 
         [Browsable(false), Category("Policy"), XmlIgnore, JsonIgnore]
         public virtual AccessValue Access
@@ -167,8 +164,6 @@ namespace DataWF.Data
 
         public abstract string FormatSql(DDLType ddlType);
 
-        #region INotifyPropertyChanged Members
-
         public event PropertyChangedEventHandler PropertyChanged;
 
         public void OnPropertyChanged(string propertyName, DDLType type = DDLType.Default)
@@ -180,7 +175,10 @@ namespace DataWF.Data
                 DBService.OnDBSchemaChanged(this, type);
         }
 
-        #endregion
+        public override string ToString()
+        {
+            return LocaleInfo?.Value ?? name;
+        }
 
         #region IComparable Members
 
