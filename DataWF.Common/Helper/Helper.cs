@@ -1040,6 +1040,10 @@ namespace DataWF.Common
                 buf = value;
             else if (value is string text && type != typeof(string))
                 buf = TextParse(text, type);
+            else if (type.IsEnum && value is int intValue)
+            {
+                buf = Enum.ToObject(type, intValue);
+            }
             else if (value is long longValue)
             {
                 if (type == typeof(int))
