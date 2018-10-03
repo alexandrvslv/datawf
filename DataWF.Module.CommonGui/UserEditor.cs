@@ -1,12 +1,10 @@
-﻿using DataWF.Data;
+﻿using DataWF.Common;
+using DataWF.Data;
 using DataWF.Gui;
-using DataWF.Common;
-using System;
-using Xwt.Drawing;
-using Xwt;
-using System.Linq;
 using DataWF.Module.Common;
-using DataWF.Data.Gui;
+using System;
+using System.Linq;
+using Xwt;
 
 namespace DataWF.Module.CommonGui
 {
@@ -143,6 +141,11 @@ namespace DataWF.Module.CommonGui
         {
             groupAttributes?.Dispose();
             groupGroups?.Dispose();
+            if (user != null)
+            {
+                user.PropertyChanged -= UserPropertyChanged;
+            }
+
             User.DBTable.RowUpdated -= OnRowUpdated;
             base.Dispose(disposing);
         }
@@ -180,6 +183,7 @@ namespace DataWF.Module.CommonGui
                 MessageDialog.ShowMessage(ParentWindow, Locale.Get("Login", "Authorization Error: check your Login and Password."), "Login");
             }
         }
+
 
         public bool Closing()
         {

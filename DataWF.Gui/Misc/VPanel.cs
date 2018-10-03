@@ -89,7 +89,7 @@ namespace DataWF.Gui
         {
             if (widget == null)
                 return;
-            if (widget is ISerializableElement)
+            if (widget is ISerializableElement && !string.IsNullOrEmpty(widget.Name))
             {
                 writer.Write(widget, widget.Name, true);
             }

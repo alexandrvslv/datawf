@@ -122,7 +122,7 @@ namespace DataWF.Module.Common
 
         public static void CachePermissionTable(GroupPermission parent, DBTable table)
         {
-            if (table is DBLogTable || table is IDBVirtualTable)
+            if (table is DBLogTable)
                 return;
             var permission = Get(parent, table);
 
