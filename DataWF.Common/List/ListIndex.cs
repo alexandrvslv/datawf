@@ -259,7 +259,7 @@ namespace DataWF.Common
                 return NullKey;
             if (key is K typed)
                 return EqualityComparer<K>.Default.Equals(typed, default(K)) ? NullKey : typed;
-            return NullKey;
+            return (K)Helper.Parse(key, typeof(K));
         }
 
         public void Refresh(T item)

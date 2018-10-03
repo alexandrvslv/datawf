@@ -215,7 +215,7 @@ namespace DataWF.Data
                 return nullKey;
             if (value is K typed)
                 return EqualityComparer<K>.Default.Equals(typed, default(K)) ? nullKey : typed;
-            return nullKey;
+            return (K)Helper.Parse(value, typeof(K));
         }
 
         public override F SelectOne<F>(object value)
