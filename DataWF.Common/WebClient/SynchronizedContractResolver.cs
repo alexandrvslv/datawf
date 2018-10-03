@@ -21,7 +21,6 @@ namespace DataWF.Common
                 if (TypeHelper.IsInterface(property.DeclaringType, typeof(ISynchronized)))
                 {
                     var propertyName = property.PropertyName;
-
                     if (!TypeHelper.IsEnumerable(property.PropertyType))
                     {
                         property.ShouldSerialize =
@@ -33,7 +32,6 @@ namespace DataWF.Common
                     }
                     else if (TypeHelper.IsInterface(TypeHelper.GetItemType(property.PropertyType), typeof(ISynchronized)))
                     {
-
                         var propertyInvoker = EmitInvoker.Initialize(property.DeclaringType, propertyName);
                         property.ShouldSerialize =
                             instance =>

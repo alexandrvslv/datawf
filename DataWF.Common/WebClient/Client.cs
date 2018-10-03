@@ -77,7 +77,7 @@ namespace DataWF.Common
                         if (property.Name == IdInvoker?.Name)
                         {
                             id = value;
-                            if (item == null)
+                            if (item == null && id != null)
                             {
                                 item = Select((K)id);
                             }
@@ -108,7 +108,7 @@ namespace DataWF.Common
                 }
             }
 
-            if (item is ISynchronized isSynch)
+            if (id != null && item is ISynchronized isSynch)
             {
                 isSynch.IsSynchronized = true;
             }
@@ -216,6 +216,12 @@ namespace DataWF.Common
         public Task<T> GetAsync(object id, CancellationToken cancellationToken) => GetAsync((K)id, cancellationToken);
 
         public Task GetAsync(object id) => GetAsync((K)id, CancellationToken.None);
+
+        public virtual Task<T> CopyAsync(K id, CancellationToken cancellationToken) => Task.FromResult(default(T));
+
+        public Task<T> CopyAsync(object id, CancellationToken cancellationToken) => CopyAsync((K)id, cancellationToken);
+
+        public Task CopyAsync(object id) => CopyAsync((K)id, CancellationToken.None);
 
         public virtual Task<T> PutAsync(T value, CancellationToken cancellationToken) => Task.FromResult(default(T));
 

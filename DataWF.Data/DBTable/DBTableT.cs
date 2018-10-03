@@ -15,8 +15,8 @@ namespace DataWF.Data
     public class DBTable<T> : DBTable, ICollection<T> where T : DBItem, new()
     {
         protected List<T> items = new List<T>();
+        protected List<T> insertItems = new List<T>();
         protected List<IDBTableView> queryViews = new List<IDBTableView>(1);
-
 
         public DBTable()
         {
@@ -57,7 +57,7 @@ namespace DataWF.Data
                 return queryViews.Count > 0 ? (DBTableView<T>)queryViews[0] : null;
             }
         }
-        
+
         [Browsable(false)]
         public override bool IsEdited
         {
@@ -112,7 +112,6 @@ namespace DataWF.Data
             items.Add(item);
             AddIndexes(item);
             item.OnAttached();
-
             CheckViews(item, NotifyCollectionChangedAction.Add);
         }
 
@@ -135,11 +134,9 @@ namespace DataWF.Data
             {
                 return false;
             }
-
             items.Remove(item);
             RemoveIndexes(item);
             item.OnDetached();
-
             CheckViews(item, NotifyCollectionChangedAction.Remove);
             return true;
         }

@@ -122,14 +122,32 @@ namespace DataWF.Web.Common
                 {
                     return NotFound();
                 }
-
                 item.Delete(7, DBLoadParam.Load);
+                return Ok(true);
+
             }
             catch (Exception ex)
             {
                 return BadRequest(ex);
             }
-            return Ok(true);
+        }
+
+        [HttpGet("Copy/{id}")]
+        public ActionResult<T> Copy([FromRoute]K id)
+        {
+            try
+            {
+                var item = table.LoadById(id);
+                if (item == null)
+                {
+                    return NotFound();
+                }
+                return (T)item.Clone();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
         }
 
         public override BadRequestObjectResult BadRequest(object error)
@@ -162,9 +180,6 @@ namespace DataWF.Web.Common
         {
             return base.ValidationProblem(modelStateDictionary);
         }
-
-
-
 
     }
 }

@@ -147,33 +147,33 @@ namespace DataWF.Data
             DBSchemaChanged?.Invoke(item, new DBSchemaChangedArgs { Item = item, Type = type });
         }
 
-        public static event DBItemEditEventHandler RowAdded;
+        //public static event DBItemEditEventHandler RowAdded;
 
-        internal static void OnAdded(DBItem e)
-        {
-            RowAdded?.Invoke(new DBItemEventArgs(e) { State = DBUpdateState.Insert });
-        }
+        //internal static void OnAdded(DBItem e)
+        //{
+        //    RowAdded?.Invoke(new DBItemEventArgs(e) { State = DBUpdateState.Insert });
+        //}
 
-        public static event DBItemEditEventHandler RowRemoved;
+        //public static event DBItemEditEventHandler RowRemoved;
 
-        internal static void OnRemoved(DBItem e)
-        {
-            RowRemoved?.Invoke(new DBItemEventArgs(e) { State = DBUpdateState.Delete });
-        }
+        //internal static void OnRemoved(DBItem e)
+        //{
+        //    RowRemoved?.Invoke(new DBItemEventArgs(e) { State = DBUpdateState.Delete });
+        //}
 
-        public static event DBItemEditEventHandler RowEditing;
+        //public static event DBItemEditEventHandler RowEditing;
 
-        internal static void OnEditing(DBItemEventArgs e)
-        {
-            RowEditing?.Invoke(e);
-        }
+        //internal static void OnEditing(DBItemEventArgs e)
+        //{
+        //    RowEditing?.Invoke(e);
+        //}
 
-        public static event DBItemEditEventHandler RowEdited;
+        //public static event DBItemEditEventHandler RowEdited;
 
-        internal static void OnEdited(DBItemEventArgs e)
-        {
-            RowEdited?.Invoke(e);
-        }
+        //internal static void OnEdited(DBItemEventArgs e)
+        //{
+        //    RowEdited?.Invoke(e);
+        //}
 
         //public static event DBItemEditEventHandler RowStateEdited;
         //internal static void OnStateEdited(DBItemEventArgs e)

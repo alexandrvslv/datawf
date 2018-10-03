@@ -141,6 +141,7 @@ namespace DataWF.Data
                 temp = DBUpdateState.Default;
             }
             UpdateState = temp;
+            //DBService.OnEdited(args);
         }
 
         public void SetProperty<T>(T value, [CallerMemberName] string property = null)
@@ -188,7 +189,6 @@ namespace DataWF.Data
             if (check)
             {
                 CheckState();
-                DBService.OnEdited(args);
             }
         }
 
@@ -217,7 +217,6 @@ namespace DataWF.Data
             if (check)
             {
                 CheckState();
-                DBService.OnEdited(args);
             }
         }
 
@@ -903,7 +902,10 @@ namespace DataWF.Data
             }
 
             if (Table.PrimaryKey != null)
+            {
                 item.SetValue(null, Table.PrimaryKey);
+                //item.GenerateId();
+            }
 
             return item;
         }
@@ -938,7 +940,7 @@ namespace DataWF.Data
                 return;
             State |= DBItemState.Attached;
             OnPropertyChanged(nameof(Attached), null);
-            DBService.OnAdded(this);
+            //DBService.OnAdded(this);
         }
 
         public virtual void OnDetached()
@@ -947,7 +949,7 @@ namespace DataWF.Data
                 return;
             State &= ~DBItemState.Attached;
             OnPropertyChanged(nameof(Attached), null);
-            DBService.OnRemoved(this);
+            //DBService.OnRemoved(this);
         }
 
         public virtual bool OnUpdating(DBItemEventArgs arg)

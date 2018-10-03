@@ -15,7 +15,7 @@ namespace DataWF.Web.CodeGenerator
 {
     public class ClientGenerator
     {
-        private readonly List<string> VirtualOperations = new List<string> { "GetAsync", "PutAsync", "PostAsync", "FindAsync", "DeleteAsync" };
+        private readonly List<string> VirtualOperations = new List<string> { "GetAsync", "PutAsync", "PostAsync", "FindAsync", "DeleteAsync", "CopyAsync" };
         private Dictionary<string, CompilationUnitSyntax> cacheModels = new Dictionary<string, CompilationUnitSyntax>();
         private Dictionary<string, ClassDeclarationSyntax> cacheClients = new Dictionary<string, ClassDeclarationSyntax>();
         private List<UsingDirectiveSyntax> usings = new List<UsingDirectiveSyntax>();

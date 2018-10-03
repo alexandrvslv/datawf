@@ -37,6 +37,7 @@ namespace DataWF.Common
         Task FindAsync(string filter);
         Task GetAsync();
         Task GetAsync(object id);
+        Task CopyAsync(object id);
         Task PostAsync(object value);
         Task PutAsync(object value);
         object DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, object item = null, object id = null);
@@ -51,6 +52,7 @@ namespace DataWF.Common
         Task<List<T>> FindAsync(string filter, CancellationToken cancellationToken);
         Task<List<T>> GetAsync(CancellationToken cancellationToken);
         Task<T> GetAsync(object id, CancellationToken cancellationToken);
+        Task<T> CopyAsync(object id, CancellationToken cancellationToken);
         Task<T> PostAsync(T value, CancellationToken cancellationToken);
         Task<T> PutAsync(T value, CancellationToken cancellationToken);
         Task<bool> DeleteAsync(object id, CancellationToken cancellationToken);
