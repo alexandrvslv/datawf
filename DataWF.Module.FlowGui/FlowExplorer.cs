@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections;
-using System.Text;
+﻿using DataWF.Common;
 using DataWF.Data;
 using DataWF.Data.Gui;
-using DataWF.Module.Common;
-using DataWF.Module.Flow;
 using DataWF.Gui;
-using DataWF.Common;
+using DataWF.Module.Common;
+using DataWF.Module.CommonGui;
+using DataWF.Module.Flow;
+using System;
 using Xwt;
 using Xwt.Drawing;
-using DataWF.Module.CommonGui;
 
 namespace DataWF.Module.FlowGui
 {
@@ -255,14 +253,11 @@ namespace DataWF.Module.FlowGui
         {
             if (tree.SelectedNode == null)
                 return;
-            foreach (var s in tree.Selection)
+            foreach (var node in tree.Selection.GetItems<TableItemNode>())
             {
-                Node tn = (Node)s.Item;
-                object obj = tn.Tag;
-
-                if (obj is DBItem)
+                if (node != null && node.Item is DBItem dbItem)
                 {
-                    var row = (DBItem)((DBItem)obj).Clone();
+                    var row = (DBItem)dbItem.Clone();
                     if (row is User)
                     {
                         ((User)row).Super = false;
@@ -281,15 +276,14 @@ namespace DataWF.Module.FlowGui
             question.Buttons.Add(Command.Yes);
             if (MessageDialog.AskQuestion(ParentWindow, question) == Command.Yes)
             {
-                var items = tree.Selection.GetItems<Node>();
-                foreach (Node tn in items)
+                var items = tree.Selection.GetItems<TableItemNode>();
+                foreach (var node in items)
                 {
-                    object obj = tn.Tag;
 
-                    if (obj is DBItem)
+                    if (node.Item is DBItem dbItem)
                     {
-                        ((DBItem)obj).Delete();
-                        ((DBItem)obj).Save();
+                        dbItem.Delete();
+                        dbItem.Save();
                     }
                 }
             }
