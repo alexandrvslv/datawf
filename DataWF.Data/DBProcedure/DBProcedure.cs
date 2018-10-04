@@ -160,6 +160,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public bool Expand { get; set; }
 
+        [JsonIgnore]
         public bool IsCompaund
         {
             get { return Childs.Any(); }
