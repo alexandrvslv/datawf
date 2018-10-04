@@ -678,11 +678,7 @@ namespace DataWF.Data
                 {
                     if (Table.AccessKey != null)
                     {
-                        var accessData = GetValue<byte[]>(Table.AccessKey);
-                        if (accessData == null)
-                            access = Table.Access;
-                        else
-                            access = new AccessValue(accessData);
+                        ReadAccess();
                     }
                     else
                     {
@@ -699,6 +695,15 @@ namespace DataWF.Data
                     SetValue(value != null ? value.Write() : null, Table.AccessKey);
                 }
             }
+        }
+
+        private void ReadAccess()
+        {
+            var accessData = GetValue<byte[]>(Table.AccessKey);
+            if (accessData == null)
+                access = Table.Access;
+            else
+                access = new AccessValue(accessData);
         }
 
         //[DataMember, Browsable(false)]
@@ -894,6 +899,12 @@ namespace DataWF.Data
         public virtual object Clone()
         {
             var item = Table.NewItem();
+            CopyTo(item);
+            return item;
+        }
+
+        public void CopyTo(DBItem item)
+        {
             foreach (var column in Table.Columns)
             {
                 var value = GetValue(column);
@@ -906,8 +917,6 @@ namespace DataWF.Data
                 item.SetValue(null, Table.PrimaryKey);
                 //item.GenerateId();
             }
-
-            return item;
         }
 
         #endregion
@@ -989,6 +998,10 @@ namespace DataWF.Data
             if (Attached)
             {
                 Table.OnItemChanged(this, property, column, value);
+                if (property == nameof(Access) && Table.AccessKey == null)
+                {
+                    ReadAccess();
+                }
             }
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
