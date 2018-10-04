@@ -43,6 +43,7 @@ namespace DataWF.Data.Gui
                 new ToolMenuItem(ToolTableRefreshOnClick) { Name = "Refresh Table Info" },
                 new ToolMenuItem(ToolTableReportOnClick) { Name = "Table Report" },
                 new ToolMenuItem(ToolTableExplorerOnClick) { Name = "Table Explorer" },
+                new ToolMenuItem(ToolSequenceRefreshOnClick) { Name = "Refresh Sequence" },
                 new ToolSeparator(),
                 new ToolMenuItem(ToolExtractDDLClick) { Name = "Extract DDL" },
                 new ToolMenuItem(ToolSerializeClick) { Name = "Serialize" },
@@ -130,6 +131,7 @@ namespace DataWF.Data.Gui
 
             DBService.DBSchemaChanged += OnDBSchemaChanged;
         }
+
 
         public DBSchema CurrentSchema
         {
@@ -448,6 +450,16 @@ namespace DataWF.Data.Gui
                 }
             }
         }
+
+        private void ToolSequenceRefreshOnClick(object sender, EventArgs e)
+        {
+            if (dataTree.SelectedDBItem is DBTable table && table.Sequence != null)
+            {
+                table.RefreshSequence();
+                //DBSystem.LoadColumns(.SelectedObject);
+            }
+        }
+
 
         private void ToolTableRefreshOnClick(object sender, EventArgs e)
         {

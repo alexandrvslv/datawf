@@ -596,6 +596,14 @@ namespace DataWF.Data
             }
         }
 
+        public void RefreshSequence()
+        {
+            var current = Schema.Connection.ExecuteQuery($"select max({PrimaryKey.SqlName}) from {SqlName}");
+            Sequence.SetCurrent(current);
+            Sequence.NextInternal();
+            Sequence.Save();
+        }
+
         public void LoadReferencingBlock(IDbCommand command)
         {
             foreach (var reference in TableAttribute.Referencings)
