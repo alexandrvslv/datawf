@@ -49,7 +49,7 @@ namespace DataWF.Common
 
         public object GetValue(object target, object index)
         {
-            return GetValue((T)target, (K)index);
+            return GetValue(target == null ? default(T) : (T)target, (K)index);
         }
 
         public void SetValue(T target, K index, V value)
