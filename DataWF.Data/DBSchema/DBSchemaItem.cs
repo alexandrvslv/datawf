@@ -79,7 +79,7 @@ namespace DataWF.Data
             set { access = value; }
         }
 
-        [Browsable(false), Category("Naming")]
+        [Browsable(false), Category("Naming"), XmlIgnore, JsonIgnore]
         public virtual string FullName
         {
             get { return Name; }
@@ -184,7 +184,6 @@ namespace DataWF.Data
 
         public virtual int CompareTo(object obj)
         {
-
             return string.Compare(name, ((DBSchemaItem)obj).name, StringComparison.Ordinal);
         }
 

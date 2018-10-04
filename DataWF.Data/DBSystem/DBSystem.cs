@@ -826,6 +826,8 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
         {
             if (value is DBItem)
                 value = ((DBItem)value).PrimaryId;
+            else if (value.GetType().IsEnum)
+                value = (int)value;
 
             if (value == null)
                 return "null";
