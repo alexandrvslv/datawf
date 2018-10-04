@@ -899,112 +899,18 @@ namespace DataWF.Data
             object buf = null;
             if (value is bool && (Keys & DBColumnKeys.Boolean) == DBColumnKeys.Boolean && DataType != typeof(bool))
                 value = (bool)value ? BoolTrue : BoolFalse;
+
             if (value == null || value == DBNull.Value)
                 buf = null;
-            else if (DataType == value.GetType())
-                buf = value;
             else if (value is DBItem item)
                 buf = item.PrimaryId;
-            else if (value is string text && DataType != typeof(string))
-                buf = ParseValue(text);
-            else if (value is long longValue)
-            {
-                if (DataType == typeof(int))
-                    buf = (int)longValue;
-                else if (DataType == typeof(short))
-                    buf = (short)longValue;
-                else if (DataType == typeof(byte))
-                    buf = (byte)longValue;
-                else if (DataType.IsEnum)
-                    buf = (int)longValue;
-            }
-            else if (value is decimal mValue)
-            {
-                if (DataType == typeof(double))
-                    buf = (double)mValue;
-                if (DataType == typeof(float))
-                    buf = (float)mValue;
-            }
             else
-                buf = ParseValue(value.ToString());
+                buf = Helper.Parse(value, DataType);
 
             if (buf is DateTime && buf.Equals(DateTime.MinValue))
                 buf = null;
-            return buf;
-        }
 
-        public object ParseValue(string value)
-        {
-            if (string.IsNullOrEmpty(value))
-                return null;
-            object val = null;
-            var type = DataType;
-            if (type == typeof(decimal))
-            {
-                if (decimal.TryParse(value.Replace(",", "."), NumberStyles.Number, CultureInfo.InvariantCulture.NumberFormat, out var d))
-                    val = d;
-            }
-            else if (type == typeof(DateTime))
-            {
-                var index = value.IndexOf('|');
-                if (index >= 0)
-                    value = value.Substring(0, index);
-                DateTime date;
-                if (value.Equals("getdate()", StringComparison.OrdinalIgnoreCase) || value.Equals("current_timestamp", StringComparison.OrdinalIgnoreCase))
-                    val = DateTime.Now;
-                if (DateTime.TryParse(value, out date))
-                    val = date;
-                else if (DateTime.TryParseExact(value, new string[] { "yyyyMMdd", "yyyyMM" }, CultureInfo.InvariantCulture.DateTimeFormat, DateTimeStyles.None, out date))
-                    val = date;
-            }
-            else if (type == typeof(string))
-                val = value;
-            else if (type == typeof(int))
-            {
-                if (int.TryParse(value, out int i))
-                    val = i;
-            }
-            else if (type.IsEnum)
-            {
-                if (int.TryParse(value, out int i))
-                {
-                    val = i;
-                }
-                else
-                {
-                    val = Enum.Parse(type, value, true);
-                }
-            }
-            else if (type == typeof(byte))
-            {
-                if (byte.TryParse(value, out byte i))
-                    val = i;
-            }
-            else if (type == typeof(TimeSpan))
-            {
-                val = TimeSpan.Parse(value);
-            }
-            else if (type == typeof(double))
-            {
-                if (double.TryParse(value, out double d))
-                    val = d;
-            }
-            else if (type == typeof(float))
-            {
-                if (float.TryParse(value, out float f))
-                    val = f;
-            }
-            else if (type == typeof(long))
-            {
-                if (long.TryParse(value, out long l))
-                    val = l;
-            }
-            else if (type == typeof(bool))
-            {
-                if (bool.TryParse(value, out bool l))
-                    val = l;
-            }
-            return val;
+            return buf;
         }
 
         public IListIndex CreateIndex()
