@@ -17,11 +17,12 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using DataWF.Common;
+using DataWF.Data;
 using System;
 using System.ComponentModel;
 using System.Linq;
-using DataWF.Data;
-using DataWF.Common;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 
 namespace DataWF.Module.Common
@@ -39,6 +40,8 @@ namespace DataWF.Module.Common
     [DataContract, Table("rgroup_permission", "User", BlockSize = 500)]
     public class GroupPermission : DBGroupItem
     {
+        private object target;
+
         public static DBTable<GroupPermission> DBTable
         {
             get { return GetTable<GroupPermission>(); }
@@ -270,25 +273,23 @@ namespace DataWF.Module.Common
             {
                 if (Code == null)
                     return null;
-                object view = GetCache(Table.CodeKey);
-                if (view == null)
+                if (target == null)
                 {
                     var type = Type;
                     if (type == PermissionType.GSchema)
-                        view = DBService.Schems[Code];
+                        target = DBService.Schems[Code];
                     else if (type == PermissionType.GColumn)
-                        view = DBService.ParseColumn(Code);
+                        target = DBService.ParseColumn(Code);
                     else if (type == PermissionType.GTable)
-                        view = DBService.ParseTable(Code);
+                        target = DBService.ParseTable(Code);
                     else if (type == PermissionType.GBlock)
-                        view = DBService.ParseTableGroup(Code);
+                        target = DBService.ParseTableGroup(Code);
                     else if (type == PermissionType.GType)
-                        view = GetClass();
+                        target = GetClass();
                     else if (type == PermissionType.GTypeMember)
-                        view = GetClassMember();
-                    SetCache(Table.CodeKey, view);
+                        target = GetClassMember();
                 }
-                return view;
+                return target;
             }
             set
             {
@@ -327,19 +328,21 @@ namespace DataWF.Module.Common
             return PermissionName;
         }
 
-        public override AccessValue Access
+        public override void OnPropertyChanged([CallerMemberName] string property = null, DBColumn column = null, object value = null)
         {
-            get => base.Access;
-            set
+            base.OnPropertyChanged(property, column, value);
+            if (Attached)
             {
-                base.Access = value;
-                if (Permission is IAccessable)
+                if (property == nameof(Access))
                 {
-                    ((IAccessable)Permission).Access = value;
+                    if (Permission is IAccessable)
+                    {
+                        ((IAccessable)Permission).Access = Access;
+                    }
                 }
             }
         }
 
-        
+
     }
 }

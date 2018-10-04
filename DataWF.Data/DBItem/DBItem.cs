@@ -693,10 +693,10 @@ namespace DataWF.Data
             }
             set
             {
-                if (value != null && Table.AccessKey != null)
+                access = value;
+                if (Table.AccessKey != null)
                 {
-                    SetValue(value.Write(), Table.AccessKey);
-                    access = value;
+                    SetValue(value != null ? value.Write() : null, Table.AccessKey);
                 }
             }
         }
