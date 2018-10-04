@@ -151,9 +151,11 @@ namespace DataWF.Common
                 return formatable.Format();
             }
             var type = TypeHelper.CheckNullable(Invoker.DataType);
-            if (type == typeof(string))
+            if (Value is string stringValue)
             {
-                return $"'{Value}'";
+                if (Comparer.Type == CompareTypes.Like && stringValue.IndexOf('%') < 0)
+                    return $"'%{stringValue}%'";
+                return $"'{stringValue}'";
             }
             else if (Value is IEnumerable enumerable)
             {
