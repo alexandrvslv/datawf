@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 
@@ -13,6 +14,19 @@ namespace DataWF.Common
             var text = item.ToString();
             var field = item.GetType().GetRuntimeField(text);
             return field?.GetCustomAttribute<EnumMemberAttribute>(false)?.Value ?? text;
+        }
+
+        public static object Parse(Type type, string value)
+        {
+            try
+            {
+                return Enum.Parse(type, value);
+            }
+            catch
+            {
+                var itemType = (typeof(EnumItem<>)).MakeGenericType(type);
+                return EmitInvoker.Invoke(itemType, nameof(Parse), null, value);
+            }
         }
 
         private bool check;
@@ -89,6 +103,14 @@ namespace DataWF.Common
             }
         }
 
+        public static object Parse(string value)
+        {
+            bool checkInt = int.TryParse(value, out var intValue);
+            return Cache.Values.FirstOrDefault(p => p.Name.Equals(value, StringComparison.OrdinalIgnoreCase)
+            || p.Text.Equals(value, StringComparison.OrdinalIgnoreCase)
+            || (checkInt && value == p.Value.ToString())).Value;
+        }
+
         public static Dictionary<T, EnumItem<T>> Cache = new Dictionary<T, EnumItem<T>>();
 
         public static string Format(T item)
@@ -107,15 +129,14 @@ namespace DataWF.Common
         public EnumItem(T item)
         {
             Value = item;
-            Text = item.ToString();
-            var attribute = typeof(T).GetRuntimeField(Text)?.GetCustomAttribute<EnumMemberAttribute>(false);
-            if (attribute != null)
-                Text = attribute.Value;
+            Name = item.ToString();
+            var attribute = typeof(T).GetRuntimeField(Name)?.GetCustomAttribute<EnumMemberAttribute>(false);
+            Text = attribute?.Value ?? Name;
         }
 
-        public T Value { get; set; }
-
-        public string Text { get; set; }
+        public T Value { get; }
+        public string Name { get; }
+        public string Text { get; }
 
         public override int GetHashCode()
         {
