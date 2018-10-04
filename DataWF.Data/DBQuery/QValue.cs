@@ -62,6 +62,10 @@ namespace DataWF.Data
                 }
                 else
                     value = Column.ParseValue(value);
+                if (value?.GetType().IsEnum ?? false)
+                {
+                    value = (int)value;
+                }
                 if (this.value != value)
                 {
                     this.value = value;

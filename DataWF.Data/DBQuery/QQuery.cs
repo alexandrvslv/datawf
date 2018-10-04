@@ -552,11 +552,15 @@ namespace DataWF.Data
                                                     }
                                                     else
                                                     {
-                                                        var invoker = EmitInvoker.Initialize(typeof(DBItem), word);
+                                                        var invoker = EmitInvoker.Initialize(Table.ItemType.Type, word);
                                                         if (invoker != null)
                                                         {
                                                             QReflection reflection = new QReflection(invoker);
                                                             parameter.SetValue(reflection);
+                                                        }
+                                                        else if (parameter?.Column != null)
+                                                        {
+                                                            parameter.SetValue(new QValue(word, parameter.Column));
                                                         }
                                                     }
                                                 }
