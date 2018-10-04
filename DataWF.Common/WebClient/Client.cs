@@ -156,7 +156,8 @@ namespace DataWF.Common
 
         public void Add(object item)
         {
-            if (Select(IdInvoker.GetValue(item)) == null)
+            var id = IdInvoker.GetValue(item);
+            if (id == null || Select(id) == null)
             {
                 Items.Add((T)item);
             }
