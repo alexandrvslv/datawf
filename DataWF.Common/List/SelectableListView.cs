@@ -175,7 +175,10 @@ namespace DataWF.Common
                 var newComparer = FilterQuery.GetComparer();
                 ApplySortInternal(newComparer);
             }
-
+            else if (comparer != null)
+            {
+                ApplySortInternal(comparer);
+            }
         }
 
         public virtual void CheckUpdateFilter(object sender, EventArgs e)
