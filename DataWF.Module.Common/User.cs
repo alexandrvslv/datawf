@@ -341,14 +341,14 @@ namespace DataWF.Module.Common
 
         public string NameRU
         {
-            get { return GetValue<string>(NameENKey); }
-            set { SetValue(value, NameENKey); }
+            get { return GetValue<string>(NameRUKey); }
+            set { SetValue(value, NameRUKey); }
         }
 
         public string NameEN
         {
-            get { return GetValue<string>(NameRUKey); }
-            set { SetValue(value, NameRUKey); }
+            get { return GetValue<string>(NameENKey); }
+            set { SetValue(value, NameENKey); }
         }
 
         public override void Dispose()
