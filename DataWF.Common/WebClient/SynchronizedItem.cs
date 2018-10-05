@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -8,9 +9,16 @@ namespace DataWF.Common
 {
     public abstract class SynchronizedItem : IContainerNotifyPropertyChanged, INotifyPropertyChanging, ISynchronized
     {
-        private bool? isSynchronized = null;
+        public static Action<PropertyChangedEventHandler, object, PropertyChangedEventArgs> GlogalChangedHook;
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        private bool? isSynchronized = null;
+        private PropertyChangedEventHandler propertyChanged;
+
+        public event PropertyChangedEventHandler PropertyChanged
+        {
+            add => propertyChanged += value;
+            remove => propertyChanged -= value;
+        }
 
         public event PropertyChangingEventHandler PropertyChanging;
 
@@ -53,7 +61,19 @@ namespace DataWF.Common
 
             var arg = new PropertyChangedEventArgs(propertyName);
             Container?.OnItemPropertyChanged(this, arg);
-            PropertyChanged?.Invoke(this, arg);
+            if (propertyChanged != null)
+            {
+                if (GlogalChangedHook != null)
+                {
+                    GlogalChangedHook(propertyChanged, this, arg);
+                }
+                else
+                {
+                    propertyChanged(this, arg);
+                }
+            }
         }
     }
+
+
 }
