@@ -57,7 +57,10 @@ namespace DataWF.Common
 
         public async Task Close()
         {
-            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Goodby", CancellationToken.None).ConfigureAwait(false);
+            if (socket != null)
+            {
+                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Goodby", CancellationToken.None).ConfigureAwait(false);
+            }
         }
 
         public void Dispose()
