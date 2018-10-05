@@ -898,8 +898,13 @@ namespace DataWF.Data
 
         public virtual object Clone()
         {
-            var item = Table.NewItem();
+            var item = Table.NewItem(DBUpdateState.Insert, false, ItemType ?? 0);
             CopyTo(item);
+            if (Table.PrimaryKey != null)
+            {
+                item.SetValue(null, Table.PrimaryKey);
+                //item.GenerateId();
+            }
             return item;
         }
 
@@ -910,12 +915,6 @@ namespace DataWF.Data
                 var value = GetValue(column);
                 if (value != null)
                     item.SetValue(value, column);
-            }
-
-            if (Table.PrimaryKey != null)
-            {
-                item.SetValue(null, Table.PrimaryKey);
-                //item.GenerateId();
             }
         }
 

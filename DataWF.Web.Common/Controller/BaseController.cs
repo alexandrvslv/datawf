@@ -200,9 +200,7 @@ namespace DataWF.Web.Common
                     value.Reject();
                     Forbid();
                 }
-                var newItem = (T)table.NewItem();
-                value.CopyTo(newItem);
-                return newItem;
+                return (T)value.Clone();
             }
             catch (Exception ex)
             {
