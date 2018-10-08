@@ -88,6 +88,9 @@ namespace DataWF.Data
 
         public string ColumnName { get; set; }
 
+        public bool IsPrimaryKey => (Attribute.Keys & DBColumnKeys.Primary) == DBColumnKeys.Primary;
+        public bool IsTypeKey => (Attribute.Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType;
+
         public Type GetDataType()
         {
             return TypeHelper.CheckNullable(Attribute.DataType);

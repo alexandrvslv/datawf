@@ -164,8 +164,8 @@ namespace DataWF.Data
 
             cacheColumns.Sort((a, b) =>
             {
-                var aOrder = a.Column.IsTypeKey ? -3 : a.Column.IsPrimaryKey ? -2 : a.Attribute.Order;
-                var bOrder = b.Column.IsTypeKey ? -3 : b.Column.IsPrimaryKey ? -2 : b.Attribute.Order;
+                var aOrder = a.IsTypeKey ? -3 : a.IsPrimaryKey ? -2 : a.Attribute.Order;
+                var bOrder = b.IsTypeKey ? -3 : b.IsPrimaryKey ? -2 : b.Attribute.Order;
                 return aOrder.CompareTo(bOrder);
             });
             foreach (var column in cacheColumns)
