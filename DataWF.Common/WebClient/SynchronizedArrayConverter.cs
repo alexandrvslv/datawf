@@ -16,7 +16,13 @@ namespace DataWF.Common
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            return serializer.Deserialize(reader, objectType);
+            var itemType = TypeHelper.GetItemType(objectType);
+            var items = (existingValue as IList) ?? (IList)EmitInvoker.CreateObject(objectType);
+            while (reader.Read() && reader.TokenType != JsonToken.EndArray)
+            {
+                items.Add(serializer.Deserialize(reader, itemType));
+            }
+            return items;
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
