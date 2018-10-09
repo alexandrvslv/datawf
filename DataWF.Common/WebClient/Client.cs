@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -45,6 +46,7 @@ namespace DataWF.Common
         public virtual T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, T item, object id = null)
         {
             var add = item != null && !Items.Contains(item);
+            var index = -1;
             var property = (PropertySerializationInfo)null;
             while (jreader.Read() && jreader.TokenType != JsonToken.EndObject)
             {
@@ -96,7 +98,7 @@ namespace DataWF.Common
                             IdInvoker.SetValue(item, id);
                             if (add)
                             {
-                                Items.Add(item);
+                                index = Items.AddInternal(item);
                                 if (TypeId != 0)
                                 {
                                     var baseClient = GetBaseClient();
@@ -118,6 +120,10 @@ namespace DataWF.Common
             if (id != null && item is ISynchronized isSynch)
             {
                 isSynch.IsSynchronized = true;
+            }
+            if (add)
+            {
+                Items.OnListChanged(NotifyCollectionChangedAction.Add, item, index);
             }
             return item;
         }
