@@ -824,7 +824,8 @@ namespace DataWF.Web.CodeGenerator
             yield return SF.ParseStatement($"if({GetFieldName(property)} == value) return;");
             yield return SF.ParseStatement($"OnPropertyChanging();");
             yield return SF.ParseStatement($"{GetFieldName(property)} = value;");
-            if (property.ExtensionData != null && property.ExtensionData.TryGetValue("x-id", out var refPropertyName))
+            var refPropertyName = (object)null;
+            if (property.ExtensionData != null && property.ExtensionData.TryGetValue("x-id", out refPropertyName))
             {
                 var idProperty = GetPrimaryKey(property.Reference);
                 yield return SF.ParseStatement($"{refPropertyName} = value?.{GetPropertyName(idProperty)};");
@@ -836,10 +837,13 @@ namespace DataWF.Web.CodeGenerator
                 yield return SF.ParseStatement($"if({objectFieldName} != null && {objectFieldName}.Id != value)");
                 yield return SF.ParseStatement("{");
                 yield return SF.ParseStatement($"{objectFieldName} = null;");
-                yield return SF.ParseStatement($"OnPropertyChanged(\"{ GetPropertyName(objectProperty)}\");");
                 yield return SF.ParseStatement("}");
+                yield return SF.ParseStatement($"OnPropertyChanged(\"{ GetPropertyName(objectProperty)}\");");
             }
-            yield return SF.ParseStatement($"OnPropertyChanged();");
+            if (refPropertyName == null)
+            {
+                yield return SF.ParseStatement($"OnPropertyChanged();");
+            }
         }
 
         private string GetPropertyName(JsonProperty property)
