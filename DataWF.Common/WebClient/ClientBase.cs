@@ -206,6 +206,9 @@ namespace DataWF.Common
                             case System.Net.HttpStatusCode.NotFound:
                                 ErrorStatus("No Data Found!", response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
                                 break;
+                            case System.Net.HttpStatusCode.BadRequest:
+                                BadRequest(response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false), response);
+                                break;
                             case System.Net.HttpStatusCode.NoContent:
                                 result = default(R);
                                 break;
@@ -451,6 +454,14 @@ namespace DataWF.Common
             throw new ClientException($"{message}",
                 (int)response.StatusCode,
                 responseData,
+                GetHeaders(response), null);
+        }
+
+        private void BadRequest(string message, HttpResponseMessage response)
+        {
+            throw new ClientException($"{message}",
+                (int)response.StatusCode,
+                null,
                 GetHeaders(response), null);
         }
 
