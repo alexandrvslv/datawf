@@ -114,6 +114,9 @@ namespace DataWF.Module.Flow
         public static event DocumentSaveDelegate Saved;
         private DocInitType initype = DocInitType.Default;
         private int changes = 0;
+        private Stage temporaryStage;
+        private User temporaryUser;
+
         //private DBItem parent = DBItem.EmptyItem;
 
         public event EventHandler<DBItemEventArgs> ReferenceChanged;
@@ -309,7 +312,28 @@ namespace DataWF.Module.Flow
             {
                 if (CurrentStage != value)
                 {
-                    Send(CurrentWork, value);
+                    temporaryStage = value;
+                }
+            }
+        }
+
+        [Browsable(false)]
+        [DataMember, Column("current_user_id", ColumnType = DBColumnTypes.Code)]
+        public int? CurrentUserId
+        {
+            get { return CurrentUser?.Id; }
+            set { CurrentUser = User.DBTable.LoadById(value); }
+        }
+
+        [Reference(nameof(CurrentUserId))]
+        public User CurrentUser
+        {
+            get { return CurrentWork?.User; }
+            set
+            {
+                if (CurrentUser != value)
+                {
+                    temporaryUser = value;
                 }
             }
         }
@@ -733,8 +757,24 @@ namespace DataWF.Module.Flow
                     }
 
                     CurrentStage = Template.Work?.GetStartStage();
-                    base.Save();
+
                 }
+                if (temporaryStage != null)
+                {
+                    //CacheReferencing(transaction);
+                    if (temporaryUser != null)
+                    {
+                        Send(CurrentWork, temporaryStage, new[] { temporaryUser });
+                    }
+                    else
+                    {
+                        Send(CurrentWork, temporaryStage);
+                    }
+                    base.Save();
+
+                }
+                temporaryUser = null;
+                temporaryStage = null;
 
                 SaveReferencing();
 
@@ -747,6 +787,7 @@ namespace DataWF.Module.Flow
                     }
                 }
                 Saved?.Invoke(null, new DocumentEventArgs(this));
+
                 if (transaction.Owner == saveLock)
                 {
                     transaction.Commit();
