@@ -91,7 +91,7 @@ namespace DataWF.Web.Common
                 var value = table.LoadById(id);
                 if (value == null)
                 {
-                    NotFound();
+                    return NotFound();
                 }
                 if (!value.Access.View)
                 {
@@ -117,7 +117,7 @@ namespace DataWF.Web.Common
                 if (!value.Access.Create)
                 {
                     value.Reject();
-                    Forbid();
+                    return Forbid();
                 }
                 if (value.UpdateState == DBUpdateState.Insert)
                 {
@@ -149,7 +149,7 @@ namespace DataWF.Web.Common
                     || ((value.UpdateState & DBUpdateState.Update) == DBUpdateState.Update && !value.Access.Edit))
                 {
                     value.Reject();
-                    Forbid();
+                    return Forbid();
                 }
                 value.Save();
             }
@@ -173,7 +173,7 @@ namespace DataWF.Web.Common
                 if (!value.Access.Delete)
                 {
                     value.Reject();
-                    Forbid();
+                    return Forbid();
                 }
                 value.Delete(7, DBLoadParam.Load);
                 return Ok(true);
@@ -198,7 +198,7 @@ namespace DataWF.Web.Common
                 if (!value.Access.Create)
                 {
                     value.Reject();
-                    Forbid();
+                    return Forbid();
                 }
                 return (T)value.Clone();
             }
