@@ -210,7 +210,13 @@ namespace DataWF.Common
 
         public virtual T Get(K id)
         {
-            return Select(id) ?? GetAsync(id, CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult();
+            var item = Select(id);
+            if (item == null)
+            {
+                try { item = GetAsync(id, CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult(); }
+                catch (Exception ex) { Helper.OnException(ex); }
+            }
+            return item;
         }
 
         public virtual Task<List<T>> GetAsync(CancellationToken cancellationToken)
