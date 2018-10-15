@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using Newtonsoft.Json;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
@@ -23,7 +21,7 @@ namespace DataWF.Common
             return $"{Group?.Name}({Data})";
         }
 
-        [XmlIgnore]
+        [XmlIgnore, JsonIgnore]
         public IAccessGroup Group { get; private set; }
 
         public int GroupId
@@ -33,20 +31,15 @@ namespace DataWF.Common
             {
                 if (value >= 0)
                 {
-                    foreach (var item in AccessValue.Groups)
-                    {
-                        if (item.Id == value)
-                        {
-                            Group = item;
-                            break;
-                        }
-                    }
+                    Group = AccessValue.Groups.FirstOrDefault(p => p.Id == value);
                 }
             }
         }
 
+        [XmlIgnore, JsonIgnore]
         public AccessType Data { get; set; }
 
+        [JsonIgnore]
         public bool IsEmpty
         {
             get { return Data == 0; }

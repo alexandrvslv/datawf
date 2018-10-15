@@ -86,7 +86,6 @@ namespace DataWF.Common
         public void SetFlag(IAccessGroup group, AccessType type)
         {
             Add(new AccessItem(group, type));
-
         }
 
         public byte[] Write()
@@ -157,8 +156,19 @@ namespace DataWF.Common
                 if (item.Group == group)
                     return item;
             }
-            return new AccessItem(group);
+            var newItem = new AccessItem(group);
+            Add(newItem);
+            return newItem;
         }
+
+        public void Add(IEnumerable<AccessItem> accessItems)
+        {
+            foreach (var item in accessItems)
+            {
+                Add(item);
+            }
+        }
+
 
         public void Add(AccessItem item)
         {
@@ -216,27 +226,27 @@ namespace DataWF.Common
         }
     }
 
-    public class AccessValueJson : JsonConverter
-    {
-        public override bool CanConvert(Type objectType)
-        {
-            return objectType == typeof(AccessValue);
-        }
+    //public class AccessValueJson : JsonConverter
+    //{
+    //    public override bool CanConvert(Type objectType)
+    //    {
+    //        return objectType == typeof(AccessValue);
+    //    }
 
-        public override bool CanRead { get { return false; } }
+    //    public override bool CanRead { get { return false; } }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
-        }
+    //    public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+    //    {
+    //        throw new NotImplementedException();
+    //    }
 
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
-        {
-            if (!(value is AccessValue typeValue))
-            {
-                throw new JsonSerializationException($"Expected {nameof(AccessValue)} but {nameof(value)} is {value?.GetType().Name}.");
-            }
-            writer.WriteValue(value.ToString());
-        }
-    }
+    //    public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+    //    {
+    //        if (!(value is AccessValue typeValue))
+    //        {
+    //            throw new JsonSerializationException($"Expected {nameof(AccessValue)} but {nameof(value)} is {value?.GetType().Name}.");
+    //        }
+    //        writer.WriteValue(value.ToString());
+    //    }
+    //}
 }

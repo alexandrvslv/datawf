@@ -32,6 +32,70 @@ namespace DataWF.Web.Common
             }
         }
 
+        [HttpGet("AccessItems/{id}")]
+        public ActionResult<List<AccessItem>> GetAccessItems([FromRoute]K id)
+        {
+            try
+            {
+                var value = table.LoadById(id);
+                if (value == null)
+                {
+                    return NotFound();
+                }
+                var accessColumn = table.AccessKey;
+
+                if (accessColumn == null)
+                {
+                    throw new InvalidOperationException($"Table {table} is not Accessable!");
+                }
+
+                var access = value.Access?.Clone();
+                if (!(accessColumn.Access?.View ?? true)
+                    || (!access.View))
+                {
+                    return Forbid();
+                }
+
+                return access.Items;
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
+        }
+
+        [HttpPut("AccessItems/{id}")]
+        public ActionResult<bool> SetAccessItems([FromRoute]K id, [FromBody]List<AccessItem> accessItems)
+        {
+            try
+            {
+                var value = table.LoadById(id);
+                if (value == null)
+                {
+                    return NotFound();
+                }
+                var accessColumn = table.AccessKey;
+                if (accessColumn == null)
+                {
+                    throw new InvalidOperationException($"Table {table} is not Accessable!");
+                }
+                var buffer = value.Access?.Clone();
+                if (!(accessColumn.Access?.Edit ?? true)
+                    || (!buffer.Edit))
+                {
+                    return Forbid();
+                }
+                buffer.Add(accessItems);
+                value.Access = buffer;
+                value.Save();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
+        }
+
         [HttpGet("Access/{property}")]
         public ActionResult<AccessValue> GetAccess([FromRoute]string property)
         {
