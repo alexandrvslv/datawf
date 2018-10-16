@@ -812,11 +812,14 @@ namespace DataWF.Module.FlowGui
         {
             if (FileSerialize)
             {
-                var fileName = GetFileName();
-                writer.WriteAttribute("FileName", fileName);
-                writer.WriteAttribute("DocumentId", Document?.Id);
+                if (DocumentType != null)
+                {
+                    var fileName = GetFileName();
+                    writer.WriteAttribute("FileName", fileName);
+                    writer.WriteAttribute("DocumentId", Document?.Id);
 
-                XmlSerialize(fileName);
+                    XmlSerialize(fileName);
+                }
             }
             else
             {
