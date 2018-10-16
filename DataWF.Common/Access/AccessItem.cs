@@ -5,7 +5,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Common
 {
-    public struct AccessItem
+    public struct AccessItem : IAccessItem
     {
         public readonly static AccessItem Empty = new AccessItem();
         public static bool Default = false;
@@ -27,7 +27,7 @@ namespace DataWF.Common
         public int GroupId
         {
             get { return Group?.Id ?? -1; }
-            internal set
+            set
             {
                 if (value >= 0)
                 {

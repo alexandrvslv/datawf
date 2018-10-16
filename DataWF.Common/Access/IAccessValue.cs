@@ -9,4 +9,9 @@
         bool Edit { get; }
         bool View { get; }
     }
+
+    public interface IAccessItem : IAccessValue
+    {
+        int GroupId { get; }
+    }
 }
