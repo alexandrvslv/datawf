@@ -15,7 +15,7 @@ namespace DataWF.Web.CodeGenerator
 {
     public class ClientGenerator
     {
-        private readonly HashSet<string> VirtualOperations = new HashSet<string> { "GetAsync", "PutAsync", "PostAsync", "FindAsync", "DeleteAsync", "CopyAsync", "AccessAsync" };
+        private readonly HashSet<string> VirtualOperations = new HashSet<string> { "GetAsync", "PutAsync", "PostAsync", "FindAsync", "DeleteAsync", "CopyAsync" };
         private Dictionary<string, CompilationUnitSyntax> cacheModels = new Dictionary<string, CompilationUnitSyntax>();
         private Dictionary<string, ClassDeclarationSyntax> cacheClients = new Dictionary<string, ClassDeclarationSyntax>();
         private List<UsingDirectiveSyntax> usings = new List<UsingDirectiveSyntax>();
@@ -400,8 +400,10 @@ namespace DataWF.Web.CodeGenerator
         private string GetReturningTypeCheckAccess(SwaggerOperationDescription descriptor)
         {
             var returnType = GetReturningType(descriptor);
-            if (returnType == "AccessValue")
-                returnType = "IAccessValue";
+            //if (returnType == "AccessValue")
+            //    returnType = "IAccessValue";
+            //if (returnType == "List<AccessItem>")
+            //    returnType = "IEnumerable<IAccessItem>";
             return returnType;
         }
 
@@ -609,7 +611,6 @@ namespace DataWF.Web.CodeGenerator
 
         private IEnumerable<BaseTypeSyntax> GenDefinitionClassBases(JsonSchema4 schema)
         {
-
             if (schema.InheritedSchema != null)
             {
                 GetOrGenDefinion(schema.InheritedSchema.Id);
@@ -618,7 +619,10 @@ namespace DataWF.Web.CodeGenerator
             else
             {
                 //yield return SF.SimpleBaseType(SF.ParseTypeName(nameof(IContainerNotifyPropertyChanged)));
-                yield return SF.SimpleBaseType(SF.ParseTypeName(nameof(SynchronizedItem)));
+                if (schema.Id == "DBItem")
+                    yield return SF.SimpleBaseType(SF.ParseTypeName(nameof(SynchronizedItem)));
+                else
+                    yield return SF.SimpleBaseType(SF.ParseTypeName(nameof(DefaultItem)));
             }
             var idKey = GetPrimaryKey(schema, false);
             if (idKey != null)
