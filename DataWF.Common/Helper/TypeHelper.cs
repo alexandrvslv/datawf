@@ -4,7 +4,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -146,20 +145,32 @@ namespace DataWF.Common
         {
             if (string.IsNullOrEmpty(value))
                 return null;
+
             if (!cacheTypes.TryGetValue(value, out Type type))
             {
                 type = Type.GetType(value);
                 if (type == null)
                 {
-                    int index = value.LastIndexOf(',');
-                    string code = index >= 0 ? value.Substring(0, index) : value;
+                    var index = value.LastIndexOf(',');
+                    var code = index >= 0 ? value.Substring(0, index) : value;
                     type = Type.GetType(code);
-                    var asseblyes = AppDomain.CurrentDomain.GetAssemblies();
-                    foreach (var assembly in asseblyes)
+
+                    var byName = !code.Contains('.');
+
+                    foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
                     {
-                        type = assembly.GetType(code);
+                        if (byName)
+                        {
+                            type = assembly.DefinedTypes.FirstOrDefault(p => p.Name == value);
+                        }
+                        else
+                        {
+                            type = assembly.GetType(code);
+                        }
                         if (type != null)
+                        {
                             break;
+                        }
                     }
                 }
                 cacheTypes[value] = type;
