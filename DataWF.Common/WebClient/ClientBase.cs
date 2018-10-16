@@ -203,6 +203,9 @@ namespace DataWF.Common
                                     ErrorStatus("Unauthorized! Try Relogin!", response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
                                 }
                                 break;
+                            case System.Net.HttpStatusCode.Forbidden:
+                                ErrorStatus("Access Denied!", response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+                                break;
                             case System.Net.HttpStatusCode.NotFound:
                                 ErrorStatus("No Data Found!", response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
                                 break;
