@@ -170,7 +170,7 @@ namespace DataWF.Common
                 InsertInternal(items.Count, item);
             }
 
-            if (comparer == null || comparer is InvokerComparerList<T>)
+            if (FilterQuery.Orders.Count > 0)
             {
                 var newComparer = FilterQuery.GetComparer();
                 ApplySortInternal(newComparer);
