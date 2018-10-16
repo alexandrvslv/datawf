@@ -20,7 +20,6 @@ namespace DataWF.Common
         }
 
         public TypeSerializationInfo SerializationInfo;
-        private IAccessValue access;
 
         public Invoker<T, K?> IdInvoker { get; }
         public Invoker<T, int?> TypeInvoker { get; }
@@ -37,11 +36,6 @@ namespace DataWF.Common
             }
         }
 
-        public IAccessValue Access
-        {
-            get => access ?? (access = AccessAsync(CancellationToken.None).GetAwaiter().GetResult());
-            set => throw new NotSupportedException();
-        }
 
         public virtual T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, T item, object id = null)
         {
@@ -145,14 +139,15 @@ namespace DataWF.Common
         public ICRUDClient GetBaseClient()
         {
             var type = typeof(T).BaseType;
+            var result = (ICRUDClient)null;
             while (type != typeof(object))
             {
                 var client = Provider.GetClient(type);
                 if (client != null)
-                    return client;
+                    result = client;               
                 type = type.BaseType;
             }
-            return null;
+            return result;
         }
 
         public object NewItem()
@@ -224,10 +219,6 @@ namespace DataWF.Common
             IsSynchronized = true;
             return Task.FromResult<List<T>>(null);
         }
-
-        public virtual Task<IAccessValue> AccessAsync(CancellationToken cancellationToken) => Task.FromResult<IAccessValue>(null);
-
-        public virtual Task<IAccessValue> AccessAsync(string property, CancellationToken cancellationToken) => Task.FromResult<IAccessValue>(null);
 
         public Task GetAsync() => GetAsync(CancellationToken.None);
 
