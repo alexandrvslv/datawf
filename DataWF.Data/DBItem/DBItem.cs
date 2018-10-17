@@ -555,7 +555,7 @@ namespace DataWF.Data
         {
             foreach (DBColumn column in Table.Columns)
             {
-                if (column.DefaultValue != null)
+                if (!string.IsNullOrEmpty(column.DefaultValue))
                     SetValue(column.ParseValue(column.DefaultValue), column, false);
             }
         }
