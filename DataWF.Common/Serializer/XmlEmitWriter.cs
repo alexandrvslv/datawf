@@ -66,7 +66,7 @@ namespace DataWF.Common
             WriteBegin(name);
             if (info.IsAttribute)
             {
-                Writer.WriteValue(Helper.TextBinaryFormat(element));
+                Writer.WriteValue(info.TextFormat(element));
             }
             else if (Serializer.CheckIFile && element is IFileSerialize)
             {
@@ -97,7 +97,7 @@ namespace DataWF.Common
                     var value = attribute.Invoker.GetValue(element);
                     if (value == null || attribute.CheckDefault(value))
                         continue;
-                    WriteAttribute(attribute.Name, value);
+                    WriteAttribute(attribute, value);
                 }
 
                 foreach (var property in info.GetContents())
@@ -110,7 +110,7 @@ namespace DataWF.Common
 
                     if (property.IsText)
                     {
-                        Writer.WriteElementString(property.Name, Helper.TextBinaryFormat(value));
+                        Writer.WriteElementString(property.Name, property.TextFormat(value));
                     }
                     else
                     {
@@ -147,6 +147,11 @@ namespace DataWF.Common
         public void WriteBegin(string name)
         {
             Writer.WriteStartElement(name);
+        }
+
+        public void WriteAttribute(PropertySerializationInfo property, object value)
+        {
+            Writer.WriteAttributeString(property.Name, property.TextFormat(value));
         }
 
         public void WriteAttribute(string name, object value)

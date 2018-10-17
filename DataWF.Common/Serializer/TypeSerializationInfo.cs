@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Portable.Xaml.Markup;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -12,14 +13,16 @@ namespace DataWF.Common
         {
             Type = type;
             TypeName = TypeHelper.FormatBinary(Type);
-            if (!Type.IsInterface)
-            {
-                Constructor = EmitInvoker.Initialize(type, Type.EmptyTypes);
-            }
+           
             IsAttribute = TypeHelper.IsXmlAttribute(Type);
             if (IsAttribute)
             {
+                Serialazer = TypeHelper.GetValueSerializer(type);
                 return;
+            }
+            if (!Type.IsInterface)
+            {
+                Constructor = EmitInvoker.Initialize(type, Type.EmptyTypes);
             }
 
             IsList = TypeHelper.IsList(type);
@@ -65,29 +68,29 @@ namespace DataWF.Common
             }
         }
 
-        public Type Type { get; private set; }
+        public Type Type { get; }
 
-        public string TypeName { get; private set; }
+        public string TypeName { get; }
 
-        public EmitConstructor Constructor { get; private set; }
+        public EmitConstructor Constructor { get; }
 
-        public bool IsList { get; private set; }
+        public bool IsList { get; }
 
-        public bool IsNamedList { get; internal set; }
+        public bool IsNamedList { get; }
 
-        public Type ListItemType { get; private set; }
+        public Type ListItemType { get; }
 
-        public TypeSerializationInfo ListItemTypeInfo { get; internal set; }
+        public TypeSerializationInfo ListItemTypeInfo { get; set; }
 
-        public bool ListDefaulType { get; private set; }
+        public bool ListDefaulType { get; }
 
-        public bool ListItemIsAttribute { get; private set; }
+        public bool ListItemIsAttribute { get; }
 
-        public EmitConstructor ListConstructor { get; private set; }
+        public EmitConstructor ListConstructor { get; }
 
-        public bool IsAttribute { get; private set; }
+        public bool IsAttribute { get; }
 
-        public bool IsDictionary { get; private set; }
+        public bool IsDictionary { get; }
 
         public IEnumerable<PropertySerializationInfo> GetAttributes() => Properties.Select(isAttributeInvoker.Name, CompareType.Equal, true);
 
@@ -95,9 +98,25 @@ namespace DataWF.Common
 
         public NamedList<PropertySerializationInfo> Properties { get; private set; }
 
+        public ValueSerializer Serialazer { get; }
+
         public PropertySerializationInfo GetProperty(string name)
         {
             return Properties[name];
+        }
+
+        public string TextFormat(object value)
+        {
+            return Serialazer != null
+                ? Serialazer.ConvertToString(value, null)
+                : Helper.TextBinaryFormat(value);
+        }
+
+        public object TextParse(string value)
+        {
+            return Serialazer != null
+                ? Serialazer.ConvertFromString(value, null)
+                : Helper.TextParse(value, Type);
         }
     }
 }

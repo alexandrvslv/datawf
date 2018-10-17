@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Xml;
 using System.Collections;
 using System.IO;
-using System.Diagnostics;
-using System.Collections.Generic;
-using System.Linq;
+using System.Xml;
 
 namespace DataWF.Common
 {
@@ -88,7 +85,7 @@ namespace DataWF.Common
             var member = info.GetProperty(Reader.Name);
             if (member != null)
             {
-                member.Invoker.SetValue(element, Helper.TextParse(Reader.Value, member.DataType));
+                member.Invoker.SetValue(element, member.TextParse(Reader.Value));
             }
         }
 
@@ -106,7 +103,9 @@ namespace DataWF.Common
                 object value = null;
                 if (member.IsText || member.IsAttribute)
                 {
-                    value = Helper.TextParse(Reader.ReadElementContentAsString(), mtype ?? member.DataType);
+                    var text = Reader.ReadElementContentAsString();
+                    value = mtype == null || mtype == member.DataType
+                        ? member.TextParse(text) : Helper.TextParse(text, member.DataType);
                 }
                 else
                 {
@@ -136,7 +135,7 @@ namespace DataWF.Common
                 object newobj = null;
                 if (itemInfo?.IsAttribute ?? info.ListItemIsAttribute)
                 {
-                    newobj = Helper.TextParse(Reader.ReadElementContentAsString(), itemInfo.Type);
+                    newobj = itemInfo.TextParse(Reader.ReadElementContentAsString());
                 }
                 else
                 {
@@ -264,7 +263,7 @@ namespace DataWF.Common
             //Debug.WriteLine($"Read {Reader.Name}");
             if (info.IsAttribute)
             {
-                return Helper.TextParse(Reader.ReadElementContentAsString(), info.Type);
+                return info.TextParse(Reader.ReadElementContentAsString());
             }
             if (element == null || element.GetType() != info.Type)
             {

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Portable.Xaml.Markup;
+using System;
 using System.Reflection;
 
 namespace DataWF.Common
@@ -13,32 +14,50 @@ namespace DataWF.Common
             Property = property;
             IsText = TypeHelper.IsXmlText(property);
             IsAttribute = TypeHelper.IsXmlAttribute(property) && !IsText;
-            Default = TypeHelper.GetDefault(property);
             Invoker = EmitInvoker.Initialize(property);
+            Default = TypeHelper.GetDefault(property);
+            if (IsAttribute || IsText)
+            {
+                Serialazer = TypeHelper.GetValueSerializer(property);
+            }
             Name = property.Name;
         }
 
-        public IInvoker Invoker { get; private set; }
+        public IInvoker Invoker { get; }
 
-        public PropertyInfo Property { get; private set; }
+        public PropertyInfo Property { get; }
 
         public string Name { get; set; }
 
         public Type DataType { get { return Property.PropertyType; } }
 
-        public bool IsAttribute { get; private set; }
+        public bool IsAttribute { get; }
 
-        public bool IsText { get; private set; }
+        public bool IsText { get; }
 
-        public object Default { get; private set; }
+        public object Default { get; }
+
+        public ValueSerializer Serialazer { get; }
 
         public bool CheckDefault(object value)
         {
-            if (Default == null && value == null)
-                return true;
             if (Default == null)
-                return false;
+                return value == null;
             return Default.Equals(value);
+        }
+
+        public string TextFormat(object value)
+        {
+            return Serialazer != null
+                ? Serialazer.ConvertToString(value, null)
+                : Helper.TextBinaryFormat(value);
+        }
+
+        public object TextParse(string value)
+        {
+            return Serialazer != null
+                ? Serialazer.ConvertFromString(value, null)
+                : Helper.TextParse(value, DataType);
         }
     }
 }
