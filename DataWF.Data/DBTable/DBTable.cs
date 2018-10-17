@@ -1554,6 +1554,22 @@ namespace DataWF.Data
                 column.DefaultValue = columnInfo.Default;
 
                 string data = columnInfo.DataType.ToUpper();
+                var sizeIndex = data.IndexOf('(');
+                if (data.IndexOf('(') > 0)
+                {
+                    if (columnInfo.Length == null && columnInfo.Precision == null)
+                    {
+                        var sizeData = data.Substring(sizeIndex).Trim('(', ')')
+                            .Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                        columnInfo.Length =
+                            columnInfo.Precision = sizeData[0];
+                        if (sizeData.Length > 1)
+                            columnInfo.Scale = sizeData[1];
+                    }
+                    data = data.Substring(0, sizeIndex);
+
+                }
                 if (data.Equals("BLOB", StringComparison.OrdinalIgnoreCase) ||
                     data.Equals("RAW", StringComparison.OrdinalIgnoreCase) ||
                     data.Equals("VARBINARY", StringComparison.OrdinalIgnoreCase))
