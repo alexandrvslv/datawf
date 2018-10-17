@@ -1040,8 +1040,14 @@ namespace DataWF.Common
 
             if (TypeHelper.IsBaseType(value.GetType(), type))
                 buf = value;
-            else if (value is string text && type != typeof(string))
-                buf = TextParse(text, type);
+            else if (type == typeof(string))
+            {
+                buf = TextDisplayFormat(value, null);
+            }
+            else if (value is string text)
+            {
+                buf = TextParse(text, type, null);
+            }
             else if (value is int intValue)
             {
                 if (type == typeof(short))
