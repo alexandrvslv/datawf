@@ -22,6 +22,7 @@ namespace DataWF.Common
         private static Dictionary<string, Type> cacheTypes = new Dictionary<string, Type>(200, StringComparer.Ordinal);
         private static Dictionary<MemberInfo, bool> cacheIsXmlText = new Dictionary<MemberInfo, bool>(200);
         private static Dictionary<Type, TypeConverter> cacheTypeConverter = new Dictionary<Type, TypeConverter>(200);
+        private static Dictionary<PropertyInfo, ValueSerializer> cachePropertyValueSerializer = new Dictionary<PropertyInfo, ValueSerializer>(200);
         private static Dictionary<Type, ValueSerializer> cacheValueSerializer = new Dictionary<Type, ValueSerializer>(200);
         private static Dictionary<Type, PropertyInfo[]> cacheTypeProperties = new Dictionary<Type, PropertyInfo[]>(200);
         private static Dictionary<MemberInfo, bool> cacheIsXmlAttribute = new Dictionary<MemberInfo, bool>(200);
@@ -190,6 +191,11 @@ namespace DataWF.Common
             return buffer;
         }
 
+        public static TypeConverter SetTypeConverter(Type type, TypeConverter converter)
+        {
+            return cacheTypeConverter[type] = converter;
+        }
+
         public static TypeConverter GetTypeConverter(Type type)
         {
             if (!cacheTypeConverter.TryGetValue(type, out var converter))
@@ -207,26 +213,83 @@ namespace DataWF.Common
             return converter;
         }
 
-        public static ValueSerializer GetValueSerializer(Type type)
+        public static ValueSerializer GetValueSerializer(PropertyInfo property)
         {
-            if (!cacheValueSerializer.TryGetValue(type, out var converter))
+            //return ValueSerializer.GetSerializerFor(property);
+            if (!cachePropertyValueSerializer.TryGetValue(property, out var serializer))
             {
-                var attribute = type.GetCustomAttribute(typeof(ValueSerializerAttribute)) as ValueSerializerAttribute;
-                ValueSerializer serializer = null;
+                var attribute = property.GetCustomAttribute<ValueSerializerAttribute>(false);
                 if (attribute != null && attribute.ValueSerializerType != null)
                 {
                     serializer = (ValueSerializer)CreateObject(attribute.ValueSerializerType);
                 }
+                else
+                {
+                    serializer = GetValueSerializer(property.PropertyType);
+                }
+
+                return cachePropertyValueSerializer[property] = serializer;
+            }
+            return serializer;
+        }
+
+        public static ValueSerializer SetValueSerializer(Type type, ValueSerializer serializer)
+        {
+            return cacheValueSerializer[type] = serializer;
+        }
+
+        public static ValueSerializer GetValueSerializer(Type type)
+        {
+            if (!cacheValueSerializer.TryGetValue(type, out var serializer))
+            {
+                var attribute = type.GetCustomAttribute<ValueSerializerAttribute>(false);
+                serializer = null;
+                if (attribute != null && attribute.ValueSerializerType != null)
+                {
+                    serializer = (ValueSerializer)CreateObject(attribute.ValueSerializerType);
+                }
+                else if (type == typeof(string))
+                {
+                    serializer = StringValueSerializer.Instance;
+                }
+                else if (type == typeof(int))
+                {
+                    serializer = IntValueSerializer.Instance;
+                }
+                else if (type == typeof(DateTime))
+                {
+                    serializer = DateTimeValueSerializer.Instance;
+                }
+                else if (type == typeof(Type))
+                {
+                    serializer = TypeValueSerializer.Instance;
+                }
+                else if (type == typeof(CultureInfo))
+                {
+                    serializer = CultureInfoValueSerializer.Instance;
+                }
+                else if (type.IsEnum)
+                {
+                    serializer = (ValueSerializer)EmitInvoker.CreateObject(typeof(EnumValueSerializer<>).MakeGenericType(type));
+                }
+                else
+                {
+                    var converter = GetTypeConverter(type);
+                    if (converter != null)
+                    {
+                        serializer = new TypeConverterValueSerializer { Converter = converter };
+                    }
+                }
                 return cacheValueSerializer[type] = serializer;
             }
-            return converter;
+            return serializer;
         }
 
         public static bool IsXmlText(MemberInfo info)
         {
             if (!cacheIsXmlText.TryGetValue(info, out bool flag))
             {
-                var attribute = info.GetCustomAttribute(typeof(XmlTextAttribute), false);
+                var attribute = info.GetCustomAttribute<XmlTextAttribute>(false);
                 return cacheIsXmlText[info] = attribute != null;
             }
             return flag;
@@ -236,8 +299,13 @@ namespace DataWF.Common
         {
             if (!cacheIsXmlAttribute.TryGetValue(info, out bool flag))
             {
-                var attribute = info.GetCustomAttribute(typeof(XmlAttributeAttribute), false);
-                return cacheIsXmlAttribute[info] = attribute != null || IsXmlAttribute(GetMemberType(info));
+                var attribute = info.GetCustomAttribute<XmlAttributeAttribute>(false);
+                if (attribute != null)
+                    return cacheIsXmlAttribute[info] = true;
+                if (info is PropertyInfo propertyInfo && GetValueSerializer(propertyInfo) != null)
+                    return cacheIsXmlAttribute[info] = true;
+
+                return cacheIsXmlAttribute[info] = IsXmlAttribute(GetMemberType(info));
             }
             return flag;
         }
@@ -254,9 +322,11 @@ namespace DataWF.Common
                 }
                 else
                 {
-                    var typeConverter = TypeHelper.GetTypeConverter(type);
-                    if (typeConverter != null && typeConverter.CanConvertTo(typeof(string)))
+                    var serializer = GetValueSerializer(type);
+                    if (serializer != null)
+                    {
                         flag = true;
+                    }
                 }
                 cacheTypeIsXmlAttribute[type] = flag;
             }
