@@ -453,10 +453,19 @@ namespace DataWF.Common
 
                 if (item.Equals(value))
                     return;
-
-                RemoveInternal(item, index);
-                InsertInternal(index, value);
-                OnListChanged(NotifyCollectionChangedAction.Replace, value, index, index, item);
+                var valueIndex = IndexOf(value);
+                if (valueIndex > 0)
+                {
+                    items.RemoveAt(valueIndex);
+                    items.Insert(index, value);
+                    OnListChanged(NotifyCollectionChangedAction.Move, value, index, valueIndex, item);
+                }
+                else
+                {
+                    RemoveInternal(item, index);
+                    InsertInternal(index, value);
+                    OnListChanged(NotifyCollectionChangedAction.Replace, value, index, index, item);
+                }
             }
         }
 

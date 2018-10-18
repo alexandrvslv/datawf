@@ -161,7 +161,7 @@ namespace DataWF.Common
                 }
                 if (info.IsNamedList)
                 {
-                    ((INamedList)list).Set((INamed)newobj);
+                    ((INamedList)list).Set((INamed)newobj, listIndex);
                 }
                 else if (listIndex < list.Count)
                 {

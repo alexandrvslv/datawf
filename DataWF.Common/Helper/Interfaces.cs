@@ -231,6 +231,7 @@ namespace DataWF.Common
     {
         INamed Get(string name);
         void Set(INamed value);
+        void Set(INamed value, int index);
     }
 
     public interface ISynchronized

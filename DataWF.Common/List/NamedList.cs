@@ -44,6 +44,15 @@ namespace DataWF.Common
                 this[value.Name] = (T)value;
             }
         }
+
+        public void Set(INamed value, int index)
+        {
+            if (value != null)
+            {
+                Set(value);
+                this[index] = (T)value;
+            }
+        }
     }
 
 
