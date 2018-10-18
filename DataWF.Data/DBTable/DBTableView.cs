@@ -235,14 +235,6 @@ namespace DataWF.Data
             }
         }
 
-        public IList ToList()
-        {
-            List<T> list = new List<T>(Count);
-            foreach (T item in this)
-                list.Add(item);
-            return list;
-        }
-
         public IDbCommand Command
         {
             get { return command; }
@@ -263,6 +255,16 @@ namespace DataWF.Data
         {
             get { return table; }
             set { table = value as DBTable<T>; }
+        }
+
+        public IEnumerable Source { get { return table; } set { return; } }
+
+        public IList ToList()
+        {
+            List<T> list = new List<T>(Count);
+            foreach (T item in this)
+                list.Add(item);
+            return list;
         }
 
         IEnumerable<DBItem> IDBTableView.Load(DBLoadParam param)

@@ -5,6 +5,7 @@ namespace DataWF.Common
 {
     public interface IFilterable : IList
     {
+        IEnumerable Source { get; set; }
         IQuery FilterQuery { get; }
         void UpdateFilter();
     }

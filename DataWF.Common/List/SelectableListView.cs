@@ -44,6 +44,12 @@ namespace DataWF.Common
             SetCollection(baseCollection);
         }
 
+        public IEnumerable Source
+        {
+            get { return source; }
+            set { SetCollection(value); }
+        }
+
         public void SetCollection(IEnumerable baseCollection)
         {
             if (source == baseCollection)
