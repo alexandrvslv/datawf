@@ -824,6 +824,9 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
 
         public virtual string FormatText(object value)
         {
+            if (value == null)
+                return "null";
+
             if (value is DBItem)
                 value = ((DBItem)value).PrimaryId;
             else if (value.GetType().IsEnum)
