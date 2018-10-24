@@ -43,22 +43,24 @@ namespace DataWF.Data
 
         public override DbConnectionStringBuilder GetConnectionStringBuilder(DBConnection connection)
         {
-            var builder = new SqlConnectionStringBuilder();
-            builder.ConnectTimeout = connection.TimeOut;
-            builder.IntegratedSecurity = connection.IntegratedSecurity;
+            var builder = new SqlConnectionStringBuilder
+            {
+                ConnectTimeout = connection.TimeOut,
+                IntegratedSecurity = connection.IntegratedSecurity,
+                DataSource = connection.Host + (connection.Port == 0 ? string.Empty : "," + connection.Port),
+                InitialCatalog = connection.DataBase,
+                Encrypt = connection.Encrypt
+            };
             if (!connection.IntegratedSecurity)
             {
                 builder.UserID = connection.User;
                 builder.Password = connection.Password;
             }
-            builder.DataSource = connection.Host + (connection.Port == 0 ? string.Empty : "," + connection.Port);
-            builder.InitialCatalog = connection.DataBase;
             if (connection.Pool != null)
             {
                 builder.Pooling = connection.Pool.Value;
             }
 
-            builder.Encrypt = connection.Encrypt;
             return builder;
         }
 

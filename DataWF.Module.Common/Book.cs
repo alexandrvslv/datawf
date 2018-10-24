@@ -30,9 +30,9 @@ namespace DataWF.Module.Common
         private static DBColumn nameRUKey = DBColumn.EmptyKey;
         private static DBTable<Book> dbTable;
 
-        public static DBColumn ValueKey => DBTable.ParseProperty(nameof(Value), valueKey);
-        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), nameENKey);
-        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), nameRUKey);
+        public static DBColumn ValueKey => DBTable.ParseProperty(nameof(Value), ref valueKey);
+        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
+        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
         public static DBTable<Book> DBTable => dbTable ?? (dbTable = GetTable<Book>());
 
         public Book()

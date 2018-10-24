@@ -58,8 +58,7 @@ namespace DataWF.Common
 
         public static EndPointMessage Read(byte[] data)
         {
-            var message = new EndPointMessage();
-            message.Lenght = (uint)data.Length;
+            var message = new EndPointMessage { Lenght = (uint)data.Length };
             if (Helper.IsGZip(data))
                 data = Helper.ReadGZip(data);
             try

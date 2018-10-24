@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 
 namespace DataWF.Common
@@ -12,8 +11,8 @@ namespace DataWF.Common
 
     public class DiffResult
     {
-        private IList listA;
-        private IList listB;
+        private readonly IList listA;
+        private readonly IList listB;
         public DiffResult(IList listA, IList listB)
         {
             Length = 1;
@@ -91,8 +90,7 @@ namespace DataWF.Common
                 }
                 if (!a[i].Equals(b[j]))
                 {
-                    int newa, newb;
-                    DiffTypeDef(a, b, i, j, out newa, out newb);
+                    DiffTypeDef(a, b, i, j, out int newa, out int newb);
                     if (newa > i)
                     {
                         curr = new DiffResult(a, b) { Type = DiffType.Deleted, Index = i, Length = newa - i };

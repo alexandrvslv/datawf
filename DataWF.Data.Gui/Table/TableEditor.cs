@@ -75,8 +75,7 @@ namespace DataWF.Data.Gui
             List.CellValueWrite += FieldsCellValueChanged;
             Name = "TableEditor";
 
-            question = new QuestionMessage();
-            question.Text = "Checkout";
+            question = new QuestionMessage { Text = "Checkout" };
             question.Buttons.Add(Command.No);
             question.Buttons.Add(Command.Yes);
         }
@@ -380,8 +379,7 @@ namespace DataWF.Data.Gui
                             {
                                 if (!relation.Table.Access.View)
                                     continue;
-                                var itemRelation = toolReference.DropDownItems[relation.Name] as MenuItemRelation;
-                                if (itemRelation != null)
+                                if (toolReference.DropDownItems[relation.Name] is MenuItemRelation itemRelation)
                                 {
                                     itemRelation.Visible = true;
                                 }
@@ -478,10 +476,12 @@ namespace DataWF.Data.Gui
                 {
                     if (cs.ReferenceTable != null && cs.Name.ToLower() != baseColumn.Name.ToLower())
                     {
-                        var item = new ToolMenuItem();
-                        item.Tag = cs;
-                        item.Name = cs.Name;
-                        item.Text = cs.ToString();
+                        var item = new ToolMenuItem
+                        {
+                            Tag = cs,
+                            Name = cs.Name,
+                            Text = cs.ToString()
+                        };
                         toolAdd.DropDownItems.Add(item);
                     }
                 }
@@ -525,15 +525,18 @@ namespace DataWF.Data.Gui
 
         private void OnToolInsertItemClicked(object sender, EventArgs e)
         {
-            var column = ((MenuItem)sender).Tag as DBColumn;
-            if (column != null)
+            if (((MenuItem)sender).Tag is DBColumn column)
             {
-                var cont = new ToolWindow();
-                cont.Target = new TableEditor();
-                cont.Label.Text = column.ReferenceTable.ToString();
+                var editor = new TableEditor();
+                editor.Initialize(column.ReferenceTable.CreateItemsView("", DBViewKeys.None, DBStatus.Current), null, column, TableEditorMode.Reference, false);
+                editor.ItemSelect += OnRowSelected;
+
+                var cont = new ToolWindow
+                {
+                    Target = editor,
+                    Title = column.ReferenceTable.ToString()
+                };
                 //cont.Closing += new ToolStripDropDownClosingEventHandler(cont_Closing);
-                ((TableEditor)cont.Target).Initialize(column.ReferenceTable.CreateItemsView("", DBViewKeys.None, DBStatus.Current), null, column, TableEditorMode.Reference, false);
-                ((TableEditor)cont.Target).ItemSelect += OnRowSelected;
                 ((MenuItem)sender).Tag = cont;
                 //((ToolStripDropDownButton)e.ClickedItem).DropDown = e.ClickedItem.Tag as ToolForm;
                 //((ToolStripDropDownButton)e.ClickedItem).ShowDropDown();
@@ -548,9 +551,8 @@ namespace DataWF.Data.Gui
             if (List.Mode == LayoutListMode.Fields)
             {
                 var field = List.SelectedItem as LayoutDBField;
-                var column = field.Invoker as DBColumn;
                 row = List.FieldSource as DBItem;
-                if (column != null && column.IsReference && column.ReferenceTable.Access.View)
+                if (field.Invoker is DBColumn column && column.IsReference && column.ReferenceTable.Access.View)
                 {
                     row = field.GetReference(row);
                 }
@@ -669,9 +671,11 @@ namespace DataWF.Data.Gui
             var text = new RichTextView();
             text.LoadText(rowsText.ToString(), Xwt.Formats.TextFormat.Plain);
 
-            var window = new ToolWindow();
-            window.Target = text;
-            window.Mode = ToolShowMode.Dialog;
+            var window = new ToolWindow
+            {
+                Target = text,
+                Mode = ToolShowMode.Dialog
+            };
             if (mode == TableEditorMode.Referencing || mode == TableEditorMode.Item)
             {
                 window.AddButton("Exclude", (object se, EventArgs arg) =>
@@ -928,8 +932,10 @@ namespace DataWF.Data.Gui
                 var itemlist = new List<DBItem>(Table);
                 foreach (var item in list.Selection)
                     itemlist.Add((DBItem)item.Item);
-                var merge = new TableRowMerge();
-                merge.Items = itemlist;
+                var merge = new TableRowMerge
+                {
+                    Items = itemlist
+                };
 
                 merge.Run(ParentWindow);
             }

@@ -270,7 +270,7 @@ namespace DataWF.Data
             {
                 if (Source != value)
                 {
-                    SourceName = value == null ? null : value.Name;
+                    SourceName = value?.Name;
                     if (value == null || DBService.Schems.Contains(value))
                         dbsource = null;
                     else
@@ -300,7 +300,7 @@ namespace DataWF.Data
             {
                 if (Target != value)
                 {
-                    TargetName = value == null ? null : value.Name;
+                    TargetName = value?.Name;
                     if (value == null || DBService.Schems.Contains(value))
                         dbtarget = null;
                     else
@@ -341,8 +341,7 @@ namespace DataWF.Data
 
         protected void OnExportProgress(ExportProgressArgs ea)
         {
-            if (ExportProgress != null)
-                ExportProgress(this, ea);
+            ExportProgress?.Invoke(this, ea);
         }
 
         private void CheckParam()
@@ -377,19 +376,22 @@ namespace DataWF.Data
                     if (ea.Cancel)
                         return;
 
-                    var esetting = new DBETable(table.Name);
-                    esetting.Target = prefix + table.Name.Trim().Replace("_", "");
+                    var esetting = new DBETable(table.Name)
+                    {
+                        Target = prefix + table.Name.Trim().Replace("_", "")
+                    };
                     Tables.Add(esetting);
 
                     foreach (var column in table.Columns)
                     {
-                        var expcol = new DBEColumn(column.Name);
-                        expcol.Target = column.Name.Trim().Replace(" ", "_");
-                        expcol.DataType = column.DBDataType;
-                        expcol.Order = column.Order;
-                        expcol.Size = column.Size;
-                        expcol.Scale = column.Scale;
-                        esetting.Columns.Add(expcol);
+                        esetting.Columns.Add(new DBEColumn(column.Name)
+                        {
+                            Target = column.Name.Trim().Replace(" ", "_"),
+                            DataType = column.DBDataType,
+                            Order = column.Order,
+                            Size = column.Size,
+                            Scale = column.Scale
+                        });
                     }
                     if (ea != null)
                     {

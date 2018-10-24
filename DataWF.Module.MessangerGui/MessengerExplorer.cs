@@ -97,8 +97,7 @@ namespace DataWF.Module.MessangerGui
             Messanger md = GuiService.Main == null ? null : GuiService.Main.DockPanel.Find(name) as Messanger;
             if (md == null)
             {
-                md = new Messanger();
-                md.Staff = user;
+                md = new Messanger { Staff = user };
             }
             if (GuiService.Main != null)
                 GuiService.Main.DockPanel.Put(md);

@@ -1,6 +1,5 @@
-﻿using DataWF.Data;
+﻿using DataWF.Common;
 using DataWF.Gui;
-using DataWF.Common;
 using System.Collections;
 using System.ComponentModel;
 
@@ -79,9 +78,7 @@ namespace DataWF.Data.Gui
                 if (query.Table == null)
                     return null;
 
-                var c = new CellEditorList();
-                c.DataSource = query.Table.Columns;
-                return c;
+                return new CellEditorList { DataSource = query.Table.Columns };
             }
             if (cell == colValue)
             {

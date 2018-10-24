@@ -55,10 +55,10 @@ namespace DataWF.Module.Common
         [ThreadStatic]
         public static UserLog CurrentLog;
         public static UserLogStrategy LogStrategy = UserLogStrategy.BySession;
-        public static DBColumn UserKey => DBTable.ParseProperty(nameof(UserId), userKey);
-        public static DBColumn LogTypeKey => DBTable.ParseProperty(nameof(LogType), logTypeKey);
-        public static DBColumn RedoKey => DBTable.ParseProperty(nameof(RedoId), redoKey);
-        public static DBColumn TextDataKey => DBTable.ParseProperty(nameof(TextData), textDataKey);
+        public static DBColumn UserKey => DBTable.ParseProperty(nameof(UserId), ref userKey);
+        public static DBColumn LogTypeKey => DBTable.ParseProperty(nameof(LogType), ref logTypeKey);
+        public static DBColumn RedoKey => DBTable.ParseProperty(nameof(RedoId), ref redoKey);
+        public static DBColumn TextDataKey => DBTable.ParseProperty(nameof(TextData), ref textDataKey);
         public static DBTable<UserLog> DBTable => dbTable ?? (dbTable = GetTable<UserLog>());
         public static event EventHandler<DBItemEventArgs> RowLoging;
         public static event EventHandler<DBItemEventArgs> RowLoged;

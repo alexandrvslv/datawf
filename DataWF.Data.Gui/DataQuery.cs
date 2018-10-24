@@ -1,15 +1,13 @@
-﻿using DataWF.Gui;
-using DataWF.Common;
+﻿using DataWF.Common;
+using DataWF.Gui;
+using Mono.TextEditor;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using DataWF.Data;
 using Xwt;
-using Mono.TextEditor;
-using System.ComponentModel;
 
 namespace DataWF.Data.Gui
 {
@@ -52,7 +50,7 @@ namespace DataWF.Data.Gui
             toolLoad = new ToolItem(ToolLoadClick) { Name = "Load", Glyph = GlyphType.FolderOpen };
             toolExecute = new ToolItem(ToolExecuteClick) { Name = "Execute", Glyph = GlyphType.Play };
             toolParser = new ToolItem(ToolParseClick) { Name = "Parse", Glyph = GlyphType.Code };
-            toolGenerate = new ToolItem(toolGenerateClick) { Name = "Generate", Glyph = GlyphType.GearAlias };
+            toolGenerate = new ToolItem(ToolGenerateClick) { Name = "Generate", Glyph = GlyphType.GearAlias };
             toolStop = new ToolItem(ToolStopClick) { Name = "Stop", Glyph = GlyphType.Stop };
             toolResult = new ToolItem(ToolSpliterClick) { Name = "Result", CheckOnClick = true, Glyph = GlyphType.List };
             toolTimer = new ToolLabel { Name = "Timer", Text = "_:_" };
@@ -356,7 +354,7 @@ namespace DataWF.Data.Gui
         }
 
 
-        private void toolGenerateClick(object sender, EventArgs e)
+        private void ToolGenerateClick(object sender, EventArgs e)
         {
             var param = new DBExport
             {
@@ -413,18 +411,18 @@ namespace DataWF.Data.Gui
                     var sd = worksheet.GetFirstChild<DocumentFormat.OpenXml.Spreadsheet.SheetData>();
                     foreach (var element in sd)
                     {
-                        var row = element as DocumentFormat.OpenXml.Spreadsheet.Row;
-                        if (row != null)
+                        if (element is DocumentFormat.OpenXml.Spreadsheet.Row row)
                         {
                             if (table == null)
                             {
-                                table = new DBTable<DBItem>("sheet");
-                                table.Schema = CurrentSchema;
+                                table = new DBTable<DBItem>("sheet")
+                                {
+                                    Schema = CurrentSchema
+                                };
 
                                 foreach (var celement in element)
                                 {
-                                    var cell = celement as DocumentFormat.OpenXml.Spreadsheet.Cell;
-                                    if (cell != null)
+                                    if (celement is DocumentFormat.OpenXml.Spreadsheet.Cell cell)
                                     {
                                         DBColumn column = new DBColumn(XlsxSaxParser.ReadCell(cell, sp));
                                         table.Columns.Add(column);
@@ -444,8 +442,7 @@ namespace DataWF.Data.Gui
                                 DBItem drow = table.NewItem();
                                 foreach (DocumentFormat.OpenXml.OpenXmlElement celement in element)
                                 {
-                                    DocumentFormat.OpenXml.Spreadsheet.Cell cell = celement as DocumentFormat.OpenXml.Spreadsheet.Cell;
-                                    if (cell != null && index < table.Columns.Count)
+                                    if (celement is DocumentFormat.OpenXml.Spreadsheet.Cell cell && index < table.Columns.Count)
                                     {
                                         drow[index] = XlsxSaxParser.ReadCell(cell, sp);
                                         index++;
@@ -494,8 +491,10 @@ namespace DataWF.Data.Gui
 
                 if (split.Length > 1)
                 {
-                    var table = new DBTable<DBItem>(param.TableName);
-                    table.Schema = CurrentSchema;
+                    var table = new DBTable<DBItem>(param.TableName)
+                    {
+                        Schema = CurrentSchema
+                    };
                     string[] csplit = Regex.Split(split[0], param.FieldSeparator);
                     for (int i = 0; i < csplit.Length; i++)
                     {

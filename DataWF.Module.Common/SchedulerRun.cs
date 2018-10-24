@@ -22,9 +22,9 @@ namespace DataWF.Module.Common
         private Scheduler item;
         private SchedulerList items = new SchedulerList();
         private bool running = false;
-        private int timer = 0;
-        private int startH = 8;
-        private int stoptH = 21;
+        private readonly int timer = 0;
+        private readonly int startH = 8;
+        private readonly int stoptH = 21;
 
         public SchedulerExecute(int timer = 60000)
         {

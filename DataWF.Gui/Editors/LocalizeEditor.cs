@@ -1,11 +1,6 @@
 ﻿using DataWF.Common;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.IO;
-using System.Linq;
-using System.Text;
 using Xwt;
 
 
@@ -69,8 +64,7 @@ namespace DataWF.Gui
 
         private void ToolLoadImagesClick(object sender, EventArgs e)
         {
-            var dialog = new OpenFileDialog();
-            dialog.Multiselect = true;
+            var dialog = new OpenFileDialog { Multiselect = true };
             if (dialog.Run(ParentWindow))
             {
                 foreach (string name in dialog.FileNames)

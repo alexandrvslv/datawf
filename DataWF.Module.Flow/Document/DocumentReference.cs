@@ -18,7 +18,6 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Data;
-using DataWF.Common;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 
@@ -33,8 +32,8 @@ namespace DataWF.Module.Flow
 
     public class DocumentReferenceList : DBTableView<DocumentReference>
     {
-        private Document doc;
-        private DocumentReferenceMode mode = DocumentReferenceMode.None;
+        private readonly Document doc;
+        private readonly DocumentReferenceMode mode = DocumentReferenceMode.None;
 
         public DocumentReferenceList()
             : this("", DBViewKeys.None)

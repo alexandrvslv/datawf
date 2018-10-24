@@ -4,7 +4,7 @@ namespace DataWF.Common
 {
     public class TreeListView<T> : SelectableListView<T> where T : IGroup
     {
-        QueryParameter<T> groupParam;
+        private readonly QueryParameter<T> groupParam;
 
         public TreeListView() : base()
         {

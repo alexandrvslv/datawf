@@ -38,10 +38,10 @@ namespace DataWF.Module.Counterpart
         private static DBColumn phoneKey = DBColumn.EmptyKey;
         private static DBTable<CustomerReference> dbTable;
 
-        public static DBColumn CompanyKey => DBTable.ParseProperty(nameof(CompanyId), companyKey);
-        public static DBColumn PersoneKey => DBTable.ParseProperty(nameof(PersoneId), personeKey);
-        public static DBColumn EMailKey => DBTable.ParseProperty(nameof(EMail), emailKey);
-        public static DBColumn PhoneKey => DBTable.ParseProperty(nameof(Phone), phoneKey);
+        public static DBColumn CompanyKey => DBTable.ParseProperty(nameof(CompanyId), ref companyKey);
+        public static DBColumn PersoneKey => DBTable.ParseProperty(nameof(PersoneId), ref personeKey);
+        public static DBColumn EMailKey => DBTable.ParseProperty(nameof(EMail), ref emailKey);
+        public static DBColumn PhoneKey => DBTable.ParseProperty(nameof(Phone), ref phoneKey);
         public static DBTable<CustomerReference> DBTable => dbTable ?? (dbTable = GetTable<CustomerReference>());
 
         public CustomerReference()

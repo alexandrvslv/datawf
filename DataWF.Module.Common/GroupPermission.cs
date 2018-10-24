@@ -78,8 +78,7 @@ namespace DataWF.Module.Common
 
         public static GroupPermission Get(GroupPermission group, DBSchemaItem item)
         {
-            string code = null;
-            PermissionType type = GetPermissionType(item, out code);
+            PermissionType type = GetPermissionType(item, out string code);
 
             var list = DBTable.Select(DBTable.CodeKey, CompareType.Equal, code).ToList();
 

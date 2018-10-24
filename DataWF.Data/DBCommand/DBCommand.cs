@@ -19,12 +19,8 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
-using Oracle.ManagedDataAccess.Client;
-using Oracle.ManagedDataAccess.Types;
 
 namespace DataWF.Data
 {
@@ -49,17 +45,20 @@ namespace DataWF.Data
 
             if (type == DBCommandTypes.Delete)
             {
-                var param = new DBCommandParameter(table.PrimaryKey, prefix);
-                param.Direction = ParameterDirection.Input;
-                command.Parameters.Add(param);
+                command.Parameters.Add(new DBCommandParameter(table.PrimaryKey, prefix)
+                {
+                    Direction = ParameterDirection.Input
+                });
             }
             else
             {
                 DBCommandParameter paramId = null;
                 if (table.PrimaryKey != null)
                 {
-                    paramId = new DBCommandParameter(table.PrimaryKey, prefix);
-                    paramId.Direction = ParameterDirection.Input;
+                    paramId = new DBCommandParameter(table.PrimaryKey, prefix)
+                    {
+                        Direction = ParameterDirection.Input
+                    };
 
                     if (type == DBCommandTypes.Insert || type == DBCommandTypes.InsertSequence)
                     {
@@ -67,8 +66,8 @@ namespace DataWF.Data
                     }
                     //else if (type == DBCommandTypes.InsertSequence)
                     //{
-                        //command.Parameters.Add(paramId);
-                        //paramId.Direction = ParameterDirection.InputOutput;
+                    //command.Parameters.Add(paramId);
+                    //paramId.Direction = ParameterDirection.InputOutput;
                     //}
                 }
                 foreach (var column in columns)

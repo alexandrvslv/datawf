@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace DataWF.Common
+﻿namespace DataWF.Common
 {
     public class Interval<T> where T : System.IComparable
     {
@@ -26,10 +24,11 @@ namespace DataWF.Common
 
         public Interval<T> Clone()
         {
-            Interval<T> item = new Interval<T>();
-            item.last = last;
-            item.first = first;
-            return item;
+            return new Interval<T>
+            {
+                last = last,
+                first = first
+            };
         }
 
         public void Set(Interval<T> interval)

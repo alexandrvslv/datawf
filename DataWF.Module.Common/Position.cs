@@ -33,9 +33,9 @@ namespace DataWF.Module.Common
         private static DBColumn nameRUKey = DBColumn.EmptyKey;
         private static DBTable<Position> dbTable;
 
-        public static DBColumn DepartmentKey => DBTable.ParseProperty(nameof(Department), departmentKey);
-        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), nameENKey);
-        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), nameRUKey);
+        public static DBColumn DepartmentKey => DBTable.ParseProperty(nameof(Department), ref departmentKey);
+        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
+        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
         public static DBTable<Position> DBTable => dbTable ?? (dbTable = GetTable<Position>());
 
         public Position()

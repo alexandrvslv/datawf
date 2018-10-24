@@ -82,12 +82,7 @@ namespace DataWF.Data
             {
                 if (BaseTable == null)
                     return null;
-                if (filterQuery == null)
-                {
-                    filterQuery = new QQuery(query, BaseTable);
-                    filterQuery.TypeFilter = typeof(T);
-                }
-                return filterQuery;
+                return filterQuery ?? (filterQuery = new QQuery(query, BaseTable) { TypeFilter = typeof(T) });
             }
         }
 

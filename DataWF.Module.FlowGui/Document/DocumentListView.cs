@@ -75,8 +75,7 @@ namespace DataWF.Module.FlowGui
 
             ofDialog = new OpenFileDialog() { Multiselect = true };
 
-            loader = new TableLoader();
-            loader.LoadParam = DBLoadParam.Referencing;
+            loader = new TableLoader { LoadParam = DBLoadParam.Referencing };
 
             toolCreate = new ToolItem(ToolCreateClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Create", GlyphColor = Colors.Green, Glyph = GlyphType.PlusCircle };
             toolCopy = new ToolItem(ToolCopyClick) { DisplayStyle = ToolItemDisplayStyle.Text, Name = "Copy", Glyph = GlyphType.CopyAlias };
@@ -322,9 +321,7 @@ namespace DataWF.Module.FlowGui
             var command = await filterToolView.Field.ShowDropDownAsync();
             if (command == Command.Ok)
             {
-                var template = FilterView.Templates.SelectedDBItem as Template;
-
-                if (template != null && !template.IsCompaund)
+                if (FilterView.Templates.SelectedDBItem is Template template && !template.IsCompaund)
                 {
                     ViewDocumentsAsync(CreateDocuments(template, Filter.Referencing, List.Selection.GetItems<Document>()));
                 }
@@ -359,8 +356,7 @@ namespace DataWF.Module.FlowGui
         {
             string name = "DocumentEditor" + document.Id.ToString();
             var dock = this.GetParent<DockBox>();
-            var editor = GuiService.Main?.DockPanel.Find(name) as DocumentEditor;
-            if (editor == null)
+            if (!(GuiService.Main?.DockPanel.Find(name) is DocumentEditor editor))
             {
                 editor = new DocumentEditor { Name = name };
                 editor.XmlDeserialize(DocumentEditor.GetFileName(document.GetType()));

@@ -160,9 +160,11 @@ namespace DataWF.Gui
             editor.Visible = false;
             editor.PropertyChanged += ControlOnValueChanged;
 
-            canvas = new LayoutListCanvas(this);
-            canvas.MinWidth = 150;
-            canvas.MinHeight = 50;
+            canvas = new LayoutListCanvas(this)
+            {
+                MinWidth = 150,
+                MinHeight = 50
+            };
             canvas.AddChild(editor, 0, 0);
 
             scroll = new ScrollView() { Content = canvas, BorderVisible = false };
@@ -749,9 +751,8 @@ namespace DataWF.Gui
                         {
                             CopyToClipboard(CurrentCell);
                         }
-                        else if (selection.CurrentValue is PSelectionAggregate)
+                        else if (selection.CurrentValue is PSelectionAggregate aggre)
                         {
-                            var aggre = (PSelectionAggregate)selection.CurrentValue;
                             var value = GetCollectedValue(aggre.Column, aggre.Group);
                             CopyToClipboard(value.ToString());
                         }
@@ -2395,8 +2396,7 @@ namespace DataWF.Gui
             var category = info.Categories[categoryName];
             if (category == null)
             {
-                category = new Category();
-                category.Name = categoryName;
+                category = new Category { Name = categoryName };
                 info.Categories.Add(category);
             }
             category.Header = Locale.Get(Locale.GetTypeCategory(fieldType), categoryName);
@@ -2583,13 +2583,15 @@ namespace DataWF.Gui
             if (args.Properties == null)
             {
                 var buf = new List<string>();
-                Type t = listMode == LayoutListMode.Fields ? FieldType : ListType;
-                if (t != null)
-                    buf = GetPropertiesByCell(args.Cell, t, listMode == LayoutListMode.Fields);
+                var type = listMode == LayoutListMode.Fields ? FieldType : ListType;
+                if (type != null)
+                {
+                    buf = GetPropertiesByCell(args.Cell, type, listMode == LayoutListMode.Fields);
+                }
+
                 args.Properties = buf;
             }
-            if (GetProperties != null)
-                GetProperties(this, args);
+            GetProperties?.Invoke(this, args);
         }
 
         public List<string> GetPropertiesByCell(ILayoutCell owner, Type basetype, bool noReadOnly)
@@ -2956,10 +2958,8 @@ namespace DataWF.Gui
                 bound.X += indent;
                 bound.Width -= indent;
             }
-            if (e.Formated is TextLayout)
+            if (e.Formated is TextLayout textLayout)
             {
-                var textLayout = (TextLayout)e.Formated;
-
                 bound.Height = textLayout.Height;
                 bound.Y = e.Bound.Y + (e.Bound.Height - bound.Height) / 2D;
             }
@@ -2969,8 +2969,7 @@ namespace DataWF.Gui
         protected virtual Rectangle GetEditorBound()
         {
             var bound = new Rectangle();
-            var row = CurrentEditor as LayoutSelectionRow;
-            if (row != null)
+            if (CurrentEditor is LayoutSelectionRow row)
             {
                 bounds.Row = GetRowBound(row.Index, GetRowGroup(row.Index));
                 bound = bounds.Cell = GetCellBound(row.Column, row.Index, bounds.Row);
@@ -3278,8 +3277,7 @@ namespace DataWF.Gui
             for (int i = 0; i < listInfo.Sorters.Count; i++)
             {
                 var sort = listInfo.Sorters[i];
-                var column = listInfo.Columns.GetItem(sort.ColumnName) as LayoutColumn;
-                if (column != null)
+                if (listInfo.Columns.GetItem(sort.ColumnName) is LayoutColumn column)
                 {
                     comparers.Add(OnColumnCreateComparer(column, sort.Direction));
                 }
@@ -4517,12 +4515,15 @@ namespace DataWF.Gui
                     e.Bound = GetCellBound(column, -1, e.RowBound);
 
                     var state = CellDisplayState.Default;
-                    var aggre = selection.HoverValue as PSelectionAggregate;
-                    if (aggre != null && aggre.Group == e.Group && aggre.Column == column)
+                    if (selection.HoverValue is PSelectionAggregate aggre && aggre.Group == e.Group && aggre.Column == column)
+                    {
                         state = CellDisplayState.Hover;
-                    aggre = selection.CurrentValue as PSelectionAggregate;
-                    if (aggre != null && aggre.Group == e.Group && aggre.Column == column)
+                    }
+
+                    if (selection.CurrentValue is PSelectionAggregate caggre && caggre.Group == e.Group && caggre.Column == column)
+                    {
                         state = CellDisplayState.Selected;
+                    }
 
                     e.Context.DrawCell(style, value, e.Bound, GetCellTextBound(e), state);
                 }

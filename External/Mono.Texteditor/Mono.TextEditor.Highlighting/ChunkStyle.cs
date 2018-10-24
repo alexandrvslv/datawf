@@ -25,12 +25,9 @@
 // THE SOFTWARE.
 
 using System;
-using System.IO;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
 using System.Xml.Linq;
-using System.Xml.XPath;
-using System.Reflection;
 using Xwt.Drawing;
 
 namespace Mono.TextEditor.Highlighting
@@ -160,8 +157,7 @@ namespace Mono.TextEditor.Highlighting
 
         public static ChunkStyle Import(string name, ColorScheme.VSSettingColor vsc)
         {
-            var textColor = new ChunkStyle();
-            textColor.Name = name;
+            var textColor = new ChunkStyle { Name = name };
             if (!string.IsNullOrEmpty(vsc.Foreground) && vsc.Foreground != "0x02000000")
             {
                 textColor.Foreground = ColorScheme.ImportVsColor(vsc.Foreground);

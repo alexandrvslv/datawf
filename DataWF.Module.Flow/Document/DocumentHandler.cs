@@ -73,7 +73,7 @@ namespace DataWF.Module.Flow
             }
             set
             {
-                Id = value == null ? null : value.PrimaryId.ToString();
+                Id = value?.PrimaryId.ToString();
                 document = value;
             }
         }
@@ -82,8 +82,7 @@ namespace DataWF.Module.Flow
 
         private void OnPropertyChanged(string property)
         {
-            if (PropertyChanged != null)
-                PropertyChanged(this, new PropertyChangedEventArgs(property));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
     }
 }

@@ -195,8 +195,7 @@ namespace DataWF.Module.FlowGui
             }
 
             var item = node.Item;
-            var dbItem = item as DBItem;
-            if (dbItem == null)
+            if (!(item is DBItem dbItem))
                 return;
 
             dbItem.Access = node.Access;
@@ -272,8 +271,7 @@ namespace DataWF.Module.FlowGui
         {
             if (tree.SelectedNode != null)
             {
-                DataQuery query = new DataQuery();
-                query.Query = tree.GenereteExport();
+                var query = new DataQuery { Query = tree.GenereteExport() };
                 query.ShowDialog(this);
             }
         }

@@ -309,7 +309,7 @@ namespace DataWF.Data
             {
                 if (value == Group)
                     return;
-                GroupName = value == null ? null : value.Name;
+                GroupName = value?.Name;
                 cacheGroup = value;
             }
         }
@@ -661,23 +661,25 @@ namespace DataWF.Data
 
         public override object Clone()
         {
-            var column = new DBColumn(name);
-            column.subList = subList;
-            column.name = name;
-            column.size = size;
-            column.scale = scale;
-            column.culture = culture;
-            column.keys = keys;
-            column.btrue = btrue;
-            column.bfalse = bfalse;
-            column.format = format;
-            column.ctype = ctype;
-            column.type = type;
-            column.cdefault = cdefault;
-            column.gname = gname;
-            column.query = query;
-            //column.bcode = bcode;
-            column.order = order;
+            var column = new DBColumn(name)
+            {
+                subList = subList,
+                name = name,
+                size = size,
+                scale = scale,
+                culture = culture,
+                keys = keys,
+                btrue = btrue,
+                bfalse = bfalse,
+                format = format,
+                ctype = ctype,
+                type = type,
+                cdefault = cdefault,
+                gname = gname,
+                query = query,
+                //column.bcode = bcode;
+                order = order
+            };
             return column;
         }
 

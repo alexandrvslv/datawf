@@ -134,15 +134,13 @@ namespace DataWF.Module.Flow
             if (!item.Attached)
                 return;
 
-            if (item is DocumentWork)
+            if (item is DocumentWork work)
             {
-                var work = (DocumentWork)item;
                 if (work.Completed || work.UpdateState == DBUpdateState.Default)
                     RefreshCache();
             }
-            else if (item is DocumentReference)
+            else if (item is DocumentReference reference)
             {
-                var reference = (DocumentReference)item;
                 RefChanged?.Invoke(this, ListChangedType.Reset);
             }
             if (item.UpdateState != DBUpdateState.Default && (item.UpdateState & DBUpdateState.Commit) != DBUpdateState.Commit && item.Attached)

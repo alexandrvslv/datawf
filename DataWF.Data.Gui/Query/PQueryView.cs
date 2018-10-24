@@ -1,6 +1,4 @@
-﻿using DataWF.Gui;
-using DataWF.Data;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using Xwt;
@@ -95,18 +93,20 @@ namespace DataWF.Data.Gui
                     {
                         if (table != null)
                             table.Dispose();
-                        table = new DBTable<DBItem>(procedure.Name + "Param");
-                        table.Schema = procedure.Schema;
-                        table.BlockSize = 1;
+                        table = new DBTable<DBItem>(procedure.Name + "Param")
+                        {
+                            Schema = procedure.Schema,
+                            BlockSize = 1
+                        };
                     }
                     if (row == null)
                         row = table.NewItem();
 
-                    DBColumn col = new DBColumn();
-                    col.Name = param.Name;
-                    col.Table = table;
-                    if (param.Name != null && param.Name.Length > 0)
-                        col.Name = param.Name;
+                    DBColumn col = new DBColumn
+                    {
+                        Name = !string.IsNullOrEmpty(param.Name) ? param.Name : "NewParam",
+                        Table = table
+                    };
                     if (param.Column != null)
                     {
                         if (param.Column.IsPrimaryKey)
@@ -117,11 +117,13 @@ namespace DataWF.Data.Gui
                     col.DataType = param.DataType;
                     table.Columns.Add(col);
 
-                    var tool = new ToolDataFieldEditor();
+                    var tool = new ToolDataFieldEditor
+                    {
+                        FieldWidth = col.ReferenceTable != null ? 150 : 80,
+                        Visible = true
+                    };
                     tool.Field.LabelSize = -1;
-                    tool.FieldWidth = col.ReferenceTable != null ? 150 : 80;
                     tool.Field.BindData(row, col.Name);
-                    tool.Visible = true;
 
                     fields.Add(tool);
                     Tools.Add(tool);

@@ -187,8 +187,10 @@ namespace DataWF.Data
                         {
                             TableStyle tableStyle = new TableStyle(TextDoc);
                             tableStyle.TableProperty.Align = "center";
-                            parentTable = new Table(TextDoc);
-                            parentTable.Style = tableStyle;
+                            parentTable = new Table(TextDoc)
+                            {
+                                Style = tableStyle
+                            };
 
                             Column column = new Column(TextDoc);
                             ColumnStyle columnStyle = new ColumnStyle(TextDoc);
@@ -200,8 +202,10 @@ namespace DataWF.Data
                             CellStyle cellStyle = new CellStyle(TextDoc);
                             cellStyle.ColumnProperty.BorderLeft = "0.004cm solid #000000";
 
-                            Cell cell = new Cell(TextDoc);
-                            cell.Style = cellStyle;
+                            Cell cell = new Cell(TextDoc)
+                            {
+                                Style = cellStyle
+                            };
 
                             for (int i = 0; i < query.Values.Count; i++)
                                 parentRow.Add((Cell)cell.Clone());

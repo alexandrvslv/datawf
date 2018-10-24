@@ -1,6 +1,5 @@
-﻿using DataWF.Gui;
-using DataWF.Common;
-using DataWF.Data;
+﻿using DataWF.Common;
+using DataWF.Gui;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -220,17 +219,16 @@ namespace DataWF.Data.Gui
         private void OnExportComplete(ExportProgressArgs ea)
         {
             GuiService.Main.SetStatus(new StateInfo("Export", "Complete!"));
-            listTables.ReadOnly = false;
-            listColumns.ReadOnly = false;
+            listTables.ReadOnly =
+                listColumns.ReadOnly = false;
 
             toolStart.Sensitive = true;
-            toolCancel.Sensitive = false;
-            toolProgress.Visible = false;
+            toolCancel.Sensitive =
+                toolProgress.Visible = false;
 
             MessageDialog.ShowMessage(ParentWindow, "Export Complete");
             current = null;
-            if (ExportComplete != null)
-                ExportComplete(this, ea);
+            ExportComplete?.Invoke(this, ea);
         }
 
         protected void OnExportComplete(object sender, ExportProgressArgs ea)
@@ -303,12 +301,15 @@ namespace DataWF.Data.Gui
 
         public void Patch()
         {
-            export.Target.Connection.ClearConnectionCache();
             var temp = export.Source;
+            export.Target.Connection.ClearConnectionCache();
             export.Source = export.Target;
             export.Target = temp;
             foreach (var table in export.Tables)
+            {
                 table.Query = null;
+            }
+
             var fileXML = Path.GetFileNameWithoutExtension(export.Source.Connection.Host) + ".xml";
 
             Serialization.Serialize(export, fileXML);
@@ -342,8 +343,7 @@ namespace DataWF.Data.Gui
 
         private void ToolScriptClick(object sender, EventArgs e)
         {
-            var query = new DataQuery { Query = export.GeneratePatch() };
-            GuiService.Main.DockPanel.Put(query);
+            GuiService.Main.DockPanel.Put(new DataQuery { Query = export.GeneratePatch() });
         }
 
         private void ToolSchemaClick(object sender, EventArgs e)
@@ -368,23 +368,21 @@ namespace DataWF.Data.Gui
 
         private void ToolColumnAddClick(object sender, EventArgs e)
         {
-            if (listTables.List.SelectedItem == null)
-                return;
-
-            var tabsett = listTables.List.SelectedItem as DBETable;
-            var col = new DBEColumn("newColumn");
-            col.Order = tabsett.Columns.Count;
-            col.UserDefined = true;
-
-            tabsett.Columns.Add(col);
+            if (listTables.List.SelectedItem is DBETable tabsett)
+            {
+                tabsett.Columns.Add(new DBEColumn("newColumn")
+                {
+                    Order = tabsett.Columns.Count,
+                    UserDefined = true
+                });
+            }
         }
 
         private void ToolTableAddClick(object sender, EventArgs e)
         {
             if (export == null)
                 return;
-            DBETable tabsett = new DBETable();
-            export.Tables.Add(tabsett);
+            export.Tables.Add(new DBETable());
         }
 
         private void ToolTableRemoveClick(object sender, EventArgs e)
@@ -396,10 +394,12 @@ namespace DataWF.Data.Gui
 
         private void ListTablesOnSelectionChahged(object sender, EventArgs e)
         {
-            DBETable table = (listTables.List.SelectedItem == null) ? null : (DBETable)listTables.List.SelectedItem;
-            listColumns.DataSource = table == null ? null : table.Columns;
+            var table = (DBETable)listTables.List.SelectedItem;
+            listColumns.DataSource = table?.Columns;
             if (table != null && GuiService.Main != null)
+            {
                 GuiService.Main.ShowProperty(this, table, true);
+            }
         }
 
         protected override void Dispose(bool disposing)

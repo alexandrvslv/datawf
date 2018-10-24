@@ -1,9 +1,9 @@
-﻿using System;
-using DataWF.Common;
+﻿using DataWF.Common;
 using DataWF.Gui;
 using DataWF.Module.Flow;
 using DataWF.Module.Messanger;
 using DataWF.Module.MessangerGui;
+using System;
 
 namespace DataWF.Module.FlowGui
 {
@@ -25,9 +25,11 @@ namespace DataWF.Module.FlowGui
                 HeaderVisible = false,
                 Indent = 6
             };
-            editor = new MessageEditor();
-            editor.OnSending = new Action<Message>(OnSend);
-            editor.HeightRequest = 100;
+            editor = new MessageEditor
+            {
+                OnSending = new Action<Message>(OnSend),
+                HeightRequest = 100
+            };
             PackStart(editor, false);
         }
 

@@ -22,12 +22,12 @@ namespace DataWF.Module.Common
 
         public static NotifyService Default;
 
-        private static object loadLock = new object();
+        private static readonly object loadLock = new object();
 
         private Instance instance;
         private ConcurrentBag<NotifyMessageItem> buffer = new ConcurrentBag<NotifyMessageItem>();
         private ManualResetEvent runEvent = new ManualResetEvent(false);
-        private int timer = 3000;
+        private const int timer = 3000;
         private IPEndPoint endPoint;
 
         public event EventHandler<NotifyEventArgs> SendChanges;

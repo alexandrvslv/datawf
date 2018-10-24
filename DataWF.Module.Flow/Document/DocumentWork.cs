@@ -29,8 +29,7 @@ namespace DataWF.Module.Flow
 {
     public class DocumentWorkList : DBTableView<DocumentWork>
     {
-        [NonSerialized()]
-        Document doc;
+        readonly Document doc;
 
         public DocumentWorkList(string filter = "", DBViewKeys mode = DBViewKeys.None)
             : base(filter, mode)

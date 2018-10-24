@@ -110,8 +110,7 @@ namespace DataWF.Module.FlowGui
         {
             if (tree.SelectedNode != null)
             {
-                var query = new DataQuery();
-                query.Query = tree.GenereteExport();
+                var query = new DataQuery { Query = tree.GenereteExport() };
                 query.ShowDialog(this);
             }
         }
@@ -201,40 +200,38 @@ namespace DataWF.Module.FlowGui
 
         private void ShowItem(DBItem item)
         {
-            if (item is UserGroup)
+            if (item is UserGroup group)
             {
-                var group = (UserGroup)item;
-                var editor = GuiService.Main.DockPanel.Find(PermissionEditor.GetName(group)) as PermissionEditor;
-                if (editor == null)
+                if (!(GuiService.Main.DockPanel.Find(PermissionEditor.GetName(group)) is PermissionEditor editor))
                     editor = new PermissionEditor() { Group = group };
                 GuiService.Main.DockPanel.Put(editor, DockType.Content);
             }
-            else if (item is User)
+            else if (item is User user)
             {
-                if (item == User.CurrentUser && !((User)item).Super.Value)
+                if (item == User.CurrentUser && !user.Super.Value)
                 {
                     MessageDialog.ShowMessage(ParentWindow, "Unable edit current user!", "Access");
                     return;
                 }
-                var editor = new UserEditor { User = (User)item };
+                var editor = new UserEditor { User = user };
                 editor.ShowWindow(this);
             }
-            else if (item is Template)
+            else if (item is Template template)
             {
-                var editor = new TemplateEditor { Template = (Template)item };
+                var editor = new TemplateEditor { Template = template };
                 editor.ShowWindow(this);
             }
-            else if (item is Work)
+            else if (item is Work work)
             {
-                var editor = new WorkEditor { Work = (Work)item };
+                var editor = new WorkEditor { Work = work };
                 editor.ShowWindow(this);
             }
-            else if (item is Stage)
+            else if (item is Stage stage)
             {
-                var editor = new StageEditor { Stage = (Stage)item };
+                var editor = new StageEditor { Stage = stage };
                 editor.ShowWindow(this);
             }
-            else if (item is DBItem)
+            else if (item != null)
             {
                 se.DataSource = item;
                 se.List.EditState = item.Attached ? EditListState.Edit : EditListState.EditAny;
@@ -318,10 +315,9 @@ namespace DataWF.Module.FlowGui
         public void ShowNodeProperty()
         {
             var flag = true;
-            foreach (var select in tree.Selection)
+            foreach (var select in tree.Selection.GetItems<TableItemNode>())
             {
-                var item = ((TableItemNode)select.Item).Item as DBItem;
-                if (item == null || !item.Access.Delete)
+                if (!(select.Item is DBItem item) || !item.Access.Delete)
                 {
                     flag = false;
                     break;
@@ -329,7 +325,6 @@ namespace DataWF.Module.FlowGui
             }
             barMain["Remove"].Sensitive = flag;
             CurrentItem = tree.SelectedDBItem;
-
         }
 
         public DBItem CurrentItem

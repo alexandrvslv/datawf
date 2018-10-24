@@ -30,8 +30,8 @@ namespace DataWF.Module.Common
         private static DBColumn resultKey = DBColumn.EmptyKey;
         private static DBTable<Statistic> dbTable;
 
-        public static DBColumn SchedulerKey => DBTable.ParseProperty(nameof(SchedulerId), schedulerKey);
-        public static DBColumn ResultKey => DBTable.ParseProperty(nameof(Result), resultKey);
+        public static DBColumn SchedulerKey => DBTable.ParseProperty(nameof(SchedulerId), ref schedulerKey);
+        public static DBColumn ResultKey => DBTable.ParseProperty(nameof(Result), ref resultKey);
         public static DBTable<Statistic> DBTable => dbTable ?? (dbTable = GetTable<Statistic>());
 
         public Statistic()

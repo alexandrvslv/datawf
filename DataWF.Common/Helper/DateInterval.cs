@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Text;
 
 namespace DataWF.Common
 {
@@ -87,15 +85,12 @@ namespace DataWF.Common
 
         public override bool Equals(object obj)
         {
-            if (obj is DateInterval)
+            switch (obj)
             {
-                var dateObj = (DateInterval)obj;
-                return this.min.Equals(dateObj.min) && this.max.Equals(dateObj.max);
-            }
-            else if (obj is DateTime)
-            {
-                var dateObj = (DateTime)obj;
-                return this.min.Equals(dateObj) && this.max.Equals(dateObj);
+                case DateInterval dateInterval:
+                    return min.Equals(dateInterval.min) && max.Equals(dateInterval.max);
+                case DateTime date:
+                    return min.Equals(date) && max.Equals(date);
             }
             return false;
         }

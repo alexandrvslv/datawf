@@ -33,8 +33,8 @@ namespace DataWF.Module.Common
         private static DBColumn nameRUKey = DBColumn.EmptyKey;
         private static DBTable<Department> dbTable;
 
-        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), nameENKey);
-        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), nameRUKey);
+        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
+        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
         public static DBTable<Department> DBTable => dbTable ?? (dbTable = GetTable<Department>());
 
         public Department()

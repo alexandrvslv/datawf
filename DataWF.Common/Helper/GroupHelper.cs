@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 
 namespace DataWF.Common
@@ -146,8 +145,7 @@ namespace DataWF.Common
             if (x == y)
                 return 0;
 
-            int xLevel, yLevel;
-            IGroup ox = TopGroup(x, out xLevel), oy = TopGroup(y, out yLevel);
+            IGroup ox = TopGroup(x, out int xLevel), oy = TopGroup(y, out int yLevel);
 
             if (ox == oy)
             {

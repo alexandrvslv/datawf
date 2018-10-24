@@ -1,14 +1,11 @@
 ﻿using DataWF.Common;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using Xwt.Drawing;
 using System.Globalization;
 using System.IO;
-using System.Reflection;
-using System.Threading;
-using Xwt;
 using System.Linq;
+using Xwt;
+using Xwt.Drawing;
 
 namespace DataWF.Gui
 {
@@ -573,11 +570,12 @@ namespace DataWF.Gui
                     {
                         if (project.GetType() == type.Project)
                         {
-                            var handler = new ProjectHandler();
-                            handler.Project = project;
-                            handler.Type = type;
-                            handler.FileName = openFD.FileName;
-                            CurrentProject = handler;
+                            CurrentProject = new ProjectHandler
+                            {
+                                Project = project,
+                                Type = type,
+                                FileName = openFD.FileName
+                            };
                             return;
                         }
                         if (project != null)

@@ -48,9 +48,9 @@ namespace DataWF.Module.Counterpart
         private static DBColumn nameENKey = DBColumn.EmptyKey;
         private static DBColumn nameRUKey = DBColumn.EmptyKey;
 
-        public static DBColumn CodeIKey => DBTable.ParseProperty(nameof(CodeI), codeIKey);
-        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), nameENKey);
-        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), nameRUKey);
+        public static DBColumn CodeIKey => DBTable.ParseProperty(nameof(CodeI), ref codeIKey);
+        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
+        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
         public static DBTable<Location> DBTable => dbTable ?? (dbTable = GetTable<Location>());
 
         public Location()

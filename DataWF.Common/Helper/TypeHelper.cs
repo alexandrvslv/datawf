@@ -17,7 +17,7 @@ namespace DataWF.Common
     /// </summary>
     public static class TypeHelper
     {
-        private static Type[] typeOneArray = { typeof(string) };
+        private static readonly Type[] typeOneArray = { typeof(string) };
         private static Dictionary<string, MemberInfo> casheNames = new Dictionary<string, MemberInfo>(200, StringComparer.Ordinal);
         private static Dictionary<string, Type> cacheTypes = new Dictionary<string, Type>(200, StringComparer.Ordinal);
         private static Dictionary<MemberInfo, bool> cacheIsXmlText = new Dictionary<MemberInfo, bool>(200);
@@ -200,7 +200,7 @@ namespace DataWF.Common
         {
             if (!cacheTypeConverter.TryGetValue(type, out var converter))
             {
-                var attribute = type.GetCustomAttribute(typeof(TypeConverterAttribute)) as TypeConverterAttribute;
+                var attribute = type.GetCustomAttribute<TypeConverterAttribute>();
                 TypeConverter typeConverter = null;
                 if (attribute != null && !string.IsNullOrEmpty(attribute.ConverterTypeName))
                 {
@@ -422,8 +422,7 @@ namespace DataWF.Common
             string cachename = string.Format("{0}.{1}{2}", type.FullName, name, generic ? "G" : "");
             foreach (var t in types)
                 cachename += t.Name;
-            MemberInfo mi = null;
-            if (casheNames.TryGetValue(cachename, out mi))
+            if (casheNames.TryGetValue(cachename, out MemberInfo mi))
                 return mi;
 
             if (type.IsInterface && name == nameof(ToString))
@@ -530,57 +529,48 @@ namespace DataWF.Common
 
         public static string GetDisplayName(PropertyInfo property)
         {
-            var name = (DisplayNameAttribute)property.GetCustomAttribute(typeof(DisplayNameAttribute), false);
-            return name == null ? property.Name : name.DisplayName;
+            return property.GetCustomAttribute<DisplayNameAttribute>(false)?.DisplayName ?? property.Name;
         }
 
         public static string GetCategory(MemberInfo info)
         {
-            var category = (CategoryAttribute)info.GetCustomAttribute(typeof(CategoryAttribute), false);
-            return category == null ? "General" : category.Category;
+            return info.GetCustomAttribute<CategoryAttribute>(false)?.Category ?? "General";
         }
 
         public static string GetDescription(MemberInfo property)
         {
-            var description = (DescriptionAttribute)property.GetCustomAttribute(typeof(DescriptionAttribute), false);
-            return description?.Description;
+            return property.GetCustomAttribute<DescriptionAttribute>(false)?.Description;
         }
 
         public static bool GetPassword(MemberInfo property)
         {
-            var password = (PasswordPropertyTextAttribute)property.GetCustomAttribute(typeof(PasswordPropertyTextAttribute), false);
-            return password != null && password.Password;
+            return property.GetCustomAttribute<PasswordPropertyTextAttribute>(false)?.Password ?? false;
         }
 
         public static string GetDefaultFormat(MemberInfo info)
         {
-            var defauiltAttr = (DefaultFormatAttribute)info.GetCustomAttribute(typeof(DefaultFormatAttribute), false);
-            return defauiltAttr == null ? null : defauiltAttr.Format;
+            return info.GetCustomAttribute<DefaultFormatAttribute>(false)?.Format;
         }
 
         public static bool GetBrowsable(MemberInfo info)
         {
-            var browsable = (BrowsableAttribute)info.GetCustomAttribute(typeof(BrowsableAttribute), false);
-            return browsable == null || browsable.Browsable;
+            return info.GetCustomAttribute<BrowsableAttribute>(false)?.Browsable ?? false;
         }
 
         public static bool GetReadOnly(MemberInfo info)
         {
-            if (info is PropertyInfo)
+            if (info is PropertyInfo property)
             {
-                var property = (PropertyInfo)info;
                 if (!property.CanWrite)
                     return true;
-                var readOnly = (ReadOnlyAttribute)property.GetCustomAttribute(typeof(ReadOnlyAttribute), false);
-                return readOnly != null && readOnly.IsReadOnly;
+                return property.GetCustomAttribute<ReadOnlyAttribute>(false)?.IsReadOnly ?? false;
             }
             return !(info is FieldInfo);
         }
 
         public static bool GetModule(Type type)
         {
-            var attrs = (ModuleAttribute)type.GetCustomAttribute(typeof(ModuleAttribute), false);
-            return attrs != null && attrs.IsModule;
+            return type.GetCustomAttribute<ModuleAttribute>(false)?.IsModule ?? false;
         }
 
         public static PropertyInfo[] GetTypeProperties(Type type)

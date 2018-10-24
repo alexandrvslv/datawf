@@ -280,13 +280,15 @@ namespace DataWF.Module.FlowGui
                 }
                 if (GuiService.Main != null)
                 {
-                    var task = new TaskExecutor();
-                    task.Name = "Confirmation!";
-                    task.Action = () =>
+                    var task = new TaskExecutor
                     {
-                        Application.Invoke(() => MessageDialog.ShowMessage(ParentWindow,
-                                                                           string.Format(Locale.Get("DocumentEditor", "Method {0}\nExecute successful!"), proc.Name), "Methods"));
-                        return null;
+                        Name = "Confirmation!",
+                        Action = () =>
+                        {
+                            Application.Invoke(() => MessageDialog.ShowMessage(ParentWindow,
+                                                                               string.Format(Locale.Get("DocumentEditor", "Method {0}\nExecute successful!"), proc.Name), "Methods"));
+                            return null;
+                        }
                     };
                     GuiService.Main.AddTask(this, task);
                 }
@@ -334,8 +336,7 @@ namespace DataWF.Module.FlowGui
                 case Document docResult:
                     if (arg.Result != arg.Document)
                     {
-                        var editor = new DocumentEditor();
-                        editor.Document = docResult;
+                        var editor = new DocumentEditor { Document = docResult };
                         editor.ShowWindow(arg.Tag as DocumentEditor);
                     }
                     break;
@@ -628,8 +629,7 @@ namespace DataWF.Module.FlowGui
 
         public void InitProcedure(DBItem owner, StageProcedure param)
         {
-            var proc = param.Procedure as DBProcedure;
-            if (proc == null || param.ProcedureType != StageParamProcudureType.Manual)
+            if (!(param.Procedure is DBProcedure proc) || param.ProcedureType != StageParamProcudureType.Manual)
                 return;
 
             string name = "procedure" + proc.Name;
@@ -639,12 +639,13 @@ namespace DataWF.Module.FlowGui
                 DockPage page = dock.GetPage(name);
                 if (page == null)
                 {
-                    var qview = new PQueryView();
-                    qview.Name = name;
-                    qview.Text = param.Name == null || param.Name.Length == 0 ? proc.ToString() : param.Name;
-                    qview.Document = document;
-                    qview.Procedure = proc;
-                    page = dock.Put(qview, DockType.Content);
+                    page = dock.Put(new PQueryView
+                    {
+                        Name = name,
+                        Text = param.Name == null || param.Name.Length == 0 ? proc.ToString() : param.Name,
+                        Document = document,
+                        Procedure = proc
+                    }, DockType.Content);
                 }
                 page.Tag = owner;
             }
@@ -664,11 +665,9 @@ namespace DataWF.Module.FlowGui
             }
             else
             {
-                var item = toolProcedures.DropDown?.Items[name] as MenuItemProcedure;
-                if (item == null)
+                if (!(toolProcedures.DropDown?.Items[name] is MenuItemProcedure item))
                 {
-                    item = new MenuItemProcedure(proc);
-                    item.Name = name;
+                    item = new MenuItemProcedure(proc) { Name = name };
                     item.Click += ProcedureItemClick;
                     toolProcedures.DropDown.Items.Add(item);
                 }

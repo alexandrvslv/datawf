@@ -1,12 +1,12 @@
 ﻿using DataWF.Common;
+using DataWF.Gui;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using Xwt.Drawing;
-using Xwt;
 using System.Globalization;
-using DataWF.Gui;
+using Xwt;
+using Xwt.Drawing;
 
 namespace DataWF.TestGui
 {
@@ -345,8 +345,7 @@ namespace DataWF.TestGui
     {
         public static SelectableList<TestClass> Generate(int count)
         {
-            SelectableList<TestClass> list = new SelectableList<TestClass>();
-            list.Capacity = count;
+            SelectableList<TestClass> list = new SelectableList<TestClass> { Capacity = count };
             Random rand = new Random();
             for (int i = 0; i < count; i++)
             {

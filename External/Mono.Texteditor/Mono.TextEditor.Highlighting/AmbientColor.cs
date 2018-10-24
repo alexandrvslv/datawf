@@ -25,12 +25,10 @@
 // THE SOFTWARE.
 
 using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using System.Xml.XPath;
-using System.Reflection;
 using Xwt.Drawing;
 
 namespace Mono.TextEditor.Highlighting
@@ -173,8 +171,7 @@ namespace Mono.TextEditor.Highlighting
                 var source = info[1].Substring(0, idx);
                 var dest = info[1].Substring(idx + 1);
 
-                ColorScheme.VSSettingColor color;
-                if (!colors.TryGetValue(source, out color))
+                if (!colors.TryGetValue(source, out ColorScheme.VSSettingColor color))
                     continue;
                 result.Name = color.Name;
                 string colorString;

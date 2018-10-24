@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using Xwt.Drawing;
+﻿using DataWF.Common;
 using DataWF.Gui;
-using DataWF.Common;
-using DataWF.Data;
-using Xwt;
-using Xwt.Formats;
+using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Linq;
+using System.ComponentModel;
+using Xwt;
+using Xwt.Drawing;
+using Xwt.Formats;
 
 namespace DataWF.Data.Gui
 {
@@ -396,9 +393,11 @@ namespace DataWF.Data.Gui
                         this.Text = "Query (" + table.ToString() + ")";
                         foreach (DBColumn item in value.Columns)
                         {
-                            var itemL = new ToolMenuItem();
-                            itemL.Tag = item;
-                            itemL.Text = item.ToString();
+                            var itemL = new ToolMenuItem
+                            {
+                                Tag = item,
+                                Text = item.ToString()
+                            };
                             itemL.Click += ColumnItemClick;
                             toolAdd.DropDownItems.Add(itemL);
                         }
@@ -479,11 +478,12 @@ namespace DataWF.Data.Gui
 
         private ToolMenuItem InitQueryTool(QQuery query)
         {
-            var item = new ToolMenuItem();
-            item.Tag = query;
-            item.Name = query.GetHashCode().ToString();
-            item.Text = query.ToString();
-            return item;
+            return new ToolMenuItem
+            {
+                Tag = query,
+                Name = query.GetHashCode().ToString(),
+                Text = query.ToString()
+            };
         }
 
         protected void SetQuery(SearchState state, QQuery query, QParam owner)
@@ -550,11 +550,9 @@ namespace DataWF.Data.Gui
             //	return;
             //}
 
-            QQuery expression = new QQuery();
-            //DataEnvir.Items.Queries.Add (expression);
-            expression.Table = Table;
             Table = Table;
-            Query = expression;
+            Query = new QQuery { Table = Table };
+            //DataEnvir.Items.Queries.Add (expression);
         }
 
         //private void toolExpression_DropDownItemClicked(object sender, ToolStripItemClickedEventArgs e)
@@ -598,25 +596,25 @@ namespace DataWF.Data.Gui
         public override void Localize()
         {
             string name = "QueryEditor";
-            toolAdd.Text = Common.Locale.Get(name, "Add");
-            toolAdd.Image = (Image)Common.Locale.GetImage(name, "Add");
-            toolAddGroup.Text = Common.Locale.Get(name, "Group");
-            toolAddGroup.Image = (Image)Common.Locale.GetImage(name, "Group");
-            toolDelete.Text = Common.Locale.Get(name, "Delete");
-            toolDelete.Image = (Image)Common.Locale.GetImage(name, "Delete");
-            toolUp.Text = Common.Locale.Get(name, "Up");
-            toolUp.Image = (Image)Common.Locale.GetImage(name, "Up");
-            toolDown.Text = Common.Locale.Get(name, "Down");
-            toolDown.Image = (Image)Common.Locale.GetImage(name, "Down");
-            tooSearch.Text = Common.Locale.Get(name, "Execute");
-            tooSearch.Image = (Image)Common.Locale.GetImage(name, "Execute");
-            toolParce.Text = Common.Locale.Get(name, "Parse");
-            toolParce.Image = (Image)Common.Locale.GetImage(name, "Parse");
-            gtext.Text = Common.Locale.Get(name, "Query Text");
-            gparam.Text = Common.Locale.Get(name, "Parameters");
-            gcolumn.Text = Common.Locale.Get(name, "Columns");
-            gtable.Text = Common.Locale.Get(name, "Tables");
-            gresult.Text = Common.Locale.Get(name, "Results");
+            toolAdd.Text = Locale.Get(name, "Add");
+            toolAdd.Image = (Image)Locale.GetImage(name, "Add");
+            toolAddGroup.Text = Locale.Get(name, "Group");
+            toolAddGroup.Image = (Image)Locale.GetImage(name, "Group");
+            toolDelete.Text = Locale.Get(name, "Delete");
+            toolDelete.Image = (Image)Locale.GetImage(name, "Delete");
+            toolUp.Text = Locale.Get(name, "Up");
+            toolUp.Image = (Image)Locale.GetImage(name, "Up");
+            toolDown.Text = Locale.Get(name, "Down");
+            toolDown.Image = (Image)Locale.GetImage(name, "Down");
+            tooSearch.Text = Locale.Get(name, "Execute");
+            tooSearch.Image = (Image)Locale.GetImage(name, "Execute");
+            toolParce.Text = Locale.Get(name, "Parse");
+            toolParce.Image = (Image)Locale.GetImage(name, "Parse");
+            gtext.Text = Locale.Get(name, "Query Text");
+            gparam.Text = Locale.Get(name, "Parameters");
+            gcolumn.Text = Locale.Get(name, "Columns");
+            gtable.Text = Locale.Get(name, "Tables");
+            gresult.Text = Locale.Get(name, "Results");
         }
 
         protected override void Dispose(bool disposing)

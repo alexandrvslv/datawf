@@ -1,13 +1,9 @@
 ﻿using DataWF.Common;
 using System;
-using System.Runtime.InteropServices;
-using Xwt;
-using Xwt.Drawing;
-using System.Timers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using System.Threading;
+using Xwt;
 
 namespace DataWF.Gui
 {
@@ -466,14 +462,18 @@ namespace DataWF.Gui
 
         public static ToolWindow InitEditor(string label, object obj, bool dispose = true)
         {
-            var list = new LayoutList();
-            list.EditMode = EditModes.ByClick;
-            list.FieldSource = obj;
+            var list = new LayoutList
+            {
+                EditMode = EditModes.ByClick,
+                FieldSource = obj
+            };
 
-            var window = new ToolWindow();
-            window.Mode = ToolShowMode.Dialog;
-            window.HeaderVisible = true;
-            window.Target = list;
+            var window = new ToolWindow
+            {
+                Mode = ToolShowMode.Dialog,
+                HeaderVisible = true,
+                Target = list
+            };
             window.Label.Text = label;
             if (dispose)
                 window.Closed += (s, e) => window.Dispose();

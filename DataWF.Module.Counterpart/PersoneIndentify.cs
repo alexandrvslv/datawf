@@ -35,7 +35,7 @@ namespace DataWF.Module.Counterpart
 
         public PersoneIdentify FindByCustomer(DBItem customer)
         {
-            return FindByCustomer(customer == null ? null : customer.PrimaryId);
+            return FindByCustomer(customer?.PrimaryId);
         }
 
         public PersoneIdentify FindByCustomer(object customer)
@@ -63,11 +63,11 @@ namespace DataWF.Module.Counterpart
         private static DBColumn issyedByKey = DBColumn.EmptyKey;
         private static DBTable<PersoneIdentify> dbTable;
 
-        public static DBColumn PersoneKey => DBTable.ParseProperty(nameof(PersoneId), personeKey);
-        public static DBColumn NumberKey => DBTable.ParseProperty(nameof(Number), numberKey);
-        public static DBColumn DateIssueKey => DBTable.ParseProperty(nameof(DateIssue), dateIssueKey);
-        public static DBColumn DateExpireKey => DBTable.ParseProperty(nameof(DateExpire), dateExpireKey);
-        public static DBColumn IssuedByKey => DBTable.ParseProperty(nameof(IssuedBy), issyedByKey);
+        public static DBColumn PersoneKey => DBTable.ParseProperty(nameof(PersoneId), ref personeKey);
+        public static DBColumn NumberKey => DBTable.ParseProperty(nameof(Number), ref numberKey);
+        public static DBColumn DateIssueKey => DBTable.ParseProperty(nameof(DateIssue), ref dateIssueKey);
+        public static DBColumn DateExpireKey => DBTable.ParseProperty(nameof(DateExpire), ref dateExpireKey);
+        public static DBColumn IssuedByKey => DBTable.ParseProperty(nameof(IssuedBy), ref issyedByKey);
         public static DBTable<PersoneIdentify> DBTable => dbTable ?? (dbTable = GetTable<PersoneIdentify>());
 
         public PersoneIdentify()

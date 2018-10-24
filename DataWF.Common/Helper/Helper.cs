@@ -1138,11 +1138,10 @@ namespace DataWF.Common
                     var index = value.IndexOf('|');
                     if (index >= 0)
                         value = value.Substring(0, index);
-                    DateTime date;
                     if (value.Equals("getdate()", StringComparison.OrdinalIgnoreCase)
                         || value.Equals("current_timestamp", StringComparison.OrdinalIgnoreCase))
                         result = DateTime.Now;
-                    if (DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                    if (DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime date))
                         result = date;
                     else if (DateTime.TryParseExact(value, new string[] { "yyyyMMdd", "yyyyMM" }, CultureInfo.InvariantCulture.DateTimeFormat, DateTimeStyles.None, out date))
                         result = date;
@@ -1297,8 +1296,7 @@ namespace DataWF.Common
 
         public static bool IsDecimal(string p)
         {
-            decimal buf;
-            return decimal.TryParse(p, out buf);
+            return decimal.TryParse(p, out var buf);
         }
 
         public static void OnSerializeNotify(object sender, SerializationNotifyEventArgs arg)
@@ -1327,8 +1325,7 @@ namespace DataWF.Common
             Logs.Add(new StateInfo(e));
             //if (e.InnerException != null && e.InnerException != e)
             //    OnThreadException(e.InnerException);            
-            if (ThreadException != null)
-                ThreadException(e);
+            ThreadException?.Invoke(e);
         }
 
         private static long WorkingSet64;

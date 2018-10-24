@@ -16,14 +16,13 @@ namespace DataWF.Common
         {
             Service = service;
             FilePath = filePath;
-            Watcher = new FileSystemWatcher();
-            Watcher.Path = Path.GetDirectoryName(filePath);
-            /* Watch for changes in LastAccess and LastWrite times, and 
-               the renaming of files or directories. */
-            Watcher.NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.LastWrite
-               | NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.Size;
-            // Only watch text files.
-            Watcher.Filter = Path.GetFileName(filePath);
+            Watcher = new FileSystemWatcher
+            {
+                Path = Path.GetDirectoryName(filePath),
+                NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.LastWrite
+               | NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.Size,
+                Filter = Path.GetFileName(filePath)
+            };
 
             // Add event handlers.
             Watcher.Changed += new FileSystemEventHandler(OnChanged);

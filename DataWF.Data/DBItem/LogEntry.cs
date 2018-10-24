@@ -136,10 +136,12 @@ namespace DataWF.Data
                         LogEntry map = changes.SelectOne(nameof(LogEntry.Column), CompareType.Equal, logColumn.BaseColumn);
                         if (map == null)
                         {
-                            map = new LogEntry();
-                            map.User = name;
-                            map.Column = logColumn.BaseColumn;
-                            map.Old = prev?.GetValue(logColumn);
+                            map = new LogEntry
+                            {
+                                User = name,
+                                Column = logColumn.BaseColumn,
+                                Old = prev?.GetValue(logColumn)
+                            };
                             changes.Add(map);
                         }
                         if (!map.User.Contains(name))

@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Runtime.InteropServices;
 
 namespace DataWF.Common
 {
     public abstract class Pull
-    {            
-        private static Type[] ctorTypes = new Type[] { typeof(int) };
+    {
+        private static readonly Type[] ctorTypes = new Type[] { typeof(int) };
 
         public static Pull Fabric(Type type, int blockSize)
         {

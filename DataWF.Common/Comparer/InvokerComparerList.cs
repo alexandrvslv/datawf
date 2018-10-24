@@ -32,9 +32,8 @@ namespace DataWF.Common
 
         public override bool Equals(object obj)
         {
-            if (obj is InvokerComparerList)
+            if (obj is InvokerComparerList list)
             {
-                var list = (InvokerComparerList)obj;
                 if (list.Count == Count)
                 {
                     for (int i = 0; i < Count; i++)
@@ -85,9 +84,8 @@ namespace DataWF.Common
 
         public override bool Equals(object obj)
         {
-            if (obj is InvokerComparerList<T>)
+            if (obj is InvokerComparerList<T> list)
             {
-                var list = (InvokerComparerList<T>)obj;
                 if (list.Count == Count)
                 {
                     for (int i = 0; i < Count; i++)

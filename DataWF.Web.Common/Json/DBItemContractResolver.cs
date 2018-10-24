@@ -11,7 +11,7 @@ namespace DataWF.Web.Common
     public class DBItemContractResolver : DefaultContractResolver
     {
         private JsonConverter dbConverter = new DBItemJsonConverter();
-        private JsonConverter stringConverter = new StringEnumConverter();
+        private readonly JsonConverter stringConverter = new StringEnumConverter();
 
         public DBItemContractResolver()
         {
@@ -38,17 +38,16 @@ namespace DataWF.Web.Common
 
                     foreach (var column in table.Columns.Where(p => TypeHelper.IsBaseType(p.Property.DeclaringType, objectType)))
                     {
-                        var jsonProperty = new JsonProperty();
-                        jsonProperty.DeclaringType = objectType;
-                        if (column.DefaultValues != null && column.DefaultValues.TryGetValue(objectType, out var defaultValue))
+                        var jsonProperty = new JsonProperty
                         {
-                            jsonProperty.DefaultValue = defaultValue;
-                        }
-                        jsonProperty.Order = column.Attribute.Order;
-                        jsonProperty.PropertyName = column.PropertyName;
-                        jsonProperty.PropertyType = column.Property.PropertyType;
-                        jsonProperty.ValueProvider = column.PropertyInvoker;
-                        jsonProperty.Ignored = column.Attribute.ColumnType != DBColumnTypes.Default || (column.Attribute.Keys & DBColumnKeys.Access) == DBColumnKeys.Access;
+                            DeclaringType = objectType,
+                            DefaultValue = column.DefaultValues != null && column.DefaultValues.TryGetValue(objectType, out var defaultValue) ? defaultValue : null,
+                            Order = column.Attribute.Order,
+                            PropertyName = column.PropertyName,
+                            PropertyType = column.Property.PropertyType,
+                            ValueProvider = column.PropertyInvoker,
+                            Ignored = column.Attribute.ColumnType != DBColumnTypes.Default || (column.Attribute.Keys & DBColumnKeys.Access) == DBColumnKeys.Access
+                        };
                         result.Properties.Add(jsonProperty);
 
                         if (column.ReferenceProperty != null)

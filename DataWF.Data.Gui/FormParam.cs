@@ -1,9 +1,8 @@
-﻿using System;
+﻿using DataWF.Common;
+using DataWF.Gui;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using DataWF.Common;
-using DataWF.Data;
-using DataWF.Gui;
 using Xwt;
 
 
@@ -16,18 +15,20 @@ namespace DataWF.Data.Gui
             var window = new FormParam();
             window.Label.Text = procedure.ToString();
 
-            var table = new DBTable<DBItem>(procedure.Name + "Param");
-            table.Schema = procedure.Schema;
-            table.BlockSize = 1;
+            var table = new DBTable<DBItem>(procedure.Name + "Param")
+            {
+                Schema = procedure.Schema,
+                BlockSize = 1
+            };
             foreach (var param in procedure.Parameters)
             {
                 if (existingParam.ContainsKey(param.Name.ToString()))
                     continue;
-                DBColumn col = new DBColumn();
-                col.Name = param.Name;
-                col.Table = table;
-                if (param.Name != null && param.Name.Length > 0)
-                    col.Name = param.Name;
+                DBColumn col = new DBColumn
+                {
+                    Name = param.Name != null && param.Name.Length > 0 ? param.Name : "NewColumn",
+                    Table = table
+                };
                 if (param.Column != null)
                 {
                     if (param.Column.IsPrimaryKey)

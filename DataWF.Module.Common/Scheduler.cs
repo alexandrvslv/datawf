@@ -35,10 +35,10 @@ namespace DataWF.Module.Common
         private static DBColumn dateExecuteKey = DBColumn.EmptyKey;
         private static DBTable<Scheduler> dbTable;
 
-        public static DBColumn OrderKey => DBTable.ParseProperty(nameof(Order), orderKey);
-        public static DBColumn IntervalKey => DBTable.ParseProperty(nameof(Interval), intervalKey);
-        public static DBColumn ProcedureKey => DBTable.ParseProperty(nameof(ProcedureName), procedureKey);
-        public static DBColumn DateExecuteKey => DBTable.ParseProperty(nameof(DateExecute), dateExecuteKey);
+        public static DBColumn OrderKey => DBTable.ParseProperty(nameof(Order), ref orderKey);
+        public static DBColumn IntervalKey => DBTable.ParseProperty(nameof(Interval), ref intervalKey);
+        public static DBColumn ProcedureKey => DBTable.ParseProperty(nameof(ProcedureName), ref procedureKey);
+        public static DBColumn DateExecuteKey => DBTable.ParseProperty(nameof(DateExecute), ref dateExecuteKey);
         public static DBTable<Scheduler> DBTable => dbTable ?? (dbTable = GetTable<Scheduler>());
 
         public Scheduler()
@@ -116,9 +116,11 @@ namespace DataWF.Module.Common
             var task = Procedure.ExecuteTask(null);
             var result = task.Execute();
 
-            var info = new StateInfo();
-            info.Module = "Task";
-            info.Message = task.Name;
+            var info = new StateInfo
+            {
+                Module = "Task",
+                Message = task.Name
+            };
 
             if (result is Exception)
             {
@@ -133,9 +135,11 @@ namespace DataWF.Module.Common
 
                 if (result is decimal && Statistic.DBTable != null)
                 {
-                    var stat = new Statistic();
-                    stat.Scheduler = this;
-                    stat.Result = (decimal)rez;
+                    var stat = new Statistic
+                    {
+                        Scheduler = this,
+                        Result = (decimal)rez
+                    };
                     stat.Save();
                 }
 

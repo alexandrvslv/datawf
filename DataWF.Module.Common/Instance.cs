@@ -37,10 +37,10 @@ namespace DataWF.Module.Common
         private static DBColumn activeKey = DBColumn.EmptyKey;
         private static DBTable<Instance> dbTable;
 
-        public static DBColumn UserKey => DBTable.ParseProperty(nameof(UserId), userKey);
-        public static DBColumn HostKey => DBTable.ParseProperty(nameof(Host), hostKey);
-        public static DBColumn PortKey => DBTable.ParseProperty(nameof(Port), portKey);
-        public static DBColumn ActiveKey => DBTable.ParseProperty(nameof(Active), activeKey);
+        public static DBColumn UserKey => DBTable.ParseProperty(nameof(UserId), ref userKey);
+        public static DBColumn HostKey => DBTable.ParseProperty(nameof(Host), ref hostKey);
+        public static DBColumn PortKey => DBTable.ParseProperty(nameof(Port), ref portKey);
+        public static DBColumn ActiveKey => DBTable.ParseProperty(nameof(Active), ref activeKey);
         public static DBTable<Instance> DBTable => dbTable ?? (dbTable = GetTable<Instance>());
 
         public static Instance GetByNetId(IPEndPoint endPoint, bool create)

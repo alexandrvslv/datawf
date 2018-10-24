@@ -9,21 +9,16 @@ namespace DataWF.Common
     /// </summary>
     public class TreeComparer<T> : IComparer<T>, IComparer where T : IGroup
     {
-        IComparer comp;
-
         public TreeComparer()
         {
         }
 
         public TreeComparer(IComparer comparer)
         {
-            this.comp = comparer;
+            Comparer = comparer;
         }
 
-        public IComparer Comparer
-        {
-            get { return comp; }
-        }
+        public IComparer Comparer { get; }
 
         #region IComparer Members
 
@@ -34,7 +29,7 @@ namespace DataWF.Common
 
         public int Compare(T x, T y)
         {
-            return GroupHelper.Compare(x, y, comp);
+            return GroupHelper.Compare(x, y, Comparer);
         }
         #endregion
     }

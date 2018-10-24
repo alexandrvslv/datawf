@@ -11,24 +11,23 @@ namespace DataWF.Data.Gui
             {
                 foreach (Doc.Odf.DocumentElement drow in sheetData)
                 {
-                    Doc.Odf.Row row = drow as Doc.Odf.Row;
-                    if (row != null && row.Index == r)
-                        return (Doc.Odf.Row)row;
+                    if (drow is Doc.Odf.Row row && row.Index == r)
+                        return row;
                 }
             }
-            Doc.Odf.Row rez = new Doc.Odf.Row(sheetData.Document)
+            var rez = new Doc.Odf.Row(sheetData.Document)
             {
-                Index = r
+                Index = r,
+                StyleName = "ro2"
             };
-            rez.StyleName = "ro2";
             sheetData.Add(rez);
             return rez;
         }
 
         public Doc.Odf.Column GetColumn(Doc.Odf.Table sheetData, int index, double width)
         {
-            Doc.Odf.Column column = new Doc.Odf.Column(sheetData.Document);
-            Doc.Odf.ColumnStyle cs = new Doc.Odf.ColumnStyle(sheetData.Document);
+            var column = new Doc.Odf.Column(sheetData.Document);
+            var cs = new Doc.Odf.ColumnStyle(sheetData.Document);
             cs.ColumnProperty.BreakBefore = "auto";
             if (width > 0)
             {
@@ -46,18 +45,17 @@ namespace DataWF.Data.Gui
 
         public Doc.Odf.Cell GetCell(Doc.Odf.Table table, int c, int r)
         {
-            Doc.Odf.Cell cell = new Doc.Odf.Cell(table.Document);
             //cell.StyleName = styleIndex;
-
-            return cell;
+            return new Doc.Odf.Cell(table.Document);
         }
 
         public Doc.Odf.Cell GetCell(Doc.Odf.Table table, int c, int r, object value, string style)
         {
-            Doc.Odf.Cell cell = new Doc.Odf.Cell(table.Document);
-            cell.StyleName = style;
-            cell.Val = value;
-            return cell;
+            return new Doc.Odf.Cell(table.Document)
+            {
+                StyleName = style,
+                Val = value
+            };
         }
 
         public void ExpMapLayout(Doc.Odf.Table sheetData, LayoutColumn map, int scol, int srow, out int mcol, out int mrow, LayoutList list, object listItem)
@@ -73,9 +71,7 @@ namespace DataWF.Data.Gui
                 if (!item.Visible)
                     continue;
 
-                int cc = 0;
-                int rr = 0;
-                map.GetVisibleIndex(item, out cc, out rr);
+                map.GetVisibleIndex(item, out int cc, out int rr);
                 int c = cc + scol;
                 int r = rr + srow;
                 if (item.Count > 0)
@@ -104,7 +100,7 @@ namespace DataWF.Data.Gui
                     {
                         for (int j = 0; j < scol; j++)
                         {
-                            Doc.Odf.CoveredCell ccell = new Doc.Odf.CoveredCell(sheetData.Document);
+                            var ccell = new Doc.Odf.CoveredCell(sheetData.Document);
                             temp.Add(ccell);
                         }
                     }
@@ -116,8 +112,10 @@ namespace DataWF.Data.Gui
                     {
                         cell.NumberColumnsSpanned = ((tws - ws) + 1).ToString();
                         cell.NumberRowsSpanned = "1";
-                        Doc.Odf.CoveredCell ccell = new Doc.Odf.CoveredCell(sheetData.Document);
-                        ccell.ColumnsRepeatedCount = (tws - ws).ToString();
+                        var ccell = new Doc.Odf.CoveredCell(sheetData.Document)
+                        {
+                            ColumnsRepeatedCount = (tws - ws).ToString()
+                        };
                         temp.Add(ccell);
                     }
                     int hs = map.GetRowHeightSpan(item.Row, true);
@@ -145,14 +143,12 @@ namespace DataWF.Data.Gui
 
         public void Export(string filename, LayoutList list)
         {
-            Doc.Odf.CellDocument doc = new Doc.Odf.CellDocument();
-            Doc.Odf.Table table = doc.SpreadSheet.GetChilds(typeof(Doc.Odf.Table))[0] as Doc.Odf.Table;
+            var doc = new Doc.Odf.CellDocument();
+            var table = doc.SpreadSheet.GetChilds(typeof(Doc.Odf.Table))[0] as Doc.Odf.Table;
             table.Clear();
-            int ind = 1;
             //List<ILayoutItem> cols = LayoutMapTool.GetVisibleItems(list.ListInfo.Columns);
-            int mc;
             //columns
-            ExpMapLayout(table, list.ListInfo.Columns, 0, 2, out mc, out ind, null, null);
+            ExpMapLayout(table, list.ListInfo.Columns, 0, 2, out int mc, out int ind, null, null);
             //GetColumn(table, mc + 1, 0);
             //data
             if (list.ListInfo.GroupVisible)
@@ -160,16 +156,14 @@ namespace DataWF.Data.Gui
                 foreach (LayoutGroup g in list.Groups)
                 {
                     ind++;
-                    Doc.Odf.Cell cell = GetCell(table, 0, (int)ind);
+                    var cell = GetCell(table, 0, (int)ind);
                     cell.StyleName = "ce4";
                     cell.Val = g.TextValue;
-                    Doc.Odf.Row row = GetRow(table, ind, false);
-                    row.Add(cell);
                     cell.NumberColumnsSpanned = (mc + 1).ToString();
                     cell.NumberRowsSpanned = "1";
-                    Doc.Odf.CoveredCell ccell = new Doc.Odf.CoveredCell(table.Document);
-                    ccell.ColumnsRepeatedCount = mc.ToString();
-                    row.Add(ccell);
+                    var row = GetRow(table, ind, false);
+                    row.Add(cell);
+                    row.Add(new Doc.Odf.CoveredCell(table.Document) { ColumnsRepeatedCount = mc.ToString() });
                     for (int i = g.IndexStart; i <= g.IndexEnd; i++)
                     {
                         ind++;

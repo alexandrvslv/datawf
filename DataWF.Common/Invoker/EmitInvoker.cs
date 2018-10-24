@@ -431,8 +431,7 @@ namespace DataWF.Common
 
         public void OnCallback(object result)
         {
-            if (Callback != null)
-                Callback(new RProcedureEventArgs { Task = this, Result = result });
+            Callback?.Invoke(new RProcedureEventArgs { Task = this, Result = result });
         }
     }
 

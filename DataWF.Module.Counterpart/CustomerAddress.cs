@@ -19,8 +19,8 @@ namespace DataWF.Module.Counterpart
         private static DBColumn addressKey = DBColumn.EmptyKey;
         private static DBTable<CustomerAddress> dbTable;
 
-        public static DBColumn CustomerKey => DBTable.ParseProperty(nameof(CustomerId), customerKey);
-        public static DBColumn AddressKey => DBTable.ParseProperty(nameof(AddressId), addressKey);
+        public static DBColumn CustomerKey => DBTable.ParseProperty(nameof(CustomerId), ref customerKey);
+        public static DBColumn AddressKey => DBTable.ParseProperty(nameof(AddressId), ref addressKey);
         public static DBTable<CustomerAddress> DBTable => dbTable ?? (dbTable = GetTable<CustomerAddress>());
 
         public CustomerAddress()

@@ -84,21 +84,23 @@ namespace DataWF.Module.FlowGui
             {
                 while (true)
                 {
-                    var task = new TaskExecutor();
-                    task.Name = "Load Documents";
-                    task.Action = () =>
+                    var task = new TaskExecutor
                     {
-                        try
+                        Name = "Load Documents",
+                        Action = () =>
                         {
-                            Document.DBTable.Load(qDocs, DBLoadParam.Referencing, null).LastOrDefault();
-                            //DocumentWork.DBTable.Load(qWork, DBLoadParam.Synchronize, works).LastOrDefault();
-                            Helper.LogWorkingSet("Documents");
+                            try
+                            {
+                                Document.DBTable.Load(qDocs, DBLoadParam.Referencing, null).LastOrDefault();
+                                //DocumentWork.DBTable.Load(qWork, DBLoadParam.Synchronize, works).LastOrDefault();
+                                Helper.LogWorkingSet("Documents");
+                            }
+                            catch (Exception ex)
+                            {
+                                Helper.OnException(ex);
+                            }
+                            return null;
                         }
-                        catch (Exception ex)
-                        {
-                            Helper.OnException(ex);
-                        }
-                        return null;
                     };
                     GuiService.Main.AddTask(this, task);
                     load.Reset();
@@ -194,13 +196,12 @@ namespace DataWF.Module.FlowGui
 
         internal static ToolMenuItem InitWork(DocumentWork d, EventHandler clickHandler)
         {
-            var item = new ToolMenuItem();
-            item.Tag = d;
-            item.Name = d.Id.ToString();
-            item.Text = string.Format("{0}-{1}", d.Stage, d.User);
-            if (clickHandler != null)
-                item.Click += clickHandler;
-            return item;
+            return new ToolMenuItem(clickHandler)
+            {
+                Tag = d,
+                Name = d.Id.ToString(),
+                Text = string.Format("{0}-{1}", d.Stage, d.User)
+            };
         }
 
         private void TemplateItemClick(object sender, EventArgs e)

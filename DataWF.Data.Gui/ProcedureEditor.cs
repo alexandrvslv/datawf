@@ -1,10 +1,7 @@
-﻿using DataWF.Data;
+﻿using DataWF.Common;
 using DataWF.Gui;
-using DataWF.Common;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using Xwt.Drawing;
 using Xwt;
 
 
@@ -139,7 +136,7 @@ namespace DataWF.Data.Gui
             fields.FieldInfo.Nodes.Add(new LayoutField("File"));
             fields.FieldInfo.Nodes.Add(new LayoutField("Schema"));
 
-            source.Document.TextReplaced += source_TextChanged;
+            source.Document.TextReplaced += OnSourceTextChanged;
             source.TextArea.Caret.PositionChanged += CaretPositionChanged;
 
             scroll.Content = source;
@@ -204,17 +201,15 @@ namespace DataWF.Data.Gui
             {
                 procedure = value;
                 procedure.PropertyChanged += ProcedurePropertyChanged;
-                Text = procedure.ToString();
                 parameterView.ListSource = procedure.Parameters;
                 fields.FieldSource = procedure;
-
-                this.source.Text = procedure.Source;
+                source.Text = procedure.Source;
                 //TODO this.source.Document.FoldingManager.UpdateFoldings(null, null);
 
-                this.Name = GetName(procedure);
-
+                Name = GetName(procedure);
+                Text = procedure.ToString();
                 FieldTypeValueChanged(null, null);
-                this.toolSave.Sensitive = !procedure.IsSynchronized;
+                toolSave.Sensitive = !procedure.IsSynchronized;
             }
         }
 
@@ -222,24 +217,24 @@ namespace DataWF.Data.Gui
         {
             if (e.PropertyName.Equals(nameof(DBProcedure.Source), StringComparison.OrdinalIgnoreCase))
             {
-                if (!change && this.source.Text != procedure.Source)
+                if (!change && source.Text != procedure.Source)
                 {
-                    this.source.Text = procedure.Source;
+                    source.Text = procedure.Source;
 
                 }
             }
             else if (e.PropertyName.Equals(nameof(DBProcedure.Name), StringComparison.OrdinalIgnoreCase))
             {
-                this.Name = GetName(procedure);
+                Name = GetName(procedure);
             }
             else
             {
-                this.Text = procedure.ToString();
+                Text = procedure.ToString();
             }
             toolSave.Sensitive = !procedure.IsSynchronized;
         }
 
-        private void source_TextChanged(object sender, EventArgs e)
+        private void OnSourceTextChanged(object sender, EventArgs e)
         {
             if (procedure != null)
             {
@@ -302,13 +297,14 @@ namespace DataWF.Data.Gui
                     if (GuiService.Main != null)
                     {
 
-                        LayoutList errors = GuiService.Main.DockPanel.Find(name) as LayoutList;
-                        if (errors == null)
+                        if (!(GuiService.Main.DockPanel.Find(name) is LayoutList errors))
                         {
-                            errors = new LayoutList();
+                            errors = new LayoutList
+                            {
+                                Name = name,
+                                Text = "Errors"
+                            };
                             errors.CellMouseClick += ListErrorCellMouseClick;
-                            errors.Name = name;
-                            errors.Text = "Errors";
                         }
                         errors.ListSource = result.Errors;
                         GuiService.Main.DockPanel.Put(errors, DockType.Bottom);
@@ -319,9 +315,11 @@ namespace DataWF.Data.Gui
                 {
                     if (GuiService.Main != null)
                     {
-                        LayoutList errors = GuiService.Main.DockPanel.Find(name) as LayoutList;
-                        if (errors != null)
+                        if (GuiService.Main.DockPanel.Find(name) is LayoutList errors)
+                        {
                             GuiService.Main.DockPanel.Delete(errors);
+                        }
+
                         GuiService.Main.SetStatus(new StateInfo("Compiler", "Succesful!"));
                     }
                 }
@@ -338,8 +336,7 @@ namespace DataWF.Data.Gui
         private void ListErrorCellMouseClick(object sender, LayoutHitTestEventArgs e)
         {
             LayoutList list = sender as LayoutList;
-            var error = list.SelectedItem as System.CodeDom.Compiler.CompilerError;
-            if (error != null)
+            if (list.SelectedItem is System.CodeDom.Compiler.CompilerError error)
             {
                 string code = System.IO.Path.GetFileNameWithoutExtension(error.FileName);
                 DBProcedure p = DBService.ParseProcedure(code);
@@ -348,11 +345,9 @@ namespace DataWF.Data.Gui
                 else if (p != null)
                 {
                     string name = GetName(p);
-                    ProcedureEditor editor = GuiService.Main.DockPanel.Find(name) as ProcedureEditor;
-                    if (editor == null)
+                    if (!(GuiService.Main.DockPanel.Find(name) is ProcedureEditor editor))
                     {
-                        editor = new ProcedureEditor();
-                        editor.Procedure = p;
+                        editor = new ProcedureEditor { Procedure = p };
                     }
                     GuiService.Main.DockPanel.Put(editor);
                     editor.Select(error.Column, error.Line);
@@ -376,10 +371,12 @@ namespace DataWF.Data.Gui
                 }
                 else if (obj is Widget)
                 {
-                    var window = new ToolWindow();
-                    window.Mode = ToolShowMode.Dialog;
-                    window.Target = (Widget)obj;
-                    window.Label.Text = procedure.Name;
+                    var window = new ToolWindow
+                    {
+                        Mode = ToolShowMode.Dialog,
+                        Target = (Widget)obj,
+                        Title = procedure.Name
+                    };
                     window.Show(this, Point.Zero);
                 }
                 else
@@ -390,20 +387,20 @@ namespace DataWF.Data.Gui
             }
             else if (procedure.ProcedureType == ProcedureTypes.Query)
             {
-                var form = new PQueryView();
-                form.Procedure = procedure;
+                var form = new PQueryView { Procedure = procedure };
 
-                var window = new ToolWindow();
-                window.Mode = ToolShowMode.Dialog;
-                window.Target = form;
-                window.Label.Text = procedure.Name;
+                var window = new ToolWindow
+                {
+                    Mode = ToolShowMode.Dialog,
+                    Target = form,
+                    Title = procedure.Name
+                };
                 window.Show(this, Point.Zero);
                 //window.Dispose();
             }
             else
             {
-                var parameters = new ExecuteArgs();
-                parameters.Parameters = ProcedureProgress.CreateParam(procedure);
+                var parameters = new ExecuteArgs { Parameters = ProcedureProgress.CreateParam(procedure) };
                 var obj = procedure.CreateObject(parameters);
                 object result = procedure.ExecuteObject(obj, parameters);
                 MessageDialog.ShowMessage(ParentWindow, result == null ? "Succesfull!" : result.ToString(), "Execute complete!");

@@ -156,7 +156,7 @@ namespace DataWF.Module.Flow
             DBColumn column = DBService.ParseColumn(code, Table.Schema);
             //var result = new DBConstraintForeign() { Table = column.Table, Column = column, Value = column.Reference };
             //if (index >= 0) result.Value = ParamCode.Substring(index + 1);
-            return column == null ? null : column.GetForeign();
+            return column?.GetForeign();
         }
 
         public DBColumn GetColumn()

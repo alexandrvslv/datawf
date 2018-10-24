@@ -1,11 +1,11 @@
-﻿using System;
+﻿using DataWF.Common;
+using Oracle.ManagedDataAccess.Client;
+using Oracle.ManagedDataAccess.Types;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Text;
-using DataWF.Common;
-using Oracle.ManagedDataAccess.Client;
-using Oracle.ManagedDataAccess.Types;
 
 namespace DataWF.Data
 {
@@ -44,12 +44,14 @@ namespace DataWF.Data
 
         public override DbConnectionStringBuilder GetConnectionStringBuilder(DBConnection connection)
         {
-            var builder = new OracleConnectionStringBuilder();
-            builder.ConnectionTimeout = connection.TimeOut;
-            builder.UserID = connection.User;
-            builder.Password = connection.Password;
-            builder.DataSource = string.Format("(DESCRIPTION = (ADDRESS_LIST = (ADDRESS = (PROTOCOL = TCP)(HOST = {0})(PORT = {1})))(CONNECT_DATA = (SID = {2})))",
-                                               connection.Host, connection.Port, connection.DataBase);
+            var builder = new OracleConnectionStringBuilder
+            {
+                ConnectionTimeout = connection.TimeOut,
+                UserID = connection.User,
+                Password = connection.Password,
+                DataSource = string.Format("(DESCRIPTION = (ADDRESS_LIST = (ADDRESS = (PROTOCOL = TCP)(HOST = {0})(PORT = {1})))(CONNECT_DATA = (SID = {2})))",
+                                               connection.Host, connection.Port, connection.DataBase)
+            };
             return builder;
         }
 
@@ -186,7 +188,7 @@ namespace DataWF.Data
 
             foreach (object[] item in list.Values)
             {
-				tableInfo.Columns.Add(new DBColumnInfo()
+                tableInfo.Columns.Add(new DBColumnInfo()
                 {
                     Name = item[iName].ToString(),
                     DataType = item[iType].ToString(),

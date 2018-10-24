@@ -151,7 +151,7 @@ namespace DataWF.Module.FlowGui
                 { StyleRow = styleDefault },
                 ListSource = new SelectableListView<DocumentSendItem>(items)
             };
-            listDocuments.GetCellStyle += listDocuments_GetCellStyle;
+            listDocuments.GetCellStyle += OnListDocumentsGetCellStyle;
 
             groupBox = new GroupBox(
                 new GroupBoxItem() { Widget = listDocuments, Name = "Documents", FillHeight = true, FillWidth = true },
@@ -385,10 +385,9 @@ namespace DataWF.Module.FlowGui
                 SendType = DocumentSendType.Recovery;
         }
 
-        private CellStyle listDocuments_GetCellStyle(object sender, object listItem, object value, ILayoutCell cell)
+        private CellStyle OnListDocumentsGetCellStyle(object sender, object listItem, object value, ILayoutCell cell)
         {
-            var item = listItem as DocumentSendItem;
-            if (item != null && cell == null)
+            if (listItem is DocumentSendItem item && cell == null)
             {
                 if (item.Work != null && item.Work.Completed)
                     return styleComplete;
@@ -498,14 +497,16 @@ namespace DataWF.Module.FlowGui
             }
             else
             {
-                var exec = new TaskExecutor();
-                exec.Name = string.Format("Document Sender ({0})", items.Count);
-                exec.Callback += (e) => SendCallback();
-                exec.Action = () =>
+                var exec = new TaskExecutor
                 {
-                    SendBackground();
-                    return null;
+                    Name = string.Format("Document Sender ({0})", items.Count),
+                    Action = () =>
+                    {
+                        SendBackground();
+                        return null;
+                    }
                 };
+                exec.Callback += (e) => SendCallback();
                 GuiService.Main.AddTask(this, exec);
             }
         }
@@ -551,9 +552,7 @@ namespace DataWF.Module.FlowGui
             foreach (TableItemNode ss in nodes)
                 departs += ((User)ss.Item).Department.Name + "; ";
             elements.Add("Департамент", departs);
-
             elements.Add("ВсегоДокументов", listDocuments.ListSource.Count);
-
             elements.Add("Отправитель", User.CurrentUser);
 
             string users = "";
@@ -561,14 +560,16 @@ namespace DataWF.Module.FlowGui
                 users += ((User)ss.Item).Name + "; ";
             elements.Add("Получатель", users);
 
-            Dictionary<string, object> subparam = new Dictionary<string, object>();
-            List<Dictionary<string, object>> param = new List<Dictionary<string, object>>();
+            var subparam = new Dictionary<string, object>();
+            var param = new List<Dictionary<string, object>>();
 
             foreach (DocumentWork row in (IEnumerable)listDocuments.ListSource)
             {
-                subparam = new Dictionary<string, object>();
-                subparam.Add("numberio", row.Document["INOUTNUM"]);
-                subparam.Add("number", row.Document.PrimaryCode);
+                subparam = new Dictionary<string, object>
+                {
+                    { "numberio", row.Document["INOUTNUM"] },
+                    { "number", row.Document.PrimaryCode }
+                };
                 //subparam.Add (row.Description);
                 param.Add(subparam);
             }

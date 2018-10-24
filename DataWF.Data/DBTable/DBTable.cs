@@ -203,7 +203,7 @@ namespace DataWF.Data
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DBColumn ParseProperty(string property, DBColumn cache)
+        public DBColumn ParseProperty(string property, ref DBColumn cache)
         {
             return cache == DBColumn.EmptyKey ? (cache = ParseProperty(property)) : cache;
         }
@@ -699,8 +699,7 @@ namespace DataWF.Data
             var column = Columns[name];
             if (column == null)
             {
-                column = new DBColumn(name);
-                column.DataType = type;
+                column = new DBColumn(name) { DataType = type };
                 Columns.Add(column);
                 newCol = true;
             }

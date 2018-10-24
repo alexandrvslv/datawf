@@ -1,6 +1,6 @@
-﻿using System;
+﻿using DataWF.Common;
+using System;
 using System.Collections.Generic;
-using DataWF.Common;
 using Xwt;
 
 namespace DataWF.Gui
@@ -60,14 +60,11 @@ namespace DataWF.Gui
             var item = LayoutListMenu.GetCached(f);
             if (item == null)
             {
-                item = new ToolMenuItem();
-                item.Name = f.Name;
-                item.Text = GroupHelper.GetFullName(f, " ");
-                item.Tag = f;
-                item.Click += (object sender, EventArgs e) =>
+                item = new ToolMenuItem((object sender, EventArgs e) => ((LayoutField)((ToolMenuItem)sender).Tag).Visible = true)
                 {
-                    var menuitem = (ToolMenuItem)sender;
-                    ((LayoutField)menuitem.Tag).Visible = true;
+                    Name = f.Name,
+                    Text = GroupHelper.GetFullName(f, " "),
+                    Tag = f
                 };
             }
             return item;

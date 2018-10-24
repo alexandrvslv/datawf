@@ -31,7 +31,8 @@ namespace DataWF.Module.Flow
 {
     public class DocumentDataList : DBTableView<DocumentData>
     {
-        Document document;
+        readonly Document document;
+
         public DocumentDataList()
             : this("", DBViewKeys.None)
         {
@@ -63,7 +64,7 @@ namespace DataWF.Module.Flow
 
     public class ListDocumentData : SelectableList<DocumentData>
     {
-        Document document;
+        readonly Document document;
 
         public ListDocumentData(Document document)
             : base(DocumentData.DBTable.Select(

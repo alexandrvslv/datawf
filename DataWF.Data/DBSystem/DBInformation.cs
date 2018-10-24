@@ -17,8 +17,6 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using System;
-using System.Collections.Generic;
 using DataWF.Common;
 
 namespace DataWF.Data
@@ -141,9 +139,11 @@ INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS KCU2
                         var reference = col.Table.Foreigns.GetByColumns(col, rcol);
                         if (reference == null)
                         {
-                            reference = new DBForeignKey();
-                            reference.Column = col;
-                            reference.Reference = rcol;
+                            reference = new DBForeignKey
+                            {
+                                Column = col,
+                                Reference = rcol
+                            };
                             col.Table.Foreigns.Add(reference);
                         }
                         reference.Name = name;

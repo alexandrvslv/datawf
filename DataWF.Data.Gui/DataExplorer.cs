@@ -274,8 +274,7 @@ namespace DataWF.Data.Gui
                     }
                 }
             };
-            var editor = new DataExport();
-            editor.Export = export;
+            var editor = new DataExport { Export = export };
             editor.ExportComplete += (oo, ee) =>
             {
                 editor.Patch();
@@ -299,15 +298,12 @@ namespace DataWF.Data.Gui
                     text.AppendLine("go");
                     text.AppendLine(schema.FormatSql());
 
-                    var query = new DataQuery();
-                    query.Query = text.ToString();
-
+                    var query = new DataQuery { Query = text.ToString() };
                     GuiService.Main.DockPanel.Put(query);
                 }
             }
-            else if (value is DBConnection)
+            else if (value is DBConnection connection)
             {
-                var connection = (DBConnection)value;
                 var schema = new DBSchema
                 {
                     Name = connection.Name,
@@ -430,10 +426,7 @@ namespace DataWF.Data.Gui
 
         private void ToolDBCheckClick(object sender, EventArgs e)
         {
-            if (dataTree.SelectedNode == null)
-                return;
-            var schema = dataTree.SelectedDBItem as DBSchema;
-            if (schema != null)
+            if (dataTree.SelectedDBItem is DBSchema schema)
             {
                 try
                 {
@@ -480,8 +473,7 @@ namespace DataWF.Data.Gui
         {
             if (dataTree.SelectedDBItem != null)
             {
-                var query = new DataQuery();
-                query.Query = dataTree.SelectedDBItem.FormatSql(DDLType.Create);
+                var query = new DataQuery { Query = dataTree.SelectedDBItem.FormatSql(DDLType.Create) };
                 GuiService.Main.DockPanel.Put(query);
             }
         }
@@ -533,8 +525,7 @@ namespace DataWF.Data.Gui
         {
             if (dataTree.SelectedDBItem is DBSchema)
             {
-                var editor = new ListExplorer();
-                editor.DataSource = dataTree.SelectedDBItem;
+                var editor = new ListExplorer { DataSource = dataTree.SelectedDBItem };
                 editor.ShowDialog(this);
             }
         }
@@ -551,9 +542,8 @@ namespace DataWF.Data.Gui
         {
             if (dataTree.SelectedDBItem is DBTable)
             {
-                var projecth = new ProjectHandler();
-                projecth.Project = new QQuery();
-                ((QQuery)projecth.Project).Table = (DBTable)dataTree.SelectedDBItem;
+                var query = new QQuery { Table = (DBTable)dataTree.SelectedDBItem };
+                var projecth = new ProjectHandler { Project = query };
                 GuiService.Main.CurrentProject = projecth;
             }
         }
@@ -590,14 +580,13 @@ namespace DataWF.Data.Gui
 
         private void ToolAddTableClick(object sender, EventArgs e)
         {
-            var schema = dataTree.SelectedDBItem.Schema as DBSchema;
             var group = dataTree.SelectedDBItem as DBTableGroup;
             if (dataTree.SelectedDBItem is DBTable)
             {
                 group = ((DBTable)dataTree.SelectedDBItem).Group;
             }
 
-            if (schema == null)
+            if (!(dataTree.SelectedDBItem?.Schema is DBSchema schema))
                 return;
 
             ShowNewItem(new DBTable<DBItem>
@@ -611,9 +600,9 @@ namespace DataWF.Data.Gui
         private void ToolAddColumnGroupClick(object sender, EventArgs e)
         {
             var table = dataTree.SelectedDBItem as DBTable;
-            if (dataTree.SelectedDBItem is IDBTableContent)
+            if (dataTree.SelectedDBItem is IDBTableContent tableContent)
             {
-                table = ((IDBTableContent)dataTree.SelectedDBItem).Table;
+                table = tableContent.Table;
             }
 
             if (table == null)
@@ -630,17 +619,17 @@ namespace DataWF.Data.Gui
         {
             var table = dataTree.SelectedDBItem as DBTable;
             var group = dataTree.SelectedDBItem as DBColumnGroup;
-            if (dataTree.SelectedDBItem is IDBTableContent)
+            if (dataTree.SelectedDBItem is IDBTableContent tableContent)
             {
-                table = ((IDBTableContent)dataTree.SelectedDBItem).Table;
+                table = tableContent.Table;
             }
 
             if (table == null)
                 return;
 
-            if (dataTree.SelectedDBItem is DBColumn)
+            if (dataTree.SelectedDBItem is DBColumn column)
             {
-                group = ((DBColumn)dataTree.SelectedDBItem).Group;
+                group = column.Group;
             }
             ShowNewItem(new DBColumn()
             {
@@ -653,23 +642,22 @@ namespace DataWF.Data.Gui
         private void ToolAddIndexClick(object sender, EventArgs e)
         {
             var table = dataTree.SelectedDBItem as DBTable;
-            var column = dataTree.SelectedDBItem as DBColumn;
-            if (dataTree.SelectedDBItem is IDBTableContent)
+            if (dataTree.SelectedDBItem is IDBTableContent tableContent)
             {
-                table = ((IDBTableContent)dataTree.SelectedDBItem).Table;
+                table = tableContent.Table;
             }
 
             if (table == null)
                 return;
 
             var columns = new List<DBColumn>();
-            if (column != null)
+            if (dataTree.SelectedDBItem is DBColumn column)
             {
                 columns.Add(column);
             }
-            else if (dataTree.SelectedDBItem is DBColumnGroup)
+            else if (dataTree.SelectedDBItem is DBColumnGroup columnGroup)
             {
-                columns.AddRange(((DBColumnGroup)dataTree.SelectedDBItem).GetColumns());
+                columns.AddRange(columnGroup.GetColumns());
             }
             ShowNewItem(new DBIndex
             {
@@ -682,23 +670,22 @@ namespace DataWF.Data.Gui
         private void ToolAddConstraintClick(object sender, EventArgs e)
         {
             var table = dataTree.SelectedDBItem as DBTable;
-            var column = dataTree.SelectedDBItem as DBColumn;
-            if (dataTree.SelectedDBItem is IDBTableContent)
+            if (dataTree.SelectedDBItem is IDBTableContent tableContent)
             {
-                table = ((IDBTableContent)dataTree.SelectedDBItem).Table;
+                table = tableContent.Table;
             }
 
             if (table == null)
                 return;
 
             var columns = new List<DBColumn>();
-            if (column != null)
+            if (dataTree.SelectedDBItem is DBColumn column)
             {
                 columns.Add(column);
             }
-            else if (dataTree.SelectedDBItem is DBColumnGroup)
+            else if (dataTree.SelectedDBItem is DBColumnGroup columnGroup)
             {
-                columns.AddRange(((DBColumnGroup)dataTree.SelectedDBItem).GetColumns());
+                columns.AddRange(columnGroup.GetColumns());
             }
 
             ShowNewItem(new DBConstraint
@@ -711,17 +698,16 @@ namespace DataWF.Data.Gui
         private void ToolAddForeignClick(object sender, EventArgs e)
         {
             var table = dataTree.SelectedDBItem as DBTable;
-            var column = dataTree.SelectedDBItem as DBColumn;
-            if (dataTree.SelectedDBItem is IDBTableContent)
+            if (dataTree.SelectedDBItem is IDBTableContent tableContent)
             {
-                table = ((IDBTableContent)dataTree.SelectedDBItem).Table;
+                table = tableContent.Table;
             }
 
             if (table == null)
                 return;
 
             var columns = new List<DBColumn>();
-            if (column != null)
+            if (dataTree.SelectedDBItem is DBColumn column)
             {
                 columns.Add(column);
             }
@@ -735,9 +721,8 @@ namespace DataWF.Data.Gui
 
         private void ToolAddSequenceClick(object sender, EventArgs e)
         {
-            var schema = dataTree.SelectedDBItem.Schema as DBSchema;
 
-            if (schema == null)
+            if (!(dataTree.SelectedDBItem?.Schema is DBSchema schema))
                 return;
 
             ShowNewItem(new DBSequence
@@ -749,10 +734,9 @@ namespace DataWF.Data.Gui
 
         private void ToolAddProcedureClick(object sender, EventArgs e)
         {
-            var schema = dataTree.SelectedDBItem.Schema as DBSchema;
             var group = dataTree.SelectedDBItem as DBProcedure;
 
-            if (schema == null)
+            if (!(dataTree.SelectedDBItem?.Schema is DBSchema schema))
                 return;
 
             ShowNewItem(new DBProcedure
@@ -766,8 +750,7 @@ namespace DataWF.Data.Gui
         private void ToolAddProcedureParamClick(object sender, EventArgs e)
         {
             var procedure = dataTree.SelectedDBItem as DBProcedure;
-            var group = dataTree.SelectedDBItem as DBProcParameter;
-            if (group != null)
+            if (dataTree.SelectedDBItem is DBProcParameter group)
             {
                 procedure = group.Procedure;
             }
@@ -815,26 +798,24 @@ namespace DataWF.Data.Gui
             var dbItem = dataTree.SelectedDBItem;
             if (dbItem == null)
                 return;
-            if (dbItem is DBTable)
+            if (dbItem is DBTable table)
             {
-                DBTable newTable = (DBTable)((DBTable)dbItem).Clone();
-                ShowNewItem(newTable);
+                ShowNewItem((DBTable)table.Clone());
             }
-            else if (dbItem is DBColumn)
+            else if (dbItem is DBColumn column)
             {
-                var selected = (DBColumn)dbItem;
-                var column = (DBColumn)selected.Clone();
-                column.Table = selected.Table;
-                ShowNewItem(column);
+                var newColumn = (DBColumn)column.Clone();
+                newColumn.Table = column.Table;
+                ShowNewItem(newColumn);
             }
-            else if (dbItem is DBProcedure)
+            else if (dbItem is DBProcedure procedure)
             {
-                var procedure = (DBProcedure)((DBProcedure)dbItem).Clone();
-                foreach (var par in ((DBProcedure)dbItem).Parameters)
+                var newProcedure = (DBProcedure)procedure.Clone();
+                foreach (var par in procedure.Parameters)
                 {
                     var parameter = (DBProcParameter)par.Clone();
                     parameter.Procedure = procedure;
-                    procedure.Parameters.Add(parameter);
+                    newProcedure.Parameters.Add(parameter);
                 }
             }
             //dataTree.SelectedDBItem
@@ -877,21 +858,15 @@ namespace DataWF.Data.Gui
 
         private void DataTreeOnDoubleClick(object sender, LayoutHitTestEventArgs e)
         {
-            if (dataTree.SelectedDBItem != null)
+            if (dataTree.SelectedDBItem is DBTable table)
             {
-                DBTable table = dataTree.SelectedDBItem as DBTable;
-                if (table != null)
-                {
-                    EditTableData(table);
-                }
-                else if (dataTree.SelectedDBItem is DBProcedure)
-                {
-                    var procedure = (DBProcedure)dataTree.SelectedDBItem;
-                    var editor = GuiService.Main.DockPanel.Find(ProcedureEditor.GetName(procedure)) as ProcedureEditor;
-                    if (editor == null)
-                        editor = new ProcedureEditor() { Procedure = procedure };
-                    GuiService.Main.DockPanel.Put(editor, DockType.Content);
-                }
+                EditTableData(table);
+            }
+            else if (dataTree.SelectedDBItem is DBProcedure procedure)
+            {
+                if (!(GuiService.Main.DockPanel.Find(ProcedureEditor.GetName(procedure)) is ProcedureEditor editor))
+                    editor = new ProcedureEditor() { Procedure = procedure };
+                GuiService.Main.DockPanel.Put(editor, DockType.Content);
             }
         }
 
@@ -919,13 +894,14 @@ namespace DataWF.Data.Gui
                             Value = ProcedureTypes.File
                         },
                         });
-                    var procedire = CurrentSchema.Procedures.Find(query) as DBProcedure;
-                    if (procedire == null)
+                    if (!(CurrentSchema.Procedures.Find(query) is DBProcedure procedire))
                     {
-                        procedire = new DBProcedure();
-                        procedire.ProcedureType = ProcedureTypes.File;
-                        procedire.DataName = name;
-                        procedire.Name = Path.GetFileNameWithoutExtension(name);
+                        procedire = new DBProcedure
+                        {
+                            ProcedureType = ProcedureTypes.File,
+                            DataName = name,
+                            Name = Path.GetFileNameWithoutExtension(name)
+                        };
                     }
                     procedire.Data = File.ReadAllBytes(fileName);
                     procedire.Stamp = File.GetLastWriteTime(fileName);

@@ -119,8 +119,7 @@ namespace DataWF.Data.Gui
                 var command = transaction.AddCommand("");
                 foreach (TableItemNode node in listObjects.Nodes)
                 {
-                    DBTable table = node.Tag as DBTable;
-                    if (table != null && table.IsLoging && table.StatusKey != null)
+                    if (node.Item is DBTable table && table.IsLoging && table.StatusKey != null)
                     {
                         var filter = table.GetStatusParam(DBStatus.Accept);
                         command.CommandText = table.BuildQuery("where " + filter.Format(), "a", null, "count(*)");
@@ -194,8 +193,7 @@ namespace DataWF.Data.Gui
             qdelete.BuildParam(table.LogTable.StatusKey, CompareType.Equal, DBStatus.New);
             foreach (var log in table.LogTable.Load(qdelete, DBLoadParam.Synchronize))
             {
-                LogMap change = new LogMap();
-                change.Table = table;
+                LogMap change = new LogMap { Table = table };
                 //change.Logs.Add(log);
                 change.RefreshChanges();
                 rows.Add(change);

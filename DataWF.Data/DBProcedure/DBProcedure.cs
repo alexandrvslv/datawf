@@ -261,11 +261,13 @@ namespace DataWF.Data
                 using (FileStream ms = new FileStream(outFile + ".csproj", FileMode.Create))
                 {
                     //Sax mod for performance reason
-                    var xws = new XmlWriterSettings();
-                    //TODO check utf8 OpenWay compatible
-                    xws.Encoding = Encoding.UTF8;
-                    //formating
-                    xws.Indent = true;
+                    var xws = new XmlWriterSettings
+                    {
+                        //TODO check utf8 OpenWay compatible
+                        Encoding = Encoding.UTF8,
+                        //formating
+                        Indent = true
+                    };
 
                     using (var xw = XmlWriter.Create(ms, xws))
                     {
@@ -445,13 +447,14 @@ namespace DataWF.Data
 
             if (ProcedureType == ProcedureTypes.Assembly || ProcedureType == ProcedureTypes.Source)
             {
-                var documented = obj as IDocument;
-                if (documented != null)
+                if (obj is IDocument documented)
+                {
                     documented.Document = param.Document;
-
-                var executed = obj as IExecutable;
-                if (executed != null)
+                }
+                if (obj is IExecutable executed)
+                {
                     obj = executed.Execute(param);
+                }
             }
             else if (ProcedureType == ProcedureTypes.StoredFunction)
             {
@@ -478,33 +481,33 @@ namespace DataWF.Data
 
         public TaskExecutor ExecuteTask(object obj, ExecuteArgs param)
         {
-            var task = new TaskExecutor();
-            task.Name = string.Format("{0} on {1} #{2}", this.Name,
-                                      param.Document,
-                                      param.Document?.PrimaryId);
-            task.Tag = param.Document;
-            task.Object = this;
-            task.Action = () =>
+            var task = new TaskExecutor
             {
-                object result = null;
-                var transaction = DBTransaction.GetTransaction(param, Schema.Connection);
-                try
+                Name = $"{this.Name} on {param.Document} #{param.Document?.PrimaryId}",
+                Tag = param.Document,
+                Object = this,
+                Action = () =>
                 {
-                    result = this.ExecuteObject(obj, param);
-                    if (transaction.Owner == param)
-                        transaction.Commit();
+                    object result = null;
+                    var transaction = DBTransaction.GetTransaction(param, Schema.Connection);
+                    try
+                    {
+                        result = this.ExecuteObject(obj, param);
+                        if (transaction.Owner == param)
+                            transaction.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        result = ex;
+                    }
+                    finally
+                    {
+                        if (transaction.Owner == param)
+                            transaction.Dispose();
+                    }
+                    return result;
                 }
-                catch (Exception ex)
-                {
-                    transaction.Rollback();
-                    result = ex;
-                }
-                finally
-                {
-                    if (transaction.Owner == param)
-                        transaction.Dispose();
-                }
-                return result;
             };
 
             return task;
@@ -726,7 +729,6 @@ namespace DataWF.Data
             //var appDir = Tool.GetDirectory();
             Helper.Logs.Add(new StateInfo("Startup", "Cache Sources", "", StatusType.Information));
 
-            CompilerResults result;
 
             var groups = schema.Procedures.Select(nameof(DBProcedure.ProcedureType),
                                                   CompareType.Equal,
@@ -741,7 +743,7 @@ namespace DataWF.Data
                 }
                 else
                 {
-                    Compile(group.Key, group, out result, false);
+                    Compile(group.Key, group, out var result, false);
                     if (result.Errors.Count > 0)
                         throw new Exception(DBProcedure.CompilerError(result));
                 }

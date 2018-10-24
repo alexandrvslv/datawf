@@ -16,19 +16,17 @@ namespace DataWF.Data.Gui
         {
             if (fields.FieldSource == null)
                 return;
-            TextDocument td = new TextDocument();
+            var td = new TextDocument();
 
             var ps = new ParagraphStyle(td);
             ps.TextProperties.FontSize = "14";
-            var pr = new Paragraph(td);
-            pr.Style = ps;
+            var pr = new Paragraph(td) { Style = ps };
             td.BodyText.Add(pr);
             pr.Add(fields.Name + "\n" + fields.FieldSource.ToString() + "\n\n");
 
             ps = new ParagraphStyle(td);
             ps.TextProperties.FontSize = "10";
-            pr = new Paragraph(td);
-            pr.Style = ps;
+            pr = new Paragraph(td) { Style = ps };
             td.BodyText.Add(pr);
             pr.Add(new Placeholder(td, "таблица", PlaceholdeType.Table));
 

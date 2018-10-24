@@ -59,15 +59,16 @@ namespace Doc.Odf
 
         private void AddFile(string type, string path, byte[] data)
         {
-            var paramD = new Dictionary<string, object>();
-            paramD.Add("IsDirectory", false);
-            paramD.Add("Data", data);
-            //
-            files.Add(path, paramD);
-            ManifestFile file = new ManifestFile(this);
-            file.FullPath = path;
-            file.MediaType = type;
-            Manifest.Add(file);
+            files.Add(path, new Dictionary<string, object>
+            {
+                { "IsDirectory", false },
+                { "Data", data }
+            });
+            Manifest.Add(new ManifestFile(this)
+            {
+                FullPath = path,
+                MediaType = type
+            });
         }
 
         public DocumentContent Content
@@ -212,8 +213,7 @@ namespace Doc.Odf
         public BaseItem InsertText(string text, BaseItem afterElement, bool replace)
         {
             BaseItem lastElement = null;
-            Paragraph paragraph = afterElement as Paragraph;
-            if (paragraph == null)
+            if (!(afterElement is Paragraph paragraph))
                 paragraph = (Paragraph)Service.GetParent(afterElement, typeof(Paragraph));
             if (paragraph == null)
                 return null;
@@ -234,9 +234,10 @@ namespace Doc.Odf
                         p.Style = s.Style as ParagraphStyle;
                     else
                     {
-                        ParagraphStyle ps = new ParagraphStyle(this);
-                        ps.ParentStyleName = ((DefaultStyle)s.Style).Name;
-                        p.Style = ps;
+                        p.Style = new ParagraphStyle(this)
+                        {
+                            ParentStyleName = ((DefaultStyle)s.Style).Name
+                        };
                     }
                     p.Clear();
                     List<BaseItem> list = ParseText(afterElement, split[i]);
@@ -309,10 +310,9 @@ namespace Doc.Odf
         }
         public IStyledElement GetStyle(BaseItem owner)
         {
-            IStyledElement s = owner as IStyledElement;
-            if (s == null)
-                s = Service.GetParent(owner, typeof(IStyledElement)) as IStyledElement;
-            return s;
+            if (!(owner is IStyledElement styled))
+                styled = Service.GetParent(owner, typeof(IStyledElement)) as IStyledElement;
+            return styled;
         }
         public List<BaseItem> ParseText(BaseItem owner, string text)
         {
@@ -329,17 +329,21 @@ namespace Doc.Odf
                 TextElement te = new TextElement(this, str.Value);
                 if (str.Format != null && str.Format.Length != 0 && ts != null)
                 {
-                    TextStyle style = new TextStyle(this);
-                    style.ParentStyle = ts;
+                    TextStyle style = new TextStyle(this)
+                    {
+                        ParentStyle = ts
+                    };
 
                     if (str.Format == "i")
                         style.TextProperties.FontStyle = FontStyles.Italic;
                     if (str.Format == "b")
                         style.TextProperties.FontWeight = FontWheights.wBold;
 
-                    TextSpan span = new TextSpan(this);
+                    TextSpan span = new TextSpan(this)
+                    {
+                        Style = style
+                    };
                     span.Add(te);
-                    span.Style = style;
                     bi.Add(span);
                 }
                 else
@@ -433,11 +437,12 @@ namespace Doc.Odf
 
                     }
                     streamOfFile.Close();
-                    Dictionary<string, object> list = new Dictionary<string, object>();
-                    list.Add("ZipFileIndex", zipEntry.ZipFileIndex);
-                    list.Add("IsDirectory", zipEntry.IsDirectory);
-                    list.Add("Data", data);
-                    files.Add(zipEntry.Name, list);
+                    files.Add(zipEntry.Name, new Dictionary<string, object>
+                    {
+                        { "ZipFileIndex", zipEntry.ZipFileIndex },
+                        { "IsDirectory", zipEntry.IsDirectory },
+                        { "Data", data }
+                    });
                 }
             }
 
@@ -583,8 +588,10 @@ namespace Doc.Odf
                 frame.Height.Data = frame.Height.Data * coef;
             }
             frame.Z = 1;
-            FrameImage fi = new FrameImage(this);
-            fi.HRef = AddImage(im);
+            FrameImage fi = new FrameImage(this)
+            {
+                HRef = AddImage(im)
+            };
             frame.Add(fi);
             return frame;
         }

@@ -1,10 +1,10 @@
-﻿using DocumentFormat.OpenXml;
+﻿using DataWF.Common;
+using DataWF.Gui;
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Drawing.Spreadsheet;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml.Validation;
-using DataWF.Gui;
-using DataWF.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -47,11 +47,9 @@ namespace DataWF.Data.Gui
                 sheets.Append(sheet);
                 workbookpart.Workbook.Save();
 
-                int ind = 1;
                 //List<ILayoutItem> cols = LayoutMapTool.GetVisibleItems(list.ListInfo.Columns);
-                int mc;
                 //columns
-                ExpMapLayout(sd, list.ListInfo.Columns, 0, 1, out mc, out ind, null, null);
+                ExpMapLayout(sd, list.ListInfo.Columns, 0, 1, out int mc, out int ind, null, null);
                 //data
                 if (list.ListInfo.GroupVisible)
                 {
@@ -127,11 +125,13 @@ namespace DataWF.Data.Gui
                 if (col.Min != null && col.Min == index)
                     return col;
             }
-            Column column = new Column();
-            column.Min = (uint)index;
-            column.Max = (uint)index;
-            column.Width = width / 6;
-            column.CustomWidth = true;
+            Column column = new Column
+            {
+                Min = (uint)index,
+                Max = (uint)index,
+                Width = width / 6,
+                CustomWidth = true
+            };
             cols.AppendChild<Column>(column);
             return column;
 
@@ -199,9 +199,7 @@ namespace DataWF.Data.Gui
                 if (!item.Visible)
                     continue;
 
-                int c = 0;
-                int r = 0;
-                map.GetVisibleIndex(item, out c, out r);
+                map.GetVisibleIndex(item, out int c, out int r);
                 c += scol;
                 r += srow;
                 if (item.Count > 0)
@@ -216,9 +214,10 @@ namespace DataWF.Data.Gui
                     {
                         object val = list.ReadValue(listItem, (ILayoutCell)item);
                         celldata = list.FormatValue(listItem, val, (ILayoutCell)item);
-                        decimal dval;
-                        if (val is decimal && decimal.TryParse(celldata.ToString(), out dval))
+                        if (val is decimal && decimal.TryParse(celldata.ToString(), out decimal dval))
+                        {
                             celldata = val;
+                        }
                     }
 
                     Cell cell = GetCell(celldata, c, r, celldata is decimal ? 3U : 6U);
@@ -406,8 +405,7 @@ namespace DataWF.Data.Gui
             {
                 if (item.Visible)
                 {
-                    int c, r;
-                    map.GetVisibleIndex(item, out c, out r);
+                    map.GetVisibleIndex(item, out int c, out int r);
                     c += sc; r += sr;
                     if (item.Count > 0)
                     {
@@ -508,8 +506,7 @@ namespace DataWF.Data.Gui
             {
                 if (column.Visible)
                 {
-                    int c, r;
-                    map.GetVisibleIndex(column, out c, out r);
+                    map.GetVisibleIndex(column, out int c, out int r);
                     c += sc; r += sr;
 
                     if (column.Count > 0)
@@ -531,93 +528,118 @@ namespace DataWF.Data.Gui
             {
                 using (SpreadsheetDocument xl = SpreadsheetDocument.Create(filename, SpreadsheetDocumentType.Workbook))
                 {
-                    WorkbookPart wbp = xl.AddWorkbookPart();
-                    WorksheetPart wsp = wbp.AddNewPart<WorksheetPart>();
-                    Workbook wb = new Workbook();
-                    FileVersion fv = new FileVersion();
-                    fv.ApplicationName = "Microsoft Office Excel";
-                    Worksheet ws = new Worksheet();
-                    SheetData sd = new SheetData();
+                    var wbp = xl.AddWorkbookPart();
+                    var wsp = wbp.AddNewPart<WorksheetPart>();
+                    var wb = new Workbook();
+                    var fv = new FileVersion { ApplicationName = "Microsoft Office Excel" };
+                    var ws = new Worksheet();
+                    var sd = new SheetData();
 
-                    WorkbookStylesPart wbsp = wbp.AddNewPart<WorkbookStylesPart>();
+                    var wbsp = wbp.AddNewPart<WorkbookStylesPart>();
                     wbsp.Stylesheet = CreateStylesheet();
                     wbsp.Stylesheet.Save();
 
-                    string sImagePath = "polymathlogo.png";
-                    DrawingsPart dp = wsp.AddNewPart<DrawingsPart>();
-                    ImagePart imgp = dp.AddImagePart(ImagePartType.Png, wsp.GetIdOfPart(dp));
+                    var sImagePath = "polymathlogo.png";
+                    var dp = wsp.AddNewPart<DrawingsPart>();
+                    var imgp = dp.AddImagePart(ImagePartType.Png, wsp.GetIdOfPart(dp));
                     using (FileStream fs = new FileStream(sImagePath, FileMode.Open))
                     {
                         imgp.FeedData(fs);
                     }
 
-                    NonVisualDrawingProperties nvdp = new NonVisualDrawingProperties();
-                    nvdp.Id = 1025;
-                    nvdp.Name = "Picture 1";
-                    nvdp.Description = "polymathlogo";
-                    DocumentFormat.OpenXml.Drawing.PictureLocks picLocks = new DocumentFormat.OpenXml.Drawing.PictureLocks();
-                    picLocks.NoChangeAspect = true;
-                    picLocks.NoChangeArrowheads = true;
-                    NonVisualPictureDrawingProperties nvpdp = new NonVisualPictureDrawingProperties();
-                    nvpdp.PictureLocks = picLocks;
-                    NonVisualPictureProperties nvpp = new NonVisualPictureProperties();
-                    nvpp.NonVisualDrawingProperties = nvdp;
-                    nvpp.NonVisualPictureDrawingProperties = nvpdp;
+                    var nvdp = new NonVisualDrawingProperties
+                    {
+                        Id = 1025,
+                        Name = "Picture 1",
+                        Description = "polymathlogo"
+                    };
+                    var picLocks = new DocumentFormat.OpenXml.Drawing.PictureLocks
+                    {
+                        NoChangeAspect = true,
+                        NoChangeArrowheads = true
+                    };
+                    var nvpdp = new NonVisualPictureDrawingProperties
+                    {
+                        PictureLocks = picLocks
+                    };
+                    var nvpp = new NonVisualPictureProperties
+                    {
+                        NonVisualDrawingProperties = nvdp,
+                        NonVisualPictureDrawingProperties = nvpdp
+                    };
 
-                    DocumentFormat.OpenXml.Drawing.Stretch stretch = new DocumentFormat.OpenXml.Drawing.Stretch();
-                    stretch.FillRectangle = new DocumentFormat.OpenXml.Drawing.FillRectangle();
+                    var stretch = new DocumentFormat.OpenXml.Drawing.Stretch
+                    {
+                        FillRectangle = new DocumentFormat.OpenXml.Drawing.FillRectangle()
+                    };
 
-                    BlipFill blipFill = new BlipFill();
-                    DocumentFormat.OpenXml.Drawing.Blip blip = new DocumentFormat.OpenXml.Drawing.Blip();
-                    blip.Embed = dp.GetIdOfPart(imgp);
-                    blip.CompressionState = DocumentFormat.OpenXml.Drawing.BlipCompressionValues.Print;
-                    blipFill.Blip = blip;
-                    blipFill.SourceRectangle = new DocumentFormat.OpenXml.Drawing.SourceRectangle();
+                    var blip = new DocumentFormat.OpenXml.Drawing.Blip
+                    {
+                        Embed = dp.GetIdOfPart(imgp),
+                        CompressionState = DocumentFormat.OpenXml.Drawing.BlipCompressionValues.Print
+                    };
+
+                    var blipFill = new BlipFill
+                    {
+                        Blip = blip,
+                        SourceRectangle = new DocumentFormat.OpenXml.Drawing.SourceRectangle()
+                    };
                     blipFill.Append(stretch);
 
-                    DocumentFormat.OpenXml.Drawing.Transform2D t2d = new DocumentFormat.OpenXml.Drawing.Transform2D();
-                    DocumentFormat.OpenXml.Drawing.Offset offset = new DocumentFormat.OpenXml.Drawing.Offset();
-                    offset.X = 0;
-                    offset.Y = 0;
-                    t2d.Offset = offset;
+                    var offset = new DocumentFormat.OpenXml.Drawing.Offset
+                    {
+                        X = 0,
+                        Y = 0
+                    };
+                    var t2d = new DocumentFormat.OpenXml.Drawing.Transform2D
+                    {
+                        Offset = offset
+                    };
+
                     var bm = Xwt.Drawing.Image.FromFile(sImagePath).ToBitmap();
                     //http://en.wikipedia.org/wiki/English_Metric_Unit#DrawingML
                     //http://stackoverflow.com/questions/1341930/pixel-to-centimeter
                     //http://stackoverflow.com/questions/139655/how-to-convert-pixels-to-points-px-to-pt-in-net-c
-                    DocumentFormat.OpenXml.Drawing.Extents extents = new DocumentFormat.OpenXml.Drawing.Extents();
-                    extents.Cx = (long)bm.Width * (long)((float)914400 / bm.PixelWidth);
-                    extents.Cy = (long)bm.Height * (long)((float)914400 / bm.PixelHeight);
+                    var extents = new DocumentFormat.OpenXml.Drawing.Extents
+                    {
+                        Cx = (long)bm.Width * (long)((float)914400 / bm.PixelWidth),
+                        Cy = (long)bm.Height * (long)((float)914400 / bm.PixelHeight)
+                    };
                     bm.Dispose();
                     t2d.Extents = extents;
-                    ShapeProperties sp = new ShapeProperties();
-                    sp.BlackWhiteMode = DocumentFormat.OpenXml.Drawing.BlackWhiteModeValues.Auto;
-                    sp.Transform2D = t2d;
-                    DocumentFormat.OpenXml.Drawing.PresetGeometry prstGeom = new DocumentFormat.OpenXml.Drawing.PresetGeometry();
-                    prstGeom.Preset = DocumentFormat.OpenXml.Drawing.ShapeTypeValues.Rectangle;
-                    prstGeom.AdjustValueList = new DocumentFormat.OpenXml.Drawing.AdjustValueList();
+                    var prstGeom = new DocumentFormat.OpenXml.Drawing.PresetGeometry
+                    {
+                        Preset = DocumentFormat.OpenXml.Drawing.ShapeTypeValues.Rectangle,
+                        AdjustValueList = new DocumentFormat.OpenXml.Drawing.AdjustValueList()
+                    };
+                    var sp = new ShapeProperties
+                    {
+                        BlackWhiteMode = DocumentFormat.OpenXml.Drawing.BlackWhiteModeValues.Auto,
+                        Transform2D = t2d
+                    };
                     sp.Append(prstGeom);
                     sp.Append(new DocumentFormat.OpenXml.Drawing.NoFill());
 
-                    DocumentFormat.OpenXml.Drawing.Spreadsheet.Picture picture = new DocumentFormat.OpenXml.Drawing.Spreadsheet.Picture();
-                    picture.NonVisualPictureProperties = nvpp;
-                    picture.BlipFill = blipFill;
-                    picture.ShapeProperties = sp;
+                    var picture = new DocumentFormat.OpenXml.Drawing.Spreadsheet.Picture
+                    {
+                        NonVisualPictureProperties = nvpp,
+                        BlipFill = blipFill,
+                        ShapeProperties = sp
+                    };
 
-                    Position pos = new Position();
-                    pos.X = 0;
-                    pos.Y = 0;
-                    Extent ext = new Extent();
-                    ext.Cx = extents.Cx;
-                    ext.Cy = extents.Cy;
-                    AbsoluteAnchor anchor = new AbsoluteAnchor();
-                    anchor.Position = pos;
-                    anchor.Extent = ext;
+                    var pos = new Position { X = 0, Y = 0 };
+                    Extent ext = new Extent { Cx = extents.Cx, Cy = extents.Cy };
+                    var anchor = new AbsoluteAnchor
+                    {
+                        Position = pos,
+                        Extent = ext
+                    };
                     anchor.Append(picture);
                     anchor.Append(new ClientData());
-                    WorksheetDrawing wsd = new WorksheetDrawing();
+
+                    var wsd = new WorksheetDrawing();
                     wsd.Append(anchor);
-                    Drawing drawing = new Drawing();
-                    drawing.Id = dp.GetIdOfPart(imgp);
+                    var drawing = new Drawing { Id = dp.GetIdOfPart(imgp) };
 
                     wsd.Save(dp);
 
@@ -637,10 +659,12 @@ namespace DataWF.Data.Gui
                     wsp.Worksheet = ws;
                     wsp.Worksheet.Save();
                     Sheets sheets = new Sheets();
-                    Sheet sheet = new Sheet();
-                    sheet.Name = "Sheet1";
-                    sheet.SheetId = 1;
-                    sheet.Id = wbp.GetIdOfPart(wsp);
+                    Sheet sheet = new Sheet
+                    {
+                        Name = "Sheet1",
+                        SheetId = 1,
+                        Id = wbp.GetIdOfPart(wsp)
+                    };
                     sheets.Append(sheet);
                     wb.Append(fv);
                     wb.Append(sheets);
@@ -863,14 +887,13 @@ namespace DataWF.Data.Gui
             ss.Append(csfs);
             ss.Append(cfs);
 
-            CellStyles css = new CellStyles();
+            var css = new CellStyles();
             DocumentFormat.OpenXml.Spreadsheet.CellStyle cs = new DocumentFormat.OpenXml.Spreadsheet.CellStyle() { Name = StringValue.FromString("Normal"), FormatId = 0, BuiltinId = 0 };
             css.Append(cs);
             css.Count = UInt32Value.FromUInt32((uint)css.ChildElements.Count);
             ss.Append(css);
 
-            DifferentialFormats dfs = new DifferentialFormats();
-            dfs.Count = 0;
+            var dfs = new DifferentialFormats { Count = 0 };
             ss.Append(dfs);
 
             TableStyles tss = new TableStyles() { Count = 0, DefaultTableStyle = StringValue.FromString("TableStyleMedium9"), DefaultPivotStyle = StringValue.FromString("PivotStyleLight16") };
@@ -881,58 +904,67 @@ namespace DataWF.Data.Gui
 
         private Row CreateHeader(UInt32 index)
         {
-            Row r = new Row();
-            r.RowIndex = index;
+            Cell c = new Cell
+            {
+                DataType = CellValues.String,
+                StyleIndex = 5,
+                CellReference = "A" + index.ToString(),
+                CellValue = new CellValue("Congratulations! You can now create Excel Open XML styles.")
+            };
 
-            Cell c = new Cell();
-            c.DataType = CellValues.String;
-            c.StyleIndex = 5;
-            c.CellReference = "A" + index.ToString();
-            c.CellValue = new CellValue("Congratulations! You can now create Excel Open XML styles.");
+            Row r = new Row { RowIndex = index };
             r.Append(c);
-
             return r;
         }
 
         private Row CreateColumnHeader(UInt32 index)
         {
-            Row r = new Row();
-            r.RowIndex = index;
+            Row r = new Row { RowIndex = index };
 
             Cell c;
-            c = new Cell();
-            c.DataType = CellValues.String;
-            c.StyleIndex = 6;
-            c.CellReference = "A" + index.ToString();
-            c.CellValue = new CellValue("Product ID");
+            c = new Cell
+            {
+                DataType = CellValues.String,
+                StyleIndex = 6,
+                CellReference = "A" + index.ToString(),
+                CellValue = new CellValue("Product ID")
+            };
             r.Append(c);
 
-            c = new Cell();
-            c.DataType = CellValues.String;
-            c.StyleIndex = 6;
-            c.CellReference = "B" + index.ToString();
-            c.CellValue = new CellValue("Date/Time");
+            c = new Cell
+            {
+                DataType = CellValues.String,
+                StyleIndex = 6,
+                CellReference = "B" + index.ToString(),
+                CellValue = new CellValue("Date/Time")
+            };
             r.Append(c);
 
-            c = new Cell();
-            c.DataType = CellValues.String;
-            c.StyleIndex = 6;
-            c.CellReference = "C" + index.ToString();
-            c.CellValue = new CellValue("Duration");
+            c = new Cell
+            {
+                DataType = CellValues.String,
+                StyleIndex = 6,
+                CellReference = "C" + index.ToString(),
+                CellValue = new CellValue("Duration")
+            };
             r.Append(c);
 
-            c = new Cell();
-            c.DataType = CellValues.String;
-            c.StyleIndex = 6;
-            c.CellReference = "D" + index.ToString();
-            c.CellValue = new CellValue("Cost");
+            c = new Cell
+            {
+                DataType = CellValues.String,
+                StyleIndex = 6,
+                CellReference = "D" + index.ToString(),
+                CellValue = new CellValue("Cost")
+            };
             r.Append(c);
 
-            c = new Cell();
-            c.DataType = CellValues.String;
-            c.StyleIndex = 8;
-            c.CellReference = "E" + index.ToString();
-            c.CellValue = new CellValue("Revenue");
+            c = new Cell
+            {
+                DataType = CellValues.String,
+                StyleIndex = 8,
+                CellReference = "E" + index.ToString(),
+                CellValue = new CellValue("Revenue")
+            };
             r.Append(c);
 
             return r;
@@ -940,18 +972,18 @@ namespace DataWF.Data.Gui
 
         private Row CreateContent(UInt32 index, ref Random rd)
         {
-            Row r = new Row();
-            r.RowIndex = index;
+            Row r = new Row { RowIndex = index };
 
-            Cell c;
-            c = new Cell();
-            c.CellReference = "A" + index.ToString();
-            c.CellValue = new CellValue(rd.Next(1000000000).ToString("d9"));
+            Cell c = new Cell
+            {
+                CellReference = "A" + index.ToString(),
+                CellValue = new CellValue(rd.Next(1000000000).ToString("d9"))
+            };
             r.Append(c);
 
-            DateTime dtEpoch = new DateTime(1900, 1, 1, 0, 0, 0, 0);
-            DateTime dt = dtEpoch.AddDays(rd.NextDouble() * 100000.0);
-            TimeSpan ts = dt - dtEpoch;
+            var dtEpoch = new DateTime(1900, 1, 1, 0, 0, 0, 0);
+            var dt = dtEpoch.AddDays(rd.NextDouble() * 100000.0);
+            var ts = dt - dtEpoch;
             double fExcelDateTime;
             // Excel has "bug" of treating 29 Feb 1900 as valid
             // 29 Feb 1900 is 59 days after 1 Jan 1900, so just skip to 1 Mar 1900
@@ -963,28 +995,36 @@ namespace DataWF.Data.Gui
             {
                 fExcelDateTime = ts.TotalDays + 1.0;
             }
-            c = new Cell();
-            c.StyleIndex = 1;
-            c.CellReference = "B" + index.ToString();
-            c.CellValue = new CellValue(fExcelDateTime.ToString());
+            c = new Cell
+            {
+                StyleIndex = 1,
+                CellReference = "B" + index.ToString(),
+                CellValue = new CellValue(fExcelDateTime.ToString())
+            };
             r.Append(c);
 
-            c = new Cell();
-            c.StyleIndex = 2;
-            c.CellReference = "C" + index.ToString();
-            c.CellValue = new CellValue(((double)rd.Next(10, 10000000) + rd.NextDouble()).ToString("f4"));
+            c = new Cell
+            {
+                StyleIndex = 2,
+                CellReference = "C" + index.ToString(),
+                CellValue = new CellValue(((double)rd.Next(10, 10000000) + rd.NextDouble()).ToString("f4"))
+            };
             r.Append(c);
 
-            c = new Cell();
-            c.StyleIndex = 3;
-            c.CellReference = "D" + index.ToString();
-            c.CellValue = new CellValue(((double)rd.Next(10, 10000) + rd.NextDouble()).ToString("f2"));
+            c = new Cell
+            {
+                StyleIndex = 3,
+                CellReference = "D" + index.ToString(),
+                CellValue = new CellValue(((double)rd.Next(10, 10000) + rd.NextDouble()).ToString("f2"))
+            };
             r.Append(c);
 
-            c = new Cell();
-            c.StyleIndex = 7;
-            c.CellReference = "E" + index.ToString();
-            c.CellValue = new CellValue(((double)rd.Next(10, 1000) + rd.NextDouble()).ToString("f2"));
+            c = new Cell
+            {
+                StyleIndex = 7,
+                CellReference = "E" + index.ToString(),
+                CellValue = new CellValue(((double)rd.Next(10, 1000) + rd.NextDouble()).ToString("f2"))
+            };
             r.Append(c);
 
             return r;

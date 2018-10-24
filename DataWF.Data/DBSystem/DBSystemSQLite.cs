@@ -55,19 +55,21 @@ namespace DataWF.Data
 
 		public override DbConnectionStringBuilder GetConnectionStringBuilder(DBConnection connection)
 		{
-			var builder = new SqliteConnectionStringBuilder();
-			builder.DataSource = connection.DataBase;
-			builder.Cache = SqliteCacheMode.Shared;
-			//builder.Pooling = connection.Pool;
-			//builder.Timeout = connection.TimeOut;
-			//builder.Enlist = false;
-			//((SqliteConnectionStringBuilder)builder).JournalMode = SQLiteJournalModeEnum.Off;
-			//((SqliteConnectionStringBuilder)builder).SyncMode = SynchronizationModes.Off;
-			//if (!string.IsNullOrEmpty(connection.Password))
-			//{
-			//    builder.HexPassword = Encoding.UTF8.GetBytes(connection.Password);
-			//}
-			return builder;
+            var builder = new SqliteConnectionStringBuilder
+            {
+                DataSource = connection.DataBase,
+                Cache = SqliteCacheMode.Shared
+            };
+            //builder.Pooling = connection.Pool;
+            //builder.Timeout = connection.TimeOut;
+            //builder.Enlist = false;
+            //((SqliteConnectionStringBuilder)builder).JournalMode = SQLiteJournalModeEnum.Off;
+            //((SqliteConnectionStringBuilder)builder).SyncMode = SynchronizationModes.Off;
+            //if (!string.IsNullOrEmpty(connection.Password))
+            //{
+            //    builder.HexPassword = Encoding.UTF8.GetBytes(connection.Password);
+            //}
+            return builder;
 		}
 
 		public override DbProviderFactory GetFactory()

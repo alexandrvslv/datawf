@@ -96,9 +96,11 @@ namespace DataWF.Gui
 
         public LayoutFilter Add(LayoutColumn column, object value = null)
         {
-            var filter = new LayoutFilter(column);
-            filter.Comparer = CompareType.Equal;
-            filter.Value = value;
+            var filter = new LayoutFilter(column)
+            {
+                Comparer = CompareType.Equal,
+                Value = value
+            };
             if (column.DataType == typeof(string)
                 || column.DataType == typeof(object))
             {

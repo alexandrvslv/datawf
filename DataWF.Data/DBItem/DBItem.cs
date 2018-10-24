@@ -692,7 +692,7 @@ namespace DataWF.Data
                 access = value;
                 if (Table.AccessKey != null)
                 {
-                    SetValue(value != null ? value.Write() : null, Table.AccessKey);
+                    SetValue(value?.Write(), Table.AccessKey);
                 }
             }
         }
@@ -1264,31 +1264,34 @@ namespace DataWF.Data
         public void Merge(IEnumerable<DBItem> list)
         {
             var relations = Table.GetChildRelations().ToList();
-            var rows = new List<DBItem>();
-            rows.Add(this);
+            var rows = new List<DBItem> { this };
             foreach (DBItem item in list)
-                if (item != this)
+            {
+                if (item == this)
+                    continue;
+                rows.Add(item);
+
+                item.UpdateState |= DBUpdateState.Delete;
+                foreach (DBColumn column in item.Table.Columns)
                 {
-                    rows.Add(item);
-
-                    item.UpdateState |= DBUpdateState.Delete;
-                    foreach (DBColumn column in item.Table.Columns)
-                        if (this[column] == DBNull.Value && item[column] != DBNull.Value)
-                            this[column] = item[column];
-
-                    foreach (DBForeignKey relation in relations)
-                        if (relation.Table.Type == DBTableType.Table)
-                        {
-                            var refings = item.GetReferencing(relation, DBLoadParam.Load | DBLoadParam.Synchronize).ToList();
-                            if (refings.Count > 0)
-                            {
-                                foreach (DBItem refing in refings)
-                                    refing[relation.Column] = PrimaryId;
-
-                                relation.Table.Save(refings);
-                            }
-                        }
+                    if (this[column] == DBNull.Value && item[column] != DBNull.Value)
+                        this[column] = item[column];
                 }
+
+                foreach (DBForeignKey relation in relations)
+                    if (relation.Table.Type == DBTableType.Table)
+                    {
+                        var refings = item.GetReferencing(relation, DBLoadParam.Load | DBLoadParam.Synchronize).ToList();
+                        if (refings.Count > 0)
+                        {
+                            foreach (DBItem refing in refings)
+                                refing[relation.Column] = PrimaryId;
+
+                            relation.Table.Save(refings);
+                        }
+                    }
+            }
+
             Table.Save(rows);
         }
 
@@ -1436,9 +1439,7 @@ namespace DataWF.Data
             var temp = GetValue<byte[]>(column);
             if (temp != null)
             {
-                memoryStream = new MemoryStream(temp);
-                memoryStream.Position = 0;
-                return memoryStream;
+                return new MemoryStream(temp) { Position = 0 };
             }
             memoryStream = new MemoryStream();
             Table.System.ReadSequential(this, column, memoryStream, bufferSize);

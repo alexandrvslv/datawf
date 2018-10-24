@@ -1,17 +1,11 @@
-﻿using DataWF.Data;
+﻿using DataWF.Common;
 using DataWF.Gui;
-using DataWF.Common;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.ComponentModel;
 using Xwt;
 using Xwt.Drawing;
-using System.IO;
-using System.Reflection;
-using System.Text;
-using System.Threading;
 
 
 namespace DataWF.Data.Gui
@@ -38,9 +32,11 @@ namespace DataWF.Data.Gui
                 contextStatusFilter = new Menu();
                 foreach (DBStatus filter in filters)
                 {
-                    var item = new MenuItem();
-                    item.Label = filter.ToString();
-                    item.Tag = filter;
+                    var item = new MenuItem
+                    {
+                        Label = filter.ToString(),
+                        Tag = filter
+                    };
                     item.Clicked += MenuStatusItemClick;
                     contextStatusFilter.Items.Add(item);
                 }

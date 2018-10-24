@@ -262,8 +262,7 @@ namespace DataWF.Common
                 {
                     y = ((string)y).Split(',');
                 }
-                var list = y as IList;
-                if (list != null)
+                if (y is IList list)
                 {
                     foreach (object item in list)
                     {
@@ -439,7 +438,7 @@ namespace DataWF.Common
             return flag ?? true;
         }
 
-        private static void swap(IList array, int Left, int Right)
+        private static void Swap(IList array, int Left, int Right)
         {
             object tempObj = array[Right];
             array[Right] = array[Left];
@@ -622,15 +621,14 @@ namespace DataWF.Common
         }
 
         public static event Action<QuickSortEventArgs> QuickSortFinished;
-        private static AsyncCallback callback = new AsyncCallback(QuickSortFinish);
+        private static readonly AsyncCallback callback = new AsyncCallback(QuickSortFinish);
         private static Action<IList, int, int, IComparer> action = new Action<IList, int, int, IComparer>(QuickSort1);
 
         public static void QuickSortFinish(IAsyncResult result)
         {
             action.EndInvoke(result);
             var arg = (QuickSortEventArgs)result.AsyncState;
-            if (QuickSortFinished != null)
-                QuickSortFinished(arg);
+            QuickSortFinished?.Invoke(arg);
         }
 
         public static void QuickSortCancel()
@@ -803,7 +801,7 @@ namespace DataWF.Common
                 } while (Compare(a[i], x, comp, true) < 0);
                 if (i < j)
                 {
-                    swap(a, i, j);
+                    Swap(a, i, j);
                     sc++;
                 }
                 else
@@ -827,17 +825,17 @@ namespace DataWF.Common
                     if (compi > 0 &&
                         compj < 0)
                     {
-                        swap(a, i, j);
+                        Swap(a, i, j);
                         swapc = j;
                     }
                     else if (compi > 0)
                     {
-                        swap(a, i, m);
+                        Swap(a, i, m);
                         swapc = i;
                     }
                     else if (compj < 0)
                     {
-                        swap(a, j, m);
+                        Swap(a, j, m);
                         swapc = j;
                     }
                 }

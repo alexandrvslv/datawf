@@ -43,7 +43,6 @@ namespace DataWF.Module.Counterpart
     public class Customer : DBItem, IDisposable
     {
         private static DBTable<Customer> dbTable;
-        private static DBColumn codeIKey = DBColumn.EmptyKey;
         private static DBColumn nameENKey = DBColumn.EmptyKey;
         private static DBColumn nameRUKey = DBColumn.EmptyKey;
         private static DBColumn shortNameENKey = DBColumn.EmptyKey;
@@ -54,15 +53,15 @@ namespace DataWF.Module.Counterpart
         private static DBColumn addressKey = DBColumn.EmptyKey;
         private static DBColumn userKey = DBColumn.EmptyKey;
 
-        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), nameENKey);
-        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), nameRUKey);
-        public static DBColumn ShortNameENKey => DBTable.ParseProperty(nameof(ShortNameEN), shortNameENKey);
-        public static DBColumn ShortNameRUKey => DBTable.ParseProperty(nameof(ShortNameRU), shortNameRUKey);
-        public static DBColumn EMailKey => DBTable.ParseProperty(nameof(EMail), emailKey);
-        public static DBColumn PhoneKey => DBTable.ParseProperty(nameof(Phone), phoneKey);
-        public static DBColumn CountryKey => DBTable.ParseProperty(nameof(CountryId), countryKey);
-        public static DBColumn AddressKey => DBTable.ParseProperty(nameof(AddressId), addressKey);
-        public static DBColumn UserKey => DBTable.ParseProperty(nameof(UserId), userKey);
+        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
+        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
+        public static DBColumn ShortNameENKey => DBTable.ParseProperty(nameof(ShortNameEN), ref shortNameENKey);
+        public static DBColumn ShortNameRUKey => DBTable.ParseProperty(nameof(ShortNameRU), ref shortNameRUKey);
+        public static DBColumn EMailKey => DBTable.ParseProperty(nameof(EMail), ref emailKey);
+        public static DBColumn PhoneKey => DBTable.ParseProperty(nameof(Phone), ref phoneKey);
+        public static DBColumn CountryKey => DBTable.ParseProperty(nameof(CountryId), ref countryKey);
+        public static DBColumn AddressKey => DBTable.ParseProperty(nameof(AddressId), ref addressKey);
+        public static DBColumn UserKey => DBTable.ParseProperty(nameof(UserId), ref userKey);
         public static DBTable<Customer> DBTable => dbTable ?? (dbTable = GetTable<Customer>());
 
         public Customer()

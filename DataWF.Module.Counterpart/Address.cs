@@ -37,8 +37,8 @@ namespace DataWF.Module.Counterpart
         private static DBColumn postIndexKey = DBColumn.EmptyKey;
         private static DBTable<Address> dbTable;
 
-        public static DBColumn LocationKey => DBTable.ParseProperty(nameof(LocationId), locationKey);
-        public static DBColumn PostIndexKey => DBTable.ParseProperty(nameof(PostIndex), postIndexKey);
+        public static DBColumn LocationKey => DBTable.ParseProperty(nameof(LocationId), ref locationKey);
+        public static DBColumn PostIndexKey => DBTable.ParseProperty(nameof(PostIndex), ref postIndexKey);
         public static DBTable<Address> DBTable => dbTable ?? (dbTable = GetTable<Address>());
 
         public Address()

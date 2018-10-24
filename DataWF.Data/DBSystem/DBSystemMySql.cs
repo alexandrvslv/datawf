@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using MySql.Data.MySqlClient;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Text;
-using MySql.Data.MySqlClient;
 
 namespace DataWF.Data
 {
@@ -42,15 +42,16 @@ namespace DataWF.Data
 
         public override DbConnectionStringBuilder GetConnectionStringBuilder(DBConnection connection)
         {
-            var builder = new MySqlConnectionStringBuilder();
-            builder.ConnectionTimeout = (uint)connection.TimeOut;
-            builder.UserID = connection.User;
-            builder.Password = connection.Password;
-            builder.Server = connection.Host;
-            builder.Database = connection.DataBase;
-            builder.Port = connection.Port;
-			builder.SslMode = MySqlSslMode.None;
-            return builder;
+            return new MySqlConnectionStringBuilder
+            {
+                ConnectionTimeout = (uint)connection.TimeOut,
+                UserID = connection.User,
+                Password = connection.Password,
+                Server = connection.Host,
+                Database = connection.DataBase,
+                Port = connection.Port,
+                SslMode = MySqlSslMode.None
+            };
         }
 
         public override DbProviderFactory GetFactory()

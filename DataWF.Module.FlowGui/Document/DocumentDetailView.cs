@@ -4,7 +4,6 @@ using DataWF.Data.Gui;
 using DataWF.Gui;
 using DataWF.Module.Flow;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace DataWF.Module.FlowGui
@@ -85,8 +84,7 @@ namespace DataWF.Module.FlowGui
 
         protected override void OnToolInsertClick(object sender, EventArgs e)
         {
-            var newItem = new T();
-            newItem.Document = Document;
+            var newItem = new T { Document = Document };
             ShowObject(newItem);
         }
 

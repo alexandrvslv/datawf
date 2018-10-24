@@ -45,14 +45,14 @@ namespace DataWF.Module.Common
         private static DBColumn nameRUKey = DBColumn.EmptyKey;
         private static DBTable<User> dbTable;
 
-        public static DBColumn DepartmentKey => DBTable.ParseProperty(nameof(DepartmentId), departmentKey);
-        public static DBColumn PositionKey => DBTable.ParseProperty(nameof(PositionId), positionKey);
-        public static DBColumn EmailKey => DBTable.ParseProperty(nameof(EMail), emailKey);
-        public static DBColumn PasswordKey => DBTable.ParseProperty(nameof(Password), passwordKey);
-        public static DBColumn SuperKey => DBTable.ParseProperty(nameof(Super), superKey);
-        public static DBColumn RefreshTokenKey => DBTable.ParseProperty(nameof(RefreshToken), refreshTokenKey);
-        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), nameENKey);
-        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), nameRUKey);
+        public static DBColumn DepartmentKey => DBTable.ParseProperty(nameof(DepartmentId), ref departmentKey);
+        public static DBColumn PositionKey => DBTable.ParseProperty(nameof(PositionId), ref positionKey);
+        public static DBColumn EmailKey => DBTable.ParseProperty(nameof(EMail), ref emailKey);
+        public static DBColumn PasswordKey => DBTable.ParseProperty(nameof(Password), ref passwordKey);
+        public static DBColumn SuperKey => DBTable.ParseProperty(nameof(Super), ref superKey);
+        public static DBColumn RefreshTokenKey => DBTable.ParseProperty(nameof(RefreshToken), ref refreshTokenKey);
+        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
+        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
         public static DBTable<User> DBTable => dbTable ?? (dbTable = GetTable<User>());
 
         [ThreadStatic]

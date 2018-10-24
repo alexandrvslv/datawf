@@ -37,15 +37,16 @@ namespace DataWF.Gui
             //System.Drawing.SystemIcons.
         }
 
-        public void add(string source, string message, string description, StatusType type)
+        public void Add(string source, string message, string description, StatusType type)
         {
-            StateInfo l = new StateInfo();
-            l.Date = DateTime.Now;
-            l.Module = source;
-            l.Message = message;
-            l.Description = description;
-            l.Type = type;
-            Helper.Logs.Add(l);
+            Helper.Logs.Add(new StateInfo
+            {
+                Date = DateTime.Now,
+                Module = source,
+                Message = message,
+                Description = description,
+                Type = type
+            });
         }
 
         public LogList List
