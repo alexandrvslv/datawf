@@ -373,8 +373,7 @@ namespace DataWF.Gui
         {
             var item = sender as ToolMenuItem;
             item.Checked = !item.Checked;
-            var column = item.Tag as LayoutColumn;
-            if (column != null)
+            if (item.Tag is LayoutColumn column)
             {
                 if (column.Map == null)
                     ContextColumn.InsertAfter(column);

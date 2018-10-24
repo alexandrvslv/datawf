@@ -17,9 +17,9 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using DataWF.Common;
 using System;
 using System.ComponentModel;
-using DataWF.Common;
 
 namespace DataWF.Data
 {
@@ -108,7 +108,7 @@ namespace DataWF.Data
             {
                 if (SourceColumn == value)
                     return;
-                source = value == null ? null : value.Name;
+                source = value?.Name;
                 OnPropertyChanged(nameof(SourceColumn));
             }
         }
@@ -129,19 +129,19 @@ namespace DataWF.Data
         [DisplayName("Destination Column")]
         public DBColumn TargetColumn
         {
-            get { return table == null || table.TargetTable == null ? null : table.TargetTable.Columns[target]; }
+            get { return table?.TargetTable?.Columns[target]; }
             set
             {
                 if (TargetColumn == value)
                     return;
-                target = value == null ? null : value.Name;
+                target = value?.Name;
                 OnPropertyChanged(nameof(TargetColumn));
             }
         }
 
         public int Scale
         {
-            get { return this.scale; }
+            get { return scale; }
             set
             {
                 if (scale == value)

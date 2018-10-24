@@ -6,7 +6,7 @@ namespace DataWF.Data
 {
     public static class PullIndexFabric
     {
-        private static Type[] ctorTypes = new Type[] { typeof(Pull), typeof(object), typeof(IComparer), typeof(IEqualityComparer) };
+        private static readonly Type[] ctorTypes = new Type[] { typeof(Pull), typeof(object), typeof(IComparer), typeof(IEqualityComparer) };
 
         public static PullIndex Create(Pull pull, Type type, Type keyType, IComparer valueComparer)
         {

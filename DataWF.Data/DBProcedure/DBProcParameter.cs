@@ -17,12 +17,11 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using System;
-using System.Data;
-using System.ComponentModel;
-using System.Xml.Serialization;
 using DataWF.Common;
 using Newtonsoft.Json;
+using System;
+using System.Data;
+using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
@@ -58,17 +57,10 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public DBColumn Column
         {
-            get
-            {
-                if (cacheColumn == null)
-                {
-                    cacheColumn = DBService.ParseColumn(ColumnName);
-                }
-                return cacheColumn as DBColumn;
-            }
+            get { return cacheColumn ?? (cacheColumn = DBService.ParseColumn(ColumnName)); }
             set
             {
-                ColumnName = value == null ? null : value.FullName;
+                ColumnName = value?.FullName;
                 if (value != null)
                 {
                     DataType = value.DataType;

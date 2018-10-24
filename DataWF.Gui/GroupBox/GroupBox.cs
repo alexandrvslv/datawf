@@ -1,9 +1,9 @@
-﻿using System;
+﻿using DataWF.Common;
+using System;
 using System.ComponentModel;
-using Xwt;
 using System.Linq;
+using Xwt;
 using Xwt.Drawing;
-using DataWF.Common;
 
 namespace DataWF.Gui
 {
@@ -54,10 +54,8 @@ namespace DataWF.Gui
 
         protected double CalcHeight(ILayoutItem item)
         {
-            if (item is GroupBoxItem)
+            if (item is GroupBoxItem box)
             {
-                var box = (GroupBoxItem)item;
-
                 double height = 0;
                 if (box.Expand)
                 {

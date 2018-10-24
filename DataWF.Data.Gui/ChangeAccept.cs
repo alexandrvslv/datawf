@@ -1,6 +1,5 @@
-﻿using DataWF.Data;
+﻿using DataWF.Common;
 using DataWF.Gui;
-using DataWF.Common;
 using System;
 using System.Collections.Generic;
 using Xwt;
@@ -103,7 +102,7 @@ namespace DataWF.Data.Gui
             set
             {
                 map = value;
-                listDiff.ListSource = map != null ? map.Changes : null;
+                listDiff.ListSource = map?.Changes;
                 //listChilds.ListSource = value.GetChilds();
                 //foreach (UserLog log in listChilds.ListSource)
                 //{

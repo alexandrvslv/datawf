@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 
 namespace DataWF.Gui
 {
@@ -174,8 +173,7 @@ namespace DataWF.Gui
 
         public void RemoveBy(int index)
         {
-            int i = 0;
-            var item = GetItem(index, out i);
+            var item = GetItem(index, out int i);
             if (item != null)
             {
                 if (CurrentRow != null && item.Index == CurrentRow.Index)
@@ -218,8 +216,7 @@ namespace DataWF.Gui
                 return true;
             else
             {
-                int i;
-                return GetItem(index, out i) != null;
+                return GetItem(index, out int i) != null;
             }
         }
 

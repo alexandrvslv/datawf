@@ -1,13 +1,13 @@
 ﻿using System;
-using System.Text;
 using System.ComponentModel;
 using System.Reflection;
+using System.Text;
 
 namespace DataWF.Common
 {
     public class ExceptionInfo
     {
-        private DateTime date;
+        private readonly DateTime date;
 
         public ExceptionInfo(Exception exception)
         {

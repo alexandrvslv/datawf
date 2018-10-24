@@ -22,11 +22,12 @@ namespace DataWF.Gui
 
         public override object ParseValue(object value, object dataSource, Type valueType)
         {
-            if (value is string && ((string)value).Length > 12)
+            if (value is string text && text.Length > 12)
             {
-                IPAddress temp;
-                if (IPAddress.TryParse((string)value, out temp))
+                if (IPAddress.TryParse((string)value, out IPAddress temp))
+                {
                     return temp;
+                }
             }
             return base.ParseValue(value, dataSource, valueType);
         }

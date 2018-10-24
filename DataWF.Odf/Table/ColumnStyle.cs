@@ -19,8 +19,7 @@ namespace Doc.Odf
         {
             get
             {
-                ColumnProperties cp = this[Service.ColumnProperties] as ColumnProperties;
-                if (cp == null)
+                if (!(this[Service.ColumnProperties] is ColumnProperties cp))
                 {
                     cp = new ColumnProperties(document);
                     this.Add(cp);

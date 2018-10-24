@@ -1,16 +1,10 @@
-﻿using DataWF.Data;
+﻿using DataWF.Common;
+using DataWF.Data;
 using DataWF.Data.Gui;
 using DataWF.Gui;
-using DataWF.Common;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using Xwt.Drawing;
-using System.Linq;
 using DataWF.Module.Common;
-using Xwt;
-using System.Collections;
-using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace DataWF.Module.CommonGui
 {
@@ -64,8 +58,7 @@ namespace DataWF.Module.CommonGui
 
         protected override void SelectData()
         {
-            var log = list.SelectedItem as UserLog;
-            if (log != null)
+            if (list.SelectedItem is UserLog log)
             {
                 detailList.ListSource = log.Items;
                 detailRow.FieldSource = log;
@@ -80,12 +73,11 @@ namespace DataWF.Module.CommonGui
         {
             if (filter is User || filter is UserGroup || filter is UserLog)
             {
-                var view = list.ListSource as DBTableView<UserLog>;
-                if (view == null)
+                if (!(list.ListSource is DBTableView<UserLog> view))
                 {
-                    if (list.ListSource is IDBTableView)
+                    if (list.ListSource is IDBTableView tableView)
                     {
-                        ((IDisposable)list.ListSource).Dispose();
+                        tableView.Dispose();
                     }
                     list.ListSource = view = new DBTableView<UserLog>((string)null, DBViewKeys.Empty);
                 }

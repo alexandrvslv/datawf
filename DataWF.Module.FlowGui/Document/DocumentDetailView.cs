@@ -111,8 +111,7 @@ namespace DataWF.Module.FlowGui
 
         protected override void OnToolWindowAcceptClick(object sender, EventArgs e)
         {
-            var item = fields.FieldSource as T;
-            if (item != null)
+            if (fields.FieldSource is T item)
             {
                 item.Attach();
             }

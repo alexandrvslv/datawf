@@ -1,6 +1,5 @@
 ﻿using System;
 using Xwt;
-using DataWF.Common;
 
 namespace DataWF.Gui
 {
@@ -34,7 +33,7 @@ namespace DataWF.Gui
                 picker = new OpenFileDialog();
             }
 
-            picker.InitialFileName = value == null ? null : value.ToString();
+            picker.InitialFileName = value?.ToString();
         }
 
         public override void FreeEditor()

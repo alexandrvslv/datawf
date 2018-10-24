@@ -286,39 +286,36 @@ namespace DataWF.Data
             }
         }
 
-        public static void Deserialize(string file, DBSchemaItem selectedDBItem)
+        public static void Deserialize(string file, DBSchemaItem selectedItem)
         {
             var item = Serialization.Deserialize(file);
-            if (item is DBTable)
+            if (item is DBTable table)
             {
-                DBSchema schema = selectedDBItem.Schema;
+                DBSchema schema = selectedItem.Schema;
 
-                if (schema.Tables.Contains(((DBTable)item).Name))
-                    schema.Tables.Remove(((DBTable)item).Name);
-                schema.Tables.Add((DBTable)item);
+                if (schema.Tables.Contains(table.Name))
+                    schema.Tables.Remove(table.Name);
+                schema.Tables.Add(table);
             }
-            else if (item is DBSchema)
+            else if (item is DBSchema schema)
             {
-                DBSchema schema = (DBSchema)item;
                 if (Schems.Contains(schema.Name))
                     schema.Name = schema.Name + "1";
                 Schems.Add((DBSchema)item);
             }
-            else if (item is DBColumn)
+            else if (item is DBColumn column)
             {
-                var table = selectedDBItem as DBTable;
-                if (table != null)
-                    table.Columns.Add((DBColumn)item);
+                if (selectedItem is DBTable sTable)
+                    sTable.Columns.Add((DBColumn)item);
             }
-            else if (item is SelectableList<DBSchemaItem>)
+            else if (item is SelectableList<DBSchemaItem> list)
             {
-                var list = (SelectableList<DBSchemaItem>)item;
-                foreach (var i in list)
+                foreach (var element in list)
                 {
-                    if (i is DBColumn && selectedDBItem is DBTable)
-                        ((DBTable)selectedDBItem).Columns.Add((DBColumn)i);
-                    else if (i is DBTable && selectedDBItem is DBSchema)
-                        ((DBSchema)selectedDBItem).Tables.Add((DBTable)i);
+                    if (element is DBColumn && selectedItem is DBTable)
+                        ((DBTable)selectedItem).Columns.Add((DBColumn)element);
+                    else if (element is DBTable && selectedItem is DBSchema)
+                        ((DBSchema)selectedItem).Tables.Add((DBTable)element);
                 }
 
             }
@@ -501,7 +498,7 @@ namespace DataWF.Data
 
 
 
-        
+
 
         public static int CompareDBTable(DBTable x, DBTable y)
         {
@@ -625,9 +622,7 @@ namespace DataWF.Data
             return procedure;
         }
 
-        private static List<int> accessGroups = new List<int>();
-
-        public static List<int> AccessGroups { get { return accessGroups; } }
+        public static List<int> AccessGroups { get; } = new List<int>();
 
         public static IDataProvider DataProvider { get; set; }
     }

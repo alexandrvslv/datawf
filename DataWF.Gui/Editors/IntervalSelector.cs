@@ -1,5 +1,5 @@
-﻿using System;
-using DataWF.Common;
+﻿using DataWF.Common;
+using System;
 using Xwt;
 
 namespace DataWF.Gui
@@ -91,8 +91,7 @@ namespace DataWF.Gui
 
         protected void OnValueChanged()
         {
-            if (ValueChanged != null)
-                ValueChanged(this, EventArgs.Empty);
+            ValueChanged?.Invoke(this, EventArgs.Empty);
         }
 
     }

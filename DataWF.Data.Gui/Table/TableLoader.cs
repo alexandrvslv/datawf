@@ -131,8 +131,7 @@ namespace DataWF.Data.Gui
         private void Loader()
         {
             delayEvent.WaitOne(400);
-            QQuery query;
-            if (queries.TryPop(out query))
+            if (queries.TryPop(out QQuery query))
             {
                 cancelEvent.WaitOne();
                 try

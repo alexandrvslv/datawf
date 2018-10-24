@@ -21,7 +21,7 @@ namespace DataWF.Web.Common
     public class AuthorizeController : ControllerBase
     {
         private readonly IOptions<JwtAuth> jwtAuth;
-        private DBTable<User> users;
+        private readonly DBTable<User> users;
         public AuthorizeController(IOptions<JwtAuth> jwtAuth)
         {
             this.jwtAuth = jwtAuth ?? throw new ArgumentNullException(nameof(jwtAuth));

@@ -18,8 +18,7 @@ namespace Doc.Odf
         {
             get
             {
-                ParagraphProperties pp = this[Service.ParagraphProperties] as ParagraphProperties;
-                if (pp == null)
+                if (!(this[Service.ParagraphProperties] is ParagraphProperties pp))
                 {
                     pp = new ParagraphProperties(document);
                     this.Add(pp);

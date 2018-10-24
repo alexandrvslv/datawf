@@ -1,9 +1,9 @@
-﻿using DataWF.Gui;
-using DataWF.Common;
+﻿using DataWF.Common;
+using DataWF.Gui;
 using System;
-using Xwt.Drawing;
-using Xwt;
 using System.Threading.Tasks;
+using Xwt;
+using Xwt.Drawing;
 
 namespace DataWF.Data.Gui
 {
@@ -388,8 +388,7 @@ namespace DataWF.Data.Gui
 
         protected void ToolAcceptClick(object sender, EventArgs e)
         {
-            DBItem row = filter as DBItem;
-            if (row != null)
+            if (filter is DBItem row)
             {
                 var d = Command.Save;
                 RowAccept(row, ref d, this);

@@ -142,8 +142,7 @@ namespace DataWF.Data
 
         public static QFunctionType ParseFunction(string val)
         {
-            QFunctionType f;
-            if (!Enum.TryParse<QFunctionType>(val, true, out f))
+            if (!Enum.TryParse<QFunctionType>(val, true, out QFunctionType f))
                 f = QFunctionType.none;
             return f;
         }

@@ -16,8 +16,7 @@ namespace Doc.Odf
         {
             get
             {
-                RowProperties rp = this[Service.RowProperties] as RowProperties;
-                if (rp == null)
+                if (!(this[Service.RowProperties] is RowProperties rp))
                 {
                     rp = new RowProperties(document);
                     this.Add(rp);

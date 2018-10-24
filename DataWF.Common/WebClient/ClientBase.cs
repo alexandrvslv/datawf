@@ -6,6 +6,8 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -80,9 +82,11 @@ namespace DataWF.Common
             if (value is Stream stream && parameters.Length > 1)
             {
                 var fileName = (string)parameters[1];
-                var content = new MultipartFormDataContent();
+                var content = new MultipartFormDataContent
+                {
+                    { new StreamContent(stream), Path.GetFileNameWithoutExtension(fileName), fileName }//File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                };
                 // content.Headers.ContentType = MediaTypeHeaderValue.Parse(mediaType);
-                content.Add(new StreamContent(stream), Path.GetFileNameWithoutExtension(fileName), fileName);//File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 request.Content = content;
             }
             else if (value != null)
@@ -411,11 +415,10 @@ namespace DataWF.Common
                 string name = Enum.GetName(value.GetType(), value);
                 if (name != null)
                 {
-                    var field = System.Reflection.IntrospectionExtensions.GetTypeInfo(value.GetType()).GetDeclaredField(name);
+                    var field = IntrospectionExtensions.GetTypeInfo(value.GetType()).GetDeclaredField(name);
                     if (field != null)
                     {
-                        var attribute = System.Reflection.CustomAttributeExtensions.GetCustomAttribute(field, typeof(System.Runtime.Serialization.EnumMemberAttribute))
-                            as System.Runtime.Serialization.EnumMemberAttribute;
+                        var attribute = field.GetCustomAttribute<EnumMemberAttribute>();
                         if (attribute != null)
                         {
                             return attribute.Value;

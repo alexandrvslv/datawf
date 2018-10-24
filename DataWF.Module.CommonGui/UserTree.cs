@@ -235,8 +235,7 @@ namespace DataWF.Module.CommonGui
         protected override void OnCellGlyphClick(LayoutHitTestEventArgs e)
         {
             base.OnCellGlyphClick(e);
-            var node = e.HitTest.Item as TableItemNode;
-            if (node != null && !node.CheckNodes)
+            if (e.HitTest.Item is TableItemNode node && !node.CheckNodes)
             {
                 CheckNode(node);
             }
@@ -244,10 +243,9 @@ namespace DataWF.Module.CommonGui
 
         public override CellStyle OnGetCellStyle(object listItem, object value, ILayoutCell col)
         {
-            if (col != null && listItem is Node)
+            if (col != null && listItem is TableItemNode node)
             {
-                User user = ((Node)listItem).Tag as User;
-                if (user != null && user.Online)
+                if (node.Item is User user && user.Online)
                 {
                     if (userStyle == null)
                     {
@@ -275,13 +273,9 @@ namespace DataWF.Module.CommonGui
 
         public string GetName(object obj)
         {
-            string rez = string.Empty;
-            var content = obj as IDBTableContent;
-            if (content != null)
-                rez = content.Table.FullName + (content is IDBTableView ? "view" : "item") + content.GetHashCode();
-            else
-                rez = Locale.GetTypeCategory(obj.GetType()) + obj.GetHashCode();
-            return rez;
+            return obj is IDBTableContent content
+                ? content.Table.FullName + (content is IDBTableView ? "view" : "item") + content.GetHashCode()
+                : Locale.GetTypeCategory(obj.GetType()) + obj.GetHashCode();
         }
 
         public void InitItem(IDBTableView view, bool show, GlyphType glyph, Color glyphColor)
@@ -435,8 +429,7 @@ namespace DataWF.Module.CommonGui
         public TableItemNode InitItem(IDBTableContent item)
         {
             var name = GetName(item);
-            var node = Nodes.Find(name) as TableItemNode;
-            if (node == null)
+            if (!(Nodes.Find(name) is TableItemNode node))
             {
                 node = new TableItemNode
                 {
@@ -450,11 +443,9 @@ namespace DataWF.Module.CommonGui
 
         protected override void OnDrawHeader(LayoutListDrawArgs e)
         {
-            var node = e.Item as TableItemNode;
-            if (node != null)
+            if (e.Item is TableItemNode node)
             {
-                var row = node.Item as DBItem;
-                if (row != null)
+                if (node.Item is DBItem row)
                 {
                     var glyph = row.Status == DBStatus.Archive ? GlyphType.FlagCheckered : GlyphType.Flag;
                     var color = Colors.Black;

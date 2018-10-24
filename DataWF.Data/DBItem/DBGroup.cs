@@ -24,8 +24,8 @@ namespace DataWF.Data
     public class DBGroup<T>
     {
         private object value;
-        private List<T> list = new List<T>();
-        
+        private readonly List<T> list = new List<T>();
+
         public object Value
         {
             get { return value; }

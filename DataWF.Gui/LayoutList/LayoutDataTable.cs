@@ -1,10 +1,6 @@
 ﻿using DataWF.Common;
-using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Reflection;
-using System.Collections;
 
 namespace DataWF.Gui
 {
@@ -23,11 +19,7 @@ namespace DataWF.Gui
 
         private DataTable Table
         {
-            get
-            {
-                var view = listSource as DataView;
-                return view == null ? null : view.Table;
-            }
+            get { return (listSource as DataView)?.Table; }
         }
 
         protected override string GetCacheKey()

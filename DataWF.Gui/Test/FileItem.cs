@@ -1,14 +1,9 @@
 ﻿using DataWF.Common;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using Xwt;
-using Xwt.Drawing;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using DataWF.Gui;
+using System;
+using System.ComponentModel;
+using System.IO;
+using Xwt.Drawing;
 
 namespace DataWF.TestGui
 {
@@ -73,12 +68,12 @@ namespace DataWF.TestGui
 
         public long Size
         {
-            get { return finfo != null ? finfo.Length : 0; }
+            get { return finfo?.Length ?? 0; }
         }
 
         public string Extension
         {
-            get { return finfo != null ? finfo.Extension : null; }
+            get { return finfo?.Extension; }
         }
 
         public DateTime CreationTime

@@ -101,15 +101,14 @@ namespace DataWF.Data.Gui
 
         protected override IComparer OnColumnCreateComparer(LayoutColumn column, ListSortDirection direction)
         {
-            if (column.Invoker is DBColumn)
+            if (column.Invoker is DBColumn dbcolumn)
             {
-                var dbc = (DBColumn)column.Invoker;
                 string columnName = string.Empty;
-                while (dbc != null)
+                while (dbcolumn != null)
                 {
-                    columnName = dbc.Name + (columnName.Length > 0 ? "." : "") + columnName;
+                    columnName = dbcolumn.Name + (columnName.Length > 0 ? "." : "") + columnName;
                     column = column.Owner as LayoutColumn;
-                    dbc = column != null ? column.Invoker as DBColumn : null;
+                    dbcolumn = column != null ? column.Invoker as DBColumn : null;
                 }
                 return new DBComparer(Table, columnName, direction);
             }
@@ -139,8 +138,7 @@ namespace DataWF.Data.Gui
 
         protected override void OnDrawHeader(LayoutListDrawArgs e)
         {
-            var row = e.Item as DBItem;
-            if (row != null)
+            if (e.Item is DBItem row)
             {
                 var imgRect = new Rectangle(e.Bound.X + 1, e.Bound.Y + 1, 0, 0);
                 var glyph = row.UpdateState == DBUpdateState.Default
@@ -185,7 +183,7 @@ namespace DataWF.Data.Gui
         {
             if (rect.Right > 0 && rect.Height > 0)
             {
-                context.DrawCell(listInfo.StyleColumn, View != null ? View.StatusFilter.ToString() : null, rect, rect, CellDisplayState.Default);
+                context.DrawCell(listInfo.StyleColumn, View?.StatusFilter.ToString(), rect, rect, CellDisplayState.Default);
             }
         }
 
@@ -265,8 +263,7 @@ namespace DataWF.Data.Gui
 
         public override bool IsComplex(ILayoutCell cell)
         {
-            var dcolumn = cell.Invoker as DBColumn;
-            if (dcolumn != null)
+            if (cell.Invoker is DBColumn dcolumn)
             {
                 if (dcolumn.IsReference)
                     return true;
@@ -341,12 +338,13 @@ namespace DataWF.Data.Gui
 
         public override ILayoutCellEditor InitCellEditor(ILayoutCell cell)
         {
-            DBColumn column = cell.Invoker as DBColumn;
-            if (column != null)
+            if (cell.Invoker is DBColumn column)
             {
                 var editor = InitCellEditor(column);
                 if (editor != null)
+                {
                     return editor;
+                }
             }
             return base.InitCellEditor(cell);
         }

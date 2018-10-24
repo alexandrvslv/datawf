@@ -136,8 +136,7 @@ namespace DataWF.Gui
 
         private void CheckStatus()
         {
-            IStatusable status = dataSource as IStatusable;
-            if (status != null)
+            if (dataSource is IStatusable status)
             {
                 ToolMenuItem item = null;
                 if (status.Status == DBStatus.Actual)
@@ -159,9 +158,10 @@ namespace DataWF.Gui
                     toolStatus.GlyphColor = item.GlyphColor;
                     toolStatus.Text = item.Text;
                 }
-                var accessable = dataSource as IAccessable;
-                if (accessable != null)
+                if (dataSource is IAccessable accessable)
+                {
                     toolStatus.Sensitive = accessable.Access.Accept;
+                }
             }
         }
 
@@ -249,8 +249,7 @@ namespace DataWF.Gui
 
         private void OnDataPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            IEditable ediable = list.FieldSource as IEditable;
-            if (ediable != null)
+            if (list.FieldSource is IEditable ediable)
             {
                 Application.Invoke(() =>
                 {

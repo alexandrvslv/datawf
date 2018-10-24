@@ -1,9 +1,7 @@
 ﻿using System;
-using System.ComponentModel;
-using Xwt.Drawing;
 using System.IO;
-using DataWF.Gui;
 using Xwt;
+using Xwt.Drawing;
 
 namespace DSBarCode
 {
@@ -161,8 +159,7 @@ namespace DSBarCode
         }
 
         String alphabet39 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-. $/+%*";
-
-        String[] coded39Char = {
+        readonly string[] coded39Char = {
             /* 0 */ "000110100", 
             /* 1 */ "100100001", 
             /* 2 */ "001100001", 

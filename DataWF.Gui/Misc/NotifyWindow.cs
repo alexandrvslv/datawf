@@ -32,16 +32,18 @@ namespace DataWF.Gui
 
         protected override void OnCloseClick(object sender, EventArgs e)
         {
-            var task = taskList.SelectedItem as TaskExecutor;
-            if (task != null)
+            if (taskList.SelectedItem is TaskExecutor task)
+            {
                 task.Cancel();
+            }
         }
 
         private void TaskListCellDoubleClick(object sender, LayoutHitTestEventArgs e)
         {
-            var task = e.HitTest.Item as TaskExecutor;
-            if (task != null)
+            if (e.HitTest.Item is TaskExecutor task)
+            {
                 task.Cancel();
+            }
         }
 
         public IList TaskList
@@ -129,10 +131,7 @@ namespace DataWF.Gui
 
         private void NotifyPListCellClick(object sender, LayoutHitTestEventArgs e)
         {
-            if (ItemClick != null)
-            {
-                ItemClick(this, EventArgs.Empty);
-            }
+            ItemClick?.Invoke(this, EventArgs.Empty);
         }
 
         public StateInfo Info

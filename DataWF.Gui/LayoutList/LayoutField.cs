@@ -1,7 +1,6 @@
 ﻿using DataWF.Common;
 using System;
 using System.ComponentModel;
-using System.Reflection;
 using System.Xml.Serialization;
 
 namespace DataWF.Gui
@@ -108,7 +107,7 @@ namespace DataWF.Gui
         [XmlIgnore]
         public ILayoutCell Owner
         {
-            get { return owner == null ? (ILayoutCell)group : owner; }
+            get { return owner ?? group as ILayoutCell; }
             set
             {
                 if (owner == value || group == value)

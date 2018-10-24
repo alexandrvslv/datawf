@@ -1,9 +1,6 @@
 ﻿using DataWF.Gui;
 using System;
-using Xwt;
 using Xwt.Drawing;
-using DataWF.Data;
-using DataWF.Common;
 
 namespace DataWF.Data.Gui
 {
@@ -32,8 +29,7 @@ namespace DataWF.Data.Gui
                 Image img = row.GetCache(column) as Image;
                 if (img == null)
                 {
-                    byte[] bytes = row[column] as byte[];
-                    if (bytes != null)
+                    if (row[column] is byte[] bytes)
                     {
                         img = GuiService.ImageFromByte(bytes);
                         row.SetCache(column, img);

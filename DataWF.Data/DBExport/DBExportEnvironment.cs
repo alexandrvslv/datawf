@@ -17,15 +17,14 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using System;
 using DataWF.Common;
+using System;
 
 namespace DataWF.Data
 {
     public class DBExportEnvironment : IFileSerialize
     {
         private DateTime stamp = DateTime.Now;
-        private DBExportList list = new DBExportList();
 
         public DBExportEnvironment()
         {
@@ -37,10 +36,7 @@ namespace DataWF.Data
             set { stamp = value; }
         }
 
-        public DBExportList List
-        {
-            get { return list; }
-        }
+        public DBExportList List { get; } = new DBExportList();
 
         #region IFSerialize implementation
         public void Save(string file)

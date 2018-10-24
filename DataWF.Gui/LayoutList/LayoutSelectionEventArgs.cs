@@ -45,8 +45,7 @@ namespace DataWF.Gui
 
         public override bool Equals(object obj)
         {
-            var obj2 = obj as LayoutSelectionEventArgs;
-            return obj2 != null && item == obj2.item;
+            return obj is LayoutSelectionEventArgs obj2 && item == obj2.item;
         }
 
         public override int GetHashCode()

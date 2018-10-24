@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using Xwt.Drawing;
+﻿using DataWF.Common;
 using DataWF.Gui;
-using DataWF.Common;
-using DataWF.Data;
+using System;
+using System.Collections.Generic;
 using Xwt;
 
 namespace DataWF.Data.Gui
@@ -111,8 +109,7 @@ namespace DataWF.Data.Gui
         protected override void OnNodeSelect(ListExplorerNode node)
         {
             base.OnNodeSelect(node);
-            var tableNode = node as TableExplorerNode;
-            if (tableNode != null)
+            if (node is TableExplorerNode tableNode)
             {
                 Text = $"{tableNode.Info.Table.DisplayName}{(tableNode.Info.Item == null ? string.Empty : " ")}{tableNode.Info.Item?.ToString()}";
             }
@@ -120,8 +117,7 @@ namespace DataWF.Data.Gui
 
         protected override void OnNodeCheck(ListExplorerNode node)
         {
-            var tableNode = node as TableExplorerNode;
-            if (tableNode == null)
+            if (!(node is TableExplorerNode tableNode))
             {
                 base.OnNodeCheck(node);
             }
@@ -169,7 +165,7 @@ namespace DataWF.Data.Gui
 
         #endregion
 
-        private void toolClose_Click(object sender, EventArgs e)
+        private void OnToolCloseClick(object sender, EventArgs e)
         {
             if (Current == null)
                 return;

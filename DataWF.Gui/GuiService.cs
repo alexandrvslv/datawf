@@ -1,7 +1,7 @@
-﻿using System;
+﻿using DataWF.Common;
+using System;
 using System.IO;
 using System.Threading;
-using DataWF.Common;
 using Xwt;
 using Xwt.Drawing;
 
@@ -177,17 +177,17 @@ namespace DataWF.Gui
             var item = Locale.GetItem(category, name);
             if (item.Glyph == GlyphType.None && def != GlyphType.None)
                 item.Glyph = def;
-            var picture = obj as IGlyph;
-            if (picture != null)
+            if (obj is IGlyph picture)
             {
                 picture.Image = Locale.GetImage(item.ImageKey) as Image;
                 if (item.Glyph != GlyphType.None)
                     picture.Glyph = item.Glyph;
             }
 
-            var text = obj as IText;
-            if (text != null)
-                ((IText)obj).Text = item.Value;
+            if (obj is IText text)
+            {
+                text.Text = item.Value;
+            }
         }
 
         public static LayoutAlignType GetAlignRect(Rectangle bound, double size, double x, double y, ref Rectangle rec)

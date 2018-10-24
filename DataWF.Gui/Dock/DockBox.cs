@@ -1,8 +1,8 @@
-﻿using System;
+﻿using DataWF.Common;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using Xwt;
-using DataWF.Common;
 using Xwt.Drawing;
 
 namespace DataWF.Gui
@@ -283,9 +283,10 @@ namespace DataWF.Gui
         {
             foreach (Widget control in GetControls())
             {
-                var loc = control as ILocalizable;
-                if (loc != null)
+                if (control is ILocalizable loc)
+                {
                     loc.Localize();
+                }
             }
         }
 
@@ -470,8 +471,7 @@ namespace DataWF.Gui
 
         public DockItem GetDockItem(string name, DockItem exist, LayoutAlignType type, bool gp)
         {
-            DockItem item = items.GetRecursive(name) as DockItem;
-            if (item == null)
+            if (!(items.GetRecursive(name) is DockItem item))
             {
                 item = CreateDockItem(name, exist, type, gp);
                 Add(item, exist, type, gp);

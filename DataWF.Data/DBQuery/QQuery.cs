@@ -490,19 +490,19 @@ namespace DataWF.Data
                                     if (Helper.IsDecimal(word))
                                     {
                                         val = decimal.Parse(word, NumberStyles.Number, CultureInfo.InvariantCulture.NumberFormat);
-                                        parameter.SetValue(new QValue(val, column == null ? null : column.Column) { Text = word });
+                                        parameter.SetValue(new QValue(val, column?.Column) { Text = word });
                                     }
                                     else if (word.Equals("true", StringComparison.OrdinalIgnoreCase))
                                     {
-                                        parameter.SetValue(new QValue(true, column == null ? null : column.Column));
+                                        parameter.SetValue(new QValue(true, column?.Column));
                                     }
                                     else if (word.Equals("false", StringComparison.OrdinalIgnoreCase))
                                     {
-                                        parameter.SetValue(new QValue(false, column == null ? null : column.Column));
+                                        parameter.SetValue(new QValue(false, column?.Column));
                                     }
                                     else if (word.Equals("null", StringComparison.OrdinalIgnoreCase))
                                     {
-                                        parameter.SetValue(new QValue(DBNull.Value, column == null ? null : column.Column));
+                                        parameter.SetValue(new QValue(DBNull.Value, column?.Column));
                                     }
                                     else if (word.Equals("not", StringComparison.OrdinalIgnoreCase))
                                     {
@@ -602,7 +602,7 @@ namespace DataWF.Data
                                             parameter.Comparer = CompareType.Less;
                                         break;
                                     case '\'':
-                                        parameter.SetValue(new QValue(ParseString(query, ref i, '\'', '\''), column != null ? column.Column : null));
+                                        parameter.SetValue(new QValue(ParseString(query, ref i, '\'', '\''), column?.Column));
                                         break;
                                     case '(':
                                         int j = i;
@@ -619,10 +619,12 @@ namespace DataWF.Data
                                         }
                                         else if (parameter != null && parameter.Comparer.Type != CompareTypes.Undefined)
                                         {
-                                            QEnum list = new QEnum();
-                                            string[] split = word2.Split(',');
-                                            foreach (var s in split)
-                                                list.Items.Add(new QValue(s.Trim(' ', '\''), column != null ? column.Column : null));
+                                            var list = new QEnum();
+                                            foreach (var s in word2.Split(','))
+                                            {
+                                                list.Items.Add(new QValue(s.Trim(' ', '\''), column?.Column));
+                                            }
+
                                             parameter.SetValue(list);
                                             if (parameter.Comparer.Type == CompareTypes.Between && parameter.ValueRight is QEnum)
                                             {

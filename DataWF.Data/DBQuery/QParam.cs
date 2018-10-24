@@ -17,17 +17,15 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using System;
-using System.ComponentModel;
 using DataWF.Common;
-using System.Collections.Generic;
-using System.Data;
+using Newtonsoft.Json;
+using System;
 using System.Collections;
-using System.Text;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Data;
 using System.Linq;
 using System.Xml.Serialization;
-using Newtonsoft.Json;
-using System.Collections.Specialized;
 
 namespace DataWF.Data
 {
@@ -334,9 +332,8 @@ namespace DataWF.Data
                 ValueLeft = value;
             else if (ValueRight == null)
                 ValueRight = value;
-            else if (ValueRight is QBetween)
+            else if (ValueRight is QBetween between)
             {
-                QBetween between = (QBetween)ValueRight;
                 if (between.Min == null)
                     between.Min = value;
                 else if (between.Max == null)

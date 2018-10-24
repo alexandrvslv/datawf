@@ -1,13 +1,7 @@
 ﻿using DataWF.Common;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using Xwt.Drawing;
-using System.IO;
-using System.Linq;
-using System.Text;
 using Xwt;
+using Xwt.Drawing;
 
 namespace DataWF.Gui
 {
@@ -95,8 +89,7 @@ namespace DataWF.Gui
 
         private void ListItemSelect(object sender, EventArgs e)
         {
-            var style = list.List.SelectedItem as CellStyle;
-            if (style != null)
+            if (list.List.SelectedItem is CellStyle style)
             {
                 details.FieldSource = style;
                 preview.Style = style;

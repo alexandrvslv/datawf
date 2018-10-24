@@ -1,12 +1,11 @@
-﻿using DataWF.Gui;
-using DataWF.Common;
+﻿using DataWF.Common;
+using DataWF.Gui;
 using System;
 using System.Collections;
-using DataWF.Data;
-using Xwt;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
+using Xwt;
 
 namespace DataWF.Data.Gui
 {
@@ -123,8 +122,7 @@ namespace DataWF.Data.Gui
             using (var transaction = new DBTransaction(this, Table.Schema.Connection))
             {
                 Debug.WriteLine("Get References {0}", getReferenceStack.Count);
-                PDBTableParam item;
-                while (getReferenceStack.TryPop(out item))
+                while (getReferenceStack.TryPop(out PDBTableParam item))
                 {
                     item.Row.GetReference(item.Column, DBLoadParam.Load);
                     item.Row.OnPropertyChanged(item.Column.Name, item.Column);

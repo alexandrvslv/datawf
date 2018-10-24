@@ -27,11 +27,11 @@ namespace DataWF.Data
 {
     public class SortIndex
     {
-        private DBItem row;
-        private DBTable list;
+        private readonly DBItem row;
+        private readonly DBTable list;
         private List<DBItem> index = new List<DBItem>();
         private IComparer comparer;
-        private DBColumn column;
+        private readonly DBColumn column;
         //private string property;
         public SortIndex(DBTable list, string property)
         {
@@ -40,17 +40,17 @@ namespace DataWF.Data
             //this.property = property;
             if (list.Columns.Contains(property))
             {
-                this.column = list.Columns[property];
-                this.comparer = new DBComparer(column, ListSortDirection.Ascending);
+                column = list.Columns[property];
+                comparer = new DBComparer(column, ListSortDirection.Ascending);
             }
             else
             {
-                this.comparer = new InvokerComparer(typeof(DBItem), property, ListSortDirection.Ascending);
+                comparer = new InvokerComparer(typeof(DBItem), property, ListSortDirection.Ascending);
             }
             Refresh();
         }
 
-        private void listOnListChanged(object sender, ListChangedEventArgs e)
+        private void OnSourceListChanged(object sender, ListChangedEventArgs e)
         {
             switch (e.ListChangedType)
             {

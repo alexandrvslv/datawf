@@ -49,8 +49,8 @@ namespace DataWF.Data
         public CompareType Comparer;
         public object Value;
         private DBColumn property;
-        public bool buffered;
-        private bool refernce;
+        public readonly bool buffered;
+        private readonly bool refernce;
         public bool Hash;
 
         public DBComparer(DBTable table, DBColumn column, string proeprty, ListSortDirection direction = ListSortDirection.Ascending)
@@ -139,8 +139,8 @@ namespace DataWF.Data
                 {
                     xValue = buffered ? x.GetReference(property) : x.GetReference(PropertyName);
                     yValue = buffered ? y.GetReference(property) : y.GetReference(PropertyName);
-                    xValue = (xValue != null) ? xValue.ToString() : null;
-                    yValue = (yValue != null) ? yValue.ToString() : null;
+                    xValue = xValue?.ToString();
+                    yValue = yValue?.ToString();
                 }
                 else
                 {

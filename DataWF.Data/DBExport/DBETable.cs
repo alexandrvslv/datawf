@@ -27,27 +27,24 @@ namespace DataWF.Data
 {
     public class DBETable : IComparable, INotifyPropertyChanged, ICheck
     {
-        [NonSerialized]
         private DBExport _export;
-        [NonSerialized]
         private bool complete = false;
         private string query = "";
         private string source = "";
         private string target = "";
         private bool check = true;
         //private bool drop = false;
-        private DBEColumnList columns;
+        private readonly DBEColumnList columns;
 
         public DBETable()
         {
             columns = new DBEColumnList(this);
         }
 
-        public DBETable(string name)
-            : this()
+        public DBETable(string name) : this()
         {
-            source = name;
-            target = name;
+            source =
+                target = name;
         }
 
         [Browsable(false)]
@@ -78,10 +75,10 @@ namespace DataWF.Data
         [DisplayName("Source Table")]
         public DBTable SourceTable
         {
-            get { return _export == null ? null : (_export.Source == null ? null : _export.Source.Tables[source]); }
+            get { return _export?.Source?.Tables[source]; }
             set
             {
-                source = value == null ? null : value.Name;
+                source = value?.Name;
                 OnPropertyChanged(nameof(SourceTable));
             }
         }
@@ -102,10 +99,10 @@ namespace DataWF.Data
         [DisplayName("Destination Table")]
         public DBTable TargetTable
         {
-            get { return _export == null ? null : (_export.Target == null ? null : _export.Target.Tables[target]); }
+            get { return _export?.Target?.Tables[target]; }
             set
             {
-                target = value == null ? null : value.Name;
+                target = value?.Name;
                 OnPropertyChanged(nameof(TargetTable));
             }
         }

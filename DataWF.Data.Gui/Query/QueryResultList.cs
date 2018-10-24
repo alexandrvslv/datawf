@@ -1,8 +1,6 @@
-﻿using DataWF.Gui;
-using DataWF.Common;
-using System;
+﻿using DataWF.Common;
+using DataWF.Gui;
 using System.Collections.Generic;
-using System.Reflection;
 
 namespace DataWF.Data.Gui
 {
@@ -48,8 +46,7 @@ namespace DataWF.Data.Gui
         {
             if (view != null)
             {
-                QField index;
-                if (view.Columns.TryGetValue(name, out index))
+                if (view.Columns.TryGetValue(name, out QField index))
                 {
                     return new LayoutColumn()
                     {

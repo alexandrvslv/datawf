@@ -22,7 +22,6 @@ using DataWF.Common;
 using DataWF.Data;
 using Newtonsoft.Json;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -62,8 +61,7 @@ namespace DataWF.Web.Common
                 {
                     if (!TypeHelper.IsBaseType(valueType, refing.PropertyInvoker.TargetType))
                         continue;
-                    var refs = refing.PropertyInvoker.GetValue(item) as IEnumerable<DBItem> ;
-                    if (refs != null)
+                    if (refing.PropertyInvoker.GetValue(item) is IEnumerable<DBItem> refs)
                     {
                         writer.WritePropertyName(refing.Property.Name);
                         serializer.Serialize(writer, refs);

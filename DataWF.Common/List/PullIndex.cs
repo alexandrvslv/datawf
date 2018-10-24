@@ -106,11 +106,9 @@ namespace DataWF.Data
         {
             lock (store)
             {
-                List<T> list;
-                if (!store.TryGetValue(key, out list))
+                if (!store.TryGetValue(key, out List<T> list))
                 {
-                    list = new List<T>(1);
-                    list.Add(item);
+                    list = new List<T>(1) { item };
                     store.Add(key, list);
                 }
                 else
@@ -328,8 +326,7 @@ namespace DataWF.Data
             }
             else if (compare.Type.Equals(CompareTypes.Between))
             {
-                var between = value as IBetween;
-                if (between == null)
+                if (!(value is IBetween between))
                     throw new Exception("Expect QBetween but Get " + value == null ? "null" : value.GetType().FullName);
                 var min = CheckNull(between.MinValue());
                 var max = CheckNull(between.MaxValue());

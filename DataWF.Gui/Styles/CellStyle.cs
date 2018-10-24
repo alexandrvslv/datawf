@@ -1,7 +1,6 @@
-﻿using System;
-using System.ComponentModel;
+﻿using DataWF.Common;
+using System;
 using System.Xml.Serialization;
-using DataWF.Common;
 using Xwt;
 using Xwt.Drawing;
 
@@ -24,8 +23,8 @@ namespace DataWF.Gui
         {
             get { return baseColor; }
             set
-            {                
-                baseColor = value;                
+            {
+                baseColor = value;
             }
         }
 
@@ -133,7 +132,7 @@ namespace DataWF.Gui
 
         public override string ToString()
         {
-            return Name == null ? base.ToString() : Name;
+            return Name ?? base.ToString();
         }
 
     }

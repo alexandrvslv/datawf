@@ -18,8 +18,7 @@ namespace Doc.Odf
         {
             get
             {
-                CellProperties cp = this[Service.CellProperties] as CellProperties;
-                if (cp == null)
+                if (!(this[Service.CellProperties] is CellProperties cp))
                 {
                     cp = new CellProperties(document);
                     this.Add(cp);

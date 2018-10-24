@@ -1,12 +1,12 @@
 ﻿using System;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using System.Linq;
 
 namespace DataWF.Common
 {
@@ -63,12 +63,11 @@ namespace DataWF.Common
 
         public static IPEndPoint ParseEndPoint(string address)
         {
-            string[] split = address.Split(':');
+            var split = address.Split(':');
             if (split.Length < 2)
                 return null;
-            IPAddress ipaddress = IPAddress.Parse(split[0]);
-            int port = 0;
-            if (int.TryParse(split[1], out port))
+            var ipaddress = IPAddress.Parse(split[0]);
+            if (int.TryParse(split[1], out int port))
             {
                 return new IPEndPoint(ipaddress, port);
             }
@@ -102,10 +101,10 @@ namespace DataWF.Common
         }
 
         public bool LogEvents
-		{
-			get { return logEvents; }
-			set { logEvents = value; }
-		}
+        {
+            get { return logEvents; }
+            set { logEvents = value; }
+        }
 
         [Browsable(false)]
         public TimeSpan TimeOut { get; set; }
@@ -224,16 +223,14 @@ namespace DataWF.Common
 
         protected virtual void OnStart()
         {
-            if (Started != null)
-                Started(this, EventArgs.Empty);
+            Started?.Invoke(this, EventArgs.Empty);
 
             Helper.Logs.Add(new StateInfo("NetService", "Start", localPoint.ToString()));
         }
 
         protected virtual void OnStop()
         {
-            if (Stopped != null)
-                Stopped(this, EventArgs.Empty);
+            Stopped?.Invoke(this, EventArgs.Empty);
 
             Helper.Logs.Add(new StateInfo("NetService", "Stop", localPoint.ToString()));
         }
@@ -248,8 +245,7 @@ namespace DataWF.Common
                     arg.Client.Socket.RemoteEndPoint,
                     Helper.TextDisplayFormat(arg.Length, "size"))));
 
-            if (DataSend != null)
-                DataSend(this, arg);
+            DataSend?.Invoke(this, arg);
 
             if (arg.Stream is MemoryStream)
                 arg.Stream.Dispose();
@@ -265,21 +261,21 @@ namespace DataWF.Common
                     arg.Client.Socket.RemoteEndPoint,
                     Helper.TextDisplayFormat(arg.Length, "size"))));
 
-            if (DataLoad != null)
-                DataLoad(this, arg);
+            DataLoad?.Invoke(this, arg);
 
             arg.Stream.Dispose();
         }
 
         protected internal void OnDataException(TcpExceptionEventArgs arg)
         {
-            if (DataException != null)
-                DataException(this, arg);
+            DataException?.Invoke(this, arg);
 
             Helper.OnException(arg.Exception);
 
-            if (arg.Arguments is TcpServerEventArgs && ((TcpServerEventArgs)arg.Arguments).Stream is MemoryStream)
-                ((TcpServerEventArgs)arg.Arguments).Stream.Dispose();
+            if (arg.Arguments is TcpServerEventArgs tcpArgs && tcpArgs.Stream is MemoryStream)
+            {
+                tcpArgs.Stream.Dispose();
+            }
         }
 
         protected internal void OnClientConnect(TcpSocketEventArgs arg)
@@ -287,23 +283,19 @@ namespace DataWF.Common
             clients.Add(arg.Client);
             arg.Client.Load();
 
-            if (ClientConnect != null)
-                ClientConnect(this, arg);
-
+            ClientConnect?.Invoke(this, arg);
         }
 
         protected internal void OnClientDisconect(TcpSocketEventArgs arg)
         {
-            if (ClientDisconnect != null)
-                ClientDisconnect(this, arg);
+            ClientDisconnect?.Invoke(this, arg);
 
             clients.Remove(arg.Client);
         }
 
         protected void OnClientTimeOut(TcpSocket client)
         {
-            if (ClientTimeout != null)
-                ClientTimeout(this, new TcpSocketEventArgs { Client = client });
+            ClientTimeout?.Invoke(this, new TcpSocketEventArgs { Client = client });
 
             client.Dispose();
         }

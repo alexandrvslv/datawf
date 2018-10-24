@@ -70,23 +70,22 @@ namespace DataWF.Common
         public SelectableList<object[]> Values = new SelectableList<object[]>();
 
         public event EventHandler ColumnsLoaded;
+
         public void OnColumnsLoaded()
         {
-            if (ColumnsLoaded != null)
-                ColumnsLoaded(this, EventArgs.Empty);
+            ColumnsLoaded?.Invoke(this, EventArgs.Empty);
         }
 
         public event EventHandler Loaded;
+
         public void OnLoaded()
         {
-            if (Loaded != null)
-                Loaded(this, EventArgs.Empty);
+            Loaded?.Invoke(this, EventArgs.Empty);
         }
 
         public int GetIndex(string Column)
         {
-            QField value;
-            return Columns.TryGetValue(Column, out value) ? value.Index : -1;
+            return Columns.TryGetValue(Column, out QField value) ? value.Index : -1;
         }
 
         public object Get(int index, string column)

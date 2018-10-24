@@ -18,8 +18,7 @@ namespace Doc.Odf
         {
             get
             {
-                GraphicProperties gp = this[Service.GraphicProperties] as GraphicProperties;
-                if (gp == null)
+                if (!(this[Service.GraphicProperties] is GraphicProperties gp))
                 {
                     gp = new GraphicProperties(document);
                     this.Add(gp);
