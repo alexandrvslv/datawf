@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Text;
-using System.Xml;
 using System.IO;
-using System.Globalization;
+using System.Xml;
 
 namespace DataWF.Common
 {
@@ -10,7 +8,7 @@ namespace DataWF.Common
     public class Serialization
     {
         public static Serializer Instance = new Serializer();
-        
+
         public static object Deserialize(Stream stream, object element = null)
         {
             OnNotify(null, SerializeType.Load, stream.ToString());
@@ -54,6 +52,19 @@ namespace DataWF.Common
                 node = node.ParentNode;
             }
             return rez;
+        }
+
+        public static T Clone<T>(T obj, bool ignoreEnumerable)
+        {
+            var typeInfo = Instance.GetTypeInfo(typeof(T));
+            var newItem = (T)typeInfo.Constructor.Create();
+            foreach (var property in typeInfo.Properties)
+            {
+                if (ignoreEnumerable && TypeHelper.IsList(property.DataType))
+                    continue;
+                property.Invoker.SetValue(newItem, property.Invoker.GetValue(obj));
+            }
+            return newItem;
         }
     }
 }
