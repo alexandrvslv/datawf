@@ -9,11 +9,17 @@ namespace DataWF.Common
     {
         static readonly Invoker<PropertySerializationInfo, bool> isAttributeInvoker = new Invoker<PropertySerializationInfo, bool>(nameof(PropertySerializationInfo.IsAttribute), (item) => item.IsAttribute);
 
-        public TypeSerializationInfo(Type type)
+        public TypeSerializationInfo(Type type) : this(type, TypeHelper.GetPropertiesByHierarchi(type))
+        { }
+
+        public TypeSerializationInfo(Type type, IEnumerable<string> properties) : this(type, TypeHelper.GetProperties(type, properties))
+        { }
+
+        public TypeSerializationInfo(Type type, IEnumerable<PropertyInfo> properties)
         {
             Type = type;
             TypeName = TypeHelper.FormatBinary(Type);
-           
+
             IsAttribute = TypeHelper.IsXmlAttribute(Type);
             if (IsAttribute)
             {
@@ -44,26 +50,21 @@ namespace DataWF.Common
             Properties = new NamedList<PropertySerializationInfo>();
             Properties.Indexes.Add(isAttributeInvoker);
 
-            foreach (var btype in TypeHelper.GetTypeHierarchi(type))
+            foreach (var property in properties)
             {
-                if (btype == typeof(object))
-                    continue;
-                foreach (var property in btype.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly))
+                if (TypeHelper.IsNonSerialize(property))
                 {
-                    if (TypeHelper.IsNonSerialize(property))
-                    {
-                        var exist = GetProperty(property.Name);
-                        if (exist != null)
-                            Properties.Remove(exist);
-                        continue;
-                    }
-                    var info = new PropertySerializationInfo(property);
-                    {
-                        var exist = GetProperty(info.Name);
-                        if (exist != null)
-                            Properties.Remove(exist);
-                        Properties.Add(info);
-                    }
+                    var exist = GetProperty(property.Name);
+                    if (exist != null)
+                        Properties.Remove(exist);
+                    continue;
+                }
+                var info = new PropertySerializationInfo(property);
+                {
+                    var exist = GetProperty(info.Name);
+                    if (exist != null)
+                        Properties.Remove(exist);
+                    Properties.Add(info);
                 }
             }
         }

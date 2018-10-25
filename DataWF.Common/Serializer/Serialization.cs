@@ -9,30 +9,30 @@ namespace DataWF.Common
 
     public class Serialization
     {
-        private static Serializer instance = new Serializer();
+        public static Serializer Instance = new Serializer();
         
         public static object Deserialize(Stream stream, object element = null)
         {
             OnNotify(null, SerializeType.Load, stream.ToString());
-            return instance.Deserialize(stream, element);
+            return Instance.Deserialize(stream, element);
         }
 
         public static object Deserialize(string file, object element = null, bool saveIfNotExist = true)
         {
             OnNotify(element, SerializeType.Load, file);
-            return instance.Deserialize(file, element, saveIfNotExist);
+            return Instance.Deserialize(file, element, saveIfNotExist);
         }
 
         public static void Serialize(object element, string file)
         {
             OnNotify(element, SerializeType.Save, file);
-            instance.Serialize(element, file);
+            Instance.Serialize(element, file);
         }
 
         public static void Serialize(object element, Stream stream)
         {
             OnNotify(element, SerializeType.Save, stream.ToString());
-            instance.Serialize(element, stream);
+            Instance.Serialize(element, stream);
         }
 
         public static event EventHandler<SerializationNotifyEventArgs> Notify;

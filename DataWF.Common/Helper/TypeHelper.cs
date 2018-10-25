@@ -511,7 +511,28 @@ namespace DataWF.Common
             return buf;
         }
 
-        public static PropertyInfo[] GetPropertyes(Type type, bool nonPublic = false)
+        public static IEnumerable<PropertyInfo> GetProperties(Type type, IEnumerable<string> properties)
+        {
+            foreach (var propertyName in properties)
+            {
+                yield return type.GetProperty(propertyName);
+            }
+        }
+
+        public static IEnumerable<PropertyInfo> GetPropertiesByHierarchi(Type type)
+        {
+            foreach (var btype in GetTypeHierarchi(type))
+            {
+                if (btype == typeof(object))
+                    continue;
+                foreach (var property in btype.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly))
+                {
+                    yield return property;
+                }
+            }
+        }
+
+        public static PropertyInfo[] GetProperties(Type type, bool nonPublic = false)
         {
             BindingFlags flag = BindingFlags.Instance | BindingFlags.Public;
             if (nonPublic)
@@ -577,7 +598,7 @@ namespace DataWF.Common
         {
             if (!cacheTypeProperties.TryGetValue(type, out var flist))
             {
-                flist = GetPropertyes(type, false);
+                flist = GetProperties(type, false);
                 cacheTypeProperties[type] = flist;
             }
             return flist;

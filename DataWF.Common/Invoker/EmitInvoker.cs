@@ -32,7 +32,7 @@ namespace DataWF.Common
         {
             DeleteCache(type, Type.EmptyTypes);
 
-            var props = TypeHelper.GetPropertyes(type, false);
+            var props = TypeHelper.GetProperties(type, false);
             foreach (var info in props)
                 DeleteCache(info);
 

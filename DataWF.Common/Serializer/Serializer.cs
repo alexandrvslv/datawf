@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 
 namespace DataWF.Common
 {
@@ -101,6 +100,11 @@ namespace DataWF.Common
         public void Dispose()
         {
             SerializationInfo.Clear();
+        }
+
+        public void SetTypeInfo(Type type, TypeSerializationInfo info)
+        {
+            SerializationInfo[type] = info;
         }
 
         public TypeSerializationInfo GetTypeInfo(Type type)
