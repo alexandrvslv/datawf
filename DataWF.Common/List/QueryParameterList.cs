@@ -22,15 +22,6 @@ namespace DataWF.Common
 
         public Query<T> Query { get; set; }
 
-        public void Remove(string property)
-        {
-            var param = this[property];
-            if (param != null)
-            {
-                Remove(param);
-            }
-        }
-
         public QueryParameter<T> Add(LogicType logic, IInvoker invoker, CompareType comparer, object value)
         {
             var parameter = new QueryParameter<T>

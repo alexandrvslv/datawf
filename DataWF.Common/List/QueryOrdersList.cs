@@ -22,15 +22,6 @@ namespace DataWF.Common
 
         public Query<T> Query { get; set; }
 
-        public void Remove(string property)
-        {
-            var param = this[property];
-            if (param != null)
-            {
-                Remove(param);
-            }
-        }
-
         public InvokerComparer<T> Add(IInvoker invoker, ListSortDirection direction)
         {
             var parameter = new InvokerComparer<T>

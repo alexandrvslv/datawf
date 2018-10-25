@@ -32,6 +32,12 @@ namespace DataWF.Common
             }
         }
 
+        public bool Remove(string name)
+        {
+            var item = this[name];
+            return item == null ? false : Remove(item);
+        }
+
         public INamed Get(string name)
         {
             return this[name];
