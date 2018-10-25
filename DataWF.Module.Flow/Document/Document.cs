@@ -125,8 +125,8 @@ namespace DataWF.Module.Flow
         {
             base.OnAttached();
             return;
-            if (UpdateState == DBUpdateState.Default && (WorkStage == null || WorkStage.Length == 0))
-                GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), DBLoadParam.Load);
+            //if (UpdateState == DBUpdateState.Default && (WorkStage == null || WorkStage.Length == 0))
+            //    GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), DBLoadParam.Load);
         }
 
         internal void OnReferenceChanged(DBItem item)
