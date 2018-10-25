@@ -239,7 +239,14 @@ namespace DataWF.Common
                 case NotifyCollectionChangedAction.Add:
                     if (newItem != null && ListHelper.CheckItem(newItem, query))
                     {
-                        base.Add(newItem);
+                        if (!query.IsEnabled && comparer == null)
+                        {
+                            base.Insert(e.NewStartingIndex, newItem);
+                        }
+                        else
+                        {
+                            base.Add(newItem);
+                        }
                     }
                     break;
             }
