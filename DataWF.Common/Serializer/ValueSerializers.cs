@@ -95,7 +95,22 @@ namespace DataWF.Common
 
         public override object ConvertFromString(string value, IValueSerializerContext context) => int.TryParse(value, out var result) ? result : 0;
 
-        public override string ConvertToString(object value, IValueSerializerContext context) => value.ToString();
+        public override string ConvertToString(object value, IValueSerializerContext context) => ((int)value).ToString(CultureInfo.InvariantCulture);
+
+        public override IEnumerable<Type> TypeReferences(object value, IValueSerializerContext context) { yield break; }
+    }
+
+    public class DoubleValueSerializer : ValueSerializer
+    {
+        public static readonly DoubleValueSerializer Instance = new DoubleValueSerializer();
+
+        public override bool CanConvertFromString(string value, IValueSerializerContext context) => true;
+
+        public override bool CanConvertToString(object value, IValueSerializerContext context) => true;
+
+        public override object ConvertFromString(string value, IValueSerializerContext context) => double.TryParse(value, out var result) ? result : 0;
+
+        public override string ConvertToString(object value, IValueSerializerContext context) => ((double)value).ToString(CultureInfo.InvariantCulture);
 
         public override IEnumerable<Type> TypeReferences(object value, IValueSerializerContext context) { yield break; }
     }

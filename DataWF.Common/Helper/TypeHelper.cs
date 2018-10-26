@@ -256,6 +256,10 @@ namespace DataWF.Common
                 {
                     serializer = IntValueSerializer.Instance;
                 }
+                else if (type == typeof(double))
+                {
+                    serializer = DoubleValueSerializer.Instance;
+                }
                 else if (type == typeof(DateTime))
                 {
                     serializer = DateTimeValueSerializer.Instance;
