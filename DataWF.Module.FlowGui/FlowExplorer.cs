@@ -32,22 +32,62 @@ namespace DataWF.Module.FlowGui
             { Name = "FlowExplorer" };
 
             contextAdd = new Menubar(
-                new ToolMenuItem { Name = "Template", Sensitive = Template.DBTable?.Access.Create ?? false, Glyph = GlyphType.Book },
-                 new ToolMenuItem { Name = "Template Data", Sensitive = TemplateData.DBTable?.Access.Create ?? false, Glyph = GlyphType.File },
-                new ToolMenuItem { Name = "Work", Sensitive = Work.DBTable?.Access.Create ?? false, Glyph = GlyphType.GearsAlias },
-                new ToolMenuItem { Name = "Work Stage", Sensitive = Stage.DBTable?.Access.Create ?? false, Glyph = GlyphType.EditAlias },
+                new ToolMenuItem
+                {
+                    Name = "Template",
+                    Sensitive = Template.DBTable?.Access.GetFlag(AccessType.Create, GuiEnvironment.CurrentUser) ?? false,
+                    Glyph = GlyphType.Book
+                },
+                 new ToolMenuItem
+                 {
+                     Name = "Template Data",
+                     Sensitive = TemplateData.DBTable?.Access.GetFlag(AccessType.Create, GuiEnvironment.CurrentUser) ?? false,
+                     Glyph = GlyphType.File
+                 },
+                new ToolMenuItem
+                {
+                    Name = "Work",
+                    Sensitive = Work.DBTable?.Access.GetFlag(AccessType.Create, GuiEnvironment.CurrentUser) ?? false,
+                    Glyph = GlyphType.GearsAlias
+                },
+                new ToolMenuItem
+                {
+                    Name = "Work Stage",
+                    Sensitive = Stage.DBTable?.Access.GetFlag(AccessType.Create, GuiEnvironment.CurrentUser) ?? false,
+                    Glyph = GlyphType.EditAlias
+                },
                 new ToolMenuItem
                 {
                     Name = "Stage Parameter",
-                    Sensitive = StageParam.DBTable?.Access.Create ?? false,
+                    Sensitive = StageParam.DBTable?.Access.GetFlag(AccessType.Create, GuiEnvironment.CurrentUser) ?? false,
                     Glyph = GlyphType.Columns,
                     DropDown = new Menubar(
-                        new ToolMenuItem { Name = "Stage Procedure", Sensitive = StageParam.DBTable?.Access.Create ?? false, Glyph = GlyphType.EditAlias },
-                        new ToolMenuItem { Name = "Stage Reference", Sensitive = StageParam.DBTable?.Access.Create ?? false, Glyph = GlyphType.EditAlias }
+                        new ToolMenuItem
+                        {
+                            Name = "Stage Procedure",
+                            Sensitive = StageParam.DBTable?.Access.GetFlag(AccessType.Create, GuiEnvironment.CurrentUser) ?? false,
+                            Glyph = GlyphType.EditAlias
+                        },
+                        new ToolMenuItem
+                        {
+                            Name = "Stage Reference",
+                            Sensitive = StageParam.DBTable?.Access.GetFlag(AccessType.Create, GuiEnvironment.CurrentUser) ?? false,
+                            Glyph = GlyphType.EditAlias
+                        }
                         )
                 },
-                new ToolMenuItem { Name = "Group", Sensitive = UserGroup.DBTable?.Access.Create ?? false, Glyph = GlyphType.Users },
-                new ToolMenuItem { Name = "Department", Sensitive = Department.DBTable?.Access.Create ?? false, Glyph = GlyphType.Home },
+                new ToolMenuItem
+                {
+                    Name = "Group",
+                    Sensitive = UserGroup.DBTable?.Access.GetFlag(AccessType.Create, GuiEnvironment.CurrentUser) ?? false,
+                    Glyph = GlyphType.Users
+                },
+                new ToolMenuItem
+                {
+                    Name = "Department",
+                    Sensitive = Department.DBTable?.Access.GetFlag(AccessType.Create, GuiEnvironment.CurrentUser) ?? false,
+                    Glyph = GlyphType.Home
+                },
                 new ToolMenuItem { Name = "Position", Sensitive = Position.DBTable?.Access.Create ?? false, Glyph = GlyphType.UserMd },
                 new ToolMenuItem { Name = "User", Sensitive = User.DBTable?.Access.Create ?? false, Glyph = GlyphType.User },
                 new ToolMenuItem { Name = "Scheduler", Sensitive = Scheduler.DBTable?.Access.Create ?? false, Glyph = GlyphType.ClockO })

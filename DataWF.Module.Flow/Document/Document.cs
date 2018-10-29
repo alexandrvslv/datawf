@@ -716,7 +716,7 @@ namespace DataWF.Module.Flow
         {
             if ((UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete)
             {
-                base.Save();
+                base.Save(user);
                 return;
             }
             if (Template == null)
@@ -732,7 +732,7 @@ namespace DataWF.Module.Flow
             var transaction = DBTransaction.GetTransaction(saveLock, Table.Schema.Connection);
             try
             {
-                base.Save();
+                base.Save(user);
                 var param = new DocumentExecuteArgs() { Document = this, ProcedureCategory = Template.Code };
                 var works = GetWorks().ToList();
                 bool isnew = works.Count == 0;
@@ -762,13 +762,13 @@ namespace DataWF.Module.Flow
                     //CacheReferencing(transaction);
                     if (temporaryUser != null)
                     {
-                        Send(CurrentWork, temporaryStage, new[] { temporaryUser });
+                        Send(CurrentWork, temporaryStage, new[] { temporaryUser }, (User)user);
                     }
                     else
                     {
-                        Send(CurrentWork, temporaryStage);
+                        Send(CurrentWork, temporaryStage, (User)user);
                     }
-                    base.Save();
+                    base.Save(user);
 
                 }
                 temporaryUser = null;
@@ -788,14 +788,14 @@ namespace DataWF.Module.Flow
 
                 if (transaction.Owner == saveLock)
                 {
-                    transaction.Commit();
+                    transaction.Commit(user);
                 }
             }
             catch (Exception ex)
             {
                 if (transaction.Owner == saveLock)
                 {
-                    transaction.Rollback();
+                    transaction.Rollback(user);
                 }
 
                 throw ex;
@@ -812,7 +812,7 @@ namespace DataWF.Module.Flow
         }
 
         [ControllerMethod]
-        public List<DocumentWork> Send()
+        public List<DocumentWork> Send(User user)
         {
             var work = GetWorksUncompleted().FirstOrDefault();
             if (work == null)
@@ -828,16 +828,16 @@ namespace DataWF.Module.Flow
             {
                 throw new InvalidOperationException("Next Stage not Defined!");
             }
-            return Send(work, stageReference.ReferenceStage);
+            return Send(work, stageReference.ReferenceStage, user);
         }
 
         [ControllerMethod]
-        public List<DocumentWork> Send(DocumentWork from, Stage stage)
+        public List<DocumentWork> Send(DocumentWork from, Stage stage, User user)
         {
             if ((stage.Keys & StageKey.IsStart) == StageKey.IsStart)
-                return Send(from, stage, new[] { User.CurrentUser });
+                return Send(from, stage, new[] { user }, user);
             else
-                return Send(from, stage, stage.GetDepartment(Template));
+                return Send(from, stage, stage.GetDepartment(Template), user);
         }
 
         [ControllerMethod]
@@ -857,11 +857,11 @@ namespace DataWF.Module.Flow
         }
 
         [ControllerMethod]
-        public void Complete(DocumentWork work)
+        public void Complete(DocumentWork work, User user)
         {
             if (work.User == null)
             {
-                work.User = User.CurrentUser;
+                work.User = user;
             }
 
             work.DateComplete = DateTime.Now;
@@ -889,7 +889,7 @@ namespace DataWF.Module.Flow
         }
 
         [ControllerMethod]
-        public void Return(DocumentWork work)
+        public void Return(DocumentWork work, User user)
         {
             if (work.From == null || work.From.Stage == null)
                 throw new InvalidOperationException("Can't Return to undefined Stage");
@@ -905,10 +905,10 @@ namespace DataWF.Module.Flow
                 }
             }
             work.IsResend = true;
-            Send(work, work.From.Stage, new[] { work.From.User });
+            Send(work, work.From.Stage, new[] { work.From.User }, user);
         }
 
-        public List<DocumentWork> Send(DocumentWork from, Stage stage, IEnumerable<DBItem> staff)
+        public List<DocumentWork> Send(DocumentWork from, Stage stage, IEnumerable<DBItem> staff, User user)
         {
             if (!(staff?.Any() ?? false))
             {
@@ -921,7 +921,7 @@ namespace DataWF.Module.Flow
                 {
                     from.IsResend = true;
                 }
-                Complete(from);
+                Complete(from, user);
             }
 
             var result = new List<DocumentWork>();

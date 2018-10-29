@@ -17,14 +17,14 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using System;
-using System.ComponentModel;
-using DataWF.Data;
 using DataWF.Common;
-using System.Collections.Generic;
-using System.Linq;
+using DataWF.Data;
 using DataWF.Module.Common;
 using DataWF.Module.Counterpart;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 
 namespace DataWF.Module.Flow
 {
@@ -171,10 +171,10 @@ namespace DataWF.Module.Flow
         [Browsable(false)]
         public bool IsCurrent
         {
-            get { return Staff == User.CurrentUser && IsWork == CheckedState.Checked; }
+            get { return Staff == CurrentUser && IsWork == CheckedState.Checked; }
             set
             {
-                Staff = value ? User.CurrentUser : null;
+                Staff = value ? CurrentUser : null;
                 if (value)
                 {
                     IsWork = CheckedState.Checked;
@@ -488,7 +488,7 @@ namespace DataWF.Module.Flow
             {
                 QWork.Parameters.Add(paramStage);
             }
-            if (Staff != null && Staff != User.CurrentUser)
+            if (Staff != null && Staff != CurrentUser)
             {
                 QWork.Parameters.Add(paramStaff);
             }
@@ -511,6 +511,6 @@ namespace DataWF.Module.Flow
             get { return QDoc.Parameters.Count == 0; }
         }
 
-
+        public DBItem CurrentUser { get; private set; }
     }
 }
