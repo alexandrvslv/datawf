@@ -22,10 +22,26 @@ namespace DataWF.Web.Common
     {
         private readonly IOptions<JwtAuth> jwtAuth;
         private readonly DBTable<User> users;
+        private User user;
+
         public AuthorizeController(IOptions<JwtAuth> jwtAuth)
         {
             this.jwtAuth = jwtAuth ?? throw new ArgumentNullException(nameof(jwtAuth));
             users = DBTable.GetTable<User>();
+        }
+
+        public User CurrentUser
+        {
+            get
+            {
+                if (user == null)
+                {
+                    var emailClaim = User?.FindFirst(ClaimTypes.Email);
+                    if (emailClaim != null)
+                        user = DataWF.Module.Common.User.GetByEmail(emailClaim.Value);
+                }
+                return user;
+            }
         }
 
         [AllowAnonymous]
@@ -52,7 +68,7 @@ namespace DataWF.Web.Common
                 user.RefreshToken = null;
             }
 
-            user.Save();
+            user.Save(user);
             return new TokenModel { Email = user.EMail, AccessToken = user.AccessToken, RefreshToken = user.RefreshToken };
         }
 
@@ -71,7 +87,7 @@ namespace DataWF.Web.Common
             }
             token.AccessToken =
                 user.AccessToken = CreateAccessToken(user);
-            user.Save();
+            user.Save(user);
             return token;
         }
 
@@ -79,7 +95,7 @@ namespace DataWF.Web.Common
         public ActionResult<TokenModel> LoginOut([FromBody]TokenModel token)
         {
             var user = GetUser(token);
-            if (user != DataWF.Module.Common.User.CurrentUser)
+            if (user != CurrentUser)
             {
                 return BadRequest("Invalid Arguments!");
             }
@@ -87,14 +103,14 @@ namespace DataWF.Web.Common
                 token.RefreshToken =
             user.AccessToken =
                 user.RefreshToken = null;
-            user.Save();
+            user.Save(CurrentUser);
             return token;
         }
 
         [HttpGet()]
         public ActionResult<User> Get()
         {
-            return Ok(DataWF.Module.Common.User.CurrentUser);
+            return Ok(CurrentUser);
         }
 
         private string CreateRefreshToken(User user)

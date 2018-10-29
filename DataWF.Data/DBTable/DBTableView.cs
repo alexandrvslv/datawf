@@ -98,14 +98,6 @@ namespace DataWF.Data
                 if (value)
                 {
                     keys |= DBViewKeys.Access;
-                    for (int i = 0; i < Count;)
-                    {
-                        T document = this[i];
-                        if (!document.Access.View)
-                            RemoveAt(i);
-                        else
-                            i++;
-                    }
                 }
                 else
                 {
@@ -466,21 +458,21 @@ namespace DataWF.Data
             }
         }
 
-        public void Accept()
+        public void Accept(IUserIdentity user)
         {
             var edited = GetEdited().ToList();
             foreach (T item in edited)
             {
-                item.Accept();
+                item.Accept(user);
             }
         }
 
-        public void Reject()
+        public void Reject(IUserIdentity user)
         {
             var edited = GetEdited().ToList();
             foreach (T item in edited)
             {
-                item.Reject();
+                item.Reject(user);
             }
         }
 

@@ -214,7 +214,7 @@ namespace DataWF.Data.Gui
 
                     foreach (DBColumn column in table.Columns)
                     {
-                        if ((column.Keys & DBColumnKeys.System) != DBColumnKeys.System && column.Access.View)
+                        if ((column.Keys & DBColumnKeys.System) != DBColumnKeys.System && column.Access.GetFlag(AccessType.View, GuiEnvironment.CurrentUser))
                             args.Properties.Add((args.Cell == null ? string.Empty : args.Cell.Name + ".") + column.Name);
                     }
                 }
@@ -307,17 +307,17 @@ namespace DataWF.Data.Gui
             if (dbcolumn != null)
             {
                 cell.Invoker = dbcolumn;
-                cell.ReadOnly = !dbcolumn.Access.Edit;
+                cell.ReadOnly = !dbcolumn.Access.GetFlag(AccessType.Edit, GuiEnvironment.CurrentUser);
                 cell.Password = (dbcolumn.Keys & DBColumnKeys.Password) == DBColumnKeys.Password;
                 if (cell is LayoutDBColumn)
                 {
                     ((LayoutColumn)cell).Collect = dbcolumn.DataType == typeof(decimal) && !dbcolumn.IsReference ? CollectedType.Sum : CollectedType.None;
-                    ((LayoutColumn)cell).Visible = dbcolumn.Access.View;
+                    ((LayoutColumn)cell).Visible = dbcolumn.Access.GetFlag(AccessType.View, GuiEnvironment.CurrentUser);
                 }
                 if (cell is LayoutDBField)
                 {
 
-                    ((LayoutDBField)cell).Visible = dbcolumn.Access.View;
+                    ((LayoutDBField)cell).Visible = dbcolumn.Access.GetFlag(AccessType.View, GuiEnvironment.CurrentUser);
                 }
             }
             else

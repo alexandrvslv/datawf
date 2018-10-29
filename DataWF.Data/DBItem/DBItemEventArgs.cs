@@ -20,11 +20,9 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System;
+using DataWF.Common;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
-using System.Linq;
 
 namespace DataWF.Data
 {
@@ -44,24 +42,33 @@ namespace DataWF.Data
             State = item.UpdateState;
             Column = column;
             Value = value;
-            Property = property ?? string.Empty;            
+            Property = property ?? string.Empty;
+        }
+
+        public DBItemEventArgs(DBItem item, DBTransaction transaction, IUserIdentity user)
+        {
+            Item = item;
+            Transaction = transaction;
+            User = user;
         }
 
         public DBUpdateState State { get; set; }
 
-        public DBColumn Column { get; private set; }
+        public DBColumn Column { get; }
 
-        public string Property { get; set; }
+        public string Property { get; }
 
         public object Value { get; set; }
 
-        public DBItem Item { get; private set; }
+        public DBItem Item { get; }
 
         public DBLogItem LogItem { get; set; }
 
         public List<DBColumn> Columns { get; set; }
 
-        public DBTransaction Transaction { get; set; }
+        public DBTransaction Transaction { get; }
+
+        public IUserIdentity User { get; }
 
         public bool StateAdded(DBUpdateState filter)
         {

@@ -1,11 +1,13 @@
 ﻿using DataWF.Common;
 using DataWF.Data;
+using DataWF.Module.Common;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 
 namespace DataWF.Web.Common
 {
@@ -15,10 +17,12 @@ namespace DataWF.Web.Common
     [Auth]
     public class AccessController : ControllerBase
     {
+        private User user;
+
         private DBTable GetTable(string name)
         {
             return DBService.DefaultSchema.Tables.FirstOrDefault(p => p.ItemType.Type.Name == name);
-            //TypeHelper.ParseType();
+            //TypeHelper.ParseType(name);
             //if (type == null)
             //{
             //    return null;
@@ -26,8 +30,22 @@ namespace DataWF.Web.Common
             //return DBTable.GetTable(type);
         }
 
+        public User CurrentUser
+        {
+            get
+            {
+                if (user == null)
+                {
+                    var emailClaim = User?.FindFirst(ClaimTypes.Email);
+                    if (emailClaim != null)
+                        user = DataWF.Module.Common.User.GetByEmail(emailClaim.Value);
+                }
+                return user;
+            }
+        }
+
         [HttpGet("Get/{name}")]
-        public ActionResult<AccessValue> GetAccess([FromRoute]string name)
+        public ActionResult<AccessView> GetAccess([FromRoute]string name)
         {
             try
             {
@@ -36,7 +54,7 @@ namespace DataWF.Web.Common
                 {
                     return NotFound();
                 }
-                return table.Access;
+                return table.Access.GetView(CurrentUser);
             }
             catch (Exception ex)
             {
@@ -45,7 +63,7 @@ namespace DataWF.Web.Common
         }
 
         [HttpGet("GetProperty/{name}/{property}")]
-        public ActionResult<AccessValue> GetPropertyAccess([FromRoute]string name, [FromRoute]string property)
+        public ActionResult<AccessView> GetPropertyAccess([FromRoute]string name, [FromRoute]string property)
         {
             try
             {
@@ -55,7 +73,7 @@ namespace DataWF.Web.Common
                 {
                     return NotFound();
                 }
-                return column.Access;
+                return column.Access.GetView(CurrentUser);
             }
             catch (Exception ex)
             {
@@ -85,14 +103,13 @@ namespace DataWF.Web.Common
                     throw new InvalidOperationException($"Table {table} is not Accessable!");
                 }
 
-                var access = value.Access?.Clone();
-                if (!(accessColumn.Access?.View ?? true)
-                    || (!access.View))
+                if (!accessColumn.Access.GetFlag(AccessType.View, CurrentUser)
+                    || !value.Access.GetFlag(AccessType.View, CurrentUser))
                 {
                     return Forbid();
                 }
 
-                return access.Items;
+                return value.Access.Items;
             }
             catch (Exception ex)
             {
@@ -120,15 +137,15 @@ namespace DataWF.Web.Common
                 {
                     throw new InvalidOperationException($"Table {table} is not Accessable!");
                 }
-                var buffer = value.Access?.Clone();
-                if (!(accessColumn.Access?.Admin ?? true)
-                    || (!buffer.Edit))
+                if (!(accessColumn.Access.GetFlag(AccessType.Edit, CurrentUser))
+                    || !value.Access.GetFlag(AccessType.Edit, CurrentUser))
                 {
                     return Forbid();
                 }
+                var buffer = value.Access?.Clone();
                 buffer.Add(accessItems);
                 value.Access = buffer;
-                value.Save();
+                value.Save(CurrentUser);
                 return true;
             }
             catch (Exception ex)

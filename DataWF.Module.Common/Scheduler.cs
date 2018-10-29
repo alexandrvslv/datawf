@@ -107,6 +107,11 @@ namespace DataWF.Module.Common
             set { SetValue(value, DateExecuteKey); }
         }
 
+        public User RunBy
+        {
+            get { return null; }
+        }
+
         public object Execute()
         {
             object rez = null;
@@ -131,7 +136,7 @@ namespace DataWF.Module.Common
             else
             {
                 DateExecute = DateTime.Now;
-                Save();
+                Save(RunBy);
 
                 if (result is decimal && Statistic.DBTable != null)
                 {
@@ -140,7 +145,7 @@ namespace DataWF.Module.Common
                         Scheduler = this,
                         Result = (decimal)rez
                     };
-                    stat.Save();
+                    stat.Save(RunBy);
                 }
 
                 info.Description = string.Format("Completed in {0:n} {1}", task.Time.TotalMilliseconds / 1000, result);

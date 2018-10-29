@@ -181,39 +181,39 @@ namespace DataWF.Data
         //    RowStateEdited?.Invoke(e);
         //}
 
-        public static event DBItemEditEventHandler RowUpdating;
+        public static Action<DBItemEventArgs> RowUpdating;
 
         internal static void OnUpdating(DBItemEventArgs e)
         {
             RowUpdating?.Invoke(e);
         }
 
-        public static event DBItemEditEventHandler RowLoging;
+        public static Action<DBItemEventArgs> RowLoging;
 
         internal static void OnLogItem(DBItemEventArgs e)
         {
             RowLoging?.Invoke(e);
         }
 
-        public static event DBItemEditEventHandler RowUpdated;
+        public static Action<DBItemEventArgs> RowUpdated;
 
         internal static void OnUpdated(DBItemEventArgs e)
         {
             RowUpdated?.Invoke(e);
         }
 
-        public static event DBItemEditEventHandler RowAccept;
+        public static Action<DBItemEventArgs> RowAccept;
 
-        internal static void OnAccept(DBItem item)
+        internal static void OnAccept(DBItemEventArgs e)
         {
-            RowAccept?.Invoke(new DBItemEventArgs(item));
+            RowAccept?.Invoke(e);
         }
 
-        public static event DBItemEditEventHandler RowReject;
+        public static Action<DBItemEventArgs> RowReject;
 
-        internal static void OnReject(DBItem item)
+        internal static void OnReject(DBItemEventArgs e)
         {
-            RowReject?.Invoke(new DBItemEventArgs(item));
+            RowReject?.Invoke(e);
         }
 
         public static void Save()

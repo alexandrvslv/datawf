@@ -1,22 +1,38 @@
 ﻿using DataWF.Common;
 using DataWF.Data;
+using DataWF.Module.Common;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 
 namespace DataWF.Web.Common
 {
-
     [Auth]
     public abstract class BaseController<T, K> : ControllerBase where T : DBItem, new()
     {
         protected DBTable<T> table;
+        private User user;
 
         public BaseController()
         {
             table = DBTable.GetTable<T>();
+        }
+
+        public User CurrentUser
+        {
+            get
+            {
+                if (user == null)
+                {
+                    var emailClaim = User?.FindFirst(ClaimTypes.Email);
+                    if (emailClaim != null)
+                        user = DataWF.Module.Common.User.GetByEmail(emailClaim.Value);
+                }
+                return user;
+            }
         }
 
         [HttpGet]
@@ -30,7 +46,7 @@ namespace DataWF.Web.Common
         {
             try
             {
-                if (!table.Access.View)
+                if (!table.Access.GetFlag(AccessType.View, CurrentUser))
                 {
                     return Forbid();
                 }
@@ -39,11 +55,21 @@ namespace DataWF.Web.Common
                     if (table.IsSynchronized)
                     {
                         return new ActionResult<IEnumerable<T>>(table.Select(query)
-                            .Where(p => p.Access.View));
+                            .Where(p =>
+                            {
+                                var view = p.Access.GetFlag(AccessType.View, CurrentUser);
+                                p.AccessView = p.Access.GetView(CurrentUser);
+                                return view;
+                            }));
                     }
 
                     return new ActionResult<IEnumerable<T>>(table.Load(query, DBLoadParam.Referencing)
-                        .Where(p => p.Access.View));
+                        .Where(p =>
+                        {
+                            var view = p.Access.GetFlag(AccessType.View, CurrentUser);
+                            p.AccessView = p.Access.GetView(CurrentUser);
+                            return view;
+                        }));
                 }
             }
             catch (Exception ex)
@@ -62,10 +88,11 @@ namespace DataWF.Web.Common
                 {
                     return NotFound();
                 }
-                if (!value.Access.View)
+                if (!value.Access.GetFlag(AccessType.View, CurrentUser))
                 {
                     return Forbid();
                 }
+                value.AccessView = value.Access.GetView(CurrentUser);
                 return Ok(value);
             }
             catch (Exception ex)
@@ -83,18 +110,18 @@ namespace DataWF.Web.Common
                 {
                     throw new InvalidOperationException("Some deserialization problem!");
                 }
-                if (!value.Access.Create)
+                if (!value.Access.GetFlag(AccessType.Create, CurrentUser))
                 {
-                    value.Reject();
+                    value.Reject(CurrentUser);
                     return Forbid();
                 }
                 if (value.UpdateState == DBUpdateState.Insert)
                 {
-                    value.Save();
+                    value.Save(CurrentUser);
                 }
                 else
                 {
-                    value.Reject();
+                    value.Reject(CurrentUser);
                     throw new InvalidOperationException("Post is used to add! You can use the Put command!");
                 }
             }
@@ -114,13 +141,13 @@ namespace DataWF.Web.Common
                 {
                     throw new InvalidOperationException("Some deserialization problem!");
                 }
-                if (((value.UpdateState & DBUpdateState.Insert) == DBUpdateState.Insert && !value.Access.Create)
-                    || ((value.UpdateState & DBUpdateState.Update) == DBUpdateState.Update && !value.Access.Edit))
+                if (((value.UpdateState & DBUpdateState.Insert) == DBUpdateState.Insert && !value.Access.GetFlag(AccessType.Create, CurrentUser))
+                    || ((value.UpdateState & DBUpdateState.Update) == DBUpdateState.Update && !value.Access.GetFlag(AccessType.Edit, CurrentUser)))
                 {
-                    value.Reject();
+                    value.Reject(CurrentUser);
                     return Forbid();
                 }
-                value.Save();
+                value.Save(CurrentUser);
             }
             catch (Exception ex)
             {
@@ -139,12 +166,12 @@ namespace DataWF.Web.Common
                 {
                     return NotFound();
                 }
-                if (!value.Access.Delete)
+                if (!value.Access.GetFlag(AccessType.Delete, CurrentUser))
                 {
-                    value.Reject();
+                    value.Reject(CurrentUser);
                     return Forbid();
                 }
-                value.Delete(7, DBLoadParam.Load);
+                value.Delete(7, DBLoadParam.Load, CurrentUser);
                 return Ok(true);
 
             }
@@ -164,9 +191,9 @@ namespace DataWF.Web.Common
                 {
                     return NotFound();
                 }
-                if (!value.Access.Create)
+                if (!table.Access.GetFlag(AccessType.Create, CurrentUser))
                 {
-                    value.Reject();
+                    value.Reject(CurrentUser);
                     return Forbid();
                 }
                 return (T)value.Clone();
@@ -207,6 +234,5 @@ namespace DataWF.Web.Common
         {
             return base.ValidationProblem(modelStateDictionary);
         }
-
     }
 }

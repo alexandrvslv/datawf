@@ -57,7 +57,7 @@ namespace DataWF.Module.MessangerGui
                 if (item.UpdateState == DBUpdateState.Default && item.DateRead == null)// && (md == null || !md.Visible))
                 {
                     item.DateRead = DateTime.Now;
-                    item.Save();
+                    item.Save(GuiEnvironment.CurrentUser);
                     if (GuiService.Main != null)
                         GuiService.Main.SetStatus(new StateInfo("Messanger", "New Message from " + item.Message.User.ToString(), item.Message.Data as string, StatusType.Information, item));
                     ShowDialog(item.Message.User);
@@ -70,7 +70,7 @@ namespace DataWF.Module.MessangerGui
             if (MessageAddress.DBTable == null)
                 return;
             var query = new QQuery(string.Empty, MessageAddress.DBTable);
-            query.BuildPropertyParam(nameof(MessageAddress.UserId), CompareType.Equal, User.CurrentUser?.Id);
+            query.BuildPropertyParam(nameof(MessageAddress.UserId), CompareType.Equal, GuiEnvironment.CurrentUser?.Id);
             query.BuildPropertyParam(nameof(MessageAddress.DateRead), CompareType.Is, DBNull.Value);
             MessageAddress.DBTable.Load(query, DBLoadParam.Synchronize, null).LastOrDefault();
         }

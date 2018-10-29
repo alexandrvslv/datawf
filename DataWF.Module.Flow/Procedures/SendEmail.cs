@@ -1,8 +1,6 @@
 ﻿using DataWF.Data;
 using DataWF.Module.Common;
 using System;
-using System.Collections.Generic;
-using System.Net;
 using System.Net.Mail;
 using System.Text;
 
@@ -24,7 +22,7 @@ namespace DataWF.Module.Flow
 
                 using (var message = new MailMessage())
                 {
-                    message.From = new MailAddress(User.CurrentUser.EMail);
+                    message.From = new MailAddress(arg.User.Name);
                     FillTo(message, darg);
                     message.Body = GetBody(darg);
                     message.Subject = "Documents Notify";
@@ -67,7 +65,7 @@ namespace DataWF.Module.Flow
                     builder.AppendLine($"Is on {arg.StageProcedure.Stage} stage!");
                 }
             }
-            builder.AppendLine($"Mailed you by {User.CurrentUser}!");
+            builder.AppendLine($"Mailed you by {arg.User.ToString()}!");
             return builder.ToString();
         }
     }

@@ -4,20 +4,24 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System;
 using System.Diagnostics;
-using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 
 namespace DataWF.Web.Common
 {
-    public class AuthAttribute : ActionFilterAttribute
+    public class AuthAttribute : TypeFilterAttribute
     {
-        public override void OnActionExecuting(ActionExecutingContext context)
+        public AuthAttribute() : base(typeof(CurentUserFilter))
+        { }
+    }
+
+    public class CurentUserFilter : IAuthorizationFilter
+    {
+        public void OnAuthorization(AuthorizationFilterContext context)
         {
             var emailClaim = context.HttpContext.User?.FindFirst(ClaimTypes.Email);
-            if (emailClaim != null)
-                User.SetCurrentByEmail(emailClaim.Value, true);
-            Debug.WriteLine($"{context.ActionDescriptor.DisplayName}({context.ActionDescriptor.Parameters.FirstOrDefault()?.Name}) {User.CurrentUser}");
+            var user = emailClaim != null ? User.GetByEmail(emailClaim.Value) : null;
+            Debug.WriteLine($"{context.ActionDescriptor.DisplayName}({context.ActionDescriptor.Parameters.FirstOrDefault()?.Name}) {user}");
         }
     }
 

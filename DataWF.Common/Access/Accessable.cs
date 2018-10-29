@@ -11,7 +11,7 @@ namespace DataWF.Common
     {
         int Id { get; }
         string Name { get; }
-        bool IsCurrent { get; }
+        bool IsCurrentUser(IUserIdentity user);
     }
 
     [Flags]

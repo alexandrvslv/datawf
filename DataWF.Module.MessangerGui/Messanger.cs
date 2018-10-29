@@ -72,7 +72,7 @@ namespace DataWF.Module.MessangerGui
                 spliter.Staff = staff;
                 spliter.toolUsers.Visible = false;
 
-                list = new MessageList(staff as User, User.CurrentUser);
+                list = new MessageList(staff as User, (User)GuiEnvironment.CurrentUser);
                 plist.ListSource = list;
                 //list.Table.LoadComplete += TableLoadComplete;
             }

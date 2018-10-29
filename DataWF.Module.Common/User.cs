@@ -32,8 +32,10 @@ using System.Text.RegularExpressions;
 
 namespace DataWF.Module.Common
 {
+
+
     [DataContract, Table("ruser", "User", BlockSize = 100)]
-    public class User : DBItem, IComparable, IDisposable, IIdentity
+    public class User : DBItem, IComparable, IDisposable, IUserIdentity
     {
         private static DBColumn departmentKey = DBColumn.EmptyKey;
         private static DBColumn positionKey = DBColumn.EmptyKey;
@@ -60,7 +62,7 @@ namespace DataWF.Module.Common
         private static User currentUser;
         public static Action CurrentUserChanged;
 
-        public static User CurrentUser
+        private static User CurrentUser
         {
             get { return threadCurrentUser ?? currentUser; }
         }
@@ -102,9 +104,14 @@ namespace DataWF.Module.Common
             return SetCurrentByEmail(new NetworkCredential(email, password), threaded);
         }
 
+        public static User GetByEmail(string email)
+        {
+            return DBTable.SelectOne(EmailKey, email);
+        }
+
         public static User SetCurrentByEmail(string email, bool threaded = false)
         {
-            var user = DBTable.SelectOne(DBTable.ParseProperty(nameof(EMail)), email);
+            var user = GetByEmail(email);
             if (user == null)
                 throw new KeyNotFoundException("User not found!");
             SetCurrentUser(user, threaded);
@@ -113,7 +120,7 @@ namespace DataWF.Module.Common
 
         public static User SetCurrentByEmail(NetworkCredential credentials, bool threaded = false)
         {
-            var user = DBTable.SelectOne(DBTable.ParseProperty(nameof(EMail)), credentials.UserName);
+            var user = GetByEmail(credentials.UserName);
             if (user == null)
                 throw new KeyNotFoundException("User not found!");
             var config = SmtpSetting.Load();
@@ -126,8 +133,6 @@ namespace DataWF.Module.Common
             }
             return user;
         }
-
-
 
         private static UserPasswordSpec PasswordSpec = UserPasswordSpec.Lenght6 | UserPasswordSpec.CharSpecial | UserPasswordSpec.CharNumbers;
 

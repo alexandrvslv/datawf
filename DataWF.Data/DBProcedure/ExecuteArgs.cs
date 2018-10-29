@@ -70,5 +70,6 @@ namespace DataWF.Data
         }
 
         public QResult Result { get; set; }
+        public IUserIdentity User { get; set; }
     }
 }

@@ -193,7 +193,7 @@ namespace DataWF.Data
             {
                 bool sec = false;
                 foreach (DBColumn column in Table.Columns)
-                    if (column.ColumnType == DBColumnTypes.Default && column.Access.View && (column.Keys & DBColumnKeys.View) == DBColumnKeys.View || (column.Keys & DBColumnKeys.Code) == DBColumnKeys.Code)
+                    if (column.ColumnType == DBColumnTypes.Default && (column.Keys & DBColumnKeys.View) == DBColumnKeys.View || (column.Keys & DBColumnKeys.Code) == DBColumnKeys.Code)
                     {
                         QParam param = null;
                         if (column.IsReference && column.ReferenceTable != Table)

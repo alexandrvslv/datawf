@@ -67,24 +67,25 @@ namespace DataWF.Module.Common
         {
             if (arg.Item.Table == UserLog.DBTable || arg.Item.Table is DBLogTable)
                 return;
+            var user = arg.User as User;
             RowLoging?.Invoke(null, arg);
-            var userLog = CurrentLog ?? User.CurrentUser?.LogStart;
+            var userLog = CurrentLog ?? user?.LogStart;
 
             if (LogStrategy == UserLogStrategy.ByTransaction)
             {
                 var transaction = DBTransaction.Current;
                 if (transaction.UserLog == null)
                 {
-                    transaction.UserLog = new UserLog { User = User.CurrentUser, Parent = userLog, LogType = UserLogType.Transaction };
-                    transaction.UserLog.Save();
+                    transaction.UserLog = new UserLog { User = user, Parent = userLog, LogType = UserLogType.Transaction };
+                    transaction.UserLog.Save(user);
                 }
                 userLog = (UserLog)transaction.UserLog;
 
             }
             else if (LogStrategy == UserLogStrategy.ByItem)
             {
-                userLog = new UserLog { User = User.CurrentUser, Parent = userLog, LogType = UserLogType.Transaction };
-                userLog.Save();
+                userLog = new UserLog { User = user, Parent = userLog, LogType = UserLogType.Transaction };
+                userLog.Save(user);
             }
             if (arg.LogItem != null)
             {
@@ -213,7 +214,7 @@ namespace DataWF.Module.Common
             }
 
             newLog.TextData = text;
-            newLog.Save();
+            newLog.Save(user);
         }
 
         DBItem IUserLog.User

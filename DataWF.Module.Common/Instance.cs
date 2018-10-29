@@ -43,7 +43,7 @@ namespace DataWF.Module.Common
         public static DBColumn ActiveKey => DBTable.ParseProperty(nameof(Active), ref activeKey);
         public static DBTable<Instance> DBTable => dbTable ?? (dbTable = GetTable<Instance>());
 
-        public static Instance GetByNetId(IPEndPoint endPoint, bool create)
+        public static Instance GetByNetId(IPEndPoint endPoint, User user, bool create)
         {
             var query = new QQuery(DBTable);
             query.BuildPropertyParam(nameof(Host), CompareType.Equal, endPoint.Address.ToString());
@@ -55,11 +55,11 @@ namespace DataWF.Module.Common
                 instance = new Instance
                 {
                     EndPoint = endPoint,
-                    User = User.CurrentUser,
+                    User = user,
                     Active = true,
                     IsCurrent = true
                 };
-                instance.Save();
+                instance.Save(user);
             }
             return instance;
         }

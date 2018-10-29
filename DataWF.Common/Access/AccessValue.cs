@@ -2,10 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace DataWF.Common
 {
+
     public class AccessValue : IAccessValue
     {
         public static IEnumerable<IAccessGroup> Groups = new List<IAccessGroup>();
@@ -40,41 +42,25 @@ namespace DataWF.Common
             }
         }
 
-        public bool View
+        public AccessView GetView(IUserIdentity user)
         {
-            get { return GetFlag(AccessType.View); }
+            return new AccessView
+            {
+                View = GetFlag(AccessType.View, user),
+                Edit = GetFlag(AccessType.Edit, user),
+                Create = GetFlag(AccessType.Create, user),
+                Delete = GetFlag(AccessType.Delete, user),
+                Admin = GetFlag(AccessType.Admin, user),
+                Accept = GetFlag(AccessType.Accept, user),
+            };
         }
 
-        public bool Edit
-        {
-            get { return GetFlag(AccessType.Edit); }
-        }
 
-        public bool Create
-        {
-            get { return GetFlag(AccessType.Create); }
-        }
-
-        public bool Delete
-        {
-            get { return GetFlag(AccessType.Delete); }
-        }
-
-        public bool Admin
-        {
-            get { return GetFlag(AccessType.Admin); }
-        }
-
-        public bool Accept
-        {
-            get { return GetFlag(AccessType.Accept); }
-        }
-
-        public bool GetFlag(AccessType type)
+        public bool GetFlag(AccessType type, IUserIdentity user)
         {
             foreach (AccessItem item in Items)
             {
-                if (item.Group != null && item.Group.IsCurrent)
+                if (item.Group?.IsCurrentUser(user) ?? false)
                 {
                     if ((item.Data & type) == type)
                         return true;
@@ -194,14 +180,7 @@ namespace DataWF.Common
 
         public override string ToString()
         {
-            return string.Format("<{0}>{1}{2}{3}{4}{5}{6}",
-                Items.Count,
-                View ? " View" : string.Empty,
-                Edit ? " Edit" : string.Empty,
-                Create ? " Create" : string.Empty,
-                Delete ? " Delete" : string.Empty,
-                Admin ? " Admin" : string.Empty,
-                Accept ? " Accept" : string.Empty);
+            return string.Join(";", Items.Select(p => p.ToString()));
         }
 
         public void Fill()

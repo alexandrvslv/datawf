@@ -90,7 +90,7 @@ namespace DataWF.Module.Common
                                     }
                                     position.Code = positionName;
                                     position.Name = positionName;
-                                    position.Save();
+                                    position.Save(null);
                                 }
 
                                 var user = User.DBTable.LoadByCode(attribute.StringValue, User.DBTable.ParseProperty(nameof(User.Login)), DBLoadParam.None);
@@ -102,7 +102,7 @@ namespace DataWF.Module.Common
                                 user.Login = attribute.StringValue;
                                 user.EMail = resultRecord.getAttribute("mail")?.StringValue;
                                 user.Name = resultRecord.getAttribute("name")?.StringValue;
-                                user.Save();
+                                user.Save(null);
                             }
 
                         }

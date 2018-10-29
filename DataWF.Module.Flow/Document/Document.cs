@@ -712,7 +712,7 @@ namespace DataWF.Module.Flow
                 DocumentCustomer.DBTable.Save(GetCustomers().ToList());
         }
 
-        public override void Save()
+        public override void Save(IUserIdentity user = null)
         {
             if ((UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete)
             {

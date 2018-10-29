@@ -212,7 +212,7 @@ namespace DataWF.Data.Gui
                     if (info.TableView != null)
                         info.TableView.Save();
                     else if (info.Item != null && node.Info.Mode == TableEditorMode.Item)
-                        info.Item.Save();
+                        info.Item.Save(GuiEnvironment.CurrentUser);
                 }
                 else if (command != Command.No)
                 {

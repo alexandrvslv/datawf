@@ -13,11 +13,11 @@ namespace DataWF.Module.Common
 
     public class NotifyService : UdpServer
     {
-        public static void Intergate(Action<EndPointMessage> onLoad)
+        public static void Intergate(Action<EndPointMessage> onLoad, User user)
         {
             var service = new NotifyService();
             service.MessageLoad += onLoad;
-            service.Login();
+            service.Login(user);
         }
 
         public static NotifyService Default;
@@ -28,6 +28,9 @@ namespace DataWF.Module.Common
         private ConcurrentBag<NotifyMessageItem> buffer = new ConcurrentBag<NotifyMessageItem>();
         private ManualResetEvent runEvent = new ManualResetEvent(false);
         private const int timer = 3000;
+
+        public User User { get; private set; }
+
         private IPEndPoint endPoint;
 
         public event EventHandler<NotifyEventArgs> SendChanges;
@@ -58,16 +61,17 @@ namespace DataWF.Module.Common
             base.Dispose();
         }
 
-        public void Login()
+        public void Login(User user)
         {
             StartListener();
+            User = user;
             endPoint = new IPEndPoint(EndPointHelper.GetInterNetworkIPs().First(), ListenerEndPoint.Port);
-            instance = Instance.GetByNetId(endPoint, true);
+            instance = Instance.GetByNetId(endPoint, user, true);
 
             byte[] temp = instance.EndPoint.GetBytes();
             Send(temp, null, SocketMessageType.Login);
 
-            DBService.RowAccept += OnCommit;
+            DBService.RowAccept = OnCommit;
             runEvent.Reset();
             new Task(SendData, TaskCreationOptions.LongRunning).Start();
         }
@@ -77,11 +81,11 @@ namespace DataWF.Module.Common
             if (instance == null)
                 return;
             runEvent.Set();
-            DBService.RowAccept -= OnCommit;
+            DBService.RowAccept = null;
             Send((byte[])null, null, SocketMessageType.Logout);
             StopListener();
             instance.Delete();
-            instance.Save();
+            instance.Save(User);
             instance = null;
         }
 
@@ -130,7 +134,7 @@ namespace DataWF.Module.Common
                     Table = item.Table,
                     ItemId = item.PrimaryId,
                     Type = type,
-                    UserId = User.CurrentUser?.Id ?? 0
+                    UserId = arg.User?.Id ?? 0
                 });
             }
         }

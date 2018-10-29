@@ -131,30 +131,40 @@ namespace DataWF.Data
 
         public void Commit()
         {
+            Commit(Owner as IUserIdentity);
+        }
+
+        public void Commit(IUserIdentity user)
+        {
             if (transaction != null)
                 try { transaction.Commit(); }
                 catch (Exception te)
                 {
                     foreach (var row in rows)
-                        row.Reject();
+                        row.Reject(user);
                     Helper.OnException(te);
                     return;
                 }
 
             Commited?.Invoke(this, new DBTransactionEventArg(rows));
             foreach (var row in rows)
-                row.Accept();
+                row.Accept(user);
 
             if (subTransactions != null)
             {
                 foreach (var transaction in subTransactions.Values)
                 {
-                    transaction.Commit();
+                    transaction.Commit(user);
                 }
             }
         }
 
         public void Rollback()
+        {
+            Rollback(Owner as IUserIdentity);
+        }
+
+        public void Rollback(IUserIdentity user)
         {
             if (transaction != null && !Canceled)
             {
@@ -167,7 +177,7 @@ namespace DataWF.Data
             }
             foreach (var row in rows)
             {
-                row.Reject();
+                row.Reject(user);
             }
             rows.Clear();
 
@@ -175,7 +185,7 @@ namespace DataWF.Data
             {
                 foreach (var transaction in subTransactions.Values)
                 {
-                    transaction.Rollback();
+                    transaction.Rollback(user);
                 }
             }
         }
@@ -370,15 +380,20 @@ namespace DataWF.Data
 
         public void Cancel()
         {
+            Cancel(Owner as IUserIdentity);
+        }
+
+        public void Cancel(IUserIdentity user)
+        {
             if (!Canceled)
             {
                 Canceled = true;
                 if (subTransactions != null)
                 {
                     foreach (var subTransaction in subTransactions.Values)
-                        subTransaction.Cancel();
+                        subTransaction.Cancel(user);
                 }
-                Rollback();
+                Rollback(user);
             }
         }
 
@@ -479,7 +494,7 @@ namespace DataWF.Data
             }
             catch (Exception ex)
             {
-                Rollback();
+                Rollback(null);
                 ex.HelpLink = Environment.StackTrace;
                 buf = ex;
             }

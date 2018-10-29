@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Security.Principal;
 
 namespace DataWF.Common
 {
@@ -163,13 +164,13 @@ namespace DataWF.Common
 
     public interface IEditable
     {
-        void Refresh();
+        void Refresh(IUserIdentity user = null);
 
-        void Save();
+        void Save(IUserIdentity user = null);
 
-        void Reject();
+        void Reject(IUserIdentity user = null);
 
-        void Accept();
+        void Accept(IUserIdentity user = null);
 
         bool IsChanged { get; }
     }
@@ -254,6 +255,11 @@ namespace DataWF.Common
     public interface IValued
     {
         object GetValue();
+    }
+
+    public interface IUserIdentity : IIdentity
+    {
+        int? Id { get; }
     }
 }
 

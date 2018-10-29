@@ -34,12 +34,12 @@ namespace DataWF.Web.Common
             return Clients.SelectOne(WebNotifyClient.UserInvoker.Name, user);
         }
 
-        public void Register(WebSocket socket)
+        public void Register(WebSocket socket, User user)
         {
             var client = GetBySocket(socket);
             if (client == null)
             {
-                client = new WebNotifyClient { Socket = socket, User = User.CurrentUser };
+                client = new WebNotifyClient { Socket = socket, User = user };
                 Clients.Add(client);
             }
         }

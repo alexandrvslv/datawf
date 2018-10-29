@@ -792,7 +792,7 @@ namespace DataWF.Data
 
         public abstract IEnumerable<DBItem> GetChangedItems();
 
-        public virtual bool SaveItem(DBItem item)
+        public virtual bool SaveItem(DBItem item, IUserIdentity user)
         {
             if (item.UpdateState == DBUpdateState.Default || (item.UpdateState & DBUpdateState.Commit) == DBUpdateState.Commit)
             {
@@ -839,7 +839,7 @@ namespace DataWF.Data
                             if (refItem != null && refItem != item)
                             {
                                 if (refItem.IsChanged)
-                                    refItem.Save();
+                                    refItem.Save(user);
                                 if (item.GetValue(column) == null)
                                     item.SetValue(refItem.PrimaryId, column);
                             }
@@ -848,7 +848,7 @@ namespace DataWF.Data
                 }
 
                 transaction.Rows.Add(item);
-                var args = new DBItemEventArgs(item) { Transaction = transaction };
+                var args = new DBItemEventArgs(item, transaction, user);
 
                 if (!item.OnUpdating(args))
                     return false;
@@ -883,7 +883,7 @@ namespace DataWF.Data
                     dmlCommand = DBCommand.Build(this, comUpdate, DBCommandTypes.Update, args.Columns);
                     if (dmlCommand.Text.Length == 0)
                     {
-                        item.Accept();
+                        item.Accept(user);
                         return true;
                     }
                 }
@@ -902,12 +902,12 @@ namespace DataWF.Data
                 {
                     args.LogItem = new DBLogItem(item);
                     DBService.OnLogItem(args);
-                    args.LogItem.Save();
+                    args.LogItem.Save(user);
                 }
                 item.OnUpdated(args);
                 item.UpdateState |= DBUpdateState.Commit;
                 if (transaction.Owner == item)
-                    transaction.Commit();
+                    transaction.Commit(user);
                 return true;
             }
             finally
@@ -924,7 +924,7 @@ namespace DataWF.Data
             return Interlocked.Increment(ref Hash);
         }
 
-        public void Save(IList rows = null)
+        public void Save(IList rows = null, IUserIdentity user = null)
         {
             if (rows == null)
                 rows = GetChangedItems().ToList();
@@ -938,10 +938,10 @@ namespace DataWF.Data
                     ListHelper.QuickSort(rows, new InvokerComparer(typeof(DBItem), nameof(DBItem.UpdateState)));
 
                     foreach (DBItem row in rows)
-                        row.Save();
+                        row.Save(user);
 
                     if (transaction.Owner == this)
-                        transaction.Commit();
+                        transaction.Commit(user);
                 }
                 finally
                 {
@@ -993,18 +993,18 @@ namespace DataWF.Data
 
         public abstract void Clear();
 
-        public void RejectChanges()
+        public void RejectChanges(IUserIdentity user)
         {
             var rows = GetChangedItems().ToList();
             for (int i = 0; i < rows.Count; i++)
-                rows[i].Reject();
+                rows[i].Reject(user);
         }
 
-        public void AcceptChanges()
+        public void AcceptChanges(IUserIdentity user)
         {
             foreach (var row in GetChangedItems().ToList())
             {
-                row.Accept();
+                row.Accept(user);
             }
         }
 
@@ -1442,7 +1442,7 @@ namespace DataWF.Data
                         DBItem row = NewItem(DBUpdateState.Default, false);
                         DBItemBinarySerialize.Read(reader, row, map);
                         Add(row);
-                        row.Accept();
+                        row.Accept((IUserIdentity)null);
                     }
                 }
             }

@@ -318,11 +318,6 @@ namespace DataWF.Gui
             return this[name] != null;
         }
 
-        public bool Remove(string name)
-        {
-            return Remove(this[name]);
-        }
-
         public override void Dispose()
         {
             foreach (var item in items)

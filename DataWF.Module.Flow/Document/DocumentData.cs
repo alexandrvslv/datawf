@@ -165,7 +165,7 @@ namespace DataWF.Module.Flow
             set
             {
                 currentUser = value;
-                Accept();
+                Accept(value);
             }
         }
 

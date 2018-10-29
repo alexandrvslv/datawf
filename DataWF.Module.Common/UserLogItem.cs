@@ -83,7 +83,7 @@ namespace DataWF.Module.Common
             }
         }
 
-        public void RefereshText()
+        public void RefereshText(IUserIdentity user)
         {
             string _textCache = "";
             if (_textCache?.Length == 0 && LogItem != null)
@@ -98,8 +98,8 @@ namespace DataWF.Module.Common
                     var newValue = LogItem.GetValue(logColumn);
                     if (DBService.Equal(oldValue, newValue))
                         continue;
-                    var oldFormat = column.Access.View ? column.FormatValue(oldValue) : "*****";
-                    var newFormat = column.Access.View ? column.FormatValue(newValue) : "*****";
+                    var oldFormat = column.Access.GetFlag(AccessType.View, user) ? column.FormatValue(oldValue) : "*****";
+                    var newFormat = column.Access.GetFlag(AccessType.View, user) ? column.FormatValue(newValue) : "*****";
                     if (oldValue == null && newValue != null)
                         _textCache += string.Format("{0}: {1}\n", column, newFormat);
                     else if (oldValue != null && newValue == null)

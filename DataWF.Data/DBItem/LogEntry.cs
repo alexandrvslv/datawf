@@ -41,13 +41,13 @@ namespace DataWF.Data
 
         public object OldFormat
         {
-            get { return Column.Access.View ? Column.FormatValue(Old) : "*****"; }
+            get { return Column.FormatValue(Old); }
             set { Old = value; }
         }
 
         public object NewFormat
         {
-            get { return Column.Access.View ? Column.FormatValue(New) : "*****"; }
+            get { return Column.FormatValue(New); }
             set { New = value; }
         }
 
@@ -174,15 +174,15 @@ namespace DataWF.Data
         //    return flag;
         //}
 
-        public void Accept()
+        public void Accept(IUserIdentity user)
         {
-            DBLogItem.Accept(row, logs);
+            DBLogItem.Accept(row, logs, user);
             RefreshLogs();
         }
 
-        public void Reject()
+        public void Reject(IUserIdentity user)
         {
-            DBLogItem.Reject(logs);
+            DBLogItem.Reject(logs, user);
             RefreshLogs();
         }
     }

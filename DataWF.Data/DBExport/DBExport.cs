@@ -532,7 +532,7 @@ namespace DataWF.Data
                             var row = table.SourceTable.LoadItemFromReader(transacton);
                             var newRow = ExportRow(table, row);
 
-                            table.TargetTable.SaveItem(newRow);
+                            table.TargetTable.SaveItem(newRow, null);
 
                             ea.Current++;
                             ea.Row = newRow;

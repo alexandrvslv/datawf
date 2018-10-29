@@ -238,7 +238,7 @@ namespace DataWF.Data.Gui
                 return;
 
             LogMap changes = (LogMap)listRows.SelectedItem;
-            changes.Reject();
+            changes.Reject(GuiEnvironment.CurrentUser);
             listDiff.ListSource = changes.Changes;
             rows.Remove(changes);
         }
@@ -256,7 +256,7 @@ namespace DataWF.Data.Gui
                     if (dr != Command.Yes)
                         break;
                 }
-                changes.Accept();
+                changes.Accept(GuiEnvironment.CurrentUser);
                 listDiff.ListSource = changes.Changes;
             }
             rowsView.UpdateFilter();

@@ -439,8 +439,10 @@ namespace DataWF.Data.Gui
             list.ApplySortInternal("Name", ListSortDirection.Ascending);
             foreach (DBTable ts in list)
             {
-                if (ts.Access.Admin)
+                if (ts.Access.GetFlag(AccessType.Admin, GuiEnvironment.CurrentUser))
+                {
                     item.DropDown.Items.Add(InitTableTool(ts));
+                }
             }
             return item;
         }

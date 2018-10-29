@@ -2,15 +2,20 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Swashbuckle.AspNetCore.Swagger;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace DataWF.Web.Common
 {
@@ -51,7 +56,11 @@ namespace DataWF.Web.Common
                     .Build();
             });
 
-            services.AddMvc()
+            services.AddMvc(options =>
+            {
+                options.OutputFormatters.RemoveType<JsonOutputFormatter>();
+                options.OutputFormatters.Insert(0, new CustomeJsonOutputFormatter(new JsonSerializerSettings(), ArrayPool<char>.Shared));
+            })
                .AddJsonOptions(options =>
                {
                    options.SerializerSettings.ContractResolver = new DBItemContractResolver();
@@ -68,6 +77,22 @@ namespace DataWF.Web.Common
             return services;
         }
 
+        public class CustomeJsonOutputFormatter : JsonOutputFormatter
+        {
+            public CustomeJsonOutputFormatter(JsonSerializerSettings serializerSettings, ArrayPool<char> charPool) : base(serializerSettings, charPool)
+            {
+            }
+
+            protected override JsonSerializer CreateJsonSerializer()
+            {
+                return base.CreateJsonSerializer();
+            }
+
+            public override Task WriteResponseBodyAsync(OutputFormatterWriteContext context, Encoding selectedEncoding)
+            {
+                return base.WriteResponseBodyAsync(context, selectedEncoding);
+            }
+        }
         //private static void SerializationErrors(object sender, ErrorEventArgs e)
         //{
         //    //throw new NotImplementedException();
@@ -128,7 +153,7 @@ namespace DataWF.Web.Common
         public static IServiceCollection AddWebNotify(this IServiceCollection app)
         {
             var service = new WebNotifyService();
-            service.Login();
+            service.Login(null);
             return app.AddSingleton(service);
         }
 

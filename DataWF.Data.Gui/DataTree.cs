@@ -354,8 +354,6 @@ namespace DataWF.Data.Gui
         {
             var node = InitItem(schema);
 
-
-
             InitList(schema.TableGroups.GetTopParents(), node, ShowTableGroup);
 
 
@@ -364,8 +362,8 @@ namespace DataWF.Data.Gui
                 if (table.Group != null && ShowTableGroup)
                     continue;
                 CheckItem(table, node, ShowTable
-                    && (!CheckTableView || (CheckTableView && table.Access.View))
-                    && (!CheckTableAdmin || (CheckTableAdmin && table.Access.Admin))
+                    && (!CheckTableView || (CheckTableView && table.Access.GetFlag(AccessType.View, GuiEnvironment.CurrentUser)))
+                    && (!CheckTableAdmin || (CheckTableAdmin && table.Access.GetFlag(AccessType.Admin, GuiEnvironment.CurrentUser)))
                     && (!(table is DBLogTable) || ShowLogTable));
             }
 
@@ -424,8 +422,8 @@ namespace DataWF.Data.Gui
             foreach (var table in tgroup.GetTables())
             {
                 CheckItem(table, node, ShowTable
-                    && (!CheckTableView || (CheckTableView && table.Access.View))
-                    && (!CheckTableAdmin || (CheckTableAdmin && table.Access.Admin))
+                    && (!CheckTableView || (CheckTableView && table.Access.GetFlag(AccessType.View, GuiEnvironment.CurrentUser)))
+                    && (!CheckTableAdmin || (CheckTableAdmin && table.Access.GetFlag(AccessType.Admin, GuiEnvironment.CurrentUser)))
                     && (!(table is DBLogTable) || ShowLogTable));
             }
             return node;
@@ -461,7 +459,7 @@ namespace DataWF.Data.Gui
             {
                 if (column.Group != null && ShowColumnGroup)
                     continue;
-                CheckItem(column, node, ShowColumn && column.Access.View);
+                CheckItem(column, node, ShowColumn && column.Access.GetFlag(AccessType.View, GuiEnvironment.CurrentUser));
             }
         }
 
@@ -500,7 +498,7 @@ namespace DataWF.Data.Gui
             var node = InitItem(cgroup);
             foreach (var column in cgroup.GetColumns())
             {
-                CheckItem(column, node, ShowColumn && column.Access.View);
+                CheckItem(column, node, ShowColumn && column.Access.GetFlag(AccessType.View, GuiEnvironment.CurrentUser));
             }
             return node;
         }

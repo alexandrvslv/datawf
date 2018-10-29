@@ -18,12 +18,11 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Data;
-using DataWF.Common;
-using System;
-using System.ComponentModel;
 using DataWF.Module.Common;
-using System.Runtime.Serialization;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Runtime.Serialization;
 
 namespace DataWF.Module.Messanger
 {
@@ -91,7 +90,7 @@ namespace DataWF.Module.Messanger
                 User = from,
                 Data = data
             };
-            message.Save();
+            message.Save(from);
 
             foreach (var staff in to)
             {
@@ -102,7 +101,7 @@ namespace DataWF.Module.Messanger
                         Message = message,
                         Staff = staff
                     };
-                    address.Save();
+                    address.Save(from);
                 }
             }
             return message;

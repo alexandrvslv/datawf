@@ -17,10 +17,10 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using System.ComponentModel;
-using DataWF.Data;
 using DataWF.Common;
+using DataWF.Data;
 using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace DataWF.Module.Common
 {
@@ -32,11 +32,14 @@ namespace DataWF.Module.Common
             ApplySort((IComparer<UserGroup>)new DBComparer<UserGroup>(UserGroup.DBTable.GroupKey, ListSortDirection.Ascending));
         }
 
-        public UserGroup GetCurrent()
+        public UserGroup GetCurrent(IUserIdentity user)
         {
             foreach (var item in this)
-                if (item.IsCurrent)
+            {
+                if (item.IsCurrentUser(user))
                     return item;
+            }
+
             return null;
         }
     }

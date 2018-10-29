@@ -21,7 +21,6 @@ using DataWF.Common;
 using DataWF.Data;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Runtime.Serialization;
 
 namespace DataWF.Module.Common
@@ -93,14 +92,10 @@ namespace DataWF.Module.Common
                     yield return user;
         }
 
-        [Browsable(false)]
-        public bool IsCurrent
+        public bool IsCurrentUser(IUserIdentity user)
         {
-            get
-            {
-                return ((User.CurrentUser?.Super.Value ?? false))//Status == DBStatus.Actual ||
-                    || (User.CurrentUser?.Access.Get(this).Create ?? false);
-            }
+            return user is User currentUser && ((currentUser?.Super.Value ?? false)//currentUser.Status == DBStatus.Actual ||
+                    || (currentUser?.Access.Get(this).Create ?? false));
         }
 
         public void AddUser(User user)
@@ -112,5 +107,7 @@ namespace DataWF.Module.Common
         {
             base.Dispose();
         }
+
+
     }
 }

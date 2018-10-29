@@ -129,12 +129,12 @@ namespace DataWF.Data.Gui
             if (Rows != null)
             {
                 foreach (var item in Rows)
-                    item.Accept();
+                    item.Accept(GuiEnvironment.CurrentUser);
             }
             else
             {
                 //MessageDialog.ShowMessage(this, Locale.Get("ChangeAccept", "Access denied for " + _change.Row + "!\nYour login in editor list."));
-                map.Accept();
+                map.Accept(GuiEnvironment.CurrentUser);
             }
             base.OnAcceptClick(sender, e);
         }
@@ -144,11 +144,11 @@ namespace DataWF.Data.Gui
             if (Rows != null)
             {
                 foreach (var item in Rows)
-                    item.Reject();
+                    item.Reject(GuiEnvironment.CurrentUser);
             }
             else
             {
-                map.Reject();
+                map.Reject(GuiEnvironment.CurrentUser);
             }
             base.OnCloseClick(sender, e);
         }

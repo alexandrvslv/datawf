@@ -272,9 +272,9 @@ namespace DataWF.Data.Gui
                 base.ReadOnly = value;
                 if (!value)
                 {
-                    AllowInsert = Table?.Access?.Create ?? false;
-                    AllowUpdate = Table?.Access?.Edit ?? false;
-                    AllowDelete = Table?.Access?.Delete ?? false;
+                    AllowInsert = Table?.Access.GetFlag(AccessType.Create, GuiEnvironment.CurrentUser) ?? false;
+                    AllowUpdate = Table?.Access.GetFlag(AccessType.Edit, GuiEnvironment.CurrentUser) ?? false;
+                    AllowDelete = Table?.Access.GetFlag(AccessType.Delete, GuiEnvironment.CurrentUser) ?? false;
                 }
                 else
                 {
@@ -310,7 +310,7 @@ namespace DataWF.Data.Gui
                             searchRow = (DBItem)TableView.NewItem();
                         }
                         //rowControl.RowEditor.State = FeldEditorState.EditEmpty;
-                        toolRemove.Sensitive = Table.Access.Delete;
+                        toolRemove.Sensitive = Table.Access.GetFlag(AccessType.Delete, GuiEnvironment.CurrentUser);
                         break;
                     case TableEditorStatus.Default:
                         OpenMode = OpenMode;
@@ -377,7 +377,7 @@ namespace DataWF.Data.Gui
                         {
                             foreach (DBForeignKey relation in OwnerRow.Table.GetChildRelations())
                             {
-                                if (!relation.Table.Access.View)
+                                if (!relation.Table.Access.GetFlag(AccessType.View, GuiEnvironment.CurrentUser))
                                     continue;
                                 if (toolReference.DropDownItems[relation.Name] is MenuItemRelation itemRelation)
                                 {
@@ -552,7 +552,7 @@ namespace DataWF.Data.Gui
             {
                 var field = List.SelectedItem as LayoutDBField;
                 row = List.FieldSource as DBItem;
-                if (field.Invoker is DBColumn column && column.IsReference && column.ReferenceTable.Access.View)
+                if (field.Invoker is DBColumn column && column.IsReference && column.ReferenceTable.Access.GetFlag(AccessType.View, GuiEnvironment.CurrentUser))
                 {
                     row = field.GetReference(row);
                 }
@@ -783,7 +783,7 @@ namespace DataWF.Data.Gui
         {
             base.OnToolWindowCancelClick(sender, e);
             DBItem bufRow = ((TableLayoutList)toolWindow.Target).FieldSource as DBItem;
-            bufRow.Reject();
+            bufRow.Reject(GuiEnvironment.CurrentUser);
             //view.ResetFilter();
         }
 
@@ -813,7 +813,7 @@ namespace DataWF.Data.Gui
                 Table.Add(bufRow);
                 try
                 {
-                    bufRow.Save();
+                    bufRow.Save(GuiEnvironment.CurrentUser);
                 }
                 catch (Exception ex)
                 {
@@ -912,7 +912,9 @@ namespace DataWF.Data.Gui
                 question.Buttons.Add(Command.No);
                 question.Buttons.Add(Command.Yes);
                 if (MessageDialog.AskQuestion(ParentWindow, question) == Command.Yes)
-                    Table.RejectChanges();
+                {
+                    Table.RejectChanges(GuiEnvironment.CurrentUser);
+                }
             }
             else if (Table.IsSynchronized)
             {

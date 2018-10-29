@@ -834,9 +834,9 @@ namespace DataWF.Data
             RemoveOld(column);
         }
 
-        public virtual void Accept()
+        public virtual void Accept(IUserIdentity user)
         {
-            DBService.OnAccept(this);
+            DBService.OnAccept(new DBItemEventArgs(this, null, user));
             if (IsChanged || (UpdateState & DBUpdateState.Commit) == DBUpdateState.Commit)
             {
                 if ((UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete)
@@ -869,7 +869,7 @@ namespace DataWF.Data
             return column != null ? GetOld(column, out object value) : false;
         }
 
-        public virtual void Reject()
+        public virtual void Reject(IUserIdentity user)
         {
             if (IsChanged || (UpdateState & DBUpdateState.Commit) == DBUpdateState.Commit)
             {
@@ -890,7 +890,7 @@ namespace DataWF.Data
                     }
                     UpdateState = DBUpdateState.Default;
                 }
-                DBService.OnReject(this);
+                DBService.OnReject(new DBItemEventArgs(this, null, user));
             }
         }
 
@@ -1006,9 +1006,9 @@ namespace DataWF.Data
         }
         #endregion
 
-        public void Refresh()
+        public void Refresh(IUserIdentity user)
         {
-            Reject();
+            Reject(user);
             Table.ReloadItem(PrimaryId);
         }
 
@@ -1054,20 +1054,20 @@ namespace DataWF.Data
             }
         }
 
-        public virtual void Save()
+        public virtual void Save(IUserIdentity user)
         {
-            if (OnSaving())
+            if (OnSaving(user))
             {
-                Table.SaveItem(this);
-                OnSaved();
+                Table.SaveItem(this, user);
+                OnSaved(user);
             }
         }
 
-        protected virtual void OnSaved()
+        protected virtual void OnSaved(IUserIdentity user)
         {
         }
 
-        protected virtual bool OnSaving()
+        protected virtual bool OnSaving(IUserIdentity user)
         {
             return true;
         }
@@ -1092,6 +1092,7 @@ namespace DataWF.Data
         }
 
         public int Handler { get => handler; set => handler = value; }
+        public AccessView AccessView { get; set; }
 
         public int CompareTo(DBItem obj)
         {
@@ -1147,11 +1148,6 @@ namespace DataWF.Data
             string c = string.Empty;
             foreach (DBColumn column in parameters)
             {
-                if (!column.Access.View)
-                {
-                    //bufRez += temprez;
-                    continue;
-                }
                 string header = (showColumn) ? header = $"{column}: " : string.Empty;
                 string value = column.FormatValue(GetValue(column));
                 if (column.IsCulture)
@@ -1188,10 +1184,11 @@ namespace DataWF.Data
             return builder.ToString();
         }
 
-        public void Delete(int recurs, DBLoadParam param = DBLoadParam.None)
+        public void Delete(int recurs, DBLoadParam param = DBLoadParam.None, IUserIdentity user = null)
         {
             var dependencies = GetChilds(recurs, param).ToList();
-            var transaction = DBTransaction.GetTransaction(saveLock, Table.Schema.Connection);
+            var owner = user ?? saveLock;
+            var transaction = DBTransaction.GetTransaction(owner, Table.Schema.Connection);
             try
             {
                 foreach (var item in dependencies)
@@ -1199,30 +1196,30 @@ namespace DataWF.Data
                     item.Delete();
                     if (item.Attached)
                     {
-                        item.Save();
+                        item.Save(user);
                     }
                 }
                 Delete();
                 if (Attached)
                 {
-                    Save();
+                    Save(user);
                 }
-                if (transaction.Owner == saveLock)
+                if (transaction.Owner == owner)
                 {
-                    transaction.Commit();
+                    transaction.Commit(user);
                 }
             }
             catch (Exception ex)//TODO If Timeout Expired
             {
                 Helper.OnException(ex);
-                if (transaction.Owner == saveLock)
+                if (transaction.Owner == owner)
                 {
-                    transaction.Rollback();
+                    transaction.Rollback(user);
                 }
             }
             finally
             {
-                if (transaction.Owner == saveLock)
+                if (transaction.Owner == owner)
                 {
                     transaction.Dispose();
                 }
@@ -1295,16 +1292,16 @@ namespace DataWF.Data
             Table.Save(rows);
         }
 
-        public void SaveOrUpdate(DBLoadParam param = DBLoadParam.None)
+        public void SaveOrUpdate(DBLoadParam param = DBLoadParam.None, IUserIdentity user = null)
         {
             var exist = FindAndUpdate(param);
             if (exist != null)
             {
-                exist.Save();
+                exist.Save(user);
             }
             else
             {
-                Save();
+                Save(user);
             }
         }
 

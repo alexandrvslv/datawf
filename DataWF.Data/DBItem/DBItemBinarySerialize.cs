@@ -92,7 +92,7 @@ namespace DataWF.Data
                 DBColumn dbColumn = row.Table.ParseColumn(map[column]);
                 row.SetValue(value, dbColumn, false);
             }
-            row.Accept();
+            row.Accept((IUserIdentity)null);
         }
 
         public static void ReadMap(byte[] data, DBTable table, Dictionary<string, object> row)
