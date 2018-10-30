@@ -31,8 +31,12 @@ namespace DataWF.Common
             while (socket.State != WebSocketState.Closed)
             {
                 var recieve = await ReadData();
-                OnReceiveMessage?.Invoke(this, new WebNotifyClientEventArgs(recieve));
+                if (recieve != null)
+                {
+                    OnReceiveMessage?.Invoke(this, new WebNotifyClientEventArgs(recieve));
+                }
             }
+
         }
 
         public async Task<byte[]> ReadData()
@@ -45,6 +49,10 @@ namespace DataWF.Common
                 do
                 {
                     result = await socket.ReceiveAsync(buffer, CancellationToken.None);
+                    if (result.MessageType == WebSocketMessageType.Close)
+                    {
+                        return null;
+                    }
                     if (result.Count > 0)
                     {
                         builder.Write(buffer.Array, buffer.Offset, result.Count);
