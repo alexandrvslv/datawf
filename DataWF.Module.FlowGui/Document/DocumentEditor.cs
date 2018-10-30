@@ -174,11 +174,11 @@ namespace DataWF.Module.FlowGui
                 return;
             if (page.Widget is IReadOnly)
             {
-                ((IReadOnly)page.Widget).ReadOnly = state == DocumentEditorState.Readonly || !document.Access.Edit;
+                ((IReadOnly)page.Widget).ReadOnly = state == DocumentEditorState.Readonly || !document.Access.GetFlag(AccessType.Edit, GuiEnvironment.User);
             }
             else
             {
-                page.Widget.Sensitive = state == DocumentEditorState.Edit && document.Access.Edit;
+                page.Widget.Sensitive = state == DocumentEditorState.Edit && document.Access.GetFlag(AccessType.Edit, GuiEnvironment.User);
             }
             if (page.Widget is IDocument)
                 ((IDocument)page.Widget).Document = document;
@@ -476,7 +476,7 @@ namespace DataWF.Module.FlowGui
                         Stage = cwork;
                     else if (document.GetLastWork() != null)
                         cwork = document.GetLastWork();
-                    from = cwork != null && cwork.From != null && (cwork.From.IsCurrent || cwork.IsCurrent);
+                    from = cwork != null && cwork.From != null && (cwork.From.IsCurrent(GuiEnvironment.User) || cwork.IsCurrent(GuiEnvironment.User));
                     //pages
                     toolLabel.Text = cwork == null || cwork.Stage == null ? "" : cwork.Stage.ToString();
                 }
@@ -545,7 +545,7 @@ namespace DataWF.Module.FlowGui
                     }
                 }
 
-                toolDelete.Visible = document.Access.Delete;// works.Count == 0 || (works.Count == 1 && works[0].IsUser);
+                toolDelete.Visible = document.Access.GetFlag(AccessType.Delete, GuiEnvironment.User);// works.Count == 0 || (works.Count == 1 && works[0].IsUser);
 
                 CheckState(DocumentEditorState.None);
             }
@@ -587,7 +587,7 @@ namespace DataWF.Module.FlowGui
                 var work = document.CurrentWork;
                 EditorState = !document.Attached || document.UpdateState == DBUpdateState.Insert
                     ? DocumentEditorState.Create
-                    : work != null && work.IsCurrent
+                    : work != null && work.IsCurrent(GuiEnvironment.User)
                     ? DocumentEditorState.Edit
                     : DocumentEditorState.Readonly;
                 toolSave.Sensitive = document.IsChanged || state == DocumentEditorState.Create;
@@ -706,9 +706,9 @@ namespace DataWF.Module.FlowGui
             foreach (var relation in Document.DBTable.GetChildRelations())
             {
                 foreach (DBItem row in document.GetReferencing(relation, DBLoadParam.None))
-                    row.Reject();
+                    row.Reject(GuiEnvironment.User);
             }
-            document.Reject();
+            document.Reject(GuiEnvironment.User);
             document.IniType = DocInitType.Default;
             CheckState(DocumentEditorState.None);
         }

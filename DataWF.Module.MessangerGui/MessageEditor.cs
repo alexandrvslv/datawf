@@ -83,7 +83,7 @@ namespace DataWF.Module.MessangerGui
                                    Message.DBTable.ParseProperty(nameof(Message.Id)).Name,
                                    Message.DBTable.Name,
                                    Message.DBTable.ParseProperty(nameof(Message.UserId)).Name,
-                                   GuiEnvironment.CurrentUser.Id);
+                                   GuiEnvironment.User.Id);
                 var items = await MessageAddress.DBTable.LoadAsync(query, DBLoadParam.Load | DBLoadParam.Synchronize, null, null);
                 items.LastOrDefault();
             }
@@ -100,7 +100,7 @@ namespace DataWF.Module.MessangerGui
             {
                 using (var transaction = new DBTransaction())
                 {
-                    var message = Message.Send((User)GuiEnvironment.CurrentUser, GetStaff(), MessageText);
+                    var message = Message.Send((User)GuiEnvironment.User, GetStaff(), MessageText);
                     OnSending?.Invoke(message);
                     transaction.Commit();
                 }

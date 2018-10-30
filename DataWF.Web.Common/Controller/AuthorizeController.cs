@@ -30,19 +30,7 @@ namespace DataWF.Web.Common
             users = DBTable.GetTable<User>();
         }
 
-        public User CurrentUser
-        {
-            get
-            {
-                if (user == null)
-                {
-                    var emailClaim = User?.FindFirst(ClaimTypes.Email);
-                    if (emailClaim != null)
-                        user = DataWF.Module.Common.User.GetByEmail(emailClaim.Value);
-                }
-                return user;
-            }
-        }
+        public User CurrentUser => user ?? (user = User.GetCurrentUser());
 
         [AllowAnonymous]
         [HttpPost("LoginIn/")]

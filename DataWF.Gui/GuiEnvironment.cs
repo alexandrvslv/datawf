@@ -277,7 +277,7 @@ namespace DataWF.Gui
             }
         }
 
-        public static IUserIdentity CurrentUser { get; internal set; }
+        public static IUserIdentity User { get; internal set; }
 
         public void SaveDirectory(string path, string name = "gui.xml")
         {

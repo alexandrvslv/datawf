@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 
 namespace DataWF.Web.Common
 {
@@ -21,19 +20,7 @@ namespace DataWF.Web.Common
             table = DBTable.GetTable<T>();
         }
 
-        public User CurrentUser
-        {
-            get
-            {
-                if (user == null)
-                {
-                    var emailClaim = User?.FindFirst(ClaimTypes.Email);
-                    if (emailClaim != null)
-                        user = DataWF.Module.Common.User.GetByEmail(emailClaim.Value);
-                }
-                return user;
-            }
-        }
+        public User CurrentUser => user ?? (user = User.GetCurrentUser());
 
         [HttpGet]
         public ActionResult<IEnumerable<T>> Get()

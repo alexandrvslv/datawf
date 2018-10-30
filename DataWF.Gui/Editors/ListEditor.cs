@@ -160,7 +160,7 @@ namespace DataWF.Gui
                 }
                 if (dataSource is IAccessable accessable)
                 {
-                    toolStatus.Sensitive = accessable.Access.GetFlag(AccessType.Accept, GuiEnvironment.CurrentUser);
+                    toolStatus.Sensitive = accessable.Access.GetFlag(AccessType.Accept, GuiEnvironment.User);
                 }
             }
         }

@@ -96,10 +96,10 @@ namespace DataWF.Data.Gui
                     foreach (DBItem r in rowsDelete)
                     {
                         r.Delete();
-                        r.Save(GuiEnvironment.CurrentUser);
+                        r.Save(GuiEnvironment.User);
                     }
                     row.Delete();
-                    row.Save(GuiEnvironment.CurrentUser);
+                    row.Save(GuiEnvironment.User);
                     transaction.Commit();
                 }
             }

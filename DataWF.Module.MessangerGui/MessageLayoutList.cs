@@ -76,7 +76,7 @@ namespace DataWF.Module.MessangerGui
         {
             var chatItem = e.Item as Message;
             var style = OnGetCellStyle(chatItem, null, null);
-            e.Context.DrawGlyph(chatItem.User == GuiEnvironment.CurrentUser ? GlyphType.SignOut : GlyphType.SignIn, e.Bound, style);
+            e.Context.DrawGlyph(chatItem.User == GuiEnvironment.User ? GlyphType.SignOut : GlyphType.SignIn, e.Bound, style);
             //base.OnPaintHeader(context, index, dataSource, bound, state);
         }
 

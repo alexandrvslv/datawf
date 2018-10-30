@@ -291,7 +291,7 @@ namespace DataWF.Module.Flow
         [Reference(nameof(CurrentWorkId))]
         public DocumentWork CurrentWork
         {
-            get { return Works.FirstOrDefault(p => p.IsCurrent) ?? Works.FirstOrDefault(p => !p.Completed); }
+            get { return Works.FirstOrDefault(p => !p.Completed); }
         }
 
         [Browsable(false)]
@@ -733,7 +733,7 @@ namespace DataWF.Module.Flow
             try
             {
                 base.Save(user);
-                var param = new DocumentExecuteArgs() { Document = this, ProcedureCategory = Template.Code };
+                var param = new DocumentExecuteArgs() { Document = this, ProcedureCategory = Template.Code, User = user };
                 var works = GetWorks().ToList();
                 bool isnew = works.Count == 0;
                 if (isnew)
@@ -812,7 +812,7 @@ namespace DataWF.Module.Flow
         }
 
         [ControllerMethod]
-        public List<DocumentWork> Send(User user)
+        public List<DocumentWork> Send(IUserIdentity user)
         {
             var work = GetWorksUncompleted().FirstOrDefault();
             if (work == null)
@@ -832,36 +832,36 @@ namespace DataWF.Module.Flow
         }
 
         [ControllerMethod]
-        public List<DocumentWork> Send(DocumentWork from, Stage stage, User user)
+        public List<DocumentWork> Send(DocumentWork from, Stage stage, IUserIdentity user)
         {
             if ((stage.Keys & StageKey.IsStart) == StageKey.IsStart)
-                return Send(from, stage, new[] { user }, user);
+                return Send(from, stage, new[] { (User)user }, user);
             else
                 return Send(from, stage, stage.GetDepartment(Template), user);
         }
 
         [ControllerMethod]
-        public object ExecuteProceduresByWork(DocumentWork work, StageParamProcudureType type)
+        public object ExecuteProceduresByWork(DocumentWork work, StageParamProcudureType type, IUserIdentity user)
         {
             if (work?.Stage == null)
                 throw new ArgumentNullException();
-            var param = new DocumentExecuteArgs { Document = this, Work = work, Stage = work.Stage };
+            var param = new DocumentExecuteArgs { Document = this, Work = work, Stage = work.Stage, User = user };
             return ExecuteProcedures(param, work.Stage.GetProceduresByType(type));
         }
 
         [ControllerMethod]
-        public object ExecuteProceduresByStage(Stage stage, StageParamProcudureType type)
+        public object ExecuteProceduresByStage(Stage stage, StageParamProcudureType type, IUserIdentity user)
         {
-            var param = new DocumentExecuteArgs { Document = this, Stage = stage };
+            var param = new DocumentExecuteArgs { Document = this, Stage = stage, User = user };
             return ExecuteProcedures(param, stage.GetProceduresByType(type));
         }
 
         [ControllerMethod]
-        public void Complete(DocumentWork work, User user)
+        public void Complete(DocumentWork work, IUserIdentity user)
         {
             if (work.User == null)
             {
-                work.User = user;
+                work.User = (User)user;
             }
 
             work.DateComplete = DateTime.Now;
@@ -879,11 +879,11 @@ namespace DataWF.Module.Flow
                 if (!work.IsResend
                     && GetWorksUncompleted(work.Stage).Count() == 0)
                 {
-                    var checkResult = ExecuteProceduresByStage(work.Stage, StageParamProcudureType.Check);
+                    var checkResult = ExecuteProceduresByStage(work.Stage, StageParamProcudureType.Check, user);
                     if (checkResult != null)
                         throw new InvalidOperationException($"Check Fail {checkResult}");
 
-                    ExecuteProceduresByStage(work.Stage, StageParamProcudureType.Finish);
+                    ExecuteProceduresByStage(work.Stage, StageParamProcudureType.Finish, user);
                 }
             }
         }
@@ -908,7 +908,7 @@ namespace DataWF.Module.Flow
             Send(work, work.From.Stage, new[] { work.From.User }, user);
         }
 
-        public List<DocumentWork> Send(DocumentWork from, Stage stage, IEnumerable<DBItem> staff, User user)
+        public List<DocumentWork> Send(DocumentWork from, Stage stage, IEnumerable<DBItem> staff, IUserIdentity user)
         {
             if (!(staff?.Any() ?? false))
             {
@@ -937,7 +937,7 @@ namespace DataWF.Module.Flow
 
             if (stage != null)
             {
-                ExecuteProceduresByStage(stage, StageParamProcudureType.Start);
+                ExecuteProceduresByStage(stage, StageParamProcudureType.Start, user);
             }
 
             return result;
@@ -1014,7 +1014,7 @@ namespace DataWF.Module.Flow
                     {
                         workStages = workStages + stage + " ";
                     }
-                    if (dw.IsCurrent && (current == null || current.User == null))
+                    if (dw.User != null && (current == null || current.User == null))
                     {
                         current = dw;
                     }

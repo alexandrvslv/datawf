@@ -94,7 +94,7 @@ namespace DataWF.Module.FlowGui
                 Name = "Send",
                 Tag = new DocumentFilter()
                 {
-                    Staff = User.CurrentUser,
+                    Staff = (User)GuiEnvironment.User,
                     DateType = DocumentSearchDate.WorkEnd,
                     Date = new DateInterval(DateTime.Today),
                     IsWork = CheckedState.Unchecked
@@ -107,7 +107,7 @@ namespace DataWF.Module.FlowGui
                 Name = "Recent",
                 Tag = new DocumentFilter()
                 {
-                    Staff = User.CurrentUser,
+                    Staff = (User)GuiEnvironment.User,
                     DateType = DocumentSearchDate.WorkEnd,
                     Date = new DateInterval(DateTime.Today)
                 }

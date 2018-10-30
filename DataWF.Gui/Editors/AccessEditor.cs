@@ -7,7 +7,7 @@ namespace DataWF.Gui
         private LayoutList alist;
         private AccessValue access;
         private IAccessable accessable;
-        private IUserIdentity user = GuiEnvironment.CurrentUser;
+        private IUserIdentity user = GuiEnvironment.User;
 
         public AccessEditor()
         {

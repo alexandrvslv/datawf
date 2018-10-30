@@ -22,18 +22,16 @@ namespace DataWF.Web.CodeGenerator
         private SwaggerDocument document;
         private CompilationUnitSyntax provider;
 
-        public ClientGenerator(string url, string output, string nameSpace = "DataWF.Web.Client")
+        public ClientGenerator(string source, string output, string nameSpace = "DataWF.Web.Client")
         {
             Namespace = nameSpace;
             Output = string.IsNullOrEmpty(output) ? null : Path.GetFullPath(output);
-            Url = new Uri(url);
+            Source = source;
         }
 
-        private Uri Url { get; }
-
         public string Output { get; }
-
-        private string Namespace { get; }
+        public string Source { get; }
+        public string Namespace { get; }
 
         public void Generate()
         {
@@ -52,8 +50,14 @@ namespace DataWF.Web.CodeGenerator
                 SyntaxHelper.CreateUsingDirective("System.Net.Http.Headers") ,
                 SyntaxHelper.CreateUsingDirective("Newtonsoft.Json")
             };
-
-            document = SwaggerDocument.FromUrlAsync(Url.OriginalString).GetAwaiter().GetResult();
+            var url = new Uri(Source);
+            Console.WriteLine(Source);
+            Console.WriteLine(url);
+            Console.WriteLine(url.LocalPath);
+            if (url.Scheme == "http" || url.Scheme == "https")
+                document = SwaggerDocument.FromUrlAsync(url.OriginalString).GetAwaiter().GetResult();
+            else if (url.Scheme == "file")
+                document = SwaggerDocument.FromFileAsync(url.LocalPath).GetAwaiter().GetResult();
             foreach (var definition in document.Definitions)
             {
                 definition.Value.Id = definition.Key;
@@ -174,7 +178,7 @@ namespace DataWF.Web.CodeGenerator
         private IEnumerable<StatementSyntax> GenProviderConstructorBody()
         {
             //SF.EqualsValueClause(SF.ParseExpression())
-            yield return SF.ParseStatement($"BaseUrl = \"{Url.Scheme}://{Url.Authority}\";");
+            //yield return SF.ParseStatement($"BaseUrl = \"{Url.Scheme}://{Url.Authority}\";");
             foreach (var client in cacheClients.Keys)
             {
                 yield return SF.ParseStatement($"{client} = new {client}Client{{Provider = this}};");
@@ -814,13 +818,27 @@ namespace DataWF.Web.CodeGenerator
             yield return SF.AccessorDeclaration(
                 kind: SyntaxKind.GetAccessorDeclaration,
                 body: SF.Block(
-                    GenPropertyGet(property)
+                    GenDefintionClassPropertyGet(property)
                 ));
             yield return SF.AccessorDeclaration(
                 kind: SyntaxKind.SetAccessorDeclaration,
                 body: SF.Block(
                     GenDefinitionClassPropertySet(property)
                 ));
+        }
+
+        private IEnumerable<StatementSyntax> GenDefintionClassPropertyGet(JsonProperty property)
+        {
+            var fieldName = GetFieldName(property);
+            if (property.ExtensionData != null && property.ExtensionData.TryGetValue("x-id", out var idProperty))
+            {
+                var idFiledName = GetFieldName((string)idProperty);
+                yield return SF.ParseStatement($"if({fieldName} == null && {idFiledName} != null){{");
+                //yield return SF.ParseStatement($"var client = ({GetTypeString(property, false, "List")}Client)ClientProvider.Default.GetClient<{GetTypeString(property, false, "List")}>();");
+                yield return SF.ParseStatement($"{fieldName} = ClientProvider.Default.{GetTypeString(property, false, "List")}.Get({idFiledName}.Value);");
+                yield return SF.ParseStatement("}");
+            }
+            yield return SF.ParseStatement($"return {fieldName};");
         }
 
         private IEnumerable<StatementSyntax> GenDefinitionClassPropertySet(JsonProperty property)
@@ -873,20 +891,6 @@ namespace DataWF.Web.CodeGenerator
         private string GetFieldName(string property)
         {
             return string.Concat("_", char.ToLowerInvariant(property[0]).ToString(), property.Substring(1));
-        }
-
-        private IEnumerable<StatementSyntax> GenPropertyGet(JsonProperty property)
-        {
-            var fieldName = GetFieldName(property);
-            if (property.ExtensionData != null && property.ExtensionData.TryGetValue("x-id", out var idProperty))
-            {
-                var idFiledName = GetFieldName((string)idProperty);
-                yield return SF.ParseStatement($"if({fieldName} == null && {idFiledName} != null){{");
-                yield return SF.ParseStatement($"var client = ({GetTypeString(property, false, "List")}Client)ClientProvider.Default.GetClient<{GetTypeString(property, false, "List")}>();");
-                yield return SF.ParseStatement($"{fieldName} = client.Get({idFiledName}.Value);");
-                yield return SF.ParseStatement("}");
-            }
-            yield return SF.ParseStatement($"return {fieldName};");
         }
 
         private FieldDeclarationSyntax GenDefinitionClassField(JsonProperty property)

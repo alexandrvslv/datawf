@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 
 namespace DataWF.Web.Common
 {
@@ -30,22 +29,10 @@ namespace DataWF.Web.Common
             //return DBTable.GetTable(type);
         }
 
-        public User CurrentUser
-        {
-            get
-            {
-                if (user == null)
-                {
-                    var emailClaim = User?.FindFirst(ClaimTypes.Email);
-                    if (emailClaim != null)
-                        user = DataWF.Module.Common.User.GetByEmail(emailClaim.Value);
-                }
-                return user;
-            }
-        }
+        public User CurrentUser => user ?? (user = User.GetCurrentUser());
 
         [HttpGet("Get/{name}")]
-        public ActionResult<AccessView> GetAccess([FromRoute]string name)
+        public ActionResult<AccessValue> GetAccess([FromRoute]string name)
         {
             try
             {
@@ -54,7 +41,7 @@ namespace DataWF.Web.Common
                 {
                     return NotFound();
                 }
-                return table.Access.GetView(CurrentUser);
+                return table.Access;
             }
             catch (Exception ex)
             {
@@ -63,7 +50,7 @@ namespace DataWF.Web.Common
         }
 
         [HttpGet("GetProperty/{name}/{property}")]
-        public ActionResult<AccessView> GetPropertyAccess([FromRoute]string name, [FromRoute]string property)
+        public ActionResult<AccessValue> GetPropertyAccess([FromRoute]string name, [FromRoute]string property)
         {
             try
             {
@@ -73,7 +60,7 @@ namespace DataWF.Web.Common
                 {
                     return NotFound();
                 }
-                return column.Access.GetView(CurrentUser);
+                return column.Access;
             }
             catch (Exception ex)
             {

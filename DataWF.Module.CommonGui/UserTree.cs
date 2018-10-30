@@ -304,7 +304,7 @@ namespace DataWF.Module.CommonGui
 
                 foreach (DBItem item in enumer)
                 {
-                    if ((!Current || (DBStatus.Current & item.Status) != DBStatus.Empty) && (!Access || item.Access.GetFlag(AccessType.View, GuiEnvironment.CurrentUser)))
+                    if ((!Current || (DBStatus.Current & item.Status) != DBStatus.Empty) && (!Access || item.Access.GetFlag(AccessType.View, GuiEnvironment.User)))
                     {
                         var element = InitItem(item);
                         if (ShowListNode)
@@ -341,7 +341,7 @@ namespace DataWF.Module.CommonGui
                 {
                     Helper.OnException(new Exception($"Warning - self reference!({item})"));
                 }
-                if (show && (!Current || (DBStatus.Current & item.Status) != DBStatus.Empty) && (!Access || item.Access.GetFlag(AccessType.View, GuiEnvironment.CurrentUser)))
+                if (show && (!Current || (DBStatus.Current & item.Status) != DBStatus.Empty) && (!Access || item.Access.GetFlag(AccessType.View, GuiEnvironment.User)))
                 {
                     var node = InitItem(item);
                     node.Group = pnode;

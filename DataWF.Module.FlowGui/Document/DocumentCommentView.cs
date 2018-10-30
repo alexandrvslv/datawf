@@ -40,7 +40,7 @@ namespace DataWF.Module.FlowGui
                 Document = Document,
                 Message = message
             };
-            comment.Save();
+            comment.Save(GuiEnvironment.User);
         }
 
         protected override void OnToolInsertClick(object sender, EventArgs e)

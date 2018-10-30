@@ -1054,7 +1054,7 @@ namespace DataWF.Data
             }
         }
 
-        public virtual void Save(IUserIdentity user)
+        public virtual void Save(IUserIdentity user = null)
         {
             if (OnSaving(user))
             {

@@ -18,7 +18,6 @@ namespace DataWF.Web.CodeGenerator
     {
         private Dictionary<string, MetadataReference> references;
         private Dictionary<string, UsingDirectiveSyntax> usings;
-        private List<MethodParametrInfo> parametersInfo;
         private Dictionary<string, ClassDeclarationSyntax> trees = new Dictionary<string, ClassDeclarationSyntax>();
         public List<Assembly> Assemblies { get; private set; }
         public string Output { get; }
@@ -274,7 +273,7 @@ namespace DataWF.Web.CodeGenerator
             AddUsing(method.DeclaringType);
             AddUsing(method.ReturnType);
             var returning = method.ReturnType == typeof(void) ? "void" : $"ActionResult<{TypeHelper.FormatCode(method.ReturnType)}>";
-
+            var parameterInfo = GetParametersInfo(method, table);
             return SyntaxFactory.MethodDeclaration(attributeLists: SyntaxFactory.List(GetControllerMethodAttributes(method)),
                           modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
                           returnType: returning == "void"
@@ -283,15 +282,15 @@ namespace DataWF.Web.CodeGenerator
                           explicitInterfaceSpecifier: null,
                           identifier: SyntaxFactory.Identifier(method.Name),
                           typeParameterList: null,
-                          parameterList: SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(GetControllerMethodParameters(method, table))),
+                          parameterList: SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(GetControllerMethodParameters(method, table, parameterInfo))),
                           constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
-                          body: SyntaxFactory.Block(GetControllerMethodBody(method, baseClass)),
+                          body: SyntaxFactory.Block(GetControllerMethodBody(method, baseClass, parameterInfo)),
                           semicolonToken: SyntaxFactory.Token(SyntaxKind.SemicolonToken));
             // Annotate that this node should be formatted
             //.WithAdditionalAnnotations(Formatter.Annotation);
         }
 
-        private IEnumerable<StatementSyntax> GetControllerMethodBody(MethodInfo method, bool baseClass)
+        private IEnumerable<StatementSyntax> GetControllerMethodBody(MethodInfo method, bool baseClass, List<MethodParametrInfo> parametersInfo)
         {
             var returning = method.ReturnType == typeof(void) ? "void" : $"ActionResult<{TypeHelper.FormatCode(method.ReturnType)}>";
             if (!method.IsStatic)
@@ -367,20 +366,36 @@ namespace DataWF.Web.CodeGenerator
                                  SyntaxFactory.IdentifierName("HttpGet"))));
         }
 
-        private IEnumerable<ParameterSyntax> GetControllerMethodParameters(MethodInfo method, TableAttributeCache table)
+        private List<MethodParametrInfo> GetParametersInfo(MethodInfo method, TableAttributeCache table)
+        {
+            var parametersInfo = new List<MethodParametrInfo>();
+            foreach (var parameter in method.GetParameters())
+            {
+                var methodParameter = new MethodParametrInfo { Info = parameter };
+                parametersInfo.Add(methodParameter);
+                AddUsing(methodParameter.Info.ParameterType);
+                if (methodParameter.Info.ParameterType == typeof(IUserIdentity))
+                {
+                    methodParameter.ValueName = "CurrentUser";
+                }
+            }
+            return parametersInfo;
+        }
+
+        private IEnumerable<ParameterSyntax> GetControllerMethodParameters(MethodInfo method, TableAttributeCache table, List<MethodParametrInfo> parametersInfo)
         {
             yield return SyntaxFactory.Parameter(attributeLists: SyntaxFactory.List(GetParameterAttributes()),
                                                              modifiers: SyntaxFactory.TokenList(),
                                                              type: SyntaxFactory.ParseTypeName((table.PrimaryKey?.GetDataType() ?? typeof(int)).Name),
                                                              identifier: SyntaxFactory.Identifier("id"),
                                                              @default: null);
-            parametersInfo = new List<MethodParametrInfo>();
 
-            foreach (var parameter in method.GetParameters())
+            foreach (var methodParameter in parametersInfo)
             {
-                var methodParameter = new MethodParametrInfo { Info = parameter };
-                parametersInfo.Add(methodParameter);
-                AddUsing(methodParameter.Info.ParameterType);
+                if (methodParameter.Info.ParameterType == typeof(IUserIdentity))
+                {
+                    continue;
+                }
                 yield return SyntaxFactory.Parameter(attributeLists: SyntaxFactory.List(GetParameterAttributes()),
                                                          modifiers: SyntaxFactory.TokenList(),
                                                          type: SyntaxFactory.ParseTypeName(methodParameter.Type.Name),
@@ -411,77 +426,77 @@ namespace DataWF.Web.CodeGenerator
             }
         }
 
-        private void GetMethod(StringBuilder builder, MethodInfo method, DBTable table)
-        {
-            AddUsing(method.ReturnType);
-            var mparams = method.GetParameters();
-            var parameters = method.IsStatic ? "" : "/{id:int}";
-            var returning = method.ReturnType == typeof(void) ? "void" : $"ActionResult<{TypeHelper.FormatCode(method.ReturnType)}>";
-            parametersInfo = new List<MethodParametrInfo>();
+        //private void GetMethod(StringBuilder builder, MethodInfo method, DBTable table)
+        //{
+        //    AddUsing(method.ReturnType);
+        //    var mparams = method.GetParameters();
+        //    var parameters = method.IsStatic ? "" : "/{id:int}";
+        //    var returning = method.ReturnType == typeof(void) ? "void" : $"ActionResult<{TypeHelper.FormatCode(method.ReturnType)}>";
+        //    parametersInfo = new List<MethodParametrInfo>();
 
-            foreach (var parameter in mparams)
-            {
-                parametersInfo.Add(new MethodParametrInfo { Info = parameter });
-                parameters += $"/{{{parameter.Name}}}";
-            }
-            //var methodsyntax = GetMethod(method);
-            builder.AppendLine($"[Route(\"{method.Name}{parameters}\"), HttpGet()]");
-            builder.Append($"public {(method.IsVirtual ? "virtual" : "")} {returning} {method.Name} (");
-            if (!method.IsStatic)
-            {
-                builder.Append($"int id{(mparams.Length > 0 ? ", " : "")}");
-            }
-            if (mparams.Length > 0)
-            {
-                foreach (var parameter in parametersInfo)
-                {
-                    AddUsing(parameter.Type);
-                    builder.Append($"{TypeHelper.FormatCode(parameter.Type)} {parameter.Info.Name}, ");
-                }
-                builder.Length -= 2;
-            }
-            builder.AppendLine(") {");
-            if (!method.IsStatic)
-            {
-                AddUsing(method.DeclaringType);
-                builder.AppendLine($"var idValue = table.LoadById<{TypeHelper.FormatCode(method.DeclaringType)}>(id);");
+        //    foreach (var parameter in mparams)
+        //    {
+        //        parametersInfo.Add(new MethodParametrInfo { Info = parameter });
+        //        parameters += $"/{{{parameter.Name}}}";
+        //    }
+        //    //var methodsyntax = GetMethod(method);
+        //    builder.AppendLine($"[Route(\"{method.Name}{parameters}\"), HttpGet()]");
+        //    builder.Append($"public {(method.IsVirtual ? "virtual" : "")} {returning} {method.Name} (");
+        //    if (!method.IsStatic)
+        //    {
+        //        builder.Append($"int id{(mparams.Length > 0 ? ", " : "")}");
+        //    }
+        //    if (mparams.Length > 0)
+        //    {
+        //        foreach (var parameter in parametersInfo)
+        //        {
+        //            AddUsing(parameter.Type);
+        //            builder.Append($"{TypeHelper.FormatCode(parameter.Type)} {parameter.Info.Name}, ");
+        //        }
+        //        builder.Length -= 2;
+        //    }
+        //    builder.AppendLine(") {");
+        //    if (!method.IsStatic)
+        //    {
+        //        AddUsing(method.DeclaringType);
+        //        builder.AppendLine($"var idValue = table.LoadById<{TypeHelper.FormatCode(method.DeclaringType)}>(id);");
 
-                foreach (var parameter in parametersInfo)
-                {
-                    if (parameter.Table != null)
-                    {
-                        AddUsing(parameter.Info.ParameterType);
-                        builder.AppendLine($"var {parameter.ValueName} = DBItem.GetTable<{TypeHelper.FormatCode(parameter.Info.ParameterType)}>().LoadById({parameter.Info.Name});");
-                    }
-                }
-                if (method.ReturnType != typeof(void))
-                    builder.Append($@"return new {returning}(");
-                builder.Append($" idValue.{method.Name}(");
+        //        foreach (var parameter in parametersInfo)
+        //        {
+        //            if (parameter.Table != null)
+        //            {
+        //                AddUsing(parameter.Info.ParameterType);
+        //                builder.AppendLine($"var {parameter.ValueName} = DBItem.GetTable<{TypeHelper.FormatCode(parameter.Info.ParameterType)}>().LoadById({parameter.Info.Name});");
+        //            }
+        //        }
+        //        if (method.ReturnType != typeof(void))
+        //            builder.Append($@"return new {returning}(");
+        //        builder.Append($" idValue.{method.Name}(");
 
-                if (mparams.Length > 0)
-                {
-                    foreach (var parameter in parametersInfo)
-                    {
-                        builder.Append($"{parameter.ValueName}, ");
-                    }
-                    builder.Length -= 2;
-                }
-                if (method.ReturnType != typeof(void))
-                    builder.Append(")");
-                builder.AppendLine(");");
+        //        if (mparams.Length > 0)
+        //        {
+        //            foreach (var parameter in parametersInfo)
+        //            {
+        //                builder.Append($"{parameter.ValueName}, ");
+        //            }
+        //            builder.Length -= 2;
+        //        }
+        //        if (method.ReturnType != typeof(void))
+        //            builder.Append(")");
+        //        builder.AppendLine(");");
 
-            }
-            builder.AppendLine("}");
-        }
+        //    }
+        //    builder.AppendLine("}");
+        //}
     }
 
     public class MethodParametrInfo
     {
         private ParameterInfo info;
 
-        public Type Type { get; private set; }
-        public TableAttributeCache Table { get; private set; }
-        public string ValueName { get; private set; }
+        public Type Type { get; internal set; }
+        public TableAttributeCache Table { get; internal set; }
+        public string ValueName { get; internal set; }
         public ParameterInfo Info
         {
             get => info;

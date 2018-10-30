@@ -300,21 +300,18 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        public bool IsCurrent
+        public bool IsCurrent(IUserIdentity user)
         {
-            get
-            {
-                var currentUser = User.CurrentUser;
-                return !Completed && (User == currentUser
-                  || (User == null && Position == currentUser?.Position)
-                  || (Position == null && Department == currentUser?.Department));
-            }
+            var currentUser = (User)user;
+            return !Completed && (User == currentUser
+              || (User == null && Position == currentUser?.Position)
+              || (Position == null && Department == currentUser?.Department));
         }
 
         [Browsable(false)]
-        public bool IsUser
+        public bool IsUser(IUserIdentity iser)
         {
-            get { return User == null || User == User.CurrentUser; }
+            return User == null || User == iser;
         }
 
         [Browsable(false)]

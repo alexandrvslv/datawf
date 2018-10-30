@@ -41,12 +41,12 @@ namespace DataWF.Module.FlowGui
 
             qWork = new QQuery(string.Empty, DocumentWork.DBTable);
             qWork.BuildPropertyParam(nameof(DocumentWork.IsComplete), CompareType.Equal, false);
-            qWork.BuildPropertyParam(nameof(DocumentWork.UserId), CompareType.Equal, GuiEnvironment.CurrentUser.Id);
+            qWork.BuildPropertyParam(nameof(DocumentWork.UserId), CompareType.Equal, GuiEnvironment.User.Id);
 
             var qDocWorks = new QQuery(string.Empty, DocumentWork.DBTable);
             qDocWorks.Columns.Add(new QColumn(DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DocumentId))));
             qDocWorks.BuildPropertyParam(nameof(DocumentWork.IsComplete), CompareType.Equal, false);
-            qDocWorks.BuildPropertyParam(nameof(DocumentWork.UserId), CompareType.Equal, GuiEnvironment.CurrentUser.Id);
+            qDocWorks.BuildPropertyParam(nameof(DocumentWork.UserId), CompareType.Equal, GuiEnvironment.User.Id);
 
             qDocs = new QQuery(string.Empty, Document.DBTable);
             qDocs.BuildPropertyParam(nameof(Document.Id), CompareType.In, qDocWorks);
@@ -126,7 +126,7 @@ namespace DataWF.Module.FlowGui
                 work = oldItem;
             }
 
-            if (work?.Document != null && work.IsUser)
+            if (work?.Document != null && work.IsUser(GuiEnvironment.User))
             {
                 if (di > 0 && GuiService.Main != null)
                 {

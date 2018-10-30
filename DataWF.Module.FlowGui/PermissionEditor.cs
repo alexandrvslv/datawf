@@ -170,7 +170,7 @@ namespace DataWF.Module.FlowGui
                 foreach (var item in changes)
                 {
                     if (item != userGroup)
-                        item.Save();
+                        item.Save(GuiEnvironment.User);
                 }
                 changes.Clear();
             }
@@ -180,7 +180,7 @@ namespace DataWF.Module.FlowGui
         {
             if (node.Access == null)
                 return;
-            if (node.Access.Edit || node.Access.Admin)
+            if (node.Access.GetFlag(AccessType.Edit, GuiEnvironment.User) || node.Access.GetFlag(AccessType.Admin, GuiEnvironment.User))
             {
                 var access = node.Access.Get(Group);
                 if (value.Value)
@@ -288,19 +288,19 @@ namespace DataWF.Module.FlowGui
             {
                 userGroup.Status = DBStatus.Edit;
                 userGroup.Stamp = DateTime.Now;
-                userGroup.Save();
+                userGroup.Save(GuiEnvironment.User);
             }
-            userGroup.Save();
+            userGroup.Save(GuiEnvironment.User);
         }
 
         private void ToolCancelClick(object sender, EventArgs e)
         {
-            userGroup.Reject();
+            userGroup.Reject(GuiEnvironment.User);
             if (changes.Count > 0)
             {
                 userGroup.Status = DBStatus.Edit;
                 foreach (var item in changes)
-                    item.Reject();
+                    item.Reject(GuiEnvironment.User);
                 changes.Clear();
             }
             //tree.Refresh();

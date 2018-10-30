@@ -25,9 +25,4 @@ namespace DataWF.Common
         Admin = 16,
         Accept = 32
     }
-
-    public class StringEventArg : EventArgs
-    {
-        public string String { get; set; }
-    }
 }

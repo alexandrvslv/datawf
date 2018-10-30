@@ -1,4 +1,5 @@
 ﻿using DataWF.Data;
+using DataWF.Module.Common;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -14,12 +15,11 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Security.Claims;
 
 namespace DataWF.Web.Common
 {
-    public static class ServicesExtensions
+    public static partial class ServicesExtensions
     {
         public static IServiceCollection AddDataProvider(this IServiceCollection services, IDataProvider dataProvider)
         {
@@ -59,7 +59,7 @@ namespace DataWF.Web.Common
             services.AddMvc(options =>
             {
                 options.OutputFormatters.RemoveType<JsonOutputFormatter>();
-                options.OutputFormatters.Insert(0, new CustomeJsonOutputFormatter(new JsonSerializerSettings(), ArrayPool<char>.Shared));
+                options.OutputFormatters.Insert(0, new ClaimsJsonOutputFormatter(new JsonSerializerSettings(), ArrayPool<char>.Shared));
             })
                .AddJsonOptions(options =>
                {
@@ -75,23 +75,6 @@ namespace DataWF.Web.Common
             }
             services.AddSingleton<IObjectModelValidator>(new DBItemValidator());
             return services;
-        }
-
-        public class CustomeJsonOutputFormatter : JsonOutputFormatter
-        {
-            public CustomeJsonOutputFormatter(JsonSerializerSettings serializerSettings, ArrayPool<char> charPool) : base(serializerSettings, charPool)
-            {
-            }
-
-            protected override JsonSerializer CreateJsonSerializer()
-            {
-                return base.CreateJsonSerializer();
-            }
-
-            public override Task WriteResponseBodyAsync(OutputFormatterWriteContext context, Encoding selectedEncoding)
-            {
-                return base.WriteResponseBodyAsync(context, selectedEncoding);
-            }
         }
         //private static void SerializationErrors(object sender, ErrorEventArgs e)
         //{
@@ -168,6 +151,11 @@ namespace DataWF.Web.Common
             return app;
         }
 
+        public static User GetCurrentUser(this ClaimsPrincipal claims)
+        {
+            var emailClaim = claims?.FindFirst(ClaimTypes.Email);
+            return emailClaim != null ? User.GetByEmail(emailClaim.Value) : null;
+        }
     }
 
 

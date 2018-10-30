@@ -30,13 +30,13 @@ namespace DataWF.Module.FlowGui
                     question.Buttons.Add(Command.Yes);
                     if (MessageDialog.AskQuestion((Window)GuiService.Main, question) == Command.Yes)
                     {
-                        if (work.Stage != null && !work.Stage.Access.Edit)
+                        if (work.Stage != null && !work.Stage.Access.GetFlag(AccessType.Edit, GuiEnvironment.User))
                         {
                             MessageDialog.ShowMessage((Window)GuiService.Main, "Access denied!", "Accept");
                         }
                         else
                         {
-                            work.User = User.CurrentUser;
+                            work.User = (User)GuiEnvironment.User;
                         }
                     }
                 }
@@ -278,7 +278,7 @@ namespace DataWF.Module.FlowGui
             if (items.Count == 0)
                 return;
 
-            toolRecovery.Visible = documents[0].Template.Access.Create;
+            toolRecovery.Visible = documents[0].Template.Access.GetFlag(AccessType.Create, GuiEnvironment.User);
             toolComplete.Visible = false;
             toolNext.Visible =
                 toolForward.Visible = true;
@@ -348,7 +348,7 @@ namespace DataWF.Module.FlowGui
                     SelectedStage = CurrentWork?.GetStartStage();
                     if (SelectedStage == null)
                     {
-                        var stageNode = InitNode(User.CurrentUser);
+                        var stageNode = InitNode((User)GuiEnvironment.User);
                     }
                 }
                 else if (type == DocumentSendType.Complete)
@@ -422,16 +422,16 @@ namespace DataWF.Module.FlowGui
                     {
                         if (SendType == DocumentSendType.Complete)
                         {
-                            sender.Document.Complete(sender.Work);
+                            sender.Document.Complete(sender.Work, (User)GuiEnvironment.User);
                         }
                         else if (SendType == DocumentSendType.Return)
                         {
-                            sender.Document.Return(sender.Work);
+                            sender.Document.Return(sender.Work, (User)GuiEnvironment.User);
                         }
                         else
                         {
                             sender.Message = string.Empty;
-                            sender.Document.Send(sender.Work, SelectedStage, nodes);
+                            sender.Document.Send(sender.Work, SelectedStage, nodes, (User)GuiEnvironment.User);
                         }
 
                         sender.Document.Save();
@@ -553,7 +553,7 @@ namespace DataWF.Module.FlowGui
                 departs += ((User)ss.Item).Department.Name + "; ";
             elements.Add("Департамент", departs);
             elements.Add("ВсегоДокументов", listDocuments.ListSource.Count);
-            elements.Add("Отправитель", User.CurrentUser);
+            elements.Add("Отправитель", GuiEnvironment.User.ToString());
 
             string users = "";
             foreach (TableItemNode ss in nodes)

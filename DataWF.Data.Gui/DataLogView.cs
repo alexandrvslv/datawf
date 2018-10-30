@@ -186,9 +186,9 @@ namespace DataWF.Data.Gui
                     return;
                 filter = value;
 
-                if (filter.Access.GetFlag(AccessType.Admin, GuiEnvironment.CurrentUser) || filter.Access.GetFlag(AccessType.Edit, GuiEnvironment.CurrentUser))
+                if (filter.Access.GetFlag(AccessType.Admin, GuiEnvironment.User) || filter.Access.GetFlag(AccessType.Edit, GuiEnvironment.User))
                 {
-                    toolRollback.Visible = filter.Access.GetFlag(AccessType.Edit, GuiEnvironment.CurrentUser);
+                    toolRollback.Visible = filter.Access.GetFlag(AccessType.Edit, GuiEnvironment.User);
                     Table = filter.Table;
                 }
                 else
@@ -240,7 +240,7 @@ namespace DataWF.Data.Gui
                         return;
                 }
             }
-            changes.Reject(GuiEnvironment.CurrentUser);
+            changes.Reject(GuiEnvironment.User);
         }
 
         public static void RowAccept(DBItem row, ref Command dr, Widget form)
@@ -259,7 +259,7 @@ namespace DataWF.Data.Gui
                             return;
                     }
                 }
-                changes.Accept(GuiEnvironment.CurrentUser);
+                changes.Accept(GuiEnvironment.User);
 
                 //dr = Command.Cancel;
                 //MessageDialog.ShowMessage(form.ParentWindow, "Editor can not accept his chnges!");
@@ -380,8 +380,8 @@ namespace DataWF.Data.Gui
                 return;
 
             var redo = list.Selection.GetItems<DBLogItem>();
-            if (redo[0] != null && redo[0].Table.Access.GetFlag(AccessType.Edit, GuiEnvironment.CurrentUser))
-                redo[0].Upload(GuiEnvironment.CurrentUser);
+            if (redo[0] != null && redo[0].Table.Access.GetFlag(AccessType.Edit, GuiEnvironment.User))
+                redo[0].Upload(GuiEnvironment.User);
             else
                 MessageDialog.ShowMessage(ParentWindow, "Access denied!");
         }
