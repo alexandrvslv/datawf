@@ -237,7 +237,7 @@ namespace DataWF.Module.Common
         {
             lock (loadLock)
             {
-                using (var transaction = new DBTransaction(loadLock, DBService.DefaultSchema.Connection, true))
+                using (var transaction = new DBTransaction(loadLock, DBService.Schems.DefaultSchema.Connection, true))
                 {
                     var stream = new MemoryStream(buffer);
                     using (var reader = new BinaryReader(stream))
@@ -246,7 +246,7 @@ namespace DataWF.Module.Common
                         {
                             reader.ReadChar();
                             var tableName = reader.ReadString();
-                            DBTable table = DBService.ParseTable(tableName);
+                            DBTable table = DBService.Schems.ParseTable(tableName);
                             while (reader.PeekChar() == 2)
                             {
                                 reader.ReadChar();

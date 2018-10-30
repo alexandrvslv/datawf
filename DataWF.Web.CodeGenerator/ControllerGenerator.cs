@@ -351,6 +351,8 @@ namespace DataWF.Web.CodeGenerator
             var parameters = method.Name + (method.IsStatic ? "" : "/{id}");
             foreach (var parameter in method.GetParameters())
             {
+                if (parameter.ParameterType == typeof(IUserIdentity))
+                    continue;
                 parameters += $"/{{{parameter.Name}}}";
             }
             var attributeArgument = SyntaxFactory.AttributeArgument(

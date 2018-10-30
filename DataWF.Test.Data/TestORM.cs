@@ -27,9 +27,9 @@ namespace DataWF.Test.Data
                 Serialization.Deserialize("connections.xml", DBService.Connections);
 
             AccessValue.Groups = new List<IAccessGroup> {
-                new AccessGroupBung() { Id = 1, Name = "Group1", IsCurrent = true },
-                new AccessGroupBung() { Id = 2, Name = "Group2", IsCurrent = true },
-                new AccessGroupBung() { Id = 3, Name = "Group3", IsCurrent = true }
+                new AccessGroupBung() { Id = 1, Name = "Group1"},
+                new AccessGroupBung() { Id = 2, Name = "Group2"},
+                new AccessGroupBung() { Id = 3, Name = "Group3"}
             };
         }
 
@@ -398,6 +398,6 @@ namespace DataWF.Test.Data
 
         public string Name { get; set; }
 
-        public bool IsCurrent { get; set; }
+        public bool IsCurrentUser(IUserIdentity user) { return true; }
     }
 }

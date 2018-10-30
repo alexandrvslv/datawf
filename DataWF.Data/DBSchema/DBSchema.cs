@@ -22,11 +22,9 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
@@ -70,6 +68,9 @@ namespace DataWF.Data
             FileName = fileName;
             Serialization.Deserialize(fileName, this);
         }
+
+        [Browsable(false)]
+        public DBSchemaList Schems => Container as DBSchemaList;
 
         [Browsable(false)]
         public string ConnectionName { get => connectionName; set => connectionName = value; }
@@ -451,6 +452,36 @@ namespace DataWF.Data
                 writer.WriteEndElement();//html
                 writer.WriteEndDocument();
             }
+        }
+
+        public DBTable ParseTable(string code)
+        {
+            if (string.IsNullOrEmpty(code))
+                return null;
+            DBTable table = null;
+            DBSchema schema = null;
+            int index = code.IndexOf('.');
+            if (index >= 0)
+            {
+                schema = Schems?[code.Substring(0, index++)];
+                int sindex = code.IndexOf('.', index);
+                code = sindex < 0 ? code.Substring(index) : code.Substring(index, sindex - index);
+            }
+            if (schema == null)
+                schema = this;
+
+            table = schema.Tables[code];
+
+            if (table == null)
+            {
+                foreach (var sch in Schems)
+                {
+                    table = sch.Tables[code];
+                    if (table != null)
+                        break;
+                }
+            }
+            return table;
         }
 
         public Task LoadTablesInfoAsync()

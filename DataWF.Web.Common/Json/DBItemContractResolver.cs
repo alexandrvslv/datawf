@@ -10,6 +10,7 @@ namespace DataWF.Web.Common
 {
     public class DBItemContractResolver : DefaultContractResolver
     {
+        public static readonly DBItemContractResolver Instance = new DBItemContractResolver();
         private readonly JsonConverter dbConverter = new DBItemJsonConverter();
         private readonly JsonConverter accessConverter = new AccessValueJsonConverter();
         private readonly JsonConverter stringConverter = new StringEnumConverter();

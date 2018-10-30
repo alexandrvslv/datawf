@@ -23,7 +23,7 @@ namespace DataWF.Web.Common
     {
         public static IServiceCollection AddDataProvider(this IServiceCollection services, IDataProvider dataProvider)
         {
-            DBService.Load(dataProvider);
+            dataProvider.Load();
             return services.AddSingleton(dataProvider);
         }
 
@@ -59,11 +59,13 @@ namespace DataWF.Web.Common
             services.AddMvc(options =>
             {
                 options.OutputFormatters.RemoveType<JsonOutputFormatter>();
-                options.OutputFormatters.Insert(0, new ClaimsJsonOutputFormatter(new JsonSerializerSettings(), ArrayPool<char>.Shared));
+                var settings = new JsonSerializerSettings() { ContractResolver = DBItemContractResolver.Instance };
+                settings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+                options.OutputFormatters.Insert(0, new ClaimsJsonOutputFormatter(settings, ArrayPool<char>.Shared));
             })
                .AddJsonOptions(options =>
                {
-                   options.SerializerSettings.ContractResolver = new DBItemContractResolver();
+                   options.SerializerSettings.ContractResolver = DBItemContractResolver.Instance;
                    //options.SerializerSettings.Error = SerializationErrors;
                    options.SerializerSettings.TraceWriter = new DiagnosticsTraceWriter() { };
                    options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
@@ -151,7 +153,7 @@ namespace DataWF.Web.Common
             return app;
         }
 
-        public static User GetCurrentUser(this ClaimsPrincipal claims)
+        public static User GetCommonUser(this ClaimsPrincipal claims)
         {
             var emailClaim = claims?.FindFirst(ClaimTypes.Email);
             return emailClaim != null ? User.GetByEmail(emailClaim.Value) : null;

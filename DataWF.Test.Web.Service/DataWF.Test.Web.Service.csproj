@@ -4,23 +4,16 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <CustomCommands>
-      <CustomCommands>
-        <Command>
-          <type>BeforeBuild</type>
-          <command>dotnet ../DataWF.Web.CodeGenerator/bin/Debug/netcoreapp2.1/DataWF.Web.CodeGenerator.dll --type controller --path ../DataWF.Module.Common/bin/Debug/netstandard2.0/DataWF.Module.Common.dll ../DataWF.Module.Counterpart/bin/Debug/netstandard2.0/DataWF.Module.Counterpart.dll ../DataWF.Module.Messanger/bin/Debug/netstandard2.0/DataWF.Module.Messanger.dll ../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Flow.dll --out Controllers</command>
-          <workingdir>${ProjectDir}</workingdir>
-        </Command>
-      </CustomCommands>
-    </CustomCommands>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">    
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="3.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="3.0.0" />
   </ItemGroup>
-
+  <ItemGroup>
+    <DotNetCliToolReference Include="Swashbuckle.AspNetCore.Cli" Version="3.0.0-beta1" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DataWF.Web.Common\DataWF.Web.Common.csproj" />
     <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />
@@ -31,8 +24,14 @@
     <ProjectReference Include="..\DataWF.Module.Flow\DataWF.Module.Flow.csproj" />
     <ProjectReference Include="..\DataWF.Module.Messanger\DataWF.Module.Messanger.csproj" />
   </ItemGroup>
-
+ <ItemGroup>
+    <Folder Include="Controllers\" />
+    <Folder Include="wwwroot\" />
+  </ItemGroup>
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="dotnet $(ProjectDir)../DataWF.Web.CodeGenerator/$(OutDir)DataWF.Web.CodeGenerator.dll -t controller -p $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Common.dll $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Counterpart.dll $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Messanger.dll $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Flow.dll -o   $(ProjectDir)Controllers" />
+    <Exec Command="dotnet $(ProjectDir)../DataWF.Web.CodeGenerator/$(OutDir)DataWF.Web.CodeGenerator.dll -t controller -p $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Common.dll $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Counterpart.dll $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Messanger.dll $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Flow.dll -o $(ProjectDir)Controllers" />
   </Target>  
+   <Target Name="SwaggerToFile" AfterTargets="AfterBuild">
+    <Exec Command="dotnet swagger tofile --output $(ProjectDir)wwwroot/swagger.json $(OutputPath)$(AssemblyName).dll v1" />
+  </Target>
 </Project>

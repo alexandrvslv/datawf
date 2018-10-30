@@ -117,7 +117,7 @@ namespace DataWF.Data
 
             if (val == null)
             {
-                var procedure = DBService.ParseProcedure(procedureCode, parameters.ProcedureCategory);
+                var procedure = DBService.Schems.ParseProcedure(procedureCode, parameters.ProcedureCategory);
                 if (procedure != null)
                     try { val = procedure.Execute(parameters); }
                     catch (Exception ex) { val = ex.Message; }

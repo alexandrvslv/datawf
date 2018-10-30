@@ -44,17 +44,17 @@ namespace DataWF.Web.Common
             }
         }
 
-        public async void Close(User user)
+        public async void CloseAsync(User user)
         {
-            await Close(GetByUser(user));
+            await CloseAsync(GetByUser(user));
         }
 
-        public async void Close(WebSocket socket)
+        public async void CloseAsync(WebSocket socket)
         {
-            await Close(GetBySocket(socket));
+            await CloseAsync(GetBySocket(socket));
         }
 
-        public async Task Close(WebNotifyClient client)
+        public async Task CloseAsync(WebNotifyClient client)
         {
             if (client != null)
             {
@@ -72,7 +72,7 @@ namespace DataWF.Web.Common
         }
 
         //https://github.com/radu-matei/websocket-manager/blob/blog-article/src/WebSocketManager/WebSocketManagerMiddleware.cs
-        public async Task Receive(WebSocket socket)
+        public async Task ListenAsync(WebSocket socket)
         {
             var buffer = new ArraySegment<byte>(new byte[8192]);
             var client = GetBySocket(socket);
@@ -100,6 +100,7 @@ namespace DataWF.Web.Common
                                 ReceiveMessage?.Invoke(this, new WebNotifyEventArgs(client, message));
                                 break;
                             case WebSocketMessageType.Close:
+                                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Good luck!", CancellationToken.None);
                                 Remove(client);
                                 return;
                         }
@@ -157,7 +158,7 @@ namespace DataWF.Web.Common
                 {
                     reader.ReadChar();
                     var tableName = reader.ReadString();
-                    var table = DBService.ParseTable(tableName);
+                    var table = DBService.Schems.ParseTable(tableName);
 
                     while (reader.PeekChar() == 2)
                     {

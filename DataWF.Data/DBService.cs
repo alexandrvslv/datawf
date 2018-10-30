@@ -72,38 +72,8 @@ namespace DataWF.Data
         //private static Type[] param = new Type[] { typeof(DBItem) };
         //private static Type[] param2 = new Type[] { typeof(DBRow) };
         public static char[] DotSplit = { '.' };
-        private static DBSchema defaultSchema;
         private static DBConnectionList connections = new DBConnectionList();
         private static DBSchemaList schems = new DBSchemaList();
-
-        public static void SaveCache()
-        {
-            foreach (DBSchema schema in schems)
-            {
-                foreach (DBTable table in schema.Tables)
-                {
-                    if (table.Count > 0 && table.IsCaching && !(table is IDBVirtualTable))
-                    {
-                        table.SaveFile();
-                    }
-                }
-            }
-        }
-
-        public static void LoadCache()
-        {
-            foreach (DBSchema schema in schems)
-            {
-                foreach (DBTable table in schema.Tables)
-                {
-                    if (table.IsCaching && !(table is IDBVirtualTable))
-                    {
-                        table.LoadFile();
-                    }
-                }
-            }
-            Helper.LogWorkingSet("Data Cache");
-        }
 
         public static SelectableList<DBSchemaChange> Changes = new SelectableList<DBSchemaChange>();
 
@@ -229,14 +199,6 @@ namespace DataWF.Data
             }
             Serialization.Serialize(connections, "connections.xml");
             Serialization.Serialize(schems, file);
-            if (DataProvider != null)
-                DataProvider.Save();
-        }
-
-        public static void Load(IDataProvider dataProvider)
-        {
-            DataProvider = dataProvider;
-            Load();
         }
 
         public static void Load()
@@ -252,11 +214,6 @@ namespace DataWF.Data
             schems.HandleChanges = true;
             Helper.LogWorkingSet("Schema");
             Changes.Clear();
-            if (DataProvider != null)
-            {
-                DataProvider.Load();
-                Helper.LogWorkingSet("DataProvider");
-            }
         }
 
         public static DBConnectionList Connections
@@ -268,57 +225,6 @@ namespace DataWF.Data
         public static DBSchemaList Schems
         {
             get { return schems; }
-        }
-
-        public static DBSchema DefaultSchema
-        {
-            get
-            {
-                if (defaultSchema == null && schems.Count > 0)
-                    defaultSchema = schems[0];
-                return defaultSchema;
-            }
-            set
-            {
-                defaultSchema = value;
-                if (defaultSchema != null && !schems.Contains(defaultSchema))
-                    schems.Add(defaultSchema);
-            }
-        }
-
-        public static void Deserialize(string file, DBSchemaItem selectedItem)
-        {
-            var item = Serialization.Deserialize(file);
-            if (item is DBTable table)
-            {
-                DBSchema schema = selectedItem.Schema;
-
-                if (schema.Tables.Contains(table.Name))
-                    schema.Tables.Remove(table.Name);
-                schema.Tables.Add(table);
-            }
-            else if (item is DBSchema schema)
-            {
-                if (Schems.Contains(schema.Name))
-                    schema.Name = schema.Name + "1";
-                Schems.Add((DBSchema)item);
-            }
-            else if (item is DBColumn column)
-            {
-                if (selectedItem is DBTable sTable)
-                    sTable.Columns.Add((DBColumn)item);
-            }
-            else if (item is SelectableList<DBSchemaItem> list)
-            {
-                foreach (var element in list)
-                {
-                    if (element is DBColumn && selectedItem is DBTable)
-                        ((DBTable)selectedItem).Columns.Add((DBColumn)element);
-                    else if (element is DBTable && selectedItem is DBSchema)
-                        ((DBSchema)selectedItem).Tables.Add((DBTable)element);
-                }
-
-            }
         }
 
         public static void CommitChanges()
@@ -392,84 +298,7 @@ namespace DataWF.Data
             return builder.ToString();
         }
 
-        public static DBColumn ParseColumn(string name, DBSchema schema = null)
-        {
-            if (string.IsNullOrEmpty(name))
-                return null;
-            DBColumn column = null;
-            DBTable table = ParseTable(name, schema);
 
-            int index = name.LastIndexOf('.');
-            name = index < 0 ? name : name.Substring(index + 1);
-            if (schema == null)
-                schema = DefaultSchema;
-
-
-            if (table != null)
-            {
-                column = table.ParseColumn(name);
-            }
-            else if (schema != null)
-            {
-                foreach (var t in schema.Tables)
-                {
-                    column = t.Columns[name];
-                    if (column != null)
-                        break;
-                }
-            }
-            return column;
-        }
-
-        public static DBTable ParseTable(string code, DBSchema s = null)
-        {
-            if (string.IsNullOrEmpty(code))
-                return null;
-            DBTable table = null;
-            DBSchema schema = null;
-            int index = code.IndexOf('.');
-            if (index >= 0)
-            {
-                schema = Schems[code.Substring(0, index++)];
-                int sindex = code.IndexOf('.', index);
-                code = sindex < 0 ? code.Substring(index) : code.Substring(index, sindex - index);
-            }
-            if (schema == null)
-                schema = s;
-            if (schema != null)
-            {
-                table = schema.Tables[code];
-            }
-            else
-            {
-                foreach (var sch in Schems)
-                {
-                    table = sch.Tables[code];
-                    if (table != null)
-                        break;
-                }
-            }
-            return table;
-        }
-
-        public static DBTableGroup ParseTableGroup(string code, DBSchema s = null)
-        {
-            if (code == null)
-                return null;
-            DBSchema schema = null;
-            int index = code.IndexOf('.');
-            if (index < 0)
-                schema = s;
-            else
-            {
-                schema = Schems[code.Substring(0, index++)];
-                int sindex = code.IndexOf('.', index);
-                code = sindex < 0 ?
-                    code.Substring(index) :
-                    code.Substring(index, sindex - index);
-            }
-            return schema.TableGroups[code];
-        }
 
         public static int GetIntValue(object value)
         {
@@ -495,10 +324,6 @@ namespace DataWF.Data
                 }
             }
         }
-
-
-
-
 
         public static int CompareDBTable(DBTable x, DBTable y)
         {
@@ -606,21 +431,7 @@ namespace DataWF.Data
 
 
 
-        public static DBProcedure ParseProcedure(string code, string category = "General")
-        {
-            var procedure = (DBProcedure)null;
-            foreach (var schema in Schems)
-            {
-                procedure = schema.Procedures[code];
-                if (procedure == null)
-                    procedure = schema.Procedures.SelectByCode(code, category);
-                if (procedure == null && category != "General")
-                    procedure = schema.Procedures.SelectByCode(code);
-                if (procedure != null)
-                    break;
-            }
-            return procedure;
-        }
+
 
         public static List<int> AccessGroups { get; } = new List<int>();
 

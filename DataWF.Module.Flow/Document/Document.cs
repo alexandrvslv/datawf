@@ -889,7 +889,7 @@ namespace DataWF.Module.Flow
         }
 
         [ControllerMethod]
-        public void Return(DocumentWork work, User user)
+        public void Return(DocumentWork work, IUserIdentity user)
         {
             if (work.From == null || work.From.Stage == null)
                 throw new InvalidOperationException("Can't Return to undefined Stage");

@@ -51,9 +51,6 @@ namespace DataWF.Web.CodeGenerator
                 SyntaxHelper.CreateUsingDirective("Newtonsoft.Json")
             };
             var url = new Uri(Source);
-            Console.WriteLine(Source);
-            Console.WriteLine(url);
-            Console.WriteLine(url.LocalPath);
             if (url.Scheme == "http" || url.Scheme == "https")
                 document = SwaggerDocument.FromUrlAsync(url.OriginalString).GetAwaiter().GetResult();
             else if (url.Scheme == "file")

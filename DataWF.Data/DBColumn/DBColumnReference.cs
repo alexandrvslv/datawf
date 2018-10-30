@@ -28,7 +28,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public DBColumn Column
         {
-            get { return column ?? DBService.ParseColumn(columnName); }
+            get { return column ?? DBService.Schems.ParseColumn(columnName); }
             set
             {
                 if (Column != value)

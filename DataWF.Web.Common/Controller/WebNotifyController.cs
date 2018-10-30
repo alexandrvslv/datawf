@@ -26,9 +26,8 @@ namespace DataWF.Web.Common
                 return BadRequest();
             }
             var socket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-            Service.Register(socket, User.GetCurrentUser());
-            await Service.Receive(socket);
-
+            Service.Register(socket, User.GetCommonUser());
+            await Service.ListenAsync(socket);
             return new EmptyResult();
         }
     }

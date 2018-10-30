@@ -488,7 +488,7 @@ namespace DataWF.Data
 
         public IEnumerable<T> GetReferencing<T>(string tableCode, string columnCode, DBLoadParam param) where T : DBItem, new()
         {
-            var table = (DBTable<T>)DBService.ParseTable(tableCode, Table.Schema);
+            var table = (DBTable<T>)Table.Schema.ParseTable(tableCode);
             return table != null ? GetReferencing<T>(table, table.ParseColumn(columnCode), param) : null;
         }
 

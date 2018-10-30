@@ -90,7 +90,7 @@ namespace DataWF.Data
                                         if (split.Length == 2)
                                         {
                                             var sheet = split[0];
-                                            var procedure = DBService.ParseProcedure(name.Name, param.ProcedureCategory);
+                                            var procedure = DBService.Schems.ParseProcedure(name.Name, param.ProcedureCategory);
                                             if (procedure != null)
                                             {
                                                 var defName = new DefinedName
@@ -143,7 +143,7 @@ namespace DataWF.Data
                                             {
                                                 var table = (Excel.Table)reader.LoadCurrentElement();
 
-                                                var procedure = DBService.ParseProcedure(table.Name, param.ProcedureCategory);
+                                                var procedure = DBService.Schems.ParseProcedure(table.Name, param.ProcedureCategory);
                                                 if (procedure != null)
                                                 {
                                                     var reference = CellRange.Parse(table.Reference.Value);

@@ -37,7 +37,7 @@ namespace DataWF.Module.Common
         [XmlIgnore]
         public DBTable Table
         {
-            get { return cacheTargetTable ?? (cacheTargetTable = DBService.ParseTable(TableName)); }
+            get { return cacheTargetTable ?? (cacheTargetTable = DBService.Schems.ParseTable(TableName)); }
             set
             {
                 cacheTargetTable = value;

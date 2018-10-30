@@ -26,7 +26,7 @@ namespace DataWF.Module.FlowGui
         private Stage mstage = null;
         private Template mtemplate = null;
         private ManualResetEvent load = new ManualResetEvent(false);
-        private DocumentFilter search = new DocumentFilter();
+        private DocumentFilter search = new DocumentFilter() { CurrentUser = (User)GuiEnvironment.User };
         private ToolItem toolRefresh;
 
 

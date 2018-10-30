@@ -87,9 +87,14 @@ namespace DataWF.Module.Common
 
         public static User SetCurrentByEnvironment()
         {
-            var user = DBTable.LoadByCode(Environment.UserName);
+            var user = GetCurrentByEnvironment();
             SetCurrentUser(user);
             return user;
+        }
+
+        public static User GetCurrentByEnvironment()
+        {
+            return DBTable.LoadByCode(Environment.UserName);
         }
 
         public static User SetCurrentByCredential(string login, string password, bool threaded = false)

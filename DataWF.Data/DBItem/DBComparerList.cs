@@ -43,7 +43,7 @@ namespace DataWF.Data
         }
 
         public DBComparerList(string table, params string[] columns)
-            : this(DBService.ParseTable(table), columns)
+            : this(DBService.Schems.ParseTable(table), columns)
         {
         }
 

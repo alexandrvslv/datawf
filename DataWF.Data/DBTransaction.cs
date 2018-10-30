@@ -84,7 +84,7 @@ namespace DataWF.Data
         private Dictionary<DBConnection, DBTransaction> subTransactions;
 
         public DBTransaction()
-            : this(DBService.DefaultSchema.Connection)
+            : this(DBService.Schems.DefaultSchema.Connection)
         { }
 
         public DBTransaction(DBConnection config)

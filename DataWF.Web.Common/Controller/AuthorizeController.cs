@@ -30,7 +30,7 @@ namespace DataWF.Web.Common
             users = DBTable.GetTable<User>();
         }
 
-        public User CurrentUser => user ?? (user = User.GetCurrentUser());
+        public User CurrentUser => user ?? (user = User.GetCommonUser());
 
         [AllowAnonymous]
         [HttpPost("LoginIn/")]

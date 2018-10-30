@@ -15,7 +15,7 @@ namespace DataWF.Web.Common
         [HttpGet]
         public ActionResult<IEnumerable<DBProcedure>> Get()
         {
-            return DBService.DefaultSchema.Procedures;
+            return DBService.Schems.DefaultSchema.Procedures;
         }
     }
 }

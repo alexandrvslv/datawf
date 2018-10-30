@@ -273,7 +273,7 @@ namespace DataWF.Data.Gui
                 AllowCheck = true,
                 CheckRecursive = true,
                 DataKeys = DataTreeKeys.Schema | DataTreeKeys.TableGroup | DataTreeKeys.Table,
-                DataFilter = DBService.DefaultSchema
+                DataFilter = DBService.Schems.DefaultSchema
             };
 
             var window = new ToolWindow()

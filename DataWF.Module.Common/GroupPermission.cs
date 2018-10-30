@@ -278,11 +278,11 @@ namespace DataWF.Module.Common
                     if (type == PermissionType.GSchema)
                         target = DBService.Schems[Code];
                     else if (type == PermissionType.GColumn)
-                        target = DBService.ParseColumn(Code);
+                        target = DBService.Schems.ParseColumn(Code);
                     else if (type == PermissionType.GTable)
-                        target = DBService.ParseTable(Code);
+                        target = DBService.Schems.ParseTable(Code);
                     else if (type == PermissionType.GBlock)
-                        target = DBService.ParseTableGroup(Code);
+                        target = DBService.Schems.ParseTableGroup(Code);
                     else if (type == PermissionType.GType)
                         target = GetClass();
                     else if (type == PermissionType.GTypeMember)
@@ -314,12 +314,12 @@ namespace DataWF.Module.Common
 
         public DBTable GetTable()
         {
-            return DBService.ParseTable(Code);
+            return DBService.Schems.ParseTable(Code);
         }
 
         public DBColumn GetColumn()
         {
-            return DBService.ParseColumn(Code);
+            return DBService.Schems.ParseColumn(Code);
         }
 
         public override string ToString()

@@ -36,7 +36,7 @@ namespace DataWF.Data
 
         public DBTable Table
         {
-            get { return cacheTable ?? (cacheTable = DBService.ParseTable(Type.Name)); }
+            get { return cacheTable ?? (cacheTable = DBService.Schems.ParseTable(Type.Name)); }
             internal set { cacheTable = value; }
         }
 

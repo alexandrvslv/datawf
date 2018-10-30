@@ -339,7 +339,7 @@ namespace DataWF.Data.Gui
             if (list.SelectedItem is System.CodeDom.Compiler.CompilerError error)
             {
                 string code = System.IO.Path.GetFileNameWithoutExtension(error.FileName);
-                DBProcedure p = DBService.ParseProcedure(code);
+                DBProcedure p = DBService.Schems.ParseProcedure(code);
                 if (GuiService.Main == null)
                     Select(error.Column, error.Line);
                 else if (p != null)

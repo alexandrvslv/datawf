@@ -511,6 +511,6 @@ namespace DataWF.Module.Flow
             get { return QDoc.Parameters.Count == 0; }
         }
 
-        public DBItem CurrentUser { get; private set; }
+        public DBItem CurrentUser { get; set; }
     }
 }

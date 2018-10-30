@@ -20,7 +20,7 @@ namespace DataWF.Web.Common
 
         private DBTable GetTable(string name)
         {
-            return DBService.DefaultSchema.Tables.FirstOrDefault(p => p.ItemType.Type.Name == name);
+            return DBService.Schems.DefaultSchema.Tables.FirstOrDefault(p => p.ItemType.Type.Name == name);
             //TypeHelper.ParseType(name);
             //if (type == null)
             //{
@@ -29,7 +29,7 @@ namespace DataWF.Web.Common
             //return DBTable.GetTable(type);
         }
 
-        public User CurrentUser => user ?? (user = User.GetCurrentUser());
+        public User CurrentUser => user ?? (user = User.GetCommonUser());
 
         [HttpGet("Get/{name}")]
         public ActionResult<AccessValue> GetAccess([FromRoute]string name)

@@ -64,7 +64,7 @@ namespace DataWF.Data
             get
             {
                 if (columnn == null && columnName != null)
-                    columnn = base.Table?.ParseColumn(columnName) ?? DBService.ParseColumn(columnName);
+                    columnn = base.Table?.ParseColumn(columnName) ?? DBService.Schems.ParseColumn(columnName);
                 return columnn;
             }
             set

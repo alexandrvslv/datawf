@@ -179,7 +179,7 @@ namespace DataWF.Data.Gui
                 dialog.Filters.Add(new FileDialogFilter("Config(*.xml)", "*.xml"));
                 if (dialog.Run(ParentWindow))
                 {
-                    DBService.Deserialize(dialog.FileName, dataTree.SelectedDBItem);
+                    DBService.Schems.Deserialize(dialog.FileName, dataTree.SelectedDBItem);
                 }
             }
         }
@@ -263,7 +263,7 @@ namespace DataWF.Data.Gui
             {
                 Mode = ExportMode.Patch,
                 Stamp = DateTime.Today.AddDays(-7),
-                Source = DBService.DefaultSchema,
+                Source = DBService.Schems.DefaultSchema,
                 Target = new DBSchema()
                 {
                     Name = "patch",

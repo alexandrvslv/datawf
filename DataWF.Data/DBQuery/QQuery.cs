@@ -340,7 +340,7 @@ namespace DataWF.Data
                     {
                         if (word.Equals("where", StringComparison.OrdinalIgnoreCase))
                             break;
-                        var tb = DBService.ParseTable(word);
+                        var tb = DBService.Schems.ParseTable(word);
 
                         if (tb != null)
                         {

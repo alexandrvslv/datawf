@@ -68,7 +68,7 @@ namespace DataWF.Data
         { }
 
         public DBComparer(string table, string column, ListSortDirection direction = ListSortDirection.Ascending)
-            : this(DBService.ParseTable(table), column, direction)
+            : this(DBService.Schems.ParseTable(table), column, direction)
         { }
 
         public DBComparer(DBTable table, string column, ListSortDirection direction = ListSortDirection.Ascending)

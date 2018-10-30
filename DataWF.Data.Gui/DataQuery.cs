@@ -111,7 +111,7 @@ namespace DataWF.Data.Gui
             Localize();
 
             toolFind = new FindWindow { Editor = queryText };
-            CurrentSchema = DBService.DefaultSchema;
+            CurrentSchema = DBService.Schems.DefaultSchema;
         }
 
         public string Query

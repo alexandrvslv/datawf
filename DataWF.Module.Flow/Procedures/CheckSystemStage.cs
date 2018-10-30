@@ -39,7 +39,7 @@ namespace DataWF.Module.Flow
                     work.Document.ExecuteProceduresByWork(work, StageParamProcudureType.Manual, parameters.User);
                     work.Document.Save();
 
-                    transaction.Commit();
+                    transaction.Commit(parameters.User);
                 }
             }
             return null;

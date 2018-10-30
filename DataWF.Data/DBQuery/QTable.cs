@@ -71,7 +71,7 @@ namespace DataWF.Data
             get
             {
                 if (table == null)
-                    table = DBService.ParseTable(tableName);
+                    table = DBService.Schems.ParseTable(tableName);
                 return table;
             }
             set

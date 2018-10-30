@@ -20,7 +20,7 @@ namespace DataWF.Web.Common
             table = DBTable.GetTable<T>();
         }
 
-        public User CurrentUser => user ?? (user = User.GetCurrentUser());
+        public User CurrentUser => user ?? (user = User.GetCommonUser());
 
         [HttpGet]
         public ActionResult<IEnumerable<T>> Get()

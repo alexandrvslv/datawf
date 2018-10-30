@@ -240,7 +240,7 @@ namespace DataWF.Data.Gui
             var tableName = reader.ReadAttribute<string>("TableName");
             if (!string.IsNullOrEmpty(tableName))
             {
-                Table = DBService.ParseTable(tableName);
+                Table = DBService.Schems.ParseTable(tableName);
             }
         }
     }
