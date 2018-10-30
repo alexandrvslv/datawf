@@ -579,7 +579,7 @@ namespace DataWF.Common
 
         public static bool GetBrowsable(MemberInfo info)
         {
-            return info.GetCustomAttribute<BrowsableAttribute>(false)?.Browsable ?? false;
+            return info.GetCustomAttribute<BrowsableAttribute>(false)?.Browsable ?? true;
         }
 
         public static bool GetReadOnly(MemberInfo info)
