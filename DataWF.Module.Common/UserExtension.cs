@@ -26,14 +26,17 @@ namespace DataWF.Module.Common
     {
         public static IEnumerable<User> GetUsers(this DBItem item, DBItem filter = null)
         {
-            foreach (var access in item.Access.Items)
+            foreach (User user in User.DBTable)
             {
-                if (access.Create && (filter == null || filter.Access.Get(access.Group).Edit))
+                foreach (var access in item.Access.Items)
                 {
-                    foreach (User user in User.DBTable)
+                    if (user.Access.Get(access.Group).Create)
                     {
-                        if (user.Access.Get(access.Group).Create)
+                        if (access.Create && (filter == null || filter.Access.Get(access.Group).Edit))
+                        {
                             yield return user;
+                            break;
+                        }
                     }
                 }
             }
@@ -41,14 +44,17 @@ namespace DataWF.Module.Common
 
         public static IEnumerable<Position> GetPositions(this DBItem item, DBItem filter = null)
         {
-            foreach (var access in item.Access.Items)
+            foreach (Position position in Position.DBTable)
             {
-                if (access.Create && (filter == null || filter.Access.Get(access.Group).Edit))
+                foreach (var access in item.Access.Items)
                 {
-                    foreach (Position position in Position.DBTable)
+                    if (position.Access.Get(access.Group).Create)
                     {
-                        if (position.Access.Get(access.Group).Create)
+                        if (access.Create && (filter == null || filter.Access.Get(access.Group).Edit))
+                        {
                             yield return position;
+                            break;
+                        }
                     }
                 }
             }
@@ -56,14 +62,17 @@ namespace DataWF.Module.Common
 
         public static IEnumerable<Department> GetDepartment(this DBItem item, DBItem filter = null)
         {
-            foreach (var access in item.Access.Items)
+            foreach (Department department in Department.DBTable)
             {
-                if (access.Create && (filter == null || filter.Access.Get(access.Group).Edit))
+                foreach (var access in item.Access.Items)
                 {
-                    foreach (Department department in Department.DBTable)
+                    if (department.Access.Get(access.Group).Create)
                     {
-                        if (department.Access.Get(access.Group).Create)
+                        if (access.Create && (filter == null || filter.Access.Get(access.Group).Edit))
+                        {
                             yield return department;
+                            break;
+                        }
                     }
                 }
             }
