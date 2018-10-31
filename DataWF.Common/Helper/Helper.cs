@@ -1159,7 +1159,7 @@ namespace DataWF.Common
                 result = new CompareType(CompareType.Parse(value));
             else
             {
-                var valueSerialize = TypeHelper.GetValueSerializer(value.GetType());
+                var valueSerialize = TypeHelper.GetValueSerializer(type);
                 if (valueSerialize != null)
                     result = valueSerialize.ConvertFromString(value, null);
                 else
