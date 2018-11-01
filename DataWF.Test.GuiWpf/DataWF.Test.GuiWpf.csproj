@@ -6,7 +6,7 @@
     <RootNamespace>DataWF.Test.GuiWpf</RootNamespace>
     <AssemblyName>DataWF.Test.GuiWpf</AssemblyName>
     <TargetFrameworks>net461</TargetFrameworks>
-    <Platforms>AnyCPU;x86</Platforms>
+    <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>

@@ -7,7 +7,7 @@
     <AssemblyName>DataWF.Test.GuiGtk</AssemblyName>
     <StartupObject>DataWF.TestGui.Program</StartupObject>
     <TargetFrameworks>net461</TargetFrameworks>
-    <Platforms>AnyCPU;x86</Platforms>
+    <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>

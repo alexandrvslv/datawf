@@ -6,7 +6,7 @@
     <RootNamespace>DataWF.OdfGui</RootNamespace>
     <AssemblyName>DataWF.OdfGui</AssemblyName>
     <TargetFrameworks>net461</TargetFrameworks>
-    <Platforms>AnyCPU;x86</Platforms>
+    <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
