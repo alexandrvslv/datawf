@@ -18,8 +18,10 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Common;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Specialized;
+using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
@@ -32,6 +34,7 @@ namespace DataWF.Data
 
         public bool HandleChanges { get; set; } = true;
 
+        [JsonIgnore, XmlIgnore]
         public DBSchema DefaultSchema
         {
             get
