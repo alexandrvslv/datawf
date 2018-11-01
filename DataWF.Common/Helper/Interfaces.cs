@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Security.Principal;
+using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
@@ -260,6 +261,11 @@ namespace DataWF.Common
     public interface IUserIdentity : IIdentity
     {
         int? Id { get; }
+    }
+
+    public interface ICallService
+    {
+        Task Call(IUserIdentity user);
     }
 }
 
