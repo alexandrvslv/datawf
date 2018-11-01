@@ -40,6 +40,7 @@ namespace DataWF.Module.Common
         private static DBColumn departmentKey = DBColumn.EmptyKey;
         private static DBColumn positionKey = DBColumn.EmptyKey;
         private static DBColumn emailKey = DBColumn.EmptyKey;
+        private static DBColumn phoneKey = DBColumn.EmptyKey;
         private static DBColumn passwordKey = DBColumn.EmptyKey;
         private static DBColumn superKey = DBColumn.EmptyKey;
         private static DBColumn refreshTokenKey = DBColumn.EmptyKey;
@@ -50,6 +51,7 @@ namespace DataWF.Module.Common
         public static DBColumn DepartmentKey => DBTable.ParseProperty(nameof(DepartmentId), ref departmentKey);
         public static DBColumn PositionKey => DBTable.ParseProperty(nameof(PositionId), ref positionKey);
         public static DBColumn EmailKey => DBTable.ParseProperty(nameof(EMail), ref emailKey);
+        public static DBColumn PhoneKey => DBTable.ParseProperty(nameof(Phone), ref phoneKey);
         public static DBColumn PasswordKey => DBTable.ParseProperty(nameof(Password), ref passwordKey);
         public static DBColumn SuperKey => DBTable.ParseProperty(nameof(Super), ref superKey);
         public static DBColumn RefreshTokenKey => DBTable.ParseProperty(nameof(RefreshToken), ref refreshTokenKey);
@@ -301,6 +303,12 @@ namespace DataWF.Module.Common
         {
             get { return GetValue<string>(EmailKey); }
             set { SetValue(value, EmailKey); }
+        }
+        [DataMember, Column("phone", 1024), Index("ruser_phone", false)]
+        public string Phone
+        {
+            get { return GetValue<string>(PhoneKey); }
+            set { SetValue(value, PhoneKey); }
         }
 
         public bool IsBlock
