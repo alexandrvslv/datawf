@@ -155,13 +155,23 @@ namespace DataWF.Common
                                             if (mediaType.Equals("application/octet-stream"))
                                             {
                                                 var headers = GetHeaders(response);
-                                                string fileName = GetFileName(headers);
+                                                (string fileName, int fileSize) = GetFileInfo(headers);
                                                 var filePath = Path.Combine(Path.GetTempPath(), fileName);
-
-                                                var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
-                                                await responseStream.CopyToAsync(fileStream, 8192, cancellationToken).ConfigureAwait(false);
-                                                await fileStream.FlushAsync();
-                                                return (R)(object)fileStream;
+                                                try
+                                                {
+                                                    var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+                                                    var process = new DownloadProcess(fileName, 8192, fileSize);
+                                                    await process.StartAsync(responseStream, fileStream, new CancellationToken());
+                                                    return (R)(object)fileStream;
+                                                }
+                                                catch (IOException ioex)
+                                                {
+                                                    if (ioex.HResult == -2147024864)
+                                                    {
+                                                        return (R)(object)null;
+                                                    }
+                                                    throw ioex;
+                                                }
                                             }
                                             else if (typeof(R) == typeof(string))
                                             {
@@ -230,13 +240,19 @@ namespace DataWF.Common
             }
         }
 
-        private static string GetFileName(Dictionary<string, IEnumerable<string>> headers)
+        private static (string, int) GetFileInfo(Dictionary<string, IEnumerable<string>> headers)
         {
             var fileName = headers.TryGetValue("Content-Disposition", out var disposition)
                 ? disposition.FirstOrDefault() : "somefile.someextension";
             fileName = fileName.Replace("attachment; filename=", "");
             var index = fileName.IndexOf(";");
-            return fileName.Substring(0, index > -1 ? index : fileName.Length).Trim(' ', '\"');
+            fileName = fileName.Substring(0, index > -1 ? index : fileName.Length).Trim(' ', '\"');
+            var fileSize = 0;
+            if (headers.TryGetValue("Content-Length", out var length))
+            {
+                int.TryParse(length.FirstOrDefault(), out fileSize);
+            }
+            return (fileName, fileSize);
         }
 
         public virtual async Task<R> RequestArray<R, I>(CancellationToken cancellationToken,

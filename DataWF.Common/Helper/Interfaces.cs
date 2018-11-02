@@ -262,10 +262,5 @@ namespace DataWF.Common
     {
         int? Id { get; }
     }
-
-    public interface ICallService
-    {
-        Task Call(IUserIdentity user);
-    }
 }
 
