@@ -18,12 +18,9 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using DataWF.Common;
 using System.Text.RegularExpressions;
 
-//using DataControl;
-
-namespace DataWF.Data
+namespace DataWF.Common
 {
     public struct CellReference
     {

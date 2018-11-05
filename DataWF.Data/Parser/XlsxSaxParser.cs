@@ -509,8 +509,6 @@ namespace DataWF.Data
             return results;
         }
 
-
-
         public void CopyPart<T>(T part, string id, OpenXmlPartContainer container) where T : OpenXmlPart, IFixedContentTypePart
         {
             try
