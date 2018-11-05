@@ -12,6 +12,8 @@ namespace DataWF.Common
         object Value { get; set; }
         object TypedValue { get; set; }
         bool IsEnabled { get; set; }
+        bool GroupBegin { get; set; }
+        bool GroupEnd { get; set; }
     }
 
     public interface IQueryFormatable

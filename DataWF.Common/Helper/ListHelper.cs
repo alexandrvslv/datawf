@@ -338,33 +338,60 @@ namespace DataWF.Common
         public static IEnumerable<T> Select<T>(IEnumerable<T> items, Query<T> query, ListIndexes<T> indexes = null)
         {
             IEnumerable<T> buffer = items;
+            var stack = new Stack<SelectStackEntry<T>>(0);
             bool? flag = null;
             foreach (var parameter in query.GetEnabled())
             {
-                var temp = Select<T>(items, parameter, indexes);
+                var curParameter = parameter;
+                var temp = Select<T>(items, curParameter, indexes);
+                if (curParameter.GroupBegin)
+                {
+                    stack.Push(new SelectStackEntry<T>() { Buffer = temp, Parameter = curParameter });
+                    continue;
+                }
+                else if (stack.Count > 0)
+                {
+                    var entry = stack.Pop();
+                    entry.Buffer = Concat(entry.Buffer, temp, curParameter);
+                    if (curParameter.GroupEnd)
+                    {
+                        temp = entry.Buffer;
+                        curParameter = entry.Parameter;
+                    }
+                    else
+                    {
+                        stack.Push(entry);
+                        continue;
+                    }
+                }
                 if (flag == null)
                 {
                     buffer = temp;
                     flag = true;
                 }
-                else if (parameter.Logic.Type == LogicTypes.Undefined)
+                else
                 {
-                    buffer = buffer.Concat(temp);
-                }
-                else if (parameter.Logic.Type == LogicTypes.Or)
-                {
-                    buffer = parameter.Logic.Not
-                                      ? buffer.Except(temp)
-                                      : buffer.Union(temp);
-                }
-                else if (parameter.Logic.Type == LogicTypes.And)
-                {
-                    buffer = parameter.Logic.Not
-                                      ? buffer.Except(temp).Union(temp.Except(buffer))
-                                      : buffer.Intersect(temp);
+                    buffer = Concat(buffer, temp, curParameter);
                 }
             }
             return buffer;
+        }
+
+        public static IEnumerable<T> Concat<T>(IEnumerable<T> buffer, IEnumerable<T> temp, IQueryParameter parameter)
+        {
+            switch (parameter.Logic.Type)
+            {
+                case LogicTypes.Or:
+                    return parameter.Logic.Not
+                    ? buffer.Except(temp)
+                    : buffer.Union(temp);
+                case LogicTypes.And:
+                    return parameter.Logic.Not
+                   ? buffer.Except(temp).Union(temp.Except(buffer))
+                   : buffer.Intersect(temp);
+                default:
+                    return buffer.Concat(temp);
+            }
         }
 
         public static IEnumerable<T> Select<T>(IEnumerable<T> items, QueryParameter<T> param, ListIndexes<T> indexes = null)
@@ -389,21 +416,9 @@ namespace DataWF.Common
                     buffer = temp;
                     flag = true;
                 }
-                else if (parameter.Logic.Type == LogicTypes.Undefined)
+                else
                 {
-                    buffer = buffer.Concat(temp);
-                }
-                else if (parameter.Logic.Type == LogicTypes.Or)
-                {
-                    buffer = parameter.Logic.Not
-                                      ? buffer.Except(temp)
-                                      : buffer.Union(temp);
-                }
-                else if (parameter.Logic.Type == LogicTypes.And)
-                {
-                    buffer = parameter.Logic.Not
-                                      ? buffer.Except(temp).Union(temp.Except(buffer))
-                                      : buffer.Intersect(temp);
+                    buffer = Concat(buffer, temp, parameter);
                 }
             }
             return buffer;
@@ -422,20 +437,70 @@ namespace DataWF.Common
             }
         }
 
+        public struct SelectStackEntry<T>
+        {
+            public IEnumerable<T> Buffer;
+            public QueryParameter<T> Parameter;
+        }
+
+        public struct CheckStackEntry
+        {
+            public bool Flag;
+            public IQueryParameter Parameter;
+        }
+
         public static bool CheckItem(object item, IQuery checkers)
         {
             bool? flag = null;
+            var stack = new Stack<CheckStackEntry>(0);
             foreach (var parameter in checkers.Parameters.Where(p => p.IsEnabled))
             {
                 bool rez = CheckItem(parameter.Invoker.GetValue(item), parameter.TypedValue, parameter.Comparer, parameter.Comparision);
+                var currParameter = parameter;
+                if (currParameter.GroupBegin)
+                {
+                    stack.Push(new CheckStackEntry { Flag = rez, Parameter = currParameter });
+                    continue;
+                }
+                else if (stack.Count > 0)
+                {
+                    var entry = stack.Pop();
+                    entry.Flag = Concat(entry.Flag, rez, currParameter);
+
+                    if (currParameter.GroupEnd)
+                    {
+                        rez = entry.Flag;
+                        currParameter = entry.Parameter;
+                    }
+                    else
+                    {
+                        stack.Push(entry);
+                        continue;
+                    }
+                }
                 if (flag == null)
+                {
                     flag = rez;
-                else if (parameter.Logic.Type == LogicTypes.Or)
-                    flag = parameter.Logic.Not ? flag | !rez : flag | rez;
-                else if (parameter.Logic.Type == LogicTypes.And)
-                    flag = parameter.Logic.Not ? flag & !rez : flag & rez;
+                }
+                else
+                {
+                    flag = Concat(flag.Value, rez, currParameter);
+                }
             }
             return flag ?? true;
+        }
+
+        private static bool Concat(bool flag, bool rez, IQueryParameter parameter)
+        {
+            switch (parameter.Logic.Type)
+            {
+                case LogicTypes.Or:
+                    return parameter.Logic.Not ? flag | !rez : flag | rez;
+                case LogicTypes.And:
+                    return parameter.Logic.Not ? flag & !rez : flag & rez;
+                default:
+                    return flag | rez;
+            }
         }
 
         private static void Swap(IList array, int Left, int Right)
@@ -448,7 +513,9 @@ namespace DataWF.Common
         public static void QuickSort<T>(IList<T> array, IComparer<T> comp)
         {
             if (array.Count > 1)
+            {
                 QuickSort1<T>(array, 0, array.Count - 1, comp);
+            }
         }
         /// <summary>
         /// List sort. Implementation of quick sork algorithm
