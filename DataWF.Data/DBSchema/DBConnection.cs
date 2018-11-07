@@ -311,10 +311,19 @@ namespace DataWF.Data
             return System.CreateCommand(this, query, commandType);
         }
 
-        public void CheckConnection()
+        public bool CheckConnection()
         {
-            var connection = GetConnection();
-            connection.Close();
+            try
+            {
+                var connection = GetConnection();
+                connection.Close();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Helper.OnException(ex);
+            }
+            return false;
         }
 
         public void ClearConnectionCache()

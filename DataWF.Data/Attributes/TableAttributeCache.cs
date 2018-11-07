@@ -136,7 +136,7 @@ namespace DataWF.Data
         {
             Schema = schema ?? throw new ArgumentNullException(nameof(schema));
 
-            Debug.WriteLine($"Generate {Attribute.TableName}");
+            Debug.WriteLine($"Generate {Attribute.TableName} - {this.ItemType.Name}");
 
             if (TableGroup == null)
             {

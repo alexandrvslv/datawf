@@ -1,5 +1,4 @@
-﻿using DataWF.Web.Common;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace DataWF.Web.CodeGenerator
@@ -19,10 +18,6 @@ namespace DataWF.Web.CodeGenerator
                 else if (key != null)
                     map[key] = $"{(map.TryGetValue(key, out var value) ? value + " " : string.Empty)}{item.Trim(' ', '\'', '\"')}";
             }
-            if (!map.TryGetValue("-t", out var type) && !map.TryGetValue("--type", out type))
-            {
-                throw new ArgumentException("Type missing, expect -t|--type client|controller");
-            }
             if (!map.TryGetValue("-p", out var path) && !map.TryGetValue("--path", out path))
             {
                 throw new ArgumentException("Path missing, expect -p|--path path1 path2");
@@ -35,22 +30,11 @@ namespace DataWF.Web.CodeGenerator
             {
                 //throw new ArgumentException("Nmaespace missing, expect -n|--namespace Name.Space");
             }
-            if (type.Equals("client", StringComparison.OrdinalIgnoreCase))
-            {
-                var generator = new ClientGenerator(path, output, nameSpace);
-                generator.Generate();
-                generator.GetUnits(true);
-            }
-            else if (type.Equals("controller", StringComparison.OrdinalIgnoreCase))
-            {
-                var generator = new ControllerGenerator(path, output, nameSpace);
-                generator.Generate();
-                generator.GetUnits(true);
-            }
-            else
-            {
-                throw new ArgumentException($"Unknown Type {type}");
-            }
+
+            var generator = new ControllerGenerator(path, output, nameSpace);
+            generator.Generate();
+            generator.GetUnits(true);
+
         }
     }
 }

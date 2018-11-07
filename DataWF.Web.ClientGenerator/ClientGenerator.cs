@@ -11,7 +11,7 @@ using System.Linq;
 using System.Text;
 using SF = Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
-namespace DataWF.Web.CodeGenerator
+namespace DataWF.Web.ClientGenerator
 {
     public class ClientGenerator
     {

@@ -1,5 +1,6 @@
 ﻿
 using DataWF.Common;
+using System;
 
 namespace DataWF.Data
 {
@@ -46,7 +47,10 @@ namespace DataWF.Data
         public virtual void Load()
         {
             DBService.Load();
-            if (Schema == null)
+            if (Schema == null
+                || Schema.Connection == null
+                || (Schema.Connection.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
+                && !Schema.Connection.CheckConnection()))
             {
                 CreateNew();
             }
