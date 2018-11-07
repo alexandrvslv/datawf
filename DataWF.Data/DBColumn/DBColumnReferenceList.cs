@@ -1,8 +1,6 @@
 ﻿using DataWF.Common;
 using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Xml.Serialization;
 
@@ -19,6 +17,12 @@ namespace DataWF.Data
         {
             AddRangeInternal(columns.Select(p => new DBColumnReference { Column = p }));
         }
+
+        [XmlIgnore, JsonIgnore]
+        public DBTableItem Container { get; set; }
+
+        [XmlIgnore, JsonIgnore]
+        public DBSchema Schema { get { return Container?.Schema; } }
 
         [XmlIgnore, JsonIgnore]
         public string Names { get; private set; }

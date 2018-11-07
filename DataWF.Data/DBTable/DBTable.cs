@@ -974,7 +974,7 @@ namespace DataWF.Data
 
         #endregion
 
-        public DBColumn ParseColumn(string name)
+        public virtual DBColumn ParseColumn(string name)
         {
             DBTable table = this;
             int s = 0, i = name.IndexOf('.');

@@ -1,9 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
 using System.Xml.Serialization;
 
 namespace DataWF.Data
@@ -15,7 +12,7 @@ namespace DataWF.Data
         public DBForeignKey() : base()
         {
             Type = DBConstraintType.Foreign;
-            References = new DBColumnReferenceList();
+            References = new DBColumnReferenceList { Container = this };
         }
 
         public DBForeignKey(DBColumn column, DBTable value) : this()

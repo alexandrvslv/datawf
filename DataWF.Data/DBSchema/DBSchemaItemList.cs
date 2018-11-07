@@ -123,7 +123,8 @@ namespace DataWF.Data
                 item.Schema = Schema;
 
             base.InsertInternal(index, item);
-            DBService.OnDBSchemaChanged(item, GetInsertType(item));
+            if (Schema != null)
+                DBService.OnDBSchemaChanged(item, GetInsertType(item));
         }
 
         public virtual DDLType GetInsertType(T item)

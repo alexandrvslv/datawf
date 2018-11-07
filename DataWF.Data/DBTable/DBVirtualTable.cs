@@ -99,6 +99,10 @@ namespace DataWF.Data
                     baseTable = null;
                     filterQuery = null;
                     OnPropertyChanged(nameof(BaseTableName), DDLType.Alter);
+                    if (BaseTable != null)
+                    {
+                        Generate();
+                    }
                 }
             }
         }
@@ -111,17 +115,14 @@ namespace DataWF.Data
             {
                 if (BaseTable != value)
                 {
-                    Columns.Clear();
-
-                    BaseTableName = value?.Name;
                     baseTable = value;
+                    BaseTableName = value?.Name;
                     if (value != null)
                     {
                         GroupName = value.GroupName;
                         BlockSize = value.BlockSize;
                     }
                 }
-                Generate();
             }
         }
 
@@ -143,6 +144,21 @@ namespace DataWF.Data
         {
             get { return BaseTable.LogTable; }
             set { }
+        }
+
+        public override string SqlName
+        {
+            get { return BaseTableName; }
+        }
+
+        public override DBSchema Schema
+        {
+            get { return base.Schema; }
+            set
+            {
+                base.Schema = value;
+                Generate();
+            }
         }
 
         public void Refresh()
@@ -240,11 +256,6 @@ namespace DataWF.Data
             }
         }
 
-        public override string SqlName
-        {
-            get { return BaseTableName; }
-        }
-
         public override DBItem NewItem(DBUpdateState state = DBUpdateState.Insert, bool def = true, int typeIndex = 0)
         {
             if (typeIndex == 0)
@@ -301,9 +312,14 @@ namespace DataWF.Data
                 yield return item;
         }
 
+        public override DBColumn ParseColumn(string name)
+        {
+            return base.ParseColumn(name);
+        }
+
         public void Generate()
         {
-            if (BaseTable == null)
+            if (BaseTable == null || Columns.Count > 0)
                 return;
             foreach (DBColumn column in BaseTable.Columns)
             {

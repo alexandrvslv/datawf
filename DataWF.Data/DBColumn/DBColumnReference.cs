@@ -10,6 +10,9 @@ namespace DataWF.Data
         private string columnName;
         private DBColumn column;
 
+        [XmlIgnore, JsonIgnore]
+        public DBSchema Schema { get { return List?.Schema; } }
+
         [Browsable(false)]
         public string ColumnName
         {
@@ -28,7 +31,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public DBColumn Column
         {
-            get { return column ?? DBService.Schems.ParseColumn(columnName); }
+            get { return column ?? DBService.Schems.ParseColumn(columnName, Schema); }
             set
             {
                 if (Column != value)

@@ -18,7 +18,6 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using Newtonsoft.Json;
-using System;
 using System.ComponentModel;
 using System.Text;
 using System.Xml.Serialization;
@@ -32,7 +31,7 @@ namespace DataWF.Data
 
         public DBConstraint()
         {
-            Columns = new DBColumnReferenceList();
+            Columns = new DBColumnReferenceList { Container = this };
         }
 
         public virtual void GenerateName()
