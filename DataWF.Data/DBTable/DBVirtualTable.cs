@@ -151,6 +151,7 @@ namespace DataWF.Data
             get { return BaseTableName; }
         }
 
+        [XmlIgnore, JsonIgnore]
         public override DBSchema Schema
         {
             get { return base.Schema; }
