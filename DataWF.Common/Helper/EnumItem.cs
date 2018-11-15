@@ -126,17 +126,24 @@ namespace DataWF.Common
 
         public static implicit operator EnumItem<T>(T item) { return Cache.TryGetValue(item, out var value) ? value : (Cache[item] = new EnumItem<T>(item)); }
 
-        public EnumItem(T item)
+        public EnumItem(T item):this(item, 
+            item.ToString(), 
+            typeof(T).GetRuntimeField(item.ToString())?
+            .GetCustomAttribute<EnumMemberAttribute>(false)?
+            .Value ?? item.ToString())
+        {
+        }
+
+        public EnumItem(T item, string name, string text)
         {
             Value = item;
-            Name = item.ToString();
-            var attribute = typeof(T).GetRuntimeField(Name)?.GetCustomAttribute<EnumMemberAttribute>(false);
-            Text = attribute?.Value ?? Name;
+            Name = name;
+            Text = text;
         }
 
         public T Value { get; }
         public string Name { get; }
-        public string Text { get; }
+        public string Text { get; set; }
 
         public override int GetHashCode()
         {

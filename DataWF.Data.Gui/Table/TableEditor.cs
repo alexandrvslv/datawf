@@ -426,7 +426,7 @@ namespace DataWF.Data.Gui
             toolReference.Text = tool.Text;
 
             if (tool.View == null)
-                tool.View = tool.Relation.Table.CreateItemsView("", DBViewKeys.Empty, DBStatus.Current);
+                tool.View = tool.Relation.Table.CreateItemsView("", DBViewKeys.Empty, DBStatus.Actual | DBStatus.Edit | DBStatus.New | DBStatus.Error);
 
             tool.View.DefaultParam = new QParam(LogicType.And, tool.Relation.Column, CompareType.Equal, OwnerRow.PrimaryId);
             baseColumn = tool.Relation.Column;
@@ -528,7 +528,7 @@ namespace DataWF.Data.Gui
             if (((MenuItem)sender).Tag is DBColumn column)
             {
                 var editor = new TableEditor();
-                editor.Initialize(column.ReferenceTable.CreateItemsView("", DBViewKeys.None, DBStatus.Current), null, column, TableEditorMode.Reference, false);
+                editor.Initialize(column.ReferenceTable.CreateItemsView("", DBViewKeys.None, DBStatus.Actual | DBStatus.Edit | DBStatus.New | DBStatus.Error), null, column, TableEditorMode.Reference, false);
                 editor.ItemSelect += OnRowSelected;
 
                 var cont = new ToolWindow

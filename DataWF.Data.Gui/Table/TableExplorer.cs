@@ -87,7 +87,8 @@ namespace DataWF.Data.Gui
                     Info = new TableEditorInfo()
                     {
                         Table = table,
-                        TableView = openmode == TableEditorMode.Item ? null : table.CreateItemsView("", DBViewKeys.None, DBStatus.Current),
+                        TableView = openmode == TableEditorMode.Item ? null 
+                        : table.CreateItemsView("", DBViewKeys.None, DBStatus.Actual | DBStatus.Edit | DBStatus.New | DBStatus.Error),
                         Item = row,
                         Column = ownColumn,
                         Mode = openmode,

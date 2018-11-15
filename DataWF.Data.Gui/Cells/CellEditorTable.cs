@@ -66,7 +66,7 @@ namespace DataWF.Data.Gui
             get
             {
                 if ((listSource == null || ((IDBTableView)listSource).Disposed) && table != null)
-                    listSource = table.CreateItemsView(viewFilter, DBViewKeys.None, DBStatus.Current);
+                    listSource = table.CreateItemsView(viewFilter, DBViewKeys.None, DBStatus.Actual| DBStatus.New| DBStatus.Edit);
                 return listSource as IDBTableView;
             }
             set

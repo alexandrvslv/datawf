@@ -608,7 +608,7 @@ namespace DataWF.Module.FlowGui
                 {
                     Name = name,
                     Text = param.Name == null || param.Name.Length == 0 ? foreign.Table.ToString() : param.Name,
-                    TableView = foreign.Table.CreateItemsView("", DBViewKeys.None, DBStatus.Current),
+                    TableView = foreign.Table.CreateItemsView("", DBViewKeys.None, DBStatus.Actual | DBStatus.New | DBStatus.Edit | DBStatus.Error),
                     OwnerColumn = foreign.Column,
                     OpenMode = TableEditorMode.Referencing
                 };

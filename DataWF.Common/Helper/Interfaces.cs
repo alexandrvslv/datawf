@@ -135,10 +135,7 @@ namespace DataWF.Common
         Edit = 4,
         Error = 8,
         Delete = 16,
-        Archive = 32,
-        Accept = New | Edit | Delete,
-        Old = Archive | Delete,
-        Current = Actual | New | Edit | Error,
+        Archive = 32
     }
 
 

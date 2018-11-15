@@ -121,7 +121,7 @@ namespace DataWF.Data.Gui
                 {
                     if (node.Item is DBTable table && table.IsLoging && table.StatusKey != null)
                     {
-                        var filter = table.GetStatusParam(DBStatus.Accept);
+                        var filter = table.GetStatusParam(DBStatus.New | DBStatus.Edit | DBStatus.Delete);
                         command.CommandText = table.BuildQuery("where " + filter.Format(), "a", null, "count(*)");
                         object count = transaction.ExecuteQuery(command, DBExecuteType.Scalar);
 
@@ -172,7 +172,7 @@ namespace DataWF.Data.Gui
         {
             rows.Clear();
             wait.Reset();
-            string filter = table.GetStatusParam(DBStatus.Accept).Format();
+            string filter = table.GetStatusParam(DBStatus.New | DBStatus.Edit | DBStatus.Delete).Format();
             if (!wait.WaitOne(0))
                 foreach (DBItem row in table.LoadItems("where " + filter))
                 {
