@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.ComponentModel;
 using System.IO;
 using System.Text;
 
@@ -51,14 +50,32 @@ namespace DataWF.Common
 
         public static void Load()
         {
+            Load(Path.Combine(Helper.GetDirectory(), "localize.xml"));
+        }
+
+        public static void Load(string filePath)
+        {
+            using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                Load(fileStream);
+            }
+        }
+
+        public static void Load(Stream stream)
+        {
             Helper.LogWorkingSet("Start");
-            Serialization.Deserialize(Path.Combine(Helper.GetDirectory(), "localize.xml"), Instance);
+            Serialization.Deserialize(stream, Instance);
             Helper.LogWorkingSet("Localization");
         }
 
         public static void Save()
         {
-            Serialization.Serialize(Instance, Path.Combine(Helper.GetDirectory(), "localize.xml"));
+            Save(Path.Combine(Helper.GetDirectory(), "localize.xml"));
+        }
+
+        public static void Save(string filePath)
+        {
+            Serialization.Serialize(Instance, filePath);
         }
 
         public static string GetTypeCategory(Type type)
