@@ -201,7 +201,7 @@ namespace DataWF.Gui
         {
             if (DataSource != null && Binding != null && string.IsNullOrEmpty(label.Text))
             {
-                Text = Locale.Get(DataSource.GetType(), Binding.DataInvoker.Name);
+                Text = Locale.Get(DataSource.GetType(), Binding.DataInvoker.Name, " ");
             }
         }
 

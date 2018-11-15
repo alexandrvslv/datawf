@@ -9,11 +9,17 @@ namespace DataWF.Common
 {
     public class EnumItem : ICheck, INotifyPropertyChanged
     {
+        public static string FormatUI(object item)
+        {
+            return Locale.Get(item.GetType(), Format(item));
+        }
+
         public static string Format(object item)
         {
-            var text = item.ToString();
-            var field = item.GetType().GetRuntimeField(text);
-            return field?.GetCustomAttribute<EnumMemberAttribute>(false)?.Value ?? text;
+            var name = item.ToString();
+            var type = item.GetType();
+            var field = type.GetRuntimeField(name);
+            return field?.GetCustomAttribute<EnumMemberAttribute>(false)?.Value ?? name;
         }
 
         public static object Parse(Type type, string value)
@@ -126,13 +132,9 @@ namespace DataWF.Common
 
         public static implicit operator EnumItem<T>(T item) { return Cache.TryGetValue(item, out var value) ? value : (Cache[item] = new EnumItem<T>(item)); }
 
-        public EnumItem(T item):this(item, 
-            item.ToString(), 
-            typeof(T).GetRuntimeField(item.ToString())?
-            .GetCustomAttribute<EnumMemberAttribute>(false)?
-            .Value ?? item.ToString())
-        {
-        }
+        public EnumItem(T item)
+            : this(item, item.ToString(), EnumItem.FormatUI(item))
+        { }
 
         public EnumItem(T item, string name, string text)
         {

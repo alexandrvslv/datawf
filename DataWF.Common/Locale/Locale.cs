@@ -88,7 +88,7 @@ namespace DataWF.Common
             return Get(GetTypeCategory(type), type.Name);
         }
 
-        public static string Get(Type type, string name, string separator = " ")
+        public static string Get(Type type, string name, string separator)
         {
             var builder = new StringBuilder();
             foreach (var info in TypeHelper.GetMemberInfoList(type, name))
@@ -98,6 +98,11 @@ namespace DataWF.Common
             }
             builder.Length -= separator.Length;
             return builder.ToString();
+        }
+
+        public static string Get(Type type, string name)
+        {
+            return Get(GetTypeCategory(type), name);
         }
 
         public static string Get(string category, string name)
