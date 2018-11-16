@@ -131,7 +131,14 @@ namespace DataWF.Web.Common
                 {
                     continue;
                 }
-                await client.Socket.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
+                try
+                {
+                    await client.Socket.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
+                }
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
+                }
             }
         }
 

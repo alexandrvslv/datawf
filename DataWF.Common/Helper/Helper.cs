@@ -1314,6 +1314,7 @@ namespace DataWF.Common
 
         public static void OnException(Exception e)
         {
+            ///Guru CODE))
             //if (File.GetAttributes("exception.log") == FileAttributes.)
             //using (var stream = File.AppendText(System.IO.Path.Combine(Environment.CurrentDirectory, "exception.log")))
             //{
