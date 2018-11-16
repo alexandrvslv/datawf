@@ -62,10 +62,8 @@ namespace DataWF.Common
         }
 
         public static void Load(Stream stream)
-        {
-            Helper.LogWorkingSet("Start");
+        {            
             Serialization.Deserialize(stream, Instance);
-            Helper.LogWorkingSet("Localization");
         }
 
         public static void Save()
