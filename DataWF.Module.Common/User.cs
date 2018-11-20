@@ -32,11 +32,10 @@ using System.Text.RegularExpressions;
 
 namespace DataWF.Module.Common
 {
-
-
     [DataContract, Table("ruser", "User", BlockSize = 100)]
     public class User : DBItem, IComparable, IDisposable, IUserIdentity
     {
+        private static DBColumn abbreviationKey = DBColumn.EmptyKey;
         private static DBColumn departmentKey = DBColumn.EmptyKey;
         private static DBColumn positionKey = DBColumn.EmptyKey;
         private static DBColumn emailKey = DBColumn.EmptyKey;
@@ -48,6 +47,7 @@ namespace DataWF.Module.Common
         private static DBColumn nameRUKey = DBColumn.EmptyKey;
         private static DBTable<User> dbTable;
 
+        public static DBColumn AbbreviationKey => DBTable.ParseProperty(nameof(Abbreviation), ref abbreviationKey);
         public static DBColumn DepartmentKey => DBTable.ParseProperty(nameof(DepartmentId), ref departmentKey);
         public static DBColumn PositionKey => DBTable.ParseProperty(nameof(PositionId), ref positionKey);
         public static DBColumn EmailKey => DBTable.ParseProperty(nameof(EMail), ref emailKey);
@@ -238,6 +238,13 @@ namespace DataWF.Module.Common
             set { SetValue(value, Table.CodeKey); }
         }
 
+        [DataMember, Column("abbreviation", 3, Keys = DBColumnKeys.Indexing), Index("ruser_abbreviation", true)]
+        public string Abbreviation
+        {
+            get { return GetValue<string>(AbbreviationKey); }
+            set { SetValue(value, AbbreviationKey); }
+        }
+
         [DataMember, Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
         public string Name
         {
@@ -304,6 +311,7 @@ namespace DataWF.Module.Common
             get { return GetValue<string>(EmailKey); }
             set { SetValue(value, EmailKey); }
         }
+
         [DataMember, Column("phone", 1024), Index("ruser_phone", false)]
         public string Phone
         {
