@@ -2,7 +2,6 @@
 using DataWF.Data;
 using DataWF.Module.Common;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -61,16 +60,17 @@ namespace DataWF.Web.Common
             }
             catch (Exception ex)
             {
-                return BadRequest(ex);
+                return BadRequest(ex, null);
             }
         }
 
         [HttpGet("{id}")]
         public ActionResult<T> Get([FromRoute]K id)
         {
+            var value = default(T);
             try
             {
-                var value = table.LoadById(id);
+                value = table.LoadById(id);
                 if (value == null)
                 {
                     return NotFound();
@@ -84,7 +84,7 @@ namespace DataWF.Web.Common
             }
             catch (Exception ex)
             {
-                return BadRequest(ex);
+                return BadRequest(ex, value);
             }
         }
 
@@ -114,7 +114,7 @@ namespace DataWF.Web.Common
             }
             catch (Exception ex)
             {
-                return BadRequest(ex);
+                return BadRequest(ex, value);
             }
             return Ok(value);
         }
@@ -138,7 +138,7 @@ namespace DataWF.Web.Common
             }
             catch (Exception ex)
             {
-                return BadRequest(ex);
+                return BadRequest(ex, value);
             }
             return Ok(value);
         }
@@ -146,9 +146,10 @@ namespace DataWF.Web.Common
         [HttpDelete("{id}")]
         public ActionResult<bool> Delete([FromRoute]K id)
         {
+            var value = default(T);
             try
             {
-                var value = table.LoadById(id);
+                value = table.LoadById(id);
                 if (value == null)
                 {
                     return NotFound();
@@ -164,16 +165,17 @@ namespace DataWF.Web.Common
             }
             catch (Exception ex)
             {
-                return BadRequest(ex);
+                return BadRequest(ex, value);
             }
         }
 
         [HttpGet("Copy/{id}")]
         public ActionResult<T> Copy([FromRoute]K id)
         {
+            var value = default(T);
             try
             {
-                var value = table.LoadById(id);
+                value = table.LoadById(id);
                 if (value == null)
                 {
                     return NotFound();
@@ -187,39 +189,24 @@ namespace DataWF.Web.Common
             }
             catch (Exception ex)
             {
-                return BadRequest(ex);
+                return BadRequest(ex, value);
             }
         }
 
-        public override BadRequestObjectResult BadRequest(object error)
+        [NonAction]
+        public BadRequestObjectResult BadRequest(object error, DBItem item)
         {
             if (error is Exception exception)
             {
                 Helper.OnException(exception);
-                return base.BadRequest($"{exception.GetType().Name} {exception.Message}");
+                error = table.System.FormatException(exception, item);
             }
-
             return base.BadRequest(error);
         }
 
-        public override BadRequestObjectResult BadRequest(ModelStateDictionary modelState)
+        public override BadRequestObjectResult BadRequest(object error)
         {
-            return base.BadRequest(modelState);
-        }
-
-        public override ActionResult ValidationProblem(ValidationProblemDetails descriptor)
-        {
-            return base.ValidationProblem(descriptor);
-        }
-
-        public override ActionResult ValidationProblem()
-        {
-            return base.ValidationProblem();
-        }
-
-        public override ActionResult ValidationProblem(ModelStateDictionary modelStateDictionary)
-        {
-            return base.ValidationProblem(modelStateDictionary);
+            return BadRequest(error, null);
         }
     }
 }

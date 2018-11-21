@@ -495,7 +495,6 @@ namespace DataWF.Data
             catch (Exception ex)
             {
                 Rollback(null);
-                ex.HelpLink = Environment.StackTrace;
                 buf = ex;
             }
             finally

@@ -220,6 +220,37 @@ namespace DataWF.Data
             return value;
         }
 
+        public override string FormatException(Exception exception, DBItem item)
+        {
+            if (exception is PostgresException pex)
+            {
+                var text = string.IsNullOrEmpty(pex.Detail) ? pex.MessageText : pex.Detail;
+                return item == null ? text : FormatMessage(text, item.Table);
+            }
+            return base.FormatException(exception, item);
+        }
+
+        private string FormatMessage(string text, DBTable table)
+        {
+            var builder = new StringBuilder();
+            text = text.Replace("character varying", "Text");
+            foreach (var item in text.Split(new char[] { ' ', '"', '(', ')' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                var column = table.ParseProperty(item);
+                if (column != null)
+                {
+                    builder.Append(column.DisplayName);
+                }
+                else
+                {
+                    builder.Append(item);
+                }
+                builder.Append(' ');
+            }
+
+            return builder.ToString();
+        }
+
         //public override void ReadSequential(DBItem item, DBColumn column, Stream stream, int bufferSize = 8192)
         //{
         //    var Conn = (NpgsqlConnection)CreateConnection(item.Table.Schema.Connection);
