@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -91,6 +92,8 @@ namespace DataWF.Common
             }
             else if (value != null)
             {
+                Validation(value);
+
                 var contentText = JsonConvert.SerializeObject(value, JsonSerializerSettings);
                 var content = new StringContent(contentText, Encoding.UTF8);
                 content.Headers.ContentType = MediaTypeHeaderValue.Parse(mediaType);
@@ -101,6 +104,13 @@ namespace DataWF.Common
                 request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(mediaType));
             }
             return request;
+        }
+
+        protected virtual void Validation(object value)
+        {
+            var vc = new ValidationContext(value);
+            //var results = new List<ValidationResult>(); 
+            Validator.ValidateObject(value, vc, true);
         }
 
         protected virtual StringBuilder ParseUrl(string url, params object[] parameters)

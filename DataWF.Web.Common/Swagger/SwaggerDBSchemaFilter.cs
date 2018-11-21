@@ -79,7 +79,7 @@ namespace DataWF.Web.Common
                 || (column.Attribute.Keys & DBColumnKeys.File) == DBColumnKeys.File)
                 return;
 
-            if (column.Attribute.DataType == typeof(string) && column.Attribute.Size > 0)
+            if (column.GetDataType() == typeof(string) && column.Attribute.Size > 0)
             {
                 columnSchema.MaxLength = column.Attribute.Size;
             }
@@ -106,7 +106,6 @@ namespace DataWF.Web.Common
             {
                 schema.Extensions.Add("x-type", column.PropertyName);
             }
-
             schema.Properties.Add(column.PropertyName, columnSchema);
 
             var defaultValue = column.Property.GetCustomAttribute<DefaultValueAttribute>();

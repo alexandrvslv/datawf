@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 //using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
+using SF = Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace DataWF.Web.ClientGenerator
 {
@@ -18,11 +19,11 @@ namespace DataWF.Web.ClientGenerator
 
             foreach (var identifier in usingName.Split('.'))
             {
-                var name = SyntaxFactory.IdentifierName(identifier);
+                var name = SF.IdentifierName(identifier);
 
                 if (qualifiedName != null)
                 {
-                    qualifiedName = SyntaxFactory.QualifiedName(qualifiedName, name);
+                    qualifiedName = SF.QualifiedName(qualifiedName, name);
                 }
                 else
                 {
@@ -30,18 +31,18 @@ namespace DataWF.Web.ClientGenerator
                 }
             }
 
-            return SyntaxFactory.UsingDirective(qualifiedName);
+            return SF.UsingDirective(qualifiedName);
         }
 
         public static CompilationUnitSyntax GenUnit(MemberDeclarationSyntax @class, string nameSpace, IEnumerable<UsingDirectiveSyntax> usings)
         {
-            var @namespace = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(nameSpace))
+            var @namespace = SF.NamespaceDeclaration(SF.ParseName(nameSpace))
                                              .AddMembers(@class);
-            return SyntaxFactory.CompilationUnit(
-                externs: SyntaxFactory.List<ExternAliasDirectiveSyntax>(),
-                usings: SyntaxFactory.List(usings),
-                attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
-                members: SyntaxFactory.List<MemberDeclarationSyntax>(new[] { @namespace }))
+            return SF.CompilationUnit(
+                externs: SF.List<ExternAliasDirectiveSyntax>(),
+                usings: SF.List(usings),
+                attributeLists: SF.List<AttributeListSyntax>(),
+                members: SF.List<MemberDeclarationSyntax>(new[] { @namespace }))
                                         .NormalizeWhitespace("    ", true);
         }
 
@@ -60,7 +61,7 @@ namespace DataWF.Web.ClientGenerator
                 using (var reader = new StreamReader(manifestStream))
                 {
                     var text = reader.ReadToEnd().Replace("NewNameSpace", newNameSpace);
-                    var unit = SyntaxFactory.ParseCompilationUnit(text);
+                    var unit = SF.ParseCompilationUnit(text);
                     if (output != null)
                     {
                         File.WriteAllText(Path.Combine(output, name.Substring(path.Length)), text);
@@ -73,22 +74,34 @@ namespace DataWF.Web.ClientGenerator
         public static PropertyDeclarationSyntax GenProperty(string type, string name, bool setter, string initializer = null)
         {
             var accessors = setter
-                ? new[] {SyntaxFactory.AccessorDeclaration( SyntaxKind.GetAccessorDeclaration )
-                        .WithSemicolonToken( SyntaxFactory.Token(SyntaxKind.SemicolonToken )),
-                        SyntaxFactory.AccessorDeclaration( SyntaxKind.SetAccessorDeclaration )
-                        .WithSemicolonToken( SyntaxFactory.Token(SyntaxKind.SemicolonToken ))}
-                : new[] {SyntaxFactory.AccessorDeclaration( SyntaxKind.GetAccessorDeclaration )
-                        .WithSemicolonToken( SyntaxFactory.Token(SyntaxKind.SemicolonToken )) };
-            return SyntaxFactory.PropertyDeclaration(
-                                attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
-                                modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
-                                type: SyntaxFactory.ParseTypeName(type),
+                ? new[] {SF.AccessorDeclaration( SyntaxKind.GetAccessorDeclaration )
+                        .WithSemicolonToken( SF.Token(SyntaxKind.SemicolonToken )),
+                        SF.AccessorDeclaration( SyntaxKind.SetAccessorDeclaration )
+                        .WithSemicolonToken( SF.Token(SyntaxKind.SemicolonToken ))}
+                : new[] {SF.AccessorDeclaration( SyntaxKind.GetAccessorDeclaration )
+                        .WithSemicolonToken( SF.Token(SyntaxKind.SemicolonToken )) };
+            return SF.PropertyDeclaration(
+                                attributeLists: SF.List<AttributeListSyntax>(),
+                                modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
+                                type: SF.ParseTypeName(type),
                                 explicitInterfaceSpecifier: null,
-                                identifier: SyntaxFactory.Identifier(name),
-                                accessorList: SyntaxFactory.AccessorList(SyntaxFactory.List(accessors)),
+                                identifier: SF.Identifier(name),
+                                accessorList: SF.AccessorList(SF.List(accessors)),
                                 expressionBody: null,
-                                initializer: initializer == null ? null : SyntaxFactory.EqualsValueClause(SyntaxFactory.ParseExpression(initializer)),
-                                semicolonToken: initializer == null ? SyntaxFactory.Token(SyntaxKind.None) : SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+                                initializer: initializer == null ? null : SF.EqualsValueClause(SF.ParseExpression(initializer)),
+                                semicolonToken: initializer == null ? SF.Token(SyntaxKind.None) : SF.Token(SyntaxKind.SemicolonToken));
+        }
+
+        public static AttributeListSyntax GenAttribute(string name, string args)
+        {
+            return SF.AttributeList(
+                SF.SingletonSeparatedList(
+                    SF.Attribute(
+                        SF.IdentifierName(name)).WithArgumentList(
+                        SF.AttributeArgumentList(
+                            SF.SingletonSeparatedList(
+                                SF.AttributeArgument(
+                                    SF.ParseExpression(args)))))));
         }
     }
 

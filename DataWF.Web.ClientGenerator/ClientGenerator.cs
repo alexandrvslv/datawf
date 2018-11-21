@@ -40,6 +40,7 @@ namespace DataWF.Web.ClientGenerator
                 SyntaxHelper.CreateUsingDirective("System") ,
                 SyntaxHelper.CreateUsingDirective("System.Collections.Generic") ,
                 SyntaxHelper.CreateUsingDirective("System.ComponentModel") ,
+                SyntaxHelper.CreateUsingDirective("System.ComponentModel.DataAnnotations") ,
                 SyntaxHelper.CreateUsingDirective("System.Linq") ,
                 SyntaxHelper.CreateUsingDirective("System.IO") ,
                 SyntaxHelper.CreateUsingDirective("System.Runtime.Serialization") ,
@@ -590,12 +591,7 @@ namespace DataWF.Web.ClientGenerator
         private IEnumerable<AttributeListSyntax> GenDefinitionEnumMemberAttribute(object item)
         {
             //[System.Runtime.Serialization.EnumMember(Value = "Empty")]
-            yield return SF.AttributeList(
-                         SF.SingletonSeparatedList(
-                         SF.Attribute(
-                         SF.IdentifierName("EnumMember")).WithArgumentList(
-                             SF.AttributeArgumentList(SF.SingletonSeparatedList(
-                                 SF.AttributeArgument(SF.ParseExpression($"Value = \"{item.ToString()}\"")))))));
+            yield return SyntaxHelper.GenAttribute("EnumMember", $"Value = \"{item.ToString()}\"");
         }
 
         private MemberDeclarationSyntax GenDefinitionClass(JsonSchema4 schema)
@@ -782,33 +778,31 @@ namespace DataWF.Web.ClientGenerator
             }
             else if (!property.IsRequired)
             {
-                yield return SF.AttributeList(
-                             SF.SingletonSeparatedList(
-                                 SF.Attribute(
-                                     SF.IdentifierName("JsonProperty")).WithArgumentList(
-                                     SF.AttributeArgumentList(SF.SingletonSeparatedList(
-                                         SF.AttributeArgument(SF.ParseExpression($"NullValueHandling = NullValueHandling.Include")))))));
+                yield return SyntaxHelper.GenAttribute("JsonProperty", $"NullValueHandling = NullValueHandling.Include");
             }
+            
             if (property == typeKey)
             {
-                yield return SF.AttributeList(
-                             SF.SingletonSeparatedList(
-                                 SF.Attribute(
-                                     SF.IdentifierName("JsonProperty")).WithArgumentList(
-                                     SF.AttributeArgumentList(SF.SingletonSeparatedList(
-                                         SF.AttributeArgument(SF.ParseExpression($"Order = -3")))))));
-            }
-            if (property == idKey)
-            {
-                yield return SF.AttributeList(
-                             SF.SingletonSeparatedList(
-                                 SF.Attribute(
-                                     SF.IdentifierName("JsonProperty")).WithArgumentList(
-                                     SF.AttributeArgumentList(SF.SingletonSeparatedList(
-                                         SF.AttributeArgument(SF.ParseExpression($"Order = -2")))))));
+                yield return SyntaxHelper.GenAttribute("JsonProperty", $"Order = -3");
             }
 
+            if (property == idKey)
+            {
+                yield return SyntaxHelper.GenAttribute("JsonProperty", $"Order = -2");
+            }
+            else if (property.IsRequired)
+            {
+                yield return SyntaxHelper.GenAttribute("Required", $"ErrorMessage = \"{GetPropertyName(property)} is required\"");
+            }
+
+            if (property.MaxLength != null)
+            {
+                yield return SyntaxHelper.GenAttribute("MaxLength", 
+                    $"{property.MaxLength}, ErrorMessage = \"{GetPropertyName(property)} only max {property.MaxLength} letters allowed.\"");
+            }
         }
+
+        
 
         private IEnumerable<AccessorDeclarationSyntax> GenDefinitionClassPropertyAccessors(JsonProperty property)
         {
