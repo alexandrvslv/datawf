@@ -116,6 +116,11 @@ namespace DataWF.Module.Common
             return DBTable.SelectOne(EmailKey, email);
         }
 
+        public static User GetByLogin(string login)
+        {
+            return DBTable.SelectOne(DBTable.CodeKey, login);
+        }
+
         public static User SetCurrentByEmail(string email, bool threaded = false)
         {
             var user = GetByEmail(email);
@@ -128,6 +133,8 @@ namespace DataWF.Module.Common
         public static User SetCurrentByEmail(NetworkCredential credentials, bool threaded = false)
         {
             var user = GetByEmail(credentials.UserName);
+            if (user == null)
+                user = GetByLogin(credentials.UserName);
             if (user == null)
                 throw new KeyNotFoundException("User not found!");
             var config = SmtpSetting.Load();
