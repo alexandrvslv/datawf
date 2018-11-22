@@ -138,7 +138,7 @@ namespace DataWF.Module.Common
             if (user == null)
                 throw new KeyNotFoundException("User not found!");
             var config = SmtpSetting.Load();
-            using (var smtpClient = new SmtpClient())
+            using (var smtpClient = new SmtpClient { Timeout = 20000})
             {
                 smtpClient.ServerCertificateValidationCallback = (s, c, h, e) => true;
                 smtpClient.Connect(config.Host, config.Port, config.SSL);
