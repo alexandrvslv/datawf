@@ -23,6 +23,8 @@ namespace DataWF.Common
     /// <typeparam name="T"></typeparam>
     public partial class ClientBase : IClient
     {
+        private const string fileNameUTFToken = "filename*=UTF-8";
+        private const string fileNameToken = "filename=";
         private Lazy<JsonSerializerSettings> serializeSettings;
         private string baseUrl;
 
@@ -254,9 +256,10 @@ namespace DataWF.Common
         {
             var fileName = headers.TryGetValue("Content-Disposition", out var disposition)
                 ? disposition.FirstOrDefault() : "somefile.someextension";
-            fileName = fileName.Replace("attachment; filename=", "");
-            var index = fileName.IndexOf(";");
-            fileName = fileName.Substring(0, index > -1 ? index : fileName.Length).Trim(' ', '\"');
+            fileName = System.Net.WebUtility.UrlDecode(fileName);
+            var index = fileName.IndexOf(fileNameUTFToken);
+            if(index>0)
+            fileName = fileName.Substring(index+ fileNameUTFToken.Length).Trim(' ', '\"', '\'');
             var fileSize = 0;
             if (headers.TryGetValue("Content-Length", out var length))
             {
