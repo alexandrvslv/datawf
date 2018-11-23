@@ -111,7 +111,7 @@ namespace DataWF.Data
             //}
         }
 
-        [Category("Naming"), XmlIgnore, JsonIgnore]
+        [Category("Naming"), XmlIgnore]
         public string DisplayName
         {
             get { return LocaleInfo?.Value ?? Name; }
@@ -122,7 +122,7 @@ namespace DataWF.Data
             }
         }
 
-        [Category("Naming")]
+        [Category("Naming"), JsonRequired]
         public virtual string Name
         {
             get { return name; }
