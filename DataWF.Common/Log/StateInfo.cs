@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.ComponentModel;
 using System.Reflection;
 using System.Text;
@@ -59,7 +60,7 @@ namespace DataWF.Common
 
         public StatusType Type { get; set; }
 
-        [Browsable(false), XmlIgnore]
+        [Browsable(false), XmlIgnore, JsonIgnore]
         public object Tag { get; set; }
     }
 }
