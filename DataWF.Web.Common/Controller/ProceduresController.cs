@@ -17,5 +17,16 @@ namespace DataWF.Web.Common
         {
             return DBService.Schems.DefaultSchema.Procedures;
         }
+
+        [HttpPut]
+        public ActionResult<DBProcedure> Put(DBProcedure value)
+        {
+            var procedure = DBService.Schems.DefaultSchema.Procedures[value.Name];
+            if (procedure != null)
+            {
+                procedure.DisplayName = value.DisplayName;
+            }
+            return procedure;
+        }
     }
 }
