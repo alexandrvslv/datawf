@@ -169,14 +169,12 @@ namespace DataWF.Data
 
         public override void FormatAlter(StringBuilder ddl, DBColumn column)
         {
-            ddl.Append($"alter table {column.Table.SqlName} alter column ");
-            ddl.Append($"{column.SqlName} TYPE ");
-            ddl.Append(FormatType(column));
+            ddl.AppendLine($"alter table {column.Table.SqlName} alter column {column.SqlName} TYPE {FormatType(column)};");
             if (column.IsNotNull || column.IsPrimaryKey)
             {
-                ddl.Append(" not null");
+                ddl.AppendLine($"alter table {column.Table.SqlName} alter column {column.SqlName} SET not null;");
             }
-            ddl.AppendLine();
+
         }
 
         public override string FormatCreateView(string name)
