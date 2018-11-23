@@ -135,15 +135,32 @@ namespace DataWF.Web.Common
             }).UseAuthentication();
         }
 
-        public static IServiceCollection AddWebNotify(this IServiceCollection app)
+        public static IServiceCollection AddScheduler(this IServiceCollection services)
         {
-            var service = new WebNotifyService();
-            service.Login(null);
-            return app.AddSingleton(service);
+            return services.AddSingleton(new SchedulerService());
         }
 
-        public static IApplicationBuilder UseWebNotify(this IApplicationBuilder app, string path = "/api/WebNotify")
+        public static IApplicationBuilder UseScheduler(this IApplicationBuilder app)
         {
+            var service = app.ApplicationServices.GetService<SchedulerService>();
+            service.Start();
+            return app;
+        }
+
+        public static IServiceCollection AddWebNotify(this IServiceCollection services)
+        {
+            return services.AddSingleton(new WebNotifyService());
+        }
+
+        public static IApplicationBuilder UseWebNotify(this IApplicationBuilder app, EventHandler<WebNotifyEventArgs> removeHandler = null)
+        {
+            var service = app.ApplicationServices.GetService<WebNotifyService>();
+            service.Login(null);
+            if (removeHandler != null)
+            {
+                service.RemoveClient += removeHandler;
+            }
+
             var webSocketOptions = new WebSocketOptions()
             {
                 KeepAliveInterval = TimeSpan.FromSeconds(20),
@@ -151,6 +168,11 @@ namespace DataWF.Web.Common
             };
             app.UseWebSockets(webSocketOptions);
             return app;
+        }
+
+        private static void Service_RemoveClient(object sender, WebNotifyEventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         public static User GetCommonUser(this ClaimsPrincipal claims)
