@@ -72,14 +72,14 @@ namespace DataWF.Module.Common
             set { SetValue(value, OrderKey); }
         }
 
-        [DataMember, DefaultValue(SchedulerType.Interval), Column("type_id", Keys = DBColumnKeys.ElementType)]
+        [DataMember, DefaultValue(SchedulerType.Interval), Column("type_id", Keys = DBColumnKeys.ElementType | DBColumnKeys.Notnull)]
         public SchedulerType? Type
         {
             get { return GetValue<SchedulerType?>(Table.ElementTypeKey); }
             set { SetValue(value, Table.ElementTypeKey); }
         }
 
-        [DataMember, Column("run_interval")]
+        [DataMember, Column("run_interval", Keys = DBColumnKeys.Notnull)]
         public TimeSpan? Interval
         {
             get { return GetValue<TimeSpan?>(IntervalKey); }
@@ -107,12 +107,8 @@ namespace DataWF.Module.Common
             set { SetValue(value, DateExecuteKey); }
         }
 
-        public User RunBy
-        {
-            get { return null; }
-        }
-
-        public object Execute()
+        [ControllerMethod]
+        public StateInfo Execute(IUserIdentity user)
         {
             object rez = null;
             if (Procedure == null)
@@ -124,19 +120,22 @@ namespace DataWF.Module.Common
             var info = new StateInfo
             {
                 Module = "Task",
-                Message = task.Name
+                Message = Name ?? task.Name,
+                Tag = result
             };
 
-            if (result is Exception)
+            if (result is Exception exception)
             {
-                Helper.OnException((Exception)result);
-                info.Description = string.Format("Fail!"); ;
+                Helper.OnException(exception);
+                info.Message += " Fail!";
+                info.Description = exception.Message;
+                info.Stack = exception.StackTrace;
                 info.Type = StatusType.Warning;
             }
             else
             {
                 DateExecute = DateTime.Now;
-                Save(RunBy);
+                Save(user);
 
                 if (result is decimal && Statistic.DBTable != null)
                 {
@@ -145,7 +144,7 @@ namespace DataWF.Module.Common
                         Scheduler = this,
                         Result = (decimal)rez
                     };
-                    stat.Save(RunBy);
+                    stat.Save(user);
                 }
 
                 info.Description = string.Format("Completed in {0:n} {1}", task.Time.TotalMilliseconds / 1000, result);
@@ -153,7 +152,40 @@ namespace DataWF.Module.Common
             }
             Helper.Logs.Add(info);
 
-            return result;
+            return info;
+        }
+
+        [ControllerMethod]
+        public static void Start()
+        {
+            if (SchedulerService.Instance == null)
+                throw new Exception($"{nameof(SchedulerService)} is not initialized!");
+
+            if (!SchedulerService.Instance.Running)
+            {
+                SchedulerService.Instance.Start();
+            }
+        }
+
+        [ControllerMethod]
+        public static void Stop()
+        {
+            if (SchedulerService.Instance == null)
+                throw new Exception($"{nameof(SchedulerService)} is not initialized!");
+
+            if (SchedulerService.Instance.Running)
+            {
+                SchedulerService.Instance.Stop();
+            }
+        }
+
+        [ControllerMethod]
+        public static bool IsRunning()
+        {
+            if (SchedulerService.Instance == null)
+                throw new Exception($"{nameof(SchedulerService)} is not initialized!");
+
+            return SchedulerService.Instance.Running;
         }
     }
 }
