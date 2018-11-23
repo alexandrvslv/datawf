@@ -237,6 +237,13 @@ namespace DataWF.Web.CodeGenerator
                     yield return GetControllerMethod(method, table, baseClass);
                 }
             }
+            foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly))
+            {
+                if (method.GetCustomAttribute<ControllerMethodAttribute>() != null)
+                {
+                    yield return GetControllerMethod(method, table, baseClass);
+                }
+            }
         }
 
         private IEnumerable<AttributeListSyntax> GetControllerAttributeList()
@@ -261,6 +268,7 @@ namespace DataWF.Web.CodeGenerator
                                              SyntaxFactory.LiteralExpression(
                                                  SyntaxKind.StringLiteralExpression,
                                                  SyntaxFactory.Literal("api/[controller]"))))))));
+
             yield return SyntaxFactory.AttributeList(
                          SyntaxFactory.SingletonSeparatedList(
                              SyntaxFactory.Attribute(
@@ -305,45 +313,44 @@ namespace DataWF.Web.CodeGenerator
                 {
                     yield return SyntaxFactory.ParseStatement("{ NotFound(); }");
                 }
-
-                var parametersBuilder = new StringBuilder();
-                foreach (var parameter in parametersInfo)
-                {
-                    if (parameter.Table != null)
-                    {
-                        yield return SyntaxFactory.ParseStatement($"var {parameter.ValueName} = DBItem.GetTable<{TypeHelper.FormatCode(parameter.Info.ParameterType)}>().LoadById({parameter.Info.Name});");
-                    }
-                    parametersBuilder.Append($"{parameter.ValueName}, ");
-                }
-                if (parametersInfo.Count > 0)
-                {
-                    parametersBuilder.Length -= 2;
-                }
-                var builder = new StringBuilder();
-                if (TypeHelper.IsBaseType(method.ReturnType, typeof(Stream)))
-                {
-                    yield return SyntaxFactory.ParseStatement("var fileName = idValue.GetValue<string>(fileNameColumn);");
-                    yield return SyntaxFactory.ParseStatement("if (string.IsNullOrEmpty(fileName))");
-                    yield return SyntaxFactory.ParseStatement("{ return new EmptyResult(); }");
-                    builder.Append($"return File(idValue.{method.Name}({parametersBuilder}), System.Net.Mime.MediaTypeNames.Application.Octet, fileName);");
-                }
-                else
-                {
-                    if (method.ReturnType != typeof(void))
-                    {
-                        builder.Append($"return new {returning}(");
-                    }
-                    builder.Append($" idValue.{method.Name}({parametersBuilder}");
-                    if (method.ReturnType != typeof(void))
-                    {
-                        builder.Append(")");
-                    }
-
-                    builder.AppendLine(");");
-                }
-                yield return SyntaxFactory.ParseStatement(builder.ToString());
-
             }
+            var parametersBuilder = new StringBuilder();
+            foreach (var parameter in parametersInfo)
+            {
+                if (parameter.Table != null)
+                {
+                    yield return SyntaxFactory.ParseStatement($"var {parameter.ValueName} = DBItem.GetTable<{TypeHelper.FormatCode(parameter.Info.ParameterType)}>().LoadById({parameter.Info.Name});");
+                }
+                parametersBuilder.Append($"{parameter.ValueName}, ");
+            }
+            if (parametersInfo.Count > 0)
+            {
+                parametersBuilder.Length -= 2;
+            }
+            var builder = new StringBuilder();
+            if (TypeHelper.IsBaseType(method.ReturnType, typeof(Stream)))
+            {
+                yield return SyntaxFactory.ParseStatement("var fileName = idValue.GetValue<string>(fileNameColumn);");
+                yield return SyntaxFactory.ParseStatement("if (string.IsNullOrEmpty(fileName))");
+                yield return SyntaxFactory.ParseStatement("{ return new EmptyResult(); }");
+                builder.Append($"return File(idValue.{method.Name}({parametersBuilder}), System.Net.Mime.MediaTypeNames.Application.Octet, fileName);");
+            }
+            else
+            {
+                if (method.ReturnType != typeof(void))
+                {
+                    builder.Append($"return new {returning}(");
+                }
+
+                builder.Append($"{(method.IsStatic ? method.DeclaringType.Name : " idValue")}.{method.Name}({parametersBuilder}");
+                if (method.ReturnType != typeof(void))
+                {
+                    builder.Append(")");
+                }
+
+                builder.AppendLine(");");
+            }
+            yield return SyntaxFactory.ParseStatement(builder.ToString());
         }
 
         private IEnumerable<AttributeListSyntax> GetControllerMethodAttributes(MethodInfo method)
@@ -386,11 +393,14 @@ namespace DataWF.Web.CodeGenerator
 
         private IEnumerable<ParameterSyntax> GetControllerMethodParameters(MethodInfo method, TableAttributeCache table, List<MethodParametrInfo> parametersInfo)
         {
-            yield return SyntaxFactory.Parameter(attributeLists: SyntaxFactory.List(GetParameterAttributes()),
+            if (!method.IsStatic)
+            {
+                yield return SyntaxFactory.Parameter(attributeLists: SyntaxFactory.List(GetParameterAttributes()),
                                                              modifiers: SyntaxFactory.TokenList(),
                                                              type: SyntaxFactory.ParseTypeName((table.PrimaryKey?.GetDataType() ?? typeof(int)).Name),
                                                              identifier: SyntaxFactory.Identifier("id"),
                                                              @default: null);
+            }
 
             foreach (var methodParameter in parametersInfo)
             {
