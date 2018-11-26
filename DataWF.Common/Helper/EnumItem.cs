@@ -7,8 +7,28 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Common
 {
-    public class EnumItem : ICheck, INotifyPropertyChanged
+    public class EnumItem : ICheck, INamed, INotifyPropertyChanged
     {
+        public static IEnumerable<EnumItem> GetEnumItems(Type type)
+        {
+            int index = 0;
+            foreach (var enumItem in Enum.GetValues(type))
+            {
+                yield return new EnumItem(enumItem) { Index = index };
+                index++;
+            }
+        }
+
+        public static IEnumerable<EnumItem<T>> GetEnumItems<T>() where T : struct
+        {
+            int index = 0;
+            foreach (T enumItem in Enum.GetValues(typeof(T)))
+            {
+                yield return new EnumItem<T>(enumItem) { Index = index };
+                index++;
+            }
+        }
+
         public static string FormatUI(object item)
         {
             return Locale.Get(item.GetType(), Format(item));
@@ -19,7 +39,19 @@ namespace DataWF.Common
             var name = item.ToString();
             var type = item.GetType();
             var field = type.GetRuntimeField(name);
-            return field?.GetCustomAttribute<EnumMemberAttribute>(false)?.Value ?? name;
+            if (field != null)
+            {
+                return field.GetCustomAttribute<EnumMemberAttribute>(false)?.Value ?? name;
+            }
+            else if (type.GetCustomAttribute<FlagsAttribute>() != null)
+            {
+                return string.Join(", ", Enum.GetValues(type)
+                    .TypeOf<object>()
+                    .Where(p => ((int)p & (int)item) != 0)
+                    .Select(p => FormatUI(p)));
+            }
+
+            return name;
         }
 
         public static object Parse(Type type, string value)
@@ -35,31 +67,43 @@ namespace DataWF.Common
             }
         }
 
+        public static bool operator ==(object item, EnumItem enumItem) { return item.Equals(enumItem.Value); }
+
+        public static bool operator !=(object item, EnumItem enumItem) { return !item.Equals(enumItem.Value); }
+
+
         private bool check;
 
-        public override string ToString()
+        public EnumItem()
+        { }
+
+        public EnumItem(object item)
+            : this(item, item.ToString(), FormatUI(item))
+        { }
+
+        public EnumItem(object item, string name, string text)
         {
-            if (Name == null)
-            {
-                Name = Format(Value);
-            }
-            return Name;
+            Value = item;
+            Name = name;
+            Text = text;
         }
 
         public int Index { get; set; }
 
+        public object Value { get; }
+
         public string Name { get; set; }
 
-        public object Value { get; set; }
+        public string Text { get; set; }
 
         public bool Check
         {
             get { return check; }
             set
             {
-                if (this.check != value)
+                if (check != value)
                 {
-                    this.check = value;
+                    check = value;
                     OnPropertyChanged(nameof(Check));
                 }
             }
@@ -71,81 +115,6 @@ namespace DataWF.Common
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
-    }
-
-
-    public class EnumItemList<T> : SelectableList<EnumItem<T>> where T : struct
-    {
-        public EnumItemList() : base()
-        { }
-
-        public EnumItemList(IEnumerable<EnumItem<T>> items) : base(items)
-        { }
-
-        public override int IndexOf(object item)
-        {
-            if (item == null)
-                return -1;
-            if (item is T)
-            {
-                return IndexOf((EnumItem<T>)(T)item);
-            }
-            return IndexOf((EnumItem<T>)item);
-        }
-
-        public override object GetItem(int index)
-        {
-            return this[index].Value;
-        }
-    }
-
-    public struct EnumItem<T> where T : struct
-    {
-        static EnumItem()
-        {
-            foreach (T enumItem in Enum.GetValues(typeof(T)))
-            {
-                Cache[enumItem] = new EnumItem<T>(enumItem);
-            }
-        }
-
-        public static object Parse(string value)
-        {
-            bool checkInt = int.TryParse(value, out var intValue);
-            return Cache.Values.FirstOrDefault(p => p.Name.Equals(value, StringComparison.OrdinalIgnoreCase)
-            || p.Text.Equals(value, StringComparison.OrdinalIgnoreCase)
-            || (checkInt && value == p.Value.ToString())).Value;
-        }
-
-        public static Dictionary<T, EnumItem<T>> Cache = new Dictionary<T, EnumItem<T>>();
-
-        public static string Format(T item)
-        {
-            return ((EnumItem<T>)item).Text;
-        }
-
-        public static bool operator ==(T item, EnumItem<T> enumItem) { return item.Equals(enumItem.Value); }
-
-        public static bool operator !=(T item, EnumItem<T> enumItem) { return !item.Equals(enumItem.Value); }
-
-        public static implicit operator T(EnumItem<T> item) { return item.Value; }
-
-        public static implicit operator EnumItem<T>(T item) { return Cache.TryGetValue(item, out var value) ? value : (Cache[item] = new EnumItem<T>(item)); }
-
-        public EnumItem(T item)
-            : this(item, item.ToString(), EnumItem.FormatUI(item))
-        { }
-
-        public EnumItem(T item, string name, string text)
-        {
-            Value = item;
-            Name = name;
-            Text = text;
-        }
-
-        public T Value { get; }
-        public string Name { get; }
-        public string Text { get; set; }
 
         public override int GetHashCode()
         {
@@ -154,7 +123,7 @@ namespace DataWF.Common
 
         public override bool Equals(object obj)
         {
-            if (obj is EnumItem<T> item)
+            if (obj is EnumItem item)
             {
                 obj = item.Value;
             }
@@ -165,6 +134,29 @@ namespace DataWF.Common
         {
             return Text;
         }
+    }
+
+    public class EnumItem<T> : EnumItem where T : struct
+    {
+        public static string Format(T item)
+        {
+            return ((EnumItem<T>)item).Text;
+        }
+
+        public static implicit operator T(EnumItem<T> item) { return item.TypedValue; }
+
+        public static implicit operator EnumItem<T>(T item) { return new EnumItem<T>(item); }
+
+        public EnumItem()
+        { }
+
+        public EnumItem(T item)
+            : base(item, item.ToString(), EnumItem.FormatUI(item))
+        { }
+
+        public T TypedValue { get => (T)Value; }
+
+
     }
 }
 
