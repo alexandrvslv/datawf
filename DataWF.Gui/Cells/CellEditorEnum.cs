@@ -29,9 +29,9 @@ namespace DataWF.Gui
                     var temp = new SelectableList<EnumItem>();
                     foreach (var enumItem in Enum.GetValues(value))
                     {
-                        temp.Add(new EnumItem() { Value = enumItem });
+                        temp.Add(new EnumItem(enumItem) );
                     }
-                    temp.PropertyChanged += TempListChanged;
+                    temp.ItemPropertyChanged += TempListChanged;
                     listSource = temp;
                 }
             }
@@ -57,7 +57,7 @@ namespace DataWF.Gui
         public override object FormatValue(object value, object dataSource, Type valueType)
         {
             if (value is Enum)
-                return EnumItems.FirstOrDefault(p => p.Value.Equals(value))?.Name;
+                return EnumItem.FormatUI(value);
             return base.FormatValue(value, dataSource, valueType);
         }
 
