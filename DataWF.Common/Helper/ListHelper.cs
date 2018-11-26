@@ -277,6 +277,10 @@ namespace DataWF.Common
                     if (compare.Not)
                         result = !result;
                 }
+                else if (y is Enum || x is Enum)
+                {
+                    return ((int)y & (int)x) != 0;
+                }
             }
             else
             {
@@ -717,7 +721,8 @@ namespace DataWF.Common
 
             if (x is Enum || y is Enum)
             {
-                return ((int)x & (int)y) != 0;
+                x = (int)x;
+                y = (int)y;
             }
             if (x is string xString)
             {
