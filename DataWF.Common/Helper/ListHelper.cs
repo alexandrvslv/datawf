@@ -715,10 +715,10 @@ namespace DataWF.Common
             }
             bool result = false;
 
-            if (x is Enum)
-                x = (int)x;
-            if (y is Enum)
-                y = (int)y;
+            if (x is Enum || y is Enum)
+            {
+                return ((int)x & (int)y) != 0;
+            }
             if (x is string xString)
             {
                 result = xString.Equals(y.ToString(), StringComparison.OrdinalIgnoreCase);
