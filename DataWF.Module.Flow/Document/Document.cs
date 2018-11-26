@@ -683,8 +683,8 @@ namespace DataWF.Module.Flow
             if (stage != null)
             {
                 if (stage.Keys != null
-                    && (stage.Keys & StageKey.IsStop) == StageKey.IsStop
-                    && (stage.Keys & StageKey.IsAutoComplete) == StageKey.IsAutoComplete)
+                    && (stage.Keys & StageKey.Stop) == StageKey.Stop
+                    && (stage.Keys & StageKey.AutoComplete) == StageKey.AutoComplete)
                     work.DateComplete = DateTime.Now;
                 if (stage.TimeLimit != null)
                     work.DateLimit = DateTime.Now + stage.TimeLimit;
@@ -834,7 +834,7 @@ namespace DataWF.Module.Flow
         [ControllerMethod]
         public List<DocumentWork> Send(DocumentWork from, Stage stage, IUserIdentity user)
         {
-            if ((stage.Keys & StageKey.IsStart) == StageKey.IsStart)
+            if ((stage.Keys & StageKey.Start) == StageKey.Start)
                 return Send(from, stage, new[] { (User)user }, user);
             else
                 return Send(from, stage, stage.GetDepartment(Template), user);
@@ -867,7 +867,7 @@ namespace DataWF.Module.Flow
             work.DateComplete = DateTime.Now;
             if (work.Stage != null)
             {
-                if ((work.Stage.Keys & StageKey.IsAutoComplete) == StageKey.IsAutoComplete)
+                if ((work.Stage.Keys & StageKey.AutoComplete) == StageKey.AutoComplete)
                 {
                     foreach (var unWork in GetWorksUncompleted(work.Stage).ToList())
                     {

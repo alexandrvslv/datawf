@@ -102,7 +102,7 @@ namespace DataWF.Module.Flow
         {
             var stages = GetStages();
             foreach (Stage stage in stages)
-                if (stage.Keys != null && (stage.Keys & StageKey.IsStart) == StageKey.IsStart)
+                if (stage.Keys != null && (stage.Keys & StageKey.Start) == StageKey.Start)
                     return stage;
             return stages.Count == 0 ? null : stages[0];
         }
@@ -112,7 +112,7 @@ namespace DataWF.Module.Flow
         {
             var stages = GetStages();
             foreach (Stage stage in stages)
-                if (stage.Keys != null && (stage.Keys & StageKey.IsStop) == StageKey.IsStop)
+                if (stage.Keys != null && (stage.Keys & StageKey.Stop) == StageKey.Stop)
                     return stage;
             return stages.Count == 0 ? null : stages[stages.Count - 1];
         }

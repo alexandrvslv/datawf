@@ -52,11 +52,11 @@ namespace DataWF.Module.Flow
     public enum StageKey
     {
         None = 0,
-        IsStop = 1,
-        IsStart = 2,
-        IsSystem = 4,
-        IsReturn = 8,
-        IsAutoComplete = 16
+        Stop = 1,
+        Start = 2,
+        System = 4,
+        Return = 8,
+        AutoComplete = 16
     }
 
     [DataContract, Table("rstage", "Template", BlockSize = 100)]

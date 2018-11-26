@@ -126,7 +126,7 @@ namespace DataWF.Common
         ByF2
     }
 
-    [Flags]
+    //[Flags]
     public enum DBStatus
     {
         Empty = 0,
