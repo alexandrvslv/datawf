@@ -277,9 +277,12 @@ namespace DataWF.Common
                     if (compare.Not)
                         result = !result;
                 }
-                else if (y is Enum || x is Enum)
+                else if (y is Enum && x is Enum)
                 {
-                    return ((int)y & (int)x) != 0;
+                    result = ((int)y & (int)x) != 0;
+
+                    if (compare.Not)
+                        result = !result;
                 }
             }
             else
