@@ -1,4 +1,6 @@
 ﻿
+using System.Collections.Generic;
+
 namespace DataWF.Common
 {
     public class NamedList<T> : SelectableList<T>, INamedList where T : INamed, new()
@@ -13,6 +15,11 @@ namespace DataWF.Common
         public NamedList()
         {
             Indexes.Add(nameInvoker);
+        }
+
+        public NamedList(IEnumerable<T> items) : this()
+        {
+            AddRangeInternal(items);
         }
 
         public T this[string param]

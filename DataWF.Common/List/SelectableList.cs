@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 
 namespace DataWF.Common
@@ -233,7 +234,7 @@ namespace DataWF.Common
             OnListChanged(args);
         }
 
-        protected virtual void OnPropertyChanged(string property)
+        protected virtual void OnPropertyChanged([CallerMemberName]string property = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
