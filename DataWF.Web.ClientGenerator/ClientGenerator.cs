@@ -558,7 +558,7 @@ namespace DataWF.Web.ClientGenerator
         private MemberDeclarationSyntax GenDefinitionEnum(JsonSchema4 schema)
         {
             return SF.EnumDeclaration(
-                    attributeLists: SF.List(DefinitionAttributeList()),
+                    attributeLists: SF.List(GenDefinitionEnumAttributes(schema)),
                     modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
                     identifier: SF.Identifier(GetDefinitionName(schema)),
                     baseList: null,
@@ -566,9 +566,22 @@ namespace DataWF.Web.ClientGenerator
                     );
         }
 
+        private IEnumerable<AttributeListSyntax> GenDefinitionEnumAttributes(JsonSchema4 schema)
+        {
+            if (schema.ExtensionData?.TryGetValue("x-flags", out var flags) ?? false)
+            {
+                yield return SyntaxHelper.GenAttribute("Flags");
+            }
+        }
+
         private IEnumerable<EnumMemberDeclarationSyntax> GenDefinitionEnumMemebers(JsonSchema4 schema)
         {
-            //int i = 0;
+            var value = -1;
+            if (schema.ExtensionData != null && schema.ExtensionData.TryGetValue("x-flags", out var flags) && flags is long lflags)
+            {
+                value = (int)lflags;
+            }
+            int i = 0;
             var definitionName = GetDefinitionName(schema);
             foreach (var item in schema.Enumeration)
             {
@@ -579,7 +592,20 @@ namespace DataWF.Web.ClientGenerator
                 }
                 yield return SF.EnumMemberDeclaration(attributeLists: SF.List(GenDefinitionEnumMemberAttribute(item)),
                         identifier: SF.Identifier(sitem),
-                        equalsValue: null);
+                        equalsValue: value >= 0
+                            ? SF.EqualsValueClause(SF.Token(SyntaxKind.EqualsToken), SF.ParseExpression(value.ToString()))
+                            : null);
+
+                i++;
+                if (value == 0)
+                {
+                    value = 1;
+                }
+                else if (value > 0)
+                {
+                    value *= 2;
+                }
+
                 //SF.EqualsValueClause(
                 //    SF.Token(SyntaxKind.EqualsToken),
                 //    SF.LiteralExpression(SyntaxKind.NumericLiteralExpression, SF.Literal(i++)))
@@ -776,33 +802,33 @@ namespace DataWF.Web.ClientGenerator
                                  SF.Attribute(
                                      SF.IdentifierName("JsonIgnoreSerialization"))));
             }
-            else if (!property.IsRequired)
-            {
-                yield return SyntaxHelper.GenAttribute("JsonProperty", $"NullValueHandling = NullValueHandling.Include");
-            }
-            
-            if (property == typeKey)
+            else if (property == typeKey)
             {
                 yield return SyntaxHelper.GenAttribute("JsonProperty", $"Order = -3");
             }
-
-            if (property == idKey)
+            else if (property == idKey)
             {
                 yield return SyntaxHelper.GenAttribute("JsonProperty", $"Order = -2");
             }
-            else if (property.IsRequired)
+            else //if (!property.IsRequired)
+            {
+                yield return SyntaxHelper.GenAttribute("JsonProperty", $"NullValueHandling = NullValueHandling.Include");
+            }
+
+
+            if (property.IsRequired && property != idKey && property != typeKey)
             {
                 yield return SyntaxHelper.GenAttribute("Required", $"ErrorMessage = \"{GetPropertyName(property)} is required\"");
             }
 
             if (property.MaxLength != null)
             {
-                yield return SyntaxHelper.GenAttribute("MaxLength", 
+                yield return SyntaxHelper.GenAttribute("MaxLength",
                     $"{property.MaxLength}, ErrorMessage = \"{GetPropertyName(property)} only max {property.MaxLength} letters allowed.\"");
             }
         }
 
-        
+
 
         private IEnumerable<AccessorDeclarationSyntax> GenDefinitionClassPropertyAccessors(JsonProperty property)
         {

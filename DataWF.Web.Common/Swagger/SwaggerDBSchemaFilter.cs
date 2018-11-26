@@ -41,6 +41,10 @@ namespace DataWF.Web.Common
                     tables.Pop();
                 }
             }
+            if (context.SystemType.IsEnum && context.SystemType.GetCustomAttribute<FlagsAttribute>() != null)
+            {
+                schema.Extensions.Add("x-flags", Enum.GetValues(context.SystemType).Cast<int>().First());
+            }
         }
 
         public Schema ApplyTableType(Schema schema, Type type, SchemaFilterContext context, Schema baseSchema)

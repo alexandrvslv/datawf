@@ -92,6 +92,14 @@ namespace DataWF.Web.ClientGenerator
                                 semicolonToken: initializer == null ? SF.Token(SyntaxKind.None) : SF.Token(SyntaxKind.SemicolonToken));
         }
 
+        public static AttributeListSyntax GenAttribute(string name)
+        {
+            return SF.AttributeList(
+                SF.SingletonSeparatedList(
+                    SF.Attribute(
+                        SF.IdentifierName(name))));
+        }
+
         public static AttributeListSyntax GenAttribute(string name, string args)
         {
             return SF.AttributeList(
