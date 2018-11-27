@@ -44,6 +44,20 @@ namespace DataWF.Common
             }
         }
 
+        public IEnumerable<object> Values
+        {
+            get
+            {
+                foreach (var item in this)
+                {
+                    if (item.Check)
+                    {
+                        yield return item.Value;
+                    }
+                }
+            }
+        }
+
         public Type Type { get; }
 
         public override void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
