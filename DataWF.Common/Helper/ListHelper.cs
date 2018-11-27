@@ -262,24 +262,34 @@ namespace DataWF.Common
                 {
                     y = ((string)y).Split(',');
                 }
-                if (y is IList list)
+                if (y is IEnumerable list)
                 {
                     foreach (object item in list)
                     {
                         if (item is string && !(val is string))
+                        {
                             val = x == null ? string.Empty : x.ToString();
-                        if (item.Equals(val))
+                        }
+
+                        if (Equals(item, val))
                         {
                             result = true;
                             break;
                         }
                     }
                     if (compare.Not)
+                    {
                         result = !result;
+                    }
                 }
-                else if (y is Enum || x is Enum)
+                else if (y is Enum && x is Enum)
                 {
-                    return ((int)y & (int)x) != 0;
+                    result = ((int)y & (int)x) != 0;
+
+                    if (compare.Not)
+                    {
+                        result = !result;
+                    }
                 }
             }
             else
