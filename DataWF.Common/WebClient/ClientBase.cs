@@ -258,8 +258,8 @@ namespace DataWF.Common
                 ? disposition.FirstOrDefault() : "somefile.someextension";
             fileName = System.Net.WebUtility.UrlDecode(fileName);
             var index = fileName.IndexOf(fileNameUTFToken);
-            if(index>0)
-            fileName = fileName.Substring(index+ fileNameUTFToken.Length).Trim(' ', '\"', '\'');
+            if (index > 0)
+                fileName = fileName.Substring(index + fileNameUTFToken.Length).Trim(' ', '\"', '\'');
             var fileSize = 0;
             if (headers.TryGetValue("Content-Length", out var length))
             {
@@ -387,6 +387,8 @@ namespace DataWF.Common
             {
                 foreach (var item in list)
                 {
+                    //if (item is ISynchronized synched && !(synched.IsSynchronized ?? false))
+                    //    continue;
                     if (!items.Contains(item))
                     {
                         list.Remove(item);
