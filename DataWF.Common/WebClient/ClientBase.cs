@@ -158,65 +158,58 @@ namespace DataWF.Common
                         switch (response.StatusCode)
                         {
                             case System.Net.HttpStatusCode.OK:
-                                try
+                                using (var responseStream = response.Content == null ? null : await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
                                 {
-                                    using (var responseStream = response.Content == null ? null : await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
+                                    using (var reader = new StreamReader(responseStream))
                                     {
-                                        using (var reader = new StreamReader(responseStream))
+                                        if (mediaType.Equals("application/octet-stream"))
                                         {
-                                            if (mediaType.Equals("application/octet-stream"))
+                                            var headers = GetHeaders(response);
+                                            (string fileName, int fileSize) = GetFileInfo(headers);
+                                            var filePath = Path.Combine(Path.GetTempPath(), fileName);
+                                            try
                                             {
-                                                var headers = GetHeaders(response);
-                                                (string fileName, int fileSize) = GetFileInfo(headers);
-                                                var filePath = Path.Combine(Path.GetTempPath(), fileName);
-                                                try
-                                                {
-                                                    var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
-                                                    var process = new DownloadProcess(fileName, 8192, fileSize);
-                                                    await process.StartAsync(responseStream, fileStream, new CancellationToken());
-                                                    return (R)(object)fileStream;
-                                                }
-                                                catch (IOException ioex)
-                                                {
-                                                    if (ioex.HResult == -2147024864)
-                                                    {
-                                                        return (R)(object)null;
-                                                    }
-                                                    throw ioex;
-                                                }
+                                                var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+                                                var process = new DownloadProcess(fileName, 8192, fileSize);
+                                                await process.StartAsync(responseStream, fileStream, new CancellationToken());
+                                                return (R)(object)fileStream;
                                             }
-                                            else if (typeof(R) == typeof(string))
+                                            catch (IOException ioex)
                                             {
-                                                result = (R)(object)reader.ReadToEnd();
-                                            }
-                                            else
-                                            {
-                                                var serializer = JsonSerializer.Create(JsonSerializerSettings);
-                                                using (var jreader = new JsonTextReader(reader))
+                                                if (ioex.HResult == -2147024864)
                                                 {
-                                                    while (jreader.Read())
+                                                    return (R)(object)null;
+                                                }
+                                                throw ioex;
+                                            }
+                                        }
+                                        else if (typeof(R) == typeof(string))
+                                        {
+                                            result = (R)(object)reader.ReadToEnd();
+                                        }
+                                        else
+                                        {
+                                            var serializer = JsonSerializer.Create(JsonSerializerSettings);
+                                            using (var jreader = new JsonTextReader(reader))
+                                            {
+                                                while (jreader.Read())
+                                                {
+                                                    switch (jreader.TokenType)
                                                     {
-                                                        switch (jreader.TokenType)
-                                                        {
-                                                            case JsonToken.StartObject:
-                                                                result = DeserializeObject<R>(serializer, jreader, value is R rvalue ? rvalue : default(R));
-                                                                break;
-                                                            case JsonToken.StartArray:
-                                                                result = (R)DeserializeArray(serializer, jreader, typeof(R), value as IList);
-                                                                break;
-                                                            default:
-                                                                result = serializer.Deserialize<R>(jreader);
-                                                                break;
-                                                        }
+                                                        case JsonToken.StartObject:
+                                                            result = DeserializeObject<R>(serializer, jreader, value is R rvalue ? rvalue : default(R));
+                                                            break;
+                                                        case JsonToken.StartArray:
+                                                            result = (R)DeserializeArray(serializer, jreader, typeof(R), value as IList);
+                                                            break;
+                                                        default:
+                                                            result = serializer.Deserialize<R>(jreader);
+                                                            break;
                                                     }
                                                 }
                                             }
                                         }
                                     }
-                                }
-                                catch (Exception ex)
-                                {
-                                    OnResponceDeserializeException(response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false), ex);
                                 }
                                 break;
                             case System.Net.HttpStatusCode.Unauthorized:
@@ -286,26 +279,20 @@ namespace DataWF.Common
                         switch (response.StatusCode)
                         {
                             case System.Net.HttpStatusCode.OK:
-                                try
+
+                                using (var responseStream = response.Content == null ? null : await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
                                 {
-                                    using (var responseStream = response.Content == null ? null : await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
+                                    using (var reader = new StreamReader(responseStream))
                                     {
-                                        using (var reader = new StreamReader(responseStream))
+                                        var serializer = JsonSerializer.Create(JsonSerializerSettings);
+                                        using (var jreader = new JsonTextReader(reader))
                                         {
-                                            var serializer = JsonSerializer.Create(JsonSerializerSettings);
-                                            using (var jreader = new JsonTextReader(reader))
+                                            while (jreader.Read() && jreader.TokenType == JsonToken.StartArray)
                                             {
-                                                while (jreader.Read() && jreader.TokenType == JsonToken.StartArray)
-                                                {
-                                                    result = DeserializeArray<R, I>(serializer, jreader);
-                                                }
+                                                result = DeserializeArray<R, I>(serializer, jreader);
                                             }
                                         }
                                     }
-                                }
-                                catch (Exception ex)
-                                {
-                                    OnResponceDeserializeException(response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false), ex);
                                 }
                                 break;
                             case System.Net.HttpStatusCode.Unauthorized:
@@ -385,13 +372,18 @@ namespace DataWF.Common
             }
             if (list != null)
             {
-                foreach (var item in list)
+                for (var i = 0; i < list.Count;)
                 {
+                    var item = list[i];
                     //if (item is ISynchronized synched && !(synched.IsSynchronized ?? false))
                     //    continue;
                     if (!items.Contains(item))
                     {
-                        list.Remove(item);
+                        list.RemoveAt(i);
+                    }
+                    else
+                    {
+                        i++;
                     }
                 }
                 foreach (var item in items)
@@ -470,11 +462,11 @@ namespace DataWF.Common
             return Convert.ToString(value, cultureInfo);
         }
 
-        private void OnResponceDeserializeException(HttpResponseMessage response, string responseData, Exception ex)
+        private void OnResponceDeserializeException(HttpResponseMessage response, Exception ex)
         {
             throw new ClientException("Could not deserialize the response body.",
                 (int)response.StatusCode,
-                responseData,
+                ex.Message,
                 GetHeaders(response), ex);
         }
 
