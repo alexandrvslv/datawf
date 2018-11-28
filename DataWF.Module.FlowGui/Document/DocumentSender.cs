@@ -289,8 +289,8 @@ namespace DataWF.Module.FlowGui
                     toolForward.Visible = false;
                 SendType = DocumentSendType.Recovery;
             }
-            else if ((CurrentStage.Keys.GetValueOrDefault() & StageKey.IsStop) == StageKey.IsStop
-                || ((CurrentStage.Keys.GetValueOrDefault() & StageKey.IsAutoComplete) != StageKey.IsAutoComplete
+            else if ((CurrentStage.Keys.GetValueOrDefault() & StageKey.Stop) == StageKey.Stop
+                || ((CurrentStage.Keys.GetValueOrDefault() & StageKey.AutoComplete) != StageKey.AutoComplete
                     && current.GetWorksUncompleted(CurrentStage).Count() > 1))
             {
                 toolComplete.Visible = true;
