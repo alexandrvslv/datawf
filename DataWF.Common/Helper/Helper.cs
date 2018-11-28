@@ -80,18 +80,23 @@ namespace DataWF.Common
             get { return logs; }
         }
 
-        public static string DateRevelantString(DateTime date)
+        public static string DateRevelantString(DateTime date, CultureInfo culture= null)
         {
             return DateRevelantString(DateTime.Now, date);
         }
 
-        public static string DateRevelantString(DateTime stamp, DateTime date)
+        public static string DateRevelantString(DateTime stamp, DateTime date, CultureInfo culture = null)
         {
+            if (culture == null)
+            {
+                culture = CultureInfo.InvariantCulture;
+            }
+
             string f = string.Empty;
             if (stamp.Year != date.Year)
-                f = date.ToString("yyyy");
+                f = date.ToString("yyyy", culture);
             else if (stamp.Month != date.Month)
-                f = date.ToString("MMMM");
+                f = date.ToString("MMMM", culture);
             else if (stamp.Day == date.Day)
             {
                 var time = stamp - date;
