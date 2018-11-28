@@ -8,8 +8,8 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="3.0.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="3.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="4.0.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="4.0.1" />
   </ItemGroup>
   <ItemGroup>
     <DotNetCliToolReference Include="Swashbuckle.AspNetCore.Cli" Version="3.0.0-beta1" />
