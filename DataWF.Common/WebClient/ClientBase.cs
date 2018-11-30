@@ -349,27 +349,23 @@ namespace DataWF.Common
         {
             var itemType = TypeHelper.GetItemType(type);
             var client = Provider.GetClient(itemType);
-            var items = (IList)EmitInvoker.CreateObject(type);
+            var temp = (IList)EmitInvoker.CreateObject(type);
 
-            if (client != null)
+            int index = 0;
+            while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
             {
-                while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
+                var item = list != null && index < list.Count ? list[index] : null;
+                item = client != null
+                    ? client.DeserializeItem(serializer, jreader, item)
+                    : serializer.Deserialize(jreader, itemType);
+                if (item == null)
                 {
-                    var item = client.DeserializeItem(serializer, jreader, null);
-                    if (item == null)
-                    {
-                        continue;
-                    }
-                    items.Add(item);
+                    continue;
                 }
+                temp.Add(item);
+                index++;
             }
-            else
-            {
-                while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
-                {
-                    items.Add(serializer.Deserialize(jreader, itemType));
-                }
-            }
+
             if (list != null)
             {
                 for (var i = 0; i < list.Count;)
@@ -377,7 +373,7 @@ namespace DataWF.Common
                     var item = list[i];
                     //if (item is ISynchronized synched && !(synched.IsSynchronized ?? false))
                     //    continue;
-                    if (!items.Contains(item))
+                    if (!temp.Contains(item))
                     {
                         list.RemoveAt(i);
                     }
@@ -386,7 +382,7 @@ namespace DataWF.Common
                         i++;
                     }
                 }
-                foreach (var item in items)
+                foreach (var item in temp)
                 {
                     if (!list.Contains(item))
                     {
@@ -395,7 +391,7 @@ namespace DataWF.Common
                 }
                 return list;
             }
-            return items;
+            return list ?? temp;
         }
 
         public virtual R DeserializeObject<R>(JsonSerializer serializer, JsonTextReader jreader, R item)
