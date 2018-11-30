@@ -17,10 +17,9 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using System;
-using DataWF.Data;
 using DataWF.Common;
-using System.Text;
+using DataWF.Data;
+using System;
 
 namespace DataWF.Module.Flow
 {
@@ -46,8 +45,9 @@ namespace DataWF.Module.Flow
             return sequence.Next();
         }
 
-        public virtual string Generate(Template template)
+        public virtual string Generate(Document document)
         {
+            var template = document.Template;
             return template.Code + GenerateIdentifier("template_" + template.Id).ToString("D8");
         }
 
@@ -57,7 +57,7 @@ namespace DataWF.Module.Flow
             var document = (Document)arg.Document;
             if (string.IsNullOrEmpty(document.Number))
             {
-                document.Number = Generate(document.Template);
+                document.Number = Generate(document);
             }
             return null;
         }
