@@ -55,6 +55,8 @@ namespace DataWF.Common
 
         public static void Load(string filePath)
         {
+            if (!File.Exists(filePath))
+                return;
             using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 Load(fileStream);
@@ -62,7 +64,7 @@ namespace DataWF.Common
         }
 
         public static void Load(Stream stream)
-        {            
+        {
             Serialization.Deserialize(stream, Instance);
         }
 
