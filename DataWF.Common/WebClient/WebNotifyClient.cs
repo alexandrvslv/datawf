@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
-    public class WebNotifyClient : IDisposable
+    public class WebNotifyClient : IDisposable, IWebNotifyClient
     {
         private ClientWebSocket socket;
 
@@ -36,7 +36,6 @@ namespace DataWF.Common
                     OnReceiveMessage?.Invoke(this, new WebNotifyClientEventArgs(recieve));
                 }
             }
-
         }
 
         public async Task<byte[]> ReadData()
