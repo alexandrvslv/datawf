@@ -267,10 +267,14 @@ namespace DataWF.Data
                 }
                 catch (Exception ex)
                 {
-                    if (ex.Message.IndexOf("already exist", StringComparison.OrdinalIgnoreCase) < 0)
+                    if (ex.Message.IndexOf("already exist", StringComparison.OrdinalIgnoreCase) >= 0
+                        || ex.Message.IndexOf("42701:") >= 0
+                        || ex.Message.IndexOf("42P07:") >= 0
+                        || ex.Message.IndexOf("42710:") >= 0)
                     {
-                        throw ex;
+                        continue;
                     }
+                    throw ex;
                 }
             }
             builder.Clear();
