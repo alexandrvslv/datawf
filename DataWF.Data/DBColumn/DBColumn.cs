@@ -479,6 +479,10 @@ namespace DataWF.Data
                 if (dataType == value)
                     return;
                 dataType = value;
+                if (value == null)
+                {
+                    DBDataType = DBDataType.String;
+                }
                 if (value == typeof(byte[]))
                 {
                     if (size <= 0 || size > 4000)
