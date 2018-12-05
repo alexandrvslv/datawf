@@ -24,6 +24,9 @@ namespace DataWF.Data
 {
     public class ItemTypeAttributeCache
     {
+        private DBTable cacheTable;
+        private DBSchema schema;
+
         public ItemTypeAttribute Attribute { get; set; }
 
         public Type Type { get; private set; }
@@ -32,12 +35,16 @@ namespace DataWF.Data
 
         public IDBVirtualTable VirtualTable { get { return (IDBVirtualTable)Table; } }
 
-        private DBTable cacheTable;
-
         public DBTable Table
         {
             get { return cacheTable ?? (cacheTable = DBService.Schems.ParseTable(Type.Name)); }
             internal set { cacheTable = value; }
+        }
+
+        public DBSchema Schema
+        {
+            get { return schema ?? TableAttribute.Schema; }
+            set { schema = value; }
         }
 
         public void Initialize(Type type)
@@ -51,14 +58,15 @@ namespace DataWF.Data
             TableAttribute.InitializeItemType(this);
         }
 
-        public DBTable Generate()
+        public DBTable Generate(DBSchema schema)
         {
+            Schema = schema;
             if (Table == null)
                 Table = CreateTable();
 
-            if (!TableAttribute.Schema.Tables.Contains(Type.Name))
+            if (!Schema.Tables.Contains(Type.Name))
             {
-                TableAttribute.Schema.Tables.Add(Table);
+                Schema.Tables.Add(Table);
             }
             Table.TableAttribute = TableAttribute;
             VirtualTable.BaseTable = TableAttribute.Table;
@@ -83,13 +91,9 @@ namespace DataWF.Data
             {
                 throw new InvalidOperationException("Table attribute not initializes!");
             }
-            if (TableAttribute.Table == null)
-            {
-                TableAttribute.Generate();
-            }
             var table = (DBTable)EmitInvoker.CreateObject(typeof(DBVirtualTable<>).MakeGenericType(Type));
             table.Name = Type.Name;
-            table.Schema = TableAttribute.Schema;
+            table.Schema = Schema;
             ((IDBVirtualTable)table).BaseTable = TableAttribute.Table;
             table.DisplayName = Type.Name;
             table.Query = $"{TableAttribute.Table.ItemTypeKey.SqlName} = {TableAttribute.Table.GetTypeIndex(Type)}";

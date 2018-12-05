@@ -172,6 +172,10 @@ namespace DataWF.Data
             {
                 column.Generate();
             }
+            if (!Schema.Tables.Contains(Table.Name))
+            {
+                Schema.Tables.Add(Table);
+            }
             foreach (var reference in cacheReferences)
             {
                 reference.CheckReference();
@@ -186,16 +190,13 @@ namespace DataWF.Data
                 index.Generate();
             }
 
-            if (!Schema.Tables.Contains(Attribute.TableName))
-            {
-                Schema.Tables.Add(Table);
-            }
+            
             Table.IsLoging = Attribute.IsLoging;
 
             foreach (var itemType in cacheItemTypes)
             {
                 Table.ItemTypes[itemType.Attribute.Id] = new DBItemType { Type = itemType.Type };
-                itemType.Generate();
+                itemType.Generate(Schema);
 
             }
 

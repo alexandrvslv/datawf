@@ -114,7 +114,11 @@ namespace DataWF.Data
                     tableAttribute.Generate(schema);
                 var itemAttribute = GetItemTypeAttribute(type);
                 if (itemAttribute != null)
+                {
+                    if (itemAttribute.Table == null && generate)
+                        itemAttribute.Generate(schema);
                     return itemAttribute.Table;
+                }
                 return tableAttribute.Table;
             }
             return null;
