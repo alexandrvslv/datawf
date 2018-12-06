@@ -748,7 +748,7 @@ namespace DataWF.Module.Flow
                         DocumentDate = DateTime.Now;
                     }
 
-                    if (GetTemplatedData() == null && Template.Datas.Any())
+                    if (!GetTemplatedData().Any() && Template.Datas.Any())
                     {
                         foreach (var data in CreateTemplatedData())
                         {
