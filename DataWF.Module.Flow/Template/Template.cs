@@ -220,8 +220,10 @@ namespace DataWF.Module.Flow
             document.DocumentDate = DateTime.Now;
             if (document.Template.Datas.Any())
             {
-                var data = document.CreateTemplatedData();
-                data.Attach();
+                foreach (var data in document.CreateTemplatedData())
+                {
+                    data.Attach();
+                }
             }
 
             if (parent != null)

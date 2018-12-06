@@ -221,9 +221,10 @@ namespace DataWF.Module.Flow
             set
             {
                 SetProperty(value, nameof(Number));
-                var data = GetTemplatedData();
-                if (data != null)
+                foreach (var data in GetTemplatedData())
+                {
                     data.RefreshName();
+                }
             }
         }
 
@@ -594,18 +595,22 @@ namespace DataWF.Module.Flow
         }
 
         [ControllerMethod]
-        public virtual DocumentData GetTemplatedData()
+        public virtual IEnumerable<DocumentData> GetTemplatedData()
         {
             foreach (DocumentData data in GetDatas())
+            {
                 if (data.IsTemplate)
-                    return data;
-            return null;
+                    yield return data;
+            }
         }
 
         [ControllerMethod]
-        public virtual DocumentData CreateTemplatedData()
+        public virtual IEnumerable<DocumentData> CreateTemplatedData()
         {
-            return GenerateFromTemplate<DocumentData>(Template.Datas.FirstOrDefault());
+            foreach (var item in Template.Datas)
+            {
+                yield return GenerateFromTemplate<DocumentData>(item);
+            }
         }
 
         public T GenerateFromTemplate<T>(TemplateData templateData) where T : DocumentData, new()
@@ -745,8 +750,10 @@ namespace DataWF.Module.Flow
 
                     if (GetTemplatedData() == null && Template.Datas.Any())
                     {
-                        var data = CreateTemplatedData();
-                        data.Attach();
+                        foreach (var data in CreateTemplatedData())
+                        {
+                            data.Attach();
+                        }
                     }
 
                     if (Parent != null && !Referencing.Any())
@@ -778,8 +785,7 @@ namespace DataWF.Module.Flow
 
                 if (isnew)
                 {
-                    var data = GetTemplatedData();
-                    if (data != null)
+                    foreach (var data in GetTemplatedData())
                     {
                         data.Parse(param);
                     }
