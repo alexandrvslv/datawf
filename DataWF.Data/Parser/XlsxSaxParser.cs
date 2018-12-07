@@ -21,6 +21,7 @@
 using DataWF.Common;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Validation;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -41,301 +42,152 @@ namespace DataWF.Data
 
         public override string Parse(Stream stream, string fileName, ExecuteArgs param)
         {
+            return ParseDirectly(stream, fileName, param);
+        }
+
+        public string ParseDirectly(Stream stream, string fileName, ExecuteArgs param)
+        {
+            var cacheNames = new Dictionary<string, DefinedName>();
+            var stringTables = (List<Excel.SharedStringItem>)null;
+            using (var document = SpreadsheetDocument.Open(stream, true))
+            {
+                var workbookPart = document.WorkbookPart;
+                var sheetList = new List<Excel.Sheet>();
+                stringTables = ReadStringTable(workbookPart.SharedStringTablePart);
+
+                ParseWorkbookPart(param, cacheNames, workbookPart, sheetList);
+
+                foreach (var part in workbookPart.Parts)
+                {
+                    if (part.OpenXmlPart is WorksheetPart worksheetPart)
+                    {
+                        var sheet = sheetList.FirstOrDefault(p => p.Id == part.RelationshipId);
+                        if (sheet.State != null
+                            && (sheet.State.Value == Excel.SheetStateValues.Hidden
+                            || sheet.State.Value == Excel.SheetStateValues.VeryHidden))
+                            continue;
+                        //var newWorksheetPart = newWorkbookPart.AddNewPart<WorksheetPart>(sheet.Id);
+                        foreach (var sheetPart in worksheetPart.Parts)
+                        {
+                            if (sheetPart.OpenXmlPart is TableDefinitionPart tableDefinitionPart)
+                            {
+                                ParseTableDefinition(param, cacheNames, sheet, tableDefinitionPart);
+                            }
+                        }
+                        ParseWorksheetPart(param, cacheNames, stringTables, worksheetPart, sheet);
+                    }
+                }
+                document.Save();
+                var validator = new OpenXmlValidator();
+                var errors = validator.Validate(document);
+            }
+            return ((FileStream)stream).Name;
+        }
+
+        public string ParseReplace(Stream stream, string fileName, ExecuteArgs param)
+        {
             string newFileName = GetTempFileName(fileName);
             var cacheNames = new Dictionary<string, DefinedName>();
-            var inserts = new List<CellRange>();
-
+            var stringTables = (List<Excel.SharedStringItem>)null;
             using (var document = SpreadsheetDocument.Open(stream, false))
-            using (var newDocument = SpreadsheetDocument.Create(newFileName, SpreadsheetDocumentType.Workbook))
+            using (var newDocument = SpreadsheetDocument.Create(newFileName, document.DocumentType))
             {
                 foreach (var docPart in document.Parts)
                 {
-                    if (docPart.OpenXmlPart is ExtendedFilePropertiesPart)
-                        newDocument.AddPart((ExtendedFilePropertiesPart)docPart.OpenXmlPart, docPart.RelationshipId);
-                    else if (docPart.OpenXmlPart is CoreFilePropertiesPart)
-                        newDocument.AddPart((CoreFilePropertiesPart)docPart.OpenXmlPart, docPart.RelationshipId);
-                    else if (docPart.OpenXmlPart is CustomFilePropertiesPart)
-                        newDocument.AddPart((CustomFilePropertiesPart)docPart.OpenXmlPart, docPart.RelationshipId);
-                    else if (docPart.OpenXmlPart is WorkbookPart)
+                    if (docPart.OpenXmlPart is ExtendedFilePropertiesPart extendedFilePropertiesPart)
                     {
-                        var workbookPart = (WorkbookPart)docPart.OpenXmlPart;
+                        newDocument.AddPart(extendedFilePropertiesPart, docPart.RelationshipId);
+                    }
+                    else if (docPart.OpenXmlPart is CoreFilePropertiesPart coreFilePropertiesPart)
+                    {
+                        newDocument.AddPart(coreFilePropertiesPart, docPart.RelationshipId);
+                    }
+                    else if (docPart.OpenXmlPart is CustomFilePropertiesPart customFilePropertiesPart)
+                    {
+                        newDocument.AddPart(customFilePropertiesPart, docPart.RelationshipId);
+                    }
+                    else if (docPart.OpenXmlPart is WorkbookPart workbookPart)
+                    {
+                        var newWorkbookPart = newDocument.AddPart(workbookPart, docPart.RelationshipId);
+                        //var newWorkbookPart = newDocument.AddWorkbookPart();
+                        //newDocument.ChangeIdOfPart(newWorkbookPart, docPart.RelationshipId);
+
                         var sheetList = new List<Excel.Sheet>();
-                        var stringTables = workbookPart.SharedStringTablePart;
-                        var newWorkbookPart = newDocument.AddWorkbookPart();
-                        newDocument.ChangeIdOfPart(newWorkbookPart, docPart.RelationshipId);
+                        stringTables = ReadStringTable(workbookPart.SharedStringTablePart);
+                        ParseWorkbookPart(param, cacheNames, workbookPart, newWorkbookPart, sheetList);
+
                         foreach (var part in workbookPart.Parts)
                         {
-                            if (part.OpenXmlPart is SharedStringTablePart)
-                                newWorkbookPart.AddPart((SharedStringTablePart)part.OpenXmlPart, part.RelationshipId);
-                            else if (part.OpenXmlPart is WorkbookStylesPart)
-                                newWorkbookPart.AddPart((WorkbookStylesPart)part.OpenXmlPart, part.RelationshipId);
-                            else if (part.OpenXmlPart is ThemePart)
-                                newWorkbookPart.AddPart((ThemePart)part.OpenXmlPart, part.RelationshipId);
-                            else if (part.OpenXmlPart is CalculationChainPart)
-                                newWorkbookPart.AddPart((CalculationChainPart)part.OpenXmlPart);
-                        }
-
-                        using (var reader = OpenXmlReader.Create(workbookPart))
-                        using (var writer = XmlWriter.Create(newWorkbookPart.GetStream(), new XmlWriterSettings { Encoding = Encoding.UTF8 }))
-                        {
-                            writer.WriteStartDocument(true);
-                            while (reader.Read())
-                                if (reader.ElementType == typeof(Excel.DefinedName))
-                                {
-                                    var name = (Excel.DefinedName)reader.LoadCurrentElement();
-                                    if (!string.IsNullOrEmpty(name.InnerText))
-                                    {
-
-                                        var split = name.InnerText.Split('!');
-                                        if (split.Length == 2)
-                                        {
-                                            var sheet = split[0];
-                                            var procedure = DBService.Schems.ParseProcedure(name.Name, param.ProcedureCategory);
-                                            if (procedure != null)
-                                            {
-                                                var defName = new DefinedName
-                                                {
-                                                    Name = name.Name,
-                                                    Sheet = split[0].Trim('\''),
-                                                    Reference = split[1],
-                                                    Procedure = procedure,
-                                                    Value = procedure.Execute(param)
-                                                };
-                                                cacheNames.Add(defName.Range.Start.ToString(), defName);
-                                            }
-                                        }
-                                    }
-                                    WriteElement(writer, name);
-                                }
-                                else if (reader.ElementType == typeof(Excel.Sheet))
-                                {
-                                    var sheet = (Excel.Sheet)reader.LoadCurrentElement();
-                                    sheetList.Add(sheet);
-                                    WriteElement(writer, sheet);
-                                }
-                                else if (reader.IsStartElement)
-                                {
-                                    WriteStartElement(writer, reader);
-                                }
-                                else if (reader.IsEndElement)
-                                {
-                                    writer.WriteEndElement();
-                                }
-                        }
-
-                        foreach (var sheet in sheetList)
-                        {
-                            var worksheetPart = workbookPart.GetPartById(sheet.Id);
-                            var newWorksheetPart = newWorkbookPart.AddNewPart<WorksheetPart>(sheet.Id);
-
-                            foreach (var part in worksheetPart.Parts)
+                            if (part.OpenXmlPart is SharedStringTablePart sharedStringTablePart)
                             {
-                                if (part.OpenXmlPart is TableDefinitionPart)
-                                {
-                                    var tableDef = newWorksheetPart.AddNewPart<TableDefinitionPart>(part.RelationshipId);
-                                    using (var reader = OpenXmlReader.Create(part.OpenXmlPart))
-                                    using (var writer = XmlWriter.Create(tableDef.GetStream()))
-                                    {
-                                        writer.WriteStartDocument(true);
-                                        while (reader.Read())
-                                        {
-                                            if (reader.ElementType == typeof(Excel.Table))
-                                            {
-                                                var table = (Excel.Table)reader.LoadCurrentElement();
-
-                                                var procedure = DBService.Schems.ParseProcedure(table.Name, param.ProcedureCategory);
-                                                if (procedure != null)
-                                                {
-                                                    var reference = CellRange.Parse(table.Reference.Value);
-                                                    var defName = new DefinedName
-                                                    {
-                                                        Name = table.Name,
-                                                        Sheet = sheet.Name,
-                                                        Range = reference,
-                                                        Procedure = procedure,
-                                                        Value = procedure.Execute(param),
-                                                    };
-                                                    if (defName.Value is QResult result && result.Values.Count > 0)
-                                                    {
-                                                        var index = reference.Start.Row + result.Values.Count;
-                                                        if (index > reference.End.Row)
-                                                        {
-                                                            defName.NewRange = new CellRange(reference.Start, new CellReference(reference.End.Col, index));
-                                                            table.Reference = defName.NewRange.ToString();
-                                                            //table.TotalsRowCount = (uint)newrange.Rows;
-                                                        }
-                                                        defName.Table = table;
-                                                        cacheNames.Add(defName.Range.Start.ToString(), defName);
-                                                    }
-                                                }
-                                                WriteElement(writer, table);
-                                            }
-                                            else if (reader.IsStartElement)
-                                            {
-
-                                                WriteStartElement(writer, reader);
-                                            }
-                                            else if (reader.IsEndElement)
-                                            {
-                                                writer.WriteEndElement();
-                                            }
-                                        }
-                                    }
-                                }
-                                else if (part.OpenXmlPart is DrawingsPart)
-                                    newWorksheetPart.AddPart((DrawingsPart)part.OpenXmlPart, part.RelationshipId);
-                                else if (part.OpenXmlPart is SpreadsheetPrinterSettingsPart)
-                                    newWorksheetPart.AddPart((SpreadsheetPrinterSettingsPart)part.OpenXmlPart, part.RelationshipId);
-                                else if (part.OpenXmlPart is ControlPropertiesPart)
-                                    newWorksheetPart.AddPart((ControlPropertiesPart)part.OpenXmlPart, part.RelationshipId);
-                                else if (part.OpenXmlPart is PivotTablePart)
-                                    newWorksheetPart.AddPart((PivotTablePart)part.OpenXmlPart, part.RelationshipId);
-                                else if (part.OpenXmlPart is QueryTablePart)
-                                    newWorksheetPart.AddPart((QueryTablePart)part.OpenXmlPart, part.RelationshipId);
-                                else if (part.OpenXmlPart is TimeLinePart)
-                                    newWorksheetPart.AddPart((TimeLinePart)part.OpenXmlPart, part.RelationshipId);
-                                else
-                                { }
+                                //newWorkbookPart.AddPart(sharedStringTablePart, part.RelationshipId);
                             }
-
-                            using (var reader = OpenXmlReader.Create(worksheetPart))
-                            using (var writer = XmlWriter.Create(newWorksheetPart.GetStream(), new XmlWriterSettings { Encoding = Encoding.UTF8 }))
+                            else if (part.OpenXmlPart is WorkbookStylesPart workbookStylesPart)
                             {
-                                int ind, dif = 0;
-                                writer.WriteStartDocument(true);
-                                while (reader.Read())
-                                {
-                                    if (reader.ElementType == typeof(Excel.Row))
-                                    {
-                                        var row = (Excel.Row)reader.LoadCurrentElement();
-                                        ind = (int)row.RowIndex.Value + dif;
-                                        var newRow = CloneRow(row, ind);
-                                        QResult query = null;
-                                        foreach (Excel.Cell ocell in newRow.Descendants<Excel.Cell>())
-                                        {
-                                            object rz = null;
-                                            if (cacheNames.TryGetValue(ocell.CellReference.Value, out var defName) && defName.Sheet.Equals(sheet.Name.Value, StringComparison.OrdinalIgnoreCase))
-                                            {
-                                                rz = defName.Value;
-                                            }
-                                            else
-                                            {
-                                                string value = ReadCell(ocell, stringTables);
-                                                rz = ReplaceExcelString(param, value);
-                                            }
-
-                                            if (rz != null)
-                                            {
-                                                query = rz as QResult;
-                                                if (query != null)
-                                                {
-                                                    var sref = CellReference.Parse(ocell.CellReference);
-                                                    var insert = new CellRange(sref, sref);
-                                                    Excel.Row tableRow = null;
-                                                    foreach (object[] dataRow in query.Values)
-                                                    {
-                                                        if (tableRow == null)
-                                                            tableRow = newRow;
-                                                        else if (defName != null && defName.Range.End.Row > sref.Row)
-                                                        {
-                                                            reader.Read();
-                                                            row = (Excel.Row)reader.LoadCurrentElement();
-                                                            tableRow = CloneRow(row, (int)row.RowIndex.Value + dif);
-                                                            insert.Start.Row++;
-                                                            insert.End.Row++;
-                                                        }
-                                                        else
-                                                        {
-                                                            tableRow = CloneRow(tableRow, sref.Row);// GetRow(sd, srow, excelRow == null, cell.Parent as Excel.Row);
-                                                            insert.End.Row++;
-                                                        }
-
-                                                        int col = sref.Col;
-                                                        foreach (object itemValue in dataRow)
-                                                        {
-                                                            GetCell(tableRow, itemValue, col, sref.Row, 0);
-                                                            col++;
-                                                        }
-                                                        sref.Row++;
-                                                        WriteElement(writer, tableRow);
-                                                    }
-
-                                                    if (insert.Rows > 0)
-                                                    {
-                                                        inserts.Add(insert);
-                                                        dif += insert.Rows;
-                                                    }
-                                                    break;
-                                                }
-                                                else
-                                                {
-                                                    ocell.CellValue = new Excel.CellValue(rz.ToString());
-                                                    ocell.DataType = Excel.CellValues.String;
-                                                }
-                                            }
-                                        }
-                                        if (query == null)
-                                            WriteElement(writer, newRow);
-                                    }
-                                    else if (reader.ElementType == typeof(Excel.MergeCell))
-                                    {
-                                        var merge = reader.LoadCurrentElement() as Excel.MergeCell;
-                                        var range = CellRange.Parse(merge.Reference);
-
-                                        foreach (var insert in inserts)
-                                        {
-                                            if (insert.Start.Row < range.Start.Row)
-                                            {
-                                                range.Start.Row += insert.Rows;
-                                                range.End.Row += insert.Rows;
-                                            }
-                                        }
-                                        merge.Reference = range.ToString();
-                                        WriteElement(writer, merge);
-                                    }
-                                    else if (reader.ElementType == typeof(Excel.DataValidation))
-                                    {
-                                        var valid = (Excel.DataValidation)reader.LoadCurrentElement();
-                                        if (valid.SequenceOfReferences.HasValue)
-                                        {
-                                            var newlist = new List<StringValue>();
-                                            foreach (var item in valid.SequenceOfReferences.Items)
-                                            {
-                                                var range = CellRange.Parse(item);
-                                                foreach (var insert in inserts)
-                                                {
-                                                    if (insert.Start.Row <= range.End.Row && insert.End.Row > range.End.Row)
-                                                    {
-                                                        range.End.Row = insert.End.Row;
-                                                        break;
-                                                    }
-                                                }
-                                                newlist.Add(range.ToString());
-                                            }
-                                            valid.SequenceOfReferences = new ListValue<StringValue>(newlist);
-                                        }
-                                        WriteElement(writer, valid);
-                                    }
-                                    else if (reader.ElementType == typeof(Excel.OddFooter)
-                                        || reader.ElementType == typeof(Excel.EvenFooter)
-                                        || reader.ElementType == typeof(Excel.FirstFooter))
-                                    {
-                                        var footer = reader.LoadCurrentElement() as OpenXmlLeafTextElement;
-                                        var str = ReplaceExcelString(param, footer.Text) as string;
-                                        if (str != null)
-                                        {
-                                            footer.Text = str;
-                                        }
-                                        WriteElement(writer, footer);
-                                    }
-                                    else if (reader.IsStartElement)
-                                        WriteStartElement(writer, reader);
-                                    else if (reader.IsEndElement)
-                                        writer.WriteEndElement();
-                                }
+                                //newWorkbookPart.AddPart(workbookStylesPart, part.RelationshipId);
                             }
-
-
+                            else if (part.OpenXmlPart is ThemePart themePart)
+                            {
+                                //newWorkbookPart.AddPart(themePart, part.RelationshipId);
+                            }
+                            else if (part.OpenXmlPart is ExternalWorkbookPart externalWorkbookPart)
+                            {
+                                //newWorkbookPart.AddPart(externalWorkbookPart, part.RelationshipId);
+                            }
+                            else if (part.OpenXmlPart is CalculationChainPart calculationChainPart)
+                            {
+                                //newWorkbookPart.AddPart(calculationChainPart);//, part.RelationshipId
+                            }
+                            else if (part.OpenXmlPart is WorksheetPart worksheetPart)
+                            {
+                                var sheet = sheetList.FirstOrDefault(p => p.Id == part.RelationshipId);
+                                //var newWorksheetPart = newWorkbookPart.AddNewPart<WorksheetPart>(sheet.Id);
+                                var newWorksheetPart = (WorksheetPart)newWorkbookPart.GetPartById(sheet.Id);
+                                foreach (var sheetPart in worksheetPart.Parts)
+                                {
+                                    if (sheetPart.OpenXmlPart is TableDefinitionPart tableDefinitionPart)
+                                    {
+                                        //var newTableDefinitionPart = newWorksheetPart.AddNewPart<TableDefinitionPart>(sheetPart.RelationshipId);
+                                        var newTableDefinitionPart = (TableDefinitionPart)newWorksheetPart.GetPartById(sheetPart.RelationshipId);
+                                        ParseTableDefinition(param, cacheNames, sheet, tableDefinitionPart, newTableDefinitionPart);
+                                    }
+                                    else if (sheetPart.OpenXmlPart is DrawingsPart drawingsPart)
+                                    {
+                                        //newWorksheetPart.AddPart(drawingsPart, sheetPart.RelationshipId);
+                                    }
+                                    else if (sheetPart.OpenXmlPart is SpreadsheetPrinterSettingsPart spreadsheetPrinterSettingsPart)
+                                    {
+                                        //newWorksheetPart.AddPart(spreadsheetPrinterSettingsPart, sheetPart.RelationshipId);
+                                    }
+                                    else if (sheetPart.OpenXmlPart is ControlPropertiesPart controlPropertiesPart)
+                                    {
+                                        //newWorksheetPart.AddPart(controlPropertiesPart, sheetPart.RelationshipId);
+                                    }
+                                    else if (sheetPart.OpenXmlPart is PivotTablePart pivotTablePart)
+                                    {
+                                        //newWorksheetPart.AddPart(pivotTablePart, sheetPart.RelationshipId);
+                                    }
+                                    else if (sheetPart.OpenXmlPart is QueryTablePart queryTablePart)
+                                    {
+                                        //newWorksheetPart.AddPart(queryTablePart, sheetPart.RelationshipId);
+                                    }
+                                    else if (sheetPart.OpenXmlPart is TimeLinePart timeLinePart)
+                                    {
+                                        //newWorksheetPart.AddPart(timeLinePart, sheetPart.RelationshipId);
+                                    }
+                                    else if (sheetPart.OpenXmlPart is WorksheetCommentsPart worksheetCommentsPart)
+                                    {
+                                        //newWorksheetPart.AddPart(worksheetCommentsPart, sheetPart.RelationshipId);
+                                    }
+                                    else if (sheetPart.OpenXmlPart is VmlDrawingPart vmlDrawingPart)
+                                    {
+                                        //newWorksheetPart.AddPart(vmlDrawingPart, sheetPart.RelationshipId);
+                                    }
+                                    else { }
+                                }
+                                ParseWorksheetPart(param, cacheNames, stringTables, worksheetPart, sheet, newWorksheetPart);
+                            }
+                            else { }
                         }
                     }
                     else { }
@@ -343,6 +195,388 @@ namespace DataWF.Data
                 newDocument.Save();
             }
             return newFileName;
+        }
+
+        private void ParseWorkbookPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, WorkbookPart workbookPart, List<Excel.Sheet> sheetList)
+        {
+            using (var buffer = new MemoryStream())
+            {
+                using (var stream = workbookPart.GetStream())
+                    stream.CopyTo(buffer);
+                buffer.Position = 0;
+                ParseWorkbookPart(param, cacheNames, buffer, workbookPart, sheetList);
+            }
+        }
+
+        private void ParseWorkbookPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, WorkbookPart workbookPart, WorkbookPart newWorkbookPart, List<Excel.Sheet> sheetList)
+        {
+            using (var stream = workbookPart.GetStream())
+            {
+                ParseWorkbookPart(param, cacheNames, stream, newWorkbookPart, sheetList);
+            }
+        }
+
+        private void ParseWorkbookPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, Stream workbookPart, WorkbookPart newWorkbookPart, List<Excel.Sheet> sheetList)
+        {
+            using (var reader = OpenXmlReader.Create(workbookPart))
+            using (var writer = XmlWriter.Create(newWorkbookPart.GetStream(),
+                new XmlWriterSettings { Encoding = Encoding.UTF8, CloseOutput = true }))
+            {
+                writer.WriteStartDocument(true);
+                while (reader.Read())
+                {
+                    //if (reader.ElementType == typeof(AlternateContent))
+                    //{
+                    //    var alternate = (AlternateContent)reader.LoadCurrentElement();
+                    //    continue;
+                    //}
+                    if (reader.ElementType == typeof(Excel.DefinedName))
+                    {
+                        var name = (Excel.DefinedName)reader.LoadCurrentElement();
+                        if (!string.IsNullOrEmpty(name.InnerText))
+                        {
+                            var split = name.InnerText.Split('!');
+                            if (split.Length == 2)
+                            {
+                                var sheet = split[0];
+                                var procedure = DBService.Schems.ParseProcedure(name.Name, param.ProcedureCategory);
+                                if (procedure != null)
+                                {
+                                    var defName = new DefinedName
+                                    {
+                                        Name = name.Name,
+                                        Sheet = split[0].Trim('\''),
+                                        Reference = split[1],
+                                        Procedure = procedure,
+                                        Value = procedure.Execute(param)
+                                    };
+                                    cacheNames.Add(defName.Range.Start.ToString(), defName);
+                                }
+                            }
+                        }
+                        WriteElement(writer, name);
+                    }
+                    else if (reader.ElementType == typeof(Excel.Sheet))
+                    {
+                        var sheet = (Excel.Sheet)reader.LoadCurrentElement();
+                        sheetList.Add(sheet);
+                        WriteElement(writer, sheet);
+                    }
+                    else if (reader.IsStartElement)
+                    {
+                        WriteStartElement(writer, reader);
+                    }
+                    else if (reader.IsEndElement)
+                    {
+                        writer.WriteEndElement();
+                    }
+                }
+                writer.WriteEndDocument();
+            }
+        }
+
+        private void ParseWorksheetPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, List<Excel.SharedStringItem> stringTables, WorksheetPart worksheetPart, Excel.Sheet sheet)
+        {
+            using (var temp = new MemoryStream())
+            {
+                using (var stream = worksheetPart.GetStream())
+                    stream.CopyTo(temp);
+                temp.Position = 0;
+                ParseWorksheetPart(param, cacheNames, stringTables, temp, sheet, worksheetPart);
+            }
+        }
+
+        private void ParseWorksheetPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, List<Excel.SharedStringItem> stringTables, WorksheetPart worksheetPart, Excel.Sheet sheet, WorksheetPart newWorksheetPart)
+        {
+            using (var stream = worksheetPart.GetStream())
+            {
+                ParseWorksheetPart(param, cacheNames, stringTables, stream, sheet, newWorksheetPart);
+            }
+        }
+
+        private void ParseWorksheetPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, List<Excel.SharedStringItem> stringTables, Stream worksheetPart, Excel.Sheet sheet, WorksheetPart newWorksheetPart)
+        {
+            var inserts = new List<CellRange>();
+
+            using (var reader = OpenXmlReader.Create(worksheetPart))
+            using (var writer = XmlWriter.Create(newWorksheetPart.GetStream(),
+                new XmlWriterSettings { Encoding = Encoding.UTF8, CloseOutput = true }))
+            {
+                int ind, dif = 0;
+                writer.WriteStartDocument(true);
+                while (reader.Read())
+                {
+                    //remove protextion
+                    //if (reader.ElementType == typeof(Excel.SheetProtection))
+                    //{
+                    //    reader.LoadCurrentElement();
+                    //    continue;
+                    //}
+                    if (reader.ElementType == typeof(Excel.Row))
+                    {
+                        var row = (Excel.Row)reader.LoadCurrentElement();
+                        ind = (int)row.RowIndex.Value + dif;
+                        var newRow = CloneRow(row, ind);
+                        QResult query = null;
+                        foreach (Excel.Cell ocell in newRow.Descendants<Excel.Cell>())
+                        {
+                            object rz = null;
+                            if (cacheNames.TryGetValue(ocell.CellReference.Value, out var defName) && defName.Sheet.Equals(sheet.Name.Value, StringComparison.OrdinalIgnoreCase))
+                            {
+                                rz = defName.Value;
+                            }
+                            else
+                            {
+                                string value = ReadCell(ocell, stringTables);
+                                rz = ReplaceExcelString(param, value);
+                            }
+
+                            if (rz != null)
+                            {
+                                query = rz as QResult;
+                                if (query != null)
+                                {
+                                    var sref = CellReference.Parse(ocell.CellReference);
+                                    var insert = new CellRange(sref, sref);
+                                    Excel.Row tableRow = null;
+                                    foreach (object[] dataRow in query.Values)
+                                    {
+                                        if (tableRow == null)
+                                            tableRow = newRow;
+                                        else if (defName != null && defName.Range.End.Row > sref.Row)
+                                        {
+                                            reader.Read();
+                                            row = (Excel.Row)reader.LoadCurrentElement();
+                                            tableRow = CloneRow(row, (int)row.RowIndex.Value + dif);
+                                            insert.Start.Row++;
+                                            insert.End.Row++;
+                                        }
+                                        else
+                                        {
+                                            tableRow = CloneRow(tableRow, sref.Row);// GetRow(sd, srow, excelRow == null, cell.Parent as Excel.Row);
+                                            insert.End.Row++;
+                                        }
+
+                                        int col = sref.Col;
+                                        foreach (object itemValue in dataRow)
+                                        {
+                                            GetCell(tableRow, itemValue, col, sref.Row, 0);
+                                            col++;
+                                        }
+                                        sref.Row++;
+                                        WriteElement(writer, tableRow);
+                                    }
+
+                                    if (insert.Rows > 0)
+                                    {
+                                        inserts.Add(insert);
+                                        dif += insert.Rows;
+                                    }
+                                    break;
+                                }
+                                else
+                                {
+                                    ocell.CellValue = new Excel.CellValue(rz.ToString());
+                                    ocell.DataType = Excel.CellValues.String;
+                                }
+                            }
+                        }
+                        if (query == null)
+                            WriteElement(writer, newRow);
+                    }
+                    else if (reader.ElementType == typeof(Excel.MergeCell))
+                    {
+                        var merge = reader.LoadCurrentElement() as Excel.MergeCell;
+                        var range = CellRange.Parse(merge.Reference);
+
+                        foreach (var insert in inserts)
+                        {
+                            if (insert.Start.Row < range.Start.Row)
+                            {
+                                range.Start.Row += insert.Rows;
+                                range.End.Row += insert.Rows;
+                            }
+                        }
+                        merge.Reference = range.ToString();
+                        WriteElement(writer, merge);
+                    }
+                    else if (reader.ElementType == typeof(Excel.DataValidation))
+                    {
+                        var validation = (Excel.DataValidation)reader.LoadCurrentElement();
+                        if (validation.SequenceOfReferences.HasValue)
+                        {
+                            var newlist = new List<StringValue>();
+                            foreach (var item in validation.SequenceOfReferences.Items)
+                            {
+                                var range = CellRange.Parse(item);
+                                foreach (var insert in inserts)
+                                {
+                                    if (insert.Start.Row <= range.End.Row && insert.End.Row > range.End.Row)
+                                    {
+                                        range.End.Row = insert.End.Row;
+                                        newlist.Add(range.ToString());
+                                        continue;
+                                    }
+                                }
+                                newlist.Add(item);
+                            }
+                            validation.SequenceOfReferences = new ListValue<StringValue>(newlist);
+                        }
+                        WriteElement(writer, validation);
+                    }
+                    else if (reader.ElementType == typeof(Excel.OddFooter)
+                        || reader.ElementType == typeof(Excel.EvenFooter)
+                        || reader.ElementType == typeof(Excel.FirstFooter))
+                    {
+                        var footer = reader.LoadCurrentElement() as OpenXmlLeafTextElement;
+                        var str = ReplaceExcelString(param, footer.Text) as string;
+                        if (str != null)
+                        {
+                            footer.Text = str;
+                        }
+                        WriteElement(writer, footer);
+                    }
+                    else if (reader.IsStartElement)
+                    {
+                        WriteStartElement(writer, reader);
+                    }
+                    else if (reader.IsEndElement)
+                    {
+                        writer.WriteEndElement();
+                    }
+                }
+                writer.WriteEndDocument();
+            }
+        }
+
+        private void ParseTableDefinition(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, Excel.Sheet sheet, TableDefinitionPart tableDefinitionPart)
+        {
+            using (var temp = new MemoryStream())
+            {
+                using (var stream = tableDefinitionPart.GetStream())
+                    stream.CopyTo(temp);
+                temp.Position = 0;
+                ParseTableDefinition(param, cacheNames, sheet, temp, tableDefinitionPart);
+            }
+        }
+
+        private void ParseTableDefinition(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, Excel.Sheet sheet, TableDefinitionPart tableDefinitionPart, TableDefinitionPart newTableDefinitionPart)
+        {
+            using (var stream = tableDefinitionPart.GetStream())
+            {
+                ParseTableDefinition(param, cacheNames, sheet, stream, newTableDefinitionPart);
+            }
+        }
+
+        private void ParseTableDefinition(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, Excel.Sheet sheet, Stream tableDefinitionPart, TableDefinitionPart newTableDefinitionPart)
+        {
+            using (var reader = OpenXmlReader.Create(tableDefinitionPart))
+            using (var writer = XmlWriter.Create(newTableDefinitionPart.GetStream(),
+                new XmlWriterSettings { Encoding = Encoding.UTF8, CloseOutput = true }))
+            {
+                writer.WriteStartDocument(true);
+                while (reader.Read())
+                {
+                    if (reader.ElementType == typeof(Excel.Table))
+                    {
+                        var table = (Excel.Table)reader.LoadCurrentElement();
+
+                        var procedure = DBService.Schems.ParseProcedure(table.Name, param.ProcedureCategory);
+                        if (procedure != null)
+                        {
+                            var reference = CellRange.Parse(table.Reference.Value);
+                            var defName = new DefinedName
+                            {
+                                Name = table.Name,
+                                Sheet = sheet.Name,
+                                Range = reference,
+                                Procedure = procedure,
+                                Value = procedure.Execute(param),
+                            };
+                            if (defName.Value is QResult result && result.Values.Count > 0)
+                            {
+                                var index = reference.Start.Row + result.Values.Count;
+                                if (index > reference.End.Row)
+                                {
+                                    defName.NewRange = new CellRange(reference.Start, new CellReference(reference.End.Col, index));
+                                    table.Reference = defName.NewRange.ToString();
+                                    //table.TotalsRowCount = (uint)newrange.Rows;
+                                }
+                                defName.Table = table;
+                                cacheNames.Add(defName.Range.Start.ToString(), defName);
+                            }
+                        }
+                        WriteElement(writer, table);
+                    }
+                    else if (reader.IsStartElement)
+                    {
+                        WriteStartElement(writer, reader);
+                    }
+                    else if (reader.IsEndElement)
+                    {
+                        writer.WriteEndElement();
+                    }
+                }
+                writer.WriteEndDocument();
+            }
+        }
+
+        public T CopyPart<T>(T part, string id, OpenXmlPartContainer container) where T : OpenXmlPart, IFixedContentTypePart
+        {
+            try
+            {
+                T newPart = container.AddNewPart<T>(id);
+                //if (newPart is OpenXmlPartContainer subContainer)
+                //{
+                //    foreach (var subPart in part.Parts)
+                //    {
+                //        CopyPart(subPart.OpenXmlPart, subPart.RelationshipId, subContainer);
+                //    }
+                //}
+                using (var reader = part.GetStream())
+                    newPart.FeedData(reader);
+
+
+                // copy all external relationships
+                foreach (ExternalRelationship externalRel in part.ExternalRelationships)
+                {
+                    newPart.AddExternalRelationship(externalRel.RelationshipType, externalRel.Uri, externalRel.Id);
+                }
+
+                // copy all hyperlink relationships
+                foreach (HyperlinkRelationship hyperlinkRel in part.HyperlinkRelationships)
+                {
+                    newPart.AddHyperlinkRelationship(hyperlinkRel.Uri, hyperlinkRel.IsExternal, hyperlinkRel.Id);
+                }
+
+                // First, we need copy the referenced media data part.
+                foreach (var dataPartReferenceRelationship in part.DataPartReferenceRelationships)
+                {
+
+                }
+                return newPart;
+            }
+            catch (Exception ex)
+            {
+                Helper.OnException(ex);
+            }
+            return null;
+        }
+
+        public List<Excel.SharedStringItem> ReadStringTable(SharedStringTablePart sharedStringTablePart)
+        {
+            var dict = new List<Excel.SharedStringItem>();
+            using (var reader = OpenXmlReader.Create(sharedStringTablePart))
+            {
+                while (reader.Read())
+                {
+                    if (reader.ElementType == typeof(Excel.SharedStringItem))
+                    {
+                        dict.Add((Excel.SharedStringItem)reader.LoadCurrentElement());
+                    }
+                }
+            }
+            return dict;
         }
 
         public object ReplaceExcelString(ExecuteArgs param, string value)
@@ -380,7 +614,7 @@ namespace DataWF.Data
             return rez;
         }
 
-        public static string ReadCell(Excel.Cell cell, SharedStringTablePart strings, List<Excel.SharedStringItem> buffer = null)
+        public static string ReadCell(Excel.Cell cell, List<Excel.SharedStringItem> buffer = null)
         {
             string value = cell.CellValue == null ? string.Empty : cell.CellValue.InnerText;
             if (cell.DataType != null)
@@ -392,9 +626,7 @@ namespace DataWF.Data
                     if (int.TryParse(value, out val))
                     {
                         //if (strings.SharedStringTable.ChildElements.Count > val)
-                        if (buffer == null)
-                            value = strings.SharedStringTable.ElementAt(val).InnerText;
-                        else
+                        if (buffer != null)
                             value = buffer[val].InnerText;
                     }
                 }
@@ -483,7 +715,7 @@ namespace DataWF.Data
             }
         }
 
-        public List<Excel.Cell> FindParsedCells(SharedStringTablePart xl, Excel.SheetData sd)
+        public List<Excel.Cell> FindParsedCells(List<Excel.SharedStringItem> xl, Excel.SheetData sd)
         {
             List<Excel.Cell> results = new List<Excel.Cell>();
 
@@ -509,30 +741,7 @@ namespace DataWF.Data
             return results;
         }
 
-        public void CopyPart<T>(T part, string id, OpenXmlPartContainer container) where T : OpenXmlPart, IFixedContentTypePart
-        {
-            try
-            {
-                T newPart = container.AddNewPart<T>(id);
-                using (var reader = OpenXmlReader.Create(part))
-                using (var writer = OpenXmlWriter.Create(newPart))
-                {
-                    while (reader.Read())
-                        if (reader.IsStartElement)
-                        {
-                            writer.WriteStartElement(reader);
-                        }
-                        else if (reader.IsEndElement)
-                        {
-                            writer.WriteEndElement();
-                        }
-                }
-            }
-            catch (Exception ex)
-            {
-                Helper.OnException(ex);
-            }
-        }
+
 
         public void WriteElement(XmlWriter writer, OpenXmlElement element)
         {
@@ -540,8 +749,8 @@ namespace DataWF.Data
                 writer.WriteStartElement(element.LocalName, element.NamespaceUri);
             else
                 writer.WriteStartElement(element.Prefix, element.LocalName, element.NamespaceUri);
-            WriteAttributes(writer, element.GetAttributes());
             WriteNamespace(writer, element.NamespaceDeclarations);
+            WriteAttributes(writer, element.GetAttributes());
             if (element.HasChildren)
             {
                 foreach (var child in element.ChildElements)
@@ -563,8 +772,8 @@ namespace DataWF.Data
             else
                 writer.WriteStartElement(reader.Prefix, reader.LocalName, reader.NamespaceUri);
 
-            WriteAttributes(writer, reader.Attributes);
             WriteNamespace(writer, reader.NamespaceDeclarations);
+            WriteAttributes(writer, reader.Attributes);
 
             var text = reader.GetText();
             if (!string.IsNullOrEmpty(text))
@@ -588,7 +797,7 @@ namespace DataWF.Data
         {
             foreach (var ns in namespaces)
             {
-                writer.WriteAttributeString("xmlns", ns.Key, null, ns.Value);
+                writer.WriteAttributeString("xmlns", ns.Key, @"http://www.w3.org/2000/xmlns/", ns.Value);
             }
         }
 

@@ -33,14 +33,14 @@ namespace DataWF.Data
     {
         public override string Parse(Stream stream, string fileName, ExecuteArgs param)
         {
-           // bool flag = false;
+            // bool flag = false;
             stream.Position = 0;
             using (var xl = SpreadsheetDocument.Open(stream, true))
             {
                 //IEnumerable<DocumentFormat.OpenXml.Packaging.SharedStringTablePart> sp = xl.WorkbookPart.GetPartsOfType<DocumentFormat.OpenXml.Packaging.SharedStringTablePart>();
                 foreach (WorksheetPart part in xl.WorkbookPart.WorksheetParts)
                 {
-                    var stringTables = xl.WorkbookPart.SharedStringTablePart;
+                    var stringTables = ReadStringTable(xl.WorkbookPart.SharedStringTablePart);
                     Excel.Worksheet worksheet = part.Worksheet;
                     Excel.SheetData sd = worksheet.GetFirstChild<Excel.SheetData>();
                     var results = FindParsedCells(stringTables, sd);
