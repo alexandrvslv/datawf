@@ -12,9 +12,10 @@ namespace DataWF.Common
         private FileWatcherService service;
 
         //https://stackoverflow.com/a/721743
-        public FileWatcher(FileWatcherService service, string filePath)
+        public FileWatcher(string filePath, IFileModel model, IFileModelView modelView, FileWatcherService service = null)
         {
-            Service = service;
+            Model = model;
+            ModelView = modelView;
             FilePath = filePath;
             Watcher = new FileSystemWatcher
             {
@@ -30,13 +31,16 @@ namespace DataWF.Common
             Watcher.Deleted += new FileSystemEventHandler(OnDeleted);
             Watcher.Renamed += new RenamedEventHandler(OnRenamed);
 
+            Service = service ?? FileWatcherService.Instance;
+            Service.WatchList.Add(this);
+
             Enabled = true;
         }
 
         private void OnRenamed(object sender, RenamedEventArgs e)
         {
             Debug.WriteLine($"{e.OldFullPath} - {e.ChangeType}");
-            Service.OnRenamed(Tag ?? this, e);
+            Service.OnRenamed(this, e);
             //FilePath = e.FullPath;
             //Watcher.Path = Path.GetDirectoryName(e.FullPath);
             //Watcher.Filter = Path.GetFileName(e.FullPath);
@@ -53,12 +57,12 @@ namespace DataWF.Common
         {
             Debug.WriteLine($"{e.FullPath} - {e.ChangeType}");
             IsChanged = true;
-            Service.OnChanged(Tag ?? this, e);
+            Service.OnChanged(this, e);
         }
 
         public void Dispose()
         {
-            Service.OnDeleted(Tag ?? this, EventArgs.Empty);
+            Service.OnDeleted(this, EventArgs.Empty);            
             Watcher?.Dispose();
         }
 
@@ -74,14 +78,16 @@ namespace DataWF.Common
                 if (Enabled != value)
                 {
                     Watcher.EnableRaisingEvents = value;
-                    Service.OnEnabledChanged(Tag ?? this, EventArgs.Empty);
+                    Service.OnEnabledChanged(this, EventArgs.Empty);
                     OnPropertyChanged();
                 }
 
             }
         }
 
-        public object Tag { get; set; }
+        public IFileModel Model { get; set; }
+
+        public IFileModelView ModelView { get; }
 
         public bool IsChanged
         {
