@@ -37,6 +37,7 @@ namespace DataWF.Data
             cache[".odt"] = new OdtParser();
             cache[".docx"] = new DocxParser();
             cache[".xlsx"] = new XlsxSaxParser();
+            cache[".xlsm"] = new XlsxSaxParser();
         }
 
         public static string GetTempFileName(string fileName)
