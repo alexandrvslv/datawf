@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -22,10 +23,15 @@ namespace DataWF.Common
         public TypeSerializationInfo SerializationInfo;
 
         public Invoker<T, K?> IdInvoker { get; }
+
         public Invoker<T, int?> TypeInvoker { get; }
+
         public int TypeId { get; }
+
         public Type ItemType { get { return typeof(T); } }
+
         public SelectableList<T> Items { get; set; } = new SelectableList<T>();
+
         public bool IsSynchronized
         {
             get => Items.IsSynchronized;
@@ -36,12 +42,12 @@ namespace DataWF.Common
             }
         }
 
-
-        public virtual T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, T item, object id = null)
+        public virtual T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, T item, IList sourceList)
         {
-            var add = item != null && !Items.Contains(item);
+            var add = false;
             var index = -1;
             var property = (PropertySerializationInfo)null;
+            var id = (object)null;
             while (jreader.Read() && jreader.TokenType != JsonToken.EndObject)
             {
                 if (jreader.TokenType == JsonToken.PropertyName)
@@ -54,7 +60,7 @@ namespace DataWF.Common
                     if (jreader.TokenType == JsonToken.StartObject)
                     {
                         var obj = item == null ? null : property?.Invoker.GetValue(item);
-                        value = DeserializeObject(serializer, jreader, property?.DataType, obj);
+                        value = DeserializeObject(serializer, jreader, property?.DataType, obj, null);
                     }
                     else if (jreader.TokenType == JsonToken.StartArray)
                     {
@@ -73,7 +79,7 @@ namespace DataWF.Common
                             if (typeId != TypeId)
                             {
                                 var client = Provider.GetClient(typeof(T), typeId);
-                                return (T)client.DeserializeItem(serializer, jreader, item, id);
+                                return (T)client.DeserializeItem(serializer, jreader, item, (IList)sourceList);
                             }
                             continue;
                         }
@@ -82,14 +88,19 @@ namespace DataWF.Common
                             id = value;
                             if (item == null && id != null)
                             {
-                                item = Select((K)id);
+                                item = Select((K)id) ?? (T)sourceList?.Cast<IPrimaryKey>().FirstOrDefault(p => p.PrimaryKey == id);
                             }
                             if (item == null)
                             {
                                 item = new T();
+                            }
+
+                            IdInvoker.SetValue(item, id);
+                            if (item is IContainerNotifyPropertyChanged containered && containered.Container != Items)
+                            {
+                                containered.Container = null;
                                 add = true;
                             }
-                            IdInvoker.SetValue(item, id);
                             if (add)
                             {
                                 index = Items.AddInternal(item);
@@ -97,6 +108,10 @@ namespace DataWF.Common
                                 {
                                     var baseClient = GetBaseClient();
                                     baseClient.Add(item);
+                                }
+                                if (sourceList != null && !sourceList.Contains(item))
+                                {
+                                    sourceList.Add(item);
                                 }
                             }
                             continue;
@@ -122,18 +137,18 @@ namespace DataWF.Common
             return item;
         }
 
-        public object DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, object item, object id)
+        public object DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, object item, IList sourceList)
         {
-            return DeserializeItem(serializer, jreader, item as T, id);
+            return DeserializeItem(serializer, jreader, item as T, sourceList);
         }
 
-        public override R DeserializeObject<R>(JsonSerializer serializer, JsonTextReader jreader, R item)
+        public override R DeserializeObject<R>(JsonSerializer serializer, JsonTextReader jreader, R item, IList sourceList)
         {
             if (typeof(R) == typeof(T))
             {
-                return (R)(object)DeserializeItem(serializer, jreader, (T)(object)item);
+                return (R)(object)DeserializeItem(serializer, jreader, (T)(object)item, sourceList);
             }
-            return base.DeserializeObject(serializer, jreader, item);
+            return base.DeserializeObject(serializer, jreader, item, sourceList);
         }
 
         public ICRUDClient GetBaseClient()
@@ -144,7 +159,7 @@ namespace DataWF.Common
             {
                 var client = Provider.GetClient(type);
                 if (client != null)
-                    result = client;               
+                    result = client;
                 type = type.BaseType;
             }
             return result;
@@ -260,7 +275,9 @@ namespace DataWF.Common
 
         public Task DeleteAsync(object id) => DeleteAsync((K)id, CancellationToken.None);
 
+        public virtual Task<object> GenerateIdAsync(CancellationToken cancellationToken) => Task.FromResult<object>(null);
 
+        public object GenerateId() => GenerateIdAsync(CancellationToken.None).GetAwaiter().GetResult();
     }
 
 

@@ -193,6 +193,12 @@ namespace DataWF.Web.Common
             }
         }
 
+        [HttpGet("GenerateId")]
+        public ActionResult<K> GenerateId()
+        {
+            return (K)table.PrimaryKey.ParseValue(table.Sequence.Next());
+        }
+
         [NonAction]
         public BadRequestObjectResult BadRequest(object error, DBItem item)
         {

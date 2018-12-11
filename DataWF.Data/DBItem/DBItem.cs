@@ -444,7 +444,7 @@ namespace DataWF.Data
             }
         }
 
-        public void SetReferencing<T>(IEnumerable<T> items, string property) where T : DBItem, new()
+        public void SetReferencing<T>(IEnumerable<T> items, DBColumn column) where T : DBItem, new()
         {
             if (items == null)
             {
@@ -452,13 +452,17 @@ namespace DataWF.Data
             }
 
             GenerateId();
-            var table = DBTable.GetTable<T>();
-            var column = table.ParseProperty(property);
             foreach (var item in items)
             {
                 item.SetReference(this, column);
                 item.Attach();
             }
+        }
+
+        public void SetReferencing<T>(IEnumerable<T> items, string property) where T : DBItem, new()
+        {
+            var table = DBTable.GetTable<T>();
+            SetReferencing<T>(items, table.ParseProperty(property));
         }
 
         public IEnumerable<T> GetReferencing<T>(DBTable<T> table, QQuery query, DBLoadParam param) where T : DBItem, new()
@@ -1011,7 +1015,7 @@ namespace DataWF.Data
             Reject(user);
             Table.ReloadItem(PrimaryId);
         }
-
+        
         public void GenerateId()
         {
             if (Table.Sequence == null || Table.PrimaryKey == null)

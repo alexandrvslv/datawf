@@ -167,21 +167,26 @@ namespace DataWF.Common
                                             var headers = GetHeaders(response);
                                             (string fileName, int fileSize) = GetFileInfo(headers);
                                             var filePath = Path.Combine(Path.GetTempPath(), fileName);
+                                            var fileStream = (FileStream)null;
                                             try
                                             {
-                                                var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
-                                                var process = new DownloadProcess(fileName, 8192, fileSize);
-                                                await process.StartAsync(responseStream, fileStream, new CancellationToken());
-                                                return (R)(object)fileStream;
+                                                fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
                                             }
                                             catch (IOException ioex)
                                             {
                                                 if (ioex.HResult == -2147024864)
                                                 {
-                                                    return (R)(object)null;
+                                                    filePath = Path.Combine(Path.GetTempPath(), Path.GetFileNameWithoutExtension(fileName) + "~" + Path.GetExtension(fileName));
+                                                    fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
                                                 }
-                                                throw ioex;
+                                                else
+                                                {
+                                                    throw ioex;
+                                                }
                                             }
+                                            var process = new DownloadProcess(fileName, 8192, fileSize);
+                                            await process.StartAsync(responseStream, fileStream, new CancellationToken());
+                                            return (R)(object)fileStream;
                                         }
                                         else if (typeof(R) == typeof(string))
                                         {
@@ -197,7 +202,7 @@ namespace DataWF.Common
                                                     switch (jreader.TokenType)
                                                     {
                                                         case JsonToken.StartObject:
-                                                            result = DeserializeObject<R>(serializer, jreader, value is R rvalue ? rvalue : default(R));
+                                                            result = DeserializeObject<R>(serializer, jreader, value is R rvalue ? rvalue : default(R), null);
                                                             break;
                                                         case JsonToken.StartArray:
                                                             result = (R)DeserializeArray(serializer, jreader, typeof(R), value as IList);
@@ -330,7 +335,7 @@ namespace DataWF.Common
             {
                 while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
                 {
-                    items.Add(client.DeserializeItem(serializer, jreader, default(I)));
+                    items.Add(client.DeserializeItem(serializer, jreader, default(I), null));
                 }
             }
             else
@@ -356,7 +361,7 @@ namespace DataWF.Common
             {
                 var item = list != null && index < list.Count ? list[index] : null;
                 item = client != null
-                    ? client.DeserializeItem(serializer, jreader, item)
+                    ? client.DeserializeItem(serializer, jreader, null, list)
                     : serializer.Deserialize(jreader, itemType);
                 if (item == null)
                 {
@@ -382,35 +387,28 @@ namespace DataWF.Common
                         i++;
                     }
                 }
-                foreach (var item in temp)
-                {
-                    if (!list.Contains(item))
-                    {
-                        list.Add(item);
-                    }
-                }
                 return list;
             }
             return list ?? temp;
         }
 
-        public virtual R DeserializeObject<R>(JsonSerializer serializer, JsonTextReader jreader, R item)
+        public virtual R DeserializeObject<R>(JsonSerializer serializer, JsonTextReader jreader, R item, IList sourceList)
         {
             var client = Provider.GetClient<R>();
             if (client != null)
             {
-                return client.DeserializeItem(serializer, jreader, item);
+                return client.DeserializeItem(serializer, jreader, item, sourceList);
             }
 
             return serializer.Deserialize<R>(jreader);
         }
 
-        public virtual object DeserializeObject(JsonSerializer serializer, JsonTextReader jreader, Type type, object item)
+        public virtual object DeserializeObject(JsonSerializer serializer, JsonTextReader jreader, Type type, object item, IList sourceList)
         {
             var client = Provider.GetClient(type);
             if (client != null)
             {
-                return client.DeserializeItem(serializer, jreader, item);
+                return client.DeserializeItem(serializer, jreader, item, sourceList);
             }
 
             return serializer.Deserialize(jreader, type);

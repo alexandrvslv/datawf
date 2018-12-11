@@ -15,7 +15,7 @@ namespace DataWF.Web.ClientGenerator
 {
     public class ClientGenerator
     {
-        private readonly HashSet<string> VirtualOperations = new HashSet<string> { "GetAsync", "PutAsync", "PostAsync", "FindAsync", "DeleteAsync", "CopyAsync" };
+        private readonly HashSet<string> VirtualOperations = new HashSet<string> { "GetAsync", "PutAsync", "PostAsync", "FindAsync", "DeleteAsync", "CopyAsync", "GenerateIdAsync" };
         private Dictionary<string, CompilationUnitSyntax> cacheModels = new Dictionary<string, CompilationUnitSyntax>();
         private Dictionary<string, ClassDeclarationSyntax> cacheClients = new Dictionary<string, ClassDeclarationSyntax>();
         private List<UsingDirectiveSyntax> usings = new List<UsingDirectiveSyntax>();
@@ -399,9 +399,11 @@ namespace DataWF.Web.ClientGenerator
             return returnType;
         }
 
-        private string GetReturningTypeCheckAccess(SwaggerOperationDescription descriptor)
+        private string GetReturningTypeCheck(SwaggerOperationDescription descriptor, string operationName)
         {
             var returnType = GetReturningType(descriptor);
+            if (operationName == "GenerateId")
+                returnType = "object";
             //if (returnType == "AccessValue")
             //    returnType = "IAccessValue";
             //if (returnType == "List<AccessItem>")
@@ -415,7 +417,7 @@ namespace DataWF.Web.ClientGenerator
             var actualName = $"{operationName}Async";
             var baseType = GetClientBaseType(clientName, out var id, out var typeKey, out var typeId);
             var isOverride = baseType != "ClientBase" && VirtualOperations.Contains(actualName);
-            var returnType = GetReturningTypeCheckAccess(descriptor);
+            var returnType = GetReturningTypeCheck(descriptor, operationName);
             returnType = returnType.Length > 0 ? $"Task<{returnType}>" : "Task";
 
             //yield return SF.MethodDeclaration(
