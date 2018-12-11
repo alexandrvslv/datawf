@@ -169,7 +169,7 @@ namespace DataWF.Module.Flow
         public override int? ItemType { get => base.ItemType; set => base.ItemType = value; }
 
         [Browsable(false)]
-        [DataMember, Column("template_id", Keys = DBColumnKeys.View | DBColumnKeys.Notnull), Index("ddocument_template_id", Unique = false)]
+        [DataMember, Column("template_id", Keys = DBColumnKeys.View), Index("ddocument_template_id", Unique = false)]
         public virtual int? TemplateId
         {
             get { return GetProperty<int?>(); }
