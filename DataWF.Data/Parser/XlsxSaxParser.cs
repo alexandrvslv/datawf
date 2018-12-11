@@ -47,7 +47,7 @@ namespace DataWF.Data
 
         public string ParseDirectly(Stream stream, string fileName, ExecuteArgs param)
         {
-            var cacheNames = new Dictionary<string, DefinedName>();
+            var cacheNames = new Dictionary<string, Dictionary<string, DefinedName>>(StringComparer.OrdinalIgnoreCase);
             var stringTables = (List<Excel.SharedStringItem>)null;
             using (var document = SpreadsheetDocument.Open(stream, true))
             {
@@ -62,19 +62,22 @@ namespace DataWF.Data
                     if (part.OpenXmlPart is WorksheetPart worksheetPart)
                     {
                         var sheet = sheetList.FirstOrDefault(p => p.Id == part.RelationshipId);
-                        if (sheet.State != null
-                            && (sheet.State.Value == Excel.SheetStateValues.Hidden
-                            || sheet.State.Value == Excel.SheetStateValues.VeryHidden))
-                            continue;
-                        //var newWorksheetPart = newWorkbookPart.AddNewPart<WorksheetPart>(sheet.Id);
-                        foreach (var sheetPart in worksheetPart.Parts)
+                        if (cacheNames.TryGetValue(sheet.Name.Value, out var sheetNames))
                         {
-                            if (sheetPart.OpenXmlPart is TableDefinitionPart tableDefinitionPart)
+                            //if (sheet.State != null
+                            //    && (sheet.State.Value == Excel.SheetStateValues.Hidden
+                            //    || sheet.State.Value == Excel.SheetStateValues.VeryHidden))
+                            //    continue;
+
+                            foreach (var sheetPart in worksheetPart.Parts)
                             {
-                                ParseTableDefinition(param, cacheNames, sheet, tableDefinitionPart);
+                                if (sheetPart.OpenXmlPart is TableDefinitionPart tableDefinitionPart)
+                                {
+                                    ParseTableDefinition(param, sheetNames, tableDefinitionPart);
+                                }
                             }
+                            ParseWorksheetPart(param, sheetNames, stringTables, worksheetPart);
                         }
-                        ParseWorksheetPart(param, cacheNames, stringTables, worksheetPart, sheet);
                     }
                 }
                 document.Save();
@@ -87,7 +90,7 @@ namespace DataWF.Data
         public string ParseReplace(Stream stream, string fileName, ExecuteArgs param)
         {
             string newFileName = GetTempFileName(fileName);
-            var cacheNames = new Dictionary<string, DefinedName>();
+            var cacheNames = new Dictionary<string, Dictionary<string, DefinedName>>(StringComparer.OrdinalIgnoreCase);
             var stringTables = (List<Excel.SharedStringItem>)null;
             using (var document = SpreadsheetDocument.Open(stream, false))
             using (var newDocument = SpreadsheetDocument.Create(newFileName, document.DocumentType))
@@ -142,6 +145,9 @@ namespace DataWF.Data
                             {
                                 var sheet = sheetList.FirstOrDefault(p => p.Id == part.RelationshipId);
                                 //var newWorksheetPart = newWorkbookPart.AddNewPart<WorksheetPart>(sheet.Id);
+
+                                if (!cacheNames.TryGetValue(sheet.Name.Value, out var sheetNames))
+                                    cacheNames[sheet.Name.Value] = sheetNames = new Dictionary<string, DefinedName>();
                                 var newWorksheetPart = (WorksheetPart)newWorkbookPart.GetPartById(sheet.Id);
                                 foreach (var sheetPart in worksheetPart.Parts)
                                 {
@@ -149,7 +155,7 @@ namespace DataWF.Data
                                     {
                                         //var newTableDefinitionPart = newWorksheetPart.AddNewPart<TableDefinitionPart>(sheetPart.RelationshipId);
                                         var newTableDefinitionPart = (TableDefinitionPart)newWorksheetPart.GetPartById(sheetPart.RelationshipId);
-                                        ParseTableDefinition(param, cacheNames, sheet, tableDefinitionPart, newTableDefinitionPart);
+                                        ParseTableDefinition(param, sheetNames, tableDefinitionPart, newTableDefinitionPart);
                                     }
                                     else if (sheetPart.OpenXmlPart is DrawingsPart drawingsPart)
                                     {
@@ -185,7 +191,7 @@ namespace DataWF.Data
                                     }
                                     else { }
                                 }
-                                ParseWorksheetPart(param, cacheNames, stringTables, worksheetPart, sheet, newWorksheetPart);
+                                ParseWorksheetPart(param, sheetNames, stringTables, worksheetPart, newWorksheetPart);
                             }
                             else { }
                         }
@@ -197,7 +203,7 @@ namespace DataWF.Data
             return newFileName;
         }
 
-        private void ParseWorkbookPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, WorkbookPart workbookPart, List<Excel.Sheet> sheetList)
+        private void ParseWorkbookPart(ExecuteArgs param, Dictionary<string, Dictionary<string, DefinedName>> cacheNames, WorkbookPart workbookPart, List<Excel.Sheet> sheetList)
         {
             using (var buffer = new MemoryStream())
             {
@@ -208,7 +214,7 @@ namespace DataWF.Data
             }
         }
 
-        private void ParseWorkbookPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, WorkbookPart workbookPart, WorkbookPart newWorkbookPart, List<Excel.Sheet> sheetList)
+        private void ParseWorkbookPart(ExecuteArgs param, Dictionary<string, Dictionary<string, DefinedName>> cacheNames, WorkbookPart workbookPart, WorkbookPart newWorkbookPart, List<Excel.Sheet> sheetList)
         {
             using (var stream = workbookPart.GetStream())
             {
@@ -216,7 +222,7 @@ namespace DataWF.Data
             }
         }
 
-        private void ParseWorkbookPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, Stream workbookPart, WorkbookPart newWorkbookPart, List<Excel.Sheet> sheetList)
+        private void ParseWorkbookPart(ExecuteArgs param, Dictionary<string, Dictionary<string, DefinedName>> cacheNames, Stream workbookPart, WorkbookPart newWorkbookPart, List<Excel.Sheet> sheetList)
         {
             using (var reader = OpenXmlReader.Create(workbookPart))
             using (var writer = XmlWriter.Create(newWorkbookPart.GetStream(),
@@ -238,19 +244,23 @@ namespace DataWF.Data
                             var split = name.InnerText.Split('!');
                             if (split.Length == 2)
                             {
-                                var sheet = split[0];
+                                var sheet = split[0].Trim('\'');
                                 var procedure = DBService.Schems.ParseProcedure(name.Name, param.ProcedureCategory);
                                 if (procedure != null)
                                 {
+                                    if (!cacheNames.TryGetValue(sheet, out var names))
+                                    {
+                                        cacheNames[sheet] = names = new Dictionary<string, DefinedName>();
+                                    }
                                     var defName = new DefinedName
                                     {
                                         Name = name.Name,
-                                        Sheet = split[0].Trim('\''),
+                                        Sheet = sheet,
                                         Reference = split[1],
                                         Procedure = procedure,
                                         Value = procedure.Execute(param)
                                     };
-                                    cacheNames.Add(defName.Range.Start.ToString(), defName);
+                                    names.Add(defName.Range.Start.ToString(), defName);
                                 }
                             }
                         }
@@ -275,26 +285,26 @@ namespace DataWF.Data
             }
         }
 
-        private void ParseWorksheetPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, List<Excel.SharedStringItem> stringTables, WorksheetPart worksheetPart, Excel.Sheet sheet)
+        private void ParseWorksheetPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, List<Excel.SharedStringItem> stringTables, WorksheetPart worksheetPart)
         {
             using (var temp = new MemoryStream())
             {
                 using (var stream = worksheetPart.GetStream())
                     stream.CopyTo(temp);
                 temp.Position = 0;
-                ParseWorksheetPart(param, cacheNames, stringTables, temp, sheet, worksheetPart);
+                ParseWorksheetPart(param, cacheNames, stringTables, temp, worksheetPart);
             }
         }
 
-        private void ParseWorksheetPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, List<Excel.SharedStringItem> stringTables, WorksheetPart worksheetPart, Excel.Sheet sheet, WorksheetPart newWorksheetPart)
+        private void ParseWorksheetPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, List<Excel.SharedStringItem> stringTables, WorksheetPart worksheetPart, WorksheetPart newWorksheetPart)
         {
             using (var stream = worksheetPart.GetStream())
             {
-                ParseWorksheetPart(param, cacheNames, stringTables, stream, sheet, newWorksheetPart);
+                ParseWorksheetPart(param, cacheNames, stringTables, stream, newWorksheetPart);
             }
         }
 
-        private void ParseWorksheetPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, List<Excel.SharedStringItem> stringTables, Stream worksheetPart, Excel.Sheet sheet, WorksheetPart newWorksheetPart)
+        private void ParseWorksheetPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, List<Excel.SharedStringItem> stringTables, Stream worksheetPart, WorksheetPart newWorksheetPart)
         {
             var inserts = new List<CellRange>();
 
@@ -321,7 +331,7 @@ namespace DataWF.Data
                         foreach (Excel.Cell ocell in newRow.Descendants<Excel.Cell>())
                         {
                             object rz = null;
-                            if (cacheNames.TryGetValue(ocell.CellReference.Value, out var defName) && defName.Sheet.Equals(sheet.Name.Value, StringComparison.OrdinalIgnoreCase))
+                            if (cacheNames.TryGetValue(ocell.CellReference.Value, out var defName))
                             {
                                 rz = defName.Value;
                             }
@@ -449,26 +459,26 @@ namespace DataWF.Data
             }
         }
 
-        private void ParseTableDefinition(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, Excel.Sheet sheet, TableDefinitionPart tableDefinitionPart)
+        private void ParseTableDefinition(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, TableDefinitionPart tableDefinitionPart)
         {
             using (var temp = new MemoryStream())
             {
                 using (var stream = tableDefinitionPart.GetStream())
                     stream.CopyTo(temp);
                 temp.Position = 0;
-                ParseTableDefinition(param, cacheNames, sheet, temp, tableDefinitionPart);
+                ParseTableDefinition(param, cacheNames, temp, tableDefinitionPart);
             }
         }
 
-        private void ParseTableDefinition(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, Excel.Sheet sheet, TableDefinitionPart tableDefinitionPart, TableDefinitionPart newTableDefinitionPart)
+        private void ParseTableDefinition(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, TableDefinitionPart tableDefinitionPart, TableDefinitionPart newTableDefinitionPart)
         {
             using (var stream = tableDefinitionPart.GetStream())
             {
-                ParseTableDefinition(param, cacheNames, sheet, stream, newTableDefinitionPart);
+                ParseTableDefinition(param, cacheNames, stream, newTableDefinitionPart);
             }
         }
 
-        private void ParseTableDefinition(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, Excel.Sheet sheet, Stream tableDefinitionPart, TableDefinitionPart newTableDefinitionPart)
+        private void ParseTableDefinition(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, Stream tableDefinitionPart, TableDefinitionPart newTableDefinitionPart)
         {
             using (var reader = OpenXmlReader.Create(tableDefinitionPart))
             using (var writer = XmlWriter.Create(newTableDefinitionPart.GetStream(),
@@ -488,7 +498,6 @@ namespace DataWF.Data
                             var defName = new DefinedName
                             {
                                 Name = table.Name,
-                                Sheet = sheet.Name,
                                 Range = reference,
                                 Procedure = procedure,
                                 Value = procedure.Execute(param),
