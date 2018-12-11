@@ -12,7 +12,7 @@ namespace DataWF.Common
         private FileWatcherService service;
 
         //https://stackoverflow.com/a/721743
-        public FileWatcher(string filePath, IFileModel model, IFileModelView modelView, FileWatcherService service = null)
+        public FileWatcher(string filePath, IFileModel model, IFileModelView modelView, bool enabled = true, FileWatcherService service = null)
         {
             Model = model;
             ModelView = modelView;
@@ -22,7 +22,8 @@ namespace DataWF.Common
                 Path = Path.GetDirectoryName(filePath),
                 NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.LastWrite
                | NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.Size,
-                Filter = Path.GetFileName(filePath)
+                Filter = Path.GetFileName(filePath),
+                EnableRaisingEvents = enabled
             };
 
             // Add event handlers.
@@ -32,9 +33,10 @@ namespace DataWF.Common
             Watcher.Renamed += new RenamedEventHandler(OnRenamed);
 
             Service = service ?? FileWatcherService.Instance;
-            Service.WatchList.Add(this);
-
-            Enabled = true;
+            if (enabled)
+            {
+                Service.WatchList.Add(this);
+            }
         }
 
         private void OnRenamed(object sender, RenamedEventArgs e)
@@ -62,7 +64,7 @@ namespace DataWF.Common
 
         public void Dispose()
         {
-            Service.OnDeleted(this, EventArgs.Empty);            
+            Service.OnDeleted(this, EventArgs.Empty);
             Watcher?.Dispose();
         }
 
