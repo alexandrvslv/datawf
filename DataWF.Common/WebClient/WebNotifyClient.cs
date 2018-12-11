@@ -26,7 +26,12 @@ namespace DataWF.Common
             await socket.ConnectAsync(uri, CancellationToken.None).ConfigureAwait(false);
         }
 
-        public async Task Listen()
+        public void Listen()
+        {
+            _ = Run();
+        }
+
+        public async Task Run()
         {
             while (socket.State != WebSocketState.Closed)
             {

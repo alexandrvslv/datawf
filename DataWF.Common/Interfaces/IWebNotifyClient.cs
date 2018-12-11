@@ -8,7 +8,7 @@ namespace DataWF.Common
         event EventHandler<WebNotifyClientEventArgs> OnReceiveMessage;
 
         Task Close();
-        Task Listen();
+        void Listen();
         Task RegisterNotify(Uri uri, string autorization);
     }
 }
