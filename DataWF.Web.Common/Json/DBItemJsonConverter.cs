@@ -108,7 +108,7 @@ namespace DataWF.Web.Common
 
             if (tableAttribute.PrimaryKey != null && dictionary.TryGetValue(tableAttribute.PrimaryKey.PropertyInvoker, out var value) && value != null)
             {
-                item = tableAttribute.Table.LoadItemById(value);
+                item = tableAttribute.Table.LoadItemById(value, DBLoadParam.Load | DBLoadParam.Referencing);
             }
 
             if (item == null)
