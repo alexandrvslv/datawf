@@ -85,6 +85,13 @@ namespace DataWF.Module.Flow
             set { SetProperty(value); }
         }
 
+        [DataMember, Column("export_code", 512)]
+        public string ExportCode
+        {
+            get { return GetProperty<string>(); }
+            set { SetProperty(value); }
+        }
+
         [DataMember, Column("name", 512, Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
         public string Name
         {
