@@ -47,7 +47,8 @@ namespace DataWF.Data
 
         public string ParseDirectly(Stream stream, string fileName, ExecuteArgs param)
         {
-            var cacheNames = new Dictionary<string, Dictionary<string, DefinedName>>(StringComparer.OrdinalIgnoreCase);
+            var cacheNames = GetCacheNames(param);
+
             var stringTables = (List<Excel.SharedStringItem>)null;
             using (var document = SpreadsheetDocument.Open(stream, true))
             {
@@ -87,10 +88,39 @@ namespace DataWF.Data
             return ((FileStream)stream).Name;
         }
 
+        private static Dictionary<string, Dictionary<string, DefinedName>> GetCacheNames(ExecuteArgs param)
+        {
+            var cacheNames = new Dictionary<string, Dictionary<string, DefinedName>>(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in DBService.Schems.GetProcedures(param.ProcedureCategory))
+            {
+                if (string.IsNullOrEmpty(item.Key))
+                    continue;
+                var split = item.Key.Split('!');
+                if (split.Length == 2)
+                {
+                    var sheet = split[0].Trim('\'');
+                    if (!cacheNames.TryGetValue(sheet, out var names))
+                    {
+                        cacheNames[sheet] = names = new Dictionary<string, DefinedName>();
+                    }
+                    var defName = new DefinedName
+                    {
+                        Name = item.Key,
+                        Sheet = sheet,
+                        Reference = split[1],
+                        Procedure = item.Value,
+                        Value = item.Value.Execute(param)
+                    };
+                    names.Add(defName.Range.Start.ToString(), defName);
+                }
+            }
+            return cacheNames;
+        }
+
         public string ParseReplace(Stream stream, string fileName, ExecuteArgs param)
         {
             string newFileName = GetTempFileName(fileName);
-            var cacheNames = new Dictionary<string, Dictionary<string, DefinedName>>(StringComparer.OrdinalIgnoreCase);
+            var cacheNames = GetCacheNames(param);
             var stringTables = (List<Excel.SharedStringItem>)null;
             using (var document = SpreadsheetDocument.Open(stream, false))
             using (var newDocument = SpreadsheetDocument.Create(newFileName, document.DocumentType))

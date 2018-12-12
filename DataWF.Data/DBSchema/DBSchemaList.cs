@@ -20,6 +20,7 @@
 using DataWF.Common;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Xml.Serialization;
 
@@ -75,6 +76,17 @@ namespace DataWF.Data
         {
             base.OnListChanged(args);
             OnItemsListChanged(this, args);
+        }
+
+        public IEnumerable<KeyValuePair<string, DBProcedure>> GetProcedures(string category = "General")
+        {
+            foreach (var schema in this)
+            {
+                foreach (var kvp in schema.Procedures.SelectByCategory(category))
+                {
+                    yield return kvp;
+                }
+            }
         }
 
         public DBProcedure ParseProcedure(string code, string category = "General")

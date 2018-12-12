@@ -53,6 +53,17 @@ namespace DataWF.Data
             return Select(nameof(DBProcedure.GroupName), CompareType.Equal, procedure?.Name);
         }
 
+        public IEnumerable<KeyValuePair<string, DBProcedure>> SelectByCategory(string category = "General")
+        {
+            if (codeIndex.TryGetValue(category, out var categoryIndex))
+            {
+                foreach (var kvp in categoryIndex)
+                {
+                    yield return kvp;
+                }
+            }
+        }
+
         public DBProcedure SelectByCode(string code, string category = "General")
         {
             if (codeIndex.TryGetValue(category, out var categoryIndex))
