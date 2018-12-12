@@ -1060,6 +1060,13 @@ namespace DataWF.Module.Flow
         {
             base.Dispose();
         }
+
+        public override object Clone()
+        {
+            var document = (Document)base.Clone();
+            document.Number = null;
+            return document;
+        }
     }
 
     public enum DocumentSearchDate
