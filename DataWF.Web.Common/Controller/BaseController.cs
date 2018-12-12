@@ -70,7 +70,7 @@ namespace DataWF.Web.Common
             var value = default(T);
             try
             {
-                value = table.LoadById(id);
+                value = table.LoadById(id, DBLoadParam.Referencing | DBLoadParam.Load);
                 if (value == null)
                 {
                     return NotFound();
@@ -175,7 +175,7 @@ namespace DataWF.Web.Common
             var value = default(T);
             try
             {
-                value = table.LoadById(id);
+                value = table.LoadById(id, DBLoadParam.Referencing | DBLoadParam.Load);
                 if (value == null)
                 {
                     return NotFound();
