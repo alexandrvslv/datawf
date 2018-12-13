@@ -22,7 +22,6 @@ namespace DataWF.Web.Common
     {
         private readonly IOptions<JwtAuth> jwtAuth;
         private readonly DBTable<User> users;
-        private User user;
 
         public AuthorizeController(IOptions<JwtAuth> jwtAuth)
         {
@@ -30,7 +29,7 @@ namespace DataWF.Web.Common
             users = DBTable.GetTable<User>();
         }
 
-        public User CurrentUser => user ?? (user = User.GetCommonUser());
+        public User CurrentUser => User.GetCommonUser();
 
         [AllowAnonymous]
         [HttpPost("LoginIn/")]

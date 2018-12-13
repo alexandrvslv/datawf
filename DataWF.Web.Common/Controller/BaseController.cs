@@ -12,14 +12,13 @@ namespace DataWF.Web.Common
     public abstract class BaseController<T, K> : ControllerBase where T : DBItem, new()
     {
         protected DBTable<T> table;
-        private User user;
 
         public BaseController()
         {
             table = DBTable.GetTable<T>();
         }
 
-        public User CurrentUser => user ?? (user = User.GetCommonUser());
+        public User CurrentUser => User.GetCommonUser();
 
         [HttpGet]
         public ActionResult<IEnumerable<T>> Get()
