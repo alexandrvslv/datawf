@@ -17,8 +17,8 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using System.Collections.Generic;
 using DataWF.Common;
+using System.Collections.Generic;
 
 namespace DataWF.Data
 {
@@ -70,6 +70,7 @@ namespace DataWF.Data
         }
 
         public QResult Result { get; set; }
+
         public IUserIdentity User { get; set; }
     }
 }

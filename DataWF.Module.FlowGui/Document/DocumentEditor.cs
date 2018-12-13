@@ -27,7 +27,7 @@ namespace DataWF.Module.FlowGui
     {
         public static string Execute(DocumentData Current)
         {
-            var fileName = Current.GetData();
+            var fileName = Current.GetDataPath();
             if (!string.IsNullOrEmpty(fileName))
             {
                 Execute(fileName);

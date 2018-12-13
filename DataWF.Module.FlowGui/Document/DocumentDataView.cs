@@ -121,7 +121,7 @@ namespace DataWF.Module.FlowGui
         {
             if (Current?.TemplateData != null)
             {
-                DocumentEditor.Execute(Current.Parse());
+                DocumentEditor.Execute(Current.Parse(GuiEnvironment.User));
             }
         }
 
@@ -137,7 +137,7 @@ namespace DataWF.Module.FlowGui
                 return;
             }
 
-            var filePath = Current.GetData();
+            var filePath = Current.GetDataPath();
             if (string.IsNullOrEmpty(filePath))
             {
                 return;

@@ -15,21 +15,14 @@ namespace DataWF.Web.Common
     {
         private static readonly FormOptions formOptions = new FormOptions();
 
-        protected DBColumn fileColumn;
-        protected DBColumn fileNameColumn;
-
         public BaseFileController()
-        {
-            fileColumn = table.Columns.GetByKey(DBColumnKeys.File);
-            fileNameColumn = table.Columns.GetByKey(DBColumnKeys.FileName);
-        }
-
+        { }
 
         [HttpGet("DownloadFile/{id}")]
         [ProducesResponseType(typeof(FileStreamResult), 200)]
         public ActionResult<Stream> DownloadFile([FromRoute]K id)
         {
-            if (fileColumn == null || fileNameColumn == null)
+            if (table.FileKey == null || table.FileNameKey == null)
             {
                 return BadRequest("No file columns presented!");
             }
@@ -40,12 +33,12 @@ namespace DataWF.Web.Common
                 {
                     return NotFound();
                 }
-                var fileName = item.GetValue<string>(fileNameColumn);
+                var fileName = item.GetValue<string>(table.FileNameKey);
                 if (string.IsNullOrEmpty(fileName))
                 {
                     return new EmptyResult();
                 }
-                return File(item.GetZipMemoryStream(fileColumn), System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
+                return File(item.GetZipMemoryStream(table.FileKey), System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
             }
             catch (Exception ex)
             {
@@ -57,7 +50,7 @@ namespace DataWF.Web.Common
         [DisableFormValueModelBinding]
         public async Task<ActionResult> UploadFile([FromRoute]K id, [FromRoute]string fileName)
         {
-            if (fileColumn == null || fileNameColumn == null)
+            if (table.FileKey == null || table.FileNameKey == null)
             {
                 return BadRequest("No file columns presented!");
             }
@@ -83,8 +76,8 @@ namespace DataWF.Web.Common
                     {
                         fileName = upload.FileName;
                     }
-                    item.SetValue(fileName, fileNameColumn);
-                    item.SetStream(upload.Stream, fileColumn);
+                    item.SetValue(fileName, table.FileNameKey);
+                    item.SetStream(upload.Stream, table.FileKey, CurrentUser);
                 }
                 return Ok();
             }

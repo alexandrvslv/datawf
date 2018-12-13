@@ -166,7 +166,8 @@ namespace DataWF.Common
                                         {
                                             var headers = GetHeaders(response);
                                             (string fileName, int fileSize) = GetFileInfo(headers);
-                                            var filePath = Path.Combine(Path.GetTempPath(), fileName);
+                                            var indentifier = commandUrl.Replace("/", "") + (parameters != null ? parameters.FirstOrDefault().ToString() : "");
+                                            var filePath = Helper.GetDocumentsFullPath(fileName, indentifier);
                                             var fileStream = (FileStream)null;
                                             try
                                             {

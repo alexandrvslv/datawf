@@ -618,28 +618,40 @@ namespace DataWF.Data
             get { return Name; }
         }
 
-        [Browsable(false)]
+        [JsonIgnore, XmlIgnore, Browsable(false)]
         public bool IsPrimaryKey
         {
             get { return (Keys & DBColumnKeys.Primary) == DBColumnKeys.Primary; }
         }
 
-        [Browsable(false)]
+        [JsonIgnore, XmlIgnore, Browsable(false)]
         public bool IsTypeKey
         {
             get { return (Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType; }
         }
 
-        [Browsable(false)]
+        [JsonIgnore, XmlIgnore, Browsable(false)]
         public bool IsNotNull
         {
             get { return (Keys & DBColumnKeys.Notnull) == DBColumnKeys.Notnull; }
         }
 
-        [Browsable(false)]
+        [JsonIgnore, XmlIgnore, Browsable(false)]
         public bool IsSystem
         {
             get { return (Keys & DBColumnKeys.System) == DBColumnKeys.System; }
+        }
+
+        [JsonIgnore, XmlIgnore, Browsable(false)]
+        public bool IsFile
+        {
+            get { return (Keys & DBColumnKeys.File) == DBColumnKeys.File; }
+        }
+
+        [JsonIgnore, XmlIgnore, Browsable(false)]
+        public bool IsFileName
+        {
+            get { return (Keys & DBColumnKeys.FileName) == DBColumnKeys.FileName; }
         }
 
         [JsonIgnore, XmlIgnore]

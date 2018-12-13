@@ -404,7 +404,7 @@ namespace DataWF.Data.Gui
 
             using (var xl = DocumentFormat.OpenXml.Packaging.SpreadsheetDocument.Open(fileName, false))
             {
-                var sp = xl.WorkbookPart.SharedStringTablePart;
+                var sp = XlsxSaxParser.ReadStringTable(xl.WorkbookPart.SharedStringTablePart);
                 foreach (var part in xl.WorkbookPart.WorksheetParts)
                 {
                     var worksheet = part.Worksheet;

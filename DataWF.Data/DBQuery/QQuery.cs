@@ -1146,7 +1146,7 @@ namespace DataWF.Data
             if (defColumns || columns.Count == 0)
             {
                 var table = tables.FirstOrDefault();
-                foreach (var col in table.Table.Columns.Where(p => (p.Keys & DBColumnKeys.File) != DBColumnKeys.File))
+                foreach (var col in table.Table.Columns.Where(p => !p.IsFile))
                 {
                     string temp = table.Table.FormatQColumn(col, table.Alias);
                     if (temp != null && temp.Length > 0)

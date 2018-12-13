@@ -133,6 +133,7 @@ namespace DataWF.Data
         protected DBColumn accessKey = DBColumn.EmptyKey;
         protected DBColumn primaryKey = DBColumn.EmptyKey;
         protected DBColumn fileKey = DBColumn.EmptyKey;
+        protected DBColumn fileNameKey = DBColumn.EmptyKey;
         protected DBColumn dateKey = DBColumn.EmptyKey;
         protected DBColumn stampKey = DBColumn.EmptyKey;
         protected DBColumn codeKey = DBColumn.EmptyKey;
@@ -386,6 +387,19 @@ namespace DataWF.Data
                     fileKey = Columns.GetByKey(DBColumnKeys.File);
                 }
                 return fileKey;
+            }
+        }
+
+        [Browsable(false), Category("Keys")]
+        public DBColumn FileNameKey
+        {
+            get
+            {
+                if (fileNameKey == DBColumn.EmptyKey)
+                {
+                    fileNameKey = Columns.GetByKey(DBColumnKeys.FileName);
+                }
+                return fileNameKey;
             }
         }
 

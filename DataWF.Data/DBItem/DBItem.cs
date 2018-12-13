@@ -1015,7 +1015,7 @@ namespace DataWF.Data
             Reject(user);
             Table.ReloadItem(PrimaryId);
         }
-        
+
         public void GenerateId()
         {
             if (Table.Sequence == null || Table.PrimaryKey == null)
@@ -1421,17 +1421,22 @@ namespace DataWF.Data
             this[column] = value;
         }
 
-        public void SetStream(string filepath, DBColumn column, int bufferSize = 8192)
+        public void SetStream(string filepath, DBColumn column, IUserIdentity user, int bufferSize = 8192)
         {
             using (var stream = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
-                SetStream(stream, column, bufferSize);
+                SetStream(stream, column, user, bufferSize);
             }
         }
 
-        public void SetStream(Stream stream, DBColumn column, int bufferSize = 8192)
+        public void SetStream(Stream stream, DBColumn column, IUserIdentity user, int bufferSize = 8192)
         {
-            Table.System.WriteSequential(this, column, stream, bufferSize);
+            SetValue(Helper.GetBytes(stream), column);
+            if (Attached)
+            {
+                Save(user);
+                SetValue(null, column, false);
+            }
         }
 
         public MemoryStream GetMemoryStream(DBColumn column, int bufferSize = 8192)

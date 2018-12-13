@@ -22,6 +22,7 @@ using DataWF.Common;
 using DataWF.Data;
 using DataWF.Module.Common;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -85,6 +86,34 @@ namespace DataWF.Module.Flow
         }
     }
 
+    public class DocumentDataLog
+    {
+        public DocumentDataLog()
+        { }
+
+        public DocumentDataLog(DBLogItem logItem)
+        {
+            Id = (int)logItem.LogId;
+            BaseId = (long)logItem.BaseId;
+            Date = (DateTime)logItem.DateCreate;
+            Type = (DBLogType)logItem.LogType;
+            User = logItem.UserLog.GetName();
+            FileName = logItem.GetValue<string>(logItem.LogTable.GetLogColumn(logItem.BaseTable.FileNameKey));
+        }
+
+        public int Id { get; set; }
+
+        public long BaseId { get; set; }
+
+        public DateTime Date { get; set; }
+
+        public DBLogType Type { get; set; }
+
+        public string User { get; set; }
+
+        public string FileName { get; set; }
+
+    }
 
     [DataContract, Table("ddocument_data", "Document", BlockSize = 400)]
     public class DocumentData : DocumentDetail
@@ -169,21 +198,6 @@ namespace DataWF.Module.Flow
             }
         }
 
-        public Stream GetFile()
-        {
-            if (FileName == null)
-            {
-                return null;
-            }
-            return GetZipMemoryStream(Table.ParseProperty(nameof(FileData)));
-        }
-
-        public void SetFile(Stream stream, string fileName)
-        {
-            FileName = fileName;
-            SetStream(stream, Table.ParseProperty(nameof(FileData)));
-        }
-
         //public string FileSize
         //{
         //    get
@@ -204,17 +218,22 @@ namespace DataWF.Module.Flow
             get { return TemplateDataId != null; }
         }
 
-        public string GetData()
+        public string GetDataPath()
         {
-            var file = Helper.GetDocumentsFullPath(FileName);
-            if (file == null)
+            using (var stream = GetData())
+            {
+                return stream == null ? null : ((FileStream)stream).Name;
+            }
+        }
+
+        public Stream GetData()
+        {
+            var filePath = Helper.GetDocumentsFullPath(FileName, nameof(DocumentData) + Id);
+            if (filePath == null)
             {
                 return null;
             }
-            using (var stream = GetData(file))
-            {
-                return file;
-            }
+            return GetData(filePath);
         }
 
         public Stream GetData(string fileName)
@@ -222,30 +241,37 @@ namespace DataWF.Module.Flow
             return GetZipFileStream(Table.FileKey, fileName);
         }
 
-        public void SetData(string filePath, bool cache)
+        public void SetData(string filePath, IUserIdentity user)
         {
-            if (cache)
+            using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
-                FileData = File.ReadAllBytes(filePath);
+                SetData(stream, null, user);
             }
-            else
+        }
+
+        public void SetData(Stream stream, string fileName, IUserIdentity user)
+        {
+            if (fileName != null)
             {
-                SetStream(filePath, Table.FileKey);
+                FileName = fileName;
             }
+
+            SetStream(stream, Table.FileKey, user);
         }
 
         [ControllerMethod]
-        public FileStream RefreshData()
+        public FileStream RefreshData(IUserIdentity user)
         {
-            return new FileStream(Parse(true), FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            return new FileStream(Parse(user, true), FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         }
 
-        public string Parse(bool fromTemplate = false)
+        public string Parse(IUserIdentity user, bool fromTemplate = false)
         {
             return Parse(new DocumentExecuteArgs
             {
                 Document = Document,
-                ProcedureCategory = TemplateData.Template.Code
+                ProcedureCategory = TemplateData.Template.Code,
+                User = user
             }, fromTemplate);
         }
 
@@ -253,10 +279,10 @@ namespace DataWF.Module.Flow
         {
             if (TemplateData == null || TemplateData.File == null)
             {
-                return GetData();
+                return GetDataPath();
             }
 
-            var filePath = Helper.GetDocumentsFullPath(FileName);
+            var filePath = Helper.GetDocumentsFullPath(FileName, "Parser" + (Id ?? TemplateData.Id));
             if (filePath == null || fromTemplate)
             {
                 using (var stream = TemplateData.File.GetFileStream())
@@ -272,7 +298,7 @@ namespace DataWF.Module.Flow
                     filePath = DocumentParser.Execute(stream, FileName, param);
                 }
             }
-            SetData(filePath, false);
+            SetData(filePath, param.User);
             return filePath;
         }
 
@@ -295,6 +321,40 @@ namespace DataWF.Module.Flow
             worker.RunWorkerAsync(param);
             return worker;
             //worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(worker_RunWorkerCompleted);
+        }
+
+        [ControllerMethod]
+        public IEnumerable<DocumentDataLog> GetLogs()
+        {
+            using (var query = new QQuery(Table.LogTable))
+            {
+                query.BuildParam(Table.LogTable.BaseKey, this.Id);
+                foreach (var logItem in Table.LogTable.Load(query))
+                {
+                    var fileName = logItem.GetValue<string>(logItem.LogTable.FileNameKey);
+                    if (fileName != null)
+                    {
+                        yield return new DocumentDataLog(logItem);
+                    }
+                }
+            };
+        }
+
+        [ControllerMethod]
+        public FileStream GetLogFile(int logId)
+        {
+            var logItem = Table.LogTable.LoadById(logId);
+            if (logItem == null)
+            {
+                throw new Exception($"DataLog with id {logId} not found!");
+            }
+            var fileName = logItem.GetValue<string>(logItem.LogTable.FileNameKey);
+            if (fileName == null)
+            {
+                throw new Exception($"DataLog with id {logId} no file defined!");
+            }
+
+            return logItem.GetFileStream(Table.LogTable.FileKey, Helper.GetDocumentsFullPath(fileName, "DataLog" + logItem.LogId));
         }
 
         public override void OnPropertyChanged([CallerMemberName]string property = null, DBColumn column = null, object value = null)

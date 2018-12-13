@@ -900,12 +900,6 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                     transaction.Dispose();
             }
         }
-
-        public virtual void WriteSequential(DBItem item, DBColumn column, Stream stream, int bufferSize = 8192)
-        {
-            item.SetValue(Helper.GetBytes(stream), column);
-            item.Save(null);
-            item.SetValue(null, column, false);
-        }
+        
     }
 }

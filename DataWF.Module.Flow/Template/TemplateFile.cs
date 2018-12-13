@@ -70,7 +70,7 @@ namespace DataWF.Module.Flow
 
         public FileStream GetFileStream()
         {
-            return GetZipFileStream(table.FileKey, Helper.GetDocumentsFullPath(DataName));
+            return GetZipFileStream(table.FileKey, Helper.GetDocumentsFullPath(DataName, nameof(TemplateFile) + Id));
         }
     }
 }

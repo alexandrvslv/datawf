@@ -637,7 +637,7 @@ namespace DataWF.Module.Flow
             foreach (var file in files)
             {
                 var data = new T { Document = this };
-                data.SetData(file, true);
+                data.SetData(file, null);
                 data.GenerateId();
                 data.Attach();
                 yield return data;

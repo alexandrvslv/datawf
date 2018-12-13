@@ -602,7 +602,7 @@ namespace DataWF.Data
             return null;
         }
 
-        public List<Excel.SharedStringItem> ReadStringTable(SharedStringTablePart sharedStringTablePart)
+        public static List<Excel.SharedStringItem> ReadStringTable(SharedStringTablePart sharedStringTablePart)
         {
             var dict = new List<Excel.SharedStringItem>();
             using (var reader = OpenXmlReader.Create(sharedStringTablePart))

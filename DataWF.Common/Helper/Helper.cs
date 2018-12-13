@@ -80,7 +80,7 @@ namespace DataWF.Common
             get { return logs; }
         }
 
-        public static string DateRevelantString(DateTime date, CultureInfo culture= null)
+        public static string DateRevelantString(DateTime date, CultureInfo culture = null)
         {
             return DateRevelantString(DateTime.Now, date);
         }
@@ -314,13 +314,13 @@ namespace DataWF.Common
                 return IsImage(fileStream);
         }
 
-        public static string GetDocumentsFullPath(string fileName)
+        public static string GetDocumentsFullPath(string fileName, string identifier)
         {
             if (string.IsNullOrEmpty(fileName))
             {
                 return null;
             }
-            var path = Path.Combine(Path.GetTempPath(), "Documents");
+            var path = Path.Combine(Path.GetTempPath(), "Documents", identifier);
             Directory.CreateDirectory(path);
             return Path.Combine(path, fileName);
         }

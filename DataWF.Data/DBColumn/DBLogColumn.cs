@@ -67,6 +67,14 @@ namespace DataWF.Data
                 ReferenceTable = value.ReferenceTable;
                 Size = value.Size;
                 Scale = value.Scale;
+                if (value.IsFile)
+                {
+                    Keys |= DBColumnKeys.File;
+                }
+                if (value.IsFileName)
+                {
+                    Keys |= DBColumnKeys.FileName;
+                }
             }
         }
 

@@ -17,12 +17,9 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using System;
-using System.ComponentModel;
-using DataWF.Data;
 using DataWF.Common;
-using System.Data;
 using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace DataWF.Data
 {
@@ -105,5 +102,6 @@ namespace DataWF.Data
                 c.Dispose();
             base.Dispose();
         }
+
     }
 }
