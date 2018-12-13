@@ -16,8 +16,6 @@ namespace DataWF.Web.Common
     [Auth]
     public class AccessController : ControllerBase
     {
-        private User user;
-
         private DBTable GetTable(string name)
         {
             return DBService.Schems.DefaultSchema.Tables.FirstOrDefault(p => p.ItemType.Type.Name == name);
@@ -29,7 +27,7 @@ namespace DataWF.Web.Common
             //return DBTable.GetTable(type);
         }
 
-        public User CurrentUser => user ?? (user = User.GetCommonUser());
+        public User CurrentUser => User.GetCommonUser();
 
         [HttpGet("Get/{name}")]
         public ActionResult<AccessValue> GetAccess([FromRoute]string name)
