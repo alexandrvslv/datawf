@@ -97,7 +97,7 @@ namespace DataWF.Module.Flow
             BaseId = (long)logItem.BaseId;
             Date = (DateTime)logItem.DateCreate;
             Type = (DBLogType)logItem.LogType;
-            User = logItem.UserLog.GetName();
+            User = ((UserLog)logItem.UserLog).User.Name;
             FileName = logItem.GetValue<string>(logItem.LogTable.GetLogColumn(logItem.BaseTable.FileNameKey));
         }
 
