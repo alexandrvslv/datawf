@@ -10,6 +10,7 @@ using System.Linq;
 
 namespace DataWF.Web.Common
 {
+    [ResponseCache(CacheProfileName = "Never")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route("api/[controller]")]
     [ApiController]
