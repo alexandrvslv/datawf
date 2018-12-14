@@ -88,7 +88,7 @@ namespace DataWF.Common
                             id = value;
                             if (item == null && id != null)
                             {
-                                item = Select((K)id) ?? (T)sourceList?.Cast<IPrimaryKey>().FirstOrDefault(p => p.PrimaryKey == id);
+                                item = Select((K)id) ?? (T)sourceList?.Cast<IPrimaryKey>().FirstOrDefault(p => p.PrimaryKey?.Equals(id) ?? false);
                             }
                             if (item == null)
                             {
