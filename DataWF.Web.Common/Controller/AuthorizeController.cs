@@ -13,7 +13,7 @@ using System.Security.Claims;
 
 namespace DataWF.Web.Common
 {
-
+    [ResponseCache(CacheProfileName = "Never")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route("api/[controller]")]
     [ApiController]
@@ -56,7 +56,12 @@ namespace DataWF.Web.Common
             }
 
             user.Save(user);
-            return new TokenModel { Email = user.EMail, AccessToken = user.AccessToken, RefreshToken = user.RefreshToken };
+            return new TokenModel
+            {
+                Email = user.EMail,
+                AccessToken = user.AccessToken,
+                RefreshToken = user.RefreshToken
+            };
         }
 
         [AllowAnonymous]
@@ -97,7 +102,7 @@ namespace DataWF.Web.Common
         [HttpGet()]
         public ActionResult<User> Get()
         {
-            return Ok(CurrentUser);
+            return CurrentUser;
         }
 
         private string CreateRefreshToken(User user)

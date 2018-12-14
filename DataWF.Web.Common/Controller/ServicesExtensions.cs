@@ -3,6 +3,7 @@ using DataWF.Module.Common;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.Extensions.Configuration;
@@ -58,6 +59,11 @@ namespace DataWF.Web.Common
 
             services.AddMvc(options =>
             {
+                options.CacheProfiles.Add("Never", new CacheProfile()
+                {
+                    Location = ResponseCacheLocation.None,
+                    NoStore = true
+                });
                 options.OutputFormatters.RemoveType<JsonOutputFormatter>();
                 var settings = new JsonSerializerSettings() { ContractResolver = DBItemContractResolver.Instance };
                 settings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
