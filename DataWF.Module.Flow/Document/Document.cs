@@ -694,10 +694,10 @@ namespace DataWF.Module.Flow
                 if (stage.TimeLimit != null)
                     work.DateLimit = DateTime.Now + stage.TimeLimit;
             }
-            if (staff is User && ((User)staff).IsCurrent)
-            {
-                work.DateRead = DateTime.Now;
-            }
+            //if (staff is User && ((User)staff).IsCurrent)
+            //{
+            //    work.DateRead = DateTime.Now;
+            //}
             work.GenerateId();
             work.Attach();
             return work;
