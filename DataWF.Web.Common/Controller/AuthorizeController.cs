@@ -40,8 +40,9 @@ namespace DataWF.Web.Common
             {
                 user = GetUser(login);
             }
-            catch
+            catch(Exception ex)
             {
+                Helper.OnException(ex);
                 return BadRequest("Invalid email or password.");
             }
 
