@@ -677,7 +677,7 @@ namespace DataWF.Web.ClientGenerator
             foreach (var property in schema.Properties)
             {
                 //    property.Value.Id = property.Key;
-                yield return GenDefinitionClassField(property.Value);
+                yield return GenDefinitionClassField(property.Value, idKey);
             }
 
             foreach (var property in schema.Properties)
@@ -777,7 +777,7 @@ namespace DataWF.Web.ClientGenerator
 
         private PropertyDeclarationSyntax GenDefinitionClassProperty(JsonProperty property, JsonProperty idKey, JsonProperty typeKey)
         {
-            var typeDeclaration = GetTypeDeclaration(property, true, "SelectableList");
+            var typeDeclaration = GetTypeDeclaration(property, property.IsNullableRaw ?? true, "SelectableList");
             return SF.PropertyDeclaration(
                 attributeLists: SF.List(GenDefinitionClassPropertyAttributes(property, idKey, typeKey)),
                 modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
@@ -912,9 +912,9 @@ namespace DataWF.Web.ClientGenerator
             return string.Concat("_", char.ToLowerInvariant(property[0]).ToString(), property.Substring(1));
         }
 
-        private FieldDeclarationSyntax GenDefinitionClassField(JsonProperty property)
+        private FieldDeclarationSyntax GenDefinitionClassField(JsonProperty property, JsonProperty idKey)
         {
-            var type = GetTypeString(property, true, "SelectableList");
+            var type = GetTypeString(property, property.IsNullableRaw ?? true, "SelectableList");
             var field = SF.FieldDeclaration(attributeLists: SF.List<AttributeListSyntax>(),
                 modifiers: SF.TokenList(SF.Token(SyntaxKind.ProtectedKeyword)),
                declaration: SF.VariableDeclaration(
@@ -924,14 +924,14 @@ namespace DataWF.Web.ClientGenerator
                            identifier: SF.ParseToken(GetFieldName(property)),
                            argumentList: null,
                            initializer: property.Default != null
-                           ? SF.EqualsValueClause(GenFieldDefault(property))
+                           ? SF.EqualsValueClause(GenFieldDefault(property, idKey))
                            : property.Type == JsonObjectType.Array
                            ? SF.EqualsValueClause(SF.ParseExpression($"new {type}()")) : null))));
 
             return field;
         }
 
-        private ExpressionSyntax GenFieldDefault(JsonProperty property)
+        private ExpressionSyntax GenFieldDefault(JsonProperty property, JsonProperty idKey)
         {
             var text = property.Default.ToString();
             var type = GetTypeString(property, false, "SelectableList");

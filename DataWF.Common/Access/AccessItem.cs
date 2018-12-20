@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
@@ -45,6 +46,7 @@ namespace DataWF.Common
             get { return Data == 0; }
         }
 
+        [DefaultValue(false)]
         public bool View
         {
             get { return (Data & AccessType.View) == AccessType.View; }
@@ -60,6 +62,7 @@ namespace DataWF.Common
             }
         }
 
+        [DefaultValue(false)]
         public bool Create
         {
             get { return (Data & AccessType.Create) == AccessType.Create; }
@@ -75,6 +78,7 @@ namespace DataWF.Common
             }
         }
 
+        [DefaultValue(false)]
         public bool Edit
         {
             get { return (Data & AccessType.Edit) == AccessType.Edit; }
@@ -90,6 +94,7 @@ namespace DataWF.Common
             }
         }
 
+        [DefaultValue(false)]
         public bool Delete
         {
             get { return (Data & AccessType.Delete) == AccessType.Delete; }
@@ -105,6 +110,7 @@ namespace DataWF.Common
             }
         }
 
+        [DefaultValue(false)]
         public bool Admin
         {
             get { return (Data & AccessType.Admin) == AccessType.Admin; }
@@ -120,6 +126,7 @@ namespace DataWF.Common
             }
         }
 
+        [DefaultValue(false)]
         public bool Accept
         {
             get { return (Data & AccessType.Accept) == AccessType.Accept; }
