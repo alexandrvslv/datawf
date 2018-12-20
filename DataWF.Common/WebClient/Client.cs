@@ -108,11 +108,11 @@ namespace DataWF.Common
                                 {
                                     var baseClient = GetBaseClient();
                                     baseClient.Add(item);
-                                }
-                                if (sourceList != null && !sourceList.Contains(item))
-                                {
-                                    sourceList.Add(item);
-                                }
+                                }                                
+                            }
+                            if (sourceList != null && !sourceList.Contains(item))
+                            {
+                                sourceList.Add(item);
                             }
                             continue;
                         }
