@@ -502,7 +502,7 @@ namespace DataWF.Data
 
         public T LoadItem(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null)
         {
-            return Load(CreateItemCommmand(id, cols)).FirstOrDefault();
+            return Load(CreateItemCommmand(id, cols), param).FirstOrDefault();
         }
 
         public override DBItem LoadItemById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null)
