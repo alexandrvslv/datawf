@@ -269,13 +269,13 @@ namespace DataWF.Module.Flow
             set { SetName(value); }
         }
 
-        public string TitleEN
+        public virtual string TitleEN
         {
             get => GetProperty<string>();
             set => SetProperty(value);
         }
 
-        public string TitleRU
+        public virtual string TitleRU
         {
             get => GetProperty<string>();
             set => SetProperty(value);

@@ -495,9 +495,9 @@ namespace DataWF.Data
             });
         }
 
-        public override void ReloadItem(object id)
+        public override void ReloadItem(object id, DBLoadParam param = DBLoadParam.Load)
         {
-            LoadItem(id);
+            LoadItem(id, param);
         }
 
         public T LoadItem(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null)
