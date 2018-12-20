@@ -390,17 +390,16 @@ namespace DataWF.Module.Flow
 
         public event Action<Document, ListChangedType> RefChanged;
 
-        [ControllerMethod(true)]
-        public virtual IEnumerable<DocumentReference> GetReferences()
+        public virtual IEnumerable<DocumentReference> GetReferences(DBLoadParam loadParam = DBLoadParam.None)
         {
             if ((initype & DocInitType.References) != DocInitType.References)
             {
                 initype |= DocInitType.References;
                 //DocumentReference.DBTable.Load(CreateRefsFilter(Id));
             }
-            foreach (var item in Referenced)
+            foreach (var item in GetReferenced(loadParam))
                 yield return item;
-            foreach (var item in Referencing)
+            foreach (var item in GetReferencing(loadParam))
                 yield return item;
         }
 
@@ -411,10 +410,8 @@ namespace DataWF.Module.Flow
             set { SetReferencing<DocumentWork>(value, nameof(DocumentWork.DocumentId)); }
         }
 
-        [ControllerMethod(true)]
-        public IEnumerable<DocumentWork> GetWorks()
+        public IEnumerable<DocumentWork> GetWorks(DBLoadParam param = DBLoadParam.None)
         {
-            var param = DBLoadParam.None;
             if ((initype & DocInitType.Workflow) != DocInitType.Workflow)
             {
                 initype |= DocInitType.Workflow;
@@ -431,10 +428,8 @@ namespace DataWF.Module.Flow
             set { SetReferencing<DocumentData>(value, nameof(DocumentData.DocumentId)); }
         }
 
-        [ControllerMethod(true)]
-        public virtual IEnumerable<DocumentData> GetDatas()
+        public virtual IEnumerable<DocumentData> GetDatas(DBLoadParam loadParam = DBLoadParam.None)
         {
-            var loadParam = DBLoadParam.None;
             if ((initype & DocInitType.Data) != DocInitType.Data)
             {
                 initype |= DocInitType.Data;
@@ -450,11 +445,9 @@ namespace DataWF.Module.Flow
             set { SetReferencing<DocumentCustomer>(value, nameof(DocumentCustomer.DocumentId)); }
         }
 
-        [ControllerMethod]
         [Browsable(false)]
-        public IEnumerable<DocumentCustomer> GetCustomers()
+        public IEnumerable<DocumentCustomer> GetCustomers(DBLoadParam loadParam = DBLoadParam.None)
         {
-            var loadParam = DBLoadParam.None;
             if ((initype & DocInitType.Customer) != DocInitType.Customer)
             {
                 initype |= DocInitType.Customer;
@@ -470,10 +463,8 @@ namespace DataWF.Module.Flow
             set { SetReferencing<DocumentComment>(value, nameof(DocumentComment.DocumentId)); }
         }
 
-        [ControllerMethod(true)]
-        public IEnumerable<DocumentComment> GetComments()
+        public IEnumerable<DocumentComment> GetComments(DBLoadParam loadParam = DBLoadParam.None)
         {
-            var loadParam = DBLoadParam.None;
             if ((initype & DocInitType.Comment) != DocInitType.Comment)
             {
                 initype |= DocInitType.Comment;
@@ -489,10 +480,8 @@ namespace DataWF.Module.Flow
             set { SetReferencing<DocumentReference>(value, nameof(DocumentReference.ReferenceId)); }
         }
 
-        [ControllerMethod(true)]
-        public IEnumerable<DocumentReference> GetReferencing()
+        public IEnumerable<DocumentReference> GetReferencing(DBLoadParam loadParam = DBLoadParam.None)
         {
-            var loadParam = DBLoadParam.None;
             if ((initype & DocInitType.Refing) != DocInitType.Refing)
             {
                 initype |= DocInitType.Refing;
@@ -508,10 +497,8 @@ namespace DataWF.Module.Flow
             set { SetReferencing<DocumentReference>(value, nameof(DocumentReference.DocumentId)); }
         }
 
-        [ControllerMethod(true)]
-        public IEnumerable<DocumentReference> GetReferenced()
+        public IEnumerable<DocumentReference> GetReferenced(DBLoadParam loadParam = DBLoadParam.None)
         {
-            var loadParam = DBLoadParam.None;
             if ((initype & DocInitType.Refed) != DocInitType.Refed)
             {
                 initype |= DocInitType.Refed;
@@ -594,7 +581,6 @@ namespace DataWF.Module.Flow
             return workFlows;
         }
 
-        [ControllerMethod]
         public virtual IEnumerable<DocumentData> GetTemplatedData()
         {
             foreach (DocumentData data in GetDatas())
@@ -604,7 +590,6 @@ namespace DataWF.Module.Flow
             }
         }
 
-        [ControllerMethod]
         public virtual IEnumerable<DocumentData> CreateTemplatedData()
         {
             foreach (var item in Template.Datas)
@@ -626,7 +611,6 @@ namespace DataWF.Module.Flow
             };
         }
 
-        [ControllerMethod]
         public virtual DocumentData CreateData(string fileName)
         {
             return CreateData<DocumentData>(fileName).First();
