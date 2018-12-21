@@ -300,6 +300,7 @@ namespace DataWF.Web.CodeGenerator
 
         private IEnumerable<StatementSyntax> GetControllerMethodBody(MethodInfo method, bool baseClass, List<MethodParametrInfo> parametersInfo)
         {
+            yield return SyntaxFactory.ParseStatement("try {");
             var returning = method.ReturnType == typeof(void) ? "void" : $"ActionResult<{TypeHelper.FormatCode(method.ReturnType)}>";
             if (!method.IsStatic)
             {
@@ -351,6 +352,19 @@ namespace DataWF.Web.CodeGenerator
                 builder.AppendLine(");");
             }
             yield return SyntaxFactory.ParseStatement(builder.ToString());
+
+            yield return SyntaxFactory.ParseStatement("}");
+            yield return SyntaxFactory.ParseStatement("catch (Exception ex) {");
+            if (method.ReturnType != typeof(void))
+            {
+                yield return SyntaxFactory.ParseStatement("return BadRequest(ex);");
+            }
+            else
+            {
+                yield return SyntaxFactory.ParseStatement("BadRequest(ex);");
+            }
+
+            yield return SyntaxFactory.ParseStatement("}");
         }
 
         private IEnumerable<AttributeListSyntax> GetControllerMethodAttributes(MethodInfo method)

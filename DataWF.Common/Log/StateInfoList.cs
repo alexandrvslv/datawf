@@ -1,10 +1,15 @@
-﻿using System;
+﻿using System.IO;
 
 namespace DataWF.Common
 {
     public class StateInfoList : SelectableList<StateInfo>, IFileSerialize
     {
         #region IFSerialize implementation
+        public void Save(Stream stream)
+        {
+            Serialization.Serialize(this, stream);
+        }
+
         public void Save(string file)
         {
             Serialization.Serialize(this, file);
