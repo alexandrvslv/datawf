@@ -110,12 +110,10 @@ namespace DataWF.Web.Common
         [HttpGet("Logs/")]
         public ActionResult<Stream> GetLogs()
         {
-            using (var stream = new MemoryStream())
-            {
-                Helper.Logs.Save(stream);
-                stream.Position = 0;
-                return File(stream, System.Net.Mime.MediaTypeNames.Application.Octet, $"ServerLogs{ DateTime.Now.ToString("yyMMddHHmmss")}.xml");
-            }
+            var stream = new MemoryStream();
+            Helper.Logs.Save(stream);
+            stream.Position = 0;
+            return File(stream, System.Net.Mime.MediaTypeNames.Application.Octet, $"ServerLogs{ DateTime.Now.ToString("yyMMddHHmmss")}.xml");
         }
 
         private string CreateRefreshToken(User user)

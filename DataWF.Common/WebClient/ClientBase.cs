@@ -166,7 +166,7 @@ namespace DataWF.Common
                                         {
                                             var headers = GetHeaders(response);
                                             (string fileName, int fileSize) = GetFileInfo(headers);
-                                            var indentifier = request.RequestUri.LocalPath.Replace("/", "") + (parameters != null ? parameters.FirstOrDefault().ToString() : "");
+                                            var indentifier = request.RequestUri.LocalPath.Replace("/", "") + (parameters?.FirstOrDefault()?.ToString() ?? "");
                                             var filePath = Helper.GetDocumentsFullPath(fileName, indentifier);
                                             var fileStream = (FileStream)null;
                                             try
