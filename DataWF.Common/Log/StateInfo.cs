@@ -1,8 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.ComponentModel;
-using System.Reflection;
-using System.Text;
 using System.Xml.Serialization;
 
 namespace DataWF.Common
@@ -56,6 +54,7 @@ namespace DataWF.Common
         [XmlText]
         public string Description { get; set; }
 
+        [XmlText]
         public string Stack { get; set; }
 
         public StatusType Type { get; set; }
