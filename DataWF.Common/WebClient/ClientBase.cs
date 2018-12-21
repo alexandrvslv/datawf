@@ -187,6 +187,7 @@ namespace DataWF.Common
                                             }
                                             var process = new DownloadProcess(fileName, 8192, fileSize);
                                             await process.StartAsync(responseStream, fileStream, new CancellationToken());
+                                            fileStream.Position = 0;
                                             return (R)(object)fileStream;
                                         }
                                         else if (typeof(R) == typeof(string))
