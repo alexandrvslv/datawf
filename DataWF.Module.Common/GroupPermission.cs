@@ -168,7 +168,7 @@ namespace DataWF.Module.Common
                 permission = new GroupPermission()
                 {
                     Parent = parent,
-                    Permission = obj
+                    Target = obj
                 };
                 permission.Attach();
             }
@@ -256,7 +256,7 @@ namespace DataWF.Module.Common
         {
             get
             {
-                object data = Permission;
+                object data = Target;
                 string per = string.Empty;
                 if (data is DBColumn)
                     per = $"{((DBColumn)data).Table} {data}";
@@ -266,7 +266,7 @@ namespace DataWF.Module.Common
             }
         }
 
-        public object Permission
+        public object Target
         {
             get
             {
@@ -294,6 +294,19 @@ namespace DataWF.Module.Common
             {
                 Type = GetPermissionType(value, out string code);
                 PrimaryCode = code;
+            }
+        }
+
+        public override AccessValue Access
+        {
+            get { return base.Access; }
+            set
+            {
+                base.Access = value;
+                if (Target is IAccessable accessable)
+                {
+                    accessable.Access = value;
+                }
             }
         }
 
@@ -330,16 +343,6 @@ namespace DataWF.Module.Common
         public override void OnPropertyChanged([CallerMemberName] string property = null, DBColumn column = null, object value = null)
         {
             base.OnPropertyChanged(property, column, value);
-            if (Attached)
-            {
-                if (property == nameof(Access))
-                {
-                    if (Permission is IAccessable)
-                    {
-                        ((IAccessable)Permission).Access = Access;
-                    }
-                }
-            }
         }
 
 

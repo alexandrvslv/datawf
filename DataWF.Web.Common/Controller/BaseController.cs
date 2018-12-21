@@ -78,7 +78,6 @@ namespace DataWF.Web.Common
                 {
                     return Forbid();
                 }
-                value.AccessView = value.Access.GetView(user);
                 return Ok(value);
             }
             catch (Exception ex)

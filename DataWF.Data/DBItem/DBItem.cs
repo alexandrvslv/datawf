@@ -682,32 +682,29 @@ namespace DataWF.Data
                 {
                     if (Table.AccessKey != null)
                     {
-                        ReadAccess();
+                        access = ReadAccess();
                     }
-                    else
+                    if (access == null)
                     {
-                        access = Table.Access;
+                        return Table.Access;
                     }
                 }
                 return access;
             }
             set
             {
-                access = value;
                 if (Table.AccessKey != null)
                 {
                     SetValue(value?.Write(), Table.AccessKey);
                 }
+                access = value;
             }
         }
 
-        private void ReadAccess()
+        private AccessValue ReadAccess()
         {
             var accessData = GetValue<byte[]>(Table.AccessKey);
-            if (accessData == null)
-                access = Table.Access;
-            else
-                access = new AccessValue(accessData);
+            return accessData != null ? new AccessValue(accessData) : null;
         }
 
         //[DataMember, Browsable(false)]
@@ -1001,9 +998,9 @@ namespace DataWF.Data
             if (Attached)
             {
                 Table.OnItemChanged(this, property, column, value);
-                if (property == nameof(Access) && Table.AccessKey == null)
+                if (property == nameof(Access) && access != null)
                 {
-                    ReadAccess();
+                    access = ReadAccess();
                 }
             }
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
@@ -1096,7 +1093,6 @@ namespace DataWF.Data
         }
 
         public int Handler { get => handler; set => handler = value; }
-        public AccessView AccessView { get; set; }
 
         public int CompareTo(DBItem obj)
         {
