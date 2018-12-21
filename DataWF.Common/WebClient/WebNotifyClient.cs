@@ -35,10 +35,17 @@ namespace DataWF.Common
         {
             while (socket.State != WebSocketState.Closed)
             {
-                var recieve = await ReadData();
-                if (recieve != null)
+                try
                 {
-                    OnReceiveMessage?.Invoke(this, new WebNotifyClientEventArgs(recieve));
+                    var recieve = await ReadData();
+                    if (recieve != null)
+                    {
+                        OnReceiveMessage?.Invoke(this, new WebNotifyClientEventArgs(recieve));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
                 }
             }
         }
