@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.IO;
 using System.Net;
 using System.Security.Claims;
 
@@ -40,7 +41,7 @@ namespace DataWF.Web.Common
             {
                 user = GetUser(login);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Helper.OnException(ex);
                 return BadRequest("Invalid email or password.");
@@ -104,6 +105,17 @@ namespace DataWF.Web.Common
         public ActionResult<User> Get()
         {
             return CurrentUser;
+        }
+
+        [HttpGet("Logs/")]
+        public ActionResult<Stream> GetLogs()
+        {
+            using (var stream = new MemoryStream())
+            {
+                Helper.Logs.Save(stream);
+                stream.Position = 0;
+                return File(stream, System.Net.Mime.MediaTypeNames.Application.Octet, $"ServerLogs{ DateTime.Now.ToString("yyMMddHHmmss")}.xml");
+            }
         }
 
         private string CreateRefreshToken(User user)
