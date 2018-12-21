@@ -241,7 +241,7 @@ namespace DataWF.Common
                     {
                         if (!query.IsEnabled && comparer == null)
                         {
-                            base.Insert(e.NewStartingIndex, newItem);
+                            base.Add(newItem);
                         }
                         else
                         {
