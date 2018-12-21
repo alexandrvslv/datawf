@@ -13,7 +13,7 @@ namespace DataWF.Common
         public XmlEmitReader(Stream stream, Serializer serializer)
         {
             Serializer = serializer;
-            Reader = XmlReader.Create(stream);
+            Reader = XmlReader.Create(stream, new XmlReaderSettings { CloseInput = false });
         }
 
         public string CurrentName { get => Reader.Name; }

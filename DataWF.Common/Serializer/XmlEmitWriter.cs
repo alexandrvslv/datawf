@@ -12,7 +12,7 @@ namespace DataWF.Common
 
         public XmlEmitWriter(Stream stream, Serializer serializer)
         {
-            Writer = XmlWriter.Create(stream, new XmlWriterSettings { Indent = serializer.Indent });
+            Writer = XmlWriter.Create(stream, new XmlWriterSettings { Indent = serializer.Indent, CloseOutput = false });
             Serializer = serializer;
         }
 
