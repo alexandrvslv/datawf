@@ -251,8 +251,8 @@ namespace DataWF.Module.Common
             get { return GetValue<string>(Table.CodeKey); }
             set { SetValue(value, Table.CodeKey); }
         }
-
-        public string PermissionName
+        [Column("display_name", ColumnType = DBColumnTypes.Code)]
+        public string DisplayName
         {
             get
             {
@@ -324,7 +324,7 @@ namespace DataWF.Module.Common
 
         public override string ToString()
         {
-            return PermissionName;
+            return DisplayName;
         }
 
         public override void OnPropertyChanged([CallerMemberName] string property = null, DBColumn column = null, object value = null)
