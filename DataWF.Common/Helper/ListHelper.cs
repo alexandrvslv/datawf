@@ -358,7 +358,7 @@ namespace DataWF.Common
             {
                 var curParameter = parameter;
                 var temp = Select<T>(items, curParameter, indexes);
-                if (curParameter.GroupBegin)
+                if ((curParameter.Group & QueryGroup.Begin) == QueryGroup.Begin)
                 {
                     stack.Push(new SelectStackEntry<T>() { Buffer = temp, Parameter = curParameter });
                     continue;
@@ -367,7 +367,7 @@ namespace DataWF.Common
                 {
                     var entry = stack.Pop();
                     entry.Buffer = Concat(entry.Buffer, temp, curParameter);
-                    if (curParameter.GroupEnd)
+                    if ((curParameter.Group & QueryGroup.End) == QueryGroup.End)
                     {
                         temp = entry.Buffer;
                         curParameter = entry.Parameter;
@@ -471,7 +471,7 @@ namespace DataWF.Common
             {
                 bool rez = CheckItem(parameter.Invoker.GetValue(item), parameter.TypedValue, parameter.Comparer, parameter.Comparision);
                 var currParameter = parameter;
-                if (currParameter.GroupBegin)
+                if ((currParameter.Group & QueryGroup.Begin) == QueryGroup.Begin)
                 {
                     stack.Push(new CheckStackEntry { Flag = rez, Parameter = currParameter });
                     continue;
@@ -481,7 +481,7 @@ namespace DataWF.Common
                     var entry = stack.Pop();
                     entry.Flag = Concat(entry.Flag, rez, currParameter);
 
-                    if (currParameter.GroupEnd)
+                    if ((currParameter.Group & QueryGroup.End) == QueryGroup.End)
                     {
                         rez = entry.Flag;
                         currParameter = entry.Parameter;

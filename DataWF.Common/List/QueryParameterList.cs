@@ -22,14 +22,15 @@ namespace DataWF.Common
 
         public Query<T> Query { get; set; }
 
-        public QueryParameter<T> Add(LogicType logic, IInvoker invoker, CompareType comparer, object value)
+        public QueryParameter<T> Add(LogicType logic, IInvoker invoker, CompareType comparer, object value, QueryGroup group = QueryGroup.None)
         {
             var parameter = new QueryParameter<T>
             {
                 Logic = logic,
                 Invoker = invoker,
                 Comparer = comparer,
-                Value = value
+                Value = value,
+                Group = group
             };
             if (parameter.Invoker?.DataType == typeof(string))
             {

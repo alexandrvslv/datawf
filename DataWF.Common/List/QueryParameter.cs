@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System;
 using System.Collections;
 using System.ComponentModel;
 using System.Linq;
@@ -17,8 +18,7 @@ namespace DataWF.Common
         private IInvoker invoker;
         private object typedValue;
         private bool isEnabled = true;
-        private bool groupBegin = false;
-        private bool groupEnd = false;
+        private QueryGroup group = QueryGroup.None;
         private bool emptyFormat;
 
         public QueryParameter()
@@ -133,7 +133,7 @@ namespace DataWF.Common
             {
                 builder.Append($" {Logic.Format()} ");
             }
-            builder.Append($"{(GroupBegin ? "(" : "")}{FormatName ?? Name} {Comparer.Format()} {FormatValue()}{(GroupEnd ? ")" : "")}");
+            builder.Append($"{((Group & QueryGroup.Begin) != 0 ? "(" : "")}{FormatName ?? Name} {Comparer.Format()} {FormatValue()}{((Group & QueryGroup.End) != 0 ? ")" : "")}");
         }
 
         private string FormatValue()
@@ -180,10 +180,7 @@ namespace DataWF.Common
             }
         }
 
-        public bool GroupBegin { get => groupBegin; set => groupBegin = value; }
-
-        public bool GroupEnd { get => groupEnd; set => groupEnd = value; }
-
+        public QueryGroup Group { get => group; set => group = value; }
 
         [JsonIgnore, XmlIgnore]
         public IComparer Comparision { get; set; }
@@ -194,6 +191,14 @@ namespace DataWF.Common
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+    }
+
+    [Flags]
+    public enum QueryGroup
+    {
+        None = 0,
+        Begin = 1,
+        End = 2
     }
 }
 

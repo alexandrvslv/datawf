@@ -116,9 +116,9 @@ namespace DataWF.Common
             Parameters.Add(parameter);
         }
 
-        public QueryParameter<T> Add(LogicType logic, IInvoker invoker, CompareType comparer, object value)
+        public QueryParameter<T> Add(LogicType logic, IInvoker invoker, CompareType comparer, object value, QueryGroup group = QueryGroup.None)
         {
-            return Parameters.Add(logic, invoker, comparer, value);
+            return Parameters.Add(logic, invoker, comparer, value, group);
         }
 
         public QueryParameter<T> AddOrUpdate(IInvoker invoker, object value)
@@ -127,7 +127,7 @@ namespace DataWF.Common
             return AddOrUpdate(parameter?.Logic ?? LogicType.And, invoker, parameter?.Comparer ?? CompareType.Equal, value);
         }
 
-        public QueryParameter<T> AddOrUpdate(LogicType logic, IInvoker invoker, CompareType comparer, object value)
+        public QueryParameter<T> AddOrUpdate(LogicType logic, IInvoker invoker, CompareType comparer, object value, QueryGroup group = QueryGroup.None)
         {
             var parameter = Parameters[invoker.Name];
             if (parameter == null)
@@ -137,6 +137,7 @@ namespace DataWF.Common
             parameter.Logic = logic;
             parameter.Comparer = comparer;
             parameter.Value = value;
+            parameter.Group = group;
             return parameter;
         }
 
