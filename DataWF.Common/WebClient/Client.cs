@@ -108,7 +108,7 @@ namespace DataWF.Common
                                 {
                                     var baseClient = GetBaseClient();
                                     baseClient.Add(item);
-                                }                                
+                                }
                             }
                             if (sourceList != null && !sourceList.Contains(item))
                             {
@@ -181,16 +181,29 @@ namespace DataWF.Common
 
         public void Remove(object item)
         {
-            Items.Add((T)item);
+            Items.Remove((T)item);
+            if (TypeId != 0)
+            {
+                var baseClient = GetBaseClient();
+                baseClient?.Remove(item);
+            }
         }
 
         public void RemoveById(object id)
         {
             var item = Select(id);
-            if (item is T tItem)
+
+            if (item != null)
             {
-                Items.Remove(tItem);
+                if (item.GetType() != ItemType)
+                {
+                    var client = Provider.GetClient(item.GetType());
+                    client?.Remove(item);
+                    return;
+                }
+                Remove(item);
             }
+
         }
 
         public object ParseId(object id)

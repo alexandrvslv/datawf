@@ -48,6 +48,7 @@ namespace DataWF.Data
         public DBItemEventArgs(DBItem item, DBTransaction transaction, IUserIdentity user)
         {
             Item = item;
+            State = item.UpdateState;
             Transaction = transaction;
             User = user;
         }
