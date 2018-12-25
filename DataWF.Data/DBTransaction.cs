@@ -512,6 +512,11 @@ namespace DataWF.Data
 
         internal void OnExecute(DBExecuteType type, string text, TimeSpan ms, object rez)
         {
+            if (rez is Exception ex)
+            {
+                Helper.Logs.Add(new StateInfo("Transaction", ex.Message, text, StatusType.Warning));
+            }
+
             Execute?.Invoke(new DBExecuteEventArg { Time = ms, Query = text, Type = type, Rezult = rez });
         }
     }
