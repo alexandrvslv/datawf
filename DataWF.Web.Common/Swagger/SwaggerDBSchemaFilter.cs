@@ -82,7 +82,7 @@ namespace DataWF.Web.Common
             if ((column.Attribute.Keys & DBColumnKeys.Password) == DBColumnKeys.Password
                 || (column.Attribute.Keys & DBColumnKeys.File) == DBColumnKeys.File)
                 return;
-            
+
             if (column.GetDataType() == typeof(string) && column.Attribute.Size > 0)
             {
                 columnSchema.MaxLength = column.Attribute.Size;
@@ -113,9 +113,16 @@ namespace DataWF.Web.Common
             schema.Properties.Add(column.PropertyName, columnSchema);
 
             var defaultValue = column.Property.GetCustomAttribute<DefaultValueAttribute>();
-            if (defaultValue != null && defaultValue != null)
+            if (defaultValue != null && defaultValue.Value != null)
             {
-                columnSchema.Default = defaultValue.Value.ToString();
+                if (defaultValue.Value.GetType().IsEnum)
+                {
+                    columnSchema.Default = EnumItem.Format(defaultValue.Value);
+                }
+                else
+                {
+                    columnSchema.Default = defaultValue.Value.ToString();
+                }
             }
         }
     }
