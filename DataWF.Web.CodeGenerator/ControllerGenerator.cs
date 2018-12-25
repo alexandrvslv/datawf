@@ -331,9 +331,12 @@ namespace DataWF.Web.CodeGenerator
             var builder = new StringBuilder();
             if (TypeHelper.IsBaseType(method.ReturnType, typeof(Stream)))
             {
-                yield return SyntaxFactory.ParseStatement("var fileName = idValue.GetValue<string>(table.FileNameKey);");
+                yield return SyntaxFactory.ParseStatement("var fileName = table.FileNameKey == null? null: idValue.GetValue<string>(table.FileNameKey);");
                 yield return SyntaxFactory.ParseStatement("if (string.IsNullOrEmpty(fileName))");
-                yield return SyntaxFactory.ParseStatement("{ return new EmptyResult(); }");
+                yield return SyntaxFactory.ParseStatement("{");
+                yield return SyntaxFactory.ParseStatement($"var stream = idValue.{method.Name}({parametersBuilder}) as FileStream;");
+                yield return SyntaxFactory.ParseStatement($"return File(stream, System.Net.Mime.MediaTypeNames.Application.Octet, Path.GetFileName(stream.Name));");
+                yield return SyntaxFactory.ParseStatement("}");
                 builder.Append($"return File(idValue.{method.Name}({parametersBuilder}), System.Net.Mime.MediaTypeNames.Application.Octet, fileName);");
             }
             else
