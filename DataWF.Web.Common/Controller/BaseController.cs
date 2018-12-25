@@ -107,8 +107,7 @@ namespace DataWF.Web.Common
                 }
                 else
                 {
-                    value.Reject(user);
-                    throw new InvalidOperationException("Post is used to add! You can use the Put command!");
+                    Put(value);
                 }
             }
             catch (Exception ex)
