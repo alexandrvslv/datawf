@@ -33,7 +33,7 @@ namespace DataWF.Common
 
         public async Task Run()
         {
-            while (socket.State != WebSocketState.Closed)
+            while (socket.State == WebSocketState.Open)
             {
                 try
                 {

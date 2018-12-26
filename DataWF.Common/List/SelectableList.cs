@@ -455,7 +455,7 @@ namespace DataWF.Common
                 if (item.Equals(value))
                     return;
                 var valueIndex = IndexOf(value);
-                if (valueIndex > 0)
+                if (valueIndex >= 0)
                 {
                     items.RemoveAt(valueIndex);
                     items.Insert(index, value);
