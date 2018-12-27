@@ -195,6 +195,7 @@ namespace DataWF.Web.Common
             {
                 writer.WriteStartArray();
                 Type itemType = null;
+                object id = null;
                 foreach (var item in list)
                 {
                     if (item.Table.ItemType.Type != itemType)
@@ -211,14 +212,18 @@ namespace DataWF.Web.Common
                         writer.WritePropertyName("Items");
                         writer.WriteStartArray();
                     }
-                    writer.WriteStartObject();
-                    writer.WritePropertyName("Diff");
-                    writer.WriteValue((int)item.Type);
-                    writer.WritePropertyName("User");
-                    writer.WriteValue(item.UserId);
-                    writer.WritePropertyName("Id");
-                    writer.WriteValue(item.ItemId.ToString());
-                    writer.WriteEndObject();
+                    if (!item.ItemId.Equals(id))
+                    {
+                        id = item.ItemId;
+                        writer.WriteStartObject();
+                        writer.WritePropertyName("Diff");
+                        writer.WriteValue((int)item.Type);
+                        writer.WritePropertyName("User");
+                        writer.WriteValue(item.UserId);
+                        writer.WritePropertyName("Id");
+                        writer.WriteValue(item.ItemId.ToString());
+                        writer.WriteEndObject();
+                    }
                 }
                 writer.WriteEndArray();
                 writer.WriteEndObject();
