@@ -298,7 +298,7 @@ namespace DataWF.Module.Flow
                     filePath = DocumentParser.Execute(stream, FileName, param);
                 }
             }
-            SetData(filePath, param.User);
+
             return filePath;
         }
 
@@ -374,7 +374,7 @@ namespace DataWF.Module.Flow
             }
         }
 
-        public string RefreshName()
+        public virtual string RefreshName()
         {
             if (IsTemplate && TemplateData?.File != null)
             {

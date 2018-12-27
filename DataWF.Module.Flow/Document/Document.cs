@@ -292,7 +292,11 @@ namespace DataWF.Module.Flow
         [Reference(nameof(CurrentWorkId))]
         public DocumentWork CurrentWork
         {
-            get { return Works.FirstOrDefault(p => !p.Completed); }
+            get
+            {
+                return GetWorksUncompleted().FirstOrDefault()
+                  ?? GetWorks().FirstOrDefault();
+            }
         }
 
         [Browsable(false)]
@@ -418,7 +422,8 @@ namespace DataWF.Module.Flow
                 //param = DBLoadParam.Load;
             }
 
-            return GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), param);
+            return GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), param).
+                OrderByDescending(p => p.DateCreate);
         }
 
         [Referencing(nameof(DocumentData.DocumentId))]
@@ -524,7 +529,6 @@ namespace DataWF.Module.Flow
             }
         }
 
-        [ControllerMethod]
         public DocumentData GetDataByFileName(string fileName)
         {
             foreach (var data in GetDatas())
@@ -533,17 +537,15 @@ namespace DataWF.Module.Flow
             return null;
         }
 
-        [ControllerMethod]
         public IEnumerable<DocumentWork> GetWorksByStage(Stage stage)
         {
-            foreach (var work in GetWorks().Reverse())
+            foreach (var work in GetWorks())
             {
                 if (work.Stage == stage)
                     yield return work;
             }
         }
 
-        [ControllerMethod]
         public IEnumerable<DocumentWork> GetWorksUncompleted(Stage filter = null)
         {
             foreach (DocumentWork work in GetWorks())
@@ -555,7 +557,6 @@ namespace DataWF.Module.Flow
             }
         }
 
-        [ControllerMethod]
         public DocumentWork GetLastWork()
         {
             return GetWorks().LastOrDefault();
@@ -641,9 +642,9 @@ namespace DataWF.Module.Flow
         }
 
         [ControllerMethod]
-        public DocumentWork CreateWorkByDepartment(DocumentWork from, Stage stage, Position position)
+        public DocumentWork CreateWorkByDepartment(DocumentWork from, Stage stage, Department department)
         {
-            return CreateWork(from, stage, position);
+            return CreateWork(from, stage, department);
         }
 
         [ControllerMethod]
@@ -744,8 +745,10 @@ namespace DataWF.Module.Flow
                     {
                         Parent.CreateReference(this);
                     }
-
-                    CurrentStage = Template.Work?.GetStartStage();
+                    if (CurrentStage == null)
+                    {
+                        CurrentStage = Template.Work?.GetStartStage();
+                    }
                 }
                 if (temporaryStage != null)
                 {
@@ -759,18 +762,17 @@ namespace DataWF.Module.Flow
                         Send(CurrentWork, temporaryStage, (User)user);
                     }
                     base.Save(user);
-
                 }
                 temporaryUser = null;
                 temporaryStage = null;
 
                 SaveReferencing();
 
-                if (isnew)
+                if (GetWorks().Count() <= 1)
                 {
                     foreach (var data in GetTemplatedData())
                     {
-                        data.Parse(param);
+                        data.SetData(data.Parse(param, false), user);
                     }
                 }
                 Saved?.Invoke(null, new DocumentEventArgs(this));
@@ -801,7 +803,6 @@ namespace DataWF.Module.Flow
             }
         }
 
-        [ControllerMethod]
         public List<DocumentWork> Send(IUserIdentity user)
         {
             var work = GetWorksUncompleted().FirstOrDefault();
@@ -821,7 +822,6 @@ namespace DataWF.Module.Flow
             return Send(work, stageReference.ReferenceStage, user);
         }
 
-        [ControllerMethod]
         public List<DocumentWork> Send(DocumentWork from, Stage stage, IUserIdentity user)
         {
             if ((stage.Keys & StageKey.Start) == StageKey.Start)
@@ -830,7 +830,6 @@ namespace DataWF.Module.Flow
                 return Send(from, stage, stage.GetDepartment(Template), user);
         }
 
-        [ControllerMethod]
         public object ExecuteProceduresByWork(DocumentWork work, StageParamProcudureType type, IUserIdentity user)
         {
             if (work?.Stage == null)
@@ -839,7 +838,6 @@ namespace DataWF.Module.Flow
             return ExecuteProcedures(param, work.Stage.GetProceduresByType(type));
         }
 
-        [ControllerMethod]
         public object ExecuteProceduresByStage(Stage stage, StageParamProcudureType type, IUserIdentity user)
         {
             var param = new DocumentExecuteArgs { Document = this, Stage = stage, User = user };
@@ -847,17 +845,30 @@ namespace DataWF.Module.Flow
         }
 
         [ControllerMethod]
-        public void Complete(DocumentWork work, IUserIdentity user)
+        public Document Complete(IUserIdentity user)
+        {
+            var dbUser = (User)user;
+            foreach (var work in GetWorksUncompleted()
+                .Where(p => p.Department == dbUser.Department
+                && (p.User == null || p.User == dbUser))
+                .ToList())
+            {
+                Complete(work, user, false);
+            }
+            Save(user);
+            return this;
+        }
+
+        public void Complete(DocumentWork work, IUserIdentity user, bool autoComplete)
         {
             if (work.User == null)
             {
                 work.User = (User)user;
             }
-
             work.DateComplete = DateTime.Now;
-            if (work.Stage != null)
+            if (work.Stage != null && work.Stage.Access.GetFlag(AccessType.Edit, user))
             {
-                if ((work.Stage.Keys & StageKey.AutoComplete) == StageKey.AutoComplete)
+                if (autoComplete && (work.Stage.Keys & StageKey.AutoComplete) == StageKey.AutoComplete)
                 {
                     foreach (var unWork in GetWorksUncompleted(work.Stage).ToList())
                     {
@@ -878,7 +889,6 @@ namespace DataWF.Module.Flow
             }
         }
 
-        [ControllerMethod]
         public void Return(DocumentWork work, IUserIdentity user)
         {
             if (work.From == null || work.From.Stage == null)
@@ -911,7 +921,7 @@ namespace DataWF.Module.Flow
                 {
                     from.IsResend = true;
                 }
-                Complete(from, user);
+                Complete(from, user, true);
             }
 
             var result = new List<DocumentWork>();
