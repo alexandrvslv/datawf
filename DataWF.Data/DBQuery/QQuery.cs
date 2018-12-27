@@ -1033,9 +1033,14 @@ namespace DataWF.Data
             return "";
         }
 
+        public QTable QTable
+        {
+            get { return tables.FirstOrDefault(); }
+        }
+
         public override DBTable Table
         {
-            get { return tables.FirstOrDefault()?.Table; }
+            get { return QTable?.Table; }
             set
             {
                 if (value != Table)
@@ -1189,7 +1194,7 @@ namespace DataWF.Data
 {(whr.Length > 0 ? "    where " : string.Empty)}{whr}
 {(order.Length > 0 ? "    order by " : string.Empty)}{order}";
         }
-
+        
         public string ToWhere(IDbCommand command = null)
         {
             var buf = new StringBuilder();
@@ -1206,7 +1211,10 @@ namespace DataWF.Data
                         continue;
                     string bufRez = param.Format(command);
                     if (bufRez.Length > 0)
+                    {
+                        //bufRez = $"{QTable.Alias}.{bufRez}";
                         buf.Append((buf.Length <= 1 ? "" : param.Logic.Format() + " ") + bufRez + " ");
+                    }
                 }
                 if (parameters.Count > 0)
                     buf.Append(") and (");

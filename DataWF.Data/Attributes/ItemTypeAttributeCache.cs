@@ -63,7 +63,7 @@ namespace DataWF.Data
             Schema = schema;
             if (Table == null)
                 Table = CreateTable();
-
+            Table.Query = $"a.{TableAttribute.Table.ItemTypeKey.SqlName} = {TableAttribute.Table.GetTypeIndex(Type)}";
             if (!Schema.Tables.Contains(Type.Name))
             {
                 Schema.Tables.Add(Table);
@@ -96,7 +96,7 @@ namespace DataWF.Data
             table.Schema = Schema;
             ((IDBVirtualTable)table).BaseTable = TableAttribute.Table;
             table.DisplayName = Type.Name;
-            table.Query = $"{TableAttribute.Table.ItemTypeKey.SqlName} = {TableAttribute.Table.GetTypeIndex(Type)}";
+            
             return table;
         }
     }
