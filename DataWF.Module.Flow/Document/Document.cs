@@ -782,6 +782,7 @@ namespace DataWF.Module.Flow
             }
             catch (Exception ex)
             {
+                Helper.OnException(ex);
                 if (transaction.Owner == saveLock)
                 {
                     transaction.Rollback(user);
