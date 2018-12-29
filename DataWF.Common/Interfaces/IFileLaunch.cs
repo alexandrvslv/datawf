@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -7,6 +7,7 @@ namespace DataWF.Common
     public interface IFileLaunch
     {
         Task<bool> Launch(string stringUri);
-        Task<ValueTuple<Stream, string>> Open();
+        Task<(Stream Stream, string FileName)> Open();
+        Task<List<(Stream Stream, string FileName)>> OpenSeveral();
     }
 }
