@@ -345,14 +345,14 @@ namespace DataWF.Common
                 if (itemType.IsSubclassOf(typeof(Delegate))
                     || (itemType == info.DeclaringType && itemType.IsValueType)
                     || (info is PropertyInfo && (!((PropertyInfo)info).CanWrite || IsIndex((PropertyInfo)info)))
-                    )
+                    || info.Name == "BindingContext")
                     //!IsDictionary(itemType) && !IsCollection(itemType)
                     flag = true;
 
                 try { XmlConvert.VerifyName(info.Name); }
                 catch { flag = true; }
                 if (!flag)
-                {
+                {                    
                     var attribute = info.GetCustomAttribute(typeof(XmlIgnoreAttribute), false);
                     flag = attribute != null;
                     if (!flag && info is FieldInfo)
