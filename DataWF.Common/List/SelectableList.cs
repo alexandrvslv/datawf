@@ -399,9 +399,9 @@ namespace DataWF.Common
                 {
                     containered.Container = null;
                 }
-                else
+                else if (item is INotifyPropertyChanged notified)
                 {
-                    ((INotifyPropertyChanged)item).PropertyChanged -= propertyHandler;
+                    notified.PropertyChanged -= propertyHandler;
                 }
             }
             indexes.RemoveItem(item);
