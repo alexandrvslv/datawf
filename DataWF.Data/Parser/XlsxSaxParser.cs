@@ -338,15 +338,15 @@ namespace DataWF.Data
             var inserts = new List<CellRange>();
 
             using (var reader = OpenXmlReader.Create(worksheetPart))
-            //using (var temp = new MemoryStream())
-            using (var writer = XmlWriter.Create(newWorksheetPart.GetStream(FileMode.Create, FileAccess.Write)
+            using (var writer = XmlWriter.Create(newWorksheetPart.GetStream(FileMode.Create)
                 , new XmlWriterSettings { Encoding = Encoding.UTF8, CloseOutput = true }))
             {
                 int ind, dif = 0;
                 writer.WriteStartDocument(true);
+
                 while (reader.Read())
                 {
-                    //remove protextion
+                    //remove protection
                     //if (reader.ElementType == typeof(Excel.SheetProtection))
                     //{
                     //    reader.LoadCurrentElement();
