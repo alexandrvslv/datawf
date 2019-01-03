@@ -855,6 +855,7 @@ namespace DataWF.Web.ClientGenerator
                 yield return SF.ParseStatement($"if({fieldName} == null && {idFiledName} != null){{");
                 //yield return SF.ParseStatement($"var client = ({GetTypeString(property, false, "List")}Client)ClientProvider.Default.GetClient<{GetTypeString(property, false, "List")}>();");
                 yield return SF.ParseStatement($"{fieldName} = ClientProvider.Default.{GetTypeString(property, false, "List")}.Get({idFiledName}.Value);");
+                //yield return SF.ParseStatement($"{fieldName} = ClientProvider.Default.{GetTypeString(property, false, "List")}.Select({idFiledName}.Value);");
                 yield return SF.ParseStatement("}");
             }
             yield return SF.ParseStatement($"return {fieldName};");
