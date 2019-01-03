@@ -21,7 +21,6 @@
 using DataWF.Common;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Validation;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -82,8 +81,8 @@ namespace DataWF.Data
                     }
                 }
                 document.Save();
-                var validator = new OpenXmlValidator();
-                var errors = validator.Validate(document);
+                //var validator = new OpenXmlValidator();
+                //var errors = validator.Validate(document);
             }
             return ((FileStream)stream).Name;
         }
@@ -339,8 +338,9 @@ namespace DataWF.Data
             var inserts = new List<CellRange>();
 
             using (var reader = OpenXmlReader.Create(worksheetPart))
-            using (var writer = XmlWriter.Create(newWorksheetPart.GetStream(),
-                new XmlWriterSettings { Encoding = Encoding.UTF8, CloseOutput = true }))
+            //using (var temp = new MemoryStream())
+            using (var writer = XmlWriter.Create(newWorksheetPart.GetStream(FileMode.Create, FileAccess.Write)
+                , new XmlWriterSettings { Encoding = Encoding.UTF8, CloseOutput = true }))
             {
                 int ind, dif = 0;
                 writer.WriteStartDocument(true);
@@ -486,6 +486,9 @@ namespace DataWF.Data
                     }
                 }
                 writer.WriteEndDocument();
+                writer.Flush();
+                writer.Close();
+                //newWorksheetPart.FeedData(temp);
             }
         }
 
