@@ -22,6 +22,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace DataWF.Data
@@ -161,6 +162,19 @@ namespace DataWF.Data
                 }
             }
             return column;
+        }
+
+        public DBTable ParseTableByTypeName(string code)
+        {
+            if (string.IsNullOrEmpty(code))
+                return null;
+            foreach (var schema in this)
+            {
+                var table = schema.Tables.FirstOrDefault(p => p.ItemType?.Type?.Name == code);
+                if (table != null)
+                    return table;
+            }
+            return null;
         }
 
         public DBTable ParseTable(string code, DBSchema s = null)

@@ -253,6 +253,16 @@ namespace DataWF.Data
             return word;
         }
 
+        public DBTable ParseTable(string word)
+        {
+            var table = DBService.Schems.ParseTable(word);
+            if (table == null)
+            {
+                table = DBService.Schems.ParseTableByTypeName(word);
+            }
+            return table;
+        }
+
         public DBColumn ParseColumn(string word)
         {
             if (tables.Count == 1)
@@ -340,7 +350,7 @@ namespace DataWF.Data
                     {
                         if (word.Equals("where", StringComparison.OrdinalIgnoreCase))
                             break;
-                        var tb = DBService.Schems.ParseTable(word);
+                        var tb = ParseTable(word);
 
                         if (tb != null)
                         {
@@ -468,7 +478,7 @@ namespace DataWF.Data
                                 {
                                     if (word.Length > 0)
                                     {
-
+                                        //Table = ParseTable(word);
                                     }
                                 }
                                 break;
@@ -1194,7 +1204,7 @@ namespace DataWF.Data
 {(whr.Length > 0 ? "    where " : string.Empty)}{whr}
 {(order.Length > 0 ? "    order by " : string.Empty)}{order}";
         }
-        
+
         public string ToWhere(IDbCommand command = null)
         {
             var buf = new StringBuilder();

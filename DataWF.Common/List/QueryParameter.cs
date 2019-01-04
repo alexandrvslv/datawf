@@ -155,6 +155,8 @@ namespace DataWF.Common
             {
                 if (Comparer.Type == CompareTypes.Like && stringValue.IndexOf('%') < 0)
                     return $"'%{stringValue}%'";
+                else if (Comparer.Type == CompareTypes.In)
+                    return stringValue;
                 return $"'{stringValue}'";
             }
             else if (Value is IEnumerable enumerable)
