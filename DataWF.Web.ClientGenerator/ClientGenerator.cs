@@ -880,11 +880,11 @@ namespace DataWF.Web.ClientGenerator
                 yield return SF.ParseStatement("{");
                 yield return SF.ParseStatement($"{objectFieldName} = null;");
                 yield return SF.ParseStatement("}");
-                yield return SF.ParseStatement($"OnPropertyChanged(\"{ GetPropertyName(objectProperty)}\");");
+                yield return SF.ParseStatement($"OnPropertyChanged(true, \"{ GetPropertyName(objectProperty)}\");");
             }
             if (refPropertyName == null)
             {
-                yield return SF.ParseStatement($"OnPropertyChanged();");
+                yield return SF.ParseStatement($"OnPropertyChanged(true);");
             }
         }
 

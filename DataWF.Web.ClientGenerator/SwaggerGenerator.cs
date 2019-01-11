@@ -22,9 +22,8 @@ namespace DataWF.Web.CodeGenerator
 
             var settings = new SwaggerToCSharpClientGeneratorSettings
             {
-                //ClassName = "DCCRegistryService",
                 CSharpGeneratorSettings = {
-                    Namespace = "DCCRegistry.WebClient",
+                    Namespace = "SomeNameSpace",
 
                 },
 

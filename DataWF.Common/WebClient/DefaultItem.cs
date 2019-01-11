@@ -43,6 +43,11 @@ namespace DataWF.Common
                 }
             }
         }
+
+        protected virtual void OnPropertyChanged(bool synch, [CallerMemberName] string propertyName = null)
+        {
+            OnPropertyChanged(propertyName);
+        }
     }
 
 

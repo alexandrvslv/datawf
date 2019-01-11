@@ -30,14 +30,16 @@ namespace DataWF.Common
             }
         }
 
-        protected override void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        protected override void OnPropertyChanged(bool synch, [CallerMemberName] string propertyName = null)
         {
-            if (IsSynchronized != null)
+            if (synch)
             {
-                IsSynchronized = false;
+                if (IsSynchronized != null)
+                {
+                    IsSynchronized = false;
+                }
+                Changes.Add(propertyName);
             }
-
-            Changes.Add(propertyName);
 
             base.OnPropertyChanged(propertyName);
         }
