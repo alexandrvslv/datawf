@@ -422,7 +422,7 @@ namespace DataWF.Module.FlowGui
                     {
                         if (SendType == DocumentSendType.Complete)
                         {
-                            sender.Document.Complete(sender.Work, (User)GuiEnvironment.User);
+                            sender.Document.Complete(sender.Work, (User)GuiEnvironment.User, true);
                         }
                         else if (SendType == DocumentSendType.Return)
                         {
