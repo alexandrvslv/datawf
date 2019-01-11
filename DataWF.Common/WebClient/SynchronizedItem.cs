@@ -14,7 +14,7 @@ namespace DataWF.Common
         public ISet<string> Changes { get; } = new HashSet<string>();
 
         [JsonIgnore, XmlIgnore]
-        public bool? IsSynchronized
+        public virtual bool? IsSynchronized
         {
             get => isSynchronized;
             set
