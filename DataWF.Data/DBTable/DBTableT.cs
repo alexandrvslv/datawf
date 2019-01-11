@@ -706,7 +706,7 @@ namespace DataWF.Data
             IEnumerable<T> buf = null;
             if (query.Parameters.Count == 0)
             {
-                buf = list ?? items;
+                buf = list ?? this;
             }
             else if (query.Parameters.Count == 1)
             {
