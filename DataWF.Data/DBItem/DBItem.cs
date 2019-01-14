@@ -1361,8 +1361,8 @@ namespace DataWF.Data
 
                 foreach (var column in Table.Columns)
                 {
+                    // || (column.Keys & DBColumnKeys.State) == DBColumnKeys.State
                     if ((column.Keys & DBColumnKeys.Access) == DBColumnKeys.Access
-                        || (column.Keys & DBColumnKeys.State) == DBColumnKeys.State
                         || (column.Keys & DBColumnKeys.Stamp) == DBColumnKeys.Stamp)
                     {
                         continue;
