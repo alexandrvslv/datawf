@@ -1,10 +1,16 @@
 ﻿using DataWF.Common;
 using DataWF.Data;
 using DataWF.Module.Common;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Net.Http.Headers;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace DataWF.Web.Common
 {
@@ -13,6 +19,7 @@ namespace DataWF.Web.Common
     public abstract class BaseController<T, K> : ControllerBase where T : DBItem, new()
     {
         protected DBTable<T> table;
+        private static readonly FormOptions formOptions = new FormOptions();
 
         public BaseController()
         {
@@ -213,6 +220,87 @@ namespace DataWF.Web.Common
         public override BadRequestObjectResult BadRequest(object error)
         {
             return BadRequest(error, null);
+        }
+
+        protected async Task<UploadModel> Upload(bool inMemory)
+        {
+            var formAccumulator = new KeyValueAccumulator();
+            var result = new UploadModel();
+
+            var boundary = MultipartRequestHelper.GetBoundary(MediaTypeHeaderValue.Parse(Request.ContentType), formOptions.MultipartBoundaryLengthLimit);
+            var reader = new MultipartReader(boundary, HttpContext.Request.Body);
+
+            var section = await reader.ReadNextSectionAsync();
+            while (section != null)
+            {
+                if (ContentDispositionHeaderValue.TryParse(section.ContentDisposition, out var contentDisposition))
+                {
+                    if (MultipartRequestHelper.HasFileContentDisposition(contentDisposition))
+                    {
+                        result.FileName = contentDisposition.FileName.ToString();
+                        if (inMemory)
+                        {
+                            result.Stream = new MemoryStream();
+                        }
+                        else
+                        {
+                            result.FilePath = Path.GetTempFileName();
+                            result.Stream = System.IO.File.Create(result.FilePath);
+                        }
+                        await section.Body.CopyToAsync(result.Stream);
+                        await result.Stream.FlushAsync();
+                    }
+                    else if (MultipartRequestHelper.HasFormDataContentDisposition(contentDisposition))
+                    {
+                        // Content-Disposition: form-data; name="key"
+                        //
+                        // value
+
+                        // Do not limit the key name length here because the 
+                        // multipart headers length limit is already in effect.
+                        var key = HeaderUtilities.RemoveQuotes(contentDisposition.Name);
+                        var encoding = GetEncoding(section);
+                        using (var streamReader = new StreamReader(
+                            section.Body,
+                            encoding,
+                            detectEncodingFromByteOrderMarks: true,
+                            bufferSize: 1024,
+                            leaveOpen: true))
+                        {
+                            // The value length limit is enforced by MultipartBodyLengthLimit
+                            var value = await streamReader.ReadToEndAsync();
+                            if (String.Equals(value, "undefined", StringComparison.OrdinalIgnoreCase))
+                            {
+                                value = String.Empty;
+                            }
+                            formAccumulator.Append(key.ToString(), value);
+
+                            if (formAccumulator.ValueCount > formOptions.ValueCountLimit)
+                            {
+                                throw new InvalidDataException($"Form key count limit {formOptions.ValueCountLimit} exceeded.");
+                            }
+                        }
+                    }
+                }
+
+                // Drains any remaining section body that has not been consumed and
+                // reads the headers for the next section.
+                section = await reader.ReadNextSectionAsync();
+            }
+
+            return result;
+        }
+
+        private static Encoding GetEncoding(MultipartSection section)
+        {
+            var hasMediaTypeHeader = MediaTypeHeaderValue.TryParse(section.ContentType, out MediaTypeHeaderValue mediaType);
+            // UTF-7 is insecure and should not be honored. UTF-8 will succeed in 
+            // most cases.
+            if (!hasMediaTypeHeader || Encoding.UTF7.Equals(mediaType.Encoding))
+            {
+                return Encoding.UTF8;
+            }
+            return mediaType.Encoding;
         }
     }
 }
