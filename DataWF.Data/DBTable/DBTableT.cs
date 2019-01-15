@@ -285,7 +285,7 @@ namespace DataWF.Data
             if (items.Count > 0)
             {
                 var maxIndex = 0;
-                foreach (var item in items)
+                foreach (var item in this)
                     maxIndex = item.handler > maxIndex ? item.handler : maxIndex;
                 if (Hash > maxIndex)
                 {
