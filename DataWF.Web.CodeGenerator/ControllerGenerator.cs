@@ -16,6 +16,8 @@ namespace DataWF.Web.CodeGenerator
 
     public partial class ControllerGenerator
     {
+        private const string prStream = "uploaded";
+        private const string prUser = "CurrentUser";
         private Dictionary<string, MetadataReference> references;
         private Dictionary<string, UsingDirectiveSyntax> usings;
         private Dictionary<string, ClassDeclarationSyntax> trees = new Dictionary<string, ClassDeclarationSyntax>();
@@ -282,7 +284,7 @@ namespace DataWF.Web.CodeGenerator
             AddUsing(method.ReturnType);
             var returning = method.ReturnType == typeof(void) ? "void" : $"ActionResult<{TypeHelper.FormatCode(method.ReturnType)}>";
             var parameterInfo = GetParametersInfo(method, table);
-            return SyntaxFactory.MethodDeclaration(attributeLists: SyntaxFactory.List(GetControllerMethodAttributes(method)),
+            return SyntaxFactory.MethodDeclaration(attributeLists: SyntaxFactory.List(GetControllerMethodAttributes(method, parameterInfo)),
                           modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
                           returnType: returning == "void"
                           ? SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword))
@@ -322,6 +324,10 @@ namespace DataWF.Web.CodeGenerator
                 {
                     yield return SyntaxFactory.ParseStatement($"var {parameter.ValueName} = DBItem.GetTable<{TypeHelper.FormatCode(parameter.Info.ParameterType)}>().LoadById({parameter.Info.Name});");
                 }
+                else if (parameter.ValueName == prStream)
+                {
+                    yield return SyntaxFactory.ParseStatement($"var {parameter.ValueName} = Upload(true).GetAwaiter().GetResult()?.Stream;");
+                }
                 parametersBuilder.Append($"{parameter.ValueName}, ");
             }
             if (parametersInfo.Count > 0)
@@ -331,13 +337,8 @@ namespace DataWF.Web.CodeGenerator
             var builder = new StringBuilder();
             if (TypeHelper.IsBaseType(method.ReturnType, typeof(Stream)))
             {
-                yield return SyntaxFactory.ParseStatement("var fileName = table.FileNameKey == null? null: idValue.GetValue<string>(table.FileNameKey);");
-                yield return SyntaxFactory.ParseStatement("if (string.IsNullOrEmpty(fileName))");
-                yield return SyntaxFactory.ParseStatement("{");
-                yield return SyntaxFactory.ParseStatement($"var stream = idValue.{method.Name}({parametersBuilder}) as FileStream;");
-                yield return SyntaxFactory.ParseStatement($"return File(stream, System.Net.Mime.MediaTypeNames.Application.Octet, Path.GetFileName(stream.Name));");
-                yield return SyntaxFactory.ParseStatement("}");
-                builder.Append($"return File(idValue.{method.Name}({parametersBuilder}), System.Net.Mime.MediaTypeNames.Application.Octet, fileName);");
+                yield return SyntaxFactory.ParseStatement($"var exportStream = {(method.IsStatic ? method.DeclaringType.Name : " idValue")}.{method.Name}({parametersBuilder}) as FileStream;");
+                yield return SyntaxFactory.ParseStatement($"return File(exportStream, System.Net.Mime.MediaTypeNames.Application.Octet, Path.GetFileName(exportStream.Name));");
             }
             else
             {
@@ -370,14 +371,24 @@ namespace DataWF.Web.CodeGenerator
             yield return SyntaxFactory.ParseStatement("}");
         }
 
-        private IEnumerable<AttributeListSyntax> GetControllerMethodAttributes(MethodInfo method)
+        private IEnumerable<AttributeListSyntax> GetControllerMethodAttributes(MethodInfo method, List<MethodParametrInfo> parametersList)
         {
             var parameters = method.Name + (method.IsStatic ? "" : "/{id}");
-            foreach (var parameter in method.GetParameters())
+            var post = false;
+            foreach (var parameter in parametersList)
             {
-                if (parameter.ParameterType == typeof(IUserIdentity))
+                if (parameter.ValueName == prUser)
                     continue;
-                parameters += $"/{{{parameter.Name}}}";
+                if (parameter.ValueName == prStream)
+                {
+                    yield return SyntaxFactory.AttributeList(
+                         SyntaxFactory.SingletonSeparatedList(
+                             SyntaxFactory.Attribute(
+                                 SyntaxFactory.IdentifierName("DisableFormValueModelBinding"))));
+                    post = true;
+                    continue;
+                }
+                parameters += $"/{{{parameter.Info.Name}}}";
             }
             var attributeArgument = SyntaxFactory.AttributeArgument(
                 SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(parameters)));
@@ -389,7 +400,7 @@ namespace DataWF.Web.CodeGenerator
             yield return SyntaxFactory.AttributeList(
                          SyntaxFactory.SingletonSeparatedList(
                              SyntaxFactory.Attribute(
-                                 SyntaxFactory.IdentifierName("HttpGet"))));
+                                 SyntaxFactory.IdentifierName(post ? "HttpPost" : "HttpGet"))));
         }
 
         private List<MethodParametrInfo> GetParametersInfo(MethodInfo method, TableAttributeCache table)
@@ -402,7 +413,11 @@ namespace DataWF.Web.CodeGenerator
                 AddUsing(methodParameter.Info.ParameterType);
                 if (methodParameter.Info.ParameterType == typeof(IUserIdentity))
                 {
-                    methodParameter.ValueName = "CurrentUser";
+                    methodParameter.ValueName = prUser;
+                }
+                else if (TypeHelper.IsBaseType(methodParameter.Info.ParameterType, typeof(Stream)))
+                {
+                    methodParameter.ValueName = prStream;
                 }
             }
             return parametersInfo;
@@ -421,7 +436,8 @@ namespace DataWF.Web.CodeGenerator
 
             foreach (var methodParameter in parametersInfo)
             {
-                if (methodParameter.Info.ParameterType == typeof(IUserIdentity))
+                if (methodParameter.ValueName == prUser
+                    || methodParameter.ValueName == prStream)
                 {
                     continue;
                 }
