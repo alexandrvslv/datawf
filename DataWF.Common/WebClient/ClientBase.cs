@@ -58,7 +58,7 @@ namespace DataWF.Common
 
         protected virtual HttpClient CreateHttpClient()
         {
-            var client = new HttpClient();
+            var client = new HttpClient() { Timeout = TimeSpan.FromMinutes(3) };
             // TODO: Customize HTTP client
             return client;
         }
@@ -82,9 +82,11 @@ namespace DataWF.Common
             };
             Provider?.Authorization?.FillRequest(request);
 
-            if (value is Stream stream && parameters.Length > 1)
+            if (value is Stream stream)
             {
-                var fileName = (string)parameters[1];
+                var fileName = parameters.Length > 1 ? (string)parameters[1]
+                    : stream is FileStream fileStream ? Path.GetFileName(fileStream.Name)
+                    : "somefile.ext";
                 var content = new MultipartFormDataContent
                 {
                     { new StreamContent(stream), Path.GetFileNameWithoutExtension(fileName), fileName }//File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
