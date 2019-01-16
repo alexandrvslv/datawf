@@ -968,10 +968,8 @@ namespace DataWF.Data
 
             QParam param = null;
 
-            if (column.DataType == typeof(string) && (comparer.Type == CompareTypes.Like || comparer.Type == CompareTypes.Equal))
+            if (value != null && column.DataType == typeof(string) && (comparer.Type == CompareTypes.Like || comparer.Type == CompareTypes.Equal))
             {
-                if (value == null)
-                    return null;
                 string like = autoLike ? "%" : "";
                 string[] split = value.ToString().Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
                 if (split.Length == 1)
