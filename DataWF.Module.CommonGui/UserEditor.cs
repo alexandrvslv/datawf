@@ -168,9 +168,9 @@ namespace DataWF.Module.CommonGui
                 }
                 else
                 {
-                    User.SetCurrentUser(row);
+                    User.StartSession(row);
+                    GuiEnvironment.User = row;
                     //row ["session_start"] = DateTime.Now;
-                    UserLog.LogUser(row, UserLogType.Start, null);
                     if (!row.Super.GetValueOrDefault())
                     {
                         GroupPermission.CachePermission();

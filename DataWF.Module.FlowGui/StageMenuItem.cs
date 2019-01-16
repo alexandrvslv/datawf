@@ -1,9 +1,9 @@
-﻿using DataWF.Module.Flow;
+﻿using DataWF.Common;
 using DataWF.Gui;
-using DataWF.Common;
-using Xwt.Drawing;
-using System;
 using DataWF.Module.Common;
+using DataWF.Module.Flow;
+using System;
+using Xwt.Drawing;
 
 namespace DataWF.Module.FlowGui
 {
@@ -19,7 +19,7 @@ namespace DataWF.Module.FlowGui
                 {
                     if (user.Status != DBStatus.Error && user.Status != DBStatus.Archive)
                     {
-                        if (!checkCurrent || !user.IsCurrent)
+                        if (!checkCurrent || user != GuiEnvironment.User)
                         {
                             if (item.DropDown.Items[user.Login] == null)
                             {

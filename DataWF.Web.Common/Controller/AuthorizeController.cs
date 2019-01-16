@@ -140,12 +140,12 @@ namespace DataWF.Web.Common
         private User GetUser(LoginModel login)
         {
             var credentials = new NetworkCredential(login.Email, login.Password);
-            return DataWF.Module.Common.User.SetCurrentByEmail(credentials, true);
+            return DataWF.Module.Common.User.StartSession(credentials);
         }
 
         private User GetUser(TokenModel token)
         {
-            return DataWF.Module.Common.User.SetCurrentByEmail(token.Email, true);
+            return DataWF.Module.Common.User.StartSession(token.Email);
         }
 
         private ClaimsIdentity GetIdentity(User user)

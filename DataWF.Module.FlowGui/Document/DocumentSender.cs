@@ -44,7 +44,7 @@ namespace DataWF.Module.FlowGui
             else
             {
                 work = document.GetWorksUncompleted().FirstOrDefault();
-                if (work != null && work.User != null && !work.User.IsCurrent)
+                if (work != null && work.User != null && work.User != GuiEnvironment.User)
                 {
                     var rezult = MessageDialog.AskQuestion("Accept", "Document current on " + work.User + " Accept anywhere?", Command.No, Command.Yes);
                     if (rezult == Command.No)

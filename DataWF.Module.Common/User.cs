@@ -59,58 +59,6 @@ namespace DataWF.Module.Common
         public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
         public static DBTable<User> DBTable => dbTable ?? (dbTable = GetTable<User>());
 
-        [ThreadStatic]
-        private static User threadCurrentUser;
-        private static User currentUser;
-        public static Action CurrentUserChanged;
-
-        private static User CurrentUser
-        {
-            get { return threadCurrentUser ?? currentUser; }
-        }
-
-        public static void SetCurrentUser(User value, bool threaded = false)
-        {
-            if (CurrentUser == value)
-                return;
-            if (threaded)
-                threadCurrentUser = value;
-            else
-                currentUser = value;
-            if (value != null)
-            {
-                if (value.LogStart == null)
-                {
-                    UserLog.LogUser(value, UserLogType.Authorization, "GetUser");
-                }
-                CurrentUserChanged?.Invoke();
-            }
-        }
-
-        public static User SetCurrentByEnvironment()
-        {
-            var user = GetCurrentByEnvironment();
-            SetCurrentUser(user);
-            return user;
-        }
-
-        public static User GetCurrentByEnvironment()
-        {
-            return DBTable.LoadByCode(Environment.UserName);
-        }
-
-        public static User SetCurrentByCredential(string login, string password, bool threaded = false)
-        {
-            var user = GetUser(login, Helper.GetSha256(password));
-            SetCurrentUser(user ?? throw new KeyNotFoundException("User not found!"), threaded);
-            return user;
-        }
-
-        public static User SetCurrentByEmail(string email, SecureString password, bool threaded = false)
-        {
-            return SetCurrentByEmail(new NetworkCredential(email, password), threaded);
-        }
-
         public static User GetByEmail(string email)
         {
             return DBTable.SelectOne(EmailKey, email);
@@ -121,16 +69,44 @@ namespace DataWF.Module.Common
             return DBTable.SelectOne(DBTable.CodeKey, login);
         }
 
-        public static User SetCurrentByEmail(string email, bool threaded = false)
+        public static User GetByEnvironment()
+        {
+            return DBTable.LoadByCode(Environment.UserName);
+        }
+
+        public static void StartSession(User value)
+        {
+            if (value != null)
+            {
+                if (value.LogStart == null)
+                {
+                    UserLog.LogUser(value, UserLogType.Authorization, "GetUser");
+                }
+            }
+        }
+
+        public static User StartSession(string login, string password)
+        {
+            var user = GetUser(login, Helper.GetSha256(password));
+            StartSession(user ?? throw new KeyNotFoundException("User not found!"));
+            return user;
+        }
+
+        public static User StartSession(string email, SecureString password)
+        {
+            return StartSession(new NetworkCredential(email, password));
+        }
+
+        public static User StartSession(string email)
         {
             var user = GetByEmail(email);
             if (user == null)
                 throw new KeyNotFoundException("User not found!");
-            SetCurrentUser(user, threaded);
+            StartSession(user);
             return user;
         }
 
-        public static User SetCurrentByEmail(NetworkCredential credentials, bool threaded = false)
+        public static User StartSession(NetworkCredential credentials)
         {
             var user = GetByEmail(credentials.UserName);
             if (user == null)
@@ -138,12 +114,12 @@ namespace DataWF.Module.Common
             if (user == null)
                 throw new KeyNotFoundException("User not found!");
             var config = SmtpSetting.Load();
-            using (var smtpClient = new SmtpClient { Timeout = 20000})
+            using (var smtpClient = new SmtpClient { Timeout = 20000 })
             {
                 smtpClient.ServerCertificateValidationCallback = (s, c, h, e) => true;
                 smtpClient.Connect(config.Host, config.Port, config.SSL);
                 smtpClient.Authenticate(credentials);
-                SetCurrentUser(user, threaded);
+                StartSession(user);
             }
             return user;
         }
@@ -348,12 +324,6 @@ namespace DataWF.Module.Common
                     throw new ArgumentException(rez);
                 SetValue(Helper.GetSha256(value), PasswordKey);
             }
-        }
-
-        [Browsable(false)]
-        public bool IsCurrent
-        {
-            get { return this == CurrentUser; }
         }
 
         [Browsable(false)]

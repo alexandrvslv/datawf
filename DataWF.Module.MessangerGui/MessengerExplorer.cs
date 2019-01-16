@@ -52,7 +52,7 @@ namespace DataWF.Module.MessangerGui
 
         private void OnLoad(MessageAddress item)
         {
-            if (item.Message != null && item.User != null && item.Message.User != null && !item.Message.User.IsCurrent && item.User.IsCurrent)
+            if (item.Message != null && item.User != null && item.Message.User != null && item.Message.User != GuiEnvironment.User && item.User == GuiEnvironment.User)
             {
                 if (item.UpdateState == DBUpdateState.Default && item.DateRead == null)// && (md == null || !md.Visible))
                 {

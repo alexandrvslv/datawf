@@ -52,8 +52,6 @@ namespace DataWF.Module.Common
         private static DBColumn redoKey = DBColumn.EmptyKey;
         private static DBColumn textDataKey = DBColumn.EmptyKey;
         private static DBTable<UserLog> dbTable;
-        [ThreadStatic]
-        public static UserLog CurrentLog;
         public static UserLogStrategy LogStrategy = UserLogStrategy.BySession;
         public static DBColumn UserKey => DBTable.ParseProperty(nameof(UserId), ref userKey);
         public static DBColumn LogTypeKey => DBTable.ParseProperty(nameof(LogType), ref logTypeKey);
@@ -69,7 +67,11 @@ namespace DataWF.Module.Common
                 return;
             var user = arg.User as User;
             RowLoging?.Invoke(null, arg);
-            var userLog = CurrentLog ?? user?.LogStart;
+            if (user != null && user.LogStart == null)
+            {
+                User.StartSession(user);
+            }
+            var userLog = user?.LogStart;
 
             if (LogStrategy == UserLogStrategy.ByTransaction)
             {
@@ -200,20 +202,19 @@ namespace DataWF.Module.Common
                 Parent = user.LogStart
             };
 
-            string text = info;
             if (type == UserLogType.Authorization)
             {
                 user.LogStart = newLog;
-                var prop = System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties();
+                //var prop = System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties();
 
-                string address = string.Empty;
-                foreach (var ip in System.Net.Dns.GetHostAddresses(prop.HostName))
-                    if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
-                        address += ip + "; ";
-                text = string.Format("{0} on {1}-{2}({3})", info, prop.DomainName, prop.HostName, address);
+                //string address = string.Empty;
+                //foreach (var ip in System.Net.Dns.GetHostAddresses(prop.HostName))
+                //    if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                //        address += ip + "; ";
+                //text = string.Format("{0} on {1}-{2}({3})", info, prop.DomainName, prop.HostName, address);
             }
 
-            newLog.TextData = text;
+            newLog.TextData = info;
             newLog.Save(user);
         }
 
