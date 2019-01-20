@@ -78,16 +78,25 @@ namespace DataWF.Common
             }
         }
 
-        public override int IndexOf(object item)
-        {
-            if (item == null)
-                return -1;
-            if (item.GetType() == Type)
-            {
-                item = SelectOne(ValueInvoker.Name, item);
-            }
-            return IndexOf((EnumItem)item);
-        }
+        //public EnumItem GetItem(object item)
+        //{
+        //    if (item.GetType() == Type)
+        //    {
+        //        return SelectOne(ValueInvoker.Name, item);
+        //    }
+        //    return (EnumItem)item;
+        //}
+
+        //public override int IndexOf(object item)
+        //{
+        //    if (item == null)
+        //        return -1;
+        //    if (item.GetType() == Type)
+        //    {
+        //        item = SelectOne(ValueInvoker.Name, item);
+        //    }
+        //    return IndexOf((EnumItem)item);
+        //}
 
     }
 
@@ -97,10 +106,10 @@ namespace DataWF.Common
         public TypedEnumItemList(Type type) : base(type)
         { }
 
-        public override object GetItem(int index)
-        {
-            return this[index].Value;
-        }
+        //public override object GetItem(int index)
+        //{
+        //    return this[index].Value;
+        //}
     }
 }
 
