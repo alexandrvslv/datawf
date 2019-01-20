@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 
 namespace DataWF.Common
 {
-    public class QueryOrdersList<T> : NamedList<InvokerComparer<T>>
+    public class QueryOrdersList<T> : NamedList<InvokerComparer<T>>, ICollection<IComparer>
     {
         public QueryOrdersList()
         {
@@ -33,6 +34,11 @@ namespace DataWF.Common
             return parameter;
         }
 
+        public void Add(IComparer item)
+        {
+            base.Add((InvokerComparer<T>)item);
+        }
+
         public InvokerComparer<T> AddOrUpdate(IInvoker invoker, ListSortDirection sortDirection)
         {
             var item = this[invoker.Name];
@@ -42,6 +48,16 @@ namespace DataWF.Common
             }
             item.Direction = sortDirection;
             return item;
+        }
+
+        public bool Contains(IComparer item)
+        {
+            return Contains((InvokerComparer<T>)item);
+        }
+
+        public void CopyTo(IComparer[] array, int arrayIndex)
+        {
+            throw new System.NotImplementedException();
         }
 
         public override void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -54,6 +70,16 @@ namespace DataWF.Common
         {
             base.OnListChanged(e);
             Query.OnOrdersChanged(this, e);
+        }
+
+        public bool Remove(IComparer item)
+        {
+            return Remove((InvokerComparer<T>)item);
+        }
+
+        IEnumerator<IComparer> IEnumerable<IComparer>.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

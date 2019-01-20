@@ -1,14 +1,22 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace DataWF.Common
 {
     public interface IQuery
     {
-        IEnumerable<IQueryParameter> Parameters { get; }
-        IEnumerable<IComparer> Orders { get; }
+        ICollection<IQueryParameter> Parameters { get; }
+
+        ICollection<IComparer> Orders { get; }
+
+        bool Suspending { get; set; }
 
         IQueryParameter Add(LogicType logic, IInvoker invoker, CompareType comparer, object value);
+
+        IQueryParameter AddOrUpdate(LogicType logic, IInvoker invoker, CompareType comparer, object value);
+
+        InvokerComparer AddOrder(IInvoker invoker, ListSortDirection sortDirection);
 
         IQueryParameter AddTreeParameter();
 

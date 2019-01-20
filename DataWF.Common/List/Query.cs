@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 
@@ -86,19 +87,19 @@ namespace DataWF.Common
             }
         }
 
-        IEnumerable<IQueryParameter> IQuery.Parameters
+        ICollection<IQueryParameter> IQuery.Parameters
         {
             get { return Parameters; }
         }
 
-        IEnumerable<IComparer> IQuery.Orders
+        ICollection<IComparer> IQuery.Orders
         {
             get { return Orders; }
         }
 
         public bool IsEnabled
         {
-            get { return Parameters.Any(p => p.IsEnabled); }
+            get { return ((IEnumerable<QueryParameter<T>>)Parameters).Any(p => p.IsEnabled); }
         }
 
         public void Clear()
@@ -144,6 +145,16 @@ namespace DataWF.Common
         IQueryParameter IQuery.Add(LogicType logic, IInvoker invoker, CompareType comparer, object value)
         {
             return Add(logic, invoker, comparer, value);
+        }
+
+        IQueryParameter IQuery.AddOrUpdate(LogicType logic, IInvoker invoker, CompareType comparer, object value)
+        {
+            return AddOrUpdate(logic, invoker, comparer, value);
+        }
+
+        public InvokerComparer AddOrder(IInvoker invoker, ListSortDirection sortDirection)
+        {
+            return Orders.AddOrUpdate(invoker, sortDirection);
         }
 
         public IQueryParameter AddTreeParameter()
@@ -209,7 +220,7 @@ namespace DataWF.Common
 
         public IEnumerable<QueryParameter<T>> GetEnabled()
         {
-            return Parameters.Where(p => p.IsEnabled);
+            return ((IEnumerable<QueryParameter<T>>)Parameters).Where(p => p.IsEnabled);
         }
 
         void IQuery.Sort(IList list)
@@ -221,6 +232,8 @@ namespace DataWF.Common
         {
             Parameters.ClearValues();
         }
+
+
     }
 }
 

@@ -4,7 +4,7 @@ using System.ComponentModel;
 
 namespace DataWF.Common
 {
-    public class QueryParameterList<T> : NamedList<QueryParameter<T>>
+    public class QueryParameterList<T> : NamedList<QueryParameter<T>>, ICollection<IQueryParameter>
     {
         public QueryParameterList()
         {
@@ -60,6 +60,31 @@ namespace DataWF.Common
                 item.Value = null;
             }
             Query.Suspending = false;
+        }
+
+        void ICollection<IQueryParameter>.Add(IQueryParameter item)
+        {
+            Add((QueryParameter<T>)item);
+        }
+
+        bool ICollection<IQueryParameter>.Contains(IQueryParameter item)
+        {
+            return Contains((QueryParameter<T>)item);
+        }
+
+        void ICollection<IQueryParameter>.CopyTo(IQueryParameter[] array, int arrayIndex)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        bool ICollection<IQueryParameter>.Remove(IQueryParameter item)
+        {
+            return Remove((QueryParameter<T>)item);
+        }
+
+        IEnumerator<IQueryParameter> IEnumerable<IQueryParameter>.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }
