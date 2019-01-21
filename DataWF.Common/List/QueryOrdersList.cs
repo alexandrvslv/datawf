@@ -34,11 +34,6 @@ namespace DataWF.Common
             return parameter;
         }
 
-        public void Add(IComparer item)
-        {
-            base.Add((InvokerComparer<T>)item);
-        }
-
         public InvokerComparer<T> AddOrUpdate(IInvoker invoker, ListSortDirection sortDirection)
         {
             var item = this[invoker.Name];
@@ -48,11 +43,6 @@ namespace DataWF.Common
             }
             item.Direction = sortDirection;
             return item;
-        }
-
-        public bool Contains(IComparer item)
-        {
-            return Contains((InvokerComparer<T>)item);
         }
 
         public void CopyTo(IComparer[] array, int arrayIndex)
@@ -72,7 +62,17 @@ namespace DataWF.Common
             Query.OnOrdersChanged(this, e);
         }
 
-        public bool Remove(IComparer item)
+        void ICollection<IComparer>.Add(IComparer item)
+        {
+            Add((InvokerComparer<T>)item);
+        }
+
+        bool ICollection<IComparer>.Contains(IComparer item)
+        {
+            return Contains((InvokerComparer<T>)item);
+        }
+
+        bool ICollection<IComparer>.Remove(IComparer item)
         {
             return Remove((InvokerComparer<T>)item);
         }
