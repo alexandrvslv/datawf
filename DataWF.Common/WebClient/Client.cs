@@ -110,10 +110,7 @@ namespace DataWF.Common
                                     baseClient.Add(item);
                                 }
                             }
-                            if (sourceList != null && !sourceList.Contains(item))
-                            {
-                                sourceList.Add(item);
-                            }
+                            
                             continue;
                         }
                         if (item == null)
@@ -133,6 +130,10 @@ namespace DataWF.Common
             if (add)
             {
                 Items.OnListChanged(NotifyCollectionChangedAction.Add, item, index);
+            }
+            if (sourceList != null && !sourceList.Contains(item))
+            {
+                sourceList.Add(item);
             }
             return item;
         }
