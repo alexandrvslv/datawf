@@ -742,6 +742,13 @@ namespace DataWF.Common
             {
                 result = yString.Equals(x.ToString(), StringComparison.OrdinalIgnoreCase);
             }
+            else if (x is DateTime xDate && y is DateTime yDate)
+            {
+                if (xDate.TimeOfDay == TimeSpan.Zero || yDate.TimeOfDay == TimeSpan.Zero)
+                    result = xDate.Date.Equals(yDate.Date);
+                else
+                    result = xDate.Equals(yDate);
+            }
             else if (x.Equals(y))
             {
                 result = true;

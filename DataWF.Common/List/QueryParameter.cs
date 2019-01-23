@@ -150,6 +150,10 @@ namespace DataWF.Common
             {
                 return formatable.Format();
             }
+            if (Value is DateTime date)
+            {
+                return $"'{date.ToString("yyyy.MM.dd")}'";
+            }
             var type = TypeHelper.CheckNullable(Invoker.DataType);
             if (Value is string stringValue)
             {
