@@ -32,10 +32,10 @@ namespace DataWF.Common
                 Value = value,
                 Group = group
             };
-            if (parameter.Invoker?.DataType == typeof(string))
-            {
-                parameter.Comparer = CompareType.Like;
-            }
+            //if (parameter.Invoker?.DataType == typeof(string))
+            //{
+            //    parameter.Comparer = CompareType.Like;
+            //}
             Add(parameter);
             return parameter;
         }
