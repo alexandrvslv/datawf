@@ -47,20 +47,15 @@ namespace DataWF.Web.Common
                 }
                 using (var query = new QQuery(filter, table))
                 {
-                    if (table.IsSynchronized)
+                    if (!table.IsSynchronized)
                     {
-                        return new ActionResult<IEnumerable<T>>(table.Select(query)
+                        table.Load(query, DBLoadParam.Referencing).LastOrDefault();
+                    }
+                    return new ActionResult<IEnumerable<T>>(table.Select(query)
                             .Where(p =>
                             {
                                 return p.Access.GetFlag(AccessType.View, user);
                             }));
-                    }
-
-                    return new ActionResult<IEnumerable<T>>(table.Load(query, DBLoadParam.Referencing)
-                        .Where(p =>
-                        {
-                            return p.Access.GetFlag(AccessType.View, user);
-                        }));
                 }
             }
             catch (Exception ex)
