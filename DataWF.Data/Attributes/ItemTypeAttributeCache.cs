@@ -70,14 +70,21 @@ namespace DataWF.Data
             }
             Table.TableAttribute = TableAttribute;
             VirtualTable.BaseTable = TableAttribute.Table;
-            foreach (var column in TableAttribute.Columns)
+            foreach (var columnAttribute in TableAttribute.Columns)
             {
-                if (column.DefaultValues != null && column.DefaultValues.TryGetValue(Type, out var defaultValue))
+                var virtualColumn = Table.ParseColumn(columnAttribute.ColumnName);
+                if (virtualColumn != null)
                 {
-                    var virtualColumn = Table.ParseColumn(column.ColumnName);
-                    if (virtualColumn != null)
+                    virtualColumn.Attribute = columnAttribute;
+                    if (columnAttribute.DefaultValues != null && columnAttribute.DefaultValues.TryGetValue(Type, out var defaultValue))
                     {
                         virtualColumn.DefaultValue = defaultValue;
+                    }
+
+                    if (virtualColumn.DisplayName.Equals(virtualColumn.Name, StringComparison.Ordinal)
+                        || (virtualColumn.DisplayName.Equals(columnAttribute.Property.Name, StringComparison.Ordinal)))
+                    {
+                        virtualColumn.DisplayName = columnAttribute.DisplayName;
                     }
                 }
             }
@@ -96,7 +103,7 @@ namespace DataWF.Data
             table.Schema = Schema;
             ((IDBVirtualTable)table).BaseTable = TableAttribute.Table;
             table.DisplayName = Type.Name;
-            
+
             return table;
         }
     }
