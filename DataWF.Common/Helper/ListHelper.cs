@@ -257,6 +257,11 @@ namespace DataWF.Common
             }
             else if (compare.Type == CompareTypes.In)
             {
+                if (!(x is string) && x is IEnumerable xlist)
+                {
+                    x = y;
+                    y = xlist;                    
+                }
                 object val = x;
                 if (y is string)
                 {
