@@ -913,9 +913,14 @@ namespace DataWF.Data
         {
             foreach (var column in Table.Columns)
             {
-                var value = GetValue(column);
-                if (value != null)
-                    item.SetValue(value, column);
+                if (column.ColumnType == DBColumnTypes.Default)
+                {
+                    var value = GetValue(column);
+                    if (value != null)
+                    {
+                        item.SetValue(value, column);
+                    }
+                }
             }
         }
 
