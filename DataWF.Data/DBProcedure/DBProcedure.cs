@@ -59,7 +59,7 @@ namespace DataWF.Data
         [JsonIgnore, XmlIgnore]
         public DBProcedureList Store
         {
-            get { return (DBProcedureList)container; }
+            get { return (DBProcedureList)Containers.FirstOrDefault(); }
         }
 
         public string GroupName { get; set; }

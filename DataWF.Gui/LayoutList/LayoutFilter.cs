@@ -1,6 +1,8 @@
 ﻿using DataWF.Common;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace DataWF.Gui
@@ -29,12 +31,12 @@ namespace DataWF.Gui
         }
 
         [XmlIgnore, Browsable(false)]
-        public INotifyListPropertyChanged Container { get; set; }
+        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers(PropertyChanged);
 
         [XmlIgnore]
         public LayoutList List
         {
-            get { return ((LayoutFilterList)Container)?.List; }
+            get { return ((LayoutFilterList)Containers.FirstOrDefault())?.List; }
         }
 
         public LogicType Logic
@@ -111,9 +113,7 @@ namespace DataWF.Gui
 
         private void OnPropertyChanged(string property)
         {
-            var arg = new PropertyChangedEventArgs(property);
-            Container?.OnItemPropertyChanged(this, arg);
-            PropertyChanged?.Invoke(this, arg);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
     }
 }

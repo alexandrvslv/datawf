@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using DataWF.Gui;
-using DataWF.Data;
+﻿using DataWF.Gui;
+using System;
+using System.Linq;
 
 namespace DataWF.Data.Gui
 {
@@ -75,7 +74,7 @@ namespace DataWF.Data.Gui
 
         public void Close()
         {
-            Container.Remove(this);
+            Containers.FirstOrDefault().Remove(this);
         }
     }
 }

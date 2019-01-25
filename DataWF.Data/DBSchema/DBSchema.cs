@@ -70,7 +70,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
-        public DBSchemaList Schems => Container as DBSchemaList;
+        public DBSchemaList Schems => Containers.FirstOrDefault() as DBSchemaList;
 
         [Browsable(false)]
         public string ConnectionName { get => connectionName; set => connectionName = value; }
@@ -165,8 +165,10 @@ namespace DataWF.Data
                 var table = GenerateTable(tableInfo.Name);
                 table.Type = tableInfo.View ? DBTableType.View : DBTableType.Table;
                 table.Generate(tableInfo);
-                if (table.Container == null)
+                if (!Tables.Contains(table))
+                {
                     Tables.Add(table);
+                }
             }
         }
 
@@ -248,8 +250,10 @@ namespace DataWF.Data
                     var table = GenerateTable(tableInfo.Name);
                     table.Type = tableInfo.View ? DBTableType.View : DBTableType.Table;
                     table.Generate(tableInfo);
-                    if (table.Container == null)
+                    if (!Tables.Contains(table))
+                    {
                         Tables.Add(table);
+                    }
                 }
             }
             finally

@@ -1,9 +1,8 @@
-﻿using NUnit.Framework;
-using System;
+﻿using DataWF.Common;
 using DataWF.Data;
 using DataWF.Module.Common;
-using System.Linq;
-using DataWF.Common;
+using NUnit.Framework;
+using System;
 
 namespace DataWF.Test.Module.Common
 {
@@ -55,7 +54,7 @@ namespace DataWF.Test.Module.Common
             };
             user.Save();
 
-            User.SetCurrentByCredential("test", "UserCommon1!");
+            User.StartSession("test", "UserCommon1!");
 
             GroupPermission.CachePermission();
 

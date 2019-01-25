@@ -1625,7 +1625,7 @@ namespace DataWF.Data
                         column.DBDataType = DBDataType.String;
                     }
                 }
-                if (column.Container == null)
+                if (!Columns.Contains(column))
                     Columns.Add(column);
             }
 
@@ -1645,7 +1645,7 @@ namespace DataWF.Data
                     column.Keys |= DBColumnKeys.Primary;
                 }
 
-                if (constraint.Container == null)
+                if (!Constraints.Contains(constraint))
                     Constraints.Add(constraint);
             }
         }

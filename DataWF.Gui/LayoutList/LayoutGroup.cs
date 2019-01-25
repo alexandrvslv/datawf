@@ -1,8 +1,8 @@
-﻿using System;
+﻿using DataWF.Common;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Xml.Serialization;
-using DataWF.Common;
 using Xwt;
 using Xwt.Drawing;
 
@@ -115,15 +115,13 @@ namespace DataWF.Gui
         }
 
         [XmlIgnore]
-        public INotifyListPropertyChanged Container { get; set; }
+        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers(PropertyChanged);
 
         public event PropertyChangedEventHandler PropertyChanged;
 
         public void OnPropertyChanged(string property)
         {
-            var arg = new PropertyChangedEventArgs(property);
-            Container?.OnItemPropertyChanged(this, arg);
-            PropertyChanged?.Invoke(this, arg);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
 
         public bool Contains(int index)

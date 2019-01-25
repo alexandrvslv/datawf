@@ -54,7 +54,7 @@ namespace DataWF.Gui
         public override object NewItem()
         {
             var item = (LayoutSort)base.NewItem();
-            item.Container = this;
+            //??item.Container = this;
             return item;
         }
 
@@ -63,7 +63,7 @@ namespace DataWF.Gui
             var sort = new LayoutSort()
             {
                 ColumnName = name,
-                Container = this
+                //??Container = this
             };
             Add(sort);
             return sort;

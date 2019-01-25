@@ -22,6 +22,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace DataWF.Data
@@ -90,7 +91,7 @@ namespace DataWF.Data
         public override void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             base.OnItemPropertyChanged(sender, e);
-            if (Schema != null && Schema.Container is DBSchemaList schemaList)
+            if (Schema != null && Schema.Containers.FirstOrDefault() is DBSchemaList schemaList)
             {
                 schemaList.OnItemsListChanged(this, e);
             }
@@ -99,7 +100,7 @@ namespace DataWF.Data
         public override void OnListChanged(NotifyCollectionChangedEventArgs args)
         {
             base.OnListChanged(args);
-            if (Schema != null && Schema.Container is DBSchemaList schemaList)
+            if (Schema != null && Schema.Containers.FirstOrDefault() is DBSchemaList schemaList)
             {
                 schemaList.OnItemsListChanged(this, args);
             }

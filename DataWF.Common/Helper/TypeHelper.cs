@@ -50,6 +50,19 @@ namespace DataWF.Common
             return itemType.GetProperty("Item", parameters);
         }
 
+        public static IEnumerable<INotifyListPropertyChanged> GetContainers(PropertyChangedEventHandler handler)
+        {
+            if (handler == null)
+                yield break;
+            foreach (var invocator in handler.GetInvocationList())
+            {
+                if (invocator.Target is INotifyListPropertyChanged container)
+                {
+                    yield return container;
+                }
+            }
+        }
+
         public static bool IsInterface(Type type, Type interfaceType)
         {
             return interfaceType.IsAssignableFrom(type);
@@ -352,7 +365,7 @@ namespace DataWF.Common
                 try { XmlConvert.VerifyName(info.Name); }
                 catch { flag = true; }
                 if (!flag)
-                {                    
+                {
                     var attribute = info.GetCustomAttribute(typeof(XmlIgnoreAttribute), false);
                     flag = attribute != null;
                     if (!flag && info is FieldInfo)

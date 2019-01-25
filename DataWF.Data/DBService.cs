@@ -82,14 +82,14 @@ namespace DataWF.Data
         public static void OnDBSchemaChanged(DBSchemaItem item, DDLType type)
         {
             if (type == DDLType.Default
-                || item.Container == null
+                || !item.Containers.Any()
                 || item.Schema == null
-                || item.Schema.Container == null
+                || !item.Schema.Containers.Any()
                 || item.Schema.IsSynchronizing)
                 return;
             if (item is IDBTableContent tabled)
             {
-                if (tabled.Table is IDBVirtualTable || tabled.Table.Container == null)
+                if (tabled.Table is IDBVirtualTable || !tabled.Table.Containers.Any())
                     return;
                 if (item is DBColumn column && column.ColumnType != DBColumnTypes.Default)
                     return;

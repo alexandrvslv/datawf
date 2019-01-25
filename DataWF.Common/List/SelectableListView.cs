@@ -71,6 +71,11 @@ namespace DataWF.Common
             UpdateFilter();
         }
 
+        public override bool Contains(T item)
+        {
+            return base.Contains(item);
+        }
+
         public Query<T> FilterQuery
         {
             get { return query; }

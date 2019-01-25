@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -44,6 +45,9 @@ namespace DataWF.Common
         public event NotifyCollectionChangedEventHandler CollectionChanged;
         public event PropertyChangedEventHandler PropertyChanged;
         public event PropertyChangedEventHandler ItemPropertyChanged;
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers(PropertyChanged);
 
         [XmlIgnore, Browsable(false)]
         public ListIndexes<T> Indexes
@@ -287,11 +291,7 @@ namespace DataWF.Common
             {
                 foreach (var item in this)
                 {
-                    if (item is IContainerNotifyPropertyChanged containered && containered.Container == this)
-                    {
-                        containered.Container = null;
-                    }
-                    else if (item is INotifyPropertyChanged notify)
+                    if (item is INotifyPropertyChanged notify)
                     {
                         notify.PropertyChanged -= propertyHandler;
                     }
@@ -320,18 +320,6 @@ namespace DataWF.Common
 
             if (propertyHandler != null)
             {
-                if (item is IContainerNotifyPropertyChanged containered)
-                {
-                    if (containered.Container == null)
-                    {
-                        containered.Container = this;
-                        return;
-                    }
-                    if (containered.Container == this)
-                    {
-                        return;
-                    }
-                }
                 ((INotifyPropertyChanged)item).PropertyChanged += propertyHandler;
             }
         }
@@ -395,11 +383,7 @@ namespace DataWF.Common
         {
             if (propertyHandler != null)
             {
-                if (item is IContainerNotifyPropertyChanged containered && containered.Container == this)
-                {
-                    containered.Container = null;
-                }
-                else if (item is INotifyPropertyChanged notified)
+                if (item is INotifyPropertyChanged notified)
                 {
                     notified.PropertyChanged -= propertyHandler;
                 }
@@ -598,6 +582,10 @@ namespace DataWF.Common
 
         public virtual bool Contains(T item)
         {
+            if (item is IContainerNotifyPropertyChanged containered && propertyHandler != null)
+            {
+                return containered.Containers.Contains(this);
+            }
             return items.Contains(item);
         }
 

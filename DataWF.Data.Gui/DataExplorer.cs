@@ -516,7 +516,9 @@ namespace DataWF.Data.Gui
                 {
                     var obj = node.Item;
                     if (obj != null)
-                        obj.Container.Remove(obj);
+                    {
+                        obj.Containers.FirstOrDefault()?.Remove(obj);
+                    }
                 }
             }
         }

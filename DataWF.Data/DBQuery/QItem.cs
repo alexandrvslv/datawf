@@ -18,9 +18,13 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Common;
+using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Linq;
+using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
@@ -39,13 +43,13 @@ namespace DataWF.Data
             this.text = name;
         }
 
-        public INotifyListPropertyChanged Container { get; set; }
-
+        [JsonIgnore, XmlIgnore]
+        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers(PropertyChanged);
 
         [Browsable(false)]
         public IQItemList List
         {
-            get { return Container as IQItemList; }
+            get { return Containers.FirstOrDefault() as IQItemList; }
         }
 
         public int Order
@@ -133,9 +137,7 @@ namespace DataWF.Data
 
         protected void OnPropertyChanged(string propertyName)
         {
-            var arg = new PropertyChangedEventArgs(propertyName);
-            Container?.OnItemPropertyChanged(this, arg);
-            PropertyChanged?.Invoke(this, arg);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         #endregion

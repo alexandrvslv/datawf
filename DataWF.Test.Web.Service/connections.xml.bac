@@ -1,3 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <!--DataWF.Data.DBConnectionList, DataWF.Data-->
-<e />
+<e Count="1">
+  <i Name="test" SystemName="SQLite" Host="" Port="0" DataBase="test.sqlite" Schema="" User="" IntegratedSecurity="False" TimeOut="80" IsolationLevel="Unspecified" Path="Z:\projects\dcc-registry\Sources\External\datawf\DataWF.Test.Web.Service\bin\Debug\netcoreapp2.1" />
+</e>

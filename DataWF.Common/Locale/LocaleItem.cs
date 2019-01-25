@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Globalization;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace DataWF.Common
@@ -67,10 +68,7 @@ namespace DataWF.Common
         }
 
         [Browsable(false)]
-        public LocaleCategory Category { get { return Container as LocaleCategory; } }
-
-        [XmlIgnore, Browsable(false)]
-        public INotifyListPropertyChanged Container { get; set; }
+        public LocaleCategory Category { get { return Containers.FirstOrDefault() as LocaleCategory; } }
 
         public void Merge(LocaleItem item)
         {
@@ -80,12 +78,6 @@ namespace DataWF.Common
         public override string ToString()
         {
             return name;
-        }
-
-        protected override void OnPropertyChanged(string property)
-        {
-            base.OnPropertyChanged(property);
-            Container?.OnItemPropertyChanged(this, new PropertyChangedEventArgs(property));
         }
 
         public LocaleString Add(string value, CultureInfo culture)

@@ -188,7 +188,7 @@ namespace DataWF.Module.Common
                 {
                     //List<int> groups = FlowEnvir.GetGroups(FlowEnvir.Personal.User);
 
-                    if (e.Item is DBTable && e.Item.Container != null)
+                    if (e.Item is DBTable && e.Item.Containers.Any())
                     {
                         var sgroup = GroupPermission.Get(null, e.Item.Schema);
                         var tgroup = GroupPermission.Get(sgroup, e.Item);
@@ -198,7 +198,7 @@ namespace DataWF.Module.Common
                             GroupPermission.Get(tgroup, column);
                         }
                     }
-                    if (e.Item is DBColumn && e.Item.Container != null && ((DBColumn)e.Item).Table.Container != null)
+                    if (e.Item is DBColumn && e.Item.Containers.Any() && ((DBColumn)e.Item).Table.Containers.Any())
                     {
                         var sgroup = GroupPermission.Get(null, e.Item.Schema);
                         var tgroup = GroupPermission.Get(sgroup, ((DBColumn)e.Item).Table);

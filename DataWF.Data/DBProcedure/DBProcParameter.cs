@@ -21,6 +21,7 @@ using DataWF.Common;
 using Newtonsoft.Json;
 using System;
 using System.Data;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace DataWF.Data
@@ -37,7 +38,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public DBProcedure Procedure
         {
-            get { return ((DBProcParameterList)Container).Procedure; }
+            get { return ((DBProcParameterList)Containers.FirstOrDefault()).Procedure; }
             set { value?.Parameters.Add(this); }
         }
 

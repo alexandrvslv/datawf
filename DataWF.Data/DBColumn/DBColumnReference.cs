@@ -1,6 +1,8 @@
 ﻿using DataWF.Common;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace DataWF.Data
@@ -43,22 +45,19 @@ namespace DataWF.Data
         }
 
         [Browsable(false), XmlIgnore, JsonIgnore]
-        public INotifyListPropertyChanged Container { get; set; }
-
+        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers(PropertyChanged);
 
         [Browsable(false), XmlIgnore, JsonIgnore]
         public DBColumnReferenceList List
         {
-            get { return Container as DBColumnReferenceList; }
+            get { return Containers.FirstOrDefault() as DBColumnReferenceList; }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
         private void OnPropertyChanged(string property)
         {
-            var arg = new PropertyChangedEventArgs(property);
-            Container?.OnItemPropertyChanged(this, arg);
-            PropertyChanged?.Invoke(this, arg);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
 
         public override string ToString()

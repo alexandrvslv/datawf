@@ -1,7 +1,9 @@
 ﻿using DataWF.Common;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Xml.Serialization;
 using Xwt.Drawing;
 
@@ -208,9 +210,9 @@ namespace DataWF.Gui
                         group.nodes.Add(this);
                     }
                     OnPropertyChanged(nameof(Group));
-                    if (Container == null && group.Container != null)
+                    if (!Containers.Any() && group.Containers.FirstOrDefault() is IList list)
                     {
-                        group.Container.Add(this);
+                        list.Add(this);
                     }
                 }
             }
@@ -292,7 +294,7 @@ namespace DataWF.Gui
         public Color GlyphColor { get; set; }
 
         [XmlIgnore]
-        public INotifyListPropertyChanged Container { get; set; }
+        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers(PropertyChanged);
 
         #endregion
 
@@ -300,9 +302,7 @@ namespace DataWF.Gui
 
         protected void OnPropertyChanged(string property)
         {
-            var arg = new PropertyChangedEventArgs(property);
-            Container?.OnItemPropertyChanged(this, arg);
-            PropertyChanged?.Invoke(this, arg);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
 
         public IEnumerable<Node> GetNodes()
@@ -335,7 +335,7 @@ namespace DataWF.Gui
 
         public void Remove()
         {
-            Container?.Remove(this);
+            Containers.FirstOrDefault()?.Remove(this);
         }
 
         public IEnumerable<IGroup> GetGroups()

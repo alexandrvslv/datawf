@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
@@ -12,7 +13,7 @@ namespace DataWF.Common
         private PropertyChangedEventHandler propertyChanged;
 
         [JsonIgnore, XmlIgnore]
-        public INotifyListPropertyChanged Container { get; set; }
+        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers(propertyChanged);
 
         public event PropertyChangedEventHandler PropertyChanged
         {
@@ -30,7 +31,6 @@ namespace DataWF.Common
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             var arg = new PropertyChangedEventArgs(propertyName);
-            Container?.OnItemPropertyChanged(this, arg);
             if (propertyChanged != null)
             {
                 if (GlogalChangedHook != null)

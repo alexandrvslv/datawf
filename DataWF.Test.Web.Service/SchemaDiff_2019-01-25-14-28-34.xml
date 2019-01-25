@@ -1,0 +1,84 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--DataWF.Common.SelectableList`1[[DataWF.Data.DBSchemaChange, DataWF.Data]], DataWF.Common-->
+<e Count="10">
+  <i Change="Alter" Check="True">
+    <!--DataWF.Data.DBVirtualTable`1[[DataWF.Module.Counterpart.Company, DataWF.Module.Counterpart]], DataWF.Data-->
+    <Item Name="Company" Query="a.item_type = 1" GroupName="Customer" Type="Table" IsCaching="False" BaseTableName="dcustomer">
+      <ItemTypes>
+        <i Key="0" Value="DataWF.Module.Counterpart.Company, DataWF.Module.Counterpart" />
+      </ItemTypes>
+    </Item>
+  </i>
+  <i Change="Alter" Check="True">
+    <!--DataWF.Data.DBVirtualTable`1[[DataWF.Module.Counterpart.Persone, DataWF.Module.Counterpart]], DataWF.Data-->
+    <Item Name="Persone" Query="a.item_type = 2" GroupName="Customer" Type="Table" IsCaching="False" BaseTableName="dcustomer">
+      <ItemTypes>
+        <i Key="0" Value="DataWF.Module.Counterpart.Persone, DataWF.Module.Counterpart" />
+      </ItemTypes>
+    </Item>
+  </i>
+  <i Change="Alter" Check="True">
+    <!--DataWF.Data.DBVirtualTable`1[[DataWF.Module.Counterpart.City, DataWF.Module.Counterpart]], DataWF.Data-->
+    <Item Name="City" Query="a.item_type = 5" GroupName="Address" Type="Table" IsCaching="False" BaseTableName="rlocation">
+      <ItemTypes>
+        <i Key="0" Value="DataWF.Module.Counterpart.City, DataWF.Module.Counterpart" />
+      </ItemTypes>
+    </Item>
+  </i>
+  <i Change="Alter" Check="True">
+    <!--DataWF.Data.DBVirtualTable`1[[DataWF.Module.Counterpart.Continent, DataWF.Module.Counterpart]], DataWF.Data-->
+    <Item Name="Continent" Query="a.item_type = 1" GroupName="Address" Type="Table" IsCaching="False" BaseTableName="rlocation">
+      <ItemTypes>
+        <i Key="0" Value="DataWF.Module.Counterpart.Continent, DataWF.Module.Counterpart" />
+      </ItemTypes>
+    </Item>
+  </i>
+  <i Change="Alter" Check="True">
+    <!--DataWF.Data.DBVirtualTable`1[[DataWF.Module.Counterpart.Country, DataWF.Module.Counterpart]], DataWF.Data-->
+    <Item Name="Country" Query="a.item_type = 2" GroupName="Address" Type="Table" IsCaching="False" BaseTableName="rlocation">
+      <ItemTypes>
+        <i Key="0" Value="DataWF.Module.Counterpart.Country, DataWF.Module.Counterpart" />
+      </ItemTypes>
+    </Item>
+  </i>
+  <i Change="Alter" Check="True">
+    <!--DataWF.Data.DBVirtualTable`1[[DataWF.Module.Counterpart.Currency, DataWF.Module.Counterpart]], DataWF.Data-->
+    <Item Name="Currency" Query="a.item_type = 3" GroupName="Address" Type="Table" IsCaching="False" BaseTableName="rlocation">
+      <ItemTypes>
+        <i Key="0" Value="DataWF.Module.Counterpart.Currency, DataWF.Module.Counterpart" />
+      </ItemTypes>
+    </Item>
+  </i>
+  <i Change="Alter" Check="True">
+    <!--DataWF.Data.DBVirtualTable`1[[DataWF.Module.Flow.StageProcedure, DataWF.Module.Flow]], DataWF.Data-->
+    <Item Name="StageProcedure" Query="a.item_type = 4" GroupName="Template" Type="Table" IsCaching="False" BaseTableName="rstage_param">
+      <ItemTypes>
+        <i Key="0" Value="DataWF.Module.Flow.StageProcedure, DataWF.Module.Flow" />
+      </ItemTypes>
+    </Item>
+  </i>
+  <i Change="Alter" Check="True">
+    <!--DataWF.Data.DBVirtualTable`1[[DataWF.Module.Flow.StageReference, DataWF.Module.Flow]], DataWF.Data-->
+    <Item Name="StageReference" Query="a.item_type = 5" GroupName="Template" Type="Table" IsCaching="False" BaseTableName="rstage_param">
+      <ItemTypes>
+        <i Key="0" Value="DataWF.Module.Flow.StageReference, DataWF.Module.Flow" />
+      </ItemTypes>
+    </Item>
+  </i>
+  <i Change="Alter" Check="True">
+    <!--DataWF.Data.DBVirtualTable`1[[DataWF.Module.Flow.StageTemplate, DataWF.Module.Flow]], DataWF.Data-->
+    <Item Name="StageTemplate" Query="a.item_type = 3" GroupName="Template" Type="Table" IsCaching="False" BaseTableName="rstage_param">
+      <ItemTypes>
+        <i Key="0" Value="DataWF.Module.Flow.StageTemplate, DataWF.Module.Flow" />
+      </ItemTypes>
+    </Item>
+  </i>
+  <i Change="Alter" Check="True">
+    <!--DataWF.Data.DBVirtualTable`1[[DataWF.Module.Flow.StageForeign, DataWF.Module.Flow]], DataWF.Data-->
+    <Item Name="StageForeign" Query="a.item_type = 2" GroupName="Template" Type="Table" IsCaching="False" BaseTableName="rstage_param">
+      <ItemTypes>
+        <i Key="0" Value="DataWF.Module.Flow.StageForeign, DataWF.Module.Flow" />
+      </ItemTypes>
+    </Item>
+  </i>
+</e>

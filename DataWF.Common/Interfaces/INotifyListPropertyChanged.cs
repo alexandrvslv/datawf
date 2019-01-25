@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 
@@ -13,7 +14,7 @@ namespace DataWF.Common
 
     public interface IContainerNotifyPropertyChanged : INotifyPropertyChanged
     {
-        INotifyListPropertyChanged Container { get; set; }
+        IEnumerable<INotifyListPropertyChanged> Containers { get; }
     }
 
 }

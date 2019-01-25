@@ -20,6 +20,7 @@
 using DataWF.Common;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Xml.Serialization;
 
@@ -32,7 +33,6 @@ namespace DataWF.Data
         protected DBSchema schema;
         protected LocaleItem litem;
         protected AccessValue access;
-        protected INotifyListPropertyChanged container;
         private bool isSynchronized;
 
         public DBSchemaItem()
@@ -51,11 +51,7 @@ namespace DataWF.Data
         }
 
         [Browsable(false), XmlIgnore, JsonIgnore]
-        public INotifyListPropertyChanged Container
-        {
-            get { return container; }
-            set { container = value; }
-        }
+        public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers(PropertyChanged);
 
         [Browsable(false), XmlIgnore, JsonIgnore]
         public virtual DBSchema Schema
@@ -168,9 +164,7 @@ namespace DataWF.Data
 
         public void OnPropertyChanged(string propertyName, DDLType type = DDLType.Default)
         {
-            var arg = new PropertyChangedEventArgs(propertyName);
-            Container?.OnItemPropertyChanged(this, arg);
-            PropertyChanged?.Invoke(this, arg);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
             if (type != DDLType.Default)
                 DBService.OnDBSchemaChanged(this, type);
         }

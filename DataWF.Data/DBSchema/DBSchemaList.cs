@@ -49,7 +49,9 @@ namespace DataWF.Data
             {
                 defaultSchema = value;
                 if (defaultSchema != null && !Contains(defaultSchema))
+                {
                     Add(defaultSchema);
+                }
             }
         }
 
@@ -58,7 +60,7 @@ namespace DataWF.Data
         public override int AddInternal(DBSchema item)
         {
             int index = base.AddInternal(item);
-            if (item.LogSchema != null && item.LogSchema.Container == null)
+            if (item.LogSchema != null && !Contains(item.LogSchema))
             {
                 Add(item.LogSchema);
             }

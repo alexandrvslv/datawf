@@ -155,7 +155,7 @@ namespace DataWF.Data
 
         internal protected virtual void CheckPull()
         {
-            if (Container == null
+            if (!Containers.Any()
                 || ColumnType == DBColumnTypes.Expression
                 || ColumnType == DBColumnTypes.Code)
                 return;

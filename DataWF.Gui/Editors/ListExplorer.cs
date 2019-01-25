@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections;
-using System.ComponentModel;
+﻿using DataWF.Common;
+using System;
 using System.Reflection;
-using DataWF.Common;
-using Xwt;
-using Xwt.Drawing;
 
 namespace DataWF.Gui
 {
@@ -71,8 +67,11 @@ namespace DataWF.Gui
             get { return Tree.SelectedNode as ListExplorerNode; }
             set
             {
-                if (value.Container == null)
+                if (!Tree.Nodes.Contains(value))
+                {
                     Tree.Nodes.Add(value);
+                }
+
                 Tree.SelectedNode = value;
             }
         }

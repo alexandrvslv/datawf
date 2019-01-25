@@ -186,20 +186,7 @@ namespace DataWF.Gui
         [XmlIgnore]
         public T Map
         {
-            get { return (T)Container; }
-        }
-
-        [XmlIgnore, Browsable(false)]
-        public INotifyListPropertyChanged Container
-        {
-            get { return container; }
-            set
-            {
-                container = value;
-                if (container == this)
-                    throw new InvalidOperationException("Layout self reference!");
-                //OnPropertyChanged(nameof(Map));
-            }
+            get { return (T)Containers.FirstOrDefault(); }
         }
 
         [XmlIgnore]
@@ -264,12 +251,6 @@ namespace DataWF.Gui
         public IEnumerable<IGroup> GetGroups()
         {
             return this;
-        }
-
-        protected override void OnPropertyChanged([CallerMemberName]string property = null)
-        {
-            Container?.OnItemPropertyChanged(this, new PropertyChangedEventArgs(property));
-            base.OnPropertyChanged(property);
         }
 
         public void Remove()

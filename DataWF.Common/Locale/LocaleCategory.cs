@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Xml.Serialization;
 
 namespace DataWF.Common
 {
@@ -27,6 +26,7 @@ namespace DataWF.Common
                 }
             }
         }
+
         public bool Contains(string name)
         {
             return SelectOne(nameof(LocaleItem.Name), name) != null;
@@ -41,15 +41,6 @@ namespace DataWF.Common
                 Add(item);
             }
             return item;
-        }
-
-        [XmlIgnore, Browsable(false)]
-        public INotifyListPropertyChanged Container { get; set; }
-
-        protected override void OnPropertyChanged(string property)
-        {
-            base.OnPropertyChanged(property);
-            Container?.OnItemPropertyChanged(this, new PropertyChangedEventArgs(property));
         }
 
         public override string ToString()

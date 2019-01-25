@@ -96,14 +96,10 @@ namespace DataWF.Common
                             }
 
                             IdInvoker.SetValue(item, id);
-                            if (item is IContainerNotifyPropertyChanged containered && containered.Container != Items)
+                            if (!Items.Contains(item))
                             {
-                                containered.Container = null;
                                 add = true;
-                            }
-                            if (add)
-                            {
-                                index = Items.AddInternal(item);                                
+                                index = Items.AddInternal(item);
                             }
                             if (TypeId != 0)
                             {
@@ -130,7 +126,7 @@ namespace DataWF.Common
             {
                 Items.OnListChanged(NotifyCollectionChangedAction.Add, item, index);
             }
-           
+
             if (sourceList != null && !sourceList.Contains(item))
             {
                 sourceList.Add(item);
