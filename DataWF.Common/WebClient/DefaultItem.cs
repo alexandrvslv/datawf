@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
@@ -30,16 +31,19 @@ namespace DataWF.Common
 
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
-            var arg = new PropertyChangedEventArgs(propertyName);
             if (propertyChanged != null)
             {
-                if (GlogalChangedHook != null)
+                var arg = new PropertyChangedEventArgs(propertyName);
+                foreach (var handler in propertyChanged.GetInvocationList())
                 {
-                    GlogalChangedHook(propertyChanged, this, arg);
-                }
-                else
-                {
-                    propertyChanged(this, arg);
+                    if (GlogalChangedHook == null || handler.Target is INotifyListPropertyChanged)
+                    {
+                        ((PropertyChangedEventHandler)handler).Invoke(this, arg);
+                    }
+                    else
+                    {
+                        GlogalChangedHook((PropertyChangedEventHandler)handler, this, arg);
+                    }
                 }
             }
         }
