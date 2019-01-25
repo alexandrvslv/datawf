@@ -103,14 +103,13 @@ namespace DataWF.Common
                             }
                             if (add)
                             {
-                                index = Items.AddInternal(item);
-                                if (TypeId != 0)
-                                {
-                                    var baseClient = GetBaseClient();
-                                    baseClient.Add(item);
-                                }
+                                index = Items.AddInternal(item);                                
                             }
-                            
+                            if (TypeId != 0)
+                            {
+                                var baseClient = GetBaseClient();
+                                baseClient.Add(item);
+                            }
                             continue;
                         }
                         if (item == null)
@@ -131,6 +130,7 @@ namespace DataWF.Common
             {
                 Items.OnListChanged(NotifyCollectionChangedAction.Add, item, index);
             }
+           
             if (sourceList != null && !sourceList.Contains(item))
             {
                 sourceList.Add(item);
@@ -237,7 +237,7 @@ namespace DataWF.Common
             var item = Select(id);
             if (item == null)
             {
-                try { item = GetAsync(id, CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult(); }
+                try { item = GetAsync(id, CancellationToken.None).Result; }
                 catch (Exception ex) { Helper.OnException(ex); }
             }
             return item;
@@ -291,7 +291,7 @@ namespace DataWF.Common
 
         public virtual Task<object> GenerateIdAsync(CancellationToken cancellationToken) => Task.FromResult<object>(null);
 
-        public object GenerateId() => GenerateIdAsync(CancellationToken.None).GetAwaiter().GetResult();
+        public Task<object> GenerateId() => GenerateIdAsync(CancellationToken.None);
     }
 
 

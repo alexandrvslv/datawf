@@ -34,7 +34,7 @@ namespace DataWF.Common
         void RemoveById(object id);
         object Select(object id);
         object ParseId(object id);
-        object GenerateId();
+        Task<object> GenerateId();
         Task DeleteAsync(object id);
         Task FindAsync(string filter);
         Task GetAsync();
