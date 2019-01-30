@@ -1246,7 +1246,7 @@ namespace DataWF.Data
                     || relation.Column.ColumnType != DBColumnTypes.Default)
                     continue;
 
-                foreach (DBItem item in GetReferencing(relation, param))
+                foreach (DBItem item in GetReferencing(relation, param).ToList())
                 {
                     if (item != this)
                     {
