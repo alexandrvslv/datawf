@@ -111,9 +111,7 @@ namespace DataWF.Common
             ((Pull<T>)this).SetValueInternal(index, value);
         }
 
-        public int Count { get; internal set; }
-        public int Capacity { get { return BlockCount * BlockSize; } }
-        public int BlockCount { get; internal set; }
+        public virtual int Capacity { get { return 0; } }
         public int BlockSize
         {
             get { return blockSize; }
@@ -140,8 +138,6 @@ namespace DataWF.Common
 
         public virtual void Clear()
         {
-            BlockCount = 0;
-            Count = 0;
         }
 
         public abstract void Trunc(int maxIndex);
@@ -176,19 +172,24 @@ namespace DataWF.Common
     public class Pull<T> : Pull, IEnumerable<T>
     {
         private List<T[]> array = new List<T[]>();
+        private short maxIndex;
 
         public Pull(int blockSize) : base(blockSize)
         {
             ItemType = typeof(T);
         }
 
+        public override int Capacity { get { return array.Count * blockSize; } }
+
         public override void Clear()
         {
             foreach (var a in array)
+            {
                 if (a != null)
                     Array.Clear(a, 0, a.Length);
+            }
+
             array.Clear();
-            base.Clear();
         }
 
         public override bool EqualNull(object value)
@@ -222,25 +223,30 @@ namespace DataWF.Common
             if (block == array.Count)
             {
                 array.Add(new T[blockSize]);
-                BlockCount++;
+                maxIndex = 0;
             }
             if (array[block] == null)
             {
                 array[block] = new T[blockSize];
-                BlockCount++;
             }
             array[block][blockIndex] = value;
-            Count = Math.Max(Count, index);
+            if (block == array.Count - 1)
+            {
+                maxIndex = Math.Max(maxIndex, blockIndex);
+            }
         }
 
         public IEnumerator<T> GetEnumerator()
         {
-            for (int i = 0; i < Count; i++)
+            for (int i = 0; i < array.Count; i++)
             {
-                var item = GetValueInternal(i);
-                if (item != null)
+                var block = array[i];
+                var size = i == array.Count - 1 ? maxIndex : blockSize;
+                for (int j = 0; j < size; j++)
                 {
-                    yield return item;
+                    if (block == null)
+                        yield return default(T);
+                    yield return block[j];
                 }
             }
         }
@@ -256,7 +262,6 @@ namespace DataWF.Common
             while (block < array.Count - 1)
             {
                 array.RemoveAt(array.Count - 1);
-                BlockCount--;
             }
             if (block < array.Count && blockIndex + 1 < BlockSize)
             {
