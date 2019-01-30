@@ -1,9 +1,9 @@
-﻿using DataWF.Module.Common;
+﻿using DataWF.Common;
+using DataWF.Module.Common;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Security.Claims;
 
@@ -21,7 +21,10 @@ namespace DataWF.Web.Common
         {
             var emailClaim = context.HttpContext.User?.FindFirst(ClaimTypes.Email);
             var user = emailClaim != null ? User.GetByEmail(emailClaim.Value) : null;
-            Debug.WriteLine($"{context.ActionDescriptor.DisplayName}({context.ActionDescriptor.Parameters.FirstOrDefault()?.Name}) {user}");
+            Helper.Logs.Add(new StateInfo("Authorization Context"
+                , $"{context.ActionDescriptor.DisplayName} {user}"
+                , string.Join(", ", context.ActionDescriptor.Parameters.Select(p => p.Name))
+                ));
         }
     }
 

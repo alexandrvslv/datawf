@@ -288,7 +288,7 @@ namespace DataWF.Module.Common
             }
         }
 
-        [DataMember, Column("email", 1024), Index("ruser_email", true)]
+        [DataMember, Column("email", 1024, Keys = DBColumnKeys.Indexing), Index("ruser_email", true)]
         public string EMail
         {
             get { return GetValue<string>(EmailKey); }

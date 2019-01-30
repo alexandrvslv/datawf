@@ -1,9 +1,30 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace DataWF.Common
 {
     public class StateInfoList : SelectableList<StateInfo>, IFileSerialize
     {
+        public StateInfoList() : this((int)Math.Pow(2, 14))
+        {
+        }
+
+        public StateInfoList(int limit) : base(128)
+        {
+            Limit = limit;
+        }
+
+        public int Limit { get; set; }
+
+        public override int Add(StateInfo item)
+        {
+            if (Limit > 0 && Count >= Limit)
+            {
+                RemoveAt(0);
+            }
+            return base.Add(item);
+        }
+
         #region IFSerialize implementation
         public void Save(Stream stream)
         {
@@ -35,6 +56,7 @@ namespace DataWF.Common
             get { return "details.log"; }
             set { }
         }
+
         #endregion
     }
 }
