@@ -187,7 +187,11 @@ namespace DataWF.Data
             var key = ReadItem(item);
             if (store.TryGetValue(key, out var val))
             {
-                val.Sort(comparer);
+                var index = val.BinarySearch(item, comparer);
+                if (index < 0 || val[index] != item)
+                {
+                    val.Sort(comparer);
+                }
             }
         }
 
