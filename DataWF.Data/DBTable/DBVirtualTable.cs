@@ -236,11 +236,15 @@ namespace DataWF.Data
 
         public override void OnItemChanged(DBItem item, string property, DBColumn column, object value)
         {
-            if (item is T)
+            if (item is T tItem)
             {
-                if (FilterQuery.Parameters.Count != 0 && (FilterQuery.Contains(column?.Name) && !BaseTable.CheckItem(item, FilterQuery)))
+                if (FilterQuery.Parameters.Count != 0 && (FilterQuery.Contains(column?.Name) && !BaseTable.CheckItem(tItem, FilterQuery)))
                 {
-                    Remove(item);
+                    if (items.Remove(tItem))
+                    {
+                        CheckViews(item, NotifyCollectionChangedAction.Remove);
+                        RemoveIndexes(tItem);
+                    }
                 }
                 else
                 {
