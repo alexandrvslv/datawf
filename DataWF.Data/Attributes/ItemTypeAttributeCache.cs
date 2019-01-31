@@ -19,6 +19,7 @@
 */
 using DataWF.Common;
 using System;
+using System.Diagnostics;
 
 namespace DataWF.Data
 {
@@ -62,7 +63,9 @@ namespace DataWF.Data
         {
             Schema = schema;
             if (Table == null)
+            {
                 Table = CreateTable();
+            }
             Table.Query = $"a.{TableAttribute.Table.ItemTypeKey.SqlName} = {TableAttribute.Table.GetTypeIndex(Type)}";
             if (!Schema.Tables.Contains(Type.Name))
             {
@@ -98,6 +101,8 @@ namespace DataWF.Data
             {
                 throw new InvalidOperationException("Table attribute not initializes!");
             }
+            Debug.WriteLine($"Generate {TableAttribute.Attribute.TableName} - {Type.Name}");
+
             var table = (DBTable)EmitInvoker.CreateObject(typeof(DBVirtualTable<>).MakeGenericType(Type));
             table.Name = Type.Name;
             table.Schema = Schema;

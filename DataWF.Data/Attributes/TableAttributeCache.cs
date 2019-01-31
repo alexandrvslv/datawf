@@ -117,6 +117,8 @@ namespace DataWF.Data
 
         public virtual DBTable CreateTable()
         {
+            Debug.WriteLine($"Generate {Attribute.TableName} - {this.ItemType.Name}");
+
             var type = typeof(DBTable<>).MakeGenericType(ItemType);
             // var logicType = ItemType.Assembly.ExportedTypes.FirstOrDefault(p => p.BaseType == type);
             var table = (DBTable)EmitInvoker.CreateObject(type);
@@ -135,8 +137,6 @@ namespace DataWF.Data
         public DBTable Generate(DBSchema schema)
         {
             Schema = schema ?? throw new ArgumentNullException(nameof(schema));
-
-            Debug.WriteLine($"Generate {Attribute.TableName} - {this.ItemType.Name}");
 
             if (TableGroup == null)
             {
