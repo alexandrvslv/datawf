@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
@@ -6,5 +7,6 @@ namespace DataWF.Common
     {
         ICollection Items { get; set; }
         object SelectedItem { get; set; }
+        Task Save(object item);
     }
 }
