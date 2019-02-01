@@ -1,8 +1,9 @@
 ﻿using System.Collections;
+using System.ComponentModel;
 
 namespace DataWF.Common
 {
-    public interface IQueryParameter
+    public interface IQueryParameter : INotifyPropertyChanged
     {
         string Name { get; set; }
         IInvoker Invoker { get; set; }
@@ -13,6 +14,8 @@ namespace DataWF.Common
         object TypedValue { get; set; }
         bool IsEnabled { get; set; }
         QueryGroup Group { get; set; }
+        string FormatName { get; set; }
+        bool FormatEmpty { get; set; }
     }
 
     public interface IQueryFormatable
