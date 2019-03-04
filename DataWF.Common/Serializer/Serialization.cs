@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 using System.Xml;
 
 namespace DataWF.Common
@@ -52,6 +53,11 @@ namespace DataWF.Common
                 node = node.ParentNode;
             }
             return rez;
+        }
+
+        public static Task<T> CloneAsync<T>(T obj, bool ignoreEnumerable)
+        {
+            return Task.Run<T>(() => Clone<T>(obj, ignoreEnumerable));
         }
 
         public static T Clone<T>(T obj, bool ignoreEnumerable)
