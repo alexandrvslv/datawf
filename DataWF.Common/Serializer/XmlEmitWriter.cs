@@ -28,6 +28,8 @@ namespace DataWF.Common
         {
             foreach (object item in collection)
             {
+                if (item == null)
+                    continue;
                 Write(item, "i", type.ListItemType != item.GetType());
             }
         }

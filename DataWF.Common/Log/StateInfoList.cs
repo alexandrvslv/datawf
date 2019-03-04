@@ -20,7 +20,8 @@ namespace DataWF.Common
         {
             if (Limit > 0 && Count >= Limit)
             {
-                RemoveAt(0);
+                Save($"logs_{DateTime.Now.ToString("yyMMddHHmmss")}.xml");
+                Clear();
             }
             return base.Add(item);
         }
