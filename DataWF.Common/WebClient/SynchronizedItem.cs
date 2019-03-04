@@ -5,24 +5,31 @@ using System.Xml.Serialization;
 
 namespace DataWF.Common
 {
+    public enum SynchronizedStatus
+    {
+        New,
+        Edit,
+        Load,
+        Actual
+    }
+
     public abstract class SynchronizedItem : DefaultItem, ISynchronized
     {
-
-        private bool? isSynchronized = null;
+        private SynchronizedStatus syncStatus = SynchronizedStatus.New;
 
         [JsonIgnore, XmlIgnore]
         public ISet<string> Changes { get; } = new HashSet<string>();
 
         [JsonIgnore, XmlIgnore]
-        public virtual bool? IsSynchronized
+        public virtual SynchronizedStatus SyncStatus
         {
-            get => isSynchronized;
+            get => syncStatus;
             set
             {
-                if (isSynchronized != value)
+                if (syncStatus != value)
                 {
-                    isSynchronized = value;
-                    if (isSynchronized ?? false)
+                    syncStatus = value;
+                    if (syncStatus == SynchronizedStatus.Actual)
                     {
                         Changes.Clear();
                     }
@@ -34,11 +41,14 @@ namespace DataWF.Common
         {
             if (synch)
             {
-                if (IsSynchronized != null)
+                if (syncStatus == SynchronizedStatus.Actual)
                 {
-                    IsSynchronized = false;
+                    SyncStatus = SynchronizedStatus.Edit;
                 }
-                Changes.Add(propertyName);
+                if (syncStatus != SynchronizedStatus.Load)
+                {
+                    Changes.Add(propertyName);
+                }
             }
 
             base.OnPropertyChanged(propertyName);

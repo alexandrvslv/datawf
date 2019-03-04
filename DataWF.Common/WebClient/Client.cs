@@ -3,7 +3,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -48,6 +47,7 @@ namespace DataWF.Common
             var index = -1;
             var property = (PropertySerializationInfo)null;
             var id = (object)null;
+            var synchItem = (ISynchronized)null;
             while (jreader.Read() && jreader.TokenType != JsonToken.EndObject)
             {
                 if (jreader.TokenType == JsonToken.PropertyName)
@@ -71,56 +71,72 @@ namespace DataWF.Common
                     {
                         value = serializer.Deserialize(jreader, property?.DataType);
                     }
-                    if (property != null)
-                    {
-                        if (property.Name == TypeInvoker?.Name && value != null)
-                        {
-                            var typeId = (int)value;
-                            if (typeId != TypeId)
-                            {
-                                var client = Provider.GetClient(typeof(T), typeId);
-                                return (T)client.DeserializeItem(serializer, jreader, item, (IList)sourceList);
-                            }
-                            continue;
-                        }
-                        if (property.Name == IdInvoker?.Name)
-                        {
-                            id = value;
-                            if (item == null && id != null)
-                            {
-                                item = Select((K)id) ?? (T)sourceList?.Cast<IPrimaryKey>().FirstOrDefault(p => p.PrimaryKey?.Equals(id) ?? false);
-                            }
-                            if (item == null)
-                            {
-                                item = new T();
-                            }
 
-                            IdInvoker.SetValue(item, id);
-                            if (!Items.Contains(item))
+                    if (property == null)
+                        continue;
+
+                    if (property.Name == TypeInvoker?.Name && value != null)
+                    {
+                        var typeId = (int)value;
+                        if (typeId != TypeId)
+                        {
+                            var client = Provider.GetClient(typeof(T), typeId);
+                            return (T)client.DeserializeItem(serializer, jreader, item, (IList)sourceList);
+                        }
+                        continue;
+                    }
+                    if (property.Name == IdInvoker?.Name)
+                    {
+                        id = value;
+                        if (item == null && id != null)
+                        {
+                            item = Select((K)id);// ?? (T)sourceList?.Cast<IPrimaryKey>().FirstOrDefault(p => p.PrimaryKey?.Equals(id) ?? false);                            
+                            if (item is ISynchronized synchronized)
                             {
-                                add = true;
-                                index = Items.AddInternal(item);
+                                synchItem = synchronized;
+                                if (synchItem.SyncStatus == SynchronizedStatus.Actual)
+                                    synchItem.SyncStatus = SynchronizedStatus.Load;
                             }
-                            if (TypeId != 0)
-                            {
-                                var baseClient = GetBaseClient();
-                                baseClient.Add(item);
-                            }
-                            continue;
                         }
                         if (item == null)
                         {
-                            throw new Exception("Wrong Json properties sequence!");
+                            item = new T();
+                            if (item is ISynchronized synchronized)
+                            {
+                                synchItem = synchronized;
+                                synchItem.SyncStatus = SynchronizedStatus.Load;
+                            }
                         }
 
-                        property.Invoker.SetValue(item, value);
+
+                        IdInvoker.SetValue(item, id);
+                        if (!Items.Contains(item))
+                        {
+                            add = true;
+                            index = Items.AddInternal(item);
+                        }
+                        if (TypeId != 0)
+                        {
+                            var baseClient = GetBaseClient();
+                            baseClient.Add(item);
+                        }
+                        continue;
                     }
+                    if (item == null)
+                    {
+                        throw new Exception("Wrong Json properties sequence!");
+                    }
+                    if (synchItem != null && synchItem.SyncStatus != SynchronizedStatus.Load && synchItem.Changes.Contains(property.Name))
+                    {
+                        continue;
+                    }
+                    property.Invoker.SetValue(item, value);
                 }
             }
 
-            if (id != null && item is ISynchronized isSynch)
+            if (synchItem != null && synchItem.SyncStatus == SynchronizedStatus.Load)
             {
-                isSynch.IsSynchronized = true;
+                synchItem.SyncStatus = SynchronizedStatus.Actual;
             }
             if (add)
             {
@@ -225,7 +241,19 @@ namespace DataWF.Common
 
         public async virtual Task<T> Get(T item)
         {
+            if (item is ISynchronized synched)
+                synched.SyncStatus = SynchronizedStatus.Load;
             return await GetAsync(IdInvoker.GetValue(item), CancellationToken.None).ConfigureAwait(false);
+        }
+
+        public async virtual Task<bool> Delete(T item)
+        {
+            var result = await DeleteAsync(IdInvoker.GetValue(item), CancellationToken.None).ConfigureAwait(false);
+            if (result)
+            {
+                Remove(item);
+            }
+            return result;
         }
 
         public virtual T Get(K id)
@@ -263,23 +291,19 @@ namespace DataWF.Common
 
         public Task CopyAsync(object id) => CopyAsync((K)id, CancellationToken.None);
 
-        public virtual Task<T> PutAsync(T value, CancellationToken cancellationToken) => Task.FromResult(default(T));
+        public virtual Task<T> PutAsync(T value, CancellationToken cancellationToken) => Task.FromResult(value);
 
         public Task<T> PutAsync(object value, CancellationToken cancellationToken) => PutAsync((T)value, cancellationToken);
 
         public Task PutAsync(object value) => PutAsync((T)value, CancellationToken.None);
 
-        public virtual Task<T> PostAsync(T value, CancellationToken cancellationToken) => Task.FromResult(default(T));
+        public virtual Task<T> PostAsync(T value, CancellationToken cancellationToken) => Task.FromResult(value);
 
         public Task<T> PostAsync(object value, CancellationToken cancellationToken) => PostAsync((T)value, cancellationToken);
 
         public Task PostAsync(object value) => PostAsync((T)value, CancellationToken.None);
 
-        public virtual Task<bool> DeleteAsync(K id, CancellationToken cancellationToken)
-        {
-            Items.Remove(Select(id));
-            return Task.FromResult(true);
-        }
+        public virtual Task<bool> DeleteAsync(K id, CancellationToken cancellationToken) => Task.FromResult(true);
 
         public Task<bool> DeleteAsync(object id, CancellationToken cancellationToken) => DeleteAsync((K)id, cancellationToken);
 

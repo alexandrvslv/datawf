@@ -478,6 +478,18 @@ namespace DataWF.Web.ClientGenerator
 
             var returnType = GetReturningType(descriptor);
 
+            //if (isOverride)
+            //{
+            //    //yield return SF.ParseStatement($"var result = {requestBuilder.ToString()}");
+            //    var paramBuilder = new StringBuilder();
+            //    foreach (var parameter in descriptor.Operation.Parameters)
+            //    {
+            //        paramBuilder.Append(parameter.Name);
+            //        paramBuilder.Append(", ");
+            //    }
+            //    paramBuilder.Append("cancellationToken");
+            //    yield return SF.ParseStatement($"await base.{actualName}({paramBuilder.ToString()}).ConfigureAwait(false);");
+            //}
             var requestBuilder = new StringBuilder();
             requestBuilder.Append($"await Request");
             if (responceSchema?.Type == JsonObjectType.Array)
@@ -501,26 +513,7 @@ namespace DataWF.Web.ClientGenerator
             }
             requestBuilder.Append(").ConfigureAwait(false);");
 
-
-            if (isOverride)
-            {
-                //var result =
-                yield return SF.ParseStatement($"var result = {requestBuilder.ToString()}");
-                var paramBuilder = new StringBuilder();
-                foreach (var parameter in descriptor.Operation.Parameters)
-                {
-                    paramBuilder.Append(parameter.Name);
-                    paramBuilder.Append(", ");
-                }
-                paramBuilder.Append("cancellationToken");
-                yield return SF.ParseStatement($"await base.{actualName}({paramBuilder.ToString()}).ConfigureAwait(false);");
-                yield return SF.ParseStatement("return result;");
-            }
-            else
-            {
-                yield return SF.ParseStatement($"return {requestBuilder.ToString()}");
-            }
-
+            yield return SF.ParseStatement($"return {requestBuilder.ToString()}");
         }
 
         private IEnumerable<ParameterSyntax> GenOperationParameter(SwaggerOperationDescription descriptor)

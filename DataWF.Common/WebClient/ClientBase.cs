@@ -155,11 +155,15 @@ namespace DataWF.Common
                 {
                     using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false))
                     {
-                        ProcessResponse(client, response);
+                        ProcessResponse(client, response);                        
                         var result = default(R);
                         switch (response.StatusCode)
                         {
                             case System.Net.HttpStatusCode.OK:
+                                if (value is ISynchronized synched)
+                                {
+                                    synched.SyncStatus = SynchronizedStatus.Load;
+                                }
                                 using (var responseStream = response.Content == null ? null : await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
                                 {
                                     using (var reader = new StreamReader(responseStream))

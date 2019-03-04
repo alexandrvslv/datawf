@@ -2,7 +2,6 @@
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
 
@@ -20,7 +19,7 @@ namespace DataWF.Common
             {
                 return property;
             }
-            
+
             if (property.NullValueHandling != null)
             {
                 if (TypeHelper.IsInterface(property.DeclaringType, typeof(ISynchronized)))
@@ -42,7 +41,7 @@ namespace DataWF.Common
                             instance =>
                             {
                                 var collection = (IEnumerable)propertyInvoker.GetValue(instance);
-                                return collection != null && collection.TypeOf<ISynchronized>().Any(p => !(p.IsSynchronized ?? false));
+                                return collection != null && collection.TypeOf<ISynchronized>().Any(p => p.SyncStatus != SynchronizedStatus.Actual);
                             };
                     }
                 }

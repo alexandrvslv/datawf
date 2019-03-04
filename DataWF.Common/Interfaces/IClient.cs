@@ -51,6 +51,7 @@ namespace DataWF.Common
         SelectableList<T> Items { get; }
         Task<T> Get(T item);
         T Get(object id);
+        Task<bool> Delete(T item);
         Task<List<T>> FindAsync(string filter, CancellationToken cancellationToken);
         Task<List<T>> GetAsync(CancellationToken cancellationToken);
         Task<T> GetAsync(object id, CancellationToken cancellationToken);

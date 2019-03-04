@@ -4,7 +4,7 @@ namespace DataWF.Common
 {
     public interface ISynchronized
     {
-        bool? IsSynchronized { get; set; }
+        SynchronizedStatus SyncStatus { get; set; }
         ISet<string> Changes { get; }
     }
 }

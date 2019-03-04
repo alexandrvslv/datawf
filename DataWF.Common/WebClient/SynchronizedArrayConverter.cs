@@ -30,7 +30,7 @@ namespace DataWF.Common
             writer.WriteStartArray();
             foreach (var item in (IEnumerable)value)
             {
-                if (item is ISynchronized isSynch && (isSynch.IsSynchronized ?? false))
+                if (item is ISynchronized isSynch && isSynch.SyncStatus == SynchronizedStatus.Actual)
                 {
                     continue;
                 }
