@@ -2,24 +2,42 @@
 
 namespace DataWF.Common
 {
-    public class TreeInvoker<T> : IInvoker<T, bool> where T : IGroup
+    public class TreeInvoker : IInvoker
+    {
+        public Type DataType => typeof(bool);
+
+        public virtual Type TargetType => typeof(IGroup);
+
+        public bool CanWrite => true;
+
+        public string Name { get => nameof(IGroup.IsExpanded); set { } }
+
+        public virtual IListIndex CreateIndex()
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual object GetValue(object target)
+        {
+            return ((IGroup)target).IsExpanded;
+        }
+
+        public virtual void SetValue(object target, object value)
+        {
+            ((IGroup)target).Expand = (bool)value;
+        }
+    }
+
+    public class TreeInvoker<T> : TreeInvoker, IInvoker<T, bool> where T : IGroup
     {
         public static readonly IInvoker<T, bool> Instance = new TreeInvoker<T>();
 
         public TreeInvoker()
-        {
-            Name = nameof(IGroup.IsExpanded);
-        }
+        { }
 
-        public bool CanWrite { get { return false; } }
+        public override Type TargetType { get { return typeof(T); } }
 
-        public Type DataType { get { return typeof(bool); } }
-
-        public Type TargetType { get { return typeof(T); } }
-
-        public string Name { get; set; }
-
-        public IListIndex CreateIndex()
+        public override IListIndex CreateIndex()
         {
             return ListIndexFabric.Create<T, bool>(this);
         }
@@ -29,19 +47,9 @@ namespace DataWF.Common
             return target.IsExpanded;
         }
 
-        public object GetValue(object target)
-        {
-            return GetValue((T)target);
-        }
-
         public void SetValue(T target, bool value)
         {
-            throw new NotSupportedException();
-        }
-
-        public void SetValue(object target, object value)
-        {
-            throw new NotImplementedException();
+            target.Expand = value;
         }
     }
 

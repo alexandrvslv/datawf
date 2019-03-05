@@ -13,6 +13,7 @@ namespace DataWF.Common
         object Value { get; set; }
         object TypedValue { get; set; }
         bool IsEnabled { get; set; }
+        bool IsGlobal { get; set; }
         QueryGroup Group { get; set; }
         string FormatName { get; set; }
         bool FormatEmpty { get; set; }

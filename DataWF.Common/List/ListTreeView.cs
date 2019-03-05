@@ -10,7 +10,7 @@ namespace DataWF.Common
         {
             groupParam = GroupHelper.CreateTreeFilter<T>();
             FilterQuery.Parameters.Add(groupParam);
-            ApplySort((IComparer<T>)new TreeComparer<T>());
+            FilterQuery.Orders.Add(new TreeComparer<T>());            
         }
 
         public TreeListView(IEnumerable<T> baseCollection) : this()

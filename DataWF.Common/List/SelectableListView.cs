@@ -277,6 +277,10 @@ namespace DataWF.Common
                 {
                     base.OnItemPropertyChanged(item, index, e);
                 }
+                if (query.HaveGlobal)
+                {
+                    UpdateFilter();
+                }
             }
             else if (index >= 0)
             {

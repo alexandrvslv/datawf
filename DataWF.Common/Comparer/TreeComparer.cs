@@ -7,7 +7,7 @@ namespace DataWF.Common
     /// Comparer tree. Buid tree from list of IGroupable objects.
     /// Used IGroupable.Level, IGroupable.TopGroup and IGroupable.Group properties of list items
     /// </summary>
-    public class TreeComparer<T> : IComparer<T>, IComparer where T : IGroup
+    public class TreeComparer<T> : InvokerComparer<T> where T : IGroup
     {
         public TreeComparer()
         {
@@ -22,12 +22,12 @@ namespace DataWF.Common
 
         #region IComparer Members
 
-        public int Compare(object x, object y)
+        public override int Compare(object x, object y)
         {
             return Compare((T)x, (T)y);
         }
 
-        public int Compare(T x, T y)
+        public override int Compare(T x, T y)
         {
             return GroupHelper.Compare(x, y, Comparer);
         }

@@ -88,7 +88,7 @@ namespace DataWF.Common
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        public int Compare(object x, object y)
+        public virtual int Compare(object x, object y)
         {
             object xValue = x == null ? null : Invoker.GetValue(x);
             object yValue = y == null ? null : Invoker.GetValue(y);
@@ -159,7 +159,7 @@ namespace DataWF.Common
             return ListHelper.Compare(val, key, null, false);
         }
 
-        public int Compare(T x, T y)
+        public virtual int Compare(T x, T y)
         {
             return base.Compare(x, y);
         }

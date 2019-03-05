@@ -37,6 +37,7 @@ namespace DataWF.Common
                 }
             }
         }
+        public bool HaveGlobal => ((IEnumerable<QueryParameter<T>>)Parameters).Any(p => p.IsEnabled && p.IsGlobal);
 
         public QueryParameterList<T> Parameters
         {

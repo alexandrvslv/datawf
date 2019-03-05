@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace DataWF.Common
@@ -9,12 +10,34 @@ namespace DataWF.Common
         {
             return new QueryParameter<G>()
             {
-                Invoker = new TreeInvoker<G>(),
+                Invoker = TreeInvoker<G>.Instance,
                 Comparer = CompareType.Equal,
-                Value = true
+                Value = true,
+                IsGlobal = true,
             };
         }
 
+        public static void Filter(IFilterable filterable)
+        {
+            var type = TypeHelper.GetItemType(filterable);
+            filterable.FilterQuery.Parameters.Add(CreateTreeFilter(type));
+            filterable.FilterQuery.Orders.Add(CreateTreeComparer(type));
+        }
+
+        public static IQueryParameter CreateTreeFilter(Type type)
+        {
+            var parameter = (IQueryParameter)EmitInvoker.CreateObject(typeof(QueryParameter<>).MakeGenericType(type));
+            parameter.Invoker = (IInvoker)EmitInvoker.CreateObject(typeof(TreeInvoker<>).MakeGenericType(type));
+            parameter.Comparer = CompareType.Equal;
+            parameter.Value = true;
+            parameter.IsGlobal = true;
+            return parameter;
+        }
+
+        public static IComparer CreateTreeComparer(Type type)
+        {
+            return (IComparer)EmitInvoker.CreateObject(typeof(TreeComparer<>).MakeGenericType(type));
+        }
 
         public static bool IsExpand(IGroup item)
         {
@@ -188,6 +211,8 @@ namespace DataWF.Common
                     yield return subItem;
             }
         }
+
+        
     }
 
 }

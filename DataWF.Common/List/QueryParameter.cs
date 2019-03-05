@@ -70,6 +70,11 @@ namespace DataWF.Common
             }
         }
 
+        public bool IsGlobal
+        {
+            get; set;
+        }
+
         public bool IsEnabled
         {
             get { return isEnabled; }

@@ -84,7 +84,6 @@ namespace DataWF.Common
 
         public static ListIndex<T, K> Create<T, K>(IInvoker<T, K> accessor)
         {
-
             IEqualityComparer<K> comparer = null;
             if (accessor.DataType == typeof(string))
             {
