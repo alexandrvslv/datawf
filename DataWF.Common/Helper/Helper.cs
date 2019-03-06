@@ -1043,7 +1043,8 @@ namespace DataWF.Common
             object buf = value;
             type = TypeHelper.CheckNullable(type);
 
-            if (TypeHelper.IsBaseType(value.GetType(), type))
+            if (TypeHelper.IsBaseType(value.GetType(), type)
+                || TypeHelper.IsInterface(value.GetType(), type))
                 buf = value;
             else if (type == typeof(string))
             {
