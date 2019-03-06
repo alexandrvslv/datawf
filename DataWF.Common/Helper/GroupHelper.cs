@@ -14,6 +14,7 @@ namespace DataWF.Common
                 Comparer = CompareType.Equal,
                 Value = true,
                 IsGlobal = true,
+                FormatIgnore = true,
             };
         }
 
@@ -31,6 +32,7 @@ namespace DataWF.Common
             parameter.Comparer = CompareType.Equal;
             parameter.Value = true;
             parameter.IsGlobal = true;
+            parameter.FormatIgnore = true;
             return parameter;
         }
 

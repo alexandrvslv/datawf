@@ -88,6 +88,8 @@ namespace DataWF.Common
             }
         }
 
+        public bool FormatIgnore { get; set; } = false;
+
         public bool FormatEmpty
         {
             get

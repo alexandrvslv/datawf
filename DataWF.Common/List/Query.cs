@@ -207,7 +207,7 @@ namespace DataWF.Common
         {
             var logic = false;
             var builder = new StringBuilder();
-            foreach (var parametr in GetEnabled())
+            foreach (var parametr in GetEnabled().Where(p => !p.FormatIgnore))
             {
                 if (ckeckEmpty && parametr.FormatEmpty)
                 {

@@ -17,6 +17,7 @@ namespace DataWF.Common
         QueryGroup Group { get; set; }
         string FormatName { get; set; }
         bool FormatEmpty { get; set; }
+        bool FormatIgnore { get; set; }
     }
 
     public interface IQueryFormatable
