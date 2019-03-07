@@ -127,22 +127,22 @@ namespace DataWF.Common
         {
             return query is Query<T> typed
                 ? Select(typed)
-                : ListHelper.Select(items, query, indexes);
+                : ListHelper.Select(this, query, indexes);
         }
 
         public IEnumerable<T> Select(Query<T> query)
         {
-            return ListHelper.Select<T>(items, query, indexes);
+            return ListHelper.Select<T>(this, query, indexes);
         }
 
         IEnumerable ISelectable.Select(IQueryParameter parameter)
         {
-            return ListHelper.Select<T>(items, (QueryParameter<T>)parameter, indexes);
+            return ListHelper.Select<T>(this, (QueryParameter<T>)parameter, indexes);
         }
 
         public IEnumerable<T> Select(QueryParameter<T> parameter)
         {
-            return ListHelper.Select<T>(items, parameter, indexes);
+            return ListHelper.Select<T>(this, parameter, indexes);
         }
 
         IEnumerable ISelectable.Select(string property, CompareType comparer, object value)

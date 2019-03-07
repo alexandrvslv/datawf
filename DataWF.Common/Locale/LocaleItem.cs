@@ -165,7 +165,7 @@ namespace DataWF.Common
         public string GetAllValues(string separator)
         {
             string rez = string.Empty;
-            foreach (var item in items)
+            foreach (var item in this)
                 rez += item.Value + (!IsLast(item) ? separator : string.Empty);
             return rez;
 
@@ -174,7 +174,7 @@ namespace DataWF.Common
         public object Clone()
         {
             var litem = new LocaleItem(name);
-            foreach (var item in items)
+            foreach (var item in this)
                 litem.Add((LocaleString)item.Clone());
             return litem;
         }
