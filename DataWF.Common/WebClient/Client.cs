@@ -47,7 +47,7 @@ namespace DataWF.Common
             var index = -1;
             var property = (PropertySerializationInfo)null;
             var id = (object)null;
-            var synchItem = (ISynchronized)null;
+            var synchItem = item as ISynchronized;
             while (jreader.Read() && jreader.TokenType != JsonToken.EndObject)
             {
                 if (jreader.TokenType == JsonToken.PropertyName)
