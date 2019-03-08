@@ -94,7 +94,7 @@ namespace DataWF.Common
                             item = Select((K)id) 
                                 ?? (T)sourceList?
                                 .Cast<IPrimaryKey>()
-                                .FirstOrDefault(p => p.PrimaryKey?.Equals(id) ?? false);                            
+                                .FirstOrDefault(p => p?.PrimaryKey?.Equals(id) ?? false);                            
                             if (item is ISynchronized synchronized)
                             {
                                 synchItem = synchronized;
