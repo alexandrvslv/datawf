@@ -204,8 +204,10 @@ namespace DataWF.Common
             return ListHelper.Compare(ox, oy, comp, true);
         }
 
-        public static IEnumerable<IGroup> GetSubGroups(IGroup group)
+        public static IEnumerable<IGroup> GetSubGroups(IGroup group, bool addSender = false)
         {
+            if(addSender)
+                yield return group;
             foreach (var item in group.GetGroups())
             {
                 yield return item;
