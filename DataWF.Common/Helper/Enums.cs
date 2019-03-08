@@ -83,7 +83,8 @@ namespace DataWF.Common
         Between,
         Is,
         As,
-        Using
+        Using,
+        Contains
     }
 
     [Flags]

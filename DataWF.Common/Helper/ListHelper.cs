@@ -260,7 +260,7 @@ namespace DataWF.Common
                 if (!(x is string) && x is IEnumerable xlist)
                 {
                     x = y;
-                    y = xlist;                    
+                    y = xlist;
                 }
                 object val = x;
                 if (y is string)
@@ -295,6 +295,21 @@ namespace DataWF.Common
                     {
                         result = !result;
                     }
+                }
+            }
+            else if (compare.Type == CompareTypes.Contains)
+            {
+                if (x is IList xList)
+                {
+                    result = xList.Contains(y);
+                }
+                else if (x is IEnumerable xEnumerable)
+                {
+                    result = xEnumerable.Cast<object>().Contains(y);
+                }
+                if (compare.Not)
+                {
+                    result = !result;
                 }
             }
             else
