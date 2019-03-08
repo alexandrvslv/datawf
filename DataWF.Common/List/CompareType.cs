@@ -22,6 +22,8 @@ namespace DataWF.Common
         public static readonly CompareType NotBetween = new CompareType(CompareTypes.Between, true);
         public static readonly CompareType Contains = new CompareType(CompareTypes.Contains, false);
         public static readonly CompareType NotContains = new CompareType(CompareTypes.Contains, true);
+        public static readonly CompareType Intersect = new CompareType(CompareTypes.Intersect, false);
+        public static readonly CompareType NotIntersect = new CompareType(CompareTypes.Intersect, true);
 
         public static bool operator ==(CompareType typeLeft, CompareType typeRight)
         {

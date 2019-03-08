@@ -84,7 +84,8 @@ namespace DataWF.Common
         Is,
         As,
         Using,
-        Contains
+        Contains,
+        Intersect
     }
 
     [Flags]

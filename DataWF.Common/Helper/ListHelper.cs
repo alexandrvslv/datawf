@@ -303,9 +303,20 @@ namespace DataWF.Common
                 {
                     result = xList.Contains(y);
                 }
-                else if (x is IEnumerable xEnumerable)
+                else if (x is IEnumerable<object> xEnumerable)
                 {
-                    result = xEnumerable.Cast<object>().Contains(y);
+                    result = xEnumerable.Contains(y);
+                }
+                if (compare.Not)
+                {
+                    result = !result;
+                }
+            }
+            else if (compare.Type == CompareTypes.Intersect)
+            {
+                if (x is IEnumerable<object> xEnumerable && y is IEnumerable<object> yEnumerable)
+                {
+                    result = xEnumerable.Intersect(yEnumerable).Any();
                 }
                 if (compare.Not)
                 {
