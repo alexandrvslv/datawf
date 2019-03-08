@@ -28,6 +28,11 @@ namespace DataWF.Common
             return ListIndexFabric.Create<T, V>(this);
         }
 
+        public QueryParameter<T> CreateParameter()
+        {
+            return new QueryParameter<T> { Invoker = this };
+        }
+
         public V GetValue(T target)
         {
             return GetAction(target);
