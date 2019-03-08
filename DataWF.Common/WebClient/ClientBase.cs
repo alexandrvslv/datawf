@@ -27,6 +27,7 @@ namespace DataWF.Common
         private const string fileNameToken = "filename=";
         private Lazy<JsonSerializerSettings> serializeSettings;
         private string baseUrl;
+        private IClientProvider provider;
 
         public ClientBase()
         {
@@ -42,7 +43,16 @@ namespace DataWF.Common
             });
         }
 
-        public IClientProvider Provider { get; set; }
+        public IClientProvider Provider
+        {
+            get => provider;
+            set => Initialize(value);
+        }
+
+        protected virtual void Initialize(IClientProvider provider)
+        {
+            this.provider = provider;
+        }
 
         public ClientStatus Status { get; set; }
 
@@ -155,7 +165,7 @@ namespace DataWF.Common
                 {
                     using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false))
                     {
-                        ProcessResponse(client, response);                        
+                        ProcessResponse(client, response);
                         var result = default(R);
                         switch (response.StatusCode)
                         {
