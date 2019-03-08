@@ -17,24 +17,25 @@ namespace DataWF.Common
         protected ISelectable selectableSource;
         private string tempParameters;
 
-        public SelectableListView() : this(new Query<T>())
-        {
-
-        }
-
         public SelectableListView(Query<T> filter)
         {
             propertyHandler = null;
             FilterQuery = filter;
         }
 
+        public SelectableListView() : this(new Query<T>())
+        { }
+
         public SelectableListView(IEnumerable baseCollection)
             : this(baseCollection, true)
-        {
-        }
+        { }
 
         public SelectableListView(IEnumerable baseCollection, bool handle)
-            : this()
+            : this(new Query<T>(), baseCollection, handle)
+        { }
+
+        public SelectableListView(Query<T> filter, IEnumerable baseCollection, bool handle)
+            : this(filter)
         {
             if (handle)
             {
