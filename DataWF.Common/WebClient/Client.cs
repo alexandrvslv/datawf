@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -90,7 +91,10 @@ namespace DataWF.Common
                         id = value;
                         if (item == null && id != null)
                         {
-                            item = Select((K)id);// ?? (T)sourceList?.Cast<IPrimaryKey>().FirstOrDefault(p => p.PrimaryKey?.Equals(id) ?? false);                            
+                            item = Select((K)id) 
+                                ?? (T)sourceList?
+                                .Cast<IPrimaryKey>()
+                                .FirstOrDefault(p => p.PrimaryKey?.Equals(id) ?? false);                            
                             if (item is ISynchronized synchronized)
                             {
                                 synchItem = synchronized;
