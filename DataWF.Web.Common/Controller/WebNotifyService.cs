@@ -14,39 +14,52 @@ namespace DataWF.Web.Common
 {
     public class WebNotifyService : NotifyService
     {
-        private SelectableList<WebNotifyClient> Clients = new SelectableList<WebNotifyClient>();
+        private SelectableList<WebNotifyConnection> connections = new SelectableList<WebNotifyConnection>();
 
         public event EventHandler<WebNotifyEventArgs> ReceiveMessage;
         public event EventHandler<WebNotifyEventArgs> RemoveClient;
 
-        public void WebSocketrequest()
+        public WebNotifyService()
         {
-            Clients.Indexes.Add(WebNotifyClient.SocketInvoker);
+            connections.Indexes.Add(WebNotifyConnection.SocketInvoker);
         }
 
-        public WebNotifyClient GetBySocket(WebSocket socket)
+        public WebNotifyConnection GetBySocket(WebSocket socket)
         {
-            return Clients.SelectOne(WebNotifyClient.SocketInvoker.Name, socket);
+            return connections.SelectOne(WebNotifyConnection.SocketInvoker.Name, socket);
         }
 
-        public WebNotifyClient GetByUser(User user)
+        public IEnumerable<WebNotifyConnection> GetByUser(User user)
         {
-            return Clients.SelectOne(WebNotifyClient.UserInvoker.Name, user);
+            return connections.Select(WebNotifyConnection.UserInvoker.Name, CompareType.Equal, user);
         }
 
-        public void Register(WebSocket socket, User user)
+        public void Register(WebSocket socket, User user, string address)
         {
             var client = GetBySocket(socket);
             if (client == null)
             {
-                client = new WebNotifyClient { Socket = socket, User = user };
-                Clients.Add(client);
+                client = new WebNotifyConnection
+                {
+                    Socket = socket,
+                    User = user,
+                    Address = address
+                };
+                connections.Add(client);
             }
+        }
+
+        public IEnumerable<WebNotifyConnection> GetConnections()
+        {
+            return connections;
         }
 
         public async void CloseAsync(User user)
         {
-            await CloseAsync(GetByUser(user));
+            foreach (var item in GetByUser(user))
+            {
+                await CloseAsync(item);
+            }
         }
 
         public async void CloseAsync(WebSocket socket)
@@ -54,21 +67,34 @@ namespace DataWF.Web.Common
             await CloseAsync(GetBySocket(socket));
         }
 
-        public async Task CloseAsync(WebNotifyClient client)
+        public async Task CloseAsync(WebNotifyConnection client)
         {
             if (client != null)
             {
-                Clients.Remove(client);
                 await client.Socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Internal Server Close.", CancellationToken.None);
-                client.Dispose();
+                Remove(client);
             }
         }
 
-        private void Remove(WebNotifyClient client)
+        private void Remove(WebNotifyConnection client)
         {
-            Clients.Remove(client);
+            try
+            {
+                lock (client)
+                {
+                    if (connections.Contains(client))
+                    {
+                        connections.Remove(client);
+                        client.Dispose();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Helper.OnException(ex);
+            }
+
             RemoveClient?.Invoke(this, new WebNotifyEventArgs(client));
-            client.Dispose();
         }
 
         //https://github.com/radu-matei/websocket-manager/blob/blog-article/src/WebSocketManager/WebSocketManagerMiddleware.cs
@@ -125,15 +151,26 @@ namespace DataWF.Web.Common
         private async Task SendToWebClient(NotifyMessageItem[] list)
         {
             var buffer = new ArraySegment<byte>(WriteData(list));
-            foreach (var client in Clients)
+            foreach (var connection in connections)
             {
-                if (client.Socket.State != WebSocketState.Open)
-                {
-                    continue;
-                }
                 try
                 {
-                    await client.Socket.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
+                    if (connection.Socket.State != WebSocketState.Open)
+                    {
+                        Remove(connection);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
+                    Remove(connection);
+                }
+            }
+            foreach (var connection in connections)
+            {
+                try
+                {
+                    await connection.Socket.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
                 }
                 catch (Exception ex)
                 {
@@ -232,19 +269,17 @@ namespace DataWF.Web.Common
                 return stream.ToArray();
             }
         }
-
-
     }
 
     public class WebNotifyEventArgs : EventArgs
     {
-        public WebNotifyEventArgs(WebNotifyClient client, string message = null)
+        public WebNotifyEventArgs(WebNotifyConnection client, string message = null)
         {
             Client = client;
             Message = message;
         }
 
-        public WebNotifyClient Client { get; set; }
+        public WebNotifyConnection Client { get; set; }
         public string Message { get; set; }
     }
 }
