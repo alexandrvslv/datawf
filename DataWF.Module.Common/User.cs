@@ -19,6 +19,7 @@
 */
 using DataWF.Common;
 using DataWF.Data;
+using DataWF.Module.Counterpart;
 using MailKit.Net.Smtp;
 using System;
 using System.Collections.Generic;
@@ -45,6 +46,7 @@ namespace DataWF.Module.Common
         private static DBColumn refreshTokenKey = DBColumn.EmptyKey;
         private static DBColumn nameENKey = DBColumn.EmptyKey;
         private static DBColumn nameRUKey = DBColumn.EmptyKey;
+        private static DBColumn companyKey = DBColumn.EmptyKey;
         private static DBTable<User> dbTable;
 
         public static DBColumn AbbreviationKey => DBTable.ParseProperty(nameof(Abbreviation), ref abbreviationKey);
@@ -57,6 +59,7 @@ namespace DataWF.Module.Common
         public static DBColumn RefreshTokenKey => DBTable.ParseProperty(nameof(RefreshToken), ref refreshTokenKey);
         public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
         public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
+        public static DBColumn CompanyKey => DBTable.ParseProperty(nameof(Company), ref companyKey);
         public static DBTable<User> DBTable => dbTable ?? (dbTable = GetTable<User>());
 
         public static User GetByEmail(string email)
@@ -212,6 +215,20 @@ namespace DataWF.Module.Common
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
             set { SetValue(value, Table.PrimaryKey); }
+        }
+
+        [DataMember, Column("company_id"), Browsable(false)]
+        public int? CompanyId
+        {
+            get { return GetValue<int?>(CompanyKey); }
+            set { SetValue(value, CompanyKey); }
+        }
+
+        [Reference(nameof(CompanyId))]
+        public Company Company
+        {
+            get { return GetReference<Company>(CompanyKey); }
+            set { SetReference(value, CompanyKey); }
         }
 
         [DataMember, Column("login", 256, Keys = DBColumnKeys.Code | DBColumnKeys.Indexing), Index("ruser_login", true)]
@@ -378,5 +395,12 @@ namespace DataWF.Module.Common
         Lenght6 = 128,
         Lenght8 = 256,
         Lenght10 = 512,
+    }
+
+    public enum UserAuthMode
+    {
+        Internal,
+        SMTP,
+        LDAP
     }
 }

@@ -18,7 +18,6 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Data;
-using DataWF.Module.Common;
 using System;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -51,7 +50,7 @@ namespace DataWF.Module.Counterpart
         private static DBColumn phoneKey = DBColumn.EmptyKey;
         private static DBColumn countryKey = DBColumn.EmptyKey;
         private static DBColumn addressKey = DBColumn.EmptyKey;
-        private static DBColumn userKey = DBColumn.EmptyKey;
+        //private static DBColumn userKey = DBColumn.EmptyKey;
 
         public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
         public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
@@ -61,7 +60,7 @@ namespace DataWF.Module.Counterpart
         public static DBColumn PhoneKey => DBTable.ParseProperty(nameof(Phone), ref phoneKey);
         public static DBColumn CountryKey => DBTable.ParseProperty(nameof(CountryId), ref countryKey);
         public static DBColumn AddressKey => DBTable.ParseProperty(nameof(AddressId), ref addressKey);
-        public static DBColumn UserKey => DBTable.ParseProperty(nameof(UserId), ref userKey);
+        //public static DBColumn UserKey => DBTable.ParseProperty(nameof(UserId), ref userKey);
         public static DBTable<Customer> DBTable => dbTable ?? (dbTable = GetTable<Customer>());
 
         public Customer()
@@ -171,21 +170,21 @@ namespace DataWF.Module.Counterpart
             set { SetReference(value, AddressKey); }
         }
 
-        [Browsable(false)]
-        [DataMember, Column("user_id")]
-        public int? UserId
-        {
-            get { return GetValue<int?>(UserKey); }
-            set { SetValue(value, UserKey); }
-        }
+        //[Browsable(false)]
+        //[DataMember, Column("user_id")]
+        //public int? UserId
+        //{
+        //    get { return GetValue<int?>(UserKey); }
+        //    set { SetValue(value, UserKey); }
+        //}
 
-        [Browsable(false)]
-        [Reference(nameof(UserId))]
-        public User User
-        {
-            get { return GetReference<User>(UserKey); }
-            set { SetReference(value, UserKey); }
-        }
+        //[Browsable(false)]
+        //[Reference(nameof(UserId))]
+        //public User User
+        //{
+        //    get { return GetReference<User>(UserKey); }
+        //    set { SetReference(value, UserKey); }
+        //}
 
         [Browsable(false)]
         [DataMember, Column("sign_key", 1024, Keys = DBColumnKeys.Password | DBColumnKeys.System)]

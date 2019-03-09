@@ -18,6 +18,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Data;
+using DataWF.Module.Counterpart;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -31,11 +32,13 @@ namespace DataWF.Module.Common
         private static DBColumn departmentKey = DBColumn.EmptyKey;
         private static DBColumn nameENKey = DBColumn.EmptyKey;
         private static DBColumn nameRUKey = DBColumn.EmptyKey;
+        private static DBColumn companyKey = DBColumn.EmptyKey;
         private static DBTable<Position> dbTable;
 
         public static DBColumn DepartmentKey => DBTable.ParseProperty(nameof(Department), ref departmentKey);
         public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
         public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
+        public static DBColumn CompanyKey => DBTable.ParseProperty(nameof(Company), ref companyKey);
         public static DBTable<Position> DBTable => dbTable ?? (dbTable = GetTable<Position>());
 
         public Position()
@@ -46,6 +49,20 @@ namespace DataWF.Module.Common
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
             set { SetValue(value, Table.PrimaryKey); }
+        }
+
+        [DataMember, Column("company_id"), Browsable(false)]
+        public int? CompanyId
+        {
+            get { return GetValue<int?>(CompanyKey); }
+            set { SetValue(value, CompanyKey); }
+        }
+
+        [Reference(nameof(CompanyId))]
+        public Company Company
+        {
+            get { return GetReference<Company>(CompanyKey); }
+            set { SetReference(value, CompanyKey); }
         }
 
         [DataMember, Column("department_id"), Index("rposition_department_id"), Browsable(false)]

@@ -20,7 +20,6 @@
 using System;
 using System.ComponentModel;
 using DataWF.Data;
-using DataWF.Module.Common;
 using System.Runtime.Serialization;
 
 namespace DataWF.Module.Counterpart

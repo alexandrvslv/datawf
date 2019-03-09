@@ -28,6 +28,5 @@
   <ItemGroup>
     <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />
     <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj" />
-    <ProjectReference Include="..\DataWF.Module.Common\DataWF.Module.Common.csproj" />
   </ItemGroup>
 </Project>

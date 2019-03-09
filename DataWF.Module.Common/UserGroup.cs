@@ -19,8 +19,10 @@
 */
 using DataWF.Common;
 using DataWF.Data;
+using DataWF.Module.Counterpart;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Runtime.Serialization;
 
 namespace DataWF.Module.Common
@@ -30,10 +32,12 @@ namespace DataWF.Module.Common
     {
         private static DBColumn nameENKey = DBColumn.EmptyKey;
         private static DBColumn nameRUKey = DBColumn.EmptyKey;
+        private static DBColumn companyKey = DBColumn.EmptyKey;
         private static DBTable<UserGroup> dbTable;
 
         public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
         public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
+        public static DBColumn CompanyKey => DBTable.ParseProperty(nameof(Company), ref companyKey);
         public static DBTable<UserGroup> DBTable => dbTable ?? (dbTable = GetTable<UserGroup>());
 
         internal static void SetCurrent()
@@ -57,6 +61,20 @@ namespace DataWF.Module.Common
         }
 
         int IAccessGroup.Id { get { return Id ?? -1; } }
+
+        [DataMember, Column("company_id"), Browsable(false)]
+        public int? CompanyId
+        {
+            get { return GetValue<int?>(CompanyKey); }
+            set { SetValue(value, CompanyKey); }
+        }
+
+        [Reference(nameof(CompanyId))]
+        public Company Company
+        {
+            get { return GetReference<Company>(CompanyKey); }
+            set { SetReference(value, CompanyKey); }
+        }
 
         [DataMember, Column("group_number", 512, Keys = DBColumnKeys.Code), Index("rgroup_group_number")]
         public string Number

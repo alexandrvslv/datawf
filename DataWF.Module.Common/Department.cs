@@ -18,6 +18,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Data;
+using DataWF.Module.Counterpart;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -31,10 +32,12 @@ namespace DataWF.Module.Common
     {
         private static DBColumn nameENKey = DBColumn.EmptyKey;
         private static DBColumn nameRUKey = DBColumn.EmptyKey;
+        private static DBColumn companyKey = DBColumn.EmptyKey;
         private static DBTable<Department> dbTable;
 
         public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
         public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
+        public static DBColumn CompanyKey => DBTable.ParseProperty(nameof(Company), ref companyKey);
         public static DBTable<Department> DBTable => dbTable ?? (dbTable = GetTable<Department>());
 
         public Department()
@@ -45,6 +48,20 @@ namespace DataWF.Module.Common
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
             set { SetValue(value, Table.PrimaryKey); }
+        }
+
+        [DataMember, Column("company_id"), Browsable(false)]
+        public int? CompanyId
+        {
+            get { return GetValue<int?>(CompanyKey); }
+            set { SetValue(value, CompanyKey); }
+        }
+
+        [Reference(nameof(CompanyId))]
+        public Company Company
+        {
+            get { return GetReference<Company>(CompanyKey); }
+            set { SetReference(value, CompanyKey); }
         }
 
         [DataMember, Column("parent_id", Keys = DBColumnKeys.Group), Index("rdepartment_parent_id"), Browsable(false)]

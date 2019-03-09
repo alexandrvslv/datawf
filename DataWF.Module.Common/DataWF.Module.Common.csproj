@@ -36,5 +36,6 @@
   <ItemGroup>
     <ProjectReference Include="..\DataWF.Common\DataWF.Common.csproj" />
     <ProjectReference Include="..\DataWF.Data\DataWF.Data.csproj" />
+    <ProjectReference Include="..\DataWF.Module.Counterpart\DataWF.Module.Counterpart.csproj" />
   </ItemGroup>
 </Project>

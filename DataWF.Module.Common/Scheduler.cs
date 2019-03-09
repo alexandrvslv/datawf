@@ -19,6 +19,7 @@
 */
 using DataWF.Common;
 using DataWF.Data;
+using DataWF.Module.Counterpart;
 using System;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -33,12 +34,14 @@ namespace DataWF.Module.Common
         private static DBColumn intervalKey = DBColumn.EmptyKey;
         private static DBColumn procedureKey = DBColumn.EmptyKey;
         private static DBColumn dateExecuteKey = DBColumn.EmptyKey;
+        private static DBColumn companyKey = DBColumn.EmptyKey;
         private static DBTable<Scheduler> dbTable;
 
         public static DBColumn OrderKey => DBTable.ParseProperty(nameof(Order), ref orderKey);
         public static DBColumn IntervalKey => DBTable.ParseProperty(nameof(Interval), ref intervalKey);
         public static DBColumn ProcedureKey => DBTable.ParseProperty(nameof(ProcedureName), ref procedureKey);
         public static DBColumn DateExecuteKey => DBTable.ParseProperty(nameof(DateExecute), ref dateExecuteKey);
+        public static DBColumn CompanyKey => DBTable.ParseProperty(nameof(Company), ref companyKey);
         public static DBTable<Scheduler> DBTable => dbTable ?? (dbTable = GetTable<Scheduler>());
 
         public Scheduler()
@@ -49,6 +52,20 @@ namespace DataWF.Module.Common
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
             set { SetValue(value, Table.PrimaryKey); }
+        }
+
+        [DataMember, Column("company_id"), Browsable(false)]
+        public int? CompanyId
+        {
+            get { return GetValue<int?>(CompanyKey); }
+            set { SetValue(value, CompanyKey); }
+        }
+
+        [Reference(nameof(CompanyId))]
+        public Company Company
+        {
+            get { return GetReference<Company>(CompanyKey); }
+            set { SetReference(value, CompanyKey); }
         }
 
         [DataMember, Column("code", Keys = DBColumnKeys.Code)]

@@ -1,6 +1,7 @@
 ﻿using DataWF.Common;
 using DataWF.Data;
 using DataWF.Module.Common;
+using DataWF.Module.Counterpart;
 using NUnit.Framework;
 using System;
 
@@ -13,7 +14,11 @@ namespace DataWF.Test.Module.Common
         public void Initialize()
         {
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            var schema = DBSchema.Generate(typeof(User).Assembly, "common_database");
+            var schema = new DBSchema("common_database");
+            schema.Generate(new[] {
+                typeof(Customer).Assembly,
+                typeof(User).Assembly });
+            DBService.Schems.Add(schema);
             Assert.IsNotNull(schema);
             Assert.IsNotNull(Book.DBTable);
             Assert.IsNotNull(UserGroup.DBTable);
@@ -21,6 +26,7 @@ namespace DataWF.Test.Module.Common
             Assert.IsNotNull(User.DBTable);
             Assert.IsNotNull(Position.DBTable);
             Assert.IsNotNull(UserLog.DBTable);
+            Assert.IsNotNull(Company.DBTable);
             DBService.Save();
             schema.Connection = new DBConnection
             {
