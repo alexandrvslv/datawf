@@ -1,11 +1,13 @@
 ﻿using System;
+using System.Collections.Specialized;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
     public class StateInfoList : SelectableList<StateInfo>, IFileSerialize
     {
-        public StateInfoList() : this((int)Math.Pow(2, 14))
+        public StateInfoList() : this((int)Math.Pow(2, 12))
         {
         }
 
@@ -16,14 +18,17 @@ namespace DataWF.Common
 
         public int Limit { get; set; }
 
-        public override int Add(StateInfo item)
+        public override void OnListChanged(NotifyCollectionChangedEventArgs e)
         {
-            if (Limit > 0 && Count >= Limit)
+            base.OnListChanged(e);
+            if (Limit > 0 && e.Action == NotifyCollectionChangedAction.Add && Count == Limit)
             {
-                Save($"logs_{DateTime.Now.ToString("yyMMddHHmmss")}.xml");
-                Clear();
+                _ = Task.Run(() =>
+                {
+                    Save($"logs_{DateTime.Now.ToString("yyMMddHHmmss")}.xml");
+                    Clear();
+                });
             }
-            return base.Add(item);
         }
 
         #region IFSerialize implementation
