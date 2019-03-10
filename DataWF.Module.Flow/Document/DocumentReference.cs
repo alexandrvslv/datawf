@@ -105,6 +105,8 @@ namespace DataWF.Module.Flow
     [DataContract, Table("ddocument_reference", "Document", BlockSize = 400)]
     public class DocumentReference : DocumentDetail
     {
+        private Document reference;
+
         public static DBTable<DocumentReference> DBTable
         {
             get { return GetTable<DocumentReference>(); }
@@ -136,14 +138,14 @@ namespace DataWF.Module.Flow
         [Reference(nameof(ReferenceId))]
         public Document Reference
         {
-            get { return GetPropertyReference<Document>(); }
-            set { SetPropertyReference(value); }
+            get { return GetPropertyReference(ref reference); }
+            set { reference = SetPropertyReference(value); }
         }
 
         public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)
         {
             base.OnPropertyChanged(property, column, value);
-            var reference = GetReference<Document>(Table.ParseProperty(nameof(Reference)), DBLoadParam.None);
+            GetReference<Document>(Table.ParseProperty(nameof(Reference)), ref reference,  DBLoadParam.None);
             if (Attached && reference != null)
             {
                 reference.OnReferenceChanged(this);

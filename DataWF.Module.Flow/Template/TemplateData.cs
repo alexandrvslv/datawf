@@ -28,6 +28,9 @@ namespace DataWF.Module.Flow
     [DataContract, Table("rtemplate_data", "Template", BlockSize = 100)]
     public class TemplateData : DBItem
     {
+        private Template template;
+        private TemplateFile templateFile;
+
         public static DBTable<TemplateData> DBTable
         {
             get { return GetTable<TemplateData>(); }
@@ -55,8 +58,8 @@ namespace DataWF.Module.Flow
         [Reference(nameof(TemplateId))]
         public Template Template
         {
-            get { return GetPropertyReference<Template>(); }
-            set { SetPropertyReference(value); }
+            get { return GetPropertyReference(ref template); }
+            set { template = SetPropertyReference(value); }
         }
 
         [Browsable(false)]
@@ -70,8 +73,8 @@ namespace DataWF.Module.Flow
         [Reference(nameof(FileId))]
         public TemplateFile File
         {
-            get { return GetPropertyReference<TemplateFile>(); }
-            set { SetPropertyReference(value); }
+            get { return GetPropertyReference(ref templateFile); }
+            set { templateFile = SetPropertyReference(value); }
         }
     }
 }

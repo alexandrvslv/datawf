@@ -62,6 +62,8 @@ namespace DataWF.Module.Flow
     [DataContract, Table("rstage", "Template", BlockSize = 100)]
     public class Stage : DBItem, IDisposable
     {
+        private Work work;
+
         public static DBTable<Stage> DBTable
         {
             get { return GetTable<Stage>(); }
@@ -74,8 +76,8 @@ namespace DataWF.Module.Flow
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<int?>(table.PrimaryKey); }
+            set { SetValue(value, table.PrimaryKey); }
         }
 
         [DataMember, Column("code", 512, Keys = DBColumnKeys.Code)]
@@ -122,8 +124,8 @@ namespace DataWF.Module.Flow
         [Reference(nameof(WorkId))]
         public Work Work
         {
-            get { return GetPropertyReference<Work>(); }
-            set { SetPropertyReference(value); }
+            get { return GetPropertyReference(ref work); }
+            set { work = SetPropertyReference(value); }
         }
 
         [DataMember, Column("keys")]

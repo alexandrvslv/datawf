@@ -36,6 +36,7 @@ namespace DataWF.Module.Common
         private static DBColumn dateExecuteKey = DBColumn.EmptyKey;
         private static DBColumn companyKey = DBColumn.EmptyKey;
         private static DBTable<Scheduler> dbTable;
+        private Company company;
 
         public static DBColumn OrderKey => DBTable.ParseProperty(nameof(Order), ref orderKey);
         public static DBColumn IntervalKey => DBTable.ParseProperty(nameof(Interval), ref intervalKey);
@@ -64,8 +65,8 @@ namespace DataWF.Module.Common
         [Reference(nameof(CompanyId))]
         public Company Company
         {
-            get { return GetReference<Company>(CompanyKey); }
-            set { SetReference(value, CompanyKey); }
+            get { return GetReference(CompanyKey, ref company); }
+            set { company = SetReference(value, CompanyKey); }
         }
 
         [DataMember, Column("code", Keys = DBColumnKeys.Code)]

@@ -58,12 +58,7 @@ namespace DataWF.Data
 
         public T GetGroupReference<T>() where T : DBGroupItem, new()
         {
-            if (group == DBItem.EmptyItem)
-            {
-                var value = GetValue(Table.GroupKey);
-                group = value == null ? null : Table.GroupKey.ReferenceTable.LoadItemById(value);
-            }
-            return (T)group;
+            return (T)GetReference(Table.GroupKey, ref group);
         }
 
         public void SetGroupReference<T>(T value) where T : DBGroupItem, new()
@@ -72,8 +67,7 @@ namespace DataWF.Data
             {
                 throw new InvalidOperationException("Circle reference detected!");
             }
-            SetValue(value?.PrimaryId, Table.GroupKey);
-            group = value;
+            group = SetReference<T>(value, Table.GroupKey);
         }
 
         [Browsable(false)]
@@ -164,12 +158,12 @@ namespace DataWF.Data
             return rez;
         }
 
-        public override object GetCache(DBColumn column)
-        {
-            if (column == Table.GroupKey)
-                return group != DBItem.EmptyItem ? group : null;
-            return base.GetCache(column);
-        }
+        //public override object GetCache(DBColumn column)
+        //{
+        //    if (column == Table.GroupKey)
+        //        return group != DBItem.EmptyItem ? group : null;
+        //    return base.GetCache(column);
+        //}
 
         public IEnumerable SelectChilds()
         {

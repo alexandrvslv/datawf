@@ -116,6 +116,8 @@ namespace DataWF.Module.Flow
         private int changes = 0;
         private Stage temporaryStage;
         private User temporaryUser;
+        private Template template;
+        private Customer customer;
 
         //private DBItem parent = DBItem.EmptyItem;
 
@@ -180,8 +182,8 @@ namespace DataWF.Module.Flow
         [Reference(nameof(TemplateId))]
         public virtual Template Template
         {
-            get { return GetPropertyReference<Template>(); }
-            set { SetPropertyReference(value); }
+            get { return GetPropertyReference(ref template); }
+            set { template = SetPropertyReference(value); }
         }
 
         [Browsable(false)]
@@ -239,10 +241,10 @@ namespace DataWF.Module.Flow
         [Reference(nameof(CustomerId))]
         public virtual Customer Customer
         {
-            get { return GetPropertyReference<Customer>(); }
+            get { return GetPropertyReference(ref customer); }
             set
             {
-                SetPropertyReference(value);
+                customer = SetPropertyReference(value);
                 //Address = Customer?.Address;
             }
         }

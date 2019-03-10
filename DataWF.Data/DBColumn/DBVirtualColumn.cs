@@ -125,19 +125,9 @@ namespace DataWF.Data
             return BaseColumn.GetOld(hindex, out obj);
         }
 
-        public override object GetTag(int hindex)
-        {
-            return BaseColumn.GetTag(hindex);
-        }
-
         public override void RemoveOld(int hindex)
         {
             BaseColumn.RemoveOld(hindex);
-        }
-
-        public override void RemoveTag(int hindex)
-        {
-            BaseColumn.RemoveTag(hindex);
         }
 
         public override void SetOld(int hindex, object value)
@@ -145,9 +135,19 @@ namespace DataWF.Data
             BaseColumn.SetOld(hindex, value);
         }
 
-        public override void SetTag(int hindex, object value)
-        {
-            BaseColumn.SetTag(hindex, value);
-        }
+        //public override object GetTag(int hindex)
+        //{
+        //    return BaseColumn.GetTag(hindex);
+        //}
+
+        //public override void RemoveTag(int hindex)
+        //{
+        //    BaseColumn.RemoveTag(hindex);
+        //}
+
+        //public override void SetTag(int hindex, object value)
+        //{
+        //    BaseColumn.SetTag(hindex, value);
+        //}
     }
 }

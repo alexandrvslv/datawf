@@ -102,6 +102,11 @@ namespace DataWF.Module.Flow
         }
 
         public static DocumentWork Empty = new DocumentWork();
+        private Stage stage;
+        private Work work;
+        private User user;
+        private Department department;
+        private DocumentWork from;
 
         public DocumentWork()
         {
@@ -129,10 +134,10 @@ namespace DataWF.Module.Flow
         [Reference(nameof(StageId))]
         public Stage Stage
         {
-            get { return GetPropertyReference<Stage>(); }
+            get { return GetPropertyReference(ref stage); }
             set
             {
-                SetPropertyReference(value);
+                stage = SetPropertyReference(value);
                 Work = value?.Work;
                 IsSystem = value?.Keys != null && (value.Keys & StageKey.System) == StageKey.System;
                 IsStart = value?.Keys != null && (value.Keys & StageKey.Start) == StageKey.Start;
@@ -151,8 +156,8 @@ namespace DataWF.Module.Flow
         [Reference(nameof(WorkId))]
         public Work Work
         {
-            get { return GetPropertyReference<Work>(); }
-            set { SetPropertyReference(value); }
+            get { return GetPropertyReference(ref work); }
+            set { work = SetPropertyReference(value); }
         }
 
         [Browsable(false)]
@@ -166,10 +171,10 @@ namespace DataWF.Module.Flow
         [Reference(nameof(UserId))]
         public User User
         {
-            get { return GetPropertyReference<User>(); }
+            get { return GetPropertyReference(ref user); }
             set
             {
-                SetPropertyReference(value);
+                user = SetPropertyReference(value);
                 Position = value?.Position;
                 Department = value?.Department;
             }
@@ -182,14 +187,14 @@ namespace DataWF.Module.Flow
             get { return GetProperty<int?>(); }
             set { SetProperty(value); }
         }
-
+        
         [Reference(nameof(PositionId))]
         public Position Position
         {
-            get { return GetPropertyReference<Position>(); }
+            get { return GetPropertyReference(ref position); }
             set
             {
-                SetPropertyReference(value);
+                position = SetPropertyReference(value);
                 Department = value?.Department;
             }
         }
@@ -202,11 +207,13 @@ namespace DataWF.Module.Flow
             set { SetProperty(value); }
         }
 
+        private Position position;
+
         [Reference(nameof(DepartmentId))]
         public Department Department
         {
-            get { return GetPropertyReference<Department>(); }
-            set { SetPropertyReference(value); }
+            get { return GetPropertyReference(ref department); }
+            set { department = SetPropertyReference(value); }
         }
 
         [Browsable(false)]
@@ -220,8 +227,8 @@ namespace DataWF.Module.Flow
         [Reference(nameof(FromId))]
         public DocumentWork From
         {
-            get { return GetPropertyReference<DocumentWork>(); }
-            set { SetPropertyReference(value); }
+            get { return GetPropertyReference(ref from); }
+            set { from = SetPropertyReference(value); }
         }
 
         [Browsable(false)]

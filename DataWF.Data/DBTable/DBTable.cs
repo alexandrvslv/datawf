@@ -843,27 +843,27 @@ namespace DataWF.Data
 
             try
             {
-                if (transaction.Reference && (item.UpdateState & DBUpdateState.Delete) != DBUpdateState.Delete)
-                {
-                    foreach (var column in Columns.GetIsReference())
-                    {
-                        if (column.ColumnType == DBColumnTypes.Default)
-                        {
-                            var refItem = item.GetCache(column) as DBItem;
-                            if (refItem == null && item.GetValue(column) != null)
-                            {
-                                refItem = item.GetReference(column) as DBItem;
-                            }
-                            if (refItem != null && refItem != item)
-                            {
-                                if (refItem.IsChanged)
-                                    refItem.Save(user);
-                                if (item.GetValue(column) == null)
-                                    item.SetValue(refItem.PrimaryId, column);
-                            }
-                        }
-                    }
-                }
+                //if (transaction.Reference && (item.UpdateState & DBUpdateState.Delete) != DBUpdateState.Delete)
+                //{
+                //    foreach (var column in Columns.GetIsReference())
+                //    {
+                //        if (column.ColumnType == DBColumnTypes.Default)
+                //        {
+                //            var refItem = item.GetCache(column) as DBItem;
+                //            if (refItem == null && item.GetValue(column) != null)
+                //            {
+                //                refItem = item.GetReference(column) as DBItem;
+                //            }
+                //            if (refItem != null && refItem != item)
+                //            {
+                //                if (refItem.IsChanged)
+                //                    refItem.Save(user);
+                //                if (item.GetValue(column) == null)
+                //                    item.SetValue(refItem.PrimaryId, column);
+                //            }
+                //        }
+                //    }
+                //}
 
                 transaction.Rows.Add(item);
                 var args = new DBItemEventArgs(item, transaction, user);

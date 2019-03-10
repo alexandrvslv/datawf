@@ -53,6 +53,9 @@ namespace DataWF.Module.Common
         private static DBColumn textDataKey = DBColumn.EmptyKey;
         private static DBTable<UserLog> dbTable;
         public static UserLogStrategy LogStrategy = UserLogStrategy.BySession;
+        private User user;
+        private UserLog redo;
+
         public static DBColumn UserKey => DBTable.ParseProperty(nameof(UserId), ref userKey);
         public static DBColumn LogTypeKey => DBTable.ParseProperty(nameof(LogType), ref logTypeKey);
         public static DBColumn RedoKey => DBTable.ParseProperty(nameof(RedoId), ref redoKey);
@@ -116,8 +119,8 @@ namespace DataWF.Module.Common
         [Reference(nameof(UserId))]
         public User User
         {
-            get { return GetReference<User>(UserKey); }
-            set { SetReference(value, UserKey); }
+            get { return GetReference(UserKey, ref user); }
+            set { user = SetReference(value, UserKey); }
         }
 
         [DataMember, Column("type_id", Keys = DBColumnKeys.ElementType | DBColumnKeys.View)]
@@ -153,8 +156,8 @@ namespace DataWF.Module.Common
         [Reference(nameof(RedoId))]
         public UserLog Redo
         {
-            get { return GetReference<UserLog>(RedoKey); }
-            set { SetReference(value, RedoKey); }
+            get { return GetReference(RedoKey, ref redo); }
+            set { redo = SetReference(value, RedoKey); }
         }
 
         [DataMember, Column("text_data")]

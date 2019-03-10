@@ -18,6 +18,8 @@ namespace DataWF.Module.Counterpart
         private static DBColumn customerKey = DBColumn.EmptyKey;
         private static DBColumn addressKey = DBColumn.EmptyKey;
         private static DBTable<CustomerAddress> dbTable;
+        private Address address;
+        private Customer customer;
 
         public static DBColumn CustomerKey => DBTable.ParseProperty(nameof(CustomerId), ref customerKey);
         public static DBColumn AddressKey => DBTable.ParseProperty(nameof(AddressId), ref addressKey);
@@ -45,8 +47,8 @@ namespace DataWF.Module.Counterpart
         [Reference(nameof(CustomerId))]
         public Customer Customer
         {
-            get { return GetReference<Customer>(CustomerKey); }
-            set { SetReference(value, CustomerKey); }
+            get { return GetReference(CustomerKey, ref customer); }
+            set { customer = SetReference(value, CustomerKey); }
         }
 
         [Browsable(false)]
@@ -60,8 +62,8 @@ namespace DataWF.Module.Counterpart
         [Reference(nameof(AddressId))]
         public Address Address
         {
-            get { return GetReference<Address>(AddressKey); }
-            set { SetReference(value, AddressKey); }
+            get { return GetReference(AddressKey,ref address); }
+            set { address = SetReference(value, AddressKey); }
         }
     }
 }

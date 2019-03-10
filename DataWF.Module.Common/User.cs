@@ -204,6 +204,8 @@ namespace DataWF.Module.Common
         }
 
         protected bool online = false;
+        private Company company;
+        private Department department;
 
         public User()
         { }
@@ -227,8 +229,8 @@ namespace DataWF.Module.Common
         [Reference(nameof(CompanyId))]
         public Company Company
         {
-            get { return GetReference<Company>(CompanyKey); }
-            set { SetReference(value, CompanyKey); }
+            get { return GetReference(CompanyKey, ref company); }
+            set { company = SetReference(value, CompanyKey); }
         }
 
         [DataMember, Column("login", 256, Keys = DBColumnKeys.Code | DBColumnKeys.Indexing), Index("ruser_login", true)]
@@ -259,11 +261,13 @@ namespace DataWF.Module.Common
             set { SetValue(value, DepartmentKey); }
         }
 
+        private Position position;
+
         [Reference(nameof(DepartmentId))]
         public Department Department
         {
-            get { return GetReference<Department>(DepartmentKey); }
-            set { SetReference(value, DepartmentKey); }
+            get { return GetReference(DepartmentKey, ref department); }
+            set { department = SetReference(value, DepartmentKey); }
         }
 
         [DataMember, Column("position_id"), Browsable(false)]
@@ -276,10 +280,10 @@ namespace DataWF.Module.Common
         [Reference(nameof(PositionId))]
         public Position Position
         {
-            get { return GetReference<Position>(PositionKey); }
+            get { return GetReference<Position>(PositionKey, ref position); }
             set
             {
-                SetReference(value, PositionKey);
+                position = SetReference(value, PositionKey);
                 Department = value?.Department;
             }
         }

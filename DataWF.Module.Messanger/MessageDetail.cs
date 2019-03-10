@@ -25,6 +25,8 @@ namespace DataWF.Module.Messanger
 {
     public abstract class MessageDetail : DBItem
     {
+        private Message message;
+
         [Browsable(false)]
         [DataMember, Column("message_id")]
         public long? MessageId
@@ -36,8 +38,8 @@ namespace DataWF.Module.Messanger
         [Reference(nameof(MessageId))]
         public Message Message
         {
-            get { return GetPropertyReference<Message>(); }
-            set { SetPropertyReference(value); }
+            get { return GetPropertyReference(ref message); }
+            set { message = SetPropertyReference(value); }
         }
     }
 

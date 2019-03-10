@@ -65,6 +65,7 @@ namespace DataWF.Module.Common
         }
 
         private IPEndPoint ipEndPoint;
+        private User user;
 
         public Instance()
         { }
@@ -86,8 +87,8 @@ namespace DataWF.Module.Common
         [Reference(nameof(UserId))]
         public User User
         {
-            get { return GetReference<User>(UserKey); }
-            set { SetReference(value, UserKey); }
+            get { return GetReference(UserKey, ref user); }
+            set { user = SetReference(value, UserKey); }
         }
 
         [DataMember, Column("instance_host")]

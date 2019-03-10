@@ -37,6 +37,8 @@ namespace DataWF.Module.Counterpart
         private static DBColumn emailKey = DBColumn.EmptyKey;
         private static DBColumn phoneKey = DBColumn.EmptyKey;
         private static DBTable<CustomerReference> dbTable;
+        private Company company;
+        private Persone persone;
 
         public static DBColumn CompanyKey => DBTable.ParseProperty(nameof(CompanyId), ref companyKey);
         public static DBColumn PersoneKey => DBTable.ParseProperty(nameof(PersoneId), ref personeKey);
@@ -66,8 +68,8 @@ namespace DataWF.Module.Counterpart
         [Reference(nameof(CompanyId))]
         public Company Company
         {
-            get { return GetReference<Company>(CompanyKey); }
-            set { SetReference(value, CompanyKey); }
+            get { return GetReference(CompanyKey, ref company); }
+            set { company = SetReference(value, CompanyKey); }
         }
 
         [Browsable(false)]
@@ -81,10 +83,10 @@ namespace DataWF.Module.Counterpart
         [Reference(nameof(PersoneId))]
         public Persone Persone
         {
-            get { return GetReference<Persone>(PersoneKey); }
+            get { return GetReference(PersoneKey, ref persone); }
             set
             {
-                SetReference(value, PersoneKey);
+                persone = SetReference(value, PersoneKey);
                 if (EMail == null)
                 {
                     EMail = Persone.EMail;

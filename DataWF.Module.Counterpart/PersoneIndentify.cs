@@ -62,6 +62,7 @@ namespace DataWF.Module.Counterpart
         private static DBColumn dateExpireKey = DBColumn.EmptyKey;
         private static DBColumn issyedByKey = DBColumn.EmptyKey;
         private static DBTable<PersoneIdentify> dbTable;
+        private Persone persone;
 
         public static DBColumn PersoneKey => DBTable.ParseProperty(nameof(PersoneId), ref personeKey);
         public static DBColumn NumberKey => DBTable.ParseProperty(nameof(Number), ref numberKey);
@@ -92,8 +93,8 @@ namespace DataWF.Module.Counterpart
         [Reference(nameof(PersoneId))]
         public Persone Persone
         {
-            get { return GetReference<Persone>(PersoneKey); }
-            set { SetReference(value, PersoneKey); }
+            get { return GetReference(PersoneKey, ref persone); }
+            set { persone = SetReference(value, PersoneKey); }
         }
 
         [DataMember, Column("identify_number", 30)]

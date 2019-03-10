@@ -110,7 +110,7 @@ namespace DataWF.Data
 
         public bool Canceled { get; private set; }
 
-        public bool Reference { get; set; } = true;
+        //public bool Reference { get; set; } = true;
 
         public IDbCommand Command
         {

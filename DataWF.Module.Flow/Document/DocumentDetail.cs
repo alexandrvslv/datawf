@@ -26,6 +26,8 @@ namespace DataWF.Module.Flow
 {
     public abstract class DocumentDetail : DBItem
     {
+        private Document document;
+
         [Browsable(false)]
         [DataMember, Column("document_id")]
         public virtual long? DocumentId
@@ -37,14 +39,14 @@ namespace DataWF.Module.Flow
         [Reference(nameof(DocumentId))]
         public Document Document
         {
-            get { return GetPropertyReference<Document>(); }
-            set { SetPropertyReference(value); }
+            get { return GetPropertyReference(ref document); }
+            set { document = SetPropertyReference(value); }
         }
 
         public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)
         {
             base.OnPropertyChanged(property, column, value);
-            var reference = GetReference<Document>(Table.ParseProperty(nameof(Document)), DBLoadParam.None);
+            var reference = GetReference<Document>(Table.ParseProperty(nameof(Document)), ref document, DBLoadParam.None);
             if (Attached && reference != null)
             {
                 reference.OnReferenceChanged(this);

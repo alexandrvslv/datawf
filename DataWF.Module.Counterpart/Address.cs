@@ -36,6 +36,7 @@ namespace DataWF.Module.Counterpart
         private static DBColumn locationKey = DBColumn.EmptyKey;
         private static DBColumn postIndexKey = DBColumn.EmptyKey;
         private static DBTable<Address> dbTable;
+        private Location location;
 
         public static DBColumn LocationKey => DBTable.ParseProperty(nameof(LocationId), ref locationKey);
         public static DBColumn PostIndexKey => DBTable.ParseProperty(nameof(PostIndex), ref postIndexKey);
@@ -62,13 +63,13 @@ namespace DataWF.Module.Counterpart
         [Reference(nameof(LocationId))]
         public Location Location
         {
-            get { return GetReference<Location>(LocationKey); }
+            get { return GetReference(LocationKey, ref location); }
             set
             {
                 if (value?.LocationType != LocationType.Region
                     && value?.LocationType != LocationType.City)
                     throw new ArgumentException("Location type mast be Region or Citi or Village");
-                SetReference(value, LocationKey);
+                location = SetReference(value, LocationKey);
             }
         }
 

@@ -34,6 +34,7 @@ namespace DataWF.Module.Common
         private static DBColumn nameRUKey = DBColumn.EmptyKey;
         private static DBColumn companyKey = DBColumn.EmptyKey;
         private static DBTable<Department> dbTable;
+        private Company company;
 
         public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
         public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
@@ -60,8 +61,8 @@ namespace DataWF.Module.Common
         [Reference(nameof(CompanyId))]
         public Company Company
         {
-            get { return GetReference<Company>(CompanyKey); }
-            set { SetReference(value, CompanyKey); }
+            get { return GetReference(CompanyKey, ref company); }
+            set { company = SetReference(value, CompanyKey); }
         }
 
         [DataMember, Column("parent_id", Keys = DBColumnKeys.Group), Index("rdepartment_parent_id"), Browsable(false)]

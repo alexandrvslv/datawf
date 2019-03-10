@@ -47,6 +47,10 @@ namespace DataWF.Module.Messanger
     [DataContract, Table("dmessage_address", "Message", IsLoging = false)]
     public class MessageAddress : MessageDetail
     {
+        private User user;
+        private Position position;
+        private Department department;
+
         public static DBTable<MessageAddress> DBTable
         {
             get { return GetTable<MessageAddress>(); }
@@ -74,10 +78,10 @@ namespace DataWF.Module.Messanger
         [Reference(nameof(UserId))]
         public User User
         {
-            get { return GetPropertyReference<User>(); }
+            get { return GetPropertyReference(ref user); }
             set
             {
-                SetPropertyReference(value);
+                user = SetPropertyReference(value);
                 Position = value?.Position;
             }
         }
@@ -93,10 +97,10 @@ namespace DataWF.Module.Messanger
         [Reference(nameof(PositionId))]
         public Position Position
         {
-            get { return GetPropertyReference<Position>(); }
+            get { return GetPropertyReference(ref position); }
             set
             {
-                SetPropertyReference(value);
+                position = SetPropertyReference(value);
                 Department = value?.Department;
             }
         }
@@ -112,8 +116,8 @@ namespace DataWF.Module.Messanger
         [Reference(nameof(DepartmentId))]
         public Department Department
         {
-            get { return GetPropertyReference<Department>(); }
-            set { SetPropertyReference(value); }
+            get { return GetPropertyReference(ref department); }
+            set { department = SetPropertyReference(value); }
         }
 
         [DataMember, Column("date_read")]

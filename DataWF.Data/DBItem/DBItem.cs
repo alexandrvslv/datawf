@@ -62,22 +62,59 @@ namespace DataWF.Data
                 Build(table);
         }
 
-        public object GetTag(DBColumn column)
-        {
-            return column.GetTag(handler);
-        }
+        //public object GetTag(DBColumn column)
+        //{
+        //    return column.GetTag(handler);
+        //}
 
-        public void SetTag(DBColumn column, object value)
-        {
-            if (value == null)
-            {
-                column.RemoveTag(handler);
-            }
-            else
-            {
-                column.SetTag(handler, value);
-            }
-        }
+        //public void SetTag(DBColumn column, object value)
+        //{
+        //    if (value == null)
+        //    {
+        //        column.RemoveTag(handler);
+        //    }
+        //    else
+        //    {
+        //        column.SetTag(handler, value);
+        //    }
+        //}
+
+        //protected virtual internal void RemoveTag()
+        //{
+        //    access = null;
+        //    foreach (DBColumn column in Table.Columns)
+        //    {
+        //        object o = GetTag(column);
+        //        if (o != null)
+        //        {
+        //            SetTag(column, null);
+        //        }
+        //    }
+        //}
+
+        //public object GetCache(string column)
+        //{
+        //    return GetCache(Table.Columns[column]);
+        //}
+
+        //public virtual object GetCache(DBColumn column)
+        //{
+        //    if (column == null)
+        //        return null;
+
+        //    return GetTag(column);
+        //}
+
+        //public void SetCache(string column, object Value)
+        //{
+        //    SetCache(Table.Columns[column], Value);
+        //}
+
+        //public void SetCache(DBColumn Column, object Value)
+        //{
+        //    if (Column != null)
+        //        SetTag(Column, Value);
+        //}
 
         public bool GetOld(DBColumn column, out object value)
         {
@@ -166,7 +203,7 @@ namespace DataWF.Data
 
         public void SetValue<T>(T value, DBColumn column, bool check, object tag = null)
         {
-            SetTag(column, tag);
+            //SetTag(column, tag);
 
             var field = column.GetValue<T>(this);
 
@@ -193,7 +230,7 @@ namespace DataWF.Data
 
         public void SetValue(object value, DBColumn column, bool check, object tag = null)
         {
-            SetTag(column, tag);
+            //SetTag(column, tag);
 
             var field = column.GetValue(this);
 
@@ -278,132 +315,108 @@ namespace DataWF.Data
             }
         }
 
-        protected virtual internal void RemoveTag()
-        {
-            access = null;
-            foreach (DBColumn column in Table.Columns)
-            {
-                object o = GetTag(column);
-                if (o != null)
-                {
-                    SetTag(column, null);
-                }
-            }
-        }
-
-        public DBItem GetReference(string code)
+        public DBItem GetRef(string code, DBLoadParam param = DBLoadParam.Load)
         {
             DBItem row = this;
             int pi = 0, i = code.IndexOf('.');
             while (i > 0)
             {
-                var item = row.GetReference(row.Table.Columns[code.Substring(pi, i - pi)]);
+                var item = row.GetRef(row.Table.Columns[code.Substring(pi, i - pi)], param);
                 if (item == null)
                     return null;
                 row = item;
                 pi = i + 1;
                 i = code.IndexOf('.', pi);
             }
-            return row.GetReference(row.Table.Columns[code.Substring(pi)]);
+            return row.GetRef(row.Table.Columns[code.Substring(pi)], param);
         }
 
-        public DBItem GetReference(DBColumn column, DBLoadParam param = DBLoadParam.Load)
-        {
-            var item = GetTag(column) as DBItem;
-
-            if (item == null)
-            {
-                object value = GetValue(column);
-                if (value == null)
-                    return null;
-
-                item = column.ReferenceTable.LoadItemById(value, param);
-                SetTag(column, item);
-            }
-            return item;
-        }
-
-        public T GetReference<T>(string code, DBLoadParam param = DBLoadParam.Load) where T : DBItem, new()
-        {
-            DBItem row = this;
-            int pi = 0, i = code.IndexOf('.');
-            while (i > 0)
-            {
-                var item = row.GetReference<T>(row.Table.Columns[code.Substring(pi, i - pi)], param);
-                if (item == null)
-                    return null;
-                row = item;
-                pi = i + 1;
-                i = code.IndexOf('.', pi);
-            }
-            return row.GetReference<T>(row.Table.Columns[code.Substring(pi)], param);
-        }
-
-        public T GetPropertyReference<T>([CallerMemberName] string property = null) where T : DBItem, new()
-        {
-            return GetReference<T>(Table.Foreigns.GetByProperty(property)?.Column);
-        }
-
-        public T GetReference<T>(DBColumn column, DBLoadParam param = DBLoadParam.Load) where T : DBItem, new()
+        public DBItem GetRef(DBColumn column, DBLoadParam param = DBLoadParam.Load)
         {
             if (column == null)
                 return null;
-            if (column.IsPrimaryKey)
-                return (T)this;
             if (!column.IsReference)
                 return null;
-
-            T item = GetTag(column) as T;
-
-            if (item == null)
-            {
-                object value = this[column];
-                if (value == null)
-                    return null;
-
-                item = (T)column.ReferenceTable.LoadItemById(value, param);
-                SetTag(column, item);// item == null ? (object)DBNull.Value : item);
-            }
-            return item;
+            if (column.IsPrimaryKey)
+                return this;
+            object value = GetValue(column);
+            if (value == null)
+                return null;
+            return column.ReferenceTable.LoadItemById(value, param);
         }
 
-        public void SetReference(DBItem value, string column)
+        public DBItem GetReference(string code, ref DBItem item, DBLoadParam param = DBLoadParam.Load)
         {
-            SetReference(value, Table.Columns[column]);
+            if (item != null)
+                return item;
+            return item = GetRef(code, param);
         }
 
-        public void SetPropertyReference(DBItem value, [CallerMemberName] string property = null)
+        public DBItem GetReference(DBColumn column, ref DBItem item, DBLoadParam param = DBLoadParam.Load)
         {
-            SetReference(value, Table.Foreigns.GetByProperty(property)?.Column);
+            object value = GetValue(column);
+            if (item?.PrimaryId == value)
+                return item;
+
+            return item = value == null ? null : column.ReferenceTable.LoadItemById(value, param);
         }
 
-        public void SetReference(DBItem value, DBColumn column)
+        public T GetReference<T>(DBColumn column, ref T item, DBLoadParam param = DBLoadParam.Load) where T : DBItem
+        {
+            object value = GetValue(column);
+            if (item?.PrimaryId == value)
+                return item;
+
+            return item = value == null ? (T)null : (T)column.ReferenceTable.LoadItemById(value, param);
+        }
+
+        public T GetPropertyReference<T>(ref T item, [CallerMemberName] string property = null) where T : DBItem
+        {
+            var column = Table.Foreigns.GetByProperty(property)?.Column;
+            return GetReference(column, ref item);
+        }
+
+        //public T GetReference<T>(string code, DBLoadParam param = DBLoadParam.Load) where T : DBItem, new()
+        //{
+        //    DBItem row = this;
+        //    int pi = 0, i = code.IndexOf('.');
+        //    while (i > 0)
+        //    {
+        //        var item = row.GetReference<T>(row.Table.Columns[code.Substring(pi, i - pi)], param);
+        //        if (item == null)
+        //            return null;
+        //        row = item;
+        //        pi = i + 1;
+        //        i = code.IndexOf('.', pi);
+        //    }
+        //    return row.GetReference<T>(row.Table.Columns[code.Substring(pi)], param);
+        //}
+
+        public T GetRef<T>(DBColumn column, DBLoadParam param = DBLoadParam.Load) where T : DBItem
+        {
+            return (T)GetRef(column, param);
+        }
+
+        public DBItem SetReference(DBItem value, string column)
+        {
+            return SetReference(value, Table.Columns[column]);
+        }
+
+        public T SetPropertyReference<T>(T value, [CallerMemberName] string property = null) where T : DBItem
+        {
+            return SetReference(value, Table.Foreigns.GetByProperty(property)?.Column);
+        }
+
+        public DBItem SetReference(DBItem value, DBColumn column)
         {
             SetValue(value?.PrimaryId, column, column.ColumnType == DBColumnTypes.Default, value);
+            return value;
         }
 
-        public object GetCache(string column)
+        public T SetReference<T>(T value, DBColumn column) where T : DBItem
         {
-            return GetCache(Table.Columns[column]);
-        }
-
-        public virtual object GetCache(DBColumn column)
-        {
-            if (column == null)
-                return null;
-
-            return GetTag(column);
-        }
-
-        public void SetCache(string column, object Value)
-        {
-            SetCache(Table.Columns[column], Value);
-        }
-
-        public void SetCache(DBColumn Column, object Value)
-        {
-            if (Column != null)
-                SetTag(Column, Value);
+            SetValue(value?.PrimaryId, column, column.ColumnType == DBColumnTypes.Default, value);
+            return value;
         }
 
         public bool GetBool(DBColumn column)
@@ -747,7 +760,7 @@ namespace DataWF.Data
                     var scolumn = row.Table.ParseColumnProperty(code.Substring(pi, i - pi));
                     if (scolumn == null)
                         return null;
-                    var item = row.GetReference(scolumn);
+                    var item = row.GetRef(scolumn);
                     if (item == null)
                         return null;
                     row = item;
@@ -762,7 +775,7 @@ namespace DataWF.Data
                 int pi = 0, i = code.IndexOf('.');
                 while (i > 0)
                 {
-                    var item = row.GetReference(row.Table.ParseColumnProperty(code.Substring(pi, i - pi)));
+                    var item = row.GetRef(row.Table.ParseColumnProperty(code.Substring(pi, i - pi)));
                     if (item == null)
                         return;
                     row = item;
@@ -996,10 +1009,10 @@ namespace DataWF.Data
             {
                 cacheToString = string.Empty;
             }
-            if (string.IsNullOrEmpty(property))
-            {
-                RemoveTag();
-            }
+            //if (string.IsNullOrEmpty(property))
+            //{
+            //    RemoveTag();
+            //}
             if (Attached)
             {
                 Table.OnItemChanged(this, property, column, value);

@@ -81,6 +81,7 @@ namespace DataWF.Module.Flow
         }
 
         private DBItemType documentType;
+        private Work work;
 
         public Template()
         {
@@ -163,8 +164,8 @@ namespace DataWF.Module.Flow
         [Reference(nameof(WorkId))]
         public Work Work
         {
-            get { return GetPropertyReference<Work>(); }
-            set { SetPropertyReference(value); }
+            get { return GetPropertyReference(ref work); }
+            set { work = SetPropertyReference(value); }
         }
 
         //public IEnumerable<TemplateParam> GetParams()

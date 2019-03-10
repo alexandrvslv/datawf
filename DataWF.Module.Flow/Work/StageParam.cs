@@ -66,6 +66,7 @@ namespace DataWF.Module.Flow
     public class StageParam : DBItem
     {
         private object _cache;
+        private Stage stage;
 
         public static DBTable<StageParam> DBTable
         {
@@ -94,8 +95,8 @@ namespace DataWF.Module.Flow
         [Reference(nameof(StageId))]
         public Stage Stage
         {
-            get { return GetPropertyReference<Stage>(); }
-            set { SetPropertyReference(value); }
+            get { return GetPropertyReference(ref stage); }
+            set { stage = SetPropertyReference(value); }
         }
 
         [DataMember, Column("code", 1024)]

@@ -44,6 +44,9 @@ namespace DataWF.Module.Flow
     [DataContract, Table("ddocument_customer", "Document", BlockSize = 400)]
     public class DocumentCustomer : DocumentDetail
     {
+        private Customer customer;
+        private Address address;
+
         public static DBTable<DocumentCustomer> DBTable
         {
             get { return GetTable<DocumentCustomer>(); }
@@ -74,10 +77,10 @@ namespace DataWF.Module.Flow
         [Reference(nameof(CustomerId))]
         public Customer Customer
         {
-            get { return GetPropertyReference<Customer>(); }
+            get { return GetPropertyReference(ref customer); }
             set
             {
-                SetPropertyReference(value);
+                customer = SetPropertyReference(value);
                 Address = value?.Address;
                 EMail = value?.EMail;
                 Phone = value?.Phone;
@@ -95,8 +98,8 @@ namespace DataWF.Module.Flow
         [Reference(nameof(AddressId))]
         public Address Address
         {
-            get { return GetPropertyReference<Address>(); }
-            set { SetPropertyReference(value); }
+            get { return GetPropertyReference(ref address); }
+            set { address = SetPropertyReference(value); }
         }
 
         [DataMember, Column("email", 1024)]

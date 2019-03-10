@@ -50,6 +50,9 @@ namespace DataWF.Module.Counterpart
         private static DBColumn phoneKey = DBColumn.EmptyKey;
         private static DBColumn countryKey = DBColumn.EmptyKey;
         private static DBColumn addressKey = DBColumn.EmptyKey;
+        private Address address;
+        private Country country;
+
         //private static DBColumn userKey = DBColumn.EmptyKey;
 
         public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
@@ -151,8 +154,8 @@ namespace DataWF.Module.Counterpart
         [Reference(nameof(CountryId))]
         public Country Country
         {
-            get { return GetReference<Country>(CountryKey); }
-            set { SetReference(value, CountryKey); }
+            get { return GetReference(CountryKey, ref country); }
+            set { country = SetReference(value, CountryKey); }
         }
 
         [Browsable(false)]
@@ -166,8 +169,8 @@ namespace DataWF.Module.Counterpart
         [Reference(nameof(AddressId))]
         public Address Address
         {
-            get { return GetReference<Address>(AddressKey); }
-            set { SetReference(value, AddressKey); }
+            get { return GetReference(AddressKey, ref address); }
+            set { address = SetReference(value, AddressKey); }
         }
 
         //[Browsable(false)]

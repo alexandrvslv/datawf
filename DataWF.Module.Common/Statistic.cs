@@ -29,6 +29,7 @@ namespace DataWF.Module.Common
         private static DBColumn schedulerKey = DBColumn.EmptyKey;
         private static DBColumn resultKey = DBColumn.EmptyKey;
         private static DBTable<Statistic> dbTable;
+        private Scheduler scheduler;
 
         public static DBColumn SchedulerKey => DBTable.ParseProperty(nameof(SchedulerId), ref schedulerKey);
         public static DBColumn ResultKey => DBTable.ParseProperty(nameof(Result), ref resultKey);
@@ -69,8 +70,8 @@ namespace DataWF.Module.Common
         [Reference(nameof(SchedulerId))]
         public Scheduler Scheduler
         {
-            get { return GetReference<Scheduler>(SchedulerKey); }
-            set { SetReference(value, SchedulerKey); }
+            get { return GetReference(SchedulerKey, ref scheduler); }
+            set { scheduler = SetReference(value, SchedulerKey); }
         }
 
         [DataMember, Column("stat_result")]

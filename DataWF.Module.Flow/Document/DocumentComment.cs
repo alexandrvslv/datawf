@@ -9,6 +9,8 @@ namespace DataWF.Module.Flow
     [DataContract, Table("ddocument_comment", "Document", BlockSize = 400, IsLoging = false)]
     public class DocumentComment : DocumentDetail
     {
+        private Message message;
+
         public static DBTable<DocumentComment> DBTable => GetTable<DocumentComment>();
 
         public DocumentComment()
@@ -36,8 +38,8 @@ namespace DataWF.Module.Flow
         [Reference(nameof(MessageId))]
         public Message Message
         {
-            get { return GetPropertyReference<Message>(); }
-            set { SetPropertyReference(value); }
+            get { return GetPropertyReference(ref message); }
+            set { message = SetPropertyReference(value); }
         }
     }
 }

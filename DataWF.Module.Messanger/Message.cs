@@ -107,6 +107,7 @@ namespace DataWF.Module.Messanger
             return message;
         }
         private MessageAddressList addresses;
+        private User user;
 
         public Message()
         {
@@ -129,8 +130,8 @@ namespace DataWF.Module.Messanger
         [Reference(nameof(UserId))]
         public User User
         {
-            get { return GetPropertyReference<User>(); }
-            set { SetPropertyReference(value); }
+            get { return GetPropertyReference(ref user); }
+            set { user = SetPropertyReference(value); }
         }
 
         [Column("text_data")]

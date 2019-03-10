@@ -125,6 +125,7 @@ namespace DataWF.Module.Flow
 
         private byte[] buf;
         private User currentUser;
+        private TemplateData template;
 
         public DocumentData()
         {
@@ -153,8 +154,8 @@ namespace DataWF.Module.Flow
         [Reference(nameof(TemplateDataId))]
         public TemplateData TemplateData
         {
-            get { return GetPropertyReference<TemplateData>(); }
-            set { SetPropertyReference(value); }
+            get { return GetPropertyReference(ref template); }
+            set { template = SetPropertyReference(value); }
         }
 
         [DataMember, Column("file_name", 1024, Keys = DBColumnKeys.View | DBColumnKeys.FileName)]

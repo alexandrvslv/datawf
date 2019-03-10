@@ -88,7 +88,7 @@ namespace DataWF.Data
         protected string cdefault;
         protected string query;
         protected string subList;
-        private Dictionary<int, object> tags;
+        //private Dictionary<int, object> tags;
         private Dictionary<int, object> olds;
 
         #endregion
@@ -707,30 +707,30 @@ namespace DataWF.Data
         }
 
 
-        public virtual object GetTag(int hindex)
-        {
-            return tags == null ? null : tags.TryGetValue(hindex, out var obj) ? obj : null;
-        }
+        //public virtual object GetTag(int hindex)
+        //{
+        //    return tags == null ? null : tags.TryGetValue(hindex, out var obj) ? obj : null;
+        //}
 
-        public virtual void RemoveTag(int hindex)
-        {
-            if (tags != null)
-            {
-                tags.Remove(hindex);
-            }
-        }
+        //public virtual void RemoveTag(int hindex)
+        //{
+        //    if (tags != null)
+        //    {
+        //        tags.Remove(hindex);
+        //    }
+        //}
 
-        public virtual void SetTag(int hindex, object value)
-        {
-            if (value == null)
-                RemoveTag(hindex);
-            else
-            {
-                if (tags == null)
-                    tags = new Dictionary<int, object>();
-                tags[hindex] = value;
-            }
-        }
+        //public virtual void SetTag(int hindex, object value)
+        //{
+        //    if (value == null)
+        //        RemoveTag(hindex);
+        //    else
+        //    {
+        //        if (tags == null)
+        //            tags = new Dictionary<int, object>();
+        //        tags[hindex] = value;
+        //    }
+        //}
 
         public virtual bool GetOld(int hindex, out object obj)
         {
@@ -756,7 +756,7 @@ namespace DataWF.Data
         public void Clear()
         {
             pull?.Clear();
-            tags?.Clear();
+            //tags?.Clear();
             olds?.Clear();
         }
 
