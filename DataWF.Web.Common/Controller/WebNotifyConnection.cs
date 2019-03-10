@@ -20,6 +20,8 @@ namespace DataWF.Web.Common
 
         public string UserEmail => User?.EMail;
 
+        public WebSocketState State => Socket?.State ?? WebSocketState.Aborted;
+
         public string Address { get; set; }
 
         [JsonIgnore]
