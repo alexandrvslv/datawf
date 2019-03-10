@@ -201,7 +201,7 @@ namespace DataWF.Common
                                                     throw ioex;
                                                 }
                                             }
-                                            var process = new DownloadProcess(fileName, 8192, fileSize);
+                                            var process = new DownloadProcess(fileName, 81920, fileSize);
                                             await process.StartAsync(responseStream, fileStream, new CancellationToken());
                                             fileStream.Position = 0;
                                             return (R)(object)fileStream;
