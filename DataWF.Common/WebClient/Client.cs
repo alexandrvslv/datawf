@@ -277,41 +277,41 @@ namespace DataWF.Common
             return Task.FromResult<List<T>>(null);
         }
 
-        public Task GetAsync() => GetAsync(CancellationToken.None);
+        public async Task<IEnumerable> GetAsync() => await GetAsync(CancellationToken.None);
 
         public virtual Task<List<T>> FindAsync(string filter, CancellationToken cancellationToken) => Task.FromResult<List<T>>(null);
 
-        public Task FindAsync(string filter) => FindAsync(filter, CancellationToken.None);
+        public async Task<IEnumerable> FindAsync(string filter) => await FindAsync(filter, CancellationToken.None);
 
         public virtual Task<T> GetAsync(K id, CancellationToken cancellationToken) => Task.FromResult(default(T));
 
         public Task<T> GetAsync(object id, CancellationToken cancellationToken) => GetAsync((K)id, cancellationToken);
 
-        public Task GetAsync(object id) => GetAsync((K)id, CancellationToken.None);
+        public async Task<object> GetAsync(object id) => await GetAsync((K)id, CancellationToken.None);
 
         public virtual Task<T> CopyAsync(K id, CancellationToken cancellationToken) => Task.FromResult(default(T));
 
         public Task<T> CopyAsync(object id, CancellationToken cancellationToken) => CopyAsync((K)id, cancellationToken);
 
-        public Task CopyAsync(object id) => CopyAsync((K)id, CancellationToken.None);
+        public async Task<object> CopyAsync(object id) => await CopyAsync((K)id, CancellationToken.None);
 
         public virtual Task<T> PutAsync(T value, CancellationToken cancellationToken) => Task.FromResult(value);
 
         public Task<T> PutAsync(object value, CancellationToken cancellationToken) => PutAsync((T)value, cancellationToken);
 
-        public Task PutAsync(object value) => PutAsync((T)value, CancellationToken.None);
+        public async Task<object> PutAsync(object value) => await PutAsync((T)value, CancellationToken.None);
 
         public virtual Task<T> PostAsync(T value, CancellationToken cancellationToken) => Task.FromResult(value);
 
         public Task<T> PostAsync(object value, CancellationToken cancellationToken) => PostAsync((T)value, cancellationToken);
 
-        public Task PostAsync(object value) => PostAsync((T)value, CancellationToken.None);
+        public async Task<object> PostAsync(object value) => await PostAsync((T)value, CancellationToken.None);
 
         public virtual Task<bool> DeleteAsync(K id, CancellationToken cancellationToken) => Task.FromResult(true);
 
         public Task<bool> DeleteAsync(object id, CancellationToken cancellationToken) => DeleteAsync((K)id, cancellationToken);
 
-        public Task DeleteAsync(object id) => DeleteAsync((K)id, CancellationToken.None);
+        public Task<bool> DeleteAsync(object id) => DeleteAsync((K)id, CancellationToken.None);
 
         public virtual Task<object> GenerateIdAsync(CancellationToken cancellationToken) => Task.FromResult<object>(null);
 

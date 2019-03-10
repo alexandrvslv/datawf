@@ -35,13 +35,13 @@ namespace DataWF.Common
         object Select(object id);
         object ParseId(object id);
         Task<object> GenerateId();
-        Task DeleteAsync(object id);
-        Task FindAsync(string filter);
-        Task GetAsync();
-        Task GetAsync(object id);
-        Task CopyAsync(object id);
-        Task PostAsync(object value);
-        Task PutAsync(object value);
+        Task<bool> DeleteAsync(object id);
+        Task<IEnumerable> FindAsync(string filter);
+        Task<IEnumerable> GetAsync();
+        Task<object> GetAsync(object id);
+        Task<object> CopyAsync(object id);
+        Task<object> PostAsync(object value);
+        Task<object> PutAsync(object value);
         object DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, object item, IList sourceList);
         object NewItem();
     }
