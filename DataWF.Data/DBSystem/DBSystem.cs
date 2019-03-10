@@ -866,7 +866,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                 return value.ToString().Replace(",", ".");
         }
 
-        public virtual void ReadSequential(DBItem item, DBColumn column, Stream stream, int bufferSize = 8192)
+        public virtual void ReadSequential(DBItem item, DBColumn column, Stream stream, int bufferSize = 81920)
         {
             var transaction = DBTransaction.GetTransaction(item, item.Table.Schema.Connection);
             try

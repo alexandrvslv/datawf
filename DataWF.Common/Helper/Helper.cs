@@ -468,7 +468,7 @@ namespace DataWF.Common
             }
         }
 
-        public static byte[] WriteGZip(Stream data, int bufferSize = 8192)
+        public static byte[] WriteGZip(Stream data, int bufferSize = 81920)
         {
             if (data == null)
                 return null;

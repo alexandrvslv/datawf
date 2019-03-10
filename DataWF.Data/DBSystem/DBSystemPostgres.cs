@@ -249,7 +249,7 @@ namespace DataWF.Data
             return builder.ToString();
         }
 
-        //public override void ReadSequential(DBItem item, DBColumn column, Stream stream, int bufferSize = 8192)
+        //public override void ReadSequential(DBItem item, DBColumn column, Stream stream, int bufferSize = 81920)
         //{
         //    var Conn = (NpgsqlConnection)CreateConnection(item.Table.Schema.Connection);
         //    // Retrieve a Large Object Manager for this connection
