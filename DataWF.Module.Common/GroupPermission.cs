@@ -20,6 +20,7 @@
 using DataWF.Common;
 using DataWF.Data;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -295,6 +296,12 @@ namespace DataWF.Module.Common
                 Type = GetPermissionType(value, out string code);
                 PrimaryCode = code;
             }
+        }
+
+        [Column(nameof(AccessItems), ColumnType = DBColumnTypes.Code)]
+        public List<AccessItem> AccessItems
+        {
+            get { return Access.Items; }
         }
 
         public override AccessValue Access
