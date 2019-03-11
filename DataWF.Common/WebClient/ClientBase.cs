@@ -374,11 +374,9 @@ namespace DataWF.Common
             var client = Provider.GetClient(itemType);
             var temp = (IList)EmitInvoker.CreateObject(type);
 
-            int index = 0;
             while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
             {
-                var item = list != null && index < list.Count ? list[index] : null;
-                item = client != null
+                var item = client != null
                     ? client.DeserializeItem(serializer, jreader, null, list)
                     : serializer.Deserialize(jreader, itemType);
                 if (item == null)
@@ -386,28 +384,34 @@ namespace DataWF.Common
                     continue;
                 }
                 temp.Add(item);
-                index++;
             }
 
             if (list != null)
             {
-                for (var i = 0; i < list.Count;)
+                lock (list)
                 {
-                    var item = list[i];
-                    //if (item is ISynchronized synched && !(synched.IsSynchronized ?? false))
-                    //    continue;
-                    if (!temp.Contains(item))
+                    for (var i = 0; i < list.Count;)
                     {
-                        list.RemoveAt(i);
-                    }
-                    else
-                    {
-                        i++;
+                        var item = list[i];
+                        if (item is ISynchronized synched && synched.SyncStatus == SynchronizedStatus.New)
+                        {
+                            i++;
+                            continue;
+                        }
+                        if (!temp.Contains(item))
+                        {
+                            list.RemoveAt(i);
+                        }
+                        else
+                        {
+                            i++;
+                        }
                     }
                 }
+                temp.Clear();
                 return list;
             }
-            return list ?? temp;
+            return temp;
         }
 
         public virtual R DeserializeObject<R>(JsonSerializer serializer, JsonTextReader jreader, R item, IList sourceList)
