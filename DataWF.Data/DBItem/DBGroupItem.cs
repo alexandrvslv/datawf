@@ -32,7 +32,7 @@ namespace DataWF.Data
     [DataContract]
     public class DBGroupItem : DBItem, IGroup
     {
-        private DBItem group = DBItem.EmptyItem;
+        private DBItem group;
 
         [Browsable(false)]
         public object GroupId
@@ -53,7 +53,7 @@ namespace DataWF.Data
                 throw new InvalidOperationException("Self reference detected!");
             }
             SetValue(value, Table.GroupKey);
-            group = DBItem.EmptyItem;
+            group = null;
         }
 
         public T GetGroupReference<T>() where T : DBGroupItem, new()
