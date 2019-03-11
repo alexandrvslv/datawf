@@ -100,7 +100,7 @@ namespace DataWF.Common
 
         public bool IsEnabled
         {
-            get { return ((IEnumerable<QueryParameter<T>>)Parameters).Any(p => p.IsEnabled); }
+            get { return ((IEnumerable<QueryParameter<T>>)Parameters).Any(p => !p.FormatIgnore && p.IsEnabled); }
         }
 
         public void Clear()
