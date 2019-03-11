@@ -57,22 +57,7 @@ namespace DataWF.Common
                 }
                 else
                 {
-                    object value = null;
-                    if (jreader.TokenType == JsonToken.StartObject)
-                    {
-                        var obj = item == null ? null : property?.Invoker.GetValue(item);
-                        value = DeserializeObject(serializer, jreader, property?.DataType, obj, null);
-                    }
-                    else if (jreader.TokenType == JsonToken.StartArray)
-                    {
-                        var list = item == null ? null : (IList)property?.Invoker.GetValue(item);
-                        value = DeserializeArray(serializer, jreader, property?.DataType, list);
-                    }
-                    else
-                    {
-                        value = serializer.Deserialize(jreader, property?.DataType);
-                    }
-
+                    object value = DeserializeValue(serializer, jreader, property?.DataType, item == null ? null : property?.Invoker.GetValue(item), null);
                     if (property == null)
                         continue;
 
@@ -91,10 +76,10 @@ namespace DataWF.Common
                         id = value;
                         if (item == null && id != null)
                         {
-                            item = Select((K)id) 
+                            item = Select((K)id)
                                 ?? (T)sourceList?
                                 .Cast<IPrimaryKey>()
-                                .FirstOrDefault(p => p?.PrimaryKey?.Equals(id) ?? false);                            
+                                .FirstOrDefault(p => p?.PrimaryKey?.Equals(id) ?? false);
                             if (item is ISynchronized synchronized)
                             {
                                 synchItem = synchronized;
@@ -137,6 +122,8 @@ namespace DataWF.Common
                     property.Invoker.SetValue(item, value);
                 }
             }
+            if (item == null)
+                return null;
 
             if (synchItem != null && synchItem.SyncStatus == SynchronizedStatus.Load)
             {
