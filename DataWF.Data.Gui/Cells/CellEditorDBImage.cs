@@ -26,13 +26,13 @@ namespace DataWF.Data.Gui
             if (dataSource is DBItem && column != null)
             {
                 DBItem row = (dataSource is DBItem) ? (DBItem)dataSource : value as DBItem;
-                Image img = row.GetCache(column) as Image;
+                Image img = null;//row.GetCache(column) as Image;
                 if (img == null)
                 {
                     if (row[column] is byte[] bytes)
                     {
                         img = GuiService.ImageFromByte(bytes);
-                        row.SetCache(column, img);
+                        //row.SetCache(column, img);
                     }
                 }
                 return img;

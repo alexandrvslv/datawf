@@ -91,7 +91,7 @@ namespace DataWF.Data.Gui
                     if (row[column]?.Equals(obj) ?? false)
                     {
                         obj = row.GetReference(column, DBLoadParam.None);
-                        if (obj == null && row.GetCache(column) == null)
+                        if (obj == null)
                         {
                             getReferenceStack.Push(new PDBTableParam() { Row = row, Column = column });
                             if (getReferenceStack.Count == 1)

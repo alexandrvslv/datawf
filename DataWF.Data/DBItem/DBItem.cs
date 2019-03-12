@@ -62,60 +62,6 @@ namespace DataWF.Data
                 Build(table);
         }
 
-        //public object GetTag(DBColumn column)
-        //{
-        //    return column.GetTag(handler);
-        //}
-
-        //public void SetTag(DBColumn column, object value)
-        //{
-        //    if (value == null)
-        //    {
-        //        column.RemoveTag(handler);
-        //    }
-        //    else
-        //    {
-        //        column.SetTag(handler, value);
-        //    }
-        //}
-
-        //protected virtual internal void RemoveTag()
-        //{
-        //    access = null;
-        //    foreach (DBColumn column in Table.Columns)
-        //    {
-        //        object o = GetTag(column);
-        //        if (o != null)
-        //        {
-        //            SetTag(column, null);
-        //        }
-        //    }
-        //}
-
-        //public object GetCache(string column)
-        //{
-        //    return GetCache(Table.Columns[column]);
-        //}
-
-        //public virtual object GetCache(DBColumn column)
-        //{
-        //    if (column == null)
-        //        return null;
-
-        //    return GetTag(column);
-        //}
-
-        //public void SetCache(string column, object Value)
-        //{
-        //    SetCache(Table.Columns[column], Value);
-        //}
-
-        //public void SetCache(DBColumn Column, object Value)
-        //{
-        //    if (Column != null)
-        //        SetTag(Column, Value);
-        //}
-
         public bool GetOld(DBColumn column, out object value)
         {
             return column.GetOld(handler, out value);
@@ -315,23 +261,23 @@ namespace DataWF.Data
             }
         }
 
-        public DBItem GetRef(string code, DBLoadParam param = DBLoadParam.Load)
+        public DBItem GetReference(string code, DBLoadParam param = DBLoadParam.Load)
         {
             DBItem row = this;
             int pi = 0, i = code.IndexOf('.');
             while (i > 0)
             {
-                var item = row.GetRef(row.Table.Columns[code.Substring(pi, i - pi)], param);
+                var item = row.GetReference(row.Table.Columns[code.Substring(pi, i - pi)], param);
                 if (item == null)
                     return null;
                 row = item;
                 pi = i + 1;
                 i = code.IndexOf('.', pi);
             }
-            return row.GetRef(row.Table.Columns[code.Substring(pi)], param);
+            return row.GetReference(row.Table.Columns[code.Substring(pi)], param);
         }
 
-        public DBItem GetRef(DBColumn column, DBLoadParam param = DBLoadParam.Load)
+        public DBItem GetReference(DBColumn column, DBLoadParam param = DBLoadParam.Load)
         {
             if (column == null)
                 return null;
@@ -349,7 +295,7 @@ namespace DataWF.Data
         {
             if (item != null)
                 return item;
-            return item = GetRef(code, param);
+            return item = GetReference(code, param);
         }
 
         public DBItem GetReference(DBColumn column, ref DBItem item, DBLoadParam param = DBLoadParam.Load)
@@ -392,9 +338,9 @@ namespace DataWF.Data
         //    return row.GetReference<T>(row.Table.Columns[code.Substring(pi)], param);
         //}
 
-        public T GetRef<T>(DBColumn column, DBLoadParam param = DBLoadParam.Load) where T : DBItem
+        public T GetReference<T>(DBColumn column, DBLoadParam param = DBLoadParam.Load) where T : DBItem
         {
-            return (T)GetRef(column, param);
+            return (T)GetReference(column, param);
         }
 
         public DBItem SetReference(DBItem value, string column)
@@ -760,7 +706,7 @@ namespace DataWF.Data
                     var scolumn = row.Table.ParseColumnProperty(code.Substring(pi, i - pi));
                     if (scolumn == null)
                         return null;
-                    var item = row.GetRef(scolumn);
+                    var item = row.GetReference(scolumn);
                     if (item == null)
                         return null;
                     row = item;
@@ -775,7 +721,7 @@ namespace DataWF.Data
                 int pi = 0, i = code.IndexOf('.');
                 while (i > 0)
                 {
-                    var item = row.GetRef(row.Table.ParseColumnProperty(code.Substring(pi, i - pi)));
+                    var item = row.GetReference(row.Table.ParseColumnProperty(code.Substring(pi, i - pi)));
                     if (item == null)
                         return;
                     row = item;

@@ -37,6 +37,9 @@ namespace DataWF.Module.Finance
     [DataContract, Table("dbalance", "Finance", BlockSize = 5000)]
     public class Balance : DBItem
     {
+        private Currency currency;
+        private Account account;
+
         public static DBTable<Balance> DBTable
         {
             get { return GetTable<Balance>(); }
@@ -107,8 +110,8 @@ namespace DataWF.Module.Finance
         [Reference("AccountId")]
         public Account Account
         {
-            get { return GetPropertyReference<Account>(); }
-            set { SetPropertyReference(value); }
+            get { return GetPropertyReference<Account>(ref account); }
+            set { account = SetPropertyReference(value); }
         }
 
         [Column("amount")]
@@ -128,8 +131,8 @@ namespace DataWF.Module.Finance
         [Reference(nameof(CurrencyId))]
         public Currency Currency
         {
-            get { return GetPropertyReference<Currency>(); }
-            set { SetPropertyReference(value); }
+            get { return GetPropertyReference<Currency>(ref currency); }
+            set { currency = SetPropertyReference(value); }
         }
     }
 }

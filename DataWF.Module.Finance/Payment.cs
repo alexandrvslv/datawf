@@ -35,7 +35,15 @@ namespace DataWF.Module.Finance
 	[DataContract, Table("dpayment", "Finance", BlockSize = 5000)]
 	public class Payment : DBItem
 	{
-		public static DBTable<Payment> DBTable
+        private Account debit;
+        private Payment parent;
+        private Book type;
+        private Account credit;
+        private Currency currency;
+        private Currency creditCurrency;
+        private Currency debitCurrency;
+
+        public static DBTable<Payment> DBTable
 		{
 			get { return GetTable<Payment>(); }
 		}
@@ -63,8 +71,8 @@ namespace DataWF.Module.Finance
 		[Reference(nameof(TypeId))]
 		public Book Type
 		{
-			get { return GetPropertyReference<Book>(); }
-			set { SetPropertyReference(value); }
+			get { return GetPropertyReference<Book>(ref type); }
+			set { type = SetPropertyReference(value); }
 		}
 
 		[Browsable(false)]
@@ -78,8 +86,8 @@ namespace DataWF.Module.Finance
 		[Reference(nameof(ParentId))]
 		public Payment Parent
 		{
-			get { return GetPropertyReference<Payment>(); }
-			set { SetPropertyReference(value); }
+			get { return GetPropertyReference<Payment>(ref parent); }
+			set { parent = SetPropertyReference(value); }
 		}
 
 		[Column("paymentdate")]
@@ -100,10 +108,10 @@ namespace DataWF.Module.Finance
 		[Reference(nameof(DebitId))]
 		public Account Debit
 		{
-			get { return GetPropertyReference<Account>(); }
+			get { return GetPropertyReference<Account>(ref debit); }
 			set
 			{
-				SetPropertyReference(value);
+                debit = SetPropertyReference(value);
 				if (value != null)
 					DebitCurrency = value.Currency;
 			}
@@ -120,10 +128,10 @@ namespace DataWF.Module.Finance
 		[Reference(nameof(CreditId))]
 		public Account Credit
 		{
-			get { return GetPropertyReference<Account>(); }
+			get { return GetPropertyReference<Account>(ref credit); }
 			set
 			{
-				SetPropertyReference(value);
+                credit = SetPropertyReference(value);
 				if (value != null)
 					CreditCurrency = value.Currency;
 			}
@@ -147,8 +155,8 @@ namespace DataWF.Module.Finance
 		[Reference(nameof(CurrencyId))]
 		public Currency Currency
 		{
-			get { return GetPropertyReference<Currency>(); }
-			set { SetPropertyReference(value); }
+			get { return GetPropertyReference<Currency>(ref currency); }
+			set { currency = SetPropertyReference(value); }
 		}
 
 		[Column("debitrate")]
@@ -176,8 +184,8 @@ namespace DataWF.Module.Finance
 		[Reference(nameof(DebitCurrencyId))]
 		public Currency DebitCurrency
 		{
-			get { return GetPropertyReference<Currency>(); }
-			set { SetPropertyReference(value); }
+			get { return GetPropertyReference<Currency>(ref debitCurrency); }
+			set { debitCurrency = SetPropertyReference(value); }
 		}
 
 		[Column("creditrate")]
@@ -205,8 +213,8 @@ namespace DataWF.Module.Finance
 		[Reference(nameof(DebitCurrencyId))]
 		public Currency CreditCurrency
 		{
-			get { return GetPropertyReference<Currency>(); }
-			set { SetPropertyReference(value); }
+			get { return GetPropertyReference<Currency>(ref creditCurrency); }
+			set { creditCurrency = SetPropertyReference(value); }
 		}
 
 		[Column("description")]

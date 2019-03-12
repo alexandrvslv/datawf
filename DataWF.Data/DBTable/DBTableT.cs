@@ -767,7 +767,7 @@ namespace DataWF.Data
                         var buf = new List<T>();
                         foreach (DBItem item in query.Select())
                         {
-                            var reference = item.GetRef<T>(qcolumn.Column, DBLoadParam.None);
+                            var reference = item.GetReference<T>(qcolumn.Column, DBLoadParam.None);
                             //if (reference != null && reference.Table != this)
                             //{
                             //    throw new Exception(string.Format("Value {0} Table {1}", reference.Table, this));

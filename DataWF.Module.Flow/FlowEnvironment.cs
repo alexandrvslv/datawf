@@ -69,7 +69,7 @@ namespace DataWF.Module.Flow
 
                 foreach (DBColumn col in cols)
                 {
-                    var document = arg.Item.GetRef<Document>(col, DBLoadParam.None);
+                    var document = arg.Item.GetReference<Document>(col, DBLoadParam.None);
                     if (document != null)
                         document.OnReferenceChanged(arg.Item);
                 }

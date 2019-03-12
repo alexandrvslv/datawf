@@ -53,6 +53,9 @@ namespace DataWF.Module.Finance
 
         [NonSerialized()]
         private decimal amount;
+        private Customer customer;
+        private Currency currency;
+        private Customer bank;
 
         public Account()
         {
@@ -128,8 +131,8 @@ namespace DataWF.Module.Finance
         [Reference(nameof(CustomerId))]
         public Customer Customer
         {
-            get { return GetPropertyReference<Customer>(); }
-            set { SetPropertyReference(value); }
+            get { return GetPropertyReference<Customer>( ref customer); }
+            set { customer = SetPropertyReference(value); }
         }
 
         [Browsable(false)]
@@ -143,8 +146,8 @@ namespace DataWF.Module.Finance
         [Reference(nameof(CurrencyId))]
         public Currency Currency
         {
-            get { return GetPropertyReference<Currency>(); }
-            set { SetPropertyReference(value); }
+            get { return GetPropertyReference<Currency>(ref currency); }
+            set { currency = SetPropertyReference(value); }
         }
 
         [Browsable(false)]
@@ -158,8 +161,8 @@ namespace DataWF.Module.Finance
         [Reference(nameof(BankId))]
         public Customer Bank
         {
-            get { return GetPropertyReference<Customer>(); }
-            set { SetPropertyReference(value); }
+            get { return GetPropertyReference<Customer>(ref bank); }
+            set { bank = SetPropertyReference(value); }
         }
 
         public Balance GetBalance(object typeid)

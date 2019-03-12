@@ -229,6 +229,8 @@ namespace DataWF.Test.Data
         [Table(PositionTableName, "Default")]
         public class Position : DBItem
         {
+            private Position parent;
+
             public static DBTable<Position> DBTable
             {
                 get { return GetTable<Position>(); }
@@ -263,8 +265,8 @@ namespace DataWF.Test.Data
             [Reference(nameof(ParentId))]
             public Position Parent
             {
-                get { return GetPropertyReference<Position>(); }
-                set { SetPropertyReference(value); }
+                get { return GetPropertyReference<Position>(ref parent); }
+                set { parent = SetPropertyReference(value); }
             }
 
             [Column("name", 200, Keys = DBColumnKeys.Culture)]
@@ -290,6 +292,8 @@ namespace DataWF.Test.Data
         [Table(EmployerTableName, "Default")]
         public class Employer : DBItem
         {
+            private Position position;
+
             public static DBTable<Employer> DBTable
             {
                 get { return GetTable<Employer>(); }
@@ -323,8 +327,8 @@ namespace DataWF.Test.Data
             [Reference(nameof(PositionId))]
             public Position Position
             {
-                get { return GetPropertyReference<Position>(); }
-                set { SetPropertyReference(value); }
+                get { return GetPropertyReference<Position>(ref position); }
+                set { position = SetPropertyReference(value); }
             }
 
             [Column("typeid", Keys = DBColumnKeys.ElementType), DefaultValue(EmployerType.Type2)]

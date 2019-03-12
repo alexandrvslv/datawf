@@ -81,7 +81,10 @@ namespace DataWF.Data
         public DBForeignKey Generate()
         {
             if (ForeignKey != null)
+            {
+                ForeignKey.Property = Property.Name;
                 return ForeignKey;
+            }
             if (ReferenceType == null
                 || Table == null || Table.Schema == null
                 || Column == null || Column.Column == null)
