@@ -73,7 +73,7 @@ namespace DataWF.Web.Common
                {
                    options.SerializerSettings.ContractResolver = DBItemContractResolver.Instance;
                    //options.SerializerSettings.Error = SerializationErrors;
-                   options.SerializerSettings.TraceWriter = new DiagnosticsTraceWriter() { };
+                   //options.SerializerSettings.TraceWriter = new DiagnosticsTraceWriter() { };
                    options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
                });
 

@@ -13,7 +13,15 @@ namespace DataWF.Web.Common
 
         public ClaimsPrincipal UserPrincipal { get; set; }
 
-        public User User => user ?? (user = UserPrincipal?.GetCommonUser());
+        public User User
+        {
+            get => user ?? (user = UserPrincipal?.GetCommonUser());
+            set => user = value;
+        }
+
+        public bool SerializeReferencing { get; set; } = true;
+
+        public bool SerializeReferences { get; set; } = false;
     }
 
 }

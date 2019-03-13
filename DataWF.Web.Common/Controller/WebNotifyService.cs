@@ -15,6 +15,7 @@ namespace DataWF.Web.Common
     public class WebNotifyService : NotifyService
     {
         private SelectableList<WebNotifyConnection> connections = new SelectableList<WebNotifyConnection>();
+        private JsonSerializerSettings jsonSettings;
 
         public event EventHandler<WebNotifyEventArgs> ReceiveMessage;
         public event EventHandler<WebNotifyEventArgs> RemoveClient;
@@ -22,6 +23,9 @@ namespace DataWF.Web.Common
         public WebNotifyService()
         {
             connections.Indexes.Add(WebNotifyConnection.SocketInvoker);
+            jsonSettings = new JsonSerializerSettings { ContractResolver = DBItemContractResolver.Instance };
+            jsonSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+
         }
 
         public WebNotifyConnection GetBySocket(WebSocket socket)
@@ -145,12 +149,30 @@ namespace DataWF.Web.Common
         protected override async void OnSendChanges(NotifyMessageItem[] list)
         {
             base.OnSendChanges(list);
-            await SendToWebClient(list);
+            await SendToWebClients(list);
         }
 
-        private async Task SendToWebClient(NotifyMessageItem[] list)
+        private async Task SendToWebClients(NotifyMessageItem[] list)
         {
-            var buffer = new ArraySegment<byte>(WriteData(list));
+            CheckConnections();
+            foreach (var connection in connections)
+            {
+                try
+                {
+                    await connection.Socket.SendAsync(new ArraySegment<byte>(WriteData(list, connection.User))
+                        , WebSocketMessageType.Text
+                        , true
+                        , CancellationToken.None);
+                }
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
+                }
+            }
+        }
+
+        private void CheckConnections()
+        {
             foreach (var connection in connections)
             {
                 try
@@ -166,17 +188,6 @@ namespace DataWF.Web.Common
                     Remove(connection);
                 }
             }
-            foreach (var connection in connections)
-            {
-                try
-                {
-                    await connection.Socket.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
-                }
-                catch (Exception ex)
-                {
-                    Helper.OnException(ex);
-                }
-            }
         }
 
         protected override async void OnMessageLoad(EndPointMessage message)
@@ -187,12 +198,12 @@ namespace DataWF.Web.Common
                 var list = ParseMessage(message.Data);
                 if (list.Length > 0)
                 {
-                    await SendToWebClient(list);
+                    await SendToWebClients(list);
                 }
             }
         }
 
-        private static NotifyMessageItem[] ParseMessage(byte[] data)
+        private NotifyMessageItem[] ParseMessage(byte[] data)
         {
             var list = new List<NotifyMessageItem>();
             var stream = new MemoryStream(data);
@@ -224,12 +235,13 @@ namespace DataWF.Web.Common
             return list.ToArray();
         }
 
-        private static byte[] WriteData(NotifyMessageItem[] list)
+        private byte[] WriteData(NotifyMessageItem[] list, User user)
         {
             using (var stream = new MemoryStream())
             using (var streamWriter = new StreamWriter(stream, Encoding.UTF8))
-            using (var writer = new JsonTextWriter(streamWriter))
+            using (var writer = new ClaimsJsonTextWriter(streamWriter) { User = user })
             {
+                var jsonSerializer = JsonSerializer.Create(jsonSettings);
                 writer.WriteStartArray();
                 Type itemType = null;
                 object id = null;
@@ -249,7 +261,7 @@ namespace DataWF.Web.Common
                         writer.WritePropertyName("Items");
                         writer.WriteStartArray();
                     }
-                    if (!item.ItemId.Equals(id))
+                    if (item.UserId != user.Id && !item.ItemId.Equals(id))
                     {
                         id = item.ItemId;
                         writer.WriteStartObject();
@@ -259,6 +271,15 @@ namespace DataWF.Web.Common
                         writer.WriteValue(item.UserId);
                         writer.WritePropertyName("Id");
                         writer.WriteValue(item.ItemId.ToString());
+                        if (item.Type != DBLogType.Delete)
+                        {
+                            var value = item.Table.LoadItemById(item.ItemId);
+                            if (value?.Access?.GetFlag(AccessType.View, user) ?? false)
+                            {
+                                writer.WritePropertyName("Value");
+                                jsonSerializer.Serialize(writer, value, value?.GetType());
+                            }
+                        }
                         writer.WriteEndObject();
                     }
                 }

@@ -17,6 +17,7 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using DataWF.Common;
 using System;
 using System.Reflection;
 
@@ -32,6 +33,7 @@ namespace DataWF.Data
             Attribute = referenceAttribute;
             Table = table;
             Property = property;
+            PropertyInvoker = EmitInvoker.Initialize(property);
             ReferenceType = property.PropertyType;
             Column.DisplayName = property.Name;
             Column.Attribute.Keys |= DBColumnKeys.Reference;
@@ -59,6 +61,8 @@ namespace DataWF.Data
         public PropertyInfo Property { get; set; }
 
         public string PropertyName { get { return Property?.Name; } }
+
+        public IInvoker PropertyInvoker { get; set; }
 
         public void GenerateName()
         {
@@ -105,11 +109,11 @@ namespace DataWF.Data
                     Table = Table.Table,
                     Column = Column.Column,
                     Reference = referenceTable.PrimaryKey,
-                    Name = Attribute.Name
+                    Name = Attribute.Name,
+                    Property = Property.Name
                 };
                 Table.Table.Foreigns.Add(ForeignKey);
             }
-            ForeignKey.Property = Property.Name;
 
             return ForeignKey;
         }

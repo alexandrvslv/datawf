@@ -59,7 +59,7 @@ namespace DataWF.Common
         Task<T> PostAsync(T value, CancellationToken cancellationToken);
         Task<T> PutAsync(T value, CancellationToken cancellationToken);
         Task<bool> DeleteAsync(object id, CancellationToken cancellationToken);
-        T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, T item, IList sourceList);
+        T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, T item, IList sourceList);        
     }
 
     public interface IFileClient

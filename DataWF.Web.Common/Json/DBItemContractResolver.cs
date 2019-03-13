@@ -11,9 +11,9 @@ namespace DataWF.Web.Common
     public class DBItemContractResolver : DefaultContractResolver
     {
         public static readonly DBItemContractResolver Instance = new DBItemContractResolver();
-        private readonly JsonConverter dbConverter = new DBItemJsonConverter();
-        private readonly JsonConverter accessConverter = new AccessValueJsonConverter();
-        private readonly JsonConverter stringConverter = new StringEnumConverter();
+        public readonly JsonConverter DBItemConverter = new DBItemJsonConverter();
+        public readonly JsonConverter AccessConverter = new AccessValueJsonConverter();
+        public readonly JsonConverter StringConverter = new StringEnumConverter();
 
         public DBItemContractResolver()
         { }
@@ -33,7 +33,7 @@ namespace DataWF.Web.Common
                 {
                     var result = new JsonObjectContract(objectType)
                     {
-                        Converter = dbConverter
+                        Converter = DBItemConverter
                     };
 
                     foreach (var column in table.Columns.Where(p => TypeHelper.IsBaseType(p.Property.DeclaringType, objectType)))
@@ -67,7 +67,7 @@ namespace DataWF.Web.Common
             {
                 var result = new JsonObjectContract(objectType)
                 {
-                    Converter = accessConverter
+                    Converter = AccessConverter
                 };
                 result.Properties.Add(new JsonProperty
                 {
@@ -122,7 +122,7 @@ namespace DataWF.Web.Common
             var contract = base.CreateObjectContract(objectType);
             if (objectType.IsEnum)
             {
-                contract.Converter = stringConverter;
+                contract.Converter = StringConverter;
             }
             return contract;
         }

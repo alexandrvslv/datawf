@@ -47,6 +47,7 @@ namespace DataWF.Web.Common
         {
             if (value is DBItem item)
             {
+                var claimsWriter = writer as ClaimsJsonTextWriter;
                 writer.WriteStartObject();
                 var table = item.Table;
                 var valueType = value.GetType();
@@ -58,14 +59,25 @@ namespace DataWF.Web.Common
                     writer.WritePropertyName(column.PropertyName);
                     serializer.Serialize(writer, column.PropertyInvoker.GetValue(item));
                 }
-                foreach (var refing in tableAttribute.Referencings)
+                if (claimsWriter?.SerializeReferences ?? false)
                 {
-                    if (!TypeHelper.IsBaseType(valueType, refing.PropertyInvoker.TargetType))
-                        continue;
-                    if (refing.PropertyInvoker.GetValue(item) is IEnumerable<DBItem> refs)
+                    foreach (var refed in tableAttribute.References)
                     {
-                        writer.WritePropertyName(refing.Property.Name);
-                        serializer.Serialize(writer, refs);
+                        writer.WritePropertyName(refed.PropertyName);
+                        serializer.Serialize(writer, refed.PropertyInvoker.GetValue(item));
+                    }
+                }
+                if (claimsWriter?.SerializeReferencing ?? true)
+                {
+                    foreach (var refing in tableAttribute.Referencings)
+                    {
+                        if (!TypeHelper.IsBaseType(valueType, refing.PropertyInvoker.TargetType))
+                            continue;
+                        if (refing.PropertyInvoker.GetValue(item) is IEnumerable<DBItem> refs)
+                        {
+                            writer.WritePropertyName(refing.Property.Name);
+                            serializer.Serialize(writer, refs);
+                        }
                     }
                 }
                 writer.WriteEndObject();
