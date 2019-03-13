@@ -567,40 +567,40 @@ namespace DataWF.Common
         /// </summary>
         public static void QuickSort(IList array, IComparer comp)
         {
-            //System.Console.Out.WriteLine("QuickSort");
+            //Debug.WriteLine("QuickSort");
             //intcomp c = new intcomp();
 
             //ArrayList a = GetArray();
             //long time = Environment.TickCount;
             //a.Sort(c);
             //time = Environment.TickCount - time;
-            //Console.WriteLine("Time Elapsed standart: " + time + " msecs.");
+            //Debug.WriteLine("Time Elapsed standart: " + time + " msecs.");
             //time = Environment.TickCount;
             //a.Sort(c);
             //time = Environment.TickCount - time;
-            //Console.WriteLine("S Time Elapsed standart: " + time + " msecs.");
+            //Debug.WriteLine("S Time Elapsed standart: " + time + " msecs.");
 
             //a = GetArray();
             //time = Environment.TickCount;
             //QuickSort2(a, 0, a.Count - 1, c);
             //time = Environment.TickCount - time;
-            //Console.WriteLine("Time Elapsed osix: " + time + " msecs.");
+            //Debug.WriteLine("Time Elapsed osix: " + time + " msecs.");
 
             //time = Environment.TickCount;
             //QuickSort2(a, 0, a.Count - 1, c);
             //time = Environment.TickCount - time;
-            //Console.WriteLine("S Time Elapsed osix: " + time + " msecs.");
+            //Debug.WriteLine("S Time Elapsed osix: " + time + " msecs.");
 
             //a = GetArray();
             //time = Environment.TickCount;
             //QuickSort1(a, 0, a.Count - 1, c);
             //time = Environment.TickCount - time;
-            //Console.WriteLine("Time Elapsed this: " + time + " msecs.");
+            //Debug.WriteLine("Time Elapsed this: " + time + " msecs.");
 
             //time = Environment.TickCount;
             //QuickSort1(a, 0, a.Count - 1, c);
             //time = Environment.TickCount - time;
-            //Console.WriteLine("S Time Elapsed this: " + time + " msecs.");
+            //Debug.WriteLine("S Time Elapsed this: " + time + " msecs.");
             if (array.Count > 1)
                 QuickSort1(array, 0, array.Count - 1, comp);
             //lock (sorting)

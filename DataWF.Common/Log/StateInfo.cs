@@ -30,19 +30,19 @@ namespace DataWF.Common
             Description = descriprion;
             Type = type;
             Tag = tag;
-#if TRACE
-            var stackBuilder = new StringBuilder();
-            var stack = new System.Diagnostics.StackTrace(true);
-            foreach (var frame in stack.GetFrames())
-            {
-                MethodBase method = frame.GetMethod();
-                if (method != null && method.DeclaringType != typeof(StateInfo))
-                {
-                    stackBuilder.AppendLine($"{(method.DeclaringType?.FullName)}.{method.Name} ({frame.GetFileLineNumber()},{frame.GetFileColumnNumber()}) at {frame.GetFileName()}");
-                }
-            }
-            Stack = stackBuilder.ToString();
-#endif
+//#if TRACE
+//            var stackBuilder = new StringBuilder();
+//            var stack = new System.Diagnostics.StackTrace(true);
+//            foreach (var frame in stack.GetFrames())
+//            {
+//                MethodBase method = frame.GetMethod();
+//                if (method != null && method.DeclaringType != typeof(StateInfo))
+//                {
+//                    stackBuilder.AppendLine($"{(method.DeclaringType?.FullName)}.{method.Name} ({frame.GetFileLineNumber()},{frame.GetFileColumnNumber()}) at {frame.GetFileName()}");
+//                }
+//            }
+//            Stack = stackBuilder.ToString();
+//#endif
         }
 
         public DateTime Date { get; set; }

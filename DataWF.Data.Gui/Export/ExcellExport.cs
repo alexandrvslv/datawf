@@ -7,6 +7,7 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml.Validation;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -676,8 +677,7 @@ namespace DataWF.Data.Gui
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString());
-                Console.ReadLine();
+                Debug.WriteLine(e.ToString());                
             }
         }
 

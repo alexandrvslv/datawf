@@ -165,7 +165,7 @@ namespace DataWF.Common
             disconnectEvent.WaitOne();
             if (Socket.Connected)
             {
-                Console.WriteLine("Disconnect");
+                Debug.WriteLine("Disconnect");
                 Socket.Shutdown(SocketShutdown.Both);
                 Socket.BeginDisconnect(reuse, DisconnectCallback, new TcpSocketEventArgs { Client = this });
             }
