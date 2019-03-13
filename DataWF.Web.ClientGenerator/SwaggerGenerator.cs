@@ -99,7 +99,7 @@ namespace DataWF.Web.CodeGenerator
     {
         public bool SupportsMultipleClients => true;
 
-        public virtual string GetClientName(SwaggerDocument document, string path, SwaggerOperationMethod httpMethod, SwaggerOperation operation)
+        public string GetClientName(SwaggerDocument document, string path, string httpMethod, SwaggerOperation operation)
         {
             if (operation.Tags?.Count > 0)
                 return operation.Tags[0];
@@ -115,7 +115,7 @@ namespace DataWF.Web.CodeGenerator
             }
         }
 
-        public virtual string GetOperationName(SwaggerDocument document, string path, SwaggerOperationMethod httpMethod, SwaggerOperation operation)
+        public string GetOperationName(SwaggerDocument document, string path, string httpMethod, SwaggerOperation operation)
         {
             var client = GetClientName(document, path, httpMethod, operation);
             var name = new StringBuilder();
@@ -129,6 +129,5 @@ namespace DataWF.Web.CodeGenerator
             }
             return name.Length == 0 ? httpMethod.ToString() : name.ToString();
         }
-
     }
 }
