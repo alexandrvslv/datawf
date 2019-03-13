@@ -239,7 +239,11 @@ namespace DataWF.Web.Common
         {
             using (var stream = new MemoryStream())
             using (var streamWriter = new StreamWriter(stream, Encoding.UTF8))
-            using (var writer = new ClaimsJsonTextWriter(streamWriter) { User = user })
+            using (var writer = new ClaimsJsonTextWriter(streamWriter)
+            {
+                User = user,
+                SerializeReferencing = false
+            })
             {
                 var jsonSerializer = JsonSerializer.Create(jsonSettings);
                 writer.WriteStartArray();
