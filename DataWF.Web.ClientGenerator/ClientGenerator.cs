@@ -250,7 +250,10 @@ namespace DataWF.Web.ClientGenerator
                     continue;
                 name.Append(step);
             }
-            return name.Length == 0 ? descriptor.Method.ToString() : name.ToString();
+            if (name.Length == 0)
+                name.Append(descriptor.Method.ToString());
+            name[0] = char.ToUpperInvariant(name[0]);
+            return name.ToString();
         }
 
         private void AddClientOperation(SwaggerOperationDescription descriptor)
@@ -419,7 +422,8 @@ namespace DataWF.Web.ClientGenerator
             var isOverride = baseType != "ClientBase" && VirtualOperations.Contains(actualName);
             var returnType = GetReturningTypeCheck(descriptor, operationName);
             returnType = returnType.Length > 0 ? $"Task<{returnType}>" : "Task";
-
+            //if (isOverride)
+            //    throw new Exception("Operation Name :" + operationName);
             //yield return SF.MethodDeclaration(
             //    attributeLists: SF.List<AttributeListSyntax>(),
             //        modifiers: SF.TokenList(
