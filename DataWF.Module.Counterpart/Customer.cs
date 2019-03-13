@@ -42,6 +42,7 @@ namespace DataWF.Module.Counterpart
     public class Customer : DBItem, IDisposable
     {
         private static DBTable<Customer> dbTable;
+        private static DBColumn codeKey = DBColumn.EmptyKey;
         private static DBColumn nameENKey = DBColumn.EmptyKey;
         private static DBColumn nameRUKey = DBColumn.EmptyKey;
         private static DBColumn shortNameENKey = DBColumn.EmptyKey;
@@ -55,6 +56,7 @@ namespace DataWF.Module.Counterpart
 
         //private static DBColumn userKey = DBColumn.EmptyKey;
 
+        public static DBColumn CodeKey => DBTable.ParseProperty(nameof(Code), ref codeKey);
         public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
         public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
         public static DBColumn ShortNameENKey => DBTable.ParseProperty(nameof(ShortNameEN), ref shortNameENKey);
@@ -89,6 +91,14 @@ namespace DataWF.Module.Counterpart
         {
             get { return GetValue<string>(Table.CodeKey); }
             set { SetValue(value, Table.CodeKey); }
+        }
+
+        [DataMember, Column("code", 40)]
+        [Index("dcustomer_code", true)]
+        public string Code
+        {
+            get { return GetValue<string>(CodeKey); }
+            set { SetValue(value, CodeKey); }
         }
 
         [DataMember, Column("shortname", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
