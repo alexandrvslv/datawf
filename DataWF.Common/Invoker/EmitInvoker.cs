@@ -56,7 +56,7 @@ namespace DataWF.Common
 
         public static int GetToken(MemberInfo info)
         {
-            return info.GetHashCode();
+            return info.Module.GetHashCode() ^ info.GetHashCode();
         }
 
         public static IInvoker Initialize<T>(string property)
