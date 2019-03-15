@@ -1,9 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 
 namespace DataWF.Common
 {
-    public interface IFilterable : IList
+    public interface IFilterable : IList, INotifyCollectionChanged
     {
         IEnumerable Source { get; set; }
         IQuery FilterQuery { get; }
