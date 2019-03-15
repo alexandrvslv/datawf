@@ -7,9 +7,9 @@
     <AssemblyName>DataWF.Common</AssemblyName>
     <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
     <Platforms>AnyCPU</Platforms>
-    <AssemblyVersion>1.2.03</AssemblyVersion>
-    <FileVersion>1.2.03</FileVersion>
-    <Version>1.2.03</Version>
+    <AssemblyVersion>1.2.04</AssemblyVersion>
+    <FileVersion>1.2.04</FileVersion>
+    <Version>1.2.04</Version>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
