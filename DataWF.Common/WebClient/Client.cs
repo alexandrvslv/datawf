@@ -215,6 +215,13 @@ namespace DataWF.Common
             return Helper.Parse(id, IdInvoker.DataType);
         }
 
+        public IEnumerable<object> GetChanges()
+        {
+            return Items.Cast<ISynchronized>().Where(p =>
+                        p.SyncStatus == SynchronizedStatus.New
+                        || p.SyncStatus == SynchronizedStatus.Edit);
+        }
+
         public object Select(object id)
         {
             return Select((K)id);
