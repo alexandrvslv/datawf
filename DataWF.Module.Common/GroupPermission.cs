@@ -42,44 +42,60 @@ namespace DataWF.Module.Common
     public class GroupPermission : DBGroupItem
     {
         private object target;
+        private static DBColumn objectNameKey = DBColumn.EmptyKey;
+        private static DBTable<GroupPermission> dbTable;
 
-        public static DBTable<GroupPermission> DBTable
-        {
-            get { return GetTable<GroupPermission>(); }
-        }
+        public static DBTable<GroupPermission> DBTable => dbTable ?? (dbTable = GetTable<GroupPermission>());
 
-        public static PermissionType GetPermissionType(object value, out string key)
+        public static DBColumn ObjectNameKey => DBTable.ParseProperty(nameof(ObjectName), ref objectNameKey);
+
+        public static PermissionType GetPermissionType(object value, out string key, out string name)
         {
             key = null;
+            name = string.Empty;
             PermissionType type = PermissionType.GTable;
             if (value is DBSchemaItem)
             {
                 key = ((DBSchemaItem)value).FullName;
                 if (value is DBSchema)
+                {
                     type = PermissionType.GSchema;
+                    name = value.ToString();
+                }
                 else if (value is DBTableGroup)
+                {
                     type = PermissionType.GBlock;
-                else if (value is DBTable)
+                    name = value.ToString();
+                }
+                else if (value is DBTable table)
+                {
                     type = PermissionType.GTable;
-                else if (value is DBColumn)
+                    name = table.ItemType?.Type.Name ?? value.ToString();
+                }
+                else if (value is DBColumn column)
+                {
                     type = PermissionType.GColumn;
+                    name = column.Property ?? value.ToString();
+                }
             }
-            else if (value is Type)
+            else if (value is Type valueType)
             {
                 key = Helper.TextBinaryFormat(value);
                 type = PermissionType.GType;
+                name = valueType.Name;
             }
-            else if (value is System.Reflection.MemberInfo)
+            else if (value is System.Reflection.MemberInfo member)
             {
                 key = Helper.TextBinaryFormat(value);
                 type = PermissionType.GTypeMember;
+                name = member.Name;
             }
             return type;
         }
 
         public static GroupPermission Get(GroupPermission group, DBSchemaItem item)
         {
-            PermissionType type = GetPermissionType(item, out string code);
+            PermissionType type = GetPermissionType(item, out string code, out string name);
 
             var list = DBTable.Select(DBTable.CodeKey, CompareType.Equal, code).ToList();
 
@@ -98,6 +114,7 @@ namespace DataWF.Module.Common
                 };
                 permission.Attach();
             }
+            permission.ObjectName = name;
             item.Access = permission.Access;
 
             if (group != null)
@@ -158,7 +175,7 @@ namespace DataWF.Module.Common
 
         public static GroupPermission Find(GroupPermission parent, object obj, bool generate)
         {
-            var type = GetPermissionType(obj, out string code);
+            var type = GetPermissionType(obj, out string code, out string name);
 
             string filter = $"{ DBTable.CodeKey.Name}='{code}' and {DBTable.ElementTypeKey.Name}={type}";
 
@@ -173,7 +190,21 @@ namespace DataWF.Module.Common
                 };
                 permission.Attach();
             }
+            permission.ObjectName = name;
             return permission;
+        }
+
+        [ControllerMethod]
+        public static GroupPermission GetByName(string name)
+        {
+            return DBTable.SelectOne(ObjectNameKey, name);
+        }
+
+        [ControllerMethod]
+        public static IEnumerable<GroupPermission> GetGroupByName(string name)
+        {
+            var item = DBTable.SelectOne(ObjectNameKey, name);
+            return item.GetSubGroups<GroupPermission>(DBLoadParam.None);
         }
 
         public static void BeginHandleSchema()
@@ -252,19 +283,12 @@ namespace DataWF.Module.Common
             get { return GetValue<string>(Table.CodeKey); }
             set { SetValue(value, Table.CodeKey); }
         }
-        [Column("display_name", ColumnType = DBColumnTypes.Code)]
-        public string DisplayName
+
+        [Column("object_name", 1024, Keys = DBColumnKeys.Indexing)]
+        public string ObjectName
         {
-            get
-            {
-                object data = Target;
-                string per = string.Empty;
-                if (data is DBColumn)
-                    per = $"{((DBColumn)data).Table} {data}";
-                else if (data != null)
-                    per = data.ToString();
-                return per;
-            }
+            get { return GetValue<string>(ObjectNameKey); }
+            set { SetValue(value, ObjectNameKey); }
         }
 
         public object Target
@@ -293,8 +317,9 @@ namespace DataWF.Module.Common
             }
             set
             {
-                Type = GetPermissionType(value, out string code);
+                Type = GetPermissionType(value, out var code, out var name);
                 PrimaryCode = code;
+                ObjectName = name;
             }
         }
 
@@ -344,7 +369,7 @@ namespace DataWF.Module.Common
 
         public override string ToString()
         {
-            return DisplayName;
+            return ObjectName;
         }
 
         public override void OnPropertyChanged([CallerMemberName] string property = null, DBColumn column = null, object value = null)
