@@ -259,7 +259,7 @@ namespace DataWF.Web.Common
                             section.Body,
                             encoding,
                             detectEncodingFromByteOrderMarks: true,
-                            bufferSize: 1024,
+                            bufferSize: 2048,
                             leaveOpen: true))
                         {
                             // The value length limit is enforced by MultipartBodyLengthLimit
