@@ -7,7 +7,7 @@ namespace DataWF.Common
     public interface IFileLaunch
     {
         Task<bool> Launch(string stringUri);
-        Task<(Stream Stream, string FileName)> Open();
-        Task<List<(Stream Stream, string FileName)>> OpenSeveral();
+        Task<(Stream Stream, string FileName)> Open(ProgressToken progressToken);
+        Task<List<(Stream Stream, string FileName)>> OpenSeveral(ProgressToken progressToken);
     }
 }

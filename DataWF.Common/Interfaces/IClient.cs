@@ -53,20 +53,20 @@ namespace DataWF.Common
         Task<T> Get(T item);
         T Get(object id);
         Task<bool> Delete(T item);
-        Task<List<T>> FindAsync(string filter, CancellationToken cancellationToken);
-        Task<List<T>> GetAsync(CancellationToken cancellationToken);
-        Task<T> GetAsync(object id, CancellationToken cancellationToken);
-        Task<T> CopyAsync(object id, CancellationToken cancellationToken);
-        Task<T> PostAsync(T value, CancellationToken cancellationToken);
-        Task<T> PutAsync(T value, CancellationToken cancellationToken);
-        Task<bool> DeleteAsync(object id, CancellationToken cancellationToken);
+        Task<List<T>> FindAsync(string filter, ProgressToken progressToken);
+        Task<List<T>> GetAsync(ProgressToken progressToken);
+        Task<T> GetAsync(object id, ProgressToken progressToken);
+        Task<T> CopyAsync(object id, ProgressToken progressToken);
+        Task<T> PostAsync(T value, ProgressToken progressToken);
+        Task<T> PutAsync(T value, ProgressToken progressToken);
+        Task<bool> DeleteAsync(object id, ProgressToken progressToken);
         T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, T item, IList sourceList);
     }
 
     public interface IFileClient
     {
-        Task<Stream> DownloadFileAsync(object id);
-        Task<string> UploadFileAsync(object id, string fileName, Stream file);
+        Task<Stream> DownloadFileAsync(object id, ProgressToken progressToken);
+        Task<string> UploadFileAsync(object id, string fileName, Stream file, ProgressToken progressToken);
     }
 
     public enum ClientStatus

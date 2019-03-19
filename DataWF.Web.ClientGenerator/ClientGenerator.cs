@@ -464,7 +464,7 @@ namespace DataWF.Web.ClientGenerator
         //    {
         //        builder.Append($"{parameter.Name}, ");
         //    }
-        //    builder.Append("CancellationToken.None);");
+        //    builder.Append("ProgressToken.None);");
         //    return SF.ParseStatement(builder.ToString());
         //}
 
@@ -491,7 +491,7 @@ namespace DataWF.Web.ClientGenerator
             //        paramBuilder.Append(parameter.Name);
             //        paramBuilder.Append(", ");
             //    }
-            //    paramBuilder.Append("cancellationToken");
+            //    paramBuilder.Append("progressToken");
             //    yield return SF.ParseStatement($"await base.{actualName}({paramBuilder.ToString()}).ConfigureAwait(false);");
             //}
             var requestBuilder = new StringBuilder();
@@ -501,7 +501,7 @@ namespace DataWF.Web.ClientGenerator
             requestBuilder.Append($"<{returnType}");
             if (responceSchema?.Type == JsonObjectType.Array)
                 requestBuilder.Append($", {GetTypeString(responceSchema.Item, false, "List")}");
-            requestBuilder.Append($">(cancellationToken, \"{method}\", \"{path}\", \"{mediatype}\"");
+            requestBuilder.Append($">(progressToken, \"{method}\", \"{path}\", \"{mediatype}\"");
             var bodyParameter = descriptor.Operation.Parameters.FirstOrDefault(p => p.Kind != SwaggerParameterKind.Path);
             if (bodyParameter == null)
             {
@@ -532,8 +532,8 @@ namespace DataWF.Web.ClientGenerator
             }
             yield return SF.Parameter(attributeLists: SF.List<AttributeListSyntax>(),
                                                         modifiers: SF.TokenList(),
-                                                        type: SF.ParseTypeName("CancellationToken"),
-                                                        identifier: SF.Identifier("cancellationToken"),
+                                                        type: SF.ParseTypeName("ProgressToken"),
+                                                        identifier: SF.Identifier("progressToken"),
                                                         @default: null);
         }
 

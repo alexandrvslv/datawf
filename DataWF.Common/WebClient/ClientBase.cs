@@ -73,7 +73,8 @@ namespace DataWF.Common
             return client;
         }
 
-        protected virtual HttpRequestMessage CreateRequest(string httpMethod = "GET",
+        protected virtual HttpRequestMessage CreateRequest(ProgressToken progressToken,
+            string httpMethod = "GET",
             string commandUrl = "/api",
             string mediaType = "application/json",
             object value = null,
@@ -90,6 +91,7 @@ namespace DataWF.Common
                 RequestUri = new Uri(ParseUrl(commandUrl, parameters).ToString(), UriKind.RelativeOrAbsolute),
                 Method = new HttpMethod(httpMethod)
             };
+
             Provider?.Authorization?.FillRequest(request);
 
             if (value is Stream stream)
@@ -98,7 +100,7 @@ namespace DataWF.Common
                     : stream is FileStream fileStream ? Path.GetFileName(fileStream.Name)
                     : "somefile.ext";
                 var content = new MultipartFormDataContent();
-                content.Add(new StreamContent(stream, 81920), Path.GetFileNameWithoutExtension(fileName), fileName);//File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                content.Add(new ProgressStreamContent(progressToken, stream, 81920), Path.GetFileNameWithoutExtension(fileName), fileName);//File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 // content.Headers.ContentType = MediaTypeHeaderValue.Parse(mediaType);
                 request.Content = content;
             }
@@ -150,7 +152,7 @@ namespace DataWF.Common
             return urlBuilder;
         }
 
-        public virtual async Task<R> Request<R>(CancellationToken cancellationToken,
+        public virtual async Task<R> Request<R>(ProgressToken progressToken,
             string httpMethod = "GET",
             string commandUrl = "/api",
             string mediaType = "application/json",
@@ -159,9 +161,13 @@ namespace DataWF.Common
         {
             using (var client = CreateHttpClient())
             {
-                using (var request = CreateRequest(httpMethod, commandUrl, mediaType, value, parameters))
+                using (var request = CreateRequest(progressToken, httpMethod, commandUrl, mediaType, value, parameters))
                 {
-                    using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false))
+                    if (progressToken?.Process != null)
+                    {
+                        client.Timeout = Timeout.InfiniteTimeSpan;
+                    }
+                    using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, progressToken.CancellationToken).ConfigureAwait(false))
                     {
                         ProcessResponse(client, response);
                         var result = default(R);
@@ -199,9 +205,12 @@ namespace DataWF.Common
                                                     throw ioex;
                                                 }
                                             }
-                                            var process = new DownloadProcess(fileName, 81920, fileSize);
-                                            await process.StartAsync(responseStream, fileStream, new CancellationToken());
-                                            fileStream.Position = 0;
+                                            var process = new CopyProcess(CopyProcessCategory.Download);
+                                            if (progressToken != ProgressToken.None)
+                                            {
+                                                progressToken.Process = process;
+                                            }
+                                            await process.StartAsync(fileSize, responseStream, fileStream);
                                             return (R)(object)fileStream;
                                         }
                                         else if (typeof(R) == typeof(string))
@@ -236,7 +245,7 @@ namespace DataWF.Common
                             case System.Net.HttpStatusCode.Unauthorized:
                                 if (Provider?.Authorization?.OnUnauthorizedError() ?? false)
                                 {
-                                    return await Request<R>(cancellationToken, httpMethod, commandUrl, mediaType, value, parameters).ConfigureAwait(false);
+                                    return await Request<R>(progressToken, httpMethod, commandUrl, mediaType, value, parameters).ConfigureAwait(false);
                                 }
                                 else
                                 {
@@ -282,7 +291,7 @@ namespace DataWF.Common
             return (fileName, fileSize);
         }
 
-        public virtual async Task<R> RequestArray<R, I>(CancellationToken cancellationToken,
+        public virtual async Task<R> RequestArray<R, I>(ProgressToken progressToken,
             string httpMethod = "GET",
             string commandUrl = "/api",
             string mediaType = "application/json",
@@ -291,9 +300,9 @@ namespace DataWF.Common
         {
             using (var client = CreateHttpClient())
             {
-                using (var request = CreateRequest(httpMethod, commandUrl, mediaType, value, parameters))
+                using (var request = CreateRequest(progressToken, httpMethod, commandUrl, mediaType, value, parameters))
                 {
-                    using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false))
+                    using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, progressToken.CancellationToken).ConfigureAwait(false))
                     {
                         ProcessResponse(client, response);
                         var result = default(R);
@@ -319,7 +328,7 @@ namespace DataWF.Common
                             case System.Net.HttpStatusCode.Unauthorized:
                                 if (Provider?.Authorization?.OnUnauthorizedError() ?? false)
                                 {
-                                    return await RequestArray<R, I>(cancellationToken, httpMethod, commandUrl, mediaType, value, parameters).ConfigureAwait(false);
+                                    return await RequestArray<R, I>(progressToken, httpMethod, commandUrl, mediaType, value, parameters).ConfigureAwait(false);
                                 }
                                 else
                                 {
