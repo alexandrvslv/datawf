@@ -67,7 +67,7 @@ namespace DataWF.Data
                 query = new QQuery(filter, this);
                 if (queryChache.TryAdd(filter, query))
                 {
-                    Load(query).LastOrDefault();
+                    Load(query, DBLoadParam.Referencing).LastOrDefault();
                 }
             }
             return Select(query);
