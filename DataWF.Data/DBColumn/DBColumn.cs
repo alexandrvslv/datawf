@@ -446,6 +446,7 @@ namespace DataWF.Data
                     {
                         case DBDataType.ByteArray:
                         case DBDataType.Blob: dataType = typeof(byte[]); break;
+                        case DBDataType.LargeObject: dataType = typeof(uint); break;
                         case DBDataType.Bool: dataType = typeof(bool); break;
                         case DBDataType.Clob: dataType = typeof(string); break;
                         case DBDataType.Date:

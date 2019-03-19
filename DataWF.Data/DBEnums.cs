@@ -88,7 +88,7 @@ namespace DataWF.Data
         DateTime,
         TimeStamp,
         TimeSpan,
-        Blob,
+        Blob,        
         ByteArray,
         Decimal,
         Double,
@@ -98,6 +98,7 @@ namespace DataWF.Data
         ShortInt,
         TinyInt,
         Bool,
+        LargeObject,
         Object
     }
 

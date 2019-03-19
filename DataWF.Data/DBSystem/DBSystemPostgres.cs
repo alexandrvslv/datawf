@@ -28,6 +28,7 @@ namespace DataWF.Data
                     {DBDataType.Decimal, "numeric{0}"},
                     {DBDataType.TimeSpan, "interval"},
                     {DBDataType.Bool, "bool"},
+                    {DBDataType.LargeObject, "oid"}
                 };
         }
 
