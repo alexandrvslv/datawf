@@ -262,10 +262,10 @@ namespace DataWF.Common
         {
             var item = (T)sender;
             int index = IndexOf(item);
-            if (index < 0)
-            {
-                return;
-            }
+            //if (index < 0)
+            //{
+            //    return;
+            //}
 
             bool checkItem = ListHelper.CheckItem(item, query);
             if (checkItem)
