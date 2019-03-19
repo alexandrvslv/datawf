@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -17,6 +18,7 @@ namespace DataWF.Data
         protected List<T> items = new List<T>();
         protected List<T> insertItems = new List<T>();
         protected List<IDBTableView> queryViews = new List<IDBTableView>(1);
+        private ConcurrentDictionary<string, QQuery> queryChache = new ConcurrentDictionary<string, QQuery>();
 
         public DBTable()
         {
@@ -56,6 +58,19 @@ namespace DataWF.Data
                     CreateView();
                 return queryViews.Count > 0 ? (DBTableView<T>)queryViews[0] : null;
             }
+        }
+
+        public IEnumerable<T> LoadCache(string filter, DBLoadParam loadParam)
+        {
+            if (!queryChache.TryGetValue(filter, out var query))
+            {
+                query = new QQuery(filter, this);
+                if (queryChache.TryAdd(filter, query))
+                {
+                    Load(query).LastOrDefault();
+                }
+            }
+            return Select(query);
         }
 
         [Browsable(false)]

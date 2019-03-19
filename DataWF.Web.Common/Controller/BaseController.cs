@@ -40,23 +40,12 @@ namespace DataWF.Web.Common
             try
             {
                 var user = CurrentUser;
-
                 if (!table.Access.GetFlag(AccessType.View, user))
                 {
                     return Forbid();
                 }
-                using (var query = new QQuery(filter, table))
-                {
-                    if (!table.IsSynchronized)
-                    {
-                        table.Load(query, DBLoadParam.Referencing).LastOrDefault();
-                    }
-                    return new ActionResult<IEnumerable<T>>(table.Select(query)
-                            .Where(p =>
-                            {
-                                return p.Access.GetFlag(AccessType.View, user);
-                            }));
-                }
+                return new ActionResult<IEnumerable<T>>(table.LoadCache(filter, DBLoadParam.Referencing)
+                                                              .Where(p => p.Access.GetFlag(AccessType.View, user))); 
             }
             catch (Exception ex)
             {
