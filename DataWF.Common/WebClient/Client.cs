@@ -2,9 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace DataWF.Common
@@ -19,6 +17,7 @@ namespace DataWF.Common
             TypeId = typeId;
             SerializationInfo = new TypeSerializationInfo(typeof(T));
         }
+        private Dictionary<K, T> downloadItems = new Dictionary<K, T>();
 
         public TypeSerializationInfo SerializationInfo;
 
@@ -45,7 +44,6 @@ namespace DataWF.Common
         public virtual T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, T item, IList sourceList)
         {
             var add = false;
-            var index = -1;
             var property = (PropertySerializationInfo)null;
             var id = (object)null;
             var synchItem = item as ISynchronized;
@@ -101,8 +99,7 @@ namespace DataWF.Common
                         IdInvoker.SetValue(item, id);
                         if (!Items.Contains(item))
                         {
-                            add = true;
-                            index = Items.AddInternal(item);
+                            downloadItems[(K)id] = item;
                         }
                         if (TypeId != 0)
                         {
@@ -129,9 +126,9 @@ namespace DataWF.Common
             {
                 synchItem.SyncStatus = SynchronizedStatus.Actual;
             }
-            if (add)
+            if (downloadItems.Remove((K)id))
             {
-                Items.OnListChanged(NotifyCollectionChangedAction.Add, item, index);
+                Items.Add(item);
             }
 
             if (sourceList != null && !sourceList.Contains(item))
@@ -229,7 +226,12 @@ namespace DataWF.Common
 
         public virtual T Select(K id)
         {
-            return Items.SelectOne(IdInvoker.Name, (K?)id);
+            var item = Items.SelectOne(IdInvoker.Name, (K?)id);
+            if (item == null)
+            {
+                downloadItems.TryGetValue(id, out item);
+            }
+            return item;
         }
 
         public virtual T Get(object id)
