@@ -997,12 +997,17 @@ namespace DataWF.Common
             return LenghtFormat((decimal)l);
         }
 
+        public static string LenghtFormat(double l)
+        {
+            return LenghtFormat((decimal)l);
+        }
+
         public static string LenghtFormat(decimal l)
         {
             var i = ByteSize.B;
             while (Math.Abs(l) >= 1024 && (int)i < 4)
             {
-                l = l / 1024;
+                l = l / 1024M;
                 i = (ByteSize)((int)i + 1);
             }
             return $"{l:0.00} {i}";
@@ -1014,6 +1019,7 @@ namespace DataWF.Common
             KB,
             MB,
             GB,
+            TB,
             PB
         }
 
@@ -1021,6 +1027,8 @@ namespace DataWF.Common
         {
             if (value is decimal decimalValue)
                 return LenghtFormat(decimalValue);
+            if (value is double doubleValue)
+                return LenghtFormat(doubleValue);
             else if (value is int intValue)
                 return LenghtFormat(intValue);
             else if (value is long longValue)
