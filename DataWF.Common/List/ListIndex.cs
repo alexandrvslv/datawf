@@ -8,7 +8,7 @@ namespace DataWF.Common
 {
     public class ListIndex<T, K> : IListIndex<T, K>
     {
-        protected Dictionary<K, List<T>> Dictionary;
+        protected Dictionary<K, ThreadSafeList<T>> Dictionary;
         protected readonly IInvoker<T, K> Invoker;
         protected readonly K NullKey;
 
@@ -18,11 +18,11 @@ namespace DataWF.Common
             Invoker = invoker;
             if (comparer != null)
             {
-                Dictionary = new Dictionary<K, List<T>>(comparer);//(IEqualityComparer<DBNullable<K>>)DBNullableComparer.StringOrdinalIgnoreCase
+                Dictionary = new Dictionary<K, ThreadSafeList<T>>(comparer);//(IEqualityComparer<DBNullable<K>>)DBNullableComparer.StringOrdinalIgnoreCase
             }
             else
             {
-                Dictionary = new Dictionary<K, List<T>>();
+                Dictionary = new Dictionary<K, ThreadSafeList<T>>();
             }
         }
 
@@ -48,7 +48,7 @@ namespace DataWF.Common
             {
                 if (!Dictionary.TryGetValue(key, out var refs))
                 {
-                    Dictionary[key] = refs = new List<T>();
+                    Dictionary[key] = refs = new ThreadSafeList<T>();
                 }
                 refs.Add(item);
             }
