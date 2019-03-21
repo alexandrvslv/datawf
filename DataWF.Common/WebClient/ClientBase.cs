@@ -10,7 +10,6 @@ using System.Net.Http.Headers;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace DataWF.Common
@@ -165,7 +164,7 @@ namespace DataWF.Common
                 {
                     if (progressToken?.Process != null)
                     {
-                        client.Timeout = Timeout.InfiniteTimeSpan;
+                        client.Timeout = TimeSpan.FromMinutes(15);
                     }
                     using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, progressToken.CancellationToken).ConfigureAwait(false))
                     {
@@ -440,6 +439,13 @@ namespace DataWF.Common
             var typeInfo = Serialization.Instance.GetTypeInfo(type);
             var property = (PropertySerializationInfo)null;
             item = item ?? typeInfo.Constructor.Create();
+
+            if (item is ISynchronized synchronized
+                && (synchronized.SyncStatus == SynchronizedStatus.New
+                    || synchronized.SyncStatus == SynchronizedStatus.Actual))
+            {
+                synchronized.SyncStatus = SynchronizedStatus.Load;
+            }
             while (jreader.Read() && jreader.TokenType != JsonToken.EndObject)
             {
                 if (jreader.TokenType == JsonToken.PropertyName)
@@ -453,6 +459,11 @@ namespace DataWF.Common
                         continue;
                     property.Invoker.SetValue(item, value);
                 }
+            }
+            if (item is ISynchronized synchronizedNew
+                && synchronizedNew.SyncStatus == SynchronizedStatus.Load)
+            {
+                synchronizedNew.SyncStatus = SynchronizedStatus.Actual;
             }
             return item;
         }

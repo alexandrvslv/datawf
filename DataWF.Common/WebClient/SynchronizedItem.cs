@@ -37,7 +37,7 @@ namespace DataWF.Common
             }
         }
 
-        protected override void OnPropertyChangingValue(object oldValue, [CallerMemberName] string propertyName = null)
+        protected override void OnPropertyChanged(object oldValue, object newValue, [CallerMemberName] string propertyName = null)
         {
             if (syncStatus == SynchronizedStatus.Actual)
             {
@@ -48,17 +48,8 @@ namespace DataWF.Common
                 if (!Changes.TryGetValue(propertyName, out var cacheValue))
                 {
                     Changes[propertyName] = oldValue;
-                }             
-            }
-
-            OnPropertyChanging(propertyName);
-        }
-
-        protected override void OnPropertyChangedValue(object newValue, [CallerMemberName] string propertyName = null)
-        {
-            if (syncStatus != SynchronizedStatus.Load)
-            {
-                if (Changes.TryGetValue(propertyName, out var cacheValue))
+                }
+                else
                 {
                     if (ListHelper.Equal(cacheValue, newValue, false))
                     {
@@ -72,7 +63,7 @@ namespace DataWF.Common
                 }
             }
 
-            OnPropertyChanged(propertyName);
+            base.OnPropertyChanged(oldValue, newValue, propertyName);
         }
     }
 

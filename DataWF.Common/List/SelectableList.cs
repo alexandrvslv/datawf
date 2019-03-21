@@ -254,7 +254,15 @@ namespace DataWF.Common
             var lindex = indexes.GetIndex(e.PropertyName);
             if (lindex != null)
             {
-                lindex.Refresh(item);
+                if (e is PropertyChangedDetailEventArgs details)
+                {
+                    lindex.Remove(item, details.OldValue);
+                    lindex.Add(item, details.NewValue);
+                }
+                else
+                {
+                    lindex.Refresh(item);
+                }
             }
             if (IsSorted)
             {

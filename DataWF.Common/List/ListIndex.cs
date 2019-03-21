@@ -42,7 +42,7 @@ namespace DataWF.Common
             Add(item, key);
         }
 
-        private void Add(T item, K key)
+        public void Add(T item, K key)
         {
             lock (Dictionary)
             {
@@ -61,7 +61,7 @@ namespace DataWF.Common
             Remove(item, key);
         }
 
-        private void Remove(T item, K key)
+        public void Remove(T item, K key)
         {
             lock (Dictionary)
             {
@@ -276,6 +276,20 @@ namespace DataWF.Common
         public void Remove(object item)
         {
             Remove((T)item);
+        }
+
+        public void Add(object item, object key)
+        {
+            var typeKey = (K)key;
+            CheckNull(ref typeKey);
+            Add((T)item, typeKey);
+        }
+
+        public void Remove(object item, object key)
+        {
+            var typeKey = (K)key;
+            CheckNull(ref typeKey);
+            Remove((T)item, typeKey);
         }
 
         object IListIndex.SelectOne(object value)

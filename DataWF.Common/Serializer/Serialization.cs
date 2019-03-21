@@ -66,7 +66,8 @@ namespace DataWF.Common
             var newItem = (T)typeInfo.Constructor.Create();
             foreach (var property in typeInfo.Properties)
             {
-                if (ignoreEnumerable && TypeHelper.IsList(property.DataType))
+                if ((ignoreEnumerable && TypeHelper.IsList(property.DataType))
+                    || property.Name.Equals(nameof(ISynchronized.SyncStatus), StringComparison.Ordinal))
                     continue;
                 property.Invoker.SetValue(newItem, property.Invoker.GetValue(obj));
             }

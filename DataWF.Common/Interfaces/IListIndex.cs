@@ -6,8 +6,11 @@ namespace DataWF.Common
     public interface IListIndex
     {
         void Add(object item);
-        void Clear();
+        void Add(object item, object key);
         void Remove(object item);
+        void Remove(object item, object key);
+        void Clear();
+
         object SelectOne(object value);
         IEnumerable Scan(IQueryParameter parameter);
     }
@@ -23,7 +26,9 @@ namespace DataWF.Common
 
     public interface IListIndex<T, K> : IListIndex<T>
     {
-        T SelectOne(K value);        
+        T SelectOne(K value);
+        void Add(T item, K key);
+        void Remove(T item, K key);
     }
 
 }

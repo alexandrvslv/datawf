@@ -861,7 +861,7 @@ namespace DataWF.Web.ClientGenerator
         private IEnumerable<StatementSyntax> GenDefinitionClassPropertySet(JsonProperty property)
         {
             yield return SF.ParseStatement($"if({GetFieldName(property)} == value) return;");
-            yield return SF.ParseStatement($"OnPropertyChangingValue({GetFieldName(property)});");
+            yield return SF.ParseStatement($"var temp = {GetFieldName(property)};");
             yield return SF.ParseStatement($"{GetFieldName(property)} = value;");
             var refPropertyName = (object)null;
             if (property.ExtensionData != null && property.ExtensionData.TryGetValue("x-id", out refPropertyName))
@@ -873,17 +873,14 @@ namespace DataWF.Web.ClientGenerator
             if (objectProperty != null)
             {
                 var objectFieldName = GetFieldName(objectProperty);
-                yield return SF.ParseStatement($"if({objectFieldName} != null && {objectFieldName}.Id != value)");
+                yield return SF.ParseStatement($"if({objectFieldName}?.Id != value)");
                 yield return SF.ParseStatement("{");
-                yield return SF.ParseStatement($"OnPropertyChangingValue({objectFieldName}, \"{GetPropertyName(objectProperty)}\");");
                 yield return SF.ParseStatement($"{objectFieldName} = null;");
-                yield return SF.ParseStatement("}");
                 yield return SF.ParseStatement($"OnPropertyChanged(\"{GetPropertyName(objectProperty)}\");");
+                yield return SF.ParseStatement("}");
             }
-            if (refPropertyName == null)
-            {
-                yield return SF.ParseStatement($"OnPropertyChangedValue(value);");
-            }
+            yield return SF.ParseStatement($"OnPropertyChanged(temp, value);");
+           
         }
 
         private string GetPropertyName(JsonProperty property)

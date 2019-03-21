@@ -7,10 +7,10 @@ using System.Xml.Serialization;
 
 namespace DataWF.Common
 {
-    public abstract class DefaultItem : IContainerNotifyPropertyChanged, INotifyPropertyChanging
+    public abstract class DefaultItem : IContainerNotifyPropertyChanged
     {
         public static Action<PropertyChangedEventHandler, object, PropertyChangedEventArgs> GlogalChangedHook;
-        private PropertyChangedEventHandler propertyChanged;
+        protected PropertyChangedEventHandler propertyChanged;
 
         [JsonIgnore, XmlIgnore]
         public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers(propertyChanged);
@@ -21,42 +21,35 @@ namespace DataWF.Common
             remove => propertyChanged -= value;
         }
 
-        public event PropertyChangingEventHandler PropertyChanging;
-
-        protected virtual void OnPropertyChanging([CallerMemberName] string propertyName = null)
+        protected virtual void OnPropertyChanged(PropertyChangedEventArgs arg)
         {
-            PropertyChanging?.Invoke(this, new PropertyChangingEventArgs(propertyName));
-        }
-
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            if (propertyChanged != null)
+            foreach (var handler in propertyChanged.GetInvocationList())
             {
-                var arg = new PropertyChangedEventArgs(propertyName);
-                foreach (var handler in propertyChanged.GetInvocationList())
+                if (GlogalChangedHook == null || handler.Target is INotifyListPropertyChanged)
                 {
-                    if (GlogalChangedHook == null || handler.Target is INotifyListPropertyChanged)
-                    {
-                        ((PropertyChangedEventHandler)handler).Invoke(this, arg);
-                    }
-                    else
-                    {
-                        GlogalChangedHook((PropertyChangedEventHandler)handler, this, arg);
-                    }
+                    ((PropertyChangedEventHandler)handler).Invoke(this, arg);
+                }
+                else
+                {
+                    GlogalChangedHook((PropertyChangedEventHandler)handler, this, arg);
                 }
             }
         }
 
-        protected virtual void OnPropertyChangingValue(object oldValue, [CallerMemberName] string propertyName = null)
+        public void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
-            OnPropertyChanging(propertyName);
+            if (propertyChanged != null)
+            {
+                OnPropertyChanged(new PropertyChangedEventArgs(propertyName));
+            }
         }
 
-        protected virtual void OnPropertyChangedValue(object oldValue, [CallerMemberName] string propertyName = null)
+        protected virtual void OnPropertyChanged(object oldValue, object newValue, [CallerMemberName] string propertyName = null)
         {
-            OnPropertyChanged(propertyName);
+            if (propertyChanged != null)
+            {
+                OnPropertyChanged(new PropertyChangedDetailEventArgs(propertyName, oldValue, newValue));
+            }
         }
     }
-
-
 }
