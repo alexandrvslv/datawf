@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
@@ -48,9 +47,9 @@ namespace DataWF.Common
             }
         }
 
-        protected virtual void OnPropertyChanged(bool synch, [CallerMemberName] string propertyName = null)
+        protected virtual void OnPropertyChanging(object oldValue, [CallerMemberName] string propertyName = null)
         {
-            OnPropertyChanged(propertyName);
+            OnPropertyChanging(propertyName);
         }
     }
 

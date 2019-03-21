@@ -111,7 +111,8 @@ namespace DataWF.Common
                     {
                         throw new Exception("Wrong Json properties sequence!");
                     }
-                    if (synchItem != null && synchItem.SyncStatus != SynchronizedStatus.Load && synchItem.Changes.Contains(property.Name))
+                    if (synchItem != null && synchItem.SyncStatus != SynchronizedStatus.Load
+                        && synchItem.Changes.ContainsKey(property.Name))
                     {
                         continue;
                     }

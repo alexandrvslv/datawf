@@ -18,7 +18,7 @@ namespace DataWF.Common
         private SynchronizedStatus syncStatus = SynchronizedStatus.New;
 
         [JsonIgnore, XmlIgnore]
-        public ISet<string> Changes { get; } = new HashSet<string>();
+        public IDictionary<string, object> Changes { get; } = new Dictionary<string, object>();
 
         [JsonIgnore, XmlIgnore]
         public virtual SynchronizedStatus SyncStatus
@@ -37,21 +37,25 @@ namespace DataWF.Common
             }
         }
 
-        protected override void OnPropertyChanged(bool synch, [CallerMemberName] string propertyName = null)
+        protected override void OnPropertyChanging(object oldValue, [CallerMemberName] string propertyName = null)
         {
-            if (synch)
+            if (syncStatus == SynchronizedStatus.Actual)
             {
-                if (syncStatus == SynchronizedStatus.Actual)
+                SyncStatus = SynchronizedStatus.Edit;
+            }
+            if (syncStatus != SynchronizedStatus.Load)
+            {
+                if (!Changes.TryGetValue(propertyName, out var cacheValue))
                 {
-                    SyncStatus = SynchronizedStatus.Edit;
+                    Changes[propertyName] = oldValue;
                 }
-                if (syncStatus != SynchronizedStatus.Load)
+                else if (cacheValue == oldValue)
                 {
-                    Changes.Add(propertyName);
+                    Changes.Remove(propertyName);
                 }
             }
 
-            base.OnPropertyChanged(propertyName);
+            base.OnPropertyChanging(propertyName);
         }
     }
 

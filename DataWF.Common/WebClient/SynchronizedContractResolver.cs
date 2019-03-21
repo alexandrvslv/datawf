@@ -31,7 +31,7 @@ namespace DataWF.Common
                             instance =>
                             {
                                 var e = (ISynchronized)instance;
-                                return e.Changes.Contains(propertyName);
+                                return e.Changes.ContainsKey(propertyName);
                             };
                     }
                     else if (TypeHelper.IsInterface(TypeHelper.GetItemType(property.PropertyType), typeof(ISynchronized)))
