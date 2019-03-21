@@ -43,7 +43,6 @@ namespace DataWF.Common
 
         public virtual T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, T item, IList sourceList)
         {
-            var add = false;
             var property = (PropertySerializationInfo)null;
             var id = (object)null;
             var synchItem = item as ISynchronized;
