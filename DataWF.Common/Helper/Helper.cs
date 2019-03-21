@@ -999,7 +999,13 @@ namespace DataWF.Common
 
         public static string LenghtFormat(double l)
         {
-            return LenghtFormat((decimal)l);
+            var i = ByteSize.B;
+            while (Math.Abs(l) >= 1024 && (int)i < 4)
+            {
+                l = l / 1024;
+                i = (ByteSize)((int)i + 1);
+            }
+            return $"{l:0.00} {i}";
         }
 
         public static string LenghtFormat(decimal l)
@@ -1007,7 +1013,7 @@ namespace DataWF.Common
             var i = ByteSize.B;
             while (Math.Abs(l) >= 1024 && (int)i < 4)
             {
-                l = l / 1024M;
+                l = l / 1024;
                 i = (ByteSize)((int)i + 1);
             }
             return $"{l:0.00} {i}";
