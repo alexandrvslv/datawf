@@ -47,9 +47,14 @@ namespace DataWF.Common
             }
         }
 
-        protected virtual void OnPropertyChanging(object oldValue, [CallerMemberName] string propertyName = null)
+        protected virtual void OnPropertyChangingValue(object oldValue, [CallerMemberName] string propertyName = null)
         {
             OnPropertyChanging(propertyName);
+        }
+
+        protected virtual void OnPropertyChangedValue(object oldValue, [CallerMemberName] string propertyName = null)
+        {
+            OnPropertyChanged(propertyName);
         }
     }
 
