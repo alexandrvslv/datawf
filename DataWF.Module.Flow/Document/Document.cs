@@ -743,10 +743,10 @@ namespace DataWF.Module.Flow
                         }
                     }
 
-                    if (Parent != null && FindReference(Parent) == null)
-                    {
-                        Parent.CreateReference(this);
-                    }
+                    //if (Parent != null && FindReference(Parent) == null)
+                    //{
+                    //    Parent.CreateReference(this);
+                    //}
                     if (CurrentStage == null)
                     {
                         CurrentStage = Template.Work?.GetStartStage();
