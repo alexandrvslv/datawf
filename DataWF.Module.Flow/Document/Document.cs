@@ -283,6 +283,13 @@ namespace DataWF.Module.Flow
             set => SetProperty(value);
         }
 
+        [DataMember, Column("complete_progress"), DefaultValue(0D)]
+        public double? CompleteProgress
+        {
+            get => GetProperty<double?>();
+            set => SetProperty(value);
+        }
+
         [Browsable(false)]
         [DataMember, Column("current_work_id", ColumnType = DBColumnTypes.Code)]
         public long? CurrentWorkId
