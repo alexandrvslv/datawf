@@ -30,6 +30,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 namespace DataWF.Data
@@ -1463,6 +1464,16 @@ namespace DataWF.Data
             byte[] temp = data != null && data.Length > 500 ? Helper.WriteGZip(data) : data;
             SetValue(temp, column);
             return temp;
+        }
+
+        public Task SetLOB(Stream value, DBColumn column)
+        {
+            return Table.System.SetLOB(this, column, value);
+        }
+
+        public Task<Stream> GetLOB(DBColumn column)
+        {
+            return Table.System.GetLOB(this, column);
         }
 
     }

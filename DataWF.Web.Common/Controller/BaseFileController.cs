@@ -1,12 +1,7 @@
 ﻿using DataWF.Data;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Net.Http.Headers;
 using System;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace DataWF.Web.Common
@@ -19,12 +14,8 @@ namespace DataWF.Web.Common
 
         [HttpGet("DownloadFile/{id}")]
         [ProducesResponseType(typeof(FileStreamResult), 200)]
-        public ActionResult<Stream> DownloadFile([FromRoute]K id)
+        public async Task<ActionResult<Stream>> DownloadFile([FromRoute]K id)
         {
-            if (table.FileKey == null || table.FileNameKey == null)
-            {
-                return BadRequest("No file columns presented!");
-            }
             try
             {
                 var item = table.LoadById(id);
@@ -32,12 +23,27 @@ namespace DataWF.Web.Common
                 {
                     return NotFound();
                 }
+                if (table.FileNameKey == null)
+                {
+                    return BadRequest("No file columns presented!");
+                }
                 var fileName = item.GetValue<string>(table.FileNameKey);
                 if (string.IsNullOrEmpty(fileName))
                 {
                     return new EmptyResult();
                 }
-                return File(item.GetZipMemoryStream(table.FileKey), System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
+                if (table.FileLOBKey != null && item.GetValue(table.FileLOBKey) != null)
+                {
+                    return File(await item.GetLOB(table.FileLOBKey), System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
+                }
+                else if (table.FileKey != null)
+                {
+                    return File(item.GetZipMemoryStream(table.FileKey), System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
+                }
+                else
+                {
+                    return BadRequest("No file columns presented!");
+                }
             }
             catch (Exception ex)
             {
@@ -50,7 +56,7 @@ namespace DataWF.Web.Common
         [DisableRequestSizeLimit]
         public async Task<ActionResult> UploadFile([FromRoute]K id, [FromRoute]string fileName)
         {
-            if (table.FileKey == null || table.FileNameKey == null)
+            if (table.FileNameKey == null)
             {
                 return BadRequest("No file columns presented!");
             }
@@ -76,8 +82,19 @@ namespace DataWF.Web.Common
                     {
                         fileName = upload.FileName;
                     }
+
                     item.SetValue(fileName, table.FileNameKey);
-                    item.SetStream(upload.Stream, table.FileKey, CurrentUser);
+                    if (table.FileLOBKey != null)
+                    {
+                        await item.SetLOB(upload.Stream, table.FileLOBKey);
+                        item.Save(CurrentUser);
+                    }
+                    else if (table.FileKey != null)
+                    {
+                        item.SetStream(upload.Stream, table.FileKey, CurrentUser);
+                    }
+
+
                 }
                 return Ok();
             }
@@ -87,7 +104,7 @@ namespace DataWF.Web.Common
             }
         }
 
-       
+
 
     }
 }

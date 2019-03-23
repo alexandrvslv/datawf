@@ -781,7 +781,7 @@ namespace DataWF.Module.Flow
                 {
                     foreach (var data in GetTemplatedData())
                     {
-                        data.SetData(data.Parse(param, false), user);
+                        data.SetData(data.Parse(param, false).GetAwaiter().GetResult(), user);
                     }
                 }
                 Saved?.Invoke(null, new DocumentEventArgs(this));

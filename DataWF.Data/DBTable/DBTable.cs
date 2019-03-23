@@ -134,6 +134,7 @@ namespace DataWF.Data
         protected DBColumn primaryKey = DBColumn.EmptyKey;
         protected DBColumn fileKey = DBColumn.EmptyKey;
         protected DBColumn fileNameKey = DBColumn.EmptyKey;
+        protected DBColumn fileLOBKey = DBColumn.EmptyKey;
         protected DBColumn dateKey = DBColumn.EmptyKey;
         protected DBColumn stampKey = DBColumn.EmptyKey;
         protected DBColumn codeKey = DBColumn.EmptyKey;
@@ -374,6 +375,19 @@ namespace DataWF.Data
                     primaryKey = Columns.GetByKey(DBColumnKeys.Primary);
                 }
                 return primaryKey;
+            }
+        }
+
+        [Browsable(false), Category("Keys")]
+        public DBColumn FileLOBKey
+        {
+            get
+            {
+                if (fileLOBKey == DBColumn.EmptyKey)
+                {
+                    fileLOBKey = Columns.GetByKey(DBColumnKeys.FileLOB);
+                }
+                return fileLOBKey;
             }
         }
 

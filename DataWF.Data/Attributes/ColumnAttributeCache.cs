@@ -129,6 +129,10 @@ namespace DataWF.Data
             }
             Column.Attribute = this;
             Column.DataType = GetDataType();
+            if (Attribute.DBDataType != DBDataType.None)
+            {
+                Column.DBDataType = Attribute.DBDataType;
+            }
             Column.Size = Attribute.Size;
             Column.Scale = Attribute.Scale;
             Column.ColumnType = Attribute.ColumnType;

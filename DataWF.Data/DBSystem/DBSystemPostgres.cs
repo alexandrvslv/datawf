@@ -4,7 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace DataWF.Data
 {
@@ -190,6 +193,10 @@ namespace DataWF.Data
             {
                 parameter.DbType = DbType.Time;
             }
+            else if (column.DBDataType == DBDataType.LargeObject)
+            {
+                parameter.DbType = DbType.UInt32;
+            }
         }
 
         public override object ReadValue(DBColumn column, object value)
@@ -248,6 +255,74 @@ namespace DataWF.Data
             }
 
             return builder.ToString();
+        }
+
+        public override async Task SetLOB(DBItem item, DBColumn fileLOBKey, Stream value)
+        {
+            try
+            {
+                value.Position = 0;
+                var outStream = new MemoryStream();
+                using (var transaction = DBTransaction.GetTransaction(item, item.Table.Schema.Connection))
+                {
+                    var manager = new NpgsqlLargeObjectManager((NpgsqlConnection)transaction.Connection);
+                    var bufferSize = 81920;
+                    var buffer = new byte[bufferSize];
+
+                    var oid = await manager.CreateAsync(0, CancellationToken.None);
+                    item.SetValue<uint?>(oid, fileLOBKey);
+
+                    using (var lobStream = await manager.OpenReadWriteAsync(oid, CancellationToken.None))
+                    {
+                        int count;
+                        while ((count = await value.ReadAsync(buffer, 0, bufferSize)) != 0)
+                        {
+                            await lobStream.WriteAsync(buffer, 0, count);
+                        }
+                    }
+                    transaction.Commit();
+                }
+            }
+            catch (Exception ex)
+            {
+                Helper.OnException(ex);
+            }
+        }
+
+        public override async Task<Stream> GetLOB(DBItem item, DBColumn fileLOBKey)
+        {
+            var oid = item.GetValue<uint?>(fileLOBKey);
+            if (oid == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                var outStream = new MemoryStream();
+                using (var transaction = DBTransaction.GetTransaction(item, item.Table.Schema.Connection))
+                {
+                    var manager = new NpgsqlLargeObjectManager((NpgsqlConnection)transaction.Connection);
+                    var bufferSize = 81920;
+                    var buffer = new byte[bufferSize];
+                    using (var lobStream = await manager.OpenReadAsync((uint)oid.Value, CancellationToken.None))
+                    {
+                        int count;
+                        while ((count = await lobStream.ReadAsync(buffer, 0, bufferSize)) != 0)
+                        {
+                            outStream.Write(buffer, 0, count);
+                        }
+                    }
+
+                    transaction.Commit();
+                }
+                return outStream;
+            }
+            catch (Exception ex)
+            {
+                Helper.OnException(ex);
+            }
+            return null;
         }
 
         //public override void ReadSequential(DBItem item, DBColumn column, Stream stream, int bufferSize = 81920)

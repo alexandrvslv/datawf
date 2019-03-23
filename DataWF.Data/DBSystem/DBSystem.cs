@@ -6,6 +6,7 @@ using System.Data.Common;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace DataWF.Data
 {
@@ -152,6 +153,16 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                     Column = item[iColu].ToString()
                 });
             }
+        }
+
+        public virtual Task<Stream> GetLOB(DBItem item, DBColumn column)
+        {
+            return null;
+        }
+
+        public virtual Task SetLOB(DBItem item, DBColumn column, Stream value)
+        {
+            return null;
         }
 
         public virtual void CreateDatabase(DBSchema schema, DBConnection connection)
@@ -900,6 +911,6 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                     transaction.Dispose();
             }
         }
-        
+
     }
 }

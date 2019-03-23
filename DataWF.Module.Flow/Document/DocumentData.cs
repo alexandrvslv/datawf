@@ -27,6 +27,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 
 namespace DataWF.Module.Flow
 {
@@ -179,6 +180,13 @@ namespace DataWF.Module.Flow
             set { SetValue(value, Table.FileKey); }
         }
 
+        [DataMember, Column("file_lob", DBDataType = DBDataType.LargeObject, Keys = DBColumnKeys.FileLOB)]
+        public virtual uint? FileLOB
+        {
+            get { return GetValue<uint?>(Table.FileLOBKey); }
+            set { SetValue(value, Table.FileLOBKey); }
+        }
+
         [Browsable(false)]
         [DataMember, Column("current_user_id", ColumnType = DBColumnTypes.Code)]
         public int? CurrentUserId
@@ -219,15 +227,15 @@ namespace DataWF.Module.Flow
             get { return TemplateDataId != null; }
         }
 
-        public string GetDataPath()
+        public async Task<string> GetDataPath()
         {
-            using (var stream = GetData())
+            using (var stream = await GetData())
             {
                 return stream == null ? null : ((FileStream)stream).Name;
             }
         }
 
-        public Stream GetData()
+        public Task<Stream> GetData()
         {
             var filePath = Helper.GetDocumentsFullPath(FileName, nameof(DocumentData) + Id);
             if (filePath == null)
@@ -237,36 +245,40 @@ namespace DataWF.Module.Flow
             return GetData(filePath);
         }
 
-        public Stream GetData(string fileName)
+        public async Task<Stream> GetData(string fileName)
         {
+            if (FileLOB != null)
+            {
+                return await GetLOB(Table.FileLOBKey);
+            }
             return GetZipFileStream(Table.FileKey, fileName);
         }
 
-        public void SetData(string filePath, IUserIdentity user)
+        public Task SetData(string filePath, IUserIdentity user)
         {
             using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
-                SetData(stream, null, user);
+                return SetData(stream, null, user);
             }
         }
 
-        public void SetData(Stream stream, string fileName, IUserIdentity user)
+        public async Task SetData(Stream stream, string fileName, IUserIdentity user)
         {
             if (fileName != null)
             {
                 FileName = fileName;
             }
-
-            SetStream(stream, Table.FileKey, user);
+            await SetLOB(stream, Table.FileLOBKey);
+            //SetStream(stream, Table.FileKey, user);
         }
 
         [ControllerMethod]
-        public FileStream RefreshData(IUserIdentity user)
+        public async Task<FileStream> RefreshData(IUserIdentity user)
         {
-            return new FileStream(Parse(user, true), FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            return new FileStream(await Parse(user, true), FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         }
 
-        public string Parse(IUserIdentity user, bool fromTemplate = false)
+        public Task<string> Parse(IUserIdentity user, bool fromTemplate = false)
         {
             return Parse(new DocumentExecuteArgs
             {
@@ -276,11 +288,11 @@ namespace DataWF.Module.Flow
             }, fromTemplate);
         }
 
-        public string Parse(DocumentExecuteArgs param, bool fromTemplate = false)
+        public async Task<string> Parse(DocumentExecuteArgs param, bool fromTemplate = false)
         {
             if (TemplateData == null || TemplateData.File == null)
             {
-                return GetDataPath();
+                return await GetDataPath();
             }
 
             var filePath = Helper.GetDocumentsFullPath(FileName, "Parser" + (Id ?? TemplateData.Id));
@@ -294,7 +306,7 @@ namespace DataWF.Module.Flow
             }
             else
             {
-                using (var stream = GetData(filePath))
+                using (var stream = await GetData(filePath))
                 {
                     filePath = DocumentParser.Execute(stream, FileName, param);
                 }
@@ -307,11 +319,11 @@ namespace DataWF.Module.Flow
         {
             var worker = new BackgroundWorker();
             //worker.WorkerSupportsCancellation = false;
-            worker.DoWork += (object sender, DoWorkEventArgs e) =>
+            worker.DoWork += async (object sender, DoWorkEventArgs e) =>
             {
                 try
                 {
-                    Parse(param);
+                    await Parse(param);
                     e.Result = param;
                 }
                 catch (Exception ex)

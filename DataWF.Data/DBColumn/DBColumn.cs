@@ -58,6 +58,7 @@ namespace DataWF.Data
         ElementType = 1 << 22,
         File = 1 << 23,
         FileName = 1 << 24,
+        FileLOB = 1 << 25,
     }
 
     public class DBColumn : DBTableItem, IComparable, IComparable<DBColumn>, ICloneable, IInvoker<DBItem, object>

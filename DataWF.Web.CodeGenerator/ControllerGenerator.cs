@@ -6,11 +6,11 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace DataWF.Web.CodeGenerator
 {
@@ -283,10 +283,26 @@ namespace DataWF.Web.CodeGenerator
         {
             AddUsing(method.DeclaringType);
             AddUsing(method.ReturnType);
+
             var returning = method.ReturnType == typeof(void) ? "void" : $"ActionResult<{TypeHelper.FormatCode(method.ReturnType)}>";
+            var modifiers = new List<SyntaxToken> { SyntaxFactory.Token(SyntaxKind.PublicKeyword) };
+            var isAsync = TypeHelper.IsBaseType(method.ReturnType, typeof(Task));
+            if (isAsync)
+            {
+                modifiers.Add(SyntaxFactory.Token(SyntaxKind.AsyncKeyword));
+                if (method.ReturnType.IsGenericType)
+                {
+                    returning = $"Task<ActionResult<{TypeHelper.FormatCode(method.ReturnType.GetGenericArguments().FirstOrDefault())}>>";
+                }
+                else
+                {
+                    returning = "Task<ActionResult>";
+                }
+            }
+
             var parameterInfo = GetParametersInfo(method, table);
             return SyntaxFactory.MethodDeclaration(attributeLists: SyntaxFactory.List(GetControllerMethodAttributes(method, parameterInfo)),
-                          modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
+                          modifiers: SyntaxFactory.TokenList(modifiers.ToArray()),
                           returnType: returning == "void"
                           ? SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword))
                           : SyntaxFactory.ParseTypeName(returning),
@@ -295,16 +311,19 @@ namespace DataWF.Web.CodeGenerator
                           typeParameterList: null,
                           parameterList: SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(GetControllerMethodParameters(method, table, parameterInfo))),
                           constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
-                          body: SyntaxFactory.Block(GetControllerMethodBody(method, baseClass, parameterInfo)),
+                          body: SyntaxFactory.Block(GetControllerMethodBody(method, baseClass, parameterInfo, returning)),
                           semicolonToken: SyntaxFactory.Token(SyntaxKind.SemicolonToken));
             // Annotate that this node should be formatted
             //.WithAdditionalAnnotations(Formatter.Annotation);
         }
 
-        private IEnumerable<StatementSyntax> GetControllerMethodBody(MethodInfo method, bool baseClass, List<MethodParametrInfo> parametersInfo)
+        private IEnumerable<StatementSyntax> GetControllerMethodBody(MethodInfo method, bool baseClass, List<MethodParametrInfo> parametersInfo, string returning)
         {
+            var isAsync = TypeHelper.IsBaseType(method.ReturnType, typeof(Task));
+            if (isAsync)
+                returning = returning.Substring(5, returning.Length - 6);
             yield return SyntaxFactory.ParseStatement("try {");
-            var returning = method.ReturnType == typeof(void) ? "void" : $"ActionResult<{TypeHelper.FormatCode(method.ReturnType)}>";
+
             if (!method.IsStatic)
             {
                 yield return SyntaxFactory.ParseStatement($"var idValue = table.LoadById<{(baseClass ? "T" : TypeHelper.FormatCode(method.DeclaringType))}>(id);");
@@ -327,7 +346,14 @@ namespace DataWF.Web.CodeGenerator
                 }
                 else if (parameter.ValueName == prStream)
                 {
-                    yield return SyntaxFactory.ParseStatement($"var {parameter.ValueName} = Upload(true).GetAwaiter().GetResult()?.Stream;");
+                    if (isAsync)
+                    {
+                        yield return SyntaxFactory.ParseStatement($"var {parameter.ValueName} = (await Upload(true))?.Stream;");
+                    }
+                    else
+                    {
+                        yield return SyntaxFactory.ParseStatement($"var {parameter.ValueName} = Upload(true).GetAwaiter().GetResult()?.Stream;");
+                    }
                 }
                 parametersBuilder.Append($"{parameter.ValueName}, ");
             }
@@ -338,7 +364,14 @@ namespace DataWF.Web.CodeGenerator
             var builder = new StringBuilder();
             if (TypeHelper.IsBaseType(method.ReturnType, typeof(Stream)))
             {
-                yield return SyntaxFactory.ParseStatement($"var exportStream = {(method.IsStatic ? method.DeclaringType.Name : " idValue")}.{method.Name}({parametersBuilder}) as FileStream;");
+                if (isAsync)
+                {
+                    yield return SyntaxFactory.ParseStatement($"var exportStream = (await {(method.IsStatic ? method.DeclaringType.Name : " idValue")}.{method.Name}({parametersBuilder})) as FileStream;");
+                }
+                else
+                {
+                    yield return SyntaxFactory.ParseStatement($"var exportStream = {(method.IsStatic ? method.DeclaringType.Name : " idValue")}.{method.Name}({parametersBuilder}) as FileStream;");
+                }
                 yield return SyntaxFactory.ParseStatement($"return File(exportStream, System.Net.Mime.MediaTypeNames.Application.Octet, Path.GetFileName(exportStream.Name));");
             }
             else
@@ -346,6 +379,10 @@ namespace DataWF.Web.CodeGenerator
                 if (method.ReturnType != typeof(void))
                 {
                     builder.Append($"return new {returning}(");
+                }
+                if (isAsync)
+                {
+                    builder.Append(" await ");
                 }
 
                 builder.Append($"{(method.IsStatic ? method.DeclaringType.Name : " idValue")}.{method.Name}({parametersBuilder}");

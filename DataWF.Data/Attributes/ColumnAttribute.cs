@@ -63,6 +63,8 @@ namespace DataWF.Data
 
         public DBColumnKeys Keys { get; set; }
 
+        public DBDataType DBDataType { get; set; }
+
         public Type DataType { get; set; }
 
         public ColumnAttribute Clone()
@@ -71,6 +73,7 @@ namespace DataWF.Data
             {
                 GroupName = GroupName,
                 ColumnType = ColumnType,
+                DBDataType = DBDataType,
                 DataType = DataType,
                 Keys = Keys
             };
