@@ -34,13 +34,8 @@ namespace DataWF.Module.Flow
             {
                 if (work.Stage == null || work.Document == null)
                     continue;
-                using (var transaction = new DBTransaction(Document.DBTable.Schema.Connection))
-                {
-                    work.Document.ExecuteProceduresByWork(work, StageParamProcudureType.Manual, parameters.User);
-                    work.Document.Save();
-
-                    transaction.Commit(parameters.User);
-                }
+                work.Document.ExecuteProceduresByWork(work, StageParamProcudureType.Manual, parameters.Transaction);
+                work.Document.Save(parameters.Transaction);
             }
             return null;
         }

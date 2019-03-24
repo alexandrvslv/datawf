@@ -20,7 +20,6 @@
 //  You should have received a copy of the GNU Lesser General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
@@ -47,35 +46,15 @@ namespace DataWF.Data
     {
         public static EventHandler<DBTransactionEventArg> Commited;
 
-        [ThreadStatic]
-        private static DBTransaction current;
-        private static ConcurrentQueue<DBTransaction> queue = new ConcurrentQueue<DBTransaction>();
-        public static DBTransaction Current
-        {
-            get => current;
-            internal set
-            {
-                if (current != null && value != null)
-                {
-                    queue.Enqueue(current);
-                    //current.subTransactions[value.DbConnection] = value;
-                }
-                else
-                {
-                    current = value;
-                }
-            }
-        }
-
-        public static DBTransaction GetTransaction(object owner, DBConnection connection, bool noTransaction = false, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null)
-        {
-            var transaction = Current?.GetSubTransaction(connection, true, noTransaction) ?? new DBTransaction(owner, connection, noTransaction);
-            if (transaction.View == null)
-                transaction.View = synch;
-            if (transaction.ReaderParam == DBLoadParam.None)
-                transaction.ReaderParam = param;
-            return transaction;
-        }
+        //public static DBTransaction GetTransaction(object owner, DBConnection connection, bool noTransaction = false, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null)
+        //{
+        //    var transaction = Current?.GetSubTransaction(connection, true, noTransaction) ?? new DBTransaction(owner, connection, noTransaction);
+        //    if (transaction.View == null)
+        //        transaction.View = synch;
+        //    if (transaction.ReaderParam == DBLoadParam.None)
+        //        transaction.ReaderParam = param;
+        //    return transaction;
+        //}
 
         private List<IDbCommand> commands = new List<IDbCommand>();
         private IDbCommand command;
@@ -84,33 +63,36 @@ namespace DataWF.Data
         private Dictionary<DBConnection, DBTransaction> subTransactions;
 
         public DBTransaction()
-            : this(DBService.Schems.DefaultSchema.Connection)
+            : this((IUserIdentity)null)
+        { }
+
+        public DBTransaction(IUserIdentity caller)
+            : this(DBService.Schems.DefaultSchema.Connection, caller)
         { }
 
         public DBTransaction(DBConnection config)
-            : this(config, config)
+            : this(config, null)
         { }
 
-        public DBTransaction(object owner, DBConnection config, bool noTransaction = false)
-            : this(owner, config, config.GetConnection(), noTransaction)
+        public DBTransaction(DBConnection config, IUserIdentity caller, bool noTransaction = false)
+            : this(config, caller, config.GetConnection(), noTransaction)
         { }
 
-        public DBTransaction(object owner, DBConnection config, IDbConnection connection, bool noTransaction = false)
+        public DBTransaction(DBConnection config, IUserIdentity caller, IDbConnection connection, bool noTransaction = false)
         {
-            Owner = owner;
-            Current = this;
             DbConnection = config;
+            Caller = caller;
             Connection = connection;
             if (!noTransaction)
+            {
                 transaction = connection.BeginTransaction(config.IsolationLevel);
+            }
             //Debug.WriteLine($"New DBTransaction owner:{owner} connection:{config} is NON{noTransaction}");
         }
 
-        public object Owner { get; private set; }
+        public IUserIdentity Caller { get; private set; }
 
         public bool Canceled { get; private set; }
-
-        //public bool Reference { get; set; } = true;
 
         public IDbCommand Command
         {
@@ -127,67 +109,6 @@ namespace DataWF.Data
         public List<DBItem> Rows
         {
             get { return rows; }
-        }
-
-        public void Commit()
-        {
-            Commit(Owner as IUserIdentity);
-        }
-
-        public void Commit(IUserIdentity user)
-        {
-            if (transaction != null)
-                try { transaction.Commit(); }
-                catch (Exception te)
-                {
-                    foreach (var row in rows)
-                        row.Reject(user);
-                    Helper.OnException(te);
-                    return;
-                }
-
-            Commited?.Invoke(this, new DBTransactionEventArg(rows));
-            foreach (var row in rows)
-                row.Accept(user);
-
-            if (subTransactions != null)
-            {
-                foreach (var transaction in subTransactions.Values)
-                {
-                    transaction.Commit(user);
-                }
-            }
-        }
-
-        public void Rollback()
-        {
-            Rollback(Owner as IUserIdentity);
-        }
-
-        public void Rollback(IUserIdentity user)
-        {
-            if (transaction != null && !Canceled)
-            {
-                try
-                {
-                    transaction.Rollback();
-                    Canceled = true;
-                }
-                catch (Exception te) { Helper.OnException(te); }
-            }
-            foreach (var row in rows)
-            {
-                row.Reject(user);
-            }
-            rows.Clear();
-
-            if (subTransactions != null)
-            {
-                foreach (var transaction in subTransactions.Values)
-                {
-                    transaction.Rollback(user);
-                }
-            }
         }
 
         public IsolationLevel IsolationLevel
@@ -222,6 +143,62 @@ namespace DataWF.Data
 
         public DBItem UserLog { get; set; }
 
+        public void Commit()
+        {
+            if (transaction != null)
+                try { transaction.Commit(); }
+                catch (Exception te)
+                {
+                    foreach (var row in rows)
+                    {
+                        row.Reject(Caller);
+                    }
+
+                    Helper.OnException(te);
+                    return;
+                }
+
+            Commited?.Invoke(this, new DBTransactionEventArg(rows));
+            foreach (var row in rows)
+            {
+                row.Accept(Caller);
+            }
+
+            if (subTransactions != null)
+            {
+                foreach (var transaction in subTransactions.Values)
+                {
+                    transaction.Commit();
+                }
+            }
+        }
+
+        public void Rollback()
+        {
+            if (transaction != null && !Canceled)
+            {
+                try
+                {
+                    transaction.Rollback();
+                    Canceled = true;
+                }
+                catch (Exception te) { Helper.OnException(te); }
+            }
+            foreach (var row in rows)
+            {
+                row.Reject(Caller);
+            }
+            rows.Clear();
+
+            if (subTransactions != null)
+            {
+                foreach (var transaction in subTransactions.Values)
+                {
+                    transaction.Rollback();
+                }
+            }
+        }
+
         public void Dispose()
         {
             if (Connection != null)
@@ -244,7 +221,7 @@ namespace DataWF.Data
                         transaction.Dispose();
                     if (subTransactions != null)
                     {
-                        foreach (var subTransaction in subTransactions.Values.ToArray())
+                        foreach (var subTransaction in subTransactions.Values.ToList())
                         {
                             subTransaction.Dispose();
                         }
@@ -252,14 +229,6 @@ namespace DataWF.Data
                 }
                 finally
                 {
-                    if (Current == this)
-                    {
-                        Current = null;
-                    }
-                    else if (Current != null)
-                    {
-                        Current.RemoveSubtransaction(this);
-                    }
                     if (Connection.State == ConnectionState.Open)
                     {
                         Connection.Close();
@@ -271,7 +240,6 @@ namespace DataWF.Data
                     ReaderColumns = null;
                     rows.Clear();
                 }
-
                 //Debug.WriteLine($"Dispose DBTransaction owner:{Owner} connection:{DbConnection}");
             }
 
@@ -359,7 +327,7 @@ namespace DataWF.Data
             {
                 return subTransaction;
             }
-            return subTransactions[config] = new DBTransaction(Owner, config, noTransaction);
+            return subTransactions[config] = new DBTransaction(config, Caller, noTransaction);
             //TODO Check several opened connections in sqlite config.System == DBSystem.SQLite && DbConnection.System == DBSystem.SQLite
         }
 
@@ -380,20 +348,15 @@ namespace DataWF.Data
 
         public void Cancel()
         {
-            Cancel(Owner as IUserIdentity);
-        }
-
-        public void Cancel(IUserIdentity user)
-        {
             if (!Canceled)
             {
                 Canceled = true;
                 if (subTransactions != null)
                 {
                     foreach (var subTransaction in subTransactions.Values)
-                        subTransaction.Cancel(user);
+                        subTransaction.Cancel();
                 }
-                Rollback(user);
+                Rollback();
             }
         }
 
@@ -494,7 +457,7 @@ namespace DataWF.Data
             }
             catch (Exception ex)
             {
-                Rollback(null);
+                Rollback();
                 buf = ex;
             }
             finally

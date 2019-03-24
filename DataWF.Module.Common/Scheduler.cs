@@ -126,13 +126,13 @@ namespace DataWF.Module.Common
         }
 
         [ControllerMethod]
-        public StateInfo Execute(IUserIdentity user)
+        public StateInfo Execute(DBTransaction transaction)
         {
             object rez = null;
             if (Procedure == null)
                 throw new Exception("Procedure not specified!");
 
-            var task = Procedure.ExecuteTask(null);
+            var task = Procedure.GetExecutor(null, transaction);
             var result = task.Execute();
 
             var info = new StateInfo
@@ -153,7 +153,7 @@ namespace DataWF.Module.Common
             else
             {
                 DateExecute = DateTime.Now;
-                Save(user);
+                Save(transaction);
 
                 if (result is decimal && Statistic.DBTable != null)
                 {
@@ -162,7 +162,7 @@ namespace DataWF.Module.Common
                         Scheduler = this,
                         Result = (decimal)rez
                     };
-                    stat.Save(user);
+                    stat.Save(transaction);
                 }
 
                 info.Description = string.Format("Completed in {0:n} {1}", task.Time.TotalMilliseconds / 1000, result);

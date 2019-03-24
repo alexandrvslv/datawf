@@ -80,7 +80,8 @@ namespace DataWF.Web.Common
         public void ApplyColumn(Schema schema, Schema columnSchema, ColumnAttributeCache column)
         {
             if ((column.Attribute.Keys & DBColumnKeys.Password) == DBColumnKeys.Password
-                || (column.Attribute.Keys & DBColumnKeys.File) == DBColumnKeys.File)
+                || (column.Attribute.Keys & DBColumnKeys.File) == DBColumnKeys.File
+                || (column.Attribute.Keys & DBColumnKeys.FileLOB) == DBColumnKeys.FileLOB)
                 return;
 
             if (column.GetDataType() == typeof(string) && column.Attribute.Size > 0)

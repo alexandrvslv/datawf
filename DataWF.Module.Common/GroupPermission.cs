@@ -152,6 +152,24 @@ namespace DataWF.Module.Common
 
         public static void CachePermission()
         {
+            using (var transaction = new DBTransaction(DBTable.Connection))
+            {
+                try
+                {
+                    CachePermission(transaction);
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
+                    transaction.Rollback();
+                    throw ex;
+                }
+            }
+        }
+
+        public static void CachePermission(DBTransaction transaction)
+        {
             if (AccessValue.Groups == null || AccessValue.Groups.Count() == 0)
                 return;
 
@@ -170,7 +188,7 @@ namespace DataWF.Module.Common
                         CachePermissionTable(permission, table);
                 }
             }
-            DBTable.Save();
+            DBTable.Save(transaction);
         }
 
         public static GroupPermission Find(GroupPermission parent, object obj, bool generate)

@@ -195,7 +195,7 @@ namespace DataWF.Data
             }
             else if (column.DBDataType == DBDataType.LargeObject)
             {
-                parameter.DbType = DbType.UInt32;
+                ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Oid;
             }
         }
 
@@ -257,72 +257,45 @@ namespace DataWF.Data
             return builder.ToString();
         }
 
-        public override async Task SetLOB(DBItem item, DBColumn fileLOBKey, Stream value)
+        public override async Task<uint> SetLOB(Stream value, DBTransaction transaction)
         {
-            try
+            if (value.CanSeek)
             {
                 value.Position = 0;
-                var outStream = new MemoryStream();
-                using (var transaction = DBTransaction.GetTransaction(item, item.Table.Schema.Connection))
+            }
+            var manager = new NpgsqlLargeObjectManager((NpgsqlConnection)transaction.Connection);
+            var bufferSize = 81920;
+            var buffer = new byte[bufferSize];
+
+            var oid = await manager.CreateAsync(0, CancellationToken.None);
+
+            using (var lobStream = await manager.OpenReadWriteAsync(oid, CancellationToken.None))
+            {
+                int count;
+                while ((count = await value.ReadAsync(buffer, 0, bufferSize)) != 0)
                 {
-                    var manager = new NpgsqlLargeObjectManager((NpgsqlConnection)transaction.Connection);
-                    var bufferSize = 81920;
-                    var buffer = new byte[bufferSize];
-
-                    var oid = await manager.CreateAsync(0, CancellationToken.None);
-                    item.SetValue<uint?>(oid, fileLOBKey);
-
-                    using (var lobStream = await manager.OpenReadWriteAsync(oid, CancellationToken.None))
-                    {
-                        int count;
-                        while ((count = await value.ReadAsync(buffer, 0, bufferSize)) != 0)
-                        {
-                            await lobStream.WriteAsync(buffer, 0, count);
-                        }
-                    }
-                    transaction.Commit();
+                    await lobStream.WriteAsync(buffer, 0, count);
                 }
             }
-            catch (Exception ex)
-            {
-                Helper.OnException(ex);
-            }
+            return oid;
         }
 
-        public override async Task<Stream> GetLOB(DBItem item, DBColumn fileLOBKey)
+        public override async Task<Stream> GetLOB(uint oid, DBTransaction transaction)
         {
-            var oid = item.GetValue<uint?>(fileLOBKey);
-            if (oid == null)
+            var outStream = new MemoryStream();
+            var manager = new NpgsqlLargeObjectManager((NpgsqlConnection)transaction.Connection);
+            var bufferSize = 81920;
+            var buffer = new byte[bufferSize];
+            using (var lobStream = await manager.OpenReadAsync(oid, CancellationToken.None))
             {
-                return null;
-            }
-
-            try
-            {
-                var outStream = new MemoryStream();
-                using (var transaction = DBTransaction.GetTransaction(item, item.Table.Schema.Connection))
+                int count;
+                while ((count = await lobStream.ReadAsync(buffer, 0, bufferSize)) != 0)
                 {
-                    var manager = new NpgsqlLargeObjectManager((NpgsqlConnection)transaction.Connection);
-                    var bufferSize = 81920;
-                    var buffer = new byte[bufferSize];
-                    using (var lobStream = await manager.OpenReadAsync((uint)oid.Value, CancellationToken.None))
-                    {
-                        int count;
-                        while ((count = await lobStream.ReadAsync(buffer, 0, bufferSize)) != 0)
-                        {
-                            outStream.Write(buffer, 0, count);
-                        }
-                    }
-
-                    transaction.Commit();
+                    outStream.Write(buffer, 0, count);
                 }
-                return outStream;
             }
-            catch (Exception ex)
-            {
-                Helper.OnException(ex);
-            }
-            return null;
+            outStream.Position = 0;
+            return outStream;
         }
 
         //public override void ReadSequential(DBItem item, DBColumn column, Stream stream, int bufferSize = 81920)

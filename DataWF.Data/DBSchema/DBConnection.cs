@@ -435,7 +435,7 @@ namespace DataWF.Data
         {
             var schema = new DBSchema() { Name = "temp", Connection = this };
             var table = new DBTable<T>(tableName) { Schema = schema };
-            using (var transaction = DBTransaction.GetTransaction(this, this, true))
+            using (var transaction = new DBTransaction(this, null, true))
             {
                 table.Load(transaction.AddCommand(query)).LastOrDefault();
             }
@@ -444,7 +444,7 @@ namespace DataWF.Data
 
         public QResult ExecuteQResult(string query)
         {
-            using (var transaction = DBTransaction.GetTransaction(this, this, true))
+            using (var transaction = new DBTransaction(this, null, true))
             {
                 transaction.AddCommand(query);
                 return transaction.ExecuteQResult();
@@ -453,7 +453,7 @@ namespace DataWF.Data
 
         public List<List<KeyValuePair<string, object>>> ExecuteListPair(string query)
         {
-            using (var transaction = DBTransaction.GetTransaction(this, this, true))
+            using (var transaction = new DBTransaction(this, null, true))
             {
                 var list = new List<List<KeyValuePair<string, object>>>();
                 using (var reader = transaction.ExecuteQuery(transaction.AddCommand(query), DBExecuteType.Reader) as IDataReader)
@@ -474,7 +474,7 @@ namespace DataWF.Data
 
         public List<Dictionary<string, object>> ExecuteListDictionary(string query)
         {
-            using (var transaction = DBTransaction.GetTransaction(this, this, true))
+            using (var transaction = new DBTransaction(this, null, true))
             {
                 transaction.AddCommand(query);
                 return transaction.ExecuteListDictionary();
@@ -485,7 +485,7 @@ namespace DataWF.Data
         {
             if (string.IsNullOrEmpty(query))
                 return null;
-            using (var transaction = new DBTransaction(this, this, noTransaction))
+            using (var transaction = new DBTransaction(this, null, noTransaction))
             {
                 var result = transaction.ExecuteQuery(transaction.AddCommand(query), type);
                 transaction.Commit();

@@ -16,39 +16,40 @@ namespace DataWF.Web.Common
         [ProducesResponseType(typeof(FileStreamResult), 200)]
         public async Task<ActionResult<Stream>> DownloadFile([FromRoute]K id)
         {
-            try
-            {
-                var item = table.LoadById(id);
-                if (item == null)
+            using (var transaction = new DBTransaction(table.Connection, CurrentUser))
+                try
                 {
-                    return NotFound();
+                    var item = table.LoadById(id, DBLoadParam.Load | DBLoadParam.Referencing, null, transaction);
+                    if (item == null)
+                    {
+                        return NotFound();
+                    }
+                    if (table.FileNameKey == null)
+                    {
+                        return BadRequest("No file columns presented!");
+                    }
+                    var fileName = item.GetValue<string>(table.FileNameKey);
+                    if (string.IsNullOrEmpty(fileName))
+                    {
+                        return new EmptyResult();
+                    }
+                    if (table.FileLOBKey != null && item.GetValue(table.FileLOBKey) != null)
+                    {
+                        return File(await item.GetLOB(table.FileLOBKey, transaction), System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
+                    }
+                    else if (table.FileKey != null)
+                    {
+                        return File(item.GetZipMemoryStream(table.FileKey), System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
+                    }
+                    else
+                    {
+                        return BadRequest("No file columns presented!");
+                    }
                 }
-                if (table.FileNameKey == null)
+                catch (Exception ex)
                 {
-                    return BadRequest("No file columns presented!");
+                    return BadRequest(ex);
                 }
-                var fileName = item.GetValue<string>(table.FileNameKey);
-                if (string.IsNullOrEmpty(fileName))
-                {
-                    return new EmptyResult();
-                }
-                if (table.FileLOBKey != null && item.GetValue(table.FileLOBKey) != null)
-                {
-                    return File(await item.GetLOB(table.FileLOBKey), System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
-                }
-                else if (table.FileKey != null)
-                {
-                    return File(item.GetZipMemoryStream(table.FileKey), System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
-                }
-                else
-                {
-                    return BadRequest("No file columns presented!");
-                }
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex);
-            }
         }
 
         [HttpPost("UploadFile/{id}/{fileName}")]
@@ -72,29 +73,37 @@ namespace DataWF.Web.Common
                     {
                         return NoContent();
                     }
-
-                    var item = table.LoadById(id);
-                    if (item == null)
+                    using (var transaction = new DBTransaction(table.Connection, CurrentUser))
                     {
-                        return NotFound();
-                    }
-                    if (string.IsNullOrEmpty(fileName) && !string.IsNullOrEmpty(upload.FileName))
-                    {
-                        fileName = upload.FileName;
-                    }
+                        var item = table.LoadById(id, DBLoadParam.Load | DBLoadParam.Referencing, null, transaction);
+                        if (item == null)
+                        {
+                            return NotFound();
+                        }
+                        if (string.IsNullOrEmpty(fileName) && !string.IsNullOrEmpty(upload.FileName))
+                        {
+                            fileName = upload.FileName;
+                        }
 
-                    item.SetValue(fileName, table.FileNameKey);
-                    if (table.FileLOBKey != null)
-                    {
-                        await item.SetLOB(upload.Stream, table.FileLOBKey);
-                        item.Save(CurrentUser);
+                        try
+                        {
+                            item.SetValue(fileName, table.FileNameKey);
+                            if (table.FileLOBKey != null)
+                            {
+                                await item.SetLOB(upload.Stream, table.FileLOBKey, transaction);
+                            }
+                            else if (table.FileKey != null)
+                            {
+                                item.SetStream(upload.Stream, table.FileKey, transaction);
+                            }
+                            transaction.Commit();
+                        }
+                        catch (Exception ex)
+                        {
+                            transaction.Rollback();
+                            return BadRequest(ex);
+                        }
                     }
-                    else if (table.FileKey != null)
-                    {
-                        item.SetStream(upload.Stream, table.FileKey, CurrentUser);
-                    }
-
-
                 }
                 return Ok();
             }

@@ -458,7 +458,14 @@ namespace DataWF.Data
             }
             else if (ProcedureType == ProcedureTypes.StoredFunction)
             {
-                obj = ExecuteDBFunction((IDbCommand)obj);
+                if (param.Transaction != null)
+                {
+                    obj = ExecuteDBFunction((IDbCommand)obj, param.Transaction);
+                }
+                else
+                {
+                    obj = ExecuteDBFunction((IDbCommand)obj);
+                }
             }
             else if (ProcedureType == ProcedureTypes.StoredProcedure)
             {
@@ -466,20 +473,38 @@ namespace DataWF.Data
             }
             else if (ProcedureType == ProcedureTypes.Query)
             {
-                var buf = ExecuteQueryResult((IDbCommand)obj);
+                var buf = (QResult)null;
+                if (param.Transaction != null)
+                {
+                    buf = ExecuteQueryResult((IDbCommand)obj, param.Transaction);
+                }
+                else
+                {
+                    buf = ExecuteQueryResult((IDbCommand)obj);
+                }
                 obj = (buf != null && buf.Columns.Count == 1 && buf.Values.Count == 1) ? buf.Values[0][0] : buf;
             }
 
             return obj;
         }
 
-        public TaskExecutor ExecuteTask(DBItem document)
+        public TaskExecutor GetExecutor(DBItem document)
         {
-            var param = new ExecuteArgs(document);
-            return ExecuteTask(CreateObject(param), param);
+            var transaction = new DBTransaction(Schema.Connection);
+            return GetExecutor(document, transaction, true);
         }
 
-        public TaskExecutor ExecuteTask(object obj, ExecuteArgs param)
+        public TaskExecutor GetExecutor(DBItem document, DBTransaction transactino, bool autoCommit = false)
+        {
+            var param = new ExecuteArgs(document)
+            {
+                Transaction = transactino,
+                AutoCommit = autoCommit
+            };
+            return GetExecutor(CreateObject(param), param);
+        }
+
+        public TaskExecutor GetExecutor(object obj, ExecuteArgs param)
         {
             var task = new TaskExecutor
             {
@@ -489,23 +514,27 @@ namespace DataWF.Data
                 Action = () =>
                 {
                     object result = null;
-                    var transaction = DBTransaction.GetTransaction(param, Schema.Connection);
                     try
                     {
                         result = this.ExecuteObject(obj, param);
-                        if (transaction.Owner == param)
-                            transaction.Commit();
+                        if (param.AutoCommit)
+                        {
+                            param.Transaction?.Commit();
+                        }
                     }
                     catch (Exception ex)
                     {
-                        transaction.Rollback();
+                        param.Transaction?.Rollback();
                         result = ex;
                     }
                     finally
                     {
-                        if (transaction.Owner == param)
-                            transaction.Dispose();
+                        if (param.AutoCommit)
+                        {
+                            param.Transaction?.Dispose();
+                        }
                     }
+
                     return result;
                 }
             };
@@ -515,7 +544,7 @@ namespace DataWF.Data
 
         public Dictionary<string, object> ExecuteDBProcedure(IDbCommand command, ExecuteArgs param)
         {
-            var transaction = DBTransaction.GetTransaction(command, Schema.Connection);
+            var transaction = param.Transaction ?? new DBTransaction(Schema.Connection);
             try
             {
                 transaction.AddCommand(command);
@@ -524,73 +553,102 @@ namespace DataWF.Data
                 foreach (IDataParameter par in command.Parameters)
                 {
                     if (par.Direction == ParameterDirection.InputOutput || par.Direction == ParameterDirection.Output)
+                    {
                         param.Parameters[par.ParameterName] = par.Value;
+                    }
                 }
-                if (transaction.Owner == command)
+                if (param.Transaction == null)
+                {
                     transaction.Commit();
-                return param.Parameters;
+                }
+            }
+            catch (Exception ex)
+            {
+                Helper.OnException(ex);
+                transaction.Rollback();
             }
             finally
             {
-                if (transaction.Owner == command)
+                if (param.Transaction == null)
+                {
                     transaction.Dispose();
+                }
             }
+            return param.Parameters;
         }
 
         public object ExecuteDBFunction(IDbCommand command)
         {
-            var transaction = DBTransaction.GetTransaction(command, Schema.Connection);
-            try
+            using (var transaction = new DBTransaction(Schema.Connection))
             {
-                object bufer = null;
-                transaction.AddCommand(command);
-                //UpdateCommand(command, parameters);
-                transaction.ExecuteQuery(command);
-                bufer = ((IDataParameter)command.Parameters[0]).Value;
-                if (transaction.Owner == command)
-                    transaction.Commit();
-                return bufer;
+                try
+                {
+                    return ExecuteDBFunction(command, transaction);
+                }
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
+                    transaction.Rollback();
+                    throw ex;
+                }
             }
-            finally
-            {
-                if (transaction.Owner == command)
-                    transaction.Dispose();
-            }
+        }
+
+        public object ExecuteDBFunction(IDbCommand command, DBTransaction transaction)
+        {
+            object bufer = null;
+            transaction.AddCommand(command);
+            //UpdateCommand(command, parameters);
+            transaction.ExecuteQuery(command);
+            bufer = ((IDataParameter)command.Parameters[0]).Value;
+            return bufer;
         }
 
         public QResult ExecuteQueryResult(IDbCommand command)
         {
-            QResult buf = null;
-            var transaction = DBTransaction.GetTransaction(command, Schema.Connection);
-            try
+            using (var transaction = new DBTransaction(Schema.Connection))
             {
-                //UpdateCommand(command, parameters);
-                buf = transaction.ExecuteQResult(transaction.AddCommand(command));
+                try
+                {
+                    return ExecuteQueryResult(command, transaction);
+                }
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
+                    transaction.Rollback();
+                    throw ex;
+                }
             }
-            finally
-            {
-                if (transaction.Owner == command)
-                    transaction.Dispose();
-            }
-            return buf;
+        }
+
+        public QResult ExecuteQueryResult(IDbCommand command, DBTransaction transaction)
+        {
+            //UpdateCommand(command, parameters);
+            return transaction.ExecuteQResult(transaction.AddCommand(command));
         }
 
         public List<Dictionary<string, object>> ExecuteListDictionary(IDbCommand command)
         {
-            List<Dictionary<string, object>> buf = null;
-            var transaction = DBTransaction.GetTransaction(command, Schema.Connection);
-            try
+            using (var transaction = new DBTransaction(Schema.Connection))
             {
-                command = transaction.AddCommand(Source);
-                //UpdateCommand(command, parameters);
-                buf = transaction.ExecuteListDictionary();
+                try
+                {
+                    return ExecuteListDictionary(command, transaction);
+                }
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
+                    transaction.Rollback();
+                    throw ex;
+                }
             }
-            finally
-            {
-                if (transaction.Owner == command)
-                    transaction.Dispose();
-            }
-            return buf;
+        }
+
+        public List<Dictionary<string, object>> ExecuteListDictionary(IDbCommand command, DBTransaction transaction)
+        {
+            command = transaction.AddCommand(Source);
+            //UpdateCommand(command, parameters);
+            return transaction.ExecuteListDictionary();
         }
 
         public void UpdateCommand(IDbCommand command, Dictionary<string, object> parameterList)

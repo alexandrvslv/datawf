@@ -227,64 +227,68 @@ namespace DataWF.Module.Flow
             get { return TemplateDataId != null; }
         }
 
-        public async Task<string> GetDataPath()
+        public async Task<string> GetDataPath(DBTransaction trnasaction)
         {
-            using (var stream = await GetData())
+            using (var stream = await GetData(trnasaction))
             {
                 return stream == null ? null : ((FileStream)stream).Name;
             }
         }
 
-        public Task<Stream> GetData()
+        public Task<Stream> GetData(DBTransaction trnasaction)
         {
             var filePath = Helper.GetDocumentsFullPath(FileName, nameof(DocumentData) + Id);
             if (filePath == null)
             {
                 return null;
             }
-            return GetData(filePath);
+            return GetData(filePath, trnasaction);
         }
 
-        public async Task<Stream> GetData(string fileName)
+        public async Task<Stream> GetData(string fileName, DBTransaction transactio)
         {
             if (FileLOB != null)
             {
-                return await GetLOB(Table.FileLOBKey);
+                var item = await GetLOB(Table.FileLOBKey, transactio);
+                if (item != null)
+                {
+                    return item;
+                }
             }
             return GetZipFileStream(Table.FileKey, fileName);
         }
 
-        public Task SetData(string filePath, IUserIdentity user)
+        public Task SetData(string filePath, DBTransaction transaction)
         {
             using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
-                return SetData(stream, null, user);
+                return SetData(stream, null, transaction);
             }
         }
 
-        public async Task SetData(Stream stream, string fileName, IUserIdentity user)
+        public async Task SetData(Stream stream, string fileName, DBTransaction transaction)
         {
             if (fileName != null)
             {
                 FileName = fileName;
             }
-            await SetLOB(stream, Table.FileLOBKey);
+            await SetLOB(stream, Table.FileLOBKey, transaction);
             //SetStream(stream, Table.FileKey, user);
         }
 
         [ControllerMethod]
-        public async Task<FileStream> RefreshData(IUserIdentity user)
+        public async Task<FileStream> RefreshData(DBTransaction transaction)
         {
-            return new FileStream(await Parse(user, true), FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            return new FileStream(await Parse(transaction, true), FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         }
 
-        public Task<string> Parse(IUserIdentity user, bool fromTemplate = false)
+        public Task<string> Parse(DBTransaction transaction, bool fromTemplate = false)
         {
             return Parse(new DocumentExecuteArgs
             {
                 Document = Document,
                 ProcedureCategory = TemplateData.Template.Code,
-                User = user
+                Transaction = transaction
             }, fromTemplate);
         }
 
@@ -292,7 +296,7 @@ namespace DataWF.Module.Flow
         {
             if (TemplateData == null || TemplateData.File == null)
             {
-                return await GetDataPath();
+                return await GetDataPath(param.Transaction);
             }
 
             var filePath = Helper.GetDocumentsFullPath(FileName, "Parser" + (Id ?? TemplateData.Id));
@@ -306,7 +310,7 @@ namespace DataWF.Module.Flow
             }
             else
             {
-                using (var stream = await GetData(filePath))
+                using (var stream = await GetData(filePath, param.Transaction))
                 {
                     filePath = DocumentParser.Execute(stream, FileName, param);
                 }
@@ -354,7 +358,7 @@ namespace DataWF.Module.Flow
         }
 
         [ControllerMethod]
-        public FileStream GetLogFile(int logId)
+        public async Task<Stream> GetLogFile(int logId, DBTransaction transaction)
         {
             var logItem = Table.LogTable.LoadById(logId);
             if (logItem == null)
@@ -365,6 +369,14 @@ namespace DataWF.Module.Flow
             if (fileName == null)
             {
                 throw new Exception($"DataLog with id {logId} no file defined!");
+            }
+            if (Table.LogTable.FileLOBKey != null)
+            {
+                var lob = logItem.GetValue(Table.LogTable.FileLOBKey);
+                if (lob != null)
+                {
+                    return await logItem.GetLOB(Table.LogTable.FileLOBKey, transaction);
+                }
             }
 
             return logItem.GetFileStream(Table.LogTable.FileKey, Helper.GetDocumentsFullPath(fileName, "DataLog" + logItem.LogId));

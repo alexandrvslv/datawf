@@ -46,24 +46,29 @@ namespace DataWF.Web.Common
                 Helper.OnException(ex);
                 return BadRequest("Invalid email or password.");
             }
-
-            user.AccessToken = CreateAccessToken(user);
-            if (login.Online)
+            try
             {
-                user.RefreshToken = CreateRefreshToken(user);
+                user.AccessToken = CreateAccessToken(user);
+                if (login.Online)
+                {
+                    user.RefreshToken = CreateRefreshToken(user);
+                }
+                else
+                {
+                    user.RefreshToken = null;
+                }
+                user.Save(user);
+                return new TokenModel
+                {
+                    Email = user.EMail,
+                    AccessToken = user.AccessToken,
+                    RefreshToken = user.RefreshToken
+                };
             }
-            else
+            catch (Exception ex)
             {
-                user.RefreshToken = null;
+                return BadRequest(ex);
             }
-
-            user.Save(user);
-            return new TokenModel
-            {
-                Email = user.EMail,
-                AccessToken = user.AccessToken,
-                RefreshToken = user.RefreshToken
-            };
         }
 
         [AllowAnonymous]
@@ -79,10 +84,17 @@ namespace DataWF.Web.Common
             {
                 return BadRequest("Refresh token is invalid.");
             }
-            token.AccessToken =
-                user.AccessToken = CreateAccessToken(user);
-            user.Save(user);
-            return token;
+            try
+            {
+                token.AccessToken =
+                    user.AccessToken = CreateAccessToken(user);
+                user.Save(user);
+                return token;
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
         }
 
         [HttpPost("LoginOut/")]
@@ -93,12 +105,25 @@ namespace DataWF.Web.Common
             {
                 return BadRequest("Invalid Arguments!");
             }
-            token.AccessToken =
-                token.RefreshToken =
-            user.AccessToken =
-                user.RefreshToken = null;
-            user.Save(CurrentUser);
-            return token;
+            try
+            {
+                token.AccessToken =
+                    token.RefreshToken =
+                user.AccessToken =
+                    user.RefreshToken = null;
+                user.Save(CurrentUser);
+                return token;
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
+        }
+
+        private BadRequestObjectResult BadRequest(Exception ex)
+        {
+            Helper.OnException(ex);
+            return BadRequest(ex.Message);
         }
 
         [HttpGet()]

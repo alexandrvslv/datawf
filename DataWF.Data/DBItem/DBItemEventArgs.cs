@@ -45,6 +45,10 @@ namespace DataWF.Data
             Property = property ?? string.Empty;
         }
 
+        public DBItemEventArgs(DBItem item, DBTransaction transaction)
+            : this(item, transaction, transaction.Caller)
+        { }
+
         public DBItemEventArgs(DBItem item, DBTransaction transaction, IUserIdentity user)
         {
             Item = item;

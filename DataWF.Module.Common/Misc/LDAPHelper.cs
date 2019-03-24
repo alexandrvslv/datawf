@@ -50,7 +50,7 @@ namespace DataWF.Module.Common
             return false;
         }
 
-        public static List<User> LoadADUsers(string userName, string password)
+        public static List<User> LoadADUsers(string userName, string password, DBTransaction transaction)
         {
             var users = new List<User>();
             try
@@ -90,7 +90,7 @@ namespace DataWF.Module.Common
                                     }
                                     position.Code = positionName;
                                     position.Name = positionName;
-                                    position.Save(null);
+                                    position.Save(transaction);
                                 }
 
                                 var user = User.DBTable.LoadByCode(attribute.StringValue, User.DBTable.ParseProperty(nameof(User.Login)), DBLoadParam.None);
@@ -102,7 +102,7 @@ namespace DataWF.Module.Common
                                 user.Login = attribute.StringValue;
                                 user.EMail = resultRecord.getAttribute("mail")?.StringValue;
                                 user.Name = resultRecord.getAttribute("name")?.StringValue;
-                                user.Save(null);
+                                user.Save(transaction);
                             }
 
                         }

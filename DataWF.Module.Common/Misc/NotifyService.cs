@@ -237,7 +237,7 @@ namespace DataWF.Module.Common
         {
             lock (loadLock)
             {
-                using (var transaction = new DBTransaction(loadLock, DBService.Schems.DefaultSchema.Connection, true))
+                using (var transaction = new DBTransaction(DBService.Schems.DefaultSchema.Connection, null, true))
                 {
                     var stream = new MemoryStream(buffer);
                     using (var reader = new BinaryReader(stream))
@@ -255,19 +255,23 @@ namespace DataWF.Module.Common
                                 var id = Helper.ReadBinary(reader);
                                 if (type == DBLogType.Insert)
                                 {
-                                    table.LoadItemById(id, DBLoadParam.Load);
+                                    table.LoadItemById(id, DBLoadParam.Load, null, transaction);
                                 }
                                 else if (type == DBLogType.Update)
                                 {
                                     var item = table.LoadItemById(id, DBLoadParam.None);
                                     if (item != null)
-                                        table.ReloadItem(id);
+                                    {
+                                        table.ReloadItem(id, DBLoadParam.Load, transaction);
+                                    }
                                 }
                                 else if (type == DBLogType.Delete)
                                 {
                                     var item = table.LoadItemById(id, DBLoadParam.None);
                                     if (item != null)
+                                    {
                                         item.Table.Remove(item);
+                                    }
                                 }
                             }
                         }

@@ -266,13 +266,19 @@ namespace DataWF.Data
 
         public IEnumerable<T> Load(DBLoadParam param = DBLoadParam.None)
         {
-            return table.Load(Query, param, this).ToList();
+            using (var transaction = new DBTransaction(Table.Connection, null, true) { View = this })
+            {
+                return table.Load(Query, param, transaction).ToList();
+            }
         }
 
         public async void LoadAsynch(DBLoadParam param = DBLoadParam.None)
         {
-            var items = await table.LoadAsync(Query, param, this).ConfigureAwait(false);
-            items.LastOrDefault();
+            using (var transaction = new DBTransaction(Table.Connection, null, true) { View = this })
+            {
+                var items = await table.LoadAsync(Query, param, transaction).ConfigureAwait(false);
+                items.LastOrDefault();
+            }
         }
 
         public void OnItemChanged(DBItem item, string propertyName, DBColumn column)
@@ -488,7 +494,25 @@ namespace DataWF.Data
 
         public void Save()
         {
-            Table.Save(GetEdited().ToList());
+            using (var transaction = new DBTransaction(Table.Connection))
+            {
+                try
+                {
+                    Save(transaction);
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
+                    transaction.Rollback();
+                }
+
+            }
+        }
+
+        public void Save(DBTransaction transaction)
+        {
+            Table.Save(transaction, GetEdited().ToList());
         }
 
         public void Sort(params DBColumn[] columns)

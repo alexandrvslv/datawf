@@ -78,19 +78,20 @@ namespace DataWF.Module.Common
 
             if (LogStrategy == UserLogStrategy.ByTransaction)
             {
-                var transaction = DBTransaction.Current;
-                if (transaction.UserLog == null)
+                if (arg.Transaction != null)
                 {
-                    transaction.UserLog = new UserLog { User = user, Parent = userLog, LogType = UserLogType.Transaction };
-                    transaction.UserLog.Save(user);
+                    if (arg.Transaction.UserLog == null)
+                    {
+                        arg.Transaction.UserLog = new UserLog { User = user, Parent = userLog, LogType = UserLogType.Transaction };
+                        arg.Transaction.UserLog.Save(arg.Transaction);
+                    }
+                    userLog = (UserLog)arg.Transaction.UserLog;
                 }
-                userLog = (UserLog)transaction.UserLog;
-
             }
             else if (LogStrategy == UserLogStrategy.ByItem)
             {
                 userLog = new UserLog { User = user, Parent = userLog, LogType = UserLogType.Transaction };
-                userLog.Save(user);
+                userLog.Save(arg.Transaction);
             }
             if (arg.LogItem != null)
             {

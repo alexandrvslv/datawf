@@ -71,6 +71,8 @@ namespace DataWF.Data
 
         public QResult Result { get; set; }
 
-        public IUserIdentity User { get; set; }
+        public DBTransaction Transaction { get; set; }
+
+        public bool AutoCommit { get; internal set; }
     }
 }

@@ -37,6 +37,7 @@ namespace DataWF.Web.Common
                     };
 
                     foreach (var column in table.Columns.Where(p => TypeHelper.IsBaseType(p.Property.DeclaringType, objectType)))
+                    // && (p.Attribute.Keys & DBColumnKeys.System) != DBColumnKeys.System
                     {
                         var jsonProperty = new JsonProperty
                         {

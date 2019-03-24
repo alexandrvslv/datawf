@@ -17,7 +17,6 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using DataWF.Common;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -283,9 +282,9 @@ namespace DataWF.Data
             return BaseTable.NextHash();
         }
 
-        public override bool SaveItem(DBItem row, IUserIdentity user)
+        public override bool SaveItem(DBItem row, DBTransaction transaction)
         {
-            return BaseTable.SaveItem(row, user);
+            return BaseTable.SaveItem(row, transaction);
         }
 
         public override void Clear()

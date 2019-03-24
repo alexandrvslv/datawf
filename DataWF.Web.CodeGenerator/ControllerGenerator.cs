@@ -19,6 +19,7 @@ namespace DataWF.Web.CodeGenerator
     {
         private const string prStream = "uploaded";
         private const string prUser = "CurrentUser";
+        private const string prTransaction = "transaction";
         private Dictionary<string, MetadataReference> references;
         private Dictionary<string, UsingDirectiveSyntax> usings;
         private Dictionary<string, ClassDeclarationSyntax> trees = new Dictionary<string, ClassDeclarationSyntax>();
@@ -300,8 +301,8 @@ namespace DataWF.Web.CodeGenerator
                 }
             }
 
-            var parameterInfo = GetParametersInfo(method, table);
-            return SyntaxFactory.MethodDeclaration(attributeLists: SyntaxFactory.List(GetControllerMethodAttributes(method, parameterInfo)),
+            var parametersInfo = GetParametersInfo(method, table);
+            return SyntaxFactory.MethodDeclaration(attributeLists: SyntaxFactory.List(GetControllerMethodAttributes(method, parametersInfo)),
                           modifiers: SyntaxFactory.TokenList(modifiers.ToArray()),
                           returnType: returning == "void"
                           ? SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword))
@@ -309,9 +310,9 @@ namespace DataWF.Web.CodeGenerator
                           explicitInterfaceSpecifier: null,
                           identifier: SyntaxFactory.Identifier(method.Name),
                           typeParameterList: null,
-                          parameterList: SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(GetControllerMethodParameters(method, table, parameterInfo))),
+                          parameterList: SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(GetControllerMethodParameters(method, table, parametersInfo))),
                           constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
-                          body: SyntaxFactory.Block(GetControllerMethodBody(method, baseClass, parameterInfo, returning)),
+                          body: SyntaxFactory.Block(GetControllerMethodBody(method, baseClass, parametersInfo, returning)),
                           semicolonToken: SyntaxFactory.Token(SyntaxKind.SemicolonToken));
             // Annotate that this node should be formatted
             //.WithAdditionalAnnotations(Formatter.Annotation);
@@ -319,14 +320,23 @@ namespace DataWF.Web.CodeGenerator
 
         private IEnumerable<StatementSyntax> GetControllerMethodBody(MethodInfo method, bool baseClass, List<MethodParametrInfo> parametersInfo, string returning)
         {
+            var isTransact = parametersInfo.Any(p => p.Info.ParameterType == typeof(DBTransaction));
             var isAsync = TypeHelper.IsBaseType(method.ReturnType, typeof(Task));
             if (isAsync)
+            {
                 returning = returning.Substring(5, returning.Length - 6);
+            }
+
+            if (isTransact)
+            {
+                yield return SyntaxFactory.ParseStatement($"using(var {prTransaction} = new DBTransaction(table.Connection, {prUser})) {{");
+            }
+
             yield return SyntaxFactory.ParseStatement("try {");
 
             if (!method.IsStatic)
             {
-                yield return SyntaxFactory.ParseStatement($"var idValue = table.LoadById<{(baseClass ? "T" : TypeHelper.FormatCode(method.DeclaringType))}>(id);");
+                yield return SyntaxFactory.ParseStatement($"var idValue = table.LoadById<{(baseClass ? "T" : TypeHelper.FormatCode(method.DeclaringType))}>(id, DBLoadParam.Load | DBLoadParam.Referencing);");
                 yield return SyntaxFactory.ParseStatement("if (idValue == null)");
                 if (method.ReturnType != typeof(void))
                 {
@@ -342,7 +352,7 @@ namespace DataWF.Web.CodeGenerator
             {
                 if (parameter.Table != null)
                 {
-                    yield return SyntaxFactory.ParseStatement($"var {parameter.ValueName} = DBItem.GetTable<{TypeHelper.FormatCode(parameter.Info.ParameterType)}>().LoadById({parameter.Info.Name});");
+                    yield return SyntaxFactory.ParseStatement($"var {parameter.ValueName} = DBItem.GetTable<{TypeHelper.FormatCode(parameter.Info.ParameterType)}>().LoadById({parameter.Info.Name}, DBLoadParam.Load | DBLoadParam.Referencing);");
                 }
                 else if (parameter.ValueName == prStream)
                 {
@@ -364,13 +374,10 @@ namespace DataWF.Web.CodeGenerator
             var builder = new StringBuilder();
             if (TypeHelper.IsBaseType(method.ReturnType, typeof(Stream)))
             {
-                if (isAsync)
+                yield return SyntaxFactory.ParseStatement($"var exportStream = {(isAsync ? "(await " : "")}{(method.IsStatic ? method.DeclaringType.Name : " idValue")}.{method.Name}({parametersBuilder}){(isAsync ? ")" : "")} as FileStream;");
+                if (isTransact)
                 {
-                    yield return SyntaxFactory.ParseStatement($"var exportStream = (await {(method.IsStatic ? method.DeclaringType.Name : " idValue")}.{method.Name}({parametersBuilder})) as FileStream;");
-                }
-                else
-                {
-                    yield return SyntaxFactory.ParseStatement($"var exportStream = {(method.IsStatic ? method.DeclaringType.Name : " idValue")}.{method.Name}({parametersBuilder}) as FileStream;");
+                    yield return SyntaxFactory.ParseStatement($"{prTransaction}.Commit();");
                 }
                 yield return SyntaxFactory.ParseStatement($"return File(exportStream, System.Net.Mime.MediaTypeNames.Application.Octet, Path.GetFileName(exportStream.Name));");
             }
@@ -378,27 +385,37 @@ namespace DataWF.Web.CodeGenerator
             {
                 if (method.ReturnType != typeof(void))
                 {
-                    builder.Append($"return new {returning}(");
+                    builder.Append("var result = ");
                 }
                 if (isAsync)
                 {
-                    builder.Append(" await ");
+                    builder.Append("await ");
                 }
 
-                builder.Append($"{(method.IsStatic ? method.DeclaringType.Name : " idValue")}.{method.Name}({parametersBuilder}");
+                builder.Append($"{(method.IsStatic ? method.DeclaringType.Name : "idValue")}.{method.Name}({parametersBuilder}");
+                builder.AppendLine(");");
+
+                yield return SyntaxFactory.ParseStatement(builder.ToString());
+                if (isTransact)
+                {
+                    yield return SyntaxFactory.ParseStatement($"{prTransaction}.Commit();");
+                }
+
                 if (method.ReturnType != typeof(void))
                 {
-                    builder.Append(")");
+                    yield return SyntaxFactory.ParseStatement($"return new {returning}(result);");
                 }
-
-                builder.AppendLine(");");
             }
-            yield return SyntaxFactory.ParseStatement(builder.ToString());
+
 
             yield return SyntaxFactory.ParseStatement("}");
             yield return SyntaxFactory.ParseStatement("catch (Exception ex) {");
             if (method.ReturnType != typeof(void))
             {
+                if (isTransact)
+                {
+                    yield return SyntaxFactory.ParseStatement($"{prTransaction}.Rollback();");
+                }
                 yield return SyntaxFactory.ParseStatement("return BadRequest(ex);");
             }
             else
@@ -407,6 +424,10 @@ namespace DataWF.Web.CodeGenerator
             }
 
             yield return SyntaxFactory.ParseStatement("}");
+            if (isTransact)
+            {
+                yield return SyntaxFactory.ParseStatement("}");
+            }
         }
 
         private IEnumerable<AttributeListSyntax> GetControllerMethodAttributes(MethodInfo method, List<MethodParametrInfo> parametersList)
@@ -415,7 +436,7 @@ namespace DataWF.Web.CodeGenerator
             var post = false;
             foreach (var parameter in parametersList)
             {
-                if (parameter.ValueName == prUser)
+                if (parameter.Info.ParameterType == typeof(DBTransaction))
                     continue;
                 if (parameter.ValueName == prStream)
                 {
@@ -449,9 +470,9 @@ namespace DataWF.Web.CodeGenerator
                 var methodParameter = new MethodParametrInfo { Info = parameter };
                 parametersInfo.Add(methodParameter);
                 AddUsing(methodParameter.Info.ParameterType);
-                if (methodParameter.Info.ParameterType == typeof(IUserIdentity))
+                if (methodParameter.Info.ParameterType == typeof(DBTransaction))
                 {
-                    methodParameter.ValueName = prUser;
+                    methodParameter.ValueName = prTransaction;
                 }
                 else if (TypeHelper.IsBaseType(methodParameter.Info.ParameterType, typeof(Stream)))
                 {
@@ -474,7 +495,7 @@ namespace DataWF.Web.CodeGenerator
 
             foreach (var methodParameter in parametersInfo)
             {
-                if (methodParameter.ValueName == prUser
+                if (methodParameter.Info.ParameterType == typeof(DBTransaction)
                     || methodParameter.ValueName == prStream)
                 {
                     continue;

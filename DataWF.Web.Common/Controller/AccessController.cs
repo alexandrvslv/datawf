@@ -54,7 +54,7 @@ namespace DataWF.Web.Common
             try
             {
                 var table = GetTable(name);
-                var column = table.ParseProperty(property);
+                var column = table?.ParseProperty(property);
                 if (column == null)
                 {
                     return NotFound();
@@ -70,23 +70,22 @@ namespace DataWF.Web.Common
         [HttpGet("GetItems/{name}/{id}")]
         public ActionResult<List<AccessItem>> GetAccessItems([FromRoute]string name, [FromRoute]string id)
         {
+            var table = GetTable(name);
+            if (table == null)
+            {
+                return NotFound();
+            }
+            var accessColumn = table.AccessKey;
+            if (accessColumn == null)
+            {
+                return BadRequest($"Table {table} is not Accessable!");
+            }
             try
             {
-                var table = GetTable(name);
-                if (table == null)
-                {
-                    return NotFound();
-                }
-                var value = table.LoadItemById(id);
+                var value = table.LoadItemById(id, DBLoadParam.Load | DBLoadParam.Referencing);
                 if (value == null)
                 {
                     return NotFound();
-                }
-                var accessColumn = table.AccessKey;
-
-                if (accessColumn == null)
-                {
-                    throw new InvalidOperationException($"Table {table} is not Accessable!");
                 }
 
                 if (!accessColumn.Access.GetFlag(AccessType.View, CurrentUser)
@@ -106,37 +105,42 @@ namespace DataWF.Web.Common
         [HttpPut("SetItems/{name}/{id}")]
         public ActionResult<bool> SetAccessItems([FromRoute]string name, [FromRoute]string id, [FromBody]List<AccessItem> accessItems)
         {
-            try
+            var table = GetTable(name);
+            if (table == null)
             {
-                var table = GetTable(name);
-                if (table == null)
-                {
-                    return NotFound();
-                }
-                var value = table.LoadItemById(id);
-                if (value == null)
-                {
-                    return NotFound();
-                }
-                var accessColumn = table.AccessKey;
-                if (accessColumn == null)
-                {
-                    throw new InvalidOperationException($"Table {table} is not Accessable!");
-                }
-                if (!(accessColumn.Access.GetFlag(AccessType.Edit, CurrentUser))
-                    || !value.Access.GetFlag(AccessType.Edit, CurrentUser))
-                {
-                    return Forbid();
-                }
-                var buffer = value.Access?.Clone();
-                buffer.Add(accessItems);
-                value.Access = buffer;
-                value.Save(CurrentUser);
-                return true;
+                return NotFound();
             }
-            catch (Exception ex)
+            var accessColumn = table.AccessKey;
+            if (accessColumn == null)
             {
-                return BadRequest(ex);
+                return BadRequest($"Table {table} is not Accessable!");
+            }
+            using (var transaction = new DBTransaction(table.Connection, CurrentUser))
+            {
+                try
+                {
+                    var value = table.LoadItemById(id, DBLoadParam.Load, null, transaction);
+                    if (value == null)
+                    {
+                        return NotFound();
+                    }
+                    if (!(accessColumn.Access.GetFlag(AccessType.Edit, CurrentUser))
+                        || !value.Access.GetFlag(AccessType.Edit, CurrentUser))
+                    {
+                        return Forbid();
+                    }
+                    var buffer = value.Access?.Clone();
+                    buffer.Add(accessItems);
+                    value.Access = buffer;
+                    value.Save(transaction);
+                    transaction.Commit();
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    return BadRequest(ex);
+                }
             }
         }
     }

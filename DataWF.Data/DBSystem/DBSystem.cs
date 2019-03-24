@@ -155,12 +155,12 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             }
         }
 
-        public virtual Task<Stream> GetLOB(DBItem item, DBColumn column)
+        public virtual Task<Stream> GetLOB(uint oid, DBTransaction transaction)
         {
             return null;
         }
 
-        public virtual Task SetLOB(DBItem item, DBColumn column, Stream value)
+        public virtual Task<uint> SetLOB(Stream value, DBTransaction transaction)
         {
             return null;
         }
@@ -879,36 +879,34 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
 
         public virtual void ReadSequential(DBItem item, DBColumn column, Stream stream, int bufferSize = 81920)
         {
-            var transaction = DBTransaction.GetTransaction(item, item.Table.Schema.Connection);
-            try
+            using (var transaction = new DBTransaction(item.Table.Connection, null, true))
             {
-                var command = transaction.AddCommand(item.Table.CreateItemCommmand(item.PrimaryId, new[] { column }));
-                using (transaction.Reader = (IDataReader)transaction.ExecuteQuery(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess))
+                try
                 {
-                    if (transaction.Reader.Read())
+                    var command = transaction.AddCommand(item.Table.CreateItemCommmand(item.PrimaryId, new[] { column }));
+                    using (transaction.Reader = (IDataReader)transaction.ExecuteQuery(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess))
                     {
-                        var buffer = new byte[bufferSize];
-                        int position = 0;
-                        int readed;
-                        while ((readed = (int)transaction.Reader.GetBytes(0, position, buffer, 0, bufferSize)) > 0)
+                        if (transaction.Reader.Read())
                         {
-                            stream.Write(buffer, 0, readed);
-                            position += readed;
+                            var buffer = new byte[bufferSize];
+                            int position = 0;
+                            int readed;
+                            while ((readed = (int)transaction.Reader.GetBytes(0, position, buffer, 0, bufferSize)) > 0)
+                            {
+                                stream.Write(buffer, 0, readed);
+                                position += readed;
+                            }
                         }
+                        transaction.Reader.Close();
                     }
-                    transaction.Reader.Close();
+                    transaction.Reader = null;
+                    stream.Position = 0;
                 }
-                transaction.Reader = null;
-                stream.Position = 0;
-            }
-            catch (Exception ex)
-            {
-                Helper.OnException(ex);
-            }
-            finally
-            {
-                if (transaction.Owner == item)
-                    transaction.Dispose();
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
+                }
+
             }
         }
 

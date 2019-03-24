@@ -89,12 +89,12 @@ namespace DataWF.Data
         [Browsable(false)]
         public DBLogTable LogTable { get { return (DBLogTable)Table; } }
 
-        public void Upload(IUserIdentity user)
+        public void Upload(DBTransaction transaction)
         {
             if (BaseItem == null)
                 baseItem = BaseTable.NewItem(DBUpdateState.Insert, false);
             Upload(BaseItem);
-            BaseItem.Save(user);
+            BaseItem.Save(transaction);
         }
 
         public void Upload(DBItem value)
@@ -180,16 +180,16 @@ namespace DataWF.Data
 
             foreach (var entry in changed)
             {
-                using (var transaction = new DBTransaction(changed, entry.Key.Table.Schema.Connection))
+                using (var transaction = new DBTransaction(entry.Key.Table.Connection, user))
                 {
                     //var currentLog = entry.Key.Table.LogTable.NewItem();
-                    entry.Key.Save(user);
+                    entry.Key.Save(transaction);
 
                     foreach (var item in entry.Value)
                     {
-                        item.Save(user);
+                        item.Save(transaction);
                     }
-                    transaction.Commit(user);
+                    transaction.Commit();
                 }
 
             }
@@ -201,19 +201,19 @@ namespace DataWF.Data
                 row.Status = DBStatus.Actual;
             else if (row.Status == DBStatus.Delete)
                 row.Delete();
-            using (var transaction = new DBTransaction(logs, row.Table.Schema.Connection))
+            using (var transaction = new DBTransaction(row.Table.Connection, user))
             {
-                row.Save(user);
+                row.Save(transaction);
 
                 foreach (var item in logs)
                 {
                     if (item.Status == DBStatus.New)
                     {
                         item.Status = DBStatus.Actual;
-                        item.Save(user);
+                        item.Save(transaction);
                     }
                 }
-                transaction.Commit(user);
+                transaction.Commit();
             }
         }
     }

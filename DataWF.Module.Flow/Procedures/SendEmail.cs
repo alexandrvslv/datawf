@@ -22,7 +22,7 @@ namespace DataWF.Module.Flow
 
                 using (var message = new MailMessage())
                 {
-                    message.From = new MailAddress(arg.User.Name);
+                    message.From = new MailAddress(arg.Transaction.Caller.Name);
                     FillTo(message, darg);
                     message.Body = GetBody(darg);
                     message.Subject = "Documents Notify";
@@ -65,7 +65,7 @@ namespace DataWF.Module.Flow
                     builder.AppendLine($"Is on {arg.StageProcedure.Stage} stage!");
                 }
             }
-            builder.AppendLine($"Mailed you by {arg.User.ToString()}!");
+            builder.AppendLine($"Mailed you by {arg.Transaction.Caller.ToString()}!");
             return builder.ToString();
         }
     }

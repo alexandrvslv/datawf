@@ -512,7 +512,7 @@ namespace DataWF.Data
                     table.SourceTable.Clear();
                     table.TargetTable.Clear();
                 }
-                using (var transacton = new DBTransaction(table.SourceTable.Schema.Connection))
+                using (var transacton = new DBTransaction(table.SourceTable.Connection))
                 {
                     ea.Current = 0;
                     ea.Count = table.SourceTable.GetRowCount(transacton, table.Query);

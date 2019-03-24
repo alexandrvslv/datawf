@@ -108,16 +108,16 @@ namespace DataWF.Data
             }
         }
 
-        private void CheckState()
+        private void CheckState(DBTransaction transaction)
         {
             var temp = UpdateState;
             if (temp == DBUpdateState.Default || (temp & DBUpdateState.Commit) == DBUpdateState.Commit)
             {
                 temp &= ~DBUpdateState.Commit;
                 temp |= DBUpdateState.Update;
-                if (DBTransaction.Current != null)
+                if (transaction != null)
                 {
-                    DBTransaction.Current.Rows.Add(this);
+                    transaction.Rows.Add(this);
                 }
             }
             else if (temp == DBUpdateState.Update && !GetIsChanged())
@@ -171,7 +171,7 @@ namespace DataWF.Data
 
             if (check)
             {
-                CheckState();
+                CheckState(null);
             }
         }
 
@@ -198,7 +198,7 @@ namespace DataWF.Data
 
             if (check)
             {
-                CheckState();
+                CheckState(null);
             }
         }
 
@@ -1020,20 +1020,38 @@ namespace DataWF.Data
             }
         }
 
-        public virtual void Save(IUserIdentity user = null)
+        public void Save(IUserIdentity user)
         {
-            if (OnSaving(user))
+            using (var transaction = new DBTransaction(Table.Connection, user))
             {
-                Table.SaveItem(this, user);
-                OnSaved(user);
+                try
+                {
+                    Save(transaction);
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
+                    transaction.Rollback();
+                    throw ex;
+                }
             }
         }
 
-        protected virtual void OnSaved(IUserIdentity user)
+        public virtual void Save(DBTransaction transaction)
+        {
+            if (OnSaving(transaction))
+            {
+                Table.SaveItem(this, transaction);
+                OnSaved(transaction);
+            }
+        }
+
+        protected virtual void OnSaved(DBTransaction transaction)
         {
         }
 
-        protected virtual bool OnSaving(IUserIdentity user)
+        protected virtual bool OnSaving(DBTransaction transaction)
         {
             return true;
         }
@@ -1149,45 +1167,39 @@ namespace DataWF.Data
             return builder.ToString();
         }
 
-        public void Delete(int recurs, DBLoadParam param = DBLoadParam.None, IUserIdentity user = null)
+        public void Delete(int recurs, DBLoadParam param = DBLoadParam.None)
+        {
+            using (DBTransaction transaction = new DBTransaction(Table.Schema.Connection))
+            {
+                try
+                {
+                    Delete(transaction, recurs, param);
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
+                    transaction.Rollback();
+                }
+            }
+        }
+
+        public void Delete(DBTransaction transaction, int recurs, DBLoadParam param = DBLoadParam.None)
         {
             var dependencies = GetChilds(recurs, param).ToList();
-            var owner = user ?? saveLock;
-            var transaction = DBTransaction.GetTransaction(owner, Table.Schema.Connection);
-            try
+
+            foreach (var item in dependencies)
             {
-                foreach (var item in dependencies)
+                item.Delete();
+                if (item.Attached)
                 {
-                    item.Delete();
-                    if (item.Attached)
-                    {
-                        item.Save(user);
-                    }
-                }
-                Delete();
-                if (Attached)
-                {
-                    Save(user);
-                }
-                if (transaction.Owner == owner)
-                {
-                    transaction.Commit(user);
+                    item.Save(transaction);
                 }
             }
-            catch (Exception ex)//TODO If Timeout Expired
+            Delete();
+            if (Attached)
             {
-                Helper.OnException(ex);
-                if (transaction.Owner == owner)
-                {
-                    transaction.Rollback(user);
-                }
-            }
-            finally
-            {
-                if (transaction.Owner == owner)
-                {
-                    transaction.Dispose();
-                }
+                Save(transaction);
             }
         }
 
@@ -1225,6 +1237,24 @@ namespace DataWF.Data
 
         public void Merge(IEnumerable<DBItem> list)
         {
+            using (var transaction = new DBTransaction(Table.Connection))
+            {
+                try
+                {
+                    Merge(list, transaction);
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
+                    transaction.Rollback();
+                }
+            }
+        }
+
+        // TODO [ControllerMethod]
+        public void Merge(IEnumerable<DBItem> list, DBTransaction transaction)
+        {
             var relations = Table.GetChildRelations().ToList();
             var rows = new List<DBItem> { this };
             foreach (DBItem item in list)
@@ -1249,24 +1279,24 @@ namespace DataWF.Data
                             foreach (DBItem refing in refings)
                                 refing[relation.Column] = PrimaryId;
 
-                            relation.Table.Save(refings);
+                            relation.Table.Save(transaction, refings);
                         }
                     }
             }
 
-            Table.Save(rows);
+            Table.Save(transaction, rows);
         }
 
-        public void SaveOrUpdate(DBLoadParam param = DBLoadParam.None, IUserIdentity user = null)
+        public void SaveOrUpdate(DBTransaction transaction, DBLoadParam param = DBLoadParam.None)
         {
             var exist = FindAndUpdate(param);
             if (exist != null)
             {
-                exist.Save(user);
+                exist.Save(transaction);
             }
             else
             {
-                Save(user);
+                Save(transaction);
             }
         }
 
@@ -1286,7 +1316,7 @@ namespace DataWF.Data
             }
         }
 
-        public void SaveReferencing()
+        public void SaveReferencing(DBTransaction transaction)
         {
             foreach (var relation in Table.GetChildRelations())
             {
@@ -1301,7 +1331,7 @@ namespace DataWF.Data
                     }
 
                     if (updatind.Count > 0)
-                        relation.Table.Save(updatind);
+                        relation.Table.Save(transaction, updatind);
                 }
             }
         }
@@ -1382,20 +1412,20 @@ namespace DataWF.Data
             this[column] = value;
         }
 
-        public void SetStream(string filepath, DBColumn column, IUserIdentity user, int bufferSize = 81920)
+        public void SetStream(string filepath, DBColumn column, DBTransaction transaction, int bufferSize = 81920)
         {
             using (var stream = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
-                SetStream(stream, column, user, bufferSize);
+                SetStream(stream, column, transaction, bufferSize);
             }
         }
 
-        public void SetStream(Stream stream, DBColumn column, IUserIdentity user, int bufferSize = 81920)
+        public void SetStream(Stream stream, DBColumn column, DBTransaction transaction, int bufferSize = 81920)
         {
             SetValue(Helper.GetBytes(stream), column);
             if (Attached)
             {
-                Save(user);
+                Save(transaction);
                 SetValue(null, column, false);
             }
         }
@@ -1466,14 +1496,19 @@ namespace DataWF.Data
             return temp;
         }
 
-        public Task SetLOB(Stream value, DBColumn column)
+        public async Task SetLOB(Stream value, DBColumn column, DBTransaction transaction)
         {
-            return Table.System.SetLOB(this, column, value);
+            var oid = await Table.System.SetLOB(value, transaction);
+            SetValue<uint?>(oid, column);
+            Save(transaction);
         }
 
-        public Task<Stream> GetLOB(DBColumn column)
+        public Task<Stream> GetLOB(DBColumn column, DBTransaction transaction)
         {
-            return Table.System.GetLOB(this, column);
+            var oid = GetValue<uint?>(column);
+            if (oid == null)
+                return null;
+            return Table.System.GetLOB(oid.Value, transaction);
         }
 
     }

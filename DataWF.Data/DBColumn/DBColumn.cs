@@ -515,6 +515,11 @@ namespace DataWF.Data
                     DBDataType = DBDataType.BigInt;
                 else if (value == typeof(int))
                     DBDataType = DBDataType.Int;
+                else if (value == typeof(uint))
+                {
+                    if (DBDataType != DBDataType.LargeObject)
+                        DBDataType = DBDataType.Int;
+                }
                 else if (value == typeof(short))
                     DBDataType = DBDataType.ShortInt;
                 else if (value == typeof(sbyte))
@@ -656,6 +661,12 @@ namespace DataWF.Data
             get { return (Keys & DBColumnKeys.FileName) == DBColumnKeys.FileName; }
         }
 
+        [JsonIgnore, XmlIgnore, Browsable(false)]
+        public bool IsFileLOB
+        {
+            get { return (Keys & DBColumnKeys.FileLOB) == DBColumnKeys.FileLOB; }
+        }
+
         [JsonIgnore, XmlIgnore]
         public ColumnAttributeCache Attribute { get; internal set; }
 
@@ -704,7 +715,7 @@ namespace DataWF.Data
         public override string FormatSql(DDLType ddlType)
         {
             var ddl = new StringBuilder();
-            Schema?.Connection?.System.Format(ddl, this, ddlType);
+            Table?.System.Format(ddl, this, ddlType);
             return ddl.ToString();
         }
 

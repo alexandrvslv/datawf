@@ -17,14 +17,11 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using DataWF.Common;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Text;
 using System.Threading;
-using System.Xml.Serialization;
-using DataWF.Common;
 
 namespace DataWF.Data
 {
@@ -96,42 +93,55 @@ namespace DataWF.Data
 
         public long Next()
         {
-            long result = 0;
-            var transaction = DBTransaction.GetTransaction(this, Schema?.Connection);
-            try
+            using (var transaction = new DBTransaction(Schema.Connection))
             {
-                result = ParseCurrent(transaction.ExecuteQuery(transaction.AddCommand(NextQuery)));
-                Interlocked.CompareExchange(ref current, result, current);
-                Interlocked.CompareExchange(ref changed, 0, 1);
-                if (transaction.Owner == this)
+                try
+                {
+                    var value = Next(transaction);
                     transaction.Commit();
+                    return value;
+                }
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
+                    transaction.Rollback();
+                    throw ex;
+                }
             }
-            finally
-            {
-                if (transaction.Owner == this)
-                    transaction.Dispose();
-            }
+        }
+
+        public long Next(DBTransaction transaction)
+        {
+            long result = 0;
+            result = ParseCurrent(transaction.ExecuteQuery(transaction.AddCommand(NextQuery)));
+            Interlocked.CompareExchange(ref current, result, current);
+            Interlocked.CompareExchange(ref changed, 0, 1);
             return result;
         }
 
-        public void Save()
+        private void Save()
+        {
+            using (var transaction = new DBTransaction(Schema.Connection))
+            {
+                try
+                {
+                    Save(transaction);
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
+                    transaction.Rollback();
+                }
+            }
+        }
+
+        public void Save(DBTransaction transaction)
         {
             if (changed == 0)
                 return;
             Interlocked.CompareExchange(ref changed, 0, 1);
-            var transaction = DBTransaction.GetTransaction(this, Schema?.Connection);
-            try
-            {
-                transaction.ExecuteQuery(transaction.AddCommand(FormatSql(DDLType.Alter)));
-                if (transaction.Owner == this)
-                    transaction.Commit();
-            }
-            finally
-            {
-                if (transaction.Owner == this)
-                    transaction.Dispose();
-            }
-
+            transaction.ExecuteQuery(transaction.AddCommand(FormatSql(DDLType.Alter)));
         }
 
         private static long ParseCurrent(object result)

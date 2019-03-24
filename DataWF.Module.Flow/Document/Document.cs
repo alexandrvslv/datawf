@@ -697,25 +697,25 @@ namespace DataWF.Module.Flow
             return work;
         }
 
-        public void Save(DocInitType type)
+        public void Save(DocInitType type, DBTransaction transaction)
         {
             if (type == DocInitType.Default)
-                Save();
+                Save(transaction);
             else if (type == DocInitType.References)
-                DocumentReference.DBTable.Save(GetReferences().ToList());
+                DocumentReference.DBTable.Save(transaction, GetReferences().ToList());
             else if (type == DocInitType.Data)
-                DocumentData.DBTable.Save(GetDatas().ToList());
+                DocumentData.DBTable.Save(transaction, GetDatas().ToList());
             else if (type == DocInitType.Workflow)
-                DocumentWork.DBTable.Save(GetWorks().ToList());
+                DocumentWork.DBTable.Save(transaction, GetWorks().ToList());
             else if (type == DocInitType.Customer)
-                DocumentCustomer.DBTable.Save(GetCustomers().ToList());
+                DocumentCustomer.DBTable.Save(transaction, GetCustomers().ToList());
         }
 
-        public override void Save(IUserIdentity user = null)
+        public override void Save(DBTransaction transaction)
         {
             if ((UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete)
             {
-                base.Save(user);
+                base.Save(transaction);
                 return;
             }
             if (Template == null)
@@ -728,11 +728,15 @@ namespace DataWF.Module.Flow
             }
             saving.Add(this);
 
-            var transaction = DBTransaction.GetTransaction(saveLock, Table.Schema.Connection);
             try
             {
-                base.Save(user);
-                var param = new DocumentExecuteArgs() { Document = this, ProcedureCategory = Template.Code, User = user };
+                base.Save(transaction);
+                var param = new DocumentExecuteArgs()
+                {
+                    Document = this,
+                    ProcedureCategory = Template.Code,
+                    Transaction = transaction
+                };
                 var works = GetWorks().ToList();
                 bool isnew = works.Count == 0;
                 if (isnew)
@@ -764,55 +768,42 @@ namespace DataWF.Module.Flow
                     //CacheReferencing(transaction);
                     if (temporaryUser != null)
                     {
-                        Send(CurrentWork, temporaryStage, new[] { temporaryUser }, (User)user);
+                        Send(CurrentWork, temporaryStage, new[] { temporaryUser }, transaction);
                     }
                     else
                     {
-                        Send(CurrentWork, temporaryStage, (User)user);
+                        Send(CurrentWork, temporaryStage, transaction);
                     }
-                    base.Save(user);
+                    base.Save(transaction);
                 }
                 temporaryUser = null;
                 temporaryStage = null;
 
-                SaveReferencing();
+                SaveReferencing(transaction);
 
                 if (GetWorks().Count() <= 1)
                 {
                     foreach (var data in GetTemplatedData())
                     {
-                        data.SetData(data.Parse(param, false).GetAwaiter().GetResult(), user);
+                        data.SetData(data.Parse(param, false).GetAwaiter().GetResult(), transaction);
                     }
                 }
                 Saved?.Invoke(null, new DocumentEventArgs(this));
 
-                if (transaction.Owner == saveLock)
-                {
-                    transaction.Commit(user);
-                }
             }
             catch (Exception ex)
             {
                 Helper.OnException(ex);
-                if (transaction.Owner == saveLock)
-                {
-                    transaction.Rollback(user);
-                }
-
+                transaction.Rollback();
                 throw ex;
             }
             finally
             {
-                if (transaction.Owner == saveLock)
-                {
-                    transaction.Dispose();
-                }
-
                 saving.Remove(this);
             }
         }
 
-        public List<DocumentWork> Send(IUserIdentity user)
+        public List<DocumentWork> Send(DBTransaction transaction)
         {
             var work = GetWorksUncompleted().FirstOrDefault();
             if (work == null)
@@ -828,54 +819,60 @@ namespace DataWF.Module.Flow
             {
                 throw new InvalidOperationException("Next Stage not Defined!");
             }
-            return Send(work, stageReference.ReferenceStage, user);
+            return Send(work, stageReference.ReferenceStage, transaction);
         }
 
-        public List<DocumentWork> Send(DocumentWork from, Stage stage, IUserIdentity user)
+        public List<DocumentWork> Send(DocumentWork from, Stage stage, DBTransaction transaction)
         {
             if ((stage.Keys & StageKey.Start) == StageKey.Start)
-                return Send(from, stage, new[] { (User)user }, user);
+                return Send(from, stage, new[] { (User)transaction.Caller }, transaction);
             else
-                return Send(from, stage, stage.GetDepartment(Template), user);
+                return Send(from, stage, stage.GetDepartment(Template), transaction);
         }
 
-        public object ExecuteProceduresByWork(DocumentWork work, StageParamProcudureType type, IUserIdentity user)
+        public object ExecuteProceduresByWork(DocumentWork work, StageParamProcudureType type, DBTransaction transaction)
         {
             if (work?.Stage == null)
                 throw new ArgumentNullException();
-            var param = new DocumentExecuteArgs { Document = this, Work = work, Stage = work.Stage, User = user };
+            var param = new DocumentExecuteArgs
+            {
+                Document = this,
+                Work = work,
+                Stage = work.Stage,
+                Transaction = transaction
+            };
             return ExecuteProcedures(param, work.Stage.GetProceduresByType(type));
         }
 
-        public object ExecuteProceduresByStage(Stage stage, StageParamProcudureType type, IUserIdentity user)
+        public object ExecuteProceduresByStage(Stage stage, StageParamProcudureType type, DBTransaction transaction)
         {
-            var param = new DocumentExecuteArgs { Document = this, Stage = stage, User = user };
+            var param = new DocumentExecuteArgs { Document = this, Stage = stage, Transaction = transaction };
             return ExecuteProcedures(param, stage.GetProceduresByType(type));
         }
 
         [ControllerMethod]
-        public Document Complete(IUserIdentity user)
+        public Document Complete(DBTransaction transaction)
         {
-            var dbUser = (User)user;
+            var dbUser = (User)transaction?.Caller;
             foreach (var work in GetWorksUncompleted()
                 .Where(p => p.Department == dbUser.Department
                 && (p.User == null || p.User == dbUser))
                 .ToList())
             {
-                Complete(work, user, false);
+                Complete(work, transaction, false);
             }
-            Save(user);
+            Save(transaction);
             return this;
         }
 
-        public void Complete(DocumentWork work, IUserIdentity user, bool autoComplete)
+        public void Complete(DocumentWork work, DBTransaction transaction, bool autoComplete)
         {
             if (work.User == null)
             {
-                work.User = (User)user;
+                work.User = (User)transaction.Caller;
             }
             work.DateComplete = DateTime.Now;
-            if (work.Stage != null && work.Stage.Access.GetFlag(AccessType.Edit, user))
+            if (work.Stage != null && work.Stage.Access.GetFlag(AccessType.Edit, transaction.Caller))
             {
                 if (autoComplete && (work.Stage.Keys & StageKey.AutoComplete) == StageKey.AutoComplete)
                 {
@@ -889,16 +886,16 @@ namespace DataWF.Module.Flow
                 if (!work.IsResend
                     && GetWorksUncompleted(work.Stage).Count() == 0)
                 {
-                    var checkResult = ExecuteProceduresByStage(work.Stage, StageParamProcudureType.Check, user);
+                    var checkResult = ExecuteProceduresByStage(work.Stage, StageParamProcudureType.Check, transaction);
                     if (checkResult != null)
                         throw new InvalidOperationException($"Check Fail {checkResult}");
 
-                    ExecuteProceduresByStage(work.Stage, StageParamProcudureType.Finish, user);
+                    ExecuteProceduresByStage(work.Stage, StageParamProcudureType.Finish, transaction);
                 }
             }
         }
 
-        public void Return(DocumentWork work, IUserIdentity user)
+        public void Return(DocumentWork work, DBTransaction transaction)
         {
             if (work.From == null || work.From.Stage == null)
                 throw new InvalidOperationException("Can't Return to undefined Stage");
@@ -907,17 +904,17 @@ namespace DataWF.Module.Flow
                 if (unWork.From == work.From && unWork != work)
                 {
                     unWork.DateComplete = DateTime.Now;
-                    if (DBTransaction.Current != null)
+                    if (transaction != null)
                     {
-                        DBTransaction.Current.Rows.Add(work);
+                        transaction.Rows.Add(work);
                     }
                 }
             }
             work.IsResend = true;
-            Send(work, work.From.Stage, new[] { work.From.User }, user);
+            Send(work, work.From.Stage, new[] { work.From.User }, transaction);
         }
 
-        public List<DocumentWork> Send(DocumentWork from, Stage stage, IEnumerable<DBItem> staff, IUserIdentity user)
+        public List<DocumentWork> Send(DocumentWork from, Stage stage, IEnumerable<DBItem> staff, DBTransaction transaction)
         {
             if (!(staff?.Any() ?? false))
             {
@@ -930,7 +927,7 @@ namespace DataWF.Module.Flow
                 {
                     from.IsResend = true;
                 }
-                Complete(from, user, true);
+                Complete(from, transaction, true);
             }
 
             var result = new List<DocumentWork>();
@@ -946,7 +943,7 @@ namespace DataWF.Module.Flow
 
             if (stage != null)
             {
-                ExecuteProceduresByStage(stage, StageParamProcudureType.Start, user);
+                ExecuteProceduresByStage(stage, StageParamProcudureType.Start, transaction);
             }
 
             return result;
@@ -966,8 +963,8 @@ namespace DataWF.Module.Flow
             return false;
         }
 
-        [ControllerMethod]
-        public Document FindReference(Template template, bool create)
+        //[ControllerMethod]
+        public Document FindReference(Template template, bool create, DBTransaction transaction)
         {
             foreach (var refer in GetReferences())
             {
@@ -978,13 +975,13 @@ namespace DataWF.Module.Flow
             if (create)
             {
                 var newdoc = template.CreateDocument(this);
-                newdoc.Save();
+                newdoc.Save(transaction);
                 return newdoc;
             }
             return null;
         }
 
-        [ControllerMethod]
+        //[ControllerMethod]
         public DocumentReference FindReference(Document document)
         {
             if (document == null || document == this)

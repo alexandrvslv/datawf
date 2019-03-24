@@ -26,7 +26,7 @@ namespace DataWF.Module.Flow
 
     public class DocumentNumberGenerator : IExecutable
     {
-        public virtual long GenerateIdentifier(string name)
+        public virtual long GenerateIdentifier(string name, DBTransaction transaction)
         {
             var sequence = Document.DBTable.Schema.Sequences[name];
             if (sequence == null)
@@ -42,13 +42,13 @@ namespace DataWF.Module.Flow
                 DBService.Save();
             }
             //return DBService.ExecuteQuery(FlowEnvironment.Config.Schema, FlowEnvironment.Config.Schema.Sequence.Create(name, 0, 1));
-            return sequence.Next();
+            return sequence.Next(transaction);
         }
 
-        public virtual string Generate(Document document)
+        public virtual string Generate(Document document, DBTransaction transaction)
         {
             var template = document.Template;
-            return template.Code + GenerateIdentifier("template_" + template.Id).ToString("D8");
+            return template.Code + GenerateIdentifier("template_" + template.Id, transaction).ToString("D8");
         }
 
         public object Execute(ExecuteArgs arg)
@@ -57,7 +57,7 @@ namespace DataWF.Module.Flow
             var document = (Document)arg.Document;
             if (string.IsNullOrEmpty(document.Number))
             {
-                document.Number = Generate(document);
+                document.Number = Generate(document, arg.Transaction);
             }
             return null;
         }

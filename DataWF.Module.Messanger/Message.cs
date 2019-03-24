@@ -17,6 +17,7 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using DataWF.Common;
 using DataWF.Data;
 using DataWF.Module.Common;
 using System;
@@ -84,27 +85,40 @@ namespace DataWF.Module.Messanger
 
         public static Message Send(User from, IEnumerable<DBItem> to, string data)
         {
-            var message = new Message()
+            using (var transaction = new DBTransaction(Message.DBTable.Connection, from))
             {
-                DateCreate = DateTime.Now,
-                User = from,
-                Data = data
-            };
-            message.Save(from);
-
-            foreach (var staff in to)
-            {
-                if (staff != message.User)//&& user.Status == DBStatus.Actual
+                try
                 {
-                    var address = new MessageAddress
+                    var message = new Message()
                     {
-                        Message = message,
-                        Staff = staff
+                        DateCreate = DateTime.Now,
+                        User = from,
+                        Data = data
                     };
-                    address.Save(from);
+                    message.Save(transaction);
+
+                    foreach (var staff in to)
+                    {
+                        if (staff != message.User)//&& user.Status == DBStatus.Actual
+                        {
+                            var address = new MessageAddress
+                            {
+                                Message = message,
+                                Staff = staff
+                            };
+                            address.Save(transaction);
+                        }
+                    }
+                    transaction.Commit();
+                    return message;
+                }
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
+                    transaction.Rollback();
+                    throw ex;
                 }
             }
-            return message;
         }
         private MessageAddressList addresses;
         private User user;

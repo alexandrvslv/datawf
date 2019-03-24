@@ -62,8 +62,8 @@ namespace DataWF.Data
                 BaseName = value.Name;
                 Name = GetName(value);
                 DisplayName = value.DisplayName + " Log";
-                DataType = value.DataType;
                 DBDataType = value.DBDataType;
+                DataType = value.DataType;
                 ReferenceTable = value.ReferenceTable;
                 Size = value.Size;
                 Scale = value.Scale;
@@ -74,6 +74,10 @@ namespace DataWF.Data
                 if (value.IsFileName)
                 {
                     Keys |= DBColumnKeys.FileName;
+                }
+                if (value.IsFileLOB)
+                {
+                    Keys |= DBColumnKeys.FileLOB;
                 }
             }
         }

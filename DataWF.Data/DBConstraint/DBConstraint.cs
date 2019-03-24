@@ -107,7 +107,7 @@ namespace DataWF.Data
         public override string FormatSql(DDLType ddlType)
         {
             var builder = new StringBuilder();
-            Schema?.Connection?.System.Format(builder, this, ddlType);
+            Table?.System.Format(builder, this, ddlType);
             return builder.ToString();
         }
 

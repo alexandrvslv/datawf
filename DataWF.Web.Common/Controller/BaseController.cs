@@ -45,7 +45,7 @@ namespace DataWF.Web.Common
                     return Forbid();
                 }
                 return new ActionResult<IEnumerable<T>>(table.LoadCache(filter, DBLoadParam.Referencing)
-                                                              .Where(p => p.Access.GetFlag(AccessType.View, user))); 
+                                                              .Where(p => p.Access.GetFlag(AccessType.View, user)));
             }
             catch (Exception ex)
             {
@@ -80,30 +80,32 @@ namespace DataWF.Web.Common
         [HttpPost]
         public ActionResult<T> Post([FromBody]T value)
         {
-            try
+            using (var transaction = new DBTransaction(table.Connection, CurrentUser))
             {
-                var user = CurrentUser;
-                if (value == null)
+                try
                 {
-                    throw new InvalidOperationException("Some deserialization problem!");
+                    if (value == null)
+                    {
+                        throw new InvalidOperationException("Some deserialization problem!");
+                    }
+                    if (!value.Access.GetFlag(AccessType.Create, transaction.Caller))
+                    {
+                        value.Reject(transaction.Caller);
+                        return Forbid();
+                    }
+                    if (value.UpdateState == DBUpdateState.Insert)
+                    {
+                        value.Save(transaction);
+                    }
+                    else
+                    {
+                        Put(value);
+                    }
                 }
-                if (!value.Access.GetFlag(AccessType.Create, user))
+                catch (Exception ex)
                 {
-                    value.Reject(user);
-                    return Forbid();
+                    return BadRequest(ex, value);
                 }
-                if (value.UpdateState == DBUpdateState.Insert)
-                {
-                    value.Save(user);
-                }
-                else
-                {
-                    Put(value);
-                }
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex, value);
             }
             return Ok(value);
         }
@@ -111,23 +113,25 @@ namespace DataWF.Web.Common
         [HttpPut]
         public ActionResult<T> Put([FromBody]T value)
         {
-            try
+            using (var transaction = new DBTransaction(table.Connection, CurrentUser))
             {
-                var user = CurrentUser;
-                if (value == null)
+                try
                 {
-                    throw new InvalidOperationException("Some deserialization problem!");
+                    if (value == null)
+                    {
+                        throw new InvalidOperationException("Some deserialization problem!");
+                    }
+                    if (((value.UpdateState & DBUpdateState.Update) == DBUpdateState.Update && !value.Access.GetFlag(AccessType.Edit, transaction.Caller)))
+                    {
+                        value.Reject(transaction.Caller);
+                        return Forbid();
+                    }
+                    value.Save(transaction);
                 }
-                if (((value.UpdateState & DBUpdateState.Update) == DBUpdateState.Update && !value.Access.GetFlag(AccessType.Edit, user)))
+                catch (Exception ex)
                 {
-                    value.Reject(user);
-                    return Forbid();
+                    return BadRequest(ex, value);
                 }
-                value.Save(user);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex, value);
             }
             return Ok(value);
         }
@@ -136,26 +140,30 @@ namespace DataWF.Web.Common
         public ActionResult<bool> Delete([FromRoute]K id)
         {
             var value = default(T);
-            try
+            using (var transaction = new DBTransaction(table.Connection, CurrentUser))
             {
-                var user = CurrentUser;
-                value = table.LoadById(id);
-                if (value == null)
+                try
                 {
-                    return NotFound();
-                }
-                if (!value.Access.GetFlag(AccessType.Delete, user))
-                {
-                    value.Reject(user);
-                    return Forbid();
-                }
-                value.Delete(7, DBLoadParam.Load, user);
-                return Ok(true);
+                    value = table.LoadById(id, DBLoadParam.Load | DBLoadParam.Referencing, null, transaction);
+                    if (value == null)
+                    {
+                        return NotFound();
+                    }
+                    if (!value.Access.GetFlag(AccessType.Delete, transaction.Caller))
+                    {
+                        value.Reject(transaction.Caller);
+                        return Forbid();
+                    }
+                    value.Delete(transaction, 2, DBLoadParam.Load);
+                    transaction.Commit();
+                    return Ok(true);
 
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex, value);
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    return BadRequest(ex, value);
+                }
             }
         }
 

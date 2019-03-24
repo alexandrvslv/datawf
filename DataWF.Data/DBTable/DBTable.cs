@@ -252,10 +252,10 @@ namespace DataWF.Data
         }
 
         [Browsable(false)]
-        public DBSystem System
-        {
-            get { return Schema?.System ?? DBSystem.Default; }
-        }
+        public DBSystem System { get { return Schema?.System ?? DBSystem.Default; } }
+
+        [Browsable(false)]
+        public DBConnection Connection { get { return Schema?.Connection; } }
 
         [Browsable(false)]
         public virtual int BlockSize
@@ -628,12 +628,12 @@ namespace DataWF.Data
             }
         }
 
-        public void RefreshSequence()
+        public void RefreshSequence(DBTransaction transaction)
         {
-            var current = Schema.Connection.ExecuteQuery($"select max({PrimaryKey.SqlName}) from {SqlName}");
+            var current = transaction.ExecuteQuery($"select max({PrimaryKey.SqlName}) from {SqlName}");
             Sequence.SetCurrent(current);
             Sequence.NextInternal();
-            Sequence.Save();
+            Sequence.Save(transaction);
         }
 
         public void LoadReferencingBlock(IDbCommand command)
@@ -745,17 +745,17 @@ namespace DataWF.Data
 
         public abstract DBItem LoadItemFromReader(DBTransaction transaction);
 
-        public abstract IEnumerable<DBItem> LoadItems(QQuery query, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null);
+        public abstract IEnumerable<DBItem> LoadItems(QQuery query, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null);
 
-        public abstract IEnumerable<DBItem> LoadItems(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable<DBColumn> cols = null, IDBTableView synch = null);
+        public abstract IEnumerable<DBItem> LoadItems(string whereText = null, DBLoadParam param = DBLoadParam.None, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null);
 
-        public abstract IEnumerable<DBItem> LoadItems(IDbCommand command, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null);
+        public abstract IEnumerable<DBItem> LoadItems(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null);
 
-        public abstract DBItem LoadItemByCode(string code, DBColumn column, DBLoadParam param);
+        public abstract DBItem LoadItemByCode(string code, DBColumn column, DBLoadParam param, DBTransaction transaction = null);
 
-        public abstract DBItem LoadItemById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null);
+        public abstract DBItem LoadItemById(object id, DBLoadParam param = DBLoadParam.Load, IEnumerable<DBColumn> cols = null, DBTransaction transaction = null);
 
-        public abstract void ReloadItem(object id, DBLoadParam param = DBLoadParam.Load);
+        public abstract void ReloadItem(object id, DBLoadParam param = DBLoadParam.Load, DBTransaction transaction = null);
 
         public abstract void AddView(IDBTableView view);
 
@@ -824,7 +824,7 @@ namespace DataWF.Data
 
         public abstract IEnumerable<DBItem> GetChangedItems();
 
-        public virtual bool SaveItem(DBItem item, IUserIdentity user)
+        public virtual bool SaveItem(DBItem item, DBTransaction transaction)
         {
             if (item.UpdateState == DBUpdateState.Default || (item.UpdateState & DBUpdateState.Commit) == DBUpdateState.Commit)
             {
@@ -853,100 +853,94 @@ namespace DataWF.Data
             if (!item.Attached)
                 Add(item);
 
-            var transaction = DBTransaction.GetTransaction(item, Schema.Connection);
+            transaction.Rows.Add(item);
+            var args = new DBItemEventArgs(item, transaction);
 
-            try
+            //CheckRerencing();
+
+            if (!item.OnUpdating(args))
+                return false;
+            args.Columns = item.GetChangeKeys().ToList();
+            DBCommand dmlCommand = null;
+
+            if (item.UpdateState == DBUpdateState.Insert)
             {
-                //if (transaction.Reference && (item.UpdateState & DBUpdateState.Delete) != DBUpdateState.Delete)
-                //{
-                //    foreach (var column in Columns.GetIsReference())
-                //    {
-                //        if (column.ColumnType == DBColumnTypes.Default)
-                //        {
-                //            var refItem = item.GetCache(column) as DBItem;
-                //            if (refItem == null && item.GetValue(column) != null)
-                //            {
-                //                refItem = item.GetReference(column) as DBItem;
-                //            }
-                //            if (refItem != null && refItem != item)
-                //            {
-                //                if (refItem.IsChanged)
-                //                    refItem.Save(user);
-                //                if (item.GetValue(column) == null)
-                //                    item.SetValue(refItem.PrimaryId, column);
-                //            }
-                //        }
-                //    }
-                //}
-
-                transaction.Rows.Add(item);
-                var args = new DBItemEventArgs(item, transaction, user);
-
-                if (!item.OnUpdating(args))
-                    return false;
-                args.Columns = item.GetChangeKeys().ToList();
-                DBCommand dmlCommand = null;
-
-                if (item.UpdateState == DBUpdateState.Insert)
+                if (PrimaryKey != null && item.PrimaryId == null && Schema.System != DBSystem.SQLite)
                 {
-                    if (PrimaryKey != null && item.PrimaryId == null && Schema.System != DBSystem.SQLite)
-                    {
-                        if (dmlInsertSequence == null)
-                            dmlInsertSequence = DBCommand.Build(this, comInsert, DBCommandTypes.InsertSequence, Columns);
-                        dmlCommand = dmlInsertSequence;
-                    }
-                    else
-                    {
-                        item.GenerateId();
-                        if (dmlInsert == null)
-                            dmlInsert = DBCommand.Build(this, comInsert, DBCommandTypes.Insert, Columns);
-                        dmlCommand = dmlInsert;
-                    }
+                    if (dmlInsertSequence == null)
+                        dmlInsertSequence = DBCommand.Build(this, comInsert, DBCommandTypes.InsertSequence, Columns);
+                    dmlCommand = dmlInsertSequence;
                 }
-                else if ((item.UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete)
+                else
                 {
-                    if (dmlDelete == null)
-                        dmlDelete = DBCommand.Build(this, comDelete, DBCommandTypes.Delete);
-                    dmlCommand = dmlDelete;
+                    item.GenerateId();
+                    if (dmlInsert == null)
+                        dmlInsert = DBCommand.Build(this, comInsert, DBCommandTypes.Insert, Columns);
+                    dmlCommand = dmlInsert;
                 }
-                else if ((item.UpdateState & DBUpdateState.Update) == DBUpdateState.Update)
-                {
-                    //if (dmlUpdate == null)
-                    dmlCommand = DBCommand.Build(this, comUpdate, DBCommandTypes.Update, args.Columns);
-                    if (dmlCommand.Text.Length == 0)
-                    {
-                        item.Accept(user);
-                        return true;
-                    }
-                }
-                var command = transaction.AddCommand(dmlCommand.Text, dmlCommand.Type);
-                dmlCommand.FillCommand(command, item);
-
-                var result = transaction.ExecuteQuery(command, dmlCommand == dmlInsertSequence ? DBExecuteType.Scalar : DBExecuteType.NoReader);
-                transaction.DbConnection.System.UploadCommand(item, command);
-                if (PrimaryKey != null && item.PrimaryId == null)
-                {
-                    item[PrimaryKey] = result;
-                    Sequence.SetCurrent(result);
-                }
-
-                if (LogTable != null)
-                {
-                    args.LogItem = new DBLogItem(item);
-                    DBService.OnLogItem(args);
-                    args.LogItem.Save(user);
-                }
-                item.OnUpdated(args);
-                item.UpdateState |= DBUpdateState.Commit;
-                if (transaction.Owner == item)
-                    transaction.Commit(user);
-                return true;
             }
-            finally
+            else if ((item.UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete)
             {
-                if (transaction.Owner == item)
-                    transaction.Dispose();
+                if (dmlDelete == null)
+                    dmlDelete = DBCommand.Build(this, comDelete, DBCommandTypes.Delete);
+                dmlCommand = dmlDelete;
             }
+            else if ((item.UpdateState & DBUpdateState.Update) == DBUpdateState.Update)
+            {
+                //if (dmlUpdate == null)
+                dmlCommand = DBCommand.Build(this, comUpdate, DBCommandTypes.Update, args.Columns);
+                if (dmlCommand.Text.Length == 0)
+                {
+                    item.Accept(transaction.Caller);
+                    return true;
+                }
+            }
+            var command = transaction.AddCommand(dmlCommand.Text, dmlCommand.Type);
+            dmlCommand.FillCommand(command, item);
+
+            var result = transaction.ExecuteQuery(command, dmlCommand == dmlInsertSequence ? DBExecuteType.Scalar : DBExecuteType.NoReader);
+            transaction.DbConnection.System.UploadCommand(item, command);
+            if (PrimaryKey != null && item.PrimaryId == null)
+            {
+                item[PrimaryKey] = result;
+                Sequence.SetCurrent(result);
+            }
+
+            if (LogTable != null)
+            {
+                args.LogItem = new DBLogItem(item);
+                DBService.OnLogItem(args);
+                args.LogItem.Save(transaction.GetSubTransaction(LogTable.Connection));
+            }
+            item.OnUpdated(args);
+            item.UpdateState |= DBUpdateState.Commit;
+
+            return true;
+        }
+
+        void CheckRerencing()
+        {
+            //if (transaction.Reference && (item.UpdateState & DBUpdateState.Delete) != DBUpdateState.Delete)
+            //{
+            //    foreach (var column in Columns.GetIsReference())
+            //    {
+            //        if (column.ColumnType == DBColumnTypes.Default)
+            //        {
+            //            var refItem = item.GetCache(column) as DBItem;
+            //            if (refItem == null && item.GetValue(column) != null)
+            //            {
+            //                refItem = item.GetReference(column) as DBItem;
+            //            }
+            //            if (refItem != null && refItem != item)
+            //            {
+            //                if (refItem.IsChanged)
+            //                    refItem.Save(user);
+            //                if (item.GetValue(column) == null)
+            //                    item.SetValue(refItem.PrimaryId, column);
+            //            }
+            //        }
+            //    }
+            //}
         }
 
         public abstract void Accept(DBItem item);
@@ -956,33 +950,39 @@ namespace DataWF.Data
             return Interlocked.Increment(ref Hash);
         }
 
-        public void Save(IList rows = null, IUserIdentity user = null)
+        public void Save(IList rows = null)
+        {
+            using (var transaction = new DBTransaction(Connection))
+            {
+                try
+                {
+                    Save(transaction, rows);
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
+                    transaction.Rollback();
+                }
+            }
+        }
+
+        public void Save(DBTransaction transaction, IList rows = null)
         {
             if (rows == null)
                 rows = GetChangedItems().ToList();
 
             if (rows.Count > 0)
             {
+                ListHelper.QuickSort(rows, new InvokerComparer(typeof(DBItem), nameof(DBItem.UpdateState)));
 
-                var transaction = DBTransaction.GetTransaction(this, Schema.Connection);
-                try
+                foreach (DBItem row in rows)
                 {
-                    ListHelper.QuickSort(rows, new InvokerComparer(typeof(DBItem), nameof(DBItem.UpdateState)));
-
-                    foreach (DBItem row in rows)
-                        row.Save(user);
-
-                    if (transaction.Owner == this)
-                        transaction.Commit(user);
-                }
-                finally
-                {
-                    if (transaction.Owner == this)
-                        transaction.Dispose();
+                    row.Save(transaction);
                 }
             }
 
-            Sequence?.Save();
+            Sequence?.Save(transaction);
         }
 
         public int GetRowCount(DBTransaction transaction, string @where)
@@ -990,7 +990,6 @@ namespace DataWF.Data
             object val = transaction.ExecuteQuery(transaction.AddCommand(BuildQuery(@where, "a", null, "count(*)")), DBExecuteType.Scalar);
             return val is Exception ? -1 : int.Parse(val.ToString());
         }
-
 
         #region IComparable Members
 
@@ -1027,9 +1026,10 @@ namespace DataWF.Data
 
         public void RejectChanges(IUserIdentity user)
         {
-            var rows = GetChangedItems().ToList();
-            for (int i = 0; i < rows.Count; i++)
-                rows[i].Reject(user);
+            foreach (var row in GetChangedItems().ToList())
+            {
+                row.Reject(user);
+            }
         }
 
         public void AcceptChanges(IUserIdentity user)
