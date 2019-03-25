@@ -5,9 +5,10 @@ using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
-    public class ProgressStreamContent : HttpContent
+    public class ProgressStreamContent : StreamContent
     {
         public ProgressStreamContent(ProgressToken progressToken, Stream content, int bufferSize = 81920)
+            : base(content, bufferSize)
         {
             ProgressToken = progressToken;
             Content = content;
