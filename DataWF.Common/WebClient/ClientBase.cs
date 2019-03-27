@@ -67,7 +67,7 @@ namespace DataWF.Common
 
         protected virtual HttpClient CreateHttpClient()
         {
-            var client = new HttpClient() { Timeout = TimeSpan.FromMinutes(4) };
+            var client = new HttpClient() { Timeout = TimeSpan.FromMinutes(1) };
             // TODO: Customize HTTP client
             return client;
         }
