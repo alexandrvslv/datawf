@@ -50,6 +50,7 @@ namespace DataWF.Data
             var nConnection = new NpgsqlConnectionStringBuilder()
             {
                 Timeout = connection.TimeOut,
+                CommandTimeout = connection.TimeOut,
                 Username = connection.User,
                 Password = connection.Password,
                 Host = connection.Host,
@@ -60,6 +61,12 @@ namespace DataWF.Data
             {
                 nConnection.Pooling = (bool)connection.Pool;
             }
+            //performance
+            nConnection.ReadBufferSize = 81920;
+            nConnection.WriteBufferSize = 81920;
+            nConnection.SocketReceiveBufferSize = 8192 * 3;
+            nConnection.SocketSendBufferSize = 8192 * 3;
+            nConnection.Enlist = false;
             return nConnection;
         }
 
@@ -264,23 +271,30 @@ namespace DataWF.Data
                 value.Position = 0;
             }
             var manager = new NpgsqlLargeObjectManager((NpgsqlConnection)transaction.Connection);
-            var bufferSize = 81920;
+            var bufferSize = 81920 * 2;
             var buffer = new byte[bufferSize];
 
             var oid = await manager.CreateAsync(0, CancellationToken.None);
 
             using (var lobStream = await manager.OpenReadWriteAsync(oid, CancellationToken.None))
             {
+                //await value.CopyToAsync(lobStream);
                 int count;
-                while ((count = await value.ReadAsync(buffer, 0, bufferSize)) != 0)
+                while ((count = value.Read(buffer, 0, bufferSize)) != 0)
                 {
-                    await lobStream.WriteAsync(buffer, 0, count);
+                    lobStream.Write(buffer, 0, count);
                 }
             }
             return oid;
         }
 
         public override async Task<Stream> GetLOB(uint oid, DBTransaction transaction)
+        {
+            var manager = new NpgsqlLargeObjectManager((NpgsqlConnection)transaction.Connection);
+            return await manager.OpenReadAsync(oid, CancellationToken.None);
+        }
+
+        public async Task<Stream> GetLOBBuffering(uint oid, DBTransaction transaction)
         {
             var outStream = new MemoryStream();
             var manager = new NpgsqlLargeObjectManager((NpgsqlConnection)transaction.Connection);
@@ -296,6 +310,12 @@ namespace DataWF.Data
             }
             outStream.Position = 0;
             return outStream;
+        }
+
+        public override async Task DeleteLOB(uint oid, DBTransaction transaction)
+        {
+            var manager = new NpgsqlLargeObjectManager((NpgsqlConnection)transaction.Connection);
+            await manager.UnlinkAsync(oid, CancellationToken.None);
         }
 
         //public override void ReadSequential(DBItem item, DBColumn column, Stream stream, int bufferSize = 81920)

@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace DataWF.Data
 {
-    public abstract class DBSystem
+    public abstract partial class DBSystem
     {
         public static readonly DBSystem MSSql = new DBSystemMSSql();
         public static readonly DBSystem MySql = new DBSystemMySql();
@@ -153,6 +153,11 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                     Column = item[iColu].ToString()
                 });
             }
+        }
+
+        public virtual Task DeleteLOB(uint oid, DBTransaction transaction)
+        {
+            return null;
         }
 
         public virtual Task<Stream> GetLOB(uint oid, DBTransaction transaction)
@@ -445,16 +450,16 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
                 foreach (var column in table.Columns)
                 {
                     if (column.ColumnType == DBColumnTypes.Default)
-                        ddl.Append(column.Name + " as " + column.Name);
+                        ddl.Append($"a.{column.Name} as {column.Name}");
                     else if (column.ColumnType == DBColumnTypes.Query)
-                        ddl.Append(column.Query + " as " + column.Name);
+                        ddl.Append($"({column.Query}) as {column.Name}");
                     else
                         continue;
                     ddl.Append(", ");
                 }
                 ddl.Length -= 2;
                 ddl.AppendLine();
-                ddl.AppendLine($"from {table.SqlName} where {table.Query};");
+                ddl.AppendLine($"from {table.SqlName} a where {table.Query};");
             }
         }
 
@@ -875,6 +880,17 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             }
             else
                 return value.ToString().Replace(",", ".");
+        }
+
+        public virtual Stream ReadSequential(DBItem item, DBColumn column, DBTransaction transaction)
+        {
+            var command = transaction.AddCommand(item.Table.CreateItemCommmand(item.PrimaryId, new[] { column }));
+            transaction.Reader = (IDataReader)transaction.ExecuteQuery(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
+            if (transaction.Reader.Read())
+            {
+                return new DataReaderStream(transaction.Reader);
+            }
+            return null;
         }
 
         public virtual void ReadSequential(DBItem item, DBColumn column, Stream stream, int bufferSize = 81920)
