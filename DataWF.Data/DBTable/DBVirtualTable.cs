@@ -24,6 +24,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 namespace DataWF.Data
@@ -282,7 +283,7 @@ namespace DataWF.Data
             return BaseTable.NextHash();
         }
 
-        public override bool SaveItem(DBItem row, DBTransaction transaction)
+        public override Task<bool> SaveItem(DBItem row, DBTransaction transaction)
         {
             return BaseTable.SaveItem(row, transaction);
         }

@@ -1,7 +1,9 @@
-﻿namespace DataWF.Common
+﻿using System.Threading.Tasks;
+
+namespace DataWF.Common
 {
     public interface IModuleInitialize
     {
-        void Initialize();
+        Task Initialize();
     }
 }

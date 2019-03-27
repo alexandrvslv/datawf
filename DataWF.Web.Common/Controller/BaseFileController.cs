@@ -16,40 +16,45 @@ namespace DataWF.Web.Common
         [ProducesResponseType(typeof(FileStreamResult), 200)]
         public async Task<ActionResult<Stream>> DownloadFile([FromRoute]K id)
         {
-            using (var transaction = new DBTransaction(table.Connection, CurrentUser))
-                try
+            var transaction = new DBTransaction(table.Connection, CurrentUser);
+            try
+            {
+                var item = table.LoadById(id, DBLoadParam.Load | DBLoadParam.Referencing, null, transaction);
+                if (item == null)
                 {
-                    var item = table.LoadById(id, DBLoadParam.Load | DBLoadParam.Referencing, null, transaction);
-                    if (item == null)
-                    {
-                        return NotFound();
-                    }
-                    if (table.FileNameKey == null)
-                    {
-                        return BadRequest("No file columns presented!");
-                    }
-                    var fileName = item.GetValue<string>(table.FileNameKey);
-                    if (string.IsNullOrEmpty(fileName))
-                    {
-                        return new EmptyResult();
-                    }
-                    if (table.FileLOBKey != null && item.GetValue(table.FileLOBKey) != null)
-                    {
-                        return File(await item.GetLOB(table.FileLOBKey, transaction), System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
-                    }
-                    else if (table.FileKey != null)
-                    {
-                        return File(item.GetZipMemoryStream(table.FileKey), System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
-                    }
-                    else
-                    {
-                        return BadRequest("No file columns presented!");
-                    }
+                    return NotFound();
                 }
-                catch (Exception ex)
+                if (table.FileNameKey == null)
                 {
-                    return BadRequest(ex);
+                    return BadRequest("No file columns presented!");
                 }
+                var fileName = item.GetValue<string>(table.FileNameKey);
+                if (string.IsNullOrEmpty(fileName))
+                {
+                    return new EmptyResult();
+                }
+                var stream = (Stream)null;
+                if (table.FileLOBKey != null && item.GetValue(table.FileLOBKey) != null)
+                {
+                    stream = await item.GetLOB(table.FileLOBKey, transaction);
+                }
+                else if (table.FileKey != null)
+                {
+                    stream = item.GetZipMemoryStream(table.FileKey);
+                }
+                else
+                {
+                    return BadRequest("No file columns presented!");
+                }
+                return new TransactFileStreamResult(stream,
+                    System.Net.Mime.MediaTypeNames.Application.Octet,
+                    transaction, fileName);
+            }
+            catch (Exception ex)
+            {
+                transaction.Dispose();
+                return BadRequest(ex);
+            }
         }
 
         [HttpPost("UploadFile/{id}/{fileName}")]
@@ -65,55 +70,41 @@ namespace DataWF.Web.Common
             {
                 return BadRequest($"Expected a multipart request, but got {Request.ContentType}");
             }
-            try
+            using (var transaction = new DBTransaction(table.Connection, CurrentUser))
             {
-                using (var upload = await Upload(true))
+                try
                 {
-                    if (upload == null)
+                    var item = table.LoadById(id, DBLoadParam.Load | DBLoadParam.Referencing, null, transaction);
+                    if (item == null)
                     {
-                        return NoContent();
+                        return NotFound();
                     }
-                    using (var transaction = new DBTransaction(table.Connection, CurrentUser))
+
+                    foreach (var upload in Upload())
                     {
-                        var item = table.LoadById(id, DBLoadParam.Load | DBLoadParam.Referencing, null, transaction);
-                        if (item == null)
-                        {
-                            return NotFound();
-                        }
                         if (string.IsNullOrEmpty(fileName) && !string.IsNullOrEmpty(upload.FileName))
                         {
                             fileName = upload.FileName;
                         }
-
-                        try
+                        item.SetValue(fileName, table.FileNameKey);
+                        if (table.FileLOBKey != null)
                         {
-                            item.SetValue(fileName, table.FileNameKey);
-                            if (table.FileLOBKey != null)
-                            {
-                                await item.SetLOB(upload.Stream, table.FileLOBKey, transaction);
-                            }
-                            else if (table.FileKey != null)
-                            {
-                                item.SetStream(upload.Stream, table.FileKey, transaction);
-                            }
-                            transaction.Commit();
+                            await item.SetLOB(upload.Stream, table.FileLOBKey, transaction);
                         }
-                        catch (Exception ex)
+                        else if (table.FileKey != null)
                         {
-                            transaction.Rollback();
-                            return BadRequest(ex);
+                            await item.SetStream(upload.Stream, table.FileKey, transaction);
                         }
+                        transaction.Commit();
                     }
+                    return Ok();
                 }
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex);
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    return BadRequest(ex);
+                }
             }
         }
-
-
-
     }
 }

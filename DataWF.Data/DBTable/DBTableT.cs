@@ -370,28 +370,28 @@ namespace DataWF.Data
 
         public IEnumerable<T> Load(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction baseTransaction = null)
         {
-            var transaction = baseTransaction ?? new DBTransaction(Connection, null, true);
-            transaction.AddCommand(command);
-
-            if ((param & DBLoadParam.Referencing) == DBLoadParam.Referencing)
-            {
-                LoadReferencingBlock(command);
-            }
-            if ((param & DBLoadParam.Reference) == DBLoadParam.Reference)
-            {
-                LoadReferenceBlock(command);
-            }
-
-            if (transaction.Canceled)
-                yield break;
-            var whereInd = command.CommandText.IndexOf("where ", StringComparison.OrdinalIgnoreCase);
-            var arg = new DBLoadProgressEventArgs(transaction.View, 0, 0, null);
-
-            if (transaction.View != null && transaction.View.Table == this && transaction.View.IsStatic)
-                transaction.View.Clear();
-
+            var transaction = baseTransaction ?? new DBTransaction(Connection, null, true);           
             try
             {
+                transaction.AddCommand(command);
+
+                if ((param & DBLoadParam.Referencing) == DBLoadParam.Referencing)
+                {
+                    LoadReferencingBlock(command, transaction);
+                }
+                if ((param & DBLoadParam.Reference) == DBLoadParam.Reference)
+                {
+                    LoadReferenceBlock(command, transaction);
+                }
+
+                if (transaction.Canceled)
+                    yield break;
+                var whereInd = command.CommandText.IndexOf("where ", StringComparison.OrdinalIgnoreCase);
+                var arg = new DBLoadProgressEventArgs(transaction.View, 0, 0, null);
+
+                if (transaction.View != null && transaction.View.Table == this && transaction.View.IsStatic)
+                    transaction.View.Clear();
+
                 if ((transaction.ReaderParam & DBLoadParam.GetCount) == DBLoadParam.GetCount)
                 {
                     string w = whereInd == -1 ? string.Empty : command.CommandText.Substring(whereInd);

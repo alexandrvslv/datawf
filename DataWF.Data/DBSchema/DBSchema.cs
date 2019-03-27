@@ -212,11 +212,11 @@ namespace DataWF.Data
         public List<Assembly> Assemblies { get; private set; }
         #endregion
 
-        public void Update()
+        public async Task Update()
         {
             foreach (var table in Tables)
             {
-                table.Save();
+                await table.Save();
             }
         }
 

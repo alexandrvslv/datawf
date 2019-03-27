@@ -33,6 +33,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 namespace DataWF.Data
@@ -611,7 +612,7 @@ namespace DataWF.Data
             }
         }
 
-        public void LoadReferenceBlock(IDbCommand command)
+        public void LoadReferenceBlock(IDbCommand command, DBTransaction transaction)
         {
             foreach (var column in Columns.GetIsReference())
             {
@@ -636,7 +637,7 @@ namespace DataWF.Data
             Sequence.Save(transaction);
         }
 
-        public void LoadReferencingBlock(IDbCommand command)
+        public void LoadReferencingBlock(IDbCommand command, DBTransaction transaction)
         {
             foreach (var reference in TableAttribute.Referencings)
             {
@@ -650,7 +651,7 @@ namespace DataWF.Data
     left join {SqlName} a 
         on a.{PrimaryKey.Name} = b.{reference.ReferenceColumn.Column.SqlName} 
     {where}", "b", null));
-                    reference.ReferenceTable.Table.LoadItems(sub).LastOrDefault();
+                    reference.ReferenceTable.Table.LoadItems(sub, DBLoadParam.None, transaction).LastOrDefault();
                 }
             }
         }
@@ -824,7 +825,7 @@ namespace DataWF.Data
 
         public abstract IEnumerable<DBItem> GetChangedItems();
 
-        public virtual bool SaveItem(DBItem item, DBTransaction transaction)
+        public virtual async Task<bool> SaveItem(DBItem item, DBTransaction transaction)
         {
             if (item.UpdateState == DBUpdateState.Default || (item.UpdateState & DBUpdateState.Commit) == DBUpdateState.Commit)
             {
@@ -910,8 +911,9 @@ namespace DataWF.Data
             {
                 args.LogItem = new DBLogItem(item);
                 DBService.OnLogItem(args);
-                args.LogItem.Save(transaction.GetSubTransaction(LogTable.Connection));
+                await args.LogItem.Save(transaction.GetSubTransaction(LogTable.Connection));
             }
+
             item.OnUpdated(args);
             item.UpdateState |= DBUpdateState.Commit;
 
@@ -950,13 +952,13 @@ namespace DataWF.Data
             return Interlocked.Increment(ref Hash);
         }
 
-        public void Save(IList rows = null)
+        public async Task Save(IList rows = null)
         {
             using (var transaction = new DBTransaction(Connection))
             {
                 try
                 {
-                    Save(transaction, rows);
+                    await Save(transaction, rows);
                     transaction.Commit();
                 }
                 catch (Exception ex)
@@ -967,7 +969,7 @@ namespace DataWF.Data
             }
         }
 
-        public void Save(DBTransaction transaction, IList rows = null)
+        public async Task Save(DBTransaction transaction, IList rows = null)
         {
             if (rows == null)
                 rows = GetChangedItems().ToList();
@@ -978,7 +980,7 @@ namespace DataWF.Data
 
                 foreach (DBItem row in rows)
                 {
-                    row.Save(transaction);
+                    await row.Save(transaction);
                 }
             }
 

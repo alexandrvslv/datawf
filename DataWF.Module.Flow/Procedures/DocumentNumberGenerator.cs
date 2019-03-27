@@ -20,6 +20,7 @@
 using DataWF.Common;
 using DataWF.Data;
 using System;
+using System.Threading.Tasks;
 
 namespace DataWF.Module.Flow
 {
@@ -51,7 +52,7 @@ namespace DataWF.Module.Flow
             return template.Code + GenerateIdentifier("template_" + template.Id, transaction).ToString("D8");
         }
 
-        public object Execute(ExecuteArgs arg)
+        public Task<object> Execute(ExecuteArgs arg)
         {
             var darg = (DocumentExecuteArgs)arg;
             var document = (Document)arg.Document;

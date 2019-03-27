@@ -582,6 +582,13 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
+        public virtual string CodeCategory
+        {
+            get { return Table.CodeKey != null ? GetValue<string>(Table.CodeKey) : "General"; }
+            set { }
+        }
+
+        [XmlIgnore, JsonIgnore, Browsable(false)]
         public object PrimaryId
         {
             get { return Table.PrimaryKey == null ? null : GetValue(Table.PrimaryKey); }
@@ -1020,13 +1027,13 @@ namespace DataWF.Data
             }
         }
 
-        public void Save(IUserIdentity user)
+        public async void Save(IUserIdentity user)
         {
             using (var transaction = new DBTransaction(Table.Connection, user))
             {
                 try
                 {
-                    Save(transaction);
+                    await Save(transaction);
                     transaction.Commit();
                 }
                 catch (Exception ex)
@@ -1038,11 +1045,11 @@ namespace DataWF.Data
             }
         }
 
-        public virtual void Save(DBTransaction transaction)
+        public virtual async Task Save(DBTransaction transaction)
         {
             if (OnSaving(transaction))
             {
-                Table.SaveItem(this, transaction);
+                await Table.SaveItem(this, transaction);
                 OnSaved(transaction);
             }
         }
@@ -1167,13 +1174,13 @@ namespace DataWF.Data
             return builder.ToString();
         }
 
-        public void Delete(int recurs, DBLoadParam param = DBLoadParam.None)
+        public async Task Delete(int recurs, DBLoadParam param = DBLoadParam.None)
         {
             using (DBTransaction transaction = new DBTransaction(Table.Schema.Connection))
             {
                 try
                 {
-                    Delete(transaction, recurs, param);
+                    await Delete(transaction, recurs, param);
                     transaction.Commit();
                 }
                 catch (Exception ex)
@@ -1184,7 +1191,7 @@ namespace DataWF.Data
             }
         }
 
-        public void Delete(DBTransaction transaction, int recurs, DBLoadParam param = DBLoadParam.None)
+        public async Task Delete(DBTransaction transaction, int recurs, DBLoadParam param = DBLoadParam.None)
         {
             var dependencies = GetChilds(recurs, param).ToList();
 
@@ -1193,13 +1200,13 @@ namespace DataWF.Data
                 item.Delete();
                 if (item.Attached)
                 {
-                    item.Save(transaction);
+                    await item.Save(transaction);
                 }
             }
             Delete();
             if (Attached)
             {
-                Save(transaction);
+                await Save(transaction);
             }
         }
 
@@ -1235,13 +1242,13 @@ namespace DataWF.Data
             }
         }
 
-        public void Merge(IEnumerable<DBItem> list)
+        public async Task Merge(IEnumerable<DBItem> list)
         {
             using (var transaction = new DBTransaction(Table.Connection))
             {
                 try
                 {
-                    Merge(list, transaction);
+                    await Merge(list, transaction);
                     transaction.Commit();
                 }
                 catch (Exception ex)
@@ -1253,7 +1260,7 @@ namespace DataWF.Data
         }
 
         // TODO [ControllerMethod]
-        public void Merge(IEnumerable<DBItem> list, DBTransaction transaction)
+        public async Task Merge(IEnumerable<DBItem> list, DBTransaction transaction)
         {
             var relations = Table.GetChildRelations().ToList();
             var rows = new List<DBItem> { this };
@@ -1279,24 +1286,24 @@ namespace DataWF.Data
                             foreach (DBItem refing in refings)
                                 refing[relation.Column] = PrimaryId;
 
-                            relation.Table.Save(transaction, refings);
+                            await relation.Table.Save(transaction, refings);
                         }
                     }
             }
 
-            Table.Save(transaction, rows);
+            await Table.Save(transaction, rows);
         }
 
-        public void SaveOrUpdate(DBTransaction transaction, DBLoadParam param = DBLoadParam.None)
+        public Task SaveOrUpdate(DBTransaction transaction, DBLoadParam param = DBLoadParam.None)
         {
             var exist = FindAndUpdate(param);
             if (exist != null)
             {
-                exist.Save(transaction);
+                return exist.Save(transaction);
             }
             else
             {
-                Save(transaction);
+                return Save(transaction);
             }
         }
 
@@ -1316,7 +1323,7 @@ namespace DataWF.Data
             }
         }
 
-        public void SaveReferencing(DBTransaction transaction)
+        public async Task SaveReferencing(DBTransaction transaction)
         {
             foreach (var relation in Table.GetChildRelations())
             {
@@ -1331,7 +1338,9 @@ namespace DataWF.Data
                     }
 
                     if (updatind.Count > 0)
-                        relation.Table.Save(transaction, updatind);
+                    {
+                        await relation.Table.Save(transaction, updatind);
+                    }
                 }
             }
         }
@@ -1412,20 +1421,20 @@ namespace DataWF.Data
             this[column] = value;
         }
 
-        public void SetStream(string filepath, DBColumn column, DBTransaction transaction, int bufferSize = 81920)
+        public async Task SetStream(string filepath, DBColumn column, DBTransaction transaction, int bufferSize = 81920)
         {
             using (var stream = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
-                SetStream(stream, column, transaction, bufferSize);
+                await SetStream(stream, column, transaction, bufferSize);
             }
         }
 
-        public void SetStream(Stream stream, DBColumn column, DBTransaction transaction, int bufferSize = 81920)
+        public async Task SetStream(Stream stream, DBColumn column, DBTransaction transaction, int bufferSize = 81920)
         {
             SetValue(Helper.GetBytes(stream), column);
             if (Attached)
             {
-                Save(transaction);
+                await Save(transaction);
                 SetValue(null, column, false);
             }
         }
@@ -1500,7 +1509,7 @@ namespace DataWF.Data
         {
             var oid = await Table.System.SetLOB(value, transaction);
             SetValue<uint?>(oid, column);
-            Save(transaction);
+            await Save(transaction);
         }
 
         public Task<Stream> GetLOB(DBColumn column, DBTransaction transaction)
@@ -1509,6 +1518,31 @@ namespace DataWF.Data
             if (oid == null)
                 return null;
             return Table.System.GetLOB(oid.Value, transaction);
+        }
+
+        public async Task<FileStream> GetLOBFileStream(DBColumn column, string path, int bufferSize = 81920)
+        {
+            using (var transaction = new DBTransaction(Table.Connection))
+            {
+                using (var lobStream = await GetLOB(column, transaction))
+                {
+                    if (lobStream == null)
+                    {
+                        return null;
+                    }
+                    var fileStream = File.Open(path, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+
+                    var buffer = new byte[bufferSize];
+                    int count;
+                    while ((count = lobStream.Read(buffer, 0, bufferSize)) != 0)
+                    {
+                        fileStream.Write(buffer, 0, count);
+                    }
+                    fileStream.Position = 0;
+                    return fileStream;
+                }
+            }
+
         }
 
     }

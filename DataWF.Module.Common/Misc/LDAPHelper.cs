@@ -17,12 +17,13 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using DataWF.Data;
 using DataWF.Common;
+using DataWF.Data;
+using Novell.Directory.Ldap;
 using System;
 using System.Collections.Generic;
-using Novell.Directory.Ldap;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace DataWF.Module.Common
 {
@@ -50,7 +51,7 @@ namespace DataWF.Module.Common
             return false;
         }
 
-        public static List<User> LoadADUsers(string userName, string password, DBTransaction transaction)
+        public static async Task<List<User>> LoadADUsers(string userName, string password, DBTransaction transaction)
         {
             var users = new List<User>();
             try
@@ -90,7 +91,7 @@ namespace DataWF.Module.Common
                                     }
                                     position.Code = positionName;
                                     position.Name = positionName;
-                                    position.Save(transaction);
+                                    await position.Save(transaction);
                                 }
 
                                 var user = User.DBTable.LoadByCode(attribute.StringValue, User.DBTable.ParseProperty(nameof(User.Login)), DBLoadParam.None);
@@ -102,7 +103,7 @@ namespace DataWF.Module.Common
                                 user.Login = attribute.StringValue;
                                 user.EMail = resultRecord.getAttribute("mail")?.StringValue;
                                 user.Name = resultRecord.getAttribute("name")?.StringValue;
-                                user.Save(transaction);
+                                await user.Save(transaction);
                             }
 
                         }

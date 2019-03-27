@@ -78,7 +78,7 @@ namespace DataWF.Web.Common
         }
 
         [HttpPost]
-        public ActionResult<T> Post([FromBody]T value)
+        public async Task<ActionResult<T>> Post([FromBody]T value)
         {
             using (var transaction = new DBTransaction(table.Connection, CurrentUser))
             {
@@ -88,22 +88,20 @@ namespace DataWF.Web.Common
                     {
                         throw new InvalidOperationException("Some deserialization problem!");
                     }
-                    if (!value.Access.GetFlag(AccessType.Create, transaction.Caller))
+                    if (((value.UpdateState & DBUpdateState.Insert) == DBUpdateState.Insert
+                        && !value.Access.GetFlag(AccessType.Create, transaction.Caller))
+                        || ((value.UpdateState & DBUpdateState.Update) == DBUpdateState.Update
+                        && !value.Access.GetFlag(AccessType.Edit, transaction.Caller)))
                     {
                         value.Reject(transaction.Caller);
                         return Forbid();
                     }
-                    if (value.UpdateState == DBUpdateState.Insert)
-                    {
-                        value.Save(transaction);
-                    }
-                    else
-                    {
-                        Put(value);
-                    }
+                    await value.Save(transaction);
+                    transaction.Commit();
                 }
                 catch (Exception ex)
                 {
+                    transaction.Rollback();
                     return BadRequest(ex, value);
                 }
             }
@@ -111,7 +109,7 @@ namespace DataWF.Web.Common
         }
 
         [HttpPut]
-        public ActionResult<T> Put([FromBody]T value)
+        public async Task<ActionResult<T>> Put([FromBody]T value)
         {
             using (var transaction = new DBTransaction(table.Connection, CurrentUser))
             {
@@ -126,10 +124,12 @@ namespace DataWF.Web.Common
                         value.Reject(transaction.Caller);
                         return Forbid();
                     }
-                    value.Save(transaction);
+                    await value.Save(transaction);
+                    transaction.Commit();
                 }
                 catch (Exception ex)
                 {
+                    transaction.Rollback();
                     return BadRequest(ex, value);
                 }
             }
@@ -137,7 +137,7 @@ namespace DataWF.Web.Common
         }
 
         [HttpDelete("{id}")]
-        public ActionResult<bool> Delete([FromRoute]K id)
+        public async Task<ActionResult<bool>> Delete([FromRoute]K id)
         {
             var value = default(T);
             using (var transaction = new DBTransaction(table.Connection, CurrentUser))
@@ -154,7 +154,7 @@ namespace DataWF.Web.Common
                         value.Reject(transaction.Caller);
                         return Forbid();
                     }
-                    value.Delete(transaction, 2, DBLoadParam.Load);
+                    await value.Delete(transaction, 2, DBLoadParam.Load);
                     transaction.Commit();
                     return Ok(true);
 
@@ -214,6 +214,59 @@ namespace DataWF.Web.Common
             return BadRequest(error, null);
         }
 
+        protected IEnumerable<UploadModel> Upload()
+        {
+            var formAccumulator = new KeyValueAccumulator();
+            var boundary = MultipartRequestHelper.GetBoundary(MediaTypeHeaderValue.Parse(Request.ContentType), formOptions.MultipartBoundaryLengthLimit);
+            var reader = new MultipartReader(boundary, HttpContext.Request.Body);
+
+            var section = reader.ReadNextSectionAsync().GetAwaiter().GetResult();
+            while (section != null)
+            {
+                if (ContentDispositionHeaderValue.TryParse(section.ContentDisposition, out var contentDisposition))
+                {
+                    if (MultipartRequestHelper.HasFileContentDisposition(contentDisposition))
+                    {
+                        var result = new UploadModel
+                        {
+                            FileName = contentDisposition.FileName.ToString(),
+                            Stream = section.Body
+                        };
+                        yield return result;
+                    }
+                    else if (MultipartRequestHelper.HasFormDataContentDisposition(contentDisposition))
+                    {
+                        // Content-Disposition: form-data; name="key"
+                        // Do not limit the key name length here because the 
+                        // multipart headers length limit is already in effect.
+                        var key = HeaderUtilities.RemoveQuotes(contentDisposition.Name);
+                        var encoding = GetEncoding(section);
+                        using (var streamReader = new StreamReader(
+                            section.Body,
+                            encoding,
+                            detectEncodingFromByteOrderMarks: true,
+                            bufferSize: 2048,
+                            leaveOpen: true))
+                        {
+                            // The value length limit is enforced by MultipartBodyLengthLimit
+                            var value = streamReader.ReadToEnd();
+                            if (String.Equals(value, "undefined", StringComparison.OrdinalIgnoreCase))
+                            {
+                                value = String.Empty;
+                            }
+                            formAccumulator.Append(key.ToString(), value);
+
+                            if (formAccumulator.ValueCount > formOptions.ValueCountLimit)
+                            {
+                                throw new InvalidDataException($"Form key count limit {formOptions.ValueCountLimit} exceeded.");
+                            }
+                        }
+                    }
+                }
+                section = reader.ReadNextSectionAsync().GetAwaiter().GetResult();
+            }
+        }
+
         protected async Task<UploadModel> Upload(bool inMemory)
         {
             var formAccumulator = new KeyValueAccumulator();
@@ -222,8 +275,8 @@ namespace DataWF.Web.Common
             var boundary = MultipartRequestHelper.GetBoundary(MediaTypeHeaderValue.Parse(Request.ContentType), formOptions.MultipartBoundaryLengthLimit);
             var reader = new MultipartReader(boundary, HttpContext.Request.Body);
 
-            var section = await reader.ReadNextSectionAsync();
-            while (section != null)
+            var section = (MultipartSection)null;
+            while ((section = await reader.ReadNextSectionAsync()) != null)
             {
                 if (ContentDispositionHeaderValue.TryParse(section.ContentDisposition, out var contentDisposition))
                 {
@@ -274,12 +327,7 @@ namespace DataWF.Web.Common
                         }
                     }
                 }
-
-                // Drains any remaining section body that has not been consumed and
-                // reads the headers for the next section.
-                section = await reader.ReadNextSectionAsync();
             }
-
             return result;
         }
 

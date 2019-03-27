@@ -22,6 +22,7 @@ using DataWF.Common;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace DataWF.Data
 {
@@ -89,12 +90,12 @@ namespace DataWF.Data
         [Browsable(false)]
         public DBLogTable LogTable { get { return (DBLogTable)Table; } }
 
-        public void Upload(DBTransaction transaction)
+        public async Task Upload(DBTransaction transaction)
         {
             if (BaseItem == null)
                 baseItem = BaseTable.NewItem(DBUpdateState.Insert, false);
             Upload(BaseItem);
-            BaseItem.Save(transaction);
+            await BaseItem.Save(transaction);
         }
 
         public void Upload(DBItem value)
@@ -137,7 +138,7 @@ namespace DataWF.Data
             return $"{LogType} {BaseItem}";
         }
 
-        public static void Reject(IEnumerable<DBLogItem> redo, IUserIdentity user)
+        public static async Task Reject(IEnumerable<DBLogItem> redo, IUserIdentity user)
         {
             var changed = new Dictionary<DBItem, List<DBLogItem>>();
             foreach (DBLogItem log in redo.OrderBy(p => p.PrimaryId))
@@ -183,11 +184,11 @@ namespace DataWF.Data
                 using (var transaction = new DBTransaction(entry.Key.Table.Connection, user))
                 {
                     //var currentLog = entry.Key.Table.LogTable.NewItem();
-                    entry.Key.Save(transaction);
+                    await entry.Key.Save(transaction);
 
                     foreach (var item in entry.Value)
                     {
-                        item.Save(transaction);
+                        await item.Save(transaction);
                     }
                     transaction.Commit();
                 }
@@ -195,7 +196,7 @@ namespace DataWF.Data
             }
         }
 
-        public static void Accept(DBItem row, IEnumerable<DBLogItem> logs, IUserIdentity user)
+        public static async Task Accept(DBItem row, IEnumerable<DBLogItem> logs, IUserIdentity user)
         {
             if (row.Status == DBStatus.Edit || row.Status == DBStatus.New || row.Status == DBStatus.Error)
                 row.Status = DBStatus.Actual;
@@ -203,18 +204,20 @@ namespace DataWF.Data
                 row.Delete();
             using (var transaction = new DBTransaction(row.Table.Connection, user))
             {
-                row.Save(transaction);
+                await row.Save(transaction);
 
                 foreach (var item in logs)
                 {
                     if (item.Status == DBStatus.New)
                     {
                         item.Status = DBStatus.Actual;
-                        item.Save(transaction);
+                        await item.Save(transaction);
                     }
                 }
                 transaction.Commit();
             }
         }
+
+
     }
 }

@@ -23,6 +23,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Data;
+using System.Threading.Tasks;
 
 namespace DataWF.Data
 {
@@ -56,7 +57,7 @@ namespace DataWF.Data
 
         void LoadAsynch(DBLoadParam param = DBLoadParam.None);
 
-        void Save();
+        Task Save();
 
         IList ToList();
     }

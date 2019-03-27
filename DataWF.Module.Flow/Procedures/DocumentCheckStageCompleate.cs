@@ -19,12 +19,13 @@
 */
 using DataWF.Data;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace DataWF.Module.Flow
 {
     public class DocumentCheckStageCompleate : IExecutable
     {
-        public object Execute(ExecuteArgs arg)
+        public Task<object> Execute(ExecuteArgs arg)
         {
             var darg = (DocumentExecuteArgs)arg;
             var document = (Document)arg.Document;
@@ -43,7 +44,7 @@ namespace DataWF.Module.Flow
                     builder.AppendLine($"    {work.Department} - {work.Position} {work.User};");
                 }
             }
-            return builder.Length == 0 ? null : builder.ToString();
+            return Task.FromResult<object>(builder.Length == 0 ? null : builder.ToString());
         }
     }
 }

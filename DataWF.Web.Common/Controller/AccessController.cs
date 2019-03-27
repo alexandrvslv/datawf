@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace DataWF.Web.Common
 {
@@ -103,7 +104,7 @@ namespace DataWF.Web.Common
         }
 
         [HttpPut("SetItems/{name}/{id}")]
-        public ActionResult<bool> SetAccessItems([FromRoute]string name, [FromRoute]string id, [FromBody]List<AccessItem> accessItems)
+        public async Task<ActionResult<bool>> SetAccessItems([FromRoute]string name, [FromRoute]string id, [FromBody]List<AccessItem> accessItems)
         {
             var table = GetTable(name);
             if (table == null)
@@ -132,7 +133,7 @@ namespace DataWF.Web.Common
                     var buffer = value.Access?.Clone();
                     buffer.Add(accessItems);
                     value.Access = buffer;
-                    value.Save(transaction);
+                    await value.Save(transaction);
                     transaction.Commit();
                     return true;
                 }

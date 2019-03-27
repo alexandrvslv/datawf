@@ -17,12 +17,12 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Serialization;
 using DataWF.Common;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
@@ -151,6 +151,21 @@ namespace DataWF.Data
                     yield return (DBLogColumn)column;
                 }
             }
+        }
+
+        public override async Task<bool> SaveItem(DBItem item, DBTransaction transaction)
+        {
+            if ((item.UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete
+                && item is DBLogItem logItem && FileLOBKey is DBLogColumn logColumn)
+            {
+                var lob = item.GetValue<uint?>(logColumn);
+                var current = logItem.BaseItem?.GetValue<uint?>(logColumn.BaseColumn);
+                if (lob != null && lob != current)
+                {
+                    await System.DeleteLOB(lob.Value, transaction);
+                }
+            }
+            return await base.SaveItem(item, transaction);
         }
 
 

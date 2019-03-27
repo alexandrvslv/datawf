@@ -25,6 +25,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace DataWF.Data
 {
@@ -492,13 +493,13 @@ namespace DataWF.Data
             }
         }
 
-        public void Save()
+        public async Task Save()
         {
             using (var transaction = new DBTransaction(Table.Connection))
             {
                 try
                 {
-                    Save(transaction);
+                    await Save(transaction);
                     transaction.Commit();
                 }
                 catch (Exception ex)
@@ -510,9 +511,9 @@ namespace DataWF.Data
             }
         }
 
-        public void Save(DBTransaction transaction)
+        public Task Save(DBTransaction transaction)
         {
-            Table.Save(transaction, GetEdited().ToList());
+            return Table.Save(transaction, GetEdited().ToList());
         }
 
         public void Sort(params DBColumn[] columns)

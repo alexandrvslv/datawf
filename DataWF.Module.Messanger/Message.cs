@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 
 namespace DataWF.Module.Messanger
 {
@@ -60,30 +61,30 @@ namespace DataWF.Module.Messanger
         }
 
         [ControllerMethod]
-        public static Message SendToGroup(User from, UserGroup group, string data)
+        public static Task<Message> SendToGroup(User from, UserGroup group, string data)
         {
             return Send(from, group.GetUsers(), data);
         }
 
         [ControllerMethod]
-        public static Message SendToUser(User from, User to, string data)
+        public static Task<Message> SendToUser(User from, User to, string data)
         {
             return Send(from, new[] { to }, data);
         }
 
         [ControllerMethod]
-        public static Message SendToPosition(User from, Position to, string data)
+        public static Task<Message> SendToPosition(User from, Position to, string data)
         {
             return Send(from, new[] { to }, data);
         }
 
         [ControllerMethod]
-        public static Message SendToDepartment(User from, Department to, string data)
+        public static Task<Message> SendToDepartment(User from, Department to, string data)
         {
             return Send(from, new[] { to }, data);
         }
 
-        public static Message Send(User from, IEnumerable<DBItem> to, string data)
+        public static async Task<Message> Send(User from, IEnumerable<DBItem> to, string data)
         {
             using (var transaction = new DBTransaction(Message.DBTable.Connection, from))
             {
@@ -95,7 +96,7 @@ namespace DataWF.Module.Messanger
                         User = from,
                         Data = data
                     };
-                    message.Save(transaction);
+                    await message.Save(transaction);
 
                     foreach (var staff in to)
                     {
@@ -106,7 +107,7 @@ namespace DataWF.Module.Messanger
                                 Message = message,
                                 Staff = staff
                             };
-                            address.Save(transaction);
+                            await address.Save(transaction);
                         }
                     }
                     transaction.Commit();

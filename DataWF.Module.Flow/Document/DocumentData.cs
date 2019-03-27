@@ -25,7 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
-using System.Runtime.CompilerServices;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
@@ -287,7 +287,6 @@ namespace DataWF.Module.Flow
             return Parse(new DocumentExecuteArgs
             {
                 Document = Document,
-                ProcedureCategory = TemplateData.Template.Code,
                 Transaction = transaction
             }, fromTemplate);
         }
@@ -345,12 +344,20 @@ namespace DataWF.Module.Flow
         {
             using (var query = new QQuery(Table.LogTable))
             {
-                query.BuildParam(Table.LogTable.BaseKey, this.Id);
-                foreach (var logItem in Table.LogTable.Load(query))
+                query.BuildParam(Table.LogTable.BaseKey, Id);
+                query.BuildParam(Table.LogTable.FileNameKey, CompareType.IsNot, null);
+                var parameterData = new QParam();
+                parameterData.Parameters.Add(QQuery.CreateParam(LogicType.And, Table.LogTable.FileLOBKey, CompareType.IsNot, null));
+                parameterData.Parameters.Add(QQuery.CreateParam(LogicType.Or, Table.LogTable.FileKey, CompareType.IsNot, null));
+                query.Parameters.Add(parameterData);
+                var lob = (uint?)null;
+
+                foreach (var logItem in Table.LogTable.Load(query).OrderByDescending(p => p[Table.LogTable.PrimaryKey]))
                 {
-                    var fileName = logItem.GetValue<string>(logItem.LogTable.FileNameKey);
-                    if (fileName != null)
+                    var lobLob = logItem.GetValue<uint?>(Table.LogTable.FileLOBKey);
+                    if (lobLob == null || lobLob != lob)
                     {
+                        lob = lobLob;
                         yield return new DocumentDataLog(logItem);
                     }
                 }
@@ -358,7 +365,7 @@ namespace DataWF.Module.Flow
         }
 
         [ControllerMethod]
-        public async Task<Stream> GetLogFile(int logId, DBTransaction transaction)
+        public async Task<Stream> GetLogFile(int logId)
         {
             var logItem = Table.LogTable.LoadById(logId);
             if (logItem == null)
@@ -375,28 +382,31 @@ namespace DataWF.Module.Flow
                 var lob = logItem.GetValue(Table.LogTable.FileLOBKey);
                 if (lob != null)
                 {
-                    return await logItem.GetLOB(Table.LogTable.FileLOBKey, transaction);
+                    return await logItem.GetLOBFileStream(Table.LogTable.FileLOBKey, Helper.GetDocumentsFullPath(fileName, "DataLog" + logItem.LogId));
                 }
             }
-
             return logItem.GetFileStream(Table.LogTable.FileKey, Helper.GetDocumentsFullPath(fileName, "DataLog" + logItem.LogId));
         }
 
-        public override void OnPropertyChanged([CallerMemberName]string property = null, DBColumn column = null, object value = null)
+        [ControllerMethod]
+        public Task RemoveLogFile(int logId, DBTransaction transaction)
         {
-            base.OnPropertyChanged(property, column, value);
-            if (property == nameof(TemplateDataId))
+            var logItem = Table.LogTable.LoadById(logId);
+            if (logItem == null)
             {
-                //var data = TemplateData;
-                //if (data != null)
-                //{
-                //    using (var template = data.File.GetMemoryStream())
-                //    {
-                //        FileData = template.ToArray();
-                //        FileName = RefreshName();
-                //    }
-                //}
+                throw new Exception($"DataLog with id {logId} not found!");
             }
+
+            if (Table.LogTable.FileLOBKey != null)
+            {
+                var lob = logItem.GetValue<uint?>(Table.LogTable.FileLOBKey);
+                if (lob != null && lob == FileLOB)
+                {
+                    throw new Exception($"Can't remove latest log entry!");
+                }
+            }
+            logItem.Delete();
+            return logItem.Save(transaction);
         }
 
         public virtual string RefreshName()

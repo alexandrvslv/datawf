@@ -1,20 +1,18 @@
 ﻿using DataWF.Common;
-using DataWF.Data;
-using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace DataWF.Module.Counterpart
 {
     public class ModuleInitialize : IModuleInitialize
     {
-        public void Initialize()
+        public Task Initialize()
         {
+            return null;
         }
 
-        public static void GenerateLocations()
+        public static Task GenerateLocations()
         {
             Location.DBTable.Load().LastOrDefault();
             var euas = new Continent { Code = "EUAS", Name = "Eurasia" }; euas.Attach();
@@ -82,7 +80,7 @@ namespace DataWF.Module.Counterpart
             new City { Parent = kazakh, Code = "7122", Name = "Atyrau" }.Attach();
             new City { Parent = kazakh, Code = "7292", Name = "Aktau" }.Attach();
 
-            Location.DBTable.Save();
+            return Location.DBTable.Save();
         }
     }
 }

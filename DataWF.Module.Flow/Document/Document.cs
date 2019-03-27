@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 
 namespace DataWF.Module.Flow
 {
@@ -160,6 +161,8 @@ namespace DataWF.Module.Flow
         {
         }
 
+        public override string CodeCategory { get => Template?.Code ?? base.CodeCategory; set => base.CodeCategory = value; }
+
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
         {
@@ -217,7 +220,7 @@ namespace DataWF.Module.Flow
         }
 
         [DataMember, Column("document_number", 40, Keys = DBColumnKeys.Code | DBColumnKeys.View), Index("ddocuument_document_number")]
-        public string Number
+        public virtual string Number
         {
             get { return GetProperty<string>(nameof(Number)); }
             set
@@ -697,25 +700,26 @@ namespace DataWF.Module.Flow
             return work;
         }
 
-        public void Save(DocInitType type, DBTransaction transaction)
+        public Task Save(DocInitType type, DBTransaction transaction)
         {
             if (type == DocInitType.Default)
-                Save(transaction);
+                return Save(transaction);
             else if (type == DocInitType.References)
-                DocumentReference.DBTable.Save(transaction, GetReferences().ToList());
+                return DocumentReference.DBTable.Save(transaction, GetReferences().ToList());
             else if (type == DocInitType.Data)
-                DocumentData.DBTable.Save(transaction, GetDatas().ToList());
+                return DocumentData.DBTable.Save(transaction, GetDatas().ToList());
             else if (type == DocInitType.Workflow)
-                DocumentWork.DBTable.Save(transaction, GetWorks().ToList());
+                return DocumentWork.DBTable.Save(transaction, GetWorks().ToList());
             else if (type == DocInitType.Customer)
-                DocumentCustomer.DBTable.Save(transaction, GetCustomers().ToList());
+                return DocumentCustomer.DBTable.Save(transaction, GetCustomers().ToList());
+            return null;
         }
 
-        public override void Save(DBTransaction transaction)
+        public override async Task Save(DBTransaction transaction)
         {
             if ((UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete)
             {
-                base.Save(transaction);
+                await base.Save(transaction);
                 return;
             }
             if (Template == null)
@@ -730,11 +734,10 @@ namespace DataWF.Module.Flow
 
             try
             {
-                base.Save(transaction);
+                await base.Save(transaction);
                 var param = new DocumentExecuteArgs()
                 {
                     Document = this,
-                    ProcedureCategory = Template.Code,
                     Transaction = transaction
                 };
                 var works = GetWorks().ToList();
@@ -774,18 +777,18 @@ namespace DataWF.Module.Flow
                     {
                         Send(CurrentWork, temporaryStage, transaction);
                     }
-                    base.Save(transaction);
+                    await base.Save(transaction);
                 }
                 temporaryUser = null;
                 temporaryStage = null;
 
-                SaveReferencing(transaction);
+                await SaveReferencing(transaction);
 
                 if (GetWorks().Count() <= 1)
                 {
                     foreach (var data in GetTemplatedData())
                     {
-                        data.SetData(data.Parse(param, false).GetAwaiter().GetResult(), transaction);
+                        await data.SetData(await data.Parse(param, false), transaction);
                     }
                 }
                 Saved?.Invoke(null, new DocumentEventArgs(this));
@@ -851,7 +854,7 @@ namespace DataWF.Module.Flow
         }
 
         [ControllerMethod]
-        public Document Complete(DBTransaction transaction)
+        public async Task<Document> Complete(DBTransaction transaction)
         {
             var dbUser = (User)transaction?.Caller;
             foreach (var work in GetWorksUncompleted()
@@ -861,7 +864,7 @@ namespace DataWF.Module.Flow
             {
                 Complete(work, transaction, false);
             }
-            Save(transaction);
+            await Save(transaction);
             return this;
         }
 
@@ -964,7 +967,7 @@ namespace DataWF.Module.Flow
         }
 
         //[ControllerMethod]
-        public Document FindReference(Template template, bool create, DBTransaction transaction)
+        public async Task<Document> FindReference(Template template, bool create, DBTransaction transaction)
         {
             foreach (var refer in GetReferences())
             {
@@ -975,7 +978,7 @@ namespace DataWF.Module.Flow
             if (create)
             {
                 var newdoc = template.CreateDocument(this);
-                newdoc.Save(transaction);
+                await newdoc.Save(transaction);
                 return newdoc;
             }
             return null;

@@ -25,6 +25,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace DataWF.Data
 {
@@ -502,7 +503,7 @@ namespace DataWF.Data
             return newRow;
         }
 
-        public void ExportTable(ExportProgressArgs ea)
+        public async Task ExportTable(ExportProgressArgs ea)
         {
             try
             {
@@ -532,7 +533,7 @@ namespace DataWF.Data
                             var row = table.SourceTable.LoadItemFromReader(transacton);
                             var newRow = ExportRow(table, row);
 
-                            table.TargetTable.SaveItem(newRow, null);
+                            await table.TargetTable.SaveItem(newRow, null);
 
                             ea.Current++;
                             ea.Row = newRow;
@@ -557,7 +558,7 @@ namespace DataWF.Data
             }
         }
 
-        public void Export(ExportProgressArgs ea)
+        public async void Export(ExportProgressArgs ea)
         {
             ExportSchema(ea);
             ea.Type = ExportProgressType.Data;
@@ -574,7 +575,7 @@ namespace DataWF.Data
                 if (!table.Check)
                     continue;
                 ea.Table = table;
-                ExportTable(ea);
+                await ExportTable(ea);
                 ea.Description = string.Format("Export {0} rows of {1}!", ea.Count, table.Source);
                 OnExportProgress(ea);
             }

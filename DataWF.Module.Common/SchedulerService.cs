@@ -84,26 +84,26 @@ namespace DataWF.Module.Common
             pauseEvent.Set();
         }
 
-        public void Execute()
+        public async void Execute()
         {
             DateTime now = DateTime.Now;
             if (now.Hour > stoptH || now.Hour < startH)
                 return;
-            try
+
+            foreach (var item in items)
             {
-                for (int i = 0; i < items.Count; i++)
+                if (Check(item))
                 {
-                    item = items[i];
-                    if (Check(item))
+                    this.item = item;
+                    try
                     {
-                        item.Execute(null);
+                        await item.Execute();
+                    }
+                    catch (Exception e)
+                    {
+                        Helper.OnException(e);
                     }
                 }
-                item = null;
-            }
-            catch (Exception e)
-            {
-                Helper.OnException(e);
             }
         }
 

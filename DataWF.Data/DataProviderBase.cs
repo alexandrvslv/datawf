@@ -1,6 +1,7 @@
 ﻿
 using DataWF.Common;
 using System;
+using System.Threading.Tasks;
 
 namespace DataWF.Data
 {
@@ -21,7 +22,7 @@ namespace DataWF.Data
             set => DBService.Schems[schemaName] = schema = value;
         }
 
-        public virtual void CreateNew()
+        public virtual Task CreateNew()
         {
             Schema = new DBSchema()
             {
@@ -40,6 +41,7 @@ namespace DataWF.Data
 
             Schema.CreateDatabase();
             Save();
+            return null;
         }
 
         public abstract void Generate();

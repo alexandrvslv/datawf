@@ -1,12 +1,13 @@
 ﻿using DataWF.Common;
 using DataWF.Data;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace DataWF.Module.Common
 {
     public class ModuleInitialize : IModuleInitialize
     {
-        public void Initialize()
+        public Task Initialize()
         {
             Book.DBTable.Load().LastOrDefault();
 
@@ -24,7 +25,7 @@ namespace DataWF.Module.Common
             DBService.RowLoging += UserLog.OnDBItemLoging;
 
             GroupPermission.DBTable.Load().LastOrDefault();
-            GroupPermission.CachePermission();
+            return GroupPermission.CachePermission();
         }
     }
 }

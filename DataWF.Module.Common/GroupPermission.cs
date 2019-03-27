@@ -25,6 +25,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 
 namespace DataWF.Module.Common
 {
@@ -93,7 +94,7 @@ namespace DataWF.Module.Common
             return type;
         }
 
-        public static GroupPermission Get(GroupPermission group, DBSchemaItem item)
+        public static async Task<GroupPermission> Get(GroupPermission group, DBSchemaItem item)
         {
             PermissionType type = GetPermissionType(item, out string code, out string name);
 
@@ -102,7 +103,7 @@ namespace DataWF.Module.Common
             var permission = list.FirstOrDefault();
             if (list.Count > 1)
             {
-                permission.Merge(list);
+                await permission.Merge(list);
             }
 
             if (permission == null)
@@ -125,38 +126,38 @@ namespace DataWF.Module.Common
             return permission;
         }
 
-        public static void CachePermissionTableGroup(GroupPermission parent, DBTableGroup group)
+        public static async Task CachePermissionTableGroup(GroupPermission parent, DBTableGroup group)
         {
-            var permission = Get(parent, group);
+            var permission = await Get(parent, group);
 
             foreach (var subGroup in group.GetChilds())
             {
-                CachePermissionTableGroup(permission, subGroup);
+                await CachePermissionTableGroup(permission, subGroup);
             }
             var tables = group.GetTables();
             foreach (DBTable table in tables)
             {
-                CachePermissionTable(permission, table);
+                await CachePermissionTable(permission, table);
             }
         }
 
-        public static void CachePermissionTable(GroupPermission parent, DBTable table)
+        public static async Task CachePermissionTable(GroupPermission parent, DBTable table)
         {
             if (table is DBLogTable)
                 return;
-            var permission = Get(parent, table);
+            var permission = await Get(parent, table);
 
             foreach (DBColumn column in table.Columns)
-                Get(permission, column);
+                await Get(permission, column);
         }
 
-        public static void CachePermission()
+        public static async Task CachePermission()
         {
             using (var transaction = new DBTransaction(DBTable.Connection))
             {
                 try
                 {
-                    CachePermission(transaction);
+                    await CachePermission(transaction);
                     transaction.Commit();
                 }
                 catch (Exception ex)
@@ -168,27 +169,27 @@ namespace DataWF.Module.Common
             }
         }
 
-        public static void CachePermission(DBTransaction transaction)
+        public static async Task CachePermission(DBTransaction transaction)
         {
             if (AccessValue.Groups == null || AccessValue.Groups.Count() == 0)
                 return;
 
             foreach (DBSchema schema in DBService.Schems)
             {
-                var permission = Get(null, schema);
+                var permission = await Get(null, schema);
                 var groups = schema.TableGroups.GetTopParents();
 
                 foreach (DBTableGroup group in groups)
                 {
-                    CachePermissionTableGroup(permission, group);
+                    await CachePermissionTableGroup(permission, group);
                 }
                 foreach (DBTable table in schema.Tables)
                 {
                     if (table.Group == null)
-                        CachePermissionTable(permission, table);
+                        await CachePermissionTable(permission, table);
                 }
             }
-            DBTable.Save(transaction);
+            await DBTable.Save(transaction);
         }
 
         public static GroupPermission Find(GroupPermission parent, object obj, bool generate)
@@ -230,7 +231,7 @@ namespace DataWF.Module.Common
             DBService.DBSchemaChanged += OnDBSchemaChanged;
         }
 
-        private static void OnDBSchemaChanged(object sender, DBSchemaChangedArgs e)
+        private static async void OnDBSchemaChanged(object sender, DBSchemaChangedArgs e)
         {
             try
             {
@@ -240,19 +241,19 @@ namespace DataWF.Module.Common
 
                     if (e.Item is DBTable && e.Item.Containers.Any())
                     {
-                        var sgroup = GroupPermission.Get(null, e.Item.Schema);
-                        var tgroup = GroupPermission.Get(sgroup, e.Item);
+                        var sgroup = await Get(null, e.Item.Schema);
+                        var tgroup = await Get(sgroup, e.Item);
 
                         foreach (DBColumn column in ((DBTable)e.Item).Columns)
                         {
-                            GroupPermission.Get(tgroup, column);
+                            await Get(tgroup, column);
                         }
                     }
                     if (e.Item is DBColumn && e.Item.Containers.Any() && ((DBColumn)e.Item).Table.Containers.Any())
                     {
-                        var sgroup = GroupPermission.Get(null, e.Item.Schema);
-                        var tgroup = GroupPermission.Get(sgroup, ((DBColumn)e.Item).Table);
-                        GroupPermission.Get(tgroup, e.Item);
+                        var sgroup = await Get(null, e.Item.Schema);
+                        var tgroup = await Get(sgroup, ((DBColumn)e.Item).Table);
+                        await Get(tgroup, e.Item);
                     }
                 }
             }

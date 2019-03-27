@@ -298,7 +298,7 @@ namespace DataWF.Data
                         return connection;
                     }
                 }
-                Debug.WriteLine($"NewConnection#{Buffer.Count}");
+                Debug.WriteLine($"New Connection {Name} #{Buffer.Count}");
                 var con = System.CreateConnection(this);
                 Buffer.Add(con);
                 con.Open();
@@ -448,6 +448,14 @@ namespace DataWF.Data
             {
                 transaction.AddCommand(query);
                 return transaction.ExecuteQResult();
+            }
+        }
+
+        public QResult ExecuteQResult(IDbCommand command)
+        {
+            using (var transaction = new DBTransaction(this, null, true))
+            {
+                return transaction.ExecuteQResult(command);
             }
         }
 

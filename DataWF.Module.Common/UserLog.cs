@@ -64,7 +64,7 @@ namespace DataWF.Module.Common
         public static event EventHandler<DBItemEventArgs> RowLoging;
         public static event EventHandler<DBItemEventArgs> RowLoged;
 
-        public static void OnDBItemLoging(DBItemEventArgs arg)
+        public static async void OnDBItemLoging(DBItemEventArgs arg)
         {
             if (arg.Item.Table == UserLog.DBTable || arg.Item.Table is DBLogTable)
                 return;
@@ -83,7 +83,7 @@ namespace DataWF.Module.Common
                     if (arg.Transaction.UserLog == null)
                     {
                         arg.Transaction.UserLog = new UserLog { User = user, Parent = userLog, LogType = UserLogType.Transaction };
-                        arg.Transaction.UserLog.Save(arg.Transaction);
+                        await arg.Transaction.UserLog.Save(arg.Transaction);
                     }
                     userLog = (UserLog)arg.Transaction.UserLog;
                 }
@@ -91,7 +91,7 @@ namespace DataWF.Module.Common
             else if (LogStrategy == UserLogStrategy.ByItem)
             {
                 userLog = new UserLog { User = user, Parent = userLog, LogType = UserLogType.Transaction };
-                userLog.Save(arg.Transaction);
+                await userLog.Save(arg.Transaction);
             }
             if (arg.LogItem != null)
             {

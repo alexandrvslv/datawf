@@ -23,6 +23,7 @@ using DataWF.Module.Counterpart;
 using System;
 using System.ComponentModel;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 
 namespace DataWF.Module.Common
 {
@@ -125,8 +126,27 @@ namespace DataWF.Module.Common
             set { SetValue(value, DateExecuteKey); }
         }
 
+        public async Task<StateInfo> Execute()
+        {
+            using (var transaction = new DBTransaction())
+            {
+                try
+                {
+                    var result = await Execute(transaction);
+                    transaction.Commit();
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    Helper.OnException(ex);
+                    throw ex;
+                }
+            }
+        }
+
         [ControllerMethod]
-        public StateInfo Execute(DBTransaction transaction)
+        public async Task<StateInfo> Execute(DBTransaction transaction)
         {
             object rez = null;
             if (Procedure == null)
@@ -153,7 +173,7 @@ namespace DataWF.Module.Common
             else
             {
                 DateExecute = DateTime.Now;
-                Save(transaction);
+                await Save(transaction);
 
                 if (result is decimal && Statistic.DBTable != null)
                 {
@@ -162,7 +182,7 @@ namespace DataWF.Module.Common
                         Scheduler = this,
                         Result = (decimal)rez
                     };
-                    stat.Save(transaction);
+                    await stat.Save(transaction);
                 }
 
                 info.Description = string.Format("Completed in {0:n} {1}", task.Time.TotalMilliseconds / 1000, result);

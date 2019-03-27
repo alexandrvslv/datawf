@@ -21,6 +21,7 @@
 using DataWF.Common;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace DataWF.Data
 {
@@ -174,15 +175,15 @@ namespace DataWF.Data
         //    return flag;
         //}
 
-        public void Accept(IUserIdentity user)
+        public async Task Accept(IUserIdentity user)
         {
-            DBLogItem.Accept(row, logs, user);
+            await DBLogItem.Accept(row, logs, user);
             RefreshLogs();
         }
 
-        public void Reject(IUserIdentity user)
+        public async Task Reject(IUserIdentity user)
         {
-            DBLogItem.Reject(logs, user);
+            await DBLogItem.Reject(logs, user);
             RefreshLogs();
         }
     }

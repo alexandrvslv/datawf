@@ -3,12 +3,13 @@ using DataWF.Module.Common;
 using System;
 using System.Net.Mail;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace DataWF.Module.Flow
 {
     public class SendEmail : IExecutable
     {
-        public object Execute(ExecuteArgs arg)
+        public Task<object> Execute(ExecuteArgs arg)
         {
             var darg = (DocumentExecuteArgs)arg;
             var smtpServer = Book.DBTable.LoadByCode("smtpserver");

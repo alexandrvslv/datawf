@@ -305,7 +305,7 @@ namespace DataWF.Web.CodeGenerator
             return SyntaxFactory.MethodDeclaration(attributeLists: SyntaxFactory.List(GetControllerMethodAttributes(method, parametersInfo)),
                           modifiers: SyntaxFactory.TokenList(modifiers.ToArray()),
                           returnType: returning == "void"
-                          ? SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword))
+                          ? SyntaxFactory.ParseTypeName("IActionResult")
                           : SyntaxFactory.ParseTypeName(returning),
                           explicitInterfaceSpecifier: null,
                           identifier: SyntaxFactory.Identifier(method.Name),
@@ -321,10 +321,17 @@ namespace DataWF.Web.CodeGenerator
         private IEnumerable<StatementSyntax> GetControllerMethodBody(MethodInfo method, bool baseClass, List<MethodParametrInfo> parametersInfo, string returning)
         {
             var isTransact = parametersInfo.Any(p => p.Info.ParameterType == typeof(DBTransaction));
+            var isVoid = method.ReturnType == typeof(void);
+            var returnType = method.ReturnType;
             var isAsync = TypeHelper.IsBaseType(method.ReturnType, typeof(Task));
             if (isAsync)
             {
                 returning = returning.Substring(5, returning.Length - 6);
+                if (method.ReturnType.IsGenericType)
+                {
+                    returnType = method.ReturnType.GetGenericArguments().FirstOrDefault();
+                }
+                isVoid = method.ReturnType == typeof(Task);
             }
 
             if (isTransact)
@@ -338,14 +345,7 @@ namespace DataWF.Web.CodeGenerator
             {
                 yield return SyntaxFactory.ParseStatement($"var idValue = table.LoadById<{(baseClass ? "T" : TypeHelper.FormatCode(method.DeclaringType))}>(id, DBLoadParam.Load | DBLoadParam.Referencing);");
                 yield return SyntaxFactory.ParseStatement("if (idValue == null)");
-                if (method.ReturnType != typeof(void))
-                {
-                    yield return SyntaxFactory.ParseStatement("{ return NotFound(); }");
-                }
-                else
-                {
-                    yield return SyntaxFactory.ParseStatement("{ NotFound(); }");
-                }
+                yield return SyntaxFactory.ParseStatement("{ return NotFound(); }");
             }
             var parametersBuilder = new StringBuilder();
             foreach (var parameter in parametersInfo)
@@ -372,18 +372,18 @@ namespace DataWF.Web.CodeGenerator
                 parametersBuilder.Length -= 2;
             }
             var builder = new StringBuilder();
-            if (TypeHelper.IsBaseType(method.ReturnType, typeof(Stream)))
+            if (TypeHelper.IsBaseType(returnType, typeof(Stream)))
             {
                 yield return SyntaxFactory.ParseStatement($"var exportStream = {(isAsync ? "(await " : "")}{(method.IsStatic ? method.DeclaringType.Name : " idValue")}.{method.Name}({parametersBuilder}){(isAsync ? ")" : "")} as FileStream;");
                 if (isTransact)
                 {
                     yield return SyntaxFactory.ParseStatement($"{prTransaction}.Commit();");
                 }
-                yield return SyntaxFactory.ParseStatement($"return File(exportStream, System.Net.Mime.MediaTypeNames.Application.Octet, Path.GetFileName(exportStream.Name));");
+                yield return SyntaxFactory.ParseStatement($"return new FileStreamResult(exportStream, System.Net.Mime.MediaTypeNames.Application.Octet){{ FileDownloadName = Path.GetFileName(exportStream.Name) }};");
             }
             else
             {
-                if (method.ReturnType != typeof(void))
+                if (!isVoid)
                 {
                     builder.Append("var result = ");
                 }
@@ -401,28 +401,23 @@ namespace DataWF.Web.CodeGenerator
                     yield return SyntaxFactory.ParseStatement($"{prTransaction}.Commit();");
                 }
 
-                if (method.ReturnType != typeof(void))
+                if (!isVoid)
                 {
                     yield return SyntaxFactory.ParseStatement($"return new {returning}(result);");
                 }
+                else
+                {
+                    yield return SyntaxFactory.ParseStatement($"return Ok();");
+                }
             }
-
 
             yield return SyntaxFactory.ParseStatement("}");
             yield return SyntaxFactory.ParseStatement("catch (Exception ex) {");
-            if (method.ReturnType != typeof(void))
+            if (isTransact)
             {
-                if (isTransact)
-                {
-                    yield return SyntaxFactory.ParseStatement($"{prTransaction}.Rollback();");
-                }
-                yield return SyntaxFactory.ParseStatement("return BadRequest(ex);");
+                yield return SyntaxFactory.ParseStatement($"{prTransaction}.Rollback();");
             }
-            else
-            {
-                yield return SyntaxFactory.ParseStatement("BadRequest(ex);");
-            }
-
+            yield return SyntaxFactory.ParseStatement("return BadRequest(ex);");
             yield return SyntaxFactory.ParseStatement("}");
             if (isTransact)
             {

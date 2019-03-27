@@ -210,15 +210,16 @@ namespace DataWF.Data
                         //TODO CHECK item.Cancel();
                         foreach (IDataParameter param in item.Parameters)
                         {
-                            if (param.Value is IDisposable)
-                                ((IDisposable)param.Value).Dispose();
+                            if (param.Value is IDisposable dispValue)
+                                dispValue.Dispose();
                         }
                         item.Dispose();
                     }
                     commands.Clear();
 
-                    if (transaction != null)
-                        transaction.Dispose();
+                    Reader?.Dispose();
+                    transaction?.Dispose();
+
                     if (subTransactions != null)
                     {
                         foreach (var subTransaction in subTransactions.Values.ToList())

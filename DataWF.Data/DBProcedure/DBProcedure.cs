@@ -28,6 +28,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
 
@@ -36,7 +37,7 @@ namespace DataWF.Data
 
     public interface IExecutable
     {
-        object Execute(ExecuteArgs arg);
+        Task<object> Execute(ExecuteArgs arg);
     }
 
     public class DBProcedure : DBSchemaItem, IData, IGroup
@@ -424,6 +425,45 @@ namespace DataWF.Data
             return command;
         }
 
+        public void UpdateCommand(IDbCommand command, Dictionary<string, object> parameterList)
+        {
+            command.CommandTimeout = 3000;
+            command.CommandText = Name;
+            command.Parameters.Clear();
+
+            foreach (DBProcParameter param in Parameters)
+            {
+                IDbDataParameter sqlparam = null;
+                //if (command.Parameters.Contains(param.Code))
+                //    sqlparam = command.Parameters[param.Code] as IDbDataParameter;
+                //else
+                {
+                    sqlparam = command.CreateParameter();
+                    sqlparam.ParameterName = param.Name;
+                    sqlparam.Direction = param.Direction;
+                    command.Parameters.Add(sqlparam);
+                }
+                if (parameterList.ContainsKey(param.Name))
+                    sqlparam.Value = parameterList[param.Name];
+            }
+            if (ProcedureType == ProcedureTypes.Query)
+            {
+                command.CommandType = CommandType.Text;
+                command.CommandText = Source;
+            }
+            else if (ProcedureType == ProcedureTypes.StoredProcedure)
+                command.CommandType = CommandType.StoredProcedure;
+            else if (ProcedureType == ProcedureTypes.StoredFunction)
+            {
+                command.CommandType = CommandType.StoredProcedure;
+                IDbDataParameter Param = command.CreateParameter();
+                Param.ParameterName = "return";
+                Param.Direction = ParameterDirection.ReturnValue;
+                Param.Size = 512;
+                command.Parameters.Add(Param);
+            }
+        }
+
         public object CreateObject(ExecuteArgs arg = null)
         {
             object temp = null;
@@ -490,15 +530,14 @@ namespace DataWF.Data
 
         public TaskExecutor GetExecutor(DBItem document)
         {
-            var transaction = new DBTransaction(Schema.Connection);
-            return GetExecutor(document, transaction, true);
+            return GetExecutor(document, null, true);
         }
 
-        public TaskExecutor GetExecutor(DBItem document, DBTransaction transactino, bool autoCommit = false)
+        public TaskExecutor GetExecutor(DBItem document, DBTransaction transaction, bool autoCommit = false)
         {
             var param = new ExecuteArgs(document)
             {
-                Transaction = transactino,
+                Transaction = transaction,
                 AutoCommit = autoCommit
             };
             return GetExecutor(CreateObject(param), param);
@@ -516,6 +555,10 @@ namespace DataWF.Data
                     object result = null;
                     try
                     {
+                        if (param.AutoCommit && param.Transaction == null)
+                        {
+                            param.Transaction = new DBTransaction(Schema.Connection);
+                        }
                         result = this.ExecuteObject(obj, param);
                         if (param.AutoCommit)
                         {
@@ -651,44 +694,7 @@ namespace DataWF.Data
             return transaction.ExecuteListDictionary();
         }
 
-        public void UpdateCommand(IDbCommand command, Dictionary<string, object> parameterList)
-        {
-            command.CommandTimeout = 3000;
-            command.CommandText = Name;
-            command.Parameters.Clear();
-
-            foreach (DBProcParameter param in Parameters)
-            {
-                IDbDataParameter sqlparam = null;
-                //if (command.Parameters.Contains(param.Code))
-                //    sqlparam = command.Parameters[param.Code] as IDbDataParameter;
-                //else
-                {
-                    sqlparam = command.CreateParameter();
-                    sqlparam.ParameterName = param.Name;
-                    sqlparam.Direction = param.Direction;
-                    command.Parameters.Add(sqlparam);
-                }
-                if (parameterList.ContainsKey(param.Name))
-                    sqlparam.Value = parameterList[param.Name];
-            }
-            if (ProcedureType == ProcedureTypes.Query)
-            {
-                command.CommandType = CommandType.Text;
-                command.CommandText = Source;
-            }
-            else if (ProcedureType == ProcedureTypes.StoredProcedure)
-                command.CommandType = CommandType.StoredProcedure;
-            else if (ProcedureType == ProcedureTypes.StoredFunction)
-            {
-                command.CommandType = CommandType.StoredProcedure;
-                IDbDataParameter Param = command.CreateParameter();
-                Param.ParameterName = "return";
-                Param.Direction = ParameterDirection.ReturnValue;
-                Param.Size = 512;
-                command.Parameters.Add(Param);
-            }
-        }
+       
 
         public void ParseAssembly(byte[] assemblyData, string fileName)
         {
