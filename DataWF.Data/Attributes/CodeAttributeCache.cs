@@ -1,5 +1,5 @@
 ﻿/*
- TemplateParcer.cs
+ ColumnConfig.cs
  
  Author:
       Alexandr <alexandr_vslv@mail.ru>
@@ -19,32 +19,24 @@
 */
 
 using DataWF.Common;
-using DocumentFormat.OpenXml.Spreadsheet;
-
-//using DataControl;
+using System.Reflection;
 
 namespace DataWF.Data
 {
-    public class DefinedName
+    public class CodeAttributeCache
     {
-        private string reference;
-        public CellRange Range;
-
-        public string Name;
-        public string Sheet;
-        public string Reference
+        public CodeAttributeCache(CodeAttribute attribute, PropertyInfo property)
         {
-            get { return reference; }
-            set
-            {
-                reference = value;
-                Range = CellRange.Parse(value);
-            }
+            Attribute = attribute;
+            Property = property;
+            Invoker = EmitInvoker.Initialize(property, true);
         }
 
-        public Table Table;
-        public IInvoker Invoker;
-        public object CacheValue;
-        internal CellRange NewRange;
+        public CodeAttribute Attribute { get; }
+        public PropertyInfo Property { get; }
+
+        public IInvoker Invoker { get; }
+
+        public object GetValue(object targe) => Invoker.GetValue(targe);
     }
 }

@@ -118,10 +118,18 @@ namespace DataWF.Data
 
             if (val == null)
             {
-                var procedure = DBService.Schems.ParseProcedure(procedureCode, parameters.ProcedureCategory);
-                if (procedure != null)
-                    try { val = procedure.Execute(parameters); }
-                    catch (Exception ex) { val = ex.Message; }
+                var codeAttribute = parameters.ParseCode(procedureCode);
+                if (codeAttribute != null)
+                {
+                    val = codeAttribute.Invoker.GetValue(parameters.Document);
+                }
+                else
+                {
+                    var procedure = DBService.Schems.ParseProcedure(procedureCode, parameters.ProcedureCategory);
+                    if (procedure != null)
+                        try { val = procedure.Execute(parameters); }
+                        catch (Exception ex) { val = ex.Message; }
+                }
             }
 
             return val;

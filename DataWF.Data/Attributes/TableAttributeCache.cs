@@ -115,6 +115,8 @@ namespace DataWF.Data
             }
         }
 
+        public SelectableList<CodeAttributeCache> Codes { get; private set; } = new SelectableList<CodeAttributeCache>();
+
         public virtual DBTable CreateTable()
         {
             Debug.WriteLine($"Generate {Attribute.TableName} - {this.ItemType.Name}");
@@ -190,7 +192,7 @@ namespace DataWF.Data
                 index.Generate();
             }
 
-            
+
             Table.IsLoging = Attribute.IsLoging;
 
             foreach (var itemType in cacheItemTypes)
@@ -225,8 +227,6 @@ namespace DataWF.Data
 
             return null;
         }
-
-
 
         public virtual void Initialize(Type type)
         {
@@ -293,6 +293,7 @@ namespace DataWF.Data
                     cacheIndexes.Add(separateIndex);
                 }
                 InitializeDefault(property);
+                InitializeCodes(property);
             }
             foreach (var property in properties)
             {
@@ -363,6 +364,16 @@ namespace DataWF.Data
             }
             referencing = null;
             return false;
+        }
+
+        public virtual void InitializeCodes(PropertyInfo property)
+        {
+            var codeAttribuites = property.GetCustomAttributes<CodeAttribute>(false);
+            foreach (var code in codeAttribuites)
+            {
+                if (!Codes.Any(p => p.Attribute.Code == code.Code && p.Attribute.Category == code.Category))
+                    Codes.Add(new CodeAttributeCache(code, property));
+            }
         }
 
         public virtual IEnumerable<ColumnAttributeCache> InitializeColumn(PropertyInfo property)

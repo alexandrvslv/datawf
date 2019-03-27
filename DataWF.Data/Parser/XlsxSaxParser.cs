@@ -90,11 +90,9 @@ namespace DataWF.Data
         private static Dictionary<string, Dictionary<string, DefinedName>> GetCacheNames(ExecuteArgs param)
         {
             var cacheNames = new Dictionary<string, Dictionary<string, DefinedName>>(StringComparer.OrdinalIgnoreCase);
-            foreach (var item in DBService.Schems.GetProcedures(param.ProcedureCategory))
+            foreach (var item in param.Codes.Where(p => p.Attribute.Category == "General" || p.Attribute.Category == param.ProcedureCategory))
             {
-                if (string.IsNullOrEmpty(item.Key))
-                    continue;
-                var split = item.Key.Split('!');
+                var split = item.Attribute.Code.Split('!');
                 if (split.Length == 2)
                 {
                     var sheet = split[0].Trim('\'');
@@ -104,11 +102,10 @@ namespace DataWF.Data
                     }
                     var defName = new DefinedName
                     {
-                        Name = item.Key,
+                        Name = item.Attribute.Code,
                         Sheet = sheet,
                         Reference = split[1],
-                        Procedure = item.Value,
-                        Value = item.Value.Execute(param)
+                        Invoker = item.Invoker
                     };
                     names.Add(defName.Range.Start.ToString(), defName);
                 }
@@ -274,8 +271,8 @@ namespace DataWF.Data
                             if (split.Length == 2)
                             {
                                 var sheet = split[0].Trim('\'');
-                                var procedure = DBService.Schems.ParseProcedure(name.Name, param.ProcedureCategory);
-                                if (procedure != null)
+                                var code = param.ParseCode(name.Name);
+                                if (code != null)
                                 {
                                     if (!cacheNames.TryGetValue(sheet, out var names))
                                     {
@@ -286,8 +283,7 @@ namespace DataWF.Data
                                         Name = name.Name,
                                         Sheet = sheet,
                                         Reference = split[1],
-                                        Procedure = procedure,
-                                        Value = procedure.Execute(param)
+                                        Invoker = code.Invoker
                                     };
                                     names.Add(defName.Range.Start.ToString(), defName);
                                 }
@@ -363,7 +359,7 @@ namespace DataWF.Data
                             object rz = null;
                             if (cacheNames.TryGetValue(ocell.CellReference.Value, out var defName))
                             {
-                                rz = defName.Value;
+                                rz = defName.CacheValue ?? defName.Invoker.GetValue(param.Document);
                             }
                             else
                             {
@@ -524,18 +520,18 @@ namespace DataWF.Data
                     {
                         var table = (Excel.Table)reader.LoadCurrentElement();
 
-                        var procedure = DBService.Schems.ParseProcedure(table.Name, param.ProcedureCategory);
-                        if (procedure != null)
+                        var code = param.ParseCode(table.Name);
+                        if (code != null)
                         {
                             var reference = CellRange.Parse(table.Reference.Value);
                             var defName = new DefinedName
                             {
                                 Name = table.Name,
                                 Range = reference,
-                                Procedure = procedure,
-                                Value = procedure.Execute(param),
+                                Invoker = code.Invoker,
+                                CacheValue = code.Invoker.GetValue(param.Document),
                             };
-                            if (defName.Value is QResult result && result.Values.Count > 0)
+                            if (defName.CacheValue is QResult result && result.Values.Count > 0)
                             {
                                 var index = reference.Start.Row + result.Values.Count;
                                 if (index > reference.End.Row)

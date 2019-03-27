@@ -18,11 +18,13 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using DataWF.Common;
 using System;
+using System.Reflection;
 
 namespace DataWF.Data
 {
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property, AllowMultiple = true)]
     public class CodeAttribute : Attribute
     {
         public CodeAttribute(string code, string category = "General")

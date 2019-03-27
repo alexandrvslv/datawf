@@ -18,7 +18,9 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Common;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace DataWF.Data
 {
@@ -45,10 +47,14 @@ namespace DataWF.Data
                 if (document == value)
                     return;
                 document = value;
+                ProcedureCategory = value.CodeCategory;
+                Codes = document?.Table.TableAttribute.Codes;
             }
         }
 
-        public string ProcedureCategory { get; set; }
+        public SelectableList<CodeAttributeCache> Codes { get; private set; }
+
+        public string ProcedureCategory { get; private set; }
 
         public Dictionary<string, object> Parameters
         {
@@ -74,5 +80,19 @@ namespace DataWF.Data
         public DBTransaction Transaction { get; set; }
 
         public bool AutoCommit { get; internal set; }
+
+        public CodeAttributeCache ParseCode(string val)
+        {
+            var result = (CodeAttributeCache)null;
+            foreach (var code in Codes.Where(p => p.Attribute.Code.Equals(val, StringComparison.Ordinal)))
+            {
+                result = code;
+                if (result.Attribute.Category.Equals(ProcedureCategory, StringComparison.Ordinal))
+                {
+                    return code;
+                }
+            }
+            return result;
+        }
     }
 }
