@@ -1524,23 +1524,28 @@ namespace DataWF.Data
         {
             using (var transaction = new DBTransaction(Table.Connection))
             {
-                using (var lobStream = await GetLOB(column, transaction))
-                {
-                    if (lobStream == null)
-                    {
-                        return null;
-                    }
-                    var fileStream = File.Open(path, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+                return await GetLOBFileStream(column, path, transaction, bufferSize);
+            }
+        }
 
-                    var buffer = new byte[bufferSize];
-                    int count;
-                    while ((count = lobStream.Read(buffer, 0, bufferSize)) != 0)
-                    {
-                        fileStream.Write(buffer, 0, count);
-                    }
-                    fileStream.Position = 0;
-                    return fileStream;
+        public async Task<FileStream> GetLOBFileStream(DBColumn column, string path, DBTransaction transaction, int bufferSize = 81920)
+        {
+            using (var lobStream = await GetLOB(column, transaction))
+            {
+                if (lobStream == null)
+                {
+                    return null;
                 }
+                var fileStream = File.Open(path, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+
+                var buffer = new byte[bufferSize];
+                int count;
+                while ((count = lobStream.Read(buffer, 0, bufferSize)) != 0)
+                {
+                    fileStream.Write(buffer, 0, count);
+                }
+                fileStream.Position = 0;
+                return fileStream;
             }
 
         }

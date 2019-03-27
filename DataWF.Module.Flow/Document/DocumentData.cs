@@ -249,7 +249,7 @@ namespace DataWF.Module.Flow
         {
             if (FileLOB != null)
             {
-                var item = await GetLOB(Table.FileLOBKey, transactio);
+                var item = await GetLOBFileStream(Table.FileLOBKey, fileName, transactio);
                 if (item != null)
                 {
                     return item;
