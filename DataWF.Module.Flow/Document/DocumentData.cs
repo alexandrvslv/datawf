@@ -258,11 +258,11 @@ namespace DataWF.Module.Flow
             return GetZipFileStream(Table.FileKey, fileName);
         }
 
-        public Task SetData(string filePath, DBTransaction transaction)
+        public async Task SetData(string filePath, DBTransaction transaction)
         {
             using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
-                return SetData(stream, null, transaction);
+                await SetData(stream, null, transaction);
             }
         }
 
