@@ -47,8 +47,12 @@ namespace DataWF.Data
                 if (document == value)
                     return;
                 document = value;
-                ProcedureCategory = value.CodeCategory;
-                Codes = document?.Table.TableAttribute.Codes;
+                if (value != null)
+                {
+                    ProcedureCategory = value.CodeCategory;
+                    var type = document.GetType();
+                    Codes = new SelectableList<CodeAttributeCache>(document?.Table.TableAttribute.Codes.Where(p => TypeHelper.IsBaseType(type,  p.Invoker.TargetType)));
+                }
             }
         }
 
