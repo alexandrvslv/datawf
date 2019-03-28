@@ -191,7 +191,7 @@ namespace DataWF.Module.Flow
 
         [Browsable(false)]
         [DataMember, Column("parent_id", Keys = DBColumnKeys.Group), Index("ddocument_parent_id", Unique = false)]
-        public long? ParentId
+        public virtual long? ParentId
         {
             get { return GetGroupValue<long?>(); }
             set { SetGroupValue(value); }
