@@ -231,34 +231,64 @@ namespace DataWF.Common
         {
             if (input == null)
                 return null;
-
-            return GetString(System.Security.Cryptography.SHA1.Create().ComputeHash(Encoding.Default.GetBytes(input)));
+            using (var encript = System.Security.Cryptography.SHA1.Create())
+            {
+                return GetString(encript.ComputeHash(Encoding.UTF8.GetBytes(input)));
+            }
         }
 
         public static string GetSha256(string input)
         {
             if (input == null)
                 return null;
-
-            return GetString(System.Security.Cryptography.SHA256.Create().ComputeHash(Encoding.Default.GetBytes(input)));
+            using (var encript = System.Security.Cryptography.SHA256.Create())
+            {
+                return GetString(encript.ComputeHash(Encoding.UTF8.GetBytes(input)));
+            }
         }
 
         public static string GetSha512(string input)
         {
             if (input == null)
                 return null;
-
-            return GetString(System.Security.Cryptography.SHA512.Create().ComputeHash(Encoding.Default.GetBytes(input)));
+            using (var encript = System.Security.Cryptography.SHA512.Create())
+            {
+                return GetString(encript.ComputeHash(Encoding.UTF8.GetBytes(input)));
+            }
         }
 
         public static string GetMd5(string input)
         {
             if (input == null)
                 return null;
-
-            return GetString(System.Security.Cryptography.MD5.Create().ComputeHash(Encoding.Default.GetBytes(input)));
+            using (var encript = System.Security.Cryptography.MD5.Create())
+            {
+                return GetString(encript.ComputeHash(Encoding.UTF8.GetBytes(input)));
+            }
         }
 
+        //http://www.cyberforum.ru/csharp-beginners/thread1797020.html
+        public static string Encrypt(string text, string key)
+        {
+            if (string.IsNullOrEmpty(text))
+                return text;
+            using (var rsa = new System.Security.Cryptography.RSACryptoServiceProvider(2048))
+            {
+                rsa.ImportCspBlob(Convert.FromBase64String(key));
+                return Convert.ToBase64String(rsa.Encrypt(Encoding.UTF8.GetBytes(text), true));
+            }
+        }
+
+        public static string Decript(string text, string key)
+        {
+            if (string.IsNullOrEmpty(text))
+                return text;
+            using (var rsa = new System.Security.Cryptography.RSACryptoServiceProvider(2048))
+            {
+                rsa.ImportCspBlob(Convert.FromBase64String(key));
+                return Encoding.UTF8.GetString(rsa.Decrypt(Convert.FromBase64String(text), true));
+            }
+        }
 
         public static int CharToInt(string val)
         {

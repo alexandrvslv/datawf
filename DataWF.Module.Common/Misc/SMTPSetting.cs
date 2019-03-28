@@ -44,5 +44,6 @@ namespace DataWF.Module.Common
         public bool SSL { get; set; }
         public string DefaultEmail { get; set; }
         public string DefaultPassword { get; set; }
+        public string PassKey { get; set; }
     }
 }

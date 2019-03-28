@@ -23,6 +23,7 @@ namespace DataWF.Common
             base.OnListChanged(e);
             if (Limit > 0 && e.Action == NotifyCollectionChangedAction.Add && Count == Limit)
             {
+                //TODO Cross thread exception - clear when adding - index out
                 _ = Task.Run(() =>
                 {
                     Save($"logs_{DateTime.Now.ToString("yyMMddHHmmss")}.xml");

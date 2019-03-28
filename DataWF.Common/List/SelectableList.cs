@@ -11,7 +11,6 @@ using System.Xml.Serialization;
 
 namespace DataWF.Common
 {
-
     public class SelectableList<T> : ISelectable, ISelectable<T>, IList, IList<T>
     {
         protected ListIndexes<T> indexes = new ListIndexes<T>();

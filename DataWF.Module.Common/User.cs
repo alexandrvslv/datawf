@@ -47,6 +47,7 @@ namespace DataWF.Module.Common
         private static DBColumn nameENKey = DBColumn.EmptyKey;
         private static DBColumn nameRUKey = DBColumn.EmptyKey;
         private static DBColumn companyKey = DBColumn.EmptyKey;
+        private static DBColumn authTypeKey = DBColumn.EmptyKey;
         private static DBTable<User> dbTable;
 
         public static DBColumn AbbreviationKey => DBTable.ParseProperty(nameof(Abbreviation), ref abbreviationKey);
@@ -60,7 +61,10 @@ namespace DataWF.Module.Common
         public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
         public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
         public static DBColumn CompanyKey => DBTable.ParseProperty(nameof(Company), ref companyKey);
+        public static DBColumn AuthTokenKey => DBTable.ParseProperty(nameof(AuthType), ref authTypeKey);
+
         public static DBTable<User> DBTable => dbTable ?? (dbTable = GetTable<User>());
+        private static SmtpSetting config;
 
         public static User GetByEmail(string email)
         {
@@ -90,7 +94,7 @@ namespace DataWF.Module.Common
 
         public static User StartSession(string login, string password)
         {
-            var user = GetUser(login, Helper.GetSha256(password));
+            var user = GetUser(login, Helper.GetSha512(password));
             StartSession(user ?? throw new KeyNotFoundException("User not found!"));
             return user;
         }
@@ -111,19 +115,44 @@ namespace DataWF.Module.Common
 
         public static User StartSession(NetworkCredential credentials)
         {
+            if (config == null)
+            {
+                config = SmtpSetting.Load();
+            }
+            credentials.Password = Helper.Decript(credentials.Password, config.PassKey);
             var user = GetByEmail(credentials.UserName);
             if (user == null)
                 user = GetByLogin(credentials.UserName);
             if (user == null)
                 throw new KeyNotFoundException("User not found!");
-            var config = SmtpSetting.Load();
-            using (var smtpClient = new SmtpClient { Timeout = 20000 })
+
+            if (user.AuthType == UserAuthType.SMTP)
             {
-                smtpClient.ServerCertificateValidationCallback = (s, c, h, e) => true;
-                smtpClient.Connect(config.Host, config.Port, config.SSL);
-                smtpClient.Authenticate(credentials);
-                StartSession(user);
+                using (var smtpClient = new SmtpClient { Timeout = 20000 })
+                {
+                    smtpClient.ServerCertificateValidationCallback = (s, c, h, e) => true;
+                    smtpClient.Connect(config.Host, config.Port, config.SSL);
+                    smtpClient.Authenticate(credentials);
+                }
             }
+            else if (user.AuthType == UserAuthType.LDAP)
+            {
+                var address = new System.Net.Mail.MailAddress(user.EMail);
+                var domain = address.Host.Substring(0, address.Host.IndexOf('.'));
+                if (!LdapHelper.ValidateUser(domain, address.User, credentials.Password))
+                {
+                    throw new Exception("Authentication fail!");
+                }
+            }
+            else
+            {
+                if (!user.Password.Equals(Helper.GetSha512(credentials.Password), StringComparison.Ordinal))
+                {
+                    throw new Exception("Authentication fail!");
+                }
+            }
+            StartSession(user);
+
             return user;
         }
 
@@ -169,7 +198,7 @@ namespace DataWF.Module.Common
 
             if (checkOld)
             {
-                string encoded = Helper.GetSha256(password);
+                string encoded = Helper.GetSha512(password);
                 foreach (var item in GetOld(User))
                 {
                     if (item.TextData == encoded)
@@ -206,6 +235,7 @@ namespace DataWF.Module.Common
         protected bool online = false;
         private Company company;
         private Department department;
+        private Position position;
 
         public User()
         { }
@@ -261,7 +291,6 @@ namespace DataWF.Module.Common
             set { SetValue(value, DepartmentKey); }
         }
 
-        private Position position;
 
         [Reference(nameof(DepartmentId))]
         public Department Department
@@ -329,7 +358,7 @@ namespace DataWF.Module.Common
             set { Status = value ? DBStatus.Actual : DBStatus.Error; }
         }
 
-        [DataMember, Column("password", 256, Keys = DBColumnKeys.Password), PasswordPropertyText(true)]
+        [DataMember, Column("password", 512, Keys = DBColumnKeys.Password), PasswordPropertyText(true)]
         public string Password
         {
             get { return GetValue<string>(PasswordKey); }
@@ -343,7 +372,7 @@ namespace DataWF.Module.Common
                 var rez = ValidateText(this, value, false);
                 if (rez.Length > 0)
                     throw new ArgumentException(rez);
-                SetValue(Helper.GetSha256(value), PasswordKey);
+                SetValue(Helper.GetSha512(value), PasswordKey);
             }
         }
 
@@ -357,7 +386,12 @@ namespace DataWF.Module.Common
             set { SetValue(value, RefreshTokenKey); }
         }
 
-        public string AuthenticationType { get; set; }
+        [Column("auth_type")]
+        public UserAuthType? AuthType
+        {
+            get { return GetValue<UserAuthType?>(AuthTokenKey) ?? UserAuthType.SMTP; }
+            set { SetValue(value, AuthTokenKey); }
+        }
 
         public bool IsAuthenticated => string.IsNullOrEmpty(AccessToken);
 
@@ -374,6 +408,8 @@ namespace DataWF.Module.Common
             get { return GetValue<string>(NameENKey); }
             set { SetValue(value, NameENKey); }
         }
+
+        public string AuthenticationType => throw new NotImplementedException();
 
         public override void Dispose()
         {
@@ -401,7 +437,7 @@ namespace DataWF.Module.Common
         Lenght10 = 512,
     }
 
-    public enum UserAuthMode
+    public enum UserAuthType
     {
         Internal,
         SMTP,
