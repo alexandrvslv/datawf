@@ -21,8 +21,8 @@ namespace DataWF.Web.CodeGenerator
         private const string prUser = "CurrentUser";
         private const string prTransaction = "transaction";
         private Dictionary<string, MetadataReference> references;
-        private Dictionary<string, UsingDirectiveSyntax> usings;
         private Dictionary<string, ClassDeclarationSyntax> trees = new Dictionary<string, ClassDeclarationSyntax>();
+        private Dictionary<string, Dictionary<string, UsingDirectiveSyntax>> treeUsings = new Dictionary<string, Dictionary<string, UsingDirectiveSyntax>>();
         public List<Assembly> Assemblies { get; private set; }
         public string Output { get; }
         public string Namespace { get; private set; }
@@ -55,8 +55,9 @@ namespace DataWF.Web.CodeGenerator
             //{
             //    var assembly = module.GetType().Assembly;
             //    references.Add(assembly.GetName().Name, MetadataReference.CreateFromFile(assembly.Location));
-            //}
-            usings = new Dictionary<string, UsingDirectiveSyntax>(StringComparer.Ordinal) {
+            //}   
+
+            var usings = new Dictionary<string, UsingDirectiveSyntax>(StringComparer.Ordinal) {
                 { "DataWF.Common", SyntaxHelper.CreateUsingDirective("DataWF.Common") },
                 { "DataWF.Data", SyntaxHelper.CreateUsingDirective("DataWF.Data") },
                 { "DataWF.Web.Common", SyntaxHelper.CreateUsingDirective("DataWF.Web.Common") },
@@ -64,7 +65,6 @@ namespace DataWF.Web.CodeGenerator
                 { "Microsoft.AspNetCore.Authentication.JwtBearer", SyntaxHelper.CreateUsingDirective("Microsoft.AspNetCore.Authentication.JwtBearer") },
                 { "Microsoft.AspNetCore.Authorization", SyntaxHelper.CreateUsingDirective("Microsoft.AspNetCore.Authorization") },
                 { "System", SyntaxHelper.CreateUsingDirective("System") },
-                { "System.IO", SyntaxHelper.CreateUsingDirective("System.IO") },
                 { "System.Collections.Generic", SyntaxHelper.CreateUsingDirective("System.Collections.Generic") }
             };
         }
@@ -90,7 +90,17 @@ namespace DataWF.Web.CodeGenerator
                     var tableAttribute = DBTable.GetTableAttribute(itemType);
                     if (tableAttribute != null)
                     {
-                        var controller = GetOrGenerateController(tableAttribute, itemType);
+                        var usings = new Dictionary<string, UsingDirectiveSyntax>(StringComparer.Ordinal) {
+                            { "DataWF.Common", SyntaxHelper.CreateUsingDirective("DataWF.Common") },
+                            { "DataWF.Data", SyntaxHelper.CreateUsingDirective("DataWF.Data") },
+                            { "DataWF.Web.Common", SyntaxHelper.CreateUsingDirective("DataWF.Web.Common") },
+                            { "Microsoft.AspNetCore.Mvc", SyntaxHelper.CreateUsingDirective("Microsoft.AspNetCore.Mvc") },
+                            { "Microsoft.AspNetCore.Authentication.JwtBearer", SyntaxHelper.CreateUsingDirective("Microsoft.AspNetCore.Authentication.JwtBearer") },
+                            { "Microsoft.AspNetCore.Authorization", SyntaxHelper.CreateUsingDirective("Microsoft.AspNetCore.Authorization") },
+                            { "System", SyntaxHelper.CreateUsingDirective("System") },
+                            { "System.Collections.Generic", SyntaxHelper.CreateUsingDirective("System.Collections.Generic") }
+                        };
+                        var controller = GetOrGenerateController(tableAttribute, itemType, usings);
                         //if (tableAttribute.ItemType != itemType)
                         //{
                         //    trees[tableAttribute.ItemType.Name] = controller.AddMembers(GetControllerMemebers(tableAttribute, itemType).ToArray());
@@ -100,7 +110,7 @@ namespace DataWF.Web.CodeGenerator
             }
         }
 
-        private ClassDeclarationSyntax GetOrGenerateBaseController(TableAttributeCache tableAttribute, Type itemType, out string controllerClassName)
+        private ClassDeclarationSyntax GetOrGenerateBaseController(TableAttributeCache tableAttribute, Type itemType, Dictionary<string, UsingDirectiveSyntax> usings, out string controllerClassName)
         {
             string name = $"Base{(tableAttribute.FileKey != null ? "File" : "")}{itemType.Name}";
             controllerClassName = $"{name}Controller";
@@ -128,10 +138,11 @@ namespace DataWF.Web.CodeGenerator
                              SyntaxFactory.TypeConstraint(SyntaxFactory.ParseTypeName("new()"))
                         }))
                     }),
-                    members: SyntaxFactory.List(GetControllerMemebers(tableAttribute, itemType, true))
+                    members: SyntaxFactory.List(GetControllerMemebers(tableAttribute, itemType, true, usings))
                     );
 
                 trees[name] = baseController;
+                treeUsings[name] = usings;
             }
             return baseController;
         }
@@ -142,7 +153,7 @@ namespace DataWF.Web.CodeGenerator
         }
 
         //https://carlos.mendible.com/2017/03/02/create-a-class-with-net-core-and-roslyn/
-        private ClassDeclarationSyntax GetOrGenerateController(TableAttributeCache tableAttribute, Type itemType)
+        private ClassDeclarationSyntax GetOrGenerateController(TableAttributeCache tableAttribute, Type itemType, Dictionary<string, UsingDirectiveSyntax> usings)
         {
             var baseName = (string)null;
             var baseType = itemType;
@@ -152,7 +163,7 @@ namespace DataWF.Web.CodeGenerator
             {
                 if (baseType == tableAttribute.ItemType || baseType != itemType)
                 {
-                    GetOrGenerateBaseController(tableAttribute, baseType, out var baseClassName);
+                    GetOrGenerateBaseController(tableAttribute, baseType, usings, out var baseClassName);
                     if (baseName == null)
                         baseName = $"{baseClassName}<{itemType.Name}, {primaryKeyType.Name}>";
                 }
@@ -170,10 +181,11 @@ namespace DataWF.Web.CodeGenerator
                     baseList: SyntaxFactory.BaseList(SyntaxFactory.SingletonSeparatedList<BaseTypeSyntax>(
                         SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName(baseName)))),
                     constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
-                    members: SyntaxFactory.List(GetControllerMemebers(tableAttribute, itemType, false))
+                    members: SyntaxFactory.List(GetControllerMemebers(tableAttribute, itemType, false, usings))
                     );
 
                 trees[itemType.Name] = controller;
+                treeUsings[itemType.Name] = usings;
             }
             return controller;
         }
@@ -219,6 +231,7 @@ namespace DataWF.Web.CodeGenerator
 
             foreach (var entry in trees)
             {
+                var usings = treeUsings[entry.Key];
                 var unit = SyntaxHelper.GenUnit(entry.Value, Namespace, usings.Values);
                 if (save)
                 {
@@ -229,9 +242,9 @@ namespace DataWF.Web.CodeGenerator
             return list;
         }
 
-        public IEnumerable<MemberDeclarationSyntax> GetControllerMemebers(TableAttributeCache table, Type type, bool baseClass)
+        public IEnumerable<MemberDeclarationSyntax> GetControllerMemebers(TableAttributeCache table, Type type, bool baseClass, Dictionary<string, UsingDirectiveSyntax> usings)
         {
-            AddUsing(type);
+            AddUsing(type, usings);
             if (table.ItemType == type && !baseClass)
                 yield break;
             foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
@@ -239,14 +252,14 @@ namespace DataWF.Web.CodeGenerator
                 if (method.GetCustomAttribute<ControllerMethodAttribute>() != null
                     && (!method.IsVirtual || method.GetBaseDefinition() == null))
                 {
-                    yield return GetControllerMethod(method, table, baseClass);
+                    yield return GetControllerMethod(method, table, baseClass, usings);
                 }
             }
             foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly))
             {
                 if (method.GetCustomAttribute<ControllerMethodAttribute>() != null)
                 {
-                    yield return GetControllerMethod(method, table, baseClass);
+                    yield return GetControllerMethod(method, table, baseClass, usings);
                 }
             }
         }
@@ -281,10 +294,10 @@ namespace DataWF.Web.CodeGenerator
         }
 
         //https://stackoverflow.com/questions/37710714/roslyn-add-new-method-to-an-existing-class
-        private MethodDeclarationSyntax GetControllerMethod(MethodInfo method, TableAttributeCache table, bool baseClass)
+        private MethodDeclarationSyntax GetControllerMethod(MethodInfo method, TableAttributeCache table, bool baseClass, Dictionary<string, UsingDirectiveSyntax> usings)
         {
-            AddUsing(method.DeclaringType);
-            AddUsing(method.ReturnType);
+            AddUsing(method.DeclaringType, usings);
+            AddUsing(method.ReturnType, usings);
 
             var returning = method.ReturnType == typeof(void) ? "void" : $"ActionResult<{TypeHelper.FormatCode(method.ReturnType)}>";
             var modifiers = new List<SyntaxToken> { SyntaxFactory.Token(SyntaxKind.PublicKeyword) };
@@ -295,7 +308,7 @@ namespace DataWF.Web.CodeGenerator
                 if (method.ReturnType.IsGenericType)
                 {
                     var returnType = method.ReturnType.GetGenericArguments().FirstOrDefault();
-                    AddUsing(returnType);
+                    AddUsing(returnType, usings);
                     returning = $"Task<ActionResult<{TypeHelper.FormatCode(returnType)}>>";
                 }
                 else
@@ -304,7 +317,7 @@ namespace DataWF.Web.CodeGenerator
                 }
             }
 
-            var parametersInfo = GetParametersInfo(method, table);
+            var parametersInfo = GetParametersInfo(method, table, usings);
             return SyntaxFactory.MethodDeclaration(attributeLists: SyntaxFactory.List(GetControllerMethodAttributes(method, parametersInfo)),
                           modifiers: SyntaxFactory.TokenList(modifiers.ToArray()),
                           returnType: returning == "void"
@@ -460,14 +473,14 @@ namespace DataWF.Web.CodeGenerator
                                  SyntaxFactory.IdentifierName(post ? "HttpPost" : "HttpGet"))));
         }
 
-        private List<MethodParametrInfo> GetParametersInfo(MethodInfo method, TableAttributeCache table)
+        private List<MethodParametrInfo> GetParametersInfo(MethodInfo method, TableAttributeCache table, Dictionary<string, UsingDirectiveSyntax> usings)
         {
             var parametersInfo = new List<MethodParametrInfo>();
             foreach (var parameter in method.GetParameters())
             {
                 var methodParameter = new MethodParametrInfo { Info = parameter };
                 parametersInfo.Add(methodParameter);
-                AddUsing(methodParameter.Info.ParameterType);
+                AddUsing(methodParameter.Info.ParameterType, usings);
                 if (methodParameter.Info.ParameterType == typeof(DBTransaction))
                 {
                     methodParameter.ValueName = prTransaction;
@@ -515,12 +528,12 @@ namespace DataWF.Web.CodeGenerator
                          SyntaxFactory.IdentifierName("FromRoute"))));
         }
 
-        private void AddUsing(Type type)
+        private void AddUsing(Type type, Dictionary<string, UsingDirectiveSyntax> usings)
         {
-            AddUsing(type.Namespace);
+            AddUsing(type.Namespace, usings);
         }
 
-        private void AddUsing(string usingName)
+        private void AddUsing(string usingName, Dictionary<string, UsingDirectiveSyntax> usings)
         {
             if (!usings.TryGetValue(usingName, out var syntax))
             {
