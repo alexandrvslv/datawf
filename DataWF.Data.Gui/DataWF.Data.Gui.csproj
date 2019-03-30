@@ -34,7 +34,7 @@
     <ProjectReference Include="..\External\xwt\Xwt\Xwt.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="DocumentFormat.OpenXml" Version="2.9.0" />
+    <PackageReference Include="DocumentFormat.OpenXml" Version="2.9.1" />
     <PackageReference Include="ICSharpCode.NRefactory" Version="5.5.1" />
   </ItemGroup>  
 </Project>
