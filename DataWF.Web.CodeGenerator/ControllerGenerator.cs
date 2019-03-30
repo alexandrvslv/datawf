@@ -64,6 +64,7 @@ namespace DataWF.Web.CodeGenerator
                 { "Microsoft.AspNetCore.Authentication.JwtBearer", SyntaxHelper.CreateUsingDirective("Microsoft.AspNetCore.Authentication.JwtBearer") },
                 { "Microsoft.AspNetCore.Authorization", SyntaxHelper.CreateUsingDirective("Microsoft.AspNetCore.Authorization") },
                 { "System", SyntaxHelper.CreateUsingDirective("System") },
+                { "System.IO", SyntaxHelper.CreateUsingDirective("System.IO") },
                 { "System.Collections.Generic", SyntaxHelper.CreateUsingDirective("System.Collections.Generic") }
             };
         }
@@ -293,7 +294,9 @@ namespace DataWF.Web.CodeGenerator
                 modifiers.Add(SyntaxFactory.Token(SyntaxKind.AsyncKeyword));
                 if (method.ReturnType.IsGenericType)
                 {
-                    returning = $"Task<ActionResult<{TypeHelper.FormatCode(method.ReturnType.GetGenericArguments().FirstOrDefault())}>>";
+                    var returnType = method.ReturnType.GetGenericArguments().FirstOrDefault();
+                    AddUsing(returnType);
+                    returning = $"Task<ActionResult<{TypeHelper.FormatCode(returnType)}>>";
                 }
                 else
                 {

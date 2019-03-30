@@ -20,6 +20,7 @@ namespace DataWF.Data
                 {DBDataType.DateTime, "timestamp(6)"},
                 {DBDataType.ByteArray, "raw{0}"},
                 {DBDataType.Blob, "blob"},
+                {DBDataType.LargeObject, "number(9)"},
                 {DBDataType.BigInt, "number(18)"},
                 {DBDataType.Int, "number(9)"},
                 {DBDataType.ShortInt, "number(4)"},

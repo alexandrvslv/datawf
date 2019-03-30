@@ -19,6 +19,7 @@ namespace DataWF.Data
                     {DBDataType.DateTime, "datetime"},
                     {DBDataType.ByteArray, "varbinary{0}"},
                     {DBDataType.Blob, "varbinary(max)"},
+                    {DBDataType.LargeObject, "integer"},
                     {DBDataType.BigInt, "bigint"},
                     {DBDataType.Int, "integer"},
                     {DBDataType.ShortInt, "smallint"},
