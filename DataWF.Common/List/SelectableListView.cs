@@ -278,9 +278,13 @@ namespace DataWF.Common
                 {
                     base.OnItemPropertyChanged(item, index, e);
                 }
-                if (query.HaveGlobal)
+                foreach (var parameter in query.GetGlobal())
                 {
-                    UpdateFilter();
+                    if (parameter.Name == e.PropertyName)
+                    {
+                        UpdateFilter();
+                        break;
+                    }
                 }
             }
             else if (index >= 0)
