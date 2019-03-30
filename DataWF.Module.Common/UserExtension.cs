@@ -32,7 +32,7 @@ namespace DataWF.Module.Common
                 {
                     if (user.Access.Get(access.Group).Create)
                     {
-                        if (access.Create && (filter == null || filter.Access.Get(access.Group).Edit))
+                        if (access.Create && (filter == null || filter.Access.Get(access.Group).Update))
                         {
                             yield return user;
                             break;
@@ -50,7 +50,7 @@ namespace DataWF.Module.Common
                 {
                     if (position.Access.Get(access.Group).Create)
                     {
-                        if (access.Create && (filter == null || filter.Access.Get(access.Group).Edit))
+                        if (access.Create && (filter == null || filter.Access.Get(access.Group).Update))
                         {
                             yield return position;
                             break;
@@ -68,7 +68,7 @@ namespace DataWF.Module.Common
                 {
                     if (department.Access.Get(access.Group).Create)
                     {
-                        if (access.Create && (filter == null || filter.Access.Get(access.Group).Edit))
+                        if (access.Create && (filter == null || filter.Access.Get(access.Group).Update))
                         {
                             yield return department;
                             break;

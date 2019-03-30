@@ -124,31 +124,33 @@ namespace DataWF.Data.Gui
             }
         }
 
-        protected override void OnAcceptClick(object sender, EventArgs e)
+        protected override async void OnAcceptClick(object sender, EventArgs e)
         {
             if (Rows != null)
             {
                 foreach (var item in Rows)
-                    item.Accept(GuiEnvironment.User);
+                {
+                    await item.Accept(GuiEnvironment.User);
+                }
             }
             else
             {
                 //MessageDialog.ShowMessage(this, Locale.Get("ChangeAccept", "Access denied for " + _change.Row + "!\nYour login in editor list."));
-                map.Accept(GuiEnvironment.User);
+                await map.Accept(GuiEnvironment.User);
             }
             base.OnAcceptClick(sender, e);
         }
 
-        protected override void OnCloseClick(object sender, EventArgs e)
+        protected override async void OnCloseClick(object sender, EventArgs e)
         {
             if (Rows != null)
             {
                 foreach (var item in Rows)
-                    item.Reject(GuiEnvironment.User);
+                    await item.Reject(GuiEnvironment.User);
             }
             else
             {
-                map.Reject(GuiEnvironment.User);
+                await map.Reject(GuiEnvironment.User);
             }
             base.OnCloseClick(sender, e);
         }

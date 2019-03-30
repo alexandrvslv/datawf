@@ -64,16 +64,20 @@ namespace DataWF.Module.FlowGui
             ViewDocument();
         }
 
-        protected override void OnToolEditClick(object sender, EventArgs e)
+        protected override async void OnToolEditClick(object sender, EventArgs e)
         {
             if (Current == null)
+            {
                 return;
+            }
 
             //base.OnToolEditClick(sender, e);
 
-            string fullpath = DocumentEditor.Execute(Current);
+            string fullpath = await DocumentEditor.Execute(Current);
             if (string.IsNullOrEmpty(fullpath))
+            {
                 return;
+            }
 
             var rez = Command.Yes;
             while (rez != Command.No)
@@ -117,11 +121,14 @@ namespace DataWF.Module.FlowGui
             window.Show(Bar, toolAdd.Bound.BottomLeft);
         }
 
-        private void ToolTemplateClick(object sender, EventArgs e)
+        private async void ToolTemplateClick(object sender, EventArgs e)
         {
             if (Current?.TemplateData != null)
             {
-                DocumentEditor.Execute(Current.Parse(GuiEnvironment.User));
+                using (var transaction = new DBTransaction(GuiEnvironment.User))
+                {
+                    DocumentEditor.Execute(await Current.Parse(transaction));
+                }
             }
         }
 
@@ -130,29 +137,31 @@ namespace DataWF.Module.FlowGui
             ViewDocument();
         }
 
-        private void ViewDocument()
+        private async void ViewDocument()
         {
             if (Current == null)
             {
                 return;
             }
+            using (var transaction = new DBTransaction(GuiEnvironment.User))
+            {
+                var filePath = await Current.GetDataPath(transaction);
+                if (string.IsNullOrEmpty(filePath))
+                {
+                    return;
+                }
 
-            var filePath = Current.GetDataPath();
-            if (string.IsNullOrEmpty(filePath))
-            {
-                return;
-            }
-
-            if (Helper.IsImage(filePath))
-            {
-                var image = new ImageEditor();
-                image.LoadImage(Current.FileData);
-                image.ShowDialog(this);
-                image.Dispose();
-            }
-            else
-            {
-                DocumentEditor.Execute(filePath);
+                if (Helper.IsImage(filePath))
+                {
+                    var image = new ImageEditor();
+                    image.LoadImage(Current.FileData);
+                    image.ShowDialog(this);
+                    image.Dispose();
+                }
+                else
+                {
+                    DocumentEditor.Execute(filePath);
+                }
             }
         }
     }

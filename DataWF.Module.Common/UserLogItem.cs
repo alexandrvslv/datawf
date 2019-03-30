@@ -121,7 +121,7 @@ namespace DataWF.Module.Common
                                     var nAceess = newAcces.Items[index];
                                     rez += string.Format("Change {0}({1}{2}{3}{4}{5}{6}); ", oAccess.Group,
                                         oAccess.Read != nAceess.Read ? (nAceess.Read ? "+" : "-") + "View " : "",
-                                        oAccess.Edit != nAceess.Edit ? (nAceess.Edit ? "+" : "-") + "Edit " : "",
+                                        oAccess.Update != nAceess.Update ? (nAceess.Update ? "+" : "-") + "Edit " : "",
                                         oAccess.Create != nAceess.Create ? (nAceess.Create ? "+" : "-") + "Create " : "",
                                         oAccess.Delete != nAceess.Delete ? (nAceess.Delete ? "+" : "-") + "Delete " : "",
                                         oAccess.Admin != nAceess.Admin ? (nAceess.Admin ? "+" : "-") + "Admin " : "",

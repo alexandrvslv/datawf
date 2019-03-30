@@ -67,16 +67,16 @@ namespace DataWF.Module.FlowGui
                     Name = "View",
                     Width = 60,
                     Invoker = new Invoker<TableItemNode, bool?>("View",
-                                                            (item) => item.Access?.Get(Group).View,
-                                                            (item, value) => CheckSave(item, AccessType.View, value))
+                                                            (item) => item.Access?.Get(Group).Read,
+                                                            (item, value) => CheckSave(item, AccessType.Read, value))
                 },
                 new LayoutColumn
                 {
                     Name = "Edit",
                     Width = 60,
                     Invoker = new Invoker<TableItemNode, bool?>("Edit",
-                                                            (item) => item.Access?.Get(Group).Edit,
-                                                            (item, value) => CheckSave(item, AccessType.Edit, value))
+                                                            (item) => item.Access?.Get(Group).Update,
+                                                            (item, value) => CheckSave(item, AccessType.Update, value))
                 },
                 new LayoutColumn
                 {
@@ -180,16 +180,16 @@ namespace DataWF.Module.FlowGui
         {
             if (node.Access == null)
                 return;
-            if (node.Access.GetFlag(AccessType.Edit, GuiEnvironment.User) || node.Access.GetFlag(AccessType.Admin, GuiEnvironment.User))
+            if (node.Access.GetFlag(AccessType.Update, GuiEnvironment.User) || node.Access.GetFlag(AccessType.Admin, GuiEnvironment.User))
             {
                 var access = node.Access.Get(Group);
                 if (value.Value)
                 {
-                    access.Data |= type;
+                    access.Access |= type;
                 }
                 else
                 {
-                    access.Data &= ~type;
+                    access.Access &= ~type;
                 }
                 node.Access.Add(access);
             }

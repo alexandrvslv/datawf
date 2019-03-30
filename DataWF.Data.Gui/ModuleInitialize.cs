@@ -1,15 +1,16 @@
-﻿using DataWF.Gui;
-using DataWF.Common;
+﻿using DataWF.Common;
+using DataWF.Gui;
 using System;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using Xwt;
 
 namespace DataWF.Data.Gui
 {
     public class ModuleInitialize : IModuleInitialize
     {
-        public void Initialize()
+        public Task Initialize()
         {
             GuiEnvironment.CellEditorFabric[typeof(DBColumn)] = (cell) =>
             {
@@ -61,6 +62,8 @@ namespace DataWF.Data.Gui
                 var menuExportXlsx = new ToolItem(MenuExportXlsxClick) { Glyph = GlyphType.FileExcelO, Text = Locale.Get("TableEditor", "Export Odf") };
                 LayoutList.DefaultMenu.Editor.Bar.Items.AddRange(new[] { menuExportODS, menuExportXlsx, menuExportTxt });
             });
+
+            return null;
         }
 
         static void MenuExportTxtClick(object sender, EventArgs e)

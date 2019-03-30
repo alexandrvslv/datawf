@@ -232,18 +232,18 @@ namespace DataWF.Data.Gui
             ToolRefreshClick(sender, e);
         }
 
-        private void ToolRejectClick(object sender, EventArgs e)
+        private async void ToolRejectClick(object sender, EventArgs e)
         {
             if (listRows.SelectedItem == null)
                 return;
 
             LogMap changes = (LogMap)listRows.SelectedItem;
-            changes.Reject(GuiEnvironment.User);
+            await changes.Reject(GuiEnvironment.User);
             listDiff.ListSource = changes.Changes;
             rows.Remove(changes);
         }
 
-        private void ToolAcceptClick(object sender, EventArgs e)
+        private async void ToolAcceptClick(object sender, EventArgs e)
         {
             if (listRows.SelectedItem == null)
                 return;
@@ -256,7 +256,7 @@ namespace DataWF.Data.Gui
                     if (dr != Command.Yes)
                         break;
                 }
-                changes.Accept(GuiEnvironment.User);
+                await changes.Accept(GuiEnvironment.User);
                 listDiff.ListSource = changes.Changes;
             }
             rowsView.UpdateFilter();

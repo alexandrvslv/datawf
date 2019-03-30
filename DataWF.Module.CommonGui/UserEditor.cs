@@ -150,7 +150,7 @@ namespace DataWF.Module.CommonGui
             base.Dispose(disposing);
         }
 
-        private void OnLogin(User user)
+        private async void OnLogin(User user)
         {
             string userLogin = user.Login;
             string userPassword = user.Password;
@@ -173,7 +173,7 @@ namespace DataWF.Module.CommonGui
                     //row ["session_start"] = DateTime.Now;
                     if (!row.Super.GetValueOrDefault())
                     {
-                        GroupPermission.CachePermission();
+                        await GroupPermission.CachePermission();
                     }
                     MessageDialog.ShowMessage(ParentWindow, string.Format(Locale.Get("Login", "Welcome {0}"), row.Name), "Login");
                 }

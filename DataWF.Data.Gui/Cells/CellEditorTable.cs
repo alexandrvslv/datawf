@@ -66,7 +66,7 @@ namespace DataWF.Data.Gui
             get
             {
                 if ((listSource == null || ((IDBTableView)listSource).Disposed) && table != null)
-                    listSource = table.CreateItemsView(viewFilter, DBViewKeys.None, DBStatus.Actual| DBStatus.New| DBStatus.Edit);
+                    listSource = table.CreateItemsView(viewFilter, DBViewKeys.None, DBStatus.Actual | DBStatus.New | DBStatus.Edit);
                 return listSource as IDBTableView;
             }
             set
@@ -119,7 +119,7 @@ namespace DataWF.Data.Gui
 
         private void LoadReference()
         {
-            using (var transaction = new DBTransaction(this, Table.Schema.Connection))
+            using (var transaction = new DBTransaction(Table.Schema.Connection, GuiEnvironment.User))
             {
                 Debug.WriteLine("Get References {0}", getReferenceStack.Count);
                 while (getReferenceStack.TryPop(out PDBTableParam item))

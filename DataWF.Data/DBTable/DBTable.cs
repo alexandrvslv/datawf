@@ -629,6 +629,15 @@ namespace DataWF.Data
             }
         }
 
+        public void RefreshSequence()
+        {
+            using (var transaction = new DBTransaction(Connection))
+            {
+                RefreshSequence(transaction);
+                transaction.Commit();
+            }
+        }
+
         public void RefreshSequence(DBTransaction transaction)
         {
             var current = transaction.ExecuteQuery($"select max({PrimaryKey.SqlName}) from {SqlName}");

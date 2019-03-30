@@ -396,7 +396,7 @@ namespace Mono.TextEditor
             get { return textArea.Document; }
         }
 
-        public bool IsDisposed
+        public new bool IsDisposed
         {
             get { return textArea.IsDisposed; }
         }

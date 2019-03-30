@@ -95,7 +95,7 @@ namespace DataWF.Data.Gui
                 var result = MessageDialog.AskQuestion(ParentWindow, question);
                 if (result == Command.Yes)
                 {
-                    Table.Save();
+                    Table.Save().GetAwaiter().GetResult();
                     return true;
                 }
                 else if (result == Command.Cancel)
@@ -273,7 +273,7 @@ namespace DataWF.Data.Gui
                 if (!value)
                 {
                     AllowInsert = Table?.Access.GetFlag(AccessType.Create, GuiEnvironment.User) ?? false;
-                    AllowUpdate = Table?.Access.GetFlag(AccessType.Edit, GuiEnvironment.User) ?? false;
+                    AllowUpdate = Table?.Access.GetFlag(AccessType.Update, GuiEnvironment.User) ?? false;
                     AllowDelete = Table?.Access.GetFlag(AccessType.Delete, GuiEnvironment.User) ?? false;
                 }
                 else
@@ -377,7 +377,7 @@ namespace DataWF.Data.Gui
                         {
                             foreach (DBForeignKey relation in OwnerRow.Table.GetChildRelations())
                             {
-                                if (!relation.Table.Access.GetFlag(AccessType.View, GuiEnvironment.User))
+                                if (!relation.Table.Access.GetFlag(AccessType.Read, GuiEnvironment.User))
                                     continue;
                                 if (toolReference.DropDownItems[relation.Name] is MenuItemRelation itemRelation)
                                 {
@@ -552,7 +552,7 @@ namespace DataWF.Data.Gui
             {
                 var field = List.SelectedItem as LayoutDBField;
                 row = List.FieldSource as DBItem;
-                if (field.Invoker is DBColumn column && column.IsReference && column.ReferenceTable.Access.GetFlag(AccessType.View, GuiEnvironment.User))
+                if (field.Invoker is DBColumn column && column.IsReference && column.ReferenceTable.Access.GetFlag(AccessType.Read, GuiEnvironment.User))
                 {
                     row = field.GetReference(row);
                 }
@@ -678,11 +678,14 @@ namespace DataWF.Data.Gui
             };
             if (mode == TableEditorMode.Referencing || mode == TableEditorMode.Item)
             {
-                window.AddButton("Exclude", (object se, EventArgs arg) =>
+                window.AddButton("Exclude", async (object se, EventArgs arg) =>
                 {
                     foreach (DBItem refRow in temp)
+                    {
                         refRow[OwnerColumn] = null;
-                    Table.Save();
+                    }
+
+                    await Table.Save();
                     window.Hide();
                 });
                 //tw.ButtonAccept.Location = new Point (b.Location.X - 60, 3);
@@ -690,7 +693,7 @@ namespace DataWF.Data.Gui
             }
             window.Label.Text = Common.Locale.Get("TableEditor", "Deleting!");
             window.ButtonAcceptText = Common.Locale.Get("TableEditor", "Delete");
-            window.ButtonAcceptClick += (p1, p2) =>
+            window.ButtonAcceptClick += async (p1, p2) =>
             {
                 question.SecondaryText = Common.Locale.Get("TableEditor", "Check Reference?");
                 bool flag = MessageDialog.AskQuestion(ParentWindow, question) == Command.Yes;
@@ -720,13 +723,13 @@ namespace DataWF.Data.Gui
                                     for (int j = 0; j < childs.Count; j++)
                                         ((DBItem)childs[j])[relation.Column] = null;
                             }
-                            relation.Table.Save();
+                            await relation.Table.Save();
                         }
                     }
                     selectedRow.Delete();
                 }
 
-                Table.Save();
+                await Table.Save();
                 list.ListSensetive = true;
                 // list.QueueDraw(true, true);
                 window.Hide();
@@ -787,7 +790,7 @@ namespace DataWF.Data.Gui
             //view.ResetFilter();
         }
 
-        protected override void OnToolWindowAcceptClick(object sender, EventArgs e)
+        protected override async void OnToolWindowAcceptClick(object sender, EventArgs e)
         {
             DBItem bufRow = ((TableLayoutList)toolWindow.Target).FieldSource as DBItem;
             if (!bufRow.Attached)
@@ -845,7 +848,7 @@ namespace DataWF.Data.Gui
                                 newRow[relation.Column] = bufRow.PrimaryId;
                                 relation.Table.Add(newRow);
                             }
-                            relation.Table.Save();
+                            await relation.Table.Save();
                         }
                     }
                 }
@@ -922,9 +925,9 @@ namespace DataWF.Data.Gui
             }
         }
 
-        protected override void OnToolSaveClick(object sender, EventArgs e)
+        protected override async void OnToolSaveClick(object sender, EventArgs e)
         {
-            Table.Save();
+            await Table.Save();
         }
 
         private void OnToolMergeClick(object sender, EventArgs e)

@@ -306,7 +306,7 @@ namespace DataWF.Module.CommonGui
                 {
                     if ((!Current
                         || ((DBStatus.Actual | DBStatus.Edit | DBStatus.New | DBStatus.Error) & item.Status) != DBStatus.Empty)
-                        && (!Access || item.Access.GetFlag(AccessType.View, GuiEnvironment.User)))
+                        && (!Access || item.Access.GetFlag(AccessType.Read, GuiEnvironment.User)))
                     {
                         var element = InitItem(item);
                         if (ShowListNode)
@@ -345,7 +345,7 @@ namespace DataWF.Module.CommonGui
                 }
                 if (show && (!Current 
                     || ((DBStatus.Actual | DBStatus.Edit | DBStatus.New | DBStatus.Error) & item.Status) != DBStatus.Empty) 
-                    && (!Access || item.Access.GetFlag(AccessType.View, GuiEnvironment.User)))
+                    && (!Access || item.Access.GetFlag(AccessType.Read, GuiEnvironment.User)))
                 {
                     var node = InitItem(item);
                     node.Group = pnode;

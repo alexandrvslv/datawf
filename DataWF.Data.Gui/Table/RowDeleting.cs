@@ -1,12 +1,11 @@
 ﻿using DataWF.Common;
+using DataWF.Gui;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Threading;
-using DataWF.Gui;
-using DataWF.Data;
-using Xwt;
 using System.Linq;
+using System.Threading;
+using Xwt;
 
 namespace DataWF.Data.Gui
 {
@@ -87,19 +86,19 @@ namespace DataWF.Data.Gui
             }
         }
 
-        private void Deleting()
+        private async void Deleting()
         {
             try
             {
-                using (var transaction = DBTransaction.GetTransaction(row, row.Table.Schema.Connection))
+                using (var transaction = new DBTransaction(row.Table.Schema.Connection, GuiEnvironment.User))
                 {
                     foreach (DBItem r in rowsDelete)
                     {
                         r.Delete();
-                        r.Save(GuiEnvironment.User);
+                        await r.Save(transaction);
                     }
                     row.Delete();
-                    row.Save(GuiEnvironment.User);
+                    await row.Save(transaction);
                     transaction.Commit();
                 }
             }

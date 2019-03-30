@@ -11,7 +11,7 @@ namespace DataWF.Test.Module.Common
     public class Generate
     {
         [Test()]
-        public void Initialize()
+        public async void Initialize()
         {
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
             var schema = new DBSchema("common_database");
@@ -62,7 +62,7 @@ namespace DataWF.Test.Module.Common
 
             User.StartSession("test", "UserCommon1!");
 
-            GroupPermission.CachePermission();
+            await GroupPermission.CachePermission();
 
         }
     }

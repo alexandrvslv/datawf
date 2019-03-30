@@ -362,7 +362,7 @@ namespace DataWF.Data.Gui
                 if (table.Group != null && ShowTableGroup)
                     continue;
                 CheckItem(table, node, ShowTable
-                    && (!CheckTableView || (CheckTableView && table.Access.GetFlag(AccessType.View, GuiEnvironment.User)))
+                    && (!CheckTableView || (CheckTableView && table.Access.GetFlag(AccessType.Read, GuiEnvironment.User)))
                     && (!CheckTableAdmin || (CheckTableAdmin && table.Access.GetFlag(AccessType.Admin, GuiEnvironment.User)))
                     && (!(table is DBLogTable) || ShowLogTable));
             }
@@ -422,7 +422,7 @@ namespace DataWF.Data.Gui
             foreach (var table in tgroup.GetTables())
             {
                 CheckItem(table, node, ShowTable
-                    && (!CheckTableView || (CheckTableView && table.Access.GetFlag(AccessType.View, GuiEnvironment.User)))
+                    && (!CheckTableView || (CheckTableView && table.Access.GetFlag(AccessType.Read, GuiEnvironment.User)))
                     && (!CheckTableAdmin || (CheckTableAdmin && table.Access.GetFlag(AccessType.Admin, GuiEnvironment.User)))
                     && (!(table is DBLogTable) || ShowLogTable));
             }
@@ -459,7 +459,7 @@ namespace DataWF.Data.Gui
             {
                 if (column.Group != null && ShowColumnGroup)
                     continue;
-                CheckItem(column, node, ShowColumn && column.Access.GetFlag(AccessType.View, GuiEnvironment.User));
+                CheckItem(column, node, ShowColumn && column.Access.GetFlag(AccessType.Read, GuiEnvironment.User));
             }
         }
 
@@ -498,7 +498,7 @@ namespace DataWF.Data.Gui
             var node = InitItem(cgroup);
             foreach (var column in cgroup.GetColumns())
             {
-                CheckItem(column, node, ShowColumn && column.Access.GetFlag(AccessType.View, GuiEnvironment.User));
+                CheckItem(column, node, ShowColumn && column.Access.GetFlag(AccessType.Read, GuiEnvironment.User));
             }
             return node;
         }

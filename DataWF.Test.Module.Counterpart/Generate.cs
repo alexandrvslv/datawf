@@ -11,7 +11,7 @@ namespace DataWf.Test.Module.Counterparty
     public class Generate
     {
         [Test()]
-        public void Initialize()
+        public async void Initialize()
         {
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
             var schema = new DBSchema("wf_customer");
@@ -59,7 +59,7 @@ namespace DataWf.Test.Module.Counterparty
             Assert.AreEqual(1, DBTable.GetTable<Country>().Count);
             Assert.AreEqual(1, DBTable.GetTable<Currency>().Count);
 
-            Location.DBTable.Save();
+            await Location.DBTable.Save();
 
             Assert.AreEqual(1, DBTable.GetTable<Country>().Count);
             Assert.AreEqual(1, DBTable.GetTable<Currency>().Count);

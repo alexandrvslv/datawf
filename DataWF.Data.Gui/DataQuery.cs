@@ -235,7 +235,7 @@ namespace DataWF.Data.Gui
                     continue;
                 if (arg.Cancel)
                     break;
-                using (var transaction = new DBTransaction(arg, arg.Schema.Connection))
+                using (var transaction = new DBTransaction(arg.Schema.Connection))
                 {
                     var command = transaction.AddCommand(query);
                     command.CommandTimeout = 30000;

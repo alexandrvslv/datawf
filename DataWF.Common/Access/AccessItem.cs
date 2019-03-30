@@ -77,12 +77,12 @@ namespace DataWF.Common
         }
 
         [XmlIgnore, JsonIgnore, DefaultValue(false)]
-        public bool Edit
+        public bool Update
         {
             get { return (Access & AccessType.Update) == AccessType.Update; }
             set
             {
-                if (Edit != value)
+                if (Update != value)
                 {
                     if (value)
                         Access |= AccessType.Update;

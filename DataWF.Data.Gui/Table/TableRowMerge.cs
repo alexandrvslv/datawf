@@ -1,7 +1,6 @@
-﻿using System;
+﻿using DataWF.Gui;
+using System;
 using System.Collections.Generic;
-using DataWF.Data;
-using DataWF.Gui;
 using Xwt;
 
 namespace DataWF.Data.Gui
@@ -36,7 +35,7 @@ namespace DataWF.Data.Gui
             }
         }
 
-        private void ToolMergeClick(object sender, EventArgs e)
+        private async void ToolMergeClick(object sender, EventArgs e)
         {
             if (list.Selection.Count == 0 || list.Selection.Count > 1)
             {
@@ -45,7 +44,7 @@ namespace DataWF.Data.Gui
             else
             {
                 DBItem main = (DBItem)list.SelectedItem;
-                main.Merge(itemlist);
+                await main.Merge(itemlist);
                 //list.QueueDraw(false, false);
                 MessageDialog.ShowMessage(this, "Merge complete!");
             }

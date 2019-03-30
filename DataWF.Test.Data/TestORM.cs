@@ -82,7 +82,7 @@ namespace DataWF.Test.Data
             Assert.AreEqual(typeof(int), column.DataType);
         }
 
-        public void Generate(DBConnection connection)
+        public async void Generate(DBConnection connection)
         {
             connection.CheckConnection();
             schema = DBSchema.Generate(GetType().Assembly, SchemaName);
@@ -119,7 +119,7 @@ namespace DataWF.Test.Data
                 Name = "Ivan",
                 Access = new AccessValue(new[]
                 {
-                    new AccessItem(AccessValue.Groups.First(i => i.Id == 1), AccessType.View),
+                    new AccessItem(AccessValue.Groups.First(i => i.Id == 1), AccessType.Read),
                     new AccessItem(AccessValue.Groups.First(i => i.Id == 2), AccessType.Admin),
                     new AccessItem(AccessValue.Groups.First(i => i.Id == 3), AccessType.Create)
                 })
@@ -146,7 +146,7 @@ namespace DataWF.Test.Data
             Assert.IsInstanceOf<byte[]>(qresult.Get(0, "group_access"), "Insert sql Fail Byte Array");
             var accessValue = new AccessValue((byte[])qresult.Get(0, "group_access"));
             Assert.AreEqual(3, accessValue.Items.Count, "Insert sql Fail Byte Array");
-            Assert.AreEqual(true, accessValue.Items[0].View, "Insert sql Fail Byte Array");
+            Assert.AreEqual(true, accessValue.Items[0].Read, "Insert sql Fail Byte Array");
             Assert.AreEqual(true, accessValue.Items[1].Admin, "Insert sql Fail Byte Array");
             Assert.AreEqual(false, accessValue.Items[2].Delete, "Insert sql Fail Byte Array");
 
@@ -168,7 +168,7 @@ namespace DataWF.Test.Data
             var nullIds = Position.DBTable.Select(Position.DBTable.PrimaryKey, CompareType.Is, null).ToList();
             Assert.AreEqual(6, nullIds.Count, "Select by null Fail");
 
-            Position.DBTable.Save();
+            await Position.DBTable.Save();
             Position.DBTable.Clear();
             var positions = Position.DBTable.Load();
             Assert.AreEqual(7, positions.Count(), "Insert/Read several Fail");
@@ -207,7 +207,7 @@ namespace DataWF.Test.Data
                 row["test_numeric"] = i / 1000M;
                 table.Add(row);
             }
-            table.Save();
+            await table.Save();
 
             table.Clear();
 

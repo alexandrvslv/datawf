@@ -186,9 +186,9 @@ namespace DataWF.Data.Gui
                     return;
                 filter = value;
 
-                if (filter.Access.GetFlag(AccessType.Admin, GuiEnvironment.User) || filter.Access.GetFlag(AccessType.Edit, GuiEnvironment.User))
+                if (filter.Access.GetFlag(AccessType.Admin, GuiEnvironment.User) || filter.Access.GetFlag(AccessType.Update, GuiEnvironment.User))
                 {
-                    toolRollback.Visible = filter.Access.GetFlag(AccessType.Edit, GuiEnvironment.User);
+                    toolRollback.Visible = filter.Access.GetFlag(AccessType.Update, GuiEnvironment.User);
                     Table = filter.Table;
                 }
                 else
@@ -259,7 +259,7 @@ namespace DataWF.Data.Gui
                             return;
                     }
                 }
-                changes.Accept(GuiEnvironment.User);
+                changes.Accept(GuiEnvironment.User).GetAwaiter().GetResult();
 
                 //dr = Command.Cancel;
                 //MessageDialog.ShowMessage(form.ParentWindow, "Editor can not accept his chnges!");
@@ -374,16 +374,24 @@ namespace DataWF.Data.Gui
             this.QueueForReallocate();
         }
 
-        protected void ToolRollbackClick(object sender, EventArgs e)
+        protected async void ToolRollbackClick(object sender, EventArgs e)
         {
             if (list.SelectedItem == null)
                 return;
 
             var redo = list.Selection.GetItems<DBLogItem>();
-            if (redo[0] != null && redo[0].Table.Access.GetFlag(AccessType.Edit, GuiEnvironment.User))
-                redo[0].Upload(GuiEnvironment.User);
+            if (redo[0] != null && redo[0].Table.Access.GetFlag(AccessType.Update, GuiEnvironment.User))
+            {
+                using (var transaction = new DBTransaction(GuiEnvironment.User))
+                {
+                    await redo[0].Upload(transaction);
+                    transaction.Commit();
+                }
+            }
             else
+            {
                 MessageDialog.ShowMessage(ParentWindow, "Access denied!");
+            }
         }
 
         protected void ToolAcceptClick(object sender, EventArgs e)

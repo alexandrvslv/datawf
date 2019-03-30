@@ -123,18 +123,18 @@ namespace DataWF.Module.FlowGui
             ose.ButtonAcceptClick += AcceptOnActivated;
 
             var userKeys = UserTreeKeys.None;
-            if (Department.DBTable?.Access.GetFlag(AccessType.View, GuiEnvironment.User) ?? false) userKeys |= UserTreeKeys.Department;
-            if (Position.DBTable?.Access.GetFlag(AccessType.View, GuiEnvironment.User) ?? false) userKeys |= UserTreeKeys.Position;
-            if (GroupPermission.DBTable?.Access.GetFlag(AccessType.View, GuiEnvironment.User) ?? false) userKeys |= UserTreeKeys.Permission;
-            if (User.DBTable?.Access.GetFlag(AccessType.View, GuiEnvironment.User) ?? false) userKeys |= UserTreeKeys.User;
-            if (UserGroup.DBTable?.Access.GetFlag(AccessType.View, GuiEnvironment.User) ?? false) userKeys |= UserTreeKeys.Group;
-            if (Scheduler.DBTable?.Access.GetFlag(AccessType.View, GuiEnvironment.User) ?? false) userKeys |= UserTreeKeys.Scheduler;
+            if (Department.DBTable?.Access.GetFlag(AccessType.Read, GuiEnvironment.User) ?? false) userKeys |= UserTreeKeys.Department;
+            if (Position.DBTable?.Access.GetFlag(AccessType.Read, GuiEnvironment.User) ?? false) userKeys |= UserTreeKeys.Position;
+            if (GroupPermission.DBTable?.Access.GetFlag(AccessType.Read, GuiEnvironment.User) ?? false) userKeys |= UserTreeKeys.Permission;
+            if (User.DBTable?.Access.GetFlag(AccessType.Read, GuiEnvironment.User) ?? false) userKeys |= UserTreeKeys.User;
+            if (UserGroup.DBTable?.Access.GetFlag(AccessType.Read, GuiEnvironment.User) ?? false) userKeys |= UserTreeKeys.Group;
+            if (Scheduler.DBTable?.Access.GetFlag(AccessType.Read, GuiEnvironment.User) ?? false) userKeys |= UserTreeKeys.Scheduler;
             var keys = FlowTreeKeys.None;
             //if (TemplateParam.DBTable?.Access.View ?? false) keys |= FlowTreeKeys.TemplateParam;
-            if (Template.DBTable?.Access.GetFlag(AccessType.View, GuiEnvironment.User) ?? false) keys |= FlowTreeKeys.Template;
-            if (StageParam.DBTable?.Access.GetFlag(AccessType.View, GuiEnvironment.User) ?? false) keys |= FlowTreeKeys.StageParam;
-            if (Stage.DBTable?.Access.GetFlag(AccessType.View, GuiEnvironment.User) ?? false) keys |= FlowTreeKeys.Stage;
-            if (Work.DBTable?.Access.GetFlag(AccessType.View, GuiEnvironment.User) ?? false) keys |= FlowTreeKeys.Work;
+            if (Template.DBTable?.Access.GetFlag(AccessType.Read, GuiEnvironment.User) ?? false) keys |= FlowTreeKeys.Template;
+            if (StageParam.DBTable?.Access.GetFlag(AccessType.Read, GuiEnvironment.User) ?? false) keys |= FlowTreeKeys.StageParam;
+            if (Stage.DBTable?.Access.GetFlag(AccessType.Read, GuiEnvironment.User) ?? false) keys |= FlowTreeKeys.Stage;
+            if (Work.DBTable?.Access.GetFlag(AccessType.Read, GuiEnvironment.User) ?? false) keys |= FlowTreeKeys.Work;
             tree = new FlowTree
             {
                 FlowKeys = keys,
@@ -356,7 +356,7 @@ namespace DataWF.Module.FlowGui
             if (tree.SelectedDBItem != null)
             {
                 var access = tree.SelectedDBItem as IAccessable;
-                if (access.Access.GetFlag(AccessType.Edit, GuiEnvironment.User))
+                if (access.Access.GetFlag(AccessType.Update, GuiEnvironment.User))
                 {
                     ShowItem(tree.SelectedDBItem);
                 }

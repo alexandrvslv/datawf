@@ -94,13 +94,13 @@ namespace DataWF.Module.MessangerGui
             yield return Staff;
         }
 
-        private void ToolSendClick(object sender, EventArgs e)
+        private async void ToolSendClick(object sender, EventArgs e)
         {
             if (!string.IsNullOrEmpty(MessageText))
             {
                 using (var transaction = new DBTransaction())
                 {
-                    var message = Message.Send((User)GuiEnvironment.User, GetStaff(), MessageText);
+                    var message = await Message.Send((User)GuiEnvironment.User, GetStaff(), MessageText);
                     OnSending?.Invoke(message);
                     transaction.Commit();
                 }

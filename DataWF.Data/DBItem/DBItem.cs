@@ -1027,6 +1027,11 @@ namespace DataWF.Data
             }
         }
 
+        public void Save()
+        {
+            Save((IUserIdentity)null);
+        }
+
         public async void Save(IUserIdentity user)
         {
             using (var transaction = new DBTransaction(Table.Connection, user))

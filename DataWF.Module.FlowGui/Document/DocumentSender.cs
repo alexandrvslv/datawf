@@ -30,7 +30,7 @@ namespace DataWF.Module.FlowGui
                     question.Buttons.Add(Command.Yes);
                     if (MessageDialog.AskQuestion((Window)GuiService.Main, question) == Command.Yes)
                     {
-                        if (work.Stage != null && !work.Stage.Access.GetFlag(AccessType.Edit, GuiEnvironment.User))
+                        if (work.Stage != null && !work.Stage.Access.GetFlag(AccessType.Update, GuiEnvironment.User))
                         {
                             MessageDialog.ShowMessage((Window)GuiService.Main, "Access denied!", "Accept");
                         }
@@ -416,22 +416,22 @@ namespace DataWF.Module.FlowGui
             var nodes = listUsers.Nodes.GetChecked().Cast<TableItemNode>().Select(p => (DBItem)p.Item).ToList();
             foreach (DocumentSendItem sender in items)
             {
-                using (var transaction = new DBTransaction(Document.DBTable.Schema.Connection))
+                using (var transaction = new DBTransaction(Document.DBTable.Schema.Connection, GuiEnvironment.User))
                 {
                     try
                     {
                         if (SendType == DocumentSendType.Complete)
                         {
-                            sender.Document.Complete(sender.Work, (User)GuiEnvironment.User, true);
+                            sender.Document.Complete(sender.Work, transaction, true);
                         }
                         else if (SendType == DocumentSendType.Return)
                         {
-                            sender.Document.Return(sender.Work, (User)GuiEnvironment.User);
+                            sender.Document.Return(sender.Work, transaction);
                         }
                         else
                         {
                             sender.Message = string.Empty;
-                            sender.Document.Send(sender.Work, SelectedStage, nodes, (User)GuiEnvironment.User);
+                            sender.Document.Send(sender.Work, SelectedStage, nodes, transaction);
                         }
 
                         sender.Document.Save();

@@ -1,14 +1,15 @@
-﻿using DataWF.Module.Common;
-using DataWF.Module.Flow;
+﻿using DataWF.Common;
 using DataWF.Gui;
-using DataWF.Common;
+using DataWF.Module.Common;
+using DataWF.Module.Flow;
+using System.Threading.Tasks;
 //using System.Windows.Forms;
 
 namespace DataWF.Module.FlowGui
 {
     public class ModuleInitialize : IModuleInitialize
     {
-        public void Initialize()
+        public Task Initialize()
         {
             GuiEnvironment.CellEditorFabric[typeof(Template)] = (Cell) =>
             {
@@ -34,6 +35,7 @@ namespace DataWF.Module.FlowGui
             {
                 return new CellEditorDocumentFilter();
             };
+            return null;
         }
     }
 }

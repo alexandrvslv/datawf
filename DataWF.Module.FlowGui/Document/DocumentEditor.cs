@@ -9,6 +9,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Xwt;
 
 namespace DataWF.Module.FlowGui
@@ -25,15 +26,17 @@ namespace DataWF.Module.FlowGui
 
     public class DocumentEditor : VPanel, IDocked, IDockContent, ISerializableElement
     {
-        public static string Execute(DocumentData Current)
+        public static async Task<string> Execute(DocumentData Current)
         {
-            var fileName = Current.GetDataPath();
-            if (!string.IsNullOrEmpty(fileName))
+            using (var transaction = new DBTransaction(GuiEnvironment.User))
             {
-                Execute(fileName);
+                var fileName = await Current.GetDataPath(transaction);
+                if (!string.IsNullOrEmpty(fileName))
+                {
+                    Execute(fileName);
+                }
+                return fileName;
             }
-
-            return fileName;
         }
 
         public static void Execute(string fileName)
@@ -174,24 +177,37 @@ namespace DataWF.Module.FlowGui
                 return;
             if (page.Widget is IReadOnly)
             {
-                ((IReadOnly)page.Widget).ReadOnly = state == DocumentEditorState.Readonly || !document.Access.GetFlag(AccessType.Edit, GuiEnvironment.User);
+                ((IReadOnly)page.Widget).ReadOnly = state == DocumentEditorState.Readonly || !document.Access.GetFlag(AccessType.Update, GuiEnvironment.User);
             }
             else
             {
-                page.Widget.Sensitive = state == DocumentEditorState.Edit && document.Access.GetFlag(AccessType.Edit, GuiEnvironment.User);
+                page.Widget.Sensitive = state == DocumentEditorState.Edit && document.Access.GetFlag(AccessType.Update, GuiEnvironment.User);
             }
             if (page.Widget is IDocument)
+            {
                 ((IDocument)page.Widget).Document = document;
+            }
+
             if (page.Widget is IExecutable)
-                ((IExecutable)page.Widget).Execute(new ExecuteArgs(document));
+            {
+                await ((IExecutable)page.Widget).Execute(new ExecuteArgs(document));
+            }
+
             if (page.Widget is TableEditor)
+            {
                 ((TableEditor)page.Widget).OwnerRow = document;
+            }
+
             if (document.Attached)
             {
                 if (page.Widget is ILoader)
+                {
                     ((ILoader)page.Widget).Loader.LoadAsync();
+                }
                 else if (page.Widget is ISync)
+                {
                     await ((ISync)page.Widget).SyncAsync();
+                }
             }
         }
 
@@ -235,7 +251,7 @@ namespace DataWF.Module.FlowGui
                 }
                 else
                 {
-                    var task = proc.ExecuteTask(result, param);
+                    var task = proc.GetExecutor(result, param);
 
                     if (GuiService.Main != null)
                     {
@@ -245,7 +261,9 @@ namespace DataWF.Module.FlowGui
                         result = null;
                     }
                     else
+                    {
                         result = task.Execute();
+                    }
                 }
 
             }
@@ -317,7 +335,7 @@ namespace DataWF.Module.FlowGui
             CheckState(DocumentEditorState.None);
         }
 
-        public void CheckProcRezult(ExecuteDocumentArg arg)
+        public async void CheckProcRezult(ExecuteDocumentArg arg)
         {
             if (arg.Document != this.Document)
                 return;
@@ -341,7 +359,7 @@ namespace DataWF.Module.FlowGui
                     }
                     break;
                 case DocumentData docData:
-                    Execute(docData);
+                    await Execute(docData);
                     break;
                 case Exception exception:
                     if (GuiService.Main == null)

@@ -17,28 +17,28 @@ namespace DataWF.Gui
                 GenerateToString = false,
                 ListInfo = new LayoutListInfo(new[] {
                     new LayoutColumn() { Name = nameof(AccessItem.Group), Width = 110, FillWidth = true, Editable = false },
-                    new LayoutColumn() { Name = nameof(AccessItem.View), Width = 35, Invoker = new Invoker<AccessItem, bool>(nameof(AccessItem.View),
-                                                            (item) => item.View,
+                    new LayoutColumn() { Name = nameof(AccessItem.Read), Width = 35, Invoker = new Invoker<AccessItem, bool>(nameof(AccessItem.Read),
+                                                            (item) => item.Read,
                                                             (item, value) =>
                                                             {
                                                                 if (access == null)
                                                                     return;
-                                                                if (access.GetFlag(AccessType.Admin,user) || access.GetFlag(AccessType.Edit,user))
+                                                                if (access.GetFlag(AccessType.Admin,user) || access.GetFlag(AccessType.Update,user))
                                                                 {
-                                                                    item.View = value;
+                                                                    item.Read = value;
                                                                     access.Add(item);
                                                                     Accessable.Access = access;
                                                                 }
                                                             })},
-                    new LayoutColumn() { Name = nameof(AccessItem.Edit), Width = 35 , Invoker = new Invoker<AccessItem, bool>(nameof(AccessItem.Edit),
-                                                            (item) => item.Edit,
+                    new LayoutColumn() { Name = nameof(AccessItem.Update), Width = 35 , Invoker = new Invoker<AccessItem, bool>(nameof(AccessItem.Update),
+                                                            (item) => item.Update,
                                                             (item, value) =>
                                                             {
                                                                 if (access == null)
                                                                     return;
-                                                                if (access.GetFlag(AccessType.Admin,user)||  access.GetFlag(AccessType.Edit,user))
+                                                                if (access.GetFlag(AccessType.Admin,user)||  access.GetFlag(AccessType.Update,user))
                                                                 {
-                                                                    item.Edit = value;
+                                                                    item.Update = value;
                                                                     access.Add(item);
                                                                     Accessable.Access = access;
                                                                 }
@@ -49,7 +49,7 @@ namespace DataWF.Gui
                                                             {
                                                                 if (access == null)
                                                                     return;
-                                                                if (access.GetFlag(AccessType.Admin,user)||  access.GetFlag(AccessType.Edit,user))
+                                                                if (access.GetFlag(AccessType.Admin,user)||  access.GetFlag(AccessType.Update,user))
                                                                 {
                                                                     item.Create = value;
                                                                     access.Add(item);
@@ -62,7 +62,7 @@ namespace DataWF.Gui
                                                             {
                                                                 if (access == null)
                                                                     return;
-                                                                if (access.GetFlag(AccessType.Admin,user)||  access.GetFlag(AccessType.Edit,user))
+                                                                if (access.GetFlag(AccessType.Admin,user)||  access.GetFlag(AccessType.Update,user))
                                                                 {
                                                                     item.Delete = value;
                                                                     access.Add(item);
@@ -75,7 +75,7 @@ namespace DataWF.Gui
                                                             {
                                                                 if (access == null)
                                                                     return;
-                                                                if (access.GetFlag(AccessType.Admin,user)||  access.GetFlag(AccessType.Edit,user))
+                                                                if (access.GetFlag(AccessType.Admin,user)||  access.GetFlag(AccessType.Update,user))
                                                                 {
                                                                     item.Admin = value;
                                                                     access.Add(item);
@@ -88,7 +88,7 @@ namespace DataWF.Gui
                                                             {
                                                                 if (access == null)
                                                                     return;
-                                                                if (access.GetFlag(AccessType.Admin,user)||  access.GetFlag(AccessType.Edit,user))
+                                                                if (access.GetFlag(AccessType.Admin,user)||  access.GetFlag(AccessType.Update,user))
                                                                 {
                                                                     item.Accept = value;
                                                                     access.Add(item);
@@ -132,7 +132,7 @@ namespace DataWF.Gui
                     if (accessable.Access == null)
                         accessable.Access = new AccessValue();
                     Access = (AccessValue)accessable.Access;
-                    Readonly = !access.GetFlag(AccessType.Edit, user) && !Access.GetFlag(AccessType.Admin, user);
+                    Readonly = !access.GetFlag(AccessType.Update, user) && !Access.GetFlag(AccessType.Admin, user);
                 }
             }
         }
