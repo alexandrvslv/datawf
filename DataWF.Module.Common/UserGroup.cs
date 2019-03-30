@@ -104,11 +104,15 @@ namespace DataWF.Module.Common
         }
 
         [ControllerMethod]
-        public IEnumerable<User> GetUsers()
+        public IEnumerable<User> GetUsers(DBTransaction transaction)
         {
             foreach (User user in User.DBTable)
-                if (user.Access.Get(this).Create)
+            {
+                if (user.Access.Get(this).Create && user.Access.GetFlag(AccessType.Read, transaction.Caller))
+                {
                     yield return user;
+                }
+            }
         }
 
         public bool IsCurrentUser(IUserIdentity user)

@@ -875,7 +875,7 @@ namespace DataWF.Module.Flow
                 work.User = (User)transaction.Caller;
             }
             work.DateComplete = DateTime.Now;
-            if (work.Stage != null && work.Stage.Access.GetFlag(AccessType.Edit, transaction.Caller))
+            if (work.Stage != null && work.Stage.Access.GetFlag(AccessType.Update, transaction.Caller))
             {
                 if (autoComplete && (work.Stage.Keys & StageKey.AutoComplete) == StageKey.AutoComplete)
                 {

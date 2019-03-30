@@ -9,17 +9,16 @@ namespace DataWF.Common
     public struct AccessItem : IAccessItem
     {
         public readonly static AccessItem Empty = new AccessItem();
-        public static bool Default = false;
 
         public AccessItem(IAccessGroup group, AccessType data = AccessType.None) : this()
         {
             Group = group;
-            Data = data;
+            Access = data;
         }
 
         public override string ToString()
         {
-            return $"{Group?.Name}({Data})";
+            return $"{Group?.Name}({Access})";
         }
 
         [XmlIgnore, JsonIgnore]
@@ -37,121 +36,120 @@ namespace DataWF.Common
             }
         }
 
-        [XmlIgnore, JsonIgnore]
-        public AccessType Data { get; set; }
+        public AccessType Access { get; set; }
 
         [JsonIgnore]
         public bool IsEmpty
         {
-            get { return Data == 0; }
+            get { return Group == null || Access == 0; }
         }
 
-        [DefaultValue(false)]
-        public bool View
+        [XmlIgnore, JsonIgnore, DefaultValue(false)]
+        public bool Read
         {
-            get { return (Data & AccessType.View) == AccessType.View; }
+            get { return (Access & AccessType.Read) == AccessType.Read; }
             set
             {
-                if (View != value)
+                if (Read != value)
                 {
                     if (value)
-                        Data |= AccessType.View;
+                        Access |= AccessType.Read;
                     else
-                        Data &= ~AccessType.View;
+                        Access &= ~AccessType.Read;
                 }
             }
         }
 
-        [DefaultValue(false)]
+        [XmlIgnore, JsonIgnore, DefaultValue(false)]
         public bool Create
         {
-            get { return (Data & AccessType.Create) == AccessType.Create; }
+            get { return (Access & AccessType.Create) == AccessType.Create; }
             set
             {
                 if (Create != value)
                 {
                     if (value)
-                        Data |= AccessType.Create;
+                        Access |= AccessType.Create;
                     else
-                        Data &= ~AccessType.Create;
+                        Access &= ~AccessType.Create;
                 }
             }
         }
 
-        [DefaultValue(false)]
+        [XmlIgnore, JsonIgnore, DefaultValue(false)]
         public bool Edit
         {
-            get { return (Data & AccessType.Edit) == AccessType.Edit; }
+            get { return (Access & AccessType.Update) == AccessType.Update; }
             set
             {
                 if (Edit != value)
                 {
                     if (value)
-                        Data |= AccessType.Edit;
+                        Access |= AccessType.Update;
                     else
-                        Data &= ~AccessType.Edit;
+                        Access &= ~AccessType.Update;
                 }
             }
         }
 
-        [DefaultValue(false)]
+        [XmlIgnore, JsonIgnore, DefaultValue(false)]
         public bool Delete
         {
-            get { return (Data & AccessType.Delete) == AccessType.Delete; }
+            get { return (Access & AccessType.Delete) == AccessType.Delete; }
             set
             {
                 if (Delete != value)
                 {
                     if (value)
-                        Data |= AccessType.Delete;
+                        Access |= AccessType.Delete;
                     else
-                        Data &= ~AccessType.Delete;
+                        Access &= ~AccessType.Delete;
                 }
             }
         }
 
-        [DefaultValue(false)]
+        [XmlIgnore, JsonIgnore, DefaultValue(false)]
         public bool Admin
         {
-            get { return (Data & AccessType.Admin) == AccessType.Admin; }
+            get { return (Access & AccessType.Admin) == AccessType.Admin; }
             set
             {
                 if (Admin != value)
                 {
                     if (value)
-                        Data |= AccessType.Admin;
+                        Access |= AccessType.Admin;
                     else
-                        Data &= ~AccessType.Admin;
+                        Access &= ~AccessType.Admin;
                 }
             }
         }
 
-        [DefaultValue(false)]
+        [XmlIgnore, JsonIgnore, DefaultValue(false)]
         public bool Accept
         {
-            get { return (Data & AccessType.Accept) == AccessType.Accept; }
+            get { return (Access & AccessType.Accept) == AccessType.Accept; }
             set
             {
                 if (Accept != value)
                 {
                     if (value)
-                        Data |= AccessType.Accept;
+                        Access |= AccessType.Accept;
                     else
-                        Data &= ~AccessType.Accept;
+                        Access &= ~AccessType.Accept;
                 }
             }
         }
 
-        internal void Write(BinaryWriter writer)
+        internal void BinaryWrite(BinaryWriter writer)
         {
             writer.Write(GroupId);
-            writer.Write((int)Data);
+            writer.Write((int)Access);
         }
 
-        internal void Read(BinaryReader reader)
+        internal void BinaryRead(BinaryReader reader)
         {
             GroupId = reader.ReadInt32();
-            Data = (AccessType)reader.ReadInt32();
+            Access = (AccessType)reader.ReadInt32();
         }
     }
 }

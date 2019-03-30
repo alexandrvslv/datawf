@@ -98,8 +98,8 @@ namespace DataWF.Module.Common
                     var newValue = LogItem.GetValue(logColumn);
                     if (DBService.Equal(oldValue, newValue))
                         continue;
-                    var oldFormat = column.Access.GetFlag(AccessType.View, user) ? column.FormatValue(oldValue) : "*****";
-                    var newFormat = column.Access.GetFlag(AccessType.View, user) ? column.FormatValue(newValue) : "*****";
+                    var oldFormat = column.Access.GetFlag(AccessType.Read, user) ? column.FormatValue(oldValue) : "*****";
+                    var newFormat = column.Access.GetFlag(AccessType.Read, user) ? column.FormatValue(newValue) : "*****";
                     if (oldValue == null && newValue != null)
                         _textCache += string.Format("{0}: {1}\n", column, newFormat);
                     else if (oldValue != null && newValue == null)
@@ -120,7 +120,7 @@ namespace DataWF.Module.Common
                                 {
                                     var nAceess = newAcces.Items[index];
                                     rez += string.Format("Change {0}({1}{2}{3}{4}{5}{6}); ", oAccess.Group,
-                                        oAccess.View != nAceess.View ? (nAceess.View ? "+" : "-") + "View " : "",
+                                        oAccess.Read != nAceess.Read ? (nAceess.Read ? "+" : "-") + "View " : "",
                                         oAccess.Edit != nAceess.Edit ? (nAceess.Edit ? "+" : "-") + "Edit " : "",
                                         oAccess.Create != nAceess.Create ? (nAceess.Create ? "+" : "-") + "Create " : "",
                                         oAccess.Delete != nAceess.Delete ? (nAceess.Delete ? "+" : "-") + "Delete " : "",

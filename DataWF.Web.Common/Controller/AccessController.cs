@@ -89,8 +89,8 @@ namespace DataWF.Web.Common
                     return NotFound();
                 }
 
-                if (!accessColumn.Access.GetFlag(AccessType.View, CurrentUser)
-                    || !value.Access.GetFlag(AccessType.View, CurrentUser))
+                if (!accessColumn.Access.GetFlag(AccessType.Read, CurrentUser)
+                    || !value.Access.GetFlag(AccessType.Read, CurrentUser))
                 {
                     return Forbid();
                 }
@@ -125,8 +125,11 @@ namespace DataWF.Web.Common
                     {
                         return NotFound();
                     }
-                    if (!(accessColumn.Access.GetFlag(AccessType.Edit, CurrentUser))
-                        || !value.Access.GetFlag(AccessType.Edit, CurrentUser))
+                    if (!(accessColumn.Access.GetFlag(AccessType.Update, CurrentUser)
+                        || accessColumn.Access.GetFlag(AccessType.Admin, CurrentUser))
+                        || !(value.Access.GetFlag(AccessType.Update, CurrentUser)
+                        || value.Access.GetFlag(AccessType.Admin, CurrentUser))
+                        || !(table.Access.GetFlag(AccessType.Admin, CurrentUser)))
                     {
                         return Forbid();
                     }

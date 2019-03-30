@@ -219,6 +219,22 @@ namespace DataWF.Common
             return builder.ToString();
         }
 
+        public string FormatEnabled()
+        {
+            var logic = false;
+            var builder = new StringBuilder();
+            foreach (var parametr in GetEnabled())
+            {
+                if (parametr.FormatEmpty)
+                {
+                    continue;
+                }
+                parametr.Format(builder, logic);
+                logic = true;
+            }
+            return builder.ToString();
+        }
+
         public IEnumerable<QueryParameter<T>> GetEnabled()
         {
             return ((IEnumerable<QueryParameter<T>>)Parameters).Where(p => p.IsEnabled);

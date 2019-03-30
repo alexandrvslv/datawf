@@ -12,7 +12,6 @@ namespace DataWF.Web.Common
     {
         public static readonly DBItemContractResolver Instance = new DBItemContractResolver();
         public readonly JsonConverter DBItemConverter = new DBItemJsonConverter();
-        public readonly JsonConverter AccessConverter = new AccessValueJsonConverter();
         public readonly JsonConverter StringConverter = new StringEnumConverter();
 
         public DBItemContractResolver()
@@ -39,6 +38,21 @@ namespace DataWF.Web.Common
                     foreach (var column in table.Columns.Where(p => TypeHelper.IsBaseType(p.Property.DeclaringType, objectType)))
                     // && (p.Attribute.Keys & DBColumnKeys.System) != DBColumnKeys.System
                     {
+                        if (column.Property.PropertyType == typeof(AccessValue))
+                        {
+                            var accessProperty = new JsonProperty
+                            {
+                                DeclaringType = objectType,
+                                DefaultValue = null,
+                                Order = column.Attribute.Order,
+                                PropertyName = column.PropertyName,
+                                PropertyType = typeof(AccessType?),
+                                ValueProvider = column.PropertyInvoker,
+                                Ignored = true
+                            };
+                            result.Properties.Add(accessProperty);
+                            continue;
+                        }
                         var jsonProperty = new JsonProperty
                         {
                             DeclaringType = objectType,
@@ -64,62 +78,7 @@ namespace DataWF.Web.Common
                     return result;
                 }
             }
-            if (objectType == typeof(AccessValue))
-            {
-                var result = new JsonObjectContract(objectType)
-                {
-                    Converter = AccessConverter
-                };
-                result.Properties.Add(new JsonProperty
-                {
-                    DeclaringType = objectType,
-                    DefaultValue = false,
-                    Order = 1,
-                    PropertyName = AccessType.View.ToString(),
-                    PropertyType = typeof(bool)
-                });
-                result.Properties.Add(new JsonProperty
-                {
-                    DeclaringType = objectType,
-                    DefaultValue = false,
-                    Order = 1,
-                    PropertyName = AccessType.Create.ToString(),
-                    PropertyType = typeof(bool)
-                });
-                result.Properties.Add(new JsonProperty
-                {
-                    DeclaringType = objectType,
-                    DefaultValue = false,
-                    Order = 1,
-                    PropertyName = AccessType.Edit.ToString(),
-                    PropertyType = typeof(bool)
-                });
-                result.Properties.Add(new JsonProperty
-                {
-                    DeclaringType = objectType,
-                    DefaultValue = false,
-                    Order = 1,
-                    PropertyName = AccessType.Delete.ToString(),
-                    PropertyType = typeof(bool)
-                });
-                result.Properties.Add(new JsonProperty
-                {
-                    DeclaringType = objectType,
-                    DefaultValue = false,
-                    Order = 1,
-                    PropertyName = AccessType.Admin.ToString(),
-                    PropertyType = typeof(bool)
-                });
-                result.Properties.Add(new JsonProperty
-                {
-                    DeclaringType = objectType,
-                    DefaultValue = false,
-                    Order = 1,
-                    PropertyName = AccessType.Accept.ToString(),
-                    PropertyType = typeof(bool)
-                });
-                return result;
-            }
+
             var contract = base.CreateObjectContract(objectType);
             if (objectType.IsEnum)
             {

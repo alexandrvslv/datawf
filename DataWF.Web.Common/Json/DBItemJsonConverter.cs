@@ -57,7 +57,15 @@ namespace DataWF.Web.Common
                     if (!IsSerializeableColumn(column))
                         continue;
                     writer.WritePropertyName(column.PropertyName);
-                    serializer.Serialize(writer, column.PropertyInvoker.GetValue(item));
+                    var propertyValue = column.PropertyInvoker.GetValue(item);
+                    if (propertyValue is AccessValue accessValue)
+                    {
+                        serializer.Serialize(writer, accessValue.GetFlags(claimsWriter.User));
+                    }
+                    else
+                    {
+                        serializer.Serialize(writer, propertyValue);
+                    }
                 }
                 if (claimsWriter?.SerializeReferences ?? false)
                 {

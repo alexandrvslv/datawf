@@ -439,8 +439,8 @@ namespace DataWF.Module.Common
 
     public enum UserAuthType
     {
-        Internal,
-        SMTP,
-        LDAP
+        Internal = 1,
+        SMTP = 2,
+        LDAP = 3
     }
 }

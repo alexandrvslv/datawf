@@ -278,7 +278,7 @@ namespace DataWF.Web.Common
                         if (item.Type != DBLogType.Delete)
                         {
                             var value = item.Table.LoadItemById(item.ItemId);
-                            if (value?.Access?.GetFlag(AccessType.View, user) ?? false)
+                            if (value?.Access?.GetFlag(AccessType.Read, user) ?? false)
                             {
                                 writer.WritePropertyName("Value");
                                 jsonSerializer.Serialize(writer, value, value?.GetType());

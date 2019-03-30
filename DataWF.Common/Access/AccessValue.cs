@@ -7,7 +7,6 @@ using System.Xml.Serialization;
 
 namespace DataWF.Common
 {
-
     public class AccessValue : IAccessValue
     {
         public static IEnumerable<IAccessGroup> Groups = new List<IAccessGroup>();
@@ -17,7 +16,6 @@ namespace DataWF.Common
             return new AccessValue(value);
         }
 
-        [JsonIgnore, XmlIgnore]
         public List<AccessItem> Items = new List<AccessItem>(1);
 
         public AccessValue()
@@ -25,7 +23,9 @@ namespace DataWF.Common
             foreach (IAccessGroup group in Groups)
             {
                 if (group != null)
-                    Add(new AccessItem(group, AccessType.View));
+                {
+                    Add(new AccessItem(group, AccessType.Read));
+                }
             }
         }
 
@@ -42,17 +42,17 @@ namespace DataWF.Common
             }
         }
 
-        public AccessView GetView(IUserIdentity user)
+        public AccessType GetFlags(IUserIdentity user)
         {
-            return new AccessView
+            var data = AccessType.None;
+            foreach (AccessItem item in Items)
             {
-                View = GetFlag(AccessType.View, user),
-                Edit = GetFlag(AccessType.Edit, user),
-                Create = GetFlag(AccessType.Create, user),
-                Delete = GetFlag(AccessType.Delete, user),
-                Admin = GetFlag(AccessType.Admin, user),
-                Accept = GetFlag(AccessType.Accept, user),
-            };
+                if (item.Group?.IsCurrentUser(user) ?? false)
+                {
+                    data |= item.Access;
+                }
+            }
+            return data;
         }
 
 
@@ -62,11 +62,11 @@ namespace DataWF.Common
             {
                 if (item.Group?.IsCurrentUser(user) ?? false)
                 {
-                    if ((item.Data & type) == type)
+                    if ((item.Access & type) == type)
                         return true;
                 }
             }
-            return AccessItem.Default;
+            return false;
         }
 
         public void SetFlag(IAccessGroup group, AccessType type)
@@ -96,7 +96,7 @@ namespace DataWF.Common
 
             foreach (AccessItem item in Items)
                 if (!item.IsEmpty)
-                    item.Write(writer);
+                    item.BinaryWrite(writer);
         }
 
         public void Read(byte[] buffer)
@@ -118,7 +118,7 @@ namespace DataWF.Common
                     if (reader.BaseStream.Position < (reader.BaseStream.Length))
                     {
                         var item = new AccessItem();
-                        item.Read(reader);
+                        item.BinaryRead(reader);
                         if (item.Group != null)
                             Items.Add(item);
                     }
@@ -155,7 +155,6 @@ namespace DataWF.Common
             }
         }
 
-
         public void Add(AccessItem item)
         {
             int index = GetIndex(item.Group);
@@ -173,7 +172,7 @@ namespace DataWF.Common
         {
             foreach (var item in Items)
             {
-                if ((type & item.Data) == type)
+                if ((type & item.Access) == type)
                     yield return item.Group;
             }
         }
@@ -204,28 +203,4 @@ namespace DataWF.Common
             throw new NotImplementedException();
         }
     }
-
-    //public class AccessValueJson : JsonConverter
-    //{
-    //    public override bool CanConvert(Type objectType)
-    //    {
-    //        return objectType == typeof(AccessValue);
-    //    }
-
-    //    public override bool CanRead { get { return false; } }
-
-    //    public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
-    //    {
-    //        throw new NotImplementedException();
-    //    }
-
-    //    public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
-    //    {
-    //        if (!(value is AccessValue typeValue))
-    //        {
-    //            throw new JsonSerializationException($"Expected {nameof(AccessValue)} but {nameof(value)} is {value?.GetType().Name}.");
-    //        }
-    //        writer.WriteValue(value.ToString());
-    //    }
-    //}
 }

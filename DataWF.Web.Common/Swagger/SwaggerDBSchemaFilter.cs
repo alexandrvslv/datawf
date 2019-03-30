@@ -55,7 +55,12 @@ namespace DataWF.Web.Common
                 schema.Properties.Clear();
                 foreach (var column in table.Columns.Where(p => p.Property.DeclaringType == type))
                 {
-                    var columnSchema = context.SchemaRegistry.GetOrRegister(TypeHelper.CheckNullable(column.Property.PropertyType));
+                    var propertyType = TypeHelper.CheckNullable(column.Property.PropertyType);
+                    if (propertyType == typeof(AccessValue))
+                    {
+                        propertyType = typeof(AccessType);
+                    }
+                    var columnSchema = context.SchemaRegistry.GetOrRegister(propertyType);
                     ApplyColumn(schema, columnSchema, column);
                     if (column.ReferenceProperty != null)
                     {
@@ -88,6 +93,7 @@ namespace DataWF.Web.Common
             {
                 columnSchema.MaxLength = column.Attribute.Size;
             }
+
             if ((column.Attribute.Keys & DBColumnKeys.Access) == DBColumnKeys.Access
                 || (column.Attribute.Keys & DBColumnKeys.Date) == DBColumnKeys.Date
                 || (column.Attribute.Keys & DBColumnKeys.Stamp) == DBColumnKeys.Stamp

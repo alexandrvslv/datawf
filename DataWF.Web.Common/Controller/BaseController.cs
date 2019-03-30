@@ -40,12 +40,12 @@ namespace DataWF.Web.Common
             try
             {
                 var user = CurrentUser;
-                if (!table.Access.GetFlag(AccessType.View, user))
+                if (!table.Access.GetFlag(AccessType.Read, user))
                 {
                     return Forbid();
                 }
                 return new ActionResult<IEnumerable<T>>(table.LoadCache(filter, DBLoadParam.Referencing)
-                                                              .Where(p => p.Access.GetFlag(AccessType.View, user)));
+                                                              .Where(p => p.Access.GetFlag(AccessType.Read, user)));
             }
             catch (Exception ex)
             {
@@ -65,7 +65,7 @@ namespace DataWF.Web.Common
                 {
                     return NotFound();
                 }
-                if (!value.Access.GetFlag(AccessType.View, user))
+                if (!value.Access.GetFlag(AccessType.Read, user))
                 {
                     return Forbid();
                 }
@@ -91,7 +91,7 @@ namespace DataWF.Web.Common
                     if (((value.UpdateState & DBUpdateState.Insert) == DBUpdateState.Insert
                         && !value.Access.GetFlag(AccessType.Create, transaction.Caller))
                         || ((value.UpdateState & DBUpdateState.Update) == DBUpdateState.Update
-                        && !value.Access.GetFlag(AccessType.Edit, transaction.Caller)))
+                        && !value.Access.GetFlag(AccessType.Update, transaction.Caller)))
                     {
                         value.Reject(transaction.Caller);
                         return Forbid();
@@ -119,7 +119,7 @@ namespace DataWF.Web.Common
                     {
                         throw new InvalidOperationException("Some deserialization problem!");
                     }
-                    if (((value.UpdateState & DBUpdateState.Update) == DBUpdateState.Update && !value.Access.GetFlag(AccessType.Edit, transaction.Caller)))
+                    if (((value.UpdateState & DBUpdateState.Update) == DBUpdateState.Update && !value.Access.GetFlag(AccessType.Update, transaction.Caller)))
                     {
                         value.Reject(transaction.Caller);
                         return Forbid();

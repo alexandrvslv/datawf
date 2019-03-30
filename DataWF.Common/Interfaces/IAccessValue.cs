@@ -9,11 +9,6 @@
     public interface IAccessItem
     {
         int GroupId { get; }
-        bool Accept { get; }
-        bool Admin { get; }
-        bool Create { get; }
-        bool Delete { get; }
-        bool Edit { get; }
-        bool View { get; }
+        AccessType Access { get; }        
     }
 }
