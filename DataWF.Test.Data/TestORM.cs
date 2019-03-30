@@ -129,7 +129,7 @@ namespace DataWF.Test.Data
             employer.GenerateId();
             Assert.NotNull(employer.Id, "Id Generator Fail");
 
-            employer.Save();
+            await employer.Save();
             var qresult = schema.Connection.ExecuteQResult($"select * from {EmployerTableName}");
             Assert.AreEqual(1, qresult.Values.Count, "Insert sql Fail");
             Assert.AreEqual(employer.Id, qresult.Get(0, "id"), "Insert sql Fail Int");
@@ -180,7 +180,7 @@ namespace DataWF.Test.Data
             Assert.IsNotNull(position, "GetById Fail");
             //Update
             employer.Position = position;
-            employer.Save();
+            await employer.Save();
 
             qresult = schema.Connection.ExecuteQResult($"select * from {EmployerTableName}");
             Assert.AreEqual(4, qresult.Get(0, "positionid"), "Update sql Fail");

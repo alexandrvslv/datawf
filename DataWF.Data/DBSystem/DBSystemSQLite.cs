@@ -59,7 +59,8 @@ namespace DataWF.Data
             var builder = new SqliteConnectionStringBuilder
             {
                 DataSource = connection.DataBase,
-                Cache = SqliteCacheMode.Shared
+                Cache = SqliteCacheMode.Shared,
+                Mode = SqliteOpenMode.ReadWriteCreate
             };
             //builder.Pooling = connection.Pool;
             //builder.Timeout = connection.TimeOut;

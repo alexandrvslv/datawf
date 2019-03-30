@@ -370,7 +370,7 @@ namespace DataWF.Data
 
         public IEnumerable<T> Load(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction baseTransaction = null)
         {
-            var transaction = baseTransaction ?? new DBTransaction(Connection, null, true);           
+            var transaction = baseTransaction ?? new DBTransaction(Connection, null, true);
             try
             {
                 transaction.AddCommand(command);
@@ -773,8 +773,7 @@ namespace DataWF.Data
                 if (column.IsPrimaryKey)
                 {
                     var query = (QQuery)value;
-                    var qcolumn = query.Columns[0] as QColumn;
-                    if (qcolumn != null && !query.IsRefence)
+                    if (query.Columns[0] is QColumn qcolumn && !query.IsRefence)
                     {
                         var buf = new List<T>();
                         foreach (DBItem item in query.Select())

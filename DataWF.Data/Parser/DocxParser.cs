@@ -264,9 +264,8 @@ namespace DataWF.Data
         {
             foreach (var child in documentPart.Elements())
             {
-                if (child is Word.FieldChar)
+                if (child is Word.FieldChar fch)
                 {
-                    Word.FieldChar fch = (Word.FieldChar)child;
                     if (fch.FieldCharType == Word.FieldCharValues.Begin)
                     {
                         lch = fch;

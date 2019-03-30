@@ -54,7 +54,7 @@ namespace DataWF.Data
                 if (invoker != value)
                 {
                     invoker = value;
-                    Text = value == null ? null : value.Name;
+                    Text = value?.Name;
                     OnPropertyChanged(nameof(Invoker));
                 }
             }
@@ -62,8 +62,9 @@ namespace DataWF.Data
 
         public override object GetValue(DBItem row = null)
         {
-            return Invoker == null ? null : Invoker.GetValue(row);
+            return Invoker?.GetValue(row);
         }
+
         public override string Format(IDbCommand command = null)
         {
             return command != null ? string.Empty : base.Format(command);

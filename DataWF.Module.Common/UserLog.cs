@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 
 namespace DataWF.Module.Common
 {
@@ -72,7 +73,7 @@ namespace DataWF.Module.Common
             RowLoging?.Invoke(null, arg);
             if (user != null && user.LogStart == null)
             {
-                User.StartSession(user);
+                await User.StartSession(user);
             }
             var userLog = user?.LogStart;
 
@@ -197,7 +198,7 @@ namespace DataWF.Module.Common
         //    return listmap;
         //}
 
-        public static void LogUser(User user, UserLogType type, string info)
+        public static async Task LogUser(User user, UserLogType type, string info)
         {
             var newLog = new UserLog()
             {
@@ -219,7 +220,7 @@ namespace DataWF.Module.Common
             }
 
             newLog.TextData = info;
-            newLog.Save(user);
+            await newLog.Save(user);
         }
 
         DBItem IUserLog.User

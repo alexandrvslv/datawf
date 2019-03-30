@@ -660,8 +660,7 @@ namespace DataWF.Data
                 if (cell.DataType.Value == Excel.CellValues.SharedString)
                 {
                     // shared strings table.
-                    int val = 0;
-                    if (int.TryParse(value, out val))
+                    if (int.TryParse(value, out int val))
                     {
                         //if (strings.SharedStringTable.ChildElements.Count > val)
                         if (buffer != null)
@@ -759,13 +758,11 @@ namespace DataWF.Data
 
             foreach (OpenXmlElement element in sd)
             {
-                Excel.Row row = element as Excel.Row;
-                if (row != null)
+                if (element is Excel.Row row)
                 {
                     foreach (OpenXmlElement celement in element)
                     {
-                        Excel.Cell cell = celement as Excel.Cell;
-                        if (cell != null)
+                        if (celement is Excel.Cell cell)
                         {
                             string val = ReadCell(cell, xl);
                             if (val.IndexOf('#') >= 0)

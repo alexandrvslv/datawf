@@ -61,12 +61,12 @@ namespace DataWF.Module.Common
             base.Dispose();
         }
 
-        public void Login(User user)
+        public async void Login(User user)
         {
             StartListener();
             User = user;
             endPoint = new IPEndPoint(EndPointHelper.GetInterNetworkIPs().First(), ListenerEndPoint.Port);
-            instance = Instance.GetByNetId(endPoint, user, true);
+            instance = await Instance.GetByNetId(endPoint, user, true);
 
             byte[] temp = instance.EndPoint.GetBytes();
             Send(temp, null, SocketMessageType.Login);
@@ -76,7 +76,7 @@ namespace DataWF.Module.Common
             new Task(SendData, TaskCreationOptions.LongRunning).Start();
         }
 
-        public void Logout()
+        public async void Logout()
         {
             if (instance == null)
                 return;
@@ -85,7 +85,7 @@ namespace DataWF.Module.Common
             Send((byte[])null, null, SocketMessageType.Logout);
             StopListener();
             instance.Delete();
-            instance.Save(User);
+            await instance.Save(User);
             instance = null;
         }
 

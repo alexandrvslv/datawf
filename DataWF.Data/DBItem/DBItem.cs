@@ -985,13 +985,13 @@ namespace DataWF.Data
             Table.ReloadItem(PrimaryId);
         }
 
-        public void GenerateId()
+        public void GenerateId(DBTransaction transaction = null)
         {
             if (Table.Sequence == null || Table.PrimaryKey == null)
                 return;
             if (PrimaryId == null)
             {
-                PrimaryId = Table.Sequence.Next();
+                PrimaryId = transaction != null ? Table.Sequence.Next(transaction) : Table.Sequence.Next();
             }
             else
             {
@@ -1027,12 +1027,12 @@ namespace DataWF.Data
             }
         }
 
-        public void Save()
+        public Task Save()
         {
-            Save((IUserIdentity)null);
+            return Save((IUserIdentity)null);
         }
 
-        public async void Save(IUserIdentity user)
+        public async Task Save(IUserIdentity user)
         {
             using (var transaction = new DBTransaction(Table.Connection, user))
             {

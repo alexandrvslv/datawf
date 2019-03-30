@@ -4,6 +4,7 @@ using DataWF.Module.Common;
 using DataWF.Module.Counterpart;
 using NUnit.Framework;
 using System;
+using System.Threading.Tasks;
 
 namespace DataWF.Test.Module.Common
 {
@@ -11,7 +12,7 @@ namespace DataWF.Test.Module.Common
     public class Generate
     {
         [Test()]
-        public async void Initialize()
+        public async Task Initialize()
         {
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
             var schema = new DBSchema("common_database");
@@ -42,7 +43,7 @@ namespace DataWF.Test.Module.Common
                 Number = "GP1",
                 Name = "Group1"
             };
-            group.Save();
+            await group.Save();
 
             var position = new Position()
             {
@@ -58,9 +59,9 @@ namespace DataWF.Test.Module.Common
                 Position = position,
                 Access = new AccessValue(new[] { new AccessItem(group, AccessType.Create) })
             };
-            user.Save();
+            await user.Save();
 
-            User.StartSession("test", "UserCommon1!");
+            await User.StartSession("test", "UserCommon1!");
 
             await GroupPermission.CachePermission();
 

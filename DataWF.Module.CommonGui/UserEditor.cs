@@ -82,13 +82,13 @@ namespace DataWF.Module.CommonGui
                 User.Status = DBStatus.Edit;
         }
 
-        private void OnRowUpdated(object sender, DBItemEventArgs arg)
+        private async void OnRowUpdated(object sender, DBItemEventArgs arg)
         {
             if (User != null && arg.Item.PrimaryId.Equals(User.Id))
             {
                 if (arg.Columns != null && arg.Columns.Contains(User.DBTable.ParseProperty(nameof(User.Password))))
                 {
-                    UserLog.LogUser(User, UserLogType.Password, "Temporary Password");
+                    await UserLog.LogUser(User, UserLogType.Password, "Temporary Password");
                 }
             }
         }
@@ -168,7 +168,7 @@ namespace DataWF.Module.CommonGui
                 }
                 else
                 {
-                    User.StartSession(row);
+                    await User.StartSession(row);
                     GuiEnvironment.User = row;
                     //row ["session_start"] = DateTime.Now;
                     if (!row.Super.GetValueOrDefault())

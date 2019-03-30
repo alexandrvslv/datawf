@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
+﻿using DataWF.Common;
 using Doc.Odf;
+using System;
+using System.Collections.Generic;
+using System.IO;
 using Xwt;
-using Xwt.Drawing;
-using DataWF.Common;
 
 namespace DataWF.Gui
 {
@@ -47,19 +45,19 @@ namespace DataWF.Gui
             // 
             toolLoad.Name = "toolLoad";
             toolLoad.Label = "load";
-            toolLoad.Clicked += new System.EventHandler(toolLoadClick);
+            toolLoad.Clicked += new System.EventHandler(ToolLoadClick);
             // 
             // toolTree
             // 
             toolTree.Name = "toolTree";
             toolTree.Label = "refresh tree";
-            toolTree.Clicked += new System.EventHandler(toolTreeClick);
+            toolTree.Clicked += new System.EventHandler(ToolTreeClick);
             // 
             // toolSave
             // 
             toolSave.Name = "toolSave";
             toolSave.Label = "Save";
-            toolSave.Clicked += new System.EventHandler(toolSaveClick);
+            toolSave.Clicked += new System.EventHandler(ToolSaveClick);
             // 
             // toolShowText
             // 
@@ -108,7 +106,7 @@ namespace DataWF.Gui
             // treeView1
             // 
             view.Name = "treeView1";
-            view.SelectionChanged += treeView1_AfterSelect;
+            view.SelectionChanged += TreeViewAfterSelect;
             // 
             // Form1
             // 
@@ -118,15 +116,17 @@ namespace DataWF.Gui
             Title = "Form1";
             view.DataSource = new TreeStore(dfName, dfTag);
             view.Columns.Add("Name", dfName);
-            pg = new LayoutList();
-            pg.EditMode = EditModes.ByClick;
+            pg = new LayoutList
+            {
+                EditMode = EditModes.ByClick
+            };
             splitContainer1.Panel2.Content = pg;
         }
 
         private TreeStore Store { get { return (TreeStore)view.DataSource; } }
 
 
-        private void toolLoadClick(object sender, EventArgs e)
+        private void ToolLoadClick(object sender, EventArgs e)
         {
             var dialog = new OpenFileDialog();
             if (dialog.Run(this))
@@ -157,7 +157,7 @@ namespace DataWF.Gui
             return tn;
         }
 
-        private void toolSaveClick(object sender, EventArgs e)
+        private void ToolSaveClick(object sender, EventArgs e)
         {
             if (doc == null)
                 return;
@@ -168,7 +168,7 @@ namespace DataWF.Gui
             }
         }
 
-        private void treeView1_AfterSelect(object sender, EventArgs e)
+        private void TreeViewAfterSelect(object sender, EventArgs e)
         {
             if (view.SelectedRow != null)
             {
@@ -184,10 +184,14 @@ namespace DataWF.Gui
                 return;
             var textView = new RichTextView();
             textView.LoadText(doc.Content.Body.Text.Value, Xwt.Formats.TextFormat.Plain);
-            var scroll = new ScrollView();
-            scroll.Content = textView;
-            var dialog = new Dialog();
-            dialog.Content = scroll;
+            var scroll = new ScrollView
+            {
+                Content = textView
+            };
+            var dialog = new Dialog
+            {
+                Content = scroll
+            };
             dialog.Run(this);
         }
 
@@ -195,11 +199,15 @@ namespace DataWF.Gui
         {
             if (doc == null)
                 return;
-            var listView = new LayoutList();
-            listView.ListSource = doc.GetTables();
+            var listView = new LayoutList
+            {
+                ListSource = doc.GetTables()
+            };
 
-            var dialog = new Dialog();
-            dialog.Content = listView;
+            var dialog = new Dialog
+            {
+                Content = listView
+            };
             dialog.Run(this);
         }
 
@@ -207,11 +215,15 @@ namespace DataWF.Gui
         {
             if (doc == null)
                 return;
-            var listView = new LayoutList();
-            listView.ListSource = doc.GetImages();
+            var listView = new LayoutList
+            {
+                ListSource = doc.GetImages()
+            };
 
-            var dialog = new Dialog();
-            dialog.Content = listView;
+            var dialog = new Dialog
+            {
+                Content = listView
+            };
             dialog.Run(this);
         }
 
@@ -264,7 +276,7 @@ namespace DataWF.Gui
             //doc.Content.Text.Add(p);            
         }
 
-        private void toolTreeClick(object sender, EventArgs e)
+        private void ToolTreeClick(object sender, EventArgs e)
         {
             Store.Clear();
             InitNode(doc.Manifest);
@@ -317,10 +329,14 @@ namespace DataWF.Gui
         {
             var textView = new ODFRichTextBox();
             textView.Initialize(doc);
-            var scroll = new ScrollView();
-            scroll.Content = textView;
-            var dialog = new Dialog();
-            dialog.Content = scroll;
+            var scroll = new ScrollView
+            {
+                Content = textView
+            };
+            var dialog = new Dialog
+            {
+                Content = scroll
+            };
             dialog.Run(this);
         }
 

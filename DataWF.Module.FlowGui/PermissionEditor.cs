@@ -162,7 +162,7 @@ namespace DataWF.Module.FlowGui
             Localize();
         }
 
-        private void FlowEnvirRowLoged(object sender, DBItemEventArgs e)
+        private async void FlowEnvirRowLoged(object sender, DBItemEventArgs e)
         {
             if (e.Item == userGroup && changes.Count > 0)
             {
@@ -170,7 +170,9 @@ namespace DataWF.Module.FlowGui
                 foreach (var item in changes)
                 {
                     if (item != userGroup)
-                        item.Save(GuiEnvironment.User);
+                    {
+                        await item.Save(GuiEnvironment.User);
+                    }
                 }
                 changes.Clear();
             }
@@ -282,15 +284,14 @@ namespace DataWF.Module.FlowGui
             logs.ShowWindow(this);
         }
 
-        private void ToolSaveClick(object sender, EventArgs e)
+        private async void ToolSaveClick(object sender, EventArgs e)
         {
             if (changes.Count > 0)
             {
                 userGroup.Status = DBStatus.Edit;
                 userGroup.Stamp = DateTime.Now;
-                userGroup.Save(GuiEnvironment.User);
             }
-            userGroup.Save(GuiEnvironment.User);
+            await userGroup.Save(GuiEnvironment.User);
         }
 
         private void ToolCancelClick(object sender, EventArgs e)

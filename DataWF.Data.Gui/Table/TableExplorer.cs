@@ -2,6 +2,7 @@
 using DataWF.Gui;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Xwt;
 
 namespace DataWF.Data.Gui
@@ -61,9 +62,15 @@ namespace DataWF.Data.Gui
         public void Initialize(DBTable table, DBItem row, DBColumn ownColumn, TableEditorMode openmode, bool readOnly)
         {
             if (this.table == null)
+            {
                 this.table = table;
+            }
+
             if (Name == "")
+            {
                 Name = table.Name + ownColumn?.Name;
+            }
+
             TableExplorerNode node = null;
             if (openmode == TableEditorMode.Item)
             {
@@ -87,7 +94,7 @@ namespace DataWF.Data.Gui
                     Info = new TableEditorInfo()
                     {
                         Table = table,
-                        TableView = openmode == TableEditorMode.Item ? null 
+                        TableView = openmode == TableEditorMode.Item ? null
                         : table.CreateItemsView("", DBViewKeys.None, DBStatus.Actual | DBStatus.Edit | DBStatus.New | DBStatus.Error),
                         Item = row,
                         Column = ownColumn,
@@ -166,11 +173,11 @@ namespace DataWF.Data.Gui
 
         #endregion
 
-        private void OnToolCloseClick(object sender, EventArgs e)
+        private async void OnToolCloseClick(object sender, EventArgs e)
         {
             if (Current == null)
                 return;
-            CloseNode(Current as TableExplorerNode);
+            await CloseNode(Current as TableExplorerNode);
         }
 
         protected override void Dispose(bool disposing)
@@ -193,14 +200,14 @@ namespace DataWF.Data.Gui
             node.Dispose();
         }
 
-        public bool CloseNode(TableExplorerNode node)
+        public async Task<bool> CloseNode(TableExplorerNode node)
         {
             if (node == null)
                 return false;
             for (int i = 0; i < node.Nodes.Count;)
             {
                 var tnch = node.Nodes[i];
-                if (!CloseNode(tnch as TableExplorerNode))
+                if (!await CloseNode(tnch as TableExplorerNode))
                     return false;
                 i++;
             }
@@ -211,9 +218,9 @@ namespace DataWF.Data.Gui
                 if (command == Command.Yes)
                 {
                     if (info.TableView != null)
-                        info.TableView.Save();
+                        await info.TableView.Save();
                     else if (info.Item != null && node.Info.Mode == TableEditorMode.Item)
-                        info.Item.Save(GuiEnvironment.User);
+                        await info.Item.Save(GuiEnvironment.User);
                 }
                 else if (command != Command.No)
                 {

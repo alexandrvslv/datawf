@@ -1,10 +1,12 @@
-﻿namespace DataWF.Common
+﻿using System.Threading.Tasks;
+
+namespace DataWF.Common
 {
     public interface IEditable
     {
         void Refresh(IUserIdentity user = null);
 
-        void Save(IUserIdentity user = null);
+        Task Save(IUserIdentity user = null);
 
         void Reject(IUserIdentity user = null);
 

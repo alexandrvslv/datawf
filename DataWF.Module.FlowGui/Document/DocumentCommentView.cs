@@ -33,14 +33,14 @@ namespace DataWF.Module.FlowGui
             PackStart(editor, false);
         }
 
-        private void OnSend(Message message)
+        private async void OnSend(Message message)
         {
             var comment = new DocumentComment()
             {
                 Document = Document,
                 Message = message
             };
-            comment.Save(GuiEnvironment.User);
+            await comment.Save(GuiEnvironment.User);
         }
 
         protected override void OnToolInsertClick(object sender, EventArgs e)

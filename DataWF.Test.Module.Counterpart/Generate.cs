@@ -4,6 +4,7 @@ using DataWF.Module.Counterpart;
 using NUnit.Framework;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace DataWf.Test.Module.Counterparty
 {
@@ -11,7 +12,7 @@ namespace DataWf.Test.Module.Counterparty
     public class Generate
     {
         [Test()]
-        public async void Initialize()
+        public async Task Initialize()
         {
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
             var schema = new DBSchema("wf_customer");

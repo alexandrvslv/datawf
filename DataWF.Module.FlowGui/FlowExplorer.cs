@@ -152,12 +152,11 @@ namespace DataWF.Module.FlowGui
             PackStart(tree, true, true);
         }
 
-        private void AcceptOnActivated(object sender, EventArgs e)
+        private async void AcceptOnActivated(object sender, EventArgs e)
         {
-            if (se.DataSource is DBItem)
+            if (se.DataSource is DBItem item)
             {
-                ((DBItem)se.DataSource).Save(GuiEnvironment.User);
-
+                await item.Save(GuiEnvironment.User);
             }
         }
 
@@ -319,7 +318,7 @@ namespace DataWF.Module.FlowGui
             }
         }
 
-        private void ToolMainRemoveClick(object sender, EventArgs e)
+        private async void ToolMainRemoveClick(object sender, EventArgs e)
         {
             if (tree.SelectedNode == null)
                 return;
@@ -335,7 +334,7 @@ namespace DataWF.Module.FlowGui
                     if (node.Item is DBItem dbItem)
                     {
                         dbItem.Delete();
-                        dbItem.Save(GuiEnvironment.User);
+                        await dbItem.Save(GuiEnvironment.User);
                     }
                 }
             }

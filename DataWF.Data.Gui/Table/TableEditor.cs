@@ -816,7 +816,7 @@ namespace DataWF.Data.Gui
                 Table.Add(bufRow);
                 try
                 {
-                    bufRow.Save(GuiEnvironment.User);
+                    await bufRow.Save(GuiEnvironment.User);
                 }
                 catch (Exception ex)
                 {

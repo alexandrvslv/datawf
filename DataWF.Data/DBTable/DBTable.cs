@@ -883,7 +883,7 @@ namespace DataWF.Data
                 }
                 else
                 {
-                    item.GenerateId();
+                    item.GenerateId(transaction);
                     if (dmlInsert == null)
                         dmlInsert = DBCommand.Build(this, comInsert, DBCommandTypes.Insert, Columns);
                     dmlCommand = dmlInsert;

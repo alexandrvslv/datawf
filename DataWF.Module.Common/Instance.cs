@@ -24,6 +24,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Net;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 
 namespace DataWF.Module.Common
 {
@@ -43,7 +44,7 @@ namespace DataWF.Module.Common
         public static DBColumn ActiveKey => DBTable.ParseProperty(nameof(Active), ref activeKey);
         public static DBTable<Instance> DBTable => dbTable ?? (dbTable = GetTable<Instance>());
 
-        public static Instance GetByNetId(IPEndPoint endPoint, User user, bool create)
+        public static async Task<Instance> GetByNetId(IPEndPoint endPoint, User user, bool create)
         {
             var query = new QQuery(DBTable);
             query.BuildPropertyParam(nameof(Host), CompareType.Equal, endPoint.Address.ToString());
@@ -59,7 +60,7 @@ namespace DataWF.Module.Common
                     Active = true,
                     IsCurrent = true
                 };
-                instance.Save(user);
+                await instance.Save(user);
             }
             return instance;
         }

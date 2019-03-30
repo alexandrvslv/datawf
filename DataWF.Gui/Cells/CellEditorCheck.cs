@@ -1,13 +1,11 @@
-﻿using System;
-using DataWF.Common;
+﻿using DataWF.Common;
+using System;
 using Xwt;
 
 namespace DataWF.Gui
 {
     public class CellEditorCheck : CellEditorText
     {
-        private bool _treeState = false;
-
         public CellEditorCheck()
             : base()
         {
@@ -93,7 +91,7 @@ namespace DataWF.Gui
         public override Widget InitEditorContent()
         {
             var box = Editor.GetCached<CheckBox>();
-            box.AllowMixed = _treeState;
+            box.AllowMixed = TreeState;
             if (!ReadOnly)
             {
                 box.Sensitive = true;

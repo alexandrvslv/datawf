@@ -547,7 +547,7 @@ namespace DataWF.Module.FlowGui
                     {
                         foreach (Document document in documents)
                         {
-                            document.Save();
+                            await document.Save();
                         }
                     }
                 }

@@ -181,28 +181,26 @@ namespace Doc.Odf
 
 		public void ApplyStyle(BaseItem item)
 		{
-			if (item is TextStyle)
+            if (item is TextStyle ts)
             {
-				var ts = (TextStyle)item;
-				textFont = new TextPropertiesView { Text = ts.TextProperties }.Font ?? textFont;
-				textColor = ts.TextProperties.FontColor.Length == 0 ? Colors.Black : Color.FromName(ts.TextProperties.FontColor);
-				textBackColor = ts.TextProperties.FontBackgroundColor.Length == 0 ? Colors.Transparent : Color.FromName(ts.TextProperties.FontBackgroundColor);
-			}
-			if (item is ParagraphStyle)
-			{
-				var ps = (ParagraphStyle)item;
-				textAlign = Alignment.Start;
-				if (ps.ParagraphProperty.TextAlign == "center")
-					textAlign = Alignment.Center;
-				if (ps.ParagraphProperty.TextAlign == "right")
-					textAlign = Alignment.End;
-				if (!string.IsNullOrEmpty(ps.ParagraphProperty.MarginTop))
-				{
+                textFont = new TextPropertiesView { Text = ts.TextProperties }.Font ?? textFont;
+                textColor = ts.TextProperties.FontColor.Length == 0 ? Colors.Black : Color.FromName(ts.TextProperties.FontColor);
+                textBackColor = ts.TextProperties.FontBackgroundColor.Length == 0 ? Colors.Transparent : Color.FromName(ts.TextProperties.FontBackgroundColor);
+            }
+            if (item is ParagraphStyle ps)
+            {
+                textAlign = Alignment.Start;
+                if (ps.ParagraphProperty.TextAlign == "center")
+                    textAlign = Alignment.Center;
+                if (ps.ParagraphProperty.TextAlign == "right")
+                    textAlign = Alignment.End;
+                if (!string.IsNullOrEmpty(ps.ParagraphProperty.MarginTop))
+                {
 
-				}
-			}
+                }
+            }
 
-			if (item is ListStyle)
+            if (item is ListStyle)
 			{
 				//var ls = (ListStyle)bs;
 			}

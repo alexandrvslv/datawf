@@ -30,6 +30,7 @@ using System.Runtime.Serialization;
 using System.Security;
 using System.Security.Principal;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace DataWF.Module.Common
 {
@@ -81,39 +82,39 @@ namespace DataWF.Module.Common
             return DBTable.LoadByCode(Environment.UserName);
         }
 
-        public static void StartSession(User value)
+        public static async Task StartSession(User value)
         {
             if (value != null)
             {
                 if (value.LogStart == null)
                 {
-                    UserLog.LogUser(value, UserLogType.Authorization, "GetUser");
+                    await UserLog.LogUser(value, UserLogType.Authorization, "GetUser");
                 }
             }
         }
 
-        public static User StartSession(string login, string password)
+        public static async Task<User> StartSession(string login, string password)
         {
-            var user = GetUser(login, Helper.GetSha512(password));
-            StartSession(user ?? throw new KeyNotFoundException("User not found!"));
+            var user = await GetUser(login, Helper.GetSha512(password));
+            await StartSession(user ?? throw new KeyNotFoundException("User not found!"));
             return user;
         }
 
-        public static User StartSession(string email, SecureString password)
+        public static Task<User> StartSession(string email, SecureString password)
         {
             return StartSession(new NetworkCredential(email, password));
         }
 
-        public static User StartSession(string email)
+        public static async Task<User> StartSession(string email)
         {
             var user = GetByEmail(email);
             if (user == null)
                 throw new KeyNotFoundException("User not found!");
-            StartSession(user);
+            await StartSession(user);
             return user;
         }
 
-        public static User StartSession(NetworkCredential credentials)
+        public static async Task<User> StartSession(NetworkCredential credentials)
         {
             if (config == null)
             {
@@ -151,7 +152,7 @@ namespace DataWF.Module.Common
                     throw new Exception("Authentication fail!");
                 }
             }
-            StartSession(user);
+            await StartSession(user);
 
             return user;
         }
@@ -221,14 +222,17 @@ namespace DataWF.Module.Common
             return UserLog.DBTable.Load(filter, DBLoadParam.Load | DBLoadParam.Synchronize);
         }
 
-        public static User GetUser(string login, string passoword)
+        public static async Task<User> GetUser(string login, string passoword)
         {
             var query = new QQuery(string.Empty, User.DBTable);
             query.BuildPropertyParam(nameof(Login), CompareType.Equal, login);
             query.BuildPropertyParam(nameof(Password), CompareType.Equal, passoword);
             var user = User.DBTable.Select(query).FirstOrDefault();
             if (user != null)
-                UserLog.LogUser(user, UserLogType.Authorization, "GetUser");
+            {
+                await UserLog.LogUser(user, UserLogType.Authorization, "GetUser");
+            }
+
             return user;
         }
 

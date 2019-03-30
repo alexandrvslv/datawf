@@ -50,16 +50,19 @@ namespace DataWF.Module.MessangerGui
             }
         }
 
-        private void OnLoad(MessageAddress item)
+        private async void OnLoad(MessageAddress item)
         {
             if (item.Message != null && item.User != null && item.Message.User != null && item.Message.User != GuiEnvironment.User && item.User == GuiEnvironment.User)
             {
                 if (item.UpdateState == DBUpdateState.Default && item.DateRead == null)// && (md == null || !md.Visible))
                 {
                     item.DateRead = DateTime.Now;
-                    item.Save(GuiEnvironment.User);
+                    await item.Save(GuiEnvironment.User);
                     if (GuiService.Main != null)
+                    {
                         GuiService.Main.SetStatus(new StateInfo("Messanger", "New Message from " + item.Message.User.ToString(), item.Message.Data as string, StatusType.Information, item));
+                    }
+
                     ShowDialog(item.Message.User);
                 }
             }

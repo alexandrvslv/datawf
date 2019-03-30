@@ -52,13 +52,12 @@ namespace DataWF.Data
                         MatchCollection mc = re.Matches(val);
                         foreach (Match m in mc)
                         {
-                            object rz = ParseString(param, m.Value.Trim("#<>".ToCharArray()));
-                            if (rz != null)
+                            object res = ParseString(param, m.Value.Trim("#<>".ToCharArray()));
+                            if (res != null)
                             {
                                 //flag = true;
-                                QResult query = rz as QResult;
                                 Excel.Row newRow = null;
-                                if (query != null)
+                                if (res is QResult query)
                                 {
                                     var sref = CellReference.Parse(cell.CellReference.Value);
                                     int count = 0;
@@ -96,7 +95,7 @@ namespace DataWF.Data
                                 }
                                 else
                                 {
-                                    val = val.Replace(m.Value, rz.ToString());
+                                    val = val.Replace(m.Value, res.ToString());
                                     cell.CellValue = new Excel.CellValue(val);
                                     cell.DataType = Excel.CellValues.String;
                                 }

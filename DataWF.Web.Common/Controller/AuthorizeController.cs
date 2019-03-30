@@ -11,6 +11,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.IO;
 using System.Net;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace DataWF.Web.Common
 {
@@ -34,12 +35,12 @@ namespace DataWF.Web.Common
 
         [AllowAnonymous]
         [HttpPost("LoginIn/")]
-        public ActionResult<TokenModel> LoginIn([FromBody]LoginModel login)
+        public async Task<ActionResult<TokenModel>> LoginIn([FromBody]LoginModel login)
         {
             var user = (User)null;
             try
             {
-                user = GetUser(login);
+                user = await GetUser(login);
             }
             catch (Exception ex)
             {
@@ -57,7 +58,7 @@ namespace DataWF.Web.Common
                 {
                     user.RefreshToken = null;
                 }
-                user.Save(user);
+                await user.Save(user);
                 return new TokenModel
                 {
                     Email = user.EMail,
@@ -73,9 +74,9 @@ namespace DataWF.Web.Common
 
         [AllowAnonymous]
         [HttpPost("ReLogin/")]
-        public ActionResult<TokenModel> ReLogin([FromBody]TokenModel token)
+        public async Task<ActionResult<TokenModel>> ReLogin([FromBody]TokenModel token)
         {
-            var user = GetUser(token);
+            var user = await GetUser(token);
             if (user.RefreshToken == null || token.RefreshToken == null)
             {
                 return BadRequest("Refresh token was not found.");
@@ -88,7 +89,7 @@ namespace DataWF.Web.Common
             {
                 token.AccessToken =
                     user.AccessToken = CreateAccessToken(user);
-                user.Save(user);
+                await user.Save(user);
                 return token;
             }
             catch (Exception ex)
@@ -98,9 +99,9 @@ namespace DataWF.Web.Common
         }
 
         [HttpPost("LoginOut/")]
-        public ActionResult<TokenModel> LoginOut([FromBody]TokenModel token)
+        public async Task<ActionResult<TokenModel>> LoginOut([FromBody]TokenModel token)
         {
-            var user = GetUser(token);
+            var user = await GetUser(token);
             if (user != CurrentUser)
             {
                 return BadRequest("Invalid Arguments!");
@@ -111,7 +112,7 @@ namespace DataWF.Web.Common
                     token.RefreshToken =
                 user.AccessToken =
                     user.RefreshToken = null;
-                user.Save(CurrentUser);
+                await user.Save(CurrentUser);
                 return token;
             }
             catch (Exception ex)
@@ -162,13 +163,12 @@ namespace DataWF.Web.Common
             return jwthandler.WriteToken(jwt);
         }
 
-        private User GetUser(LoginModel login)
+        private Task<User> GetUser(LoginModel login)
         {
-            var credentials = new NetworkCredential(login.Email, login.Password);
-            return DataWF.Module.Common.User.StartSession(credentials);
+            return DataWF.Module.Common.User.StartSession(new NetworkCredential(login.Email, login.Password));
         }
 
-        private User GetUser(TokenModel token)
+        private Task<User> GetUser(TokenModel token)
         {
             return DataWF.Module.Common.User.StartSession(token.Email);
         }

@@ -52,9 +52,11 @@ namespace DataWF.TestGui
 
         private void ListEditorClick(object sender, EventArgs e)
         {
-            var list = new ListEditor();
-            list.Text = "List Editor";
-            list.DataSource = TestClass.Generate(10000);
+            var list = new ListEditor
+            {
+                Text = "List Editor",
+                DataSource = TestClass.Generate(10000)
+            };
             dock.Put(list, DockType.Content);
         }
 
@@ -99,9 +101,11 @@ namespace DataWF.TestGui
 
         private void CalendarClick(object sender, EventArgs e)
         {
-            CalendarEditor calendare = new CalendarEditor();
-            calendare.Text = "Calendar";
-            calendare.Date = DateTime.Now;
+            CalendarEditor calendare = new CalendarEditor
+            {
+                Text = "Calendar",
+                Date = DateTime.Now
+            };
             dock.Put(calendare);
             return;
             SyntaxText st = new SyntaxText();
