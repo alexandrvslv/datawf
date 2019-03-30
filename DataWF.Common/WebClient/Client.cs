@@ -20,6 +20,7 @@ namespace DataWF.Common
         private Dictionary<K, T> downloadItems = new Dictionary<K, T>();
 
         public TypeSerializationInfo SerializationInfo;
+        private HashSet<K> blackList = new HashSet<K>();
 
         public Invoker<T, K?> IdInvoker { get; }
 
@@ -258,11 +259,27 @@ namespace DataWF.Common
 
         public virtual T Get(K id)
         {
+            if (blackList.Contains(id))
+            {
+                return null;
+            }
+
             var item = Select(id);
             if (item == null)
             {
-                try { item = GetAsync(id, ProgressToken.None).Result; }
-                catch (Exception ex) { Helper.OnException(ex); }
+                try
+                {
+                    item = GetAsync(id, ProgressToken.None).Result;
+                    if (item == null)
+                    {
+                        blackList.Add(id);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    blackList.Add(id);
+                    Helper.OnException(ex);
+                }
             }
             return item;
         }
