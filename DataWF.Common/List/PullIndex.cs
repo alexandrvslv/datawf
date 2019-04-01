@@ -37,7 +37,7 @@ namespace DataWF.Data
 
     public class PullIndex<T, K> : PullIndex, IDisposable where T : class, IPullHandler
     {
-        private Dictionary<K, List<T>> store;
+        private Dictionary<K, ThreadSafeList<T>> store;
         private readonly IComparer<T> comparer;
         private readonly K nullKey;
 
@@ -48,11 +48,11 @@ namespace DataWF.Data
             comparer = valueComparer as IComparer<T>;
             if (keyComparer is IEqualityComparer<K> typedKeyComparer)
             {
-                store = new Dictionary<K, List<T>>(typedKeyComparer);//(IEqualityComparer<DBNullable<K>>)DBNullableComparer.StringOrdinalIgnoreCase
+                store = new Dictionary<K, ThreadSafeList<T>>(typedKeyComparer);//(IEqualityComparer<DBNullable<K>>)DBNullableComparer.StringOrdinalIgnoreCase
             }
             else
             {
-                store = new Dictionary<K, List<T>>();
+                store = new Dictionary<K, ThreadSafeList<T>>();
             }
         }
 
@@ -106,9 +106,9 @@ namespace DataWF.Data
         {
             lock (store)
             {
-                if (!store.TryGetValue(key, out List<T> list))
+                if (!store.TryGetValue(key, out ThreadSafeList<T> list))
                 {
-                    list = new List<T>(1) { item };
+                    list = new ThreadSafeList<T>(1) { item };
                     store.Add(key, list);
                 }
                 else
@@ -234,12 +234,12 @@ namespace DataWF.Data
             CheckNull(ref key);
             if (store.TryGetValue(key, out var list))
             {
-                for (int i = 0; i < list.Count; i++)
+                foreach (var item in list)
                 {
-                    F item = list[i] as F;
-                    if (item != null)
+                    var fitem = item as F;
+                    if (fitem != null)
                     {
-                        yield return item;
+                        yield return fitem;
                     }
                 }
             }
@@ -255,11 +255,13 @@ namespace DataWF.Data
             {
                 if (comparer(entry.Key))
                 {
-                    for (int i = 0; i < entry.Value.Count; i++)
+                    foreach (var item in entry.Value)
                     {
-                        var item = entry.Value[i] as F;
-                        if (item != null)
-                            yield return item;
+                        var fitem = item as F;
+                        if (fitem != null)
+                        {
+                            yield return fitem;
+                        }
                     }
                 }
             }
