@@ -121,6 +121,36 @@ namespace DataWF.Web.Common
             }
         }
 
+        [HttpPost("ResetPassword/")]
+        public async Task<ActionResult<bool>> ResetPassword([FromBody]LoginModel login)
+        {
+            try
+            {
+                var user = DataWF.Module.Common.User.GetByEmail(login.Email) ?? DataWF.Module.Common.User.GetByLogin(login.Email);
+                if (user == null)
+                {
+                    return NotFound();
+                }
+
+                if (user != CurrentUser)
+                {
+                    if (!user.Access.GetFlag(AccessType.Admin, CurrentUser)
+                        && !user.Table.Access.GetFlag(AccessType.Admin, CurrentUser))
+                    {
+                        return Forbid();
+                    }
+                }
+
+                DataWF.Module.Common.User.ChangePassword(user, login.Password);
+                await user.Save(CurrentUser);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
+        }
+
         private BadRequestObjectResult BadRequest(Exception ex)
         {
             Helper.OnException(ex);

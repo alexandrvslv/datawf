@@ -114,6 +114,15 @@ namespace DataWF.Module.Common
             return user;
         }
 
+        public static void ChangePassword(User user, string password)
+        {
+            if (config == null)
+            {
+                config = SmtpSetting.Load();
+            }
+            user.Password = Helper.Decript(password, config.PassKey);
+        }
+
         public static async Task<User> StartSession(NetworkCredential credentials)
         {
             if (config == null)
