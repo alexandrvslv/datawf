@@ -125,11 +125,9 @@ namespace DataWF.Web.Common
                     {
                         return NotFound();
                     }
-                    if (!(accessColumn.Access.GetFlag(AccessType.Update, CurrentUser)
-                        || accessColumn.Access.GetFlag(AccessType.Admin, CurrentUser))
-                        || !(value.Access.GetFlag(AccessType.Update, CurrentUser)
-                        || value.Access.GetFlag(AccessType.Admin, CurrentUser))
-                        || !(table.Access.GetFlag(AccessType.Admin, CurrentUser)))
+                    if (!accessColumn.Access.GetFlag(AccessType.Admin, CurrentUser)
+                        && !value.Access.GetFlag(AccessType.Admin, CurrentUser)
+                        && !table.Access.GetFlag(AccessType.Admin, CurrentUser))
                     {
                         return Forbid();
                     }
