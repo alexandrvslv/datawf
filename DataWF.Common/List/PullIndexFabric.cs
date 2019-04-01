@@ -12,7 +12,7 @@ namespace DataWF.Data
         {
             object nullKey = ListIndexFabric.GetNullKey(keyType);
             object keyComparer = null;
-            if (type == typeof(string))
+            if (keyType == typeof(string))
             {
                 keyComparer = StringComparer.OrdinalIgnoreCase;
             }
