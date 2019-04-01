@@ -229,10 +229,6 @@ namespace DataWF.Common
             var builder = new StringBuilder();
             foreach (var parametr in GetEnabled())
             {
-                if (parametr.FormatEmpty)
-                {
-                    continue;
-                }
                 parametr.Format(builder, logic);
                 logic = true;
             }
