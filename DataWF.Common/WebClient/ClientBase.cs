@@ -70,7 +70,7 @@ namespace DataWF.Common
         {
             if (client == null)
             {
-                client = new HttpClient() { Timeout = TimeSpan.FromMinutes(2) };
+                client = new HttpClient() { Timeout = TimeSpan.FromMinutes(4) };
             }
             return client;
         }
