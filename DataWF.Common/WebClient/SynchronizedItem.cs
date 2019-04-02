@@ -26,7 +26,7 @@ namespace DataWF.Common
             get => syncStatus;
             set
             {
-                if (syncStatus != value)
+                if (SyncStatus != value)
                 {
                     syncStatus = value;
                     if (syncStatus == SynchronizedStatus.Actual)
