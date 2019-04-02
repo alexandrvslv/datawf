@@ -527,7 +527,11 @@ namespace DataWF.Module.Flow
         [Browsable(false)]
         public override AccessValue Access
         {
-            get { return CurrentStage?.Access ?? Template?.Access ?? base.Access; }
+            get
+            {
+                return base.Access != Table.Access ? base.Access
+                  : CurrentStage?.Access ?? Template?.Access ?? base.Access;
+            }
         }
 
         [Browsable(false)]
