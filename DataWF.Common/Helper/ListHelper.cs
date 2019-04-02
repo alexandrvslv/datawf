@@ -303,9 +303,13 @@ namespace DataWF.Common
                 {
                     result = xList.Contains(y);
                 }
-                else if (x is IEnumerable<object> xEnumerable)
+                else if (x is IEnumerable<object> xEnumerableObject)
                 {
-                    result = xEnumerable.Contains(y);
+                    result = xEnumerableObject.Contains(y);
+                }
+                else if (x is IEnumerable xEnumerable)
+                {
+                    result = xEnumerable.Cast<object>().Contains(y);
                 }
                 if (compare.Not)
                 {
@@ -314,9 +318,13 @@ namespace DataWF.Common
             }
             else if (compare.Type == CompareTypes.Intersect)
             {
-                if (x is IEnumerable<object> xEnumerable && y is IEnumerable<object> yEnumerable)
+                if (x is IEnumerable<object> xEnumerableObject && y is IEnumerable<object> yEnumerableObject)
                 {
-                    result = xEnumerable.Intersect(yEnumerable).Any();
+                    result = xEnumerableObject.Intersect(yEnumerableObject).Any();
+                }
+                if (x is IEnumerable xEnumerable && y is IEnumerable yEnumerable)
+                {
+                    result = xEnumerable.Cast<object>().Intersect(yEnumerable.Cast<object>()).Any();
                 }
                 if (compare.Not)
                 {
