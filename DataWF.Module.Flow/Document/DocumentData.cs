@@ -391,6 +391,11 @@ namespace DataWF.Module.Flow
         [ControllerMethod]
         public Task RemoveLogFile(int logId, DBTransaction transaction)
         {
+            if (!Access.GetFlag(AccessType.Delete, transaction.Caller))
+            {
+                throw new Exception("Access Denied!");
+            }
+
             var logItem = Table.LogTable.LoadById(logId);
             if (logItem == null)
             {
