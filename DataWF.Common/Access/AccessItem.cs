@@ -41,7 +41,7 @@ namespace DataWF.Common
         [JsonIgnore]
         public bool IsEmpty
         {
-            get { return Group == null || Access == 0; }
+            get { return Group == null; }
         }
 
         [XmlIgnore, JsonIgnore, DefaultValue(false)]
