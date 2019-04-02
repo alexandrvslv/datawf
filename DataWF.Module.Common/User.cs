@@ -132,9 +132,14 @@ namespace DataWF.Module.Common
             credentials.Password = Helper.Decript(credentials.Password, config.PassKey);
             var user = GetByEmail(credentials.UserName);
             if (user == null)
+            {
                 user = GetByLogin(credentials.UserName);
-            if (user == null)
+            }
+
+            if (user == null || user.Status == DBStatus.Archive || user.Status == DBStatus.Error)
+            {
                 throw new KeyNotFoundException("User not found!");
+            }
 
             if (user.AuthType == UserAuthType.SMTP)
             {
