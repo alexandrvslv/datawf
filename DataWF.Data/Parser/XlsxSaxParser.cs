@@ -48,12 +48,17 @@ namespace DataWF.Data
         {
             var cacheNames = GetCacheNames(param);
 
-            var stringTables = (List<Excel.SharedStringItem>)null;
+            var sharedStrings = (List<string>)null;
             using (var document = SpreadsheetDocument.Open(stream, true))
             {
                 var workbookPart = document.WorkbookPart;
                 var sheetList = new List<Excel.Sheet>();
-                stringTables = ReadStringTable(workbookPart.SharedStringTablePart);
+                sharedStrings = ReadStringTable(workbookPart.SharedStringTablePart);
+
+                //if (workbookPart.CalculationChainPart != null)
+                //{
+                //    workbookPart.DeletePart(workbookPart.CalculationChainPart);
+                //}
 
                 ParseWorkbookPart(param, cacheNames, workbookPart, sheetList);
 
@@ -76,12 +81,14 @@ namespace DataWF.Data
                                     ParseTableDefinition(param, sheetNames, tableDefinitionPart);
                                 }
                             }
-                            ParseWorksheetPart(param, sheetNames, stringTables, worksheetPart);
+                            ParseWorksheetPart(param, sheetNames, sharedStrings, worksheetPart);
                         }
                     }
                 }
+
+                WriteStringTable(workbookPart.SharedStringTablePart, sharedStrings);
                 document.Save();
-                //var validator = new OpenXmlValidator();
+                //var validator = new DocumentFormat.OpenXml.Validation.OpenXmlValidator();
                 //var errors = validator.Validate(document);
             }
             return ((FileStream)stream).Name;
@@ -117,7 +124,7 @@ namespace DataWF.Data
         {
             string newFileName = GetTempFileName(fileName);
             var cacheNames = GetCacheNames(param);
-            var stringTables = (List<Excel.SharedStringItem>)null;
+            var stringTables = (List<string>)null;
             using (var document = SpreadsheetDocument.Open(stream, false))
             using (var newDocument = SpreadsheetDocument.Create(newFileName, document.DocumentType))
             {
@@ -307,29 +314,32 @@ namespace DataWF.Data
                     }
                 }
                 writer.WriteEndDocument();
+                writer.Flush();
             }
         }
 
-        private void ParseWorksheetPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, List<Excel.SharedStringItem> stringTables, WorksheetPart worksheetPart)
+        private void ParseWorksheetPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, List<string> sharedStrings, WorksheetPart worksheetPart)
         {
-            using (var temp = new MemoryStream())
+            var tempName = Path.GetTempFileName();
+            using (var temp = new FileStream(tempName, FileMode.Create, FileAccess.ReadWrite))
             {
                 using (var stream = worksheetPart.GetStream())
                     stream.CopyTo(temp);
                 temp.Position = 0;
-                ParseWorksheetPart(param, cacheNames, stringTables, temp, worksheetPart);
+                ParseWorksheetPart(param, cacheNames, sharedStrings, temp, worksheetPart);
             }
+            File.Delete(tempName);
         }
 
-        private void ParseWorksheetPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, List<Excel.SharedStringItem> stringTables, WorksheetPart worksheetPart, WorksheetPart newWorksheetPart)
+        private void ParseWorksheetPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, List<string> sharedStrings, WorksheetPart worksheetPart, WorksheetPart newWorksheetPart)
         {
             using (var stream = worksheetPart.GetStream())
             {
-                ParseWorksheetPart(param, cacheNames, stringTables, stream, newWorksheetPart);
+                ParseWorksheetPart(param, cacheNames, sharedStrings, stream, newWorksheetPart);
             }
         }
 
-        private void ParseWorksheetPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, List<Excel.SharedStringItem> stringTables, Stream worksheetPart, WorksheetPart newWorksheetPart)
+        private void ParseWorksheetPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, List<string> sharedStrings, Stream worksheetPart, WorksheetPart newWorksheetPart)
         {
             var inserts = new List<CellRange>();
 
@@ -351,10 +361,11 @@ namespace DataWF.Data
                     if (reader.ElementType == typeof(Excel.Row))
                     {
                         var row = (Excel.Row)reader.LoadCurrentElement();
-                        ind = (int)row.RowIndex.Value + dif;
-                        var newRow = CloneRow(row, ind);
+                        var rowIndex = (int)row.RowIndex.Value;
+                        ind = rowIndex + dif;
+                        UpdateRowIndex(row, ind);
                         QResult query = null;
-                        foreach (Excel.Cell ocell in newRow.Descendants<Excel.Cell>())
+                        foreach (Excel.Cell ocell in row.Descendants<Excel.Cell>())
                         {
                             object rz = null;
                             if (cacheNames.TryGetValue(ocell.CellReference.Value, out var defName))
@@ -363,7 +374,7 @@ namespace DataWF.Data
                             }
                             else
                             {
-                                string value = ReadCell(ocell, stringTables);
+                                string value = ReadCell(ocell, sharedStrings);
                                 rz = ReplaceExcelString(param, value);
                             }
 
@@ -378,14 +389,18 @@ namespace DataWF.Data
                                     foreach (object[] dataRow in query.Values)
                                     {
                                         if (tableRow == null)
-                                            tableRow = newRow;
+                                            tableRow = row;
                                         else if (defName != null && defName.Range.End.Row > sref.Row)
                                         {
-                                            reader.Read();
-                                            row = (Excel.Row)reader.LoadCurrentElement();
-                                            tableRow = CloneRow(row, (int)row.RowIndex.Value + dif);
-                                            insert.Start.Row++;
-                                            insert.End.Row++;
+                                            if (reader.Read() && reader.ElementType == typeof(Excel.Row))
+                                            {
+                                                tableRow = (Excel.Row)reader.LoadCurrentElement();
+                                                UpdateRowIndex(tableRow, (int)tableRow.RowIndex.Value + dif);
+                                                insert.Start.Row++;
+                                                insert.End.Row++;
+                                            }
+                                            else
+                                            { }
                                         }
                                         else
                                         {
@@ -396,7 +411,7 @@ namespace DataWF.Data
                                         int col = sref.Col;
                                         foreach (object itemValue in dataRow)
                                         {
-                                            GetCell(tableRow, itemValue, col, sref.Row, 0);
+                                            GetCell(tableRow, itemValue, col, sref.Row, 0, sharedStrings);
                                             col++;
                                         }
                                         sref.Row++;
@@ -412,13 +427,12 @@ namespace DataWF.Data
                                 }
                                 else
                                 {
-                                    ocell.CellValue = new Excel.CellValue(rz.ToString());
-                                    ocell.DataType = Excel.CellValues.String;
+                                    WriteCell(ocell, rz, sharedStrings);
                                 }
                             }
                         }
                         if (query == null)
-                            WriteElement(writer, newRow);
+                            WriteElement(writer, row);
                     }
                     else if (reader.ElementType == typeof(Excel.MergeCell))
                     {
@@ -486,6 +500,48 @@ namespace DataWF.Data
                 writer.Close();
                 //newWorksheetPart.FeedData(temp);
             }
+        }
+
+        public static void WriteCell(Excel.Cell cell, object value, List<string> sharedStrings)
+        {
+            if (value != null)
+            {
+                Type type = value.GetType();
+                if (type == typeof(int) || type == typeof(uint) || type == typeof(long) || type == typeof(ulong) || type == typeof(short) || type == typeof(ushort))
+                {
+                    cell.DataType = Excel.CellValues.Number;
+                    cell.CellValue = new Excel.CellValue(value.ToString());
+                }
+                else if (value.GetType() == typeof(decimal) || value.GetType() == typeof(float) || value.GetType() == typeof(double))
+                {
+                    cell.DataType = Excel.CellValues.Number;
+                    cell.CellValue = new Excel.CellValue(((decimal)value).ToString(".00", CultureInfo.InvariantCulture.NumberFormat));
+                }
+                else
+                {
+                    if (cell.CellFormula != null)
+                    {
+                        cell.DataType = Excel.CellValues.String;
+                        cell.CellValue = new Excel.CellValue(value.ToString());
+                    }
+                    else
+                    {
+                        var stringValue = value.ToString();
+                        var index = sharedStrings.FindIndex((p) => p.Equals(stringValue, StringComparison.Ordinal));
+                        if (index < 0)
+                        {
+                            index = sharedStrings.Count;
+                            sharedStrings.Add(stringValue);
+                        }
+                        cell.DataType = Excel.CellValues.SharedString;
+                        cell.CellValue = new Excel.CellValue(index.ToString());
+                    }
+                    //cell.DataType = Excel.CellValues.String;
+                    //cell.CellValue = new Excel.CellValue(value.ToString().Replace("", string.Empty));
+                }
+            }
+
+
         }
 
         private void ParseTableDefinition(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, TableDefinitionPart tableDefinitionPart)
@@ -556,6 +612,7 @@ namespace DataWF.Data
                     }
                 }
                 writer.WriteEndDocument();
+                writer.Flush();
             }
         }
 
@@ -601,20 +658,37 @@ namespace DataWF.Data
             return null;
         }
 
-        public static List<Excel.SharedStringItem> ReadStringTable(SharedStringTablePart sharedStringTablePart)
+        public static List<string> ReadStringTable(SharedStringTablePart sharedStringTablePart)
         {
-            var dict = new List<Excel.SharedStringItem>();
+            var dict = new List<string>();
             using (var reader = OpenXmlReader.Create(sharedStringTablePart))
             {
                 while (reader.Read())
                 {
                     if (reader.ElementType == typeof(Excel.SharedStringItem))
                     {
-                        dict.Add((Excel.SharedStringItem)reader.LoadCurrentElement());
+                        dict.Add(((Excel.SharedStringItem)reader.LoadCurrentElement()).InnerText);
                     }
                 }
             }
             return dict;
+        }
+
+        public void WriteStringTable(SharedStringTablePart sharedStringTablePart, List<string> items)
+        {
+            using (var writer = XmlWriter.Create(sharedStringTablePart.GetStream(FileMode.Create)
+                , new XmlWriterSettings { Encoding = Encoding.UTF8, CloseOutput = true }))
+            {
+                writer.WriteStartDocument();
+                WriteStartElement(writer, new Excel.SharedStringTable { Count = (uint)items.Count });
+                foreach (var item in items)
+                {
+                    WriteElement(writer, new Excel.SharedStringItem { Text = new Excel.Text(item) });
+                }
+                writer.WriteEndElement();
+                writer.WriteEndDocument();
+                writer.Flush();
+            }
         }
 
         public object ReplaceExcelString(ExecuteArgs param, string value)
@@ -635,26 +709,35 @@ namespace DataWF.Data
             return null;
         }
 
+        public void UpdateRowIndex(Excel.Row row, int r)
+        {
+            if (row.RowIndex != (uint)r)
+            {
+                row.RowIndex = (uint)r;
+
+                foreach (Excel.Cell cell in row.Descendants<Excel.Cell>())
+                {
+                    var reference = CellReference.Parse(cell.CellReference);
+                    reference.Row = r;
+                    cell.CellReference = reference.ToString();
+                    //if (cell.CellFormula != null)
+                    //{
+                    //   cell.CellValue = null;
+                    //}
+                }
+            }
+        }
+
         public Excel.Row CloneRow(Excel.Row cloning, int r)
         {
             var rez = (Excel.Row)cloning.Clone();
-            rez.RowIndex = (uint)r;
-            foreach (Excel.Cell cell in rez)
-            {
-                var reference = CellReference.Parse(cell.CellReference);
-                reference.Row = r;
-                cell.CellReference = reference.ToString();
-                //if (cell.CellFormula != null)
-                //{
-                //   cell.CellValue = null;
-                //}
-            }
+            UpdateRowIndex(rez, r);
             return rez;
         }
 
-        public static string ReadCell(Excel.Cell cell, List<Excel.SharedStringItem> buffer = null)
+        public static string ReadCell(Excel.Cell cell, List<string> buffer = null)
         {
-            string value = cell.CellValue == null ? string.Empty : cell.CellValue.InnerText;
+            string value = cell.CellValue?.InnerText ?? string.Empty;
             if (cell.DataType != null)
             {
                 if (cell.DataType.Value == Excel.CellValues.SharedString)
@@ -664,7 +747,7 @@ namespace DataWF.Data
                     {
                         //if (strings.SharedStringTable.ChildElements.Count > val)
                         if (buffer != null)
-                            value = buffer[val].InnerText;
+                            value = buffer[val];
                     }
                 }
                 else if (cell.DataType.Value == Excel.CellValues.Boolean)
@@ -683,18 +766,18 @@ namespace DataWF.Data
             return value;
         }
 
-        public Excel.Cell GetCell(object value, int c, int r, uint styleIndex)
+        public Excel.Cell GetCell(object value, int c, int r, uint styleIndex, List<string> sharedStrings)
         {
             Excel.Cell cell = new Excel.Cell()
             {
                 CellReference = Helper.IntToChar(c) + (r).ToString(),
                 StyleIndex = styleIndex,
             };
-            SetCellValue(cell, value);
+            WriteCell(cell, value, sharedStrings);
             return cell;
         }
 
-        public Excel.Cell GetCell(OpenXmlCompositeElement row, object value, int c, int r, uint styleIndex)
+        public Excel.Cell GetCell(OpenXmlCompositeElement row, object value, int c, int r, uint styleIndex, List<string> sharedStrings)
         {
             string reference = Helper.IntToChar(c) + r.ToString();
             Excel.Cell cell = null;
@@ -724,35 +807,12 @@ namespace DataWF.Data
                     row.AppendChild<Excel.Cell>(cell);
             }
 
-            SetCellValue(cell, value);
+            WriteCell(cell, value, sharedStrings);
 
             return cell;
         }
 
-        public void SetCellValue(Excel.Cell cell, object value)
-        {
-            if (value != null)
-            {
-                Type type = value.GetType();
-                if (type == typeof(int) || type == typeof(uint) || type == typeof(long) || type == typeof(ulong) || type == typeof(short) || type == typeof(ushort))
-                {
-                    cell.DataType = Excel.CellValues.Number;
-                    cell.CellValue = new Excel.CellValue(value.ToString());
-                }
-                else if (value.GetType() == typeof(decimal) || value.GetType() == typeof(float) || value.GetType() == typeof(double))
-                {
-                    cell.DataType = Excel.CellValues.Number;
-                    cell.CellValue = new Excel.CellValue(((decimal)value).ToString(".00", CultureInfo.InvariantCulture.NumberFormat));
-                }
-                else
-                {
-                    cell.DataType = Excel.CellValues.String;
-                    cell.CellValue = new Excel.CellValue(value.ToString().Replace("", string.Empty));
-                }
-            }
-        }
-
-        public List<Excel.Cell> FindParsedCells(List<Excel.SharedStringItem> xl, Excel.SheetData sd)
+        public List<Excel.Cell> FindParsedCells(List<string> stringTable, Excel.SheetData sd)
         {
             List<Excel.Cell> results = new List<Excel.Cell>();
 
@@ -764,7 +824,7 @@ namespace DataWF.Data
                     {
                         if (celement is Excel.Cell cell)
                         {
-                            string val = ReadCell(cell, xl);
+                            string val = ReadCell(cell, stringTable);
                             if (val.IndexOf('#') >= 0)
                             {
                                 results.Add(cell);
@@ -776,16 +836,9 @@ namespace DataWF.Data
             return results;
         }
 
-
-
         public void WriteElement(XmlWriter writer, OpenXmlElement element)
         {
-            if (string.IsNullOrEmpty(element.Prefix) || element.Prefix.Equals("x", StringComparison.Ordinal))
-                writer.WriteStartElement(element.LocalName, element.NamespaceUri);
-            else
-                writer.WriteStartElement(element.Prefix, element.LocalName, element.NamespaceUri);
-            WriteNamespace(writer, element.NamespaceDeclarations);
-            WriteAttributes(writer, element.GetAttributes());
+            WriteStartElement(writer, element);
             if (element.HasChildren)
             {
                 foreach (var child in element.ChildElements)
@@ -800,12 +853,41 @@ namespace DataWF.Data
             writer.WriteEndElement();
         }
 
+        private void WriteStartElement(XmlWriter writer, OpenXmlElement element)
+        {
+            if (string.IsNullOrEmpty(element.Prefix) || element.Prefix.Equals("x", StringComparison.Ordinal))
+            {
+                var prolog = writer.WriteState == WriteState.Prolog;
+                writer.WriteStartElement(element.LocalName, element.NamespaceUri);
+                if (prolog)
+                {
+                    writer.WriteAttributeString("xmlns", null, @"http://www.w3.org/2000/xmlns/", element.NamespaceUri);
+                }
+            }
+            else
+            {
+                writer.WriteStartElement(element.Prefix, element.LocalName, element.NamespaceUri);
+            }
+
+            WriteNamespace(writer, element.NamespaceDeclarations);
+            WriteAttributes(writer, element.GetAttributes());
+        }
+
         public void WriteStartElement(XmlWriter writer, OpenXmlReader reader)
         {
             if (string.IsNullOrEmpty(reader.Prefix) || reader.Prefix.Equals("x", StringComparison.Ordinal))
+            {
+                var prolog = writer.WriteState == WriteState.Prolog;
                 writer.WriteStartElement(reader.LocalName, reader.NamespaceUri);
+                if (prolog)
+                {
+                    writer.WriteAttributeString("xmlns", null, @"http://www.w3.org/2000/xmlns/", reader.NamespaceUri);
+                }
+            }
             else
+            {
                 writer.WriteStartElement(reader.Prefix, reader.LocalName, reader.NamespaceUri);
+            }
 
             WriteNamespace(writer, reader.NamespaceDeclarations);
             WriteAttributes(writer, reader.Attributes);
@@ -821,10 +903,15 @@ namespace DataWF.Data
         {
             foreach (var attr in attributes)
             {
+                if (attr.LocalName == "xmlns")
+                    continue;
                 if (string.IsNullOrEmpty(attr.Prefix) || attr.Prefix.Equals("x", StringComparison.Ordinal))
                     writer.WriteAttributeString(attr.LocalName, attr.Value);
                 else
+                {
+                    // writer.WriteAttributeString("xmlns", attr.Prefix, @"http://www.w3.org/2000/xmlns/", attr.NamespaceUri);
                     writer.WriteAttributeString(attr.Prefix, attr.LocalName, attr.NamespaceUri, attr.Value);
+                }
             }
         }
 

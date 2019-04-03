@@ -29,6 +29,10 @@ namespace DataWF.Data.Gui
                 wbsp.Stylesheet = CreateStylesheet();
                 wbsp.Stylesheet.Save();
 
+                // Add a SharedStringTablePart to the WorkbookPart.
+                var stringPart = workbookpart.AddNewPart<SharedStringTablePart>();
+                var stringTable = new List<string>();
+
                 // Add a WorksheetPart to the WorkbookPart.
                 WorksheetPart worksheetPart = workbookpart.AddNewPart<WorksheetPart>();
                 SheetData sd = new SheetData();
@@ -50,14 +54,14 @@ namespace DataWF.Data.Gui
 
                 //List<ILayoutItem> cols = LayoutMapTool.GetVisibleItems(list.ListInfo.Columns);
                 //columns
-                ExpMapLayout(sd, list.ListInfo.Columns, 0, 1, out int mc, out int ind, null, null);
+                ExpMapLayout(sd, list.ListInfo.Columns, 0, 1, out int mc, out int ind, null, null, stringTable);
                 //data
                 if (list.ListInfo.GroupVisible)
                 {
                     foreach (LayoutGroup g in list.Groups)
                     {
                         ind++;
-                        Cell cell = GetCell(g.TextValue, 0, (int)ind, 8);
+                        Cell cell = GetCell(g.TextValue, 0, (int)ind, 8, stringTable);
                         GetRow(sd, ind, false).Append(cell);
                         MergeCells mcells = GetMergeCells(worksheet);
 
@@ -66,7 +70,7 @@ namespace DataWF.Data.Gui
                         for (int i = g.IndexStart; i <= g.IndexEnd; i++)
                         {
                             ind++;
-                            ExpMapLayout(sd, list.ListInfo.Columns, 0, ind, out mc, out ind, list, list.ListSource[i]);
+                            ExpMapLayout(sd, list.ListInfo.Columns, 0, ind, out mc, out ind, list, list.ListSource[i], stringTable);
                         }
                     }
                 }
@@ -75,7 +79,7 @@ namespace DataWF.Data.Gui
                     foreach (object o in list.ListSource)
                     {
                         ind++;
-                        ExpMapLayout(sd, list.ListInfo.Columns, 0, ind, out mc, out ind, list, o);
+                        ExpMapLayout(sd, list.ListInfo.Columns, 0, ind, out mc, out ind, list, o, stringTable);
                     }
                 }
                 worksheet.Save();
@@ -179,15 +183,15 @@ namespace DataWF.Data.Gui
             writer.WriteEndElement();
         }
 
-        public Row GenerateRow(int rr, int mc, bool header)
+        public Row GenerateRow(int rr, int mc, bool header, List<string> stringTable)
         {
             Row row = new Row() { RowIndex = (uint)rr };
             for (int i = 0; i < mc; i++)
-                row.AppendChild(GetCell(null, i, rr, header ? (uint)7 : (uint)6));
+                row.AppendChild(GetCell(null, i, rr, header ? (uint)7 : (uint)6, stringTable));
             return row;
         }
 
-        public void ExpMapLayout(SheetData sheetData, LayoutColumn map, int scol, int srow, out int mcol, out int mrow, LayoutList list, object listItem)
+        public void ExpMapLayout(SheetData sheetData, LayoutColumn map, int scol, int srow, out int mcol, out int mrow, LayoutList list, object listItem, List<string> stringTable)
         {
             int tws = map.GetWithdSpan();
             //int ths = tool.LayoutMapTool.GetHeightSpan(map);
@@ -205,7 +209,7 @@ namespace DataWF.Data.Gui
                 r += srow;
                 if (item.Count > 0)
                 {
-                    ExpMapLayout(sheetData, item, c, r, out c, out r, list, listItem);
+                    ExpMapLayout(sheetData, item, c, r, out c, out r, list, listItem, stringTable);
                 }
                 else
                 {
@@ -221,7 +225,7 @@ namespace DataWF.Data.Gui
                         }
                     }
 
-                    Cell cell = GetCell(celldata, c, r, celldata is decimal ? 3U : 6U);
+                    Cell cell = GetCell(celldata, c, r, celldata is decimal ? 3U : 6U, stringTable);
 
                     if (list == null)
                     {
@@ -275,13 +279,16 @@ namespace DataWF.Data.Gui
                 wbsp.Stylesheet.Save();
 
                 // Add a WorksheetPart to the WorkbookPart.
-                WorksheetPart worksheetPart = workbookpart.AddNewPart<WorksheetPart>();
+                var worksheetPart = workbookpart.AddNewPart<WorksheetPart>();
 
+                // Add a SharedStringTablePart to the WorkbookPart.
+                var stringPart = workbookpart.AddNewPart<SharedStringTablePart>();
+                var stringTable = new List<string>();
                 // Add Sheets to the Workbook.
-                Sheets sheets = xl.WorkbookPart.Workbook.AppendChild<Sheets>(new Sheets());
+                var sheets = xl.WorkbookPart.Workbook.AppendChild<Sheets>(new Sheets());
 
                 // Append a new worksheet and associate it with the workbook.
-                Sheet sheet = new Sheet()
+                var sheet = new Sheet()
                 {
                     Id = xl.WorkbookPart.GetIdOfPart(worksheetPart),
                     SheetId = 1,
@@ -308,11 +315,11 @@ namespace DataWF.Data.Gui
 
                 int ind = 1;
                 var row = new Row() { RowIndex = (uint)ind, Height = 25 };
-                row.AppendChild(GetCell(list.Description, 0, ind, (uint)13));
+                row.AppendChild(GetCell(list.Description, 0, ind, (uint)13, stringTable));
                 WriteRows(writer, new List<Row>(new Row[] { row }));
                 mcells.Add(new MergeCell() { Reference = new CellRange(0, 1, mc - 1, 1).ToString() });
 
-                WriteMapItem(list.ListInfo.Columns, -1, null, 0, 0, ref ind);
+                WriteMapItem(list.ListInfo.Columns, -1, null, 0, 0, ref ind, stringTable);
 
                 if (list.Selection.Count > 1)
                 {
@@ -320,7 +327,7 @@ namespace DataWF.Data.Gui
                     for (var i = 0; i < items.Count; i++)
                     {
                         var item = items[i];
-                        WriteMapItem(list.ListInfo.Columns, i, item, 0, 0, ref ind);
+                        WriteMapItem(list.ListInfo.Columns, i, item, 0, 0, ref ind, stringTable);
                     }
                 }
                 else if (list.NodeInfo != null)
@@ -329,7 +336,7 @@ namespace DataWF.Data.Gui
                     for (var i = 0; i < items.Count; i++)
                     {
                         var item = items[i] as Node;
-                        WriteMapItem(list.ListInfo.Columns, i, item, 0, 0, ref ind);
+                        WriteMapItem(list.ListInfo.Columns, i, item, 0, 0, ref ind, stringTable);
                     }
                 }
                 else if (list.ListInfo.GroupVisible)
@@ -341,18 +348,18 @@ namespace DataWF.Data.Gui
                         {
                             ind++;
                             var header = new Row() { RowIndex = (uint)ind, CustomHeight = true, Height = 20 };
-                            header.AppendChild(GetCell(g.TextValue, 0, ind, 8));
+                            header.AppendChild(GetCell(g.TextValue, 0, ind, 8, stringTable));
                             mcells.Add(new MergeCell() { Reference = new CellRange(0, ind, mc - 1, ind).ToString() });
                             WriteRow(writer, header);
                         }
 
                         for (int i = g.IndexStart; i <= g.IndexEnd; i++)
                         {
-                            WriteMapItem(list.ListInfo.Columns, i, list.ListSource[i], 0, 0, ref ind);
+                            WriteMapItem(list.ListInfo.Columns, i, list.ListSource[i], 0, 0, ref ind, stringTable);
                         }
                         if (list.ListInfo.CollectingRow)
                         {
-                            WriteMapItem(list.ListInfo.Columns, -2, null, 0, 0, ref ind);
+                            WriteMapItem(list.ListInfo.Columns, -2, null, 0, 0, ref ind, stringTable);
                         }
                         //ind++;
                     }
@@ -362,11 +369,11 @@ namespace DataWF.Data.Gui
 
                     for (int i = 0; i < list.ListSource.Count; i++)
                     {
-                        WriteMapItem(list.ListInfo.Columns, i, list.ListSource[i], 0, 0, ref ind);
+                        WriteMapItem(list.ListInfo.Columns, i, list.ListSource[i], 0, 0, ref ind, stringTable);
                     }
                     if (list.ListInfo.CollectingRow)
                     {
-                        WriteMapItem(list.ListInfo.Columns, -2, null, 0, 0, ref ind);
+                        WriteMapItem(list.ListInfo.Columns, -2, null, 0, 0, ref ind, stringTable);
 
                     }
                 }
@@ -386,7 +393,7 @@ namespace DataWF.Data.Gui
             }
         }
 
-        public void WriteMapItem(LayoutColumn map, int listIndex, object listItem, int sc, int sr, ref int mr, List<Row> prows = null)
+        public void WriteMapItem(LayoutColumn map, int listIndex, object listItem, int sc, int sr, ref int mr, List<string> stringTable, List<Row> prows = null)
         {
             int tws = map.GetWithdSpan();
             Row row = null;
@@ -395,8 +402,8 @@ namespace DataWF.Data.Gui
             {
                 rows = new List<Row>();
                 mr++;
-                row = GenerateRow(mr, mc, listItem == null);
-                SetCellValue(row.GetFirstChild<Cell>(), listItem == null ? (object)"#" : (object)(listIndex + 1));
+                row = GenerateRow(mr, mc, listItem == null, stringTable);
+                WriteCell(row.GetFirstChild<Cell>(), listItem == null ? (object)"#" : (object)(listIndex + 1), stringTable);
                 rows.Add(row);
                 sc = 1;
             }
@@ -410,7 +417,7 @@ namespace DataWF.Data.Gui
                     c += sc; r += sr;
                     if (item.Count > 0)
                     {
-                        WriteMapItem(item, listIndex, listItem, c, r, ref mr, rows);
+                        WriteMapItem(item, listIndex, listItem, c, r, ref mr, stringTable, rows);
                     }
                     else
                     {
@@ -418,7 +425,7 @@ namespace DataWF.Data.Gui
                         if (rows.Count <= r)
                         {
                             mr++;
-                            row = GenerateRow(rr, mc, listItem == null);
+                            row = GenerateRow(rr, mc, listItem == null, stringTable);
                             rows.Add(row);
                         }
                         else
@@ -443,7 +450,7 @@ namespace DataWF.Data.Gui
                         }
 
                         var cellc = (Cell)row.ChildElements.GetItem(c);
-                        SetCellValue(cellc, celldata);
+                        WriteCell(cellc, celldata, stringTable);
                         if (celldata is decimal)
                             cellc.StyleIndex = 3;
 
@@ -491,7 +498,7 @@ namespace DataWF.Data.Gui
                     var i = 0;
                     foreach (var item in ((Node)listItem).Nodes)
                     {
-                        WriteMapItem(map, i++, item, 0, 0, ref mr);
+                        WriteMapItem(map, i++, item, 0, 0, ref mr, stringTable);
                     }
                 }
             }
@@ -677,7 +684,7 @@ namespace DataWF.Data.Gui
             }
             catch (Exception e)
             {
-                Debug.WriteLine(e.ToString());                
+                Debug.WriteLine(e.ToString());
             }
         }
 

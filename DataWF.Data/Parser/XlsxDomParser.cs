@@ -40,14 +40,14 @@ namespace DataWF.Data
                 //IEnumerable<DocumentFormat.OpenXml.Packaging.SharedStringTablePart> sp = xl.WorkbookPart.GetPartsOfType<DocumentFormat.OpenXml.Packaging.SharedStringTablePart>();
                 foreach (WorksheetPart part in xl.WorkbookPart.WorksheetParts)
                 {
-                    var stringTables = ReadStringTable(xl.WorkbookPart.SharedStringTablePart);
+                    var sharedStrings = ReadStringTable(xl.WorkbookPart.SharedStringTablePart);
                     Excel.Worksheet worksheet = part.Worksheet;
                     Excel.SheetData sd = worksheet.GetFirstChild<Excel.SheetData>();
-                    var results = FindParsedCells(stringTables, sd);
+                    var results = FindParsedCells(sharedStrings, sd);
                     foreach (Excel.Cell cell in results)
                     {
 
-                        string val = ReadCell(cell, stringTables);
+                        string val = ReadCell(cell, sharedStrings);
                         Regex re = new Regex("#.[^#]*#", RegexOptions.IgnoreCase);
                         MatchCollection mc = re.Matches(val);
                         foreach (Match m in mc)
@@ -68,7 +68,7 @@ namespace DataWF.Data
                                         newRow = GetRow(sd, sref.Row, newRow == null, cell.Parent as Excel.Row);
                                         foreach (object kvp in dataRow)
                                         {
-                                            Excel.Cell ncell = GetCell(newRow, kvp, col, sref.Row, 0);
+                                            Excel.Cell ncell = GetCell(newRow, kvp, col, sref.Row, 0, sharedStrings);
                                             if (ncell.Parent == null)
                                                 newRow.Append(ncell);
                                             col++;
@@ -96,12 +96,12 @@ namespace DataWF.Data
                                 else
                                 {
                                     val = val.Replace(m.Value, res.ToString());
-                                    cell.CellValue = new Excel.CellValue(val);
-                                    cell.DataType = Excel.CellValues.String;
+                                    WriteCell(cell, val, sharedStrings);
                                 }
                             }
                         }
                     }
+                    WriteStringTable(xl.WorkbookPart.SharedStringTablePart, sharedStrings);
                 }
             }
             stream.Flush();
