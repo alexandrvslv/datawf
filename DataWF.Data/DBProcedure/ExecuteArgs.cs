@@ -90,8 +90,11 @@ namespace DataWF.Data
             var result = (CodeAttributeCache)null;
             foreach (var code in Codes.Where(p => p.Attribute.Code.Equals(val, StringComparison.Ordinal)))
             {
-                result = code;
-                if (result.Attribute.Category.Equals(ProcedureCategory, StringComparison.Ordinal))
+                if (code.Attribute.Category.Equals("General"))
+                {
+                    result = code;
+                }
+                if (code.Attribute.Category.Equals(ProcedureCategory, StringComparison.Ordinal))
                 {
                     return code;
                 }
