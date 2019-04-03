@@ -142,20 +142,21 @@ namespace DataWF.Common
         public static string IntToChar(int val)
         {
             var sb = new StringBuilder();
-            float f = val / 25F;
-            if (f <= 1)
+
+            var mod = val % 26;
+            sb.Append((char)((int)'A' + mod));
+
+            var f = val / 26;
+            var i = 1;
+            while (f > 0)
             {
-                sb.Append((char)((int)'A' + val));
+                mod = f % 26;
+                sb.Insert(0, (char)((int)'A' + (mod - 1)));
+                f = f / 26;
+                i++;
             }
-            else
-            {
-                int i = 1;
-                for (; i < f; i++)
-                {
-                    sb.Append((char)((int)'A' + (i - 1)));
-                }
-                sb.Append((char)((int)'A' + ((val - (i - 1) * 25)) - 1));
-            }
+
+
             return sb.ToString();
         }
 
@@ -294,12 +295,13 @@ namespace DataWF.Common
         {
             int rez = 0;
             int i = 0;
-            for (; i < val.Length; i++)
+            var diff = (int)'A' - 1;
+            for (i = 0; i < val.Length; i++)
             {
-                rez += (rez + i) * 26 + (int)val[i] - (int)'A';
+                rez += ((int)val[i] - diff) * (int)Math.Pow(26, val.Length - (i + 1));
 
             }
-            return rez;
+            return rez -1;
         }
 
         public static byte GetAscii(char ichar)
