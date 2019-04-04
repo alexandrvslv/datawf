@@ -222,6 +222,8 @@ namespace DataWF.Common
 
         public object Select(object id)
         {
+            if (id == null)
+                return null;
             return Select((K)id);
         }
 
