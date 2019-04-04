@@ -1,9 +1,7 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Xml.Serialization;
 
 namespace DataWF.Common
 {
@@ -88,15 +86,12 @@ namespace DataWF.Common
 
         public void Write(BinaryWriter writer)
         {
-            int c = 0;
-            foreach (AccessItem item in Items)
-                if (!item.IsEmpty)
-                    c++;
-            writer.Write(c);
+            writer.Write(Items.Where(p => !p.IsEmpty).Distinct().Count());
 
-            foreach (AccessItem item in Items)
-                if (!item.IsEmpty)
-                    item.BinaryWrite(writer);
+            foreach (AccessItem item in Items.Where(p => !p.IsEmpty).Distinct())
+            {
+                item.BinaryWrite(writer);
+            }
         }
 
         public void Read(byte[] buffer)
