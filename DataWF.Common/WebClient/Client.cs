@@ -55,7 +55,18 @@ namespace DataWF.Common
                 }
                 else
                 {
-                    object value = DeserializeValue(serializer, jreader, property?.DataType, item == null ? null : property?.Invoker.GetValue(item), null);
+                    var currentValue = item == null ? null : property?.Invoker.GetValue(item);
+                    if (currentValue is IList listValue && synchItem != null && synchItem.SyncStatus == SynchronizedStatus.Load)
+                    {
+                        foreach (var listItem in listValue)
+                        {
+                            if (listItem is ISynchronized synchronized && synchronized.SyncStatus != SynchronizedStatus.Actual)
+                            {
+                                synchronized.SyncStatus = SynchronizedStatus.Load;
+                            }
+                        }
+                    }
+                    object value = DeserializeValue(serializer, jreader, property?.DataType, currentValue, null);
                     if (property == null)
                         continue;
 
