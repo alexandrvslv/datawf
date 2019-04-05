@@ -395,6 +395,16 @@ namespace DataWF.Module.Common
         }
 
         [Browsable(false)]
+        public override AccessValue Access
+        {
+            get
+            {
+                return base.Access != Table.Access ? base.Access
+                  : Department?.Access ?? Position?.Access ?? Table.Access;
+            }
+        }
+
+        [Browsable(false)]
         public string AccessToken { get; set; }
 
         [Browsable(false), DataMember, Column("token_refresh", 2048, Keys = DBColumnKeys.Password | DBColumnKeys.NoLog)]
