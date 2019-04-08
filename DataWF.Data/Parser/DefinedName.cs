@@ -42,8 +42,8 @@ namespace DataWF.Data
             }
         }
 
+        public CodeAttributeCache Code;
         public Table Table;
-        public IInvoker Invoker;
         public object CacheValue;
         internal CellRange NewRange;
     }

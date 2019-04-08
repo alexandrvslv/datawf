@@ -112,7 +112,7 @@ namespace DataWF.Data
                         Name = item.Attribute.Code,
                         Sheet = sheet,
                         Reference = split[1],
-                        Invoker = item.Invoker
+                        Code = item
                     };
                     names.Add(defName.Range.Start.ToString(), defName);
                 }
@@ -290,7 +290,7 @@ namespace DataWF.Data
                                         Name = name.Name,
                                         Sheet = sheet,
                                         Reference = split[1],
-                                        Invoker = code.Invoker
+                                        Code = code
                                     };
                                     names.Add(defName.Range.Start.ToString(), defName);
                                 }
@@ -370,7 +370,7 @@ namespace DataWF.Data
                             object rz = null;
                             if (cacheNames.TryGetValue(ocell.CellReference.Value, out var defName))
                             {
-                                rz = defName.CacheValue ?? defName.Invoker.GetValue(param.Document);
+                                rz = defName.CacheValue ?? param.GetValue(defName.Code);
                             }
                             else
                             {
@@ -584,8 +584,8 @@ namespace DataWF.Data
                             {
                                 Name = table.Name,
                                 Range = reference,
-                                Invoker = code.Invoker,
-                                CacheValue = code.Invoker.GetValue(param.Document),
+                                Code = code,
+                                CacheValue = param.GetValue(code)
                             };
                             if (defName.CacheValue is QResult result && result.Values.Count > 0)
                             {

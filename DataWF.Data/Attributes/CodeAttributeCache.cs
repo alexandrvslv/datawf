@@ -25,18 +25,30 @@ namespace DataWF.Data
 {
     public class CodeAttributeCache
     {
-        public CodeAttributeCache(CodeAttribute attribute, PropertyInfo property)
+        public CodeAttributeCache(CodeAttribute attribute, MemberInfo member)
         {
             Attribute = attribute;
-            Property = property;
-            Invoker = EmitInvoker.Initialize(property, true);
+            Member = member;
+            MemberInvoker = EmitInvoker.Initialize(member, true);
         }
 
         public CodeAttribute Attribute { get; }
-        public PropertyInfo Property { get; }
 
-        public IInvoker Invoker { get; }
+        public MemberInfo Member { get; }
 
-        public object GetValue(object targe) => Invoker.GetValue(targe);
+        public IInvoker MemberInvoker { get; }
+
+        public object GetValue(object targe, DBTransaction transaction)
+        {
+            if (Member is PropertyInfo)
+            {
+                return MemberInvoker.GetValue(targe);
+            }
+            else if (Member is MethodInfo)
+            {
+                return ((IIndexInvoker)MemberInvoker).GetValue(targe, new object[] { transaction });
+            }
+            return null;
+        }
     }
 }

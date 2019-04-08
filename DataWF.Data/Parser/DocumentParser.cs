@@ -121,7 +121,7 @@ namespace DataWF.Data
                 var codeAttribute = parameters.ParseCode(procedureCode);
                 if (codeAttribute != null)
                 {
-                    val = codeAttribute.Invoker.GetValue(parameters.Document);
+                    val = parameters.GetValue(codeAttribute);
                 }
                 else
                 {

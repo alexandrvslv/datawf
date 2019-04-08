@@ -24,7 +24,7 @@ using System.Reflection;
 
 namespace DataWF.Data
 {
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property, AllowMultiple = true)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Method, AllowMultiple = true)]
     public class CodeAttribute : Attribute
     {
         public CodeAttribute(string code, string category = "General")

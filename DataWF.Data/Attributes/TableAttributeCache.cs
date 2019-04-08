@@ -306,7 +306,11 @@ namespace DataWF.Data
                     cacheReferencings.Add(referencing);
                 }
             }
-
+            var methods = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
+            foreach (var method in methods)
+            {
+                InitializeCodes(method);
+            }
             cachedTypes.Add(type);
         }
 
@@ -366,13 +370,15 @@ namespace DataWF.Data
             return false;
         }
 
-        public virtual void InitializeCodes(PropertyInfo property)
+        public virtual void InitializeCodes(MemberInfo member)
         {
-            var codeAttribuites = property.GetCustomAttributes<CodeAttribute>(false);
+            var codeAttribuites = member.GetCustomAttributes<CodeAttribute>(false);
             foreach (var code in codeAttribuites)
             {
                 if (!Codes.Any(p => p.Attribute.Code == code.Code && p.Attribute.Category == code.Category))
-                    Codes.Add(new CodeAttributeCache(code, property));
+                {
+                    Codes.Add(new CodeAttributeCache(code, member));
+                }
             }
         }
 

@@ -51,7 +51,7 @@ namespace DataWF.Data
                 {
                     ProcedureCategory = value.CodeCategory;
                     var type = document.GetType();
-                    Codes = new SelectableList<CodeAttributeCache>(document?.Table.TableAttribute.Codes.Where(p => TypeHelper.IsBaseType(type,  p.Invoker.TargetType)));
+                    Codes = new SelectableList<CodeAttributeCache>(document?.Table.TableAttribute.Codes.Where(p => TypeHelper.IsBaseType(type, p.MemberInvoker.TargetType)));
                 }
             }
         }
@@ -100,6 +100,11 @@ namespace DataWF.Data
                 }
             }
             return result;
+        }
+
+        public object GetValue(CodeAttributeCache code)
+        {
+            return code.GetValue(Document, Transaction);
         }
     }
 }
