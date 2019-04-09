@@ -96,7 +96,7 @@ namespace DataWF.Web.Common
                         value.Reject(transaction.Caller);
                         return Forbid();
                     }
-                    await value.Save(transaction);
+                    await table.SaveItem(value, transaction);
                     transaction.Commit();
                 }
                 catch (Exception ex)
@@ -124,7 +124,7 @@ namespace DataWF.Web.Common
                         value.Reject(transaction.Caller);
                         return Forbid();
                     }
-                    await value.Save(transaction);
+                    await table.SaveItem(value, transaction);
                     transaction.Commit();
                 }
                 catch (Exception ex)
@@ -195,7 +195,14 @@ namespace DataWF.Web.Common
         [HttpGet("GenerateId")]
         public ActionResult<K> GenerateId()
         {
-            return (K)table.PrimaryKey.ParseValue(table.Sequence.Next());
+            try
+            {
+                return (K)table.PrimaryKey.ParseValue(table.Sequence.Next());
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex, null);
+            }
         }
 
         [NonAction]
