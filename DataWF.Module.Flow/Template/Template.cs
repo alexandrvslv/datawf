@@ -95,7 +95,7 @@ namespace DataWF.Module.Flow
         }
 
         [DataMember, Column("code", 250, Keys = DBColumnKeys.Code)]
-        public string Code
+        public virtual string Code
         {
             get { return GetValue<string>(Table.CodeKey); }
             set
@@ -112,13 +112,13 @@ namespace DataWF.Module.Flow
             set { SetName(value); }
         }
 
-        public string NameEN
+        public virtual string NameEN
         {
             get => GetProperty<string>();
             set => SetProperty(value);
         }
 
-        public string NameRU
+        public virtual string NameRU
         {
             get => GetProperty<string>();
             set => SetProperty(value);
