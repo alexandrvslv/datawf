@@ -135,7 +135,8 @@ namespace DataWF.Common
             else if (args is PropertyChangedEventArgs p)
             {
                 if (p.PropertyName == nameof(QueryParameter<T>.IsEnabled)
-                    || p.PropertyName == nameof(QueryParameter<T>.Value))
+                    || p.PropertyName == nameof(QueryParameter<T>.Value)
+                    || p.PropertyName == nameof(QueryParameter<T>.Comparer))
                 {
                     CheckUpdateFilter(sender, args);
                 }
