@@ -877,7 +877,7 @@ namespace DataWF.Data
 
         public QParam BuildParam(DBColumn col, object val)
         {
-            return BuildParam(col, val, true);
+            return BuildParam(col, val, false);
         }
 
         public QParam BuildNameParam(string property, CompareType comparer, object value)

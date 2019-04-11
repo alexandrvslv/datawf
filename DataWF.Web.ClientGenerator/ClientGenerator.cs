@@ -584,7 +584,7 @@ namespace DataWF.Web.ClientGenerator
             var definitionName = GetDefinitionName(schema);
             foreach (var item in schema.Enumeration)
             {
-                var sitem = item.ToString();
+                var sitem = item.ToString().Replace(" ", "");
                 if (!Char.IsLetter(sitem[0]))
                 {
                     sitem = definitionName[0] + sitem;
@@ -880,7 +880,7 @@ namespace DataWF.Web.ClientGenerator
                 yield return SF.ParseStatement("}");
             }
             yield return SF.ParseStatement($"OnPropertyChanged(temp, value);");
-           
+
         }
 
         private string GetPropertyName(JsonProperty property)
