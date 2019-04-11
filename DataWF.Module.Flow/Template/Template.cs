@@ -75,10 +75,13 @@ namespace DataWF.Module.Flow
     [DataContract, Table("rtemplate", "Template", BlockSize = 100)]
     public class Template : DBGroupItem, IDisposable
     {
-        public static DBTable<Template> DBTable
-        {
-            get { return GetTable<Template>(); }
-        }
+        private static DBTable<Template> dbTable;
+        private static DBColumn nameENKey = DBColumn.EmptyKey;
+        private static DBColumn nameRUKey = DBColumn.EmptyKey;
+
+        public static DBTable<Template> DBTable => dbTable ?? (dbTable = GetTable<Template>());
+        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
+        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
 
         private DBItemType documentType;
         private Work work;
@@ -114,14 +117,14 @@ namespace DataWF.Module.Flow
 
         public virtual string NameEN
         {
-            get => GetProperty<string>();
-            set => SetProperty(value);
+            get => GetValue<string>(NameENKey);
+            set => SetValue(value, NameENKey);
         }
 
         public virtual string NameRU
         {
-            get => GetProperty<string>();
-            set => SetProperty(value);
+            get => GetValue<string>(NameRUKey);
+            set => SetValue(value, NameRUKey);
         }
 
         [DataMember, DefaultValue(0), Column("document_type", 250)]
@@ -178,6 +181,13 @@ namespace DataWF.Module.Flow
         {
             get { return GetReferencing<TemplateData>(nameof(TemplateData.TemplateId), DBLoadParam.None); }
             set { SetReferencing<TemplateData>(value, nameof(TemplateData.TemplateId)); }
+        }
+
+        [DataMember, DefaultValue(false), Column("is_file")]
+        public bool? IsFile
+        {
+            get { return GetProperty<bool?>(); }
+            set { SetProperty(value); }
         }
 
         //[Browsable(false)]
@@ -240,12 +250,26 @@ namespace DataWF.Module.Flow
             return document;
         }
 
-
-        [DataMember, DefaultValue(false), Column("is_file")]
-        public bool? IsFile
+        [ControllerMethod]
+        public TemplateReference GetTemplateReference(int referenceId)
         {
-            get { return GetProperty<bool?>(); }
-            set { SetProperty(value); }
+            using (var query = new QQuery(TemplateReference.DBTable))
+            {
+                query.BuildParam(TemplateReference.TemplateKey, Id);
+                query.BuildParam(TemplateReference.ReferenceKey, referenceId);
+                return TemplateReference.DBTable.Select(query).FirstOrDefault();
+            }
+        }
+
+        [ControllerMethod]
+        public TemplateProperty GetTemplateProperty(string propertyName)
+        {
+            using (var query = new QQuery(TemplateProperty.DBTable))
+            {
+                query.BuildParam(TemplateProperty.TemplateKey, Id);
+                query.BuildParam(TemplateProperty.PropertyNameKey, propertyName);
+                return TemplateProperty.DBTable.Select(query).FirstOrDefault();
+            }
         }
 
         //public bool BarCode

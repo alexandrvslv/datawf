@@ -19,39 +19,33 @@
 */
 
 using DataWF.Data;
-using System.ComponentModel;
-using System.Runtime.Serialization;
 
 namespace DataWF.Module.Flow
 {
-
-    [DataContract, Table("rtemplate_data", "Template", BlockSize = 100)]
-    public class TemplateData : DBItem
+    [Table("rtemplate_property", "Template")]
+    public class TemplateProperty : DBItem
     {
-        private static DBTable<TemplateData> dbTable;
+        private static DBTable<TemplateProperty> dbTable;
         private static DBColumn templateKey = DBColumn.EmptyKey;
-        private static DBColumn fileKey = DBColumn.EmptyKey;
+        private static DBColumn propertyNameKey = DBColumn.EmptyKey;
 
-        public static DBTable<TemplateData> DBTable => dbTable ?? (dbTable = GetTable<TemplateData>());
+        public static DBTable<TemplateProperty> DBTable => dbTable ?? (dbTable = GetTable<TemplateProperty>());
         public static DBColumn TemplateKey => DBTable.ParseProperty(nameof(TemplateId), ref templateKey);
-        public static DBColumn FileKey => DBTable.ParseProperty(nameof(FileId), ref fileKey);
+        public static DBColumn PropertyNameKey => DBTable.ParseProperty(nameof(PropertyName), ref propertyNameKey);
 
         private Template template;
-        private TemplateFile templateFile;
 
-        public TemplateData()
-        {
-        }
+        public TemplateProperty()
+        { }
 
-        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
+        [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
             set { SetValue(value, Table.PrimaryKey); }
         }
 
-        [Browsable(false)]
-        [DataMember, Column("template_id"), Index("rtemplate_data_index", true)]
+        [Column("template_id"), Index("rtemplate_property_index", true)]
         public int? TemplateId
         {
             get { return GetValue<int?>(TemplateKey); }
@@ -65,19 +59,12 @@ namespace DataWF.Module.Flow
             set { template = SetReference(value, TemplateKey); }
         }
 
-        [Browsable(false)]
-        [DataMember, Column("file_id", Keys = DBColumnKeys.View), Index("rtemplate_data_index", true)]
-        public int? FileId
+        [Column("property_name", 1024), Index("rtemplate_property_index", true)]
+        public string PropertyName
         {
-            get { return GetValue<int?>(FileKey); }
-            set { SetValue(value, FileKey); }
+            get { return GetValue<string>(PropertyNameKey); }
+            set { SetValue(value, PropertyNameKey); }
         }
 
-        [Reference(nameof(FileId))]
-        public TemplateFile File
-        {
-            get { return GetReference(FileKey, ref templateFile); }
-            set { templateFile = SetReference(value, FileKey); }
-        }
     }
 }
