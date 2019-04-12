@@ -655,7 +655,8 @@ namespace DataWF.Data
                     && !reference.ReferenceTable.Table.IsSynchronized
                     && !(reference.ReferenceTable.Table is IDBVirtualTable))
                 {
-                    var where = command.CommandText.Substring(command.CommandText.IndexOf(" where ", StringComparison.OrdinalIgnoreCase));
+                    var whereIndex = command.CommandText.IndexOf(" where ", StringComparison.OrdinalIgnoreCase);
+                    var where = whereIndex < 0 ? string.Empty : command.CommandText.Substring(whereIndex);
                     var sub = DBCommand.CloneCommand(command, reference.ReferenceTable.Table.BuildQuery($@"
     left join {SqlName} a 
         on a.{PrimaryKey.Name} = b.{reference.ReferenceColumn.Column.SqlName} 
