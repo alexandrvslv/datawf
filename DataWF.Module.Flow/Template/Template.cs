@@ -179,8 +179,22 @@ namespace DataWF.Module.Flow
         [Referencing(nameof(TemplateData.TemplateId))]
         public IEnumerable<TemplateData> Datas
         {
-            get { return GetReferencing<TemplateData>(nameof(TemplateData.TemplateId), DBLoadParam.None); }
-            set { SetReferencing<TemplateData>(value, nameof(TemplateData.TemplateId)); }
+            get { return GetReferencing(TemplateData.DBTable, TemplateData.TemplateKey, DBLoadParam.None); }
+            set { SetReferencing(value, TemplateData.TemplateKey); }
+        }
+
+        [Referencing(nameof(TemplateReference.TemplateId))]
+        public IEnumerable<TemplateReference> References
+        {
+            get { return GetReferencing(TemplateReference.DBTable, TemplateReference.TemplateKey, DBLoadParam.None); }
+            set { SetReferencing(value, TemplateReference.TemplateKey); }
+        }
+
+        [Referencing(nameof(TemplateProperty.TemplateId))]
+        public IEnumerable<TemplateProperty> Properties
+        {
+            get { return GetReferencing(TemplateProperty.DBTable, TemplateProperty.TemplateKey, DBLoadParam.None); }
+            set { SetReferencing(value, TemplateProperty.TemplateKey); }
         }
 
         [DataMember, DefaultValue(false), Column("is_file")]
