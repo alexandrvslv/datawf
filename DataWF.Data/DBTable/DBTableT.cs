@@ -99,7 +99,7 @@ namespace DataWF.Data
             return item.Table == this && item.Attached;
         }
 
-        public void Add(params object[] fields)
+        public void AddParams(params object[] fields)
         {
             var row = NewItem();
             row.SetValues(fields);
@@ -163,9 +163,16 @@ namespace DataWF.Data
 
         public override void Accept(DBItem item)
         {
-            foreach (var column in Columns.Where(p => p.Index != null))
+            if (!item.Attached)
             {
-                column.Index.RefreshSort(item);
+                Add(item);
+            }
+            else
+            {
+                foreach (var column in Columns.Where(p => p.Index != null))
+                {
+                    column.Index.RefreshSort(item);
+                }                
             }
             foreach (var collection in virtualTables)
             {

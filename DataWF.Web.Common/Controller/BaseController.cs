@@ -124,7 +124,7 @@ namespace DataWF.Web.Common
                         value.Reject(transaction.Caller);
                         return Forbid();
                     }
-                    await table.SaveItem(value, transaction);
+                    await value.Save(transaction);
                     transaction.Commit();
                 }
                 catch (Exception ex)

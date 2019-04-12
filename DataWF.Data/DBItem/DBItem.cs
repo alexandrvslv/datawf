@@ -1054,7 +1054,9 @@ namespace DataWF.Data
         {
             if (OnSaving(transaction))
             {
+                await SaveReferenced(transaction);
                 await Table.SaveItem(this, transaction);
+                await SaveReferencing(transaction);
                 OnSaved(transaction);
             }
         }
@@ -1322,7 +1324,37 @@ namespace DataWF.Data
                     foreach (DBItem reference in references)
                     {
                         if (reference.IsChanged)
+                        {
                             transaction.Rows.Add(reference);
+                        }
+                    }
+                }
+            }
+        }
+
+        public async Task SaveReferenced(DBTransaction transaction)
+        {
+            if ((UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete)
+            {
+                return;
+            }
+
+            foreach (var column in Table.Columns.GetIsReference())
+            {
+                var invoker = column.Attribute?.ReferencePropertyInvoker;
+                if (column.ColumnType == DBColumnTypes.Default
+                    && invoker != null
+                    && TypeHelper.IsBaseType(GetType(), invoker.TargetType))
+                {
+                    var item = column.Attribute.ReferencePropertyInvoker.GetValue(this) as DBItem;
+
+                    if (item != null && item.IsChanged)
+                    {
+                        await item.Save(transaction);
+                        if (GetValue(column) == null)
+                        {
+                            SetValue(item.PrimaryId, column);
+                        }
                     }
                 }
             }
@@ -1330,22 +1362,19 @@ namespace DataWF.Data
 
         public async Task SaveReferencing(DBTransaction transaction)
         {
+            if ((UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete)
+            {
+                return;
+            }
+
             foreach (var relation in Table.GetChildRelations())
             {
-                if (relation.Table != Table && !(relation.Table is IDBVirtualTable))
+                if (relation.Table != Table
+                    && !(relation.Table is IDBVirtualTable))
                 {
-                    var references = GetReferencing(relation, DBLoadParam.None);
-                    var updatind = new List<DBItem>();
-                    foreach (DBItem reference in references)
-                    {
-                        if (reference.IsChanged)
-                            updatind.Add(reference);
-                    }
-
-                    if (updatind.Count > 0)
-                    {
-                        await relation.Table.Save(transaction, updatind);
-                    }
+                    var references = GetReferencing(relation, DBLoadParam.None)
+                        .Where(p => p.IsChanged).ToList();
+                    await relation.Table.Save(transaction, references);
                 }
             }
         }

@@ -781,12 +781,12 @@ namespace DataWF.Module.Flow
                     {
                         Send(CurrentWork, temporaryStage, transaction);
                     }
-                    await base.Save(transaction);
+                   
                 }
                 temporaryUser = null;
                 temporaryStage = null;
-
-                await SaveReferencing(transaction);
+                await base.Save(transaction);
+                
 
                 if (GetWorks().Count() <= 1)
                 {

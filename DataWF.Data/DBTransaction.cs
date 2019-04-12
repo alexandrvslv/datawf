@@ -143,6 +143,8 @@ namespace DataWF.Data
 
         public DBItem UserLog { get; set; }
 
+        public int ReferencingRecursion { get; set; }
+
         public void Commit()
         {
             if (transaction != null)

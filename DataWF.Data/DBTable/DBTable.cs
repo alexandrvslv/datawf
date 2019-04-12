@@ -648,20 +648,27 @@ namespace DataWF.Data
 
         public void LoadReferencingBlock(IDbCommand command, DBTransaction transaction)
         {
+            var oldAlias = Helper.IntToChar(transaction.ReferencingRecursion).ToLowerInvariant();
+            transaction.ReferencingRecursion++;
+            var newAlias = Helper.IntToChar(transaction.ReferencingRecursion).ToLowerInvariant();
             foreach (var reference in TableAttribute.Referencings)
             {
-                if ((reference.ReferenceColumn.Attribute.Keys & DBColumnKeys.Group) != DBColumnKeys.Group
+                var referenceColumn = reference.ReferenceColumn;
+                if ((referenceColumn.Attribute.Keys & DBColumnKeys.Group) != DBColumnKeys.Group
                     && reference.ReferenceTable.Table != this
                     && !reference.ReferenceTable.Table.IsSynchronized
                     && !(reference.ReferenceTable.Table is IDBVirtualTable))
                 {
-                    var whereIndex = command.CommandText.IndexOf(" where ", StringComparison.OrdinalIgnoreCase);
+                    var whereIndex = command.CommandText.IndexOf(" left join ", StringComparison.OrdinalIgnoreCase);
+                    if (whereIndex < 0)
+                    {
+                        whereIndex = command.CommandText.IndexOf(" where ", StringComparison.OrdinalIgnoreCase);
+                    }
                     var where = whereIndex < 0 ? string.Empty : command.CommandText.Substring(whereIndex);
-                    var sub = DBCommand.CloneCommand(command, reference.ReferenceTable.Table.BuildQuery($@"
-    left join {SqlName} a 
-        on a.{PrimaryKey.Name} = b.{reference.ReferenceColumn.Column.SqlName} 
-    {where}", "b", null));
-                    reference.ReferenceTable.Table.LoadItems(sub, DBLoadParam.None, transaction).LastOrDefault();
+                    var subCommand = DBCommand.CloneCommand(command, reference.ReferenceTable.Table.BuildQuery($@"
+    left join {SqlName} {oldAlias} on {oldAlias}.{PrimaryKey.SqlName} = {newAlias}.{referenceColumn.Column.SqlName} 
+    {where}", newAlias, null));
+                    reference.ReferenceTable.Table.LoadItems(subCommand, DBLoadParam.Referencing, transaction).LastOrDefault();
                 }
             }
         }
@@ -861,8 +868,8 @@ namespace DataWF.Data
                     item.Status = DBStatus.Edit;
             }
 
-            if (!item.Attached)
-                Add(item);
+            //if (!item.Attached)
+            //    Add(item);
 
             transaction.Rows.Add(item);
             var args = new DBItemEventArgs(item, transaction);
@@ -928,31 +935,6 @@ namespace DataWF.Data
             item.UpdateState |= DBUpdateState.Commit;
 
             return true;
-        }
-
-        void CheckRerencing()
-        {
-            //if (transaction.Reference && (item.UpdateState & DBUpdateState.Delete) != DBUpdateState.Delete)
-            //{
-            //    foreach (var column in Columns.GetIsReference())
-            //    {
-            //        if (column.ColumnType == DBColumnTypes.Default)
-            //        {
-            //            var refItem = item.GetCache(column) as DBItem;
-            //            if (refItem == null && item.GetValue(column) != null)
-            //            {
-            //                refItem = item.GetReference(column) as DBItem;
-            //            }
-            //            if (refItem != null && refItem != item)
-            //            {
-            //                if (refItem.IsChanged)
-            //                    refItem.Save(user);
-            //                if (item.GetValue(column) == null)
-            //                    item.SetValue(refItem.PrimaryId, column);
-            //            }
-            //        }
-            //    }
-            //}
         }
 
         public abstract void Accept(DBItem item);
