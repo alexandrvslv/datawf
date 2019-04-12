@@ -429,7 +429,7 @@ namespace DataWF.Data
 
         public object ExecuteQuery(string commandText, DBExecuteType type = DBExecuteType.Scalar)
         {
-            return ExecuteQuery(AddCommand(CommandText), type);
+            return ExecuteQuery(AddCommand(commandText), type);
         }
 
         public object ExecuteQuery(IDbCommand command, DBExecuteType type = DBExecuteType.Scalar, CommandBehavior behavior = CommandBehavior.Default)
