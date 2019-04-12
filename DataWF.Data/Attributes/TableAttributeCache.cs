@@ -375,7 +375,7 @@ namespace DataWF.Data
             var codeAttribuites = member.GetCustomAttributes<CodeAttribute>(false);
             foreach (var code in codeAttribuites)
             {
-                if (!Codes.Any(p => p.Attribute.Code == code.Code && p.Attribute.Category == code.Category))
+                if (!Codes.Any(p => p.Attribute.Code == code.Code && p.Attribute.Category == code.Category && p.Member == member))
                 {
                     Codes.Add(new CodeAttributeCache(code, member));
                 }
