@@ -154,7 +154,7 @@ namespace DataWF.Web.Common
                         value.Reject(transaction.Caller);
                         return Forbid();
                     }
-                    await value.Delete(transaction, 2, DBLoadParam.Load);
+                    await value.Delete(transaction, 4, DBLoadParam.Load);
                     transaction.Commit();
                     return Ok(true);
 
