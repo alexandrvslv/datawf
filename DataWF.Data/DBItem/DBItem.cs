@@ -1274,31 +1274,41 @@ namespace DataWF.Data
             foreach (DBItem item in list)
             {
                 if (item == this)
+                {
                     continue;
+                }
+
                 rows.Add(item);
 
                 item.UpdateState |= DBUpdateState.Delete;
                 foreach (DBColumn column in item.Table.Columns)
                 {
-                    if (this[column] == DBNull.Value && item[column] != DBNull.Value)
-                        this[column] = item[column];
+                    if (GetValue(column) == null && item.GetValue(column) != null)
+                    {
+                        SetValue(item.GetValue(column), column);
+                    }
                 }
 
                 foreach (DBForeignKey relation in relations)
+                {
                     if (relation.Table.Type == DBTableType.Table)
                     {
-                        var refings = item.GetReferencing(relation, DBLoadParam.Load | DBLoadParam.Synchronize).ToList();
-                        if (refings.Count > 0)
+                        var referencing = item.GetReferencing(relation, DBLoadParam.Load | DBLoadParam.Synchronize).ToList();
+                        if (referencing.Count > 0)
                         {
-                            foreach (DBItem refing in refings)
-                                refing[relation.Column] = PrimaryId;
-
-                            await relation.Table.Save(transaction, refings);
+                            foreach (DBItem subItem in referencing)
+                            {
+                                subItem.SetValue(PrimaryId, relation.Column);
+                                await relation.Table.SaveItem(subItem, transaction);
+                            }
                         }
                     }
+                }
             }
-
-            await Table.Save(transaction, rows);
+            foreach (var item in rows)
+            {
+                await Table.SaveItem(item, transaction);
+            }
         }
 
         public Task SaveOrUpdate(DBTransaction transaction, DBLoadParam param = DBLoadParam.None)
