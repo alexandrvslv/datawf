@@ -123,12 +123,12 @@ namespace DataWF.Module.Flow
             set { SetProperty(value, nameof(Id)); }
         }
 
-        [Index("ddocument_reference_document_id")]
+        [Index("ddocument_reference_unique", true)]
         public override long? DocumentId { get => base.DocumentId; set => base.DocumentId = value; }
 
         [Browsable(false)]
         [DataMember, Column("reference_id", Keys = DBColumnKeys.View)]
-        [Index("ddocument_reference_reference_id")]
+        [Index("ddocument_reference_unique", true)]
         public long? ReferenceId
         {
             get { return GetProperty<long?>(); }
@@ -145,7 +145,7 @@ namespace DataWF.Module.Flow
         public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)
         {
             base.OnPropertyChanged(property, column, value);
-            GetReference<Document>(Table.ParseProperty(nameof(Reference)), ref reference,  DBLoadParam.None);
+            GetReference<Document>(Table.ParseProperty(nameof(Reference)), ref reference, DBLoadParam.None);
             if (Attached && reference != null)
             {
                 reference.OnReferenceChanged(this);
