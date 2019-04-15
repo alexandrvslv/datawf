@@ -493,7 +493,7 @@ namespace DataWF.Data
                 }
                 if (obj is IExecutable executed)
                 {
-                    obj = executed.Execute(param);
+                    obj = executed.Execute(param).GetAwaiter().GetResult();
                 }
             }
             else if (ProcedureType == ProcedureTypes.StoredFunction)
@@ -694,7 +694,7 @@ namespace DataWF.Data
             return transaction.ExecuteListDictionary();
         }
 
-       
+
 
         public void ParseAssembly(byte[] assemblyData, string fileName)
         {
