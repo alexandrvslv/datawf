@@ -265,7 +265,7 @@ namespace DataWF.Web.Common
                         writer.WritePropertyName("Items");
                         writer.WriteStartArray();
                     }
-                    if (item.UserId != user.Id && !item.ItemId.Equals(id))
+                    if (!item.ItemId.Equals(id) && (item.UserId != user.Id || item.Type == DBLogType.Delete))
                     {
                         id = item.ItemId;
                         writer.WriteStartObject();
