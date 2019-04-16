@@ -10,6 +10,29 @@ namespace DataWF.Common
 
     public static class ListHelper
     {
+        public static bool Contains(IEnumerable enumerable, object value)
+        {
+            if (enumerable is IList list)
+            {
+                return list.Contains(value);
+            }
+            foreach (var item in enumerable)
+            {
+                if (item?.Equals(value) ?? false)
+                    return true;
+            }
+            return false;
+        }
+
+        public static IEnumerable<object> Intersect(IEnumerable a, IEnumerable b)
+        {
+            foreach (var item in a)
+            {
+                if (Contains(b, item))
+                    yield return item;
+            }
+        }
+
         public static IList Create(Type type, int capacity)
         {
             return (IList)EmitInvoker.CreateObject(type, new Type[] { typeof(int) }, new object[] { capacity }, true);
@@ -309,7 +332,7 @@ namespace DataWF.Common
                 }
                 else if (x is IEnumerable xEnumerable)
                 {
-                    result = xEnumerable.Cast<object>().Contains(y);
+                    result = Contains(xEnumerable, y);
                 }
                 if (compare.Not)
                 {
@@ -324,7 +347,7 @@ namespace DataWF.Common
                 }
                 if (x is IEnumerable xEnumerable && y is IEnumerable yEnumerable)
                 {
-                    result = xEnumerable.Cast<object>().Intersect(yEnumerable.Cast<object>()).Any();
+                    result = Intersect(xEnumerable, yEnumerable).Any();
                 }
                 if (compare.Not)
                 {
@@ -810,6 +833,7 @@ namespace DataWF.Common
             int result = 0;
             if (comp != null)
                 result = comp.Compare(x, y);
+
             else if (x == null || DBNull.Value.Equals(x))
             {
                 result = (y == null || DBNull.Value.Equals(y)) ? 0 : -1;

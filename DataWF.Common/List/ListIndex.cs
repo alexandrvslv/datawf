@@ -219,12 +219,12 @@ namespace DataWF.Common
                     }
                     break;
                 case CompareTypes.In:
-                    var list = param.Value as IList;
+                    var list = param.Value as IEnumerable;
                     if (param.Comparer.Not)
                     {
                         foreach (var entry in index)
                         {
-                            if (!list.Contains(entry.Key))
+                            if (!ListHelper.Contains(list, entry.Key))
                             {
                                 foreach (var item in entry.Value)
                                     yield return item;
