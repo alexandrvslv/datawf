@@ -67,9 +67,9 @@ namespace DataWF.Common
             }
         }
 
-        public static bool operator ==(object item, EnumItem enumItem) { return item.Equals(enumItem.Value); }
+        //public static bool operator ==(object item, EnumItem enumItem) { return item.Equals(enumItem.Value); }
 
-        public static bool operator !=(object item, EnumItem enumItem) { return !item.Equals(enumItem.Value); }
+        //public static bool operator !=(object item, EnumItem enumItem) { return !item.Equals(enumItem.Value); }
 
 
         private bool check;
