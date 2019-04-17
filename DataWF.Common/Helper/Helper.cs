@@ -80,6 +80,16 @@ namespace DataWF.Common
             get { return logs; }
         }
 
+        public static string DateDaysString(DateTime date, CultureInfo culture = null)
+        {
+            return DateDaysString(DateTime.Now, date);
+        }
+
+        private static string DateDaysString(DateTime now, DateTime date)
+        {
+            throw new NotImplementedException();
+        }
+
         public static string DateRevelantString(DateTime date, CultureInfo culture = null)
         {
             return DateRevelantString(DateTime.Now, date);
@@ -118,7 +128,7 @@ namespace DataWF.Common
                 }
             }
             else if (stamp.Day == date.Day + 1)
-                f = "Yestorday";
+                f = "Yesterday";
             else if (stamp.Day - (int)stamp.DayOfWeek < date.Day)
                 f = "This Week";
             else
