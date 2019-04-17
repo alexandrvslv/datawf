@@ -65,10 +65,8 @@ namespace DataWF.Data
             if (!queryChache.TryGetValue(filter, out var query))
             {
                 query = new QQuery(filter, this);
-                if (queryChache.TryAdd(filter, query))
-                {
-                    Load(query, DBLoadParam.Referencing).LastOrDefault();
-                }
+                Load(query, DBLoadParam.Referencing).LastOrDefault();
+                queryChache.TryAdd(filter, query);
             }
             return Select(query);
         }
@@ -172,7 +170,7 @@ namespace DataWF.Data
                 foreach (var column in Columns.Where(p => p.Index != null))
                 {
                     column.Index.RefreshSort(item);
-                }                
+                }
             }
             foreach (var collection in virtualTables)
             {
