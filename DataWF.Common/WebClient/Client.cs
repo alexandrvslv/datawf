@@ -342,7 +342,13 @@ namespace DataWF.Common
         public virtual Task<object> GenerateIdAsync(ProgressToken progressToken) => Task.FromResult<object>(null);
 
         public Task<object> GenerateId() => GenerateIdAsync(ProgressToken.None);
+
+        public virtual Task<T> MergeAsync(K id, List<string> ids, ProgressToken progressToken) => Task.FromResult<T>(null);
+
+        public Task<T> MergeAsync(T item, List<string> ids, ProgressToken progressToken)
+            => MergeAsync(IdInvoker.GetValue(item).Value, ids, ProgressToken.None);
+
+        public async Task<object> MergeAsync(object id, List<string> ids) => await MergeAsync((K)id, ids, ProgressToken.None);
+
     }
-
-
 }

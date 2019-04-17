@@ -1248,6 +1248,20 @@ namespace DataWF.Data
                 }
             }
         }
+        
+        public Task Merge(List<string> ids, DBTransaction transaction)
+        {
+            var items = new List<DBItem>();
+            foreach (var id in ids)
+            {
+                var item = Table.LoadItemById(id, DBLoadParam.Referencing, null, transaction);
+                if (item != null)
+                {
+                    items.Add(item);
+                }
+            }
+            return Merge(items, transaction);
+        }
 
         public async Task Merge(IEnumerable<DBItem> list)
         {
@@ -1266,7 +1280,6 @@ namespace DataWF.Data
             }
         }
 
-        // TODO [ControllerMethod]
         public async Task Merge(IEnumerable<DBItem> list, DBTransaction transaction)
         {
             var relations = Table.GetChildRelations().ToList();

@@ -3,7 +3,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace DataWF.Common
@@ -43,6 +42,7 @@ namespace DataWF.Common
         Task<object> CopyAsync(object id);
         Task<object> PostAsync(object value);
         Task<object> PutAsync(object value);
+        Task<object> MergeAsync(object id, List<string> ids);
         object DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, object item, IList sourceList);
         object NewItem();
     }
@@ -60,6 +60,7 @@ namespace DataWF.Common
         Task<T> PostAsync(T value, ProgressToken progressToken);
         Task<T> PutAsync(T value, ProgressToken progressToken);
         Task<bool> DeleteAsync(object id, ProgressToken progressToken);
+        Task<T> MergeAsync(T value, List<string> ids, ProgressToken progressToken);
         T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, T item, IList sourceList);
     }
 

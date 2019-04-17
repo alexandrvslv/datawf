@@ -136,6 +136,30 @@ namespace DataWF.Web.Common
             return Ok(value);
         }
 
+        [HttpDelete("Merge/{id}")]
+        public async Task<ActionResult<T>> Merge([FromRoute]K id, [FromBody]List<string> ids)
+        {
+            using (var transaction = new DBTransaction(table.Connection, CurrentUser))
+            {
+                try
+                {
+                    var idValue = table.LoadById<T>(id, DBLoadParam.Load | DBLoadParam.Referencing);
+                    if (idValue == null)
+                    {
+                        return NotFound();
+                    }
+                    await idValue.Merge(ids, transaction);
+                    transaction.Commit();
+                    return idValue;
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    return BadRequest(ex, null);
+                }
+            }
+        }
+
         [HttpDelete("{id}")]
         public async Task<ActionResult<bool>> Delete([FromRoute]K id)
         {
