@@ -1386,7 +1386,7 @@ namespace DataWF.Data
 
         public bool IsReferencingChanged
         {
-            get { return GetPropertyReferencing().Any(p => p.IsChanged); }
+            get { return IsChanged || GetPropertyReferencing().Any(p => p.IsReferencingChanged); }
         }
 
         public IEnumerable<DBItem> GetPropertyReferencing()
