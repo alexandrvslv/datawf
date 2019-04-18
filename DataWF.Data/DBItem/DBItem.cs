@@ -1395,11 +1395,14 @@ namespace DataWF.Data
                 yield break;
             foreach (var referencing in Table.TableAttribute.Referencings)
             {
-                var references = (IEnumerable)referencing.PropertyInvoker.GetValue(this);
-                if (references != null)
+                if (TypeHelper.IsBaseType(GetType(), referencing.PropertyInvoker.TargetType))
                 {
-                    foreach (DBItem item in references)
-                        yield return item;
+                    var references = (IEnumerable)referencing.PropertyInvoker.GetValue(this);
+                    if (references != null)
+                    {
+                        foreach (DBItem item in references)
+                            yield return item;
+                    }
                 }
             }
         }
