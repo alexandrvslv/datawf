@@ -21,6 +21,7 @@
 using DataWF.Common;
 using Newtonsoft.Json;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -1248,7 +1249,7 @@ namespace DataWF.Data
                 }
             }
         }
-        
+
         public Task Merge(List<string> ids, DBTransaction transaction)
         {
             var items = new List<DBItem>();
@@ -1383,6 +1384,26 @@ namespace DataWF.Data
             }
         }
 
+        public bool IsReferencingChanged
+        {
+            get { return GetPropertyReferencing().Any(p => p.IsChanged); }
+        }
+
+        public IEnumerable<DBItem> GetPropertyReferencing()
+        {
+            if (Table.TableAttribute == null)
+                yield break;
+            foreach (var referencing in Table.TableAttribute.Referencings)
+            {
+                var references = (IEnumerable)referencing.PropertyInvoker.GetValue(this);
+                if (references != null)
+                {
+                    foreach (DBItem item in references)
+                        yield return item;
+                }
+            }
+        }
+
         public async Task SaveReferencing(DBTransaction transaction)
         {
             if ((UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete)
@@ -1396,8 +1417,11 @@ namespace DataWF.Data
                     && !(relation.Table is IDBVirtualTable))
                 {
                     var references = GetReferencing(relation, DBLoadParam.None)
-                        .Where(p => p.IsChanged).ToList();
-                    await relation.Table.Save(transaction, references);
+                        .Where(p => p.IsChanged || p.IsReferencingChanged).ToList();
+                    if (references.Count > 0)
+                    {
+                        await relation.Table.Save(transaction, references);
+                    }
                 }
             }
         }
