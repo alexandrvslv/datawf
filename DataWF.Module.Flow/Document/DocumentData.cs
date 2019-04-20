@@ -389,7 +389,7 @@ namespace DataWF.Module.Flow
         }
 
         [ControllerMethod]
-        public Task RemoveLogFile(int logId, DBTransaction transaction)
+        public async Task RemoveLogFile(int logId, DBTransaction transaction)
         {
             if (!Access.GetFlag(AccessType.Admin, transaction.Caller))
             {
@@ -399,19 +399,34 @@ namespace DataWF.Module.Flow
             var logItem = Table.LogTable.LoadById(logId);
             if (logItem == null)
             {
-                throw new Exception($"DataLog with id {logId} not found!");
+                throw new Exception($"Not Found!");
             }
 
             if (Table.LogTable.FileLOBKey != null)
             {
                 var lob = logItem.GetValue<uint?>(Table.LogTable.FileLOBKey);
-                if (lob != null && lob == FileLOB)
+                if (lob != null)
                 {
-                    throw new Exception($"Can't remove latest log entry!");
+                    if (lob == FileLOB)
+                    {
+                        throw new Exception($"Latest log entry. Deletion Canceled!");
+                    }
+
+                    var qquery = new QQuery(Table.LogTable);
+                    qquery.BuildParam(Table.LogTable.FileLOBKey, lob);
+                    foreach (var item in Table.LogTable.Load(qquery).ToList())
+                    {
+                        if (item != logItem)
+                        {
+                            item.Delete();
+                            await item.Save(transaction);
+                        }
+                    }
                 }
             }
             logItem.Delete();
-            return logItem.Save(transaction);
+            await logItem.Save(transaction);
+            Table.LogTable.Trunc();
         }
 
         public virtual string RefreshName()
