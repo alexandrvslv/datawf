@@ -10,6 +10,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
@@ -138,7 +139,7 @@ namespace DataWF.Common
 
         public static void CreateTempDirectory(string dirName)
         {
-            string fullpath = Path.GetDirectoryName(GetDirectory(Environment.SpecialFolder.ApplicationData, dirName));
+            string fullpath = Path.GetDirectoryName(GetDirectory(Environment.SpecialFolder.LocalApplicationData, dirName));
             string editpath = Path.Combine(fullpath, DocEdit);
             string viewpath = Path.Combine(fullpath, DocView);
             Directory.CreateDirectory(fullpath);
@@ -311,7 +312,7 @@ namespace DataWF.Common
                 rez += ((int)val[i] - diff) * (int)Math.Pow(26, val.Length - (i + 1));
 
             }
-            return rez -1;
+            return rez - 1;
         }
 
         public static byte GetAscii(char ichar)
@@ -356,13 +357,34 @@ namespace DataWF.Common
                 return IsImage(fileStream);
         }
 
+        public static Task ClearDocumentsAsync()
+        {
+            return Task.Run(() => ClearDocuments());
+        }
+
+        public static void ClearDocuments()
+        {
+            var path = Path.Combine(GetDirectory(true), "Documents");
+            if (Directory.Exists(path))
+            {
+                try
+                {
+                    Directory.Delete(path, true);
+                }
+                catch (Exception ex)
+                {
+                    Helper.OnException(ex);
+                }
+            }
+        }
+
         public static string GetDocumentsFullPath(string fileName, string identifier)
         {
             if (string.IsNullOrEmpty(fileName))
             {
                 return null;
             }
-            var path = Path.Combine(Path.GetTempPath(), "Documents", identifier);
+            var path = Path.Combine(GetDirectory(true), "Documents", identifier);
             Directory.CreateDirectory(path);
             return Path.Combine(path, fileName);
         }
@@ -370,6 +392,11 @@ namespace DataWF.Common
         public static string GetDirectory(string sub = "")
         {
             return Path.Combine(Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory), sub);
+        }
+
+        public static string GetDirectory(bool appDirectory)
+        {
+            return GetDirectory(Environment.SpecialFolder.LocalApplicationData, appDirectory);
         }
 
         public static string GetDirectory(Environment.SpecialFolder folder, bool appDirectory)
