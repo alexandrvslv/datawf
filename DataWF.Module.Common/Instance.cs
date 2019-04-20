@@ -50,7 +50,7 @@ namespace DataWF.Module.Common
             query.BuildPropertyParam(nameof(Host), CompareType.Equal, endPoint.Address.ToString());
             query.BuildPropertyParam(nameof(Port), CompareType.Equal, endPoint.Port);
             query.BuildPropertyParam(nameof(Action), CompareType.Equal, false);
-            var instance = DBTable.Load(query).FirstOrDefault();
+            var instance = DBTable.Load(query).LastOrDefault();
             if (instance == null && create)
             {
                 instance = new Instance
