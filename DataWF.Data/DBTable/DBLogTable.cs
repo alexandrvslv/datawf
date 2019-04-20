@@ -162,7 +162,18 @@ namespace DataWF.Data
                 var current = logItem.BaseItem?.GetValue<uint?>(logColumn.BaseColumn);
                 if (lob != null && lob != current)
                 {
-                    await System.DeleteLOB(lob.Value, transaction);
+                    try
+                    {
+                        using (var transactionDeleteLOB = new DBTransaction(transaction.DbConnection, transaction.Caller))
+                        {
+                            await System.DeleteLOB(lob.Value, transaction);
+                            transactionDeleteLOB.Commit();
+                        }
+                    }
+                    catch (Exception ex)
+                    {                        
+                        Helper.OnException(ex);
+                    }
                 }
             }
             return await base.SaveItem(item, transaction);
