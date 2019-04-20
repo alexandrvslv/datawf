@@ -254,7 +254,7 @@ namespace DataWF.Data
         {
             var builder = new StringBuilder();
             text = text.Replace("character varying", "Text");
-            foreach (var item in text.Split(new char[] { ' ', '"', '(', ')' }, StringSplitOptions.RemoveEmptyEntries))
+            foreach (var item in text.Split(new char[] { ',', ' ', '"', '(', ')' }, StringSplitOptions.RemoveEmptyEntries))
             {
                 var column = table.ParseProperty(item);
                 if (column != null)
