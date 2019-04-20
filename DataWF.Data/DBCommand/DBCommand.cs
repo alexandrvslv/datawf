@@ -143,7 +143,7 @@ namespace DataWF.Data
 
                     command.Parameters.Add(dbParameter);
                 }
-                param.Column.Schema.System.WriteValue(param.Column, row[param.Column], dbParameter, command.Connection);
+                param.Column.Schema.System.WriteValue(command, dbParameter, row[param.Column], param.Column);
             }
         }
     }

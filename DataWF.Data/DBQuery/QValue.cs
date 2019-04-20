@@ -118,13 +118,17 @@ namespace DataWF.Data
             string param = name + i;
             while (command.Parameters.Contains(param))
                 param = name + ++i;
+            var parameter = Table?.System.CreateParameter(command, param, value, Column);
 
-            var parameter = command.CreateParameter();
-            //parameter.DbType = DbType.String;
-            parameter.Direction = ParameterDirection.Input;
-            parameter.ParameterName = param;
-            parameter.Value = value;
-            command.Parameters.Add(parameter);
+            if (parameter == null)
+            {
+                parameter = command.CreateParameter();
+                //parameter.DbType = DbType.String;
+                parameter.Direction = ParameterDirection.Input;
+                parameter.ParameterName = param;
+                parameter.Value = value;
+                command.Parameters.Add(parameter);
+            }
             return param;
         }
     }

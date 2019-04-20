@@ -203,9 +203,9 @@ namespace DataWF.Data
         }
 
 
-        public override void WriteValue(DBColumn column, object value, IDataParameter parameter, IDbConnection connection)
+        public override void WriteValue(IDbCommand command, IDataParameter parameter, object value, DBColumn column)
         {
-            base.WriteValue(column, value, parameter, connection);
+            base.WriteValue(command, parameter, value, column);
             if (value == null)
             {
                 if (column.IsPrimaryKey)
@@ -228,7 +228,7 @@ namespace DataWF.Data
                     dbParameter.OracleDbType = OracleDbType.Blob;
                     if (value != null)
                     {
-                        var blob = new OracleBlob((OracleConnection)connection);
+                        var blob = new OracleBlob((OracleConnection)command.Connection);
                         blob.Write((byte[])value, 0, ((byte[])value).Length);
                         blob.Position = 0L;
                         dbParameter.Value = blob;
@@ -239,7 +239,7 @@ namespace DataWF.Data
                     dbParameter.OracleDbType = OracleDbType.NClob;
                     if (value != null)
                     {
-                        var clob = new OracleClob((OracleConnection)connection, false, true);
+                        var clob = new OracleClob((OracleConnection)command.Connection, false, true);
                         clob.Write(((string)value).ToCharArray(), 0, ((string)value).Length);
                         clob.Position = 0L;
                         dbParameter.Value = clob;

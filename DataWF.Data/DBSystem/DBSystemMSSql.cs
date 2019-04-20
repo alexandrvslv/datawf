@@ -135,7 +135,7 @@ namespace DataWF.Data
             command.AppendLine($"select {idparam};");
         }
 
-        public override void WriteValue(DBColumn column, object value, IDataParameter parameter, IDbConnection connection)
+        public override void WriteValue(IDbCommand command, IDataParameter parameter, object value, DBColumn column)
         {
             var dbParameter = (SqlParameter)parameter;
             switch (dbParameter.DbType)
@@ -160,7 +160,7 @@ namespace DataWF.Data
             {
                 parameter.Direction = ParameterDirection.Output;
             }
-            base.WriteValue(column, value, parameter, connection);
+            base.WriteValue(command, parameter, value, column);
         }
 
         public override string FormatQColumn(DBColumn column, string tableAlias)

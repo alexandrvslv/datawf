@@ -51,23 +51,25 @@ namespace DataWF.Data
         }
 
 
-        public IDataParameter CreateParameter(IDbCommand command, string name, object value)
+        public virtual IDataParameter CreateParameter(IDbCommand command, string name, object value, DBColumn column)
         {
-            IDataParameter dparam = null;
+            IDataParameter parameter = null;
             foreach (IDataParameter param in command.Parameters)
                 if (param.ParameterName == name)
                 {
-                    dparam = param;
+                    parameter = param;
                     break;
                 }
-            if (dparam == null)
+            if (parameter == null)
             {
-                dparam = command.CreateParameter();
-                dparam.ParameterName = name;
-                command.Parameters.Add(dparam);
+                parameter = command.CreateParameter();
+                parameter.ParameterName = name;
+                command.Parameters.Add(parameter);
             }
-            dparam.Value = value ?? DBNull.Value;
-            return dparam;
+            parameter.Direction = ParameterDirection.Input;
+
+            WriteValue(command, parameter, value, column);
+            return parameter;
         }
 
         public static IEnumerable<DBSystem> GetSystems()
@@ -764,13 +766,13 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             return builder.ToString();
         }
 
-        public virtual void WriteValue(DBColumn column, object value, IDataParameter parameter, IDbConnection connection)
+        public virtual void WriteValue(IDbCommand command, IDataParameter parameter, object value, DBColumn column)
         {
             if (value == null)
             {
                 value = DBNull.Value;
             }
-            else if (column.DataType.IsEnum)
+            else if (column != null && column.DataType.IsEnum)
             {
                 value = (int)value;
             }

@@ -1389,7 +1389,7 @@ namespace DataWF.Data
         {
             string idName = System.ParameterPrefix + PrimaryKey.Name;
             var command = System.CreateCommand(Schema.Connection, BuildQuery($"where a.{PrimaryKey.SqlName}={idName}", "a", cols));
-            System.CreateParameter(command, idName, id);
+            System.CreateParameter(command, idName, id, PrimaryKey);
             return command;
         }
 

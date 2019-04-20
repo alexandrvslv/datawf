@@ -571,7 +571,7 @@ namespace DataWF.Data
             if (row == null && (param & DBLoadParam.Load) == DBLoadParam.Load)//&& !IsSynchronized
             {
                 var command = System.CreateCommand(Schema.Connection, CreateQuery($"where a.{column.Name}={Schema.System.ParameterPrefix}{column.Name}", "a", Columns));
-                System.CreateParameter(command, Schema.System.ParameterPrefix + column.Name, code);
+                System.CreateParameter(command, Schema.System.ParameterPrefix + column.Name, code, column);
                 row = Load(command, param, transaction).FirstOrDefault();
             }
             return row;

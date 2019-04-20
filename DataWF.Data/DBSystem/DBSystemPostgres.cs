@@ -190,19 +190,26 @@ namespace DataWF.Data
 
         public override string FormatCreateView(string name)
         {
-            return "drop view if exists "+name+"; create view " + name + " as";
+            return $"drop view if exists {name}; create view {name} as";
         }
 
-        public override void WriteValue(DBColumn column, object value, IDataParameter parameter, IDbConnection connection)
+        public override void WriteValue(IDbCommand command, IDataParameter parameter, object value, DBColumn column)
         {
-            base.WriteValue(column, value, parameter, connection);
-            if (column.DBDataType == DBDataType.TimeSpan)
+            base.WriteValue(command, parameter, value, column);
+            if (column != null)
             {
-                parameter.DbType = DbType.Time;
-            }
-            else if (column.DBDataType == DBDataType.LargeObject)
-            {
-                ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Oid;
+                if (column.DBDataType == DBDataType.TimeSpan)
+                {
+                    parameter.DbType = DbType.Time;
+                }
+                else if (column.DBDataType == DBDataType.LargeObject)
+                {
+                    ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Oid;
+                }
+                else if (column.DataType == typeof(uint))
+                {
+                    ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Integer;
+                }
             }
         }
 
