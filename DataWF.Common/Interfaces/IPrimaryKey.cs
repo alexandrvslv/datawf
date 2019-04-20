@@ -1,4 +1,6 @@
-﻿namespace DataWF.Common
+﻿using System;
+
+namespace DataWF.Common
 {
     public interface IPrimaryKey
     {
@@ -10,6 +12,9 @@
         new K PrimaryKey { get; set; }
     }
 
-
+    public interface IStampKey
+    {
+        DateTime? Stamp { get; set; }
+    }
 }
 

@@ -16,6 +16,7 @@ namespace DataWF.Common
         {
             Model = model;
             ModelView = modelView;
+            Stamp = modelView is IStampKey stamp ? (stamp.Stamp ?? DateTime.UtcNow) : DateTime.UtcNow;
             FilePath = filePath;
             Service = service ?? FileWatcherService.Instance;
             Enabled = enabled;
@@ -51,6 +52,8 @@ namespace DataWF.Common
         }
 
         public string FilePath { get; set; }
+
+        public DateTime Stamp { get; set; }
 
         public FileSystemWatcher Watcher { get; private set; }
 
