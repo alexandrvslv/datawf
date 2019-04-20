@@ -17,26 +17,8 @@ namespace DataWF.Common
             Model = model;
             ModelView = modelView;
             FilePath = filePath;
-            Watcher = new FileSystemWatcher
-            {
-                Path = Path.GetDirectoryName(filePath),
-                NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.LastWrite
-               | NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.Size,
-                Filter = Path.GetFileName(filePath),
-                EnableRaisingEvents = enabled
-            };
-
-            // Add event handlers.
-            Watcher.Changed += new FileSystemEventHandler(OnChanged);
-            Watcher.Created += new FileSystemEventHandler(OnChanged);
-            Watcher.Deleted += new FileSystemEventHandler(OnDeleted);
-            Watcher.Renamed += new RenamedEventHandler(OnRenamed);
-
             Service = service ?? FileWatcherService.Instance;
-            if (enabled)
-            {
-                Service.WatchList.Add(this);
-            }
+            Enabled = enabled;
         }
 
         private void OnRenamed(object sender, RenamedEventArgs e)
@@ -70,17 +52,46 @@ namespace DataWF.Common
 
         public string FilePath { get; set; }
 
-        public FileSystemWatcher Watcher { get; }
+        public FileSystemWatcher Watcher { get; private set; }
 
         public bool Enabled
         {
-            get => Watcher.EnableRaisingEvents;
+            get => Watcher?.EnableRaisingEvents ?? false;
             set
             {
                 if (Enabled != value)
                 {
-                    Watcher.EnableRaisingEvents = value;
+                    if (value)
+                    {
+                        if (Watcher == null)
+                        {
+                            Watcher = new FileSystemWatcher
+                            {
+                                Path = Path.GetDirectoryName(FilePath),
+                                NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.LastWrite
+                  | NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.Size,
+                                Filter = Path.GetFileName(FilePath),
+                            };
+
+                            // Add event handlers.
+                            Watcher.Changed += new FileSystemEventHandler(OnChanged);
+                            Watcher.Created += new FileSystemEventHandler(OnChanged);
+                            Watcher.Deleted += new FileSystemEventHandler(OnDeleted);
+                            Watcher.Renamed += new RenamedEventHandler(OnRenamed);
+                        }
+                        Watcher.EnableRaisingEvents = true;
+                        Service.WatchList.Add(this);
+                    }
+                    else
+                    {
+                        if (Watcher != null)
+                        {
+                            Watcher.EnableRaisingEvents = false;
+                        }
+                        Service.WatchList.Remove(this);
+                    }
                     Service.OnEnabledChanged(this, EventArgs.Empty);
+
                     OnPropertyChanged();
                 }
 
