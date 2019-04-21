@@ -204,6 +204,15 @@ namespace DataWF.Module.Flow
             set { SetProperty(value); }
         }
 
+        public override AccessValue Access
+        {
+            get
+            {
+                return base.Access != Table.Access ? base.Access
+                  : Parent?.Access ?? base.Access;
+            }
+        }
+
         //[Browsable(false)]
         //public TemplateParamList TemplateAllParams
         //{
