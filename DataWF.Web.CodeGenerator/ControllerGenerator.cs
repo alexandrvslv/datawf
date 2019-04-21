@@ -138,7 +138,7 @@ namespace DataWF.Web.CodeGenerator
                              SyntaxFactory.TypeConstraint(SyntaxFactory.ParseTypeName("new()"))
                         }))
                     }),
-                    members: SyntaxFactory.List(GetControllerMemebers(tableAttribute, itemType, true, usings))
+                    members: SyntaxFactory.List(GetControllerMemebers(tableAttribute, itemType, usings))
                     );
 
                 trees[name] = baseController;
@@ -155,33 +155,33 @@ namespace DataWF.Web.CodeGenerator
         //https://carlos.mendible.com/2017/03/02/create-a-class-with-net-core-and-roslyn/
         private ClassDeclarationSyntax GetOrGenerateController(TableAttributeCache tableAttribute, Type itemType, Dictionary<string, UsingDirectiveSyntax> usings)
         {
-            var baseName = (string)null;
-            var baseType = itemType;
             var primaryKeyType = tableAttribute.PrimaryKey?.GetDataType() ?? typeof(int);
+            var baseName = $"Base{(tableAttribute.FileKey != null ? "File" : "")}Controller<{itemType.Name}, {primaryKeyType.Name}>";
+            var baseType = itemType;
 
-            while (baseType != null && !IsPrimaryType(baseType))
-            {
-                if (baseType == tableAttribute.ItemType || baseType != itemType)
-                {
-                    GetOrGenerateBaseController(tableAttribute, baseType, usings, out var baseClassName);
-                    if (baseName == null)
-                        baseName = $"{baseClassName}<{itemType.Name}, {primaryKeyType.Name}>";
-                }
-                baseType = baseType.BaseType;
-            }
+            //while (baseType != null && !IsPrimaryType(baseType))
+            //{
+            //    if (baseType == tableAttribute.ItemType || baseType != itemType)
+            //    {
+            //        GetOrGenerateBaseController(tableAttribute, baseType, usings, out var baseClassName);
+            //        if (baseName == null)
+            //            baseName = $"{baseClassName}<{itemType.Name}, {primaryKeyType.Name}>";
+            //    }
+            //    baseType = baseType.BaseType;
+            //}
 
             if (!trees.TryGetValue(itemType.Name, out var controller))
             {
                 var controllerClassName = $"{itemType.Name}Controller";
                 controller = SyntaxFactory.ClassDeclaration(
                     attributeLists: SyntaxFactory.List(GetControllerAttributeList()),
-                    modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)),
+                    modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.PartialKeyword)),
                     identifier: SyntaxFactory.Identifier(controllerClassName),
                     typeParameterList: null,
                     baseList: SyntaxFactory.BaseList(SyntaxFactory.SingletonSeparatedList<BaseTypeSyntax>(
                         SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName(baseName)))),
                     constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
-                    members: SyntaxFactory.List(GetControllerMemebers(tableAttribute, itemType, false, usings))
+                    members: SyntaxFactory.List(GetControllerMemebers(tableAttribute, itemType, usings))
                     );
 
                 trees[itemType.Name] = controller;
@@ -242,24 +242,24 @@ namespace DataWF.Web.CodeGenerator
             return list;
         }
 
-        public IEnumerable<MemberDeclarationSyntax> GetControllerMemebers(TableAttributeCache table, Type type, bool baseClass, Dictionary<string, UsingDirectiveSyntax> usings)
+        public IEnumerable<MemberDeclarationSyntax> GetControllerMemebers(TableAttributeCache table, Type type, Dictionary<string, UsingDirectiveSyntax> usings)
         {
             AddUsing(type, usings);
-            if (table.ItemType == type && !baseClass)
-                yield break;
-            foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+            //if (table.ItemType == type && !baseClass)
+            //    yield break;
+            foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.Instance))//BindingFlags.DeclaredOnly
             {
                 if (method.GetCustomAttribute<ControllerMethodAttribute>() != null
                     && (!method.IsVirtual || method.GetBaseDefinition() == null))
                 {
-                    yield return GetControllerMethod(method, table, baseClass, usings);
+                    yield return GetControllerMethod(method, table, usings);
                 }
             }
-            foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly))
+            foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.Static))//BindingFlags.DeclaredOnly
             {
                 if (method.GetCustomAttribute<ControllerMethodAttribute>() != null)
                 {
-                    yield return GetControllerMethod(method, table, baseClass, usings);
+                    yield return GetControllerMethod(method, table, usings);
                 }
             }
         }
@@ -294,7 +294,7 @@ namespace DataWF.Web.CodeGenerator
         }
 
         //https://stackoverflow.com/questions/37710714/roslyn-add-new-method-to-an-existing-class
-        private MethodDeclarationSyntax GetControllerMethod(MethodInfo method, TableAttributeCache table, bool baseClass, Dictionary<string, UsingDirectiveSyntax> usings)
+        private MethodDeclarationSyntax GetControllerMethod(MethodInfo method, TableAttributeCache table, Dictionary<string, UsingDirectiveSyntax> usings)
         {
             AddUsing(method.DeclaringType, usings);
             AddUsing(method.ReturnType, usings);
@@ -328,13 +328,13 @@ namespace DataWF.Web.CodeGenerator
                           typeParameterList: null,
                           parameterList: SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(GetControllerMethodParameters(method, table, parametersInfo))),
                           constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
-                          body: SyntaxFactory.Block(GetControllerMethodBody(method, baseClass, parametersInfo, returning)),
+                          body: SyntaxFactory.Block(GetControllerMethodBody(method, parametersInfo, returning)),
                           semicolonToken: SyntaxFactory.Token(SyntaxKind.SemicolonToken));
             // Annotate that this node should be formatted
             //.WithAdditionalAnnotations(Formatter.Annotation);
         }
 
-        private IEnumerable<StatementSyntax> GetControllerMethodBody(MethodInfo method, bool baseClass, List<MethodParametrInfo> parametersInfo, string returning)
+        private IEnumerable<StatementSyntax> GetControllerMethodBody(MethodInfo method, List<MethodParametrInfo> parametersInfo, string returning)
         {
             var isTransact = parametersInfo.Any(p => p.Info.ParameterType == typeof(DBTransaction));
             var isVoid = method.ReturnType == typeof(void);
@@ -359,7 +359,7 @@ namespace DataWF.Web.CodeGenerator
 
             if (!method.IsStatic)
             {
-                yield return SyntaxFactory.ParseStatement($"var idValue = table.LoadById<{(baseClass ? "T" : TypeHelper.FormatCode(method.DeclaringType))}>(id, DBLoadParam.Load | DBLoadParam.Referencing);");
+                yield return SyntaxFactory.ParseStatement($"var idValue = table.LoadById(id, DBLoadParam.Load | DBLoadParam.Referencing);");
                 yield return SyntaxFactory.ParseStatement("if (idValue == null)");
                 yield return SyntaxFactory.ParseStatement("{ return NotFound(); }");
             }

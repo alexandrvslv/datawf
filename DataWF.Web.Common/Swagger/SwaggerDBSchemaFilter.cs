@@ -25,9 +25,14 @@ namespace DataWF.Web.Common
                 }
 
                 Schema baseSchema = null;
-                if (context.SystemType.BaseType != typeof(object))
+                Type baseType = context.SystemType.BaseType;
+                while (baseType.IsGenericType)
                 {
-                    baseSchema = context.SchemaRegistry.GetOrRegister(context.SystemType.BaseType);
+                    baseType = baseType.BaseType;
+                }
+                if (baseType != typeof(object))
+                {
+                    baseSchema = context.SchemaRegistry.GetOrRegister(baseType);
                 }
                 ApplyTableType(schema, context.SystemType, context, baseSchema);
 
@@ -53,33 +58,44 @@ namespace DataWF.Web.Common
             if (schema.Properties != null && table != null)
             {
                 schema.Properties.Clear();
-                foreach (var column in table.Columns.Where(p => p.Property.DeclaringType == type))
+                ApplyProperties(schema, type, context, table);
+                var baseType = type.BaseType;
+                while (baseType != null && baseType.IsGenericType)
                 {
-                    var propertyType = TypeHelper.CheckNullable(column.Property.PropertyType);
-                    if (propertyType == typeof(AccessValue))
-                    {
-                        propertyType = typeof(AccessType);
-                    }
-                    var columnSchema = context.SchemaRegistry.GetOrRegister(propertyType);
-                    ApplyColumn(schema, columnSchema, column);
-                    if (column.ReferenceProperty != null)
-                    {
-                        var referenceSchema = context.SchemaRegistry.GetOrRegister(column.ReferenceProperty.PropertyType);
-                        var schemaProperty = new Schema() { Ref = referenceSchema.Ref };
-                        schemaProperty.Extensions.Add("x-id", column.PropertyName);
-                        schema.Properties.Add(column.ReferenceProperty.Name, schemaProperty);
-                    }
-                }
-                foreach (var refing in table.Referencings.Where(p => p.Property.DeclaringType == type))
-                {
-                    var refingSchema = context.SchemaRegistry.GetOrRegister(refing.Property.PropertyType);
-                    //var schemaProperty = new Schema() { Ref = referenceSchema.Ref };
-                    schema.Properties.Add(refing.Property.Name, refingSchema);
+                    ApplyProperties(schema, baseType, context, table);
+                    baseType = baseType.BaseType;
                 }
             }
             if (baseSchema != null)
                 schema.AllOf = new List<Schema> { baseSchema };
             return baseSchema;
+        }
+
+        private void ApplyProperties(Schema schema, Type type, SchemaFilterContext context, TableAttributeCache table)
+        {
+            foreach (var column in table.Columns.Where(p => p.Property.DeclaringType == type))
+            {
+                var propertyType = TypeHelper.CheckNullable(column.Property.PropertyType);
+                if (propertyType == typeof(AccessValue))
+                {
+                    propertyType = typeof(AccessType);
+                }
+                var columnSchema = context.SchemaRegistry.GetOrRegister(propertyType);
+                ApplyColumn(schema, columnSchema, column);
+                if (column.ReferenceProperty != null)
+                {
+                    var referenceSchema = context.SchemaRegistry.GetOrRegister(column.ReferenceProperty.PropertyType);
+                    var schemaProperty = new Schema() { Ref = referenceSchema.Ref };
+                    schemaProperty.Extensions.Add("x-id", column.PropertyName);
+                    schema.Properties.Add(column.ReferenceProperty.Name, schemaProperty);
+                }
+            }
+            foreach (var refing in table.Referencings.Where(p => p.Property.DeclaringType == type))
+            {
+                var refingSchema = context.SchemaRegistry.GetOrRegister(refing.Property.PropertyType);
+                //var schemaProperty = new Schema() { Ref = referenceSchema.Ref };
+                schema.Properties.Add(refing.Property.Name, refingSchema);
+            }
         }
 
         public void ApplyColumn(Schema schema, Schema columnSchema, ColumnAttributeCache column)
