@@ -923,5 +923,20 @@ namespace DataWF.Data
             }
         }
 
+        public static Excel.Worksheet GetSheetByName(WorkbookPart workbookPart, string name)
+        {
+            var sheetList = workbookPart.Workbook.Sheets.Descendants<Excel.Sheet>().ToList();
+            foreach (var part in workbookPart.WorksheetParts)
+            {
+                var id = workbookPart.GetIdOfPart(part);
+                var sheet = sheetList.FirstOrDefault(p => p.Id == id);
+                if (sheet.Name.Value.Trim().Equals(name, StringComparison.OrdinalIgnoreCase))
+                {
+                    return part.Worksheet;
+                }
+            }
+            return null;
+        }
+
     }
 }
