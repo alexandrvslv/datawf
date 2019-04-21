@@ -24,23 +24,31 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Module.Flow
 {
-    public abstract class DocumentDetail : DBItem
+    public abstract class DocumentDetail<T> : DBItem where T : DBItem, new()
     {
+        private static DBTable<T> dbTable;
+        private static DBColumn documentKey = DBColumn.EmptyKey;
+        public static DBColumn DocumentKey => DBTable.ParseProperty(nameof(DocumentId), ref documentKey);
+
+        public static DBTable<T> DBTable => dbTable ?? (dbTable = GetTable<T>());
+
         private Document document;
+
+        //public
 
         [Browsable(false)]
         [DataMember, Column("document_id")]
         public virtual long? DocumentId
         {
-            get { return GetProperty<long?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<long?>(DocumentKey); }
+            set { SetValue(value, DocumentKey); }
         }
 
         [Reference(nameof(DocumentId))]
         public Document Document
         {
-            get { return GetPropertyReference(ref document); }
-            set { document = SetPropertyReference(value); }
+            get { return GetReference(DocumentKey, ref document); }
+            set { document = SetReference(value, DocumentKey); }
         }
 
         public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)

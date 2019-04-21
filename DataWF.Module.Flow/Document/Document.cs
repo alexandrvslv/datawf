@@ -41,10 +41,30 @@ namespace DataWF.Module.Flow
     [DataContract, Table("ddocument", "Document", BlockSize = 200)]
     public class Document : DBGroupItem, IDisposable
     {
-        public static DBTable<Document> DBTable
-        {
-            get { return GetTable<Document>(); }
-        }
+        private static DBTable<Document> dbTable;
+        private static DBColumn templateKey = DBColumn.EmptyKey;
+        private static DBColumn numberKey = DBColumn.EmptyKey;
+        private static DBColumn documentDateKey = DBColumn.EmptyKey;
+        private static DBColumn customerKey = DBColumn.EmptyKey;
+        private static DBColumn titleENKey = DBColumn.EmptyKey;
+        private static DBColumn titleRUKey = DBColumn.EmptyKey;
+        private static DBColumn completeProgressKey = DBColumn.EmptyKey;
+        private static DBColumn importantKey = DBColumn.EmptyKey;
+        private static DBColumn isCompleteKey = DBColumn.EmptyKey;
+        private static DBColumn currentStageKey = DBColumn.EmptyKey;
+
+        public static DBTable<Document> DBTable => dbTable ?? (dbTable = GetTable<Document>());
+
+        public static DBColumn TemplateKey => DBTable?.ParseProperty(nameof(TemplateId), ref templateKey);
+        public static DBColumn NumberKey => DBTable?.ParseProperty(nameof(Number), ref numberKey);
+        public static DBColumn CustomerKey => DBTable?.ParseProperty(nameof(Customer), ref customerKey);
+        public static DBColumn DocumentDateKey => DBTable?.ParseProperty(nameof(DocumentDate), ref documentDateKey);
+        public static DBColumn TitleENKey => DBTable?.ParseProperty(nameof(TitleEN), ref titleENKey);
+        public static DBColumn TitleRUKey => DBTable?.ParseProperty(nameof(TitleRU), ref titleRUKey);
+        public static DBColumn CompleteProgressKey => DBTable?.ParseProperty(nameof(CompleteProgress), ref completeProgressKey);
+        public static DBColumn ImportantKey => DBTable?.ParseProperty(nameof(Important), ref importantKey);
+        public static DBColumn IsCompleteKey => DBTable?.ParseProperty(nameof(IsComplete), ref isCompleteKey);
+        public static DBColumn CurrentStageKey => DBTable?.ParseProperty(nameof(CurrentStageId), ref currentStageKey);
 
         public static Document FindDocument(Template template, object p)
         {
@@ -177,16 +197,16 @@ namespace DataWF.Module.Flow
         [DataMember, Column("template_id", Keys = DBColumnKeys.View | DBColumnKeys.Notnull), Index("ddocument_template_id", Unique = false)]
         public virtual int? TemplateId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<int?>(TemplateKey); }
+            set { SetValue(value, TemplateKey); }
         }
 
         [ReadOnly(true)]
         [Reference(nameof(TemplateId))]
         public virtual Template Template
         {
-            get { return GetPropertyReference(ref template); }
-            set { template = SetPropertyReference(value); }
+            get { return GetReference(TemplateKey, ref template); }
+            set { template = SetReference(value, TemplateKey); }
         }
 
         [Browsable(false)]
@@ -215,17 +235,17 @@ namespace DataWF.Module.Flow
         [DataMember, Column("document_date")]
         public DateTime? DocumentDate
         {
-            get { return GetProperty<DateTime?>(nameof(DocumentDate)); }
-            set { SetProperty(value, nameof(DocumentDate)); }
+            get { return GetValue<DateTime?>(DocumentDateKey); }
+            set { SetValue(value, DocumentDateKey); }
         }
 
         [DataMember, Column("document_number", 40, Keys = DBColumnKeys.Code | DBColumnKeys.View), Index("ddocuument_document_number")]
         public virtual string Number
         {
-            get { return GetProperty<string>(nameof(Number)); }
+            get { return GetValue<string>(NumberKey); }
             set
             {
-                SetProperty(value, nameof(Number));
+                SetValue(value, NumberKey);
                 foreach (var data in GetTemplatedData())
                 {
                     data.RefreshName();
@@ -237,17 +257,17 @@ namespace DataWF.Module.Flow
         [DataMember, Column("customer_id")]
         public int? CustomerId
         {
-            get { return GetProperty<int?>(nameof(CustomerId)); }
-            set { SetProperty(value, nameof(CustomerId)); }
+            get { return GetValue<int?>(CustomerKey); }
+            set { SetValue(value, CustomerKey); }
         }
 
         [Reference(nameof(CustomerId))]
         public virtual Customer Customer
         {
-            get { return GetPropertyReference(ref customer); }
+            get { return GetReference(CustomerKey, ref customer); }
             set
             {
-                customer = SetPropertyReference(value);
+                customer = SetReference(value, CustomerKey);
                 //Address = Customer?.Address;
             }
         }
@@ -276,21 +296,21 @@ namespace DataWF.Module.Flow
 
         public virtual string TitleEN
         {
-            get => GetProperty<string>();
-            set => SetProperty(value);
+            get => GetValue<string>(TitleENKey);
+            set => SetValue(value, TitleENKey);
         }
 
         public virtual string TitleRU
         {
-            get => GetProperty<string>();
-            set => SetProperty(value);
+            get => GetValue<string>(TitleRUKey);
+            set => SetValue(value, TitleRUKey);
         }
 
         [DataMember, Column("complete_progress"), DefaultValue(0D)]
         public double? CompleteProgress
         {
-            get => GetProperty<double?>();
-            set => SetProperty(value);
+            get => GetValue<double?>(CompleteProgressKey);
+            set => SetValue(value, CompleteProgressKey);
         }
 
         [Browsable(false)]
@@ -392,16 +412,16 @@ namespace DataWF.Module.Flow
         [DataMember, Column("is_important")]
         public bool? Important
         {
-            get { return GetProperty<bool?>(nameof(Important)); }
-            set { SetProperty(value, nameof(Important)); }
+            get { return GetValue<bool?>(ImportantKey); }
+            set { SetValue(value, ImportantKey); }
         }
 
         [Browsable(false)]
         [DataMember, DefaultValue(false), Column("is_comlete")]
         public bool? IsComplete
         {
-            get { return GetProperty<bool?>(nameof(IsComplete)); }
-            set { SetProperty(value, nameof(IsComplete)); }
+            get { return GetValue<bool?>(IsCompleteKey); }
+            set { SetValue(value, IsCompleteKey); }
         }
 
         public event Action<Document, ListChangedType> RefChanged;
@@ -781,12 +801,12 @@ namespace DataWF.Module.Flow
                     {
                         Send(CurrentWork, temporaryStage, transaction);
                     }
-                   
+
                 }
                 temporaryUser = null;
                 temporaryStage = null;
                 await base.Save(transaction);
-                
+
 
                 if (GetWorks().Count() <= 1)
                 {

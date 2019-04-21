@@ -1,5 +1,4 @@
 ﻿using DataWF.Data;
-using DataWF.Module.Flow;
 using DataWF.Module.Messanger;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -7,11 +6,12 @@ using System.Runtime.Serialization;
 namespace DataWF.Module.Flow
 {
     [DataContract, Table("ddocument_comment", "Document", BlockSize = 400, IsLoging = false)]
-    public class DocumentComment : DocumentDetail
+    public class DocumentComment : DocumentDetail<DocumentComment>
     {
-        private Message message;
+        private static DBColumn messageKey = DBColumn.EmptyKey;
+        public static DBColumn MessageKey => DBTable.ParseProperty(nameof(MessageId), ref messageKey);
 
-        public static DBTable<DocumentComment> DBTable => GetTable<DocumentComment>();
+        private Message message;
 
         public DocumentComment()
         {
@@ -20,8 +20,8 @@ namespace DataWF.Module.Flow
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
         {
-            get { return GetProperty<long?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<long?>(Table.PrimaryKey); }
+            set { SetValue(value, Table.PrimaryKey); }
         }
 
         [Index("ddocument_comment_document_id")]
@@ -31,15 +31,17 @@ namespace DataWF.Module.Flow
         [DataMember, Column("message_id")]
         public long? MessageId
         {
-            get { return GetProperty<long?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<long?>(MessageKey); }
+            set { SetValue(value, MessageKey); }
         }
 
         [Reference(nameof(MessageId))]
         public Message Message
         {
-            get { return GetPropertyReference(ref message); }
-            set { message = SetPropertyReference(value); }
+            get { return GetReference(MessageKey, ref message); }
+            set { message = SetReference(value, MessageKey); }
         }
+
+
     }
 }

@@ -94,12 +94,37 @@ namespace DataWF.Module.Flow
     }
 
     [DataContract, Table("ddocument_work", "Document", BlockSize = 400)]
-    public class DocumentWork : DocumentDetail
+    public class DocumentWork : DocumentDetail<DocumentWork>
     {
-        public static DBTable<DocumentWork> DBTable
-        {
-            get { return GetTable<DocumentWork>(); }
-        }
+        private static DBColumn stageIdKey = DBColumn.EmptyKey;
+        private static DBColumn workKey = DBColumn.EmptyKey;
+        private static DBColumn userKey = DBColumn.EmptyKey;
+        private static DBColumn positionKey = DBColumn.EmptyKey;
+        private static DBColumn departmentKey = DBColumn.EmptyKey;
+        private static DBColumn fromKey = DBColumn.EmptyKey;
+        private static DBColumn dateReadKey = DBColumn.EmptyKey;
+        private static DBColumn dateLimitKey = DBColumn.EmptyKey;
+        private static DBColumn dateCompleteKey = DBColumn.EmptyKey;
+        private static DBColumn isCompleteKey = DBColumn.EmptyKey;
+        private static DBColumn isStartKey = DBColumn.EmptyKey;
+        private static DBColumn isStopKey = DBColumn.EmptyKey;
+        private static DBColumn isSystemKey = DBColumn.EmptyKey;
+        private static DBColumn descriptionKey = DBColumn.EmptyKey;
+
+        public static DBColumn StageIdKey => DBTable.ParseProperty(nameof(StageId), ref stageIdKey);
+        public static DBColumn WorkKey => DBTable.ParseProperty(nameof(WorkId), ref workKey);
+        public static DBColumn UserKey => DBTable.ParseProperty(nameof(UserId), ref userKey);
+        public static DBColumn PositionKey => DBTable.ParseProperty(nameof(UserId), ref positionKey);
+        public static DBColumn DepartmentKey => DBTable.ParseProperty(nameof(DepartmentId), ref departmentKey);
+        public static DBColumn FromKey => DBTable.ParseProperty(nameof(FromId), ref fromKey);
+        public static DBColumn DateReadKey => DBTable.ParseProperty(nameof(DateRead), ref dateReadKey);
+        public static DBColumn DateLimitKey => DBTable.ParseProperty(nameof(DateLimit), ref dateLimitKey);
+        public static DBColumn DateCompleteKey => DBTable.ParseProperty(nameof(DateComplete), ref dateCompleteKey);
+        public static DBColumn IsCompleteKey => DBTable.ParseProperty(nameof(IsComplete), ref isCompleteKey);
+        public static DBColumn IsStartKey => DBTable.ParseProperty(nameof(IsStart), ref isStartKey);
+        public static DBColumn IsStopKey => DBTable.ParseProperty(nameof(IsStop), ref isStopKey);
+        public static DBColumn IsSystemKey => DBTable.ParseProperty(nameof(IsSystem), ref isSystemKey);
+        public static DBColumn DescriptionKey => DBTable.ParseProperty(nameof(Description), ref descriptionKey);
 
         public static DocumentWork Empty = new DocumentWork();
         private Stage stage;
@@ -116,8 +141,8 @@ namespace DataWF.Module.Flow
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
         {
-            get { return GetProperty<long?>(nameof(Id)); }
-            set { SetProperty(value, nameof(Id)); }
+            get { return GetValue<long?>(Table.PrimaryKey); }
+            set { SetValue(value, Table.PrimaryKey); }
         }
 
         [Index("ddocument_work_document_id")]
@@ -127,17 +152,17 @@ namespace DataWF.Module.Flow
         [DataMember, Column("stage_id", Keys = DBColumnKeys.View), Index("ddocument_work_stage_id")]
         public int? StageId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<int?>(StageIdKey); }
+            set { SetValue(value, StageIdKey); }
         }
 
         [Reference(nameof(StageId))]
         public Stage Stage
         {
-            get { return GetPropertyReference(ref stage); }
+            get { return GetReference(StageIdKey, ref stage); }
             set
             {
-                stage = SetPropertyReference(value);
+                stage = SetReference(value, StageIdKey);
                 Work = value?.Work;
                 IsSystem = value?.Keys != null && (value.Keys & StageKey.System) == StageKey.System;
                 IsStart = value?.Keys != null && (value.Keys & StageKey.Start) == StageKey.Start;
@@ -149,32 +174,32 @@ namespace DataWF.Module.Flow
         [DataMember, Column("work_id"), Index("ddocument_work_work_id")]
         public int? WorkId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<int?>(WorkKey); }
+            set { SetValue(value, WorkKey); }
         }
 
         [Reference(nameof(WorkId))]
         public Work Work
         {
-            get { return GetPropertyReference(ref work); }
-            set { work = SetPropertyReference(value); }
+            get { return GetReference(WorkKey, ref work); }
+            set { work = SetReference(value, WorkKey); }
         }
 
         [Browsable(false)]
         [DataMember, Column("user_id", Keys = DBColumnKeys.View), Index("ddocument_work_user_id")]
         public int? UserId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<int?>(UserKey); }
+            set { SetValue(value, UserKey); }
         }
 
         [Reference(nameof(UserId))]
         public User User
         {
-            get { return GetPropertyReference(ref user); }
+            get { return GetReference(UserKey, ref user); }
             set
             {
-                user = SetPropertyReference(value);
+                user = SetReference(value, UserKey);
                 Position = value?.Position;
                 Department = value?.Department;
             }
@@ -184,17 +209,17 @@ namespace DataWF.Module.Flow
         [DataMember, Column("position_id", Keys = DBColumnKeys.View), Index("ddocument_work_position_id")]
         public int? PositionId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<int?>(PositionKey); }
+            set { SetValue(value, PositionKey); }
         }
-        
+
         [Reference(nameof(PositionId))]
         public Position Position
         {
-            get { return GetPropertyReference(ref position); }
+            get { return GetReference(PositionKey, ref position); }
             set
             {
-                position = SetPropertyReference(value);
+                position = SetReference(value, PositionKey);
                 Department = value?.Department;
             }
         }
@@ -203,8 +228,8 @@ namespace DataWF.Module.Flow
         [DataMember, Column("department_id", Keys = DBColumnKeys.View), Index("ddocument_work_department_id")]
         public int? DepartmentId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<int?>(DepartmentKey); }
+            set { SetValue(value, DepartmentKey); }
         }
 
         private Position position;
@@ -212,47 +237,47 @@ namespace DataWF.Module.Flow
         [Reference(nameof(DepartmentId))]
         public Department Department
         {
-            get { return GetPropertyReference(ref department); }
-            set { department = SetPropertyReference(value); }
+            get { return GetReference(DepartmentKey, ref department); }
+            set { department = SetReference(value, DepartmentKey); }
         }
 
         [Browsable(false)]
         [DataMember, Column("from_id")]
         public long? FromId
         {
-            get { return GetProperty<long?>(nameof(FromId)); }
-            set { SetProperty(value, nameof(FromId)); }
+            get { return GetValue<long?>(FromKey); }
+            set { SetValue(value, FromKey); }
         }
 
         [Reference(nameof(FromId))]
         public DocumentWork From
         {
-            get { return GetPropertyReference(ref from); }
-            set { from = SetPropertyReference(value); }
+            get { return GetReference(FromKey, ref from); }
+            set { from = SetReference(value, FromKey); }
         }
 
         [Browsable(false)]
         [DataMember, Column("date_read")]
         public DateTime? DateRead
         {
-            get { return GetProperty<DateTime?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<DateTime?>(DateReadKey); }
+            set { SetValue(value, DateReadKey); }
         }
 
         [DataMember, Column("date_limit")]
         public DateTime? DateLimit
         {
-            get { return GetProperty<DateTime?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<DateTime?>(DateLimitKey); }
+            set { SetValue(value, DateLimitKey); }
         }
 
         [DataMember, Column("date_complete"), Index("ddocument_work_date_complete")]
         public DateTime? DateComplete
         {
-            get { return GetProperty<DateTime?>(); }
+            get { return GetValue<DateTime?>(DateCompleteKey); }
             set
             {
-                SetProperty(value);
+                SetValue(value, DateCompleteKey);
                 if (value != null && !Completed)
                 {
                     IsComplete = true;
@@ -263,10 +288,10 @@ namespace DataWF.Module.Flow
         [DataMember, Column("is_complete"), Index("ddocument_work_is_complete"), DefaultValue(false)]
         public bool? IsComplete
         {
-            get { return GetProperty<bool?>(); }
+            get { return GetValue<bool?>(IsCompleteKey); }
             set
             {
-                SetProperty(value);
+                SetValue(value, IsCompleteKey);
                 if (value ?? false && DateComplete == null)
                 {
                     DateComplete = DateComplete = DateTime.Now;
@@ -281,29 +306,29 @@ namespace DataWF.Module.Flow
         [DataMember, Column("is_system")]
         public bool? IsSystem
         {
-            get { return GetProperty<bool?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<bool?>(IsSystemKey); }
+            set { SetValue(value, IsSystemKey); }
         }
 
         [DataMember, Column("is_start")]
         public bool? IsStart
         {
-            get { return GetProperty<bool?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<bool?>(IsStartKey); }
+            set { SetValue(value, IsStartKey); }
         }
 
         [DataMember, Column("is_stop")]
         public bool? IsStop
         {
-            get { return GetProperty<bool?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<bool?>(IsStopKey); }
+            set { SetValue(value, IsStopKey); }
         }
 
         [DataMember, Column("description", 2048)]
         public string Description
         {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
+            get { return GetValue<string>(DescriptionKey); }
+            set { SetValue(value, DescriptionKey); }
         }
 
         [Browsable(false)]
@@ -355,3 +380,4 @@ namespace DataWF.Module.Flow
         }
     }
 }
+

@@ -9,7 +9,6 @@ using DataWF.Module.Common;
 
 namespace DataWF.Module.Flow
 {
-
     public interface IDocuments
     {
         IEnumerable Documents { get; set; }

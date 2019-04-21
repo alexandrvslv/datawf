@@ -60,7 +60,7 @@ namespace DataWF.Module.Flow
 
         public void FilterByDocument(Document document)
         {
-            DefaultParam = new QParam(LogicType.And, DocumentData.DBTable.ParseProperty(nameof(DocumentData.DocumentId)), CompareType.Equal, document.PrimaryId);
+            DefaultParam = new QParam(LogicType.And, DocumentData.DocumentKey, CompareType.Equal, document.PrimaryId);
         }
     }
 
@@ -70,7 +70,7 @@ namespace DataWF.Module.Flow
 
         public ListDocumentData(Document document)
             : base(DocumentData.DBTable.Select(
-                DocumentData.DBTable.ParseProperty(nameof(DocumentData.DocumentId)), CompareType.Equal, document.PrimaryId))
+                DocumentData.DocumentKey, CompareType.Equal, document.PrimaryId))
         {
             this.document = document;
         }
@@ -117,26 +117,26 @@ namespace DataWF.Module.Flow
     }
 
     [DataContract, Table("ddocument_data", "Document", BlockSize = 400)]
-    public class DocumentData : DocumentDetail
+    public class DocumentData : DocumentDetail<DocumentData>
     {
-        public static DBTable<DocumentData> DBTable
-        {
-            get { return GetTable<DocumentData>(); }
-        }
+        private static DBColumn templateDataKey = DBColumn.EmptyKey;        
+        private static DBColumn fileUrlKey = DBColumn.EmptyKey;
+
+        public static DBColumn TemplateDataKey => DBTable.ParseProperty(nameof(TemplateDataId), ref templateDataKey);
+        public static DBColumn FileUrlKey => DBTable.ParseProperty(nameof(FileUrl), ref fileUrlKey);
 
         private byte[] buf;
         private User currentUser;
         private TemplateData template;
 
         public DocumentData()
-        {
-        }
+        { }
 
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
         {
-            get { return GetProperty<long?>(nameof(Id)); }
-            set { SetProperty(value, nameof(Id)); }
+            get { return GetValue<long?>(Table.PrimaryKey); }
+            set { SetValue(value, Table.PrimaryKey); }
         }
 
         [Index("ddocument_data_item_type", false)]
@@ -148,29 +148,29 @@ namespace DataWF.Module.Flow
         [DataMember, Column("template_data_id")]
         public int? TemplateDataId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<int?>(TemplateDataKey); }
+            set { SetValue(value, TemplateDataKey); }
         }
 
         [Reference(nameof(TemplateDataId))]
         public TemplateData TemplateData
         {
-            get { return GetPropertyReference(ref template); }
-            set { template = SetPropertyReference(value); }
+            get { return GetReference(TemplateDataKey, ref template); }
+            set { template = SetReference(value, TemplateDataKey); }
         }
 
         [DataMember, Column("file_name", 1024, Keys = DBColumnKeys.View | DBColumnKeys.FileName)]
         public string FileName
         {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
+            get { return GetValue<string>(Table.FileNameKey); }
+            set { SetValue(value, Table.FileNameKey); }
         }
 
         [DataMember, Column("file_url", 1024)]
         public string FileUrl
         {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
+            get { return GetValue<string>(FileUrlKey); }
+            set { SetValue(value, FileUrlKey); }
         }
 
         [DataMember, Column("file_data", Keys = DBColumnKeys.File)]

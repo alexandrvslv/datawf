@@ -103,14 +103,13 @@ namespace DataWF.Module.Flow
     }
 
     [DataContract, Table("ddocument_reference", "Document", BlockSize = 400)]
-    public class DocumentReference : DocumentDetail
+    public class DocumentReference : DocumentDetail<DocumentReference>
     {
-        private Document reference;
+        private static DBColumn referenceKey = DBColumn.EmptyKey;
 
-        public static DBTable<DocumentReference> DBTable
-        {
-            get { return GetTable<DocumentReference>(); }
-        }
+        public static DBColumn ReferenceKey => DBTable.ParseProperty(nameof(ReferenceId), ref referenceKey);
+
+        private Document reference;
 
         public DocumentReference()
         {
@@ -119,8 +118,8 @@ namespace DataWF.Module.Flow
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
         {
-            get { return GetProperty<long?>(nameof(Id)); }
-            set { SetProperty(value, nameof(Id)); }
+            get { return GetValue<long?>(Table.PrimaryKey); }
+            set { SetValue(value, Table.PrimaryKey); }
         }
 
         [Index("ddocument_reference_unique", true)]
@@ -131,15 +130,15 @@ namespace DataWF.Module.Flow
         [Index("ddocument_reference_unique", true)]
         public long? ReferenceId
         {
-            get { return GetProperty<long?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<long?>(ReferenceKey); }
+            set { SetValue(value, ReferenceKey); }
         }
 
         [Reference(nameof(ReferenceId))]
         public Document Reference
         {
-            get { return GetPropertyReference(ref reference); }
-            set { reference = SetPropertyReference(value); }
+            get { return GetReference(ReferenceKey, ref reference); }
+            set { reference = SetReference(value, ReferenceKey); }
         }
 
         public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)
