@@ -80,8 +80,8 @@ namespace DataWF.Module.Flow
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get { return GetProperty<int?>(nameof(Id)); }
-            set { SetProperty(value, nameof(Id)); }
+            get { return GetValue<int?>(Table.PrimaryKey); }
+            set { SetValue(value, Table.PrimaryKey); }
         }
 
         [Browsable(false)]
