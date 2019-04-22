@@ -438,6 +438,13 @@ namespace DataWF.Common
 
         public virtual object DeserializeObject(JsonSerializer serializer, JsonTextReader jreader, Type type, object item, IList sourceList)
         {
+            if (type == null)
+            {
+                while (jreader.Read() && jreader.TokenType != JsonToken.EndObject)
+                { }
+                return null;
+            }
+
             var client = Provider.GetClient(type);
             if (client != null)
             {
