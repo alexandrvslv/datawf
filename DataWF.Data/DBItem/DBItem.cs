@@ -431,7 +431,7 @@ namespace DataWF.Data
             //query.TypeFilter = typeof(T);
             if ((param & DBLoadParam.Load) == DBLoadParam.Load)
             {
-                return table.Load(query);
+                table.Load(query);
             }
             return table.Select(query);
         }
