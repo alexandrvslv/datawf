@@ -624,7 +624,7 @@ namespace DataWF.Data
                                   column.ReferenceTable.PrimaryKey.Name,
                                   column.Name,
                                   command.CommandText.Substring(command.CommandText.IndexOf(" from ", StringComparison.OrdinalIgnoreCase))), "b", null));
-                    column.ReferenceTable.LoadItems(sub).LastOrDefault();
+                    column.ReferenceTable.LoadItems(sub);
                 }
             }
         }
@@ -668,7 +668,7 @@ namespace DataWF.Data
                     var subCommand = DBCommand.CloneCommand(command, reference.ReferenceTable.Table.BuildQuery($@"
     left join {SqlName} {oldAlias} on {oldAlias}.{PrimaryKey.SqlName} = {newAlias}.{referenceColumn.Column.SqlName} 
     {where}", newAlias, null));
-                    reference.ReferenceTable.Table.LoadItems(subCommand, DBLoadParam.Referencing, transaction).LastOrDefault();
+                    reference.ReferenceTable.Table.LoadItems(subCommand, DBLoadParam.Referencing, transaction);
                 }
             }
         }

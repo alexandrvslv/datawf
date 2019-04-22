@@ -65,7 +65,7 @@ namespace DataWF.Data
             if (!queryChache.TryGetValue(filter, out var query))
             {
                 query = new QQuery(filter, this);
-                Load(query, DBLoadParam.Referencing).LastOrDefault();
+                Load(query, DBLoadParam.Referencing);
                 queryChache.TryAdd(filter, query);
             }
             return Select(query);
@@ -373,8 +373,9 @@ namespace DataWF.Data
             return Load(command, param, transaction);
         }
 
-        public IEnumerable<T> Load(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction baseTransaction = null)
+        public List<T> Load(IDbCommand command, DBLoadParam param = DBLoadParam.None, DBTransaction baseTransaction = null)
         {
+            var list = new List<T>();
             var transaction = baseTransaction ?? new DBTransaction(Connection, null, true);
             try
             {
@@ -390,7 +391,7 @@ namespace DataWF.Data
                 }
 
                 if (transaction.Canceled)
-                    yield break;
+                    return list;
                 var whereInd = command.CommandText.IndexOf("where ", StringComparison.OrdinalIgnoreCase);
                 var arg = new DBLoadProgressEventArgs(transaction.View, 0, 0, null);
 
@@ -404,7 +405,7 @@ namespace DataWF.Data
                     arg.TotalCount = val is Exception ? -1 : int.Parse(val.ToString());
 
                     if (arg.TotalCount < 0 || arg.TotalCount == 0)
-                        yield break;
+                        return list;
                     if (items.Capacity < arg.TotalCount)
                         items.Capacity = arg.TotalCount;
                     //arg.TotalCount = Rows._items.Capacity;
@@ -412,7 +413,7 @@ namespace DataWF.Data
                 //var buffer = new List<T>(arg.TotalCount == 0 ? 1 : arg.TotalCount);
                 if (transaction.Canceled)
                 {
-                    yield break;
+                    return list;
                 }
                 using (transaction.Reader = transaction.ExecuteQuery(command, DBExecuteType.Reader) as IDataReader)
                 {
@@ -435,7 +436,7 @@ namespace DataWF.Data
                             arg.CurrentRow = row;
                             RaiseLoadProgress(arg);
                         }
-                        yield return row;
+                        list.Add(row);
                         if (transaction.View?.Table == this && transaction.View.IsStatic)
                             transaction.View.Add(row);
                     }
@@ -462,6 +463,7 @@ namespace DataWF.Data
                     transaction.Dispose();
                 }
             }
+            return list;
         }
 
         public Task<IEnumerable<T>> LoadAsync(QQuery query, DBLoadParam param = DBLoadParam.None, DBTransaction transaction = null)

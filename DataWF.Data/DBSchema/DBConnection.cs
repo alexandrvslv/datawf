@@ -437,7 +437,7 @@ namespace DataWF.Data
             var table = new DBTable<T>(tableName) { Schema = schema };
             using (var transaction = new DBTransaction(this, null, true))
             {
-                table.Load(transaction.AddCommand(query)).LastOrDefault();
+                table.Load(transaction.AddCommand(query));
             }
             return table;
         }

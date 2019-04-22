@@ -31,7 +31,7 @@ namespace DataWF.Module.Common
         {
             Instance = this;
             this.timer = timer;
-            items.Table.LoadItems("", DBLoadParam.Synchronize | DBLoadParam.CheckDeleted).LastOrDefault();
+            items.Table.LoadItems("", DBLoadParam.Synchronize | DBLoadParam.CheckDeleted);
         }
 
         public bool Running

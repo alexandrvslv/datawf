@@ -10,18 +10,18 @@ namespace DataWF.Module.Flow
         public Task Initialize()
         {
             Work.DBTable.DefaultComparer = new DBComparer(Work.DBTable.CodeKey) { Hash = true };
-            Work.DBTable.Load().LastOrDefault();
+            Work.DBTable.Load();
 
-            Stage.DBTable.Load().LastOrDefault();
+            Stage.DBTable.Load();
 
             StageParam.DBTable.DefaultComparer = new DBComparer(StageParam.DBTable.PrimaryKey) { Hash = true };
-            StageParam.DBTable.Load().LastOrDefault();
+            StageParam.DBTable.Load();
 
             Template.DBTable.DefaultComparer = new DBComparer(Template.DBTable.CodeKey) { Hash = true };
-            Template.DBTable.Load().LastOrDefault();
+            Template.DBTable.Load();
 
             TemplateData.DBTable.DefaultComparer = new DBComparer(TemplateData.DBTable.PrimaryKey) { Hash = true };
-            TemplateData.DBTable.Load().LastOrDefault();
+            TemplateData.DBTable.Load();
 
             return null;
         }

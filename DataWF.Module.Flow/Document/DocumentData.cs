@@ -410,18 +410,8 @@ namespace DataWF.Module.Flow
                     if (lob == FileLOB)
                     {
                         throw new Exception($"Latest log entry. Deletion Canceled!");
-                    }
-
-                    var qquery = new QQuery(Table.LogTable);
-                    qquery.BuildParam(Table.LogTable.FileLOBKey, lob);
-                    foreach (var item in Table.LogTable.Load(qquery).ToList())
-                    {
-                        if (item != logItem)
-                        {
-                            item.Delete();
-                            await item.Save(transaction);
-                        }
-                    }
+                    }                  
+                    
                 }
             }
             logItem.Delete();

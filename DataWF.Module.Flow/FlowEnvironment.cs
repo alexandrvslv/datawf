@@ -24,7 +24,6 @@ using DataWF.Module.Counterpart;
 using System;
 using System.Data;
 using System.Diagnostics;
-using System.Linq;
 
 namespace DataWF.Module.Flow
 {
@@ -83,19 +82,19 @@ namespace DataWF.Module.Flow
             watch.Start();
             using (var transaction = new DBTransaction(Book.DBTable.Schema.Connection) { ReaderParam = DBLoadParam.Synchronize | DBLoadParam.CheckDeleted })
             {
-                Book.DBTable.Load().LastOrDefault();
+                Book.DBTable.Load();
                 //cache groups
-                UserGroup.DBTable.Load().LastOrDefault();
+                UserGroup.DBTable.Load();
                 AccessValue.Groups = new DBTableView<UserGroup>("");
-                Location.DBTable.Load().LastOrDefault();
-                User.DBTable.Load().LastOrDefault();
-                Template.DBTable.Load().LastOrDefault();
-                TemplateData.DBTable.Load().LastOrDefault();
-                Work.DBTable.Load().LastOrDefault();
-                Stage.DBTable.Load().LastOrDefault();
-                StageParam.DBTable.Load().LastOrDefault();
-                GroupPermission.DBTable.Load().LastOrDefault();
-                Scheduler.DBTable.Load().LastOrDefault();
+                Location.DBTable.Load();
+                User.DBTable.Load();
+                Template.DBTable.Load();
+                TemplateData.DBTable.Load();
+                Work.DBTable.Load();
+                Stage.DBTable.Load();
+                StageParam.DBTable.Load();
+                GroupPermission.DBTable.Load();
+                Scheduler.DBTable.Load();
             }
             watch.Stop();
 

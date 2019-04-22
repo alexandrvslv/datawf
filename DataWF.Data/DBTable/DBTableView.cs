@@ -269,7 +269,7 @@ namespace DataWF.Data
         {
             using (var transaction = new DBTransaction(Table.Connection, null, true) { View = this })
             {
-                return table.Load(Query, param, transaction).ToList();
+                return table.Load(Query, param, transaction);
             }
         }
 
@@ -278,7 +278,6 @@ namespace DataWF.Data
             using (var transaction = new DBTransaction(Table.Connection, null, true) { View = this })
             {
                 var items = await table.LoadAsync(Query, param, transaction).ConfigureAwait(false);
-                items.LastOrDefault();
             }
         }
 

@@ -14,7 +14,7 @@ namespace DataWF.Module.Counterpart
 
         public static Task GenerateLocations()
         {
-            Location.DBTable.Load().LastOrDefault();
+            Location.DBTable.Load();
             var euas = new Continent { Code = "EUAS", Name = "Eurasia" }; euas.Attach();
             new Continent { Code = "AF", CodeI = "", Name = "Africa" }.Attach();
             new Continent { Code = "AN", Name = "Antarctica" }.Attach();

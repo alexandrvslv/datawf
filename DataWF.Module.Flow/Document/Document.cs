@@ -128,8 +128,8 @@ namespace DataWF.Module.Flow
             var qDocs = new QQuery(string.Empty, Document.DBTable);
             qDocs.BuildPropertyParam(nameof(Document.Id), CompareType.In, qWork);
 
-            Document.DBTable.Load(qDocs, DBLoadParam.Synchronize).LastOrDefault();
-            DocumentWork.DBTable.Load(qWork, DBLoadParam.Synchronize).LastOrDefault();
+            Document.DBTable.Load(qDocs, DBLoadParam.Synchronize);
+            DocumentWork.DBTable.Load(qWork, DBLoadParam.Synchronize);
         }
 
         public static event DocumentSaveDelegate Saved;
