@@ -191,7 +191,7 @@ namespace DataWF.Data
 
         public override void Accept(DBItem item)
         {
-            if (item is T tItem)
+            if (item is T tItem && tItem.GetType() == typeof(T))
             {
                 base.Accept(tItem);
             }
@@ -213,7 +213,7 @@ namespace DataWF.Data
 
         public void OnTableChanged(DBItem item, NotifyCollectionChangedAction type)
         {
-            if (item is T view)
+            if (item is T view && view.GetType() == typeof(T))
             {
                 switch (type)
                 {
@@ -236,7 +236,7 @@ namespace DataWF.Data
 
         public override void OnItemChanged(DBItem item, string property, DBColumn column, object value)
         {
-            if (item is T tItem)
+            if (item is T tItem && tItem.GetType() == typeof(T))
             {
                 if (FilterQuery.Parameters.Count != 0 && (FilterQuery.Contains(column?.Name) && !BaseTable.CheckItem(tItem, FilterQuery)))
                 {
@@ -255,7 +255,7 @@ namespace DataWF.Data
 
         public override void OnItemChanging(DBItem item, string property, DBColumn column, object value)
         {
-            if (item is T)
+            if (item is T && item.GetType() == typeof(T))
             {
                 base.OnItemChanging(item, property, column == null ? null : Columns[column.Name], value);
             }
