@@ -48,6 +48,7 @@ namespace DataWF.Data
         protected string fileName = "";
         protected DBLogSchema logSchema;
         protected string logSchemaName;
+        private bool cacheRelation;
 
         public DBSchema()
             : this(null)
@@ -541,6 +542,24 @@ namespace DataWF.Data
                 rez.Append(((DBItem)item).FormatPatch());
             }
             return rez.ToString();
+        }
+
+        public IEnumerable<DBForeignKey> GetChildRelations(DBTable dBTable)
+        {
+            if (!cacheRelation)
+            {
+                foreach (var table in Tables)
+                {
+                    table.ChildRelations.Clear();
+                }
+                foreach (var table in Tables)
+                {
+                    table.Foreigns.CacheChildRelations();
+                }
+                cacheRelation = true;
+
+            }
+            return dBTable.ChildRelations;
         }
     }
 }

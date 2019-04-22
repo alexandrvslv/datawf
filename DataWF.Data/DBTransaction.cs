@@ -27,24 +27,9 @@ using System.Linq;
 
 namespace DataWF.Data
 {
-    public class DBTransactionEventArg : EventArgs
-    {
-        private List<DBItem> rows;
-
-        public DBTransactionEventArg(List<DBItem> rows)
-        {
-            this.rows = rows;
-        }
-
-        public List<DBItem> Rows
-        {
-            get { return rows; }
-        }
-    }
-
     public class DBTransaction : IDbTransaction
     {
-        public static EventHandler<DBTransactionEventArg> Commited;
+        public static EventHandler Commited;
 
         //public static DBTransaction GetTransaction(object owner, DBConnection connection, bool noTransaction = false, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null)
         //{
@@ -160,7 +145,7 @@ namespace DataWF.Data
                     return;
                 }
 
-            Commited?.Invoke(this, new DBTransactionEventArg(items));
+            Commited?.Invoke(this, EventArgs.Empty);
             foreach (var row in items)
             {
                 row.Accept(Caller);

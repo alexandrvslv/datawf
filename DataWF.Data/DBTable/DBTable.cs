@@ -1041,6 +1041,8 @@ namespace DataWF.Data
         [Browsable(false)]
         public abstract IDBTableView DefaultItemsView { get; }
 
+        public List<DBForeignKey> ChildRelations { get; } = new List<DBForeignKey>();
+
         public abstract IDBTableView CreateItemsView(string query = "", DBViewKeys mode = DBViewKeys.None, DBStatus filter = DBStatus.Empty);
 
         public virtual DBItem NewItem(DBUpdateState state = DBUpdateState.Insert, bool def = true, int typeIndex = 0)
@@ -1277,13 +1279,7 @@ namespace DataWF.Data
 
         public virtual IEnumerable<DBForeignKey> GetChildRelations()
         {
-            if (Schema == null)
-                yield break;
-            foreach (var table in Schema.Tables)
-            {
-                foreach (var foreign in table.Foreigns.GetByReference(this))
-                    yield return foreign;
-            }
+            return Schema?.GetChildRelations(this) ?? Enumerable.Empty<DBForeignKey>();            
         }
 
         public void GetAllParentTables(List<DBTable> parents)

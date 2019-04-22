@@ -175,7 +175,7 @@ namespace DataWF.Data
             foreach (var collection in virtualTables)
             {
                 collection.Accept(item);
-            }
+            }            
         }
 
         public void CopyTo(T[] array, int arrayIndex)

@@ -1414,7 +1414,8 @@ namespace DataWF.Data
             foreach (var relation in Table.GetChildRelations())
             {
                 if (relation.Table != Table
-                    && !(relation.Table is IDBVirtualTable))
+                    && !(relation.Table is IDBVirtualTable)
+                    && relation.Column.ColumnType == DBColumnTypes.Default)
                 {
                     var references = GetReferencing(relation, DBLoadParam.None)
                         .Where(p => p.IsChanged || p.IsReferencingChanged).ToList();

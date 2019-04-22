@@ -1,5 +1,4 @@
 ﻿using DataWF.Common;
-using System;
 /*
 DBConstraintList.cs
 
@@ -64,11 +63,19 @@ namespace DataWF.Data
             foreach (var item in items)
             {
                 if (item.Column == column && item.Reference == reference)
+                {
                     return item;
+                }
             }
             return null;
         }
 
-        
+        public void CacheChildRelations()
+        {
+            foreach (var item in this)
+            {
+                item.ReferenceTable?.ChildRelations.Add(item);
+            }
+        }
     }
 }
