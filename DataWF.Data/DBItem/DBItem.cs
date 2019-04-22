@@ -116,10 +116,7 @@ namespace DataWF.Data
             {
                 temp &= ~DBUpdateState.Commit;
                 temp |= DBUpdateState.Update;
-                if (transaction != null)
-                {
-                    transaction.Rows.Add(this);
-                }
+                transaction?.AddItem(this);
             }
             else if (temp == DBUpdateState.Update && !GetIsChanged())
             {
@@ -1053,7 +1050,7 @@ namespace DataWF.Data
 
         public virtual async Task Save(DBTransaction transaction)
         {
-            if (OnSaving(transaction))
+            if (transaction.AddItem(this) && OnSaving(transaction))
             {
                 //await SaveReferenced(transaction);
                 await Table.SaveItem(this, transaction);
@@ -1349,7 +1346,7 @@ namespace DataWF.Data
                     {
                         if (reference.IsChanged)
                         {
-                            transaction.Rows.Add(reference);
+                            transaction.AddItem(reference);
                         }
                     }
                 }

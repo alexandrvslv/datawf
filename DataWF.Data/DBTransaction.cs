@@ -59,7 +59,7 @@ namespace DataWF.Data
         private List<IDbCommand> commands = new List<IDbCommand>();
         private IDbCommand command;
         private IDbTransaction transaction;
-        private List<DBItem> rows = new List<DBItem>();
+        private HashSet<DBItem> items = new HashSet<DBItem>();
         private Dictionary<DBConnection, DBTransaction> subTransactions;
 
         public DBTransaction()
@@ -106,9 +106,9 @@ namespace DataWF.Data
             set { AddCommand(value); }
         }
 
-        public List<DBItem> Rows
+        public HashSet<DBItem> Items
         {
-            get { return rows; }
+            get { return items; }
         }
 
         public IsolationLevel IsolationLevel
@@ -151,7 +151,7 @@ namespace DataWF.Data
                 try { transaction.Commit(); }
                 catch (Exception te)
                 {
-                    foreach (var row in rows)
+                    foreach (var row in items)
                     {
                         row.Reject(Caller);
                     }
@@ -160,8 +160,8 @@ namespace DataWF.Data
                     return;
                 }
 
-            Commited?.Invoke(this, new DBTransactionEventArg(rows));
-            foreach (var row in rows)
+            Commited?.Invoke(this, new DBTransactionEventArg(items));
+            foreach (var row in items)
             {
                 row.Accept(Caller);
             }
@@ -186,11 +186,11 @@ namespace DataWF.Data
                 }
                 catch (Exception te) { Helper.OnException(te); }
             }
-            foreach (var row in rows)
+            foreach (var row in items)
             {
                 row.Reject(Caller);
             }
-            rows.Clear();
+            items.Clear();
 
             if (subTransactions != null)
             {
@@ -241,7 +241,7 @@ namespace DataWF.Data
                     command = null;
                     commands = null;
                     ReaderColumns = null;
-                    rows.Clear();
+                    items.Clear();
                 }
                 //Debug.WriteLine($"Dispose DBTransaction owner:{Owner} connection:{DbConnection}");
             }
@@ -484,6 +484,16 @@ namespace DataWF.Data
             }
 
             Execute?.Invoke(new DBExecuteEventArg { Time = ms, Query = text, Type = type, Rezult = rez });
+        }
+
+        public bool AddItem(DBItem item)
+        {
+            if (!Items.Contains(item))
+            {
+                Items.Add(item);
+                return true;
+            }
+            return item.IsChanged;
         }
     }
 }
