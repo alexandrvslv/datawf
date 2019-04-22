@@ -375,6 +375,12 @@ namespace DataWF.Common
 
         protected virtual IList DeserializeArray(JsonSerializer serializer, JsonTextReader jreader, Type type, IList sourceList)
         {
+            if (type == null)
+            {
+                while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
+                {}
+                return null;
+            }
             var itemType = TypeHelper.GetItemType(type);
             var client = Provider.GetClient(itemType);
             var temp = (IList)EmitInvoker.CreateObject(type);
