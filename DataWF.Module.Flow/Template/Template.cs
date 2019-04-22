@@ -78,10 +78,12 @@ namespace DataWF.Module.Flow
         private static DBTable<Template> dbTable;
         private static DBColumn nameENKey = DBColumn.EmptyKey;
         private static DBColumn nameRUKey = DBColumn.EmptyKey;
+        private static DBColumn workKey = DBColumn.EmptyKey;
 
         public static DBTable<Template> DBTable => dbTable ?? (dbTable = GetTable<Template>());
         public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
         public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
+        public static DBColumn WorkKey => DBTable.ParseProperty(nameof(WorkId), ref workKey);
 
         private DBItemType documentType;
         private Work work;
@@ -160,15 +162,15 @@ namespace DataWF.Module.Flow
         [DataMember, Column("work_id")]
         public int? WorkId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<int?>(WorkKey); }
+            set { SetValue(value, WorkKey); }
         }
 
         [Reference(nameof(WorkId))]
         public Work Work
         {
-            get { return GetPropertyReference(ref work); }
-            set { work = SetPropertyReference(value); }
+            get { return GetReference(WorkKey, ref work); }
+            set { work = SetReference(value, WorkKey); }
         }
 
         //public IEnumerable<TemplateParam> GetParams()

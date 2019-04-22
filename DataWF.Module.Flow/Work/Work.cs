@@ -17,11 +17,12 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using System;
-using System.ComponentModel;
-using DataWF.Data;
-using System.Collections.Generic;
 using DataWF.Common;
+using DataWF.Data;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 using System.Runtime.Serialization;
 
 namespace DataWF.Module.Flow
@@ -82,39 +83,33 @@ namespace DataWF.Module.Flow
         }
 
         [ControllerMethod]
-        public List<Template> GetTemplates()
+        public IEnumerable<Template> GetTemplates()
         {
-            var list = new List<Template>(Template.DBTable.Select(Template.DBTable.ParseProperty(nameof(Template.WorkId)), CompareType.Equal, PrimaryId));
-            list.Sort(new DBComparer<Template>(Template.DBTable.CodeKey, ListSortDirection.Ascending));
-            return list;
+            return GetReferencing<Template>(Template.DBTable, Template.WorkKey, DBLoadParam.None)
+                .OrderBy(p => p.Code);
         }
 
         [ControllerMethod]
-        public List<Stage> GetStages()
-        {
-            var list = new List<Stage>(Stage.DBTable.Select(Stage.DBTable.ParseProperty(nameof(Stage.WorkId)), CompareType.Equal, PrimaryId));
-            list.Sort(new DBComparer<Stage>(Stage.DBTable.CodeKey, ListSortDirection.Ascending));
-            return list;
-        }
+        public IEnumerable<Stage> GetStages() =>
+            GetReferencing<Stage>(Stage.DBTable, Stage.WorkKey, DBLoadParam.None)
+            .OrderBy(p => p.Code);
 
         [ControllerMethod]
         public Stage GetStartStage()
         {
-            var stages = GetStages();
-            foreach (Stage stage in stages)
+            foreach (Stage stage in GetStages())
                 if (stage.Keys != null && (stage.Keys & StageKey.Start) == StageKey.Start)
                     return stage;
-            return stages.Count == 0 ? null : stages[0];
+            return GetStages().FirstOrDefault();
         }
 
         [ControllerMethod]
         public Stage GetStopStage()
         {
-            var stages = GetStages();
-            foreach (Stage stage in stages)
+            foreach (Stage stage in GetStages())
                 if (stage.Keys != null && (stage.Keys & StageKey.Stop) == StageKey.Stop)
                     return stage;
-            return stages.Count == 0 ? null : stages[stages.Count - 1];
+            return GetStages().LastOrDefault();
         }
 
         public override void Dispose()

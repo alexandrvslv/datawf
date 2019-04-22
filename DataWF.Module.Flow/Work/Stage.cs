@@ -62,12 +62,23 @@ namespace DataWF.Module.Flow
     [DataContract, Table("rstage", "Template", BlockSize = 100)]
     public class Stage : DBItem, IDisposable
     {
-        private Work work;
+        private static DBTable<Stage> dbTable;
+        private static DBColumn exportCodeKey = DBColumn.EmptyKey;
+        private static DBColumn nameENKey = DBColumn.EmptyKey;
+        private static DBColumn nameRUKey = DBColumn.EmptyKey;
+        private static DBColumn workKey = DBColumn.EmptyKey;
+        private static DBColumn keysKey = DBColumn.EmptyKey;
+        private static DBColumn timeLimitKey = DBColumn.EmptyKey;
 
-        public static DBTable<Stage> DBTable
-        {
-            get { return GetTable<Stage>(); }
-        }
+        public static DBTable<Stage> DBTable => dbTable ?? (dbTable = GetTable<Stage>());
+        public static DBColumn ExportCodeKey => DBTable.ParseProperty(nameof(ExportCode), ref exportCodeKey);
+        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
+        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
+        public static DBColumn WorkKey => DBTable.ParseProperty(nameof(WorkId), ref workKey);
+        public static DBColumn KeysKey => DBTable.ParseProperty(nameof(Keys), ref keysKey);
+        public static DBColumn TimeLimitKey => DBTable.ParseProperty(nameof(TimeLimit), ref timeLimitKey);
+
+        private Work work;
 
         public Stage()
         {
@@ -83,15 +94,15 @@ namespace DataWF.Module.Flow
         [DataMember, Column("code", 512, Keys = DBColumnKeys.Code)]
         public string Code
         {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
+            get { return GetValue<string>(table.CodeKey); }
+            set { SetValue(value, table.CodeKey); }
         }
 
         [DataMember, Column("export_code", 512)]
         public string ExportCode
         {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
+            get { return GetValue<string>(ExportCodeKey); }
+            set { SetValue(value, ExportCodeKey); }
         }
 
         [DataMember, Column("name", 512, Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
@@ -103,43 +114,43 @@ namespace DataWF.Module.Flow
 
         public string NameEN
         {
-            get => GetProperty<string>();
-            set => SetProperty(value);
+            get => GetValue<string>(NameENKey);
+            set => SetValue(value, NameENKey);
         }
 
         public string NameRU
         {
-            get => GetProperty<string>();
-            set => SetProperty(value);
+            get => GetValue<string>(NameRUKey);
+            set => SetValue(value, NameRUKey);
         }
 
         [Browsable(false)]
         [DataMember, Column("work_id")]
         public int? WorkId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<int?>(WorkKey); }
+            set { SetValue(value, WorkKey); }
         }
 
         [Reference(nameof(WorkId))]
         public Work Work
         {
-            get { return GetPropertyReference(ref work); }
-            set { work = SetPropertyReference(value); }
+            get { return GetReference(WorkKey, ref work); }
+            set { work = SetReference(value, WorkKey); }
         }
 
         [DataMember, Column("keys")]
         public StageKey? Keys
         {
-            get { return GetProperty<StageKey?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<StageKey?>(KeysKey); }
+            set { SetValue(value, KeysKey); }
         }
 
         [DataMember, Column("time_limit")]
         public TimeSpan? TimeLimit
         {
-            get { return GetProperty<TimeSpan?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<TimeSpan?>(TimeLimitKey); }
+            set { SetValue(value, TimeLimitKey); }
         }
 
         public IEnumerable<T> GetParams<T>() where T : StageParam
