@@ -870,8 +870,7 @@ namespace DataWF.Data
 
             //if (!item.Attached)
             //    Add(item);
-
-            transaction.Rows.Add(item);
+            transaction.AddItem(item);
             var args = new DBItemEventArgs(item, transaction);
 
             //CheckRerencing();

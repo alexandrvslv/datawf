@@ -239,7 +239,7 @@ namespace DataWF.Module.Flow
             set { SetValue(value, DocumentDateKey); }
         }
 
-        [DataMember, Column("document_number", 40, Keys = DBColumnKeys.Code | DBColumnKeys.View), Index("ddocuument_document_number")]
+        [DataMember, Column("document_number", 40, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing), Index("ddocuument_document_number")]
         public virtual string Number
         {
             get { return GetValue<string>(NumberKey); }
@@ -686,7 +686,7 @@ namespace DataWF.Module.Flow
             {
                 throw new InvalidOperationException($"{nameof(Template)} must be specified!");
             }
-            if (saving.Contains(this))//prevent recursion
+            if (saving.Contains(this))//prevent recursion cross transactions
             {
                 return;
             }
@@ -694,7 +694,7 @@ namespace DataWF.Module.Flow
 
             try
             {
-                await base.Save(transaction);
+                GenerateId();
                 var param = new DocumentExecuteArgs()
                 {
                     Document = this,
@@ -702,6 +702,8 @@ namespace DataWF.Module.Flow
                 };
                 var works = Works.ToList();
                 bool isnew = works.Count == 0;
+                var temporaryStage = this.temporaryStage;
+                var temporaryUser = this.temporaryUser;
                 if (isnew)
                 {
                     if (DocumentDate == null)
@@ -713,20 +715,20 @@ namespace DataWF.Module.Flow
                     {
                         foreach (var data in CreateTemplatedData())
                         {
+                            data.GenerateId();
                             data.Attach();
                         }
                     }
-
                     //if (Parent != null && FindReference(Parent) == null)
                     //{
                     //    Parent.CreateReference(this);
                     //}
-                    if (CurrentStage == null)
+                    if (CurrentWork == null)
                     {
-                        CurrentStage = Template.Work?.GetStartStage();
+                        Send(null, Template.Work?.GetStartStage(), transaction);
                     }
                 }
-                if (temporaryStage != null)
+                if (temporaryStage != null && temporaryStage != CurrentStage)
                 {
                     //CacheReferencing(transaction);
                     if (temporaryUser != null)
@@ -742,8 +744,6 @@ namespace DataWF.Module.Flow
                 temporaryUser = null;
                 temporaryStage = null;
                 await base.Save(transaction);
-
-
                 if (Works.Count() <= 1)
                 {
                     foreach (var data in GetTemplatedData())
@@ -752,7 +752,6 @@ namespace DataWF.Module.Flow
                     }
                 }
                 Saved?.Invoke(null, new DocumentEventArgs(this));
-
             }
             catch (Exception ex)
             {
@@ -867,10 +866,7 @@ namespace DataWF.Module.Flow
                 if (unWork.From == work.From && unWork != work)
                 {
                     unWork.DateComplete = DateTime.Now;
-                    if (transaction != null)
-                    {
-                        transaction.Rows.Add(work);
-                    }
+                    transaction?.AddItem(work);
                 }
             }
             work.IsResend = true;
