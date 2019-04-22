@@ -327,7 +327,7 @@ namespace DataWF.Module.Flow
             get
             {
                 return GetWorksUncompleted().FirstOrDefault()
-                  ?? GetWorks().FirstOrDefault();
+                  ?? Works.FirstOrDefault();
             }
         }
 
@@ -426,122 +426,58 @@ namespace DataWF.Module.Flow
 
         public event Action<Document, ListChangedType> RefChanged;
 
-        public virtual IEnumerable<DocumentReference> GetReferences(DBLoadParam loadParam = DBLoadParam.None)
+        public virtual IEnumerable<DocumentReference> GetReferences()
         {
-            if ((initype & DocInitType.References) != DocInitType.References)
-            {
-                initype |= DocInitType.References;
-                //DocumentReference.DBTable.Load(CreateRefsFilter(Id));
-            }
-            foreach (var item in GetReferenced(loadParam))
+            foreach (var item in Referenced)
                 yield return item;
-            foreach (var item in GetReferencing(loadParam))
+            foreach (var item in Referencing)
                 yield return item;
         }
 
         [Referencing(nameof(DocumentWork.DocumentId))]
         public IEnumerable<DocumentWork> Works
         {
-            get { return GetWorks(); }
-            set { SetReferencing<DocumentWork>(value, nameof(DocumentWork.DocumentId)); }
-        }
-
-        public IEnumerable<DocumentWork> GetWorks(DBLoadParam param = DBLoadParam.None)
-        {
-            if ((initype & DocInitType.Workflow) != DocInitType.Workflow)
+            get
             {
-                initype |= DocInitType.Workflow;
-                //param = DBLoadParam.Load;
+                return GetReferencing(DocumentWork.DBTable, DocumentWork.DocumentKey, DBLoadParam.None).
+              OrderByDescending(p => p.DateCreate);
             }
-
-            return GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), param).
-                OrderByDescending(p => p.DateCreate);
+            set { SetReferencing(value, DocumentWork.DocumentKey); }
         }
 
         [Referencing(nameof(DocumentData.DocumentId))]
         public IEnumerable<DocumentData> Datas
         {
-            get { return GetDatas(); }
-            set { SetReferencing<DocumentData>(value, nameof(DocumentData.DocumentId)); }
-        }
-
-        public virtual IEnumerable<DocumentData> GetDatas(DBLoadParam loadParam = DBLoadParam.None)
-        {
-            if ((initype & DocInitType.Data) != DocInitType.Data)
-            {
-                initype |= DocInitType.Data;
-                //loadParam = DBLoadParam.Load;
-            }
-            return GetReferencing<DocumentData>(nameof(DocumentData.DocumentId), loadParam);
+            get { return GetReferencing(DocumentData.DBTable, DocumentData.DocumentKey, DBLoadParam.None); }
+            set { SetReferencing(value, DocumentData.DocumentKey); }
         }
 
         [Referencing(nameof(DocumentCustomer.DocumentId))]
         public IEnumerable<DocumentCustomer> Customers
         {
-            get { return GetCustomers(); }
-            set { SetReferencing<DocumentCustomer>(value, nameof(DocumentCustomer.DocumentId)); }
-        }
-
-        [Browsable(false)]
-        public IEnumerable<DocumentCustomer> GetCustomers(DBLoadParam loadParam = DBLoadParam.None)
-        {
-            if ((initype & DocInitType.Customer) != DocInitType.Customer)
-            {
-                initype |= DocInitType.Customer;
-                //loadParam = DBLoadParam.Load;
-            }
-            return GetReferencing<DocumentCustomer>(nameof(DocumentCustomer.DocumentId), loadParam);
+            get { return GetReferencing(DocumentCustomer.DBTable, DocumentCustomer.DocumentKey, DBLoadParam.None); }
+            set { SetReferencing(value, DocumentCustomer.DocumentKey); }
         }
 
         [Referencing(nameof(DocumentComment.DocumentId))]
         public IEnumerable<DocumentComment> Comments
         {
-            get { return GetComments(); }
-            set { SetReferencing<DocumentComment>(value, nameof(DocumentComment.DocumentId)); }
+            get { return GetReferencing(DocumentComment.DBTable, DocumentComment.DocumentKey, DBLoadParam.None); }
+            set { SetReferencing(value, DocumentComment.DocumentKey); }
         }
 
-        public IEnumerable<DocumentComment> GetComments(DBLoadParam loadParam = DBLoadParam.None)
-        {
-            if ((initype & DocInitType.Comment) != DocInitType.Comment)
-            {
-                initype |= DocInitType.Comment;
-                //loadParam = DBLoadParam.Load;
-            }
-            return GetReferencing<DocumentComment>(nameof(DocumentComment.DocumentId), loadParam);
-        }
-
-        [Referencing(nameof(DocumentReference.ReferenceId))]
+        //[Referencing(nameof(DocumentReference.ReferenceId))]
         public IEnumerable<DocumentReference> Referencing
         {
-            get { return GetReferencing(); }
-            set { SetReferencing<DocumentReference>(value, nameof(DocumentReference.ReferenceId)); }
+            get { return GetReferencing(DocumentReference.DBTable, DocumentReference.ReferenceKey, DBLoadParam.None); }
+            set { SetReferencing(value, DocumentReference.ReferenceKey); }
         }
 
-        public IEnumerable<DocumentReference> GetReferencing(DBLoadParam loadParam = DBLoadParam.None)
-        {
-            if ((initype & DocInitType.Refing) != DocInitType.Refing)
-            {
-                initype |= DocInitType.Refing;
-                //loadParam = DBLoadParam.Load;
-            }
-            return GetReferencing<DocumentReference>(nameof(DocumentReference.ReferenceId), loadParam);
-        }
-
-        [Referencing(nameof(DocumentReference.DocumentId))]
+        //[Referencing(nameof(DocumentReference.DocumentId))]
         public IEnumerable<DocumentReference> Referenced
         {
-            get { return GetReferenced(); }
-            set { SetReferencing<DocumentReference>(value, nameof(DocumentReference.DocumentId)); }
-        }
-
-        public IEnumerable<DocumentReference> GetReferenced(DBLoadParam loadParam = DBLoadParam.None)
-        {
-            if ((initype & DocInitType.Refed) != DocInitType.Refed)
-            {
-                initype |= DocInitType.Refed;
-                //loadParam = DBLoadParam.Load;
-            }
-            return GetReferencing<DocumentReference>(nameof(DocumentReference.DocumentId), loadParam);
+            get { return GetReferencing(DocumentReference.DBTable, DocumentReference.DocumentKey, DBLoadParam.None); }
+            set { SetReferencing(value, DocumentReference.DocumentKey); }
         }
 
         [Browsable(false)]
@@ -567,7 +503,7 @@ namespace DataWF.Module.Flow
 
         public DocumentData GetDataByFileName(string fileName)
         {
-            foreach (var data in GetDatas())
+            foreach (var data in Datas)
                 if (data.FileName == fileName || data.FileName.EndsWith(fileName))
                     return data;
             return null;
@@ -575,7 +511,7 @@ namespace DataWF.Module.Flow
 
         public IEnumerable<DocumentWork> GetWorksByStage(Stage stage)
         {
-            foreach (var work in GetWorks())
+            foreach (var work in Works)
             {
                 if (work.Stage == stage)
                     yield return work;
@@ -584,7 +520,7 @@ namespace DataWF.Module.Flow
 
         public IEnumerable<DocumentWork> GetWorksUncompleted(Stage filter = null)
         {
-            foreach (DocumentWork work in GetWorks())
+            foreach (DocumentWork work in Works)
             {
                 if (!work.Completed && (filter == null || work.Stage == filter))
                 {
@@ -595,13 +531,13 @@ namespace DataWF.Module.Flow
 
         public DocumentWork GetLastWork()
         {
-            return GetWorks().LastOrDefault();
+            return Works.LastOrDefault();
         }
 
         public string GetWorkFlow()
         {
             var workFlows = string.Empty;
-            foreach (DocumentWork work in GetWorks())
+            foreach (DocumentWork work in Works)
             {
                 string flow = work.Stage != null ? work.Stage.Work.Name : "<no name>";
                 if (!work.Completed
@@ -620,7 +556,7 @@ namespace DataWF.Module.Flow
 
         public virtual IEnumerable<DocumentData> GetTemplatedData()
         {
-            foreach (DocumentData data in GetDatas())
+            foreach (DocumentData data in Datas)
             {
                 if (data.IsTemplate)
                     yield return data;
@@ -731,11 +667,11 @@ namespace DataWF.Module.Flow
             else if (type == DocInitType.References)
                 return DocumentReference.DBTable.Save(transaction, GetReferences().ToList());
             else if (type == DocInitType.Data)
-                return DocumentData.DBTable.Save(transaction, GetDatas().ToList());
+                return DocumentData.DBTable.Save(transaction, Datas.ToList());
             else if (type == DocInitType.Workflow)
-                return DocumentWork.DBTable.Save(transaction, GetWorks().ToList());
+                return DocumentWork.DBTable.Save(transaction, Works.ToList());
             else if (type == DocInitType.Customer)
-                return DocumentCustomer.DBTable.Save(transaction, GetCustomers().ToList());
+                return DocumentCustomer.DBTable.Save(transaction, Customers.ToList());
             return null;
         }
 
@@ -764,7 +700,7 @@ namespace DataWF.Module.Flow
                     Document = this,
                     Transaction = transaction
                 };
-                var works = GetWorks().ToList();
+                var works = Works.ToList();
                 bool isnew = works.Count == 0;
                 if (isnew)
                 {
@@ -808,7 +744,7 @@ namespace DataWF.Module.Flow
                 await base.Save(transaction);
 
 
-                if (GetWorks().Count() <= 1)
+                if (Works.Count() <= 1)
                 {
                     foreach (var data in GetTemplatedData())
                     {
@@ -1069,7 +1005,7 @@ namespace DataWF.Module.Flow
 
         public void CheckComplete()
         {
-            foreach (var work in GetWorks())
+            foreach (var work in Works)
             {
                 if (!work.Completed)
                 {
