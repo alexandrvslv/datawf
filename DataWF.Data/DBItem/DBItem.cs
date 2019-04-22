@@ -1052,7 +1052,7 @@ namespace DataWF.Data
         {
             if (transaction.AddItem(this) && OnSaving(transaction))
             {
-                //await SaveReferenced(transaction);
+                await SaveReferenced(transaction);
                 await Table.SaveItem(this, transaction);
                 await SaveReferencing(transaction);
                 OnSaved(transaction);
