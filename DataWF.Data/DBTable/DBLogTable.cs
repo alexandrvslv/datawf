@@ -21,6 +21,7 @@ using DataWF.Common;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
@@ -162,17 +163,22 @@ namespace DataWF.Data
                 var current = logItem.BaseItem?.GetValue<uint?>(logColumn.BaseColumn);
                 if (lob != null && lob != current)
                 {
-                    try
+                    var qquery = new QQuery(this);
+                    qquery.BuildParam(FileLOBKey, lob);
+                    if (!Load(qquery).Any(p => p != item))
                     {
-                        using (var transactionDeleteLOB = new DBTransaction(transaction.DbConnection, transaction.Caller))
+                        try
                         {
-                            await System.DeleteLOB(lob.Value, transactionDeleteLOB);
-                            transactionDeleteLOB.Commit();
+                            using (var transactionDeleteLOB = new DBTransaction(transaction.DbConnection, transaction.Caller))
+                            {
+                                await System.DeleteLOB(lob.Value, transactionDeleteLOB);
+                                transactionDeleteLOB.Commit();
+                            }
                         }
-                    }
-                    catch (Exception ex)
-                    {                        
-                        Helper.OnException(ex);
+                        catch (Exception ex)
+                        {
+                            Helper.OnException(ex);
+                        }
                     }
                 }
             }
