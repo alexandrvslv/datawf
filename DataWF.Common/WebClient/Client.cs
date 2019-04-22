@@ -190,6 +190,11 @@ namespace DataWF.Common
             {
                 Items.Add((T)item);
             }
+            if (TypeId != 0)
+            {
+                var baseClient = GetBaseClient();
+                baseClient?.Add(item);
+            }
         }
 
         public void Remove(object item)
