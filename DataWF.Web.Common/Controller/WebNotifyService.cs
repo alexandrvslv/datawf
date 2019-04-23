@@ -242,7 +242,7 @@ namespace DataWF.Web.Common
             using (var writer = new ClaimsJsonTextWriter(streamWriter)
             {
                 User = user,
-                SerializeReferencing = false
+                SerializeReferencing = true
             })
             {
                 var jsonSerializer = JsonSerializer.Create(jsonSettings);
