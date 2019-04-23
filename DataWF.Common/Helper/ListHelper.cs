@@ -881,7 +881,10 @@ namespace DataWF.Common
         {
             int result = 0;
             if (comp != null)
+            {
                 result = comp.Compare(x, y);
+                hash = x == null || y == null;
+            }
             else if (x == null || x == DBNull.Value)
             {
                 result = (y == null || y == DBNull.Value) ? 0 : -1;
