@@ -803,6 +803,7 @@ namespace DataWF.Data
 
         public virtual void Accept(IUserIdentity user)
         {
+            OnAccepting(user);
             DBService.OnAccept(new DBItemEventArgs(this, null, user));
             if (IsChanged || (UpdateState & DBUpdateState.Commit) == DBUpdateState.Commit)
             {
@@ -818,7 +819,14 @@ namespace DataWF.Data
                 }
                 RemoveOld();
             }
+            OnAccepted(user);
         }
+
+        public virtual void OnAccepted(IUserIdentity user)
+        { }
+
+        public virtual void OnAccepting(IUserIdentity user)
+        { }
 
         public void Reject(string column)
         {
