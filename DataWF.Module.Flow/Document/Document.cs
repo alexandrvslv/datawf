@@ -892,7 +892,7 @@ namespace DataWF.Module.Flow
             var result = new List<DocumentWork>();
             foreach (var item in staff)
             {
-                if (!GetWorksUncompleted().Any(p => p.Stage == stage && p.Staff == stage))
+                if (!GetWorksUncompleted().Any(p => p.Stage == stage && p.Staff == item))
                 {
                     result.Add(CreateWork(from, stage, item));
                 }

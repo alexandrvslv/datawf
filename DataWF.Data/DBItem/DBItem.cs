@@ -398,7 +398,8 @@ namespace DataWF.Data
             }
             else
             {
-                UpdateState |= DBUpdateState.Delete;
+                if (UpdateState != (DBUpdateState.Delete | DBUpdateState.Commit))
+                    UpdateState |= DBUpdateState.Delete;
             }
         }
 

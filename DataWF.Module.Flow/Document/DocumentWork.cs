@@ -114,7 +114,7 @@ namespace DataWF.Module.Flow
         public static DBColumn StageIdKey => DBTable.ParseProperty(nameof(StageId), ref stageIdKey);
         public static DBColumn WorkKey => DBTable.ParseProperty(nameof(WorkId), ref workKey);
         public static DBColumn UserKey => DBTable.ParseProperty(nameof(UserId), ref userKey);
-        public static DBColumn PositionKey => DBTable.ParseProperty(nameof(UserId), ref positionKey);
+        public static DBColumn PositionKey => DBTable.ParseProperty(nameof(PositionId), ref positionKey);
         public static DBColumn DepartmentKey => DBTable.ParseProperty(nameof(DepartmentId), ref departmentKey);
         public static DBColumn FromKey => DBTable.ParseProperty(nameof(FromId), ref fromKey);
         public static DBColumn DateReadKey => DBTable.ParseProperty(nameof(DateRead), ref dateReadKey);
@@ -361,12 +361,12 @@ namespace DataWF.Module.Flow
             get { return (DBItem)User ?? (DBItem)Position ?? (DBItem)Department; }
             set
             {
-                if (value is Department)
-                    Department = (Department)value;
-                else if (value is Position)
-                    Position = (Position)value;
-                else if (value is User)
-                    User = (User)value;
+                if (value is Department department)
+                    Department = department;
+                else if (value is Position position)
+                    Position = position;
+                else if (value is User user)
+                    User = user;
             }
         }
 
