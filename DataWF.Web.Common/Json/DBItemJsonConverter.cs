@@ -67,7 +67,7 @@ namespace DataWF.Web.Common
                         serializer.Serialize(writer, propertyValue);
                     }
                 }
-                if (claimsWriter?.SerializeReferences ?? false)
+                if (claimsWriter?.IncludeReferences ?? false)
                 {
                     foreach (var refed in tableAttribute.References)
                     {
@@ -75,7 +75,7 @@ namespace DataWF.Web.Common
                         serializer.Serialize(writer, refed.PropertyInvoker.GetValue(item));
                     }
                 }
-                if (claimsWriter?.SerializeReferencing ?? true)
+                if (claimsWriter?.IncludeReferencing ?? true)
                 {
                     foreach (var refing in tableAttribute.Referencings)
                     {

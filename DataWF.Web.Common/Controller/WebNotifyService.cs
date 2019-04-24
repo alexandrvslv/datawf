@@ -159,7 +159,8 @@ namespace DataWF.Web.Common
             {
                 try
                 {
-                    await connection.Socket.SendAsync(new ArraySegment<byte>(WriteData(list, connection.User))
+                    var buffer = WriteData(list, connection.User);
+                    await connection.Socket.SendAsync(new ArraySegment<byte>(buffer)
                         , WebSocketMessageType.Text
                         , true
                         , CancellationToken.None);
@@ -242,7 +243,8 @@ namespace DataWF.Web.Common
             using (var writer = new ClaimsJsonTextWriter(streamWriter)
             {
                 User = user,
-                SerializeReferencing = true
+                IncludeReferences = false,
+                IncludeReferencing = false
             })
             {
                 var jsonSerializer = JsonSerializer.Create(jsonSettings);

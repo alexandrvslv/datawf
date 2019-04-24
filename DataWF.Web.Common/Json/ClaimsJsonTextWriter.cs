@@ -19,9 +19,9 @@ namespace DataWF.Web.Common
             set => user = value;
         }
 
-        public bool SerializeReferencing { get; set; } = true;
+        public bool IncludeReferencing { get; set; } = true;
 
-        public bool SerializeReferences { get; set; } = false;
+        public bool IncludeReferences { get; set; } = false;
     }
 
 }
