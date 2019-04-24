@@ -10,11 +10,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using Swashbuckle.AspNetCore.Swagger;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Security.Claims;
 
@@ -28,7 +28,7 @@ namespace DataWF.Web.Common
             return services.AddSingleton(dataProvider);
         }
 
-        public static IServiceCollection AddAuth(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddAuthAndMvc(this IServiceCollection services, IConfiguration configuration)
         {
             var jwtConfig = new JwtAuth();
             var config = configuration.GetSection("JwtAuth");
@@ -71,6 +71,9 @@ namespace DataWF.Web.Common
             })
                .AddJsonOptions(options =>
                {
+#if DEBUG
+                   options.SerializerSettings.Formatting = Formatting.Indented;
+#endif
                    options.SerializerSettings.ContractResolver = DBItemContractResolver.Instance;
                    //options.SerializerSettings.Error = SerializationErrors;
                    //options.SerializerSettings.TraceWriter = new DiagnosticsTraceWriter() { };
@@ -84,23 +87,21 @@ namespace DataWF.Web.Common
             services.AddSingleton<IObjectModelValidator>(new DBItemValidator());
             return services;
         }
-        //private static void SerializationErrors(object sender, ErrorEventArgs e)
-        //{
-        //    //throw new NotImplementedException();
-        //}
 
-        public static IServiceCollection AddAuthAndSwagger(this IServiceCollection services, IConfiguration configuration, string name, string version)
+        public static IServiceCollection AddSwagger(this IServiceCollection services, IConfiguration configuration, string name, string version)
         {
-            return services.AddAuth(configuration).AddSwaggerGen(c =>
+            return services.AddSwaggerGen(c =>
               {
                   c.SwaggerDoc(version, new Info { Title = name, Version = version });
                   c.SchemaFilter<SwaggerDBSchemaFilter>();
                   c.OperationFilter<SwaggerFileUploadOperationFilter>();
                   c.ParameterFilter<SwaggerEnumParameterFilter>();
-                  c.MapType<System.IO.Stream>(() => new Schema { Type = "file" });
-                  c.MapType<System.IO.MemoryStream>(() => new Schema { Type = "file" });
-                  c.MapType<System.IO.FileStream>(() => new Schema { Type = "file" });
-                  c.MapType<Microsoft.AspNetCore.Mvc.FileStreamResult>(() => new Schema { Type = "file" });
+
+                  c.MapType<Stream>(() => new Schema { Type = "file" });
+                  c.MapType<MemoryStream>(() => new Schema { Type = "file" });
+                  c.MapType<FileStream>(() => new Schema { Type = "file" });
+                  c.MapType<FileStreamResult>(() => new Schema { Type = "file" });
+
                   c.UseReferencedDefinitionsForEnums();
                   c.DescribeAllEnumsAsStrings();
                   c.ResolveConflictingActions(parameters =>
@@ -120,16 +121,17 @@ namespace DataWF.Web.Common
                   c.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, apiKey);
                   c.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>>
                   {
-                    { JwtBearerDefaults.AuthenticationScheme, new string[] { } }
+                      { JwtBearerDefaults.AuthenticationScheme, new string[] { } }
                   });
               });
         }
 
-        public static IApplicationBuilder UseAuthAndSwagger(this IApplicationBuilder app, string name, string url = "/swagger/v1/swagger.json")
+        public static IApplicationBuilder UseSwagger(this IApplicationBuilder app, string name, string url = "/swagger/v1/swagger.json")
         {
             //app.UseHttpMethodOverride
             return app.UseSwagger(c =>
             {
+
             })
             .UseSwaggerUI(c =>
             {
@@ -138,7 +140,7 @@ namespace DataWF.Web.Common
                 c.EnableValidator(null);
                 c.SwaggerEndpoint(url, name);
                 c.RoutePrefix = string.Empty;
-            }).UseAuthentication();
+            });
         }
 
         public static IServiceCollection AddScheduler(this IServiceCollection services)
@@ -176,17 +178,10 @@ namespace DataWF.Web.Common
             return app;
         }
 
-        private static void Service_RemoveClient(object sender, WebNotifyEventArgs e)
-        {
-            throw new NotImplementedException();
-        }
-
         public static User GetCommonUser(this ClaimsPrincipal claims)
         {
             var emailClaim = claims?.FindFirst(ClaimTypes.Email);
             return emailClaim != null ? User.GetByEmail(emailClaim.Value) : null;
         }
     }
-
-
 }
