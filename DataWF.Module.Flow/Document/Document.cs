@@ -466,17 +466,17 @@ namespace DataWF.Module.Flow
             set { SetReferencing(value, DocumentComment.DocumentKey); }
         }
 
-        //[Referencing(nameof(DocumentReference.ReferenceId))]
+        [Referencing(nameof(DocumentReference.ReferenceId))]
         public IEnumerable<DocumentReference> Referencing
         {
-            get { return GetReferencing(DocumentReference.DBTable, DocumentReference.ReferenceKey, DBLoadParam.Load); }
+            get { return GetReferencing(DocumentReference.DBTable, DocumentReference.ReferenceKey, DBLoadParam.None); }
             set { SetReferencing(value, DocumentReference.ReferenceKey); }
         }
 
-        //[Referencing(nameof(DocumentReference.DocumentId))]
+        [Referencing(nameof(DocumentReference.DocumentId))]
         public IEnumerable<DocumentReference> Referenced
         {
-            get { return GetReferencing(DocumentReference.DBTable, DocumentReference.DocumentKey, DBLoadParam.Load); }
+            get { return GetReferencing(DocumentReference.DBTable, DocumentReference.DocumentKey, DBLoadParam.None); }
             set { SetReferencing(value, DocumentReference.DocumentKey); }
         }
 

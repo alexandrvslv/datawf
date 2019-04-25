@@ -383,7 +383,7 @@ namespace DataWF.Common
             }
             var itemType = TypeHelper.GetItemType(type);
             var client = Provider.GetClient(itemType);
-            var temp = (IList)EmitInvoker.CreateObject(type);
+            var temp = sourceList ?? (IList)EmitInvoker.CreateObject(type);
 
             while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
             {
@@ -397,31 +397,31 @@ namespace DataWF.Common
                 temp.Add(item);
             }
 
-            if (sourceList != null)
-            {
-                lock (sourceList)
-                {
-                    for (var i = 0; i < sourceList.Count;)
-                    {
-                        var item = sourceList[i];
-                        if (item is ISynchronized synched && synched.SyncStatus == SynchronizedStatus.New)
-                        {
-                            i++;
-                            continue;
-                        }
-                        if (!temp.Contains(item))
-                        {
-                            sourceList.RemoveAt(i);
-                        }
-                        else
-                        {
-                            i++;
-                        }
-                    }
-                }
-                temp.Clear();
-                return sourceList;
-            }
+            //if (sourceList != null)
+            //{
+            //    lock (sourceList)
+            //    {
+            //        for (var i = 0; i < sourceList.Count;)
+            //        {
+            //            var item = sourceList[i];
+            //            if (item is ISynchronized synched && synched.SyncStatus == SynchronizedStatus.New)
+            //            {
+            //                i++;
+            //                continue;
+            //            }
+            //            if (!temp.Contains(item))
+            //            {
+            //                sourceList.RemoveAt(i);
+            //            }
+            //            else
+            //            {
+            //                i++;
+            //            }
+            //        }
+            //    }
+            //    temp.Clear();
+            //    return sourceList;
+            //}
             return temp;
         }
 

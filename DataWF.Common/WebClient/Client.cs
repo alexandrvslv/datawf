@@ -21,6 +21,7 @@ namespace DataWF.Common
 
         public TypeSerializationInfo SerializationInfo;
         private HashSet<K> blackList = new HashSet<K>();
+        private ICRUDClient baseClient;
 
         public Invoker<T, K?> IdInvoker { get; }
 
@@ -85,8 +86,7 @@ namespace DataWF.Common
                         id = value;
                         if (item == null && id != null)
                         {
-                            item = Select((K)id)
-                                ?? (T)sourceList?
+                            item = Select((K)id) ?? (T)sourceList?
                                 .Cast<IPrimaryKey>()
                                 .FirstOrDefault(p => p?.PrimaryKey?.Equals(id) ?? false);
                             if (item is ISynchronized synchronized)
@@ -106,17 +106,13 @@ namespace DataWF.Common
                             }
                         }
 
-
                         IdInvoker.SetValue(item, id);
                         if (!Items.Contains(item))
                         {
                             downloadItems[(K)id] = item;
                         }
-                        if (TypeId != 0)
-                        {
-                            var baseClient = GetBaseClient();
-                            baseClient.Add(item);
-                        }
+                        GetBaseClient()?.Add(item);
+
                         continue;
                     }
                     if (item == null)
@@ -138,15 +134,11 @@ namespace DataWF.Common
             {
                 synchItem.SyncStatus = SynchronizedStatus.Actual;
             }
-            if (downloadItems.Remove((K)id))
+            if (downloadItems.Remove((K)id) || !Items.Contains(item))
             {
-                Items.Add(item);
+                Add(item);
             }
 
-            if (sourceList != null && !sourceList.Contains(item))
-            {
-                sourceList.Add(item);
-            }
             return item;
         }
 
@@ -166,6 +158,8 @@ namespace DataWF.Common
 
         public ICRUDClient GetBaseClient()
         {
+            if (TypeId == 0 || baseClient != null)
+                return baseClient;
             var type = typeof(T).BaseType;
             var result = (ICRUDClient)null;
             while (type != typeof(object))
@@ -175,7 +169,7 @@ namespace DataWF.Common
                     result = client;
                 type = type.BaseType;
             }
-            return result;
+            return baseClient = result;
         }
 
         public object NewItem()
@@ -185,26 +179,23 @@ namespace DataWF.Common
 
         public void Add(object item)
         {
+            Add((T)item);
+        }
+
+        public void Add(T item)
+        {
             var id = IdInvoker.GetValue(item);
             if (id == null || Select(id) == null)
             {
                 Items.Add((T)item);
             }
-            if (TypeId != 0)
-            {
-                var baseClient = GetBaseClient();
-                baseClient?.Add(item);
-            }
+            GetBaseClient()?.Add(item);
         }
 
         public void Remove(object item)
         {
             Items.Remove((T)item);
-            if (TypeId != 0)
-            {
-                var baseClient = GetBaseClient();
-                baseClient?.Remove(item);
-            }
+            GetBaseClient()?.Remove(item);
         }
 
         public void RemoveById(object id)

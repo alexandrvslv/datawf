@@ -93,7 +93,9 @@ namespace DataWF.Web.Common
             foreach (var refing in table.Referencings.Where(p => p.Property.DeclaringType == type))
             {
                 var refingSchema = context.SchemaRegistry.GetOrRegister(refing.Property.PropertyType);
-                //var schemaProperty = new Schema() { Ref = referenceSchema.Ref };
+                var itemType = TypeHelper.GetItemType(refing.Property.PropertyType);
+                //refingSchema.Extensions.Add("x-ref-client", itemType.Name);
+                refingSchema.Extensions.Add("x-ref-key", refing.ReferenceColumn.PropertyName);
                 schema.Properties.Add(refing.Property.Name, refingSchema);
             }
         }
