@@ -148,6 +148,11 @@ namespace DataWF.Web.Common
 
         protected override async void OnSendChanges(NotifyMessageItem[] list)
         {
+            if (list == null)
+            {
+                return;
+            }
+
             base.OnSendChanges(list);
             await SendToWebClients(list);
         }
@@ -160,6 +165,8 @@ namespace DataWF.Web.Common
                 try
                 {
                     var buffer = WriteData(list, connection.User);
+                    if (buffer == null)
+                        return;
                     await connection.Socket.SendAsync(new ArraySegment<byte>(buffer)
                         , WebSocketMessageType.Text
                         , true
@@ -247,6 +254,7 @@ namespace DataWF.Web.Common
                 IncludeReferencing = false
             })
             {
+                bool haveValue = false;
                 var jsonSerializer = JsonSerializer.Create(jsonSettings);
                 writer.WriteStartArray();
                 Type itemType = null;
@@ -267,7 +275,8 @@ namespace DataWF.Web.Common
                         writer.WritePropertyName("Items");
                         writer.WriteStartArray();
                     }
-                    if (!item.ItemId.Equals(id) && (item.UserId != user.Id || item.Type == DBLogType.Delete))
+                    if (!item.ItemId.Equals(id)
+                        && (item.UserId != user.Id || item.Type == DBLogType.Delete))
                     {
                         id = item.ItemId;
                         writer.WriteStartObject();
@@ -284,6 +293,11 @@ namespace DataWF.Web.Common
                             {
                                 writer.WritePropertyName("Value");
                                 jsonSerializer.Serialize(writer, value, value?.GetType());
+                                haveValue = true;
+                            }
+                            else
+                            {
+                                haveValue = true;
                             }
                         }
                         writer.WriteEndObject();
@@ -293,7 +307,7 @@ namespace DataWF.Web.Common
                 writer.WriteEndObject();
                 writer.WriteEndArray();
                 writer.Flush();
-                return stream.ToArray();
+                return haveValue ? stream.ToArray() : null;
             }
         }
     }
