@@ -14,6 +14,10 @@ namespace DataWF.Common
                 index = (IListIndex<T>)invoker.CreateIndex();
                 indexes.Add(invoker.Name, index);
             }
+            //else
+            //{
+            //    throw new ArgumentException($"Index with name {invoker.Name} allreaby in list!");
+            //}
         }
 
         public IListIndex<T> GetIndex(string property)

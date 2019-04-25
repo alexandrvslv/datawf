@@ -21,6 +21,7 @@ namespace DataWF.Common
         protected PropertyChangedEventHandler propertyHandler;
         protected SelectableListView<T> defaultView;
         private bool isSynchronized;
+        private object lockObject = new object();
 
         public SelectableList(int capacity)
         {
@@ -268,6 +269,8 @@ namespace DataWF.Common
                 if (index < 0)
                     index = items.IndexOf(item);
                 int newindex = GetIndexBySort(item);
+                if (newindex < 0)
+                    newindex = -newindex - 1;
                 if (index != newindex)
                 {
                     if (newindex > index)
@@ -344,9 +347,22 @@ namespace DataWF.Common
 
         public virtual int AddInternal(T item)
         {
-            int index = GetIndexBySort(item);
-            InsertInternal(index, item);
-            return index;
+            lock (lockObject)
+            {
+                int index = GetIndexBySort(item);
+                if (index < 0)
+                {
+                    index = -index - 1;
+                    if (index > items.Count)
+                    {
+                        index = items.Count;
+                    }
+
+                    InsertInternal(index, item);
+                }
+
+                return index;
+            }
         }
 
         protected int GetIndexBySort(T item)
@@ -354,16 +370,9 @@ namespace DataWF.Common
             if (comparer != null)
             {
                 //int index = _items.BinarySearch(item, _comparer);
-                int index = ListHelper.BinarySearch(items, item, comparer);
-                if (index < 0)
-                    index = -index - 1;
-
-                if (index > items.Count)
-                    index = items.Count;
-
-                return index;
+                return ListHelper.BinarySearch(items, item, comparer);
             }
-            return items.Count;
+            return Contains(item) ? IndexOf(item) : -(items.Count + 1);
         }
 
         int IList.Add(object item)

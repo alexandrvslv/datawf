@@ -159,9 +159,12 @@ namespace DataWF.Common
 
         public override int Add(T item)
         {
-            if (selectableSource != null && !selectableSource.Contains(item))
+            if (selectableSource != null)
             {
-                selectableSource.Add(item);
+                if (!selectableSource.Contains(item))
+                {
+                    selectableSource.Add(item);
+                }
                 if (_listChangedHandler != null)
                 {
                     return -1;
