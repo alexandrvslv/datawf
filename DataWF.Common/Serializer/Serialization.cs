@@ -62,6 +62,11 @@ namespace DataWF.Common
 
         public static T Clone<T>(T obj, bool ignoreEnumerable)
         {
+            if (obj == null)
+            {
+                return (T)(object)null;
+            }
+
             var typeInfo = Instance.GetTypeInfo(typeof(T));
             var newItem = (T)typeInfo.Constructor.Create();
             foreach (var property in typeInfo.Properties)
