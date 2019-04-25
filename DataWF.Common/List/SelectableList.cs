@@ -360,7 +360,10 @@ namespace DataWF.Common
 
                     InsertInternal(index, item);
                 }
-
+                else
+                {
+                    index = -1;
+                }
                 return index;
             }
         }
@@ -397,6 +400,8 @@ namespace DataWF.Common
 
         public virtual void RemoveInternal(T item, int index)
         {
+            if (index < 0)
+                return;
             if (propertyHandler != null)
             {
                 if (item is INotifyPropertyChanged notified)

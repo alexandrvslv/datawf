@@ -86,9 +86,10 @@ namespace DataWF.Common
                         id = value;
                         if (item == null && id != null)
                         {
-                            item = Select((K)id) ?? (T)sourceList?
-                                .Cast<IPrimaryKey>()
-                                .FirstOrDefault(p => p?.PrimaryKey?.Equals(id) ?? false);
+                            item = Select((K)id) ?? (T)GetBaseClient()?.Select(id);
+                            //(T)sourceList?
+                            //.Cast<IPrimaryKey>()
+                            //.FirstOrDefault(p => p?.PrimaryKey?.Equals(id) ?? false);
                             if (item is ISynchronized synchronized)
                             {
                                 synchItem = synchronized;
@@ -134,11 +135,8 @@ namespace DataWF.Common
             {
                 synchItem.SyncStatus = SynchronizedStatus.Actual;
             }
-            if (downloadItems.Remove((K)id) || !Items.Contains(item))
-            {
-                Add(item);
-            }
-
+            downloadItems.Remove((K)id);
+            Add(item);
             return item;
         }
 
@@ -184,10 +182,9 @@ namespace DataWF.Common
 
         public void Add(T item)
         {
-            var id = IdInvoker.GetValue(item);
-            if (id == null || Select(id) == null)
+            if (!Items.Contains(item))
             {
-                Items.Add((T)item);
+                Items.Add(item);
             }
             GetBaseClient()?.Add(item);
         }
