@@ -295,10 +295,10 @@ namespace DataWF.Web.Common
                                 jsonSerializer.Serialize(writer, value, value?.GetType());
                                 haveValue = true;
                             }
-                            else
-                            {
-                                haveValue = true;
-                            }
+                        }
+                        else
+                        {
+                            haveValue = true;
                         }
                         writer.WriteEndObject();
                     }
