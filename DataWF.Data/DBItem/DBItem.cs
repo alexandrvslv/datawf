@@ -1059,22 +1059,23 @@ namespace DataWF.Data
 
         public virtual async Task Save(DBTransaction transaction)
         {
-            if (transaction.AddItem(this) && OnSaving(transaction))
+            if (transaction.AddItem(this) && await OnSaving(transaction))
             {
                 await SaveReferenced(transaction);
                 await Table.SaveItem(this, transaction);
                 await SaveReferencing(transaction);
-                OnSaved(transaction);
+                await OnSaved(transaction);
             }
         }
 
-        protected virtual void OnSaved(DBTransaction transaction)
+        protected virtual Task OnSaved(DBTransaction transaction)
         {
+            return Task.CompletedTask;
         }
 
-        protected virtual bool OnSaving(DBTransaction transaction)
+        protected virtual Task<bool> OnSaving(DBTransaction transaction)
         {
-            return true;
+            return Task.FromResult(true);
         }
 
         public int CompareTo(object obj)
