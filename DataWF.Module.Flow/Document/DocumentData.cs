@@ -119,7 +119,7 @@ namespace DataWF.Module.Flow
     [DataContract, Table("ddocument_data", "Document", BlockSize = 400)]
     public class DocumentData : DocumentDetail<DocumentData>
     {
-        private static DBColumn templateDataKey = DBColumn.EmptyKey;        
+        private static DBColumn templateDataKey = DBColumn.EmptyKey;
         private static DBColumn fileUrlKey = DBColumn.EmptyKey;
 
         public static DBColumn TemplateDataKey => DBTable.ParseProperty(nameof(TemplateDataId), ref templateDataKey);
@@ -410,12 +410,48 @@ namespace DataWF.Module.Flow
                     if (lob == FileLOB)
                     {
                         throw new Exception($"Latest log entry. Deletion Canceled!");
-                    }                  
-                    
+                    }
+
                 }
             }
             logItem.Delete();
             await logItem.Save(transaction);
+            Table.LogTable.Trunc();
+        }
+
+        [ControllerMethod]
+        public async Task UndoLogFile(int logId, DBTransaction transaction)
+        {
+            var logItem = Table.LogTable.LoadById(logId);
+            if (logItem == null)
+            {
+                throw new Exception($"Not Found!");
+            }
+
+            if (!Access.GetFlag(AccessType.Update, transaction.Caller))
+            {
+                throw new Exception("Access Denied!");
+            }
+
+            await logItem.Undo(transaction);
+            Table.LogTable.Trunc();
+        }
+
+        [ControllerMethod]
+        public async Task RedoLogFile(int logId, DBTransaction transaction)
+        {
+            var logItem = Table.LogTable.LoadById(logId);
+            if (logItem == null)
+            {
+                throw new Exception($"Not Found!");
+            }
+
+            if (!Access.GetFlag(AccessType.Update, transaction.Caller))
+            {
+                throw new Exception("Access Denied!");
+            }
+
+            await logItem.Redo(transaction);
             Table.LogTable.Trunc();
         }
 

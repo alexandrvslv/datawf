@@ -130,6 +130,8 @@ namespace DataWF.Data
 
         public int ReferencingRecursion { get; set; }
 
+        public bool NoLogs { get; set; }
+
         public void Commit()
         {
             if (transaction != null)

@@ -923,7 +923,7 @@ namespace DataWF.Data
                 Sequence.SetCurrent(result);
             }
 
-            if (LogTable != null)
+            if (!transaction.NoLogs && LogTable != null)
             {
                 args.LogItem = new DBLogItem(item);
                 DBService.OnLogItem(args);
@@ -1279,7 +1279,7 @@ namespace DataWF.Data
 
         public virtual IEnumerable<DBForeignKey> GetChildRelations()
         {
-            return Schema?.GetChildRelations(this) ?? Enumerable.Empty<DBForeignKey>();            
+            return Schema?.GetChildRelations(this) ?? Enumerable.Empty<DBForeignKey>();
         }
 
         public void GetAllParentTables(List<DBTable> parents)

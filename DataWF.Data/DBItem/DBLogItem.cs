@@ -90,7 +90,7 @@ namespace DataWF.Data
         [Browsable(false)]
         public DBLogTable LogTable { get { return (DBLogTable)Table; } }
 
-        public async Task Upload(DBTransaction transaction)
+        public async Task Redo(DBTransaction transaction)
         {
             if (BaseItem == null)
                 baseItem = BaseTable.NewItem(DBUpdateState.Insert, false);
@@ -136,6 +136,15 @@ namespace DataWF.Data
         public override string ToString()
         {
             return $"{LogType} {BaseItem}";
+        }
+
+        public async Task Undo(DBTransaction transaction)
+        {
+            transaction.NoLogs = true;
+            await Redo(transaction);
+            transaction.NoLogs = false;
+            Delete();
+            await Save(transaction.GetSubTransaction(Table.Connection));
         }
 
         public static async Task Reject(IEnumerable<DBLogItem> redo, IUserIdentity user)
