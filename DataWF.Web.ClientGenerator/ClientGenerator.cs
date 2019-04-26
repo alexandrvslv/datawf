@@ -280,8 +280,69 @@ namespace DataWF.Web.ClientGenerator
                         baseList: SF.BaseList(SF.SingletonSeparatedList<BaseTypeSyntax>(
                             SF.SimpleBaseType(baseType))),
                         constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
-                        members: SF.List<MemberDeclarationSyntax>(GenClientConstructor(clientName, idKey, typeKey, typeId))
+                        members: SF.List(GenClientMembers(clientName, idKey, typeKey, typeId))
                         );
+        }
+
+        private IEnumerable<MemberDeclarationSyntax> GenClientMembers(string clientName, JsonProperty idKey, JsonProperty typeKey, int typeId)
+        {
+            document.Definitions.TryGetValue(clientName, out var clientSchema);
+
+            var cache = clientSchema != null ? GetClientReferences(clientSchema) : new HashSet<RefField>();
+            yield return GenClientConstructor(clientName, idKey, typeKey, typeId, cache);
+            if (cache.Count > 0)
+            {
+                yield return SF.MethodDeclaration(
+               attributeLists: SF.List<AttributeListSyntax>(),
+                   modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.OverrideKeyword)),
+                   returnType: SF.ParseTypeName("bool"),
+                   explicitInterfaceSpecifier: null,
+                   identifier: SF.Identifier("Remove"),
+                   typeParameterList: null,
+                   parameterList: SF.ParameterList(
+                       SF.SeparatedList(new[] {
+                           SF.Parameter(
+                               attributeLists: SF.List<AttributeListSyntax>(),
+                               modifiers: SF.TokenList(),
+                               type: SF.ParseTypeName(clientName),
+                               identifier: SF.Identifier("item"),
+                               @default: null) })),
+                   constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
+                   body: SF.Block(GenClientRemoveOverrideBody(clientName, idKey, typeKey, typeId, cache)),
+                   semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
+            }
+        }
+
+        private IEnumerable<StatementSyntax> GenClientRemoveOverrideBody(string clientName, JsonProperty idKey, JsonProperty typeKey, int typeId, HashSet<RefField> cache)
+        {
+            yield return SF.ParseStatement($"var removed = base.Remove(item);");
+            foreach (var refField in cache)
+            {
+                yield return SF.ParseStatement($"if(removed && item.{refField.KeyName} != null && item.{refField.ValueName} is {refField.Definition} item{refField.Definition})");
+                yield return SF.ParseStatement("{");
+                yield return SF.ParseStatement($"item{refField.Definition}.{refField.PropertyName}.UpdateFilter();");
+                yield return SF.ParseStatement("}");
+            }
+            yield return SF.ParseStatement($"return removed;");
+        }
+
+        private HashSet<RefField> GetClientReferences(JsonSchema4 clientSchema)
+        {
+            var cache = new HashSet<RefField>();
+            foreach (var entry in referenceFields)
+            {
+                foreach (var refField in entry.Value)
+                {
+                    if (refField.TypeSchema == clientSchema)
+                    {
+                        if (!cache.Contains(refField))
+                        {
+                            cache.Add(refField);
+                        }
+                    }
+                }
+            }
+            return cache;
         }
 
         private string GetClientBaseType(string clientName, out JsonProperty idKey, out JsonProperty typeKey, out int typeId)
@@ -367,7 +428,7 @@ namespace DataWF.Web.ClientGenerator
             return 0;
         }
 
-        private IEnumerable<ConstructorDeclarationSyntax> GenClientConstructor(string clientName, JsonProperty idKey, JsonProperty typeKey, int typeId)
+        private ConstructorDeclarationSyntax GenClientConstructor(string clientName, JsonProperty idKey, JsonProperty typeKey, int typeId, HashSet<RefField> cache)
         {
             var idName = idKey == null ? null : GetPropertyName(idKey);
             var typeName = typeKey == null ? null : GetPropertyName(typeKey);
@@ -379,35 +440,20 @@ namespace DataWF.Web.ClientGenerator
                             SF.Argument(SF.ParseExpression($"new Invoker<{clientName},{GetTypeString(typeKey, true, "List")}>(nameof({clientName}.{typeName}), p=>p.{typeName}, (p,v)=>p.{typeName}=v)")),
                             SF.Argument(SF.ParseExpression($"{typeId}")),
                         })));
-            yield return SF.ConstructorDeclaration(
+            return SF.ConstructorDeclaration(
                 attributeLists: SF.List(ClientAttributeList()),
                 modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
                 identifier: SF.Identifier($"{clientName}Client"),
                 parameterList: SF.ParameterList(),
                 initializer: initialize,
-                body: SF.Block(GenClientConstructorBody(clientName, idKey, typeKey)));
+                body: SF.Block(GenClientConstructorBody(clientName, idKey, typeKey, cache)));
         }
 
-        private IEnumerable<StatementSyntax> GenClientConstructorBody(string clientName, JsonProperty idKey, JsonProperty typeKey)
+        private IEnumerable<StatementSyntax> GenClientConstructorBody(string clientName, JsonProperty idKey, JsonProperty typeKey, HashSet<RefField> cache)
         {
-            var cache = new HashSet<string>(StringComparer.Ordinal);
-            if (!document.Definitions.TryGetValue(clientName, out var clientSchema))
+            foreach (var refField in cache)
             {
-                yield break;
-            }
-            //var parentSchems = clientSchema.AllInheritedSchemas.ToList();
-            foreach (var entry in referenceFields)
-            {
-                foreach (var refField in entry.Value)
-                {
-                    if (refField.TypeSchema == clientSchema)
-                    {
-                        if (!cache.Contains(refField.InvokerName))
-                        {
-                            yield return SF.ParseStatement($"Items.Indexes.Add({refField.Definition}.{refField.InvokerName});");
-                        }
-                    }
-                }
+                yield return SF.ParseStatement($"Items.Indexes.Add({refField.Definition}.{refField.InvokerName});");
             }
         }
 
@@ -417,8 +463,6 @@ namespace DataWF.Web.ClientGenerator
             {
                 yield return schema.ParentSchema.ActualSchema;
                 schema = schema.ParentSchema.ActualSchema;
-
-
             }
         }
 
@@ -1014,10 +1058,11 @@ namespace DataWF.Web.ClientGenerator
                 var refField = new RefField
                 {
                     Property = property,
+                    PropertyName = GetPropertyName(property),
                     Definition = property.ParentSchema.Id,
                     RefKey = refkey,
-                    TypeSchema = document.Definitions[property.Item.ActualTypeSchema.Id],
-                    TypeName = GetTypeString(property.Item, false, "SelectableList"),
+                    TypeSchema = property.Item.ActualTypeSchema,
+                    TypeName = GetTypeString(property.Item, false),
                 };
                 refFields.Add(refField);
                 //var refTypePrimary = GetPrimaryKey(refTypeSchema);
@@ -1025,7 +1070,11 @@ namespace DataWF.Web.ClientGenerator
                 //var refTypePrimaryType = GetTypeString(refTypePrimary, true, "SelectableList");
                 refField.KeyProperty = refField.TypeSchema.Properties[refkey];
                 refField.KeyName = GetPropertyName(refField.KeyProperty);
-                refField.KeyType = GetTypeString(refField.KeyProperty, true, "SelectableList");
+                refField.KeyType = GetTypeString(refField.KeyProperty, true);
+
+                refField.ValueProperty = GetExtensionKey((JsonSchema4)refField.KeyProperty.Parent, refField.KeyName);
+                refField.ValueName = GetPropertyName(refField.ValueProperty);
+                refField.ValueType = GetTypeString(refField.ValueProperty, false, null);
 
                 refField.InvokerType = $"Invoker<{refField.TypeName},{refField.KeyType}>";
                 refField.InvokerName = refField.TypeName + refkey + "Invoker";
@@ -1071,7 +1120,7 @@ namespace DataWF.Web.ClientGenerator
             }
             else
             {
-                var type = GetTypeString(property, property.IsNullableRaw ?? true, "SelectableList");
+                var type = GetTypeString(property, property.IsNullableRaw ?? true);
                 yield return SF.FieldDeclaration(attributeLists: SF.List<AttributeListSyntax>(),
                     modifiers: SF.TokenList(SF.Token(SyntaxKind.ProtectedKeyword)),
                    declaration: SF.VariableDeclaration(
@@ -1090,7 +1139,7 @@ namespace DataWF.Web.ClientGenerator
         private ExpressionSyntax GenFieldDefault(JsonProperty property, JsonProperty idKey)
         {
             var text = property.Default.ToString();
-            var type = GetTypeString(property, false, "SelectableList");
+            var type = GetTypeString(property, false);
             if (type == "bool")
                 text = text.ToLowerInvariant();
             else if (type == "string")
@@ -1100,7 +1149,7 @@ namespace DataWF.Web.ClientGenerator
             return SF.ParseExpression(text);
         }
 
-        private string GetTypeString(JsonSchema4 value, bool nullable, string listType)
+        private string GetTypeString(JsonSchema4 value, bool nullable, string listType = "SelectableList")
         {
             switch (value.Type)
             {
@@ -1192,9 +1241,13 @@ namespace DataWF.Web.ClientGenerator
             public string ParameterType;
             public string ParameterName;
             public JsonProperty Property;
+            public string PropertyName;
             public string FieldType;
             public string FieldName;
             public string Definition;
+            public JsonProperty ValueProperty;
+            public string ValueName;
+            public string ValueType;
         }
 
     }

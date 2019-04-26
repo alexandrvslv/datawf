@@ -175,24 +175,33 @@ namespace DataWF.Common
             return new T();
         }
 
-        public void Add(object item)
+        public bool Add(object item)
         {
-            Add((T)item);
+            return Add((T)item);
         }
 
-        public void Add(T item)
+        public virtual bool Add(T item)
         {
+            var added = false;
             if (!Items.Contains(item))
             {
                 Items.Add(item);
+                added = true;
             }
             GetBaseClient()?.Add(item);
+            return added;
         }
 
-        public void Remove(object item)
+        public bool Remove(object item)
         {
-            Items.Remove((T)item);
+            return Remove((T)item);
+        }
+
+        public virtual bool Remove(T item)
+        {
+            var removed = Items.Remove((T)item);
             GetBaseClient()?.Remove(item);
+            return removed;
         }
 
         public void RemoveById(object id)

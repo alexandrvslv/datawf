@@ -28,8 +28,8 @@ namespace DataWF.Common
         bool IsSynchronized { get; set; }
         Type ItemType { get; }
         int TypeId { get; }
-        void Add(object item);
-        void Remove(object item);
+        bool Add(object item);
+        bool Remove(object item);
         void RemoveById(object id);
         object Select(object id);
         object ParseId(object id);
