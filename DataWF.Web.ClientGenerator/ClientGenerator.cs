@@ -318,9 +318,9 @@ namespace DataWF.Web.ClientGenerator
             yield return SF.ParseStatement($"var removed = base.Remove(item);");
             foreach (var refField in cache)
             {
-                yield return SF.ParseStatement($"if(removed && item.{refField.KeyName} != null && item.{refField.ValueName} is {refField.Definition} item{refField.Definition})");
+                yield return SF.ParseStatement($"if(removed && item.{refField.KeyName} != null && item.{refField.ValueName} is {refField.Definition} item{refField.ValueName})");
                 yield return SF.ParseStatement("{");
-                yield return SF.ParseStatement($"item{refField.Definition}.{refField.PropertyName}.UpdateFilter();");
+                yield return SF.ParseStatement($"item{refField.ValueName}.{refField.PropertyName}.UpdateFilter();");
                 yield return SF.ParseStatement("}");
             }
             yield return SF.ParseStatement($"return removed;");
