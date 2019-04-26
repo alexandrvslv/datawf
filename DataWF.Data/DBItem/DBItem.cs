@@ -390,6 +390,12 @@ namespace DataWF.Data
             SetBool(Table.Columns[ColumnCode], value);
         }
 
+        public Task Delete(DBTransaction transaction)
+        {
+            Delete();
+            return Save(transaction);
+        }
+
         public void Delete()
         {
             if ((UpdateState & DBUpdateState.Insert) == DBUpdateState.Insert)
