@@ -106,19 +106,29 @@ namespace DataWF.Data
             }
         }
 
-        public DBLogItem GetPrevius()
+        public DBLogItem GetPrevius(IUserIdentity user = null)
         {
-            var query = new QQuery("", LogTable);
-            query.Columns.Add(new QFunc(QFunctionType.max)
+            using (var transaction = new DBTransaction(Table.Connection, user, true))
             {
-                Items = new QItemList<QItem>(new[] { new QColumn(LogTable.PrimaryKey) })
-            });
-            query.BuildParam(LogTable.PrimaryKey, CompareType.Less, LogId);
-            query.BuildParam(LogTable.BaseKey, CompareType.Equal, BaseId);
-            query.Orders.Add(new QOrder(LogTable.PrimaryKey));
+                return GetPrevius(transaction);
+            }
+        }
 
-            var id = LogTable.Schema.Connection.ExecuteQuery(query.ToWhere());
-            return LogTable.LoadById(id);
+        public DBLogItem GetPrevius(DBTransaction transaction)
+        {
+            using (var query = new QQuery("", LogTable))
+            {
+                query.Columns.Add(new QFunc(QFunctionType.max)
+                {
+                    Items = new QItemList<QItem>(new[] { new QColumn(LogTable.PrimaryKey) })
+                });
+                query.BuildParam(LogTable.PrimaryKey, CompareType.Less, LogId);
+                query.BuildParam(LogTable.BaseKey, CompareType.Equal, BaseId);
+                //query.Orders.Add(new QOrder(LogTable.PrimaryKey));
+
+                var id = transaction.ExecuteQuery(query.Format());
+                return LogTable.LoadById(id, DBLoadParam.Load, null, transaction);
+            }
         }
 
         public override void Reject(IUserIdentity user)
@@ -140,11 +150,16 @@ namespace DataWF.Data
 
         public async Task Undo(DBTransaction transaction)
         {
-            transaction.NoLogs = true;
-            await Redo(transaction);
-            transaction.NoLogs = false;
+            var logtransaction = transaction.GetSubTransaction(Table.Connection);
+            var item = GetPrevius(logtransaction);
+            if (item != null)
+            {
+                transaction.NoLogs = true;
+                await item.Redo(transaction);
+                transaction.NoLogs = false;
+            }
             Delete();
-            await Save(transaction.GetSubTransaction(Table.Connection));
+            await Save();
         }
 
         public static async Task Reject(IEnumerable<DBLogItem> redo, IUserIdentity user)
