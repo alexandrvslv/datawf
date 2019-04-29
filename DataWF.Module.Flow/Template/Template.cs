@@ -99,6 +99,9 @@ namespace DataWF.Module.Flow
             set { SetValue(value, Table.PrimaryKey); }
         }
 
+        [Index("rtemplate_item_type", false)]
+        public override int? ItemType { get => base.ItemType; set => base.ItemType = value; }
+
         [DataMember, Column("code", 250, Keys = DBColumnKeys.Code)]
         public virtual string Code
         {
