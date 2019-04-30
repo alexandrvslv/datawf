@@ -1427,17 +1427,20 @@ namespace DataWF.Data
                 return;
             }
 
-            foreach (var relation in Table.GetChildRelations())
+            foreach (var referencing in Table.TableAttribute.Referencings)
             {
-                if (relation.Table != Table
-                    && !(relation.Table is IDBVirtualTable)
-                    && relation.Column.ColumnType == DBColumnTypes.Default)
+                if (TypeHelper.IsBaseType(GetType(), referencing.PropertyInvoker.TargetType))
                 {
-                    var references = GetReferencing(relation, DBLoadParam.None)
-                        .Where(p => p.IsChanged || p.IsReferencingChanged).ToList();
-                    if (references.Count > 0)
+                    var references = (IEnumerable)referencing.PropertyInvoker.GetValue(this);
+                    if (references != null)
                     {
-                        await relation.Table.Save(transaction, references);
+                        foreach (DBItem item in references)
+                        {
+                            if (item.IsChanged || item.IsReferencingChanged)
+                            {
+                                await item.Save(transaction);
+                            }
+                        }
                     }
                 }
             }
