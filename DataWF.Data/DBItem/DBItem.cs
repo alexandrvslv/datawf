@@ -1422,7 +1422,7 @@ namespace DataWF.Data
 
         public async Task SaveReferencing(DBTransaction transaction)
         {
-            if ((UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete)
+            if (Table.TableAttribute == null || (UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete)
             {
                 return;
             }
