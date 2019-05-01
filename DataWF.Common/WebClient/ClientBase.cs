@@ -384,7 +384,10 @@ namespace DataWF.Common
             var itemType = TypeHelper.GetItemType(type);
             var client = Provider.GetClient(itemType);
             var temp = sourceList ?? (IList)EmitInvoker.CreateObject(type);
-
+            if (!(temp is IFilterable))
+            {
+                temp.Clear();
+            }
             while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
             {
                 var item = client != null
