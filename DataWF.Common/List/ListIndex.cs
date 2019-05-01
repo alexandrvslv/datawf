@@ -122,7 +122,7 @@ namespace DataWF.Common
                         }
                         else
                         {
-                            if (index.TryGetValue(key, out var value))
+                            if (index.TryGetValue(key, out var value) && value != null)
                             {
                                 foreach (var item in value)
                                     yield return item;
