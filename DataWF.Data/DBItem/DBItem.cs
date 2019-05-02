@@ -1294,7 +1294,7 @@ namespace DataWF.Data
             }
         }
 
-        public async Task Merge(IEnumerable<DBItem> list, DBTransaction transaction)
+        public virtual async Task Merge(IEnumerable<DBItem> list, DBTransaction transaction)
         {
             var relations = Table.GetChildRelations().ToList();
             var rows = new List<DBItem> { this };
