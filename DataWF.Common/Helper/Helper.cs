@@ -88,7 +88,12 @@ namespace DataWF.Common
 
         private static string DateDaysString(DateTime now, DateTime date)
         {
-            throw new NotImplementedException();
+            var stamp = now - date;
+            if (stamp.Days < 1)
+            {
+                return string.Empty;
+            }
+            return $"{stamp.Days} day(s) ago";
         }
 
         public static string DateRevelantString(DateTime date, CultureInfo culture = null)
