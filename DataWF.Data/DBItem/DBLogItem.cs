@@ -148,7 +148,7 @@ namespace DataWF.Data
             return $"{LogType} {BaseItem}";
         }
 
-        public async Task Undo(DBTransaction transaction)
+        public async Task<DBLogItem> Undo(DBTransaction transaction)
         {
             var logtransaction = transaction.GetSubTransaction(Table.Connection);
             var item = GetPrevius(logtransaction);
@@ -158,8 +158,8 @@ namespace DataWF.Data
                 await item.Redo(transaction);
                 transaction.NoLogs = false;
             }
-            Delete();
-            await Save();
+            await Delete(logtransaction);
+            return item;
         }
 
         public static async Task Reject(IEnumerable<DBLogItem> redo, IUserIdentity user)
