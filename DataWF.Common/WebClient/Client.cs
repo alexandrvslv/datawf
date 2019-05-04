@@ -281,22 +281,27 @@ namespace DataWF.Common
 
             var item = Select(id);
             if (item == null)
-            {
-                try
-                {
-                    item = GetAsync(id, ProgressToken.None).Result;
-                    if (item == null)
-                    {
-                        blackList.Add(id);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    blackList.Add(id);
-                    Helper.OnException(ex);
-                }
+            {                
+                _ = GetCheckBlackList(id);
             }
             return item;
+        }
+
+        private async Task GetCheckBlackList(K id)
+        {
+            blackList.Add(id);
+            try
+            {
+                var loadedItem = await GetAsync(id, ProgressToken.None);
+                if (loadedItem != null)
+                {
+                    blackList.Remove(id);
+                }
+            }
+            catch (Exception ex)
+            {
+                Helper.OnException(ex);
+            }
         }
 
         public virtual Task<List<T>> GetAsync(ProgressToken progressToken)
