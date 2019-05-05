@@ -100,14 +100,15 @@ namespace DataWF.Common
 
         public void Start(long size, Stream sourceStream, Stream targetStream)
         {
-            Prepare(size, sourceStream, targetStream);
-            _ = ListenAsync();
-            DownloadStart?.Invoke(this);
+            Prepare(size, sourceStream, targetStream);            
 
-            int count;
-            var buffer = new byte[BufferSize];
             try
             {
+                listen = new ManualResetEvent(false);
+                _ = ListenAsync();
+                DownloadStart?.Invoke(this);
+                int count;
+                var buffer = new byte[BufferSize];
                 var stopWatch = new Stopwatch();
                 stopWatch.Start();
                 while ((count = sourceStream.Read(buffer, 0, BufferSize)) != 0 && !CancellationToken.IsCancellationRequested)
@@ -170,7 +171,7 @@ namespace DataWF.Common
         private void Listen()
         {
             Progress = 0;
-            listen = new ManualResetEvent(false);
+            
             while (!listen.WaitOne(50))
             {
                 long currentLength = Interlocked.Read(ref length);
