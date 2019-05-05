@@ -9,6 +9,7 @@ namespace DataWF.Common
     public class ListIndex<T, K> : IListIndex<T, K>
     {
         protected Dictionary<K, ThreadSafeList<T>> Dictionary;
+        private object lockObject = new object();
         protected readonly IInvoker<T, K> Invoker;
         protected readonly K NullKey;
 
@@ -44,7 +45,7 @@ namespace DataWF.Common
 
         public void Add(T item, K key)
         {
-            lock (Dictionary)
+            lock (lockObject)
             {
                 if (!Dictionary.TryGetValue(key, out var refs))
                 {
@@ -63,7 +64,7 @@ namespace DataWF.Common
 
         public void Remove(T item, K key)
         {
-            lock (Dictionary)
+            lock (lockObject)
             {
                 if (!Dictionary.TryGetValue(key, out var refs) || !refs.Remove(item))
                 {
