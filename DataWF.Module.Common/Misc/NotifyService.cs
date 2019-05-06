@@ -247,6 +247,11 @@ namespace DataWF.Module.Common
                             reader.ReadChar();
                             var tableName = reader.ReadString();
                             DBTable table = DBService.Schems.ParseTable(tableName);
+                            if (table == null)
+                            {
+                                continue;
+                            }
+
                             while (reader.PeekChar() == 2)
                             {
                                 reader.ReadChar();
