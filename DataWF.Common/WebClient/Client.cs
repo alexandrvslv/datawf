@@ -21,7 +21,6 @@ namespace DataWF.Common
 
         public TypeSerializationInfo SerializationInfo;
         private ICRUDClient baseClient;
-        private object lockObject = new object();
         private LoadProgress<T> loadProgress;
 
         public Invoker<T, K?> IdInvoker { get; }
@@ -275,18 +274,14 @@ namespace DataWF.Common
 
         public virtual T Get(K id)
         {
-            lock (lockObject)
+            var item = Select(id);
+            if (item == null)
             {
-                var item = Select(id);
-                if (item == null)
-                {
-                    item = new T();
-                    IdInvoker.SetValue(item, id);
-                    downloadItems[id] = item;
-                    _ = GetAsync(id);
-                }
-                return item;
+                downloadItems[id] = item = new T();
+                IdInvoker.SetValue(item, id);
+                _ = GetAsync(id, ProgressToken.None);
             }
+            return item;
         }
 
         public virtual Task<List<T>> GetAsync(ProgressToken progressToken)
