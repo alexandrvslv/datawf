@@ -7,6 +7,7 @@ namespace DataWF.Common
         public static readonly ProgressToken None = new ProgressToken(null);
 
         public CancellationToken CancellationToken = CancellationToken.None;
+        public CancellationTokenSource CancellationTokenSource = null;
 
         private CopyProcess process;
 
@@ -16,7 +17,8 @@ namespace DataWF.Common
             if (Progressable != null)
             {
                 Progressable.Progress = 0;
-                CancellationToken = new CancellationToken();
+                CancellationTokenSource = new CancellationTokenSource();
+                CancellationToken = CancellationTokenSource.Token;
             }
         }
 
@@ -41,6 +43,14 @@ namespace DataWF.Common
         }
 
         public IProgressable Progressable { get; }
+
+        public void Cancel()
+        {
+            if (CancellationTokenSource != null)
+            {
+                CancellationTokenSource.Cancel();
+            }
+        }
     }
 
 }

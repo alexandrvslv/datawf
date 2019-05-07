@@ -20,8 +20,9 @@ namespace DataWF.Common
         private Dictionary<K, T> downloadItems = new Dictionary<K, T>();
 
         public TypeSerializationInfo SerializationInfo;
-        private HashSet<K> blackList = new HashSet<K>();
         private ICRUDClient baseClient;
+        private object lockObject = new object();
+        private LoadProgress<T> loadProgress;
 
         public Invoker<T, K?> IdInvoker { get; }
 
@@ -274,33 +275,17 @@ namespace DataWF.Common
 
         public virtual T Get(K id)
         {
-            if (blackList.Contains(id))
+            lock (lockObject)
             {
-                return null;
-            }
-
-            var item = Select(id);
-            if (item == null)
-            {                
-                _ = GetCheckBlackList(id);
-            }
-            return item;
-        }
-
-        private async Task GetCheckBlackList(K id)
-        {
-            blackList.Add(id);
-            try
-            {
-                var loadedItem = await GetAsync(id, ProgressToken.None);
-                if (loadedItem != null)
+                var item = Select(id);
+                if (item == null)
                 {
-                    blackList.Remove(id);
+                    item = new T();
+                    IdInvoker.SetValue(item, id);
+                    downloadItems[id] = item;
+                    _ = GetAsync(id);
                 }
-            }
-            catch (Exception ex)
-            {
-                Helper.OnException(ex);
+                return item;
             }
         }
 
@@ -311,6 +296,20 @@ namespace DataWF.Common
         }
 
         public async Task<IEnumerable> GetAsync() => await GetAsync(ProgressToken.None);
+
+        public LoadProgress<T> Load(string filter, IProgressable progressable)
+        {
+            if (loadProgress == null || loadProgress.Filter != filter)
+            {
+                if (loadProgress != null && !loadProgress.Task.IsCompleted)
+                {
+                    loadProgress.Token.Cancel();
+                }
+                loadProgress = new LoadProgress<T>(filter, progressable);
+                loadProgress.Task = FindAsync(filter, loadProgress.Token);
+            }
+            return loadProgress;
+        }
 
         public virtual Task<List<T>> FindAsync(string filter, ProgressToken progressToken) => Task.FromResult<List<T>>(null);
 
@@ -356,6 +355,17 @@ namespace DataWF.Common
             => MergeAsync(IdInvoker.GetValue(item).Value, ids, ProgressToken.None);
 
         public async Task<object> MergeAsync(object id, List<string> ids) => await MergeAsync((K)id, ids, ProgressToken.None);
+    }
 
+    public class LoadProgress<T>
+    {
+        public LoadProgress(string filter, IProgressable progressable)
+        {
+            Filter = filter;
+            Token = new ProgressToken(progressable);
+        }
+        public ProgressToken Token { get; }
+        public Task<List<T>> Task { get; set; }
+        public string Filter { get; internal set; }
     }
 }

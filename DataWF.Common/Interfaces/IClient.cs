@@ -53,6 +53,7 @@ namespace DataWF.Common
         Task<T> Get(T item);
         T Get(object id);
         Task<bool> Delete(T item);
+        LoadProgress<T> Load(string filter, IProgressable progressable);
         Task<List<T>> FindAsync(string filter, ProgressToken progressToken);
         Task<List<T>> GetAsync(ProgressToken progressToken);
         Task<T> GetAsync(object id, ProgressToken progressToken);
