@@ -1383,9 +1383,9 @@ namespace DataWF.Data
                     && invoker != null
                     && TypeHelper.IsBaseType(GetType(), invoker.TargetType))
                 {
-                    var item = column.Attribute.ReferencePropertyInvoker.GetValue(this) as DBItem;
+                    var item = invoker.GetValue(this) as DBItem;
 
-                    if (item != null && item.IsChanged)
+                    if (item != null && item != this && item.IsChanged)
                     {
                         await item.Save(transaction);
                         if (GetValue(column) == null)
