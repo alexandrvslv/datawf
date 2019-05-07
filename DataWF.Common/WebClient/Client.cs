@@ -295,14 +295,29 @@ namespace DataWF.Common
 
         public virtual T Get(K id)
         {
+            return Get(id, null);
+        }
+
+        public virtual T Get(K id, Action<T> loadAction)
+        {
             var item = Select(id);
             if (item == null)
             {
                 downloadItems[id] = item = new T();
-                IdInvoker.SetValue(item, id);
-                _ = GetAsync(id, ProgressToken.None);
+                if (item is IPrimaryKey keyed)
+                    keyed.PrimaryKey = id;
+                if (item is ISynchronized synched)
+                    synched.SyncStatus = SynchronizedStatus.Load;
+
+                _ = GetAction(id, loadAction).ConfigureAwait(false);
             }
             return item;
+        }
+
+        private async Task GetAction(K id, Action<T> loadAction)
+        {
+            var result = await GetAsync(id, ProgressToken.None).ConfigureAwait(false);
+            loadAction?.Invoke(result);
         }
 
         public virtual Task<List<T>> GetAsync(ProgressToken progressToken)
@@ -315,7 +330,7 @@ namespace DataWF.Common
 
         public LoadProgress<T> Load(string filter, IProgressable progressable)
         {
-            if (loadProgress == null || loadProgress.Filter != filter)
+            if (loadProgress == null || loadProgress.Task.IsCompleted || loadProgress.Filter != filter)
             {
                 if (loadProgress != null && !loadProgress.Task.IsCompleted)
                 {
