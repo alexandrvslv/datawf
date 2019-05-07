@@ -86,15 +86,15 @@ namespace DataWF.Common
                         id = value;
                         if (item == null && id != null)
                         {
-                            item = Select((K)id) ?? (T)GetBaseClient()?.Select(id);
-                            //(T)sourceList?
-                            //.Cast<IPrimaryKey>()
-                            //.FirstOrDefault(p => p?.PrimaryKey?.Equals(id) ?? false);
+                            item = Select((K)id) ?? SelectBase(id);
+
                             if (item is ISynchronized synchronized)
                             {
                                 synchItem = synchronized;
                                 if (synchItem.SyncStatus == SynchronizedStatus.Actual)
+                                {
                                     synchItem.SyncStatus = SynchronizedStatus.Load;
+                                }
                             }
                         }
                         if (item == null)
@@ -138,6 +138,23 @@ namespace DataWF.Common
             downloadItems.Remove((K)id);
             Add(item);
             return item;
+        }
+
+        private T SelectBase(object id)
+        {
+            var baseCached = GetBaseClient()?.Select(id);
+            if (baseCached != null)
+            {
+                if (!(baseCached is T))
+                {
+                    GetBaseClient().RemoveById(id);
+                }
+                else
+                {
+                    return (T)baseCached;
+                }
+            }
+            return null;
         }
 
         public object DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, object item, IList sourceList)
@@ -199,7 +216,11 @@ namespace DataWF.Common
 
         public virtual bool Remove(T item)
         {
-            var removed = Items.Remove((T)item);
+            var removed = Items.Remove(item);
+            if (!removed)
+            {
+                removed = downloadItems.Remove((K)IdInvoker.GetValue(item));
+            }
             GetBaseClient()?.Remove(item);
             return removed;
         }
