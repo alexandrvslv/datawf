@@ -465,7 +465,7 @@ namespace DataWF.Module.Flow
                 }
                 else
                 {
-                    return $"{Path.GetFileNameWithoutExtension(TemplateData.File.DataName)}{Document.Number}{TemplateData.File.FileType}";
+                    return $"{Document.Number}{TemplateData.File.FileType}";
                 }
             }
             return FileName;
