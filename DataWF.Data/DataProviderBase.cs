@@ -49,18 +49,17 @@ namespace DataWF.Data
         public virtual void Load()
         {
             DBService.Load();
-            if (Schema == null
-                || Schema.Connection == null
-                || (Schema.Connection.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
-                && !Schema.Connection.CheckConnection()))
+
+            if (Schema == null || Schema.Connection == null)
             {
-                CreateNew();
+                throw new Exception("Missing data.xml or connection.xml");
             }
-            else
+            if (!Schema.Connection.CheckConnection())
             {
-                Generate();
-                DBService.CommitChanges();
+                throw new Exception("Check Connection FAIL!");
             }
+            Generate();
+            DBService.CommitChanges();
 
             Helper.Logs.Add(new StateInfo("Load", "Database", "Generate Data"));
 
