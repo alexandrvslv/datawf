@@ -96,15 +96,18 @@ namespace DataWF.Module.Flow
         {
             Id = (int)logItem.LogId;
             BaseId = (long)logItem.BaseId;
+            DocumentId = logItem.GetValue<long>(DocumentData.DocumentKey.LogColumn);
             Date = (DateTime)logItem.DateCreate;
             Type = (DBLogType)logItem.LogType;
             User = ((UserLog)logItem.UserLog)?.User?.Name;
-            FileName = logItem.GetValue<string>(logItem.LogTable.GetLogColumn(logItem.BaseTable.FileNameKey));
+            FileName = logItem.GetValue<string>(logItem.LogTable.FileNameKey);
         }
 
         public int Id { get; set; }
 
         public long BaseId { get; set; }
+
+        public long? DocumentId { get; set; }
 
         public DateTime Date { get; set; }
 
