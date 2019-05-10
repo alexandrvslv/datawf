@@ -384,7 +384,7 @@ namespace DataWF.Data.Gui
             {
                 using (var transaction = new DBTransaction(GuiEnvironment.User))
                 {
-                    await redo[0].Upload(transaction);
+                    var item = await redo[0].Redo(transaction);
                     transaction.Commit();
                 }
             }

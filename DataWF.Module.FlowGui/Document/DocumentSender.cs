@@ -238,7 +238,7 @@ namespace DataWF.Module.FlowGui
             {
                 if (current.Template != document.Template)
                     continue;
-                var dworks = document.GetWorks().ToList();
+                var dworks = document.Works.ToList();
                 var cwork = document.CurrentWork;
                 if (cwork == null || cwork.Stage != CurrentStage)
                 {

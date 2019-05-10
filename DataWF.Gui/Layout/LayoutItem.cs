@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 using Xwt;
 
@@ -393,7 +392,12 @@ namespace DataWF.Gui
             {
                 item.Name = "litem" + items.Count;
             }
-            Insert(GetIndexBySort(item), item);
+            var index = GetIndexBySort(item);
+            if (index < 0)
+            {
+                index = -index - 1;
+            }
+            Insert(index, item);
         }
 
         public void InsertWith(T newItem, LayoutAlignType type, bool grouping)

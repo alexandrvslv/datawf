@@ -67,7 +67,7 @@ namespace DataWF.Module.FlowGui
                         && TypeHelper.GetBrowsable(method))
                     {
                         var type = method.ReturnType.GetGenericArguments().First();
-                        if (TypeHelper.IsBaseType(type, typeof(DocumentDetail)))
+                        if (TypeHelper.IsInterface(type, typeof(IDocumentDetail)))
                         {
                             types.Add(type);
                         }
@@ -796,11 +796,11 @@ namespace DataWF.Module.FlowGui
                 {
                     if (!TypeBinding.TryGetValue(type, out var widgetType))
                     {
-                        widgetType = typeof(DocumentDetailView<>);
+                        widgetType = typeof(DocumentDetailView<,>);
                     }
                     if (widgetType.IsGenericType)
                     {
-                        widgetType = widgetType.MakeGenericType(type);
+                        widgetType = widgetType.MakeGenericType(type, type);
                     }
 
                     var widget = (Widget)EmitInvoker.CreateObject(widgetType);
