@@ -8,7 +8,7 @@ namespace DataWF.Data
     public abstract class DataProviderBase : IDataProvider
     {
         private DBSchema schema;
-        private string schemaName = "example";
+        protected string schemaName = "example";
 
         public string SchemaName
         {

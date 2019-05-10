@@ -19,7 +19,8 @@ namespace DataWF.Test.Web.Service
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDataProvider(new TestDataProvider());
-            services.AddAuthAndSwagger(Configuration, "TestService", "v1");
+            services.AddAuthAndMvc(Configuration);
+            services.AddSwagger(Configuration, "TestService", "v1");
             services.AddWebNotify();
         }
 
