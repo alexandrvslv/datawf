@@ -1,5 +1,8 @@
 ﻿using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 
@@ -66,6 +69,4 @@ namespace DataWF.Common
             base.OnPropertyChanged(oldValue, newValue, propertyName);
         }
     }
-
-
 }
