@@ -50,6 +50,8 @@ namespace DataWF.Common
     public interface ICRUDClient<T> : ICRUDClient
     {
         SelectableList<T> Items { get; }
+        bool Add(T item);
+        bool Remove(T item);
         Task<T> Get(T item);
         T Get(object id);
         Task<bool> Delete(T item);
