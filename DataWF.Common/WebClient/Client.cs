@@ -110,10 +110,8 @@ namespace DataWF.Common
                         IdInvoker.SetValue(item, id);
                         if (!Items.Contains(item))
                         {
-                            downloadItems[(K)id] = item;
+                            AddDownloads((K)id, item);
                         }
-                        GetBaseClient()?.Add(item);
-
                         continue;
                     }
                     if (item == null)
@@ -135,24 +133,41 @@ namespace DataWF.Common
             {
                 synchItem.SyncStatus = SynchronizedStatus.Actual;
             }
-            downloadItems.Remove((K)id);
-            Add(item);
+            if (RemoveDownloads((K)id))
+            {
+                Add(item);
+            }
             return item;
+        }
+
+        public bool RemoveDownloads(object id)
+        {
+            return RemoveDownloads((K)id);
+        }
+
+        public bool RemoveDownloads(K id)
+        {
+            return downloadItems.Remove(id) ||
+             (GetBaseClient()?.RemoveDownloads(id) ?? false);
+        }
+
+        public void AddDownloads(object id, object item)
+        {
+            AddDownloads((K)id, (T)item);
+        }
+
+        public void AddDownloads(K id, T item)
+        {
+            downloadItems[id] = item;
+            GetBaseClient()?.AddDownloads(id, item);
         }
 
         private T SelectBase(object id)
         {
             var baseCached = GetBaseClient()?.Select(id);
-            if (baseCached != null)
+            if (baseCached is T)
             {
-                if (!(baseCached is T))
-                {
-                    GetBaseClient().RemoveById(id);
-                }
-                else
-                {
-                    return (T)baseCached;
-                }
+                return (T)baseCached;
             }
             return null;
         }
@@ -219,7 +234,7 @@ namespace DataWF.Common
             var removed = Items.Remove(item);
             if (!removed)
             {
-                removed = downloadItems.Remove((K)IdInvoker.GetValue(item));
+                removed = RemoveDownloads((K)IdInvoker.GetValue(item));
             }
             GetBaseClient()?.Remove(item);
             return removed;
@@ -303,12 +318,12 @@ namespace DataWF.Common
             var item = Select(id);
             if (item == null)
             {
-                downloadItems[id] = item = new T();
+                item = new T();
                 if (item is IPrimaryKey keyed)
                     keyed.PrimaryKey = id;
                 if (item is ISynchronized synched)
                     synched.SyncStatus = SynchronizedStatus.Load;
-
+                AddDownloads(id, item);
                 _ = GetAction(id, loadAction).ConfigureAwait(false);
             }
             return item;

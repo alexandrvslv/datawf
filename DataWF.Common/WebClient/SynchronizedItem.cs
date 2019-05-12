@@ -1,8 +1,5 @@
 ﻿using Newtonsoft.Json;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 
@@ -36,6 +33,7 @@ namespace DataWF.Common
                     {
                         Changes.Clear();
                     }
+                    //PERFORMANCE ListView Update(( OnPropertyChanged();
                 }
             }
         }

@@ -334,11 +334,19 @@ namespace DataWF.Web.ClientGenerator
         private IEnumerable<StatementSyntax> GenClientRemoveOverrideBody(string clientName, JsonProperty idKey, JsonProperty typeKey, int typeId, HashSet<RefField> cache)
         {
             yield return SF.ParseStatement($"var removed = base.Remove(item);");
+            if (cache.Count > 0)
+            {
+                yield return SF.ParseStatement("if(removed){");
+            }
             foreach (var refField in cache)
             {
-                yield return SF.ParseStatement($"if(removed && item.{refField.KeyName} != null && item.{refField.ValueName} is {refField.Definition} item{refField.ValueName})");
-                yield return SF.ParseStatement("{");
-                yield return SF.ParseStatement($"item{refField.ValueName}.{refField.PropertyName}.Remove(item);");
+                yield return SF.ParseStatement($"if(item.{refField.KeyName} != null){{");
+                yield return SF.ParseStatement($"var item{refField.ValueName} = (item.{refField.ValueFieldName} ?? (item.{refField.ValueFieldName} = ClientProvider.Default.{refField.ValueType}.Select(item.{refField.KeyName}.Value))) as {refField.Definition};");
+                yield return SF.ParseStatement($"item{refField.ValueName}?.{refField.PropertyName}.Remove(item);");
+                yield return SF.ParseStatement("}");
+            }
+            if (cache.Count > 0)
+            {
                 yield return SF.ParseStatement("}");
             }
             yield return SF.ParseStatement($"return removed;");
@@ -347,11 +355,19 @@ namespace DataWF.Web.ClientGenerator
         private IEnumerable<StatementSyntax> GenClientAddOverrideBody(string clientName, JsonProperty idKey, JsonProperty typeKey, int typeId, HashSet<RefField> cache)
         {
             yield return SF.ParseStatement($"var added = base.Add(item);");
+            if (cache.Count > 0)
+            {
+                yield return SF.ParseStatement("if(added){");
+            }
             foreach (var refField in cache)
             {
-                yield return SF.ParseStatement($"if(added && item.{refField.KeyName} != null && item.{refField.ValueName} is {refField.Definition} item{refField.ValueName})");
-                yield return SF.ParseStatement("{");
-                yield return SF.ParseStatement($"item{refField.ValueName}.{refField.PropertyName}.Add(item);");
+                yield return SF.ParseStatement($"if(item.{refField.KeyName} != null){{");
+                yield return SF.ParseStatement($"var item{refField.ValueName} = (item.{refField.ValueFieldName} ?? (item.{refField.ValueFieldName} = ClientProvider.Default.{refField.ValueType}.Select(item.{refField.KeyName}.Value))) as {refField.Definition};");
+                yield return SF.ParseStatement($"item{refField.ValueName}?.{refField.PropertyName}.Add(item);");
+                yield return SF.ParseStatement("}");
+            }
+            if (cache.Count > 0)
+            {
                 yield return SF.ParseStatement("}");
             }
             yield return SF.ParseStatement($"return added;");
@@ -932,7 +948,7 @@ namespace DataWF.Web.ClientGenerator
                 //new Query<{refField.TypeName}>(new[]{{{refField.ParameterName}}}),
                 //ClientProvider.Default.{refField.TypeName}.Items,
                 //false);");
-                yield return SF.ParseStatement($@"{refField.FieldName} = new {refField.FieldType} (this, nameof({refField.PropertyName}), ClientProvider.Default.{refField.TypeName}.Items);");
+                yield return SF.ParseStatement($@"{refField.FieldName} = new {refField.FieldType} (this, nameof({refField.PropertyName}));");
             }
         }
 
@@ -1158,6 +1174,7 @@ namespace DataWF.Web.ClientGenerator
                 refField.ValueProperty = GetExtensionKey((JsonSchema4)refField.KeyProperty.Parent, refField.KeyName);
                 refField.ValueName = GetPropertyName(refField.ValueProperty);
                 refField.ValueType = GetTypeString(refField.ValueProperty, false, null);
+                refField.ValueFieldName = GetFieldName(refField.ValueProperty);
 
                 refField.InvokerType = $"Invoker<{refField.TypeName},{refField.KeyType}>";
                 refField.InvokerName = refField.TypeName + refkey + "Invoker";
@@ -1205,7 +1222,9 @@ namespace DataWF.Web.ClientGenerator
             {
                 var type = GetTypeString(property, property.IsNullableRaw ?? true);
                 yield return SF.FieldDeclaration(attributeLists: SF.List<AttributeListSyntax>(),
-                    modifiers: SF.TokenList(SF.Token(SyntaxKind.ProtectedKeyword)),
+                    modifiers: SF.TokenList(type.EndsWith('?')
+                    ? new[] { SF.Token(SyntaxKind.ProtectedKeyword) }
+                    : new[] { SF.Token(SyntaxKind.ProtectedKeyword), SF.Token(SyntaxKind.InternalKeyword) }),
                    declaration: SF.VariableDeclaration(
                        type: SF.ParseTypeName(type),
                        variables: SF.SingletonSeparatedList(
@@ -1331,6 +1350,8 @@ namespace DataWF.Web.ClientGenerator
             public JsonProperty ValueProperty;
             public string ValueName;
             public string ValueType;
+            public string ValueFieldName;
+
         }
 
     }

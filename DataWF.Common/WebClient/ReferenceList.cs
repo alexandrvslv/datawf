@@ -10,48 +10,52 @@ namespace DataWF.Common
         public ReferenceList()
         { }
 
-        public ReferenceList(SynchronizedItem owner, string ownerProperty, IList<T> baseCollection)
+        public ReferenceList(SynchronizedItem owner, string ownerProperty)
         {
             Owner = owner;
             OwnerProperty = ownerProperty;
-            BaseCollection = baseCollection;
         }
 
         public SynchronizedItem Owner { get; set; }
         public string OwnerProperty { get; set; }
-        public IList<T> BaseCollection { get; set; }
 
         public override void OnListChanged(NotifyCollectionChangedEventArgs e)
         {
             base.OnListChanged(e);
-            CheckOwnerStatus();
+            var items = e.Action == NotifyCollectionChangedAction.Add
+                ? Enumerable.Repeat((T)e.NewItems[0], 1)
+                : e.Action == NotifyCollectionChangedAction.Reset
+                || e.Action == NotifyCollectionChangedAction.Remove
+                ? (IEnumerable<T>)this
+                : null;
+            if (items != null)
+            {
+                CheckOwnerStatus(items);
+            }
         }
 
         public override void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             base.OnItemPropertyChanged(sender, e);
-            if (e.PropertyName == nameof(SynchronizedItem.SyncStatus))
+            if (sender is T item && item.SyncStatus != SynchronizedStatus.Load)
             {
-                CheckOwnerStatus();
+                CheckOwnerStatus(Enumerable.Repeat(item, 1));
             }
         }
 
         public override int Add(T item)
         {
-            var index = base.Add(item);
-            if (index >= 0 && !BaseCollection.Contains(item))
-            {
-                BaseCollection.Add(item);
-            }
-            return index;
+            if (Contains(item))
+                return -1;
+            return base.Add(item);
         }
 
-        private void CheckOwnerStatus()
+        private void CheckOwnerStatus(IEnumerable<T> items)
         {
             switch (Owner.SyncStatus)
             {
                 case SynchronizedStatus.Actual:
-                    if (this.Any(p => p.SyncStatus != SynchronizedStatus.Actual))
+                    if (items.Any(p => p.SyncStatus != SynchronizedStatus.Actual))
                     {
                         Owner.SyncStatus = SynchronizedStatus.Edit;
                         Owner.Changes[OwnerProperty] = this;
@@ -67,6 +71,7 @@ namespace DataWF.Common
                     }
                     break;
             }
+            //Owner.OnPropertyChanged(OwnerProperty);
         }
     }
 }
