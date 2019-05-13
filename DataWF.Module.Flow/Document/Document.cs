@@ -739,10 +739,15 @@ namespace DataWF.Module.Flow
                     {
                         Send(CurrentWork, temporaryStage, transaction);
                     }
-
+                    temporaryUser = null;
+                    temporaryStage = null;
                 }
-                temporaryUser = null;
-                temporaryStage = null;
+                if (temporaryUser != null && CurrentStage != null)
+                {
+                    Send(CurrentWork, CurrentStage, new[] { temporaryUser }, transaction);
+                    temporaryUser = null;
+                }
+
                 await base.Save(transaction);
                 if (Works.Count() <= 1)
                 {

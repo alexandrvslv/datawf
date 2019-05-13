@@ -384,7 +384,7 @@ namespace DataWF.Common
             var itemType = TypeHelper.GetItemType(type);
             var client = Provider.GetClient(itemType);
             var temp = sourceList ?? (IList)EmitInvoker.CreateObject(type);
-            if (!(temp is IFilterable))
+            if (!(temp is IReferenceList))
             {
                 temp.Clear();
             }

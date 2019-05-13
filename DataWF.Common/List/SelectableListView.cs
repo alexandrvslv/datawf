@@ -266,7 +266,7 @@ namespace DataWF.Common
         {
             var item = (T)sender;
             
-            var checkItem = query.IsEnabledParameter(e.PropertyName) ? ListHelper.CheckItem(item, query) : true;
+            var checkItem = ListHelper.CheckItem(item, query);
             if (checkItem)
             {
                 if (query.IsGlobalParameter(e.PropertyName))

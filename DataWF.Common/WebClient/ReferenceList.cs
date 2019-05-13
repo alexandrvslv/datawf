@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace DataWF.Common
 {
-    public class ReferenceList<T> : SelectableList<T> where T : SynchronizedItem
+    public class ReferenceList<T> : SelectableList<T>, IReferenceList where T : SynchronizedItem
     {
         public ReferenceList()
         { }
