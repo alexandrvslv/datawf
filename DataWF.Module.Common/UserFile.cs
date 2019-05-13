@@ -15,10 +15,12 @@ namespace DataWF.Module.Common
         private static DBColumn idKey = DBColumn.EmptyKey;
         private static DBColumn dataNameKey = DBColumn.EmptyKey;
         private static DBColumn userKey = DBColumn.EmptyKey;
+        private static DBColumn isAvatarKey = DBColumn.EmptyKey;
 
         public static DBColumn IdKey => DBTable.ParseProperty(nameof(Id), ref idKey);
         public static DBColumn DataNameKey => DBTable.ParseProperty(nameof(DataName), ref dataNameKey);
         public static DBColumn UserKey => DBTable.ParseProperty(nameof(UserId), ref userKey);
+        public static DBColumn IsAvatarKey = DBTable.ParseProperty(nameof(IsAvatar),ref isAvatarKey);
 
 
 
@@ -57,6 +59,14 @@ namespace DataWF.Module.Common
         {
             get => GetPropertyReference(ref user);
             set => user = SetPropertyReference(value);
+        }
+
+        [Column("is_avatar")]
+        public bool IsAvatar
+        {
+            get => GetValue<bool>(IsAvatarKey);
+            set => SetValue(value,IsAvatarKey);
+
         }
     }
 }
