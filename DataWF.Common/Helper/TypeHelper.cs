@@ -329,6 +329,7 @@ namespace DataWF.Common
 
         public static bool IsXmlAttribute(Type type)
         {
+            type = CheckNullable(type);
             if (!cacheTypeIsXmlAttribute.TryGetValue(type, out bool flag))
             {
                 if (type.IsPrimitive || type.IsEnum
