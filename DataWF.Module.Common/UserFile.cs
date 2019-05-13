@@ -62,9 +62,9 @@ namespace DataWF.Module.Common
         }
 
         [Column("is_avatar")]
-        public bool IsAvatar
+        public bool? IsAvatar
         {
-            get => GetValue<bool>(IsAvatarKey);
+            get => GetValue<bool?>(IsAvatarKey);
             set => SetValue(value,IsAvatarKey);
 
         }
