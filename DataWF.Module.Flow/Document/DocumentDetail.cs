@@ -24,7 +24,7 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Module.Flow
 {
-    public abstract class DocumentDetail<T> : DBItem where T : DBItem, new()
+    public abstract class DocumentDetail<T> : DBItem, IDocumentDetail where T : DBItem, new()
     {
         private static DBTable<T> dbTable;
         private static DBColumn documentKey = DBColumn.EmptyKey;

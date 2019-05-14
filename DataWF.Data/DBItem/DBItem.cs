@@ -448,10 +448,17 @@ namespace DataWF.Data
 
         public IEnumerable<T> GetReferencing<T>(DBTable<T> table, DBColumn column, DBLoadParam param) where T : DBItem, new()
         {
-            using (var query = new QQuery("", table))
+            if ((param & DBLoadParam.Load) == DBLoadParam.Load)
             {
-                query.BuildParam(column, CompareType.Equal, PrimaryId);
-                return GetReferencing<T>(table, query, param);
+                using (var query = new QQuery("", table))
+                {
+                    query.BuildParam(column, CompareType.Equal, PrimaryId);
+                    return GetReferencing<T>(table, query, param);
+                }
+            }
+            else
+            {
+                return table.Select(column, CompareType.Equal, PrimaryId);
             }
         }
 
@@ -468,21 +475,28 @@ namespace DataWF.Data
 
         public IEnumerable<DBItem> GetReferencing(DBTable table, DBColumn column, DBLoadParam param)
         {
-            using (var query = new QQuery("", table))
+            if ((param & DBLoadParam.Load) == DBLoadParam.Load)
             {
-                query.BuildParam(column, CompareType.Equal, PrimaryId);
-                return GetReferencing(query, param);
+                using (var query = new QQuery("", table))
+                {
+                    query.BuildParam(column, CompareType.Equal, PrimaryId);
+                    return GetReferencing(table, query, param);
+                }
+            }
+            else
+            {
+                return table.SelectItems(column, CompareType.Equal, PrimaryId);
             }
         }
 
-        public IEnumerable<DBItem> GetReferencing(QQuery query, DBLoadParam param)
+        public IEnumerable<DBItem> GetReferencing(DBTable table, QQuery query, DBLoadParam param)
         {
             if ((param & DBLoadParam.Load) == DBLoadParam.Load)
             {
-                return query.Load();
+                return table.LoadItems(query);
             }
 
-            return query.Select();
+            return table.SelectItems(query);
         }
 
         public IEnumerable<DBItem> GetReferencing(DBForeignKey relation, DBLoadParam param)
@@ -1383,9 +1397,9 @@ namespace DataWF.Data
                     && invoker != null
                     && TypeHelper.IsBaseType(GetType(), invoker.TargetType))
                 {
-                    var item = column.Attribute.ReferencePropertyInvoker.GetValue(this) as DBItem;
+                    var item = invoker.GetValue(this) as DBItem;
 
-                    if (item != null && item.IsChanged)
+                    if (item != null && item != this && item.IsChanged)
                     {
                         await item.Save(transaction);
                         if (GetValue(column) == null)

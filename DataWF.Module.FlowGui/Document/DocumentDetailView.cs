@@ -8,14 +8,16 @@ using System.Threading.Tasks;
 
 namespace DataWF.Module.FlowGui
 {
-    public class DocumentDetailView<T> : ListEditor, IDocument, ISync where T : DocumentDetail, new()
+    public class DocumentDetailView<T, K> : ListEditor, IDocument, ISync
+        where T : DocumentDetail<K>, new()
+        where K : DBItem, new()
     {
         protected Document document;
         protected DBTableView<T> view;
 
         public DocumentDetailView() : base(new DocumentLayoutList())
         {
-            view = new DBTableView<T>(Table, new QParam(LogicType.And, Table.ParseProperty(nameof(DocumentDetail.DocumentId)), CompareType.Equal, 0), DBViewKeys.Empty);
+            view = new DBTableView<T>(Table, new QParam(LogicType.And, Table.ParseProperty(nameof(DocumentDetail<T>.DocumentId)), CompareType.Equal, 0), DBViewKeys.Empty);
             DataSource = view;
 
             List.EditMode = EditModes.ByF2;
@@ -25,7 +27,7 @@ namespace DataWF.Module.FlowGui
                 toolSave.Visible =
                 toolStatus.Visible = false;
             HideOnClose = true;
-            Name = nameof(DocumentDetailView<T>);
+            Name = nameof(DocumentDetailView<T, K>);
         }
 
         DBItem IDocument.Document { get => Document; set => Document = (Document)value; }
@@ -130,7 +132,7 @@ namespace DataWF.Module.FlowGui
         public override void Localize()
         {
             base.Localize();
-            GuiService.Localize(this, nameof(DocumentDetailView<T>), typeof(T).Name);
+            GuiService.Localize(this, nameof(DocumentDetailView<T, K>), typeof(T).Name);
         }
     }
 }

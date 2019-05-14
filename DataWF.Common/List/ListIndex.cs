@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -8,7 +9,7 @@ namespace DataWF.Common
 {
     public class ListIndex<T, K> : IListIndex<T, K>
     {
-        protected Dictionary<K, ThreadSafeList<T>> Dictionary;
+        protected ConcurrentDictionary<K, ThreadSafeList<T>> Dictionary;
         protected readonly IInvoker<T, K> Invoker;
         protected readonly K NullKey;
 
@@ -18,11 +19,11 @@ namespace DataWF.Common
             Invoker = invoker;
             if (comparer != null)
             {
-                Dictionary = new Dictionary<K, ThreadSafeList<T>>(comparer);//(IEqualityComparer<DBNullable<K>>)DBNullableComparer.StringOrdinalIgnoreCase
+                Dictionary = new ConcurrentDictionary<K, ThreadSafeList<T>>(comparer);//(IEqualityComparer<DBNullable<K>>)DBNullableComparer.StringOrdinalIgnoreCase
             }
             else
             {
-                Dictionary = new Dictionary<K, ThreadSafeList<T>>();
+                Dictionary = new ConcurrentDictionary<K, ThreadSafeList<T>>();
             }
         }
 
@@ -44,14 +45,11 @@ namespace DataWF.Common
 
         public void Add(T item, K key)
         {
-            lock (Dictionary)
+            if (!Dictionary.TryGetValue(key, out var refs))
             {
-                if (!Dictionary.TryGetValue(key, out var refs))
-                {
-                    Dictionary[key] = refs = new ThreadSafeList<T>();
-                }
-                refs.Add(item);
+                Dictionary[key] = refs = new ThreadSafeList<T>();
             }
+            refs.Add(item);
         }
 
         public void Remove(T item)
@@ -63,20 +61,17 @@ namespace DataWF.Common
 
         public void Remove(T item, K key)
         {
-            lock (Dictionary)
+            if (!Dictionary.TryGetValue(key, out var refs) || !refs.Remove(item))
             {
-                if (!Dictionary.TryGetValue(key, out var refs) || !refs.Remove(item))
+                foreach (var entry in Dictionary)
                 {
-                    foreach (var entry in Dictionary)
-                    {
-                        if (entry.Value.Remove(item))
-                            break;
-                    }
+                    if (entry.Value.Remove(item))
+                        break;
                 }
-                if (refs != null && refs.Count == 0)
-                {
-                    Dictionary.Remove(key);//, out refs
-                }
+            }
+            if (refs != null && refs.Count == 0)
+            {
+                Dictionary.TryRemove(key, out refs);
             }
         }
 

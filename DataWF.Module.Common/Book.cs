@@ -45,7 +45,7 @@ namespace DataWF.Module.Common
             set { SetValue(value, Table.PrimaryKey); }
         }
 
-        [DataMember, Column("code", 40, Keys = DBColumnKeys.Code)]
+        [DataMember, Column("code", 512, Keys = DBColumnKeys.Code)]
         public string Code
         {
             get { return GetValue<string>(Table.CodeKey); }
@@ -66,7 +66,7 @@ namespace DataWF.Module.Common
             set { SetGroupReference(value); }
         }
 
-        [DataMember, Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
+        [DataMember, Column("name", 1024, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
         public string Name
         {
             get { return GetName(); }
