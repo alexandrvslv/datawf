@@ -246,7 +246,7 @@ namespace DataWF.Common
         public virtual void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             var item = (T)sender;
-            OnItemPropertyChanged(item, IsSorted ? items.IndexOf(item) : -1, e);
+            OnItemPropertyChanged(item, -1, e);
         }
 
         public void OnItemPropertyChanged(T item, int index, PropertyChangedEventArgs e)

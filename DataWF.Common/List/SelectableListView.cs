@@ -265,35 +265,34 @@ namespace DataWF.Common
         public virtual void SourceItemChanged(object sender, PropertyChangedEventArgs e)
         {
             var item = (T)sender;
-            int index = IndexOf(item);
-            //if (index < 0)
-            //{
-            //    return;
-            //}
-
-            bool checkItem = ListHelper.CheckItem(item, query);
+            
+            var checkItem = ListHelper.CheckItem(item, query);
             if (checkItem)
             {
-                if (index < 0)
+                if (query.IsGlobalParameter(e.PropertyName))
                 {
-                    base.Add(item);
+                    UpdateFilter();
                 }
                 else
                 {
-                    base.OnItemPropertyChanged(item, index, e);
-                }
-                foreach (var parameter in query.GetGlobal())
-                {
-                    if (parameter.Name == e.PropertyName)
+                    int index = IndexOf(item);
+                    if (index < 0)
                     {
-                        UpdateFilter();
-                        break;
+                        base.Add(item);
+                    }
+                    else
+                    {
+                        base.OnItemPropertyChanged(item, index, e);
                     }
                 }
             }
-            else if (index >= 0)
+            else
             {
-                Remove(item, index);
+                int index = IndexOf(item);
+                if (index >= 0)
+                {
+                    Remove(item, index);
+                }
             }
         }
 

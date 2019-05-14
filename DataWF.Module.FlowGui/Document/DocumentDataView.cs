@@ -10,7 +10,7 @@ using Xwt.Drawing;
 
 namespace DataWF.Module.FlowGui
 {
-    public class DocumentDataView<T> : DocumentDetailView<T> where T : DocumentData, new()
+    public class DocumentDataView<T> : DocumentDetailView<T, DocumentData> where T : DocumentData, new()
     {
         private ToolItem toolTemplate;
         private ToolItem toolInsertTemplate;
@@ -30,7 +30,7 @@ namespace DataWF.Module.FlowGui
         public override void Localize()
         {
             base.Localize();
-            GuiService.Localize(this, nameof(DocumentDetailView<T>), "Files");
+            GuiService.Localize(this, nameof(DocumentDataView<T>), "Files");
         }
 
         public override Document Document

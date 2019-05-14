@@ -250,7 +250,21 @@ namespace DataWF.Common
             Parameters.ClearValues();
         }
 
+        public bool IsEnabledParameter(string propertyName)
+        {
+            if (string.IsNullOrEmpty(propertyName))
+                return true;
+            var item = Parameters[propertyName];
+            return item?.IsEnabled ?? false;
+        }
 
+        public bool IsGlobalParameter(string propertyName)
+        {
+            if (string.IsNullOrEmpty(propertyName))
+                return false;
+            var item = Parameters[propertyName];
+            return (item?.IsEnabled ?? false) && item.IsGlobal;
+        }
     }
 }
 

@@ -1,15 +1,13 @@
-﻿using DataWF.Data.Gui;
-using DataWF.Common;
-using System;
-using System.ComponentModel;
-using System.Threading;
+﻿using DataWF.Common;
+using DataWF.Data;
+using DataWF.Data.Gui;
 using DataWF.Gui;
 using DataWF.Module.Flow;
+using System;
+using System.ComponentModel;
+using System.Threading.Tasks;
 using Xwt;
 using Xwt.Drawing;
-using DataWF.Data;
-using System.Threading.Tasks;
-using System.Linq;
 
 namespace DataWF.Module.FlowGui
 {
@@ -88,12 +86,7 @@ namespace DataWF.Module.FlowGui
             {
                 try
                 {
-                    using (var transaction = new DBTransaction())
-                    {
-                        document.GetReferencing().LastOrDefault();
-                        document.GetReferenced().LastOrDefault();
-                        Documents.Load();
-                    }
+                    Documents.Load(DBLoadParam.Referencing);
                     //refs.Documents.UpdateFilter();
                     synch = true;
                 }

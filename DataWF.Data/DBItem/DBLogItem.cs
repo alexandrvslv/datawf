@@ -90,12 +90,13 @@ namespace DataWF.Data
         [Browsable(false)]
         public DBLogTable LogTable { get { return (DBLogTable)Table; } }
 
-        public async Task Redo(DBTransaction transaction)
+        public async Task<DBItem> Redo(DBTransaction transaction)
         {
             if (BaseItem == null)
-                baseItem = BaseTable.NewItem(DBUpdateState.Insert, false);
+                baseItem = BaseTable.NewItem(DBUpdateState.Insert, false, (int)GetValue<int?>(BaseTable.ItemTypeKey.LogColumn));
             Upload(BaseItem);
             await BaseItem.Save(transaction);
+            return baseItem;
         }
 
         public void Upload(DBItem value)
@@ -148,18 +149,19 @@ namespace DataWF.Data
             return $"{LogType} {BaseItem}";
         }
 
-        public async Task<DBLogItem> Undo(DBTransaction transaction)
+        public async Task<DBItem> Undo(DBTransaction transaction)
         {
             var logtransaction = transaction.GetSubTransaction(Table.Connection);
             var item = GetPrevius(logtransaction);
+            var baseItem = BaseItem;
             if (item != null)
             {
                 transaction.NoLogs = true;
-                await item.Redo(transaction);
+                baseItem = await item.Redo(transaction);
                 transaction.NoLogs = false;
             }
             await Delete(logtransaction);
-            return item;
+            return baseItem;
         }
 
         public static async Task Reject(IEnumerable<DBLogItem> redo, IUserIdentity user)

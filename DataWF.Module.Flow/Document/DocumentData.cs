@@ -96,15 +96,18 @@ namespace DataWF.Module.Flow
         {
             Id = (int)logItem.LogId;
             BaseId = (long)logItem.BaseId;
+            DocumentId = logItem.GetValue<long?>(DocumentData.DocumentKey.LogColumn);
             Date = (DateTime)logItem.DateCreate;
             Type = (DBLogType)logItem.LogType;
             User = ((UserLog)logItem.UserLog)?.User?.Name;
-            FileName = logItem.GetValue<string>(logItem.LogTable.GetLogColumn(logItem.BaseTable.FileNameKey));
+            FileName = logItem.GetValue<string>(logItem.LogTable.FileNameKey);
         }
 
         public int Id { get; set; }
 
         public long BaseId { get; set; }
+
+        public long? DocumentId { get; set; }
 
         public DateTime Date { get; set; }
 
@@ -420,39 +423,41 @@ namespace DataWF.Module.Flow
         }
 
         [ControllerMethod]
-        public async Task UndoLogFile(int logId, DBTransaction transaction)
+        public static async Task<DocumentData> UndoLogFile(int logId, DBTransaction transaction)
         {
-            var logItem = Table.LogTable.LoadById(logId);
+            var logItem = DBTable.LogTable.LoadById(logId);
             if (logItem == null)
             {
                 throw new Exception($"Not Found!");
             }
 
-            if (!Access.GetFlag(AccessType.Update, transaction.Caller))
+            if (!DBTable.Access.GetFlag(AccessType.Update, transaction.Caller))
             {
                 throw new Exception("Access Denied!");
             }
 
-            await logItem.Undo(transaction);
-            Table.LogTable.Trunc();
+            var data = (DocumentData)await logItem.Undo(transaction);
+            DBTable.LogTable.Trunc();
+            return data;
         }
 
         [ControllerMethod]
-        public async Task RedoLogFile(int logId, DBTransaction transaction)
+        public static async Task<DocumentData> RedoLogFile(int logId, DBTransaction transaction)
         {
-            var logItem = Table.LogTable.LoadById(logId);
+            var logItem = DBTable.LogTable.LoadById(logId);
             if (logItem == null)
             {
                 throw new Exception($"Not Found!");
             }
 
-            if (!Access.GetFlag(AccessType.Update, transaction.Caller))
+            if (!DBTable.Access.GetFlag(AccessType.Update, transaction.Caller))
             {
                 throw new Exception("Access Denied!");
             }
 
-            await logItem.Redo(transaction);
-            Table.LogTable.Trunc();
+            var data = (DocumentData)await logItem.Redo(transaction);
+            DBTable.LogTable.Trunc();
+            return data;
         }
 
         public virtual string RefreshName()
@@ -465,7 +470,7 @@ namespace DataWF.Module.Flow
                 }
                 else
                 {
-                    return $"{Path.GetFileNameWithoutExtension(TemplateData.File.DataName)}{Document.Number}{TemplateData.File.FileType}";
+                    return $"{Document.Number}{TemplateData.File.FileType}";
                 }
             }
             return FileName;

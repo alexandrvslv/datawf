@@ -30,6 +30,8 @@ namespace DataWF.Common
         int TypeId { get; }
         bool Add(object item);
         bool Remove(object item);
+        void AddDownloads(object id, object item);
+        bool RemoveDownloads(object id);
         void RemoveById(object id);
         object Select(object id);
         object ParseId(object id);
@@ -50,6 +52,8 @@ namespace DataWF.Common
     public interface ICRUDClient<T> : ICRUDClient
     {
         SelectableList<T> Items { get; }
+        bool Add(T item);
+        bool Remove(T item);
         Task<T> Get(T item);
         T Get(object id);
         Task<bool> Delete(T item);

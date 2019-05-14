@@ -84,7 +84,7 @@ namespace DataWF.Test.Data
 
         public async void Generate(DBConnection connection)
         {
-            connection.CheckConnection();
+            Assert.AreEqual(true, connection.CheckConnection(), $"Connection Fail!");
             schema = DBSchema.Generate(GetType().Assembly, SchemaName);
 
             Assert.IsNotNull(schema, "Attribute Generator Fail. On Schema");

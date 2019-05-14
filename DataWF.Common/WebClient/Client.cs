@@ -110,10 +110,8 @@ namespace DataWF.Common
                         IdInvoker.SetValue(item, id);
                         if (!Items.Contains(item))
                         {
-                            downloadItems[(K)id] = item;
+                            AddDownloads((K)id, item);
                         }
-                        GetBaseClient()?.Add(item);
-
                         continue;
                     }
                     if (item == null)
@@ -135,26 +133,11 @@ namespace DataWF.Common
             {
                 synchItem.SyncStatus = SynchronizedStatus.Actual;
             }
-            downloadItems.Remove((K)id);
-            Add(item);
-            return item;
-        }
-
-        private T SelectBase(object id)
-        {
-            var baseCached = GetBaseClient()?.Select(id);
-            if (baseCached != null)
+            if (RemoveDownloads((K)id))
             {
-                if (!(baseCached is T))
-                {
-                    GetBaseClient().RemoveById(id);
-                }
-                else
-                {
-                    return (T)baseCached;
-                }
+                Add(item);
             }
-            return null;
+            return item;
         }
 
         public object DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, object item, IList sourceList)
@@ -216,11 +199,7 @@ namespace DataWF.Common
 
         public virtual bool Remove(T item)
         {
-            var removed = Items.Remove(item);
-            if (!removed)
-            {
-                removed = downloadItems.Remove((K)IdInvoker.GetValue(item));
-            }
+            var removed = Items.Remove((T)item);
             GetBaseClient()?.Remove(item);
             return removed;
         }
@@ -302,22 +281,27 @@ namespace DataWF.Common
         {
             var item = Select(id);
             if (item == null)
-            {
-                downloadItems[id] = item = new T();
-                if (item is IPrimaryKey keyed)
-                    keyed.PrimaryKey = id;
-                if (item is ISynchronized synched)
-                    synched.SyncStatus = SynchronizedStatus.Load;
-
-                _ = GetAction(id, loadAction).ConfigureAwait(false);
+            {                
+                _ = GetCheckBlackList(id);
             }
             return item;
         }
 
-        private async Task GetAction(K id, Action<T> loadAction)
+        private async Task GetCheckBlackList(K id)
         {
-            var result = await GetAsync(id, ProgressToken.None).ConfigureAwait(false);
-            loadAction?.Invoke(result);
+            blackList.Add(id);
+            try
+            {
+                var loadedItem = await GetAsync(id, ProgressToken.None);
+                if (loadedItem != null)
+                {
+                    blackList.Remove(id);
+                }
+            }
+            catch (Exception ex)
+            {
+                Helper.OnException(ex);
+            }
         }
 
         public virtual Task<List<T>> GetAsync(ProgressToken progressToken)

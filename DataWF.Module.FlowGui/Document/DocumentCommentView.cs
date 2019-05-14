@@ -7,7 +7,7 @@ using System;
 
 namespace DataWF.Module.FlowGui
 {
-    public class DocumentCommentView : DocumentDetailView<DocumentComment>
+    public class DocumentCommentView : DocumentDetailView<DocumentComment, DocumentComment>
     {
         MessageEditor editor;
         public DocumentCommentView() : base()

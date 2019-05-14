@@ -33,6 +33,7 @@ namespace DataWF.Common
                     {
                         Changes.Clear();
                     }
+                    //PERFORMANCE ListView Update(( OnPropertyChanged();
                 }
             }
         }
@@ -66,6 +67,4 @@ namespace DataWF.Common
             base.OnPropertyChanged(oldValue, newValue, propertyName);
         }
     }
-
-
 }

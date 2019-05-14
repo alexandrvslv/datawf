@@ -91,6 +91,7 @@ namespace DataWF.Data
         protected string subList;
         //private Dictionary<int, object> tags;
         private Dictionary<int, object> olds;
+        private DBLogColumn logColumn;
 
         #endregion
 
@@ -669,6 +670,9 @@ namespace DataWF.Data
 
         [JsonIgnore, XmlIgnore]
         public ColumnAttributeCache Attribute { get; internal set; }
+
+        [JsonIgnore, XmlIgnore]
+        public DBLogColumn LogColumn => logColumn ?? (logColumn = Table?.LogTable?.GetLogColumn(this));
 
         #region IComparable Members
 
