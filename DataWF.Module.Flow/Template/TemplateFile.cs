@@ -47,8 +47,8 @@ namespace DataWF.Module.Flow
         [DataMember, Column("template_file", Keys = DBColumnKeys.File)]
         public byte[] Data
         {
-            get { return GetProperty<byte[]>(); }
-            set { SetProperty(value); }
+            get { return GetValue<byte[]>(Table.FileKey); }
+            set { SetValue(value, Table.FileKey); }
         }
 
         [DataMember, Column("template_file_name", 1024, Keys = DBColumnKeys.FileName | DBColumnKeys.View | DBColumnKeys.Code)]
