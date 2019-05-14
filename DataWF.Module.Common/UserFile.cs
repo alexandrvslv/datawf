@@ -49,8 +49,8 @@ namespace DataWF.Module.Common
         [Column("user_id")]
         public int? UserId
         {
-            get => GetProperty<int?>();
-            set => SetProperty(value);
+            get => GetValue<int?>(UserKey);
+            set => SetValue(value, UserKey);
         }
 
         [Reference(nameof(UserId))]
