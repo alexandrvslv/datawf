@@ -21,7 +21,9 @@ namespace DataWF.Module.Common
         public static DBColumn UserKey => DBTable.ParseProperty(nameof(UserId), ref userKey);
         public static DBColumn IsAvatarKey = DBTable.ParseProperty(nameof(IsAvatar), ref isAvatarKey);
 
-
+        public UserFile()
+        {
+        }
 
         public static DBTable<UserFile> DBTable => dbTable ?? (dbTable = GetTable<UserFile>());
 
@@ -35,8 +37,8 @@ namespace DataWF.Module.Common
         [Column("user_file", Keys = DBColumnKeys.File)]
         public byte[] Data
         {
-            get { return GetProperty<byte[]>(); }
-            set { SetProperty(value); }
+            get { return GetValue<byte[]>(Table.FileKey); }
+            set { SetValue(value, Table.FileKey); }
         }
 
         [Column("user_file_name", 1024, Keys = DBColumnKeys.FileName | DBColumnKeys.View | DBColumnKeys.Code)]
@@ -56,8 +58,8 @@ namespace DataWF.Module.Common
         [Reference(nameof(UserId))]
         public User User
         {
-            get => GetPropertyReference(ref user);
-            set => user = SetPropertyReference(value);
+            get { return GetReference(UserKey, ref user); }
+            set { user = SetReference(value, UserKey); }
         }
 
         [Column("is_avatar")]
@@ -65,7 +67,6 @@ namespace DataWF.Module.Common
         {
             get => GetValue<bool?>(IsAvatarKey);
             set => SetValue(value, IsAvatarKey);
-
         }
     }
 }
