@@ -113,6 +113,24 @@ namespace DataWF.Common
                 if (IsChanged != value)
                 {
                     isChanged = value;
+                    if (Model is SynchronizedItem synched
+                        && synched.SyncStatus != SynchronizedStatus.New
+                        && synched.SyncStatus != SynchronizedStatus.Load)
+                    {
+                        if (value)
+                        {
+                            synched.Changes[nameof(IFileModel.FileWatcher)] = this;
+                            synched.SyncStatus = SynchronizedStatus.Edit;
+                        }
+                        else if (synched.SyncStatus == SynchronizedStatus.Edit
+                            && synched.Changes.ContainsKey(nameof(IFileModel.FileWatcher))
+                            && synched.Changes.Count == 1)
+                        {
+                            synched.SyncStatus = SynchronizedStatus.Actual;
+                        }
+
+                        synched.OnPropertyChanged(nameof(IFileModel.FileWatcher));
+                    }
                     OnPropertyChanged();
                 }
             }
