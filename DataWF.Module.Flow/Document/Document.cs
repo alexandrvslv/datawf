@@ -565,7 +565,7 @@ namespace DataWF.Module.Flow
 
         public virtual IEnumerable<DocumentData> CreateTemplatedData()
         {
-            foreach (var item in Template.Datas)
+            foreach (var item in Template.Datas.Where(p => p.AutoGenerate ?? false))
             {
                 yield return GenerateFromTemplate<DocumentData>(item);
             }

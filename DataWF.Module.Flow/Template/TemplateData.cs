@@ -31,10 +31,12 @@ namespace DataWF.Module.Flow
         private static DBTable<TemplateData> dbTable;
         private static DBColumn templateKey = DBColumn.EmptyKey;
         private static DBColumn fileKey = DBColumn.EmptyKey;
+        private static DBColumn autoGenerateKey = DBColumn.EmptyKey;
 
         public static DBTable<TemplateData> DBTable => dbTable ?? (dbTable = GetTable<TemplateData>());
         public static DBColumn TemplateKey => DBTable.ParseProperty(nameof(TemplateId), ref templateKey);
         public static DBColumn FileKey => DBTable.ParseProperty(nameof(FileId), ref fileKey);
+        public static DBColumn AutoGenerateKey => DBTable.ParseProperty(nameof(AutoGenerate), ref autoGenerateKey);
 
         private Template template;
         private TemplateFile templateFile;
@@ -66,7 +68,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [DataMember, Column("file_id", Keys = DBColumnKeys.View), Index("rtemplate_data_index", true)]
+        [Column("file_id", Keys = DBColumnKeys.View), Index("rtemplate_data_index", true)]
         public int? FileId
         {
             get { return GetValue<int?>(FileKey); }
@@ -78,6 +80,13 @@ namespace DataWF.Module.Flow
         {
             get { return GetReference(FileKey, ref templateFile); }
             set { templateFile = SetReference(value, FileKey); }
+        }
+
+        [Column("auto_generate")]
+        public bool? AutoGenerate
+        {
+            get { return GetValue<bool?>(AutoGenerateKey); }
+            set { SetValue(value, AutoGenerateKey); }
         }
     }
 }
