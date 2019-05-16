@@ -2,7 +2,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -164,116 +163,126 @@ namespace DataWF.Common
             params object[] parameters)
         {
             var client = CreateHttpClient();
-
-            using (var request = CreateRequest(progressToken, httpMethod, commandUrl, mediaType, value, parameters))
+            try
             {
-                //if (progressToken?.Process != null)
-                //{
-                //    client.Timeout = TimeSpan.FromMinutes(15);
-                //}
-                using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, progressToken.CancellationToken).ConfigureAwait(false))
+                using (var request = CreateRequest(progressToken, httpMethod, commandUrl, mediaType, value, parameters))
                 {
-                    ProcessResponse(client, response);
-                    var result = default(R);
-                    switch (response.StatusCode)
+                    using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, progressToken.CancellationToken).ConfigureAwait(false))
                     {
-                        case System.Net.HttpStatusCode.OK:
-                            if (value is ISynchronized synched)
-                            {
-                                synched.SyncStatus = SynchronizedStatus.Load;
-                            }
-                            using (var responseStream = response.Content == null ? null : await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
-                            {
-                                using (var reader = new StreamReader(responseStream))
+                        ProcessResponse(client, response);
+                        var result = default(R);
+                        switch (response.StatusCode)
+                        {
+                            case System.Net.HttpStatusCode.OK:
+                                if (value is ISynchronized synched)
                                 {
-                                    if (mediaType.Equals("application/octet-stream"))
+                                    synched.SyncStatus = SynchronizedStatus.Load;
+                                }
+                                using (var responseStream = response.Content == null ? null : await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
+                                {
+                                    using (var reader = new StreamReader(responseStream))
                                     {
-                                        var headers = GetHeaders(response);
-                                        (string fileName, int fileSize) = GetFileInfo(headers);
-                                        var indentifier = request.RequestUri.LocalPath.Replace("/", "") + (parameters?.FirstOrDefault()?.ToString() ?? "");
-                                        var filePath = Helper.GetDocumentsFullPath(fileName, indentifier);
-                                        var fileStream = (FileStream)null;
-                                        try
+                                        if (mediaType.Equals("application/octet-stream"))
                                         {
-                                            fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
-                                        }
-                                        catch (IOException ioex)
-                                        {
-                                            if (ioex.HResult == -2147024864)
+                                            var headers = GetHeaders(response);
+                                            (string fileName, int fileSize) = GetFileInfo(headers);
+                                            var indentifier = request.RequestUri.LocalPath.Replace("/", "") + (parameters?.FirstOrDefault()?.ToString() ?? "");
+                                            var filePath = Helper.GetDocumentsFullPath(fileName, indentifier);
+                                            var fileStream = (FileStream)null;
+                                            try
                                             {
-                                                filePath = Path.Combine(Path.GetTempPath(), Path.GetFileNameWithoutExtension(fileName) + "~" + Path.GetExtension(fileName));
                                                 fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
                                             }
-                                            else
+                                            catch (IOException ioex)
                                             {
-                                                throw ioex;
-                                            }
-                                        }
-                                        var process = new CopyProcess(CopyProcessCategory.Download);
-                                        if (progressToken != ProgressToken.None)
-                                        {
-                                            progressToken.Process = process;
-                                        }
-                                        await process.StartAsync(fileSize, responseStream, fileStream);
-                                        return (R)(object)fileStream;
-                                    }
-                                    else if (typeof(R) == typeof(string))
-                                    {
-                                        result = (R)(object)reader.ReadToEnd();
-                                    }
-                                    else
-                                    {
-                                        var serializer = JsonSerializer.Create(JsonSerializerSettings);
-                                        using (var jreader = new JsonTextReader(reader))
-                                        {
-                                            while (jreader.Read())
-                                            {
-                                                switch (jreader.TokenType)
+                                                if (ioex.HResult == -2147024864)
                                                 {
-                                                    case JsonToken.StartObject:
-                                                        result = DeserializeObject<R>(serializer, jreader, value is R rvalue ? rvalue : default(R), null);
-                                                        break;
-                                                    case JsonToken.StartArray:
-                                                        result = (R)DeserializeArray(serializer, jreader, typeof(R), value as IList);
-                                                        break;
-                                                    default:
-                                                        result = serializer.Deserialize<R>(jreader);
-                                                        break;
+                                                    filePath = Path.Combine(Path.GetTempPath(), Path.GetFileNameWithoutExtension(fileName) + "~" + Path.GetExtension(fileName));
+                                                    fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+                                                }
+                                                else
+                                                {
+                                                    throw ioex;
+                                                }
+                                            }
+                                            var process = new CopyProcess(CopyProcessCategory.Download);
+                                            if (progressToken != ProgressToken.None)
+                                            {
+                                                progressToken.Process = process;
+                                            }
+                                            await process.StartAsync(fileSize, responseStream, fileStream);
+                                            return (R)(object)fileStream;
+                                        }
+                                        else if (typeof(R) == typeof(string))
+                                        {
+                                            result = (R)(object)reader.ReadToEnd();
+                                        }
+                                        else
+                                        {
+                                            var serializer = JsonSerializer.Create(JsonSerializerSettings);
+                                            using (var jreader = new JsonTextReader(reader))
+                                            {
+                                                while (jreader.Read())
+                                                {
+                                                    switch (jreader.TokenType)
+                                                    {
+                                                        case JsonToken.StartObject:
+                                                            result = DeserializeObject<R>(serializer, jreader, value is R rvalue ? rvalue : default(R), null);
+                                                            break;
+                                                        case JsonToken.StartArray:
+                                                            result = (R)DeserializeArray(serializer, jreader, typeof(R), value as IList);
+                                                            break;
+                                                        default:
+                                                            result = serializer.Deserialize<R>(jreader);
+                                                            break;
+                                                    }
                                                 }
                                             }
                                         }
                                     }
                                 }
-                            }
-                            break;
-                        case System.Net.HttpStatusCode.Unauthorized:
-                            if (Provider?.Authorization?.OnUnauthorizedError() ?? false)
-                            {
-                                return await Request<R>(progressToken, httpMethod, commandUrl, mediaType, value, parameters).ConfigureAwait(false);
-                            }
-                            else
-                            {
-                                ErrorStatus("Unauthorized! Try Relogin!", response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
-                            }
-                            break;
-                        case System.Net.HttpStatusCode.Forbidden:
-                            ErrorStatus("Access Denied!", response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
-                            break;
-                        case System.Net.HttpStatusCode.NotFound:
-                            ErrorStatus("No Data Found!", response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
-                            break;
-                        case System.Net.HttpStatusCode.BadRequest:
-                            BadRequest(response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false), response);
-                            break;
-                        case System.Net.HttpStatusCode.NoContent:
-                            result = default(R);
-                            break;
-                        default:
-                            UnexpectedStatus(response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
-                            break;
+                                break;
+                            case System.Net.HttpStatusCode.Unauthorized:
+                                if (Provider?.Authorization?.OnUnauthorizedError() ?? false)
+                                {
+                                    return await Request<R>(progressToken, httpMethod, commandUrl, mediaType, value, parameters).ConfigureAwait(false);
+                                }
+                                else
+                                {
+                                    ErrorStatus("Unauthorized! Try Relogin!", response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+                                }
+                                break;
+                            case System.Net.HttpStatusCode.Forbidden:
+                                ErrorStatus("Access Denied!", response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+                                break;
+                            case System.Net.HttpStatusCode.NotFound:
+                                ErrorStatus("No Data Found!", response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+                                break;
+                            case System.Net.HttpStatusCode.BadRequest:
+                                BadRequest(response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false), response);
+                                break;
+                            case System.Net.HttpStatusCode.NoContent:
+                                result = default(R);
+                                break;
+                            default:
+                                UnexpectedStatus(response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+                                break;
+                        }
+                        Status = ClientStatus.Compleate;
+                        return result;
                     }
-                    Status = ClientStatus.Compleate;
-                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                if (progressToken.IsCanceled)
+                {
+                    Helper.OnException(ex);
+                    return (R)(object)null;
+                }
+                else
+                {
+                    throw ex;
                 }
             }
         }
@@ -302,53 +311,68 @@ namespace DataWF.Common
             params object[] parameters) where R : IList<I>
         {
             var client = CreateHttpClient();
-            using (var request = CreateRequest(progressToken, httpMethod, commandUrl, mediaType, value, parameters))
+            try
             {
-                using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, progressToken.CancellationToken).ConfigureAwait(false))
+                using (var request = CreateRequest(progressToken, httpMethod, commandUrl, mediaType, value, parameters))
                 {
-                    ProcessResponse(client, response);
-                    var result = default(R);
-                    switch (response.StatusCode)
+                    using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, progressToken.CancellationToken).ConfigureAwait(false))
                     {
-                        case System.Net.HttpStatusCode.OK:
+                        ProcessResponse(client, response);
+                        var result = default(R);
+                        switch (response.StatusCode)
+                        {
+                            case System.Net.HttpStatusCode.OK:
 
-                            using (var responseStream = response.Content == null ? null : await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
-                            {
-                                using (var reader = new StreamReader(responseStream))
+                                using (var responseStream = response.Content == null ? null : await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
                                 {
-                                    var serializer = JsonSerializer.Create(JsonSerializerSettings);
-                                    using (var jreader = new JsonTextReader(reader))
+                                    using (var reader = new StreamReader(responseStream))
                                     {
-                                        while (jreader.Read() && jreader.TokenType == JsonToken.StartArray)
+                                        var serializer = JsonSerializer.Create(JsonSerializerSettings);
+                                        using (var jreader = new JsonTextReader(reader))
                                         {
-                                            result = DeserializeArray<R, I>(serializer, jreader);
+                                            while (jreader.Read() && jreader.TokenType == JsonToken.StartArray)
+                                            {
+                                                result = DeserializeArray<R, I>(serializer, jreader);
+                                            }
                                         }
                                     }
                                 }
-                            }
-                            break;
-                        case System.Net.HttpStatusCode.Unauthorized:
-                            if (Provider?.Authorization?.OnUnauthorizedError() ?? false)
-                            {
-                                return await RequestArray<R, I>(progressToken, httpMethod, commandUrl, mediaType, value, parameters).ConfigureAwait(false);
-                            }
-                            else
-                            {
-                                ErrorStatus("Unauthorized! Try Relogin!", response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
-                            }
-                            break;
-                        case System.Net.HttpStatusCode.NotFound:
-                            ErrorStatus("No Data Found!", response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
-                            break;
-                        case System.Net.HttpStatusCode.NoContent:
-                            result = default(R);
-                            break;
-                        default:
-                            UnexpectedStatus(response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
-                            break;
+                                break;
+                            case System.Net.HttpStatusCode.Unauthorized:
+                                if (Provider?.Authorization?.OnUnauthorizedError() ?? false)
+                                {
+                                    return await RequestArray<R, I>(progressToken, httpMethod, commandUrl, mediaType, value, parameters).ConfigureAwait(false);
+                                }
+                                else
+                                {
+                                    ErrorStatus("Unauthorized! Try Relogin!", response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+                                }
+                                break;
+                            case System.Net.HttpStatusCode.NotFound:
+                                ErrorStatus("No Data Found!", response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+                                break;
+                            case System.Net.HttpStatusCode.NoContent:
+                                result = default(R);
+                                break;
+                            default:
+                                UnexpectedStatus(response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+                                break;
+                        }
+                        Status = ClientStatus.Compleate;
+                        return result;
                     }
-                    Status = ClientStatus.Compleate;
-                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                if (progressToken.IsCanceled)
+                {
+                    Helper.OnException(ex);
+                    return (R)(object)null;
+                }
+                else
+                {
+                    throw ex;
                 }
             }
         }
@@ -378,7 +402,7 @@ namespace DataWF.Common
             if (type == null)
             {
                 while (jreader.Read() && jreader.TokenType != JsonToken.EndArray)
-                {}
+                { }
                 return null;
             }
             var itemType = TypeHelper.GetItemType(type);

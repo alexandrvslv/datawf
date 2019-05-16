@@ -1,8 +1,9 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 
 namespace DataWF.Common
 {
-    public class ProgressToken
+    public class ProgressToken : IDisposable
     {
         public static readonly ProgressToken None = new ProgressToken(null);
 
@@ -17,7 +18,10 @@ namespace DataWF.Common
             if (Progressable != null)
             {
                 Progressable.Progress = 0;
-                CancellationTokenSource = new CancellationTokenSource();
+                CancellationTokenSource = new CancellationTokenSource
+                {
+
+                };
                 CancellationToken = CancellationTokenSource.Token;
             }
         }
@@ -42,6 +46,8 @@ namespace DataWF.Common
             }
         }
 
+        public bool IsCanceled => CancellationTokenSource?.IsCancellationRequested ?? false;
+
         public IProgressable Progressable { get; }
 
         public void Cancel()
@@ -49,6 +55,15 @@ namespace DataWF.Common
             if (CancellationTokenSource != null)
             {
                 CancellationTokenSource.Cancel();
+            }
+        }
+
+        public void Dispose()
+        {
+            if (CancellationTokenSource != null)
+            {
+                CancellationTokenSource.Dispose();
+                CancellationTokenSource = null;
             }
         }
     }
