@@ -294,6 +294,15 @@ namespace DataWF.Module.Flow
             }, fromTemplate);
         }
 
+        public async Task ParseAndSave(DocumentExecuteArgs param, bool fromTemplate = false)
+        {
+            var path = await Parse(param, fromTemplate);
+            if (path != null)
+            {
+                await SetData(path, param.Transaction);
+            }
+        }
+
         public async Task<string> Parse(DocumentExecuteArgs param, bool fromTemplate = false)
         {
             if (TemplateData == null || TemplateData.File == null)
@@ -314,6 +323,10 @@ namespace DataWF.Module.Flow
             {
                 using (var stream = await GetData(filePath, param.Transaction))
                 {
+                    if (stream.Length == 0)
+                    {
+                        return null;
+                    }
                     filePath = DocumentParser.Execute(stream, FileName, param);
                 }
             }

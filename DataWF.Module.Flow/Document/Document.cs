@@ -710,19 +710,6 @@ namespace DataWF.Module.Flow
                     {
                         DocumentDate = DateTime.Now;
                     }
-
-                    if (!GetTemplatedData().Any() && Template.Datas.Any())
-                    {
-                        foreach (var data in CreateTemplatedData())
-                        {
-                            data.GenerateId();
-                            data.Attach();
-                        }
-                    }
-                    //if (Parent != null && FindReference(Parent) == null)
-                    //{
-                    //    Parent.CreateReference(this);
-                    //}
                     if (CurrentWork == null)
                     {
                         Send(null, Template.Work?.GetStartStage(), transaction);
@@ -747,13 +734,23 @@ namespace DataWF.Module.Flow
                     Send(CurrentWork, CurrentStage, new[] { temporaryUser }, transaction);
                     temporaryUser = null;
                 }
-
+                if (isnew)
+                {
+                    if (!GetTemplatedData().Any() && Template.Datas.Any())
+                    {
+                        foreach (var data in CreateTemplatedData())
+                        {
+                            data.GenerateId();
+                            data.Attach();
+                        }
+                    }
+                }
                 await base.Save(transaction);
                 if (Works.Count() <= 1)
                 {
                     foreach (var data in GetTemplatedData())
                     {
-                        await data.SetData(await data.Parse(param, false), transaction);
+                        await data.ParseAndSave(param, false);
                     }
                 }
                 Saved?.Invoke(null, new DocumentEventArgs(this));
