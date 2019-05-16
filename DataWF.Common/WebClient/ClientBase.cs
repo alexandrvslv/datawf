@@ -275,7 +275,7 @@ namespace DataWF.Common
             }
             catch (Exception ex)
             {
-                if (progressToken.IsCanceled)
+                if (progressToken.IsCancelled)
                 {
                     Helper.OnException(ex);
                     return (R)(object)null;
@@ -365,7 +365,7 @@ namespace DataWF.Common
             }
             catch (Exception ex)
             {
-                if (progressToken.IsCanceled)
+                if (progressToken.IsCancelled)
                 {
                     Helper.OnException(ex);
                     return (R)(object)null;

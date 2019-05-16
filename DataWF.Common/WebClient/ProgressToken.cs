@@ -46,7 +46,7 @@ namespace DataWF.Common
             }
         }
 
-        public bool IsCanceled => CancellationTokenSource?.IsCancellationRequested ?? false;
+        public bool IsCancelled => CancellationTokenSource?.IsCancellationRequested ?? false;
 
         public IProgressable Progressable { get; }
 
