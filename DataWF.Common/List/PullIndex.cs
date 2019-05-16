@@ -1,6 +1,7 @@
 ﻿using DataWF.Common;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -37,7 +38,7 @@ namespace DataWF.Data
 
     public class PullIndex<T, K> : PullIndex, IDisposable where T : class, IPullHandler
     {
-        private Dictionary<K, ThreadSafeList<T>> store;
+        private ConcurrentDictionary<K, ThreadSafeList<T>> store;
         private readonly IComparer<T> comparer;
         private readonly K nullKey;
 
@@ -48,11 +49,11 @@ namespace DataWF.Data
             comparer = valueComparer as IComparer<T>;
             if (keyComparer is IEqualityComparer<K> typedKeyComparer)
             {
-                store = new Dictionary<K, ThreadSafeList<T>>(typedKeyComparer);//(IEqualityComparer<DBNullable<K>>)DBNullableComparer.StringOrdinalIgnoreCase
+                store = new ConcurrentDictionary<K, ThreadSafeList<T>>(typedKeyComparer);//(IEqualityComparer<DBNullable<K>>)DBNullableComparer.StringOrdinalIgnoreCase
             }
             else
             {
-                store = new Dictionary<K, ThreadSafeList<T>>();
+                store = new ConcurrentDictionary<K, ThreadSafeList<T>>();
             }
         }
 
@@ -108,8 +109,7 @@ namespace DataWF.Data
             {
                 if (!store.TryGetValue(key, out ThreadSafeList<T> list))
                 {
-                    list = new ThreadSafeList<T>(1) { item };
-                    store.Add(key, list);
+                    store[key] = list = new ThreadSafeList<T>(1) { item };
                 }
                 else
                 {
@@ -143,7 +143,7 @@ namespace DataWF.Data
                 {
                     if (val.Count <= 1)
                     {
-                        store.Remove(key);
+                        store.TryRemove(key, out val);
                         return;
                     }
                     else
@@ -168,7 +168,7 @@ namespace DataWF.Data
                     if (index >= 0)
                     {
                         if (list.Count == 1)
-                            store.Remove(de.Key);
+                            store.TryRemove(de.Key, out list);
                         else
                             list.RemoveAt(index);
                         break;
