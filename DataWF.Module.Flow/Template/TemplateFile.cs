@@ -54,8 +54,8 @@ namespace DataWF.Module.Flow
         [DataMember, Column("template_file_name", 1024, Keys = DBColumnKeys.FileName | DBColumnKeys.View | DBColumnKeys.Code)]
         public string DataName
         {
-            get { return GetValue<string>(Table.CodeKey); }
-            set { SetValue(value, Table.CodeKey); }
+            get { return GetValue<string>(Table.FileNameKey); }
+            set { SetValue(value, Table.FileNameKey); }
         }
 
         public string FileType
