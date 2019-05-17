@@ -18,10 +18,9 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Data;
-using DataWF.Common;
+using DataWF.Module.Common;
 using System;
 using System.ComponentModel;
-using DataWF.Module.Common;
 using System.Runtime.Serialization;
 
 namespace DataWF.Module.Messanger
@@ -47,14 +46,21 @@ namespace DataWF.Module.Messanger
     [DataContract, Table("dmessage_address", "Message", IsLoging = false)]
     public class MessageAddress : MessageDetail
     {
+        private static DBTable<MessageAddress> dbTable;
+        private static DBColumn userKey = DBColumn.EmptyKey;
+        private static DBColumn positionKey = DBColumn.EmptyKey;
+        private static DBColumn departmentKey = DBColumn.EmptyKey;
+        private static DBColumn dateReadKey = DBColumn.EmptyKey;
+
+        public static DBTable<MessageAddress> DBTable => dbTable ?? (dbTable = GetTable<MessageAddress>());
+        public static DBColumn UserKey => DBTable.ParseProperty(nameof(UserId), ref userKey);
+        public static DBColumn PositionKey => DBTable.ParseProperty(nameof(PositionId), ref positionKey);
+        public static DBColumn DepartmentKey => DBTable.ParseProperty(nameof(DepartmentId), ref departmentKey);
+        public static DBColumn DateReadKey => DBTable.ParseProperty(nameof(DateRead), ref dateReadKey);
+
         private User user;
         private Position position;
         private Department department;
-
-        public static DBTable<MessageAddress> DBTable
-        {
-            get { return GetTable<MessageAddress>(); }
-        }
 
         public MessageAddress()
         {
@@ -63,25 +69,25 @@ namespace DataWF.Module.Messanger
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<int?>(table.PrimaryKey); }
+            set { SetValue(value, table.PrimaryKey); }
         }
 
         [Browsable(false)]
         [DataMember, Column("user_id"), Index("dmessage_address_user_id")]
         public int? UserId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<int?>(UserKey); }
+            set { SetValue(value, UserKey); }
         }
 
         [Reference(nameof(UserId))]
         public User User
         {
-            get { return GetPropertyReference(ref user); }
+            get { return GetReference(UserKey, ref user); }
             set
             {
-                user = SetPropertyReference(value);
+                SetReference(user = value, UserKey);
                 Position = value?.Position;
             }
         }
@@ -90,17 +96,17 @@ namespace DataWF.Module.Messanger
         [DataMember, Column("position_id", Keys = DBColumnKeys.View), Index("dmessage_address_position_id")]
         public int? PositionId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<int?>(PositionKey); }
+            set { SetValue(value, PositionKey); }
         }
 
         [Reference(nameof(PositionId))]
         public Position Position
         {
-            get { return GetPropertyReference(ref position); }
+            get { return GetReference(PositionKey, ref position); }
             set
             {
-                position = SetPropertyReference(value);
+                SetReference(position = value, PositionKey);
                 Department = value?.Department;
             }
         }
@@ -109,22 +115,22 @@ namespace DataWF.Module.Messanger
         [DataMember, Column("department_id", Keys = DBColumnKeys.View), Index("dmessage_address_department_id")]
         public int? DepartmentId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<int?>(DepartmentKey); }
+            set { SetValue(value, DepartmentKey); }
         }
 
         [Reference(nameof(DepartmentId))]
         public Department Department
         {
-            get { return GetPropertyReference(ref department); }
-            set { department = SetPropertyReference(value); }
+            get { return GetReference(DepartmentKey, ref department); }
+            set { SetReference(department = value, DepartmentKey); }
         }
 
         [DataMember, Column("date_read")]
         public DateTime? DateRead
         {
-            get { return GetProperty<DateTime?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<DateTime?>(DateReadKey); }
+            set { SetValue(value, DateReadKey); }
         }
 
         [Browsable(false)]

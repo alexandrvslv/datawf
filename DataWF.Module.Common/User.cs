@@ -278,7 +278,7 @@ namespace DataWF.Module.Common
         public Company Company
         {
             get { return GetReference(CompanyKey, ref company); }
-            set { company = SetReference(value, CompanyKey); }
+            set { SetReference(company = value, CompanyKey); }
         }
 
         [DataMember, Column("login", 256, Keys = DBColumnKeys.Code | DBColumnKeys.Indexing), Index("ruser_login", true)]
@@ -314,7 +314,7 @@ namespace DataWF.Module.Common
         public Department Department
         {
             get { return GetReference(DepartmentKey, ref department); }
-            set { department = SetReference(value, DepartmentKey); }
+            set { SetReference(department = value, DepartmentKey); }
         }
 
         [DataMember, Column("position_id"), Browsable(false)]
@@ -330,7 +330,7 @@ namespace DataWF.Module.Common
             get { return GetReference<Position>(PositionKey, ref position); }
             set
             {
-                position = SetReference(value, PositionKey);
+                SetReference(position = value, PositionKey);
                 Department = value?.Department;
             }
         }

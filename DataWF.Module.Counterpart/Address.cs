@@ -69,7 +69,7 @@ namespace DataWF.Module.Counterpart
                 if (value?.LocationType != LocationType.Region
                     && value?.LocationType != LocationType.City)
                     throw new ArgumentException("Location type mast be Region or Citi or Village");
-                location = SetReference(value, LocationKey);
+                SetReference(location = value, LocationKey);
             }
         }
 

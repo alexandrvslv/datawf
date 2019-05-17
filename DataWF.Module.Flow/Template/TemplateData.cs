@@ -64,7 +64,7 @@ namespace DataWF.Module.Flow
         public Template Template
         {
             get { return GetReference(TemplateKey, ref template); }
-            set { template = SetReference(value, TemplateKey); }
+            set { SetReference(template = value, TemplateKey); }
         }
 
         [Browsable(false)]
@@ -79,7 +79,7 @@ namespace DataWF.Module.Flow
         public TemplateFile File
         {
             get { return GetReference(FileKey, ref templateFile); }
-            set { templateFile = SetReference(value, FileKey); }
+            set { SetReference(templateFile = value, FileKey); }
         }
 
         [Column("auto_generate")]

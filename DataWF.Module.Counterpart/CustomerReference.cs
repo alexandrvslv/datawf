@@ -69,7 +69,7 @@ namespace DataWF.Module.Counterpart
         public Company Company
         {
             get { return GetReference(CompanyKey, ref company); }
-            set { company = SetReference(value, CompanyKey); }
+            set { SetReference(company = value, CompanyKey); }
         }
 
         [Browsable(false)]
@@ -86,7 +86,7 @@ namespace DataWF.Module.Counterpart
             get { return GetReference(PersoneKey, ref persone); }
             set
             {
-                persone = SetReference(value, PersoneKey);
+                SetReference(persone = value, PersoneKey);
                 if (EMail == null)
                 {
                     EMail = Persone.EMail;

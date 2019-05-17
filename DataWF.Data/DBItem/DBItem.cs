@@ -362,7 +362,7 @@ namespace DataWF.Data
         {
             if (column.Attribute?.PropertyInvoker != null)
             {
-                column.Attribute?.PropertyInvoker.SetValue(this, value?.PrimaryId);
+                column.Attribute.PropertyInvoker.SetValue(this, value?.PrimaryId);
             }
             else
             {

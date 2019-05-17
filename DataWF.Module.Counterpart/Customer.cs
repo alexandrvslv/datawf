@@ -165,7 +165,7 @@ namespace DataWF.Module.Counterpart
         public Country Country
         {
             get { return GetReference(CountryKey, ref country); }
-            set { country = SetReference(value, CountryKey); }
+            set { SetReference(country = value, CountryKey); }
         }
 
         [Browsable(false)]
@@ -180,7 +180,7 @@ namespace DataWF.Module.Counterpart
         public Address Address
         {
             get { return GetReference(AddressKey, ref address); }
-            set { address = SetReference(value, AddressKey); }
+            set { SetReference(address = value, AddressKey); }
         }
 
         //[Browsable(false)]

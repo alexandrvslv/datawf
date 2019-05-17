@@ -56,7 +56,7 @@ namespace DataWF.Module.Flow
         public Template Template
         {
             get { return GetReference(TemplateKey, ref template); }
-            set { template = SetReference(value, TemplateKey); }
+            set { SetReference(template = value, TemplateKey); }
         }
 
         [Column("property_name", 1024), Index("rtemplate_property_index", true)]

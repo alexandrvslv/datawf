@@ -159,7 +159,7 @@ namespace DataWF.Module.Flow
         public TemplateData TemplateData
         {
             get { return GetReference(TemplateDataKey, ref template); }
-            set { template = SetReference(value, TemplateDataKey); }
+            set { SetReference(template = value, TemplateDataKey); }
         }
 
         [DataMember, Column("file_name", 1024, Keys = DBColumnKeys.View | DBColumnKeys.FileName)]

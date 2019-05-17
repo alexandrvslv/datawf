@@ -48,7 +48,7 @@ namespace DataWF.Module.Counterpart
         public Customer Customer
         {
             get { return GetReference(CustomerKey, ref customer); }
-            set { customer = SetReference(value, CustomerKey); }
+            set { SetReference(customer = value, CustomerKey); }
         }
 
         [Browsable(false)]
@@ -63,7 +63,7 @@ namespace DataWF.Module.Counterpart
         public Address Address
         {
             get { return GetReference(AddressKey,ref address); }
-            set { address = SetReference(value, AddressKey); }
+            set { SetReference(address = value, AddressKey); }
         }
     }
 }

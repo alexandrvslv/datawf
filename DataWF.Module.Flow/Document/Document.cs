@@ -206,7 +206,7 @@ namespace DataWF.Module.Flow
         public virtual Template Template
         {
             get { return GetReference(TemplateKey, ref template); }
-            set { template = SetReference(value, TemplateKey); }
+            set { SetReference(template = value, TemplateKey); }
         }
 
         [Browsable(false)]
@@ -267,7 +267,7 @@ namespace DataWF.Module.Flow
             get { return GetReference(CustomerKey, ref customer); }
             set
             {
-                customer = SetReference(value, CustomerKey);
+                SetReference(customer = value, CustomerKey);
                 //Address = Customer?.Address;
             }
         }

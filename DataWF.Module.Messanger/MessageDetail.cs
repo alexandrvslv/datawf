@@ -39,7 +39,7 @@ namespace DataWF.Module.Messanger
         public Message Message
         {
             get { return GetPropertyReference(ref message); }
-            set { message = SetPropertyReference(value); }
+            set { SetPropertyReference(message = value); }
         }
     }
 

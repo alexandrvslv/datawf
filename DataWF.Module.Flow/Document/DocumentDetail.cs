@@ -48,7 +48,7 @@ namespace DataWF.Module.Flow
         public Document Document
         {
             get { return GetReference(DocumentKey, ref document); }
-            set { document = SetReference(value, DocumentKey); }
+            set { SetReference(document = value, DocumentKey); }
         }
 
         public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)

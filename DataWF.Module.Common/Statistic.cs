@@ -71,7 +71,7 @@ namespace DataWF.Module.Common
         public Scheduler Scheduler
         {
             get { return GetReference(SchedulerKey, ref scheduler); }
-            set { scheduler = SetReference(value, SchedulerKey); }
+            set { SetReference(scheduler = value, SchedulerKey); }
         }
 
         [DataMember, Column("stat_result")]

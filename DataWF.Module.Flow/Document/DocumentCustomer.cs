@@ -68,7 +68,7 @@ namespace DataWF.Module.Flow
             get { return GetReference(CustomerKey, ref customer); }
             set
             {
-                customer = SetReference(value, CustomerKey);
+                SetReference(customer = value, CustomerKey);
                 Address = value?.Address;
                 EMail = value?.EMail;
                 Phone = value?.Phone;
@@ -87,7 +87,7 @@ namespace DataWF.Module.Flow
         public Address Address
         {
             get { return GetReference(AddressKey, ref address); }
-            set { address = SetReference(value, AddressKey); }
+            set { SetReference(address = value, AddressKey); }
         }
 
         [DataMember, Column("email", 1024)]

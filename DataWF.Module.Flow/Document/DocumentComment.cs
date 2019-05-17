@@ -39,7 +39,7 @@ namespace DataWF.Module.Flow
         public Message Message
         {
             get { return GetReference(MessageKey, ref message); }
-            set { message = SetReference(value, MessageKey); }
+            set { SetReference(message = value, MessageKey); }
         }
 
 

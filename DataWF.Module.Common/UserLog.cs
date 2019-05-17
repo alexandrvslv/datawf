@@ -122,7 +122,7 @@ namespace DataWF.Module.Common
         public User User
         {
             get { return GetReference(UserKey, ref user); }
-            set { user = SetReference(value, UserKey); }
+            set { SetReference(user = value, UserKey); }
         }
 
         [DataMember, Column("type_id", Keys = DBColumnKeys.ElementType | DBColumnKeys.View)]
@@ -159,7 +159,7 @@ namespace DataWF.Module.Common
         public UserLog Redo
         {
             get { return GetReference(RedoKey, ref redo); }
-            set { redo = SetReference(value, RedoKey); }
+            set { SetReference(redo = value, RedoKey); }
         }
 
         [DataMember, Column("text_data")]

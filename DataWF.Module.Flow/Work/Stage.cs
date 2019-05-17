@@ -136,7 +136,7 @@ namespace DataWF.Module.Flow
         public Work Work
         {
             get { return GetReference(WorkKey, ref work); }
-            set { work = SetReference(value, WorkKey); }
+            set { SetReference(work = value, WorkKey); }
         }
 
         [DataMember, Column("keys")]

@@ -65,19 +65,25 @@ namespace DataWF.Module.Flow
     [DataContract, Table("rstage_param", "Template", BlockSize = 200)]
     public class StageParam : DBItem
     {
+        private static DBTable<StageParam> dbTable;
+        private static DBColumn stageKey = DBColumn.EmptyKey;
+        private static DBColumn paramCodeKey = DBColumn.EmptyKey;
+        private static DBColumn nameKey = DBColumn.EmptyKey;
+
+        public static DBTable<StageParam> DBTable => dbTable ?? (dbTable = GetTable<StageParam>());
+
+        public static DBColumn StageKey => DBTable.ParseProperty(nameof(StageId), ref stageKey);
+        public static DBColumn ParamCodeKey => DBTable.ParseProperty(nameof(ParamCode), ref paramCodeKey);
+        public static DBColumn NameKey => DBTable.ParseProperty(nameof(Name), ref nameKey);
+
         private object _cache;
         private Stage stage;
-
-        public static DBTable<StageParam> DBTable
-        {
-            get { return GetTable<StageParam>(); }
-        }
 
         public StageParam()
         {
         }
 
-        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
+        [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
@@ -85,32 +91,32 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [DataMember, Column("stage_id")]
+        [Column("stage_id")]
         public int? StageId
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<int?>(StageKey); }
+            set { SetValue(value, StageKey); }
         }
 
         [Reference(nameof(StageId))]
         public Stage Stage
         {
-            get { return GetPropertyReference(ref stage); }
-            set { stage = SetPropertyReference(value); }
+            get { return GetReference(StageKey, ref stage); }
+            set { SetReference(stage = value, StageKey); }
         }
 
-        [DataMember, Column("code", 1024)]
+        [Column("code", 1024)]
         public string ParamCode
         {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
+            get { return GetValue<string>(ParamCodeKey); }
+            set { SetValue(value, ParamCodeKey); }
         }
 
-        [DataMember, Column("name", 1024)]
+        [Column("name", 1024)]
         public string Name
         {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
+            get { return GetValue<string>(NameKey); }
+            set { SetValue(value, NameKey); }
         }
 
         [Browsable(false)]
@@ -177,6 +183,9 @@ namespace DataWF.Module.Flow
     [ItemType((int)StageParamType.Procedure)]
     public class StageProcedure : StageParam
     {
+        private static DBColumn procedureTypeKey = DBColumn.EmptyKey;
+        public static DBColumn ProcedureTypeKey => DBTable.ParseProperty(nameof(ProcedureType), ref procedureTypeKey);
+
         public StageProcedure()
         {
             ItemType = (int)StageParamType.Procedure;
@@ -188,17 +197,20 @@ namespace DataWF.Module.Flow
             set { Param = value; }
         }
 
-        [DataMember, Column("procedure_type")]
+        [Column("procedure_type")]
         public StageParamProcudureType? ProcedureType
         {
-            get { return GetProperty<StageParamProcudureType?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<StageParamProcudureType?>(ProcedureTypeKey); }
+            set { SetValue(value, ProcedureTypeKey); }
         }
     }
 
     [ItemType((int)StageParamType.Reference)]
     public class StageReference : StageParam
     {
+        private static DBColumn nextKey = DBColumn.EmptyKey;
+        public static DBColumn NextKey => DBTable.ParseProperty(nameof(Next), ref nextKey);
+
         public StageReference()
         {
             ItemType = (int)StageParamType.Reference;
@@ -210,11 +222,11 @@ namespace DataWF.Module.Flow
             set { Param = value; }
         }
 
-        [DataMember, Column("is_next")]
+        [Column("is_next")]
         public bool? Next
         {
-            get => GetProperty<bool?>();
-            set => SetProperty(value);
+            get => GetValue<bool?>(NextKey);
+            set => SetValue(value, NextKey);
         }
     }
 

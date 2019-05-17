@@ -67,7 +67,7 @@ namespace DataWF.Data
             {
                 throw new InvalidOperationException("Circle reference detected!");
             }
-            group = SetReference<T>(value, Table.GroupKey);
+            SetReference<T>((T)(group = value), Table.GroupKey);
         }
 
         [Browsable(false)]

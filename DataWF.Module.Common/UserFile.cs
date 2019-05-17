@@ -59,7 +59,7 @@ namespace DataWF.Module.Common
         public User User
         {
             get { return GetReference(UserKey, ref user); }
-            set { user = SetReference(value, UserKey); }
+            set { SetReference(user = value, UserKey); }
         }
 
         [Column("is_avatar")]

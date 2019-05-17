@@ -62,7 +62,7 @@ namespace DataWF.Module.Common
         public Company Company
         {
             get { return GetReference(CompanyKey, ref company); }
-            set { company = SetReference(value, CompanyKey); }
+            set { SetReference(company = value, CompanyKey); }
         }
 
         [DataMember, Column("parent_id", Keys = DBColumnKeys.Group), Index("rdepartment_parent_id"), Browsable(false)]

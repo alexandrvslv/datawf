@@ -55,10 +55,13 @@ namespace DataWF.Module.Messanger
     [DataContract, Table("dmessage", "Message", IsLoging = false)]
     public class Message : DBItem, IDisposable
     {
-        public static DBTable<Message> DBTable
-        {
-            get { return GetTable<Message>(); }
-        }
+        private static DBTable<Message> dbTable;
+        private static DBColumn userKey;
+        private static DBColumn dataKey;
+
+        public static DBTable<Message> DBTable => dbTable ?? (dbTable = GetTable<Message>());
+        private static DBColumn UserKey => DBTable.ParseProperty(nameof(User), ref userKey);
+        private static DBColumn DataKey => DBTable.ParseProperty(nameof(Data), ref dataKey);
 
         [ControllerMethod]
         public static Task<Message> SendToGroup(User from, UserGroup group, string data)
@@ -131,29 +134,29 @@ namespace DataWF.Module.Messanger
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
         {
-            get { return GetProperty<long?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<long?>(Table.PrimaryKey); }
+            set { SetValue(value, Table.PrimaryKey); }
         }
 
         [Browsable(false), Column("user_id", Keys = DBColumnKeys.View)]
         public int? UserId
         {
-            get { return GetProperty<int?>(nameof(UserId)); }
-            set { SetProperty(value, nameof(UserId)); }
+            get { return GetValue<int?>(UserKey); }
+            set { SetValue(value, UserKey); }
         }
 
         [Reference(nameof(UserId))]
         public User User
         {
-            get { return GetPropertyReference(ref user); }
-            set { user = SetPropertyReference(value); }
+            get { return GetReference(UserKey, ref user); }
+            set { SetReference(user = value, UserKey); }
         }
 
         [Column("text_data")]
         public string Data
         {
-            get { return GetProperty<string>(nameof(Data)); }
-            set { SetProperty(value, nameof(Data)); }
+            get { return GetValue<string>(DataKey); }
+            set { SetValue(value, DataKey); }
         }
 
         public MessageAddressList Addresses

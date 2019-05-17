@@ -162,7 +162,7 @@ namespace DataWF.Module.Flow
             get { return GetReference(StageIdKey, ref stage); }
             set
             {
-                stage = SetReference(value, StageIdKey);
+                SetReference(stage = value, StageIdKey);
                 Work = value?.Work;
                 IsSystem = value?.Keys != null && (value.Keys & StageKey.System) == StageKey.System;
                 IsStart = value?.Keys != null && (value.Keys & StageKey.Start) == StageKey.Start;
@@ -182,7 +182,7 @@ namespace DataWF.Module.Flow
         public Work Work
         {
             get { return GetReference(WorkKey, ref work); }
-            set { work = SetReference(value, WorkKey); }
+            set { SetReference(work = value, WorkKey); }
         }
 
         [Browsable(false)]
@@ -199,7 +199,7 @@ namespace DataWF.Module.Flow
             get { return GetReference(UserKey, ref user); }
             set
             {
-                user = SetReference(value, UserKey);
+                SetReference(user = value, UserKey);
                 Position = value?.Position;
                 Department = value?.Department;
             }
@@ -219,7 +219,7 @@ namespace DataWF.Module.Flow
             get { return GetReference(PositionKey, ref position); }
             set
             {
-                position = SetReference(value, PositionKey);
+                SetReference(position = value, PositionKey);
                 Department = value?.Department;
             }
         }
@@ -238,7 +238,7 @@ namespace DataWF.Module.Flow
         public Department Department
         {
             get { return GetReference(DepartmentKey, ref department); }
-            set { department = SetReference(value, DepartmentKey); }
+            set { SetReference(department = value, DepartmentKey); }
         }
 
         [Browsable(false)]
@@ -253,7 +253,7 @@ namespace DataWF.Module.Flow
         public DocumentWork From
         {
             get { return GetReference(FromKey, ref from); }
-            set { from = SetReference(value, FromKey); }
+            set { SetReference(from = value, FromKey); }
         }
 
         [Browsable(false)]

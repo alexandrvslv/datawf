@@ -94,7 +94,7 @@ namespace DataWF.Module.Counterpart
         public Persone Persone
         {
             get { return GetReference(PersoneKey, ref persone); }
-            set { persone = SetReference(value, PersoneKey); }
+            set { SetReference(persone = value, PersoneKey); }
         }
 
         [DataMember, Column("identify_number", 30)]
