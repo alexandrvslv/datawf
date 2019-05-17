@@ -74,7 +74,15 @@ namespace DataWF.Data
         {
             foreach (var item in this)
             {
-                item.ReferenceTable?.ChildRelations.Add(item);
+                var table = item.ReferenceTable;
+                if (table != null)
+                {
+                    table.ChildRelations.Add(item);
+                }
+                if (table is IDBVirtualTable virtualTable)
+                {
+                    virtualTable.BaseTable.ChildRelations.Add(item);
+                }
             }
         }
     }
