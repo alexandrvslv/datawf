@@ -146,7 +146,7 @@ namespace DataWF.Data
             SetValue(value, column, column.ColumnType == DBColumnTypes.Default);
         }
 
-        public void SetValue<T>(T value, DBColumn column, bool check, object tag = null)
+        public void SetValue<T>(T value, DBColumn column, bool check)
         {
             //SetTag(column, tag);
 
@@ -173,7 +173,7 @@ namespace DataWF.Data
             }
         }
 
-        public void SetValue(object value, DBColumn column, bool check, object tag = null)
+        public void SetValue(object value, DBColumn column, bool check)
         {
             //SetTag(column, tag);
 
@@ -354,13 +354,20 @@ namespace DataWF.Data
 
         public DBItem SetReference(DBItem value, DBColumn column)
         {
-            SetValue(value?.PrimaryId, column, column.ColumnType == DBColumnTypes.Default, value);
+            SetValue(value?.PrimaryId, column, column.ColumnType == DBColumnTypes.Default);
             return value;
         }
 
         public T SetReference<T>(T value, DBColumn column) where T : DBItem
         {
-            SetValue(value?.PrimaryId, column, column.ColumnType == DBColumnTypes.Default, value);
+            if (column.Attribute?.PropertyInvoker != null)
+            {
+                column.Attribute?.PropertyInvoker.SetValue(this, value?.PrimaryId);
+            }
+            else
+            {
+                SetValue(value?.PrimaryId, column, column.ColumnType == DBColumnTypes.Default);
+            }
             return value;
         }
 
@@ -777,8 +784,7 @@ namespace DataWF.Data
 
                 SetValue(column.ParseValue(value),
                          column,
-                         column.ColumnType == DBColumnTypes.Default,
-                         value as DBItem);
+                         column.ColumnType == DBColumnTypes.Default);
             }
         }
 
