@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using DataWF.Common;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
@@ -33,10 +34,16 @@ namespace DataWF.Web.Common
             return new EmptyResult();
         }
 
-        [HttpGet("Users")]
+        [HttpGet("Connections/")]
         public IEnumerable<WebNotifyConnection> GetConnections()
         {
             return Service.GetConnections();
+        }
+
+        [HttpGet("Logs/")]
+        public ActionResult<IEnumerable<StateInfo>> GetLogs()
+        {
+            return Helper.Logs;
         }
 
         //https://stackoverflow.com/questions/28664686/how-do-i-get-client-ip-address-in-asp-net-core
@@ -44,7 +51,6 @@ namespace DataWF.Web.Common
         {
             return HttpContext.Connection.RemoteIpAddress.ToString();
             //var ip = HttpContext.Request.ServerVariables["HTTP_X_FORWARDED_FOR"];
-
             //if (string.IsNullOrEmpty(ip))
             //    ip = HttpContext.Current.Request.ServerVariables["REMOTE_ADDR"];
             //else

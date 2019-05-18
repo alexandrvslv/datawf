@@ -19,12 +19,7 @@ namespace DataWF.Web.Common
     {
         public void OnAuthorization(AuthorizationFilterContext context)
         {
-            var emailClaim = context.HttpContext.User?.FindFirst(ClaimTypes.Email);
-            var user = emailClaim != null ? User.GetByEmail(emailClaim.Value) : null;
-            Helper.Logs.Add(new StateInfo("Authorization Context"
-                , $"{context.ActionDescriptor.DisplayName} {user}"
-                , string.Join(", ", context.ActionDescriptor.Parameters.Select(p => p.Name))
-                ));
+            WebNotifyService.Instance.SetCurrentAction(context);            
         }
     }
 

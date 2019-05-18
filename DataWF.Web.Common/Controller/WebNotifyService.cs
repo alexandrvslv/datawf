@@ -1,11 +1,14 @@
 ﻿using DataWF.Common;
 using DataWF.Data;
 using DataWF.Module.Common;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.WebSockets;
+using System.Security.Claims;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,15 +20,18 @@ namespace DataWF.Web.Common
         private SelectableList<WebNotifyConnection> connections = new SelectableList<WebNotifyConnection>();
         private JsonSerializerSettings jsonSettings;
 
+        public static WebNotifyService Instance { get; private set; }
+
         public event EventHandler<WebNotifyEventArgs> ReceiveMessage;
         public event EventHandler<WebNotifyEventArgs> RemoveClient;
 
         public WebNotifyService()
         {
+            Instance = this;
             connections.Indexes.Add(WebNotifyConnection.SocketInvoker);
+            connections.Indexes.Add(WebNotifyConnection.UserInvoker);
             jsonSettings = new JsonSerializerSettings { ContractResolver = DBItemContractResolver.Instance };
             jsonSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
-
         }
 
         public WebNotifyConnection GetBySocket(WebSocket socket)
@@ -36,6 +42,30 @@ namespace DataWF.Web.Common
         public IEnumerable<WebNotifyConnection> GetByUser(User user)
         {
             return connections.Select(WebNotifyConnection.UserInvoker.Name, CompareType.Equal, user);
+        }
+
+        public void SetCurrentAction(AuthorizationFilterContext context)
+        {
+            var emailClaim = context.HttpContext.User?.FindFirst(ClaimTypes.Email);
+            var user = emailClaim != null ? User.GetByEmail(emailClaim.Value) : null;
+            SetCurrentAction(user, context);
+        }
+
+        public void SetCurrentAction(User user, AuthorizationFilterContext context)
+        {
+            SetCurrentAction(user, context.HttpContext.Connection.RemoteIpAddress.ToString(), context.ActionDescriptor.DisplayName);
+        }
+
+        public void SetCurrentAction(User user, string address, string action)
+        {
+            if (user != null)
+            {
+                foreach (var connection in GetByUser(user).Where(p => p.Address.Equals(address, StringComparison.Ordinal)))
+                {
+                    connection.Action = action;
+                }
+            }
+            Helper.Logs.Add(new StateInfo("Web Request", action, address) { User = user?.EMail });
         }
 
         public void Register(WebSocket socket, User user, string address)
