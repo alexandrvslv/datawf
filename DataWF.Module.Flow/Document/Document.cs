@@ -729,7 +729,7 @@ namespace DataWF.Module.Flow
                     temporaryUser = null;
                     temporaryStage = null;
                 }
-                if (temporaryUser != null && CurrentStage != null)
+                if (temporaryUser != null && CurrentStage != null && CurrentWork?.User != temporaryUser)
                 {
                     Send(CurrentWork, CurrentStage, new[] { temporaryUser }, transaction);
                     temporaryUser = null;
