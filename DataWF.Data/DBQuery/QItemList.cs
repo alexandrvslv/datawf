@@ -32,15 +32,15 @@ namespace DataWF.Data
 
     public class QItemList<T> : SelectableList<T>, IQItemList where T : QItem, new()
     {
-        static readonly Invoker<T, string> textInvoker = new Invoker<T, string>(nameof(QItem.Text), (item) => item.Text);
-        static readonly Invoker<T, int> orderInvoker = new Invoker<T, int>(nameof(QItem.Order), (item) => item.Order);
+        public static readonly Invoker<T, string> TextInvoker = new Invoker<T, string>(nameof(QItem.Text), (item) => item.Text);
+        public static readonly Invoker<T, int> OrderInvoker = new Invoker<T, int>(nameof(QItem.Order), (item) => item.Order);
 
         protected IQuery query;
 
         public QItemList()
         {
-            Indexes.Add(textInvoker);
-            ApplySort(new InvokerComparer(orderInvoker, ListSortDirection.Ascending));
+            Indexes.Add(TextInvoker);
+            ApplySort(new InvokerComparer(OrderInvoker, ListSortDirection.Ascending));
         }
 
         public QItemList(IEnumerable<T> items) : this()
@@ -62,7 +62,7 @@ namespace DataWF.Data
 
         public T this[string name]
         {
-            get { return SelectOne("Text", CompareType.Equal, name); }
+            get { return SelectOne(TextInvoker.Name, CompareType.Equal, name); }
         }
 
         public void Delete(QItem item)

@@ -1082,66 +1082,88 @@ namespace DataWF.Data
 
         public SelectableList<QParam> AllParameters
         {
-            get
+            get { return allParameters; }
+            set
             {
-                if (allParameters == null)
-                    OnParametersListChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-                return allParameters;
+                if (allParameters != value)
+                {
+                    allParameters = value;
+                    OnParametersListChanged(null, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+                }
             }
         }
-
-        //protected List<QParam> GetDownParam(QParam prm)
-        //{
-        //    List<QParam> prms = new List<QParam>();
-        //    if (!(prm.Value is Query))
-        //    {
-        //        prms.Add(prm);
-        //        return prms;
-        //    }
-        //    ((Query)prm.Value).parameters.ListChanged -= handleChild;
-        //    ((Query)prm.Value).parameters.ListChanged += handleChild;
-        //    prms.Add(prm);
-        //    foreach (QParam p in ((Query)prm.Value).parameters)
-        //        prms.AddRange(GetDownParam(p).ToArray());
-        //    return prms;
-        //}
 
         private void AddAllParam(QParam param)
         {
             if (param.IsCompaund)
+            {
                 foreach (var p in param.Parameters)
                     AddAllParam(p);
+            }
+
             if (!allParameters.Contains(param))
-                allParameters.AddInternal(param);
+            {
+                allParameters.Add(param);
+            }
 
             if (param.ValueRight is QQuery)
+            {
                 foreach (QParam pp in ((QQuery)param.ValueRight).Parameters)
                 {
                     AddAllParam(pp);
                 }
+            }
+        }
+
+        private void RemoveAllParam(QParam param)
+        {
+            if (param.IsCompaund)
+            {
+                foreach (var p in param.Parameters)
+                    RemoveAllParam(p);
+            }
+
+            if (allParameters.Contains(param))
+            {
+                allParameters.Remove(param);
+            }
+
+            if (param.ValueRight is QQuery)
+            {
+                foreach (QParam pp in ((QQuery)param.ValueRight).Parameters)
+                {
+                    RemoveAllParam(pp);
+                }
+            }
         }
 
         public void OnParametersListChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            //var pe = (ListPropertyChangedEventArgs)e;
-            //if (e.ListChangedType == ListChangedType.ItemAdded)
-            //{
-            //    var param = ((IList)sender)[e.NewIndex] as QParam;
-            //    if (!allParameters.Contains(param))
-            //        allParameters.Add(param);
-            //}
-            if (allParameters == null)
-                allParameters = new SelectableList<QParam>();
-            if (e.Action == NotifyCollectionChangedAction.Reset || e.Action == NotifyCollectionChangedAction.Remove)
+            if (allParameters != null)
             {
-                refmode = false;
-                allParameters.ClearInternal();
+                allParameters = new SelectableList<QParam>();
+                if (e.Action == NotifyCollectionChangedAction.Reset)
+                {
+                    refmode = false;
+                    allParameters.Clear();
+                    foreach (QParam p in parameters)
+                        AddAllParam(p);
+                }
+                else if (e.Action == NotifyCollectionChangedAction.Remove)
+                {
+                    foreach (QParam parameter in e.OldItems)
+                    {
+                        RemoveAllParam(parameter);
+                    }
+                }
+                else if (e.Action == NotifyCollectionChangedAction.Add)
+                {
+                    foreach (QParam parameter in e.NewItems)
+                    {
+                        AddAllParam(parameter);
+                    }
+                }
             }
-
-            foreach (QParam p in parameters)
-                AddAllParam(p);
-
-            allParameters.OnListChanged(NotifyCollectionChangedAction.Reset);
         }
 
         public override string Format(IDbCommand command = null)
@@ -1312,8 +1334,7 @@ namespace DataWF.Data
 
         public override void Dispose()
         {
-            if (allParameters != null)
-                allParameters.Dispose();
+            allParameters?.Dispose();
             allParameters = null;
 
             parameters?.Dispose();
