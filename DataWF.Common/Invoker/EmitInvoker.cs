@@ -50,13 +50,16 @@ namespace DataWF.Common
 
         public static void DeleteCache(MemberInfo info)
         {
-            int token = GetToken(info);
+            var token = GetToken(info);
             cacheInvokers.Remove(token);
         }
 
-        public static int GetToken(MemberInfo info)
+        //https://stackoverflow.com/questions/6219614/convert-a-long-to-two-int-for-the-purpose-of-reconstruction
+        public static long GetToken(MemberInfo info)
         {
-            return info.Module.GetHashCode() ^ info.GetHashCode();
+            long b = info.GetHashCode();
+            b = b << 32;
+            return b | (uint)info.Module.GetHashCode();
         }
 
         public static IInvoker Initialize<T>(string property)
@@ -116,7 +119,7 @@ namespace DataWF.Common
 
         public static IInvoker Initialize(MemberInfo info, object index = null)
         {
-            int token = GetToken(info);
+            var token = GetToken(info);
             IInvoker result = null;
             if (info is FieldInfo)
             {
