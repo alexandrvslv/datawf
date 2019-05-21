@@ -60,12 +60,12 @@ namespace DataWF.Data
             }
         }
 
-        public IEnumerable<T> LoadCache(string filter, DBLoadParam loadParam)
+        public IEnumerable<T> LoadCache(string filter, DBLoadParam loadParam, DBTransaction transaction = null)
         {
             if (!queryChache.TryGetValue(filter, out var query))
             {
                 query = new QQuery(filter, this);
-                Load(query, DBLoadParam.Referencing);
+                Load(query, DBLoadParam.Referencing, transaction);
                 queryChache.TryAdd(filter, query);
             }
             return Select(query);
