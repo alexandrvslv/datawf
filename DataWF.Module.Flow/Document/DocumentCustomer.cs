@@ -36,7 +36,7 @@ namespace DataWF.Module.Flow
         public static DBColumn CustomerKey => DBTable.ParseProperty(nameof(CustomerId), ref customerKey);
         public static DBColumn AddressKey => DBTable.ParseProperty(nameof(AddressId), ref addressKey);
         public static DBColumn EMailKey => DBTable.ParseProperty(nameof(EMail), ref eMailKey);
-        public static DBColumn PhoneKey => DBTable.ParseProperty(nameof(EMail), ref phoneKey);
+        public static DBColumn PhoneKey => DBTable.ParseProperty(nameof(Phone), ref phoneKey);
 
         private Customer customer;
         private Address address;
