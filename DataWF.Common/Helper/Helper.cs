@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DataWF.Common
@@ -55,6 +56,13 @@ namespace DataWF.Common
             }
         }
 
+        public static int MainThreadId { get; set; }
+
+        public static SynchronizationContext MainContext { get; set; }
+
+        public static bool IsMainThread => Thread.CurrentThread.ManagedThreadId == MainThreadId;
+
+
         private static void OnAssemblyLoad(object sender, AssemblyLoadEventArgs e)
         {
             if (e.LoadedAssembly.GetCustomAttributes<AssemblyMetadataAttribute>().Any(m => m.Key == "module"))
@@ -87,7 +95,7 @@ namespace DataWF.Common
             a = (short)(value >> 16);
             b = (short)(value & 0xFFFF);
         }
-        
+
         public static long TwoToOneShift(int a, int b)
         {
             return ((long)a << 32) | ((long)b & 0xFFFFFFFF);
