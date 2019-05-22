@@ -822,7 +822,7 @@ namespace DataWF.Data
             {
                 return handler;
             }
-            return Pull.GetHIndexUnsafe(NextHash(), BlockSize);
+            return Pull.GetHIndex(NextHash(), BlockSize);
         }
 
         public event EventHandler<DBItemEventArgs> RowUpdated;

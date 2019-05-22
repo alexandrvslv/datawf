@@ -61,36 +61,11 @@ namespace DataWF.Common
 
         public static int GetHIndex(int index, int blockSize)
         {
-            short a = (short)(index / blockSize);
-            short b = (short)(index % blockSize);
-            return (a << 16) | (b & 0xFFFF);
-        }
-
-        public unsafe static int GetHIndexUnsafe(int index, int blockSize)
-        {
-            int result = 0;
-            short* p = (short*)&result;
-            *p = (short)(index % blockSize);
-            *(p + 1) = (short)(index / blockSize);
-            return result;
-        }
-
-        public static void GetBlockIndex(int index, out short block, out short blockIndex)
-        {
-            block = (short)(index >> 16);
-            blockIndex = (short)(index & 0xFFFF);
-        }
-
-        public unsafe static void GetBlockIndexUnsafe(int index, out short block, out short blockIndex)
-        {
-            short* p = (short*)&index;
-            blockIndex = (*p);
-            block = (*(p + 1));
+            return Helper.TwoToOneShift((short)(index / blockSize), (short)(index % blockSize));
         }
 
         protected int blockSize;
         private Type itemType;
-
 
         internal Pull(int BlockSize)
         {
@@ -209,7 +184,7 @@ namespace DataWF.Common
 
         public T GetValueInternal(int index)
         {
-            GetBlockIndexUnsafe(index, out short block, out short blockIndex);
+            Helper.OneToTwoShift(index, out var block, out var blockIndex);
             if (block >= array.Count || array[block] == null)
                 return default(T);
             return array[block][blockIndex];
@@ -217,7 +192,7 @@ namespace DataWF.Common
 
         public void SetValueInternal(int index, T value)
         {
-            GetBlockIndexUnsafe(index, out short block, out short blockIndex);
+            Helper.OneToTwoShift(index, out var block, out var blockIndex);
             while (block > array.Count)
                 array.Add(null);
             if (block == array.Count)
@@ -258,7 +233,7 @@ namespace DataWF.Common
 
         public override void Trunc(int maxIndex)
         {
-            GetBlockIndexUnsafe(maxIndex, out short block, out short blockIndex);
+            Helper.OneToTwoShift(maxIndex, out var block, out var blockIndex);
             while (block < array.Count - 1)
             {
                 array.RemoveAt(array.Count - 1);

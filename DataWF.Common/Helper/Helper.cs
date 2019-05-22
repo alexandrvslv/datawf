@@ -8,6 +8,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -74,6 +75,110 @@ namespace DataWF.Common
                     }
                 }
             }
+        }
+
+        public static int TwoToOneShift(short a, short b)
+        {
+            return (a << 16) | (b & 0xFFFF);
+        }
+
+        public static void OneToTwoShift(int value, out short a, out short b)
+        {
+            a = (short)(value >> 16);
+            b = (short)(value & 0xFFFF);
+        }
+        
+        public static long TwoToOneShift(int a, int b)
+        {
+            return ((long)a << 32) | ((long)b & 0xFFFFFFFF);
+        }
+
+        public static void OneToTwoShift(long value, out int a, out int b)
+        {
+            a = (int)(value >> 32);
+            b = (int)(value & 0xFFFFFFFF);
+        }
+
+        public static unsafe int TwoToOnePointer(short a, short b)
+        {
+            int result = 0;
+            var p = (short*)&result;
+            *p = b;
+            *(p + 1) = a;
+            return result;
+        }
+
+        public static unsafe void OneToTwoPointer(int value, out short a, out short b)
+        {
+            short* p = (short*)&value;
+            a = (*(p + 1));
+            b = (*p);
+        }
+
+        public static unsafe long TwoToOnePointer(int a, int b)
+        {
+            long result = 0;
+            var p = (int*)&result;
+            *p = b;
+            *(p + 1) = a;
+            return result;
+        }
+
+        public static unsafe void OneToTwoPointer(long value, out int a, out int b)
+        {
+            int* p = (int*)&value;
+            a = (*(p + 1));
+            b = (*p);
+        }
+
+        public static int TwoToOneStruct(short a, short b)
+        {
+            var shortToInt = new ShortToInt { Low = a, High = b };
+            return shortToInt.Value;
+        }
+
+        public static long TwoToOneStruct(int a, int b)
+        {
+            var itnToLong = new ItnToLong { Low = a, High = b };
+            a = itnToLong.Low;
+            return itnToLong.Value;
+        }
+
+        public static void OneToTwoStruct(int value, out short a, out short b)
+        {
+            var shortToInt = new ShortToInt { Value = value };
+            a = shortToInt.Low;
+            b = shortToInt.High;
+        }
+
+        public static void OneToTwoStruct(long value, out int a, out int b)
+        {
+            var itnToLong = new ItnToLong { Value = value };
+            a = itnToLong.Low;
+            b = itnToLong.High;
+        }
+
+        //https://stackoverflow.com/questions/1873402/is-there-a-nice-way-to-split-an-int-into-two-shorts-net
+        [StructLayout(LayoutKind.Explicit)]
+        private struct ShortToInt
+        {
+            [FieldOffset(0)]
+            public int Value;
+            [FieldOffset(0)]
+            public short Low;
+            [FieldOffset(2)]
+            public short High;
+        }
+
+        [StructLayout(LayoutKind.Explicit)]
+        private struct ItnToLong
+        {
+            [FieldOffset(0)]
+            public long Value;
+            [FieldOffset(0)]
+            public int Low;
+            [FieldOffset(4)]
+            public int High;
         }
 
         public static StateInfoList Logs

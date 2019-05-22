@@ -57,9 +57,7 @@ namespace DataWF.Common
         //https://stackoverflow.com/questions/6219614/convert-a-long-to-two-int-for-the-purpose-of-reconstruction
         public static long GetToken(MemberInfo info)
         {
-            long b = info.GetHashCode();
-            b = b << 32;
-            return b | (uint)info.Module.GetHashCode();
+            return Helper.TwoToOneShift(info.GetHashCode(), info.Module.GetHashCode());
         }
 
         public static IInvoker Initialize<T>(string property)
