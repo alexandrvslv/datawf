@@ -52,6 +52,8 @@ namespace DataWF.Module.Flow
         private static DBColumn importantKey = DBColumn.EmptyKey;
         private static DBColumn isCompleteKey = DBColumn.EmptyKey;
         private static DBColumn currentStageKey = DBColumn.EmptyKey;
+        private static DBColumn workUserKey = DBColumn.EmptyKey;
+        private static DBColumn workStageKey = DBColumn.EmptyKey;
 
         public static DBTable<Document> DBTable => dbTable ?? (dbTable = GetTable<Document>());
 
@@ -65,6 +67,8 @@ namespace DataWF.Module.Flow
         public static DBColumn ImportantKey => DBTable?.ParseProperty(nameof(Important), ref importantKey);
         public static DBColumn IsCompleteKey => DBTable?.ParseProperty(nameof(IsComplete), ref isCompleteKey);
         public static DBColumn CurrentStageKey => DBTable?.ParseProperty(nameof(CurrentStageId), ref currentStageKey);
+        public static DBColumn WorkUserKey => DBTable?.ParseProperty(nameof(WorkUser), ref workUserKey);
+        public static DBColumn WorkStageKey => DBTable?.ParseProperty(nameof(WorkStage), ref workStageKey);
 
         public static Document FindDocument(Template template, object p)
         {
@@ -374,19 +378,19 @@ namespace DataWF.Module.Flow
         }
 
         //[Browsable(false)]
-        [DataMember, Column("work_user", ColumnType = DBColumnTypes.Internal)]
+        [Column("work_user", ColumnType = DBColumnTypes.Internal)]
         public string WorkUser
         {
-            get { return GetProperty<string>(); }
-            private set { SetProperty(value); }
+            get { return GetValue<string>(WorkUserKey); }
+            private set { SetValue(value, WorkUserKey); }
         }
 
         [Browsable(false)]
-        [DataMember, Column("work_stage", ColumnType = DBColumnTypes.Internal)]
+        [Column("work_stage", ColumnType = DBColumnTypes.Internal)]
         public string WorkStage
         {
-            get { return GetProperty<string>(nameof(WorkStage)); }
-            private set { SetProperty(value, nameof(WorkStage)); }
+            get { return GetValue<string>(WorkStageKey); }
+            private set { SetValue(value, WorkStageKey); }
         }
 
         [Browsable(false)]
