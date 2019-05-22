@@ -352,7 +352,9 @@ namespace DataWF.Common
                     loadProgress.Token.Cancel();
                 }
                 loadProgress = new LoadProgress<T>(filter, progressable);
-                loadProgress.Task = FindAsync(filter, loadProgress.Token);
+                loadProgress.Task = string.IsNullOrEmpty(filter)
+                    ? GetAsync(loadProgress.Token)
+                    : FindAsync(filter, loadProgress.Token);
             }
             return loadProgress;
         }
