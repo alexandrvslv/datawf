@@ -537,11 +537,12 @@ namespace DataWF.Data
                                             {
                                                 if (parameter.Comparer.Type == CompareTypes.Between && lg == LogicTypes.And)
                                                 {
-                                                    var between = new QBetween(parameter.ValueRight, null, column?.Column);
-                                                    parameter.ValueRight = between;
+                                                    parameter.ValueRight = new QBetween(parameter.ValueRight, null, column?.Column);
                                                 }
                                                 else
+                                                {
                                                     parameter.Logic = new LogicType(lg);
+                                                }
                                             }
                                             else
                                             {
@@ -562,13 +563,15 @@ namespace DataWF.Data
                                                     }
                                                     else
                                                     {
-                                                        var invoker = EmitInvoker.Initialize(Table.ItemType.Type, word);
-                                                        if (invoker != null)
+                                                        if (parameter.ValueLeft == null)
                                                         {
-                                                            QReflection reflection = new QReflection(invoker);
-                                                            parameter.SetValue(reflection);
+                                                            var invoker = EmitInvoker.Initialize(Table.ItemType.Type, word);
+                                                            if (invoker != null)
+                                                            {
+                                                                parameter.SetValue(new QReflection(invoker));
+                                                            }
                                                         }
-                                                        else if (parameter?.Column != null)
+                                                        else// if (parameter.Column != null)
                                                         {
                                                             parameter.SetValue(new QValue(word, parameter.Column));
                                                         }
