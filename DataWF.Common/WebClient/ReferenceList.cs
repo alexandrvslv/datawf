@@ -55,23 +55,26 @@ namespace DataWF.Common
             switch (Owner.SyncStatus)
             {
                 case SynchronizedStatus.Actual:
-                    if (items.Any(p => p.SyncStatus != SynchronizedStatus.Actual))
+                    if (items.Any(p => p.SyncStatus == SynchronizedStatus.New
+                    || p.SyncStatus == SynchronizedStatus.Edit))
                     {
                         Owner.SyncStatus = SynchronizedStatus.Edit;
                         Owner.Changes[OwnerProperty] = this;
+                        Owner.OnPropertyChanged(OwnerProperty);
                     }
                     break;
                 case SynchronizedStatus.Edit:
-                    if (!this.Any(p => p.SyncStatus != SynchronizedStatus.Actual))
+                    if (!this.Any(p => p.SyncStatus != SynchronizedStatus.Actual
+                    && p.SyncStatus != SynchronizedStatus.Load))
                     {
                         if (Owner.Changes.Remove(OwnerProperty) && Owner.Changes.Count == 0)
                         {
                             Owner.SyncStatus = SynchronizedStatus.Actual;
+                            Owner.OnPropertyChanged(OwnerProperty);
                         }
                     }
                     break;
             }
-            //Owner.OnPropertyChanged(OwnerProperty);
         }
     }
 }
