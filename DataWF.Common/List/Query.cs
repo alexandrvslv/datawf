@@ -86,10 +86,7 @@ namespace DataWF.Common
 
         internal void OnParametersChanged(object sender, EventArgs e)
         {
-            if (!Suspending)
-            {
-                ParametersChanged?.Invoke(sender, e);
-            }
+            ParametersChanged?.Invoke(sender, e);
         }
 
         ICollection<IQueryParameter> IQuery.Parameters

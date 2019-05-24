@@ -199,16 +199,19 @@ namespace DataWF.Common
 
         public virtual void CheckUpdateFilter(object sender, EventArgs e)
         {
-            var parameters = query.FormatEnabled();
-            if (tempParameters?.Equals(parameters, StringComparison.Ordinal) ?? false)
+            if (!query.Suspending)
             {
-                return;
+                var parameters = query.FormatEnabled();
+                if (tempParameters?.Equals(parameters, StringComparison.Ordinal) ?? false)
+                {
+                    return;
+                }
+                else
+                {
+                    tempParameters = parameters;
+                }
+                UpdateFilter();
             }
-            else
-            {
-                tempParameters = parameters;
-            }
-            UpdateFilter();
             FilterChanged?.Invoke(sender, e);
         }
 
