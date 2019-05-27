@@ -31,7 +31,7 @@ namespace DataWF.Data.Gui
 
                 // Add a SharedStringTablePart to the WorkbookPart.
                 var stringPart = workbookpart.AddNewPart<SharedStringTablePart>();
-                var stringTable = new List<string>();
+                var stringTable = new IndexedList<string>(StringComparer.Ordinal);
 
                 // Add a WorksheetPart to the WorkbookPart.
                 WorksheetPart worksheetPart = workbookpart.AddNewPart<WorksheetPart>();
@@ -183,7 +183,7 @@ namespace DataWF.Data.Gui
             writer.WriteEndElement();
         }
 
-        public Row GenerateRow(int rr, int mc, bool header, List<string> stringTable)
+        public Row GenerateRow(int rr, int mc, bool header, IndexedList<string> stringTable)
         {
             Row row = new Row() { RowIndex = (uint)rr };
             for (int i = 0; i < mc; i++)
@@ -191,7 +191,7 @@ namespace DataWF.Data.Gui
             return row;
         }
 
-        public void ExpMapLayout(SheetData sheetData, LayoutColumn map, int scol, int srow, out int mcol, out int mrow, LayoutList list, object listItem, List<string> stringTable)
+        public void ExpMapLayout(SheetData sheetData, LayoutColumn map, int scol, int srow, out int mcol, out int mrow, LayoutList list, object listItem, IndexedList<string> stringTable)
         {
             int tws = map.GetWithdSpan();
             //int ths = tool.LayoutMapTool.GetHeightSpan(map);
@@ -283,9 +283,9 @@ namespace DataWF.Data.Gui
 
                 // Add a SharedStringTablePart to the WorkbookPart.
                 var stringPart = workbookpart.AddNewPart<SharedStringTablePart>();
-                var stringTable = new List<string>();
+                var stringTable = new IndexedList<string>(StringComparer.Ordinal);
                 // Add Sheets to the Workbook.
-                var sheets = xl.WorkbookPart.Workbook.AppendChild<Sheets>(new Sheets());
+                var sheets = xl.WorkbookPart.Workbook.AppendChild(new Sheets());
 
                 // Append a new worksheet and associate it with the workbook.
                 var sheet = new Sheet()
@@ -393,7 +393,7 @@ namespace DataWF.Data.Gui
             }
         }
 
-        public void WriteMapItem(LayoutColumn map, int listIndex, object listItem, int sc, int sr, ref int mr, List<string> stringTable, List<Row> prows = null)
+        public void WriteMapItem(LayoutColumn map, int listIndex, object listItem, int sc, int sr, ref int mr, IndexedList<string> stringTable, List<Row> prows = null)
         {
             int tws = map.GetWithdSpan();
             Row row = null;

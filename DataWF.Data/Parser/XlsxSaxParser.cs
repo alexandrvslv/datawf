@@ -48,7 +48,7 @@ namespace DataWF.Data
         {
             var cacheNames = GetCacheNames(param);
 
-            var sharedStrings = (List<string>)null;
+            var sharedStrings = (IndexedList<string>)null;
             using (var document = SpreadsheetDocument.Open(stream, true))
             {
                 var workbookPart = document.WorkbookPart;
@@ -124,7 +124,7 @@ namespace DataWF.Data
         {
             string newFileName = GetTempFileName(fileName);
             var cacheNames = GetCacheNames(param);
-            var stringTables = (List<string>)null;
+            var stringTables = (IndexedList<string>)null;
             using (var document = SpreadsheetDocument.Open(stream, false))
             using (var newDocument = SpreadsheetDocument.Create(newFileName, document.DocumentType))
             {
@@ -318,7 +318,7 @@ namespace DataWF.Data
             }
         }
 
-        private void ParseWorksheetPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, List<string> sharedStrings, WorksheetPart worksheetPart)
+        private void ParseWorksheetPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, IndexedList<string> sharedStrings, WorksheetPart worksheetPart)
         {
             var tempName = Path.GetTempFileName();
             using (var temp = new FileStream(tempName, FileMode.Create, FileAccess.ReadWrite))
@@ -331,7 +331,7 @@ namespace DataWF.Data
             File.Delete(tempName);
         }
 
-        private void ParseWorksheetPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, List<string> sharedStrings, WorksheetPart worksheetPart, WorksheetPart newWorksheetPart)
+        private void ParseWorksheetPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, IndexedList<string> sharedStrings, WorksheetPart worksheetPart, WorksheetPart newWorksheetPart)
         {
             using (var stream = worksheetPart.GetStream())
             {
@@ -339,7 +339,7 @@ namespace DataWF.Data
             }
         }
 
-        private void ParseWorksheetPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, List<string> sharedStrings, Stream worksheetPart, WorksheetPart newWorksheetPart)
+        private void ParseWorksheetPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, IndexedList<string> sharedStrings, Stream worksheetPart, WorksheetPart newWorksheetPart)
         {
             var inserts = new List<CellRange>();
 
@@ -502,7 +502,7 @@ namespace DataWF.Data
             }
         }
 
-        public static void WriteCell(Excel.Cell cell, object value, List<string> sharedStrings)
+        public static void WriteCell(Excel.Cell cell, object value, IndexedList<string> sharedStrings)
         {
             if (value != null)
             {
@@ -527,11 +527,10 @@ namespace DataWF.Data
                     else
                     {
                         var stringValue = value.ToString();
-                        var index = sharedStrings.FindIndex((p) => p.Equals(stringValue, StringComparison.Ordinal));
-                        if (index < 0)
+                        
+                        if (!sharedStrings.TryGetIndex(stringValue, out var index ))
                         {
-                            index = sharedStrings.Count;
-                            sharedStrings.Add(stringValue);
+                            index = sharedStrings.Add(stringValue);
                         }
                         cell.DataType = Excel.CellValues.SharedString;
                         cell.CellValue = new Excel.CellValue(index.ToString());
@@ -658,9 +657,9 @@ namespace DataWF.Data
             return null;
         }
 
-        public static List<string> ReadStringTable(SharedStringTablePart sharedStringTablePart)
+        public static IndexedList<string> ReadStringTable(SharedStringTablePart sharedStringTablePart)
         {
-            var dict = new List<string>();
+            var dict = new IndexedList<string>(StringComparer.Ordinal);
             using (var reader = OpenXmlReader.Create(sharedStringTablePart))
             {
                 while (reader.Read())
@@ -674,7 +673,7 @@ namespace DataWF.Data
             return dict;
         }
 
-        public void WriteStringTable(SharedStringTablePart sharedStringTablePart, List<string> items)
+        public void WriteStringTable(SharedStringTablePart sharedStringTablePart, IndexedList<string> items)
         {
             using (var writer = XmlWriter.Create(sharedStringTablePart.GetStream(FileMode.Create)
                 , new XmlWriterSettings { Encoding = Encoding.UTF8, CloseOutput = true }))
@@ -735,7 +734,7 @@ namespace DataWF.Data
             return rez;
         }
 
-        public static string ReadCell(Excel.Cell cell, List<string> buffer = null)
+        public static string ReadCell(Excel.Cell cell, IndexedList<string> buffer = null)
         {
             string value = cell.CellValue?.InnerText ?? string.Empty;
             if (cell.DataType != null)
@@ -766,7 +765,7 @@ namespace DataWF.Data
             return value;
         }
 
-        public Excel.Cell GetCell(object value, int c, int r, uint styleIndex, List<string> sharedStrings)
+        public Excel.Cell GetCell(object value, int c, int r, uint styleIndex, IndexedList<string> sharedStrings)
         {
             Excel.Cell cell = new Excel.Cell()
             {
@@ -777,7 +776,7 @@ namespace DataWF.Data
             return cell;
         }
 
-        public Excel.Cell GetCell(OpenXmlCompositeElement row, object value, int c, int r, uint styleIndex, List<string> sharedStrings)
+        public Excel.Cell GetCell(OpenXmlCompositeElement row, object value, int c, int r, uint styleIndex, IndexedList<string> sharedStrings)
         {
             string reference = Helper.IntToChar(c) + r.ToString();
             Excel.Cell cell = null;
@@ -812,7 +811,7 @@ namespace DataWF.Data
             return cell;
         }
 
-        public List<Excel.Cell> FindParsedCells(List<string> stringTable, Excel.SheetData sd)
+        public List<Excel.Cell> FindParsedCells(IndexedList<string> stringTable, Excel.SheetData sd)
         {
             List<Excel.Cell> results = new List<Excel.Cell>();
 
@@ -939,4 +938,6 @@ namespace DataWF.Data
         }
 
     }
+
+    
 }

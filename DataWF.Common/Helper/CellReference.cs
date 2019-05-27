@@ -29,12 +29,12 @@ namespace DataWF.Common
         public static CellReference Parse(string reference)
         {
             reference = reference.Replace("$", "");
-            MatchCollection mc = Regex.Matches(reference, @"\d[\d]*", RegexOptions.IgnoreCase);
+            MatchCollection mc = Regex.Matches(reference, @"\d[\d]*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
             if (mc.Count == 1)
             {
                 return new CellReference()
                 {
-                    Col = Helper.CharToInt(reference.Replace(mc[0].Value, "")),
+                    Col = Helper.CharToInt(reference.Substring(0, mc[0].Index)),
                     Row = int.Parse(mc[0].Value)
                 };
             }
