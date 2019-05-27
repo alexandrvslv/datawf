@@ -311,11 +311,11 @@ namespace DataWF.Module.Flow
             }
 
             var filePath = Helper.GetDocumentsFullPath(FileName, "Parser" + (Id ?? TemplateData.Id));
-            if (filePath == null || fromTemplate)
+            if (FileLOB == null || filePath == null || fromTemplate)
             {
                 using (var stream = TemplateData.File.GetFileStream())
                 {
-                    FileName = RefreshName();
+                    FileName = string.IsNullOrEmpty(FileName) ? RefreshName() : FileName;
                     filePath = DocumentParser.Execute(stream, FileName, param);
                 }
             }
