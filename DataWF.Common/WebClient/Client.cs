@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,7 +18,7 @@ namespace DataWF.Common
             TypeId = typeId;
             SerializationInfo = new TypeSerializationInfo(typeof(T));
         }
-        private Dictionary<K, T> downloadItems = new Dictionary<K, T>();
+        private ConcurrentDictionary<K, T> downloadItems = new ConcurrentDictionary<K, T>();
 
         public TypeSerializationInfo SerializationInfo;
         private ICRUDClient baseClient;
@@ -147,7 +148,7 @@ namespace DataWF.Common
 
         public bool RemoveDownloads(K id)
         {
-            return downloadItems.Remove(id) ||
+            return downloadItems.TryRemove(id, out var item) ||
              (GetBaseClient()?.RemoveDownloads(id) ?? false);
         }
 
