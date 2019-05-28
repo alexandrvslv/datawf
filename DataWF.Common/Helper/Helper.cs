@@ -1583,6 +1583,27 @@ namespace DataWF.Common
             }
             return new string(charArray.ToArray());
         }
+
+        public static string ToSepInitcap(this string str)
+        {
+            if (string.IsNullOrEmpty(str))
+                return str;
+            var charArray = new List<char>(str.Length);
+            foreach (Char currentChar in str)
+            {
+                if (Char.IsLetter(currentChar) && charArray.Count > 0)
+                {
+                    if (currentChar == Char.ToUpper(currentChar))
+                    {
+                        charArray.Add(' ');
+                    }
+
+                }
+
+                charArray.Add(currentChar);
+            }
+            return new string(charArray.ToArray());
+        }
     }
 
 }
