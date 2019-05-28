@@ -66,6 +66,11 @@ namespace DataWF.Common
         {
             list.Sort(comparer);
         }
+
+        public void AddRange(IEnumerable<T> enumerable)
+        {
+            list.AddRange(enumerable);
+        }
     }
 }
 
