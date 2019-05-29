@@ -699,6 +699,7 @@ namespace DataWF.Module.Flow
             try
             {
                 GenerateId();
+                Attach();
                 var param = new DocumentExecuteArgs()
                 {
                     Document = this,
@@ -750,7 +751,7 @@ namespace DataWF.Module.Flow
                     }
                 }
                 await base.Save(transaction);
-                if (Works.Count() <= 1)
+                if (isnew || Works.Count() <= 1)
                 {
                     foreach (var data in GetTemplatedData())
                     {
