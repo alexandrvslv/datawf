@@ -673,7 +673,7 @@ namespace DataWF.Data
             return dict;
         }
 
-        public void WriteStringTable(SharedStringTablePart sharedStringTablePart, StringKeyList items)
+        public static void WriteStringTable(SharedStringTablePart sharedStringTablePart, StringKeyList items)
         {
             using (var writer = XmlWriter.Create(sharedStringTablePart.GetStream(FileMode.Create)
                 , new XmlWriterSettings { Encoding = Encoding.UTF8, CloseOutput = true }))
@@ -835,7 +835,7 @@ namespace DataWF.Data
             return results;
         }
 
-        public void WriteElement(XmlWriter writer, OpenXmlElement element)
+        public static void WriteElement(XmlWriter writer, OpenXmlElement element)
         {
             WriteStartElement(writer, element);
             if (element.HasChildren)
@@ -852,7 +852,7 @@ namespace DataWF.Data
             writer.WriteEndElement();
         }
 
-        private void WriteStartElement(XmlWriter writer, OpenXmlElement element)
+        public static void WriteStartElement(XmlWriter writer, OpenXmlElement element)
         {
             if (string.IsNullOrEmpty(element.Prefix) || element.Prefix.Equals("x", StringComparison.Ordinal))
             {
@@ -872,7 +872,7 @@ namespace DataWF.Data
             WriteAttributes(writer, element.GetAttributes());
         }
 
-        public void WriteStartElement(XmlWriter writer, OpenXmlReader reader)
+        public static void WriteStartElement(XmlWriter writer, OpenXmlReader reader)
         {
             if (string.IsNullOrEmpty(reader.Prefix) || reader.Prefix.Equals("x", StringComparison.Ordinal))
             {
@@ -898,7 +898,7 @@ namespace DataWF.Data
             }
         }
 
-        private void WriteAttributes(XmlWriter writer, IEnumerable<OpenXmlAttribute> attributes)
+        public static void WriteAttributes(XmlWriter writer, IEnumerable<OpenXmlAttribute> attributes)
         {
             foreach (var attr in attributes)
             {
@@ -914,7 +914,7 @@ namespace DataWF.Data
             }
         }
 
-        public void WriteNamespace(XmlWriter writer, IEnumerable<KeyValuePair<string, string>> namespaces)
+        public static void WriteNamespace(XmlWriter writer, IEnumerable<KeyValuePair<string, string>> namespaces)
         {
             foreach (var ns in namespaces)
             {

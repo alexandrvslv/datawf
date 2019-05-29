@@ -14,11 +14,11 @@ namespace DataWF.Common
 
         public IInvoker<T, K> KeyInvoker { get; }
 
-        public override int Add(T item)
+        public override int AddInternal(T item)
         {
-            return cache[KeyInvoker.GetValue(item)] = base.Add(item);
+            return cache[KeyInvoker.GetValue(item)] = base.AddInternal(item);
         }
-
+        
         public override bool Remove(T item)
         {
             return base.Remove(item) && cache.Remove(KeyInvoker.GetValue(item));

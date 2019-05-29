@@ -635,7 +635,9 @@ namespace DataWF.Common
         public void AddRangeInternal(IEnumerable<T> list)
         {
             foreach (T item in list)
+            {
                 AddInternal(item);
+            }
         }
 
         public void AddRange(IEnumerable<T> list)
@@ -647,7 +649,9 @@ namespace DataWF.Common
         public void RemoveRange(IEnumerable<T> toDelete)
         {
             foreach (T item in toDelete)
+            {
                 Remove(item);
+            }
         }
 
     }

@@ -316,7 +316,7 @@ namespace DataWF.Module.Flow
                 using (var stream = TemplateData.File.GetFileStream())
                 {
                     FileName = string.IsNullOrEmpty(FileName) ? RefreshName() : FileName;
-                    filePath = DocumentParser.Execute(stream, FileName, param);
+                    filePath = Execute(param, stream);
                 }
             }
             else
@@ -327,11 +327,16 @@ namespace DataWF.Module.Flow
                     {
                         return null;
                     }
-                    filePath = DocumentParser.Execute(stream, FileName, param);
+                    filePath = Execute(param, stream);
                 }
             }
 
             return filePath;
+        }
+
+        public virtual string Execute(DocumentExecuteArgs param, Stream stream)
+        {
+            return DocumentParser.Execute(stream, FileName, param);
         }
 
         public BackgroundWorker ExecuteAsync(DocumentExecuteArgs param)
