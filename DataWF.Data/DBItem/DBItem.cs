@@ -300,7 +300,7 @@ namespace DataWF.Data
         public DBItem GetReference(DBColumn column, ref DBItem item, DBLoadParam param = DBLoadParam.Load)
         {
             object value = GetValue(column);
-            if (item?.PrimaryId == value)
+            if (value != null && value.Equals(item?.PrimaryId))
                 return item;
 
             return item = value == null ? null : column.ReferenceTable.LoadItemById(value, param);
@@ -309,7 +309,7 @@ namespace DataWF.Data
         public T GetReference<T>(DBColumn column, ref T item, DBLoadParam param = DBLoadParam.Load) where T : DBItem
         {
             object value = GetValue(column);
-            if (item?.PrimaryId == value)
+            if (value != null && value.Equals(item?.PrimaryId))
                 return item;
 
             return item = value == null ? (T)null : (T)column.ReferenceTable.LoadItemById(value, param);
