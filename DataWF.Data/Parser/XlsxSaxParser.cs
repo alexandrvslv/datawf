@@ -48,7 +48,7 @@ namespace DataWF.Data
         {
             var cacheNames = GetCacheNames(param);
 
-            var sharedStrings = (IndexedList<string>)null;
+            var sharedStrings = (StringKeyList)null;
             using (var document = SpreadsheetDocument.Open(stream, true))
             {
                 var workbookPart = document.WorkbookPart;
@@ -124,7 +124,7 @@ namespace DataWF.Data
         {
             string newFileName = GetTempFileName(fileName);
             var cacheNames = GetCacheNames(param);
-            var stringTables = (IndexedList<string>)null;
+            var stringTables = (StringKeyList)null;
             using (var document = SpreadsheetDocument.Open(stream, false))
             using (var newDocument = SpreadsheetDocument.Create(newFileName, document.DocumentType))
             {
@@ -318,7 +318,7 @@ namespace DataWF.Data
             }
         }
 
-        private void ParseWorksheetPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, IndexedList<string> sharedStrings, WorksheetPart worksheetPart)
+        private void ParseWorksheetPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, StringKeyList sharedStrings, WorksheetPart worksheetPart)
         {
             var tempName = Path.GetTempFileName();
             using (var temp = new FileStream(tempName, FileMode.Create, FileAccess.ReadWrite))
@@ -331,7 +331,7 @@ namespace DataWF.Data
             File.Delete(tempName);
         }
 
-        private void ParseWorksheetPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, IndexedList<string> sharedStrings, WorksheetPart worksheetPart, WorksheetPart newWorksheetPart)
+        private void ParseWorksheetPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, StringKeyList sharedStrings, WorksheetPart worksheetPart, WorksheetPart newWorksheetPart)
         {
             using (var stream = worksheetPart.GetStream())
             {
@@ -339,7 +339,7 @@ namespace DataWF.Data
             }
         }
 
-        private void ParseWorksheetPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, IndexedList<string> sharedStrings, Stream worksheetPart, WorksheetPart newWorksheetPart)
+        private void ParseWorksheetPart(ExecuteArgs param, Dictionary<string, DefinedName> cacheNames, StringKeyList sharedStrings, Stream worksheetPart, WorksheetPart newWorksheetPart)
         {
             var inserts = new List<CellRange>();
 
@@ -502,7 +502,7 @@ namespace DataWF.Data
             }
         }
 
-        public static void WriteCell(Excel.Cell cell, object value, IndexedList<string> sharedStrings)
+        public static void WriteCell(Excel.Cell cell, object value, StringKeyList sharedStrings)
         {
             if (value != null)
             {
@@ -527,10 +527,10 @@ namespace DataWF.Data
                     else
                     {
                         var stringValue = value.ToString();
-                        
-                        if (!sharedStrings.TryGetIndex(stringValue, out var index ))
+
+                        if (!sharedStrings.TryGetIndex(stringValue, out var index))
                         {
-                            index = sharedStrings.Add(stringValue);
+                            index = sharedStrings.Add(new StringKey(stringValue));
                         }
                         cell.DataType = Excel.CellValues.SharedString;
                         cell.CellValue = new Excel.CellValue(index.ToString());
@@ -657,23 +657,23 @@ namespace DataWF.Data
             return null;
         }
 
-        public static IndexedList<string> ReadStringTable(SharedStringTablePart sharedStringTablePart)
+        public static StringKeyList ReadStringTable(SharedStringTablePart sharedStringTablePart)
         {
-            var dict = new IndexedList<string>(StringComparer.Ordinal);
+            var dict = new StringKeyList();
             using (var reader = OpenXmlReader.Create(sharedStringTablePart))
             {
                 while (reader.Read())
                 {
                     if (reader.ElementType == typeof(Excel.SharedStringItem))
                     {
-                        dict.Add(((Excel.SharedStringItem)reader.LoadCurrentElement()).InnerText);
+                        dict.Add(new StringKey((Excel.SharedStringItem)reader.LoadCurrentElement()));
                     }
                 }
             }
             return dict;
         }
 
-        public void WriteStringTable(SharedStringTablePart sharedStringTablePart, IndexedList<string> items)
+        public void WriteStringTable(SharedStringTablePart sharedStringTablePart, StringKeyList items)
         {
             using (var writer = XmlWriter.Create(sharedStringTablePart.GetStream(FileMode.Create)
                 , new XmlWriterSettings { Encoding = Encoding.UTF8, CloseOutput = true }))
@@ -682,7 +682,7 @@ namespace DataWF.Data
                 WriteStartElement(writer, new Excel.SharedStringTable { Count = (uint)items.Count });
                 foreach (var item in items)
                 {
-                    WriteElement(writer, new Excel.SharedStringItem { Text = new Excel.Text(item) });
+                    WriteElement(writer, item.Value);
                 }
                 writer.WriteEndElement();
                 writer.WriteEndDocument();
@@ -734,7 +734,7 @@ namespace DataWF.Data
             return rez;
         }
 
-        public static string ReadCell(Excel.Cell cell, IndexedList<string> buffer = null)
+        public static string ReadCell(Excel.Cell cell, StringKeyList buffer = null)
         {
             string value = cell.CellValue?.InnerText ?? string.Empty;
             if (cell.DataType != null)
@@ -746,7 +746,7 @@ namespace DataWF.Data
                     {
                         //if (strings.SharedStringTable.ChildElements.Count > val)
                         if (buffer != null)
-                            value = buffer[val];
+                            value = buffer[val]?.Key;
                     }
                 }
                 else if (cell.DataType.Value == Excel.CellValues.Boolean)
@@ -765,7 +765,7 @@ namespace DataWF.Data
             return value;
         }
 
-        public Excel.Cell GetCell(object value, int c, int r, uint styleIndex, IndexedList<string> sharedStrings)
+        public Excel.Cell GetCell(object value, int c, int r, uint styleIndex, StringKeyList sharedStrings)
         {
             Excel.Cell cell = new Excel.Cell()
             {
@@ -776,7 +776,7 @@ namespace DataWF.Data
             return cell;
         }
 
-        public Excel.Cell GetCell(OpenXmlCompositeElement row, object value, int c, int r, uint styleIndex, IndexedList<string> sharedStrings)
+        public Excel.Cell GetCell(OpenXmlCompositeElement row, object value, int c, int r, uint styleIndex, StringKeyList sharedStrings)
         {
             string reference = Helper.IntToChar(c) + r.ToString();
             Excel.Cell cell = null;
@@ -811,7 +811,7 @@ namespace DataWF.Data
             return cell;
         }
 
-        public List<Excel.Cell> FindParsedCells(IndexedList<string> stringTable, Excel.SheetData sd)
+        public List<Excel.Cell> FindParsedCells(StringKeyList stringTable, Excel.SheetData sd)
         {
             List<Excel.Cell> results = new List<Excel.Cell>();
 
@@ -939,5 +939,33 @@ namespace DataWF.Data
 
     }
 
-    
+    public class StringKey
+    {
+        public StringKey(Excel.SharedStringItem item)
+        {
+            Value = item;
+            Key = item.InnerText;
+        }
+
+        public StringKey(string key)
+        {
+            Value = new Excel.SharedStringItem { Text = new Excel.Text(key) };
+            Key = key;
+        }
+
+        public Excel.SharedStringItem Value { get; set; }
+
+        public string Key { get; set; }
+    }
+
+    public class StringKeyList : IndexedList<StringKey, String>
+    {
+        public static readonly Invoker<StringKey, String> StringKeyInvoker = new Invoker<StringKey, string>(nameof(StringKey.Key),
+            p => p.Key, (p, v) => p.Key = v);
+
+        public StringKeyList() : base(StringComparer.Ordinal, StringKeyInvoker)
+        {
+
+        }
+    }
 }

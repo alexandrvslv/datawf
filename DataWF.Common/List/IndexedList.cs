@@ -2,32 +2,36 @@
 
 namespace DataWF.Common
 {
-    public class IndexedList<T> : SelectableList<T>
+    public class IndexedList<T, K> : SelectableList<T>
     {
-        private Dictionary<T, int> cache = new Dictionary<T, int>();
-        public IndexedList(IEqualityComparer<T> comparer)
+        private Dictionary<K, int> cache;
+
+        public IndexedList(IEqualityComparer<K> comparer, IInvoker<T, K> keyInvoker)
         {
-            cache = new Dictionary<T, int>(items.Capacity, comparer);
+            cache = new Dictionary<K, int>(items.Capacity, comparer);
+            KeyInvoker = keyInvoker;
         }
+
+        public IInvoker<T, K> KeyInvoker { get; }
 
         public override int Add(T item)
         {
-            return cache[item] = base.Add(item);
+            return cache[KeyInvoker.GetValue(item)] = base.Add(item);
         }
 
         public override bool Remove(T item)
         {
-            return base.Remove(item) && cache.Remove(item);
+            return base.Remove(item) && cache.Remove(KeyInvoker.GetValue(item));
         }
 
         public override bool Contains(T item)
         {
-            return cache.ContainsKey(item);
+            return cache.ContainsKey(KeyInvoker.GetValue(item));
         }
 
-        public bool TryGetIndex(T value, out int index)
+        public bool TryGetIndex(K key, out int index)
         {
-            return cache.TryGetValue(value, out index);
+            return cache.TryGetValue(key, out index);
         }
     }
 }
