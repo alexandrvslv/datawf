@@ -7,7 +7,7 @@
     <AssemblyName>DataWF.Module.Common.View</AssemblyName>
     <TargetFrameworks>net461</TargetFrameworks>
     <Platforms>AnyCPU;x86</Platforms>
-    <Version>1.3.40.0</Version>
+    <Version>1.3.41.0</Version>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>

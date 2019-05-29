@@ -606,6 +606,27 @@
         }
       }
     },
+    "/api/Authorize/Logs": {
+      "get": {
+        "tags": [
+          "Authorize"
+        ],
+        "operationId": "GetLogs",
+        "consumes": [],
+        "produces": [
+          "application/octet-stream"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "file"
+            }
+          }
+        }
+      }
+    },
     "/api/Authorize": {
       "get": {
         "tags": [
@@ -624,27 +645,6 @@
             "description": "Success",
             "schema": {
               "$ref": "#/definitions/User"
-            }
-          }
-        }
-      }
-    },
-    "/api/Authorize/Logs": {
-      "get": {
-        "tags": [
-          "Authorize"
-        ],
-        "operationId": "GetLogs",
-        "consumes": [],
-        "produces": [
-          "application/octet-stream"
-        ],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "type": "file"
             }
           }
         }
@@ -13421,6 +13421,368 @@
         }
       }
     },
+    "/api/UserFile/DownloadFile/{id}": {
+      "get": {
+        "tags": [
+          "UserFile"
+        ],
+        "operationId": "DownloadFile",
+        "consumes": [],
+        "produces": [
+          "application/octet-stream"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "file"
+            }
+          }
+        }
+      }
+    },
+    "/api/UserFile/UploadFile/{id}/{fileName}": {
+      "post": {
+        "tags": [
+          "UserFile"
+        ],
+        "operationId": "UploadFile",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "produces": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "fileName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "file",
+            "in": "formData",
+            "description": "Upload File",
+            "required": true,
+            "type": "file"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/UserFile": {
+      "get": {
+        "tags": [
+          "UserFile"
+        ],
+        "operationId": "Get",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/UserFile"
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "UserFile"
+        ],
+        "operationId": "Put",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "value",
+            "in": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/UserFile"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/UserFile"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "UserFile"
+        ],
+        "operationId": "Post",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "value",
+            "in": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/UserFile"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/UserFile"
+            }
+          }
+        }
+      }
+    },
+    "/api/UserFile/Find/{filter}": {
+      "get": {
+        "tags": [
+          "UserFile"
+        ],
+        "operationId": "Find",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/UserFile"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/UserFile/{id}": {
+      "get": {
+        "tags": [
+          "UserFile"
+        ],
+        "operationId": "Get",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/UserFile"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "UserFile"
+        ],
+        "operationId": "Delete",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "/api/UserFile/Merge/{id}": {
+      "delete": {
+        "tags": [
+          "UserFile"
+        ],
+        "operationId": "Merge",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "ids",
+            "in": "body",
+            "required": false,
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/UserFile"
+            }
+          }
+        }
+      }
+    },
+    "/api/UserFile/Copy/{id}": {
+      "get": {
+        "tags": [
+          "UserFile"
+        ],
+        "operationId": "Copy",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/UserFile"
+            }
+          }
+        }
+      }
+    },
+    "/api/UserFile/GenerateId": {
+      "get": {
+        "tags": [
+          "UserFile"
+        ],
+        "operationId": "GenerateId",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        }
+      }
+    },
     "/api/UserGroup/GetUsers/{id}": {
       "get": {
         "tags": [
@@ -14060,7 +14422,7 @@
         }
       }
     },
-    "/api/WebNotify/Users": {
+    "/api/WebNotify/Connections": {
       "get": {
         "tags": [
           "WebNotify"
@@ -14081,6 +14443,33 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/WebNotifyConnection"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/WebNotify/Logs": {
+      "get": {
+        "tags": [
+          "WebNotify"
+        ],
+        "operationId": "GetLogs",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/StateInfo"
               }
             }
           }
@@ -15008,7 +15397,7 @@
           "type": "integer"
         },
         "Code": {
-          "maxLength": 40,
+          "maxLength": 512,
           "type": "string"
         },
         "ParentId": {
@@ -15020,11 +15409,11 @@
           "x-id": "ParentId"
         },
         "NameRU": {
-          "maxLength": 512,
+          "maxLength": 1024,
           "type": "string"
         },
         "NameEN": {
-          "maxLength": 512,
+          "maxLength": 1024,
           "type": "string"
         },
         "Value": {
@@ -15606,6 +15995,9 @@
         "File": {
           "$ref": "#/definitions/TemplateFile",
           "x-id": "FileId"
+        },
+        "AutoGenerate": {
+          "type": "boolean"
         }
       },
       "x-id": "Id",
@@ -16257,6 +16649,9 @@
     "StateInfo": {
       "type": "object",
       "properties": {
+        "User": {
+          "type": "string"
+        },
         "Date": {
           "format": "date-time",
           "type": "string"
@@ -16473,6 +16868,40 @@
       "x-id": "Id",
       "x-type-id": 0
     },
+    "UserFile": {
+      "required": [
+        "Id"
+      ],
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/DBItem"
+        }
+      ],
+      "properties": {
+        "Id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "DataName": {
+          "maxLength": 1024,
+          "type": "string"
+        },
+        "UserId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "User": {
+          "$ref": "#/definitions/User",
+          "x-id": "UserId"
+        },
+        "IsAvatar": {
+          "type": "boolean"
+        }
+      },
+      "x-id": "Id",
+      "x-type-id": 0
+    },
     "UserGroup": {
       "required": [
         "Id"
@@ -16575,6 +17004,10 @@
     "WebNotifyConnection": {
       "type": "object",
       "properties": {
+        "Id": {
+          "format": "int32",
+          "type": "integer"
+        },
         "Date": {
           "format": "date-time",
           "type": "string",
@@ -16589,6 +17022,9 @@
           "readOnly": true
         },
         "Address": {
+          "type": "string"
+        },
+        "Action": {
           "type": "string"
         }
       }
