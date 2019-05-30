@@ -268,25 +268,32 @@ namespace DataWF.Common
         public static string DocView = "View";
         public static string DocEdit = "Edit";
 
+        //https://stackoverflow.com/a/182924/4682355
         public static string IntToChar(int val)
         {
             var sb = new StringBuilder();
-
-            var mod = val % 26;
-            sb.Append((char)((int)'A' + mod));
-
-            var f = val / 26;
-            var i = 1;
-            while (f > 0)
+            val = val + 1;
+            var mod = 0;
+            while (val > 0)
             {
-                mod = f % 26;
-                sb.Insert(0, (char)((int)'A' + (mod - 1)));
-                f = f / 26;
-                i++;
+                mod = (val - 1) % 26;
+                sb.Insert(0, (char)((int)'A' + mod));
+                val = (val - mod) / 26;
             }
 
-
             return sb.ToString();
+        }
+
+        public static int CharToInt(string val)
+        {
+            int rez = 0;
+            int i = 0;
+            var diff = (int)'A' - 1;
+            for (i = 0; i < val.Length; i++)
+            {
+                rez += ((int)val[i] - diff) * (int)Math.Pow(26, val.Length - (i + 1));
+            }
+            return rez - 1;
         }
 
         //http://stackoverflow.com/questions/5417070/c-sharp-version-of-sql-likea
@@ -420,18 +427,7 @@ namespace DataWF.Common
             }
         }
 
-        public static int CharToInt(string val)
-        {
-            int rez = 0;
-            int i = 0;
-            var diff = (int)'A' - 1;
-            for (i = 0; i < val.Length; i++)
-            {
-                rez += ((int)val[i] - diff) * (int)Math.Pow(26, val.Length - (i + 1));
 
-            }
-            return rez - 1;
-        }
 
         public static byte GetAscii(char ichar)
         {
