@@ -32,7 +32,9 @@ namespace DataWF.Common
             Category = category;
             BufferSize = bufferSize;
         }
-        public CancellationToken CancellationToken = CancellationToken.None;
+
+        public ProgressToken Token = null;
+
         private double speed;
 
         public DateTime Date { get; }
@@ -93,6 +95,8 @@ namespace DataWF.Common
 
         public IProgressable Progressable { get; internal set; }
 
+        public IFileModel File { get; internal set; }
+
         public async Task StartAsync(long size, Stream sourceStream, Stream destinationStream)
         {
             await Task.Run(() => Start(size, sourceStream, destinationStream));
@@ -100,7 +104,7 @@ namespace DataWF.Common
 
         public void Start(long size, Stream sourceStream, Stream targetStream)
         {
-            Prepare(size, sourceStream, targetStream);            
+            Prepare(size, sourceStream, targetStream);
 
             try
             {
@@ -111,7 +115,7 @@ namespace DataWF.Common
                 var buffer = new byte[BufferSize];
                 var stopWatch = new Stopwatch();
                 stopWatch.Start();
-                while ((count = sourceStream.Read(buffer, 0, BufferSize)) != 0 && !CancellationToken.IsCancellationRequested)
+                while ((count = sourceStream.Read(buffer, 0, BufferSize)) != 0 && !(Token?.IsCancelled ?? false))
                 {
                     targetStream.Write(buffer, 0, count);
                     Interlocked.Exchange(ref length, length + count);
@@ -171,7 +175,7 @@ namespace DataWF.Common
         private void Listen()
         {
             Progress = 0;
-            
+
             while (!listen.WaitOne(50))
             {
                 long currentLength = Interlocked.Read(ref length);

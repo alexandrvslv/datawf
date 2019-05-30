@@ -39,8 +39,9 @@ namespace DataWF.Common
                     process = value;
                     if (process != null)
                     {
-                        process.CancellationToken = CancellationToken;
+                        process.Token = this;
                         process.Progressable = Progressable;
+                        process.File = File;
                     }
                 }
             }
@@ -49,6 +50,8 @@ namespace DataWF.Common
         public bool IsCancelled => CancellationTokenSource?.IsCancellationRequested ?? false;
 
         public IProgressable Progressable { get; }
+
+        public IFileModel File { get; set; }
 
         public void Cancel()
         {
