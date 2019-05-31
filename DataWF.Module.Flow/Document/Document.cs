@@ -764,7 +764,7 @@ namespace DataWF.Module.Flow
             {
                 Helper.OnException(ex);
                 transaction.Rollback();
-                throw ex;
+                throw new Exception("Some error during save", ex);
             }
             finally
             {
@@ -929,14 +929,40 @@ namespace DataWF.Module.Flow
             return false;
         }
 
-        //[ControllerMethod]
+        public IEnumerable<Document> FindReferenceByName(string name)
+        {
+            foreach (var refer in Referenced)
+            {
+                if (refer.Reference?.Template?.CheckName(name) ?? false)
+                    yield return refer.Reference;
+            }
+
+            foreach (var refer in Referencing)
+            {
+                if (refer.Document?.Template?.CheckName(name) ?? false)
+                    yield return refer.Document;
+            }
+        }
+
         public async Task<Document> FindReference(Template template, bool create, DBTransaction transaction)
         {
+            foreach (var refer in Referenced)
+            {
+                if (refer.Reference?.Template == template)
+                    return refer.Reference;
+            }
+
+            foreach (var refer in Referencing)
+            {
+                if (refer.Document?.Template == template)
+                    return refer.Document;
+            }
             foreach (var refer in GetReferences())
             {
-                if ((refer.Reference.Template == template && refer.Reference != this)
-                    || (refer.Document.Template == template && refer.Document != this))
+                if (refer.Reference != this && refer.Reference.Template == template)
                     return refer.Reference;
+                else if (refer.Document != this && refer.Document.Template == template)
+                    return refer.Document;
             }
             if (create)
             {
