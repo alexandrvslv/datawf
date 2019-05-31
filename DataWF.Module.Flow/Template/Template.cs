@@ -79,11 +79,17 @@ namespace DataWF.Module.Flow
         private static DBColumn nameENKey = DBColumn.EmptyKey;
         private static DBColumn nameRUKey = DBColumn.EmptyKey;
         private static DBColumn workKey = DBColumn.EmptyKey;
+        private static DBColumn alterName1Key = DBColumn.EmptyKey;
+        private static DBColumn alterName2Key = DBColumn.EmptyKey;
+        private static DBColumn alterName3Key = DBColumn.EmptyKey;
 
         public static DBTable<Template> DBTable => dbTable ?? (dbTable = GetTable<Template>());
+        public static DBColumn WorkKey => DBTable.ParseProperty(nameof(WorkId), ref workKey);
         public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
         public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
-        public static DBColumn WorkKey => DBTable.ParseProperty(nameof(WorkId), ref workKey);
+        public static DBColumn AlterName1Key => DBTable.ParseProperty(nameof(AlterName1), ref alterName1Key);
+        public static DBColumn AlterName2Key => DBTable.ParseProperty(nameof(AlterName2), ref alterName2Key);
+        public static DBColumn AlterName3Key => DBTable.ParseProperty(nameof(AlterName3), ref alterName3Key);
 
         private DBItemType documentType;
         private Work work;
@@ -92,7 +98,7 @@ namespace DataWF.Module.Flow
         {
         }
 
-        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
+        [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
@@ -102,7 +108,7 @@ namespace DataWF.Module.Flow
         [Index("rtemplate_item_type", false)]
         public override int? ItemType { get => base.ItemType; set => base.ItemType = value; }
 
-        [DataMember, Column("code", 250, Keys = DBColumnKeys.Code)]
+        [Column("code", 250, Keys = DBColumnKeys.Code)]
         public virtual string Code
         {
             get { return GetValue<string>(Table.CodeKey); }
@@ -113,7 +119,7 @@ namespace DataWF.Module.Flow
             }
         }
 
-        [DataMember, Column("name", 512, Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
+        [Column("name", 512, Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
         public string Name
         {
             get { return GetName(); }
@@ -132,7 +138,28 @@ namespace DataWF.Module.Flow
             set => SetValue(value, NameRUKey);
         }
 
-        [DataMember, DefaultValue(0), Column("document_type", 250)]
+        [Column("alter_name1", 1024)]
+        public virtual string AlterName1
+        {
+            get => GetValue<string>(AlterName1Key);
+            set => SetValue(value, AlterName1Key);
+        }
+
+        [Column("alter_name2", 1024)]
+        public virtual string AlterName2
+        {
+            get => GetValue<string>(AlterName2Key);
+            set => SetValue(value, AlterName2Key);
+        }
+
+        [Column("alter_name3", 1024)]
+        public virtual string AlterName3
+        {
+            get => GetValue<string>(AlterName3Key);
+            set => SetValue(value, AlterName3Key);
+        }
+
+        [DefaultValue(0), Column("document_type", 250)]
         public int? DocumentType
         {
             get { return GetProperty<int?>(); }
@@ -140,7 +167,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [DataMember, Column("group_id", Keys = DBColumnKeys.Group)]
+        [Column("group_id", Keys = DBColumnKeys.Group)]
         public int? ParentId
         {
             get { return GetGroupValue<int?>(); }
@@ -162,7 +189,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [DataMember, Column("work_id")]
+        [Column("work_id")]
         public int? WorkId
         {
             get { return GetValue<int?>(WorkKey); }
@@ -202,7 +229,7 @@ namespace DataWF.Module.Flow
             set { SetReferencing(value, TemplateProperty.TemplateKey); }
         }
 
-        [DataMember, DefaultValue(false), Column("is_file")]
+        [DefaultValue(false), Column("is_file")]
         public bool? IsFile
         {
             get { return GetProperty<bool?>(); }
@@ -298,6 +325,15 @@ namespace DataWF.Module.Flow
                 query.BuildParam(TemplateProperty.PropertyNameKey, propertyName);
                 return TemplateProperty.DBTable.Select(query).FirstOrDefault();
             }
+        }
+
+        public bool CheckName(string name)
+        {
+            return (NameEN?.Equals(name, StringComparison.OrdinalIgnoreCase) ?? false)
+                || (NameRU?.Equals(name, StringComparison.OrdinalIgnoreCase) ?? false)
+                || (AlterName1?.Equals(name, StringComparison.OrdinalIgnoreCase) ?? false)
+                || (AlterName2?.Equals(name, StringComparison.OrdinalIgnoreCase) ?? false)
+                || (AlterName3?.Equals(name, StringComparison.OrdinalIgnoreCase) ?? false);
         }
 
         //public bool BarCode
