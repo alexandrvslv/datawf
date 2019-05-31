@@ -715,7 +715,7 @@ namespace DataWF.Module.Flow
                     {
                         DocumentDate = DateTime.Now;
                     }
-                    if (CurrentWork == null)
+                    if (CurrentWork == null && Template.Work != null)
                     {
                         Send(null, Template.Work?.GetStartStage(), transaction);
                     }
