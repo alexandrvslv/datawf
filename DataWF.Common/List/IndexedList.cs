@@ -8,6 +8,7 @@ namespace DataWF.Common
 
         public IndexedList(IEqualityComparer<K> comparer, IInvoker<T, K> keyInvoker)
         {
+            CheckUnique = false;
             cache = new Dictionary<K, int>(items.Capacity, comparer);
             KeyInvoker = keyInvoker;
         }
@@ -18,7 +19,7 @@ namespace DataWF.Common
         {
             return cache[KeyInvoker.GetValue(item)] = base.AddInternal(item);
         }
-        
+
         public override bool Remove(T item)
         {
             return base.Remove(item) && cache.Remove(KeyInvoker.GetValue(item));

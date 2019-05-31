@@ -210,6 +210,8 @@ namespace DataWF.Common
             get { return items == null; }
         }
 
+        public bool CheckUnique { get; set; } = true;
+
         public virtual void OnListChanged(NotifyCollectionChangedEventArgs e)
         {
             CollectionChanged?.Invoke(this, e);
@@ -349,7 +351,7 @@ namespace DataWF.Common
         {
             lock (lockObject)
             {
-                int index = GetIndexBySort(item);
+                int index = GetIndexForAdding(item);
                 if (index < 0)
                 {
                     index = -index - 1;
@@ -368,11 +370,22 @@ namespace DataWF.Common
             }
         }
 
+        protected int GetIndexForAdding(T item)
+        {
+            if (comparer != null)
+            {
+                var index = ListHelper.BinarySearch(items, item, comparer);
+                return CheckUnique ? index : -Math.Abs(index);
+            }
+            return CheckUnique
+                ? Contains(item) ? IndexOf(item) : -(items.Count + 1)
+                : -(items.Count + 1);
+        }
+
         protected int GetIndexBySort(T item)
         {
             if (comparer != null)
             {
-                //int index = _items.BinarySearch(item, _comparer);
                 return ListHelper.BinarySearch(items, item, comparer);
             }
             return Contains(item) ? IndexOf(item) : -(items.Count + 1);
