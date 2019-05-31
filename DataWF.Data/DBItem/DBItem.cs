@@ -260,7 +260,7 @@ namespace DataWF.Data
             }
         }
 
-        public DBItem GetReference(string code, DBLoadParam param = DBLoadParam.Load)
+        public DBItem GetReference(string code, DBLoadParam param = DBLoadParam.Load | DBLoadParam.Referencing)
         {
             DBItem row = this;
             int pi = 0, i = code.IndexOf('.');
@@ -276,7 +276,7 @@ namespace DataWF.Data
             return row.GetReference(row.Table.Columns[code.Substring(pi)], param);
         }
 
-        public DBItem GetReference(DBColumn column, DBLoadParam param = DBLoadParam.Load)
+        public DBItem GetReference(DBColumn column, DBLoadParam param = DBLoadParam.Load | DBLoadParam.Referencing)
         {
             if (column == null)
                 return null;
@@ -290,14 +290,14 @@ namespace DataWF.Data
             return column.ReferenceTable.LoadItemById(value, param);
         }
 
-        public DBItem GetReference(string code, ref DBItem item, DBLoadParam param = DBLoadParam.Load)
+        public DBItem GetReference(string code, ref DBItem item, DBLoadParam param = DBLoadParam.Load | DBLoadParam.Referencing)
         {
             if (item != null)
                 return item;
             return item = GetReference(code, param);
         }
 
-        public DBItem GetReference(DBColumn column, ref DBItem item, DBLoadParam param = DBLoadParam.Load)
+        public DBItem GetReference(DBColumn column, ref DBItem item, DBLoadParam param = DBLoadParam.Load | DBLoadParam.Referencing)
         {
             object value = GetValue(column);
             if (value != null && value.Equals(item?.PrimaryId))
@@ -306,7 +306,7 @@ namespace DataWF.Data
             return item = value == null ? null : column.ReferenceTable.LoadItemById(value, param);
         }
 
-        public T GetReference<T>(DBColumn column, ref T item, DBLoadParam param = DBLoadParam.Load) where T : DBItem
+        public T GetReference<T>(DBColumn column, ref T item, DBLoadParam param = DBLoadParam.Load | DBLoadParam.Referencing) where T : DBItem
         {
             object value = GetValue(column);
             if (value != null && value.Equals(item?.PrimaryId))
@@ -321,7 +321,7 @@ namespace DataWF.Data
             return GetReference(column, ref item);
         }
 
-        //public T GetReference<T>(string code, DBLoadParam param = DBLoadParam.Load) where T : DBItem, new()
+        //public T GetReference<T>(string code, DBLoadParam param = DBLoadParam.Load | DBLoadParam.Referencing) where T : DBItem, new()
         //{
         //    DBItem row = this;
         //    int pi = 0, i = code.IndexOf('.');
@@ -337,7 +337,7 @@ namespace DataWF.Data
         //    return row.GetReference<T>(row.Table.Columns[code.Substring(pi)], param);
         //}
 
-        public T GetReference<T>(DBColumn column, DBLoadParam param = DBLoadParam.Load) where T : DBItem
+        public T GetReference<T>(DBColumn column, DBLoadParam param = DBLoadParam.Load | DBLoadParam.Referencing) where T : DBItem
         {
             return (T)GetReference(column, param);
         }
@@ -442,7 +442,7 @@ namespace DataWF.Data
             //query.TypeFilter = typeof(T);
             if ((param & DBLoadParam.Load) == DBLoadParam.Load)
             {
-                table.Load(query);
+                table.Load(query, param);
             }
             return table.Select(query);
         }
@@ -1340,7 +1340,7 @@ namespace DataWF.Data
                 {
                     if (relation.Table.Type == DBTableType.Table)
                     {
-                        var referencing = item.GetReferencing(relation, DBLoadParam.Load | DBLoadParam.Synchronize).ToList();
+                        var referencing = item.GetReferencing(relation, DBLoadParam.Load | DBLoadParam.Referencing).ToList();
                         if (referencing.Count > 0)
                         {
                             foreach (DBItem subItem in referencing)

@@ -60,7 +60,7 @@ namespace DataWF.Data
             }
         }
 
-        public IEnumerable<T> LoadCache(string filter, DBLoadParam loadParam, DBTransaction transaction = null)
+        public IEnumerable<T> LoadCache(string filter, DBLoadParam loadParam = DBLoadParam.Referencing, DBTransaction transaction = null)
         {
             if (!queryChache.TryGetValue(filter, out var query))
             {
