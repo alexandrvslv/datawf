@@ -78,6 +78,12 @@ namespace DataWF.Common
 
         public event EventHandler Loaded;
 
+        public void AddField(QField field)
+        {
+            field.Index = Columns.Count;
+            Columns[field.Name] = field;
+        }
+
         public void OnLoaded()
         {
             Loaded?.Invoke(this, EventArgs.Empty);
