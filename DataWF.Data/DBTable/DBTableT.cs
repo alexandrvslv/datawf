@@ -386,6 +386,11 @@ namespace DataWF.Data
                     LoadReferenceBlock(command, transaction);
                 }
 
+                if ((param & DBLoadParam.Referencing) == DBLoadParam.Referencing)
+                {
+                    LoadReferencingBlock(command, transaction);
+                }
+
                 if (transaction.Canceled)
                     return list;
                 var whereInd = command.CommandText.IndexOf("where ", StringComparison.OrdinalIgnoreCase);
@@ -440,10 +445,6 @@ namespace DataWF.Data
 
                 transaction.Reader = null;
 
-                if ((param & DBLoadParam.Referencing) == DBLoadParam.Referencing)
-                {
-                    LoadReferencingBlock(command, transaction);
-                }
 
                 //Check IsSynchronized
                 if (transaction.View?.Table == this)
