@@ -24,38 +24,38 @@ namespace DataWF.Data
 {
     public class DBForeignList : DBConstraintList<DBForeignKey>
     {
-        static readonly Invoker<DBForeignKey, string> referenceNameInvoker = new Invoker<DBForeignKey, string>(nameof(DBForeignKey.ReferenceName),
-            (item) => item.ReferenceName);
-        static readonly Invoker<DBForeignKey, string> propertyInvoker = new Invoker<DBForeignKey, string>(nameof(DBForeignKey.Property),
-            (item) => item.Property);
-        static readonly Invoker<DBForeignKey, string> referenceTableNameInvoker = new Invoker<DBForeignKey, string>(nameof(DBForeignKey.ReferenceTableName),
-            (item) => item.ReferenceTableName);
-
+        public static readonly Invoker<DBForeignKey, string> ReferenceNameInvoker = new Invoker<DBForeignKey, string>(nameof(DBForeignKey.ReferenceName),
+            p => p.ReferenceName);
+        public static readonly Invoker<DBForeignKey, string> PropertyInvoker = new Invoker<DBForeignKey, string>(nameof(DBForeignKey.Property),
+            p => p.Property);
+        public static readonly Invoker<DBForeignKey, string> ReferenceTableNameInvoker = new Invoker<DBForeignKey, string>(nameof(DBForeignKey.ReferenceTableName),
+            p => p.ReferenceTableName);
+        
         public DBForeignList(DBTable table) : base(table)
         {
-            Indexes.Add(referenceNameInvoker);
-            Indexes.Add(referenceTableNameInvoker);
-            Indexes.Add(propertyInvoker);
+            Indexes.Add(ReferenceNameInvoker);
+            Indexes.Add(ReferenceTableNameInvoker);
+            Indexes.Add(PropertyInvoker);
         }
 
         public DBForeignKey GetForeignByColumn(DBColumn column)
         {
-            return SelectOne(nameof(DBForeignKey.ColumnName), CompareType.Equal, column.FullName);
+            return SelectOne(ColumnNameInvoker.Name, CompareType.Equal, column.FullName);
         }
 
         public DBForeignKey GetByProperty(string property)
         {
-            return SelectOne(nameof(DBForeignKey.Property), CompareType.Equal, property);
+            return SelectOne(PropertyInvoker.Name, CompareType.Equal, property);
         }
 
         public IEnumerable<DBForeignKey> GetByReference(DBColumn reference)
         {
-            return Select(nameof(DBForeignKey.ReferenceName), CompareType.Equal, reference.FullName);
+            return Select(ReferenceNameInvoker, CompareType.Equal, reference.FullName);
         }
 
         public IEnumerable<DBForeignKey> GetByReference(DBTable reference)
         {
-            return Select(nameof(DBForeignKey.ReferenceTableName), CompareType.Equal, reference.FullName);
+            return Select(ReferenceTableNameInvoker, CompareType.Equal, reference.FullName);
         }
 
         public DBForeignKey GetByColumns(DBColumn column, DBColumn reference)

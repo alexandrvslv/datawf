@@ -10,7 +10,7 @@ namespace DataWF.Common
     public class ListIndex<T, K> : IListIndex<T, K>
     {
         protected ConcurrentDictionary<K, ThreadSafeList<T>> Dictionary;
-        protected readonly IInvoker<T, K> Invoker;
+        protected IInvoker<T, K> Invoker { get; };
         protected readonly K NullKey;
 
         public ListIndex(IInvoker<T, K> invoker, K nullKey, IEqualityComparer<K> comparer = null)

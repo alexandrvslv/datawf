@@ -29,20 +29,20 @@ namespace DataWF.Data
 {
     public class DBColumnList<T> : DBTableItemList<T> where T : DBColumn, new()
     {
-        static readonly Invoker<T, string> groupNameInvoker = new Invoker<T, string>(nameof(DBColumn.GroupName), item => item.GroupName);
-        static readonly Invoker<T, string> propertyInvoker = new Invoker<T, string>(nameof(DBColumn.Property), item => item.Property);
-        static readonly Invoker<T, bool> isViewInvoker = new Invoker<T, bool>(nameof(DBColumn.IsView), item => item.IsView);
-        static readonly Invoker<T, bool> isReferenceInvoker = new Invoker<T, bool>(nameof(DBColumn.IsReference), item => item.IsReference);
-        static readonly Invoker<T, string> referenceTableInvoker = new Invoker<T, string>(nameof(DBColumn.ReferenceTable), item => item.ReferenceTable?.Name);
+        public static readonly Invoker<T, string> GroupNameInvoker = new Invoker<T, string>(nameof(DBColumn.GroupName), p => p.GroupName);
+        public static readonly Invoker<T, string> PropertyInvoker = new Invoker<T, string>(nameof(DBColumn.Property), p => p.Property);
+        public static readonly Invoker<T, bool> IsViewInvoker = new Invoker<T, bool>(nameof(DBColumn.IsView), p => p.IsView);
+        public static readonly Invoker<T, bool> IsReferenceInvoker = new Invoker<T, bool>(nameof(DBColumn.IsReference), p => p.IsReference);
+        public static readonly Invoker<T, string> ReferenceTableInvoker = new Invoker<T, string>(nameof(DBColumn.ReferenceTable), p => p.ReferenceTable?.Name);
 
         public DBColumnList(DBTable table)
             : base(table)
         {
-            Indexes.Add(groupNameInvoker);
-            Indexes.Add(propertyInvoker);
-            Indexes.Add(isViewInvoker);
-            Indexes.Add(isReferenceInvoker);
-            Indexes.Add(referenceTableInvoker);
+            Indexes.Add(GroupNameInvoker);
+            Indexes.Add(PropertyInvoker);
+            Indexes.Add(IsViewInvoker);
+            Indexes.Add(IsReferenceInvoker);
+            Indexes.Add(ReferenceTableInvoker);
         }
 
         protected override void OnPropertyChanged(string property)
@@ -144,27 +144,27 @@ namespace DataWF.Data
 
         public IEnumerable<DBColumn> GetByGroup(string groupName)
         {
-            return string.IsNullOrEmpty(groupName) ? null : Select(nameof(DBColumn.GroupName), CompareType.Equal, groupName);
+            return string.IsNullOrEmpty(groupName) ? null : Select(GroupNameInvoker, CompareType.Equal, groupName);
         }
 
         public IEnumerable<DBColumn> GetByReference(DBTable table)
         {
-            return Select(nameof(DBColumn.ReferenceTable), CompareType.Equal, table.Name);
+            return Select(ReferenceTableInvoker, CompareType.Equal, table.Name);
         }
 
         public IEnumerable<DBColumn> GetIsReference()
         {
-            return Select(nameof(DBColumn.IsReference), CompareType.Equal, true);
+            return Select(IsReferenceInvoker, CompareType.Equal, true);
         }
 
         public IEnumerable<DBColumn> GetIsView()
         {
-            return Select(nameof(DBColumn.IsView), CompareType.Equal, true);
+            return Select(IsViewInvoker, CompareType.Equal, true);
         }
 
         public DBColumn GetByProperty(string property)
         {
-            var columns = Select(nameof(DBColumn.Property), CompareType.Equal, property);
+            var columns = Select(PropertyInvoker, CompareType.Equal, property);
             if (columns.Count() > 1)
             {
                 return columns.Where(p => p.Culture == Locale.Instance.Culture).FirstOrDefault();

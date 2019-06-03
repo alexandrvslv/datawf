@@ -5,6 +5,8 @@ namespace DataWF.Common
 {
     public interface IListIndex
     {
+        IInvoker Invoker { get; };
+
         void Add(object item);
         void Add(object item, object key);
         void Remove(object item);
@@ -16,7 +18,7 @@ namespace DataWF.Common
     }
 
     public interface IListIndex<T> : IListIndex
-    {
+    {        
         void Add(T item);
         void Remove(T item);
         IEnumerable<T> Scan(QueryParameter<T> parameter);
@@ -25,7 +27,7 @@ namespace DataWF.Common
     }
 
     public interface IListIndex<T, K> : IListIndex<T>
-    {
+    {        
         T SelectOne(K value);
         void Add(T item, K key);
         void Remove(T item, K key);

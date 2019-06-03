@@ -25,20 +25,20 @@ namespace DataWF.Data
 {
     public class DBTableList : DBSchemaItemList<DBTable>
     {
-        static readonly Invoker<DBTable, string> groupNameInvoker = new Invoker<DBTable, string>(nameof(DBTable.GroupName), (item) => item.GroupName);
+        public static readonly Invoker<DBTable, string> GroupNameInvoker = new Invoker<DBTable, string>(nameof(DBTable.GroupName), (item) => item.GroupName);
 
         public DBTableList() : this(null)
         { }
 
         public DBTableList(DBSchema schema) : base(schema)
         {
-            Indexes.Add(groupNameInvoker);
+            Indexes.Add(GroupNameInvoker);
             ApplyDefaultSort();
         }
 
         public IEnumerable<DBTable> GetByGroup(string name)
         {
-            return Select(nameof(DBTable.GroupName), CompareType.Equal, name);
+            return Select(GroupNameInvoker, CompareType.Equal, name);
         }
 
         public override int AddInternal(DBTable item)

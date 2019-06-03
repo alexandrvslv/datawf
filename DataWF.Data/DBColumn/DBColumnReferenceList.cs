@@ -8,6 +8,8 @@ namespace DataWF.Data
 {
     public class DBColumnReferenceList : SelectableList<DBColumnReference>
     {
+        public static readonly Invoker<DBColumnReference, string> ColumnNameInvoker = new Invoker<DBColumnReference, string>(
+            nameof(DBColumnReference.ColumnName), p => p.ColumnName, (p, v) => p.ColumnName = v);
         public DBColumnReferenceList()
         {
             //Indexes.Add("Column");
@@ -44,7 +46,7 @@ namespace DataWF.Data
 
         public bool Contains(string column)
         {
-            return Select(nameof(DBColumnReference.ColumnName), CompareType.Equal, column).Any();
+            return Select(ColumnNameInvoker, CompareType.Equal, column).Any();
         }
 
         protected override void OnPropertyChanged(string property)

@@ -41,7 +41,7 @@ namespace DataWF.Web.Common
 
         public IEnumerable<WebNotifyConnection> GetByUser(User user)
         {
-            return connections.Select(WebNotifyConnection.UserInvoker.Name, CompareType.Equal, user);
+            return connections.Select(WebNotifyConnection.UserInvoker, CompareType.Equal, user);
         }
 
         public void SetCurrentAction(AuthorizationFilterContext context)

@@ -374,7 +374,7 @@ namespace DataWF.Data
                             TempAssembly = Assembly.LoadFrom(file);//File.ReadAllBytes(FileDataName)
                                                                    //TempAssembly = Assembly.LoadFile(Path.Combine(Environment.CurrentDirectory,  FileDataName)); // Assembly.Load(File.ReadAllBytes(FileDataName))
                         }
-                        var list = Store.Select(nameof(DataName), CompareType.Equal, DataName);
+                        var list = Store.Select(DBProcedureList.DataNameInvoker, CompareType.Equal, DataName);
                         foreach (DBProcedure proc in list)
                             proc.TempAssembly = TempAssembly;
                     }
@@ -794,7 +794,7 @@ namespace DataWF.Data
             Helper.Logs.Add(new StateInfo("Startup", "Cache Sources", "", StatusType.Information));
 
 
-            var groups = schema.Procedures.Select(nameof(DBProcedure.ProcedureType),
+            var groups = schema.Procedures.Select(DBProcedureList.ProcedureTypeInvoker,
                                                   CompareType.Equal,
                                                   ProcedureTypes.Source).GroupBy((p) => p.DataName);
             foreach (var group in groups)

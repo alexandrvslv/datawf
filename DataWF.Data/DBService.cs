@@ -75,6 +75,8 @@ namespace DataWF.Data
         private static DBConnectionList connections = new DBConnectionList();
         private static DBSchemaList schems = new DBSchemaList();
 
+        public static Invoker<DBSchemaChange, DBSchemaItem> DBSchemaChangeItemInvoker = new Invoker<DBSchemaChange, DBSchemaItem>(
+            nameof(DBSchemaChange.Item), p => p.Item, (p, v) => p.Item = v);
         public static SelectableList<DBSchemaChange> Changes = new SelectableList<DBSchemaChange>();
 
         public static event EventHandler<DBSchemaChangedArgs> DBSchemaChanged;
@@ -96,7 +98,7 @@ namespace DataWF.Data
             }
             DBSchemaChange change = null;
 
-            var list = Changes.Select("Item", CompareType.Equal, item).ToList();
+            var list = Changes.Select(DBSchemaChangeItemInvoker, CompareType.Equal, item).ToList();
 
             if (list.Count > 0)
             {

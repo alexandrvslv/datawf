@@ -24,11 +24,11 @@ namespace DataWF.Data
 {
     public class DBTableGroupList : DBSchemaItemList<DBTableGroup>
     {
-        static readonly Invoker<DBTableGroup, string> groupNameInvoker = new Invoker<DBTableGroup, string>(nameof(DBTableGroup.GroupName), (item) => item.GroupName);
+        public static readonly Invoker<DBTableGroup, string> GroupNameInvoker = new Invoker<DBTableGroup, string>(nameof(DBTableGroup.GroupName), (item) => item.GroupName);
 
         public DBTableGroupList(DBSchema schema) : base(schema)
         {
-            Indexes.Add(groupNameInvoker);
+            Indexes.Add(GroupNameInvoker);
         }
 
         public IEnumerable<DBTableGroup> GetTopParents()
@@ -38,7 +38,7 @@ namespace DataWF.Data
 
         public IEnumerable<DBTableGroup> GetByGroup(string name)
         {
-            return Select(nameof(DBTableGroup.GroupName), CompareType.Equal, name);
+            return Select(GroupNameInvoker, CompareType.Equal, name);
         }
     }
 }

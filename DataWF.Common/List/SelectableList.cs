@@ -150,10 +150,21 @@ namespace DataWF.Common
             return Select(property, comparer, value);
         }
 
+        public IEnumerable<T> Select(IInvoker invoker, CompareType comparer, object value)
+        {
+            return Select(new QueryParameter<T>
+            {
+                Invoker = invoker,
+                Comparer = comparer,
+                Value = value
+            });
+        }
+
         public IEnumerable<T> Select(string property, CompareType comparer, object value)
         {
             return Select(new QueryParameter<T>
             {
+                Invoker = Indexes.GetIndex(property)?.Invoker,
                 Name = property,
                 Comparer = comparer,
                 Value = value

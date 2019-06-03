@@ -42,7 +42,8 @@ namespace DataWF.Data
 
     public class QParamList : QItemList<QParam>
     {
-        static readonly Invoker<QParam, QParam> groupInvoker = new Invoker<QParam, QParam>(nameof(QParam.Group), (item) => item.Group);
+        public static readonly Invoker<QParam, QParam> GroupInvoker = new Invoker<QParam, QParam>(nameof(QParam.Group), p => p.Group);
+        public static readonly Invoker<QParam, string> ColumnNameInvoker = new Invoker<QParam, string>("Column.Name", p => p.Column?.Name);
 
         public QParamList()
         {
@@ -886,7 +887,7 @@ namespace DataWF.Data
         public QParam BuildNameParam(string property, CompareType comparer, object value)
         {
             var param = new QParam();
-            foreach (var item in Table.Columns.Select(nameof(DBColumn.GroupName), CompareType.Equal, property))
+            foreach (var item in Table.Columns.Select(DBColumnList<DBColumn>.GroupNameInvoker, CompareType.Equal, property))
             {
                 param.Parameters.Add(QQuery.CreateParam(LogicType.Or, item, comparer, value));
             }
@@ -1302,7 +1303,7 @@ namespace DataWF.Data
 
         public bool Contains(string column)
         {
-            return parameters.Select("Column.Name", CompareType.Equal, column).Any();
+            return parameters.Select(QParamList.ColumnNameInvoker, CompareType.Equal, column).Any();
         }
 
         public QParam GetByColumn(DBColumn column)

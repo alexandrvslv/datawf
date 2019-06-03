@@ -27,30 +27,30 @@ namespace DataWF.Data
 {
     public class DBProcedureList : DBSchemaItemList<DBProcedure>
     {
-        static readonly Invoker<DBProcedure, string> parentNameInvoker = new Invoker<DBProcedure, string>(nameof(DBProcedure.GroupName), (item) => item.GroupName);
-        static readonly Invoker<DBProcedure, string> dataNameInvoker = new Invoker<DBProcedure, string>(nameof(DBProcedure.DataName), (item) => item.DataName);
-        static readonly Invoker<DBProcedure, ProcedureTypes> typeInvoker = new Invoker<DBProcedure, ProcedureTypes>(nameof(DBProcedure.ProcedureType), (item) => item.ProcedureType);
+        public static readonly Invoker<DBProcedure, string> GroupNameInvoker = new Invoker<DBProcedure, string>(nameof(DBProcedure.GroupName), (item) => item.GroupName);
+        public static readonly Invoker<DBProcedure, string> DataNameInvoker = new Invoker<DBProcedure, string>(nameof(DBProcedure.DataName), (item) => item.DataName);
+        public static readonly Invoker<DBProcedure, ProcedureTypes> ProcedureTypeInvoker = new Invoker<DBProcedure, ProcedureTypes>(nameof(DBProcedure.ProcedureType), (item) => item.ProcedureType);
 
         private Dictionary<string, Dictionary<string, DBProcedure>> codeIndex = new Dictionary<string, Dictionary<string, DBProcedure>>(StringComparer.OrdinalIgnoreCase);
 
         public DBProcedureList(DBSchema schema) : base(schema)
         {
-            Indexes.Add(parentNameInvoker);
-            Indexes.Add(dataNameInvoker);
-            Indexes.Add(typeInvoker);
+            Indexes.Add(GroupNameInvoker);
+            Indexes.Add(DataNameInvoker);
+            Indexes.Add(ProcedureTypeInvoker);
         }
 
         public IEnumerable<DBProcedure> SelectByFile(string fileName)
         {
             var query = new Query<DBProcedure>();
-            query.Parameters.Add(new QueryParameter<DBProcedure>() { Name = nameof(DBProcedure.ProcedureType), Value = ProcedureTypes.Source });
-            query.Parameters.Add(new QueryParameter<DBProcedure>() { Name = nameof(DBProcedure.DataName), Value = fileName });
+            query.Parameters.Add(new QueryParameter<DBProcedure>() { Invoker = ProcedureTypeInvoker, Value = ProcedureTypes.Source });
+            query.Parameters.Add(new QueryParameter<DBProcedure>() { Invoker = DataNameInvoker, Value = fileName });
             return Select(query);
         }
 
         public IEnumerable<DBProcedure> SelectByParent(DBProcedure procedure)
         {
-            return Select(nameof(DBProcedure.GroupName), CompareType.Equal, procedure?.Name);
+            return Select(GroupNameInvoker, CompareType.Equal, procedure?.Name);
         }
 
         public IEnumerable<KeyValuePair<string, DBProcedure>> SelectByCategory(string category = "General")

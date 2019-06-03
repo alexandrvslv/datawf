@@ -25,26 +25,28 @@ namespace DataWF.Data
 {
     public class DBConstraintList<T> : DBTableItemList<T> where T : DBConstraint, new()
     {
-        static readonly Invoker<T, string> columnNameInvoker = new Invoker<T, string>(nameof(DBConstraint.ColumnName), (item) => item.ColumnName);
-
+        public static readonly Invoker<T, string> ColumnNameInvoker = new Invoker<T, string>(
+            nameof(DBConstraint.ColumnName), p => p.ColumnName, (p, v) => p.ColumnName = v);
+        public static readonly Invoker<T, string> ValueInvoker = new Invoker<T, string>(
+            nameof(DBConstraint.Value), p => p.Value, (p, v) => p.Value = v);
         public DBConstraintList(DBTable table) : base(table)
         {
-            Indexes.Add(columnNameInvoker);
+            Indexes.Add(ColumnNameInvoker);
         }
 
         public IEnumerable<T> GetByColumn(DBColumn column)
         {
-            return Select(nameof(DBConstraint.ColumnName), CompareType.Equal, column.FullName);
+            return Select(ColumnNameInvoker, CompareType.Equal, column.FullName);
         }
 
         public IEnumerable<T> GetByColumnAndTYpe(DBColumn column, DBConstraintType type)
         {
-            return Select(nameof(DBConstraint.ColumnName), CompareType.Equal, column.FullName).Where(p => p.Type == type);
+            return Select(ColumnNameInvoker, CompareType.Equal, column.FullName).Where(p => p.Type == type);
         }
 
         public IEnumerable<T> GetByValue(string value)
         {
-            return Select(nameof(DBConstraint.Value), CompareType.Equal, value);
+            return Select(ValueInvoker, CompareType.Equal, value);
         }
 
         public override DDLType GetInsertType(T item)

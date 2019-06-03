@@ -7,7 +7,7 @@ namespace DataWF.Common
 {
     public class TypeSerializationInfo
     {
-        static readonly Invoker<PropertySerializationInfo, bool> isAttributeInvoker = new Invoker<PropertySerializationInfo, bool>(nameof(PropertySerializationInfo.IsAttribute), (item) => item.IsAttribute);
+        static readonly Invoker<PropertySerializationInfo, bool> IsAttributeInvoker = new Invoker<PropertySerializationInfo, bool>(nameof(PropertySerializationInfo.IsAttribute), (item) => item.IsAttribute);
 
         public TypeSerializationInfo(Type type) : this(type, TypeHelper.GetPropertiesByHierarchi(type))
         { }
@@ -48,7 +48,7 @@ namespace DataWF.Common
             IsDictionary = TypeHelper.IsDictionary(type);
 
             Properties = new NamedList<PropertySerializationInfo>();
-            Properties.Indexes.Add(isAttributeInvoker);
+            Properties.Indexes.Add(IsAttributeInvoker);
 
             foreach (var property in properties)
             {
@@ -93,9 +93,9 @@ namespace DataWF.Common
 
         public bool IsDictionary { get; }
 
-        public IEnumerable<PropertySerializationInfo> GetAttributes() => Properties.Select(isAttributeInvoker.Name, CompareType.Equal, true);
+        public IEnumerable<PropertySerializationInfo> GetAttributes() => Properties.Select(IsAttributeInvoker, CompareType.Equal, true);
 
-        public IEnumerable<PropertySerializationInfo> GetContents() => Properties.Select(isAttributeInvoker.Name, CompareType.Equal, false);
+        public IEnumerable<PropertySerializationInfo> GetContents() => Properties.Select(IsAttributeInvoker, CompareType.Equal, false);
 
         public NamedList<PropertySerializationInfo> Properties { get; private set; }
 
