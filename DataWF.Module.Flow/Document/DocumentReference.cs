@@ -144,10 +144,10 @@ namespace DataWF.Module.Flow
         public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)
         {
             base.OnPropertyChanged(property, column, value);
-            GetReference<Document>(Table.ParseProperty(nameof(Reference)), ref reference, DBLoadParam.None);
-            if (Attached && reference != null)
+
+            if (Attached)
             {
-                reference.OnReferenceChanged(this);
+                GetReference<Document>(ReferenceKey, ref reference, DBLoadParam.None)?.OnReferenceChanged(this);
             }
         }
 
