@@ -161,15 +161,15 @@ namespace DataWF.Module.Flow
             if (!item.Attached)
                 return;
 
-            if (item is DocumentWork work)
-            {
-                if (work.Completed || work.UpdateState == DBUpdateState.Default)
-                    RefreshCache();
-            }
-            else if (item is DocumentReference reference)
-            {
-                RefChanged?.Invoke(this, ListChangedType.Reset);
-            }
+            //if (item is DocumentWork work)
+            //{
+            //    if (work.Completed || work.UpdateState == DBUpdateState.Default)
+            //        RefreshCache();
+            //}
+            //else if (item is DocumentReference reference)
+            //{
+            //    RefChanged?.Invoke(this, ListChangedType.Reset);
+            //}
             if (item.UpdateState != DBUpdateState.Default && (item.UpdateState & DBUpdateState.Commit) != DBUpdateState.Commit && item.Attached)
             {
                 changes++;
@@ -997,8 +997,7 @@ namespace DataWF.Module.Flow
             string workUsers = string.Empty;
             string workStages = string.Empty;
             DocumentWork current = null;
-            var works = GetReferencing<DocumentWork>(nameof(DocumentWork.DocumentId), DBLoadParam.None);
-            foreach (DocumentWork dw in works)
+            foreach (DocumentWork dw in Works)
             {
                 var stage = dw.Stage?.ToString() ?? "none";
                 var user = dw.User?.Name ?? "empty";
@@ -1019,9 +1018,9 @@ namespace DataWF.Module.Flow
                 }
             }
             if (workStages.Length == 0)
-                workStages = works.LastOrDefault()?.Stage?.ToString() ?? "none";
+                workStages = Works.LastOrDefault()?.Stage?.ToString() ?? "none";
             if (workUsers.Length == 0)
-                workUsers = works.LastOrDefault()?.User?.Name ?? "empty";
+                workUsers = Works.LastOrDefault()?.User?.Name ?? "empty";
             WorkUser = workUsers;
             WorkStage = workStages;
         }
