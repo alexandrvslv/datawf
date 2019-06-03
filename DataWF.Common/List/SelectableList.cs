@@ -221,6 +221,7 @@ namespace DataWF.Common
             get { return items == null; }
         }
 
+        [XmlIgnore, JsonIgnore]
         public bool CheckUnique { get; set; } = true;
 
         public virtual void OnListChanged(NotifyCollectionChangedEventArgs e)

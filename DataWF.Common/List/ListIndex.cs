@@ -10,7 +10,7 @@ namespace DataWF.Common
     public class ListIndex<T, K> : IListIndex<T, K>
     {
         protected ConcurrentDictionary<K, ThreadSafeList<T>> Dictionary;
-        protected IInvoker<T, K> Invoker { get; };
+
         protected readonly K NullKey;
 
         public ListIndex(IInvoker<T, K> invoker, K nullKey, IEqualityComparer<K> comparer = null)
@@ -26,6 +26,10 @@ namespace DataWF.Common
                 Dictionary = new ConcurrentDictionary<K, ThreadSafeList<T>>();
             }
         }
+
+        public IInvoker<T, K> Invoker { get; }
+
+        IInvoker IListIndex.Invoker => Invoker;
 
         public bool CheckParameter(QueryParameter<T> param)
         {

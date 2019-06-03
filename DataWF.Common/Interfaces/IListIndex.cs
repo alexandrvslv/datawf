@@ -5,7 +5,7 @@ namespace DataWF.Common
 {
     public interface IListIndex
     {
-        IInvoker Invoker { get; };
+        IInvoker Invoker { get; }
 
         void Add(object item);
         void Add(object item, object key);
