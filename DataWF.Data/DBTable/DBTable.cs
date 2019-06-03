@@ -648,9 +648,17 @@ namespace DataWF.Data
 
         public void LoadReferencingBlock(IDbCommand command, DBTransaction transaction)
         {
+            if (!TableAttribute.Referencings.Any())
+                return;
             var oldAlias = Helper.IntToChar(transaction.ReferencingRecursion).ToLowerInvariant();
             transaction.ReferencingRecursion++;
             var newAlias = Helper.IntToChar(transaction.ReferencingRecursion).ToLowerInvariant();
+            var whereIndex = command.CommandText.IndexOf(" left join ", StringComparison.OrdinalIgnoreCase);
+            if (whereIndex < 0)
+            {
+                whereIndex = command.CommandText.IndexOf(" where ", StringComparison.OrdinalIgnoreCase);
+            }
+            var where = whereIndex < 0 ? string.Empty : command.CommandText.Substring(whereIndex);
             foreach (var reference in TableAttribute.Referencings)
             {
                 var referenceColumn = reference.ReferenceColumn;
@@ -659,18 +667,14 @@ namespace DataWF.Data
                     && !reference.ReferenceTable.Table.IsSynchronized
                     && !(reference.ReferenceTable.Table is IDBVirtualTable))
                 {
-                    var whereIndex = command.CommandText.IndexOf(" left join ", StringComparison.OrdinalIgnoreCase);
-                    if (whereIndex < 0)
-                    {
-                        whereIndex = command.CommandText.IndexOf(" where ", StringComparison.OrdinalIgnoreCase);
-                    }
-                    var where = whereIndex < 0 ? string.Empty : command.CommandText.Substring(whereIndex);
+
                     var subCommand = DBCommand.CloneCommand(command, reference.ReferenceTable.Table.BuildQuery($@"
     left join {SqlName} {oldAlias} on {oldAlias}.{PrimaryKey.SqlName} = {newAlias}.{referenceColumn.Column.SqlName} 
     {where}", newAlias, null));
                     reference.ReferenceTable.Table.LoadItems(subCommand, DBLoadParam.Referencing, transaction);
                 }
             }
+            transaction.ReferencingRecursion--;
         }
 
         public DBColumn GetNameKey(string group)

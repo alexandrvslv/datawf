@@ -381,10 +381,6 @@ namespace DataWF.Data
             {
                 transaction.AddCommand(command);
 
-                if ((param & DBLoadParam.Referencing) == DBLoadParam.Referencing)
-                {
-                    LoadReferencingBlock(command, transaction);
-                }
                 if ((param & DBLoadParam.Reference) == DBLoadParam.Reference)
                 {
                     LoadReferenceBlock(command, transaction);
@@ -440,6 +436,13 @@ namespace DataWF.Data
                         if (transaction.View?.Table == this && transaction.View.IsStatic)
                             transaction.View.Add(row);
                     }
+                }
+
+                transaction.Reader = null;
+
+                if ((param & DBLoadParam.Referencing) == DBLoadParam.Referencing)
+                {
+                    LoadReferencingBlock(command, transaction);
                 }
 
                 //Check IsSynchronized
