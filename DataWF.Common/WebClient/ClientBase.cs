@@ -593,7 +593,7 @@ namespace DataWF.Common
 
         private void ErrorStatus(string message, HttpResponseMessage response, string responseData)
         {
-            throw new ClientException($"{message}",
+            throw new ClientException(message,
                 (int)response.StatusCode,
                 responseData,
                 GetHeaders(response), null);
@@ -601,7 +601,7 @@ namespace DataWF.Common
 
         private void BadRequest(string message, HttpResponseMessage response)
         {
-            throw new ClientException($"{message}",
+            throw new ClientException(message,
                 (int)response.StatusCode,
                 null,
                 GetHeaders(response), null);

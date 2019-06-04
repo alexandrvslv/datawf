@@ -1078,7 +1078,7 @@ namespace DataWF.Data
                 {
                     Helper.OnException(ex);
                     transaction.Rollback();
-                    throw new Exception("Some Exception during Save!", ex);
+                    throw new Exception("Save Error:", ex);
                 }
             }
         }

@@ -235,7 +235,7 @@ namespace DataWF.Web.Common
             if (error is Exception exception)
             {
                 Helper.OnException(exception);
-                error = table.System.FormatException(exception, item);
+                error = table.System.FormatException(exception, table, item);
             }
             return base.BadRequest(error);
         }

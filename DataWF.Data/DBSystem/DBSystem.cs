@@ -465,9 +465,15 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             }
         }
 
-        public virtual string FormatException(Exception exception, DBItem item)
+        public virtual string FormatException(Exception exception, DBTable table, DBItem item)
         {
-            return $"{exception.Message}";//{exception.GetType().Name} 
+            var sb = new StringBuilder();
+            while (exception != null)
+            {
+                sb.AppendLine(exception.Message);
+                exception = exception.InnerException;
+            }
+            return sb.ToString();
         }
 
         public virtual void Format(StringBuilder ddl, DBTable table, DDLType ddlType, bool constraints = true, bool indexes = true)

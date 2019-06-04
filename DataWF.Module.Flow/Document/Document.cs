@@ -243,7 +243,7 @@ namespace DataWF.Module.Flow
             set { SetValue(value, DocumentDateKey); }
         }
 
-        [DataMember, Column("document_number", 40, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing), Index("ddocuument_document_number")]
+        [DataMember, Column("document_number", 80, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing), Index("ddocuument_document_number")]
         public virtual string Number
         {
             get { return GetValue<string>(NumberKey); }
@@ -764,7 +764,7 @@ namespace DataWF.Module.Flow
             {
                 Helper.OnException(ex);
                 transaction.Rollback();
-                throw new Exception("Some error during save", ex);
+                throw new Exception("Save Error:", ex);
             }
             finally
             {

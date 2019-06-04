@@ -240,31 +240,46 @@ namespace DataWF.Data
             return value;
         }
 
-        public override string FormatException(Exception exception, DBItem item)
+        public override string FormatException(Exception exception, DBTable table, DBItem item)
         {
-            if (exception is PostgresException pex)
+            var lines = new List<string>();
+            while (exception != null)
             {
-                var text = string.IsNullOrEmpty(pex.Detail) ? pex.MessageText : pex.Detail;
-                return item == null ? text : FormatMessage(text, item.Table);
+                var text = exception is PostgresException pex
+                    ? FormatMessage(pex, table, item)
+                    : exception.Message;
+                if (lines.FindIndex(p => p.Equals(text, StringComparison.Ordinal)) < 0)
+                    lines.Add(text);
+                exception = exception.InnerException;
             }
-            return base.FormatException(exception, item);
+            var sb = new StringBuilder();
+            foreach (var line in lines)
+            {
+                sb.AppendLine(line);
+            }
+            return sb.ToString();
         }
 
-        private string FormatMessage(string text, DBTable table)
+        private string FormatMessage(PostgresException pex, DBTable table, DBItem dbItem)
         {
+            var text = string.IsNullOrEmpty(pex.Detail) ? pex.MessageText : pex.Detail;
+            var refTable = string.IsNullOrEmpty(pex.TableName) ? null : DBService.Schems.ParseTable(pex.TableName);
             var builder = new StringBuilder();
             text = text.Replace("character varying", "Text");
             foreach (var item in text.Split(new char[] { ',', ' ', '"', '(', ')' }, StringSplitOptions.RemoveEmptyEntries))
             {
-                var column = table.ParseProperty(item);
-                if (column != null)
+                if (table != null)
                 {
-                    builder.Append(column.DisplayName);
+                    var column = refTable?.ParseColumnProperty(item) ?? table?.ParseColumnProperty(item);
+                    if (column != null)
+                    {
+                        builder.Append(column.DisplayName);
+                        builder.Append(' ');
+                        continue;
+                    }
                 }
-                else
-                {
-                    builder.Append(item);
-                }
+
+                builder.Append(item);
                 builder.Append(' ');
             }
 
