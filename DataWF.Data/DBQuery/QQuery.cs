@@ -57,6 +57,8 @@ namespace DataWF.Data
 
     public class QQuery : QItem, IQuery, IDisposable, IQItemList
     {
+        static readonly char[] separator = new char[] { ',' };
+
         public string CacheQuery;
         protected SelectableList<QParam> allParameters;
         protected QParamList parameters;
@@ -879,11 +881,6 @@ namespace DataWF.Data
             return param;
         }
 
-        public QParam BuildParam(DBColumn col, object val)
-        {
-            return BuildParam(col, val, false);
-        }
-
         public QParam BuildNameParam(string property, CompareType comparer, object value)
         {
             var param = new QParam();
@@ -899,12 +896,12 @@ namespace DataWF.Data
             return BuildParam(Table.ParseProperty(property), comparer, value);
         }
 
-        public QParam BuildParam(string column, object value, bool autoLike)
+        public QParam BuildParam(string column, object value, QQueryBuildParam buildParam = QQueryBuildParam.None)
         {
             int index = column.IndexOf('.');
             if (index >= 0)
             {
-                string[] split = column.Split(DBService.DotSplit);//TODO replace with substring
+                string[] split = column.Split(DBService.DotSplit);//TODO JOIN
                 DBTable table = Table;
                 QQuery q = this;
                 QParam param = null;
@@ -924,22 +921,28 @@ namespace DataWF.Data
                             q.Columns.Add(new QColumn(dbColumn.ReferenceTable.PrimaryKey.Name));
                         }
                 }
-                q.BuildParam(dbColumn, value, autoLike);
+                q.BuildParam(dbColumn, value, buildParam);
                 param = parameters[parameters.Count - 1];
                 if (parameters.Count > 1)
+                {
                     param.Logic = LogicType.And;
+                }
+
                 return param;
             }
             else
-                return BuildParam(Table.Columns[column], value, autoLike);
-
+            {
+                return BuildParam(Table.Columns[column], value, buildParam);
+            }
         }
 
-        public QParam BuildParam(DBColumn column, object value, bool autoLike)
+        public QParam BuildParam(DBColumn column, object value, QQueryBuildParam buildParam = QQueryBuildParam.None)
         {
             CompareType comparer = CompareType.Equal;
             if (value is QQuery)
+            {
                 comparer = CompareType.In;
+            }
             else if (value is DBItem)
             {
                 if (value is DBGroupItem)
@@ -948,48 +951,76 @@ namespace DataWF.Data
                     comparer = CompareType.In;
                 }
                 else
+                {
                     value = ((DBItem)value).PrimaryId;
+                }
             }
-            else if ((column.Keys & DBColumnKeys.Boolean) == DBColumnKeys.Boolean)
-                comparer = CompareType.Equal;
             else if (column.DataType == typeof(string))
-                comparer = CompareType.Like;
-            else if (value is DateInterval)// && !((DateInterval)val).IsEqual())
+            {
+                if ((buildParam & QQueryBuildParam.AutoLike) != 0)
+                    comparer = CompareType.Like;
+                else if ((buildParam & QQueryBuildParam.SplitString) != 0
+                    && value.ToString().Contains(','))
+                    comparer = CompareType.In;
+            }
+            else if (value is DateInterval)
+            {
                 comparer = CompareType.Between;
+            }
             else if (column.DataType == typeof(DateTime))
+            {
                 comparer = CompareType.Equal;
-            return BuildParam(column, comparer, value, autoLike);
+            }
+
+            return BuildParam(column, comparer, value, buildParam);
         }
 
-        public QParam BuildParam(DBColumn column, CompareType comparer, object value, bool autoLike = false)
+        public QParam BuildParam(DBColumn column, CompareType comparer, object value, QQueryBuildParam buildParam = QQueryBuildParam.None)
         {
             if (column == null)
                 return null;
 
-            //  foreach (QParam p in parameters)
-            // if (p.Column == col && p.Comparer == comp && p.Value == val)
-            //return p;
-
             QParam param = null;
-
-            if (value != null && column.DataType == typeof(string) && (comparer.Type == CompareTypes.Like || comparer.Type == CompareTypes.Equal))
+            if (column.DataType == typeof(string))
             {
-                string like = autoLike ? "%" : "";
-                string[] split = value.ToString().Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-                if (split.Length == 1)
-                    param = CreateParam(column, comparer, like + split[0].Trim() + like);
+                string like = (buildParam & QQueryBuildParam.AutoLike) != 0
+                    && comparer.Type == CompareTypes.Like ? "%" : "";
+
+                if ((buildParam & QQueryBuildParam.SplitString) != 0
+                    && value is string stringValue)
+                {
+                    string[] split = stringValue.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+                    if (split.Length == 1)
+                    {
+                        param = CreateParam(column, comparer, like + split[0].Trim() + like);
+                    }
+                    else if (comparer.Type == CompareTypes.Like
+                        || comparer.Type == CompareTypes.Equal)
+                    {
+                        param = parameters.Add();
+                        foreach (string item in split)
+                        {
+                            if (item.Trim().Length == 0)
+                            {
+                                continue;
+                            }
+
+                            param.Parameters.Add(CreateParam(param.Parameters.Count == 0
+                                ? LogicType.And
+                                : LogicType.Or,
+                                column,
+                                comparer,
+                                like + item.Trim() + like));
+                        }
+                    }
+                    else if (comparer.Type == CompareTypes.In)
+                    {
+                        param = CreateParam(column, comparer, split);
+                    }
+                }
                 else
                 {
-                    param = parameters.Add();
-                    int i = 0;
-                    foreach (string s in split)
-                    {
-                        if (s.Trim().Length == 0)
-                            continue;
-
-                        param.Parameters.Add(CreateParam(i == 0 ? LogicType.And : LogicType.Or, column, comparer, like + s.Trim() + like));
-                        i++;
-                    }
+                    param = CreateParam(column, comparer, like + value + like);
                 }
             }
             else
@@ -998,18 +1029,20 @@ namespace DataWF.Data
             }
 
             if (param != null && param.Query == null)
+            {
                 Parameters.Add(param);
+            }
 
             return param;
         }
 
-        public QParam BuildParam(DBColumn parent, DBColumn column, object p, bool p_4)
+        public QParam BuildParam(DBColumn parent, DBColumn column, object p, QQueryBuildParam buildParam)
         {
             var query = new QQuery("", column.Table);
             query.Columns.Add(new QColumn(column.Table.PrimaryKey.Name));
             query.Parameters.Remove(column);
-            query.BuildParam(column, p, p_4);
-            QParam param = CreateParam(parent, CompareType.In, query);
+            query.BuildParam(column, p, buildParam);
+            var param = CreateParam(parent, CompareType.In, query);
             Parameters.Add(param);
             return param;
         }
@@ -1379,6 +1412,14 @@ namespace DataWF.Data
         Minus,
         Devide,
         Multiply
+    }
+
+    [Flags]
+    public enum QQueryBuildParam
+    {
+        None = 0,
+        AutoLike = 1,
+        SplitString = 2
     }
 
 }
