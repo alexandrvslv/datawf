@@ -7,7 +7,7 @@
     <AssemblyName>DataWF.StarterWpf</AssemblyName>
     <TargetFrameworks>net461</TargetFrameworks>
     <Platforms>AnyCPU</Platforms>
-    <Version>1.3.45.0</Version>
+    <Version>1.3.46.0</Version>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
