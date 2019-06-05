@@ -30,8 +30,9 @@ namespace DataWF.Common
         int TypeId { get; }
         bool Add(object item);
         bool Remove(object item);
-        void AddDownloads(object id, object item);
+        object AddDownloads(object id, object item);
         bool RemoveDownloads(object id);
+        object GetDownloads(object id);
         void RemoveById(object id);
         object Select(object id);
         object ParseId(object id);

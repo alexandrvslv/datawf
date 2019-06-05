@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -17,12 +18,15 @@ namespace DataWF.Common
             TypeInvoker = typeInvoker;
             TypeId = typeId;
             SerializationInfo = new TypeSerializationInfo(typeof(T));
+            if (typeId == 0)
+                downloads = new ConcurrentDictionary<K, T>();
         }
-        private ConcurrentDictionary<K, T> downloadItems = new ConcurrentDictionary<K, T>();
+        private ConcurrentDictionary<K, T> downloads;
 
         public TypeSerializationInfo SerializationInfo;
         private ICRUDClient baseClient;
         private LoadProgress<T> loadProgress;
+        //private object downloadLock;
 
         public Invoker<T, K?> IdInvoker { get; }
 
@@ -111,7 +115,7 @@ namespace DataWF.Common
                         IdInvoker.SetValue(item, id);
                         if (!Items.Contains(item))
                         {
-                            AddDownloads((K)id, item);
+                            item = AddDownloads((K)id, item);
                         }
                         continue;
                     }
@@ -148,19 +152,33 @@ namespace DataWF.Common
 
         public bool RemoveDownloads(K id)
         {
-            return downloadItems.TryRemove(id, out var item) ||
-             (GetBaseClient()?.RemoveDownloads(id) ?? false);
+            return downloads != null
+                ? downloads.TryRemove(id, out var item)
+                : (GetBaseClient()?.RemoveDownloads(id) ?? false);
         }
 
-        public void AddDownloads(object id, object item)
+        public object AddDownloads(object id, object item)
         {
-            AddDownloads((K)id, (T)item);
+            return AddDownloads((K)id, (T)item);
         }
 
-        public void AddDownloads(K id, T item)
+        public T AddDownloads(K id, T item)
         {
-            downloadItems[id] = item;
-            GetBaseClient()?.AddDownloads(id, item);
+            return downloads != null
+                 ? downloads.GetOrAdd(id, item)
+                 : GetBaseClient()?.AddDownloads(id, item) as T;
+        }
+
+        public object GetDownloads(object id)
+        {
+            return GetDownloads((K)id);
+        }
+
+        public T GetDownloads(K id)
+        {
+            return downloads != null
+                 ? downloads.TryGetValue(id, out var item) ? item : null
+                 : GetBaseClient()?.GetDownloads(id) as T;
         }
 
         private T SelectBase(object id)
@@ -279,12 +297,7 @@ namespace DataWF.Common
 
         public virtual T Select(K id)
         {
-            var item = Items.SelectOne(IdInvoker.Name, (K?)id);
-            if (item == null)
-            {
-                downloadItems.TryGetValue(id, out item);
-            }
-            return item;
+            return Items.SelectOne(IdInvoker.Name, (K?)id) ?? GetDownloads(id);
         }
 
         public virtual T Get(object id)
@@ -319,12 +332,13 @@ namespace DataWF.Common
             var item = Select(id);
             if (item == null)
             {
+                Debug.WriteLine($"Client.Get {typeof(T)} {id}");
                 item = new T();
                 if (item is IPrimaryKey keyed)
                     keyed.PrimaryKey = id;
                 if (item is ISynchronized synched)
                     synched.SyncStatus = SynchronizedStatus.Load;
-                AddDownloads(id, item);
+                item = AddDownloads(id, item);
                 _ = GetAction(id, loadAction).ConfigureAwait(false);
             }
             return item;
