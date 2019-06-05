@@ -981,7 +981,10 @@ namespace DataWF.Data
                 return null;
 
             QParam param = null;
-            if (column.DataType == typeof(string))
+            if (column.DataType == typeof(string) &&
+                (comparer.Type == CompareTypes.Like
+                || comparer.Type == CompareTypes.Equal
+                || comparer.Type == CompareTypes.In))
             {
                 string like = (buildParam & QQueryBuildParam.AutoLike) != 0
                     && comparer.Type == CompareTypes.Like ? "%" : "";
@@ -994,8 +997,11 @@ namespace DataWF.Data
                     {
                         param = CreateParam(column, comparer, like + split[0].Trim() + like);
                     }
-                    else if (comparer.Type == CompareTypes.Like
-                        || comparer.Type == CompareTypes.Equal)
+                    else if (comparer.Type == CompareTypes.In)
+                    {
+                        param = CreateParam(column, comparer, split);
+                    }
+                    else
                     {
                         param = parameters.Add();
                         foreach (string item in split)
@@ -1012,10 +1018,6 @@ namespace DataWF.Data
                                 comparer,
                                 like + item.Trim() + like));
                         }
-                    }
-                    else if (comparer.Type == CompareTypes.In)
-                    {
-                        param = CreateParam(column, comparer, split);
                     }
                 }
                 else
