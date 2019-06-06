@@ -172,9 +172,6 @@ namespace DataWF.Module.Common
             }
             else
             {
-                DateExecute = DateTime.Now;
-                await Save(transaction);
-
                 if (result is decimal && Statistic.DBTable != null)
                 {
                     var stat = new Statistic
@@ -188,6 +185,9 @@ namespace DataWF.Module.Common
                 info.Description = string.Format("Completed in {0:n} {1}", task.Time.TotalMilliseconds / 1000, result);
                 info.Type = StatusType.Information;
             }
+            DateExecute = DateTime.Now;
+            await Save(transaction);
+
             Helper.Logs.Add(info);
 
             return info;
