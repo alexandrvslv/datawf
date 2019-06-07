@@ -353,6 +353,7 @@ namespace DataWF.Web.Common
             if (!haveValue)
             {
                 stream.Dispose();
+                stream = null;
             }
             else
             {
