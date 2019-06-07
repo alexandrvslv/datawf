@@ -194,13 +194,21 @@ namespace DataWF.Web.Common
             {
                 try
                 {
-                    var buffer = WriteData(list, connection.User);
-                    if (buffer == null)
-                        return;
-                    await connection.Socket.SendAsync(new ArraySegment<byte>(buffer)
-                        , WebSocketMessageType.Text
-                        , true
-                        , CancellationToken.None);
+                    var buffer = new byte[8 * 1024];
+                    using (var stream = WriteData(list, connection.User))
+                    {
+                        if (stream == null)
+                            return;
+                        while (stream.Position < stream.Length)
+                        {
+                            var count = stream.Read(buffer, 0, buffer.Length);
+
+                            await connection.Socket.SendAsync(new ArraySegment<byte>(buffer, 0, count)
+                                , WebSocketMessageType.Text
+                                , stream.Position == stream.Length
+                                , CancellationToken.None);
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -274,18 +282,19 @@ namespace DataWF.Web.Common
             return list.ToArray();
         }
 
-        private byte[] WriteData(NotifyMessageItem[] list, User user)
+        private MemoryStream WriteData(NotifyMessageItem[] list, User user)
         {
-            using (var stream = new MemoryStream())
-            using (var streamWriter = new StreamWriter(stream, Encoding.UTF8))
+            bool haveValue = false;
+            var stream = new MemoryStream();
+            using (var streamWriter = new StreamWriter(stream, Encoding.UTF8, 80 * 1024, true))
             using (var writer = new ClaimsJsonTextWriter(streamWriter)
             {
                 User = user,
                 IncludeReferences = false,
-                IncludeReferencing = false
+                IncludeReferencing = false,
+                CloseOutput = false
             })
             {
-                bool haveValue = false;
                 var jsonSerializer = JsonSerializer.Create(jsonSettings);
                 writer.WriteStartArray();
                 Type itemType = null;
@@ -320,7 +329,8 @@ namespace DataWF.Web.Common
                         if (item.Type != DBLogType.Delete)
                         {
                             var value = item.Table.LoadItemById(item.ItemId);
-                            if (value?.Access?.GetFlag(AccessType.Read, user) ?? false)
+                            if (value?.Access?.GetFlag(AccessType.Read, user) ?? false
+                                && value.PrimaryId != null)
                             {
                                 writer.WritePropertyName("Value");
                                 jsonSerializer.Serialize(writer, value, value?.GetType());
@@ -338,8 +348,17 @@ namespace DataWF.Web.Common
                 writer.WriteEndObject();
                 writer.WriteEndArray();
                 writer.Flush();
-                return haveValue ? stream.ToArray() : null;
+
             }
+            if (!haveValue)
+            {
+                stream.Dispose();
+            }
+            else
+            {
+                stream.Position = 0;
+            }
+            return stream;
         }
     }
 

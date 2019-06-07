@@ -52,8 +52,7 @@ namespace DataWF.Common
 
         public async Task<byte[]> ReadData()
         {
-            //var buffer = new byte[4 * 1024];
-            var buffer = new ArraySegment<byte>(new byte[8192]);
+            var buffer = new ArraySegment<byte>(new byte[8 * 1024]);
             using (var builder = new MemoryStream())
             {
                 WebSocketReceiveResult result = null;

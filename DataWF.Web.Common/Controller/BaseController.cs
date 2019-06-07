@@ -45,7 +45,8 @@ namespace DataWF.Web.Common
                     return Forbid();
                 }
                 return new ActionResult<IEnumerable<T>>(table.LoadCache(filter, DBLoadParam.Referencing)
-                                                              .Where(p => p.Access.GetFlag(AccessType.Read, user)));
+                                                              .Where(p => p.Access.GetFlag(AccessType.Read, user)
+                                                              && (p.UpdateState & DBUpdateState.Insert) == 0));
             }
             catch (Exception ex)
             {

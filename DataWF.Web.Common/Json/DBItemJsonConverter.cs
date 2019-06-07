@@ -52,23 +52,23 @@ namespace DataWF.Web.Common
                 var table = item.Table;
                 var valueType = value.GetType();
                 var tableAttribute = table.TableAttribute;
-                var itemTypeColumn = table.ItemTypeKey?.Attribute;
-                if (itemTypeColumn != null)
-                {
-                    writer.WritePropertyName(itemTypeColumn.PropertyName);
-                    writer.WriteValue(itemTypeColumn.PropertyInvoker.GetValue(item));
-                }
-                var primaryKeyColumn = table.PrimaryKey?.Attribute;
-                if (primaryKeyColumn != null)
-                {
-                    writer.WritePropertyName(primaryKeyColumn.PropertyName);
-                    writer.WriteValue(primaryKeyColumn.PropertyInvoker.GetValue(item));
-                }
+                //var itemTypeColumn = table.ItemTypeKey?.Attribute;
+                //if (itemTypeColumn != null)
+                //{
+                //    writer.WritePropertyName(itemTypeColumn.PropertyName);
+                //    writer.WriteValue(itemTypeColumn.PropertyInvoker.GetValue(item));
+                //}
+                //var primaryKeyColumn = table.PrimaryKey?.Attribute;
+                //if (primaryKeyColumn != null)
+                //{
+                //    writer.WritePropertyName(primaryKeyColumn.PropertyName);
+                //    writer.WriteValue(primaryKeyColumn.PropertyInvoker.GetValue(item));
+                //}
                 foreach (var column in tableAttribute.Columns.Where(p => TypeHelper.IsBaseType(valueType, p.PropertyInvoker.TargetType)))
                 {
-                    if (!IsSerializeableColumn(column)
-                        || column == itemTypeColumn
-                        || column == primaryKeyColumn)
+                    if (!IsSerializeableColumn(column))
+                        //|| column == itemTypeColumn
+                        //|| column == primaryKeyColumn)
                         continue;
                     writer.WritePropertyName(column.PropertyName);
                     var propertyValue = column.PropertyInvoker.GetValue(item);
