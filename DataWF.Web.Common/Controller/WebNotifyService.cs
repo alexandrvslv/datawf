@@ -198,7 +198,7 @@ namespace DataWF.Web.Common
                     using (var stream = WriteData(list, connection.User))
                     {
                         if (stream == null)
-                            return;
+                            continue;
                         while (stream.Position < stream.Length)
                         {
                             var count = stream.Read(buffer, 0, buffer.Length);
