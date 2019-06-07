@@ -176,6 +176,11 @@ namespace DataWF.Common
 
         protected void UpdateInternal(IEnumerable<T> list)
         {
+            if (selectableSource != null && _listChangedHandler != null)
+            {
+                selectableSource.CollectionChanged -= _listChangedHandler;
+                selectableSource.ItemPropertyChanged -= _listItemChangedHandler;
+            }
             ClearInternal();
             if (list == null)
             {
@@ -194,6 +199,11 @@ namespace DataWF.Common
             else if (comparer != null)
             {
                 ApplySortInternal(comparer);
+            }
+            if (selectableSource != null && _listChangedHandler != null)
+            {
+                selectableSource.CollectionChanged += _listChangedHandler;
+                selectableSource.ItemPropertyChanged += _listItemChangedHandler;
             }
         }
 
@@ -268,7 +278,7 @@ namespace DataWF.Common
         public virtual void SourceItemChanged(object sender, PropertyChangedEventArgs e)
         {
             var item = (T)sender;
-            
+
             var checkItem = ListHelper.CheckItem(item, query);
             if (checkItem)
             {
