@@ -242,7 +242,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [DataMember, Column("from_id")]
+        [DataMember, Column("from_id"), Index("ddocument_work_from_id")]
         public long? FromId
         {
             get { return GetValue<long?>(FromKey); }
