@@ -284,8 +284,9 @@ namespace DataWF.Common
         public IEnumerable<object> GetChanges()
         {
             return Items.Cast<ISynchronized>().Where(p =>
-                        p.SyncStatus == SynchronizedStatus.New
-                        || p.SyncStatus == SynchronizedStatus.Edit);
+                        p != null
+                        && (p.SyncStatus == SynchronizedStatus.New
+                        || p.SyncStatus == SynchronizedStatus.Edit));
         }
 
         public object Select(object id)
