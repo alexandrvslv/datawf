@@ -25,11 +25,11 @@ namespace DataWF.Web.Common
                 {
                     return NotFound();
                 }
-                if (!(item.Access?.GetFlag(AccessType.Download, transaction.Caller) ?? true)
-                    && !(item.Access?.GetFlag(AccessType.Update, transaction.Caller) ?? true))
-                {
-                    return Forbid();
-                }
+                //if (!(item.Access?.GetFlag(AccessType.Download, transaction.Caller) ?? true)
+                //    && !(item.Access?.GetFlag(AccessType.Update, transaction.Caller) ?? true))
+                //{
+                //    return Forbid();
+                //}
                 if (table.FileNameKey == null)
                 {
                     return BadRequest("No file columns presented!");
