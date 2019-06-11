@@ -437,7 +437,7 @@ namespace DataWF.Module.Flow
             }
             logItem.Delete();
             await logItem.Save(transaction);
-            Table.LogTable.Trunc();
+            //Table.LogTable.Trunc();
         }
 
         [ControllerMethod]
@@ -455,7 +455,7 @@ namespace DataWF.Module.Flow
             }
 
             var data = (DocumentData)await logItem.Undo(transaction);
-            DBTable.LogTable.Trunc();
+            // DBTable.LogTable.Trunc();
             return data;
         }
 
@@ -474,7 +474,7 @@ namespace DataWF.Module.Flow
             }
 
             var data = (DocumentData)await logItem.Redo(transaction);
-            DBTable.LogTable.Trunc();
+            //DBTable.LogTable.Trunc();
             return data;
         }
 

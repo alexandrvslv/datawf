@@ -135,13 +135,13 @@ namespace DataWF.Data
         public override void Reject(IUserIdentity user)
         {
             base.Reject(user);
-            Clear();
+            //Clear();
         }
 
         public override void Accept(IUserIdentity user)
         {
             base.Accept(user);
-            Clear();
+            //Clear();
         }
 
         public override string ToString()
