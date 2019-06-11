@@ -1,4 +1,5 @@
-﻿using DataWF.Data;
+﻿using DataWF.Common;
+using DataWF.Data;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.IO;
@@ -23,6 +24,11 @@ namespace DataWF.Web.Common
                 if (item == null)
                 {
                     return NotFound();
+                }
+                if (!(item.Access?.GetFlag(AccessType.Download, transaction.Caller) ?? true)
+                    && !(item.Access?.GetFlag(AccessType.Update, transaction.Caller) ?? true))
+                {
+                    return Forbid();
                 }
                 if (table.FileNameKey == null)
                 {
@@ -65,7 +71,7 @@ namespace DataWF.Web.Common
             if (table.FileNameKey == null)
             {
                 return BadRequest("No file columns presented!");
-            }
+            }            
             if (!MultipartRequestHelper.IsMultipartContentType(Request.ContentType))
             {
                 return BadRequest($"Expected a multipart request, but got {Request.ContentType}");
@@ -78,6 +84,11 @@ namespace DataWF.Web.Common
                     if (item == null)
                     {
                         return NotFound();
+                    }
+                    if (!(item.Access?.GetFlag(AccessType.Update, transaction.Caller) ?? true)
+                        && !(item.Access?.GetFlag(AccessType.Create, transaction.Caller) ?? true))
+                    {
+                        return Forbid();
                     }
 
                     foreach (var upload in Upload())

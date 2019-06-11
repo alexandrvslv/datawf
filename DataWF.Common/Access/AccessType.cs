@@ -11,6 +11,7 @@ namespace DataWF.Common
         Update = 4,
         Delete = 8,
         Admin = 16,
-        Accept = 32
+        Accept = 32,
+        Download = 64
     }
 }
