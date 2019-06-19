@@ -20,6 +20,7 @@
 using DataWF.Common;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -90,7 +91,7 @@ namespace DataWF.Data
         protected string query;
         protected string subList;
         //private Dictionary<int, object> tags;
-        private Dictionary<int, object> olds;
+        private ConcurrentDictionary<int, object> olds;
         private DBLogColumn logColumn;
 
         #endregion
@@ -752,22 +753,19 @@ namespace DataWF.Data
         public virtual bool GetOld(int hindex, out object obj)
         {
             obj = null;
-            return olds != null ? olds.TryGetValue(hindex, out obj) : false;
+            return olds?.TryGetValue(hindex, out obj) ?? false;
         }
 
         public virtual void RemoveOld(int hindex)
         {
-            if (olds != null)
-            {
-                olds.Remove(hindex);
-            }
+            olds?.TryRemove(hindex, out var value);
         }
 
         public virtual void SetOld(int hindex, object value)
         {
             if (olds == null)
-                olds = new Dictionary<int, object>();
-            olds[hindex] = value;
+                olds = new ConcurrentDictionary<int, object>();
+            olds.TryAdd(hindex, value);
         }
 
         public void Clear()
