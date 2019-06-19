@@ -175,35 +175,44 @@ namespace DataWF.Common
         }
 
         protected void UpdateInternal(IEnumerable<T> list)
-        {
-            if (selectableSource != null && _listChangedHandler != null)
+        {            
+            lock (lockObject)
             {
-                selectableSource.CollectionChanged -= _listChangedHandler;
-                selectableSource.ItemPropertyChanged -= _listItemChangedHandler;
-            }
-            ClearInternal();
-            if (list == null)
-            {
-                return;
-            }
-            foreach (T item in list)
-            {
-                InsertInternal(items.Count, item);
-            }
+                try
+                {
+                    if (selectableSource != null && _listChangedHandler != null)
+                    {
+                        selectableSource.CollectionChanged -= _listChangedHandler;
+                        selectableSource.ItemPropertyChanged -= _listItemChangedHandler;
+                    }
+                    ClearInternal();
+                    if (list == null)
+                    {
+                        return;
+                    }
+                    foreach (T item in list)
+                    {
+                        InsertInternal(items.Count, item);
+                    }
 
-            if (FilterQuery.Orders.Count > 0)
-            {
-                var newComparer = FilterQuery.GetComparer();
-                ApplySortInternal(newComparer);
-            }
-            else if (comparer != null)
-            {
-                ApplySortInternal(comparer);
-            }
-            if (selectableSource != null && _listChangedHandler != null)
-            {
-                selectableSource.CollectionChanged += _listChangedHandler;
-                selectableSource.ItemPropertyChanged += _listItemChangedHandler;
+                    if (FilterQuery.Orders.Count > 0)
+                    {
+                        var newComparer = FilterQuery.GetComparer();
+                        ApplySortInternal(newComparer);
+                    }
+                    else if (comparer != null)
+                    {
+                        ApplySortInternal(comparer);
+                    }
+                }
+                finally
+                {
+                    if (selectableSource != null && _listChangedHandler != null)
+                    {
+                        selectableSource.CollectionChanged += _listChangedHandler;
+                        selectableSource.ItemPropertyChanged += _listItemChangedHandler;
+                    }
+                }
             }
         }
 

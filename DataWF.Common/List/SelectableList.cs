@@ -21,7 +21,7 @@ namespace DataWF.Common
         protected PropertyChangedEventHandler propertyHandler;
         protected SelectableListView<T> defaultView;
         private bool isSynchronized;
-        private object lockObject = new object();
+        protected object lockObject = new object();
 
         public SelectableList(int capacity)
         {
