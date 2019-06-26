@@ -92,31 +92,31 @@ namespace DataWF.Common
                         if (item == null && id != null)
                         {
                             item = Select((K)id) ?? SelectBase(id);
-
-                            if (item is ISynchronized synchronized)
-                            {
-                                synchItem = synchronized;
-                                if (synchItem.SyncStatus == SynchronizedStatus.Actual)
-                                {
-                                    synchItem.SyncStatus = SynchronizedStatus.Load;
-                                }
-                            }
                         }
                         if (item == null)
                         {
-                            item = new T();
-                            if (item is ISynchronized synchronized)
+                            item = AddDownloads((K)id, (p) => NewLoadItem());
+                            if (item == null)
                             {
-                                synchItem = synchronized;
+                                item = NewLoadItem();
+                                SetDownloads((K)id, item);
+                            }
+                        }
+                        else if (!Items.Contains(item))
+                        {
+                            item = AddDownloads((K)id, item);
+                        }
+                        IdInvoker.SetValue(item, id);
+
+                        if (item is ISynchronized synchronized)
+                        {
+                            synchItem = synchronized;
+                            if (synchItem.SyncStatus == SynchronizedStatus.Actual)
+                            {
                                 synchItem.SyncStatus = SynchronizedStatus.Load;
                             }
                         }
 
-                        IdInvoker.SetValue(item, id);
-                        if (!Items.Contains(item))
-                        {
-                            item = AddDownloads((K)id, item);
-                        }
                         continue;
                     }
                     if (item == null)
@@ -145,6 +145,17 @@ namespace DataWF.Common
             return item;
         }
 
+        public T NewLoadItem()
+        {
+            var newItem = new T();
+            if (newItem is ISynchronized synched)
+            {
+                synched.SyncStatus = SynchronizedStatus.Load;
+            }
+
+            return newItem;
+        }
+
         public bool RemoveDownloads(object id)
         {
             return RemoveDownloads((K)id);
@@ -159,10 +170,38 @@ namespace DataWF.Common
 
         public object AddDownloads(object id, object item)
         {
-            return AddDownloads((K)id, (T)item);
+            if (item is T)
+            {
+                return AddDownloads((K)id, (T)item);
+            }
+            else
+            {
+                return AddDownloads((K)id, (Func<K, T>)item);
+            }
         }
 
         public T AddDownloads(K id, T item)
+        {
+            if (downloads != null)
+            {
+                return downloads.GetOrAdd(id, item);
+            }
+            else
+            {
+                var loadItem = GetBaseClient()?.AddDownloads(id, item) ?? item;
+                if (loadItem is T typedItem)
+                {
+                    return typedItem;
+                }
+                else
+                {
+                    GetBaseClient().SetDownloads(id, item);
+                    return item;
+                }
+            }
+        }
+
+        public T AddDownloads(K id, Func<K, T> item)
         {
             return downloads != null
                  ? downloads.GetOrAdd(id, item)
@@ -181,14 +220,26 @@ namespace DataWF.Common
                  : GetBaseClient()?.GetDownloads(id) as T;
         }
 
+        public void SetDownloads(object id, object item)
+        {
+            SetDownloads((K)id, (T)item);
+        }
+
+        public void SetDownloads(K id, T item)
+        {
+            if (downloads != null)
+            {
+                downloads[id] = item;
+            }
+            else
+            {
+                GetBaseClient()?.SetDownloads(id, item);
+            }
+        }
+
         private T SelectBase(object id)
         {
-            var baseCached = GetBaseClient()?.Select(id);
-            if (baseCached is T)
-            {
-                return (T)baseCached;
-            }
-            return null;
+            return GetBaseClient()?.Select(id) as T;
         }
 
         public object DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, object item, IList sourceList)

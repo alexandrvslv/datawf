@@ -33,6 +33,7 @@ namespace DataWF.Common
         object AddDownloads(object id, object item);
         bool RemoveDownloads(object id);
         object GetDownloads(object id);
+        void SetDownloads(object id, object item);
         void RemoveById(object id);
         object Select(object id);
         object ParseId(object id);
@@ -47,7 +48,7 @@ namespace DataWF.Common
         Task<object> PutAsync(object value);
         Task<object> MergeAsync(object id, List<string> ids);
         object DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, object item, IList sourceList);
-        object NewItem();
+        object NewItem();        
     }
 
     public interface ICRUDClient<T> : ICRUDClient
