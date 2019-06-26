@@ -631,7 +631,7 @@ namespace DataWF.Data
         [Browsable(false)]
         [DataMember]
         [DefaultValue(0)]
-        [Column("item_type", GroupName = "system", Keys = DBColumnKeys.ItemType | DBColumnKeys.System, Order = 0)]
+        [Column("item_type", GroupName = "system", Keys = DBColumnKeys.ItemType, Order = 0)]
         public virtual int? ItemType
         {
             get { return Table.ItemTypeKey == null ? 0 : GetValue<int?>(Table.ItemTypeKey); }
@@ -641,7 +641,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore, Browsable(false)]
         DBStatus IStatusable.Status { get => Status ?? DBStatus.Empty; set => Status = value; }
 
-        [DataMember, DefaultValue(DBStatus.New), Column("status_id", GroupName = "system", Keys = DBColumnKeys.State | DBColumnKeys.System | DBColumnKeys.Indexing, Order = 99)]
+        [DataMember, DefaultValue(DBStatus.New), Column("status_id", GroupName = "system", Keys = DBColumnKeys.State | DBColumnKeys.Indexing, Order = 99)]
         public DBStatus? Status
         {
             get { return Table.StatusKey == null ? DBStatus.Empty : GetValue<DBStatus?>(Table.StatusKey).GetValueOrDefault(); }

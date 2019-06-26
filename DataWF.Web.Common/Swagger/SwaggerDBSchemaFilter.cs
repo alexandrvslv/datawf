@@ -115,6 +115,7 @@ namespace DataWF.Web.Common
             if ((column.Attribute.Keys & DBColumnKeys.Access) == DBColumnKeys.Access
                 || (column.Attribute.Keys & DBColumnKeys.Date) == DBColumnKeys.Date
                 || (column.Attribute.Keys & DBColumnKeys.Stamp) == DBColumnKeys.Stamp
+                || (column.Attribute.Keys & DBColumnKeys.System) == DBColumnKeys.System
                 || column.Property.GetSetMethod() == null)
             {
                 columnSchema.ReadOnly = true;
