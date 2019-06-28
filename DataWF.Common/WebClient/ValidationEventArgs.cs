@@ -24,6 +24,7 @@ namespace DataWF.Common
         public string Member { get; }
         public List<string> Messages { get; }
         public bool Fail { get; }
+        public bool Handled { get; set; }
     }
 
 }
