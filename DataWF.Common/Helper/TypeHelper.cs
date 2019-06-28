@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -583,7 +584,10 @@ namespace DataWF.Common
 
         public static bool GetPassword(MemberInfo property)
         {
-            return property.GetCustomAttribute<PasswordPropertyTextAttribute>(false)?.Password ?? false;
+            var dataType = (DataTypeAttribute)null;
+            return (property.GetCustomAttribute<PasswordPropertyTextAttribute>(false)?.Password ?? false)
+                || ((dataType = property.GetCustomAttribute<DataTypeAttribute>(false)) != null
+                    && dataType.DataType == DataType.Password);
         }
 
         public static string GetDefaultFormat(MemberInfo info)

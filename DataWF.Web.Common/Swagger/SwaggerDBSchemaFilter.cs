@@ -109,7 +109,7 @@ namespace DataWF.Web.Common
 
             if (column.GetDataType() == typeof(string) && column.Attribute.Size > 0)
             {
-                columnSchema.MaxLength = column.Attribute.Size;
+                columnSchema.MaxLength = column.Attribute.Size;                
             }
 
             if ((column.Attribute.Keys & DBColumnKeys.Access) == DBColumnKeys.Access
@@ -150,6 +150,10 @@ namespace DataWF.Web.Common
                     columnSchema.Default = defaultValue.Value.ToString();
                 }
             }
+            //if (TypeHelper.GetPassword(column.Property))
+            //{
+            //    schema.Extensions.Add("x-data", column.PropertyName);
+            //}
         }
     }
 }
