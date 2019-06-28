@@ -441,7 +441,7 @@ namespace DataWF.Web.ClientGenerator
             return null;
         }
 
-        private JsonProperty GetExtensionKey(JsonSchema4 schema, string name, bool inherit = true)
+        private JsonProperty GetReferenceProperty(JsonSchema4 schema, string name, bool inherit = true)
         {
             var find = schema.Properties.Values.FirstOrDefault(p => p.ExtensionData != null
                  && p.ExtensionData.TryGetValue("x-id", out var propertyName)
@@ -462,6 +462,15 @@ namespace DataWF.Web.ClientGenerator
                         return find;
                     }
                 }
+            }
+            return null;
+        }
+
+        private JsonProperty GetReferenceIdProperty(JsonProperty property, bool inherit = true)
+        {
+            if (property.ExtensionData != null && property.ExtensionData.TryGetValue("x-id", out var propertyName))
+            {
+                return GetProperty(property.ParentSchema, (string)propertyName);
             }
             return null;
         }
@@ -689,7 +698,6 @@ namespace DataWF.Web.ClientGenerator
             }
             return tree;
         }
-
 
         private CompilationUnitSyntax GenDefinition(JsonSchema4 schema)
         {
@@ -1026,16 +1034,38 @@ namespace DataWF.Web.ClientGenerator
                 yield return SyntaxHelper.GenAttribute("JsonProperty", $"NullValueHandling = NullValueHandling.Include");
             }
 
+            foreach (var attribute in GenDefinitionClassPropertyValidationAttributes(property, idKey, typeKey))
+            {
+                yield return attribute;
+            }
+        }
+
+        private IEnumerable<AttributeListSyntax> GenDefinitionClassPropertyValidationAttributes(JsonProperty property, JsonProperty idKey, JsonProperty typeKey)
+        {
+            var propertyName = GetPropertyName(property);
+            var objectProperty = GetReferenceProperty((JsonSchema4)property.Parent, property.Name);
+            if (objectProperty != null)
+            {
+                propertyName = GetPropertyName(objectProperty);
+            }
 
             if (property.IsRequired && property != idKey && property != typeKey)
             {
-                yield return SyntaxHelper.GenAttribute("Required", $"ErrorMessage = \"{GetPropertyName(property)} is required\"");
+                yield return SyntaxHelper.GenAttribute("Required", $"ErrorMessage = \"{propertyName} is required\"");
             }
 
             if (property.MaxLength != null)
             {
                 yield return SyntaxHelper.GenAttribute("MaxLength",
-                    $"{property.MaxLength}, ErrorMessage = \"{GetPropertyName(property)} only max {property.MaxLength} letters allowed.\"");
+                    $"{property.MaxLength}, ErrorMessage = \"{propertyName} only max {property.MaxLength} letters allowed.\"");
+            }
+            var idProperty = GetReferenceIdProperty(property);
+            if (idProperty != null)
+            {
+                foreach (var attribute in GenDefinitionClassPropertyValidationAttributes(idProperty, idKey, typeKey))
+                {
+                    yield return attribute;
+                }
             }
         }
 
@@ -1091,7 +1121,7 @@ namespace DataWF.Web.ClientGenerator
                     var idProperty = GetPrimaryKey(property.Reference);
                     yield return SF.ParseStatement($"{refPropertyName} = value?.{GetPropertyName(idProperty)};");
                 }
-                var objectProperty = GetExtensionKey((JsonSchema4)property.Parent, property.Name);
+                var objectProperty = GetReferenceProperty((JsonSchema4)property.Parent, property.Name);
                 if (objectProperty != null)
                 {
                     var objectFieldName = GetFieldName(objectProperty);
@@ -1171,7 +1201,7 @@ namespace DataWF.Web.ClientGenerator
                 refField.KeyName = GetPropertyName(refField.KeyProperty);
                 refField.KeyType = GetTypeString(refField.KeyProperty, true);
 
-                refField.ValueProperty = GetExtensionKey((JsonSchema4)refField.KeyProperty.Parent, refField.KeyName);
+                refField.ValueProperty = GetReferenceProperty((JsonSchema4)refField.KeyProperty.Parent, refField.KeyName);
                 refField.ValueName = GetPropertyName(refField.ValueProperty);
                 refField.ValueType = GetTypeString(refField.ValueProperty, false, null);
                 refField.ValueFieldName = GetFieldName(refField.ValueProperty);
