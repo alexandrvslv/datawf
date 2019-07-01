@@ -1085,12 +1085,16 @@ namespace DataWF.Data
 
         public virtual async Task Save(DBTransaction transaction)
         {
-            if (transaction.AddItem(this) && await OnSaving(transaction))
+            if (transaction.AddItem(this))
             {
-                await SaveReferenced(transaction);
-                await Table.SaveItem(this, transaction);
-                await SaveReferencing(transaction);
-                await OnSaved(transaction);
+                SnapshotReferencing(transaction);
+                if (await OnSaving(transaction))
+                {
+                    await SaveReferenced(transaction);
+                    await Table.SaveItem(this, transaction);
+                    await SaveReferencing(transaction);
+                    await OnSaved(transaction);
+                }
             }
         }
 
@@ -1435,6 +1439,32 @@ namespace DataWF.Data
                     {
                         foreach (DBItem item in references)
                             yield return item;
+                    }
+                }
+            }
+        }
+
+        public void SnapshotReferencing(DBTransaction transaction)
+        {
+            if (Table.TableAttribute == null || (UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete)
+            {
+                return;
+            }
+
+            foreach (var referencing in Table.TableAttribute.Referencings)
+            {
+                if (TypeHelper.IsBaseType(GetType(), referencing.PropertyInvoker.TargetType))
+                {
+                    var references = (IEnumerable)referencing.PropertyInvoker.GetValue(this);
+                    if (references != null)
+                    {
+                        foreach (DBItem item in references)
+                        {
+                            if (item.IsChanged)
+                            {
+                                transaction.AddItem(item);
+                            }
+                        }
                     }
                 }
             }
