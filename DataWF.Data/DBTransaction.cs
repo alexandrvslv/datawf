@@ -482,6 +482,11 @@ namespace DataWF.Data
             }
             return item.IsChanged;
         }
+
+        public bool RemoveItem(DBItem item)
+        {
+            return Items.Remove(item);
+        }
     }
 }
 

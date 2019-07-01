@@ -1095,6 +1095,10 @@ namespace DataWF.Data
                     await SaveReferencing(transaction);
                     await OnSaved(transaction);
                 }
+                else
+                {
+                    RejectReferencing(transaction);
+                }
             }
         }
 
@@ -1375,24 +1379,6 @@ namespace DataWF.Data
             }
         }
 
-        public void CacheReferencing(DBTransaction transaction)
-        {
-            foreach (var relation in Table.GetChildRelations())
-            {
-                if (relation.Table != Table && !(relation.Table is IDBVirtualTable))
-                {
-                    var references = GetReferencing(relation, DBLoadParam.None);
-                    foreach (DBItem reference in references)
-                    {
-                        if (reference.IsChanged)
-                        {
-                            transaction.AddItem(reference);
-                        }
-                    }
-                }
-            }
-        }
-
         public async Task SaveReferenced(DBTransaction transaction)
         {
             if ((UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete)
@@ -1429,7 +1415,10 @@ namespace DataWF.Data
         public IEnumerable<DBItem> GetPropertyReferencing()
         {
             if (Table.TableAttribute == null)
+            {
                 yield break;
+            }
+
             foreach (var referencing in Table.TableAttribute.Referencings)
             {
                 if (TypeHelper.IsBaseType(GetType(), referencing.PropertyInvoker.TargetType))
@@ -1438,7 +1427,27 @@ namespace DataWF.Data
                     if (references != null)
                     {
                         foreach (DBItem item in references)
+                        {
                             yield return item;
+                        }
+                    }
+                }
+            }
+        }
+
+        public void CacheReferencing(DBTransaction transaction)
+        {
+            foreach (var relation in Table.GetChildRelations())
+            {
+                if (relation.Table != Table && !(relation.Table is IDBVirtualTable))
+                {
+                    var references = GetReferencing(relation, DBLoadParam.None);
+                    foreach (DBItem reference in references)
+                    {
+                        if (reference.IsChanged)
+                        {
+                            transaction.AddItem(reference);
+                        }
                     }
                 }
             }
@@ -1446,52 +1455,33 @@ namespace DataWF.Data
 
         public void SnapshotReferencing(DBTransaction transaction)
         {
-            if (Table.TableAttribute == null || (UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete)
+            foreach (DBItem item in GetPropertyReferencing())
             {
-                return;
-            }
-
-            foreach (var referencing in Table.TableAttribute.Referencings)
-            {
-                if (TypeHelper.IsBaseType(GetType(), referencing.PropertyInvoker.TargetType))
+                if (item.IsChanged)
                 {
-                    var references = (IEnumerable)referencing.PropertyInvoker.GetValue(this);
-                    if (references != null)
-                    {
-                        foreach (DBItem item in references)
-                        {
-                            if (item.IsChanged)
-                            {
-                                transaction.AddItem(item);
-                            }
-                        }
-                    }
+                    transaction.AddItem(item);
+                }
+            }
+        }
+
+        public void RejectReferencing(DBTransaction transaction)
+        {
+            foreach (DBItem item in GetPropertyReferencing())
+            {
+                if (item.IsChanged && transaction.RemoveItem(item))
+                {
+                    item.Reject(transaction.Caller);
                 }
             }
         }
 
         public async Task SaveReferencing(DBTransaction transaction)
         {
-            if (Table.TableAttribute == null || (UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete)
+            foreach (DBItem item in GetPropertyReferencing())
             {
-                return;
-            }
-
-            foreach (var referencing in Table.TableAttribute.Referencings)
-            {
-                if (TypeHelper.IsBaseType(GetType(), referencing.PropertyInvoker.TargetType))
+                if (item.IsChanged || item.IsReferencingChanged)
                 {
-                    var references = (IEnumerable)referencing.PropertyInvoker.GetValue(this);
-                    if (references != null)
-                    {
-                        foreach (DBItem item in references)
-                        {
-                            if (item.IsChanged || item.IsReferencingChanged)
-                            {
-                                await item.Save(transaction);
-                            }
-                        }
-                    }
+                    await item.Save(transaction);
                 }
             }
         }
