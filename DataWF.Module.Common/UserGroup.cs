@@ -108,22 +108,24 @@ namespace DataWF.Module.Common
         {
             foreach (User user in User.DBTable)
             {
-                if (user.Access.Get(this).Create && user.Access.GetFlag(AccessType.Read, transaction.Caller))
+                if (user.Access.Get(this).Create
+                    && user.Access.GetFlag(AccessType.Read, transaction.Caller))
                 {
                     yield return user;
                 }
             }
         }
 
-        public bool IsCurrentUser(IUserIdentity user)
+        public bool ContainsUser(IUserIdentity user)
         {
-            return user is User currentUser && ((currentUser?.Super.Value ?? false)//currentUser.Status == DBStatus.Actual ||
-                    || (currentUser?.Access.Get(this).Create ?? false));
+            return user is User currentUser
+                // && currentUser.Status == DBStatus.Actual
+                && currentUser.Access.Get(this).Create;
         }
 
         public void AddUser(User user)
         {
-            user.Access.SetFlag(this, AccessType.Create);
+            user.Access.Add(this, AccessType.Create | AccessType.Read);
         }
 
         public override void Dispose()

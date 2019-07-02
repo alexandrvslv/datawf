@@ -71,7 +71,7 @@ namespace DataWF.Data
         [Browsable(false), Category("Policy"), XmlIgnore, JsonIgnore]
         public virtual AccessValue Access
         {
-            get { return access ?? (access = new AccessValue()); }
+            get { return access ?? (access = new AccessValue(AccessValue.Groups)); }
             set { access = value; }
         }
 
@@ -95,7 +95,8 @@ namespace DataWF.Data
                 var locName = Name;
                 if (string.IsNullOrEmpty(locCategory) || string.IsNullOrEmpty(locName))
                     return null;
-                if (litem != null && (litem.Category.Name != locCategory || litem.Name != locName))
+                if (litem != null && (!(litem.Category.Name?.Equals(locCategory, StringComparison.Ordinal) ?? false)
+                    || !(litem.Name?.Equals(locName, StringComparison.Ordinal) ?? false)))
                     litem = null;
                 return litem ?? (litem = Locale.GetItem(locCategory, locName));
             }

@@ -109,16 +109,15 @@ namespace DataWF.Module.Common
                         if ((column.Keys & DBColumnKeys.Access) == DBColumnKeys.Access)
                         {
                             string rez = string.Empty;
-                            AccessValue oldAcces = new AccessValue((byte[])oldValue);
-                            AccessValue newAcces = new AccessValue((byte[])newValue);
+                            var oldAcces = new AccessValue((byte[])oldValue);
+                            var newAcces = new AccessValue((byte[])newValue);
                             foreach (var oAccess in oldAcces.Items)
                             {
-                                int index = newAcces.GetIndex(oAccess.Group);
-                                if (index < 0)
+                                var nAceess = newAcces.Get(oAccess.Group);
+                                if (nAceess.Equals(AccessItem.Empty))
                                     rez += string.Format("Remove {0}; ", oAccess);
-                                else if (!newAcces.Items[index].Equals(oAccess))
+                                else if (!nAceess.Equals(oAccess))
                                 {
-                                    var nAceess = newAcces.Items[index];
                                     rez += string.Format("Change {0}({1}{2}{3}{4}{5}{6}); ", oAccess.Group,
                                         oAccess.Read != nAceess.Read ? (nAceess.Read ? "+" : "-") + "View " : "",
                                         oAccess.Update != nAceess.Update ? (nAceess.Update ? "+" : "-") + "Edit " : "",
@@ -130,8 +129,8 @@ namespace DataWF.Module.Common
                             }
                             foreach (var nAccess in newAcces.Items)
                             {
-                                int index = oldAcces.GetIndex(nAccess.Group);
-                                if (index < 0)
+                                var access = oldAcces.Get(nAccess.Group);
+                                if (!access.Equals(AccessItem.Empty))
                                     rez += string.Format("New {0}; ", nAccess);
                             }
                             _textCache += string.Format("{0}: {1}", column, rez);

@@ -4,6 +4,6 @@
     {
         int Id { get; }
         string Name { get; }
-        bool IsCurrentUser(IUserIdentity user);
+        bool ContainsUser(IUserIdentity user);
     }
 }

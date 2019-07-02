@@ -1,10 +1,13 @@
-﻿using System.Security.Principal;
+﻿using System.Collections.Generic;
+using System.Security.Principal;
 
 namespace DataWF.Common
 {
     public interface IUserIdentity : IIdentity
     {
         int? Id { get; }
+
+        IEnumerable<IAccessGroup> Groups { get; }
     }
 }
 

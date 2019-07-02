@@ -254,6 +254,8 @@ namespace DataWF.Module.Common
         private Company company;
         private Department department;
         private Position position;
+        private List<IAccessGroup> groups;
+        private AccessValue cacheAccess;
 
         public User()
         { }
@@ -397,11 +399,8 @@ namespace DataWF.Module.Common
         [Browsable(false)]
         public override AccessValue Access
         {
-            get
-            {
-                return base.Access != Table.Access ? base.Access
+            get => base.Access != Table.Access ? base.Access
                   : Department?.Access ?? Position?.Access ?? Table.Access;
-            }
         }
 
         [Browsable(false)]
@@ -438,6 +437,30 @@ namespace DataWF.Module.Common
         }
 
         public string AuthenticationType => throw new NotImplementedException();
+
+        public IEnumerable<IAccessGroup> Groups
+        {
+            get
+            {
+                var access = Access;
+                if (groups == null)
+                {
+                    cacheAccess = access;
+                    groups = new List<IAccessGroup>(Super ?? false
+                            ? (IEnumerable<IAccessGroup>)UserGroup.DBTable
+                            : access.Items.Where(p => p.Create).Select(p => p.Group));
+                }
+                else if (access != cacheAccess)
+                {
+                    cacheAccess = access;
+                    groups.Clear();
+                    groups.AddRange(Super ?? false
+                        ? (IEnumerable<IAccessGroup>)UserGroup.DBTable
+                        : access.Items.Where(p => p.Create).Select(p => p.Group));
+                }
+                return groups;
+            }
+        }
 
         public override void Dispose()
         {

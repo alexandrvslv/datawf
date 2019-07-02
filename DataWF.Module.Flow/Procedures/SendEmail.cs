@@ -37,7 +37,7 @@ namespace DataWF.Module.Flow
         {
             if (arg.StageProcedure != null)
             {
-                foreach (var department in arg.StageProcedure.GetDepartment(((Document)arg.Document).Template))
+                foreach (var department in arg.StageProcedure.GetDepartments(((Document)arg.Document).Template))
                 {
                     foreach (var user in department.GetUsers())
                     {

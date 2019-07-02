@@ -69,7 +69,7 @@ namespace DataWF.Web.Common
         }
 
         [HttpGet("GetItems/{name}/{id}")]
-        public ActionResult<List<AccessItem>> GetAccessItems([FromRoute]string name, [FromRoute]string id)
+        public ActionResult<IEnumerable<AccessItem>> GetAccessItems([FromRoute]string name, [FromRoute]string id)
         {
             var table = GetTable(name);
             if (table == null)
@@ -95,7 +95,7 @@ namespace DataWF.Web.Common
                     return Forbid();
                 }
 
-                return value.Access.Items;
+                return new ActionResult<IEnumerable<AccessItem>>(value.Access.Items);
             }
             catch (Exception ex)
             {

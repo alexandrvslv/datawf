@@ -28,16 +28,15 @@ namespace DataWF.Module.Common
         {
             foreach (User user in User.DBTable)
             {
-                foreach (var access in item.Access.Items)
+                foreach (var group in user.Groups)
                 {
-                    if (user.Access.Get(access.Group).Create)
+                    var access = item.Access.Get(group);
+                    if (access.Create && (filter == null || filter.Access.Get(access.Group).Update))
                     {
-                        if (access.Create && (filter == null || filter.Access.Get(access.Group).Update))
-                        {
-                            yield return user;
-                            break;
-                        }
+                        yield return user;
+                        break;
                     }
+
                 }
             }
         }
@@ -46,7 +45,7 @@ namespace DataWF.Module.Common
         {
             foreach (Position position in Position.DBTable)
             {
-                foreach (var access in item.Access.Items)
+                foreach (var access in item.Access)
                 {
                     if (position.Access.Get(access.Group).Create)
                     {
@@ -60,11 +59,11 @@ namespace DataWF.Module.Common
             }
         }
 
-        public static IEnumerable<Department> GetDepartment(this DBItem item, DBItem filter = null)
+        public static IEnumerable<Department> GetDepartments(this DBItem item, DBItem filter = null)
         {
             foreach (Department department in Department.DBTable)
             {
-                foreach (var access in item.Access.Items)
+                foreach (var access in item.Access)
                 {
                     if (department.Access.Get(access.Group).Create)
                     {

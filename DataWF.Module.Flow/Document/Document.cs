@@ -796,7 +796,7 @@ namespace DataWF.Module.Flow
             if ((stage.Keys & StageKey.Start) == StageKey.Start)
                 return Send(from, stage, new[] { (User)transaction.Caller }, transaction);
             else
-                return Send(from, stage, stage.GetDepartment(Template), transaction);
+                return Send(from, stage, stage.GetDepartments(Template), transaction);
         }
 
         public object ExecuteProceduresByWork(DocumentWork work, StageParamProcudureType type, DBTransaction transaction)

@@ -887,10 +887,9 @@ namespace DataWF.Data
             {
                 if ((Keys & DBColumnKeys.Access) == DBColumnKeys.Access)
                 {
-                    AccessValue cash = new AccessValue();
-                    cash.Read((byte[])val);
+                    var cash = new AccessValue((byte[])val);
                     string rez = string.Empty;
-                    foreach (var item in cash.Items)
+                    foreach (var item in cash)
                     {
                         rez += string.Format("{0}{1}", rez.Length > 0 ? "; " : string.Empty, item);
                     }

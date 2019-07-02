@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
 namespace DataWF.Common
 {
-    public class AccessValue : IAccessValue
+    public class AccessValue : IAccessValue//, IEnumerable<AccessItem>
     {
         public static IEnumerable<IAccessGroup> Groups = new List<IAccessGroup>();
 
@@ -14,22 +15,28 @@ namespace DataWF.Common
             return new AccessValue(value);
         }
 
-        public List<AccessItem> Items = new List<AccessItem>(1);
+        private Dictionary<IAccessGroup, AccessItem> items = new Dictionary<IAccessGroup, AccessItem>(1);
 
         public AccessValue()
+        { }
+
+        public AccessValue(IEnumerable<IAccessGroup> groups, AccessType access = AccessType.Read)
         {
-            foreach (IAccessGroup group in Groups)
+            foreach (IAccessGroup group in groups)
             {
                 if (group != null)
                 {
-                    Add(new AccessItem(group, AccessType.Read));
+                    Add(new AccessItem(group, access));
                 }
             }
         }
 
         public AccessValue(IEnumerable<AccessItem> items)
         {
-            Items.AddRange(items);
+            foreach (var item in items)
+            {
+                this.items[item.Group] = item;
+            }
         }
 
         public AccessValue(byte[] buffer)
@@ -40,34 +47,35 @@ namespace DataWF.Common
             }
         }
 
+        public IEnumerable<AccessItem> Items
+        {
+            get => items.Values;
+            set => Add(value);
+        }
+
         public AccessType GetFlags(IUserIdentity user)
         {
             var data = AccessType.None;
-            foreach (AccessItem item in Items)
+            foreach (IAccessGroup group in user.Groups)
             {
-                if (item.Group?.IsCurrentUser(user) ?? false)
-                {
-                    data |= item.Access;
-                }
+                var item = Get(group);
+                data |= item.Access;
             }
             return data;
         }
 
-
         public bool GetFlag(AccessType type, IUserIdentity user)
         {
-            foreach (AccessItem item in Items)
+            foreach (IAccessGroup group in user.Groups)
             {
-                if (item.Group?.IsCurrentUser(user) ?? false)
-                {
-                    if ((item.Access & type) == type)
-                        return true;
-                }
+                var item = Get(group);
+                if ((item.Access & type) == type)
+                    return true;
             }
             return false;
         }
 
-        public void SetFlag(IAccessGroup group, AccessType type)
+        public void Add(IAccessGroup group, AccessType type)
         {
             Add(new AccessItem(group, type));
         }
@@ -86,9 +94,9 @@ namespace DataWF.Common
 
         public void Write(BinaryWriter writer)
         {
-            writer.Write(Items.Where(p => !p.IsEmpty).Distinct().Count());
+            writer.Write(items.Values.Where(p => !p.IsEmpty).Distinct().Count());
 
-            foreach (AccessItem item in Items.Where(p => !p.IsEmpty).Distinct())
+            foreach (AccessItem item in items.Values.Where(p => !p.IsEmpty).Distinct())
             {
                 item.BinaryWrite(writer);
             }
@@ -105,37 +113,35 @@ namespace DataWF.Common
 
         public void Read(BinaryReader reader, byte[] buffer)
         {
-            Items.Clear();
-            Items.Capacity = reader.ReadInt32();
-            if (Items.Capacity > 0)
+            items.Clear();
+            var capacity = reader.ReadInt32();
+            if (capacity > 0)
             {
-                for (int i = 0; i < Items.Capacity; i++)
-                    if (reader.BaseStream.Position < (reader.BaseStream.Length))
-                    {
-                        var item = new AccessItem();
-                        item.BinaryRead(reader);
-                        if (item.Group != null)
-                            Items.Add(item);
-                    }
+                while (reader.BaseStream.Position < reader.BaseStream.Length)
+                {
+                    var item = new AccessItem();
+                    item.BinaryRead(reader);
+                    if (item.Group != null)
+                        items[item.Group] = item;
+                }
             }
         }
 
-        public int GetIndex(IAccessGroup group)
+        public bool Contains(IAccessGroup group)
         {
-            for (int i = 0; i < Items.Count; i++)
-            {
-                if (Items[i].Group == group)
-                    return i;
-            }
-            return -1;
+            return items.TryGetValue(group, out var item);
         }
 
         public AccessItem Get(IAccessGroup group)
         {
-            foreach (var item in Items)
+            return items.TryGetValue(group, out var item) ? item : AccessItem.Empty;
+        }
+
+        public AccessItem GetOrAdd(IAccessGroup group)
+        {
+            if (items.TryGetValue(group, out var item))
             {
-                if (item.Group == group)
-                    return item;
+                return item;
             }
             var newItem = new AccessItem(group);
             Add(newItem);
@@ -152,20 +158,12 @@ namespace DataWF.Common
 
         public void Add(AccessItem item)
         {
-            int index = GetIndex(item.Group);
-            if (index < 0)
-            {
-                Items.Add(item);
-            }
-            else
-            {
-                Items[index] = item;
-            }
+            items[item.Group] = item;
         }
 
         public IEnumerable<IAccessGroup> GetGroups(AccessType type)
         {
-            foreach (var item in Items)
+            foreach (var item in items.Values)
             {
                 if ((type & item.Access) == type)
                     yield return item.Group;
@@ -174,21 +172,21 @@ namespace DataWF.Common
 
         public override string ToString()
         {
-            return string.Join(";", Items.Select(p => p.ToString()));
+            return string.Join(";", items.Select(p => p.ToString()));
         }
 
         public void Fill()
         {
             foreach (IAccessGroup group in Groups)
             {
-                Get(group);
+                GetOrAdd(group);
             }
         }
 
         public AccessValue Clone()
         {
             var cache = new AccessValue();
-            foreach (var item in Items)
+            foreach (var item in items.Values)
                 cache.Add(item);
             return cache;
         }
@@ -197,5 +195,11 @@ namespace DataWF.Common
         {
             throw new NotImplementedException();
         }
+
+        public IEnumerator<AccessItem> GetEnumerator()
+        {
+            return items.Values.GetEnumerator();
+        }
+
     }
 }

@@ -343,7 +343,7 @@ namespace DataWF.Module.Common
         }
 
         [Column(nameof(AccessItems), ColumnType = DBColumnTypes.Code)]
-        public List<AccessItem> AccessItems
+        public IEnumerable<AccessItem> AccessItems
         {
             get { return Access.Items; }
         }
