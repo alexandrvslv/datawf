@@ -162,6 +162,7 @@ namespace DataWF.Data
         internal object locker = new object();
         protected List<IDBVirtualTable> virtualTables = new List<IDBVirtualTable>(0);
         private DBItemType itemType;
+        private int itemTypeIndex = 0;
 
         protected DBTable(string name = null) : base(name)
         {
@@ -226,6 +227,9 @@ namespace DataWF.Data
 
         [Browsable(false), XmlIgnore, JsonIgnore]
         public DBItemType ItemType => itemType;
+
+        [Browsable(false), XmlIgnore, JsonIgnore]
+        public int ItemTypeIndex { get => itemTypeIndex; set => itemTypeIndex = value; }
 
         protected void SetItemType(Type type)
         {
@@ -1049,16 +1053,12 @@ namespace DataWF.Data
 
         public abstract IDBTableView CreateItemsView(string query = "", DBViewKeys mode = DBViewKeys.None, DBStatus filter = DBStatus.Empty);
 
-        public virtual DBItem NewItem(DBUpdateState state = DBUpdateState.Insert, bool def = true, int typeIndex = 0)
+        public abstract DBItem NewItem(DBUpdateState state = DBUpdateState.Insert, bool def = true);
+
+        public virtual DBItem NewItem(DBUpdateState state, bool def, int typeIndex)
         {
             var type = GetItemType(typeIndex);
-            var item = (DBItem)type.Constructor.Create();
-            if (item.Table == null)
-            {
-                item.Build(this, def);
-            }
-            item.update = state;
-            return item;
+            return type.Table.NewItem(state, def);
         }
 
         public IEnumerable<DBColumn> ParseColumns(ICollection<string> columns)

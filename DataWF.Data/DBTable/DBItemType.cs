@@ -30,6 +30,7 @@ namespace DataWF.Data
     public class DBItemType
     {
         private Type type;
+        private DBTable table;
 
         public DBItemType()
         { }
@@ -46,7 +47,9 @@ namespace DataWF.Data
 
         [XmlIgnore, JsonIgnore]
         public EmitConstructor Constructor { get; set; }
-        
+
+        [XmlIgnore, JsonIgnore]
+        public DBTable Table => table ?? (table = DBTable.GetTable(Type));
     }
 
     public class DBItemTypeConverter : TypeConverter

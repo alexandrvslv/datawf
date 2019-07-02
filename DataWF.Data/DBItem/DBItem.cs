@@ -528,7 +528,7 @@ namespace DataWF.Data
             return Format(Table.Columns[code]);
         }
 
-        public void Build(DBTable table, bool setDefauilts = true)
+        public void Build(DBTable table, bool setDefauilts = true, int itemType = -1)
         {
             Table = table;
             if (setDefauilts)
@@ -537,7 +537,7 @@ namespace DataWF.Data
             }
             if (Table.ItemTypeKey != null)
             {
-                SetValue<int?>(table.GetTypeIndex(GetType()), table.ItemTypeKey, false);
+                SetValue<int?>(itemType < 0 ? table.GetTypeIndex(GetType()) : itemType, table.ItemTypeKey, false);
             }
         }
 

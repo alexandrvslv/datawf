@@ -394,36 +394,34 @@ namespace DataWF.Data
                 return y == null;
             }
 
-            if (x is byte[])
-            {
-                return Helper.CompareByte((byte[])(object)x, (byte[])(object)y);
-            }
-            if (x is string && y is string)
-            {
-                return string.Equals((string)(object)x, (string)(object)y, StringComparison.Ordinal);
-            }
-            return EqualityComparer<T>.Default.Equals(x, y);
+            var equal = false;
+            if (x is string strX && y is string strY)
+                equal = string.Equals(strX, strY, StringComparison.Ordinal);
+            else if (x is byte[] byteX && y is byte[] byteY)
+                equal = Helper.CompareByte(byteX, byteY);
+            else
+                equal = EqualityComparer<T>.Default.Equals(x, y);
+            return equal;
         }
 
         public static bool Equal(object x, object y)
         {
             if (x == null)
-                return y == null;
-
-            var equal = object.ReferenceEquals(x, y);
-            if (!equal)
             {
-                if (x is byte[] && y is byte[])
-                    equal = Helper.CompareByte((byte[])x, (byte[])y);
-                else if (x is Enum && y is int)
-                    equal = ((int)x).Equals(y);
-                else if (y is Enum && x is int)
-                    equal = ((int)y).Equals(x);
-                else if (x is string && y is string)
-                    equal = string.Equals((string)x, (string)y, StringComparison.Ordinal);
-                else
-                    equal = x.Equals(y);
+                return y == null;
             }
+
+            var equal = false;
+            if (x is string strX && y is string strY)
+                equal = string.Equals(strX, strY, StringComparison.Ordinal);
+            else if (x is Enum && y is int intY)
+                equal = ((int)x).Equals(intY);
+            else if (y is Enum && x is int intX)
+                equal = ((int)y).Equals(intX);
+            else if (x is byte[] byteX && y is byte[] byteY)
+                equal = Helper.CompareByte(byteX, byteY);
+            else
+                equal = x.Equals(y);
             return equal;
         }
 

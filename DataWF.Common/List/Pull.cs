@@ -61,7 +61,7 @@ namespace DataWF.Common
 
         public static int GetHIndex(int index, int blockSize)
         {
-            return Helper.TwoToOneShift((short)(index / blockSize), (short)(index % blockSize));
+            return Helper.TwoToOnePointer((short)(index / blockSize), (short)(index % blockSize));
         }
 
         protected int blockSize;
@@ -184,7 +184,7 @@ namespace DataWF.Common
 
         public T GetValueInternal(int index)
         {
-            Helper.OneToTwoShift(index, out var block, out var blockIndex);
+            Helper.OneToTwoPointer(index, out var block, out var blockIndex);
             if (block >= array.Count || array[block] == null)
                 return default(T);
             return array[block][blockIndex];
@@ -192,7 +192,7 @@ namespace DataWF.Common
 
         public void SetValueInternal(int index, T value)
         {
-            Helper.OneToTwoShift(index, out var block, out var blockIndex);
+            Helper.OneToTwoPointer(index, out var block, out var blockIndex);
             while (block > array.Count)
                 array.Add(null);
             if (block == array.Count)
@@ -233,7 +233,7 @@ namespace DataWF.Common
 
         public override void Trunc(int maxIndex)
         {
-            Helper.OneToTwoShift(maxIndex, out var block, out var blockIndex);
+            Helper.OneToTwoPointer(maxIndex, out var block, out var blockIndex);
             while (block < array.Count - 1)
             {
                 array.RemoveAt(array.Count - 1);

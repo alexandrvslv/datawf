@@ -8,6 +8,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
@@ -895,6 +896,14 @@ namespace DataWF.Data
             Clear();
             queryViews.Clear();
             queryViews.TrimExcess();
+        }
+
+        public override DBItem NewItem(DBUpdateState state = DBUpdateState.Insert, bool def = true)
+        {
+            var item = (T)FormatterServices.GetUninitializedObject(typeof(T));
+            item.Build(this, def, ItemTypeIndex);           
+            item.update = state;
+            return item;
         }
     }
 

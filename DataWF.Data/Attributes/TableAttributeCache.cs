@@ -199,7 +199,6 @@ namespace DataWF.Data
             {
                 Table.ItemTypes[itemType.Attribute.Id] = new DBItemType { Type = itemType.Type };
                 itemType.Generate(Schema);
-
             }
 
             return Table;
