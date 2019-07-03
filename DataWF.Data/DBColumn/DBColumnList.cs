@@ -89,7 +89,6 @@ namespace DataWF.Data
 
             base.InsertInternal(index, item);
 
-            item.CheckPull();
             if (item.IsPrimaryKey)
             {
                 DBConstraint primary = null;
@@ -106,9 +105,10 @@ namespace DataWF.Data
                     primary = new DBConstraint() { Column = Table.PrimaryKey, Type = DBConstraintType.Primary };
                     primary.GenerateName();
                     Table.Constraints.Add(primary);
-                    Table.DefaultComparer = new DBComparer(Table.PrimaryKey) { Hash = true };
+                    //Table.DefaultComparer = item.CreateComparer(); Commented for poerformance of Index creation
                 }
             }
+            item.CheckPull();
         }
 
         public DBColumn Add(string name)

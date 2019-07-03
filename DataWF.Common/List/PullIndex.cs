@@ -197,7 +197,7 @@ namespace DataWF.Data
 
         public K ReadItem(T item)
         {
-            var key = Pull.GetValueInternal(item.Handler);
+            var key = Pull.GetValue(item.Block, item.BlockIndex);
             CheckNull(ref key);
             return key;
         }

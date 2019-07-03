@@ -47,7 +47,7 @@ namespace DataWF.Module.Counterpart
             var list = ((IEnumerable<PersoneIdentify>)table.LoadItems(filter, DBLoadParam.Load)).ToList();
             if (list.Count > 1)
             {
-                list.Sort(new DBComparer(Table.PrimaryKey, System.ComponentModel.ListSortDirection.Descending));
+                list.Sort(new DBComparer<PersoneIdentify, int?>(Table.PrimaryKey, ListSortDirection.Descending));
             }
             return list.Count == 0 ? null : list[0] as PersoneIdentify;
         }

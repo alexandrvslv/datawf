@@ -41,7 +41,7 @@ namespace DataWF.Data
             if (list.Columns.Contains(property))
             {
                 column = list.Columns[property];
-                comparer = new DBComparer(column, ListSortDirection.Ascending);
+                comparer = column.CreateComparer(ListSortDirection.Ascending);
             }
             else
             {
@@ -101,7 +101,7 @@ namespace DataWF.Data
 
         private void SetValue(object value)
         {
-            if (comparer is DBComparer)
+            if (column != null)
                 row[column] = value;
             else if (comparer is InvokerComparer)
             {

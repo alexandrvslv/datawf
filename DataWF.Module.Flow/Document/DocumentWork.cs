@@ -34,11 +34,11 @@ namespace DataWF.Module.Flow
         public DocumentWorkList(string filter = "", DBViewKeys mode = DBViewKeys.None)
             : base(filter, mode)
         {
-            ApplySortInternal(new DBComparer<DocumentWork>(DocumentWork.DBTable.PrimaryKey, ListSortDirection.Ascending));
+            ApplySortInternal(new DBComparer<DocumentWork, long?>(DocumentWork.DBTable.PrimaryKey, ListSortDirection.Ascending));
         }
 
         public DocumentWorkList(Document document)
-            : this(DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DocumentId)).Name + "=" + document.PrimaryId, DBViewKeys.None)
+            : this(DocumentWork.DocumentKey.Name + "=" + document.PrimaryId, DBViewKeys.None)
         {
             this.doc = document;
         }
@@ -64,8 +64,8 @@ namespace DataWF.Module.Flow
         private Document document;
 
         public ListDocumentWork(Document document)
-            : base(DocumentWork.DBTable.Select(DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DocumentId)), CompareType.Equal, document.PrimaryId),
-                   new DBComparer(DocumentWork.DBTable.PrimaryKey))
+            : base(DocumentWork.DBTable.Select(DocumentWork.DocumentKey, CompareType.Equal, document.PrimaryId),
+                   new DBComparer<DocumentWork, long?>(DocumentWork.DBTable.PrimaryKey))
         {
             this.document = document;
         }

@@ -22,32 +22,33 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 
 namespace DataWF.Data
 {
-    public class DBComparer : DBComparer<DBItem>
-    {
-        public DBComparer(DBColumn column, ListSortDirection direction = ListSortDirection.Ascending)
-            : base(column, direction)
-        { }
+    //public class DBComparer : DBComparer<DBItem, object>
+    //{
+    //    public DBComparer(DBColumn column, ListSortDirection direction = ListSortDirection.Ascending)
+    //        : base(column, direction)
+    //    { }
 
-        public DBComparer(string table, string column, ListSortDirection direction = ListSortDirection.Ascending)
-            : base(table, column, direction)
-        { }
+    //    public DBComparer(string table, string column, ListSortDirection direction = ListSortDirection.Ascending)
+    //        : base(table, column, direction)
+    //    { }
 
-        public DBComparer(DBTable table, string column, ListSortDirection direction = ListSortDirection.Ascending)
-            : base(table, column, direction)
-        { }
-    }
+    //    public DBComparer(DBTable table, string column, ListSortDirection direction = ListSortDirection.Ascending)
+    //        : base(table, column, direction)
+    //    { }
+    //}
 
-    public class DBComparer<T> : IComparer<T>, IComparer where T : DBItem
+    public class DBComparer<T, K> : IComparer<T>, IComparer where T : DBItem
     {
         public DBTable Table;
         public string PropertyName;
         public string Format;
         public ListSortDirection Direction;
         public CompareType Comparer;
-        public object Value;
+        public K Value;
         private DBColumn property;
         public readonly bool buffered;
         private readonly bool refernce;
@@ -76,14 +77,16 @@ namespace DataWF.Data
         { }
 
         #region IComparer
-        public int Compare(T x, object key)
+        public int Compare(T x, K key)
         {
-            object xo = buffered ? x.GetValue(property) : x[PropertyName];
-            if (Format != null && property != null && property.DataType == typeof(DateTime) && xo != null && key != null && key is DateTime)
-            {//TODO datetime check only date need sone new attribute to check time
-                return string.Compare(((DateTime)xo).ToString(Format), ((DateTime)key).ToString(Format), StringComparison.Ordinal);
+            var xo = buffered ? x.GetValue<K>(property) : (K)x[PropertyName];
+            if (Format != null && xo is IFormattable xFormat && key is IFormattable keyFormat)
+            {
+                return string.Compare(xFormat.ToString(Format, CultureInfo.InvariantCulture), keyFormat.ToString(Format, CultureInfo.InvariantCulture), StringComparison.Ordinal);
             }
-            return ListHelper.Compare(xo, key, null, Direction, false);
+            return Direction == ListSortDirection.Ascending
+                ? ListHelper.CompareT<K>(xo, key, null, false)
+                : -ListHelper.CompareT<K>(xo, key, null, false);
         }
 
         public bool Predicate(T x)
@@ -134,18 +137,18 @@ namespace DataWF.Data
                 rez = 0;
             else
             {
-                object xValue, yValue;
+                K xValue, yValue;
                 if (refernce)
                 {
-                    xValue = buffered ? x.GetReference(property) : x.GetReference(PropertyName);
-                    yValue = buffered ? y.GetReference(property) : y.GetReference(PropertyName);
-                    xValue = xValue?.ToString();
-                    yValue = yValue?.ToString();
+                    var xReference = buffered ? x.GetReference(property) : x.GetReference(PropertyName);
+                    var yReference = buffered ? y.GetReference(property) : y.GetReference(PropertyName);
+                    xValue = (K)(object)xReference.ToString();
+                    yValue = (K)(object)yReference.ToString();
                 }
                 else
                 {
-                    xValue = buffered ? x.GetValue(property) : x[PropertyName];
-                    yValue = buffered ? y.GetValue(property) : y[PropertyName];
+                    xValue = buffered ? x.GetValue<K>(property) : (K)x[PropertyName];
+                    yValue = buffered ? y.GetValue<K>(property) : (K)y[PropertyName];
                 }
                 if (property.Format == "SL")
                 {
@@ -153,7 +156,7 @@ namespace DataWF.Data
                     if (len != 0)
                         return Direction == ListSortDirection.Descending ? -len : len;
                 }
-                rez = ListHelper.Compare(xValue, yValue, null, false);
+                rez = ListHelper.CompareT(xValue, yValue, null, false);
                 if (rez == 0 && Hash)
                     rez = x.CompareTo(y);
             }
@@ -179,10 +182,10 @@ namespace DataWF.Data
 
         public override bool Equals(object obj)
         {
-            if (obj is DBComparer<T>)
-                return Direction == ((DBComparer<T>)obj).Direction
-                                                     && Table == ((DBComparer<T>)obj).Table
-                                                     && PropertyName.Equals(((DBComparer<T>)obj).PropertyName, StringComparison.Ordinal);
+            if (obj is DBComparer<T, K>)
+                return Direction == ((DBComparer<T, K>)obj).Direction
+                    && Table == ((DBComparer<T, K>)obj).Table
+                    && PropertyName.Equals(((DBComparer<T, K>)obj).PropertyName, StringComparison.Ordinal);
             return base.Equals(obj);
         }
 

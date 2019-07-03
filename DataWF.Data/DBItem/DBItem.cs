@@ -50,6 +50,8 @@ namespace DataWF.Data
 
         public object Tag;
         internal int handler = -1;
+        internal short block = -1;
+        internal short blockIndex = -1;
         internal string cacheToString = string.Empty;
         protected DBTable table;
         protected DBItemState state = DBItemState.New;
@@ -716,7 +718,7 @@ namespace DataWF.Data
                 if (table != value)
                 {
                     table = value is IDBVirtualTable virtualTable ? virtualTable.BaseTable : value;
-                    handler = table.GetNextHandler();
+                    handler = table.GetNextHandler(out block, out blockIndex);
                 }
             }
         }
@@ -1133,9 +1135,13 @@ namespace DataWF.Data
 
         public int Handler { get => handler; set => handler = value; }
 
+        public short Block { get => block; set => block = value; }
+
+        public short BlockIndex { get => blockIndex; set => blockIndex = value; }
+
         public int CompareTo(DBItem obj)
         {
-            return obj == null ? 1 : obj.Table == Table ? handler.CompareTo(obj.handler) :
+            return obj == null ? 1 : obj.table == table ? handler.CompareTo(obj.handler) :
                 GetHashCode().CompareTo(obj.GetHashCode());
         }
 

@@ -17,6 +17,7 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using System;
 using System.ComponentModel;
 using DataWF.Data;
 
@@ -27,7 +28,7 @@ namespace DataWF.Module.Common
         public StatisticList(string filter, DBViewKeys mode = DBViewKeys.None)
             : base(Statistic.DBTable, filter, mode)
         {
-            ApplySortInternal(new DBComparer(Statistic.DBTable.ParseProperty(nameof(Statistic.DateCreate)), ListSortDirection.Ascending));
+            ApplySortInternal(new DBComparer<Statistic, DateTime?>(Statistic.DBTable.DateKey, ListSortDirection.Ascending));
         }
 
         public StatisticList()

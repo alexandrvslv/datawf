@@ -836,41 +836,39 @@ namespace DataWF.Common
                 result = comp.Compare(x, y);
                 hash = hash && x != null && y != null;
             }
-            else if (x == null || DBNull.Value.Equals(x))
+            else if (x == null)
             {
-                result = (y == null || DBNull.Value.Equals(y)) ? 0 : -1;
+                result = (y == null) ? 0 : -1;
                 hash = false;
             }
-            else if (y == null || DBNull.Value.Equals(y))
+            else if (y == null)
             {
                 result = 1;
                 hash = false;
             }
-            else if (x.Equals(y))
+            else if (x is string sx && y is string sy)
+            {
+                result = string.Compare(sx, sy, StringComparison.OrdinalIgnoreCase);
+                hash = false;
+            }
+            else if (EqualityComparer<T>.Default.Equals(x, y))
             {
                 result = 0;
                 hash = false;
             }
-            else if (x is string)
+            else if (x is DateTime xd && y is DateTime yd)
             {
-                result = string.Compare(x.ToString(), y.ToString(), StringComparison.OrdinalIgnoreCase);
-                hash = false;
-            }
-            else if (x is DateTime)
-            {
-                var xd = (DateTime)(object)x;
-                var yd = (DateTime)(object)y;
                 if (xd.TimeOfDay == TimeSpan.Zero || yd.TimeOfDay == TimeSpan.Zero)
                     result = xd.Date.CompareTo(yd.Date);
                 else
                     result = xd.CompareTo(yd);
             }
-            else if (x is IComparable<T>)
-                result = ((IComparable<T>)x).CompareTo(y);
-            else if (x is IComparable)
-                result = ((IComparable)x).CompareTo(y);
-            else if (x is byte[])
-                result = ((byte[])(object)x).Length.CompareTo(((byte[])(object)y).Length);
+            else if (x is IComparable<T> tcx)
+                result = tcx.CompareTo(y);
+            else if (x is IComparable cx)
+                result = cx.CompareTo(y);
+            else if (x is byte[] xb && y is byte[] yb)
+                result = xb.Length.CompareTo(yb.Length);
             else
                 result = string.Compare(x.ToString(), y.ToString(), StringComparison.OrdinalIgnoreCase);
 
@@ -887,14 +885,19 @@ namespace DataWF.Common
                 result = comp.Compare(x, y);
                 hash = hash && x != null && y != null;
             }
-            else if (x == null || x == DBNull.Value)
+            else if (x == null)
             {
-                result = (y == null || y == DBNull.Value) ? 0 : -1;
+                result = (y == null) ? 0 : -1;
                 hash = false;
             }
-            else if (y == null || y == DBNull.Value)
+            else if (y == null)
             {
                 result = 1;
+                hash = false;
+            }
+            else if (x is string sx && y is string sy)
+            {
+                result = string.Compare(sx, sy, StringComparison.OrdinalIgnoreCase);
                 hash = false;
             }
             else if (x.Equals(y))
@@ -902,24 +905,17 @@ namespace DataWF.Common
                 result = 0;
                 hash = false;
             }
-            else if (x is string)
+            else if (x is DateTime xd && y is DateTime yd)
             {
-                result = string.Compare((string)x, y.ToString(), StringComparison.OrdinalIgnoreCase);
-                hash = false;
-            }
-            else if (x is DateTime && y is DateTime)
-            {
-                var xd = (DateTime)x;
-                var yd = (DateTime)y;
                 if (xd.TimeOfDay == TimeSpan.Zero || yd.TimeOfDay == TimeSpan.Zero)
                     result = xd.Date.CompareTo(yd.Date);
                 else
                     result = xd.CompareTo(yd);
             }
-            else if (x is IComparable)//x.GetType() == y.GetType() &&
-                result = ((IComparable)x).CompareTo(y);
-            else if (x.GetType() == typeof(byte[]))
-                result = ((byte[])x).Length.CompareTo(((byte[])y).Length);
+            else if (x is IComparable xc)//x.GetType() == y.GetType() &&
+                result = xc.CompareTo(y);
+            else if (x is byte[] xb && y is byte[] yb)
+                result = xb.Length.CompareTo(yb.Length);
             else
                 result = string.Compare(x.ToString(), y.ToString(), StringComparison.OrdinalIgnoreCase);
 

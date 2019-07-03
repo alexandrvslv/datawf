@@ -59,9 +59,11 @@ namespace DataWF.Common
             array = narray;
         }
 
-        public static int GetHIndex(int index, int blockSize)
+        public static int GetHIndex(int index, int blockSize, out short block, out short blockIndex)
         {
-            return Helper.TwoToOnePointer((short)(index / blockSize), (short)(index % blockSize));
+            block = (short)(index / blockSize);
+            blockIndex = (short)(index % blockSize);
+            return Helper.TwoToOnePointer(block, blockIndex);
         }
 
         protected int blockSize;
@@ -74,16 +76,32 @@ namespace DataWF.Common
 
         public abstract object Get(int index);
 
+        public abstract object Get(short block, short blockIndex);
+
         public abstract void Set(int index, object value);
+
+        public abstract void Set(short block, short blockIndex, object value);
 
         public T GetValue<T>(int index)
         {
-            return ((Pull<T>)this).GetValueInternal(index);
+            Helper.OneToTwoPointer(index, out var block, out var blockIndex);
+            return GetValue<T>(block, blockIndex);
+        }
+
+        public T GetValue<T>(short block, short blockIndex)
+        {
+            return ((Pull<T>)this).GetValue(block, blockIndex);
         }
 
         public void SetValue<T>(int index, T value)
         {
-            ((Pull<T>)this).SetValueInternal(index, value);
+            Helper.OneToTwoPointer(index, out var block, out var blockIndex);
+            SetValue(block, blockIndex, value);
+        }
+
+        public void SetValue<T>(short block, short blockIndex, T value)
+        {
+            ((Pull<T>)this).SetValue(block, blockIndex, value);
         }
 
         public virtual int Capacity { get { return 0; } }
@@ -127,7 +145,13 @@ namespace DataWF.Common
 
         public override void Set(int index, object value)
         {
-            SetValue(index, DBNullable<T>.CheckNull(value));
+            Helper.OneToTwoPointer(index, out var block, out var blockIndex);
+            Set(block, blockIndex, value);
+        }
+
+        public override void Set(short block, short blockIndex, object value)
+        {
+            SetValue(block, blockIndex, DBNullable<T>.CheckNull(value));
         }
     }
 
@@ -140,7 +164,13 @@ namespace DataWF.Common
 
         public override void Set(int index, object value)
         {
-            SetValue(index, value == null ? null : value is T? ? (T?)value : (T?)(T)value);
+            Helper.OneToTwoPointer(index, out var block, out var blockIndex);
+            Set(block, blockIndex, value);
+        }
+
+        public override void Set(short block, short blockIndex, object value)
+        {
+            base.Set(block, blockIndex, value == null ? null : value is T? ? (T?)value : (T?)(T)value);
         }
     }
 
@@ -174,25 +204,35 @@ namespace DataWF.Common
 
         public override object Get(int index)
         {
-            return GetValueInternal(index);
+            Helper.OneToTwoPointer(index, out var block, out var blockIndex);
+            return GetValue(block, blockIndex);
+        }
+
+        public override object Get(short block, short blockIndex)
+        {
+            return GetValue(block, blockIndex);
         }
 
         public override void Set(int index, object value)
         {
-            SetValueInternal(index, (T)value);
+            Helper.OneToTwoPointer(index, out var block, out var blockIndex);
+            SetValue(block, blockIndex, (T)value);
         }
 
-        public T GetValueInternal(int index)
+        public override void Set(short block, short blockIndex, object value)
         {
-            Helper.OneToTwoPointer(index, out var block, out var blockIndex);
+            SetValue(block, blockIndex, (T)value);
+        }
+
+        public T GetValue(short block, short blockIndex)
+        {
             if (block >= array.Count || array[block] == null)
                 return default(T);
             return array[block][blockIndex];
         }
 
-        public void SetValueInternal(int index, T value)
+        public void SetValue(short block, short blockIndex, T value)
         {
-            Helper.OneToTwoPointer(index, out var block, out var blockIndex);
             while (block > array.Count)
                 array.Add(null);
             if (block == array.Count)

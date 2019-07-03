@@ -28,7 +28,7 @@ namespace DataWF.Module.Common
         public SchedulerList(string filter, DBViewKeys mode = DBViewKeys.None, DBStatus status = DBStatus.Empty)
             : base(Scheduler.DBTable, filter, mode, status)
         {
-            ApplySortInternal(new DBComparer(Scheduler.DBTable.ParseProperty(nameof(Scheduler.Order)), ListSortDirection.Ascending));
+            ApplySortInternal(new DBComparer<Scheduler, int?>(Scheduler.OrderKey, ListSortDirection.Ascending));
         }
 
         public SchedulerList()

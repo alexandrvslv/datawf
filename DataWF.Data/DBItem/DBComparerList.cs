@@ -28,18 +28,18 @@ namespace DataWF.Data
 {
     public class DBComparerList : IComparer, IComparer<DBItem>
     {
-        protected List<DBComparer> comparers;
+        protected List<IComparer> comparers;
 
-        public List<DBComparer> Comparers
+        public List<IComparer> Comparers
         {
             get { return comparers; }
         }
 
         public DBComparerList(params DBColumn[] columns)
         {
-            comparers = new List<DBComparer>();
+            comparers = new List<IComparer>();
             foreach (var col in columns)
-                comparers.Add(new DBComparer(col));
+                comparers.Add(col.CreateComparer());
         }
 
         public DBComparerList(string table, params string[] columns)
@@ -49,7 +49,7 @@ namespace DataWF.Data
 
         public DBComparerList(DBTable table, params string[] columns)
         {
-            comparers = new List<DBComparer>();
+            comparers = new List<IComparer>();
             foreach (string column in columns)
             {
                 var dir = ListSortDirection.Ascending;
@@ -58,11 +58,12 @@ namespace DataWF.Data
                 string name = column.Trim().IndexOf(" ", StringComparison.Ordinal) > 0
                                     ? column.Substring(0, column.IndexOf(" ", StringComparison.Ordinal))
                                     : column;
-                comparers.Add(new DBComparer(table, name, dir));
+                var dbColumn = table.ParseColumn(name);
+                comparers.Add(dbColumn.CreateComparer(dir));
             }
         }
 
-        public DBComparerList(List<DBComparer> comparers)
+        public DBComparerList(List<IComparer> comparers)
         {
             this.comparers = comparers;
         }
@@ -82,7 +83,7 @@ namespace DataWF.Data
         {
             if ((x == null && y == null) || (x != null && x.Equals(y)))
                 return 0;
-            foreach (DBComparer comparer in comparers)
+            foreach (var comparer in comparers)
             {
                 int retval = comparer.Compare(x, y);
                 if (retval != 0)

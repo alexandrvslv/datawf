@@ -43,10 +43,11 @@ namespace DataWF.Module.Messanger
     [DataContract, Table("dmessage_data", "Message", IsLoging = false)]
     public class MessageData : MessageDetail
     {
-        public static DBTable<MessageData> DBTable
-        {
-            get { return GetTable<MessageData>(); }
-        }
+        private static DBColumn dataNameKey = DBColumn.EmptyKey;
+        private static DBColumn dataKey = DBColumn.EmptyKey;
+        public static DBTable<MessageData> DBTable => GetTable<MessageData>();
+        public static DBColumn DataNameKey => DBTable.ParseProperty(nameof(DataName), ref dataNameKey);
+        public static DBColumn DataKey => DBTable.ParseProperty(nameof(Data), ref dataKey);
 
         public MessageData()
         {
@@ -55,22 +56,22 @@ namespace DataWF.Module.Messanger
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get => GetValue<int?>(Table.PrimaryKey);
+            set => SetValue(value, Table.PrimaryKey);
         }
 
         [DataMember, Column("mdata_name")]
         public string DataName
         {
-            get { return GetProperty<string>(); }
-            set { SetProperty(value); }
+            get => GetValue<string>(DataNameKey);
+            set => SetValue(value, DataNameKey);
         }
 
         [DataMember, Column("mdata")]
         public byte[] Data
         {
-            get { return GetProperty<byte[]>(); }
-            set { SetProperty(value); }
+            get => GetValue<byte[]>(DataKey);
+            set => SetValue(value, DataKey);
         }
     }
 

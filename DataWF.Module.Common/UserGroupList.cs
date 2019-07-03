@@ -29,7 +29,7 @@ namespace DataWF.Module.Common
         public UserGroupList(string filter = "", DBViewKeys mode = DBViewKeys.None, DBStatus status = DBStatus.Empty)
             : base(UserGroup.DBTable, filter, mode, status)
         {
-            ApplySort((IComparer<UserGroup>)new DBComparer<UserGroup>(UserGroup.DBTable.GroupKey, ListSortDirection.Ascending));
+            ApplySortInternal(new DBComparer<UserGroup, int?>(UserGroup.DBTable.GroupKey, ListSortDirection.Ascending));
         }
 
         public UserGroup GetCurrent(IUserIdentity user)

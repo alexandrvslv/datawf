@@ -592,7 +592,7 @@ namespace DataWF.Data
 
         public List<DBGroup<T>> GroupBy(DBColumn column)
         {
-            items.Sort(new DBComparer(column, ListSortDirection.Ascending));
+            items.Sort((IComparer<T>)column.CreateComparer(ListSortDirection.Ascending));
             var groups = new List<DBGroup<T>>();
             DBGroup<T> group = null;
             foreach (T item in items)

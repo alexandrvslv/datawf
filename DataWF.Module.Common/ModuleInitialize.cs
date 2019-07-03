@@ -16,10 +16,10 @@ namespace DataWF.Module.Common
             UserGroup.DBTable.Load();
             UserGroup.SetCurrent();
 
-            User.DBTable.DefaultComparer = new DBComparer(User.DBTable.CodeKey) { Hash = true };
+            User.DBTable.DefaultComparer = new DBComparer<User, string>(User.DBTable.CodeKey) { Hash = true };
             User.DBTable.Load();
 
-            UserLog.DBTable.DefaultComparer = new DBComparer(UserLog.DBTable.PrimaryKey) { Hash = true };
+            UserLog.DBTable.DefaultComparer = new DBComparer<UserLog, long?>(UserLog.DBTable.PrimaryKey) { Hash = true };
             DBLogTable.UserLogTable = UserLog.DBTable;
             DBService.RowLoging += UserLog.OnDBItemLoging;
 

@@ -100,7 +100,7 @@ namespace DataWF.Module.Flow
 
             Helper.Logs.Add(new StateInfo("Flow Synchronization", "Complete", "in " + watch.ElapsedMilliseconds + " ms", StatusType.Information));
 
-            DocumentWork.DBTable.DefaultComparer = new DBComparer(DocumentWork.DBTable.PrimaryKey) { Hash = true };
+            DocumentWork.DBTable.DefaultComparer = new DBComparer<DocumentWork, long?>(DocumentWork.DBTable.PrimaryKey) { Hash = true };
             //Logs.Add(new StateInfo("Flow Check", "Config Falil", "AccountInfo", StatusType.Warning));
         }
 

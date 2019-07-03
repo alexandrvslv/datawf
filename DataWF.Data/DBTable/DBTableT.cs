@@ -652,15 +652,12 @@ namespace DataWF.Data
             for (int i = 0; i < transaction.ReaderColumns.Count; i++)
             {
                 var column = transaction.ReaderColumns[i];
-                var value = transaction.DbConnection.System.ReadValue(column, transaction.Reader.GetValue(i));
-
-                if (!srow.Attached || srow.UpdateState == DBUpdateState.Default || !srow.GetOld(column, out object oldValue))
-                {
-                    srow.SetValue(value, column, false);
-                }
+                column.LoadFromReader(transaction, srow, i);
             }
             return srow;
         }
+
+        
 
         public override IEnumerable<DBItem> GetChangedItems()
         {

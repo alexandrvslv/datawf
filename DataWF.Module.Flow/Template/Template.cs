@@ -43,7 +43,7 @@ namespace DataWF.Module.Flow
         public TemplateList(string filter, DBViewKeys mode = DBViewKeys.None, DBStatus status = DBStatus.Empty)
             : base(filter, mode, status)
         {
-            ApplySortInternal(new DBComparer(Template.DBTable.CodeKey, ListSortDirection.Ascending));
+            ApplySortInternal(new DBComparer<Template, string>(Template.DBTable.CodeKey, ListSortDirection.Ascending));
         }
 
         public TemplateList()
@@ -52,7 +52,7 @@ namespace DataWF.Module.Flow
         }
 
         public TemplateList(Work flow)
-            : this(Template.DBTable.ParseProperty(nameof(Template.WorkId)).Name + "=" + flow.PrimaryId)
+            : this(Template.WorkKey.Name + "=" + flow.PrimaryId)
         {
         }
 
@@ -82,6 +82,8 @@ namespace DataWF.Module.Flow
         private static DBColumn alterName1Key = DBColumn.EmptyKey;
         private static DBColumn alterName2Key = DBColumn.EmptyKey;
         private static DBColumn alterName3Key = DBColumn.EmptyKey;
+        private static DBColumn documentTypeKey = DBColumn.EmptyKey;
+        private static DBColumn isFileKey = DBColumn.EmptyKey;
 
         public static DBTable<Template> DBTable => dbTable ?? (dbTable = GetTable<Template>());
         public static DBColumn WorkKey => DBTable.ParseProperty(nameof(WorkId), ref workKey);
@@ -90,6 +92,8 @@ namespace DataWF.Module.Flow
         public static DBColumn AlterName1Key => DBTable.ParseProperty(nameof(AlterName1), ref alterName1Key);
         public static DBColumn AlterName2Key => DBTable.ParseProperty(nameof(AlterName2), ref alterName2Key);
         public static DBColumn AlterName3Key => DBTable.ParseProperty(nameof(AlterName3), ref alterName3Key);
+        public static DBColumn DocumentTypeKey => DBTable.ParseProperty(nameof(DocumentType), ref documentTypeKey);
+        public static DBColumn IsFileKey => DBTable.ParseProperty(nameof(IsFile), ref isFileKey);
 
         private DBItemType documentType;
         private Work work;
@@ -162,8 +166,8 @@ namespace DataWF.Module.Flow
         [DefaultValue(0), Column("document_type", 250)]
         public int? DocumentType
         {
-            get { return GetProperty<int?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<int?>(DocumentTypeKey); }
+            set { SetValue(value, DocumentTypeKey); }
         }
 
         [Browsable(false)]
@@ -232,8 +236,8 @@ namespace DataWF.Module.Flow
         [DefaultValue(false), Column("is_file")]
         public bool? IsFile
         {
-            get { return GetProperty<bool?>(); }
-            set { SetProperty(value); }
+            get { return GetValue<bool?>(IsFileKey); }
+            set { SetValue(value, IsFileKey); }
         }
 
         public override AccessValue Access

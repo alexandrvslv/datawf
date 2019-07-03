@@ -51,6 +51,7 @@ namespace DataWF.Module.Counterpart
         private static DBColumn phoneKey = DBColumn.EmptyKey;
         private static DBColumn countryKey = DBColumn.EmptyKey;
         private static DBColumn addressKey = DBColumn.EmptyKey;
+        private static DBColumn keyKey = DBColumn.EmptyKey;
         private Address address;
         private Country country;
 
@@ -65,6 +66,7 @@ namespace DataWF.Module.Counterpart
         public static DBColumn PhoneKey => DBTable.ParseProperty(nameof(Phone), ref phoneKey);
         public static DBColumn CountryKey => DBTable.ParseProperty(nameof(CountryId), ref countryKey);
         public static DBColumn AddressKey => DBTable.ParseProperty(nameof(AddressId), ref addressKey);
+        public static DBColumn KeyKey => DBTable.ParseProperty(nameof(Key), ref keyKey);
         //public static DBColumn UserKey => DBTable.ParseProperty(nameof(UserId), ref userKey);
         public static DBTable<Customer> DBTable => dbTable ?? (dbTable = GetTable<Customer>());
 
@@ -203,8 +205,8 @@ namespace DataWF.Module.Counterpart
         [DataMember, Column("sign_key", 1024, Keys = DBColumnKeys.Password | DBColumnKeys.System)]
         public string Key
         {
-            get { return GetProperty<string>(nameof(Key)); }
-            set { SetProperty(value, nameof(Key)); }
+            get { return GetValue<string>(KeyKey); }
+            set { SetValue(value, KeyKey); }
         }
 
 

@@ -146,7 +146,7 @@ namespace DataWF.Data
         protected DBColumn itemTypeKey = DBColumn.EmptyKey;
 
         private DBSequence cacheSequence;
-        public DBComparer DefaultComparer;
+        public IComparer DefaultComparer;
         public int Hash = -1;
         protected internal ConcurrentQueue<int> FreeHandlers = new ConcurrentQueue<int>();
 
@@ -824,13 +824,14 @@ namespace DataWF.Data
             return !e.Cancel;
         }
 
-        protected internal int GetNextHandler()
+        protected internal int GetNextHandler(out short block, out short blockIndex)
         {
             if (FreeHandlers.Count > 0 && FreeHandlers.TryDequeue(out var handler))
             {
+                Helper.OneToTwoPointer(handler, out block, out blockIndex);
                 return handler;
             }
-            return Pull.GetHIndex(NextHash(), BlockSize);
+            return Pull.GetHIndex(NextHash(), BlockSize, out block, out blockIndex);
         }
 
         public event EventHandler<DBItemEventArgs> RowUpdated;

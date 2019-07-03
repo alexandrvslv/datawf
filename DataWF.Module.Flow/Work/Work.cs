@@ -32,7 +32,7 @@ namespace DataWF.Module.Flow
         public WorkList(string filter = "", DBViewKeys mode = DBViewKeys.None, DBStatus status = DBStatus.Empty)
             : base(filter, mode, status)
         {
-            ApplySortInternal(new DBComparer<Work>(Work.DBTable.CodeKey, ListSortDirection.Ascending));
+            ApplySortInternal(new DBComparer<Work, string>(Work.DBTable.CodeKey, ListSortDirection.Ascending));
         }
 
     }
@@ -40,10 +40,14 @@ namespace DataWF.Module.Flow
     [DataContract, Table("rwork", "Template", BlockSize = 20)]
     public class Work : DBItem, IDisposable
     {
-        public static DBTable<Work> DBTable
-        {
-            get { return GetTable<Work>(); }
-        }
+        private static DBColumn nameENKey = DBColumn.EmptyKey;
+        private static DBColumn nameRUKey = DBColumn.EmptyKey;
+        private static DBTable<Work> dbTable;
+
+        public static DBTable<Work> DBTable => dbTable ?? (dbTable = GetTable<Work>());
+
+        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
+        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
 
         public Work()
         {
@@ -72,14 +76,14 @@ namespace DataWF.Module.Flow
 
         public string NameEN
         {
-            get => GetProperty<string>();
-            set => SetProperty(value);
+            get => GetValue<string>(NameENKey);
+            set => SetValue(value, NameENKey);
         }
 
         public string NameRU
         {
-            get => GetProperty<string>();
-            set => SetProperty(value);
+            get => GetValue<string>(NameRUKey);
+            set => SetValue(value, NameRUKey);
         }
 
         [ControllerMethod]

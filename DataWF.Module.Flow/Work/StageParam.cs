@@ -48,7 +48,7 @@ namespace DataWF.Module.Flow
         public StageParamList(string filter, DBViewKeys mode = DBViewKeys.None, DBStatus status = DBStatus.Empty)
             : base(filter, mode, status)
         {
-            ApplySortInternal(new DBComparer(StageParam.DBTable.PrimaryKey, ListSortDirection.Ascending));
+            ApplySortInternal(new DBComparer<StageParam, int?>(StageParam.DBTable.PrimaryKey, ListSortDirection.Ascending));
         }
 
         public StageParamList()

@@ -120,7 +120,7 @@ namespace DataWF.Data
 
         public void RefreshChanges()
         {
-            logs.Sort(new DBComparer(Row.Table.LogTable.PrimaryKey));
+            logs.Sort(new DBComparer<DBLogItem, int?>(Row.Table.LogTable.PrimaryKey));
 
             changes.Clear();
             user = string.Empty;

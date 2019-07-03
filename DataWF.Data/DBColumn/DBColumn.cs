@@ -20,10 +20,12 @@
 using DataWF.Common;
 using Newtonsoft.Json;
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
@@ -93,6 +95,7 @@ namespace DataWF.Data
         //private Dictionary<int, object> tags;
         private ConcurrentDictionary<int, object> olds;
         private DBLogColumn logColumn;
+        private const int bufferSize = 4048;
 
         #endregion
 
@@ -175,12 +178,105 @@ namespace DataWF.Data
             }
         }
 
+        public IComparer CreateComparer(ListSortDirection direction = ListSortDirection.Ascending)
+        {
+            return CreateComparer<DBItem>(direction);
+        }
+
+        public IComparer CreateComparer<T>(ListSortDirection direction = ListSortDirection.Ascending) where T : DBItem
+        {
+            var type = typeof(DBComparer<,>).MakeGenericType(typeof(T), GetDataType());
+            return (IComparer)EmitInvoker.CreateObject(type,
+                new Type[] { typeof(DBColumn), typeof(ListSortDirection) },
+                new object[] { this, direction }, true);
+        }
+
+        public void LoadFromReader(DBTransaction transaction, DBItem row, int i)
+        {
+            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out object oldValue))
+            {
+                return;
+            }
+            switch (DBDataType)
+            {
+                case DBDataType.String:
+                case DBDataType.Clob:
+                    var stringValue = transaction.Reader.IsDBNull(i) ? null : transaction.Reader.GetString(i);
+                    row.SetValue<string>(stringValue, this, false);
+                    break;
+                case DBDataType.Int:
+                    var intValue = transaction.Reader.IsDBNull(i) ? null : (int?)transaction.Reader.GetInt32(i);
+                    if (DataType.IsEnum)
+                    {
+                        row.SetValue((object)intValue, this, false);
+                    }
+                    else
+                    {
+                        row.SetValue<int?>(intValue, this, false);
+                    }
+                    break;
+                case DBDataType.BigInt:
+                    var longValue = transaction.Reader.IsDBNull(i) ? null : (long?)transaction.Reader.GetInt64(i);
+                    row.SetValue<long?>(longValue, this, false);
+                    break;
+                case DBDataType.ShortInt:
+                    var shortValue = transaction.Reader.IsDBNull(i) ? null : (short?)transaction.Reader.GetInt16(i);
+                    row.SetValue<short?>(shortValue, this, false);
+                    break;
+                case DBDataType.Date:
+                case DBDataType.DateTime:
+                case DBDataType.TimeStamp:
+                    var dateValue = transaction.Reader.IsDBNull(i) ? null : (DateTime?)transaction.Reader.GetDateTime(i);
+                    row.SetValue<DateTime?>(dateValue, this, false);
+                    break;
+                case DBDataType.Bool:
+                    var boolValue = transaction.Reader.IsDBNull(i) ? null : (bool?)transaction.Reader.GetBoolean(i);
+                    row.SetValue<bool?>(boolValue, this, false);
+                    break;
+                case DBDataType.Blob:
+                case DBDataType.ByteArray:
+                    var arrayValue = transaction.Reader.IsDBNull(i) ? null : (byte[])transaction.Reader.GetValue(i);
+                    row.SetValue<byte[]>(arrayValue, this, false);
+                    break;
+                case DBDataType.LargeObject:
+                    var unitValue = transaction.Reader.IsDBNull(i) ? null : (uint?)transaction.Reader.GetValue(i);
+                    row.SetValue<uint?>(unitValue, this, false);
+                    break;
+                case DBDataType.Decimal:
+                    var decimalValue = transaction.Reader.IsDBNull(i) ? null : (decimal?)transaction.Reader.GetDecimal(i);
+                    row.SetValue<decimal?>(decimalValue, this, false);
+                    break;
+                case DBDataType.Double:
+                    var doubleValue = transaction.Reader.IsDBNull(i) ? null : (double?)transaction.Reader.GetDouble(i);
+                    row.SetValue<double?>(doubleValue, this, false);
+                    break;
+                case DBDataType.Float:
+                    var floatValue = transaction.Reader.IsDBNull(i) ? null : (float?)transaction.Reader.GetFloat(i);
+                    row.SetValue<float?>(floatValue, this, false);
+                    break;
+                case DBDataType.TimeSpan:
+                    var spanValue = transaction.Reader.IsDBNull(i) ? null : (TimeSpan?)transaction.Reader.GetValue(i);
+                    row.SetValue<TimeSpan?>(spanValue, this, false);
+                    break;
+                case DBDataType.TinyInt:
+                    var byteValue = transaction.Reader.IsDBNull(i) ? null : (byte?)transaction.Reader.GetByte(i);
+                    row.SetValue<byte?>(byteValue, this, false);
+                    break;
+                default:
+                    var value = transaction.Reader.IsDBNull(i) ? null : transaction.Reader.GetValue(i);
+                    row.SetValue(value, this, false);
+                    break;
+            }
+            //var value = transaction.DbConnection.System.ReadValue(this, transaction.Reader.GetValue(i));
+            //row.SetValue(value, this, false);
+        }
+
         protected void CheckIndex()
         {
             if (Index != null && Index.BasePull != pull)
             {
                 Index.Dispose();
-                index = null;
+                Index = null;
             }
             if (pull == null)
             {
@@ -473,6 +569,13 @@ namespace DataWF.Data
 
         [Browsable(false)]
         public Type TargetType { get { return typeof(DBItem); } }
+
+        public Type GetDataType()
+        {
+            if (DataType.IsValueType)
+                return typeof(Nullable<>).MakeGenericType(DataType);
+            return DataType;
+        }
 
         [Browsable(false), Category("Database")]
         public virtual Type DataType
@@ -777,13 +880,13 @@ namespace DataWF.Data
 
         public object GetValue(DBItem target)
         {
-            return Pull != null ? Pull.Get(target.handler) :
+            return Pull != null ? Pull.Get(target.block, target.blockIndex) :
                 TypeHelper.IsBaseType(target.GetType(), Attribute.PropertyInvoker.TargetType) ? Attribute.PropertyInvoker.GetValue(target) : null;
         }
 
         public T GetValue<T>(DBItem target)
         {
-            return Pull != null ? Pull.GetValue<T>(target.handler) : (T)Attribute.PropertyInvoker.GetValue(target);
+            return Pull != null ? Pull.GetValue<T>(target.block, target.blockIndex) : (T)Attribute.PropertyInvoker.GetValue(target);
         }
 
         public object GetValue(object target)
@@ -795,7 +898,7 @@ namespace DataWF.Data
         {
             if (Pull != null)
             {
-                Pull?.Set(target.handler, value);
+                Pull.Set(target.block, target.blockIndex, value);
             }
             else
             {
@@ -807,7 +910,7 @@ namespace DataWF.Data
         {
             if (Pull != null)
             {
-                Pull?.SetValue<T>(target.handler, value);
+                Pull.SetValue<T>(target.block, target.blockIndex, value);
             }
             else
             {

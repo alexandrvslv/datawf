@@ -34,7 +34,7 @@ namespace DataWF.Module.Flow
         public StageList(string filter, DBViewKeys mode = DBViewKeys.None, DBStatus status = DBStatus.Empty)
             : base(filter, mode, status)
         {
-            ApplySortInternal(new DBComparer(Stage.DBTable.CodeKey, ListSortDirection.Ascending));
+            ApplySortInternal(new DBComparer<Stage, string>(Stage.DBTable.CodeKey, ListSortDirection.Ascending));
         }
 
         public StageList()
@@ -43,7 +43,7 @@ namespace DataWF.Module.Flow
         }
 
         public StageList(Work flow)
-            : this(Stage.DBTable.ParseColumn(nameof(Stage.Work)).Name + "=" + flow.PrimaryId)
+            : this(Stage.WorkKey.Name + "=" + flow.PrimaryId)
         {
         }
     }

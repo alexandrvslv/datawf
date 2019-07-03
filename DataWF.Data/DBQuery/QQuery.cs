@@ -95,7 +95,7 @@ namespace DataWF.Data
         {
             var comparer = new DBComparerList();
             foreach (QOrder order in Orders)
-                comparer.Comparers.Add(new DBComparer(Table, order.Column.Name, order.Direction));
+                comparer.Comparers.Add(order.Column.CreateComparer(order.Direction));
             ListHelper.QuickSort(list, comparer);
         }
 
