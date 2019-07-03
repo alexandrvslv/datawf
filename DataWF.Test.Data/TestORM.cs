@@ -144,11 +144,12 @@ namespace DataWF.Test.Data
             var lodar = qresult.Get(0, "lodar").ToString();
             Assert.IsTrue(lodar == "1" || lodar == "True", "Insert sql Fail Bool");
             Assert.IsInstanceOf<byte[]>(qresult.Get(0, "group_access"), "Insert sql Fail Byte Array");
+
             var accessValue = new AccessValue((byte[])qresult.Get(0, "group_access"));
-            Assert.AreEqual(3, accessValue.Items.Count, "Insert sql Fail Byte Array");
-            Assert.AreEqual(true, accessValue.Items[0].Read, "Insert sql Fail Byte Array");
-            Assert.AreEqual(true, accessValue.Items[1].Admin, "Insert sql Fail Byte Array");
-            Assert.AreEqual(false, accessValue.Items[2].Delete, "Insert sql Fail Byte Array");
+            Assert.AreEqual(3, accessValue.Items.Count(), "Insert sql Fail Byte Array");
+            Assert.AreEqual(true, accessValue.Items.ElementAt(0).Read, "Insert sql Fail Byte Array");
+            Assert.AreEqual(true, accessValue.Items.ElementAt(1).Admin, "Insert sql Fail Byte Array");
+            Assert.AreEqual(false, accessValue.Items.ElementAt(2).Delete, "Insert sql Fail Byte Array");
 
             Employer.DBTable.Clear();
             Assert.AreEqual(0, Employer.DBTable.Count, "Clear table Fail");
@@ -402,6 +403,9 @@ namespace DataWF.Test.Data
 
         public string Name { get; set; }
 
-        public bool IsCurrentUser(IUserIdentity user) { return true; }
+        public bool ContainsUser(IUserIdentity user)
+        {
+            return true;
+        }
     }
 }

@@ -205,7 +205,7 @@ namespace DataWF.Module.FlowGui
                 if (value != null)
                 {
                     groupBox.Items["Users"].Visible = true;
-                    foreach (var item in value.GetDepartment(current.Template))
+                    foreach (var item in value.GetDepartments(current.Template))
                         InitNode(item);
                 }
                 else

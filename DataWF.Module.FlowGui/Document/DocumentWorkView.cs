@@ -18,7 +18,7 @@ namespace DataWF.Module.FlowGui
         {
             actualParam = new QParam(LogicType.And, DocumentWork.DBTable.ParseProperty(nameof(DocumentWork.DateComplete)), CompareType.Is, null);
 
-            view.ApplySortInternal(DocumentWork.DBTable.DefaultComparer);
+            view.ApplySortInternal(new DBComparer<DocumentWork, long?>(DocumentWork.DBTable.PrimaryKey));
             view.Query.Parameters.Add(actualParam);
 
             list.AllowSort = false;

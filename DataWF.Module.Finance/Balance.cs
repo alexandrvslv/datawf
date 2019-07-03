@@ -37,18 +37,20 @@ namespace DataWF.Module.Finance
     [DataContract, Table("dbalance", "Finance", BlockSize = 5000)]
     public class Balance : DBItem
     {
-        private Currency currency;
-        private Account account;
-
-        public static DBTable<Balance> DBTable
-        {
-            get { return GetTable<Balance>(); }
-        }
+        private static DBTable<Balance> dbTable;
+        private static DBColumn balanceDateKey = DBColumn.EmptyKey;
+        public static DBTable<Balance> DBTable => dbTable ?? (dbTable= GetTable<Balance>());
+        public static DBColumn BalanceDateKey => DBTable.ParseProperty(nameof(BalanceDate), ref balanceDateKey);
 
         public static DBTableView<Balance> DataView
         {
             get { return DBTable.DefaultView; }
         }
+
+        private Currency currency;
+        private Account account;
+        private Book balanceType;
+        private Balance parent;
 
         public Balance()
         {
@@ -73,8 +75,8 @@ namespace DataWF.Module.Finance
         [Reference(nameof(TypeId))]
         public Book Type
         {
-            get { return GetReference<Book>(Table.ElementTypeKey); }
-            set { SetReference(value, Table.ElementTypeKey); }
+            get { return GetReference<Book>(Table.ElementTypeKey, ref balanceType); }
+            set { SetReference(balanceType = value, Table.ElementTypeKey); }
         }
 
         [Browsable(false)]
@@ -89,15 +91,15 @@ namespace DataWF.Module.Finance
         [Reference(nameof(ParentId))]
         public Balance Parent
         {
-            get { return GetReference<Balance>(Table.GroupKey); }
-            set { SetReference(value, Table.GroupKey); }
+            get { return GetReference<Balance>(Table.GroupKey, ref parent); }
+            set { SetReference(parent = value, Table.GroupKey); }
         }
 
         [Column("balancedate"), Index("daccountbalance_balancedate")]
         public DateTime? BalanceDate
         {
-            get { return GetProperty<DateTime?>(nameof(BalanceDate)); }
-            set { SetProperty(value, nameof(BalanceDate)); }
+            get { return GetValue<DateTime?>(BalanceDateKey); }
+            set { SetValue(value, BalanceDateKey); }
         }
 
         [Column("accountid"), Index("daccountbalance_accountid")]

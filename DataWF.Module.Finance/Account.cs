@@ -131,7 +131,7 @@ namespace DataWF.Module.Finance
         [Reference(nameof(CustomerId))]
         public Customer Customer
         {
-            get { return GetPropertyReference<Customer>( ref customer); }
+            get { return GetPropertyReference<Customer>(ref customer); }
             set { customer = SetPropertyReference(value); }
         }
 
@@ -171,7 +171,7 @@ namespace DataWF.Module.Finance
             filter.BuildPropertyParam(nameof(Balance.AccountId), CompareType.Equal, PrimaryId);
             filter.BuildPropertyParam(nameof(Balance.TypeId), CompareType.Equal, typeid);
             var balances = Balance.DBTable.Load(filter, DBLoadParam.Load | DBLoadParam.Synchronize).ToList();
-            balances.Sort(new DBComparer(Balance.DBTable.ParseProperty(nameof(Balance.BalanceDate)), ListSortDirection.Descending));
+            balances.Sort(new DBComparer<Balance, DateTime?>(Balance.BalanceDateKey, ListSortDirection.Descending));
             return balances.FirstOrDefault();
         }
     }

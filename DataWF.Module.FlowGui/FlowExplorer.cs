@@ -6,6 +6,7 @@ using DataWF.Module.Common;
 using DataWF.Module.CommonGui;
 using DataWF.Module.Flow;
 using System;
+using System.Linq;
 using Xwt;
 using Xwt.Drawing;
 
@@ -236,11 +237,9 @@ namespace DataWF.Module.FlowGui
                 else if (tag is Position)
                     ((User)row).Position = (Position)tag;
                 //row.Access.Create
-                for (int i = 0; i < row.Access.Items.Count; i++)
+                foreach (var access in row.Access.Items.ToList())
                 {
-                    var access = row.Access.Items[i];
-                    access.Create = false;
-                    row.Access.Add(access);
+                    row.Access.Add(access.Group, access.Access & ~AccessType.Create);
                 }
             }
             else if (item.Name == "Scheduler")

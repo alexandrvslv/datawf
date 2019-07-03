@@ -14,7 +14,7 @@ namespace DataWF.Test.Common
             var pull = new Pull<int>(blockSize);
             for (int i = 0; i < 100; i++)
             {
-                var index = Pull.GetHIndex(i, blockSize);
+                var index = Pull.GetHIndex(i, blockSize, out var block, out var blockIndex);
                 Helper.OneToTwoShift(index, out var left, out var right);
                 Debug.WriteLine($"pull index {i} = {index} left {left} right {right}");
                 pull.SetValue(index, i);
@@ -22,7 +22,8 @@ namespace DataWF.Test.Common
 
             for (int i = 0; i < 100; i++)
             {
-                Assert.AreEqual(i, pull.GetValueInternal(Pull.GetHIndex(i, blockSize)));
+                Pull.GetHIndex(i, blockSize, out var block, out var blockIndex);
+                Assert.AreEqual(i, pull.GetValue(block, blockIndex));
             }
         }
 
@@ -33,7 +34,7 @@ namespace DataWF.Test.Common
             var pull = new NullablePull<int>(blockSize);
             for (int i = 0; i < 100; i++)
             {
-                var index = Pull.GetHIndex(i, blockSize);
+                var index = Pull.GetHIndex(i, blockSize, out var block, out var blockIndex);
                 Helper.OneToTwoShift(index, out var left, out var right);
                 Debug.WriteLine($"pull index {i} = {index} left {left} right {right}");
                 pull.SetValue<int?>(index, i);
@@ -41,7 +42,8 @@ namespace DataWF.Test.Common
 
             for (int i = 0; i < 100; i++)
             {
-                Assert.AreEqual(i, pull.GetValueInternal(Pull.GetHIndex(i, blockSize)));
+                Pull.GetHIndex(i, blockSize, out var block, out var blockIndex);
+                Assert.AreEqual(i, pull.GetValue(block, blockIndex));
             }
         }
 
