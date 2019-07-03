@@ -223,8 +223,9 @@ namespace DataWF.Web.Common
             {
                 try
                 {
-                    if (connection.State != WebSocketState.Open
-                        && connection.State != WebSocketState.Connecting)
+                    if (connection.Socket == null
+                        || (connection.State != WebSocketState.Open
+                        && connection.State != WebSocketState.Connecting))
                     {
                         Remove(connection);
                     }

@@ -1,4 +1,5 @@
 ﻿using DataWF.Common;
+using System.Linq;
 
 namespace DataWF.Gui
 {
@@ -117,7 +118,7 @@ namespace DataWF.Gui
             set
             {
                 access = value?.Clone();
-                alist.ListSource = access?.Items;
+                alist.ListSource = access?.Items.ToList();
             }
         }
 

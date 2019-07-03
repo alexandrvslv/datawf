@@ -110,7 +110,7 @@ namespace DataWF.Data.Gui
                     column = column.Owner as LayoutColumn;
                     dbcolumn = column != null ? column.Invoker as DBColumn : null;
                 }
-                return new DBComparer(Table, columnName, direction);
+                return dbcolumn.CreateComparer(direction);
             }
             return base.OnColumnCreateComparer(column, direction);
         }
