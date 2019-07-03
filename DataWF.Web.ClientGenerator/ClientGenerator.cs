@@ -1023,15 +1023,15 @@ namespace DataWF.Web.ClientGenerator
             }
             else if (property == typeKey)
             {
-                yield return SyntaxHelper.GenAttribute("JsonSchemaProperty", $"Order = -3");
+                yield return SyntaxHelper.GenAttribute("JsonProperty", $"Order = -3");
             }
             else if (property == idKey)
             {
-                yield return SyntaxHelper.GenAttribute("JsonSchemaProperty", $"Order = -2");
+                yield return SyntaxHelper.GenAttribute("JsonProperty", $"Order = -2");
             }
             else //if (!property.IsRequired)
             {
-                yield return SyntaxHelper.GenAttribute("JsonSchemaProperty", $"NullValueHandling = NullValueHandling.Include");
+                yield return SyntaxHelper.GenAttribute("JsonProperty", $"NullValueHandling = NullValueHandling.Include");
             }
 
             foreach (var attribute in GenDefinitionClassPropertyValidationAttributes(property, idKey, typeKey))
