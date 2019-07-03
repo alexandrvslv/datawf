@@ -180,7 +180,7 @@ namespace DataWF.Web.ClientGenerator
             //yield return SF.ParseStatement($"BaseUrl = \"{Url.Scheme}://{Url.Authority}\";");
             foreach (var client in cacheClients.Keys)
             {
-                yield return SF.ParseStatement($"Clients.Add({client} = new {client}Client{{Provider = this}});");
+                yield return SF.ParseStatement($"Add({client} = new {client}Client{{Provider = this}});");
             }
         }
 
