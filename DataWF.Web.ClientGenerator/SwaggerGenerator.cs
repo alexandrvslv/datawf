@@ -17,10 +17,10 @@ namespace DataWF.Web.CodeGenerator
     {
         public async Task Generate(string url)
         {
-            var document = await SwaggerDocument.FromUrlAsync(url);
+            var document = await OpenApiDocument.FromUrlAsync(url);
 
 
-            var settings = new SwaggerToCSharpClientGeneratorSettings
+            var settings = new CSharpClientGeneratorSettings
             {
                 CSharpGeneratorSettings = {
                     Namespace = "SomeNameSpace",
@@ -33,7 +33,7 @@ namespace DataWF.Web.CodeGenerator
                
             };
             var destinationPath = Path.GetFullPath(@"..\..\..\");
-            var generator = new SwaggerToCSharpClientGenerator(document, settings);
+            var generator = new CSharpClientGenerator(document, settings);
 
             var clients = generator.GenerateFile(NSwag.CodeGeneration.ClientGeneratorOutputType.Implementation);
             var models = generator.GenerateFile(NSwag.CodeGeneration.ClientGeneratorOutputType.Contracts);
@@ -99,7 +99,7 @@ namespace DataWF.Web.CodeGenerator
     {
         public bool SupportsMultipleClients => true;
 
-        public string GetClientName(SwaggerDocument document, string path, string httpMethod, SwaggerOperation operation)
+        public string GetClientName(OpenApiDocument document, string path, string httpMethod, OpenApiOperation operation)
         {
             if (operation.Tags?.Count > 0)
                 return operation.Tags[0];
@@ -115,7 +115,7 @@ namespace DataWF.Web.CodeGenerator
             }
         }
 
-        public string GetOperationName(SwaggerDocument document, string path, string httpMethod, SwaggerOperation operation)
+        public string GetOperationName(OpenApiDocument document, string path, string httpMethod, OpenApiOperation operation)
         {
             var client = GetClientName(document, path, httpMethod, operation);
             var name = new StringBuilder();
@@ -129,5 +129,6 @@ namespace DataWF.Web.CodeGenerator
             }
             return name.Length == 0 ? httpMethod.ToString() : name.ToString();
         }
+
     }
 }
