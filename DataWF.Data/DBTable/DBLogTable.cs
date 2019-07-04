@@ -153,6 +153,10 @@ namespace DataWF.Data
                 }
             }
         }
+        public override DBItem NewItem(DBUpdateState state, bool def, int typeIndex)
+        {
+            return NewItem(state, def);
+        }
 
         public override async Task<bool> SaveItem(DBItem item, DBTransaction transaction)
         {
