@@ -1059,7 +1059,7 @@ namespace DataWF.Data
         public virtual DBItem NewItem(DBUpdateState state, bool def, int typeIndex)
         {
             var type = GetItemType(typeIndex);
-            return type.Table.NewItem(state, def);
+            return (type?.Table ?? this).NewItem(state, def);
         }
 
         public IEnumerable<DBColumn> ParseColumns(ICollection<string> columns)
