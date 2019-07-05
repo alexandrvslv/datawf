@@ -290,7 +290,7 @@ namespace DataWF.Module.Common
             set { SetValue(value, Table.CodeKey); }
         }
 
-        [DataMember, Column("abbreviation", 3, Keys = DBColumnKeys.Indexing), Index("ruser_abbreviation", true)]
+        [DataMember, Column("abbreviation", 4, Keys = DBColumnKeys.Indexing), Index("ruser_abbreviation", true)]
         public string Abbreviation
         {
             get { return GetValue<string>(AbbreviationKey); }
