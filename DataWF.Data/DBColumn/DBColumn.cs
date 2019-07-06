@@ -216,7 +216,7 @@ namespace DataWF.Data
                     }
                     else
                     {
-                        row.SetValue<int>(intValue, this, false);
+                        row.SetValue<int?>(intValue, this, false);
                     }
                     break;
                 case DBDataType.BigInt:
