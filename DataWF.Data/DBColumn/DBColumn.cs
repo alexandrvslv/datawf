@@ -264,7 +264,14 @@ namespace DataWF.Data
                     break;
                 case DBDataType.TinyInt:
                     var byteValue = transaction.Reader.IsDBNull(i) ? null : (byte?)transaction.Reader.GetByte(i);
-                    row.SetValue<byte?>(byteValue, this, false);
+                    if (DataType == typeof(sbyte))
+                    {
+                        row.SetValue<sbyte?>(byteValue == null ? null : (sbyte?)byteValue, this, false);
+                    }
+                    else
+                    {
+                        row.SetValue<byte?>(byteValue, this, false);
+                    }
                     break;
                 default:
                     var value = transaction.Reader.IsDBNull(i) ? null : transaction.Reader.GetValue(i);
