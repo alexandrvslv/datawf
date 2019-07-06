@@ -212,7 +212,7 @@ namespace DataWF.Data
                     }
                     else if (DataType == typeof(uint))
                     {
-                        row.SetValue<uint?>((uint)intValue, this, false);
+                        row.SetValue<uint?>(intValue == null ? null : (uint?)intValue, this, false);
                     }
                     else
                     {
