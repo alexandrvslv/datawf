@@ -210,9 +210,13 @@ namespace DataWF.Data
                     {
                         row.SetValue((object)intValue, this, false);
                     }
-                    else if(DataType == typeof(uint))
+                    else if (DataType == typeof(uint))
                     {
                         row.SetValue<uint?>((uint)intValue, this, false);
+                    }
+                    else
+                    {
+                        row.SetValue<int>(intValue, this, false);
                     }
                     break;
                 case DBDataType.BigInt:
