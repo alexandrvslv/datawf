@@ -248,17 +248,17 @@ namespace DataWF.Module.Flow
             return GetData(filePath, trnasaction);
         }
 
-        public async Task<Stream> GetData(string fileName, DBTransaction transactio)
+        public async Task<Stream> GetData(string fileName, DBTransaction transaction)
         {
             if (FileLOB != null)
             {
-                var item = await GetLOBFileStream(Table.FileLOBKey, fileName, transactio);
+                var item = await GetLOBFileStream(Table.FileLOBKey, fileName, transaction);
                 if (item != null)
                 {
                     return item;
                 }
             }
-            return GetZipFileStream(Table.FileKey, fileName);
+            return GetZipFileStream(Table.FileKey, fileName, transaction);
         }
 
         public async Task SetData(string filePath, DBTransaction transaction)
@@ -313,7 +313,7 @@ namespace DataWF.Module.Flow
             var filePath = Helper.GetDocumentsFullPath(FileName, "Parser" + (Id ?? TemplateData.Id));
             if (FileLOB == null || filePath == null || fromTemplate)
             {
-                using (var stream = TemplateData.File.GetFileStream())
+                using (var stream = TemplateData.File.GetFileStream(param.Transaction))
                 {
                     FileName = string.IsNullOrEmpty(FileName) ? RefreshName() : FileName;
                     filePath = Execute(param, stream);
@@ -386,7 +386,7 @@ namespace DataWF.Module.Flow
         }
 
         [ControllerMethod]
-        public async Task<Stream> GetLogFile(int logId)
+        public async Task<Stream> GetLogFile(int logId, DBTransaction transaction)
         {
             var logItem = Table.LogTable.LoadById(logId);
             if (logItem == null)
@@ -398,15 +398,16 @@ namespace DataWF.Module.Flow
             {
                 throw new Exception($"DataLog with id {logId} no file defined!");
             }
+            var filename = Helper.GetDocumentsFullPath(fileName, "DataLog" + logItem.LogId);
             if (Table.LogTable.FileLOBKey != null)
             {
                 var lob = logItem.GetValue(Table.LogTable.FileLOBKey);
                 if (lob != null)
                 {
-                    return await logItem.GetLOBFileStream(Table.LogTable.FileLOBKey, Helper.GetDocumentsFullPath(fileName, "DataLog" + logItem.LogId));
+                    return await logItem.GetLOBFileStream(Table.LogTable.FileLOBKey, filename, transaction);
                 }
             }
-            return logItem.GetFileStream(Table.LogTable.FileKey, Helper.GetDocumentsFullPath(fileName, "DataLog" + logItem.LogId));
+            return logItem.GetFileStream(Table.LogTable.FileKey, filename, transaction);
         }
 
         [ControllerMethod]

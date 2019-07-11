@@ -63,14 +63,14 @@ namespace DataWF.Module.Flow
             get { return Path.GetExtension(DataName); }
         }
 
-        public Stream GetMemoryStream()
+        public Stream GetMemoryStream(DBTransaction transaction)
         {
-            return GetZipMemoryStream(table.FileKey);
+            return GetZipMemoryStream(table.FileKey, transaction);
         }
 
-        public FileStream GetFileStream()
+        public FileStream GetFileStream(DBTransaction transaction)
         {
-            return GetZipFileStream(table.FileKey, Helper.GetDocumentsFullPath(DataName, nameof(TemplateFile) + Id));
+            return GetZipFileStream(table.FileKey, Helper.GetDocumentsFullPath(DataName, nameof(TemplateFile) + Id), transaction);
         }
     }
 }

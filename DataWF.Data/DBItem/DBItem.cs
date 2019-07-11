@@ -1586,7 +1586,7 @@ namespace DataWF.Data
             }
         }
 
-        public MemoryStream GetMemoryStream(DBColumn column, int bufferSize = 81920)
+        public MemoryStream GetMemoryStream(DBColumn column, DBTransaction transaction, int bufferSize = 81920)
         {
             var memoryStream = (MemoryStream)null;
             var temp = GetValue<byte[]>(column);
@@ -1595,11 +1595,11 @@ namespace DataWF.Data
                 return new MemoryStream(temp) { Position = 0 };
             }
             memoryStream = new MemoryStream();
-            Table.System.ReadSequential(this, column, memoryStream, bufferSize);
+            Table.System.ReadSequential(this, column, memoryStream, transaction, bufferSize);
             return memoryStream;
         }
 
-        public FileStream GetFileStream(DBColumn column, string path, int bufferSize = 81920)
+        public FileStream GetFileStream(DBColumn column, string path, DBTransaction transaction, int bufferSize = 81920)
         {
             var fileStream = File.Open(path, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
             var temp = GetValue<byte[]>(column);
@@ -1610,19 +1610,19 @@ namespace DataWF.Data
                 return fileStream;
             }
 
-            Table.System.ReadSequential(this, column, fileStream, bufferSize);
+            Table.System.ReadSequential(this, column, fileStream, transaction, bufferSize);
             return fileStream;
         }
 
-        public Stream GetZipMemoryStream(DBColumn column, int bufferSize = 81920)
+        public Stream GetZipMemoryStream(DBColumn column, DBTransaction transaction, int bufferSize = 81920)
         {
-            var memoryStream = GetMemoryStream(column, bufferSize);
+            var memoryStream = GetMemoryStream(column, transaction, bufferSize);
             return Helper.IsGZip(memoryStream) ? Helper.GetGZipStrem(memoryStream) : memoryStream;
         }
 
-        public FileStream GetZipFileStream(DBColumn column, string path, int bufferSize = 81920)
+        public FileStream GetZipFileStream(DBColumn column, string path, DBTransaction transaction, int bufferSize = 81920)
         {
-            var fileStream = GetFileStream(column, path, bufferSize);
+            var fileStream = GetFileStream(column, path, transaction, bufferSize);
             if (Helper.IsGZip(fileStream))
             {
                 using (var gzip = Helper.GetGZipStrem(fileStream))

@@ -46,7 +46,7 @@ namespace DataWF.Web.Common
                 }
                 else if (table.FileKey != null)
                 {
-                    stream = item.GetZipMemoryStream(table.FileKey);
+                    stream = item.GetZipMemoryStream(table.FileKey, transaction);
                 }
                 else
                 {
@@ -71,7 +71,7 @@ namespace DataWF.Web.Common
             if (table.FileNameKey == null)
             {
                 return BadRequest("No file columns presented!");
-            }            
+            }
             if (!MultipartRequestHelper.IsMultipartContentType(Request.ContentType))
             {
                 return BadRequest($"Expected a multipart request, but got {Request.ContentType}");

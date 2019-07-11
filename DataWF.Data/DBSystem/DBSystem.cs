@@ -905,33 +905,30 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
         {
             using (var transaction = new DBTransaction(item.Table.Connection, null, true))
             {
-                try
-                {
-                    var command = transaction.AddCommand(item.Table.CreateItemCommmand(item.PrimaryId, new[] { column }));
-                    using (transaction.Reader = (IDataReader)transaction.ExecuteQuery(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess))
-                    {
-                        if (transaction.Reader.Read())
-                        {
-                            var buffer = new byte[bufferSize];
-                            int position = 0;
-                            int readed;
-                            while ((readed = (int)transaction.Reader.GetBytes(0, position, buffer, 0, bufferSize)) > 0)
-                            {
-                                stream.Write(buffer, 0, readed);
-                                position += readed;
-                            }
-                        }
-                        transaction.Reader.Close();
-                    }
-                    transaction.Reader = null;
-                    stream.Position = 0;
-                }
-                catch (Exception ex)
-                {
-                    Helper.OnException(ex);
-                }
-
+                ReadSequential(item, column, stream, transaction, bufferSize);
             }
+        }
+
+        public virtual void ReadSequential(DBItem item, DBColumn column, Stream stream, DBTransaction transaction, int bufferSize = 81920)
+        {
+            var command = transaction.AddCommand(item.Table.CreateItemCommmand(item.PrimaryId, new[] { column }));
+            using (transaction.Reader = (IDataReader)transaction.ExecuteQuery(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess))
+            {
+                if (transaction.Reader.Read())
+                {
+                    var buffer = new byte[bufferSize];
+                    int position = 0;
+                    int readed;
+                    while ((readed = (int)transaction.Reader.GetBytes(0, position, buffer, 0, bufferSize)) > 0)
+                    {
+                        stream.Write(buffer, 0, readed);
+                        position += readed;
+                    }
+                }
+                transaction.Reader.Close();
+            }
+            transaction.Reader = null;
+            stream.Position = 0;
         }
 
     }
