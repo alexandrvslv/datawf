@@ -1,9 +1,11 @@
-﻿using Newtonsoft.Json;
+﻿using Brotli;
+using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -70,6 +72,10 @@ namespace DataWF.Common
         {
             if (client == null)
             {
+                //var handler = new HttpClientHandler()
+                //{
+                //    AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+                //};
                 client = new HttpClient() { Timeout = TimeSpan.FromHours(1) };
             }
             return client;
@@ -117,9 +123,13 @@ namespace DataWF.Common
                 content.Headers.ContentType = MediaTypeHeaderValue.Parse(mediaType);
                 request.Content = content;
             }
-            if (httpMethod == "GET")
+            if (httpMethod.Equals("GET", StringComparison.OrdinalIgnoreCase))
             {
                 request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(mediaType));
+            }
+            if (mediaType.Equals("application/json", StringComparison.OrdinalIgnoreCase))
+            {
+                request.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("br"));
             }
             return request;
         }
@@ -181,7 +191,9 @@ namespace DataWF.Common
                                 }
                                 using (var responseStream = response.Content == null ? null : await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
                                 {
-                                    using (var reader = new StreamReader(responseStream))
+
+                                    using (var encodedStream = GetEncodedStream(response, responseStream))
+                                    using (var reader = new StreamReader(encodedStream))
                                     {
                                         if (mediaType.Equals("application/octet-stream"))
                                         {
@@ -288,6 +300,21 @@ namespace DataWF.Common
             }
         }
 
+        private static Stream GetEncodedStream(HttpResponseMessage response, Stream responseStream)
+        {
+            if (response.Content.Headers.TryGetValues("Content-Encoding", out var encodedBy))
+            {
+                if (encodedBy.Contains("br", StringComparer.OrdinalIgnoreCase)
+                    || encodedBy.Contains("brotli", StringComparer.OrdinalIgnoreCase))
+                    return new Brotli.BrotliStream(responseStream, CompressionMode.Decompress, false);
+                if (encodedBy.Contains("gzip", StringComparer.OrdinalIgnoreCase))
+                    return new GZipStream(responseStream, CompressionMode.Decompress);
+                if (encodedBy.Contains("deflate", StringComparer.OrdinalIgnoreCase))
+                    return new DeflateStream(responseStream, CompressionMode.Decompress);
+            }
+            return responseStream;
+        }
+
         private static (string, int) GetFileInfo(Dictionary<string, IEnumerable<string>> headers)
         {
             var fileName = headers.TryGetValue("Content-Disposition", out var disposition)
@@ -326,7 +353,8 @@ namespace DataWF.Common
 
                                 using (var responseStream = response.Content == null ? null : await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
                                 {
-                                    using (var reader = new StreamReader(responseStream))
+                                    using (var encodedStream = GetEncodedStream(response, responseStream))
+                                    using (var reader = new StreamReader(encodedStream))
                                     {
                                         var serializer = JsonSerializer.Create(JsonSerializerSettings);
                                         using (var jreader = new JsonTextReader(reader))
@@ -604,7 +632,7 @@ namespace DataWF.Common
 
         private void BadRequest(string message, HttpResponseMessage response)
         {
-            message = message.Trim('\"').Replace("\\r","\r").Replace("\\n", "\n");
+            message = message.Trim('\"').Replace("\\r", "\r").Replace("\\n", "\n");
             throw new ClientException(message,
                 (int)response.StatusCode,
                 null,
