@@ -428,7 +428,7 @@ namespace DataWF.Module.Flow
             set { SetValue(value, IsCompleteKey); }
         }
 
-        public event Action<Document, ListChangedType> RefChanged;
+        //public event Action<Document, ListChangedType> RefChanged;
 
         public virtual IEnumerable<DocumentReference> GetReferences()
         {
@@ -751,13 +751,17 @@ namespace DataWF.Module.Flow
                     }
                 }
                 await base.Save(transaction);
-                if (isnew || Works.Count() <= 1)
+
+                foreach (var data in GetTemplatedData())
                 {
-                    foreach (var data in GetTemplatedData())
+                    if (isnew
+                        || Works.Count() <= 1
+                        || data.FileLOB == null)
                     {
                         await data.ParseAndSave(param, false);
                     }
                 }
+
                 Saved?.Invoke(null, new DocumentEventArgs(this));
             }
             catch (Exception ex)

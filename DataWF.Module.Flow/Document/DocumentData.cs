@@ -309,18 +309,23 @@ namespace DataWF.Module.Flow
             {
                 return await GetDataPath(param.Transaction);
             }
-
-            var filePath = Helper.GetDocumentsFullPath(FileName, "Parser" + (Id ?? TemplateData.Id));
-            if (FileLOB == null || filePath == null || fromTemplate)
+            var filePath = (string)null;
+            if (FileLOB == null || string.IsNullOrEmpty(FileName) || fromTemplate)
             {
-                using (var stream = TemplateData.File.GetFileStream(param.Transaction))
+                if (string.IsNullOrEmpty(FileName))
                 {
-                    FileName = string.IsNullOrEmpty(FileName) ? RefreshName() : FileName;
+                    FileName = RefreshName();
+                }
+
+                filePath = Helper.GetDocumentsFullPath(FileName, "ParserNew" + (Id ?? TemplateData.Id));
+                using (var stream = TemplateData.File.GetZipFileStream(TemplateFile.DBTable.FileKey, filePath, param.Transaction))
+                {
                     filePath = Execute(param, stream);
                 }
             }
             else
             {
+                filePath = Helper.GetDocumentsFullPath(FileName, "Parser" + (Id ?? TemplateData.Id));
                 using (var stream = await GetData(filePath, param.Transaction))
                 {
                     if (stream.Length == 0)
@@ -483,9 +488,11 @@ namespace DataWF.Module.Flow
         {
             if (IsTemplate && TemplateData?.File != null)
             {
-                if (string.IsNullOrEmpty(Document?.Number))
+                if (string.IsNullOrEmpty(Document?.Number)
+                    || Document.Datas.Any(p => p.TemplateDataId != null
+                    && p.FileName?.IndexOf(Document.Number, StringComparison.OrdinalIgnoreCase) >= 0))
                 {
-                    return $"{Path.GetFileNameWithoutExtension(TemplateData.File.DataName)}{DateTime.Now.ToString("yy-MM-dd_hh-mm-ss")}{TemplateData.File.FileType}";
+                    return $"{Path.GetFileNameWithoutExtension(TemplateData.File.DataName)}{DateTime.Now.ToString("yyMMddhhmmss")}{TemplateData.File.FileType}";
                 }
                 else
                 {
