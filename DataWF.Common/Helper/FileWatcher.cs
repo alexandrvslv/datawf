@@ -87,11 +87,13 @@ namespace DataWF.Common
                     }
                     else
                     {
+                        Service.WatchList.Remove(this);
                         if (Watcher != null)
                         {
                             Watcher.EnableRaisingEvents = false;
+                            Watcher.Dispose();
+                            Watcher = null;
                         }
-                        Service.WatchList.Remove(this);
                     }
                     Service.OnEnabledChanged(this, EventArgs.Empty);
 
