@@ -262,23 +262,25 @@ namespace DataWF.Common
                                 }
                                 else
                                 {
-                                    ErrorStatus("Unauthorized! Try Relogin!", response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+                                    ErrorStatus("Unauthorized! Try Relogin!", response, await ReadContentAsString(response));
                                 }
                                 break;
                             case System.Net.HttpStatusCode.Forbidden:
-                                ErrorStatus("Access Denied!", response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+                                var details = string.Empty;
+
+                                ErrorStatus("Access Denied!", response, await ReadContentAsString(response));
                                 break;
                             case System.Net.HttpStatusCode.NotFound:
-                                ErrorStatus("No Data Found!", response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+                                ErrorStatus("No Data Found!", response, await ReadContentAsString(response));
                                 break;
                             case System.Net.HttpStatusCode.BadRequest:
-                                BadRequest(response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false), response);
+                                BadRequest(await ReadContentAsString(response), response);
                                 break;
                             case System.Net.HttpStatusCode.NoContent:
                                 result = default(R);
                                 break;
                             default:
-                                UnexpectedStatus(response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+                                UnexpectedStatus(response, await ReadContentAsString(response));
                                 break;
                         }
                         Status = ClientStatus.Compleate;
@@ -300,6 +302,20 @@ namespace DataWF.Common
             }
         }
 
+        private static async Task<string> ReadContentAsString(HttpResponseMessage response)
+        {
+            if (response.Content == null)
+                return null;
+            using (var responseStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
+            {
+                using (var encoded = GetEncodedStream(response, responseStream))
+                using (var stringReader = new StreamReader(encoded))
+                {
+                    return await stringReader.ReadToEndAsync();
+                }
+            }
+        }
+
         private static Stream GetEncodedStream(HttpResponseMessage response, Stream responseStream)
         {
             if (response.Content.Headers.TryGetValues("Content-Encoding", out var encodedBy))
@@ -308,9 +324,9 @@ namespace DataWF.Common
                     || encodedBy.Contains("brotli", StringComparer.OrdinalIgnoreCase))
                     return new Brotli.BrotliStream(responseStream, CompressionMode.Decompress, false);
                 if (encodedBy.Contains("gzip", StringComparer.OrdinalIgnoreCase))
-                    return new GZipStream(responseStream, CompressionMode.Decompress);
+                    return new GZipStream(responseStream, CompressionMode.Decompress, false);
                 if (encodedBy.Contains("deflate", StringComparer.OrdinalIgnoreCase))
-                    return new DeflateStream(responseStream, CompressionMode.Decompress);
+                    return new DeflateStream(responseStream, CompressionMode.Decompress, false);
             }
             return responseStream;
         }
@@ -374,20 +390,20 @@ namespace DataWF.Common
                                 }
                                 else
                                 {
-                                    ErrorStatus("Unauthorized! Try Relogin!", response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+                                    ErrorStatus("Unauthorized! Try Relogin!", response, await ReadContentAsString(response));
                                 }
                                 break;
                             case System.Net.HttpStatusCode.NotFound:
-                                ErrorStatus("No Data Found!", response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+                                ErrorStatus("No Data Found!", response, await ReadContentAsString(response));
                                 break;
                             case System.Net.HttpStatusCode.BadRequest:
-                                BadRequest(response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false), response);
+                                BadRequest(await ReadContentAsString(response), response);
                                 break;
                             case System.Net.HttpStatusCode.NoContent:
                                 result = default(R);
                                 break;
                             default:
-                                UnexpectedStatus(response, response.Content == null ? null : await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+                                UnexpectedStatus(response, await ReadContentAsString(response));
                                 break;
                         }
                         Status = ClientStatus.Compleate;
