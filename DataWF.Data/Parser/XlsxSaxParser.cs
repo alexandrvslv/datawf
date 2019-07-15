@@ -114,7 +114,7 @@ namespace DataWF.Data
                         Reference = split[1],
                         Code = item
                     };
-                    names.Add(defName.Range.Start.ToString(), defName);
+                    names[defName.Range.Start.ToString()] = defName;
                 }
             }
             return cacheNames;
@@ -596,7 +596,7 @@ namespace DataWF.Data
                                     //table.TotalsRowCount = (uint)newrange.Rows;
                                 }
                                 defName.Table = table;
-                                cacheNames.Add(defName.Range.Start.ToString(), defName);
+                                cacheNames[defName.Range.Start.ToString()] = defName;
                             }
                         }
                         WriteElement(writer, table);

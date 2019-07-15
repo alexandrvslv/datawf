@@ -46,5 +46,10 @@ namespace DataWF.Data
         public Table Table;
         public object CacheValue;
         internal CellRange NewRange;
+
+        public override string ToString()
+        {
+            return Sheet + Range.Start.ToString();
+        }
     }
 }
