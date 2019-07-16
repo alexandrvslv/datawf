@@ -174,7 +174,7 @@ namespace DataWF.Gui
 
         public static void Localize(object obj, string category, string name, GlyphType def = GlyphType.None)
         {
-            var item = Locale.GetItem(category, name);
+            var item = Locale.Instance.GetItem(category, name);
             if (item.Glyph == GlyphType.None && def != GlyphType.None)
                 item.Glyph = def;
             if (obj is IGlyph picture)

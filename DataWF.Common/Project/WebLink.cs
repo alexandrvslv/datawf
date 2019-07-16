@@ -39,7 +39,7 @@ namespace DataWF.Common
             get
             {
                 if (litem == null && url != null)
-                    litem = Locale.GetItem("WebLink", url);
+                    litem = Locale.Instance.GetItem("WebLink", url);
                 return litem;
             }
         }

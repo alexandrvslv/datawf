@@ -1,8 +1,10 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Xml.Serialization;
 
 namespace DataWF.Common
 {
@@ -32,6 +34,9 @@ namespace DataWF.Common
 
         public string Version { get; set; } = "1.0";
 
+        [JsonIgnore, XmlIgnore]
+        public static bool IsChanged { get; internal set; }
+
         public bool Contains(string name)
         {
             return SelectOne(nameof(LocaleCategory.Name), name) != null;
@@ -44,8 +49,21 @@ namespace DataWF.Common
             {
                 item = new LocaleCategory { Name = name };
                 Add(item);
+                IsChanged = true;
+            }
+            else
+            {
+                IsChanged = false;
             }
             return item;
+        }
+
+        public LocaleItem GetItem(string category, string name)
+        {
+            var categoryItem = GetByName(category);
+            var nameItem = categoryItem.GetByName(name);
+            var value = nameItem.Value;
+            return nameItem;
         }
 
         public static void Load()
@@ -76,6 +94,7 @@ namespace DataWF.Common
         public static void Save(string filePath)
         {
             Serialization.Serialize(Instance, filePath);
+            IsChanged = false;
         }
 
         public static string GetTypeCategory(Type type)
@@ -107,7 +126,7 @@ namespace DataWF.Common
 
         public static string Get(string category, string name)
         {
-            return GetItem(category, name).Value;
+            return Instance.GetItem(category, name).Value;
         }
 
         public static string Get(object obj)
@@ -119,12 +138,6 @@ namespace DataWF.Common
         {
             return Instance.GetByName(GetTypeCategory(category)).GetByName(name);
         }
-
-        public static LocaleItem GetItem(string category, string name)
-        {
-            return Instance.GetByName(category).GetByName(name);
-        }
-
         public static GlyphType GetGlyph(Type category, string name, GlyphType def = GlyphType.None)
         {
             return GetGlyph(GetTypeCategory(category), name, def);
@@ -132,7 +145,7 @@ namespace DataWF.Common
 
         public static GlyphType GetGlyph(string category, string name, GlyphType def = GlyphType.None)
         {
-            var item = GetItem(category, name);
+            var item = Instance.GetItem(category, name);
             if (item.Glyph == GlyphType.None && def != GlyphType.None)
                 item.Glyph = def;
             return item.Glyph;
@@ -140,7 +153,7 @@ namespace DataWF.Common
 
         public static string GetImageKey(string category, string name)
         {
-            return GetItem(category, name).ImageKey;
+            return Instance.GetItem(category, name).ImageKey;
         }
 
         public static object GetImage(string key)

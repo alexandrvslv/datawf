@@ -44,12 +44,12 @@ namespace DataWF.Module.FlowGui
                 if (document != value)
                 {
                     synch = false;
-                    if (document != null)
-                        document.RefChanged -= DocumentRefChanged;
+                    //if (document != null)
+                    //    document.RefChanged -= DocumentRefChanged;
                     document = value;
                     if (document != null)
                     {
-                        document.RefChanged += DocumentRefChanged;
+                        //document.RefChanged += DocumentRefChanged;
                         Filter.Referencing = value;
                     }
 

@@ -98,7 +98,7 @@ namespace DataWF.Data
                 if (litem != null && (!(litem.Category.Name?.Equals(locCategory, StringComparison.Ordinal) ?? false)
                     || !(litem.Name?.Equals(locName, StringComparison.Ordinal) ?? false)))
                     litem = null;
-                return litem ?? (litem = Locale.GetItem(locCategory, locName));
+                return litem ?? (litem = Locale.Instance.GetItem(locCategory, locName));
             }
             //set
             //{

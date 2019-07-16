@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.ComponentModel;
+using System.Xml.Serialization;
 
 namespace DataWF.Common
 {
@@ -39,6 +41,7 @@ namespace DataWF.Common
             {
                 item = new LocaleItem(name);
                 Add(item);
+                Locale.IsChanged = true;
             }
             return item;
         }

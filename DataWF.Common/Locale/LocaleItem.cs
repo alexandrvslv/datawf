@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
@@ -133,8 +134,13 @@ namespace DataWF.Common
             get
             {
                 var item = this[Locale.Instance.Culture];
-                var value = item?.Value ?? GetFirst()?.Value;
-                return value ?? Name;
+                if (item == null)
+                {
+                    item = new LocaleString(GetFirst()?.Value ?? Name, Locale.Instance.Culture);
+                    Add(item);
+                    Locale.IsChanged = true;
+                }
+                return item.Value;
             }
             set
             {
