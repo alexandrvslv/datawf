@@ -58,10 +58,6 @@ namespace DataWF.Common
                 Add(item);
                 IsChanged = true;
             }
-            else
-            {
-                IsChanged = false;
-            }
             return item;
         }
 
@@ -97,7 +93,10 @@ namespace DataWF.Common
 
         public static void Save()
         {
-            Save(FilePath);
+            if (IsChanged || !File.Exists(FilePath))
+            {
+                Save(FilePath);
+            }
         }
 
         public static void Save(string filePath)
