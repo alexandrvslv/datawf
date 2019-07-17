@@ -25,7 +25,14 @@ namespace DataWF.Common
         public CultureInfo Culture
         {
             get { return culture; }
-            set { culture = value; }
+            set
+            {
+                culture = value;
+                if (culture != null && !Cultures.Contains(culture))
+                {
+                    Cultures.Add(culture);
+                }
+            }
         }
 
         public List<CultureInfo> Cultures { get; set; } = new List<CultureInfo>();
@@ -66,9 +73,11 @@ namespace DataWF.Common
             return nameItem;
         }
 
+        public static string FilePath = Path.Combine(Helper.GetDirectory(), "localize.xml");
+
         public static void Load()
         {
-            Load(Path.Combine(Helper.GetDirectory(), "localize.xml"));
+            Load(FilePath);
         }
 
         public static void Load(string filePath)
@@ -88,7 +97,7 @@ namespace DataWF.Common
 
         public static void Save()
         {
-            Save(Path.Combine(Helper.GetDirectory(), "localize.xml"));
+            Save(FilePath);
         }
 
         public static void Save(string filePath)
