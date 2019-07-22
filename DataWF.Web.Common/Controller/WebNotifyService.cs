@@ -114,14 +114,8 @@ namespace DataWF.Web.Common
         {
             try
             {
-                lock (client)
-                {
-                    if (connections.Contains(client))
-                    {
-                        connections.Remove(client);
-                        client.Dispose();
-                    }
-                }
+                client?.Dispose();
+                connections.Remove(client);
             }
             catch (Exception ex)
             {
@@ -189,16 +183,25 @@ namespace DataWF.Web.Common
 
         private async Task SendToWebClients(NotifyMessageItem[] list)
         {
-            CheckConnections();
-            foreach (var connection in connections)
+            for (int i = 0; i < connections.Count; i++)
             {
+                var connection = connections[i];
                 try
                 {
-                    var buffer = new byte[8 * 1024];
+                    if (connection.Socket == null
+                        || (connection.State != WebSocketState.Open
+                        && connection.State != WebSocketState.Connecting))
+                    {
+                        Remove(connection);
+                        i--;
+                        continue;
+                    }
                     using (var stream = WriteData(list, connection.User))
                     {
                         if (stream == null)
                             continue;
+                        var buffer = new byte[8 * 1024];
+
                         while (stream.Position < stream.Length)
                         {
                             var count = stream.Read(buffer, 0, buffer.Length);
@@ -213,27 +216,6 @@ namespace DataWF.Web.Common
                 catch (Exception ex)
                 {
                     Helper.OnException(ex);
-                }
-            }
-        }
-
-        private void CheckConnections()
-        {
-            foreach (var connection in connections)
-            {
-                try
-                {
-                    if (connection.Socket == null
-                        || (connection.State != WebSocketState.Open
-                        && connection.State != WebSocketState.Connecting))
-                    {
-                        Remove(connection);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Helper.OnException(ex);
-                    Remove(connection);
                 }
             }
         }
@@ -330,7 +312,8 @@ namespace DataWF.Web.Common
                         if (item.Type != DBLogType.Delete)
                         {
                             var value = item.Table.LoadItemById(item.ItemId);
-                            if (value?.Access?.GetFlag(AccessType.Read, user) ?? false
+                            if (value != null
+                                && (value.Access?.GetFlag(AccessType.Read, user) ?? false)
                                 && value.PrimaryId != null)
                             {
                                 writer.WritePropertyName("Value");
