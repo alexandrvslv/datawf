@@ -10,10 +10,15 @@ namespace DataWF.Common
     public class WebNotifyClient : IDisposable, IWebNotifyClient
     {
         private ClientWebSocket socket;
+        private bool closeRequest;
 
         public WebSocketState State => socket?.State ?? WebSocketState.Closed;
 
+        public bool CloseRequest { get => closeRequest; set => closeRequest = value; }
+
         public event EventHandler<WebNotifyClientEventArgs> OnReceiveMessage;
+        public event EventHandler<ExceptionEventArgs> OnError;
+        public event EventHandler<EventArgs> OnClose;
 
         public async Task RegisterNotify(Uri uri, string autorization)
         {
@@ -46,6 +51,12 @@ namespace DataWF.Common
                 catch (Exception ex)
                 {
                     Helper.OnException(ex);
+                    if (ex.InnerException?.Message?.EndsWith("HRESULT: 0x80072EFE", StringComparison.OrdinalIgnoreCase) ?? false)
+                    {
+                        OnClose(this, EventArgs.Empty);
+                        return;
+                    }
+                    OnError?.Invoke(this, new ExceptionEventArgs(ex));
                 }
             }
         }
@@ -61,6 +72,7 @@ namespace DataWF.Common
                     result = await socket.ReceiveAsync(buffer, CancellationToken.None);
                     if (result.MessageType == WebSocketMessageType.Close)
                     {
+                        OnClose?.Invoke(this, EventArgs.Empty);
                         return null;
                     }
                     if (result.Count > 0)
@@ -77,6 +89,7 @@ namespace DataWF.Common
         {
             try
             {
+                closeRequest = true;
                 if (socket != null && socket.State == WebSocketState.Open)
                 {
                     await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Goodby", CancellationToken.None).ConfigureAwait(false);
@@ -85,6 +98,11 @@ namespace DataWF.Common
             catch (Exception ex)
             {
                 Helper.OnException(ex);
+            }
+            finally
+            {
+                closeRequest = false;
+                socket?.Dispose();
             }
         }
 
