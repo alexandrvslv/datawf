@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using System.Net.WebSockets;
 using System.Threading.Tasks;
 
 namespace DataWF.Web.Common

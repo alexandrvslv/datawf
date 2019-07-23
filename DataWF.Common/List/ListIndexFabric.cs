@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 
 namespace DataWF.Common
 {
@@ -79,7 +80,7 @@ namespace DataWF.Common
             {
                 return float.MinValue;
             }
-            return EmitInvoker.CreateObject(type);
+            return FormatterServices.GetUninitializedObject(type);
         }
 
         public static ListIndex<T, K> Create<T, K>(IInvoker<T, K> accessor)

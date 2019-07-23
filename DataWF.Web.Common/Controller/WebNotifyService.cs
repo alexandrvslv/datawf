@@ -28,7 +28,6 @@ namespace DataWF.Web.Common
         public WebNotifyService()
         {
             Instance = this;
-            connections.Indexes.Add(WebNotifyConnection.SocketInvoker);
             connections.Indexes.Add(WebNotifyConnection.UserInvoker);
             jsonSettings = new JsonSerializerSettings { ContractResolver = DBItemContractResolver.Instance };
             jsonSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
@@ -114,8 +113,8 @@ namespace DataWF.Web.Common
         {
             try
             {
-                client?.Dispose();
                 connections.Remove(client);
+                client?.Dispose();
             }
             catch (Exception ex)
             {
