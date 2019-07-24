@@ -22,11 +22,11 @@ namespace DataWF.Common
                 downloads = new ConcurrentDictionary<K, T>();
         }
         private ConcurrentDictionary<K, T> downloads;
-
-        public TypeSerializationInfo SerializationInfo;
         private ICRUDClient baseClient;
         private LoadProgress<T> loadProgress;
         //private object downloadLock;
+
+        public TypeSerializationInfo SerializationInfo { get; }
 
         public Invoker<T, K?> IdInvoker { get; }
 

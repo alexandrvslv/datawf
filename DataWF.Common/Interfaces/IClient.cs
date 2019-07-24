@@ -25,6 +25,7 @@ namespace DataWF.Common
 
     public interface ICRUDClient : IClient
     {
+        TypeSerializationInfo SerializationInfo { get; }
         bool IsSynchronized { get; set; }
         Type ItemType { get; }
         int TypeId { get; }

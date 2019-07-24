@@ -1,6 +1,8 @@
-﻿namespace DataWF.Common
+﻿using System.Collections;
+
+namespace DataWF.Common
 {
-    public interface IReferenceList
+    public interface IReferenceList : IList
     {
         SynchronizedItem Owner { get; set; }
         string OwnerProperty { get; set; }

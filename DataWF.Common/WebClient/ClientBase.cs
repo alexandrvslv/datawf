@@ -109,7 +109,8 @@ namespace DataWF.Common
                     : "somefile.ext";
                 var content = new MultipartFormDataContent
                 {
-                    { new ProgressStreamContent(progressToken, stream, 81920), Path.GetFileNameWithoutExtension(fileName), fileName }//File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    { new ProgressStreamContent(progressToken, stream, 81920), Path.GetFileNameWithoutExtension(fileName), fileName }
+                    //File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 };
                 // content.Headers.ContentType = MediaTypeHeaderValue.Parse(mediaType);
                 request.Content = content;
@@ -456,7 +457,16 @@ namespace DataWF.Common
             var itemType = TypeHelper.GetItemType(type);
             var client = Provider.GetClient(itemType);
             var temp = sourceList ?? (IList)EmitInvoker.CreateObject(type);
-            if (!(temp is IReferenceList))
+            var referenceList = temp as IReferenceList;
+            if (referenceList != null
+                && referenceList.Owner.SyncStatus == SynchronizedStatus.Load)
+            {
+                foreach (var item in referenceList.OfType<ISynchronized>())
+                {
+                    item.SyncStatus = SynchronizedStatus.Load;
+                }
+            }
+            else
             {
                 temp.Clear();
             }
@@ -472,31 +482,22 @@ namespace DataWF.Common
                 temp.Add(item);
             }
 
-            //if (sourceList != null)
-            //{
-            //    lock (sourceList)
-            //    {
-            //        for (var i = 0; i < sourceList.Count;)
-            //        {
-            //            var item = sourceList[i];
-            //            if (item is ISynchronized synched && synched.SyncStatus == SynchronizedStatus.New)
-            //            {
-            //                i++;
-            //                continue;
-            //            }
-            //            if (!temp.Contains(item))
-            //            {
-            //                sourceList.RemoveAt(i);
-            //            }
-            //            else
-            //            {
-            //                i++;
-            //            }
-            //        }
-            //    }
-            //    temp.Clear();
-            //    return sourceList;
-            //}
+            if (referenceList != null
+                && referenceList.Owner.SyncStatus == SynchronizedStatus.Load
+                && client != null)
+            {
+                for (var i = 0; i < referenceList.Count; i++)
+                {
+                    var item = referenceList[i];
+                    if (item is ISynchronized synched
+                        && synched.SyncStatus == SynchronizedStatus.Load)
+                    {
+
+                        client.Remove(item);
+                        i--;
+                    }
+                }
+            }
             return temp;
         }
 
