@@ -51,7 +51,9 @@ namespace DataWF.Common
                 catch (Exception ex)
                 {
                     Helper.OnException(ex);
-                    if (ex.InnerException?.Message?.EndsWith("HRESULT: 0x80072EFE", StringComparison.OrdinalIgnoreCase) ?? false)
+                    if (ex.InnerException?.Message != null
+                        && (ex.InnerException.Message.EndsWith("HRESULT: 0x80072EFE", StringComparison.OrdinalIgnoreCase)
+                        || ex.InnerException.Message.EndsWith("HRESULT: 0x80072EE2", StringComparison.OrdinalIgnoreCase)))
                     {
                         OnClose(this, EventArgs.Empty);
                         return;
