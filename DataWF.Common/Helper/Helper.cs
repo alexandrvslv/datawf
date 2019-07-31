@@ -505,7 +505,8 @@ namespace DataWF.Common
 
         public static string GetDirectory(string sub = "")
         {
-            return Path.Combine(Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory), sub);
+            return Path.Combine(Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory 
+                ?? Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)), sub);
         }
 
         public static string GetDirectory(bool appDirectory)
