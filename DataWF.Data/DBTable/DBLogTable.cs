@@ -35,6 +35,7 @@ namespace DataWF.Data
         public static readonly string DateName = "datecreate";
         public static readonly string StateName = "status_id";
         public static readonly string UserLogName = "userlog_id";
+        public static readonly string ItemTypeName = "item_type";
         public static DBTable UserLogTable { get; set; }
 
         private DBTable baseTable;
@@ -96,8 +97,8 @@ namespace DataWF.Data
                 DisplayName = value.DisplayName + " Log";
 
                 var idColumn = Columns[IdName];
-                if (idColumn == null) Columns.Add(new DBColumn() { Name = IdName, DataType = typeof(int), Keys = DBColumnKeys.Primary | DBColumnKeys.Notnull });
-                else { idColumn.DataType = typeof(int); idColumn.Keys = DBColumnKeys.Primary | DBColumnKeys.Notnull; }
+                if (idColumn == null) Columns.Add(new DBColumn() { Name = IdName, DataType = typeof(long), Keys = DBColumnKeys.Primary | DBColumnKeys.Notnull });
+                else { idColumn.DataType = typeof(long); idColumn.Keys = DBColumnKeys.Primary | DBColumnKeys.Notnull; }
                 var dateColumn = Columns[DateName];
                 if (dateColumn == null) Columns.Add(new DBColumn() { Name = DateName, DataType = typeof(DateTime), Keys = DBColumnKeys.Date });
                 else { dateColumn.DataType = typeof(DateTime); dateColumn.Keys = DBColumnKeys.Date; }
@@ -110,6 +111,9 @@ namespace DataWF.Data
                 var userColumn = Columns[UserLogName];
                 if (userColumn == null) Columns.Add(new DBColumn() { Name = UserLogName, DataType = typeof(long) });
                 else { userColumn.DataType = typeof(long); userColumn.Keys = DBColumnKeys.None; }
+                var itemTypeColumn = Columns[ItemTypeName];
+                if (itemTypeColumn == null) Columns.Add(new DBColumn() { Name = ItemTypeName, DataType = typeof(int), Keys = DBColumnKeys.ItemType, DefaultValue = "0" });
+                else { itemTypeColumn.DataType = typeof(int); itemTypeColumn.Keys = DBColumnKeys.ItemType; itemTypeColumn.DefaultValue = "0"; }
 
                 foreach (var column in value.Columns)
                 {

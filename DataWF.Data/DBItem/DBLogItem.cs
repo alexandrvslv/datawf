@@ -38,9 +38,9 @@ namespace DataWF.Data
             BaseItem = item;
         }
 
-        public int? LogId
+        public long? LogId
         {
-            get { return GetValue<int?>(Table.PrimaryKey); }
+            get { return GetValue<long?>(Table.PrimaryKey); }
             set { SetValue(value, Table.PrimaryKey); }
         }
 

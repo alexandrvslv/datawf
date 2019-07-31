@@ -66,7 +66,7 @@ namespace DataWF.Module.Common
         }
 
         [Browsable(false)]
-        public int? LogId { get; set; }
+        public long? LogId { get; set; }
 
         [XmlIgnore]
         public DBLogItem LogItem
