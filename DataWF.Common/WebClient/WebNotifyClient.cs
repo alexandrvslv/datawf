@@ -114,6 +114,22 @@ namespace DataWF.Common
             socket?.Dispose();
             socket = null;
         }
+
+        public async void Send(byte[] data)
+        {
+            var buffer = new ArraySegment<byte>(new byte[8 * 1024]);
+            using (var stream = new MemoryStream(data))
+            {
+                int result = 0;
+                int total = 0;
+                while ((result = stream.Read(buffer.Array, 0, buffer.Count)) != 0)
+                {
+                    total += result;
+                    await socket.SendAsync(buffer, WebSocketMessageType.Text, total < data.Length, CancellationToken.None);
+                }
+            }
+
+        }
     }
 
     public class WebNotifyItem

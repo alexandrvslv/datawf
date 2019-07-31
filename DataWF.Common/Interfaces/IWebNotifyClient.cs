@@ -12,6 +12,7 @@ namespace DataWF.Common
         bool CloseRequest { get; }
         Task Close();
         void Listen();
+        void Send(byte[] data);
         Task RegisterNotify(Uri uri, string autorization);
     }
 }

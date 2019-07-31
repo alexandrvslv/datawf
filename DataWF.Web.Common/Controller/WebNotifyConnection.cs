@@ -38,6 +38,10 @@ namespace DataWF.Web.Common
         [JsonIgnore]
         public User User { get; set; }
 
+        public string Platform { get; set; }
+        public string Application { get; set; }
+        public string Version { get; set; }
+
         public void Dispose()
         {
             Socket?.Dispose();

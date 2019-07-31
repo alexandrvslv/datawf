@@ -22,6 +22,7 @@ namespace DataWF.Web.Common
 
         public WebNotifyService Service { get; }
 
+
         [HttpGet()]
         public async Task<IActionResult> Get()
         {

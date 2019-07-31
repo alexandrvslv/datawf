@@ -76,7 +76,7 @@ namespace DataWF.Web.Common
                 {
                     Socket = socket,
                     User = user,
-                    Address = address
+                    Address = address,
                 };
                 connections.Add(client);
             }
@@ -149,8 +149,7 @@ namespace DataWF.Web.Common
                         switch (result.MessageType)
                         {
                             case WebSocketMessageType.Text:
-                                var message = Encoding.UTF8.GetString(stream.ToArray());
-                                ReceiveMessage?.Invoke(this, new WebNotifyEventArgs(client, message));
+                                OnMessageReceive(client, stream);
                                 break;
                             case WebSocketMessageType.Close:
                                 await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Good luck!", CancellationToken.None);
@@ -167,6 +166,52 @@ namespace DataWF.Web.Common
                 }
 
             }
+        }
+
+        private void OnMessageReceive(WebNotifyConnection client, MemoryStream stream)
+        {
+            stream.Position = 0;
+            var property = (string)null;
+            var type = (Type)null;
+            var serializer = JsonSerializer.Create(jsonSettings);
+            using (var reader = new StreamReader(stream))
+            using (var jreader = new JsonTextReader(reader))
+            {
+                while (jreader.Read())
+                {
+                    switch (jreader.TokenType)
+                    {
+                        case JsonToken.PropertyName:
+                            property = (string)jreader.Value;
+                            break;
+                        case JsonToken.String:
+                            switch (property)
+                            {
+                                case ("Type"):
+                                    type = TypeHelper.ParseType((string)jreader.Value);
+                                    break;
+                            }
+                            break;
+                        case JsonToken.StartObject:
+                            if (property == "Value" && client != null)
+                            {
+                                property = null;
+                                var obj = serializer.Deserialize(jreader, type);
+
+                                if (obj is WebNotifyRegistration data)
+                                {
+                                    client.Platform = data.Platform;
+                                    client.Application = data.Application;
+                                    client.Version = data.Version;
+                                    return;
+                                }
+                            }
+                            break;
+                    }
+                }
+            }
+            var message = Encoding.UTF8.GetString(stream.ToArray());
+            ReceiveMessage?.Invoke(this, new WebNotifyEventArgs(client, message));
         }
 
         protected override async void OnSendChanges(NotifyMessageItem[] list)
