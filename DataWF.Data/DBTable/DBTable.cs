@@ -39,7 +39,7 @@ using System.Xml.Serialization;
 namespace DataWF.Data
 {
 
-    public abstract class DBTable : DBSchemaItem, ICollection<DBItem>, IComparable, IDisposable
+    public abstract class DBTable : DBSchemaItem, IComparable, IDBTable
     {
         private static Dictionary<Type, TableAttributeCache> cacheTables = new Dictionary<Type, TableAttributeCache>();
         private static Dictionary<Type, ItemTypeAttributeCache> cacheItemTypes = new Dictionary<Type, ItemTypeAttributeCache>();
@@ -128,7 +128,7 @@ namespace DataWF.Data
         protected DBCommand dmlInsert;
         protected DBCommand dmlInsertSequence;
         protected DBCommand dmlDelete;
-        protected DBLogTable logTable;
+        protected IDBLogTable logTable;
         protected DBTableGroup tableGroup;
         protected DBColumn nameKey = DBColumn.EmptyKey;
         protected DBColumn accessKey = DBColumn.EmptyKey;
@@ -180,18 +180,18 @@ namespace DataWF.Data
         public TableAttributeCache TableAttribute { get; internal set; }
 
         [XmlIgnore, JsonIgnore]
-        public virtual DBLogTable LogTable
+        public virtual IDBLogTable LogTable
         {
             get
             {
                 return logTable
-                               ?? (logTable = (DBLogTable)Schema?.LogSchema?.Tables[LogTableName]
-                               ?? (DBLogTable)Schema?.Tables[LogTableName]);
+                               ?? (logTable = (IDBLogTable)Schema?.LogSchema?.Tables[LogTableName]
+                               ?? (IDBLogTable)Schema?.Tables[LogTableName]);
             }
             set
             {
                 logTable = value;
-                LogTableName = value?.name;
+                LogTableName = value?.Name;
             }
         }
 
@@ -1518,12 +1518,12 @@ namespace DataWF.Data
             imageKey = DBColumn.EmptyKey;
         }
 
-        public DBLogTable GenerateLogTable()
+        public IDBLogTable GenerateLogTable()
         {
             if (LogTable == null)
             {
-                LogTable = new DBLogTable { BaseTable = this };
-                LogTable.Schema.Tables.Add(LogTable);
+                LogTable = new DBLogTable<DBLogItem> { BaseTable = this };
+                LogTable.Schema.Tables.Add((DBTable)LogTable);
             }
             else
             {

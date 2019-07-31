@@ -87,38 +87,6 @@ namespace DataWF.Module.Flow
         }
     }
 
-    public class DocumentDataLog
-    {
-        public DocumentDataLog()
-        { }
-
-        public DocumentDataLog(DBLogItem logItem)
-        {
-            Id = (int)logItem.LogId;
-            BaseId = (long)logItem.BaseId;
-            DocumentId = logItem.GetValue<long?>(DocumentData.DocumentKey.LogColumn);
-            Date = (DateTime)logItem.DateCreate;
-            Type = (DBLogType)logItem.LogType;
-            User = ((UserLog)logItem.UserLog)?.User?.Name;
-            FileName = logItem.GetValue<string>(logItem.LogTable.FileNameKey);
-        }
-
-        public int Id { get; set; }
-
-        public long BaseId { get; set; }
-
-        public long? DocumentId { get; set; }
-
-        public DateTime Date { get; set; }
-
-        public DBLogType Type { get; set; }
-
-        public string User { get; set; }
-
-        public string FileName { get; set; }
-
-    }
-
     [DataContract, Table("ddocument_data", "Document", BlockSize = 400)]
     public class DocumentData : DocumentDetail<DocumentData>
     {
@@ -368,7 +336,7 @@ namespace DataWF.Module.Flow
         [ControllerMethod]
         public IEnumerable<DocumentDataLog> GetLogs()
         {
-            using (var query = new QQuery(Table.LogTable))
+            using (var query = new QQuery((DBTable)Table.LogTable))
             {
                 query.BuildParam(Table.LogTable.BaseKey, Id);
                 query.BuildParam(Table.LogTable.FileNameKey, CompareType.IsNot, null);
@@ -378,7 +346,7 @@ namespace DataWF.Module.Flow
                 query.Parameters.Add(parameterData);
                 var lob = (uint?)null;
 
-                foreach (var logItem in Table.LogTable.Load(query).OrderByDescending(p => p[Table.LogTable.PrimaryKey]))
+                foreach (DBLogItem logItem in Table.LogTable.LoadItems(query).OrderByDescending(p => p[Table.LogTable.PrimaryKey]))
                 {
                     var lobLob = logItem.GetValue<uint?>(Table.LogTable.FileLOBKey);
                     if (lobLob == null || lobLob != lob)
@@ -391,9 +359,9 @@ namespace DataWF.Module.Flow
         }
 
         [ControllerMethod]
-        public async Task<Stream> GetLogFile(int logId, DBTransaction transaction)
+        public async Task<Stream> GetLogFile(long logId, DBTransaction transaction)
         {
-            var logItem = Table.LogTable.LoadById(logId);
+            var logItem = (DBLogItem)Table.LogTable.LoadItemById(logId);
             if (logItem == null)
             {
                 throw new Exception($"DataLog with id {logId} not found!");
@@ -416,14 +384,14 @@ namespace DataWF.Module.Flow
         }
 
         [ControllerMethod]
-        public async Task RemoveLogFile(int logId, DBTransaction transaction)
+        public async Task RemoveLogFile(long logId, DBTransaction transaction)
         {
             if (!Access.GetFlag(AccessType.Admin, transaction.Caller))
             {
                 throw new Exception("Access Denied!");
             }
 
-            var logItem = Table.LogTable.LoadById(logId);
+            var logItem = (DBLogItem)Table.LogTable.LoadItemById(logId);
             if (logItem == null)
             {
                 throw new Exception($"Not Found!");
@@ -447,9 +415,9 @@ namespace DataWF.Module.Flow
         }
 
         [ControllerMethod]
-        public static async Task<DocumentData> UndoLogFile(int logId, DBTransaction transaction)
+        public static async Task<DocumentData> UndoLogFile(long logId, DBTransaction transaction)
         {
-            var logItem = DBTable.LogTable.LoadById(logId);
+            var logItem = (DBLogItem)DBTable.LogTable.LoadItemById(logId);
             if (logItem == null)
             {
                 throw new Exception($"Not Found!");
@@ -466,9 +434,9 @@ namespace DataWF.Module.Flow
         }
 
         [ControllerMethod]
-        public static async Task<DocumentData> RedoLogFile(int logId, DBTransaction transaction)
+        public static async Task<DocumentData> RedoLogFile(long logId, DBTransaction transaction)
         {
-            var logItem = DBTable.LogTable.LoadById(logId);
+            var logItem = (DBLogItem)DBTable.LogTable.LoadItemById(logId);
             if (logItem == null)
             {
                 throw new Exception($"Not Found!");

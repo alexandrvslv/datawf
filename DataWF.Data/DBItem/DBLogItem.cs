@@ -28,6 +28,8 @@ namespace DataWF.Data
 {
     public class DBLogItem : DBItem
     {
+        public static DBTable UserLogTable { get; set; }
+
         private DBItem baseItem = DBItem.EmptyItem;
 
         public DBLogItem()
@@ -56,9 +58,9 @@ namespace DataWF.Data
             set { SetValue(value, LogTable.UserLogKey); }
         }
 
-        public DBItem UserLog
+        public DBUserLog UserLog
         {
-            get { return DBLogTable.UserLogTable?.LoadItemById(UserLogId); }
+            get { return (DBUserLog)DBLogItem.UserLogTable?.LoadItemById(UserLogId); }
             set { UserLogId = (long?)value?.PrimaryId; }
         }
 
@@ -73,7 +75,7 @@ namespace DataWF.Data
             set
             {
                 baseItem = value;
-                Build(value.Table.LogTable);
+                Build((DBTable)value.Table.LogTable);
                 LogType = value.UpdateState.HasFlag(DBUpdateState.Insert)
                               ? DBLogType.Insert : value.UpdateState.HasFlag(DBUpdateState.Update)
                               ? DBLogType.Update : value.UpdateState.HasFlag(DBUpdateState.Delete)
@@ -85,10 +87,10 @@ namespace DataWF.Data
             }
         }
 
-        public DBTable BaseTable { get { return LogTable?.BaseTable; } }
+        public DBTable BaseTable => LogTable?.BaseTable;
 
         [Browsable(false)]
-        public DBLogTable LogTable { get { return (DBLogTable)Table; } }
+        public IDBLogTable LogTable => (IDBLogTable)Table;
 
         public async Task<DBItem> Redo(DBTransaction transaction)
         {
@@ -117,7 +119,7 @@ namespace DataWF.Data
 
         public DBLogItem GetPrevius(DBTransaction transaction)
         {
-            using (var query = new QQuery("", LogTable))
+            using (var query = new QQuery("", (DBTable)LogTable))
             {
                 query.Columns.Add(new QFunc(QFunctionType.max)
                 {
@@ -128,7 +130,7 @@ namespace DataWF.Data
                 //query.Orders.Add(new QOrder(LogTable.PrimaryKey));
 
                 var id = transaction.ExecuteQuery(query.Format());
-                return LogTable.LoadById(id, DBLoadParam.Load, null, transaction);
+                return (DBLogItem)LogTable.LoadItemById(id, DBLoadParam.Load, null, transaction);
             }
         }
 
@@ -243,7 +245,5 @@ namespace DataWF.Data
                 transaction.Commit();
             }
         }
-
-
     }
 }

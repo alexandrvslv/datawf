@@ -312,7 +312,7 @@ namespace DataWF.Data.Gui
             Task.Run(() =>
             {
                 var logTable = filter?.Table.LogTable ?? Table?.LogTable;
-                using (var query = new QQuery("", logTable))
+                using (var query = new QQuery("", (DBTable)logTable))
                 {
                     if (Mode == DataLogMode.Default || mode == DataLogMode.Document)
                     {
@@ -322,7 +322,7 @@ namespace DataWF.Data.Gui
                     {
                         query.BuildParam(logTable.DateKey, CompareType.Between, interval);
                     }
-                    foreach (var item in logTable.Load(query))
+                    foreach (DBLogItem item in logTable.LoadItems(query))
                         list.ListSource.Add(item);
                 }
                 if (mode == DataLogMode.Document)
@@ -334,14 +334,14 @@ namespace DataWF.Data.Gui
                         || (Table != filter.Table && refed.Table != Table))
                             continue;
 
-                        using (var query = new QQuery("", refed.Table.LogTable))
+                        using (var query = new QQuery("", (DBTable)refed.Table.LogTable))
                         {
                             query.BuildParam(refed.Table.LogTable.GetLogColumn(refed.Column), CompareType.Equal, filter.PrimaryId);
                             if (Date != null)
                             {
                                 query.BuildParam(refed.Table.LogTable.DateKey, CompareType.Between, interval);
                             }
-                            foreach (var item in refed.Table.LogTable.Load(query))
+                            foreach (DBLogItem item in refed.Table.LogTable.LoadItems(query))
                                 list.ListSource.Add(item);
                         }
                     }

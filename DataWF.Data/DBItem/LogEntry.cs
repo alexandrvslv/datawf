@@ -20,6 +20,7 @@
 
 using DataWF.Common;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -95,10 +96,10 @@ namespace DataWF.Data
 
         public void RefreshLogs()
         {
-            QQuery query = new QQuery(string.Empty, Row.Table.LogTable);
+            QQuery query = new QQuery(string.Empty, (DBTable)Row.Table.LogTable);
             query.BuildParam(Row.Table.LogTable.BaseKey, CompareType.Equal, row.PrimaryId);
             query.BuildParam(Row.Table.LogTable.StatusKey, CompareType.Equal, (int)DBStatus.New);
-            Logs.AddRange(Row.Table.LogTable.Load(query, DBLoadParam.Load | DBLoadParam.Synchronize));
+            Logs.AddRange(Row.Table.LogTable.LoadItems(query, DBLoadParam.Load | DBLoadParam.Synchronize).Cast<DBLogItem>());
 
             RefreshChanges();
         }
@@ -129,7 +130,7 @@ namespace DataWF.Data
             {
                 if (log.Status == DBStatus.New)
                 {
-                    string name = ((IUserLog)log.UserLog)?.User?.ToString();
+                    string name = log.UserLog?.DBUser?.Name;
                     if (user.IndexOf(name, StringComparison.Ordinal) < 0)
                         user += name + "; ";
                     foreach (var logColumn in log.LogTable.GetLogColumns())
@@ -188,8 +189,5 @@ namespace DataWF.Data
         }
     }
 
-    public interface IUserLog
-    {
-        DBItem User { get; }
-    }
+
 }

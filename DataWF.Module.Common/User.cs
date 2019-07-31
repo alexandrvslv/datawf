@@ -35,7 +35,7 @@ using System.Threading.Tasks;
 namespace DataWF.Module.Common
 {
     [DataContract, Table("ruser", "User", BlockSize = 100)]
-    public class User : DBItem, IComparable, IDisposable, IUserIdentity
+    public class User : DBUser, IComparable, IDisposable
     {
         private static DBColumn abbreviationKey = DBColumn.EmptyKey;
         private static DBColumn departmentKey = DBColumn.EmptyKey;
@@ -262,8 +262,8 @@ namespace DataWF.Module.Common
 
         public UserLog LogStart { get; set; }
 
-        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
+        
+        public override int? Id
         {
             get { return GetValue<int?>(Table.PrimaryKey); }
             set { SetValue(value, Table.PrimaryKey); }
@@ -283,8 +283,7 @@ namespace DataWF.Module.Common
             set { SetReference(company = value, CompanyKey); }
         }
 
-        [DataMember, Column("login", 256, Keys = DBColumnKeys.Code | DBColumnKeys.Indexing), Index("ruser_login", true)]
-        public string Login
+        public override string Login
         {
             get { return GetValue<string>(Table.CodeKey); }
             set { SetValue(value, Table.CodeKey); }
@@ -298,7 +297,7 @@ namespace DataWF.Module.Common
         }
 
         [DataMember, Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
-        public string Name
+        public override string Name
         {
             get { return GetName(); }
             set { SetName(value); }
@@ -357,9 +356,8 @@ namespace DataWF.Module.Common
                 OnPropertyChanged();
             }
         }
-
-        [DataMember, Column("email", 1024, Keys = DBColumnKeys.Indexing), Index("ruser_email", true)]
-        public string EMail
+        
+        public override string EMail
         {
             get { return GetValue<string>(EmailKey); }
             set { SetValue(value, EmailKey); }
@@ -420,9 +418,7 @@ namespace DataWF.Module.Common
             set { SetValue(value, AuthTokenKey); }
         }
 
-        public bool IsAuthenticated => string.IsNullOrEmpty(AccessToken);
-
-        string IIdentity.Name => EMail;
+        public override bool IsAuthenticated => string.IsNullOrEmpty(AccessToken);        
 
         public string NameRU
         {
@@ -436,9 +432,9 @@ namespace DataWF.Module.Common
             set { SetValue(value, NameENKey); }
         }
 
-        public string AuthenticationType => throw new NotImplementedException();
+        public override string AuthenticationType => AuthType?.ToString();
 
-        public IEnumerable<IAccessGroup> Groups
+        public override IEnumerable<IAccessGroup> Groups
         {
             get
             {

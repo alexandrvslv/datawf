@@ -17,6 +17,7 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using DataWF.Common;
 using DataWF.Data;
 using System;
 using System.Collections.Generic;
@@ -46,7 +47,7 @@ namespace DataWF.Module.Common
     }
 
     [DataContract, Table("duser_log", "User", BlockSize = 500, IsLoging = false)]
-    public class UserLog : DBGroupItem, IUserLog
+    public class UserLog : DBUserLog
     {
         private static DBColumn userKey = DBColumn.EmptyKey;
         private static DBColumn logTypeKey = DBColumn.EmptyKey;
@@ -67,13 +68,13 @@ namespace DataWF.Module.Common
 
         public static async void OnDBItemLoging(DBItemEventArgs arg)
         {
-            if (arg.Item.Table == UserLog.DBTable || arg.Item.Table is DBLogTable)
+            if (arg.Item.Table == UserLog.DBTable || arg.Item.Table is IDBLogTable)
                 return;
             var user = arg.User as User;
             RowLoging?.Invoke(null, arg);
             if (user != null && user.LogStart == null)
             {
-                await User.StartSession(user);
+                await Common.User.StartSession(user);
             }
             var userLog = user?.LogStart;
 
@@ -103,16 +104,14 @@ namespace DataWF.Module.Common
 
         public UserLog()
         { }
-
-        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
-        public long? Id
+        
+        public override long? Id
         {
             get { return GetValue<long?>(Table.PrimaryKey); }
             set { SetValue(value, Table.PrimaryKey); }
         }
-
-        [DataMember, Column("user_id", Keys = DBColumnKeys.View)]
-        public int? UserId
+        
+        public override int? UserId
         {
             get { return GetValue<int?>(UserKey); }
             set { SetValue(value, UserKey); }
@@ -124,6 +123,9 @@ namespace DataWF.Module.Common
             get { return GetReference(UserKey, ref user); }
             set { SetReference(user = value, UserKey); }
         }
+
+        public override DBUser DBUser { get => User; set => User = (User)value; }
+
 
         [DataMember, Column("type_id", Keys = DBColumnKeys.ElementType | DBColumnKeys.View)]
         public UserLogType? LogType
@@ -223,9 +225,6 @@ namespace DataWF.Module.Common
             await newLog.Save(user);
         }
 
-        DBItem IUserLog.User
-        {
-            get { return User; }
-        }
+
     }
 }

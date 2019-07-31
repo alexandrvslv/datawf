@@ -42,7 +42,7 @@ namespace DataWF.Data
             BaseColumn = column;
         }
 
-        public DBLogTable LogTable { get { return (DBLogTable)Table; } }
+        public IDBLogTable LogTable => (IDBLogTable)Table;
 
         [Browsable(false)]
         public string BaseName { get; set; }

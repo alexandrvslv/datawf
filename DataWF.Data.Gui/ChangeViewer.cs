@@ -188,15 +188,17 @@ namespace DataWF.Data.Gui
                         {
                         }
                 }
-            QQuery qdelete = new QQuery("", table.LogTable);
-            qdelete.BuildParam(table.LogTable.ElementTypeKey, CompareType.Equal, DBLogType.Delete);
-            qdelete.BuildParam(table.LogTable.StatusKey, CompareType.Equal, DBStatus.New);
-            foreach (var log in table.LogTable.Load(qdelete, DBLoadParam.Synchronize))
+            using (QQuery qdelete = new QQuery("", (DBTable)table.LogTable))
             {
-                LogMap change = new LogMap { Table = table };
-                //change.Logs.Add(log);
-                change.RefreshChanges();
-                rows.Add(change);
+                qdelete.BuildParam(table.LogTable.ElementTypeKey, CompareType.Equal, DBLogType.Delete);
+                qdelete.BuildParam(table.LogTable.StatusKey, CompareType.Equal, DBStatus.New);
+                foreach (DBLogItem log in table.LogTable.LoadItems(qdelete, DBLoadParam.Synchronize))
+                {
+                    LogMap change = new LogMap { Table = table };
+                    //change.Logs.Add(log);
+                    change.RefreshChanges();
+                    rows.Add(change);
+                }
             }
             //wait.Set();
             rows.OnListChanged(NotifyCollectionChangedAction.Reset);

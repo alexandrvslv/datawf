@@ -28,7 +28,7 @@ using System.Xml.Serialization;
 namespace DataWF.Data
 {
 
-    public class DBLogTable : DBTable<DBLogItem>
+    public class DBLogTable<T> : DBTable<T>, IDBLogTable where T : DBLogItem, new()
     {
         public static readonly string TypeName = "logtype";
         public static readonly string IdName = "logid";
@@ -36,7 +36,6 @@ namespace DataWF.Data
         public static readonly string StateName = "status_id";
         public static readonly string UserLogName = "userlog_id";
         public static readonly string ItemTypeName = "item_type";
-        public static DBTable UserLogTable { get; set; }
 
         private DBTable baseTable;
         private DBColumn basekey = DBColumn.EmptyKey;

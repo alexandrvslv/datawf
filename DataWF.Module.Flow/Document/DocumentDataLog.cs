@@ -1,5 +1,5 @@
 ﻿/*
- DBTable.cs
+ DocumentData.cs
  
  Author:
       Alexandr <alexandr_vslv@mail.ru>
@@ -17,15 +17,28 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using System.Collections.Specialized;
 
-namespace DataWF.Data
+using DataWF.Data;
+
+namespace DataWF.Module.Flow
 {
-    public interface IDBVirtualTable: IDBTable
+    public class DocumentDataLog : DBLogView
     {
-        DBTable BaseTable { get; set; }
-        QQuery FilterQuery { get; }
-        void OnTableChanged(DBItem item, NotifyCollectionChangedAction type);
-        
+        public DocumentDataLog()
+        { }
+
+        public DocumentDataLog(DBLogItem logItem) : base(logItem)
+        {
+            BaseId = (long)logItem.BaseId;
+            DocumentId = logItem.GetValue<long?>(DocumentData.DocumentKey.LogColumn);
+            FileName = logItem.GetValue<string>(logItem.LogTable.FileNameKey);
+        }
+
+        public long BaseId { get; set; }
+
+        public long? DocumentId { get; set; }
+
+        public string FileName { get; set; }
+
     }
 }

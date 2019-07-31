@@ -364,7 +364,7 @@ namespace DataWF.Data.Gui
                 CheckItem(table, node, ShowTable
                     && (!CheckTableView || (CheckTableView && table.Access.GetFlag(AccessType.Read, GuiEnvironment.User)))
                     && (!CheckTableAdmin || (CheckTableAdmin && table.Access.GetFlag(AccessType.Admin, GuiEnvironment.User)))
-                    && (!(table is DBLogTable) || ShowLogTable));
+                    && (!(table is IDBLogTable) || ShowLogTable));
             }
 
             InitList(schema.Procedures.SelectByParent(null), node, ShowProcedures, "Procedures");
@@ -424,7 +424,7 @@ namespace DataWF.Data.Gui
                 CheckItem(table, node, ShowTable
                     && (!CheckTableView || (CheckTableView && table.Access.GetFlag(AccessType.Read, GuiEnvironment.User)))
                     && (!CheckTableAdmin || (CheckTableAdmin && table.Access.GetFlag(AccessType.Admin, GuiEnvironment.User)))
-                    && (!(table is DBLogTable) || ShowLogTable));
+                    && (!(table is IDBLogTable) || ShowLogTable));
             }
             return node;
         }

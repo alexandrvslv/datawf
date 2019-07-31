@@ -60,7 +60,7 @@ namespace DataWF.Module.Common
             }
         }
 
-        public DBLogTable LogTable
+        public IDBLogTable LogTable
         {
             get { return Table?.LogTable; }
         }
@@ -71,7 +71,7 @@ namespace DataWF.Module.Common
         [XmlIgnore]
         public DBLogItem LogItem
         {
-            get { return cacheLogItem ?? (cacheLogItem = LogTable?.LoadById(LogId)); }
+            get { return cacheLogItem ?? (cacheLogItem = (DBLogItem)LogTable?.LoadItemById(LogId)); }
             set
             {
                 cacheLogItem = value;

@@ -140,7 +140,7 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore]
-        public override DBLogTable LogTable
+        public override IDBLogTable LogTable
         {
             get { return BaseTable.LogTable; }
             set { }

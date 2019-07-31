@@ -26,7 +26,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-    public abstract class DBSchemaItem : IContainerNotifyPropertyChanged, IComparable, ICloneable, IAccessable
+    public abstract class DBSchemaItem : IContainerNotifyPropertyChanged, IComparable, ICloneable, IAccessable, IDBSchemaItem
     {
         protected string name;
         protected string oldname;

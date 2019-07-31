@@ -1,8 +1,8 @@
 ﻿/*
- DBTableList.cs
+ DBTable.cs
  
  Author:
-      Alexandr <alexandr_vslv@mail.ru>  
+      Alexandr <alexandr_vslv@mail.ru>
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License as published by
@@ -17,33 +17,24 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 using System.Collections.Generic;
+using DataWF.Common;
 
 namespace DataWF.Data
 {
-    public class DBTableComparer : IComparer<DBTable>
+
+    public abstract class DBUserLog : DBGroupItem, IUserLog
     {
-        public int Compare(DBTable x, DBTable y)
-        {
-            var rez = 0;
-            if (x is IDBVirtualTable || x is IDBLogTable)
-            {
-                if (!(y is IDBVirtualTable) && !(y is IDBLogTable))
-                {
-                    rez = 1;
-                }
-            }
-            else if (y is IDBVirtualTable || y is IDBLogTable)
-            {
-                rez = -11;
-            }
+        [Column("unid", Keys = DBColumnKeys.Primary)]
+        public abstract long? Id { get; set; }
 
-            if (rez == 0)
-            {
-                rez = x.Name.CompareTo(y.Name);
-            }
+        [Column("user_id", Keys = DBColumnKeys.View)]
+        public abstract int? UserId { get; set; }
 
-            return rez;
-        }
+
+        public abstract DBUser DBUser { get; set; }
+
+        IUserIdentity IUserLog.UserIdentity => DBUser;
     }
 }

@@ -1,8 +1,8 @@
 ﻿/*
- DBTableList.cs
+ DBTable.cs
  
  Author:
-      Alexandr <alexandr_vslv@mail.ru>  
+      Alexandr <alexandr_vslv@mail.ru>
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License as published by
@@ -17,33 +17,28 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using System.Collections.Generic;
+
+using System;
 
 namespace DataWF.Data
 {
-    public class DBTableComparer : IComparer<DBTable>
+    public class DBLogView
     {
-        public int Compare(DBTable x, DBTable y)
+        public DBLogView()
+        { }
+        public DBLogView(DBLogItem logItem)
         {
-            var rez = 0;
-            if (x is IDBVirtualTable || x is IDBLogTable)
-            {
-                if (!(y is IDBVirtualTable) && !(y is IDBLogTable))
-                {
-                    rez = 1;
-                }
-            }
-            else if (y is IDBVirtualTable || y is IDBLogTable)
-            {
-                rez = -11;
-            }
-
-            if (rez == 0)
-            {
-                rez = x.Name.CompareTo(y.Name);
-            }
-
-            return rez;
+            Id = (long)logItem.LogId;
+            Date = (DateTime)logItem.DateCreate;
+            Type = (DBLogType)logItem.LogType;
+            UserId = logItem.UserLog?.UserId;
+            User = logItem.UserLog?.DBUser?.Name;
         }
+        public long Id { get; set; }
+        public DateTime Date { get; set; }
+        public DBLogType Type { get; set; }
+
+        public int? UserId { get; set; }
+        public string User { get; set; }
     }
 }

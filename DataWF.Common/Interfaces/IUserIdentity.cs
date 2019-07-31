@@ -9,5 +9,10 @@ namespace DataWF.Common
 
         IEnumerable<IAccessGroup> Groups { get; }
     }
+
+    public interface IUserLog
+    {
+        IUserIdentity UserIdentity { get; }
+    }
 }
 
