@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DataWF.Common
@@ -24,6 +25,8 @@ namespace DataWF.Common
         private ConcurrentDictionary<K, T> downloads;
         private ICRUDClient baseClient;
         private LoadProgress<T> loadProgress;
+        private SemaphoreSlim getActionSemaphore;
+
         //private object downloadLock;
 
         public TypeSerializationInfo SerializationInfo { get; }
@@ -384,7 +387,6 @@ namespace DataWF.Common
             var item = Select(id);
             if (item == null)
             {
-                Debug.WriteLine($"Client.Get {typeof(T)} {id}");
                 item = new T();
                 if (item is IPrimaryKey keyed)
                     keyed.PrimaryKey = id;
@@ -398,8 +400,19 @@ namespace DataWF.Common
 
         private async Task GetAction(K id, Action<T> loadAction)
         {
-            var result = await GetAsync(id, ProgressToken.None).ConfigureAwait(false);
-            loadAction?.Invoke(result);
+            if (getActionSemaphore == null)
+                getActionSemaphore = new SemaphoreSlim(2);
+            await getActionSemaphore.WaitAsync();
+            try
+            {
+                Debug.WriteLine($"Client.Get {typeof(T)} {id}");
+                var result = await GetAsync(id, ProgressToken.None).ConfigureAwait(false);
+                loadAction?.Invoke(result);
+            }
+            finally
+            {
+                getActionSemaphore.Release();
+            }
         }
 
         public virtual Task<List<T>> GetAsync(ProgressToken progressToken)
