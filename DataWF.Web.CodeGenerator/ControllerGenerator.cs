@@ -11,6 +11,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using SF = Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace DataWF.Web.CodeGenerator
 {
@@ -120,25 +121,25 @@ namespace DataWF.Web.CodeGenerator
                 var fileColumn = tableAttribute.Columns.FirstOrDefault(p => (p.Attribute.Keys & DBColumnKeys.File) == DBColumnKeys.File);
                 var primaryKeyType = tableAttribute.PrimaryKey?.GetDataType() ?? typeof(int);
                 var baseType = $"Base{(tableAttribute.FileKey != null ? "File" : "")}{(IsPrimaryType(itemType.BaseType) ? "" : itemType.BaseType.Name)}Controller<T, K>";
-                baseController = SyntaxFactory.ClassDeclaration(
-                    attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
-                    modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.AbstractKeyword)),
-                    identifier: SyntaxFactory.Identifier(controllerClassName),
-                    typeParameterList: SyntaxFactory.TypeParameterList(
-                        SyntaxFactory.SeparatedList(new[] {
-                            SyntaxFactory.TypeParameter("T"),
-                            SyntaxFactory.TypeParameter("K") })),
-                    baseList: SyntaxFactory.BaseList(
-                        SyntaxFactory.SeparatedList<BaseTypeSyntax>(new[] {
-                        SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName(baseType)) })),
-                    constraintClauses: SyntaxFactory.List(new[] { SyntaxFactory.TypeParameterConstraintClause(
-                        name: SyntaxFactory.IdentifierName("T"),
-                        constraints: SyntaxFactory.SeparatedList<TypeParameterConstraintSyntax>(new []{
-                            SyntaxFactory.TypeConstraint(SyntaxFactory.ParseTypeName(itemType.Name)),
-                             SyntaxFactory.TypeConstraint(SyntaxFactory.ParseTypeName("new()"))
+                baseController = SF.ClassDeclaration(
+                    attributeLists: SF.List<AttributeListSyntax>(),
+                    modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.AbstractKeyword)),
+                    identifier: SF.Identifier(controllerClassName),
+                    typeParameterList: SF.TypeParameterList(
+                        SF.SeparatedList(new[] {
+                            SF.TypeParameter("T"),
+                            SF.TypeParameter("K") })),
+                    baseList: SF.BaseList(
+                        SF.SeparatedList<BaseTypeSyntax>(new[] {
+                        SF.SimpleBaseType(SF.ParseTypeName(baseType)) })),
+                    constraintClauses: SF.List(new[] { SF.TypeParameterConstraintClause(
+                        name: SF.IdentifierName("T"),
+                        constraints: SF.SeparatedList<TypeParameterConstraintSyntax>(new []{
+                            SF.TypeConstraint(SF.ParseTypeName(itemType.Name)),
+                             SF.TypeConstraint(SF.ParseTypeName("new()"))
                         }))
                     }),
-                    members: SyntaxFactory.List(GetControllerMemebers(tableAttribute, itemType, usings))
+                    members: SF.List(GetControllerMemebers(tableAttribute, itemType, usings))
                     );
 
                 trees[name] = baseController;
@@ -173,15 +174,15 @@ namespace DataWF.Web.CodeGenerator
             if (!trees.TryGetValue(itemType.Name, out var controller))
             {
                 var controllerClassName = $"{itemType.Name}Controller";
-                controller = SyntaxFactory.ClassDeclaration(
-                    attributeLists: SyntaxFactory.List(GetControllerAttributeList()),
-                    modifiers: SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.PartialKeyword)),
-                    identifier: SyntaxFactory.Identifier(controllerClassName),
+                controller = SF.ClassDeclaration(
+                    attributeLists: SF.List(GetControllerAttributeList()),
+                    modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.PartialKeyword)),
+                    identifier: SF.Identifier(controllerClassName),
                     typeParameterList: null,
-                    baseList: SyntaxFactory.BaseList(SyntaxFactory.SingletonSeparatedList<BaseTypeSyntax>(
-                        SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName(baseName)))),
-                    constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
-                    members: SyntaxFactory.List(GetControllerMemebers(tableAttribute, itemType, usings))
+                    baseList: SF.BaseList(SF.SingletonSeparatedList<BaseTypeSyntax>(
+                        SF.SimpleBaseType(SF.ParseTypeName(baseName)))),
+                    constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
+                    members: SF.List(GetControllerMemebers(tableAttribute, itemType, usings))
                     );
 
                 trees[itemType.Name] = controller;
@@ -267,30 +268,30 @@ namespace DataWF.Web.CodeGenerator
         private IEnumerable<AttributeListSyntax> GetControllerAttributeList()
         {
             //[Authorize(JwtBearerDefaults.AuthenticationScheme)]
-            yield return SyntaxFactory.AttributeList(
-                         SyntaxFactory.SingletonSeparatedList(
-                             SyntaxFactory.Attribute(
-                                 SyntaxFactory.IdentifierName("Authorize")).WithArgumentList(
-                                 SyntaxFactory.AttributeArgumentList(
-                                     SyntaxFactory.SingletonSeparatedList(
-                                         SyntaxFactory.AttributeArgument(
-                                             SyntaxFactory.ParseExpression("AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme")))))));
+            yield return SF.AttributeList(
+                         SF.SingletonSeparatedList(
+                             SF.Attribute(
+                                 SF.IdentifierName("Authorize")).WithArgumentList(
+                                 SF.AttributeArgumentList(
+                                     SF.SingletonSeparatedList(
+                                         SF.AttributeArgument(
+                                             SF.ParseExpression("AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme")))))));
 
-            yield return SyntaxFactory.AttributeList(
-                         SyntaxFactory.SingletonSeparatedList(
-                             SyntaxFactory.Attribute(
-                                 SyntaxFactory.IdentifierName("Route")).WithArgumentList(
-                                 SyntaxFactory.AttributeArgumentList(
-                                     SyntaxFactory.SingletonSeparatedList(
-                                         SyntaxFactory.AttributeArgument(
-                                             SyntaxFactory.LiteralExpression(
+            yield return SF.AttributeList(
+                         SF.SingletonSeparatedList(
+                             SF.Attribute(
+                                 SF.IdentifierName("Route")).WithArgumentList(
+                                 SF.AttributeArgumentList(
+                                     SF.SingletonSeparatedList(
+                                         SF.AttributeArgument(
+                                             SF.LiteralExpression(
                                                  SyntaxKind.StringLiteralExpression,
-                                                 SyntaxFactory.Literal("api/[controller]"))))))));
+                                                 SF.Literal("api/[controller]"))))))));
 
-            yield return SyntaxFactory.AttributeList(
-                         SyntaxFactory.SingletonSeparatedList(
-                             SyntaxFactory.Attribute(
-                                 SyntaxFactory.IdentifierName("ApiController"))));
+            yield return SF.AttributeList(
+                         SF.SingletonSeparatedList(
+                             SF.Attribute(
+                                 SF.IdentifierName("ApiController"))));
         }
 
         //https://stackoverflow.com/questions/37710714/roslyn-add-new-method-to-an-existing-class
@@ -300,11 +301,11 @@ namespace DataWF.Web.CodeGenerator
             AddUsing(method.ReturnType, usings);
 
             var returning = method.ReturnType == typeof(void) ? "void" : $"ActionResult<{TypeHelper.FormatCode(method.ReturnType)}>";
-            var modifiers = new List<SyntaxToken> { SyntaxFactory.Token(SyntaxKind.PublicKeyword) };
+            var modifiers = new List<SyntaxToken> { SF.Token(SyntaxKind.PublicKeyword) };
             var isAsync = TypeHelper.IsBaseType(method.ReturnType, typeof(Task));
             if (isAsync)
             {
-                modifiers.Add(SyntaxFactory.Token(SyntaxKind.AsyncKeyword));
+                modifiers.Add(SF.Token(SyntaxKind.AsyncKeyword));
                 if (method.ReturnType.IsGenericType)
                 {
                     var returnType = method.ReturnType.GetGenericArguments().FirstOrDefault();
@@ -318,18 +319,18 @@ namespace DataWF.Web.CodeGenerator
             }
 
             var parametersInfo = GetParametersInfo(method, table, usings);
-            return SyntaxFactory.MethodDeclaration(attributeLists: SyntaxFactory.List(GetControllerMethodAttributes(method, parametersInfo)),
-                          modifiers: SyntaxFactory.TokenList(modifiers.ToArray()),
+            return SF.MethodDeclaration(attributeLists: SF.List(GetControllerMethodAttributes(method, parametersInfo)),
+                          modifiers: SF.TokenList(modifiers.ToArray()),
                           returnType: returning == "void"
-                          ? SyntaxFactory.ParseTypeName("IActionResult")
-                          : SyntaxFactory.ParseTypeName(returning),
+                          ? SF.ParseTypeName("IActionResult")
+                          : SF.ParseTypeName(returning),
                           explicitInterfaceSpecifier: null,
-                          identifier: SyntaxFactory.Identifier(method.Name),
+                          identifier: SF.Identifier(method.Name),
                           typeParameterList: null,
-                          parameterList: SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(GetControllerMethodParameters(method, table, parametersInfo))),
-                          constraintClauses: SyntaxFactory.List<TypeParameterConstraintClauseSyntax>(),
-                          body: SyntaxFactory.Block(GetControllerMethodBody(method, parametersInfo, returning)),
-                          semicolonToken: SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+                          parameterList: SF.ParameterList(SF.SeparatedList(GetControllerMethodParameters(method, table, parametersInfo))),
+                          constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
+                          body: SF.Block(GetControllerMethodBody(method, parametersInfo, returning)),
+                          semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
             // Annotate that this node should be formatted
             //.WithAdditionalAnnotations(Formatter.Annotation);
         }
@@ -352,33 +353,33 @@ namespace DataWF.Web.CodeGenerator
 
             if (isTransact)
             {
-                yield return SyntaxFactory.ParseStatement($"using(var {prTransaction} = new DBTransaction(table.Connection, {prUser})) {{");
+                yield return SF.ParseStatement($"using(var {prTransaction} = new DBTransaction(table.Connection, {prUser})) {{");
             }
 
-            yield return SyntaxFactory.ParseStatement("try {");
+            yield return SF.ParseStatement("try {");
 
             if (!method.IsStatic)
             {
-                yield return SyntaxFactory.ParseStatement($"var idValue = table.LoadById(id, DBLoadParam.Load | DBLoadParam.Referencing);");
-                yield return SyntaxFactory.ParseStatement("if (idValue == null)");
-                yield return SyntaxFactory.ParseStatement("{ return NotFound(); }");
+                yield return SF.ParseStatement($"var idValue = table.LoadById(id, DBLoadParam.Load | DBLoadParam.Referencing);");
+                yield return SF.ParseStatement("if (idValue == null)");
+                yield return SF.ParseStatement("{ return NotFound(); }");
             }
             var parametersBuilder = new StringBuilder();
             foreach (var parameter in parametersInfo)
             {
                 if (parameter.Table != null)
                 {
-                    yield return SyntaxFactory.ParseStatement($"var {parameter.ValueName} = DBItem.GetTable<{TypeHelper.FormatCode(parameter.Info.ParameterType)}>().LoadById({parameter.Info.Name}, DBLoadParam.Load | DBLoadParam.Referencing);");
+                    yield return SF.ParseStatement($"var {parameter.ValueName} = DBItem.GetTable<{TypeHelper.FormatCode(parameter.Info.ParameterType)}>().LoadById({parameter.Info.Name}, DBLoadParam.Load | DBLoadParam.Referencing);");
                 }
                 else if (parameter.ValueName == prStream)
                 {
                     if (isAsync)
                     {
-                        yield return SyntaxFactory.ParseStatement($"var {parameter.ValueName} = (await Upload(true))?.Stream;");
+                        yield return SF.ParseStatement($"var {parameter.ValueName} = (await Upload(true))?.Stream;");
                     }
                     else
                     {
-                        yield return SyntaxFactory.ParseStatement($"var {parameter.ValueName} = Upload(true).GetAwaiter().GetResult()?.Stream;");
+                        yield return SF.ParseStatement($"var {parameter.ValueName} = Upload(true).GetAwaiter().GetResult()?.Stream;");
                     }
                 }
                 parametersBuilder.Append($"{parameter.ValueName}, ");
@@ -390,12 +391,12 @@ namespace DataWF.Web.CodeGenerator
             var builder = new StringBuilder();
             if (TypeHelper.IsBaseType(returnType, typeof(Stream)))
             {
-                yield return SyntaxFactory.ParseStatement($"var exportStream = {(isAsync ? "(await " : "")}{(method.IsStatic ? method.DeclaringType.Name : " idValue")}.{method.Name}({parametersBuilder}){(isAsync ? ")" : "")} as FileStream;");
+                yield return SF.ParseStatement($"var exportStream = {(isAsync ? "(await " : "")}{(method.IsStatic ? method.DeclaringType.Name : " idValue")}.{method.Name}({parametersBuilder}){(isAsync ? ")" : "")} as FileStream;");
                 if (isTransact)
                 {
-                    yield return SyntaxFactory.ParseStatement($"{prTransaction}.Commit();");
+                    yield return SF.ParseStatement($"{prTransaction}.Commit();");
                 }
-                yield return SyntaxFactory.ParseStatement($"return new FileStreamResult(exportStream, System.Net.Mime.MediaTypeNames.Application.Octet){{ FileDownloadName = Path.GetFileName(exportStream.Name) }};");
+                yield return SF.ParseStatement($"return new FileStreamResult(exportStream, System.Net.Mime.MediaTypeNames.Application.Octet){{ FileDownloadName = Path.GetFileName(exportStream.Name) }};");
             }
             else
             {
@@ -411,33 +412,33 @@ namespace DataWF.Web.CodeGenerator
                 builder.Append($"{(method.IsStatic ? method.DeclaringType.Name : "idValue")}.{method.Name}({parametersBuilder}");
                 builder.AppendLine(");");
 
-                yield return SyntaxFactory.ParseStatement(builder.ToString());
+                yield return SF.ParseStatement(builder.ToString());
                 if (isTransact)
                 {
-                    yield return SyntaxFactory.ParseStatement($"{prTransaction}.Commit();");
+                    yield return SF.ParseStatement($"{prTransaction}.Commit();");
                 }
 
                 if (!isVoid)
                 {
-                    yield return SyntaxFactory.ParseStatement($"return new {returning}(result);");
+                    yield return SF.ParseStatement($"return new {returning}(result);");
                 }
                 else
                 {
-                    yield return SyntaxFactory.ParseStatement($"return Ok();");
+                    yield return SF.ParseStatement($"return Ok();");
                 }
             }
 
-            yield return SyntaxFactory.ParseStatement("}");
-            yield return SyntaxFactory.ParseStatement("catch (Exception ex) {");
+            yield return SF.ParseStatement("}");
+            yield return SF.ParseStatement("catch (Exception ex) {");
             if (isTransact)
             {
-                yield return SyntaxFactory.ParseStatement($"{prTransaction}.Rollback();");
+                yield return SF.ParseStatement($"{prTransaction}.Rollback();");
             }
-            yield return SyntaxFactory.ParseStatement("return BadRequest(ex);");
-            yield return SyntaxFactory.ParseStatement("}");
+            yield return SF.ParseStatement("return BadRequest(ex);");
+            yield return SF.ParseStatement("}");
             if (isTransact)
             {
-                yield return SyntaxFactory.ParseStatement("}");
+                yield return SF.ParseStatement("}");
             }
         }
 
@@ -451,26 +452,26 @@ namespace DataWF.Web.CodeGenerator
                     continue;
                 if (parameter.ValueName == prStream)
                 {
-                    yield return SyntaxFactory.AttributeList(
-                         SyntaxFactory.SingletonSeparatedList(
-                             SyntaxFactory.Attribute(
-                                 SyntaxFactory.IdentifierName("DisableFormValueModelBinding"))));
+                    yield return SF.AttributeList(
+                         SF.SingletonSeparatedList(
+                             SF.Attribute(
+                                 SF.IdentifierName("DisableFormValueModelBinding"))));
                     post = true;
                     continue;
                 }
                 parameters += $"/{{{parameter.Info.Name}}}";
             }
-            var attributeArgument = SyntaxFactory.AttributeArgument(
-                SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(parameters)));
-            yield return SyntaxFactory.AttributeList(
-                         SyntaxFactory.SingletonSeparatedList(
-                             SyntaxFactory.Attribute(
-                                 SyntaxFactory.IdentifierName("Route")).WithArgumentList(
-                                 SyntaxFactory.AttributeArgumentList(SyntaxFactory.SingletonSeparatedList(attributeArgument)))));
-            yield return SyntaxFactory.AttributeList(
-                         SyntaxFactory.SingletonSeparatedList(
-                             SyntaxFactory.Attribute(
-                                 SyntaxFactory.IdentifierName(post ? "HttpPost" : "HttpGet"))));
+            var attributeArgument = SF.AttributeArgument(
+                SF.LiteralExpression(SyntaxKind.StringLiteralExpression, SF.Literal(parameters)));
+            yield return SF.AttributeList(
+                         SF.SingletonSeparatedList(
+                             SF.Attribute(
+                                 SF.IdentifierName("Route")).WithArgumentList(
+                                 SF.AttributeArgumentList(SF.SingletonSeparatedList(attributeArgument)))));
+            yield return SF.AttributeList(
+                         SF.SingletonSeparatedList(
+                             SF.Attribute(
+                                 SF.IdentifierName(post ? "HttpPost" : "HttpGet"))));
         }
 
         private List<MethodParametrInfo> GetParametersInfo(MethodInfo method, TableAttributeCache table, Dictionary<string, UsingDirectiveSyntax> usings)
@@ -497,10 +498,10 @@ namespace DataWF.Web.CodeGenerator
         {
             if (!method.IsStatic)
             {
-                yield return SyntaxFactory.Parameter(attributeLists: SyntaxFactory.List(GetParameterAttributes()),
-                                                             modifiers: SyntaxFactory.TokenList(),
-                                                             type: SyntaxFactory.ParseTypeName((table.PrimaryKey?.GetDataType() ?? typeof(int)).Name),
-                                                             identifier: SyntaxFactory.Identifier("id"),
+                yield return SF.Parameter(attributeLists: SF.List(GetParameterAttributes()),
+                                                             modifiers: SF.TokenList(),
+                                                             type: SF.ParseTypeName((table.PrimaryKey?.GetDataType() ?? typeof(int)).Name),
+                                                             identifier: SF.Identifier("id"),
                                                              @default: null);
             }
 
@@ -511,10 +512,10 @@ namespace DataWF.Web.CodeGenerator
                 {
                     continue;
                 }
-                yield return SyntaxFactory.Parameter(attributeLists: SyntaxFactory.List(GetParameterAttributes()),
-                                                         modifiers: SyntaxFactory.TokenList(),
-                                                         type: SyntaxFactory.ParseTypeName(methodParameter.Type.Name),
-                                                         identifier: SyntaxFactory.Identifier(methodParameter.Info.Name),
+                yield return SF.Parameter(attributeLists: SF.List(GetParameterAttributes()),
+                                                         modifiers: SF.TokenList(),
+                                                         type: SF.ParseTypeName(methodParameter.Type.Name),
+                                                         identifier: SF.Identifier(methodParameter.Info.Name),
                                                          @default: null);
             }
         }
@@ -522,10 +523,10 @@ namespace DataWF.Web.CodeGenerator
         private IEnumerable<AttributeListSyntax> GetParameterAttributes()
         {
             //yield break;
-            yield return SyntaxFactory.AttributeList(
-                         SyntaxFactory.SingletonSeparatedList(
-                         SyntaxFactory.Attribute(
-                         SyntaxFactory.IdentifierName("FromRoute"))));
+            yield return SF.AttributeList(
+                         SF.SingletonSeparatedList(
+                         SF.Attribute(
+                         SF.IdentifierName("FromRoute"))));
         }
 
         private void AddUsing(Type type, Dictionary<string, UsingDirectiveSyntax> usings)
