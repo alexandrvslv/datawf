@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace DataWF.Web.Common
+namespace DataWF.Common
 {
     public class WebNotifyRegistration
     {
@@ -12,6 +12,5 @@ namespace DataWF.Web.Common
         public string Application { get; set; }
 
         public string Version { get; set; }
-
     }
 }

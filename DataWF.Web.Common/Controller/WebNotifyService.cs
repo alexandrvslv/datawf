@@ -148,6 +148,7 @@ namespace DataWF.Web.Common
 
                         switch (result.MessageType)
                         {
+                            case WebSocketMessageType.Binary:
                             case WebSocketMessageType.Text:
                                 OnMessageReceive(client, stream);
                                 break;
@@ -193,7 +194,7 @@ namespace DataWF.Web.Common
                             }
                             break;
                         case JsonToken.StartObject:
-                            if (property == "Value" && client != null)
+                            if (property == "Value" && type != null)
                             {
                                 property = null;
                                 var obj = serializer.Deserialize(jreader, type);

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace DataWF.Web.Common
+namespace DataWF.Common
 {
     public class WebNotifyMessage
     {

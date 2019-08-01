@@ -8,6 +8,7 @@ namespace DataWF.Common
         event EventHandler<WebNotifyClientEventArgs> OnReceiveMessage;
         event EventHandler<ExceptionEventArgs> OnError;
         event EventHandler<EventArgs> OnClose;
+        event EventHandler<EventArgs> OnOpen;
 
         bool CloseRequest { get; }
         Task Close();

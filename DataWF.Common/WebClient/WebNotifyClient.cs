@@ -11,6 +11,7 @@ namespace DataWF.Common
     {
         private ClientWebSocket socket;
         private bool closeRequest;
+        private Uri uri;
 
         public WebSocketState State => socket?.State ?? WebSocketState.Closed;
 
@@ -19,21 +20,24 @@ namespace DataWF.Common
         public event EventHandler<WebNotifyClientEventArgs> OnReceiveMessage;
         public event EventHandler<ExceptionEventArgs> OnError;
         public event EventHandler<EventArgs> OnClose;
+        public event EventHandler<EventArgs> OnOpen;
 
-        public async Task RegisterNotify(Uri uri, string autorization)
+        public Task RegisterNotify(Uri uri, string autorization)
         {
             socket = new ClientWebSocket();
             if (!string.IsNullOrEmpty(autorization))
             {
                 socket.Options.SetRequestHeader("Authorization", autorization);
             }
-
-            await socket.ConnectAsync(uri, CancellationToken.None).ConfigureAwait(false);
+            this.uri = uri;
+            return Task.CompletedTask;
         }
 
-        public void Listen()
+        public async void Listen()
         {
-            _ = Run();
+            await socket.ConnectAsync(uri, CancellationToken.None).ConfigureAwait(false);
+            OnOpen?.Invoke(this, EventArgs.Empty);
+            await Run();
         }
 
         public async Task Run()
@@ -51,9 +55,7 @@ namespace DataWF.Common
                 catch (Exception ex)
                 {
                     Helper.OnException(ex);
-                    if (ex.InnerException?.Message != null
-                        && (ex.InnerException.Message.EndsWith("HRESULT: 0x80072EFE", StringComparison.OrdinalIgnoreCase)
-                        || ex.InnerException.Message.EndsWith("HRESULT: 0x80072EE2", StringComparison.OrdinalIgnoreCase)))
+                    if (socket.State != WebSocketState.Open)
                     {
                         OnClose(this, EventArgs.Empty);
                         return;
@@ -125,7 +127,7 @@ namespace DataWF.Common
                 while ((result = stream.Read(buffer.Array, 0, buffer.Count)) != 0)
                 {
                     total += result;
-                    await socket.SendAsync(buffer, WebSocketMessageType.Text, total < data.Length, CancellationToken.None);
+                    await socket.SendAsync(buffer, WebSocketMessageType.Binary, total >= data.Length, CancellationToken.None);
                 }
             }
 
