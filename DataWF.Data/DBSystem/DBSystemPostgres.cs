@@ -49,7 +49,7 @@ namespace DataWF.Data
         {
             var nConnection = new NpgsqlConnectionStringBuilder()
             {
-                Timeout = connection.TimeOut,
+                //Timeout = connection.TimeOut,
                 CommandTimeout = connection.TimeOut,
                 Username = connection.User,
                 Password = connection.Password,
