@@ -683,15 +683,22 @@ namespace DataWF.Common
 
             if (type.IsGenericType)
             {
-                if (nameSpace)
-                    builder.Append($"{type.Namespace}.");
-                builder.Append($"{type.Name.Remove(type.Name.IndexOf('`'))}<");
-                foreach (var parameter in type.GetGenericArguments())
+                if (type.GetGenericTypeDefinition() == typeof(Nullable<>))
                 {
-                    builder.Append($"{FormatCode(parameter)}, ");
+                    builder.Append($"{FormatCode(type.GetGenericArguments().First())}?");
                 }
-                builder.Length -= 2;
-                builder.Append(">");
+                else
+                {
+                    if (nameSpace)
+                        builder.Append($"{type.Namespace}.");
+                    builder.Append($"{type.Name.Remove(type.Name.IndexOf('`'))}<");
+                    foreach (var parameter in type.GetGenericArguments())
+                    {
+                        builder.Append($"{FormatCode(parameter)}, ");
+                    }
+                    builder.Length -= 2;
+                    builder.Append(">");
+                }
             }
             else if (type == typeof(void))
             {
