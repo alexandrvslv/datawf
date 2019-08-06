@@ -72,9 +72,10 @@ namespace DataWF.Common
         public void StartListener()
         {
             if (listenerEndPoint == null)
-                listenerEndPoint = new IPEndPoint(IPAddress.Any, GetUdpPort());
+                listenerEndPoint = new IPEndPoint(IPAddress.Any, 0);
             listener = new UdpClient();
             listener.Client.Bind(listenerEndPoint);
+            listenerEndPoint = (IPEndPoint)listener.Client.LocalEndPoint;
             //this.listener.Client.SendTimeout = 5000;
             //this.listener.Client.ReceiveTimeout = 5000;
             sender = new UdpClient();
