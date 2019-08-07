@@ -13,7 +13,7 @@ namespace DataWF.Web.CodeGenerator
             {
                 if (item.Length == 0)
                     continue;
-                if (item.StartsWith('-'))
+                if (item.StartsWith("-"))
                     key = item;
                 else if (key != null)
                     map[key] = $"{(map.TryGetValue(key, out var value) ? value + " " : string.Empty)}{item.Trim(' ', '\'', '\"')}";
@@ -30,8 +30,15 @@ namespace DataWF.Web.CodeGenerator
             {
                 //throw new ArgumentException("Nmaespace missing, expect -n|--namespace Name.Space");
             }
+            CodeGeneratorMode mode = CodeGeneratorMode.Controllers;
+            if (map.TryGetValue("-m", out var modeText) || map.TryGetValue("--mode", out modeText))
+            {
+                if (!Enum.TryParse<CodeGeneratorMode>(modeText, out mode))
+                    throw new ArgumentException("Mode missing, expect -m|--mode Controllers|,|Logs");
+            }
 
-            var generator = new ControllerGenerator(path, output, nameSpace);
+            var generator = new CodeGenerator(path, output, nameSpace);
+            generator.Mode = mode;
             generator.Generate();
             generator.GetUnits(true);
 

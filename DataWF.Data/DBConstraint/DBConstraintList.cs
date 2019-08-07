@@ -25,9 +25,9 @@ namespace DataWF.Data
 {
     public class DBConstraintList<T> : DBTableItemList<T> where T : DBConstraint, new()
     {
-        public static readonly Invoker<T, string> ColumnNameInvoker = new Invoker<T, string>(
+        public static readonly Invoker<T, string> ColumnNameInvoker = new ActionInvoker<T, string>(
             nameof(DBConstraint.ColumnName), p => p.ColumnName, (p, v) => p.ColumnName = v);
-        public static readonly Invoker<T, string> ValueInvoker = new Invoker<T, string>(
+        public static readonly Invoker<T, string> ValueInvoker = new ActionInvoker<T, string>(
             nameof(DBConstraint.Value), p => p.Value, (p, v) => p.Value = v);
         public DBConstraintList(DBTable table) : base(table)
         {

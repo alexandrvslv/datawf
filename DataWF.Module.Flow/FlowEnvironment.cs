@@ -59,7 +59,7 @@ namespace DataWF.Module.Flow
 
         public static void OnDBRowChanged(DBItemEventArgs arg)
         {
-            if (arg.Item.Table == UserLog.DBTable) //|| arg.Row.Table == FlowEnvir.Config.Document.Table)
+            if (arg.Item.Table == UserReg.DBTable) //|| arg.Row.Table == FlowEnvir.Config.Document.Table)
                 return;
 
             if (!(arg.Item.Table is IDBVirtualTable))

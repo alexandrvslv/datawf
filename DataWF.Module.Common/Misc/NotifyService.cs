@@ -120,7 +120,7 @@ namespace DataWF.Module.Common
         {
             var item = arg.Item;
 
-            if (!(item is UserLog) && !(item is DBLogItem) && item.Table.Type == DBTableType.Table && item.Table.IsLoging)
+            if (!(item is UserReg) && !(item is DBLogItem) && item.Table.Type == DBTableType.Table && item.Table.IsLoging)
             {
                 var type = DBLogType.None;
                 if ((arg.State & DBUpdateState.Delete) == DBUpdateState.Delete)

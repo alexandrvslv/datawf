@@ -10,7 +10,7 @@ namespace DataWF.Common
     /// </summary>
     public class LocaleImageList : SelectableList<LocaleImage>
     {
-        static readonly Invoker<LocaleImage, string> keyInvoker = new Invoker<LocaleImage, string>(nameof(LocaleImage.Key), items => items.Key);
+        static readonly Invoker<LocaleImage, string> keyInvoker = new ActionInvoker<LocaleImage, string>(nameof(LocaleImage.Key), items => items.Key);
         /// <summary>
         /// Initializes a new instance of the <see cref="Dwf.Tool.LocaleImageList"/> class.
         /// </summary>

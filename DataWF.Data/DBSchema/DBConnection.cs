@@ -17,7 +17,7 @@ namespace DataWF.Data
 {
     public class DBConnectionList : SelectableList<DBConnection>
     {
-        static readonly Invoker<DBConnection, string> nameInvoker = new Invoker<DBConnection, string>(nameof(DBConnection.Name), (item) => item.Name);
+        static readonly Invoker<DBConnection, string> nameInvoker = new ActionInvoker<DBConnection, string>(nameof(DBConnection.Name), (item) => item.Name);
 
         public DBConnectionList()
         {

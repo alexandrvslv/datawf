@@ -9,8 +9,8 @@ namespace DataWF.Web.Common
     public class WebNotifyConnection : DefaultItem, IDisposable
     {
         private static uint IdSequence = 0;
-        public static readonly Invoker<WebNotifyConnection, WebSocket> SocketInvoker = new Invoker<WebNotifyConnection, WebSocket>(nameof(Socket), (p) => p.Socket, (p, v) => p.Socket = v);
-        public static readonly Invoker<WebNotifyConnection, User> UserInvoker = new Invoker<WebNotifyConnection, User>(nameof(User), (p) => p.User, (p, v) => p.User = v);
+        public static readonly Invoker<WebNotifyConnection, WebSocket> SocketInvoker = new ActionInvoker<WebNotifyConnection, WebSocket>(nameof(Socket), (p) => p.Socket, (p, v) => p.Socket = v);
+        public static readonly Invoker<WebNotifyConnection, User> UserInvoker = new ActionInvoker<WebNotifyConnection, User>(nameof(User), (p) => p.User, (p, v) => p.User = v);
 
         public WebNotifyConnection()
         {

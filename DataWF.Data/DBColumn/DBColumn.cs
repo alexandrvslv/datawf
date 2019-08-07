@@ -27,6 +27,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Xml.Serialization;
 
@@ -84,6 +85,7 @@ namespace DataWF.Data
         protected DBColumnTypes ctype = DBColumnTypes.Default;
         protected string gname;
         protected string property;
+        protected string referenceProperty;
         protected string culture;
         protected string btrue;
         protected string bfalse;
@@ -95,6 +97,9 @@ namespace DataWF.Data
         //private Dictionary<int, object> tags;
         private ConcurrentDictionary<int, object> olds;
         private DBLogColumn logColumn;
+        private PropertyInfo propertyInfo;
+        private IInvoker propertyInvoker;
+        private PropertyInfo referencePropertyInfo;
         private const int bufferSize = 4048;
 
         #endregion
@@ -123,9 +128,44 @@ namespace DataWF.Data
             ReferenceTable = reference;
         }
 
-        public override string ToString()
+        [Browsable(false), XmlIgnore, JsonIgnore]
+        public Dictionary<Type, string> DefaultValues { get; set; }
+
+        [Browsable(false), XmlIgnore, JsonIgnore]
+        public virtual PropertyInfo PropertyInfo
         {
-            return base.ToString();
+            get => propertyInfo;
+            set
+            {
+                if (propertyInfo != value)
+                {
+                    propertyInfo = value;
+                    if (propertyInfo != null)
+                    {
+                        if (Property == null)
+                            Property = propertyInfo.Name;
+                        if (PropertyInvoker == this && Property == propertyInfo.Name)
+                        {
+                            PropertyInvoker = EmitInvoker.Initialize(propertyInfo, true);
+                        }
+                    }
+                    OnPropertyChanged(nameof(PropertyInfo));
+                }
+            }
+        }
+
+        [Browsable(false), XmlIgnore, JsonIgnore]
+        public virtual IInvoker PropertyInvoker
+        {
+            get => propertyInvoker ?? this;
+            set
+            {
+                if (propertyInvoker != value)
+                {
+                    propertyInvoker = value;
+                    OnPropertyChanged(nameof(PropertyInvoker));
+                }
+            }
         }
 
         [Browsable(false)]
@@ -138,6 +178,42 @@ namespace DataWF.Data
                 {
                     property = value;
                     OnPropertyChanged(nameof(Property));
+                }
+            }
+        }
+
+        [Browsable(false), XmlIgnore, JsonIgnore]
+        public virtual PropertyInfo ReferencePropertyInfo
+        {
+            get => referencePropertyInfo;
+            set
+            {
+                if (referencePropertyInfo != value)
+                {
+                    referencePropertyInfo = value;
+                    ReferenceProperty = value?.Name;
+                    if (referencePropertyInfo != null && ReferencePropertyInvoker == null)
+                    {
+                        ReferencePropertyInvoker = EmitInvoker.Initialize(referencePropertyInfo, true);
+                    }
+                    OnPropertyChanged(nameof(ReferencePropertyInfo));
+                }
+            }
+        }
+
+        [Browsable(false), XmlIgnore, JsonIgnore]
+        public virtual IInvoker ReferencePropertyInvoker { get; set; }
+
+        [Browsable(false)]
+        public virtual string ReferenceProperty
+        {
+            get { return referenceProperty; }
+            set
+            {
+                if (referenceProperty != value)
+                {
+                    referenceProperty = value;
+                    OnPropertyChanged(nameof(ReferenceProperty));
                 }
             }
         }
@@ -783,8 +859,6 @@ namespace DataWF.Data
             get { return (Keys & DBColumnKeys.FileLOB) == DBColumnKeys.FileLOB; }
         }
 
-        [JsonIgnore, XmlIgnore]
-        public ColumnAttributeCache Attribute { get; internal set; }
 
         [JsonIgnore, XmlIgnore]
         public DBLogColumn LogColumn => logColumn ?? (logColumn = Table?.LogTable?.GetLogColumn(this));
@@ -891,13 +965,16 @@ namespace DataWF.Data
 
         public object GetValue(DBItem target)
         {
-            return Pull != null ? Pull.Get(target.block, target.blockIndex) :
-                TypeHelper.IsBaseType(target.GetType(), Attribute.PropertyInvoker.TargetType) ? Attribute.PropertyInvoker.GetValue(target) : null;
+            return Pull != null ? Pull.Get(target.block, target.blockIndex)
+                : PropertyInvoker == this || !TypeHelper.IsBaseType(target.GetType(), PropertyInvoker.TargetType) ? null
+                : PropertyInvoker.GetValue(target);
         }
 
         public T GetValue<T>(DBItem target)
         {
-            return Pull != null ? Pull.GetValue<T>(target.block, target.blockIndex) : (T)Attribute.PropertyInvoker.GetValue(target);
+            return Pull != null ? Pull.GetValue<T>(target.block, target.blockIndex)
+                : PropertyInvoker == this || !TypeHelper.IsBaseType(target.GetType(), PropertyInvoker.TargetType) ? default(T)
+                : (T)PropertyInvoker.GetValue(target);
         }
 
         public object GetValue(object target)
@@ -913,7 +990,7 @@ namespace DataWF.Data
             }
             else
             {
-                Attribute.PropertyInvoker.SetValue(target, value);
+                PropertyInvoker.SetValue(target, value);
             }
         }
 
@@ -925,7 +1002,7 @@ namespace DataWF.Data
             }
             else
             {
-                Attribute.PropertyInvoker.SetValue(target, value);
+                PropertyInvoker.SetValue(target, value);
             }
         }
 
@@ -1063,5 +1140,12 @@ namespace DataWF.Data
         {
             throw new NotImplementedException();
         }
+
+        public override string ToString()
+        {
+            return base.ToString();
+        }
+
+
     }
 }

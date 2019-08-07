@@ -29,12 +29,12 @@ namespace DataWF.Module.CommonGui
 
             toolMode.DropDownItems.AddRange(new[] { toolModeGroup, toolModeUser });
 
-            toolTypeAuthorization = new ToolMenuItem() { Checked = true, Name = "Authorization", Tag = UserLogType.Authorization };
-            toolTypePassword = new ToolMenuItem { Checked = true, Name = "Password", Tag = UserLogType.Password };
-            toolTypeStart = new ToolMenuItem { Checked = true, Name = "Start", Tag = UserLogType.Start };
-            toolTypeStop = new ToolMenuItem { Checked = true, Name = "Stop", Tag = UserLogType.Stop };
-            toolTypeProcedure = new ToolMenuItem { Checked = true, Name = "Procedure", Tag = UserLogType.Execute };
-            toolTypeTransaction = new ToolMenuItem { Checked = true, Name = "Transaction", Tag = UserLogType.Transaction };
+            toolTypeAuthorization = new ToolMenuItem() { Checked = true, Name = "Authorization", Tag = UserRegType.Authorization };
+            toolTypePassword = new ToolMenuItem { Checked = true, Name = "Password", Tag = UserRegType.Password };
+            toolTypeStart = new ToolMenuItem { Checked = true, Name = "Start", Tag = UserRegType.Start };
+            toolTypeStop = new ToolMenuItem { Checked = true, Name = "Stop", Tag = UserRegType.Stop };
+            toolTypeProcedure = new ToolMenuItem { Checked = true, Name = "Procedure", Tag = UserRegType.Execute };
+            toolTypeTransaction = new ToolMenuItem { Checked = true, Name = "Transaction", Tag = UserRegType.Transaction };
 
             toolType = new ToolDropDown(
                 toolTypeAuthorization,
@@ -58,7 +58,7 @@ namespace DataWF.Module.CommonGui
 
         protected override void SelectData()
         {
-            if (list.SelectedItem is UserLog log)
+            if (list.SelectedItem is UserReg log)
             {
                 detailList.ListSource = log.Items;
                 detailRow.FieldSource = log;
@@ -71,15 +71,15 @@ namespace DataWF.Module.CommonGui
 
         public override void UpdateFilter()
         {
-            if (filter is User || filter is UserGroup || filter is UserLog)
+            if (filter is User || filter is UserGroup || filter is UserReg)
             {
-                if (!(list.ListSource is DBTableView<UserLog> view))
+                if (!(list.ListSource is DBTableView<UserReg> view))
                 {
                     if (list.ListSource is IDBTableView tableView)
                     {
                         tableView.Dispose();
                     }
-                    list.ListSource = view = new DBTableView<UserLog>((string)null, DBViewKeys.Empty);
+                    list.ListSource = view = new DBTableView<UserReg>((string)null, DBViewKeys.Empty);
                 }
                 var query = view.Query;
 
@@ -88,27 +88,27 @@ namespace DataWF.Module.CommonGui
                 {
                     if (toolItem.Checked)
                     {
-                        f.Add((int)(UserLogType)toolItem.Tag);
+                        f.Add((int)(UserRegType)toolItem.Tag);
                     }
                 }
-                query.BuildPropertyParam(nameof(UserLog.LogType), CompareType.In, f);
+                query.BuildPropertyParam(nameof(UserReg.RegType), CompareType.In, f);
 
                 if (Date != null)
                 {
-                    query.BuildPropertyParam(nameof(UserLog.DateCreate), CompareType.GreaterOrEqual, Date.Min);
-                    query.BuildPropertyParam(nameof(UserLog.DateCreate), CompareType.LessOrEqual, Date.Max.AddDays(1));
+                    query.BuildPropertyParam(nameof(UserReg.DateCreate), CompareType.GreaterOrEqual, Date.Min);
+                    query.BuildPropertyParam(nameof(UserReg.DateCreate), CompareType.LessOrEqual, Date.Max.AddDays(1));
                 }
                 if (filter is User && mode == DataLogMode.User)
                 {
-                    query.BuildPropertyParam(nameof(UserLog.UserId), CompareType.Equal, filter.PrimaryId);
+                    query.BuildPropertyParam(nameof(UserReg.UserId), CompareType.Equal, filter.PrimaryId);
                 }
                 else if (filter is UserGroup && mode == DataLogMode.Group)
                 {
-                    query.BuildPropertyParam(nameof(UserLog.UserId), CompareType.In, ((UserGroup)filter).GetUsers().ToList());
+                    query.BuildPropertyParam(nameof(UserReg.UserId), CompareType.In, ((UserGroup)filter).GetUsers().ToList());
                 }
-                else if (filter is UserLog)
+                else if (filter is UserReg)
                 {
-                    query.BuildPropertyParam(nameof(UserLog.ParentId), CompareType.Equal, filter.PrimaryId);
+                    query.BuildPropertyParam(nameof(UserReg.ParentId), CompareType.Equal, filter.PrimaryId);
                 }
             }
             base.UpdateFilter();

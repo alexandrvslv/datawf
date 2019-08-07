@@ -5,7 +5,7 @@ using System.Reflection.Emit;
 
 namespace DataWF.Common
 {
-    public class PropertyInvoker<T, V> : Invoker<T, V>
+    public class PropertyInvoker<T, V> : ActionInvoker<T, V>
     {
         public PropertyInvoker(PropertyInfo info)
             : base(info.Name, GetExpressionGet(info), info.CanWrite ? GetExpressionSet(info) : null)

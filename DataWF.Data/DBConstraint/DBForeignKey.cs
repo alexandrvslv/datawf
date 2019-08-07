@@ -1,6 +1,8 @@
-﻿using Newtonsoft.Json;
+﻿using DataWF.Common;
+using Newtonsoft.Json;
 using System;
 using System.ComponentModel;
+using System.Reflection;
 using System.Xml.Serialization;
 
 namespace DataWF.Data
@@ -20,6 +22,12 @@ namespace DataWF.Data
             Column = column;
             Reference = value.PrimaryKey;
         }
+
+        [Browsable(false), XmlIgnore, JsonIgnore]
+        public PropertyInfo PropertyInfo { get; set; }
+
+        [Browsable(false), XmlIgnore, JsonIgnore]
+        public IInvoker PropertyInvoker { get; set; }
 
         public string Property
         {

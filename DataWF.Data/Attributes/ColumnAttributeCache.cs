@@ -35,25 +35,23 @@ namespace DataWF.Data
             Attribute = columnAttribute;
             Table = table;
             Culture = culture;
+            GroupName = columnAttribute.GroupName ?? columnAttribute.ColumnName;
             PropertyName =
                 DisplayName = $"{property.Name}{culture.TwoLetterISOLanguageName.ToUpperInvariant()}";
-            Property = property.DeclaringType.GetProperty(PropertyName) ?? property;
+            PropertyInfo = property.DeclaringType.GetProperty(PropertyName) ?? property;
             ColumnName = $"{columnAttribute.ColumnName}_{culture.TwoLetterISOLanguageName}";
-            GroupName = columnAttribute.GroupName ?? columnAttribute.ColumnName;
         }
 
         public ColumnAttributeCache(TableAttributeCache table, PropertyInfo property, ColumnAttribute columnAttribute)
         {
             Attribute = columnAttribute;
             Table = table;
-            Property = property;
+            PropertyInfo = property;
             PropertyName =
                 DisplayName = property.Name;
             ColumnName = columnAttribute.ColumnName;
             GroupName = columnAttribute.GroupName;
         }
-
-        public Dictionary<Type, string> DefaultValues { get; set; }
 
         public ColumnAttribute Attribute { get; set; }
 
@@ -76,20 +74,19 @@ namespace DataWF.Data
 
         public string GroupName { get; set; }
 
-        public PropertyInfo Property { get; set; }
-
-        public IInvoker PropertyInvoker { get; set; }
+        public PropertyInfo PropertyInfo { get; set; }
 
         public string PropertyName { get; set; }
 
         public PropertyInfo ReferenceProperty { get; set; }
 
-        public IInvoker ReferencePropertyInvoker { get; set; }
-
         public string ColumnName { get; set; }
 
         public bool IsPrimaryKey => (Attribute.Keys & DBColumnKeys.Primary) == DBColumnKeys.Primary;
+
         public bool IsTypeKey => (Attribute.Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType;
+
+        public Dictionary<Type, string> DefaultValues { get; set; }
 
         public Type GetDataType()
         {
@@ -123,11 +120,12 @@ namespace DataWF.Data
                 Column = CreateColumn(ColumnName);
             }
             if (Column.DisplayName.Equals(Column.Name, StringComparison.Ordinal)
-                || (Column.DisplayName.Equals(Property.Name, StringComparison.Ordinal) && ReferenceProperty != null))
+                || (Column.DisplayName.Equals(PropertyInfo.Name, StringComparison.Ordinal) 
+                && ReferenceProperty != null))
             {
                 Column.DisplayName = DisplayName;
             }
-            Column.Attribute = this;
+
             if (Attribute.DBDataType != DBDataType.None)
             {
                 Column.DBDataType = Attribute.DBDataType;
@@ -137,12 +135,13 @@ namespace DataWF.Data
             Column.Scale = Attribute.Scale;
             Column.ColumnType = Attribute.ColumnType;
             Column.Keys = Attribute.Keys;
-            Column.Property = PropertyName;
             Column.Culture = Culture;
             Column.GroupName = GroupName;
-            PropertyInvoker = PropertyName == Property.Name ? EmitInvoker.Initialize(Property, true) : Column;
-            ReferencePropertyInvoker = ReferenceProperty == null ? null : EmitInvoker.Initialize(ReferenceProperty, true);
-            if (DefaultValues != null && DefaultValues.TryGetValue(Property.DeclaringType, out var defaultValue))
+            Column.Property = PropertyName;
+            Column.PropertyInfo = PropertyInfo;
+            Column.ReferencePropertyInfo = ReferenceProperty;
+            Column.DefaultValues = DefaultValues;
+            if (DefaultValues != null && DefaultValues.TryGetValue(PropertyInfo.DeclaringType, out var defaultValue))
             {
                 Column.DefaultValue = defaultValue;
             }

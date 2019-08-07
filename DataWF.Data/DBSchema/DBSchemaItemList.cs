@@ -29,7 +29,7 @@ namespace DataWF.Data
 {
     public class DBSchemaItemList<T> : SelectableList<T> where T : DBSchemaItem
     {
-        static readonly Invoker<T, string> ItemNameInvoker = new Invoker<T, string>(nameof(DBSchemaItem.Name), (item) => item.Name);
+        static readonly Invoker<T, string> ItemNameInvoker = new ActionInvoker<T, string>(nameof(DBSchemaItem.Name), (item) => item.Name);
 
         public DBSchemaItemList()
             : this(null)

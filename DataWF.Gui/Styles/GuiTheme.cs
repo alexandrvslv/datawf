@@ -10,7 +10,7 @@ namespace DataWF.Gui
 {
     public class GuiTheme : NamedList<CellStyle>, INamed
     {
-        static readonly Invoker<CellStyle, string> nameInvoker = new Invoker<CellStyle, string>(nameof(CellStyle.Name), (item) => item.Name);
+        static readonly Invoker<CellStyle, string> nameInvoker = new ActionInvoker<CellStyle, string>(nameof(CellStyle.Name), (item) => item.Name);
 
         public GuiTheme()
         {

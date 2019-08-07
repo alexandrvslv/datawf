@@ -6,10 +6,10 @@ namespace DataWF.Gui
 {
     public class LayoutNodeInfo : IDisposable
     {
-        static readonly Invoker<Node, Category> categoryInvoker = new Invoker<Node, Category>(nameof(Node.Category),
+        static readonly Invoker<Node, Category> categoryInvoker = new ActionInvoker<Node, Category>(nameof(Node.Category),
                                                       (item) => item.Category,
                                                       (item, value) => item.Category = value);
-        static readonly Invoker<Node, int> orderInvoker = new Invoker<Node, int>(nameof(Node.Order),
+        static readonly Invoker<Node, int> orderInvoker = new ActionInvoker<Node, int>(nameof(Node.Order),
                                                  (item) => item.Order,
                                                  (item, value) => item.Order = value);
         protected LayoutNodeList<Node> nodes;

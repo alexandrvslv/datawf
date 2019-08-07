@@ -10,7 +10,7 @@ namespace DataWF.Module.FlowGui
 {
     public class DocumentFilterView : VPanel
     {
-        static readonly Invoker<TableItemNode, int> countInvoker = new Invoker<TableItemNode, int>(nameof(TableItemNode.Count), p => p.Count);
+        static readonly Invoker<TableItemNode, int> countInvoker = new ActionInvoker<TableItemNode, int>(nameof(TableItemNode.Count), p => p.Count);
 
         private ToolSearchEntry toolFilter;
 

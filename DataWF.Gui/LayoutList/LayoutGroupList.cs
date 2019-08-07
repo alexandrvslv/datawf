@@ -16,7 +16,7 @@ namespace DataWF.Gui
 
     public class LayoutGroupList : ICollection<LayoutGroup>
     {
-        static readonly Invoker<LayoutGroup, string> textValueInvoker = new Invoker<LayoutGroup, string>(nameof(LayoutGroup.TextValue), item => item.TextValue, (item, value) => item.TextValue = value);
+        static readonly Invoker<LayoutGroup, string> textValueInvoker = new ActionInvoker<LayoutGroup, string>(nameof(LayoutGroup.TextValue), item => item.TextValue, (item, value) => item.TextValue = value);
         private SelectableList<LayoutGroup> items;
         private ILayoutList list;
 

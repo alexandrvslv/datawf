@@ -30,13 +30,6 @@ namespace DataWF.Data
 
     public class DBLogTable<T> : DBTable<T>, IDBLogTable where T : DBLogItem, new()
     {
-        public static readonly string TypeName = "logtype";
-        public static readonly string IdName = "logid";
-        public static readonly string DateName = "datecreate";
-        public static readonly string StateName = "status_id";
-        public static readonly string UserLogName = "userlog_id";
-        public static readonly string ItemTypeName = "item_type";
-
         private DBTable baseTable;
         private DBColumn basekey = DBColumn.EmptyKey;
         private DBColumn userLogkey = DBColumn.EmptyKey;
@@ -67,7 +60,7 @@ namespace DataWF.Data
             {
                 if (userLogkey == DBColumn.EmptyKey)
                 {
-                    userLogkey = Columns[UserLogName];
+                    userLogkey = Columns[DBLogItem.UserLogKeyName];
                 }
                 return userLogkey;
             }
@@ -94,25 +87,9 @@ namespace DataWF.Data
                 var seqName = value.SequenceName + "_log";
                 Sequence = Schema.Sequences[seqName] ?? new DBSequence() { Name = seqName };
                 DisplayName = value.DisplayName + " Log";
-
-                var idColumn = Columns[IdName];
-                if (idColumn == null) Columns.Add(new DBColumn() { Name = IdName, DataType = typeof(long), Keys = DBColumnKeys.Primary | DBColumnKeys.Notnull });
-                else { idColumn.DataType = typeof(long); idColumn.Keys = DBColumnKeys.Primary | DBColumnKeys.Notnull; }
-                var dateColumn = Columns[DateName];
-                if (dateColumn == null) Columns.Add(new DBColumn() { Name = DateName, DataType = typeof(DateTime), Keys = DBColumnKeys.Date });
-                else { dateColumn.DataType = typeof(DateTime); dateColumn.Keys = DBColumnKeys.Date; }
-                var typeColumn = Columns[TypeName];
-                if (typeColumn == null) Columns.Add(new DBColumn() { Name = TypeName, DataType = typeof(DBLogType), Keys = DBColumnKeys.ElementType });
-                else { typeColumn.DataType = typeof(DBLogType); typeColumn.Keys = DBColumnKeys.ElementType; }
-                var stateColumn = Columns[StateName];
-                if (stateColumn == null) Columns.Add(new DBColumn() { Name = StateName, DataType = typeof(DBStatus), Keys = DBColumnKeys.State, DefaultValue = "2" });
-                else { stateColumn.DataType = typeof(DBStatus); stateColumn.Keys = DBColumnKeys.State; stateColumn.DefaultValue = "2"; }
-                var userColumn = Columns[UserLogName];
-                if (userColumn == null) Columns.Add(new DBColumn() { Name = UserLogName, DataType = typeof(long) });
-                else { userColumn.DataType = typeof(long); userColumn.Keys = DBColumnKeys.None; }
-                var itemTypeColumn = Columns[ItemTypeName];
-                if (itemTypeColumn == null) Columns.Add(new DBColumn() { Name = ItemTypeName, DataType = typeof(int), Keys = DBColumnKeys.ItemType, DefaultValue = "0" });
-                else { itemTypeColumn.DataType = typeof(int); itemTypeColumn.Keys = DBColumnKeys.ItemType; itemTypeColumn.DefaultValue = "0"; }
+                var tableGenerator = new TableAttributeCache() { Schema = schema, Table = this };
+                tableGenerator.Initialize(typeof(DBLogItem));
+                tableGenerator.GenerateColumns();
 
                 foreach (var column in value.Columns)
                 {
@@ -131,6 +108,11 @@ namespace DataWF.Data
                         }
                     }
                 }
+                foreach (var entry in value.ItemTypes)
+                {
+                    var logEquevalent = TypeHelper.ParseType(entry.Value.Type.Name + "Log");
+                    ItemTypes[entry.Key] = new DBItemType { Type = logEquevalent ?? typeof(DBLogItem) };
+                }
             }
         }
 
@@ -146,6 +128,13 @@ namespace DataWF.Data
             return ParseColumn(column.Name + "_log") as DBLogColumn;
         }
 
+        public DBColumn ParseLogProperty(string name, ref DBColumn column)
+        {
+            if (column != DBColumn.EmptyKey)
+                return column;
+            return column = BaseTable?.ParseProperty(name)?.LogColumn;
+        }
+
         public IEnumerable<DBLogColumn> GetLogColumns()
         {
             foreach (var column in Columns)
@@ -155,10 +144,6 @@ namespace DataWF.Data
                     yield return (DBLogColumn)column;
                 }
             }
-        }
-        public override DBItem NewItem(DBUpdateState state, bool def, int typeIndex)
-        {
-            return NewItem(state, def);
         }
 
         public override async Task<bool> SaveItem(DBItem item, DBTransaction transaction)

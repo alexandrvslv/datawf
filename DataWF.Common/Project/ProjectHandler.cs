@@ -9,7 +9,7 @@ namespace DataWF.Common
     {
         public ProjectHandleList()
         {
-            Indexes.Add(new Invoker<ProjectHandler, string>(nameof(ProjectHandler.FileName),
+            Indexes.Add(new ActionInvoker<ProjectHandler, string>(nameof(ProjectHandler.FileName),
                                                                   (item) => item.FileName));
         }
     }

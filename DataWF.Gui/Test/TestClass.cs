@@ -46,7 +46,7 @@ namespace DataWF.TestGui
             var paramDefault = new object[] { };
             var paramParam = new object[] { 12, "1dasdas" };
 
-            var actionBinder = new Invoker<TestClass, int>(
+            var actionBinder = new ActionInvoker<TestClass, int>(
                 nameof(TestClass.Order),
                 (item) => item.Order,
                 (item, value) => item.Order = value);

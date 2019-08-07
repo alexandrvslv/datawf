@@ -24,11 +24,11 @@ namespace DataWF.Data
 {
     public class DBForeignList : DBConstraintList<DBForeignKey>
     {
-        public static readonly Invoker<DBForeignKey, string> ReferenceNameInvoker = new Invoker<DBForeignKey, string>(nameof(DBForeignKey.ReferenceName),
+        public static readonly Invoker<DBForeignKey, string> ReferenceNameInvoker = new ActionInvoker<DBForeignKey, string>(nameof(DBForeignKey.ReferenceName),
             p => p.ReferenceName);
-        public static readonly Invoker<DBForeignKey, string> PropertyInvoker = new Invoker<DBForeignKey, string>(nameof(DBForeignKey.Property),
+        public static readonly Invoker<DBForeignKey, string> PropertyInvoker = new ActionInvoker<DBForeignKey, string>(nameof(DBForeignKey.Property),
             p => p.Property);
-        public static readonly Invoker<DBForeignKey, string> ReferenceTableNameInvoker = new Invoker<DBForeignKey, string>(nameof(DBForeignKey.ReferenceTableName),
+        public static readonly Invoker<DBForeignKey, string> ReferenceTableNameInvoker = new ActionInvoker<DBForeignKey, string>(nameof(DBForeignKey.ReferenceTableName),
             p => p.ReferenceTableName);
         
         public DBForeignList(DBTable table) : base(table)

@@ -75,7 +75,7 @@ namespace DataWF.Data
         private static DBConnectionList connections = new DBConnectionList();
         private static DBSchemaList schems = new DBSchemaList();
 
-        public static Invoker<DBSchemaChange, DBSchemaItem> DBSchemaChangeItemInvoker = new Invoker<DBSchemaChange, DBSchemaItem>(
+        public static ActionInvoker<DBSchemaChange, DBSchemaItem> DBSchemaChangeItemInvoker = new ActionInvoker<DBSchemaChange, DBSchemaItem>(
             nameof(DBSchemaChange.Item), p => p.Item, (p, v) => p.Item = v);
         public static SelectableList<DBSchemaChange> Changes = new SelectableList<DBSchemaChange>();
 

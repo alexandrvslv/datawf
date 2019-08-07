@@ -88,7 +88,7 @@ namespace DataWF.Module.CommonGui
             {
                 if (arg.Columns != null && arg.Columns.Contains(User.DBTable.ParseProperty(nameof(User.Password))))
                 {
-                    await UserLog.LogUser(User, UserLogType.Password, "Temporary Password");
+                    await UserReg.LogUser(User, UserRegType.Password, "Temporary Password");
                 }
             }
         }

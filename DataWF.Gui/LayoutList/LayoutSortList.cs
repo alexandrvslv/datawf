@@ -14,7 +14,7 @@ namespace DataWF.Gui
             }
         }
 
-        static readonly Invoker<LayoutSort, string> columnNameInvoker = new Invoker<LayoutSort, string>(nameof(LayoutSort.ColumnName), (item) => item.ColumnName);
+        static readonly Invoker<LayoutSort, string> columnNameInvoker = new ActionInvoker<LayoutSort, string>(nameof(LayoutSort.ColumnName), (item) => item.ColumnName);
 
         public LayoutSortList()
         {

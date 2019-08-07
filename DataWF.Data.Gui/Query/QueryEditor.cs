@@ -184,7 +184,7 @@ namespace DataWF.Data.Gui
                 Name = nameof(QParam.Group),
                 Width = 80,
                 Visible = false,
-                Invoker = new Invoker<QParam, QParam>(nameof(QParam.Group),
+                Invoker = new ActionInvoker<QParam, QParam>(nameof(QParam.Group),
                                                       (item) => item.Group,
                                                       (item, value) => item.Group = value),
                 CellEditor = new CellEditorQueryGroup() { DataType = typeof(QParam) }
@@ -193,7 +193,7 @@ namespace DataWF.Data.Gui
             {
                 Name = nameof(QParam.Order),
                 Visible = false,
-                Invoker = new Invoker<QParam, int>(nameof(QParam.Order),
+                Invoker = new ActionInvoker<QParam, int>(nameof(QParam.Order),
                                                    (item) => item.Order,
                                                    (item, value) => item.Order = value)
             });
@@ -201,7 +201,7 @@ namespace DataWF.Data.Gui
             {
                 Name = nameof(QParam.Query),
                 Visible = false,
-                Invoker = new Invoker<QParam, IQuery>(nameof(QParam.Query),
+                Invoker = new ActionInvoker<QParam, IQuery>(nameof(QParam.Query),
                                                    (item) => item.Query)
                 //(item, value) => item.Query = value
             });
@@ -209,7 +209,7 @@ namespace DataWF.Data.Gui
             {
                 Name = nameof(QParam.Logic),
                 Width = 70,
-                Invoker = new Invoker<QParam, LogicType>(nameof(QParam.Logic),
+                Invoker = new ActionInvoker<QParam, LogicType>(nameof(QParam.Logic),
                                                           (item) => item.Logic,
                                                           (item, value) => item.Logic = value),
                 CellEditor = new CellEditorList()
@@ -227,7 +227,7 @@ namespace DataWF.Data.Gui
                 Name = nameof(QParam.Column),
                 Width = 80,
                 Visible = false,
-                Invoker = new Invoker<QParam, DBColumn>(nameof(QParam.Column),
+                Invoker = new ActionInvoker<QParam, DBColumn>(nameof(QParam.Column),
                                                          (item) => item.Column,
                                                          (item, value) => item.Column = value),
                 CellEditor = new CellEditorList() { DataType = typeof(DBColumn) }
@@ -236,7 +236,7 @@ namespace DataWF.Data.Gui
             {
                 Name = nameof(QParam.Comparer),
                 Width = 80,
-                Invoker = new Invoker<QParam, CompareType>(nameof(QParam.Comparer),
+                Invoker = new ActionInvoker<QParam, CompareType>(nameof(QParam.Comparer),
                                                         (item) => item.Comparer,
                                                         (item, value) => item.Comparer = value),
                 CellEditor = new CellEditorList()
@@ -261,7 +261,7 @@ namespace DataWF.Data.Gui
             {
                 Name = nameof(QParam.Value),
                 Width = 250,
-                Invoker = new Invoker<QParam, object>(nameof(QParam.Value),
+                Invoker = new ActionInvoker<QParam, object>(nameof(QParam.Value),
                                                            (item) => item.Value,
                                                            (item, value) => item.Value = value)
             });

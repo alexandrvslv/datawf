@@ -66,7 +66,7 @@ namespace DataWF.Module.FlowGui
                 {
                     Name = "View",
                     Width = 60,
-                    Invoker = new Invoker<TableItemNode, bool?>("View",
+                    Invoker = new ActionInvoker<TableItemNode, bool?>("View",
                                                             (item) => item.Access?.Get(Group).Read,
                                                             (item, value) => CheckSave(item, AccessType.Read, value))
                 },
@@ -74,7 +74,7 @@ namespace DataWF.Module.FlowGui
                 {
                     Name = "Edit",
                     Width = 60,
-                    Invoker = new Invoker<TableItemNode, bool?>("Edit",
+                    Invoker = new ActionInvoker<TableItemNode, bool?>("Edit",
                                                             (item) => item.Access?.Get(Group).Update,
                                                             (item, value) => CheckSave(item, AccessType.Update, value))
                 },
@@ -82,7 +82,7 @@ namespace DataWF.Module.FlowGui
                 {
                     Name = "Create",
                     Width = 60,
-                    Invoker = new Invoker<TableItemNode, bool?>("Create",
+                    Invoker = new ActionInvoker<TableItemNode, bool?>("Create",
                                                             (item) => item.Access?.Get(Group).Create,
                                                             (item, value) => CheckSave(item, AccessType.Create, value))
                 },
@@ -90,7 +90,7 @@ namespace DataWF.Module.FlowGui
                 {
                     Name = "Delete",
                     Width = 60,
-                    Invoker = new Invoker<TableItemNode, bool?>("Delete",
+                    Invoker = new ActionInvoker<TableItemNode, bool?>("Delete",
                                                             (item) => item.Access?.Get(Group).Delete,
                                                             (item, value) => CheckSave(item, AccessType.Delete, value))
                 },
@@ -98,7 +98,7 @@ namespace DataWF.Module.FlowGui
                 {
                     Name = "Admin",
                     Width = 60,
-                    Invoker = new Invoker<TableItemNode, bool?>("Admin",
+                    Invoker = new ActionInvoker<TableItemNode, bool?>("Admin",
                                                             (item) => item.Access?.Get(Group).Admin,
                                                             (item, value) => CheckSave(item, AccessType.Admin, value))
                 },
@@ -106,7 +106,7 @@ namespace DataWF.Module.FlowGui
                 {
                     Name = "Accept",
                     Width = 60,
-                    Invoker = new Invoker<TableItemNode, bool?>("Accept",
+                    Invoker = new ActionInvoker<TableItemNode, bool?>("Accept",
                                                             (item) => item.Access?.Get(Group).Accept,
                                                             (item, value) => CheckSave(item, AccessType.Accept, value))
                 },
@@ -157,7 +157,7 @@ namespace DataWF.Module.FlowGui
             PackStart(bar, false, false);
             PackStart(map, true, true);
 
-            UserLog.RowLoged += FlowEnvirRowLoged;
+            UserReg.RowLoged += FlowEnvirRowLoged;
 
             Localize();
         }
@@ -166,7 +166,7 @@ namespace DataWF.Module.FlowGui
         {
             if (e.Item == userGroup && changes.Count > 0)
             {
-                e.Transaction.UserLog = sender as UserLog;
+                e.Transaction.UserLog = sender as UserReg;
                 foreach (var item in changes)
                 {
                     if (item != userGroup)
@@ -339,7 +339,7 @@ namespace DataWF.Module.FlowGui
 
         protected override void Dispose(bool disposing)
         {
-            UserLog.RowLoged -= FlowEnvirRowLoged;
+            UserReg.RowLoged -= FlowEnvirRowLoged;
             userGroup.PropertyChanged -= GroupPropertyChanged;
             base.Dispose(disposing);
         }

@@ -1,5 +1,5 @@
 ﻿/*
- DocumentData.cs
+ ColumnConfig.cs
  
  Author:
       Alexandr <alexandr_vslv@mail.ru>
@@ -18,27 +18,21 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using DataWF.Data;
+using System;
 
-namespace DataWF.Module.Flow
+namespace DataWF.Data
 {
-    public class DocumentDataLog : DBLogView
+    [AttributeUsage(AttributeTargets.Property)]
+    public class LogColumnAttribute : ColumnAttribute
     {
-        public DocumentDataLog()
+        public LogColumnAttribute()
         { }
 
-        public DocumentDataLog(DBLogItem logItem) : base(logItem)
+        public LogColumnAttribute(string baseName, string name) : base(name)
         {
-            BaseId = (long)logItem.BaseId;
-            DocumentId = logItem.GetValue<long?>(DocumentData.DocumentKey.LogColumn);
-            FileName = logItem.GetValue<string>(logItem.LogTable.FileNameKey);
+            BaseName = baseName;
         }
 
-        public long BaseId { get; set; }
-
-        public long? DocumentId { get; set; }
-
-        public string FileName { get; set; }
-
+        public string BaseName { get; }
     }
 }

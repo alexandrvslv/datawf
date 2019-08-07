@@ -22,10 +22,10 @@ using DataWF.Data;
 
 namespace DataWF.Module.Common
 {
-    public class UserLogList : DBTableView<UserLog>
+    public class UserLogList : DBTableView<UserReg>
     {
         public UserLogList(string filter)
-            : base(UserLog.DBTable, filter)
+            : base(UserReg.DBTable, filter)
         {
         }
 

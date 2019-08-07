@@ -1,5 +1,5 @@
 ﻿/*
- DBTable.cs
+ Account.cs
  
  Author:
       Alexandr <alexandr_vslv@mail.ru>
@@ -17,24 +17,15 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-using System.Collections.Generic;
-using DataWF.Common;
+using System;
 
 namespace DataWF.Data
 {
-
-    public abstract class DBUserLog : DBGroupItem, IUserLog
+    [AttributeUsage(AttributeTargets.Class, Inherited = false)]
+    public class LogItemTypeAttribute : ItemTypeAttribute
     {
-        [Column("unid", Keys = DBColumnKeys.Primary)]
-        public abstract long? Id { get; set; }
-
-        [Column("user_id", Keys = DBColumnKeys.View)]
-        public abstract int? UserId { get; set; }
-
-
-        public abstract DBUser DBUser { get; set; }
-
-        IUserIdentity IUserLog.UserIdentity => DBUser;
+        public LogItemTypeAttribute(int id) : base(id)
+        {
+        }
     }
 }

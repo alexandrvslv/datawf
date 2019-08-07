@@ -95,7 +95,7 @@ namespace DataWF.Common
 
         public TcpServer()
         {
-            clients.Indexes.Add(new Invoker<TcpSocket, string>($"{nameof(TcpSocket.Point)}.{nameof(object.ToString)}",
+            clients.Indexes.Add(new ActionInvoker<TcpSocket, string>($"{nameof(TcpSocket.Point)}.{nameof(object.ToString)}",
                                                                      (item) => item.Point.ToString()));
             TimeOut = TimeSpan.MinValue;
         }

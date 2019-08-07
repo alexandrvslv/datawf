@@ -30,6 +30,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -41,13 +42,15 @@ namespace DataWF.Data
 
     public abstract class DBTable : DBSchemaItem, IComparable, IDBTable
     {
-        private static Dictionary<Type, TableAttributeCache> cacheTables = new Dictionary<Type, TableAttributeCache>();
-        private static Dictionary<Type, ItemTypeAttributeCache> cacheItemTypes = new Dictionary<Type, ItemTypeAttributeCache>();
+        private static Dictionary<Type, DBTable> cacheTables = new Dictionary<Type, DBTable>();
+        private static Dictionary<Type, TableAttributeCache> cacheTableAttributes = new Dictionary<Type, TableAttributeCache>();
+        private static Dictionary<Type, ItemTypeAttributeCache> cacheItemTypeAttributes = new Dictionary<Type, ItemTypeAttributeCache>();
 
         public static void ClearAttributeCache()
         {
             cacheTables.Clear();
-            cacheItemTypes.Clear();
+            cacheTableAttributes.Clear();
+            cacheItemTypeAttributes.Clear();
         }
 
         public static TableAttributeCache GetTableAttributeInherit(Type type)
@@ -68,15 +71,20 @@ namespace DataWF.Data
 
         public static TableAttributeCache GetTableAttribute(Type type)
         {
-            if (!cacheTables.TryGetValue(type, out var table))
+            if (!cacheTableAttributes.TryGetValue(type, out var table))
             {
                 var tableAttribute = type.GetCustomAttribute<TableAttribute>(false);
-                if (tableAttribute != null)
+                if (tableAttribute is LogTableAttribute)
+                {
+                    table = new LogTableAttributeCache() { Attribute = tableAttribute };
+                    table.Initialize(type);
+                }
+                else if (tableAttribute is TableAttribute)
                 {
                     table = new TableAttributeCache() { Attribute = tableAttribute };
                     table.Initialize(type);
                 }
-                cacheTables[type] = table;
+                cacheTableAttributes[type] = table;
             }
             if (table == null)
             {
@@ -88,15 +96,20 @@ namespace DataWF.Data
 
         public static ItemTypeAttributeCache GetItemTypeAttribute(Type type)
         {
-            if (!cacheItemTypes.TryGetValue(type, out var itemType))
+            if (!cacheItemTypeAttributes.TryGetValue(type, out var itemType))
             {
                 var itemTypeAttribute = type.GetCustomAttribute<ItemTypeAttribute>(false);
-                if (itemTypeAttribute != null)
+                if (itemTypeAttribute is LogItemTypeAttribute)
+                {
+                    itemType = new LogItemTypeAttributeCache { Attribute = itemTypeAttribute };
+                    itemType.Initialize(type);
+                }
+                else if (itemTypeAttribute is ItemTypeAttribute)
                 {
                     itemType = new ItemTypeAttributeCache { Attribute = itemTypeAttribute };
                     itemType.Initialize(type);
                 }
-                cacheItemTypes[type] = itemType;
+                cacheItemTypeAttributes[type] = itemType;
             }
             return itemType;
         }
@@ -108,21 +121,28 @@ namespace DataWF.Data
 
         public static DBTable GetTable(Type type, DBSchema schema = null, bool generate = false)
         {
-            var tableAttribute = GetTableAttribute(type);
-            if (tableAttribute != null)
+            if (!cacheTables.TryGetValue(type, out var table))
             {
-                if (tableAttribute.Table == null && generate)
-                    tableAttribute.Generate(schema);
-                var itemAttribute = GetItemTypeAttribute(type);
-                if (itemAttribute != null)
+                var tableAttribute = GetTableAttribute(type);
+                if (tableAttribute != null)
                 {
-                    if (itemAttribute.Table == null && generate)
-                        itemAttribute.Generate(schema);
-                    return itemAttribute.Table;
+                    if (tableAttribute.Table == null && generate)
+                        tableAttribute.Generate(schema);
+                    var itemAttribute = GetItemTypeAttribute(type);
+                    if (itemAttribute != null)
+                    {
+                        if (itemAttribute.Table == null && generate)
+                            itemAttribute.Generate(schema);
+                        return cacheTables[type] = itemAttribute.Table;
+                    }
+                    return cacheTables[type] = tableAttribute.Table;
                 }
-                return tableAttribute.Table;
+                else
+                {
+                    cacheTables[type] = null;
+                }
             }
-            return null;
+            return table;
         }
 
         protected DBCommand dmlInsert;
@@ -206,8 +226,7 @@ namespace DataWF.Data
         public DBColumn ParseColumnProperty(string property)
         {
             return Columns[property]
-                ?? Columns.GetByProperty(property)
-                ?? Foreigns.GetByProperty(property)?.Column;
+                ?? ParseProperty(property);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -219,7 +238,7 @@ namespace DataWF.Data
         public DBColumn ParseProperty(string property)
         {
             return Columns.GetByProperty(property)
-                ?? Foreigns.GetByProperty(property)?.Column;
+                ?? Columns.GetByReferenceProperty(property);
         }
 
         [Browsable(false)]
@@ -934,7 +953,9 @@ namespace DataWF.Data
 
             if (!transaction.NoLogs && LogTable != null)
             {
-                args.LogItem = new DBLogItem(item);
+
+                args.LogItem = (DBLogItem)LogTable.NewItem(DBUpdateState.Insert, false, item.ItemType ?? 0);
+                args.LogItem.BaseItem = item;
                 DBService.OnLogItem(args);
                 await args.LogItem.Save(transaction.GetSubTransaction(LogTable.Connection));
             }
@@ -1059,7 +1080,17 @@ namespace DataWF.Data
         public virtual DBItem NewItem(DBUpdateState state, bool def, int typeIndex)
         {
             var type = GetItemType(typeIndex);
-            return (type?.Table ?? this).NewItem(state, def);
+            return type != null
+                ? NewItem(state, def, typeIndex, type.Type)
+                : NewItem(state, def);
+        }
+
+        public DBItem NewItem(DBUpdateState state, bool def, int typeIndex, Type type)
+        {
+            var item = (DBItem)FormatterServices.GetUninitializedObject(type);
+            item.Build(this, def, typeIndex);
+            item.update = state;
+            return item;
         }
 
         public IEnumerable<DBColumn> ParseColumns(ICollection<string> columns)
@@ -1518,11 +1549,38 @@ namespace DataWF.Data
             imageKey = DBColumn.EmptyKey;
         }
 
+        public IInvoker GetInvoker(string property)
+        {
+            var column = Columns.GetByProperty(property);
+            if (column != null)
+            {
+                return column.PropertyInvoker;
+            }
+
+            var reference = Foreigns.GetByProperty(property);
+            if (reference != null)
+            {
+                return reference.PropertyInvoker;
+            }
+
+            var refing = TableAttribute?.GetReferencingByProperty(property);
+            if (refing != null)
+            {
+                return refing.PropertyInvoker;
+            }
+
+            return null;
+        }
+
+
         public IDBLogTable GenerateLogTable()
         {
             if (LogTable == null)
             {
-                LogTable = new DBLogTable<DBLogItem> { BaseTable = this };
+                var genericType = TypeHelper.ParseType(ItemType.Type.Name + "Log");
+                var itemType = genericType ?? typeof(DBLogItem);
+                LogTable = (IDBLogTable)GetTable(itemType) ?? (IDBLogTable)EmitInvoker.CreateObject(typeof(DBLogTable<>).MakeGenericType(itemType));
+                LogTable.BaseTable = this;
                 LogTable.Schema.Tables.Add((DBTable)LogTable);
             }
             else

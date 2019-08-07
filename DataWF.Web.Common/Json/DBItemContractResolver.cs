@@ -27,7 +27,7 @@ namespace DataWF.Web.Common
         {
             if (TypeHelper.IsBaseType(objectType, typeof(DBItem)))
             {
-                var table = DBTable.GetTableAttributeInherit(objectType);
+                var table = DBTable.GetTable(objectType);
                 if (table != null)
                 {
                     var result = new JsonObjectContract(objectType)
@@ -35,17 +35,17 @@ namespace DataWF.Web.Common
                         Converter = DBItemConverter
                     };
 
-                    foreach (var column in table.Columns.Where(p => TypeHelper.IsBaseType(p.Property.DeclaringType, objectType)))
+                    foreach (var column in table.Columns.Where(p => TypeHelper.IsBaseType(p.PropertyInfo?.DeclaringType, objectType)))
                     // && (p.Attribute.Keys & DBColumnKeys.System) != DBColumnKeys.System
                     {
-                        if (column.Property.PropertyType == typeof(AccessValue))
+                        if (column.PropertyInfo.PropertyType == typeof(AccessValue))
                         {
                             var accessProperty = new JsonProperty
                             {
                                 DeclaringType = objectType,
                                 DefaultValue = null,
-                                Order = column.Attribute.Order,
-                                PropertyName = column.PropertyName,
+                                Order = column.Order,
+                                PropertyName = column.Property,
                                 PropertyType = typeof(AccessType?),
                                 ValueProvider = column.PropertyInvoker,
                                 Ignored = true
@@ -56,20 +56,21 @@ namespace DataWF.Web.Common
                         var jsonProperty = new JsonProperty
                         {
                             DeclaringType = objectType,
-                            DefaultValue = column.DefaultValues != null && column.DefaultValues.TryGetValue(objectType, out var defaultValue) ? defaultValue : null,
-                            Order = column.Attribute.Order,
-                            PropertyName = column.PropertyName,
-                            PropertyType = column.Property.PropertyType,
+                            DefaultValue = column.DefaultValues != null && column.DefaultValues.TryGetValue(objectType, out var defaultValue)
+                                  ? defaultValue : null,
+                            Order = column.Order,
+                            PropertyName = column.Property,
+                            PropertyType = column.PropertyInfo.PropertyType,
                             ValueProvider = column.PropertyInvoker,
-                            Ignored = column.Attribute.ColumnType != DBColumnTypes.Default || (column.Attribute.Keys & DBColumnKeys.Access) == DBColumnKeys.Access
+                            Ignored = column.ColumnType != DBColumnTypes.Default || (column.Keys & DBColumnKeys.Access) == DBColumnKeys.Access
                         };
                         result.Properties.Add(jsonProperty);
 
-                        if (column.ReferenceProperty != null)
+                        if (column.ReferencePropertyInfo != null)
                         {
-                            jsonProperty = base.CreateProperty(column.ReferenceProperty, MemberSerialization.OptIn);
+                            jsonProperty = base.CreateProperty(column.ReferencePropertyInfo, MemberSerialization.OptIn);
                             jsonProperty.IsReference = true;
-                            jsonProperty.ValueProvider = EmitInvoker.Initialize(column.ReferenceProperty);
+                            jsonProperty.ValueProvider = column.ReferencePropertyInvoker;
                             jsonProperty.NullValueHandling = NullValueHandling.Ignore;
                             result.Properties.Add(jsonProperty);
                         }

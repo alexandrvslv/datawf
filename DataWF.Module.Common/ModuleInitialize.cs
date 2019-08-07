@@ -19,9 +19,9 @@ namespace DataWF.Module.Common
             User.DBTable.DefaultComparer = new DBComparer<User, string>(User.DBTable.CodeKey) { Hash = true };
             User.DBTable.Load();
 
-            UserLog.DBTable.DefaultComparer = new DBComparer<UserLog, long?>(UserLog.DBTable.PrimaryKey) { Hash = true };
-            DBLogItem.UserLogTable = UserLog.DBTable;
-            DBService.RowLoging += UserLog.OnDBItemLoging;
+            UserReg.DBTable.DefaultComparer = new DBComparer<UserReg, long?>(UserReg.DBTable.PrimaryKey) { Hash = true };
+            DBLogItem.UserLogTable = UserReg.DBTable;
+            DBService.RowLoging += UserReg.OnDBItemLoging;
 
             GroupPermission.DBTable.Load();
             return GroupPermission.CachePermission();

@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace DataWF.Common
 {
-    public class FieldInvoker<T, V> : Invoker<T, V>
+    public class FieldInvoker<T, V> : ActionInvoker<T, V>
     {
         public FieldInvoker(FieldInfo info)
             : base(info.Name, GetFieldGetInvoker(info), GetFieldSetInvoker(info))

@@ -8,7 +8,7 @@ namespace DataWF.Data
 {
     public class DBColumnReferenceList : SelectableList<DBColumnReference>
     {
-        public static readonly Invoker<DBColumnReference, string> ColumnNameInvoker = new Invoker<DBColumnReference, string>(
+        public static readonly Invoker<DBColumnReference, string> ColumnNameInvoker = new ActionInvoker<DBColumnReference, string>(
             nameof(DBColumnReference.ColumnName), p => p.ColumnName, (p, v) => p.ColumnName = v);
         public DBColumnReferenceList()
         {

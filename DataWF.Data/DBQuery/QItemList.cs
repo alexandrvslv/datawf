@@ -32,8 +32,8 @@ namespace DataWF.Data
 
     public class QItemList<T> : SelectableList<T>, IQItemList where T : QItem, new()
     {
-        public static readonly Invoker<T, string> TextInvoker = new Invoker<T, string>(nameof(QItem.Text), (item) => item.Text);
-        public static readonly Invoker<T, int> OrderInvoker = new Invoker<T, int>(nameof(QItem.Order), (item) => item.Order);
+        public static readonly Invoker<T, string> TextInvoker = new ActionInvoker<T, string>(nameof(QItem.Text), (item) => item.Text);
+        public static readonly Invoker<T, int> OrderInvoker = new ActionInvoker<T, int>(nameof(QItem.Order), (item) => item.Order);
 
         protected IQuery query;
 

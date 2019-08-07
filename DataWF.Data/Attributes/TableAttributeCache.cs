@@ -29,28 +29,28 @@ namespace DataWF.Data
 {
     public class TableAttributeCache
     {
-        static readonly Invoker<ColumnAttributeCache, string> columnNameInvoker = new Invoker<ColumnAttributeCache, string>(nameof(ColumnAttributeCache.ColumnName), (item) => item.ColumnName);
-        static readonly Invoker<ColumnAttributeCache, string> columnPropertyInvoker = new Invoker<ColumnAttributeCache, string>(nameof(ColumnAttributeCache.PropertyName), (item) => item.PropertyName);
-        static readonly Invoker<ReferenceAttributeCache, string> referencePropertyInvoker = new Invoker<ReferenceAttributeCache, string>(nameof(ReferenceAttributeCache.PropertyName), (item) => item.PropertyName);
-        static readonly Invoker<ReferencingAttributeCache, string> referencingPropertyInvoker = new Invoker<ReferencingAttributeCache, string>(nameof(ReferencingAttributeCache.PropertyName), (item) => item.PropertyName);
-        static readonly Invoker<IndexAttributeCache, string> IndexNameinvoker = new Invoker<IndexAttributeCache, string>(nameof(IndexAttributeCache.IndexName), (item) => item.IndexName);
+        static readonly Invoker<ColumnAttributeCache, string> columnNameInvoker = new ActionInvoker<ColumnAttributeCache, string>(nameof(ColumnAttributeCache.ColumnName), (item) => item.ColumnName);
+        static readonly Invoker<ColumnAttributeCache, string> columnPropertyInvoker = new ActionInvoker<ColumnAttributeCache, string>(nameof(ColumnAttributeCache.PropertyName), (item) => item.PropertyName);
+        static readonly Invoker<ReferenceAttributeCache, string> referencePropertyInvoker = new ActionInvoker<ReferenceAttributeCache, string>(nameof(ReferenceAttributeCache.PropertyName), (item) => item.PropertyName);
+        static readonly Invoker<ReferencingAttributeCache, string> referencingPropertyInvoker = new ActionInvoker<ReferencingAttributeCache, string>(nameof(ReferencingAttributeCache.PropertyName), (item) => item.PropertyName);
+        static readonly Invoker<IndexAttributeCache, string> IndexNameinvoker = new ActionInvoker<IndexAttributeCache, string>(nameof(IndexAttributeCache.IndexName), (item) => item.IndexName);
 
         private DBSchema cacheSchema;
         private DBTable cacheTable;
         private DBTableGroup cacheGroup;
-        private SelectableList<ColumnAttributeCache> cacheColumns;
-        private SelectableList<ReferenceAttributeCache> cacheReferences;
-        private SelectableList<ReferencingAttributeCache> cacheReferencings;
-        private SelectableList<IndexAttributeCache> cacheIndexes;
-        private SelectableList<ItemTypeAttributeCache> cacheItemTypes;
-        private List<Type> cachedTypes = new List<Type>();
-        private ColumnAttributeCache cachePrimaryKey;
-        private ColumnAttributeCache cacheTypeKey;
-        private ColumnAttributeCache cacheFileKey;
+        protected SelectableList<ColumnAttributeCache> cacheColumns;
+        protected SelectableList<ReferenceAttributeCache> cacheReferences;
+        protected SelectableList<ReferencingAttributeCache> cacheReferencings;
+        protected SelectableList<IndexAttributeCache> cacheIndexes;
+        protected SelectableList<ItemTypeAttributeCache> cacheItemTypes;
+        protected List<Type> cachedTypes = new List<Type>();
+        protected ColumnAttributeCache cachePrimaryKey;
+        protected ColumnAttributeCache cacheTypeKey;
+        protected ColumnAttributeCache cacheFileKey;
 
         public TableAttribute Attribute { get; set; }
 
-        public DBSchema Schema
+        public virtual DBSchema Schema
         {
             get { return cacheSchema; }
             set { cacheSchema = value; }
@@ -61,7 +61,6 @@ namespace DataWF.Data
             get { return cacheTable ?? (cacheTable = DBService.Schems.ParseTable(Attribute.TableName)); }
             internal set { cacheTable = value; }
         }
-
 
         public DBTableGroup TableGroup
         {
@@ -133,10 +132,58 @@ namespace DataWF.Data
         {
             if (Schema == null)
                 throw new InvalidOperationException("Can't generate as Schema not defined!");
+
             return Generate(Schema);
         }
 
-        public DBTable Generate(DBSchema schema)
+        public virtual DBTable Generate(DBSchema schema)
+        {
+            GenerateBasic(schema);
+            GenerateColumns();
+            if (!Schema.Tables.Contains(Table.Name))
+            {
+                Schema.Tables.Add(Table);
+            }
+            GenerateReferences();
+            Generateindexes();
+            GenerateVirtualTables();
+
+            Table.IsLoging = Attribute.IsLoging;
+
+            return Table;
+        }
+
+        private void GenerateVirtualTables()
+        {
+            foreach (var itemType in cacheItemTypes)
+            {
+                Table.ItemTypes[itemType.Attribute.Id] = new DBItemType { Type = itemType.Type };
+                itemType.Generate(Schema);
+            }
+        }
+
+        private void Generateindexes()
+        {
+            foreach (var index in cacheIndexes)
+            {
+                index.Generate();
+            }
+        }
+
+        private void GenerateReferences()
+        {
+            foreach (var reference in cacheReferences)
+            {
+                reference.CheckReference();
+            }
+
+            foreach (var reference in cacheReferences)
+            {
+                reference.Generate();
+            }
+        }
+
+        private void GenerateBasic(DBSchema schema)
         {
             Schema = schema ?? throw new ArgumentNullException(nameof(schema));
 
@@ -163,7 +210,10 @@ namespace DataWF.Data
             Table.Type = Attribute.TableType;
             Table.BlockSize = Attribute.BlockSize;
             Table.Sequence = Table.GenerateSequence();
+        }
 
+        public void GenerateColumns()
+        {
             cacheColumns.Sort((a, b) =>
             {
                 var aOrder = a.IsTypeKey ? -3 : a.IsPrimaryKey ? -2 : a.Attribute.Order;
@@ -174,57 +224,6 @@ namespace DataWF.Data
             {
                 column.Generate();
             }
-            if (!Schema.Tables.Contains(Table.Name))
-            {
-                Schema.Tables.Add(Table);
-            }
-            foreach (var reference in cacheReferences)
-            {
-                reference.CheckReference();
-            }
-
-            foreach (var reference in cacheReferences)
-            {
-                reference.Generate();
-            }
-            foreach (var index in cacheIndexes)
-            {
-                index.Generate();
-            }
-
-
-            Table.IsLoging = Attribute.IsLoging;
-
-            foreach (var itemType in cacheItemTypes)
-            {
-                Table.ItemTypes[itemType.Attribute.Id] = new DBItemType { Type = itemType.Type };
-                itemType.Generate(Schema);
-            }
-
-            return Table;
-        }
-
-        public IInvoker ParseProperty(string property)
-        {
-            var column = GetColumnByProperty(property);
-            if (column != null)
-            {
-                return column.PropertyInvoker;
-            }
-
-            var reference = GetReferenceByProperty(property);
-            if (reference != null)
-            {
-                return reference.Column.ReferencePropertyInvoker;
-            }
-
-            var refing = GetReferencingByProperty(property);
-            if (refing != null)
-            {
-                return refing.PropertyInvoker;
-            }
-
-            return null;
         }
 
         public virtual void Initialize(Type type)
@@ -262,7 +261,7 @@ namespace DataWF.Data
             }
         }
 
-        public void InitializeType(Type type)
+        public virtual void InitializeType(Type type)
         {
             if (cachedTypes.Contains(type))
                 return;
@@ -275,6 +274,11 @@ namespace DataWF.Data
                 {
                     foreach (var column in columns)
                     {
+                        var exist = GetColumnByProperty(column.PropertyName);
+                        if (exist != null)
+                        {
+                            cacheColumns.Remove(exist);
+                        }
                         if ((column.Attribute.Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType)
                             cacheColumns.Insert(0, column);
                         else if ((column.Attribute.Keys & DBColumnKeys.Primary) == DBColumnKeys.Primary)
@@ -348,7 +352,12 @@ namespace DataWF.Data
         public virtual bool InitializeReference(PropertyInfo property, out ReferenceAttributeCache reference)
         {
             var referenceAttrubute = property.GetCustomAttribute<ReferenceAttribute>(false);
-            if (referenceAttrubute != null)
+            if (referenceAttrubute is LogReferenceAttribute logReferenceAttrubute)
+            {
+                reference = new LogReferenceAttributeCache(this, property, logReferenceAttrubute);
+                return true;
+            }
+            else if (referenceAttrubute != null)
             {
                 reference = new ReferenceAttributeCache(this, property, referenceAttrubute);
                 return true;
@@ -395,13 +404,19 @@ namespace DataWF.Data
                 {
                     foreach (var culture in Locale.Instance.Cultures)
                     {
-                        yield return new ColumnAttributeCache(this, property, columnAttribute, culture);
+                        if (columnAttribute is LogColumnAttribute logColumnAttribute)
+                            yield return new LogColumnAttributeCache(this as LogTableAttributeCache, property, logColumnAttribute, culture);
+                        else
+                            yield return new ColumnAttributeCache(this, property, columnAttribute, culture);
                     }
 
                 }
                 else
                 {
-                    yield return new ColumnAttributeCache(this, property, columnAttribute);
+                    if (columnAttribute is LogColumnAttribute logColumnAttribute)
+                        yield return new LogColumnAttributeCache(this as LogTableAttributeCache, property, logColumnAttribute);
+                    else
+                        yield return new ColumnAttributeCache(this, property, columnAttribute);
                 }
             }
         }

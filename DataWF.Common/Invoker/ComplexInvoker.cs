@@ -6,7 +6,7 @@ using System.Reflection.Emit;
 
 namespace DataWF.Common
 {
-    public class ComplexInvoker<T, V> : Invoker<T, V>
+    public class ComplexInvoker<T, V> : ActionInvoker<T, V>
     {
         public ComplexInvoker(string property, List<MemberInfo> list)
             : base(property, GetInvokerGet(property, list), GetInvokerSet(property, list))

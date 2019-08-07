@@ -49,7 +49,7 @@ namespace DataWF.Common
         Task<object> PutAsync(object value);
         Task<object> MergeAsync(object id, List<string> ids);
         object DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, object item, IList sourceList);
-        object NewItem();        
+        object NewItem();
     }
 
     public interface ICRUDClient<T> : ICRUDClient
@@ -72,12 +72,36 @@ namespace DataWF.Common
         T DeserializeItem(JsonSerializer serializer, JsonTextReader jreader, T item, IList sourceList);
     }
 
+    public interface ILoggedClient
+    {
+        Task<IEnumerable> GetLogsAsync(string filter);
+        Task<IEnumerable> GetItemLogsAsync(object id);
+
+        Task<object> UndoLogAsync(long logId);
+        Task<object> RedoLogAsync(long logId);
+        Task<bool> RemoveLogAsync(long logId);
+    }
+
+    public interface ILoggedClient<T, L> : ILoggedClient
+    {
+        Task<List<L>> GetLogsAsync(string filter, ProgressToken progressToken);
+        Task<List<L>> GetItemLogsAsync(object id, ProgressToken progressToken);
+
+        Task<T> UndoLogAsync(long logId, ProgressToken progressToken);
+        Task<T> RedoLogAsync(long logId, ProgressToken progressToken);
+        Task<bool> RemoveLogAsync(long logId, ProgressToken progressToken);
+    }
+
     public interface IFileClient
     {
         Task<Stream> DownloadFileAsync(object id, ProgressToken progressToken);
         Task<string> UploadFileAsync(object id, string fileName, Stream file, ProgressToken progressToken);
     }
 
+    public interface ILoggedFileClient : IFileClient
+    {
+        Task<Stream> DownloadLogFileAsync(long logId, ProgressToken progressToken);
+    }
     public enum ClientStatus
     {
         None,

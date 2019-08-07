@@ -25,7 +25,7 @@ namespace DataWF.Data
 {
     public class DBTableList : DBSchemaItemList<DBTable>
     {
-        public static readonly Invoker<DBTable, string> GroupNameInvoker = new Invoker<DBTable, string>(nameof(DBTable.GroupName), (item) => item.GroupName);
+        public static readonly Invoker<DBTable, string> GroupNameInvoker = new ActionInvoker<DBTable, string>(nameof(DBTable.GroupName), (item) => item.GroupName);
 
         public DBTableList() : this(null)
         { }

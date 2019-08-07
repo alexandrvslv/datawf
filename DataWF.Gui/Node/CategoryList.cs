@@ -4,7 +4,7 @@ namespace DataWF.Gui
 {
     public class CategoryList : SelectableList<Category>
     {
-        static readonly Invoker<Category, string> nameInvoker = new Invoker<Category, string>(nameof(Category.Name), (item) => item.Name);
+        static readonly Invoker<Category, string> nameInvoker = new ActionInvoker<Category, string>(nameof(Category.Name), (item) => item.Name);
 
         public CategoryList()
             : base()

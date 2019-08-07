@@ -10,7 +10,7 @@ namespace DataWF.Common
 {
     public class Locale : SelectableList<LocaleCategory>
     {
-        static readonly Invoker<LocaleCategory, string> nameInvoker = new Invoker<LocaleCategory, string>(nameof(LocaleCategory.Name), item => item.Name);
+        static readonly Invoker<LocaleCategory, string> nameInvoker = new ActionInvoker<LocaleCategory, string>(nameof(LocaleCategory.Name), item => item.Name);
         private CultureInfo culture = CultureInfo.GetCultureInfo("en-US");
 
         public Locale()

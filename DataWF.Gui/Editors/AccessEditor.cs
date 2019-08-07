@@ -18,7 +18,7 @@ namespace DataWF.Gui
                 GenerateToString = false,
                 ListInfo = new LayoutListInfo(new[] {
                     new LayoutColumn() { Name = nameof(AccessItem.Group), Width = 110, FillWidth = true, Editable = false },
-                    new LayoutColumn() { Name = nameof(AccessItem.Read), Width = 35, Invoker = new Invoker<AccessItem, bool>(nameof(AccessItem.Read),
+                    new LayoutColumn() { Name = nameof(AccessItem.Read), Width = 35, Invoker = new ActionInvoker<AccessItem, bool>(nameof(AccessItem.Read),
                                                             (item) => item.Read,
                                                             (item, value) =>
                                                             {
@@ -31,7 +31,7 @@ namespace DataWF.Gui
                                                                     Accessable.Access = access;
                                                                 }
                                                             })},
-                    new LayoutColumn() { Name = nameof(AccessItem.Update), Width = 35 , Invoker = new Invoker<AccessItem, bool>(nameof(AccessItem.Update),
+                    new LayoutColumn() { Name = nameof(AccessItem.Update), Width = 35 , Invoker = new ActionInvoker<AccessItem, bool>(nameof(AccessItem.Update),
                                                             (item) => item.Update,
                                                             (item, value) =>
                                                             {
@@ -44,7 +44,7 @@ namespace DataWF.Gui
                                                                     Accessable.Access = access;
                                                                 }
                                                             })},
-                    new LayoutColumn() { Name = nameof(AccessItem.Create), Width = 35 , Invoker = new Invoker<AccessItem, bool>(nameof(AccessItem.Create),
+                    new LayoutColumn() { Name = nameof(AccessItem.Create), Width = 35 , Invoker = new ActionInvoker<AccessItem, bool>(nameof(AccessItem.Create),
                                                             (item) => item.Create,
                                                             (item, value) =>
                                                             {
@@ -57,7 +57,7 @@ namespace DataWF.Gui
                                                                     Accessable.Access = access;
                                                                 }
                                                             })},
-                    new LayoutColumn() { Name = nameof(AccessItem.Delete), Width = 35 , Invoker = new Invoker<AccessItem, bool>(nameof(AccessItem.Delete),
+                    new LayoutColumn() { Name = nameof(AccessItem.Delete), Width = 35 , Invoker = new ActionInvoker<AccessItem, bool>(nameof(AccessItem.Delete),
                                                             (item) => item.Delete,
                                                             (item, value) =>
                                                             {
@@ -70,7 +70,7 @@ namespace DataWF.Gui
                                                                     Accessable.Access = access;
                                                                 }
                                                             })},
-                    new LayoutColumn() { Name = nameof(AccessItem.Admin), Width = 35, Invoker = new Invoker<AccessItem, bool>(nameof(AccessItem.Admin),
+                    new LayoutColumn() { Name = nameof(AccessItem.Admin), Width = 35, Invoker = new ActionInvoker<AccessItem, bool>(nameof(AccessItem.Admin),
                                                             (item) => item.Admin,
                                                             (item, value) =>
                                                             {
@@ -83,7 +83,7 @@ namespace DataWF.Gui
                                                                     Accessable.Access = access;
                                                                 }
                                                             })},
-                    new LayoutColumn() { Name = nameof(AccessItem.Accept), Width = 35, Invoker = new Invoker<AccessItem, bool>(nameof(AccessItem.Accept),
+                    new LayoutColumn() { Name = nameof(AccessItem.Accept), Width = 35, Invoker = new ActionInvoker<AccessItem, bool>(nameof(AccessItem.Accept),
                                                             (item) => item.Accept,
                                                             (item, value) =>
                                                             {

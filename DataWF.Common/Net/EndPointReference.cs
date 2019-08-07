@@ -22,7 +22,7 @@ namespace DataWF.Common
 
     public class EndPointReferenceList<T> : SelectableList<EndPointReference<T>>
     {
-        private static Invoker<EndPointReference<T>, IPEndPoint> invoker = new Invoker<EndPointReference<T>, IPEndPoint>(nameof(EndPointReference<T>.EndPoint), item => item.EndPoint);
+        private static ActionInvoker<EndPointReference<T>, IPEndPoint> invoker = new ActionInvoker<EndPointReference<T>, IPEndPoint>(nameof(EndPointReference<T>.EndPoint), item => item.EndPoint);
 
         public EndPointReferenceList()
         {

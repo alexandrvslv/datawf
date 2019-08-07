@@ -19,6 +19,7 @@
 */
 using System;
 using System.ComponentModel;
+using System.Reflection;
 using System.Xml.Serialization;
 using DataWF.Common;
 using Newtonsoft.Json;
@@ -88,7 +89,7 @@ namespace DataWF.Data
 
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public override string Property { get => BaseColumn.Property; set => base.Property = value; }
-        
+
         [XmlIgnore, JsonIgnore]
         public override DBColumnKeys Keys { get => BaseColumn.Keys; set => base.Keys = value; }
 
@@ -109,6 +110,15 @@ namespace DataWF.Data
 
         [XmlIgnore, JsonIgnore]
         public override DBColumnTypes ColumnType { get => BaseColumn.ColumnType; set => base.ColumnType = value; }
+
+        [XmlIgnore, JsonIgnore]
+        public override PropertyInfo PropertyInfo { get => BaseColumn.PropertyInfo; set => base.PropertyInfo = value; }
+        [XmlIgnore, JsonIgnore]
+        public override PropertyInfo ReferencePropertyInfo { get => BaseColumn.ReferencePropertyInfo; set => base.ReferencePropertyInfo = value; }
+        [XmlIgnore, JsonIgnore]
+        public override IInvoker PropertyInvoker { get => BaseColumn.PropertyInvoker; set => base.PropertyInvoker = value; }
+        [XmlIgnore, JsonIgnore]
+        public override IInvoker ReferencePropertyInvoker { get => BaseColumn.ReferencePropertyInvoker; set => base.ReferencePropertyInvoker = value; }
 
         protected internal override void CheckPull()
         {

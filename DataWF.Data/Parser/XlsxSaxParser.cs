@@ -966,7 +966,7 @@ namespace DataWF.Data
 
     public class StringKeyList : IndexedList<StringKey, String>
     {
-        public static readonly Invoker<StringKey, String> StringKeyInvoker = new Invoker<StringKey, string>(nameof(StringKey.Key),
+        public static readonly Invoker<StringKey, String> StringKeyInvoker = new ActionInvoker<StringKey, string>(nameof(StringKey.Key),
             p => p.Key, (p, v) => p.Key = v);
 
         public StringKeyList() : base(StringComparer.Ordinal, StringKeyInvoker)

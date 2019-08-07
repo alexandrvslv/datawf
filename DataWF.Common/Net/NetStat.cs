@@ -10,7 +10,7 @@ namespace DataWF.Common
 
         static NetStat()
         {
-            items.Indexes.Add(new Invoker<NetStatItem, string>(nameof(NetStatItem.Name), (item) => item.Name));
+            items.Indexes.Add(new ActionInvoker<NetStatItem, string>(nameof(NetStatItem.Name), (item) => item.Name));
         }
 
         public static SelectableList<NetStatItem> Items { get { return items; } }

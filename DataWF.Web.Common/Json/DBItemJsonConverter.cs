@@ -30,12 +30,12 @@ namespace DataWF.Web.Common
 
     public class DBItemJsonConverter : JsonConverter
     {
-        public bool IsSerializeableColumn(ColumnAttributeCache column)
+        public bool IsSerializeableColumn(DBColumn column)
         {
             return column.PropertyInvoker != null
                 //&& (column.Attribute.Keys & DBColumnKeys.Access) != DBColumnKeys.Access
-                && (column.Attribute.Keys & DBColumnKeys.Password) != DBColumnKeys.Password
-                && (column.Attribute.Keys & DBColumnKeys.File) != DBColumnKeys.File;
+                && (column.Keys & DBColumnKeys.Password) != DBColumnKeys.Password
+                && (column.Keys & DBColumnKeys.File) != DBColumnKeys.File;
         }
 
         public override bool CanConvert(Type objectType)
@@ -51,26 +51,13 @@ namespace DataWF.Web.Common
                 writer.WriteStartObject();
                 var table = item.Table;
                 var valueType = value.GetType();
-                var tableAttribute = table.TableAttribute;
-                //var itemTypeColumn = table.ItemTypeKey?.Attribute;
-                //if (itemTypeColumn != null)
-                //{
-                //    writer.WritePropertyName(itemTypeColumn.PropertyName);
-                //    writer.WriteValue(itemTypeColumn.PropertyInvoker.GetValue(item));
-                //}
-                //var primaryKeyColumn = table.PrimaryKey?.Attribute;
-                //if (primaryKeyColumn != null)
-                //{
-                //    writer.WritePropertyName(primaryKeyColumn.PropertyName);
-                //    writer.WriteValue(primaryKeyColumn.PropertyInvoker.GetValue(item));
-                //}
-                foreach (var column in tableAttribute.Columns.Where(p => TypeHelper.IsBaseType(valueType, p.PropertyInvoker.TargetType)))
+                var includeReference = claimsWriter?.IncludeReferences ?? false;
+
+                foreach (var column in table.Columns.Where(p => TypeHelper.IsBaseType(valueType, p.PropertyInvoker.TargetType)))
                 {
                     if (!IsSerializeableColumn(column))
-                        //|| column == itemTypeColumn
-                        //|| column == primaryKeyColumn)
                         continue;
-                    writer.WritePropertyName(column.PropertyName);
+                    writer.WritePropertyName(column.Property);
                     var propertyValue = column.PropertyInvoker.GetValue(item);
                     if (propertyValue is AccessValue accessValue)
                     {
@@ -79,19 +66,17 @@ namespace DataWF.Web.Common
                     else
                     {
                         serializer.Serialize(writer, propertyValue);
+                        if (includeReference && column.ReferencePropertyInvoker != null)
+                        {
+                            writer.WritePropertyName(column.ReferencePropertyInfo.Name);
+                            serializer.Serialize(writer, column.ReferencePropertyInfo.GetValue(item));
+                        }
                     }
                 }
-                if (claimsWriter?.IncludeReferences ?? false)
+
+                if (claimsWriter?.IncludeReferencing ?? true && table.TableAttribute != null)
                 {
-                    foreach (var refed in tableAttribute.References)
-                    {
-                        writer.WritePropertyName(refed.PropertyName);
-                        serializer.Serialize(writer, refed.PropertyInvoker.GetValue(item));
-                    }
-                }
-                if (claimsWriter?.IncludeReferencing ?? true)
-                {
-                    foreach (var refing in tableAttribute.Referencings)
+                    foreach (var refing in table.TableAttribute.Referencings)
                     {
                         if (!TypeHelper.IsBaseType(valueType, refing.PropertyInvoker.TargetType))
                             continue;
@@ -117,8 +102,8 @@ namespace DataWF.Web.Common
             {
                 throw new JsonSerializationException($"Expect {nameof(DBItem)} but {nameof(existingValue)} is {existingValue?.GetType().Name ?? "null"}");
             }
-            var tableAttribute = DBTable.GetTableAttributeInherit(objectType);
-            if (tableAttribute == null)
+            var table = DBTable.GetTable(objectType);
+            if (table == null)
             {
                 throw new JsonSerializationException($"Can't find table of {objectType?.Name ?? "null"}");
             }
@@ -128,7 +113,7 @@ namespace DataWF.Web.Common
             {
                 if (reader.TokenType == JsonToken.PropertyName)
                 {
-                    key = tableAttribute.ParseProperty((string)reader.Value);
+                    key = table.GetInvoker((string)reader.Value);
                     if (key == null)
                     {
                         throw new InvalidOperationException($"Property {reader.Value} not found!");
@@ -140,15 +125,14 @@ namespace DataWF.Web.Common
                 }
             }
 
-            if (tableAttribute.PrimaryKey != null && dictionary.TryGetValue(tableAttribute.PrimaryKey.PropertyInvoker, out var value) && value != null)
+            if (table.PrimaryKey != null && dictionary.TryGetValue(table.PrimaryKey.PropertyInvoker, out var value) && value != null)
             {
-                item = tableAttribute.Table.LoadItemById(value, DBLoadParam.Load | DBLoadParam.Referencing);
+                item = table.LoadItemById(value, DBLoadParam.Load | DBLoadParam.Referencing);
             }
 
             if (item == null)
             {
-                var table = DBTable.GetTable(objectType);
-                if (tableAttribute.TypeKey != null && dictionary.TryGetValue(tableAttribute.TypeKey.PropertyInvoker, out var itemType) && itemType != null)
+                if (table.ItemTypeKey != null && dictionary.TryGetValue(table.ItemTypeKey.PropertyInvoker, out var itemType) && itemType != null)
                 {
                     item = table.NewItem(DBUpdateState.Insert, true, (int)itemType);
                 }

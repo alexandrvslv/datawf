@@ -103,7 +103,7 @@ namespace DataWF.Module.Flow
         public DocumentData()
         { }
 
-        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
+        [Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
         {
             get { return GetValue<long?>(Table.PrimaryKey); }
@@ -116,7 +116,7 @@ namespace DataWF.Module.Flow
         [Index("ddocument_data_document_id")]
         public override long? DocumentId { get => base.DocumentId; set => base.DocumentId = value; }
 
-        [DataMember, Column("template_data_id")]
+        [Column("template_data_id")]
         public int? TemplateDataId
         {
             get { return GetValue<int?>(TemplateDataKey); }
@@ -130,28 +130,28 @@ namespace DataWF.Module.Flow
             set { SetReference(template = value, TemplateDataKey); }
         }
 
-        [DataMember, Column("file_name", 1024, Keys = DBColumnKeys.View | DBColumnKeys.FileName)]
+        [Column("file_name", 1024, Keys = DBColumnKeys.View | DBColumnKeys.FileName)]
         public string FileName
         {
             get { return GetValue<string>(Table.FileNameKey); }
             set { SetValue(value, Table.FileNameKey); }
         }
 
-        [DataMember, Column("file_url", 1024)]
+        [Column("file_url", 1024)]
         public string FileUrl
         {
             get { return GetValue<string>(FileUrlKey); }
             set { SetValue(value, FileUrlKey); }
         }
 
-        [DataMember, Column("file_data", Keys = DBColumnKeys.File)]
+        [Column("file_data", Keys = DBColumnKeys.File)]
         public virtual byte[] FileData
         {
             get { return buf ?? (buf = GetZip(Table.FileKey)); }
             set { SetValue(value, Table.FileKey); }
         }
 
-        [DataMember, Column("file_lob", DBDataType = DBDataType.LargeObject, Keys = DBColumnKeys.FileLOB)]
+        [Column("file_lob", DBDataType = DBDataType.LargeObject, Keys = DBColumnKeys.FileLOB)]
         public virtual uint? FileLOB
         {
             get { return GetValue<uint?>(Table.FileLOBKey); }
@@ -159,7 +159,7 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [DataMember, Column("current_user_id", ColumnType = DBColumnTypes.Code)]
+        [Column("current_user_id", ColumnType = DBColumnTypes.Code)]
         public int? CurrentUserId
         {
             get { return currentUser?.Id; }
@@ -331,126 +331,7 @@ namespace DataWF.Module.Flow
             worker.RunWorkerAsync(param);
             return worker;
             //worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(worker_RunWorkerCompleted);
-        }
-
-        [ControllerMethod]
-        public IEnumerable<DocumentDataLog> GetLogs()
-        {
-            using (var query = new QQuery((DBTable)Table.LogTable))
-            {
-                query.BuildParam(Table.LogTable.BaseKey, Id);
-                query.BuildParam(Table.LogTable.FileNameKey, CompareType.IsNot, null);
-                var parameterData = new QParam();
-                parameterData.Parameters.Add(QQuery.CreateParam(LogicType.And, Table.LogTable.FileLOBKey, CompareType.IsNot, null));
-                parameterData.Parameters.Add(QQuery.CreateParam(LogicType.Or, Table.LogTable.FileKey, CompareType.IsNot, null));
-                query.Parameters.Add(parameterData);
-                var lob = (uint?)null;
-
-                foreach (DBLogItem logItem in Table.LogTable.LoadItems(query).OrderByDescending(p => p[Table.LogTable.PrimaryKey]))
-                {
-                    var lobLob = logItem.GetValue<uint?>(Table.LogTable.FileLOBKey);
-                    if (lobLob == null || lobLob != lob)
-                    {
-                        lob = lobLob;
-                        yield return new DocumentDataLog(logItem);
-                    }
-                }
-            };
-        }
-
-        [ControllerMethod]
-        public async Task<Stream> GetLogFile(long logId, DBTransaction transaction)
-        {
-            var logItem = (DBLogItem)Table.LogTable.LoadItemById(logId);
-            if (logItem == null)
-            {
-                throw new Exception($"DataLog with id {logId} not found!");
-            }
-            var fileName = logItem.GetValue<string>(logItem.LogTable.FileNameKey);
-            if (fileName == null)
-            {
-                throw new Exception($"DataLog with id {logId} no file defined!");
-            }
-            var filename = Helper.GetDocumentsFullPath(fileName, "DataLog" + logItem.LogId);
-            if (Table.LogTable.FileLOBKey != null)
-            {
-                var lob = logItem.GetValue(Table.LogTable.FileLOBKey);
-                if (lob != null)
-                {
-                    return await logItem.GetLOBFileStream(Table.LogTable.FileLOBKey, filename, transaction);
-                }
-            }
-            return logItem.GetFileStream(Table.LogTable.FileKey, filename, transaction);
-        }
-
-        [ControllerMethod]
-        public async Task RemoveLogFile(long logId, DBTransaction transaction)
-        {
-            if (!Access.GetFlag(AccessType.Admin, transaction.Caller))
-            {
-                throw new Exception("Access Denied!");
-            }
-
-            var logItem = (DBLogItem)Table.LogTable.LoadItemById(logId);
-            if (logItem == null)
-            {
-                throw new Exception($"Not Found!");
-            }
-
-            if (Table.LogTable.FileLOBKey != null)
-            {
-                var lob = logItem.GetValue<uint?>(Table.LogTable.FileLOBKey);
-                if (lob != null)
-                {
-                    if (lob == FileLOB)
-                    {
-                        throw new Exception($"Latest log entry. Deletion Canceled!");
-                    }
-
-                }
-            }
-            logItem.Delete();
-            await logItem.Save(transaction);
-            //Table.LogTable.Trunc();
-        }
-
-        [ControllerMethod]
-        public static async Task<DocumentData> UndoLogFile(long logId, DBTransaction transaction)
-        {
-            var logItem = (DBLogItem)DBTable.LogTable.LoadItemById(logId);
-            if (logItem == null)
-            {
-                throw new Exception($"Not Found!");
-            }
-
-            if (!DBTable.Access.GetFlag(AccessType.Update, transaction.Caller))
-            {
-                throw new Exception("Access Denied!");
-            }
-
-            var data = (DocumentData)await logItem.Undo(transaction);
-            // DBTable.LogTable.Trunc();
-            return data;
-        }
-
-        [ControllerMethod]
-        public static async Task<DocumentData> RedoLogFile(long logId, DBTransaction transaction)
-        {
-            var logItem = (DBLogItem)DBTable.LogTable.LoadItemById(logId);
-            if (logItem == null)
-            {
-                throw new Exception($"Not Found!");
-            }
-
-            if (!DBTable.Access.GetFlag(AccessType.Update, transaction.Caller))
-            {
-                throw new Exception("Access Denied!");
-            }
-
-            var data = (DocumentData)await logItem.Redo(transaction);
-            //DBTable.LogTable.Trunc();
-            return data;
-        }
+        }        
 
         public virtual string RefreshName()
         {

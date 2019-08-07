@@ -1,8 +1,8 @@
 ﻿/*
- DBTableGroupList.cs
+ Account.cs
  
  Author:
-      Alexandr <alexandr_vslv@mail.ru>  
+      Alexandr <alexandr_vslv@mail.ru>
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License as published by
@@ -17,28 +17,20 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using System.Collections.Generic;
-using DataWF.Common;
+using System.Reflection;
 
 namespace DataWF.Data
 {
-    public class DBTableGroupList : DBSchemaItemList<DBTableGroup>
+    public class LogReferenceAttributeCache : ReferenceAttributeCache
     {
-        public static readonly Invoker<DBTableGroup, string> GroupNameInvoker = new ActionInvoker<DBTableGroup, string>(nameof(DBTableGroup.GroupName), (item) => item.GroupName);
-
-        public DBTableGroupList(DBSchema schema) : base(schema)
+        public LogReferenceAttributeCache(TableAttributeCache table, PropertyInfo property, LogReferenceAttribute referenceAttribute)
+            : base(table, property, referenceAttribute)
         {
-            Indexes.Add(GroupNameInvoker);
         }
 
-        public IEnumerable<DBTableGroup> GetTopParents()
+        public override DBForeignKey Generate()
         {
-            return GetByGroup(null);
-        }
-
-        public IEnumerable<DBTableGroup> GetByGroup(string name)
-        {
-            return Select(GroupNameInvoker, CompareType.Equal, name);
+            return null;
         }
     }
 }

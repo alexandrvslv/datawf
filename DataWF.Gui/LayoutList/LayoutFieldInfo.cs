@@ -72,10 +72,10 @@ namespace DataWF.Gui
 
     public class LayoutFieldInfo : IDisposable
     {
-        static readonly IInvoker categoryInvoker = new Invoker<LayoutField, Category>(nameof(LayoutField.Category),
+        static readonly IInvoker categoryInvoker = new ActionInvoker<LayoutField, Category>(nameof(LayoutField.Category),
                                                              (item) => item.Category,
                                                              (item, value) => item.Category = value);
-        static readonly IInvoker orderInvoker = new Invoker<LayoutField, int>(nameof(LayoutField.Order),
+        static readonly IInvoker orderInvoker = new ActionInvoker<LayoutField, int>(nameof(LayoutField.Order),
                                                         (item) => item.Order,
                                                         (item, value) => item.Order = value);
         protected LayoutNodeList<LayoutField> nodes;

@@ -27,9 +27,9 @@ namespace DataWF.Data
 {
     public class DBProcedureList : DBSchemaItemList<DBProcedure>
     {
-        public static readonly Invoker<DBProcedure, string> GroupNameInvoker = new Invoker<DBProcedure, string>(nameof(DBProcedure.GroupName), (item) => item.GroupName);
-        public static readonly Invoker<DBProcedure, string> DataNameInvoker = new Invoker<DBProcedure, string>(nameof(DBProcedure.DataName), (item) => item.DataName);
-        public static readonly Invoker<DBProcedure, ProcedureTypes> ProcedureTypeInvoker = new Invoker<DBProcedure, ProcedureTypes>(nameof(DBProcedure.ProcedureType), (item) => item.ProcedureType);
+        public static readonly Invoker<DBProcedure, string> GroupNameInvoker = new ActionInvoker<DBProcedure, string>(nameof(DBProcedure.GroupName), (item) => item.GroupName);
+        public static readonly Invoker<DBProcedure, string> DataNameInvoker = new ActionInvoker<DBProcedure, string>(nameof(DBProcedure.DataName), (item) => item.DataName);
+        public static readonly Invoker<DBProcedure, ProcedureTypes> ProcedureTypeInvoker = new ActionInvoker<DBProcedure, ProcedureTypes>(nameof(DBProcedure.ProcedureType), (item) => item.ProcedureType);
 
         private Dictionary<string, Dictionary<string, DBProcedure>> codeIndex = new Dictionary<string, Dictionary<string, DBProcedure>>(StringComparer.OrdinalIgnoreCase);
 

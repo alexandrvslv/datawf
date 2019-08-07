@@ -88,7 +88,7 @@ namespace DataWF.Module.Common
             {
                 if (value.LogStart == null)
                 {
-                    await UserLog.LogUser(value, UserLogType.Authorization, "GetUser");
+                    await UserReg.LogUser(value, UserRegType.Authorization, "GetUser");
                 }
             }
         }
@@ -227,13 +227,13 @@ namespace DataWF.Module.Common
             return message;
         }
 
-        public static IEnumerable<UserLog> GetOld(User User)
+        public static IEnumerable<UserReg> GetOld(User User)
         {
-            var filter = new QQuery(string.Empty, UserLog.DBTable);
-            filter.BuildPropertyParam(nameof(UserLog.UserId), CompareType.Equal, User.PrimaryId);
-            filter.BuildPropertyParam(nameof(UserLog.LogType), CompareType.Equal, UserLogType.Password);
-            filter.Orders.Add(new QOrder { Column = UserLog.DBTable.ParseProperty(nameof(UserLog.Id)), Direction = ListSortDirection.Descending });
-            return UserLog.DBTable.Load(filter, DBLoadParam.Load | DBLoadParam.Synchronize);
+            var filter = new QQuery(string.Empty, UserReg.DBTable);
+            filter.BuildPropertyParam(nameof(UserReg.UserId), CompareType.Equal, User.PrimaryId);
+            filter.BuildPropertyParam(nameof(UserReg.RegType), CompareType.Equal, UserRegType.Password);
+            filter.Orders.Add(new QOrder { Column = UserReg.DBTable.ParseProperty(nameof(UserReg.Id)), Direction = ListSortDirection.Descending });
+            return UserReg.DBTable.Load(filter, DBLoadParam.Load | DBLoadParam.Synchronize);
         }
 
         public static async Task<User> GetUser(string login, string passoword)
@@ -244,7 +244,7 @@ namespace DataWF.Module.Common
             var user = User.DBTable.Select(query).FirstOrDefault();
             if (user != null)
             {
-                await UserLog.LogUser(user, UserLogType.Authorization, "GetUser");
+                await UserReg.LogUser(user, UserRegType.Authorization, "GetUser");
             }
 
             return user;
@@ -260,7 +260,7 @@ namespace DataWF.Module.Common
         public User()
         { }
 
-        public UserLog LogStart { get; set; }
+        public UserReg LogStart { get; set; }
 
         
         public override int? Id

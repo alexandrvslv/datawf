@@ -67,7 +67,7 @@ namespace DataWF.Data
 
         public LogMap()
         {
-            changes.Indexes.Add(new Invoker<LogEntry, DBColumn>(nameof(LogEntry.Column),
+            changes.Indexes.Add(new ActionInvoker<LogEntry, DBColumn>(nameof(LogEntry.Column),
                         (item) => item.Column,
                         (item, value) => item.Column = value));
         }
@@ -130,7 +130,7 @@ namespace DataWF.Data
             {
                 if (log.Status == DBStatus.New)
                 {
-                    string name = log.UserLog?.DBUser?.Name;
+                    string name = log.UserReg?.DBUser?.Name;
                     if (user.IndexOf(name, StringComparison.Ordinal) < 0)
                         user += name + "; ";
                     foreach (var logColumn in log.LogTable.GetLogColumns())

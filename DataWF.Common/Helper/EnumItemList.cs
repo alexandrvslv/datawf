@@ -6,7 +6,7 @@ namespace DataWF.Common
 {
     public class EnumItemList : NamedList<EnumItem>
     {
-        public static readonly Invoker<EnumItem, object> ValueInvoker = new Invoker<EnumItem, object>(nameof(EnumItem.Value),
+        public static readonly Invoker<EnumItem, object> ValueInvoker = new ActionInvoker<EnumItem, object>(nameof(EnumItem.Value),
             p => p.Value);
 
         private object itemValue;

@@ -25,7 +25,7 @@ using System.Xml.Serialization;
 
 namespace DataWF.Module.Common
 {
-    public class UserLogItem
+    public class UserRegItem
     {
         private DBLogItem cacheLogItem;
         private DBTable cacheTargetTable;

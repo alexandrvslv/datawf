@@ -32,8 +32,7 @@ namespace DataWF.Data
         {
             Attribute = referenceAttribute;
             Table = table;
-            Property = property;
-            PropertyInvoker = EmitInvoker.Initialize(property);
+            PropertyInfo = property;
             ReferenceType = property.PropertyType;
             Column.DisplayName = property.Name;
             Column.Attribute.Keys |= DBColumnKeys.Reference;
@@ -58,11 +57,10 @@ namespace DataWF.Data
             internal set { cacheKey = value; }
         }
 
-        public PropertyInfo Property { get; set; }
+        public PropertyInfo PropertyInfo { get; set; }
 
-        public string PropertyName { get { return Property?.Name; } }
+        public string PropertyName { get { return PropertyInfo?.Name; } }
 
-        public IInvoker PropertyInvoker { get; set; }
 
         public void GenerateName()
         {
@@ -79,16 +77,15 @@ namespace DataWF.Data
             {
                 throw new Exception($"{nameof(ReferenceType)}({Attribute.ColumnProperty} - {ReferenceType}) Table not found! Target table: {Table.Table}");
             }
+            if (referenceTable.PrimaryKey == null)
+            {
+                throw new Exception($"{nameof(ReferenceType)}({Attribute.ColumnProperty} - {ReferenceType}) Primary key not found! Target table: {Table.Table}");
+            }
             return referenceTable;
         }
 
-        public DBForeignKey Generate()
+        public virtual DBForeignKey Generate()
         {
-            if (ForeignKey != null)
-            {
-                ForeignKey.Property = Property.Name;
-                return ForeignKey;
-            }
             if (ReferenceType == null
                 || Table == null || Table.Schema == null
                 || Column == null || Column.Column == null)
@@ -97,24 +94,24 @@ namespace DataWF.Data
             }
             if (ForeignKey == null)
             {
-                Column.Column.IsReference = true;
-
                 var referenceTable = CheckReference();
-                if (referenceTable.PrimaryKey == null)
-                {
-                    throw new Exception($"{nameof(ReferenceType)}({Attribute.ColumnProperty} - {ReferenceType}) Primary key not found! Target table: {Table.Table}");
-                }
+
                 ForeignKey = new DBForeignKey()
                 {
                     Table = Table.Table,
                     Column = Column.Column,
                     Reference = referenceTable.PrimaryKey,
                     Name = Attribute.Name,
-                    Property = Property.Name
                 };
                 Table.Table.Foreigns.Add(ForeignKey);
             }
-
+            Column.Column.IsReference = true;
+            ForeignKey.Property = PropertyInfo.Name;
+            ForeignKey.PropertyInfo = PropertyInfo;
+            if (ForeignKey.PropertyInvoker == null)
+            {
+                ForeignKey.PropertyInvoker = EmitInvoker.Initialize(PropertyInfo);
+            }
             return ForeignKey;
         }
     }

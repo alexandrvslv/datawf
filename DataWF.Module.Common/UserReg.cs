@@ -27,7 +27,7 @@ using System.Threading.Tasks;
 
 namespace DataWF.Module.Common
 {
-    public enum UserLogType
+    public enum UserRegType
     {
         None,
         Password,
@@ -39,7 +39,7 @@ namespace DataWF.Module.Common
         Reject
     }
 
-    public enum UserLogStrategy
+    public enum UserRegStrategy
     {
         ByItem,
         ByTransaction,
@@ -47,28 +47,28 @@ namespace DataWF.Module.Common
     }
 
     [DataContract, Table("duser_log", "User", BlockSize = 500, IsLoging = false)]
-    public class UserLog : DBUserLog
+    public class UserReg : DBUserReg
     {
         private static DBColumn userKey = DBColumn.EmptyKey;
-        private static DBColumn logTypeKey = DBColumn.EmptyKey;
+        private static DBColumn regTypeKey = DBColumn.EmptyKey;
         private static DBColumn redoKey = DBColumn.EmptyKey;
         private static DBColumn textDataKey = DBColumn.EmptyKey;
-        private static DBTable<UserLog> dbTable;
-        public static UserLogStrategy LogStrategy = UserLogStrategy.BySession;
+        private static DBTable<UserReg> dbTable;
+        public static UserRegStrategy LogStrategy = UserRegStrategy.BySession;
         private User user;
-        private UserLog redo;
+        private UserReg redo;
 
         public static DBColumn UserKey => DBTable.ParseProperty(nameof(UserId), ref userKey);
-        public static DBColumn LogTypeKey => DBTable.ParseProperty(nameof(LogType), ref logTypeKey);
+        public static DBColumn RegTypeKey => DBTable.ParseProperty(nameof(RegType), ref regTypeKey);
         public static DBColumn RedoKey => DBTable.ParseProperty(nameof(RedoId), ref redoKey);
         public static DBColumn TextDataKey => DBTable.ParseProperty(nameof(TextData), ref textDataKey);
-        public static DBTable<UserLog> DBTable => dbTable ?? (dbTable = GetTable<UserLog>());
+        public static DBTable<UserReg> DBTable => dbTable ?? (dbTable = GetTable<UserReg>());
         public static event EventHandler<DBItemEventArgs> RowLoging;
         public static event EventHandler<DBItemEventArgs> RowLoged;
 
         public static async void OnDBItemLoging(DBItemEventArgs arg)
         {
-            if (arg.Item.Table == UserLog.DBTable || arg.Item.Table is IDBLogTable)
+            if (arg.Item.Table == UserReg.DBTable || arg.Item.Table is IDBLogTable)
                 return;
             var user = arg.User as User;
             RowLoging?.Invoke(null, arg);
@@ -78,31 +78,31 @@ namespace DataWF.Module.Common
             }
             var userLog = user?.LogStart;
 
-            if (LogStrategy == UserLogStrategy.ByTransaction)
+            if (LogStrategy == UserRegStrategy.ByTransaction)
             {
                 if (arg.Transaction != null)
                 {
                     if (arg.Transaction.UserLog == null)
                     {
-                        arg.Transaction.UserLog = new UserLog { User = user, Parent = userLog, LogType = UserLogType.Transaction };
+                        arg.Transaction.UserLog = new UserReg { User = user, Parent = userLog, RegType = UserRegType.Transaction };
                         await arg.Transaction.UserLog.Save(arg.Transaction);
                     }
-                    userLog = (UserLog)arg.Transaction.UserLog;
+                    userLog = (UserReg)arg.Transaction.UserLog;
                 }
             }
-            else if (LogStrategy == UserLogStrategy.ByItem)
+            else if (LogStrategy == UserRegStrategy.ByItem)
             {
-                userLog = new UserLog { User = user, Parent = userLog, LogType = UserLogType.Transaction };
+                userLog = new UserReg { User = user, Parent = userLog, RegType = UserRegType.Transaction };
                 await userLog.Save(arg.Transaction);
             }
             if (arg.LogItem != null)
             {
-                arg.LogItem.UserLog = userLog;
+                arg.LogItem.UserReg = userLog;
             }
             RowLoged?.Invoke(null, arg);
         }
 
-        public UserLog()
+        public UserReg()
         { }
         
         public override long? Id
@@ -128,10 +128,10 @@ namespace DataWF.Module.Common
 
 
         [DataMember, Column("type_id", Keys = DBColumnKeys.ElementType | DBColumnKeys.View)]
-        public UserLogType? LogType
+        public UserRegType? RegType
         {
-            get { return GetValue<UserLogType?>(LogTypeKey); }
-            set { SetValue(value, LogTypeKey); }
+            get { return GetValue<UserRegType?>(RegTypeKey); }
+            set { SetValue(value, RegTypeKey); }
         }
 
         [Browsable(false)]
@@ -143,9 +143,9 @@ namespace DataWF.Module.Common
         }
 
         [Reference(nameof(ParentId))]
-        public UserLog Parent
+        public UserReg Parent
         {
-            get { return GetGroupReference<UserLog>(); }
+            get { return GetGroupReference<UserReg>(); }
             set { SetGroupReference(value); }
         }
 
@@ -158,7 +158,7 @@ namespace DataWF.Module.Common
         }
 
         [Reference(nameof(RedoId))]
-        public UserLog Redo
+        public UserReg Redo
         {
             get { return GetReference(RedoKey, ref redo); }
             set { SetReference(redo = value, RedoKey); }
@@ -171,7 +171,7 @@ namespace DataWF.Module.Common
             set { SetValue(value, TextDataKey); }
         }
 
-        public List<UserLogItem> Items { get; set; }
+        public List<UserRegItem> Items { get; set; }
 
         public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)
         {
@@ -200,16 +200,16 @@ namespace DataWF.Module.Common
         //    return listmap;
         //}
 
-        public static async Task LogUser(User user, UserLogType type, string info)
+        public static async Task LogUser(User user, UserRegType type, string info)
         {
-            var newLog = new UserLog()
+            var newLog = new UserReg()
             {
                 User = user,
-                LogType = type,
+                RegType = type,
                 Parent = user.LogStart
             };
 
-            if (type == UserLogType.Authorization)
+            if (type == UserRegType.Authorization)
             {
                 user.LogStart = newLog;
                 //var prop = System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties();

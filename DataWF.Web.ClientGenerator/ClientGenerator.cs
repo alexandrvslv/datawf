@@ -15,7 +15,21 @@ namespace DataWF.Web.ClientGenerator
 {
     public class ClientGenerator
     {
-        private readonly HashSet<string> VirtualOperations = new HashSet<string> { "GetAsync", "PutAsync", "PostAsync", "FindAsync", "DeleteAsync", "CopyAsync", "GenerateIdAsync", "MergeAsync" };
+        private readonly HashSet<string> VirtualOperations = new HashSet<string> {
+            "GetAsync",
+            "PutAsync",
+            "PostAsync",
+            "FindAsync",
+            "DeleteAsync",
+            "CopyAsync",
+            "GenerateIdAsync",
+            "MergeAsync",
+            "GetItemLogsAsync",
+            "GetLogsAsync",
+            "RedoLogAsync",
+            "RemoveLogAsync",
+            "UndoLogAsync"
+        };
         private Dictionary<string, CompilationUnitSyntax> cacheModels = new Dictionary<string, CompilationUnitSyntax>();
         private Dictionary<string, ClassDeclarationSyntax> cacheClients = new Dictionary<string, ClassDeclarationSyntax>();
         private List<UsingDirectiveSyntax> usings = new List<UsingDirectiveSyntax>();
@@ -397,12 +411,18 @@ namespace DataWF.Web.ClientGenerator
             idKey = null;
             typeKey = null;
             typeId = 0;
+            var logged = document.Operations
+                .Where(p => p.Operation.Tags.Contains(clientName, StringComparer.OrdinalIgnoreCase))
+                .FirstOrDefault(p => p.Path.Contains("/GetItemLogs/", StringComparison.OrdinalIgnoreCase));
+            var loggedReturnSchema = logged == null ? null : GetReturningTypeSchema(logged);
+            var loggedTypeName = loggedReturnSchema == null ? null : GetArrayElementTypeString(loggedReturnSchema);
             if (document.Definitions.TryGetValue(clientName, out var schema))
             {
                 idKey = GetPrimaryKey(schema);
                 typeKey = GetTypeKey(schema);
                 typeId = GetTypeId(schema);
-                return $"Client<{clientName}, {(idKey == null ? "int" : GetTypeString(idKey, false, "List"))}>";
+
+                return $"{(loggedTypeName != null ? "Logged" : "")}Client<{clientName}, {(idKey == null ? "int" : GetTypeString(idKey, false, "List"))}{(logged != null ? $", {loggedTypeName}" : "")}>";
             }
             return $"ClientBase";
         }
@@ -509,8 +529,8 @@ namespace DataWF.Web.ClientGenerator
                     SyntaxKind.BaseConstructorInitializer,
                     SF.ArgumentList(
                         SF.SeparatedList(new[] {
-                            SF.Argument(SF.ParseExpression($"new Invoker<{clientName},{GetTypeString(idKey, true, "List")}>(nameof({clientName}.{idName}), p=>p.{idName}, (p,v)=>p.{idName}=v)")),
-                            SF.Argument(SF.ParseExpression($"new Invoker<{clientName},{GetTypeString(typeKey, true, "List")}>(nameof({clientName}.{typeName}), p=>p.{typeName}, (p,v)=>p.{typeName}=v)")),
+                            SF.Argument(SF.ParseExpression($"new ActionInvoker<{clientName},{GetTypeString(idKey, true, "List")}>(nameof({clientName}.{idName}), p=>p.{idName}, (p,v)=>p.{idName}=v)")),
+                            SF.Argument(SF.ParseExpression($"new ActionInvoker<{clientName},{GetTypeString(typeKey, true, "List")}>(nameof({clientName}.{typeName}), p=>p.{typeName}, (p,v)=>p.{typeName}=v)")),
                             SF.Argument(SF.ParseExpression($"{typeId}")),
                         })));
             return SF.ConstructorDeclaration(
@@ -542,6 +562,12 @@ namespace DataWF.Web.ClientGenerator
         private IEnumerable<AttributeListSyntax> ClientAttributeList()
         {
             yield break;
+        }
+
+        private JsonSchema GetReturningTypeSchema(OpenApiOperationDescription descriptor)
+        {
+            return descriptor.Operation.Responses.TryGetValue("200", out var responce) && responce.Schema != null
+                ? responce.Schema : null;
         }
 
         private string GetReturningType(OpenApiOperationDescription descriptor)
@@ -1206,7 +1232,7 @@ namespace DataWF.Web.ClientGenerator
                 refField.ValueType = GetTypeString(refField.ValueProperty, false, null);
                 refField.ValueFieldName = GetFieldName(refField.ValueProperty);
 
-                refField.InvokerType = $"Invoker<{refField.TypeName},{refField.KeyType}>";
+                refField.InvokerType = $"ActionInvoker<{refField.TypeName},{refField.KeyType}>";
                 refField.InvokerName = refField.TypeName + refkey + "Invoker";
 
                 //refField.ParameterType = $"QueryParameter<{refField.TypeName}>";
@@ -1219,7 +1245,7 @@ namespace DataWF.Web.ClientGenerator
                        type: SF.ParseTypeName(refField.InvokerType),
                        variables: SF.SingletonSeparatedList(
                            SF.VariableDeclarator(
-                               identifier: SF.ParseToken(refField.InvokerName),
+                               identifier: SF.Identifier(refField.InvokerName),
                                argumentList: null,
                                initializer: SF.EqualsValueClause(
                                    SF.ParseExpression($"new {refField.InvokerType}(\"{refField.KeyName}\",p => p.{refField.KeyName}, (p,v) => p.{refField.KeyName} = v)"))))));
@@ -1244,7 +1270,7 @@ namespace DataWF.Web.ClientGenerator
                        type: SF.ParseTypeName(refField.FieldType),
                        variables: SF.SingletonSeparatedList(
                            SF.VariableDeclarator(
-                               identifier: SF.ParseToken(refField.FieldName),
+                               identifier: SF.Identifier(refField.FieldName),
                                argumentList: null,
                                initializer: null))));
             }
@@ -1259,7 +1285,7 @@ namespace DataWF.Web.ClientGenerator
                        type: SF.ParseTypeName(type),
                        variables: SF.SingletonSeparatedList(
                            SF.VariableDeclarator(
-                               identifier: SF.ParseToken(GetFieldName(property)),
+                               identifier: SF.Identifier(GetFieldName(property)),
                                argumentList: null,
                                initializer: property.Default != null
                                ? SF.EqualsValueClause(GenFieldDefault(property, idKey))
@@ -1281,12 +1307,19 @@ namespace DataWF.Web.ClientGenerator
             return SF.ParseExpression(text);
         }
 
-        private string GetTypeString(JsonSchema value, bool nullable, string listType = "SelectableList")
+        private string GetArrayElementTypeString(JsonSchema schema)
         {
-            switch (value.Type)
+            return schema.Type == JsonObjectType.Array
+                ? GetTypeString(schema.Item, false, "List")
+                : null;
+        }
+
+        private string GetTypeString(JsonSchema schema, bool nullable, string listType = "SelectableList")
+        {
+            switch (schema.Type)
             {
                 case JsonObjectType.Integer:
-                    if (value.Format == "int64")
+                    if (schema.Format == "int64")
                     {
                         return "long" + (nullable ? "?" : string.Empty);
                     }
@@ -1294,21 +1327,21 @@ namespace DataWF.Web.ClientGenerator
                 case JsonObjectType.Boolean:
                     return "bool" + (nullable ? "?" : string.Empty);
                 case JsonObjectType.Number:
-                    if (value.IsEnumeration)
+                    if (schema.IsEnumeration)
                     {
                         goto case JsonObjectType.Object;
                     }
-                    if (string.IsNullOrEmpty(value.Format))
+                    if (string.IsNullOrEmpty(schema.Format))
                     {
                         return "decimal" + (nullable ? "?" : string.Empty);
                     }
-                    return value.Format + (nullable ? "?" : string.Empty);
+                    return schema.Format + (nullable ? "?" : string.Empty);
                 case JsonObjectType.String:
-                    if (value.IsEnumeration)
+                    if (schema.IsEnumeration)
                     {
                         goto case JsonObjectType.Object;
                     }
-                    switch (value.Format)
+                    switch (schema.Format)
                     {
                         case "byte":
                         case "binary":
@@ -1320,27 +1353,27 @@ namespace DataWF.Web.ClientGenerator
                             return "string";
                     }
                 case JsonObjectType.Array:
-                    return $"{listType}<{GetTypeString(value.Item, false, listType)}>";
+                    return $"{listType}<{GetTypeString(schema.Item, false, listType)}>";
                 case JsonObjectType.None:
-                    if (value.ActualTypeSchema != null)
+                    if (schema.ActualTypeSchema != null)
                     {
-                        if (value.ActualTypeSchema.Type != JsonObjectType.None)
-                            return GetTypeString(value.ActualTypeSchema, nullable, listType);
+                        if (schema.ActualTypeSchema.Type != JsonObjectType.None)
+                            return GetTypeString(schema.ActualTypeSchema, nullable, listType);
                         else
                         { }
                     }
                     break;
                 case JsonObjectType.Object:
-                    if (value.Id != null)
+                    if (schema.Id != null)
                     {
-                        GetOrGenDefinion(value.Id);
-                        if (value.IsEnumeration)
+                        GetOrGenDefinion(schema.Id);
+                        if (schema.IsEnumeration)
                         {
-                            return GetDefinitionName(value) + (nullable ? "?" : string.Empty);
+                            return GetDefinitionName(schema) + (nullable ? "?" : string.Empty);
                         }
                         else
                         {
-                            return GetDefinitionName(value);
+                            return GetDefinitionName(schema);
                         }
                     }
                     break;

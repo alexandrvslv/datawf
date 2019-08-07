@@ -33,15 +33,18 @@ namespace DataWF.Data
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public class TableAttribute : Attribute
     {
-        public TableAttribute(string name, string groupName)
+        public TableAttribute(string name, string groupName, string schema = null)
         {
             TableName = name;
             GroupName = groupName ?? "Default";
+            Schema = schema;
         }
 
         public string TableName { get; set; }
 
         public virtual string GroupName { get; set; }
+
+        public string Schema { get; }
 
         [DefaultValue(DBTableType.Table)]
         public DBTableType TableType { get; set; } = DBTableType.Table;

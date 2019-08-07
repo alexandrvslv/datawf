@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 
 namespace DataWF.Web.Common
 {
+
     [ResponseCache(CacheProfileName = "Never")]
     [Auth]
     public abstract class BaseController<T, K> : ControllerBase where T : DBItem, new()

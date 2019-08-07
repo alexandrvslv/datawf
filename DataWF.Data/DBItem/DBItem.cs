@@ -362,9 +362,9 @@ namespace DataWF.Data
 
         public T SetReference<T>(T value, DBColumn column) where T : DBItem
         {
-            if (column.Attribute?.PropertyInvoker != null)
+            if (column.PropertyInvoker != null)
             {
-                column.Attribute.PropertyInvoker.SetValue(this, value?.PrimaryId);
+                column.PropertyInvoker.SetValue(this, value?.PrimaryId);
             }
             else
             {
@@ -630,9 +630,7 @@ namespace DataWF.Data
             set { this[Table.CodeKey] = value; }
         }
 
-        [Browsable(false)]
-        [DataMember]
-        [DefaultValue(0)]
+        [Browsable(false), DefaultValue(0)]
         [Column("item_type", GroupName = "system", Keys = DBColumnKeys.ItemType, Order = 0)]
         public virtual int? ItemType
         {
@@ -643,22 +641,22 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore, Browsable(false)]
         DBStatus IStatusable.Status { get => Status ?? DBStatus.Empty; set => Status = value; }
 
-        [DataMember, DefaultValue(DBStatus.New), Column("status_id", GroupName = "system", Keys = DBColumnKeys.State | DBColumnKeys.Indexing, Order = 99)]
+        [DefaultValue(DBStatus.New), Column("status_id", GroupName = "system", Keys = DBColumnKeys.State | DBColumnKeys.Indexing, Order = 99)]
         public DBStatus? Status
         {
             get { return Table.StatusKey == null ? DBStatus.Empty : GetValue<DBStatus?>(Table.StatusKey).GetValueOrDefault(); }
             set { SetValue(value, Table.StatusKey); }
         }
 
-        [DataMember, Column("date_create", GroupName = "system", Keys = DBColumnKeys.Date | DBColumnKeys.System, Order = 100)]
-        public DateTime? DateCreate
+        [Column("date_create", GroupName = "system", Keys = DBColumnKeys.Date | DBColumnKeys.System, Order = 100)]
+        public virtual DateTime? DateCreate
         {
             get { return Table.DateKey == null ? null : GetValue<DateTime?>(Table.DateKey); }
             set { SetValue(value, Table.DateKey); }
         }
 
         [Browsable(false)]
-        [DataMember, Column("date_update", GroupName = "system", Keys = DBColumnKeys.Stamp | DBColumnKeys.NoLog | DBColumnKeys.System, Order = 101)]
+        [Column("date_update", GroupName = "system", Keys = DBColumnKeys.Stamp | DBColumnKeys.NoLog | DBColumnKeys.System, Order = 101)]
         public DateTime? Stamp
         {
             get { return Table.StampKey == null ? null : GetValue<DateTime?>(Table.StampKey); }
@@ -668,7 +666,7 @@ namespace DataWF.Data
         IAccessValue IAccessable.Access { get => Access; set => Access = (AccessValue)value; }
 
         [XmlIgnore, JsonIgnore, NotMapped, Browsable(false)]
-        [DataMember, Column("group_access", 512, DataType = typeof(byte[]), GroupName = "system", Keys = DBColumnKeys.Access | DBColumnKeys.System, Order = 102)]
+        [Column("group_access", 512, DataType = typeof(byte[]), GroupName = "system", Keys = DBColumnKeys.Access | DBColumnKeys.System, Order = 102)]
         public virtual AccessValue Access
         {
             get
@@ -702,7 +700,7 @@ namespace DataWF.Data
             return accessData != null ? new AccessValue(accessData) : null;
         }
 
-        //[DataMember, Browsable(false)]
+        //[Browsable(false)]
         //public virtual string Name
         //{
         //    get { return GetName(nameof(Name)); }
@@ -1394,7 +1392,7 @@ namespace DataWF.Data
 
             foreach (var column in Table.Columns.GetIsReference())
             {
-                var invoker = column.Attribute?.ReferencePropertyInvoker;
+                var invoker = column.ReferencePropertyInvoker;
                 if (column.ColumnType == DBColumnTypes.Default
                     && invoker != null
                     && TypeHelper.IsBaseType(GetType(), invoker.TargetType))

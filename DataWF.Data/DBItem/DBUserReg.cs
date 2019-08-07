@@ -18,27 +18,23 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System;
+using System.Collections.Generic;
+using DataWF.Common;
 
 namespace DataWF.Data
 {
-    public class DBLogView
-    {
-        public DBLogView()
-        { }
-        public DBLogView(DBLogItem logItem)
-        {
-            Id = (long)logItem.LogId;
-            Date = (DateTime)logItem.DateCreate;
-            Type = (DBLogType)logItem.LogType;
-            UserId = logItem.UserLog?.UserId;
-            User = logItem.UserLog?.DBUser?.Name;
-        }
-        public long Id { get; set; }
-        public DateTime Date { get; set; }
-        public DBLogType Type { get; set; }
 
-        public int? UserId { get; set; }
-        public string User { get; set; }
+    public abstract class DBUserReg : DBGroupItem, IUserReg
+    {
+        [Column("unid", Keys = DBColumnKeys.Primary)]
+        public abstract long? Id { get; set; }
+
+        [Column("user_id", Keys = DBColumnKeys.View)]
+        public abstract int? UserId { get; set; }
+
+
+        public abstract DBUser DBUser { get; set; }
+
+        IUserIdentity IUserReg.UserIdentity => DBUser;
     }
 }

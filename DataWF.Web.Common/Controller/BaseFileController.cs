@@ -7,7 +7,9 @@ using System.Threading.Tasks;
 
 namespace DataWF.Web.Common
 {
-    public abstract class BaseFileController<T, K> : BaseController<T, K> where T : DBItem, new()
+    public abstract class BaseFileController<T, K, L> : BaseLoggedController<T, K, L>
+        where T : DBItem, new()
+        where L : DBLogItem, new()
     {
 
         public BaseFileController()
@@ -37,7 +39,7 @@ namespace DataWF.Web.Common
                 var fileName = item.GetValue<string>(table.FileNameKey);
                 if (string.IsNullOrEmpty(fileName))
                 {
-                    return new EmptyResult();
+                    return BadRequest("File name was not specified!");
                 }
                 var stream = (Stream)null;
                 if (table.FileLOBKey != null && item.GetValue(table.FileLOBKey) != null)
@@ -117,5 +119,74 @@ namespace DataWF.Web.Common
                 }
             }
         }
+
+        [HttpGet("DownloadLogFile/{logId}")]
+        public async Task<ActionResult<Stream>> DownloadLogFile([FromRoute]long logId)
+        {
+            var transaction = new DBTransaction(table.Connection, CurrentUser);
+            try
+            {
+                var logItem = (DBLogItem)table.LogTable?.LoadItemById(logId);
+                if (logItem == null)
+                {
+                    return NotFound();
+                }
+                if (!(logItem.Access?.GetFlag(AccessType.Download, transaction.Caller) ?? true)
+                    && !(logItem.Access?.GetFlag(AccessType.Update, transaction.Caller) ?? true))
+                {
+                    return Forbid();
+                }
+                var fileName = logItem.GetValue<string>(logItem.LogTable.FileNameKey);
+                if (fileName == null)
+                {
+                    return BadRequest($"Log with id {logId} no file name defined!");
+                }
+
+                var stream = (Stream)null;
+                if (table.LogTable.FileLOBKey != null && logItem.GetValue(table.LogTable.FileLOBKey) != null)
+                {
+                    stream = await logItem.GetLOB(table.LogTable.FileLOBKey, transaction);
+                }
+                else if (table.LogTable.FileKey != null)
+                {
+                    stream = logItem.GetZipMemoryStream(table.LogTable.FileKey, transaction);
+                }
+                return new TransactFileStreamResult(stream,
+                       System.Net.Mime.MediaTypeNames.Application.Octet,
+                       transaction, fileName);
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                return BadRequest(ex);
+            }
+        }
+
+        public override async Task<ActionResult<bool>> RemoveLog(long logId)
+        {
+            var user = CurrentUser;
+            if (!table.Access.GetFlag(AccessType.Admin, user))
+            {
+                return Forbid();
+            }
+
+            var logItem = (DBLogItem)table.LogTable.LoadItemById(logId);
+            if (logItem == null)
+            {
+                return false;
+            }
+
+            if (table.LogTable.FileLOBKey != null)
+            {
+                var lob = logItem.GetValue<uint?>(table.LogTable.FileLOBKey);
+                if (lob != null && lob == logItem.BaseItem?.GetValue<uint?>(table.FileLOBKey))
+                {
+                    return BadRequest($"Latest log entry. Deletion Canceled!");
+                }
+            }
+            return await base.RemoveLog(logId);
+        }
+
+
     }
 }

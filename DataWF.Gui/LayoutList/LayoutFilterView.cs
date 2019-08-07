@@ -26,15 +26,15 @@ namespace DataWF.Gui
 
     public class LayoutFilterView : LayoutList
     {
-        static readonly Invoker<LayoutFilter, object> valueInvoker = new Invoker<LayoutFilter, object>(nameof(LayoutFilter.Value),
+        static readonly Invoker<LayoutFilter, object> valueInvoker = new ActionInvoker<LayoutFilter, object>(nameof(LayoutFilter.Value),
                                                                  (item) => item.Value,
                                                                  (item, value) => item.Value = value);
-        static readonly Invoker<LayoutFilter, LogicType> logicInvoker = new Invoker<LayoutFilter, LogicType>(nameof(LayoutFilter.Logic),
+        static readonly Invoker<LayoutFilter, LogicType> logicInvoker = new ActionInvoker<LayoutFilter, LogicType>(nameof(LayoutFilter.Logic),
                                                                (item) => item.Logic,
                                                                (item, value) => item.Logic = value);
-        static readonly Invoker<LayoutFilter, string> headerInvoker = new Invoker<LayoutFilter, string>(nameof(LayoutFilter.Header),
+        static readonly Invoker<LayoutFilter, string> headerInvoker = new ActionInvoker<LayoutFilter, string>(nameof(LayoutFilter.Header),
                                                             (item) => item.Header);
-        static readonly Invoker<LayoutFilter, CompareType> comparerInvoker = new Invoker<LayoutFilter, CompareType>(nameof(LayoutFilter.Comparer),
+        static readonly Invoker<LayoutFilter, CompareType> comparerInvoker = new ActionInvoker<LayoutFilter, CompareType>(nameof(LayoutFilter.Comparer),
                                                                  (item) => item.Comparer,
                                                                  (item, value) => item.Comparer = value);
         private LayoutColumn valueColumn;

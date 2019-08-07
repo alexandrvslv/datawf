@@ -30,13 +30,13 @@ namespace DataWF.Data
 
         public ItemTypeAttribute Attribute { get; set; }
 
-        public Type Type { get; private set; }
+        public Type Type { get; protected set; }
 
         public TableAttributeCache TableAttribute { get; set; }
 
         public IDBVirtualTable VirtualTable { get { return (IDBVirtualTable)Table; } }
 
-        public DBTable Table
+        public virtual DBTable Table
         {
             get { return cacheTable ?? (cacheTable = DBService.Schems.ParseTable(Type.Name)); }
             internal set { cacheTable = value; }
@@ -48,7 +48,7 @@ namespace DataWF.Data
             set { schema = value; }
         }
 
-        public void Initialize(Type type)
+        public virtual void Initialize(Type type)
         {
             Type = type;
             TableAttribute = DBTable.GetTableAttributeInherit(type.BaseType);
@@ -59,7 +59,7 @@ namespace DataWF.Data
             TableAttribute.InitializeItemType(this);
         }
 
-        public DBTable Generate(DBSchema schema)
+        public virtual DBTable Generate(DBSchema schema)
         {
             Schema = schema;
             if (Table == null)
@@ -79,14 +79,13 @@ namespace DataWF.Data
                 var virtualColumn = Table.ParseColumn(columnAttribute.ColumnName);
                 if (virtualColumn != null)
                 {
-                    virtualColumn.Attribute = columnAttribute;
                     if (columnAttribute.DefaultValues != null && columnAttribute.DefaultValues.TryGetValue(Type, out var defaultValue))
                     {
                         virtualColumn.DefaultValue = defaultValue;
                     }
 
                     if (virtualColumn.DisplayName.Equals(virtualColumn.Name, StringComparison.Ordinal)
-                        || (virtualColumn.DisplayName.Equals(columnAttribute.Property.Name, StringComparison.Ordinal)))
+                        || (virtualColumn.DisplayName.Equals(columnAttribute.PropertyInfo.Name, StringComparison.Ordinal)))
                     {
                         virtualColumn.DisplayName = columnAttribute.DisplayName;
                     }
@@ -96,7 +95,7 @@ namespace DataWF.Data
             return Table;
         }
 
-        public DBTable CreateTable()
+        public virtual DBTable CreateTable()
         {
             if (TableAttribute == null)
             {

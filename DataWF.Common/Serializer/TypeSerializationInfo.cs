@@ -7,7 +7,7 @@ namespace DataWF.Common
 {
     public class TypeSerializationInfo
     {
-        static readonly Invoker<PropertySerializationInfo, bool> IsAttributeInvoker = new Invoker<PropertySerializationInfo, bool>(nameof(PropertySerializationInfo.IsAttribute), (item) => item.IsAttribute);
+        static readonly Invoker<PropertySerializationInfo, bool> IsAttributeInvoker = new ActionInvoker<PropertySerializationInfo, bool>(nameof(PropertySerializationInfo.IsAttribute), (item) => item.IsAttribute);
 
         public TypeSerializationInfo(Type type) : this(type, TypeHelper.GetPropertiesByHierarchi(type))
         { }

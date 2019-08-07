@@ -17,23 +17,20 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using DataWF.Common;
 using System;
 
 namespace DataWF.Data
 {
-
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
-    public class ItemTypeAttribute : Attribute
+    public class LogTableAttribute : TableAttribute
     {
 
-        public ItemTypeAttribute(int id)
+        public LogTableAttribute(Type baseType, string name, string schema = null) : base(name, "Default", schema)
         {
-            Id = id;
+            BaseType = baseType;
+            IsLoging = false;
         }
 
-        public int Id { get; private set; }
-
-        public string Query { get; set; }
+        public Type BaseType { get; }
     }
 }

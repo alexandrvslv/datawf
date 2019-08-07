@@ -5,16 +5,14 @@ namespace DataWF.Common
 {
     public class NamedList<T> : SelectableList<T>, INamedList where T : INamed, new()
     {
-        static readonly Invoker<T, string> nameInvoker = new Invoker<T, string>(nameof(INamed.Name), (item) => item.Name);
-
         public NamedList(int capacity) : base(capacity)
         {
-            Indexes.Add(nameInvoker);
+            Indexes.Add(NamedNameInvoker<T>.Instance);
         }
 
         public NamedList()
         {
-            Indexes.Add(nameInvoker);
+            Indexes.Add(NamedNameInvoker<T>.Instance);
         }
 
         public NamedList(IEnumerable<T> items) : this()
