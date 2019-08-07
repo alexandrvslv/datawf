@@ -113,7 +113,7 @@ namespace DataWF.Web.CodeGenerator
                 return null;
             var baseName = $"DBLogItem";
             var baseType = itemType.BaseType;
-            while (baseType.IsAbstract || baseType.IsGenericType)
+            while (baseType.IsGenericType)
                 baseType = baseType.BaseType;
 
             if (baseType != typeof(DBItem)
@@ -144,6 +144,8 @@ namespace DataWF.Web.CodeGenerator
 
         private IEnumerable<AttributeListSyntax> GenLogAttributeList(TableAttributeCache table, Type itemType)
         {
+            if (itemType.IsAbstract)
+                yield break;
             if (itemType.GetCustomAttribute<TableAttribute>(false) != null)
             {
                 yield return SF.AttributeList(
@@ -170,9 +172,10 @@ namespace DataWF.Web.CodeGenerator
 
         private IEnumerable<MemberDeclarationSyntax> GenLogMemebers(TableAttributeCache table, Type itemType, Type baseType, Dictionary<string, UsingDirectiveSyntax> usings)
         {
-            if (baseType == typeof(DBItem)
-                || baseType == typeof(DBGroupItem))
+            if ((itemType.GetCustomAttribute<TableAttribute>(false) != null)
+                || !TypeHelper.IsBaseType(itemType, table.ItemType))
             {
+                AddUsing(table.ItemType, usings);
                 yield return SF.FieldDeclaration(
                attributeLists: SF.List<AttributeListSyntax>(),
                modifiers: SF.TokenList(new[] { SF.Token(SyntaxKind.PrivateKeyword), SF.Token(SyntaxKind.StaticKeyword) }),
@@ -191,14 +194,14 @@ namespace DataWF.Web.CodeGenerator
                     identifier: SF.Identifier("DBLogTable"),
                     accessorList: null,
                     expressionBody: SF.ArrowExpressionClause(
-                        SF.ParseExpression($"_dbLogTable ?? (_dbLogTable = GetTable<{itemType.Name}>().LogTable)")),
+                        SF.ParseExpression($"_dbLogTable ?? (_dbLogTable = GetTable<{table.ItemType.Name}>().LogTable)")),
                     initializer: null,
                     semicolonToken: SF.Token(SyntaxKind.SemicolonToken)
                    );
             }
             var columns = new List<ColumnAttributeCache>();
             var itemBaseType = itemType.BaseType;
-            while (itemBaseType.IsAbstract || baseType.IsGenericType)
+            while (itemBaseType.IsGenericType)
             {
                 columns.AddRange(table.Columns
                 .Where(p => itemBaseType == p.PropertyInfo?.DeclaringType
