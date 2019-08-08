@@ -23,6 +23,10 @@ namespace DataWF.Web.Common
                 {
                     return Forbid();
                 }
+                if (table is IDBVirtualTable virtualTable && virtualTable.ItemTypeIndex != 0)
+                {
+                    filter = $"({filter}) and {virtualTable.ItemTypeKey?.Property} = {virtualTable.ItemTypeIndex}";
+                }
                 using (var query = new QQuery(filter, (DBTable)logTable))
                 {
                     return new ActionResult<IEnumerable<L>>(logTable.LoadItems(query, DBLoadParam.Referencing)
