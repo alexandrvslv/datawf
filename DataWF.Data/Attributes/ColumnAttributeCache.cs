@@ -78,7 +78,7 @@ namespace DataWF.Data
 
         public string PropertyName { get; set; }
 
-        public PropertyInfo ReferenceProperty { get; set; }
+        public PropertyInfo ReferencePropertyInfo { get; set; }
 
         public string ColumnName { get; set; }
 
@@ -87,6 +87,8 @@ namespace DataWF.Data
         public bool IsTypeKey => (Attribute.Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType;
 
         public Dictionary<Type, string> DefaultValues { get; set; }
+
+        public virtual int Size => Attribute?.Size ?? 0;
 
         public Type GetDataType()
         {
@@ -120,8 +122,8 @@ namespace DataWF.Data
                 Column = CreateColumn(ColumnName);
             }
             if (Column.DisplayName.Equals(Column.Name, StringComparison.Ordinal)
-                || (Column.DisplayName.Equals(PropertyInfo.Name, StringComparison.Ordinal) 
-                && ReferenceProperty != null))
+                || (Column.DisplayName.Equals(PropertyInfo.Name, StringComparison.Ordinal)
+                && ReferencePropertyInfo != null))
             {
                 Column.DisplayName = DisplayName;
             }
@@ -139,7 +141,7 @@ namespace DataWF.Data
             Column.GroupName = GroupName;
             Column.Property = PropertyName;
             Column.PropertyInfo = PropertyInfo;
-            Column.ReferencePropertyInfo = ReferenceProperty;
+            Column.ReferencePropertyInfo = ReferencePropertyInfo;
             Column.DefaultValues = DefaultValues;
             if (DefaultValues != null && DefaultValues.TryGetValue(PropertyInfo.DeclaringType, out var defaultValue))
             {

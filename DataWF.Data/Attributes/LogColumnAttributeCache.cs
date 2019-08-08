@@ -45,7 +45,9 @@ namespace DataWF.Data
             set => Column = value;
         }
 
-        public ColumnAttributeCache BaseColumn => LogTable.BaseTableAttribute.GetColumn(LogAttribute.BaseName);
+        public override int Size => BaseColumn?.Size ?? base.Size;
+
+        public ColumnAttributeCache BaseColumn => LogTable?.BaseTableAttribute?.GetColumn(LogAttribute?.BaseName);
 
         public override DBColumn CreateColumn(string name)
         {
@@ -67,7 +69,7 @@ namespace DataWF.Data
             LogColumn.BaseColumn = BaseColumn.Column;
             Column.Property = PropertyName;
             Column.PropertyInfo = PropertyInfo;
-            Column.ReferencePropertyInfo = ReferenceProperty;
+            Column.ReferencePropertyInfo = ReferencePropertyInfo;
             Column.DefaultValues = DefaultValues;
             if (!table.Columns.Contains(Column.Name))
             {

@@ -79,7 +79,7 @@ namespace DataWF.Data
             get => UserReg?.UserId;
         }
 
-        [LogColumn("item_type", "item_type_log", GroupName = "system", Keys = DBColumnKeys.ItemType, Order = 0)]
+        [LogColumn("item_type", "item_type_log", GroupName = "system", Keys = DBColumnKeys.ItemType, Order = 0), DefaultValue(0)]
         public override int? ItemType
         {
             get => base.ItemType;

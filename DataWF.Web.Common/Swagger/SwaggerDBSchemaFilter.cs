@@ -12,13 +12,13 @@ namespace DataWF.Web.Common
 {
     public class SwaggerDBSchemaFilter : ISchemaFilter
     {
-        private Stack<DBTable> tables = new Stack<DBTable>();
+        private Stack<TableAttributeCache> tables = new Stack<TableAttributeCache>();
 
         public void Apply(Schema schema, SchemaFilterContext context)
         {
             if (TypeHelper.IsBaseType(context.SystemType, typeof(DBItem)))
             {
-                var temp = DBTable.GetTableAttributeInherit(context.SystemType)?.Table;
+                var temp = DBTable.GetTableAttributeInherit(context.SystemType);
                 if (temp != null)
                 {
                     tables.Push(temp);
@@ -71,7 +71,7 @@ namespace DataWF.Web.Common
             return baseSchema;
         }
 
-        private void ApplyProperties(Schema schema, Type type, SchemaFilterContext context, DBTable table)
+        private void ApplyProperties(Schema schema, Type type, SchemaFilterContext context, TableAttributeCache table)
         {
             foreach (var column in table.Columns.Where(p => p.PropertyInfo?.GetGetMethod()?.GetBaseDefinition()?.DeclaringType == type))
             {
@@ -86,13 +86,13 @@ namespace DataWF.Web.Common
                 {
                     var referenceSchema = context.SchemaRegistry.GetOrRegister(column.ReferencePropertyInfo.PropertyType);
                     var schemaProperty = new Schema() { Ref = referenceSchema.Ref };
-                    schemaProperty.Extensions.Add("x-id", column.Property);
+                    schemaProperty.Extensions.Add("x-id", column.PropertyName);
                     schema.Properties.Add(column.ReferencePropertyInfo.Name, schemaProperty);
                 }
             }
-            if (table.TableAttribute != null)
+            if (table.Referencings != null)
             {
-                foreach (var refing in table.TableAttribute.Referencings.Where(p => p.Property.DeclaringType == type))
+                foreach (var refing in table.Referencings.Where(p => p.Property.DeclaringType == type))
                 {
                     var refingSchema = context.SchemaRegistry.GetOrRegister(refing.Property.PropertyType);
                     var itemType = TypeHelper.GetItemType(refing.Property.PropertyType);
@@ -103,10 +103,10 @@ namespace DataWF.Web.Common
             }
         }
 
-        public void ApplyColumn(Schema schema, Schema columnSchema, DBColumn column)
+        public void ApplyColumn(Schema schema, Schema columnSchema, ColumnAttributeCache column)
         {
-            if ((column.Keys & DBColumnKeys.Password) == DBColumnKeys.Password
-                || (column.Keys & DBColumnKeys.File) == DBColumnKeys.File)
+            if ((column.Attribute.Keys & DBColumnKeys.Password) == DBColumnKeys.Password
+                || (column.Attribute.Keys & DBColumnKeys.File) == DBColumnKeys.File)
                 return;
 
             if (column.GetDataType() == typeof(string) && column.Size > 0)
@@ -114,31 +114,31 @@ namespace DataWF.Web.Common
                 columnSchema.MaxLength = column.Size;
             }
 
-            if ((column.Keys & DBColumnKeys.Access) == DBColumnKeys.Access
-                || (column.Keys & DBColumnKeys.Date) == DBColumnKeys.Date
-                || (column.Keys & DBColumnKeys.Stamp) == DBColumnKeys.Stamp
-                || (column.Keys & DBColumnKeys.System) == DBColumnKeys.System
+            if ((column.Attribute.Keys & DBColumnKeys.Access) == DBColumnKeys.Access
+                || (column.Attribute.Keys & DBColumnKeys.Date) == DBColumnKeys.Date
+                || (column.Attribute.Keys & DBColumnKeys.Stamp) == DBColumnKeys.Stamp
+                || (column.Attribute.Keys & DBColumnKeys.System) == DBColumnKeys.System
                 || column.PropertyInfo?.GetSetMethod() == null)
             {
                 columnSchema.ReadOnly = true;
             }
-            if (((column.Keys & DBColumnKeys.Notnull) == DBColumnKeys.Notnull
-                || (column.Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType)
-                || (column.Keys & DBColumnKeys.Primary) == DBColumnKeys.Primary)
+            if (((column.Attribute.Keys & DBColumnKeys.Notnull) == DBColumnKeys.Notnull
+                || (column.Attribute.Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType)
+                || (column.Attribute.Keys & DBColumnKeys.Primary) == DBColumnKeys.Primary)
             {
                 if (schema.Required == null)
                     schema.Required = new List<string>();
-                schema.Required.Add(column.Property);
+                schema.Required.Add(column.PropertyName);
             }
-            if ((column.Keys & DBColumnKeys.Primary) == DBColumnKeys.Primary)
+            if ((column.Attribute.Keys & DBColumnKeys.Primary) == DBColumnKeys.Primary)
             {
-                schema.Extensions.Add("x-id", column.Property);
+                schema.Extensions.Add("x-id", column.PropertyName);
             }
-            if ((column.Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType)
+            if ((column.Attribute.Keys & DBColumnKeys.ItemType) == DBColumnKeys.ItemType)
             {
-                schema.Extensions.Add("x-type", column.Property);
+                schema.Extensions.Add("x-type", column.PropertyName);
             }
-            schema.Properties.Add(column.Property, columnSchema);
+            schema.Properties.Add(column.PropertyName, columnSchema);
 
             var defaultValue = column.PropertyInfo.GetCustomAttribute<DefaultValueAttribute>();
             if (defaultValue != null && defaultValue.Value != null)

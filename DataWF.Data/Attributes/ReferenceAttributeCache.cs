@@ -36,7 +36,7 @@ namespace DataWF.Data
             ReferenceType = property.PropertyType;
             Column.DisplayName = property.Name;
             Column.Attribute.Keys |= DBColumnKeys.Reference;
-            Column.ReferenceProperty = property;
+            Column.ReferencePropertyInfo = property;
             GenerateName();
         }
 

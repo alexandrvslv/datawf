@@ -79,6 +79,14 @@ namespace DataWF.Data
                 {
                     Keys |= DBColumnKeys.FileLOB;
                 }
+                if (value.IsTypeKey)
+                {
+                    Keys |= DBColumnKeys.ItemType;
+                }
+                if ((value.Keys & DBColumnKeys.Access) == DBColumnKeys.Access)
+                {
+                    Keys |= DBColumnKeys.Access;
+                }
             }
         }
 
