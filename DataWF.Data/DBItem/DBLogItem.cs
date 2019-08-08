@@ -79,7 +79,7 @@ namespace DataWF.Data
             get => UserReg?.UserId;
         }
 
-        [Column("item_type_log", GroupName = "system", Keys = DBColumnKeys.ItemType, Order = 0)]
+        [LogColumn("item_type", "item_type_log", GroupName = "system", Keys = DBColumnKeys.ItemType, Order = 0)]
         public override int? ItemType
         {
             get => base.ItemType;
@@ -94,7 +94,7 @@ namespace DataWF.Data
         }
 
         [XmlIgnore, JsonIgnore, NotMapped, Browsable(false)]
-        [Column("group_access_log", 512, DataType = typeof(byte[]), GroupName = "system", Keys = DBColumnKeys.Access | DBColumnKeys.System, Order = 102)]
+        [LogColumn("group_access", "group_access_log", Size = 512, DataType = typeof(byte[]), GroupName = "system", Keys = DBColumnKeys.Access | DBColumnKeys.System, Order = 102)]
         public override AccessValue Access
         {
             get => base.Access;

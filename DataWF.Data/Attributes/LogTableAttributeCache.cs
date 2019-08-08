@@ -30,7 +30,11 @@ namespace DataWF.Data
 
         public LogTableAttribute LogAttribute => base.Attribute as LogTableAttribute;
 
-        public TableAttributeCache BaseTableAttribute => baseTable ?? (baseTable = DBTable.GetTableAttribute(LogAttribute.BaseType));
+        public TableAttributeCache BaseTableAttribute
+        {
+            get => baseTable ?? (baseTable = DBTable.GetTableAttribute(LogAttribute.BaseType));
+            set => baseTable = value;
+        }
 
         public override DBSchema Schema
         {

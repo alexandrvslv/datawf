@@ -69,6 +69,10 @@ namespace DataWF.Data
             Column.PropertyInfo = PropertyInfo;
             Column.ReferencePropertyInfo = ReferenceProperty;
             Column.DefaultValues = DefaultValues;
+            if (!table.Columns.Contains(Column.Name))
+            {
+                table.Columns.Add(Column);
+            }
         }
     }
 }

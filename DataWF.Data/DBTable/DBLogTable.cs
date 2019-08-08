@@ -87,7 +87,12 @@ namespace DataWF.Data
                 var seqName = value.SequenceName + "_log";
                 Sequence = Schema.Sequences[seqName] ?? new DBSequence() { Name = seqName };
                 DisplayName = value.DisplayName + " Log";
-                var tableGenerator = new TableAttributeCache() { Schema = schema, Table = this };
+                var tableGenerator = new LogTableAttributeCache()
+                {
+                    Schema = Schema,
+                    Table = this,
+                    BaseTableAttribute = value.TableAttribute
+                };
                 tableGenerator.Initialize(typeof(DBLogItem));
                 tableGenerator.GenerateColumns();
 
