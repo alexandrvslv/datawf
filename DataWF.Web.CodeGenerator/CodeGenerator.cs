@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using SF = Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
@@ -500,7 +501,7 @@ namespace DataWF.Web.CodeGenerator
                 var unit = SyntaxHelper.GenUnit(entry.Value, Namespace, usings.Values);
                 if (save)
                 {
-                    File.WriteAllText(Path.Combine(Output, $"{entry.Key}Controller.cs"), unit.ToFullString());
+                    WriteFile(Path.Combine(Output, $"{entry.Key}Controller.cs"), unit);
                 }
                 list.Add(unit.SyntaxTree);
             }
@@ -516,11 +517,38 @@ namespace DataWF.Web.CodeGenerator
                 var unit = SyntaxHelper.GenUnit(entry.Value, Namespace, usings.Values);
                 if (save)
                 {
-                    File.WriteAllText(Path.Combine(logOutput, $"{entry.Key}Log.cs"), unit.ToFullString());
+                    WriteFile(Path.Combine(logOutput, $"{entry.Key}Log.cs"), unit);
                 }
                 list.Add(unit.SyntaxTree);
             }
             return list;
+        }
+
+        private void WriteFile(string name, CompilationUnitSyntax unit)
+        {
+            int tryCount = 6;
+            for (int i = 1; i < tryCount; i++)
+            {
+                if (TryWriteFile(name, unit))
+                    break;
+                Console.WriteLine($"Can not access file {name}, try {i}");
+                Thread.Sleep(200);
+            }
+        }
+
+        private static bool TryWriteFile(string name, CompilationUnitSyntax unit)
+        {
+            try
+            {
+                using (var fileStream = new FileStream(name, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
+                using (var writer = new StreamWriter(fileStream))
+                    unit.WriteTo(writer);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public IEnumerable<MemberDeclarationSyntax> GenControllerMemebers(TableAttributeCache table, Type type, Dictionary<string, UsingDirectiveSyntax> usings)
