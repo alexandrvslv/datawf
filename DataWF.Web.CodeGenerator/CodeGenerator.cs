@@ -230,7 +230,7 @@ namespace DataWF.Web.CodeGenerator
 
         private IEnumerable<MemberDeclarationSyntax> GenLogProperty(ColumnAttributeCache column, TableAttributeCache table, Type itemType, Dictionary<string, UsingDirectiveSyntax> usings)
         {
-            AddUsing(column.PropertyInfo.PropertyType, usings);
+            AddUsing(TypeHelper.CheckNullable(column.PropertyInfo.PropertyType), usings);
             var typeText = TypeHelper.FormatCode(column.PropertyInfo.PropertyType);
 
             yield return SF.PropertyDeclaration(
