@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-//using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
+using SF = Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace DataWF.Web.CodeGenerator
 {
