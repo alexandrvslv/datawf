@@ -23,6 +23,12 @@ namespace DataWF.Common
     {
         private static Dictionary<long, IInvoker> cacheInvokers = new Dictionary<long, IInvoker>(1000);
         private static Dictionary<long, EmitConstructor> cacheCtors = new Dictionary<long, EmitConstructor>(1000);
+
+        static EmitInvoker()
+        {
+            var methoInfo = TypeHelper.GetMemberInfo(typeof(object), nameof(ToString));
+            cacheInvokers[GetToken(methoInfo)] = ToStringInvoker.Instance;
+        }
         public static void DeleteCache()
         {
             cacheInvokers.Clear();
@@ -96,6 +102,23 @@ namespace DataWF.Common
             return Initialize(info, cache);
         }
 
+        public static void RegisterInvoker(Type type, InvokerAttribute invoker)
+        {
+            var propertyInfo = TypeHelper.GetPropertyInfo(invoker.TargetType, invoker.PropertyName);
+            if (propertyInfo != null)
+            {
+                var token = GetToken(propertyInfo);
+                if (type.IsGenericType)
+                {
+                    cacheInvokers[token] = (IInvoker)Activator.CreateInstance(type.MakeGenericType(invoker.TargetType));
+                }
+                else
+                {
+                    cacheInvokers[token] = (IInvoker)Activator.CreateInstance(type);
+                }
+            }
+        }
+
         public static EmitConstructor Initialize(ConstructorInfo info, bool cache = true)
         {
             var token = GetToken(info);
@@ -109,14 +132,34 @@ namespace DataWF.Common
             if (info == null)
                 return null;
             var token = GetToken(info);
-            if (cache && cacheInvokers.TryGetValue(token, out var invoker))
-                return invoker;
+            var baseInfo = (MemberInfo)null;
+            if (cache)
+            {
+                if (cacheInvokers.TryGetValue(token, out var invoker))
+                {
+                    return invoker;
+                }
+
+                baseInfo = info.GetMemberBaseDefinition();
+                var baseToken = GetToken(baseInfo);
+                if (cacheInvokers.TryGetValue(baseToken, out invoker))
+                {
+                    return invoker;
+                }
+                else if (!baseInfo.IsGeneric())
+                {
+                    token = baseToken;
+                    info = baseInfo;
+                }
+            }
+
 
             return cacheInvokers[token] = Initialize(info, null);
         }
 
         public static IInvoker Initialize(MemberInfo info, object index = null)
         {
+            System.Diagnostics.Debug.WriteLine($"Invoker {info.DeclaringType} - {info.Name}");
             var token = GetToken(info);
             IInvoker result = null;
             if (info is FieldInfo)

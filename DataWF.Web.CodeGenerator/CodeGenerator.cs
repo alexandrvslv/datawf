@@ -53,9 +53,8 @@ namespace DataWF.Web.CodeGenerator
                 {"System.Linq", MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location) },
                 {"Microsoft.AspNetCore.Mvc", MetadataReference.CreateFromFile(typeof(ControllerBase).Assembly.Location) },
                 {"DataWF.Common", MetadataReference.CreateFromFile(typeof(Helper).Assembly.Location) },
-                {"DataWF.Data", MetadataReference.CreateFromFile(typeof(TableAttributeCache).Assembly.Location) },
+                {"DataWF.Data", MetadataReference.CreateFromFile(typeof(TableGenerator).Assembly.Location) },
             };
-
         }
 
         public static IEnumerable<Assembly> LoadAssemblies(IEnumerable<string> assemblies)
@@ -77,7 +76,7 @@ namespace DataWF.Web.CodeGenerator
                 foreach (var itemType in assembly.GetExportedTypes())
                 {
                     var table = DBTable.GetTableAttribute(itemType);
-                    if (table != null && !(table is LogTableAttributeCache))
+                    if (table != null && !(table is LogTableGenerator))
                     {
                         if ((Mode & CodeGeneratorMode.Controllers) != 0)
                         {
@@ -108,7 +107,7 @@ namespace DataWF.Web.CodeGenerator
             }
         }
 
-        private ClassDeclarationSyntax GetOrGenLog(TableAttributeCache table, Type itemType, Dictionary<string, UsingDirectiveSyntax> usings)
+        private ClassDeclarationSyntax GetOrGenLog(TableGenerator table, Type itemType, Dictionary<string, UsingDirectiveSyntax> usings)
         {
             if (!table.Attribute.IsLoging)
                 return null;
@@ -143,7 +142,7 @@ namespace DataWF.Web.CodeGenerator
             return controller;
         }
 
-        private IEnumerable<AttributeListSyntax> GenLogAttributeList(TableAttributeCache table, Type itemType)
+        private IEnumerable<AttributeListSyntax> GenLogAttributeList(TableGenerator table, Type itemType)
         {
             if (itemType.IsAbstract)
                 yield break;
@@ -158,7 +157,7 @@ namespace DataWF.Web.CodeGenerator
                                              SF.AttributeArgument(
                                                  SF.ParseExpression($"typeof({itemType.Name}), \"{table.Attribute.TableName}_log\"")))))));
             }
-            else if (DBTable.GetItemTypeAttribute(itemType) is ItemTypeAttributeCache itemTypeAttr)
+            else if (DBTable.GetItemTypeAttribute(itemType) is ItemTypeGenerator itemTypeAttr)
             {
                 yield return SF.AttributeList(
                              SF.SingletonSeparatedList(
@@ -171,7 +170,7 @@ namespace DataWF.Web.CodeGenerator
             }
         }
 
-        private IEnumerable<MemberDeclarationSyntax> GenLogMemebers(TableAttributeCache table, Type itemType, Type baseType, Dictionary<string, UsingDirectiveSyntax> usings)
+        private IEnumerable<MemberDeclarationSyntax> GenLogMemebers(TableGenerator table, Type itemType, Type baseType, Dictionary<string, UsingDirectiveSyntax> usings)
         {
             if ((itemType.GetCustomAttribute<TableAttribute>(false) != null)
                 || !TypeHelper.IsBaseType(itemType, table.ItemType))
@@ -200,7 +199,7 @@ namespace DataWF.Web.CodeGenerator
                     semicolonToken: SF.Token(SyntaxKind.SemicolonToken)
                    );
             }
-            var columns = new List<ColumnAttributeCache>();
+            var columns = new List<ColumnGenerator>();
             var itemBaseType = itemType.BaseType;
             while (itemBaseType.IsGenericType)
             {
@@ -229,7 +228,7 @@ namespace DataWF.Web.CodeGenerator
             }
         }
 
-        private IEnumerable<MemberDeclarationSyntax> GenLogProperty(ColumnAttributeCache column, TableAttributeCache table, Type itemType, Dictionary<string, UsingDirectiveSyntax> usings)
+        private IEnumerable<MemberDeclarationSyntax> GenLogProperty(ColumnGenerator column, TableGenerator table, Type itemType, Dictionary<string, UsingDirectiveSyntax> usings)
         {
             AddUsing(TypeHelper.CheckNullable(column.PropertyInfo.PropertyType), usings);
             var typeText = TypeHelper.FormatCode(column.PropertyInfo.PropertyType);
@@ -286,7 +285,7 @@ namespace DataWF.Web.CodeGenerator
             }
         }
 
-        private IEnumerable<AttributeListSyntax> GenLogPropertyAttributes(ColumnAttributeCache column, TableAttributeCache table, Type itemType)
+        private IEnumerable<AttributeListSyntax> GenLogPropertyAttributes(ColumnGenerator column, TableGenerator table, Type itemType)
         {
             yield return SF.AttributeList(
                          SF.SingletonSeparatedList(
@@ -298,7 +297,7 @@ namespace DataWF.Web.CodeGenerator
                                              SF.ParseExpression($"\"{column.ColumnName}\", \"{column.ColumnName}_log\"")))))));
         }
 
-        private IEnumerable<AttributeListSyntax> GenLogReferencePropertyAttributes(ColumnAttributeCache column, TableAttributeCache table, Type itemType)
+        private IEnumerable<AttributeListSyntax> GenLogReferencePropertyAttributes(ColumnGenerator column, TableGenerator table, Type itemType)
         {
             yield return SF.AttributeList(
                          SF.SingletonSeparatedList(
@@ -310,7 +309,7 @@ namespace DataWF.Web.CodeGenerator
                                              SF.ParseExpression($"nameof({GetLogPropertyName(column)})")))))));
         }
 
-        private string GetLogPropertyName(ColumnAttributeCache column)
+        private string GetLogPropertyName(ColumnGenerator column)
         {
             if (column.PropertyInfo.DeclaringType == typeof(DBItem))
             {
@@ -319,7 +318,7 @@ namespace DataWF.Web.CodeGenerator
             return column.PropertyName;
         }
 
-        private MemberDeclarationSyntax GenKeyProperty(ColumnAttributeCache column, TableAttributeCache tableAttribute, Type itemType)
+        private MemberDeclarationSyntax GenKeyProperty(ColumnGenerator column, TableGenerator tableAttribute, Type itemType)
         {
             return SF.PropertyDeclaration(
                 attributeLists: SF.List<AttributeListSyntax>(),
@@ -335,7 +334,7 @@ namespace DataWF.Web.CodeGenerator
                );
         }
 
-        private MemberDeclarationSyntax GenKeyField(ColumnAttributeCache column, TableAttributeCache table, Type itemType)
+        private MemberDeclarationSyntax GenKeyField(ColumnGenerator column, TableGenerator table, Type itemType)
         {
             return SF.FieldDeclaration(
                 attributeLists: SF.List<AttributeListSyntax>(),
@@ -349,13 +348,13 @@ namespace DataWF.Web.CodeGenerator
                             initializer: SF.EqualsValueClause(SF.ParseExpression($"DBColumn.EmptyKey"))))));
         }
 
-        private string GetKeyFieldName(ColumnAttributeCache column)
+        private string GetKeyFieldName(ColumnGenerator column)
         {
             var property = column.PropertyName;
             return string.Concat(char.ToLowerInvariant(property[0]).ToString(), property.Substring(1), "Key");
         }
 
-        private string GetKeyName(ColumnAttributeCache column)
+        private string GetKeyName(ColumnGenerator column)
         {
             var property = column.PropertyName;
             return string.Concat(property, "Key");
@@ -366,7 +365,7 @@ namespace DataWF.Web.CodeGenerator
             return $"{itemType.Name}Log";
         }
 
-        private ClassDeclarationSyntax GetOrGenBaseController(TableAttributeCache table, Type itemType, Dictionary<string, UsingDirectiveSyntax> usings, out string controllerClassName)
+        private ClassDeclarationSyntax GetOrGenBaseController(TableGenerator table, Type itemType, Dictionary<string, UsingDirectiveSyntax> usings, out string controllerClassName)
         {
             string name = $"Base{(table.FileKey != null ? "File" : "")}{itemType.Name}";
             controllerClassName = $"{name}Controller";
@@ -409,7 +408,7 @@ namespace DataWF.Web.CodeGenerator
         }
 
         //https://carlos.mendible.com/2017/03/02/create-a-class-with-net-core-and-roslyn/
-        private ClassDeclarationSyntax GetOrGenController(TableAttributeCache table, Type itemType, Dictionary<string, UsingDirectiveSyntax> usings)
+        private ClassDeclarationSyntax GetOrGenController(TableGenerator table, Type itemType, Dictionary<string, UsingDirectiveSyntax> usings)
         {
             var primaryKeyType = table.PrimaryKey?.GetDataType() ?? typeof(int);
             var baseName = $"Base{(table.FileKey != null ? "File" : "")}Controller<{itemType.Name}, {primaryKeyType.Name}>";
@@ -489,7 +488,6 @@ namespace DataWF.Web.CodeGenerator
             var list = new List<SyntaxTree>();
             list.AddRange(SyntaxHelper.LoadResources(assembly, baseName, Namespace, save ? Output : null).Select(P => P.SyntaxTree));
 
-
             if (save)
             {
                 Directory.CreateDirectory(Output);
@@ -551,7 +549,7 @@ namespace DataWF.Web.CodeGenerator
             }
         }
 
-        public IEnumerable<MemberDeclarationSyntax> GenControllerMemebers(TableAttributeCache table, Type type, Dictionary<string, UsingDirectiveSyntax> usings)
+        public IEnumerable<MemberDeclarationSyntax> GenControllerMemebers(TableGenerator table, Type type, Dictionary<string, UsingDirectiveSyntax> usings)
         {
             //if (table.ItemType == type && !baseClass)
             //    yield break;
@@ -602,7 +600,7 @@ namespace DataWF.Web.CodeGenerator
         }
 
         //https://stackoverflow.com/questions/37710714/roslyn-add-new-method-to-an-existing-class
-        private MethodDeclarationSyntax GenControllerMethod(MethodInfo method, TableAttributeCache table, Dictionary<string, UsingDirectiveSyntax> usings)
+        private MethodDeclarationSyntax GenControllerMethod(MethodInfo method, TableGenerator table, Dictionary<string, UsingDirectiveSyntax> usings)
         {
             AddUsing(method.DeclaringType, usings);
             AddUsing(method.ReturnType, usings);
@@ -781,7 +779,111 @@ namespace DataWF.Web.CodeGenerator
                                  SF.IdentifierName(post ? "HttpPost" : "HttpGet"))));
         }
 
-        private List<MethodParametrInfo> GetParametersInfo(MethodInfo method, TableAttributeCache table, Dictionary<string, UsingDirectiveSyntax> usings)
+        private ClassDeclarationSyntax GenPropertyInvoker(string name, string definitionName, string propertyName, string propertyType)
+        {
+            return SF.ClassDeclaration(
+                     attributeLists: SF.List(GenPropertyInvokerAttribute(definitionName, propertyName)),
+                     modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.PartialKeyword)),
+                     identifier: SF.Identifier(name + "<T>"),
+                     typeParameterList: null,
+                     baseList: SF.BaseList(SF.SingletonSeparatedList<BaseTypeSyntax>(
+                            SF.SimpleBaseType(SF.ParseTypeName($"Invoker<T, {propertyType}>")))),
+                     constraintClauses: SF.List(new TypeParameterConstraintClauseSyntax[] {
+                         SF.TypeParameterConstraintClause(
+                             name: SF.IdentifierName("T"),
+                             constraints: SF.SeparatedList(new TypeParameterConstraintSyntax[] {
+                                 SF.TypeConstraint(SF.ParseTypeName(definitionName))
+                             }))
+                     }),
+                     members: SF.List(GenPropertyInvokerMemebers(name, propertyName, propertyType, definitionName)));
+        }
+
+        private IEnumerable<MemberDeclarationSyntax> GenPropertyInvokerMemebers(string name, string propertyName, string propertyType, string definitionName)
+        {
+            yield return SF.FieldDeclaration(attributeLists: SF.List<AttributeListSyntax>(),
+                   modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.StaticKeyword), SF.Token(SyntaxKind.ReadOnlyKeyword)),
+                  declaration: SF.VariableDeclaration(
+                      type: SF.ParseTypeName(name + "<T>"),
+                      variables: SF.SingletonSeparatedList(
+                          SF.VariableDeclarator(
+                              identifier: SF.Identifier("DefaultInstance"),
+                              argumentList: null,
+                              initializer: SF.EqualsValueClause(SF.ParseExpression($"new {name}<T>()"))))));
+
+            yield return SF.ConstructorDeclaration(
+                         attributeLists: SF.List<AttributeListSyntax>(),
+                         modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
+                         identifier: SF.Identifier(name),
+                         parameterList: SF.ParameterList(),
+                         initializer: null,
+                         body: SF.Block(SF.ParseStatement($@"Name = nameof({definitionName}.{propertyName});")));
+
+            //public override bool CanWrite => true;
+            yield return SF.PropertyDeclaration(
+                   attributeLists: SF.List<AttributeListSyntax>(),
+                   modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.OverrideKeyword)),
+                   type: SF.ParseTypeName("bool"),
+                   explicitInterfaceSpecifier: null,
+                   identifier: SF.Identifier(nameof(IInvoker.CanWrite)),
+                   accessorList: null,
+                   expressionBody: SF.ArrowExpressionClause(SF.ParseExpression("true")),
+                   initializer: null,
+                   semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
+
+            //public override string GetValue(T target) => target.Name;
+            yield return SF.MethodDeclaration(
+                   attributeLists: SF.List<AttributeListSyntax>(),
+                   modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.OverrideKeyword)),
+                   returnType: SF.ParseTypeName(propertyType),
+                   explicitInterfaceSpecifier: null,
+                   identifier: SF.Identifier(nameof(IInvoker.GetValue)),
+                   constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
+                   typeParameterList: null,
+                   body: null,
+                   parameterList: SF.ParameterList(SF.SeparatedList(new[] {SF.Parameter(
+                       attributeLists: SF.List<AttributeListSyntax>(),
+                       modifiers: SF.TokenList(),
+                       type: SF.ParseTypeName("T"),
+                       identifier: SF.Identifier("target"),
+                       @default: null
+                       ) })),
+                   expressionBody: SF.ArrowExpressionClause(SF.ParseExpression($"target.{propertyName}")),
+                   semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
+            //public override void SetValue(T target, string value) => target.Name = value;
+            yield return SF.MethodDeclaration(
+                   attributeLists: SF.List<AttributeListSyntax>(),
+                   modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.OverrideKeyword)),
+                   returnType: SF.ParseTypeName("void"),
+                   explicitInterfaceSpecifier: null,
+                   identifier: SF.Identifier(nameof(IInvoker.SetValue)),
+                   constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
+                   typeParameterList: null,
+                   body: null,
+                   parameterList: SF.ParameterList(SF.SeparatedList(new[] {
+                       SF.Parameter(
+                           attributeLists: SF.List<AttributeListSyntax>(),
+                           modifiers: SF.TokenList(),
+                           type: SF.ParseTypeName("T"),
+                           identifier: SF.Identifier("target"),
+                           @default: null),
+                       SF.Parameter(
+                           attributeLists: SF.List<AttributeListSyntax>(),
+                           modifiers: SF.TokenList(),
+                           type: SF.ParseTypeName(propertyType),
+                           identifier: SF.Identifier("value"),
+                           @default: null)
+                   })),
+                   expressionBody: SF.ArrowExpressionClause(SF.ParseExpression($"target.{propertyName} = value")),
+                   semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
+
+        }
+
+        private IEnumerable<AttributeListSyntax> GenPropertyInvokerAttribute(string definitionName, string propertyName)
+        {
+            yield return SyntaxHelper.GenAttribute("Invoker", $"typeof({definitionName}), nameof({definitionName}.{propertyName})");
+        }
+
+        private List<MethodParametrInfo> GetParametersInfo(MethodInfo method, TableGenerator table, Dictionary<string, UsingDirectiveSyntax> usings)
         {
             var parametersInfo = new List<MethodParametrInfo>();
             foreach (var parameter in method.GetParameters())
@@ -801,7 +903,7 @@ namespace DataWF.Web.CodeGenerator
             return parametersInfo;
         }
 
-        private IEnumerable<ParameterSyntax> GenControllerMethodParameters(MethodInfo method, TableAttributeCache table, List<MethodParametrInfo> parametersInfo)
+        private IEnumerable<ParameterSyntax> GenControllerMethodParameters(MethodInfo method, TableGenerator table, List<MethodParametrInfo> parametersInfo)
         {
             if (!method.IsStatic)
             {
@@ -918,7 +1020,7 @@ namespace DataWF.Web.CodeGenerator
         private ParameterInfo info;
 
         public Type Type { get; internal set; }
-        public TableAttributeCache Table { get; internal set; }
+        public TableGenerator Table { get; internal set; }
         public string ValueName { get; internal set; }
         public ParameterInfo Info
         {

@@ -2,6 +2,7 @@
 
 namespace DataWF.Common
 {
+
     public abstract class Invoker<T, V> : IInvoker<T, V>
     {
         public string Name { get; set; }

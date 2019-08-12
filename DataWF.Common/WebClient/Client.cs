@@ -15,7 +15,7 @@ namespace DataWF.Common
         where T : class, new()
         where K : struct
     {
-        public Client(ActionInvoker<T, K?> idInvoker, ActionInvoker<T, int?> typeInvoker, int typeId = 0)
+        public Client(Invoker<T, K?> idInvoker, Invoker<T, int?> typeInvoker, int typeId = 0)
         {
             IdInvoker = idInvoker;
             Items.Indexes.Add(IdInvoker);
@@ -34,9 +34,9 @@ namespace DataWF.Common
 
         public TypeSerializationInfo SerializationInfo { get; }
 
-        public ActionInvoker<T, K?> IdInvoker { get; }
+        public Invoker<T, K?> IdInvoker { get; }
 
-        public ActionInvoker<T, int?> TypeInvoker { get; }
+        public Invoker<T, int?> TypeInvoker { get; }
 
         public int TypeId { get; }
 

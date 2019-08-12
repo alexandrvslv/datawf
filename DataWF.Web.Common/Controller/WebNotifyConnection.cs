@@ -9,8 +9,6 @@ namespace DataWF.Web.Common
     public class WebNotifyConnection : DefaultItem, IDisposable
     {
         private static uint IdSequence = 0;
-        public static readonly Invoker<WebNotifyConnection, WebSocket> SocketInvoker = new ActionInvoker<WebNotifyConnection, WebSocket>(nameof(Socket), (p) => p.Socket, (p, v) => p.Socket = v);
-        public static readonly Invoker<WebNotifyConnection, User> UserInvoker = new ActionInvoker<WebNotifyConnection, User>(nameof(User), (p) => p.User, (p, v) => p.User = v);
 
         public WebNotifyConnection()
         {
@@ -49,4 +47,35 @@ namespace DataWF.Web.Common
         }
     }
 
+    [Invoker(typeof(WebNotifyConnection), nameof(WebNotifyConnection.Socket))]
+    public class WebNotifyConnectionSocketInvoker : Invoker<WebNotifyConnection, WebSocket>
+    {
+        public static readonly WebNotifyConnectionSocketInvoker Instance = new WebNotifyConnectionSocketInvoker();
+        public WebNotifyConnectionSocketInvoker()
+        {
+            Name = nameof(WebNotifyConnection.Socket);
+        }
+
+        public override bool CanWrite => true;
+
+        public override WebSocket GetValue(WebNotifyConnection target) => target.Socket;
+
+        public override void SetValue(WebNotifyConnection target, WebSocket value) => target.Socket = value;
+    }
+
+    [Invoker(typeof(WebNotifyConnection), nameof(WebNotifyConnection.User))]
+    public class WebNotifyConnectionUserInvoker : Invoker<WebNotifyConnection, User>
+    {
+        public static readonly WebNotifyConnectionUserInvoker Instance = new WebNotifyConnectionUserInvoker();
+        public WebNotifyConnectionUserInvoker()
+        {
+            Name = nameof(WebNotifyConnection.User);
+        }
+
+        public override bool CanWrite => true;
+
+        public override User GetValue(WebNotifyConnection target) => target.User;
+
+        public override void SetValue(WebNotifyConnection target, User value) => target.User = value;
+    }
 }

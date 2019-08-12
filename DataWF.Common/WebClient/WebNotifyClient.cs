@@ -145,5 +145,6 @@ namespace DataWF.Common
         public string Id { get; set; }
         public int Diff { get; set; }
         public int User { get; set; }
+        public object Value { get; set; }
     }
 }

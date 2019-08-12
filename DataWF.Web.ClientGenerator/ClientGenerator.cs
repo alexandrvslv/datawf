@@ -529,8 +529,8 @@ namespace DataWF.Web.ClientGenerator
                     SyntaxKind.BaseConstructorInitializer,
                     SF.ArgumentList(
                         SF.SeparatedList(new[] {
-                            SF.Argument(SF.ParseExpression($"new ActionInvoker<{clientName},{GetTypeString(idKey, true, "List")}>(nameof({clientName}.{idName}), p=>p.{idName}, (p,v)=>p.{idName}=v)")),
-                            SF.Argument(SF.ParseExpression($"new ActionInvoker<{clientName},{GetTypeString(typeKey, true, "List")}>(nameof({clientName}.{typeName}), p=>p.{typeName}, (p,v)=>p.{typeName}=v)")),
+                            SF.Argument(SF.ParseExpression($"{clientName}.{idName}Invoker<{clientName}>.Default")),
+                            SF.Argument(SF.ParseExpression($"{clientName}.{typeName}Invoker<{clientName}>.Default")),
                             SF.Argument(SF.ParseExpression($"{typeId}")),
                         })));
             return SF.ConstructorDeclaration(
@@ -546,7 +546,7 @@ namespace DataWF.Web.ClientGenerator
         {
             foreach (var refField in cache)
             {
-                yield return SF.ParseStatement($"Items.Indexes.Add({refField.Definition}.{refField.InvokerName});");
+                yield return SF.ParseStatement($"Items.Indexes.Add({refField.InvokerName});");
             }
         }
 
@@ -916,43 +916,132 @@ namespace DataWF.Web.ClientGenerator
                     body: SF.Block(new[] { SF.ParseStatement($"return {idKey.Name}.ToString();") }),
                     semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
             }
+            var definitionName = GetDefinitionName(schema);
 
-            //if (schema.InheritedSchema == null)
-            //{
-            //    yield return SF.EventFieldDeclaration(
-            //        attributeLists: SF.List<AttributeListSyntax>(),
-            //        modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
-            //        declaration: SF.VariableDeclaration(
-            //            type: SF.ParseTypeName(nameof(PropertyChangedEventHandler)),
-            //            variables: SF.SeparatedList(new[] { SF.VariableDeclarator(nameof(INotifyPropertyChanged.PropertyChanged)) })));
-            //    yield return SyntaxHelper.GenProperty(nameof(INotifyListPropertyChanged), nameof(IContainerNotifyPropertyChanged.Container), true)
-            //        .WithAttributeLists(SF.List(new[] { SF.AttributeList(SF.SingletonSeparatedList(SF.Attribute(SF.IdentifierName("JsonIgnore")))) }));
-            //    yield return SyntaxHelper.GenProperty("bool?", nameof(ISynchronized.IsSynchronized), true)
-            //        .WithAttributeLists(SF.List(new[] { SF.AttributeList(SF.SingletonSeparatedList(SF.Attribute(SF.IdentifierName("JsonIgnore")))) }));
-            //    yield return SyntaxHelper.GenProperty("IDictionary<string, object>", nameof(ISynchronized.Changes), false)
-            //        .WithAttributeLists(SF.List(new[] { SF.AttributeList(SF.SingletonSeparatedList(SF.Attribute(SF.IdentifierName("JsonIgnore")))) }));
-            //    yield return SF.MethodDeclaration(
-            //        attributeLists: SF.List<AttributeListSyntax>(),
-            //        modifiers: SF.TokenList(
-            //            SF.Token(SyntaxKind.ProtectedKeyword),
-            //            SF.Token(SyntaxKind.VirtualKeyword)),
-            //        returnType: SF.PredefinedType(SF.Token(SyntaxKind.VoidKeyword)),
-            //        explicitInterfaceSpecifier: null,
-            //        identifier: SF.Identifier("OnPropertyChanged"),
-            //        typeParameterList: null,
-            //        parameterList: SF.ParameterList(SF.SeparatedList(GenPropertyChangedParameter())),
-            //        constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
-            //        body: SF.Block(new[] {
-            //            SF.ParseStatement($"if({nameof(ISynchronized.IsSynchronized)} != null)"),
-            //            SF.ParseStatement("{"),
-            //            SF.ParseStatement($"{nameof(ISynchronized.IsSynchronized)} = false;"),
+            foreach (var property in schema.Properties)
+            {
+                var name = GetInvokerName(property.Value);
+                var refkey = GetPropertyRefKey(property.Value);
+                var propertyType = GetTypeString(property.Value, property.Value.IsNullableRaw ?? true, refkey == null ? "SelectableList" : "ReferenceList");
+                var propertyName = GetPropertyName(property.Value);
 
-            //            SF.ParseStatement("}"),
-            //            SF.ParseStatement($"var arg = new PropertyChangedEventArgs(propertyName);"),
-            //            SF.ParseStatement($"Container?.OnItemPropertyChanged(this, arg);"),
-            //            SF.ParseStatement($"PropertyChanged?.Invoke(this, arg);") }),
-            //        semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
-            //}
+                yield return GenDefinitionClassPropertyInvoker(name, definitionName, propertyName, propertyType);
+            }
+
+            if (GetPrimaryKey(schema, false) != null)
+            {
+                yield return GenDefinitionClassPropertyInvoker("PrimaryKeyInvoker", definitionName, "PrimaryKey", "object");
+            }
+        }
+
+        private ClassDeclarationSyntax GenDefinitionClassPropertyInvoker(string name, string definitionName, string propertyName, string propertyType)
+        {
+
+            return SF.ClassDeclaration(
+                     attributeLists: SF.List(GenDefinitionClassPropertyInvokerAttribute(definitionName, propertyName)),
+                     modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.PartialKeyword)),
+                     identifier: SF.Identifier(name + "<T>"),
+                     typeParameterList: null,
+                     baseList: SF.BaseList(SF.SingletonSeparatedList<BaseTypeSyntax>(
+                            SF.SimpleBaseType(SF.ParseTypeName($"Invoker<T, {propertyType}>")))),
+                     constraintClauses: SF.List(new TypeParameterConstraintClauseSyntax[] {
+                         SF.TypeParameterConstraintClause(
+                             name: SF.IdentifierName("T"),
+                             constraints: SF.SeparatedList(new TypeParameterConstraintSyntax[] {
+                                 SF.TypeConstraint(SF.ParseTypeName(definitionName))
+                             }))
+                     }),
+                     members: SF.List(GenDefinitionClassPropertyInvokerMemebers(name, propertyName, propertyType, definitionName)));
+        }
+
+        private IEnumerable<MemberDeclarationSyntax> GenDefinitionClassPropertyInvokerMemebers(string name, string propertyName, string propertyType, string definitionName)
+        {
+            yield return SF.FieldDeclaration(attributeLists: SF.List<AttributeListSyntax>(),
+                   modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.StaticKeyword), SF.Token(SyntaxKind.ReadOnlyKeyword)),
+                  declaration: SF.VariableDeclaration(
+                      type: SF.ParseTypeName(name + "<T>"),
+                      variables: SF.SingletonSeparatedList(
+                          SF.VariableDeclarator(
+                              identifier: SF.Identifier("Default"),
+                              argumentList: null,
+                              initializer: SF.EqualsValueClause(SF.ParseExpression($"new {name}<T>()"))))));
+
+            yield return SF.ConstructorDeclaration(
+                         attributeLists: SF.List<AttributeListSyntax>(),
+                         modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
+                         identifier: SF.Identifier(name),
+                         parameterList: SF.ParameterList(),
+                         initializer: null,
+                         body: SF.Block(SF.ParseStatement($@"Name = nameof({definitionName}.{propertyName});")));
+
+            //public override bool CanWrite => true;
+            yield return SF.PropertyDeclaration(
+                   attributeLists: SF.List<AttributeListSyntax>(),
+                   modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.OverrideKeyword)),
+                   type: SF.ParseTypeName("bool"),
+                   explicitInterfaceSpecifier: null,
+                   identifier: SF.Identifier(nameof(IInvoker.CanWrite)),
+                   accessorList: null,
+                   expressionBody: SF.ArrowExpressionClause(SF.ParseExpression("true")),
+                   initializer: null,
+                   semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
+
+            //public override string GetValue(T target) => target.Name;
+            yield return SF.MethodDeclaration(
+                   attributeLists: SF.List<AttributeListSyntax>(),
+                   modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.OverrideKeyword)),
+                   returnType: SF.ParseTypeName(propertyType),
+                   explicitInterfaceSpecifier: null,
+                   identifier: SF.Identifier(nameof(IInvoker.GetValue)),
+                   constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
+                   typeParameterList: null,
+                   body: null,
+                   parameterList: SF.ParameterList(SF.SeparatedList(new[] {SF.Parameter(
+                       attributeLists: SF.List<AttributeListSyntax>(),
+                       modifiers: SF.TokenList(),
+                       type: SF.ParseTypeName("T"),
+                       identifier: SF.Identifier("target"),
+                       @default: null
+                       ) })),
+                   expressionBody: SF.ArrowExpressionClause(SF.ParseExpression($"target.{propertyName}")),
+                   semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
+            //public override void SetValue(T target, string value) => target.Name = value;
+            yield return SF.MethodDeclaration(
+                   attributeLists: SF.List<AttributeListSyntax>(),
+                   modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.OverrideKeyword)),
+                   returnType: SF.ParseTypeName("void"),
+                   explicitInterfaceSpecifier: null,
+                   identifier: SF.Identifier(nameof(IInvoker.SetValue)),
+                   constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
+                   typeParameterList: null,
+                   body: null,
+                   parameterList: SF.ParameterList(SF.SeparatedList(new[] {
+                       SF.Parameter(
+                           attributeLists: SF.List<AttributeListSyntax>(),
+                           modifiers: SF.TokenList(),
+                           type: SF.ParseTypeName("T"),
+                           identifier: SF.Identifier("target"),
+                           @default: null),
+                       SF.Parameter(
+                           attributeLists: SF.List<AttributeListSyntax>(),
+                           modifiers: SF.TokenList(),
+                           type: SF.ParseTypeName(propertyType),
+                           identifier: SF.Identifier("value"),
+                           @default: null)
+                   })),
+                   expressionBody: SF.ArrowExpressionClause(SF.ParseExpression($"target.{propertyName} = value")),
+                   semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
+
+        }
+
+        private IEnumerable<AttributeListSyntax> GenDefinitionClassPropertyInvokerAttribute(string definitionName, string propertyName)
+        {
+            yield return SyntaxHelper.GenAttribute("Invoker", $"typeof({definitionName}), nameof({definitionName}.{propertyName})");
+        }
+
+        private string GetInvokerName(JsonSchemaProperty property)
+        {
+            return GetPropertyName(property) + "Invoker";
         }
 
         private IEnumerable<StatementSyntax> GenDefintionClassPropertySynckGet(JsonSchemaProperty typeKey, int typeId, List<RefField> refFields)
@@ -1232,23 +1321,10 @@ namespace DataWF.Web.ClientGenerator
                 refField.ValueType = GetTypeString(refField.ValueProperty, false, null);
                 refField.ValueFieldName = GetFieldName(refField.ValueProperty);
 
-                refField.InvokerType = $"ActionInvoker<{refField.TypeName},{refField.KeyType}>";
-                refField.InvokerName = refField.TypeName + refkey + "Invoker";
+                refField.InvokerName = $"{refField.TypeName}.{refkey}Invoker<{refField.TypeName}>.Default";
 
                 //refField.ParameterType = $"QueryParameter<{refField.TypeName}>";
                 //refField.ParameterName = refField.TypeName + refkey + "Parameter";
-
-                //invoker
-                yield return SF.FieldDeclaration(attributeLists: SF.List<AttributeListSyntax>(),
-            modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.StaticKeyword), SF.Token(SyntaxKind.ReadOnlyKeyword)),
-                   declaration: SF.VariableDeclaration(
-                       type: SF.ParseTypeName(refField.InvokerType),
-                       variables: SF.SingletonSeparatedList(
-                           SF.VariableDeclarator(
-                               identifier: SF.Identifier(refField.InvokerName),
-                               argumentList: null,
-                               initializer: SF.EqualsValueClause(
-                                   SF.ParseExpression($"new {refField.InvokerType}(\"{refField.KeyName}\",p => p.{refField.KeyName}, (p,v) => p.{refField.KeyName} = v)"))))));
 
                 ////QueryParameter<T>                
                 //yield return SF.FieldDeclaration(attributeLists: SF.List<AttributeListSyntax>(),
@@ -1402,7 +1478,7 @@ namespace DataWF.Web.ClientGenerator
             public JsonSchema TypeSchema;
             public string TypeName;
             public string InvokerName;
-            public string InvokerType;
+            //public string InvokerType;
             //public string ParameterType;
             //public string ParameterName;
             public JsonSchemaProperty Property;

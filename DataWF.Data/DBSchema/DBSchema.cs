@@ -509,7 +509,7 @@ namespace DataWF.Data
             Assemblies = new List<Assembly>(assemblies);
             var logSchema = GenerateLogSchema();
             Helper.Logs.Add(new StateInfo("Load", "Database", "Generate Schema"));
-            var attributes = new List<TableAttributeCache>();
+            var attributes = new List<TableGenerator>();
             foreach (var assembly in assemblies)
             {
                 foreach (var type in assembly.GetExportedTypes().Where(item => item.IsClass))

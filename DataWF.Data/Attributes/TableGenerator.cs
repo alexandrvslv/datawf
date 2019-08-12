@@ -27,26 +27,20 @@ using System.Reflection;
 
 namespace DataWF.Data
 {
-    public class TableAttributeCache
+    public class TableGenerator
     {
-        static readonly Invoker<ColumnAttributeCache, string> columnNameInvoker = new ActionInvoker<ColumnAttributeCache, string>(nameof(ColumnAttributeCache.ColumnName), (item) => item.ColumnName);
-        static readonly Invoker<ColumnAttributeCache, string> columnPropertyInvoker = new ActionInvoker<ColumnAttributeCache, string>(nameof(ColumnAttributeCache.PropertyName), (item) => item.PropertyName);
-        static readonly Invoker<ReferenceAttributeCache, string> referencePropertyInvoker = new ActionInvoker<ReferenceAttributeCache, string>(nameof(ReferenceAttributeCache.PropertyName), (item) => item.PropertyName);
-        static readonly Invoker<ReferencingAttributeCache, string> referencingPropertyInvoker = new ActionInvoker<ReferencingAttributeCache, string>(nameof(ReferencingAttributeCache.PropertyName), (item) => item.PropertyName);
-        static readonly Invoker<IndexAttributeCache, string> IndexNameinvoker = new ActionInvoker<IndexAttributeCache, string>(nameof(IndexAttributeCache.IndexName), (item) => item.IndexName);
-
         private DBSchema cacheSchema;
         private DBTable cacheTable;
         private DBTableGroup cacheGroup;
-        protected SelectableList<ColumnAttributeCache> cacheColumns;
-        protected SelectableList<ReferenceAttributeCache> cacheReferences;
-        protected SelectableList<ReferencingAttributeCache> cacheReferencings;
-        protected SelectableList<IndexAttributeCache> cacheIndexes;
-        protected SelectableList<ItemTypeAttributeCache> cacheItemTypes;
+        protected SelectableList<ColumnGenerator> cacheColumns;
+        protected SelectableList<ReferenceGenerator> cacheReferences;
+        protected SelectableList<ReferencingGenerator> cacheReferencings;
+        protected SelectableList<IndexGenerator> cacheIndexes;
+        protected SelectableList<ItemTypeGenerator> cacheItemTypes;
         protected List<Type> cachedTypes = new List<Type>();
-        protected ColumnAttributeCache cachePrimaryKey;
-        protected ColumnAttributeCache cacheTypeKey;
-        protected ColumnAttributeCache cacheFileKey;
+        protected ColumnGenerator cachePrimaryKey;
+        protected ColumnGenerator cacheTypeKey;
+        protected ColumnGenerator cacheFileKey;
 
         public TableAttribute Attribute { get; set; }
 
@@ -70,15 +64,15 @@ namespace DataWF.Data
 
         public Type ItemType { get; internal set; }
 
-        public IEnumerable<ColumnAttributeCache> Columns { get { return cacheColumns; } }
+        public IEnumerable<ColumnGenerator> Columns { get { return cacheColumns; } }
 
-        public IEnumerable<ReferenceAttributeCache> References { get { return cacheReferences; } }
+        public IEnumerable<ReferenceGenerator> References { get { return cacheReferences; } }
 
-        public IEnumerable<ReferencingAttributeCache> Referencings { get { return cacheReferencings; } }
+        public IEnumerable<ReferencingGenerator> Referencings { get { return cacheReferencings; } }
 
         public IEnumerable<Type> Types { get { return cachedTypes; } }
 
-        public ColumnAttributeCache PrimaryKey
+        public ColumnGenerator PrimaryKey
         {
             get
             {
@@ -90,7 +84,7 @@ namespace DataWF.Data
             }
         }
 
-        public ColumnAttributeCache TypeKey
+        public ColumnGenerator TypeKey
         {
             get
             {
@@ -102,7 +96,7 @@ namespace DataWF.Data
             }
         }
 
-        public ColumnAttributeCache FileKey
+        public ColumnGenerator FileKey
         {
             get
             {
@@ -230,16 +224,16 @@ namespace DataWF.Data
         {
             if (ItemType != null)
                 return;
-            cacheColumns = new SelectableList<ColumnAttributeCache>();
-            cacheColumns.Indexes.Add(columnNameInvoker);
-            cacheColumns.Indexes.Add(columnPropertyInvoker);
-            cacheReferences = new SelectableList<ReferenceAttributeCache>();
-            cacheReferences.Indexes.Add(referencePropertyInvoker);
-            cacheReferencings = new SelectableList<ReferencingAttributeCache>();
-            cacheReferencings.Indexes.Add(referencingPropertyInvoker);
-            cacheIndexes = new SelectableList<IndexAttributeCache>();
-            cacheIndexes.Indexes.Add(IndexNameinvoker);
-            cacheItemTypes = new SelectableList<ItemTypeAttributeCache>();
+            cacheColumns = new SelectableList<ColumnGenerator>();
+            cacheColumns.Indexes.Add(ColumnGeneratorColumnNameInvoker.Instance);
+            cacheColumns.Indexes.Add(ColumnGeneratorPropertyNameInvoker.Instance);
+            cacheReferences = new SelectableList<ReferenceGenerator>();
+            cacheReferences.Indexes.Add(ReferenceGeneratorPropertyNameInvoker.Instance);
+            cacheReferencings = new SelectableList<ReferencingGenerator>();
+            cacheReferencings.Indexes.Add(ReferencingGeneratorPropertyNameInvoker.Instance);
+            cacheIndexes = new SelectableList<IndexGenerator>();
+            cacheIndexes.Indexes.Add(IndexGeneratorNameInvoker.Instance);
+            cacheItemTypes = new SelectableList<ItemTypeGenerator>();
 
             ItemType = type;
             var types = TypeHelper.GetTypeHierarchi(type);
@@ -249,7 +243,7 @@ namespace DataWF.Data
             }
         }
 
-        public void InitializeItemType(ItemTypeAttributeCache itemType)
+        public void InitializeItemType(ItemTypeGenerator itemType)
         {
             if (cacheItemTypes.Contains(itemType))
                 return;
@@ -317,13 +311,13 @@ namespace DataWF.Data
             cachedTypes.Add(type);
         }
 
-        private bool InitializeSeparateIndex(PropertyInfo property, out IndexAttributeCache index)
+        private bool InitializeSeparateIndex(PropertyInfo property, out IndexGenerator index)
         {
             var indexAttribute = property.GetCustomAttribute<IndexAttribute>(false);
             if (indexAttribute != null)
             {
-                index = cacheIndexes.SelectOne(nameof(IndexAttributeCache.IndexName), indexAttribute.IndexName)
-                    ?? new IndexAttributeCache { Attribute = indexAttribute };
+                index = cacheIndexes.SelectOne(nameof(IndexGenerator.IndexName), indexAttribute.IndexName)
+                    ?? new IndexGenerator { Attribute = indexAttribute };
                 index.Table = this;
                 var columnAttribute = GetColumnByProperty(property.Name);
                 index.Columns.Add(columnAttribute);
@@ -334,13 +328,13 @@ namespace DataWF.Data
         }
 
 
-        private bool InitializeIndex(PropertyInfo property, IEnumerable<ColumnAttributeCache> columns, out IndexAttributeCache index)
+        private bool InitializeIndex(PropertyInfo property, IEnumerable<ColumnGenerator> columns, out IndexGenerator index)
         {
             var indexAttribute = property.GetCustomAttribute<IndexAttribute>(false);
             if (indexAttribute != null)
             {
-                index = cacheIndexes.SelectOne(nameof(IndexAttributeCache.IndexName), indexAttribute.IndexName)
-                    ?? new IndexAttributeCache { Attribute = indexAttribute };
+                index = cacheIndexes.SelectOne(nameof(IndexGenerator.IndexName), indexAttribute.IndexName)
+                    ?? new IndexGenerator { Attribute = indexAttribute };
                 index.Table = this;
                 index.Columns.AddRange(columns);
                 return true;
@@ -349,29 +343,29 @@ namespace DataWF.Data
             return false;
         }
 
-        public virtual bool InitializeReference(PropertyInfo property, out ReferenceAttributeCache reference)
+        public virtual bool InitializeReference(PropertyInfo property, out ReferenceGenerator reference)
         {
             var referenceAttrubute = property.GetCustomAttribute<ReferenceAttribute>(false);
             if (referenceAttrubute is LogReferenceAttribute logReferenceAttrubute)
             {
-                reference = new LogReferenceAttributeCache(this, property, logReferenceAttrubute);
+                reference = new LogReferenceGenerator(this, property, logReferenceAttrubute);
                 return true;
             }
             else if (referenceAttrubute != null)
             {
-                reference = new ReferenceAttributeCache(this, property, referenceAttrubute);
+                reference = new ReferenceGenerator(this, property, referenceAttrubute);
                 return true;
             }
             reference = null;
             return false;
         }
 
-        public virtual bool InitializeReferencing(PropertyInfo property, out ReferencingAttributeCache referencing)
+        public virtual bool InitializeReferencing(PropertyInfo property, out ReferencingGenerator referencing)
         {
             var referencingAttribuite = property.GetCustomAttribute<ReferencingAttribute>(false);
             if (referencingAttribuite != null)
             {
-                referencing = new ReferencingAttributeCache(this, property, referencingAttribuite);
+                referencing = new ReferencingGenerator(this, property, referencingAttribuite);
                 return true;
             }
             referencing = null;
@@ -390,7 +384,7 @@ namespace DataWF.Data
             }
         }
 
-        public virtual IEnumerable<ColumnAttributeCache> InitializeColumn(PropertyInfo property)
+        public virtual IEnumerable<ColumnGenerator> InitializeColumn(PropertyInfo property)
         {
             var columnAttribute = property.GetCustomAttribute<ColumnAttribute>(false);
             if (columnAttribute != null)
@@ -405,18 +399,18 @@ namespace DataWF.Data
                     foreach (var culture in Locale.Instance.Cultures)
                     {
                         if (columnAttribute is LogColumnAttribute logColumnAttribute)
-                            yield return new LogColumnAttributeCache(this as LogTableAttributeCache, property, logColumnAttribute, culture);
+                            yield return new LogColumnGenerator(this as LogTableGenerator, property, logColumnAttribute, culture);
                         else
-                            yield return new ColumnAttributeCache(this, property, columnAttribute, culture);
+                            yield return new ColumnGenerator(this, property, columnAttribute, culture);
                     }
 
                 }
                 else
                 {
                     if (columnAttribute is LogColumnAttribute logColumnAttribute)
-                        yield return new LogColumnAttributeCache(this as LogTableAttributeCache, property, logColumnAttribute);
+                        yield return new LogColumnGenerator(this as LogTableGenerator, property, logColumnAttribute);
                     else
-                        yield return new ColumnAttributeCache(this, property, columnAttribute);
+                        yield return new ColumnGenerator(this, property, columnAttribute);
                 }
             }
         }
@@ -437,24 +431,24 @@ namespace DataWF.Data
             }
         }
 
-        public ColumnAttributeCache GetColumn(string name)
+        public ColumnGenerator GetColumn(string name)
         {
-            return cacheColumns.SelectOne(nameof(ColumnAttributeCache.ColumnName), name);
+            return cacheColumns.SelectOne(nameof(ColumnGenerator.ColumnName), name);
         }
 
-        public ColumnAttributeCache GetColumnByProperty(string property)
+        public ColumnGenerator GetColumnByProperty(string property)
         {
-            return cacheColumns.SelectOne(nameof(ColumnAttributeCache.PropertyName), property);
+            return cacheColumns.SelectOne(nameof(ColumnGenerator.PropertyName), property);
         }
 
-        public ReferenceAttributeCache GetReferenceByProperty(string property)
+        public ReferenceGenerator GetReferenceByProperty(string property)
         {
-            return cacheReferences.SelectOne(nameof(ReferenceAttributeCache.PropertyName), property);
+            return cacheReferences.SelectOne(nameof(ReferenceGenerator.PropertyName), property);
         }
 
-        public ReferencingAttributeCache GetReferencingByProperty(string property)
+        public ReferencingGenerator GetReferencingByProperty(string property)
         {
-            return cacheReferencings.SelectOne(nameof(ReferencingAttributeCache.PropertyName), property);
+            return cacheReferencings.SelectOne(nameof(ReferencingGenerator.PropertyName), property);
         }
     }
 }

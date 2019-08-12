@@ -24,13 +24,13 @@ using System.Reflection;
 
 namespace DataWF.Data
 {
-    public class LogTableAttributeCache : TableAttributeCache
+    public class LogTableGenerator : TableGenerator
     {
-        private TableAttributeCache baseTable;
+        private TableGenerator baseTable;
 
         public LogTableAttribute LogAttribute => base.Attribute as LogTableAttribute;
 
-        public TableAttributeCache BaseTableAttribute
+        public TableGenerator BaseTableAttribute
         {
             get => baseTable ?? (baseTable = DBTable.GetTableAttribute(LogAttribute.BaseType));
             set => baseTable = value;

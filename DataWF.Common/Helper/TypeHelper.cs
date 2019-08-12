@@ -464,7 +464,7 @@ namespace DataWF.Common
             return mi;
         }
 
-        private static PropertyInfo GetPropertyInfo(Type type, string name, bool generic, Type[] types)
+        public static PropertyInfo GetPropertyInfo(Type type, string name, bool generic, Type[] types)
         {
             foreach (var property in type.GetProperties(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
             {
@@ -479,7 +479,7 @@ namespace DataWF.Common
             return null;
         }
 
-        private static MethodInfo GetMethodInfo(Type type, string name, bool generic, Type[] types)
+        public static MethodInfo GetMethodInfo(Type type, string name, bool generic, Type[] types)
         {
             foreach (var method in type.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
             {
@@ -738,5 +738,50 @@ namespace DataWF.Common
             }
             return builder.ToString();
         }
+
+        //https://startbigthinksmall.wordpress.com/2008/12/10/retrieving-the-base-definition-for-a-propertyinfo-net-reflection-mess/
+        public static MemberInfo GetMemberBaseDefinition(this MemberInfo memberInfo)
+        {
+            if (memberInfo is MethodInfo methodInfo)
+            {
+                return methodInfo.GetBaseDefinition();
+            }
+            else if (memberInfo is PropertyInfo propertyInfo)
+            {
+                var method = propertyInfo.GetGetMethod(true);
+                if (method == null)
+                    return propertyInfo;
+
+                var baseMethod = method.GetBaseDefinition();
+
+                var arguments = propertyInfo.GetIndexParameters().Select(p => p.ParameterType).ToArray();
+
+                return baseMethod.DeclaringType.GetProperty(propertyInfo.Name,
+                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static,
+                    null, propertyInfo.PropertyType, arguments, null);
+            }
+            else
+            {
+                return memberInfo;
+            }
+        }
+
+        public static bool IsGeneric(this MemberInfo memberInfo)
+        {
+            if (memberInfo is MethodInfo methodInfo)
+            {
+                return methodInfo.ContainsGenericParameters;
+            }
+            else if (memberInfo is PropertyInfo propertyInfo)
+            {
+                var method = propertyInfo.GetGetMethod(true) ?? propertyInfo.GetSetMethod(true);
+                return method?.ContainsGenericParameters ?? false;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
     }
 }

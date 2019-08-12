@@ -32,15 +32,12 @@ namespace DataWF.Data
 
     public class QItemList<T> : SelectableList<T>, IQItemList where T : QItem, new()
     {
-        public static readonly Invoker<T, string> TextInvoker = new ActionInvoker<T, string>(nameof(QItem.Text), (item) => item.Text);
-        public static readonly Invoker<T, int> OrderInvoker = new ActionInvoker<T, int>(nameof(QItem.Order), (item) => item.Order);
-
         protected IQuery query;
 
         public QItemList()
         {
-            Indexes.Add(TextInvoker);
-            ApplySort(new InvokerComparer(OrderInvoker, ListSortDirection.Ascending));
+            Indexes.Add(QItemTextInvoker<T>.Instance);
+            ApplySort(new InvokerComparer(QItemOrderInvoker<T>.Instance, ListSortDirection.Ascending));
         }
 
         public QItemList(IEnumerable<T> items) : this()
@@ -62,7 +59,7 @@ namespace DataWF.Data
 
         public T this[string name]
         {
-            get { return SelectOne(TextInvoker.Name, CompareType.Equal, name); }
+            get { return SelectOne(nameof(QItem.Text), CompareType.Equal, name); }
         }
 
         public void Delete(QItem item)
@@ -102,6 +99,39 @@ namespace DataWF.Data
                 c.Dispose();
             base.Dispose();
         }
-
     }
+
+    [Invoker(typeof(QItem), nameof(QItem.Text))]
+    public class QItemTextInvoker<T> : Invoker<T, string> where T : QItem
+    {
+        public static readonly QItemTextInvoker<T> Instance = new QItemTextInvoker<T>();
+
+        public QItemTextInvoker()
+        {
+            Name = nameof(QItem.Text);
+        }
+
+        public override bool CanWrite => true;
+
+        public override string GetValue(T target) => target.Text;
+
+        public override void SetValue(T target, string value) => target.Text = value;
+    }
+
+    [Invoker(typeof(QItem), nameof(QItem.Order))]
+    public class QItemOrderInvoker<T> : Invoker<T, int> where T : QItem
+    {
+        public static readonly QItemOrderInvoker<T> Instance = new QItemOrderInvoker<T>();
+        public QItemOrderInvoker()
+        {
+            Name = nameof(QItem.Order);
+        }
+
+        public override bool CanWrite => true;
+
+        public override int GetValue(T target) => target.Order;
+
+        public override void SetValue(T target, int value) => target.Order = value;
+    }
+
 }

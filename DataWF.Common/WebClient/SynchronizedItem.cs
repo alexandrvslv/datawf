@@ -67,5 +67,20 @@ namespace DataWF.Common
 
             base.OnPropertyChanged(oldValue, newValue, propertyName);
         }
+
+        [Invoker(typeof(SynchronizedItem), nameof(SynchronizedItem.SyncStatus))]
+        public class SyncStatusInvoker<T> : Invoker<T, SynchronizedStatus> where T : SynchronizedItem
+        {
+            public SyncStatusInvoker()
+            {
+                Name = nameof(SynchronizedItem.SyncStatus);
+            }
+
+            public override bool CanWrite => true;
+
+            public override SynchronizedStatus GetValue(T target) => target.SyncStatus;
+
+            public override void SetValue(T target, SynchronizedStatus value) => target.SyncStatus = value;
+        }
     }
 }

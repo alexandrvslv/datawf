@@ -12,7 +12,7 @@ namespace DataWF.Web.Common
 {
     public class SwaggerDBSchemaFilter : ISchemaFilter
     {
-        private Stack<TableAttributeCache> tables = new Stack<TableAttributeCache>();
+        private Stack<TableGenerator> tables = new Stack<TableGenerator>();
 
         public void Apply(Schema schema, SchemaFilterContext context)
         {
@@ -71,7 +71,7 @@ namespace DataWF.Web.Common
             return baseSchema;
         }
 
-        private void ApplyProperties(Schema schema, Type type, SchemaFilterContext context, TableAttributeCache table)
+        private void ApplyProperties(Schema schema, Type type, SchemaFilterContext context, TableGenerator table)
         {
             foreach (var column in table.Columns.Where(p => p.PropertyInfo?.GetGetMethod()?.GetBaseDefinition()?.DeclaringType == type))
             {
@@ -103,7 +103,7 @@ namespace DataWF.Web.Common
             }
         }
 
-        public void ApplyColumn(Schema schema, Schema columnSchema, ColumnAttributeCache column)
+        public void ApplyColumn(Schema schema, Schema columnSchema, ColumnGenerator column)
         {
             if ((column.Attribute.Keys & DBColumnKeys.Password) == DBColumnKeys.Password
                 || (column.Attribute.Keys & DBColumnKeys.File) == DBColumnKeys.File)

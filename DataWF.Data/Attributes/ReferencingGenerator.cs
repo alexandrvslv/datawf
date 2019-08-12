@@ -23,9 +23,9 @@ using DataWF.Common;
 
 namespace DataWF.Data
 {
-    public class ReferencingAttributeCache
+    public class ReferencingGenerator
     {
-        public ReferencingAttributeCache(TableAttributeCache table, PropertyInfo property, ReferencingAttribute referencingAttribuite)
+        public ReferencingGenerator(TableGenerator table, PropertyInfo property, ReferencingAttribute referencingAttribuite)
         {
             if (!property.PropertyType.IsGenericType)
             {
@@ -52,16 +52,32 @@ namespace DataWF.Data
         }
 
         public ReferencingAttribute Attribute { get; set; }
-        public TableAttributeCache Table { get; set; }
+        public TableGenerator Table { get; set; }
         public PropertyInfo Property { get; set; }
         public string PropertyName { get { return Property.Name; } }
-        public TableAttributeCache ReferenceTable { get; set; }
-        public ColumnAttributeCache ReferenceColumn { get; set; }
+        public TableGenerator ReferenceTable { get; set; }
+        public ColumnGenerator ReferenceColumn { get; set; }
         public IInvoker PropertyInvoker { get; set; }
 
         public override string ToString()
         {
             return $"{PropertyName} {ReferenceTable?.Table}";
         }
+    }
+
+    [Invoker(typeof(ReferencingGenerator), nameof(ReferencingGenerator.PropertyName))]
+    public class ReferencingGeneratorPropertyNameInvoker : Invoker<ReferencingGenerator, string>
+    {
+        public static readonly ReferencingGeneratorPropertyNameInvoker Instance = new ReferencingGeneratorPropertyNameInvoker();
+        public ReferencingGeneratorPropertyNameInvoker()
+        {
+            Name = nameof(ReferencingGenerator.PropertyName);
+        }
+
+        public override bool CanWrite => false;
+
+        public override string GetValue(ReferencingGenerator target) => target.PropertyName;
+
+        public override void SetValue(ReferencingGenerator target, string value) { }
     }
 }

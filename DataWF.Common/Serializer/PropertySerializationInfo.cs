@@ -14,7 +14,7 @@ namespace DataWF.Common
             Property = property;
             IsText = TypeHelper.IsXmlText(property);
             IsAttribute = TypeHelper.IsXmlAttribute(property) && !IsText;
-            Invoker = EmitInvoker.Initialize(property);
+            Invoker = EmitInvoker.Initialize(property, true);
             Default = TypeHelper.GetDefault(property);
             if (IsAttribute || IsText)
             {

@@ -23,12 +23,12 @@ using System.Reflection;
 
 namespace DataWF.Data
 {
-    public class ReferenceAttributeCache
+    public class ReferenceGenerator
     {
-        private ColumnAttributeCache cacheColumn;
+        private ColumnGenerator cacheColumn;
         private DBForeignKey cacheKey;
 
-        public ReferenceAttributeCache(TableAttributeCache table, PropertyInfo property, ReferenceAttribute referenceAttribute)
+        public ReferenceGenerator(TableGenerator table, PropertyInfo property, ReferenceAttribute referenceAttribute)
         {
             Attribute = referenceAttribute;
             Table = table;
@@ -44,9 +44,9 @@ namespace DataWF.Data
 
         public Type ReferenceType { get; internal set; }
 
-        public TableAttributeCache Table { get; internal set; }
+        public TableGenerator Table { get; internal set; }
 
-        public ColumnAttributeCache Column
+        public ColumnGenerator Column
         {
             get { return cacheColumn ?? (cacheColumn = Table?.GetColumnByProperty(Attribute.ColumnProperty)); }
         }
@@ -114,5 +114,21 @@ namespace DataWF.Data
             }
             return ForeignKey;
         }
+    }
+
+    [Invoker(typeof(ReferenceGenerator), nameof(ReferenceGenerator.PropertyName))]
+    public class ReferenceGeneratorPropertyNameInvoker : Invoker<ReferenceGenerator, string>
+    {
+        public static readonly ReferenceGeneratorPropertyNameInvoker Instance = new ReferenceGeneratorPropertyNameInvoker();
+        public ReferenceGeneratorPropertyNameInvoker()
+        {
+            Name = nameof(ReferenceGenerator.PropertyName);
+        }
+
+        public override bool CanWrite => false;
+
+        public override string GetValue(ReferenceGenerator target) => target.PropertyName;
+
+        public override void SetValue(ReferenceGenerator target, string value) { }
     }
 }

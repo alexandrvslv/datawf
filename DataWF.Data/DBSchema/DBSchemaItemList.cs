@@ -27,10 +27,9 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
+
     public class DBSchemaItemList<T> : SelectableList<T> where T : DBSchemaItem
     {
-        static readonly Invoker<T, string> ItemNameInvoker = new ActionInvoker<T, string>(nameof(DBSchemaItem.Name), (item) => item.Name);
-
         public DBSchemaItemList()
             : this(null)
         { }
@@ -38,7 +37,7 @@ namespace DataWF.Data
         public DBSchemaItemList(DBSchema schema)
             : base()
         {
-            Indexes.Add(ItemNameInvoker);
+            Indexes.Add(DBSchemaItemNameInvoker<T>.Instance);
             Schema = schema;
         }
 
@@ -47,7 +46,7 @@ namespace DataWF.Data
 
         public virtual T this[string name]
         {
-            get { return SelectOne(ItemNameInvoker.Name, CompareType.Equal, name); }
+            get { return SelectOne(nameof(DBSchemaItem.Name), CompareType.Equal, name); }
             set
             {
                 int i = GetIndexByName(name);
@@ -65,7 +64,7 @@ namespace DataWF.Data
 
         protected int GetIndexByName(string name)
         {
-            var item = SelectOne(ItemNameInvoker.Name, CompareType.Equal, name);
+            var item = SelectOne(nameof(DBSchemaItem.Name), CompareType.Equal, name);
             return item == null ? -1 : IndexOf(item);
         }
 
@@ -139,5 +138,22 @@ namespace DataWF.Data
             item.Schema = Schema;
             return item;
         }
+    }
+
+    [Invoker(typeof(DBSchemaItem), nameof(DBSchemaItem.Name))]
+    public class DBSchemaItemNameInvoker<T> : Invoker<T, string> where T : DBSchemaItem
+    {
+        public static readonly DBSchemaItemNameInvoker<T> Instance = new DBSchemaItemNameInvoker<T>();
+
+        public DBSchemaItemNameInvoker()
+        {
+            Name = nameof(DBSchemaItem.Name);
+        }
+
+        public override bool CanWrite => true;
+
+        public override string GetValue(T target) => target.Name;
+
+        public override void SetValue(T target, string value) => target.Name = value;
     }
 }

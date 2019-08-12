@@ -134,6 +134,72 @@ namespace DataWF.Common
         {
             return Text;
         }
+
+        [Invoker(typeof(EnumItem), nameof(EnumItem.Value))]
+        public class ValueInvoker : Invoker<EnumItem, object>
+        {
+            public static readonly ValueInvoker Instance = new ValueInvoker();
+            public ValueInvoker()
+            {
+                Name = nameof(EnumItem.Value);
+            }
+
+            public override bool CanWrite => false;
+
+            public override object GetValue(EnumItem target) => target.Value;
+
+            public override void SetValue(EnumItem target, object value) { }
+        }
+
+
+        [Invoker(typeof(EnumItem), nameof(EnumItem.Name))]
+        public class NameInvoker : Invoker<EnumItem, string>
+        {
+            public static readonly NameInvoker Instance = new NameInvoker();
+            public NameInvoker()
+            {
+                Name = nameof(EnumItem.Name);
+            }
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(EnumItem target) => target.Name;
+
+            public override void SetValue(EnumItem target, string value) => target.Name = value;
+        }
+
+        [Invoker(typeof(EnumItem), nameof(EnumItem.Text))]
+        public class TextInvoker : Invoker<EnumItem, string>
+        {
+            public static readonly TextInvoker Instance = new TextInvoker();
+            public TextInvoker()
+            {
+                Name = nameof(EnumItem.Text);
+            }
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(EnumItem target) => target.Text;
+
+            public override void SetValue(EnumItem target, string value) => target.Text = value;
+        }
+
+        [Invoker(typeof(EnumItem), nameof(EnumItem.Index))]
+        public class IndexInvoker : Invoker<EnumItem, int>
+        {
+            public static readonly IndexInvoker Instance = new IndexInvoker();
+            public IndexInvoker()
+            {
+                Name = nameof(EnumItem.Index);
+            }
+
+            public override bool CanWrite => true;
+
+            public override int GetValue(EnumItem target) => target.Index;
+
+            public override void SetValue(EnumItem target, int value) => target.Index = value;
+        }
+
     }
 
     public class EnumItem<T> : EnumItem where T : struct

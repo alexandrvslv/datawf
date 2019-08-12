@@ -184,6 +184,70 @@ namespace DataWF.Common
                 litem.Add((LocaleString)item.Clone());
             return litem;
         }
+
+        [Invoker(typeof(LocaleItem), nameof(LocaleItem.Name))]
+        public class NameInvoker : Invoker<LocaleItem, string>
+        {
+            public static readonly NameInvoker Instance = new NameInvoker();
+            public NameInvoker()
+            {
+                Name = nameof(LocaleItem.Name);
+            }
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(LocaleItem target) => target.Name;
+
+            public override void SetValue(LocaleItem target, string value) => target.Name = value;
+        }
+
+        [Invoker(typeof(LocaleItem), nameof(LocaleItem.Glyph))]
+        public class GlyphInvoker : Invoker<LocaleItem, GlyphType>
+        {
+            public static readonly GlyphInvoker Instance = new GlyphInvoker();
+            public GlyphInvoker()
+            {
+                Name = nameof(LocaleItem.Glyph);
+            }
+
+            public override bool CanWrite => true;
+
+            public override GlyphType GetValue(LocaleItem target) => target.Glyph;
+
+            public override void SetValue(LocaleItem target, GlyphType value) => target.Glyph = value;
+        }
+
+        [Invoker(typeof(LocaleItem), nameof(LocaleItem.ImageKey))]
+        public class ImageKeyInvoker : Invoker<LocaleItem, string>
+        {
+            public static readonly ImageKeyInvoker Instance = new ImageKeyInvoker();
+            public ImageKeyInvoker()
+            {
+                Name = nameof(LocaleItem.ImageKey);
+            }
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(LocaleItem target) => target.ImageKey;
+
+            public override void SetValue(LocaleItem target, string value) => target.ImageKey = value;
+        }
+
+        [Invoker(typeof(LocaleItem), nameof(LocaleItem.Value))]
+        public class ValueInvoker : Invoker<LocaleItem, string>
+        {
+            public static readonly ValueInvoker Instance = new ValueInvoker();
+            public ValueInvoker()
+            {
+                Name = nameof(LocaleItem.Value);
+            }
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(LocaleItem target) => target.Value;
+
+            public override void SetValue(LocaleItem target, string value) => target.Value = value;
+        }
     }
 
 }

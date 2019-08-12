@@ -8,8 +8,6 @@ namespace DataWF.Data
 {
     public class DBColumnReferenceList : SelectableList<DBColumnReference>
     {
-        public static readonly Invoker<DBColumnReference, string> ColumnNameInvoker = new ActionInvoker<DBColumnReference, string>(
-            nameof(DBColumnReference.ColumnName), p => p.ColumnName, (p, v) => p.ColumnName = v);
         public DBColumnReferenceList()
         {
             //Indexes.Add("Column");
@@ -46,7 +44,7 @@ namespace DataWF.Data
 
         public bool Contains(string column)
         {
-            return Select(ColumnNameInvoker, CompareType.Equal, column).Any();
+            return Select(DBColumnReferenceColumnNameInvoker.Instance, CompareType.Equal, column).Any();
         }
 
         protected override void OnPropertyChanged(string property)
@@ -60,5 +58,21 @@ namespace DataWF.Data
             }
             base.OnPropertyChanged(property);
         }
+    }
+
+    [Invoker(typeof(DBColumnReference), nameof(DBColumnReference.ColumnName))]
+    public class DBColumnReferenceColumnNameInvoker : Invoker<DBColumnReference, string>
+    {
+        public static readonly DBColumnReferenceColumnNameInvoker Instance = new DBColumnReferenceColumnNameInvoker();
+        public DBColumnReferenceColumnNameInvoker()
+        {
+            Name = nameof(DBColumnReference.ColumnName);
+        }
+
+        public override bool CanWrite => true;
+
+        public override string GetValue(DBColumnReference target) => target.ColumnName;
+
+        public override void SetValue(DBColumnReference target, string value) => target.ColumnName = value;
     }
 }

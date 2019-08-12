@@ -25,20 +25,19 @@ namespace DataWF.Data
 {
     public class DBTableList : DBSchemaItemList<DBTable>
     {
-        public static readonly Invoker<DBTable, string> GroupNameInvoker = new ActionInvoker<DBTable, string>(nameof(DBTable.GroupName), (item) => item.GroupName);
 
         public DBTableList() : this(null)
         { }
 
         public DBTableList(DBSchema schema) : base(schema)
         {
-            Indexes.Add(GroupNameInvoker);
+            Indexes.Add(DBTableGroupNameInvoker.Instance);
             ApplyDefaultSort();
         }
 
         public IEnumerable<DBTable> GetByGroup(string name)
         {
-            return Select(GroupNameInvoker, CompareType.Equal, name);
+            return Select(nameof(DBTable.GroupName), CompareType.Equal, name);
         }
 
         public override int AddInternal(DBTable item)
@@ -55,5 +54,21 @@ namespace DataWF.Data
         {
             ApplySort(new DBTableComparer());
         }
+    }
+
+    [Invoker(typeof(DBTable), nameof(DBTable.GroupName))]
+    public class DBTableGroupNameInvoker : Invoker<DBTable, string>
+    {
+        public static readonly DBTableGroupNameInvoker Instance = new DBTableGroupNameInvoker();
+        public DBTableGroupNameInvoker()
+        {
+            Name = nameof(DBTable.GroupName);
+        }
+
+        public override bool CanWrite => true;
+
+        public override string GetValue(DBTable target) => target.GroupName;
+
+        public override void SetValue(DBTable target, string value) => target.GroupName = value;
     }
 }

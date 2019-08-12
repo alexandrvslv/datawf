@@ -966,12 +966,26 @@ namespace DataWF.Data
 
     public class StringKeyList : IndexedList<StringKey, String>
     {
-        public static readonly Invoker<StringKey, String> StringKeyInvoker = new ActionInvoker<StringKey, string>(nameof(StringKey.Key),
-            p => p.Key, (p, v) => p.Key = v);
 
-        public StringKeyList() : base(StringComparer.Ordinal, StringKeyInvoker)
+        public StringKeyList() : base(StringComparer.Ordinal, StringKeyKeyInvoker.Instance)
         {
 
         }
+    }
+
+    [Invoker(typeof(StringKey), nameof(StringKey.Key))]
+    public class StringKeyKeyInvoker : Invoker<StringKey, String>
+    {
+        public static readonly StringKeyKeyInvoker Instance = new StringKeyKeyInvoker();
+        public StringKeyKeyInvoker()
+        {
+            Name = nameof(StringKey.Key);
+        }
+
+        public override bool CanWrite => true;
+
+        public override string GetValue(StringKey target) => target.Key;
+
+        public override void SetValue(StringKey target, string value) => target.Key = value;
     }
 }

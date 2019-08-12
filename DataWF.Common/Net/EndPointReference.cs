@@ -22,17 +22,31 @@ namespace DataWF.Common
 
     public class EndPointReferenceList<T> : SelectableList<EndPointReference<T>>
     {
-        private static ActionInvoker<EndPointReference<T>, IPEndPoint> invoker = new ActionInvoker<EndPointReference<T>, IPEndPoint>(nameof(EndPointReference<T>.EndPoint), item => item.EndPoint);
-
         public EndPointReferenceList()
         {
-            Indexes.Add(invoker);
+            Indexes.Add(EndPointReferenceEndPoint<T>.Instance);
         }
 
         public EndPointReference<T> this[IPEndPoint point]
         {
             get { return SelectOne(nameof(EndPointReference<T>.EndPoint), CompareType.Equal, point); }
         }
+    }
+
+    [Invoker(typeof(EndPointReferenceEndPoint<>), nameof(EndPoint))]
+    public class EndPointReferenceEndPoint<T> : Invoker<EndPointReference<T>, IPEndPoint>
+    {
+        public static readonly EndPointReferenceEndPoint<T> Instance = new EndPointReferenceEndPoint<T>();
+        public EndPointReferenceEndPoint()
+        {
+            Name = nameof(EndPointReference<T>.EndPoint);
+        }
+
+        public override bool CanWrite => true;
+
+        public override IPEndPoint GetValue(EndPointReference<T> target) => target.EndPoint;
+
+        public override void SetValue(EndPointReference<T> target, IPEndPoint value) => target.EndPoint = value;
     }
 
 }

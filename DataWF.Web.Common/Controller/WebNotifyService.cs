@@ -28,19 +28,19 @@ namespace DataWF.Web.Common
         public WebNotifyService()
         {
             Instance = this;
-            connections.Indexes.Add(WebNotifyConnection.UserInvoker);
+            connections.Indexes.Add(WebNotifyConnectionUserInvoker.Instance);
             jsonSettings = new JsonSerializerSettings { ContractResolver = DBItemContractResolver.Instance };
             jsonSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
         }
 
         public WebNotifyConnection GetBySocket(WebSocket socket)
         {
-            return connections.SelectOne(WebNotifyConnection.SocketInvoker.Name, socket);
+            return connections.SelectOne(nameof(WebNotifyConnection.Socket), socket);
         }
 
         public IEnumerable<WebNotifyConnection> GetByUser(User user)
         {
-            return connections.Select(WebNotifyConnection.UserInvoker, CompareType.Equal, user);
+            return connections.Select(WebNotifyConnectionUserInvoker.Instance, CompareType.Equal, user);
         }
 
         public void SetCurrentAction(AuthorizationFilterContext context)

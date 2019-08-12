@@ -187,5 +187,150 @@ namespace DataWF.Common
             listen = null;
             Progress = (length / percent) / 100;
         }
+
+        [Invoker(typeof(CopyProcess), nameof(CopyProcess.Category))]
+        public class CategoryInvoker : Invoker<CopyProcess, CopyProcessCategory>
+        {
+            public static readonly CategoryInvoker Instance = new CategoryInvoker();
+            public CategoryInvoker()
+            {
+                Name = nameof(CopyProcess.Category);
+            }
+
+            public override bool CanWrite => false;
+
+            public override CopyProcessCategory GetValue(CopyProcess target) => target.Category;
+
+            public override void SetValue(CopyProcess target, CopyProcessCategory value) { }
+        }
+
+        [Invoker(typeof(CopyProcess), nameof(CopyProcess.Date))]
+        public class DateInvoker : Invoker<CopyProcess, DateTime>
+        {
+            public static readonly DateInvoker Instance = new DateInvoker();
+            public DateInvoker()
+            {
+                Name = nameof(CopyProcess.Date);
+            }
+
+            public override bool CanWrite => false;
+
+            public override DateTime GetValue(CopyProcess target) => target.Date;
+
+            public override void SetValue(CopyProcess target, DateTime value) { }
+        }
+
+        [Invoker(typeof(CopyProcess), nameof(CopyProcess.FileName))]
+        public class FileNameInvoker : Invoker<CopyProcess, string>
+        {
+            public static readonly FileNameInvoker Instance = new FileNameInvoker();
+            public FileNameInvoker()
+            {
+                Name = nameof(CopyProcess.FileName);
+            }
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(CopyProcess target) => target.FileName;
+
+            public override void SetValue(CopyProcess target, string value) => target.FileName = value;
+        }
+
+        [Invoker(typeof(CopyProcess), nameof(CopyProcess.File))]
+        public class FileInvoker : Invoker<CopyProcess, IFileModel>
+        {
+            public static readonly FileInvoker Instance = new FileInvoker();
+            public FileInvoker()
+            {
+                Name = nameof(CopyProcess.File);
+            }
+
+            public override bool CanWrite => true;
+
+            public override IFileModel GetValue(CopyProcess target) => target.File;
+
+            public override void SetValue(CopyProcess target, IFileModel value) => target.File = value;
+        }
+
+        [Invoker(typeof(CopyProcess), nameof(CopyProcess.Progress))]
+        public class ProgressInvoker : Invoker<CopyProcess, double>
+        {
+            public static readonly ProgressInvoker Instance = new ProgressInvoker();
+            public ProgressInvoker()
+            {
+                Name = nameof(CopyProcess.Progress);
+            }
+
+            public override bool CanWrite => true;
+
+            public override double GetValue(CopyProcess target) => target.Progress;
+
+            public override void SetValue(CopyProcess target, double value) => target.Progress = value;
+        }
+
+        [Invoker(typeof(CopyProcess), nameof(CopyProcess.FileSize))]
+        public class FileSizeInvoker : Invoker<CopyProcess, long>
+        {
+            public static readonly FileSizeInvoker Instance = new FileSizeInvoker();
+            public FileSizeInvoker()
+            {
+                Name = nameof(CopyProcess.Progress);
+            }
+
+            public override bool CanWrite => true;
+
+            public override long GetValue(CopyProcess target) => target.FileSize;
+
+            public override void SetValue(CopyProcess target, long value) { }
+        }
+
+        [Invoker(typeof(CopyProcess), nameof(CopyProcess.Speed))]
+        public class SpeedInvoker : Invoker<CopyProcess, double>
+        {
+            public static readonly SpeedInvoker Instance = new SpeedInvoker();
+            public SpeedInvoker()
+            {
+                Name = nameof(CopyProcess.Speed);
+            }
+
+            public override bool CanWrite => true;
+
+            public override double GetValue(CopyProcess target) => target.Speed;
+
+            public override void SetValue(CopyProcess target, double value) { }
+        }
+
+        [Invoker(typeof(CopyProcess), nameof(CopyProcess.SpeedFormat))]
+        public class SpeedFormatInvoker : Invoker<CopyProcess, string>
+        {
+            public static readonly SpeedFormatInvoker Instance = new SpeedFormatInvoker();
+            public SpeedFormatInvoker()
+            {
+                Name = nameof(CopyProcess.SpeedFormat);
+            }
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(CopyProcess target) => target.SpeedFormat;
+
+            public override void SetValue(CopyProcess target, string value) { }
+        }
+
+        [Invoker(typeof(CopyProcess), nameof(CopyProcess.Finished))]
+        public class FinishedInvoker : Invoker<CopyProcess, bool>
+        {
+            public static readonly FinishedInvoker Instance = new FinishedInvoker();
+            public FinishedInvoker()
+            {
+                Name = nameof(CopyProcess.SpeedFormat);
+            }
+
+            public override bool CanWrite => true;
+
+            public override bool GetValue(CopyProcess target) => target.Finished;
+
+            public override void SetValue(CopyProcess target, bool value) { }
+        }
+
     }
 }

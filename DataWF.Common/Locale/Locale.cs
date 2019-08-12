@@ -10,12 +10,12 @@ namespace DataWF.Common
 {
     public class Locale : SelectableList<LocaleCategory>
     {
-        static readonly Invoker<LocaleCategory, string> nameInvoker = new ActionInvoker<LocaleCategory, string>(nameof(LocaleCategory.Name), item => item.Name);
+
         private CultureInfo culture = CultureInfo.GetCultureInfo("en-US");
 
         public Locale()
         {
-            Indexes.Add(nameInvoker);
+            Indexes.Add(LocaleCategory.NameInvoker.Instance);
             Cultures.Add(CultureInfo.GetCultureInfo("ru-RU"));
             Cultures.Add(CultureInfo.GetCultureInfo("en-US"));
             //try { Cultures.Add(CultureInfo.GetCultureInfo("kk-KZ")); }
@@ -176,6 +176,5 @@ namespace DataWF.Common
 
         public static Locale Instance = new Locale();
     }
-
 }
 

@@ -6,14 +6,11 @@ namespace DataWF.Common
 {
     public class EnumItemList : NamedList<EnumItem>
     {
-        public static readonly Invoker<EnumItem, object> ValueInvoker = new ActionInvoker<EnumItem, object>(nameof(EnumItem.Value),
-            p => p.Value);
-
         private object itemValue;
 
         public EnumItemList()
         {
-            Indexes.Add(ValueInvoker);
+            Indexes.Add(EnumItem.ValueInvoker.Instance);
         }
 
         public EnumItemList(Type type) : this(EnumItem.GetEnumItems(type))
@@ -99,8 +96,6 @@ namespace DataWF.Common
         //}
 
     }
-
-
     public class TypedEnumItemList : EnumItemList
     {
         public TypedEnumItemList(Type type) : base(type)

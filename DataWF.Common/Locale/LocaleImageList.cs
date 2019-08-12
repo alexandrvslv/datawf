@@ -4,19 +4,18 @@ using System.Linq;
 using System.Text;
 
 namespace DataWF.Common
-{
+{   
     /// <summary>
     /// Images for localization
     /// </summary>
     public class LocaleImageList : SelectableList<LocaleImage>
     {
-        static readonly Invoker<LocaleImage, string> keyInvoker = new ActionInvoker<LocaleImage, string>(nameof(LocaleImage.Key), items => items.Key);
         /// <summary>
         /// Initializes a new instance of the <see cref="Dwf.Tool.LocaleImageList"/> class.
         /// </summary>
         public LocaleImageList()
         {
-            Indexes.Add(keyInvoker);
+            Indexes.Add(LocaleImage.KeyInvoker.Instance);
         }
 
         public bool Contains(string name)

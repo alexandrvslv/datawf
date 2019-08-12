@@ -24,38 +24,32 @@ namespace DataWF.Data
 {
     public class DBForeignList : DBConstraintList<DBForeignKey>
     {
-        public static readonly Invoker<DBForeignKey, string> ReferenceNameInvoker = new ActionInvoker<DBForeignKey, string>(nameof(DBForeignKey.ReferenceName),
-            p => p.ReferenceName);
-        public static readonly Invoker<DBForeignKey, string> PropertyInvoker = new ActionInvoker<DBForeignKey, string>(nameof(DBForeignKey.Property),
-            p => p.Property);
-        public static readonly Invoker<DBForeignKey, string> ReferenceTableNameInvoker = new ActionInvoker<DBForeignKey, string>(nameof(DBForeignKey.ReferenceTableName),
-            p => p.ReferenceTableName);
-        
+
         public DBForeignList(DBTable table) : base(table)
         {
-            Indexes.Add(ReferenceNameInvoker);
-            Indexes.Add(ReferenceTableNameInvoker);
-            Indexes.Add(PropertyInvoker);
+            Indexes.Add(DBForeignKeyReferenceNameInvoker.Instance);
+            Indexes.Add(DBForeignKeyReferenceTableNameInvoker.Instance);
+            Indexes.Add(DBForeignKeyPropertyInvoker.Instance);
         }
 
         public DBForeignKey GetForeignByColumn(DBColumn column)
         {
-            return SelectOne(ColumnNameInvoker.Name, CompareType.Equal, column.FullName);
+            return SelectOne(nameof(DBForeignKey.ColumnName), CompareType.Equal, column.FullName);
         }
 
         public DBForeignKey GetByProperty(string property)
         {
-            return SelectOne(PropertyInvoker.Name, CompareType.Equal, property);
+            return SelectOne(nameof(DBForeignKey.Property), CompareType.Equal, property);
         }
 
         public IEnumerable<DBForeignKey> GetByReference(DBColumn reference)
         {
-            return Select(ReferenceNameInvoker, CompareType.Equal, reference.FullName);
+            return Select(DBForeignKeyReferenceNameInvoker.Instance, CompareType.Equal, reference.FullName);
         }
 
         public IEnumerable<DBForeignKey> GetByReference(DBTable reference)
         {
-            return Select(ReferenceTableNameInvoker, CompareType.Equal, reference.FullName);
+            return Select(DBForeignKeyReferenceTableNameInvoker.Instance, CompareType.Equal, reference.FullName);
         }
 
         public DBForeignKey GetByColumns(DBColumn column, DBColumn reference)
@@ -85,5 +79,55 @@ namespace DataWF.Data
                 }
             }
         }
+    }
+
+    [Invoker(typeof(DBForeignKey), nameof(DBForeignKey.ReferenceName))]
+    public class DBForeignKeyReferenceNameInvoker : Invoker<DBForeignKey, string>
+    {
+        public static readonly DBForeignKeyReferenceNameInvoker Instance = new DBForeignKeyReferenceNameInvoker();
+        public DBForeignKeyReferenceNameInvoker()
+        {
+            Name = nameof(DBForeignKey.ReferenceName);
+        }
+
+        public override bool CanWrite => true;
+
+        public override string GetValue(DBForeignKey target) => target.ReferenceName;
+
+        public override void SetValue(DBForeignKey target, string value) => target.ReferenceName = value;
+    }
+
+    [Invoker(typeof(DBForeignKey), nameof(DBForeignKey.Property))]
+    public class DBForeignKeyPropertyInvoker : Invoker<DBForeignKey, string>
+    {
+        public static readonly DBForeignKeyPropertyInvoker Instance = new DBForeignKeyPropertyInvoker();
+
+        public override bool CanWrite => throw new System.NotImplementedException();
+
+        public DBForeignKeyPropertyInvoker()
+        {
+            Name = nameof(DBForeignKey.Property);
+        }
+
+        public override string GetValue(DBForeignKey target) => target.Property;
+
+        public override void SetValue(DBForeignKey target, string value) => target.Property = value;
+    }
+
+    [Invoker(typeof(DBForeignKey), nameof(DBForeignKey.ReferenceTableName))]
+    public class DBForeignKeyReferenceTableNameInvoker : Invoker<DBForeignKey, string>
+    {
+        public static readonly DBForeignKeyReferenceTableNameInvoker Instance = new DBForeignKeyReferenceTableNameInvoker();
+
+        public DBForeignKeyReferenceTableNameInvoker()
+        {
+            Name = nameof(DBForeignKey.ReferenceTableName);
+        }
+
+        public override bool CanWrite => false;
+
+        public override string GetValue(DBForeignKey target) => target.ReferenceTableName;
+
+        public override void SetValue(DBForeignKey target, string value) { }
     }
 }

@@ -90,6 +90,26 @@ namespace DataWF.Web.CodeGenerator
                                 initializer: initializer == null ? null : SyntaxFactory.EqualsValueClause(SyntaxFactory.ParseExpression(initializer)),
                                 semicolonToken: initializer == null ? SyntaxFactory.Token(SyntaxKind.None) : SyntaxFactory.Token(SyntaxKind.SemicolonToken));
         }
+
+        public static AttributeListSyntax GenAttribute(string name)
+        {
+            return SF.AttributeList(
+                SF.SingletonSeparatedList(
+                    SF.Attribute(
+                        SF.IdentifierName(name))));
+        }
+
+        public static AttributeListSyntax GenAttribute(string name, string args)
+        {
+            return SF.AttributeList(
+                SF.SingletonSeparatedList(
+                    SF.Attribute(
+                        SF.IdentifierName(name)).WithArgumentList(
+                        SF.AttributeArgumentList(
+                            SF.SingletonSeparatedList(
+                                SF.AttributeArgument(
+                                    SF.ParseExpression(args)))))));
+        }
     }
 
 }

@@ -190,6 +190,7 @@ namespace DataWF.Data
         }
     }
 
+    [Invoker(typeof(DBColumn), nameof(DBColumn.GroupName))]
     public class DBColumnGroupNameInvoker<T> : Invoker<T, string> where T : DBColumn
     {
         public static readonly DBColumnGroupNameInvoker<T> Instance = new DBColumnGroupNameInvoker<T>();
@@ -206,6 +207,7 @@ namespace DataWF.Data
         public override void SetValue(T target, string value) => target.GroupName = value;
     }
 
+    [Invoker(typeof(DBColumn), nameof(DBColumn.Property))]
     public class DBColumnPropertyInvoker<T> : Invoker<T, string> where T : DBColumn
     {
         public static readonly DBColumnPropertyInvoker<T> Instance = new DBColumnPropertyInvoker<T>();
@@ -222,6 +224,7 @@ namespace DataWF.Data
         public override void SetValue(T target, string value) => target.Property = value;
     }
 
+    [Invoker(typeof(DBColumn), nameof(DBColumn.ReferenceProperty))]
     public class DBColumnReferencePropertyInvoker<T> : Invoker<T, string> where T : DBColumn
     {
         public static readonly DBColumnReferencePropertyInvoker<T> Instance = new DBColumnReferencePropertyInvoker<T>();
@@ -238,6 +241,7 @@ namespace DataWF.Data
         public override void SetValue(T target, string value) => target.ReferenceProperty = value;
     }
 
+    [Invoker(typeof(DBColumn), nameof(DBColumn.ReferenceTable))]
     public class DBColumnReferenceTableInvoker<T> : Invoker<T, string> where T : DBColumn
     {
         public static readonly DBColumnReferenceTableInvoker<T> Instance = new DBColumnReferenceTableInvoker<T>();
@@ -254,6 +258,7 @@ namespace DataWF.Data
         public override void SetValue(T target, string value) { }
     }
 
+    [Invoker(typeof(DBColumn), nameof(DBColumn.IsView))]
     public class DBColumnIsViewInvoker<T> : Invoker<T, bool> where T : DBColumn
     {
         public static readonly DBColumnIsViewInvoker<T> Instance = new DBColumnIsViewInvoker<T>();
@@ -270,6 +275,7 @@ namespace DataWF.Data
         public override void SetValue(T target, bool value) { }
     }
 
+    [Invoker(typeof(DBColumn), nameof(DBColumn.IsReference))]
     public class DBColumnIsReferenceInvoker<T> : Invoker<T, bool> where T : DBColumn
     {
         public static readonly DBColumnIsReferenceInvoker<T> Instance = new DBColumnIsReferenceInvoker<T>();

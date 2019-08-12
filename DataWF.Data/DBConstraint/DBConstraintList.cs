@@ -25,33 +25,62 @@ namespace DataWF.Data
 {
     public class DBConstraintList<T> : DBTableItemList<T> where T : DBConstraint, new()
     {
-        public static readonly Invoker<T, string> ColumnNameInvoker = new ActionInvoker<T, string>(
-            nameof(DBConstraint.ColumnName), p => p.ColumnName, (p, v) => p.ColumnName = v);
-        public static readonly Invoker<T, string> ValueInvoker = new ActionInvoker<T, string>(
-            nameof(DBConstraint.Value), p => p.Value, (p, v) => p.Value = v);
+
         public DBConstraintList(DBTable table) : base(table)
         {
-            Indexes.Add(ColumnNameInvoker);
+            Indexes.Add(DBConstraintColumnNameInvoker<T>.Instance);
         }
 
         public IEnumerable<T> GetByColumn(DBColumn column)
         {
-            return Select(ColumnNameInvoker, CompareType.Equal, column.FullName);
+            return Select(nameof(DBConstraint.ColumnName), CompareType.Equal, column.FullName);
         }
 
         public IEnumerable<T> GetByColumnAndTYpe(DBColumn column, DBConstraintType type)
         {
-            return Select(ColumnNameInvoker, CompareType.Equal, column.FullName).Where(p => p.Type == type);
+            return Select(nameof(DBConstraint.ColumnName), CompareType.Equal, column.FullName).Where(p => p.Type == type);
         }
 
         public IEnumerable<T> GetByValue(string value)
         {
-            return Select(ValueInvoker, CompareType.Equal, value);
+            return Select(DBConstraintValueInvoker<T>.Instance, CompareType.Equal, value);
         }
 
         public override DDLType GetInsertType(T item)
         {
             return (item.Column?.ColumnType == DBColumnTypes.Default) ? DDLType.Create : DDLType.Default;
         }
+    }
+
+    [Invoker(typeof(DBConstraint), nameof(DBConstraint.ColumnName))]
+    public class DBConstraintColumnNameInvoker<T> : Invoker<T, string> where T : DBConstraint
+    {
+        public static readonly DBConstraintColumnNameInvoker<T> Instance = new DBConstraintColumnNameInvoker<T>();
+        public DBConstraintColumnNameInvoker()
+        {
+            Name = nameof(DBConstraint.ColumnName);
+        }
+
+        public override bool CanWrite => true;
+
+        public override string GetValue(T target) => target.ColumnName;
+
+        public override void SetValue(T target, string value) => target.ColumnName = value;
+    }
+
+    [Invoker(typeof(DBConstraint), nameof(DBConstraint.Value))]
+    public class DBConstraintValueInvoker<T> : Invoker<T, string> where T : DBConstraint
+    {
+        public static readonly DBConstraintValueInvoker<T> Instance = new DBConstraintValueInvoker<T>();
+        public DBConstraintValueInvoker()
+        {
+            Name = nameof(DBConstraint.Value);
+        }
+
+        public override bool CanWrite => true;
+
+        public override string GetValue(T target) => target.Value;
+
+        public override void SetValue(T target, string value) => target.Value = value;
     }
 }

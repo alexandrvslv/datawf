@@ -7,8 +7,6 @@ namespace DataWF.Common
 {
     public class TypeSerializationInfo
     {
-        static readonly Invoker<PropertySerializationInfo, bool> IsAttributeInvoker = new ActionInvoker<PropertySerializationInfo, bool>(nameof(PropertySerializationInfo.IsAttribute), (item) => item.IsAttribute);
-
         public TypeSerializationInfo(Type type) : this(type, TypeHelper.GetPropertiesByHierarchi(type))
         { }
 
@@ -48,7 +46,7 @@ namespace DataWF.Common
             IsDictionary = TypeHelper.IsDictionary(type);
 
             Properties = new NamedList<PropertySerializationInfo>();
-            Properties.Indexes.Add(IsAttributeInvoker);
+            Properties.Indexes.Add(PropertySaveInfoIsAttributeInvoker.Instance);
 
             foreach (var property in properties)
             {
@@ -93,9 +91,9 @@ namespace DataWF.Common
 
         public bool IsDictionary { get; }
 
-        public IEnumerable<PropertySerializationInfo> GetAttributes() => Properties.Select(IsAttributeInvoker, CompareType.Equal, true);
+        public IEnumerable<PropertySerializationInfo> GetAttributes() => Properties.Select(PropertySaveInfoIsAttributeInvoker.Instance, CompareType.Equal, true);
 
-        public IEnumerable<PropertySerializationInfo> GetContents() => Properties.Select(IsAttributeInvoker, CompareType.Equal, false);
+        public IEnumerable<PropertySerializationInfo> GetContents() => Properties.Select(PropertySaveInfoIsAttributeInvoker.Instance, CompareType.Equal, false);
 
         public NamedList<PropertySerializationInfo> Properties { get; private set; }
 
@@ -120,4 +118,22 @@ namespace DataWF.Common
                 : Helper.TextParse(value, Type);
         }
     }
+
+    [Invoker(typeof(PropertySerializationInfo), nameof(PropertySerializationInfo.IsAttribute))]
+    public class PropertySaveInfoIsAttributeInvoker : Invoker<PropertySerializationInfo, bool>
+    {
+        public static readonly PropertySaveInfoIsAttributeInvoker Instance = new PropertySaveInfoIsAttributeInvoker();
+
+        public PropertySaveInfoIsAttributeInvoker()
+        {
+            Name = nameof(PropertySerializationInfo.IsAttribute);
+        }
+
+        public override bool CanWrite => false;
+
+        public override bool GetValue(PropertySerializationInfo target) => target.IsAttribute;
+
+        public override void SetValue(PropertySerializationInfo target, bool value) { }
+    }
+
 }

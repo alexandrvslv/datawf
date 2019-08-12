@@ -43,8 +43,8 @@ namespace DataWF.Data
     public abstract class DBTable : DBSchemaItem, IComparable, IDBTable
     {
         private static Dictionary<Type, DBTable> cacheTables = new Dictionary<Type, DBTable>();
-        private static Dictionary<Type, TableAttributeCache> cacheTableAttributes = new Dictionary<Type, TableAttributeCache>();
-        private static Dictionary<Type, ItemTypeAttributeCache> cacheItemTypeAttributes = new Dictionary<Type, ItemTypeAttributeCache>();
+        private static Dictionary<Type, TableGenerator> cacheTableAttributes = new Dictionary<Type, TableGenerator>();
+        private static Dictionary<Type, ItemTypeGenerator> cacheItemTypeAttributes = new Dictionary<Type, ItemTypeGenerator>();
 
         public static void ClearAttributeCache()
         {
@@ -53,7 +53,7 @@ namespace DataWF.Data
             cacheItemTypeAttributes.Clear();
         }
 
-        public static TableAttributeCache GetTableAttributeInherit(Type type)
+        public static TableGenerator GetTableAttributeInherit(Type type)
         {
             var tableAttribute = GetTableAttribute(type);
             while (tableAttribute == null && type != null)
@@ -64,24 +64,24 @@ namespace DataWF.Data
             return tableAttribute;
         }
 
-        public static TableAttributeCache GetTableAttribute<T>()
+        public static TableGenerator GetTableAttribute<T>()
         {
             return GetTableAttribute(typeof(T));
         }
 
-        public static TableAttributeCache GetTableAttribute(Type type)
+        public static TableGenerator GetTableAttribute(Type type)
         {
             if (!cacheTableAttributes.TryGetValue(type, out var table))
             {
                 var tableAttribute = type.GetCustomAttribute<TableAttribute>(false);
                 if (tableAttribute is LogTableAttribute)
                 {
-                    table = new LogTableAttributeCache() { Attribute = tableAttribute };
+                    table = new LogTableGenerator() { Attribute = tableAttribute };
                     table.Initialize(type);
                 }
                 else if (tableAttribute is TableAttribute)
                 {
-                    table = new TableAttributeCache() { Attribute = tableAttribute };
+                    table = new TableGenerator() { Attribute = tableAttribute };
                     table.Initialize(type);
                 }
                 cacheTableAttributes[type] = table;
@@ -94,19 +94,19 @@ namespace DataWF.Data
             return table;
         }
 
-        public static ItemTypeAttributeCache GetItemTypeAttribute(Type type)
+        public static ItemTypeGenerator GetItemTypeAttribute(Type type)
         {
             if (!cacheItemTypeAttributes.TryGetValue(type, out var itemType))
             {
                 var itemTypeAttribute = type.GetCustomAttribute<ItemTypeAttribute>(false);
                 if (itemTypeAttribute is LogItemTypeAttribute)
                 {
-                    itemType = new LogItemTypeAttributeCache { Attribute = itemTypeAttribute };
+                    itemType = new LogItemTypeGenerator { Attribute = itemTypeAttribute };
                     itemType.Initialize(type);
                 }
                 else if (itemTypeAttribute is ItemTypeAttribute)
                 {
-                    itemType = new ItemTypeAttributeCache { Attribute = itemTypeAttribute };
+                    itemType = new ItemTypeGenerator { Attribute = itemTypeAttribute };
                     itemType.Initialize(type);
                 }
                 cacheItemTypeAttributes[type] = itemType;
@@ -197,7 +197,7 @@ namespace DataWF.Data
         public string LogTableName { get; set; }
 
         [XmlIgnore, JsonIgnore]
-        public TableAttributeCache TableAttribute { get; internal set; }
+        public TableGenerator TableAttribute { get; internal set; }
 
         [XmlIgnore, JsonIgnore]
         public virtual IDBLogTable LogTable

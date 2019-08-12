@@ -17,32 +17,18 @@
  You should have received a copy of the GNU Lesser General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using System;
+using System.Reflection;
 
 namespace DataWF.Data
 {
-    public class LogItemTypeAttributeCache : ItemTypeAttributeCache
+    public class LogReferenceGenerator : ReferenceGenerator
     {
-        public LogItemTypeAttribute LogAttribute
+        public LogReferenceGenerator(TableGenerator table, PropertyInfo property, LogReferenceAttribute referenceAttribute)
+            : base(table, property, referenceAttribute)
         {
-            get => Attribute as LogItemTypeAttribute;
-            set => Attribute = value;
         }
 
-        public LogTableAttributeCache LogTableAttribute
-        {
-            get => TableAttribute as LogTableAttributeCache;
-            set => TableAttribute = value;
-        }
-
-        public override DBTable Table { get => LogTableAttribute.Table; internal set => base.Table = value; }
-
-        public override DBTable CreateTable()
-        {
-            return null;
-        }
-
-        public override DBTable Generate(DBSchema schema)
+        public override DBForeignKey Generate()
         {
             return null;
         }

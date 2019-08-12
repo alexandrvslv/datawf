@@ -17,17 +17,31 @@ namespace DataWF.Data
 {
     public class DBConnectionList : SelectableList<DBConnection>
     {
-        static readonly Invoker<DBConnection, string> nameInvoker = new ActionInvoker<DBConnection, string>(nameof(DBConnection.Name), (item) => item.Name);
-
         public DBConnectionList()
         {
-            Indexes.Add(nameInvoker);
+            Indexes.Add(DBConnectionNameInvoker.Instance);
         }
 
         public DBConnection this[string name]
         {
             get { return SelectOne(nameof(DBConnection.Name), CompareType.Equal, name); }
         }
+    }
+
+    [Invoker(typeof(DBConnection), nameof(DBConnection.Name))]
+    public class DBConnectionNameInvoker : Invoker<DBConnection, string>
+    {
+        public static readonly DBConnectionNameInvoker Instance = new DBConnectionNameInvoker();
+        public DBConnectionNameInvoker()
+        {
+            Name = nameof(DBConnection.Name);
+        }
+
+        public override bool CanWrite => true;
+
+        public override string GetValue(DBConnection target) => target.Name;
+
+        public override void SetValue(DBConnection target, string value) => target.Name = value;
     }
 
     public class DBConnection : INotifyPropertyChanged, IDisposable

@@ -18,11 +18,12 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using DataWF.Common;
 using System.Collections.Generic;
 
 namespace DataWF.Data
 {
-    public class IndexAttributeCache
+    public class IndexGenerator
     {
         DBIndex cacheIndex;
 
@@ -30,7 +31,7 @@ namespace DataWF.Data
 
         public string IndexName { get { return Attribute?.IndexName; } }
 
-        public List<ColumnAttributeCache> Columns { get; } = new List<ColumnAttributeCache>();
+        public List<ColumnGenerator> Columns { get; } = new List<ColumnGenerator>();
 
         public DBIndex Index
         {
@@ -38,7 +39,7 @@ namespace DataWF.Data
             set { cacheIndex = value; }
         }
 
-        public TableAttributeCache Table { get; set; }
+        public TableGenerator Table { get; set; }
 
         public DBIndex Generate()
         {
@@ -57,5 +58,21 @@ namespace DataWF.Data
             Table.Table.Indexes.Add(Index);
             return Index;
         }
+    }
+
+    [Invoker(typeof(IndexGenerator), nameof(IndexGenerator.IndexName))]
+    public class IndexGeneratorNameInvoker : Invoker<IndexGenerator, string>
+    {
+        public static readonly IndexGeneratorNameInvoker Instance = new IndexGeneratorNameInvoker();
+        public IndexGeneratorNameInvoker()
+        {
+            Name = nameof(IndexGenerator.IndexName);
+        }
+
+        public override bool CanWrite => false;
+
+        public override string GetValue(IndexGenerator target) => target.IndexName;
+
+        public override void SetValue(IndexGenerator target, string value) { }
     }
 }

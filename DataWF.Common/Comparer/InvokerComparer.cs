@@ -34,7 +34,7 @@ namespace DataWF.Common
         }
 
         public InvokerComparer(PropertyInfo info, object index, ListSortDirection direction = ListSortDirection.Ascending)
-            : this(EmitInvoker.Initialize(info, index), direction)
+            : this(index == null ? EmitInvoker.Initialize(info, true) : EmitInvoker.Initialize(info, index), direction)
         {
         }
 

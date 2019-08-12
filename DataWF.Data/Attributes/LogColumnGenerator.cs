@@ -24,20 +24,20 @@ using System.Reflection;
 
 namespace DataWF.Data
 {
-    public class LogColumnAttributeCache : ColumnAttributeCache
+    public class LogColumnGenerator : ColumnGenerator
     {
-        public LogColumnAttributeCache(LogTableAttributeCache table, PropertyInfo property, LogColumnAttribute columnAttribute, CultureInfo culture)
+        public LogColumnGenerator(LogTableGenerator table, PropertyInfo property, LogColumnAttribute columnAttribute, CultureInfo culture)
             : base(table, property, columnAttribute, culture)
         {
         }
-        public LogColumnAttributeCache(LogTableAttributeCache table, PropertyInfo property, LogColumnAttribute columnAttribute)
+        public LogColumnGenerator(LogTableGenerator table, PropertyInfo property, LogColumnAttribute columnAttribute)
             : base(table, property, columnAttribute)
         {
         }
 
         public LogColumnAttribute LogAttribute => base.Attribute as LogColumnAttribute;
 
-        public LogTableAttributeCache LogTable => Table as LogTableAttributeCache;
+        public LogTableGenerator LogTable => Table as LogTableGenerator;
 
         public DBLogColumn LogColumn
         {
@@ -47,7 +47,7 @@ namespace DataWF.Data
 
         public override int Size => BaseColumn?.Size ?? base.Size;
 
-        public ColumnAttributeCache BaseColumn => LogTable?.BaseTableAttribute?.GetColumn(LogAttribute?.BaseName);
+        public ColumnGenerator BaseColumn => LogTable?.BaseTableAttribute?.GetColumn(LogAttribute?.BaseName);
 
         public override DBColumn CreateColumn(string name)
         {

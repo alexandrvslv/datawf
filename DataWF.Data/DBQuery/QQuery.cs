@@ -40,21 +40,6 @@ namespace DataWF.Data
         QItemList<QTable> Tables { get; }
     }
 
-    public class QParamList : QItemList<QParam>
-    {
-        public static readonly Invoker<QParam, QParam> GroupInvoker = new ActionInvoker<QParam, QParam>(nameof(QParam.Group), p => p.Group);
-        public static readonly Invoker<QParam, string> ColumnNameInvoker = new ActionInvoker<QParam, string>("Column.Name", p => p.Column?.Name);
-
-        public QParamList()
-        {
-        }
-
-        public QParamList(IQItemList owner) : base(owner)
-        {
-            //Indexes.Add(groupInvoker);
-        }
-    }
-
     public class QQuery : QItem, IQuery, IDisposable, IQItemList
     {
         static readonly char[] separator = new char[] { ',' };
@@ -104,14 +89,21 @@ namespace DataWF.Data
         {
             baseQuery = bquery;
             if (bquery != null)
+            {
                 order = bquery.order + 1;
+            }
+
             Table = table;
             Parse(query);
             if (cols != null)
+            {
                 foreach (DBColumn col in cols)
+                {
                     BuildColumn(col);
-
+                }
+            }
         }
+
         public IQItemList Owner { get { return baseQuery ?? this; } }
 
         public override IQuery Query { get { return Owner as IQuery; } }
@@ -1338,7 +1330,7 @@ namespace DataWF.Data
 
         public bool Contains(string column)
         {
-            return parameters.Select(QParamList.ColumnNameInvoker, CompareType.Equal, column).Any();
+            return parameters.Select(QParamColumnNameInvoker.Instance, CompareType.Equal, column).Any();
         }
 
         public QParam GetByColumn(DBColumn column)

@@ -26,11 +26,11 @@ using System.Reflection;
 
 namespace DataWF.Data
 {
-    public class ColumnAttributeCache
+    public class ColumnGenerator
     {
         private DBColumn cache;
 
-        public ColumnAttributeCache(TableAttributeCache table, PropertyInfo property, ColumnAttribute columnAttribute, CultureInfo culture)
+        public ColumnGenerator(TableGenerator table, PropertyInfo property, ColumnAttribute columnAttribute, CultureInfo culture)
         {
             Attribute = columnAttribute;
             Table = table;
@@ -42,7 +42,7 @@ namespace DataWF.Data
             ColumnName = $"{columnAttribute.ColumnName}_{culture.TwoLetterISOLanguageName}";
         }
 
-        public ColumnAttributeCache(TableAttributeCache table, PropertyInfo property, ColumnAttribute columnAttribute)
+        public ColumnGenerator(TableGenerator table, PropertyInfo property, ColumnAttribute columnAttribute)
         {
             Attribute = columnAttribute;
             Table = table;
@@ -55,7 +55,7 @@ namespace DataWF.Data
 
         public ColumnAttribute Attribute { get; set; }
 
-        public TableAttributeCache Table { get; set; }
+        public TableGenerator Table { get; set; }
 
         public DBColumn Column
         {
@@ -153,5 +153,38 @@ namespace DataWF.Data
                 table.Columns.Add(Column);
             }
         }
+    }
+
+    [Invoker(typeof(ColumnGenerator), nameof(ColumnGenerator.ColumnName))]
+    public class ColumnGeneratorColumnNameInvoker : Invoker<ColumnGenerator, string>
+    {
+        public static readonly ColumnGeneratorColumnNameInvoker Instance = new ColumnGeneratorColumnNameInvoker();
+        public ColumnGeneratorColumnNameInvoker()
+        {
+            Name = nameof(ColumnGenerator.ColumnName);
+        }
+
+        public override bool CanWrite => true;
+
+        public override string GetValue(ColumnGenerator target) => target.ColumnName;
+
+        public override void SetValue(ColumnGenerator target, string value) => target.ColumnName = value;
+    }
+
+    [Invoker(typeof(ColumnGenerator), nameof(ColumnGenerator.PropertyName))]
+    public class ColumnGeneratorPropertyNameInvoker : Invoker<ColumnGenerator, string>
+    {
+        public static readonly ColumnGeneratorPropertyNameInvoker Instance = new ColumnGeneratorPropertyNameInvoker();
+
+        public ColumnGeneratorPropertyNameInvoker()
+        {
+            Name = nameof(ColumnGenerator.PropertyName);
+        }
+
+        public override bool CanWrite => true;
+
+        public override string GetValue(ColumnGenerator target) => target.PropertyName;
+
+        public override void SetValue(ColumnGenerator target, string value) => target.PropertyName = value;
     }
 }

@@ -23,7 +23,7 @@ using System.Diagnostics;
 
 namespace DataWF.Data
 {
-    public class ItemTypeAttributeCache
+    public class ItemTypeGenerator
     {
         private DBTable cacheTable;
         private DBSchema schema;
@@ -32,7 +32,7 @@ namespace DataWF.Data
 
         public Type Type { get; protected set; }
 
-        public TableAttributeCache TableAttribute { get; set; }
+        public TableGenerator TableAttribute { get; set; }
 
         public IDBVirtualTable VirtualTable { get { return (IDBVirtualTable)Table; } }
 

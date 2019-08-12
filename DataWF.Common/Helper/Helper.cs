@@ -67,7 +67,7 @@ namespace DataWF.Common
         {
             if (e.LoadedAssembly.GetCustomAttributes<AssemblyMetadataAttribute>().Any(m => m.Key == "module"))
             {
-                foreach (var item in e.LoadedAssembly?.GetExportedTypes())
+                foreach (var item in e.LoadedAssembly.GetExportedTypes())
                 {
                     if (TypeHelper.IsInterface(item, typeof(IModuleInitialize)))
                     {
@@ -80,6 +80,17 @@ namespace DataWF.Common
                         {
                             Helper.OnException(ex);
                         }
+                    }
+                }
+            }
+            if (!e.LoadedAssembly.IsDynamic && !e.LoadedAssembly.GetName().Name.StartsWith("System", StringComparison.Ordinal))
+            {
+                foreach (var item in e.LoadedAssembly.GetExportedTypes())
+                {
+                    var invoker = item.GetCustomAttribute<InvokerAttribute>();
+                    if (invoker != null)
+                    {
+                        EmitInvoker.RegisterInvoker(item, invoker);
                     }
                 }
             }
@@ -505,7 +516,7 @@ namespace DataWF.Common
 
         public static string GetDirectory(string sub = "")
         {
-            return Path.Combine(Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory 
+            return Path.Combine(Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory
                 ?? Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)), sub);
         }
 

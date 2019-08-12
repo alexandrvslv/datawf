@@ -98,5 +98,54 @@ namespace DataWF.Common
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
 
+        [Invoker(typeof(LocaleImage), nameof(LocaleImage.Key))]
+        public class KeyInvoker : Invoker<LocaleImage, string>
+        {
+            public static readonly KeyInvoker Instance = new KeyInvoker();
+            public KeyInvoker()
+            {
+                Name = nameof(LocaleImage.Key);
+            }
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(LocaleImage target) => target.Key;
+
+            public override void SetValue(LocaleImage target, string value) => target.Key = value;
+        }
+
+
+        [Invoker(typeof(LocaleImage), nameof(LocaleImage.FileName))]
+        public class FileNameInvoker : Invoker<LocaleImage, string>
+        {
+            public static readonly FileNameInvoker Instance = new FileNameInvoker();
+            public FileNameInvoker()
+            {
+                Name = nameof(LocaleImage.FileName);
+            }
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(LocaleImage target) => target.FileName;
+
+            public override void SetValue(LocaleImage target, string value) => target.FileName = value;
+        }
+
+        [Invoker(typeof(LocaleImage), nameof(LocaleImage.Data))]
+        public class DataInvoker : Invoker<LocaleImage, byte[]>
+        {
+            public static readonly DataInvoker Instance = new DataInvoker();
+            public DataInvoker()
+            {
+                Name = nameof(LocaleImage.Data);
+            }
+
+            public override bool CanWrite => true;
+
+            public override byte[] GetValue(LocaleImage target) => target.Data;
+
+            public override void SetValue(LocaleImage target, byte[] value) => target.Data = value;
+        }
+
     }
 }
