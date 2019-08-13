@@ -39,7 +39,6 @@ using System.Xml.Serialization;
 
 namespace DataWF.Data
 {
-
     public abstract class DBTable : DBSchemaItem, IComparable, IDBTable
     {
         private static Dictionary<Type, DBTable> cacheTables = new Dictionary<Type, DBTable>();
@@ -1832,6 +1831,149 @@ namespace DataWF.Data
                 new DBColumn { Name = "stateid", Keys = DBColumnKeys.State, DBDataType = DBDataType.Decimal, Size = 28 },
                 new DBColumn { Name = "access", Keys = DBColumnKeys.Access, DBDataType = DBDataType.Blob, Size = 2000 }
             });
+        }
+
+        [Invoker(typeof(DBTable), nameof(DBTable.GroupName))]
+        public class GroupNameInvoker : Invoker<DBTable, string>
+        {
+            public static readonly GroupNameInvoker Instance = new GroupNameInvoker();
+            public override string Name => nameof(DBTable.GroupName);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(DBTable target) => target.GroupName;
+
+            public override void SetValue(DBTable target, string value) => target.GroupName = value;
+        }
+
+        [Invoker(typeof(DBTable), nameof(DBTable.LogTableName))]
+        public class LogTableNameInvoker : Invoker<DBTable, string>
+        {
+            public static readonly LogTableNameInvoker Instance = new LogTableNameInvoker();
+            public override string Name => nameof(DBTable.LogTableName);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(DBTable target) => target.LogTableName;
+
+            public override void SetValue(DBTable target, string value) => target.LogTableName = value;
+        }
+
+        [Invoker(typeof(DBTable), nameof(DBTable.LogTable))]
+        public class LogTableInvoker : Invoker<DBTable, IDBLogTable>
+        {
+            public static readonly LogTableInvoker Instance = new LogTableInvoker();
+            public override string Name => nameof(DBTable.LogTable);
+
+            public override bool CanWrite => true;
+
+            public override IDBLogTable GetValue(DBTable target) => target.LogTable;
+
+            public override void SetValue(DBTable target, IDBLogTable value) => target.LogTable = value;
+        }
+
+        [Invoker(typeof(DBTable), nameof(DBTable.SequenceName))]
+        public class SequenceNameInvoker : Invoker<DBTable, string>
+        {
+            public static readonly SequenceNameInvoker Instance = new SequenceNameInvoker();
+            public override string Name => nameof(DBTable.SequenceName);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(DBTable target) => target.SequenceName;
+
+            public override void SetValue(DBTable target, string value) => target.SequenceName = value;
+        }
+
+        [Invoker(typeof(DBTable), nameof(DBTable.Sequence))]
+        public class SequenceInvoker : Invoker<DBTable, DBSequence>
+        {
+            public static readonly SequenceInvoker Instance = new SequenceInvoker();
+            public override string Name => nameof(DBTable.Sequence);
+
+            public override bool CanWrite => true;
+
+            public override DBSequence GetValue(DBTable target) => target.Sequence;
+
+            public override void SetValue(DBTable target, DBSequence value) => target.Sequence = value;
+        }
+
+        [Invoker(typeof(DBTable), nameof(DBTable.BlockSize))]
+        public class BlockSizeInvoker : Invoker<DBTable, int>
+        {
+            public static readonly BlockSizeInvoker Instance = new BlockSizeInvoker();
+            public override string Name => nameof(DBTable.BlockSize);
+
+            public override bool CanWrite => true;
+
+            public override int GetValue(DBTable target) => target.BlockSize;
+
+            public override void SetValue(DBTable target, int value) => target.BlockSize = value;
+        }
+
+        [Invoker(typeof(DBTable), nameof(DBTable.Columns))]
+        public class ColumnsInvoker : Invoker<DBTable, DBColumnList<DBColumn>>
+        {
+            public static readonly ColumnsInvoker Instance = new ColumnsInvoker();
+            public override string Name => nameof(DBTable.Columns);
+
+            public override bool CanWrite => true;
+
+            public override DBColumnList<DBColumn> GetValue(DBTable target) => target.Columns;
+
+            public override void SetValue(DBTable target, DBColumnList<DBColumn> value) => target.Columns = value;
+        }
+
+        [Invoker(typeof(DBTable), nameof(DBTable.ColumnGroups))]
+        public class ColumnGroupsInvoker : Invoker<DBTable, DBColumnGroupList>
+        {
+            public static readonly ColumnGroupsInvoker Instance = new ColumnGroupsInvoker();
+            public override string Name => nameof(DBTable.ColumnGroups);
+
+            public override bool CanWrite => true;
+
+            public override DBColumnGroupList GetValue(DBTable target) => target.ColumnGroups;
+
+            public override void SetValue(DBTable target, DBColumnGroupList value) => target.ColumnGroups = value;
+        }
+
+        [Invoker(typeof(DBTable), nameof(DBTable.Indexes))]
+        public class IndexesInvoker : Invoker<DBTable, DBIndexList>
+        {
+            public static readonly IndexesInvoker Instance = new IndexesInvoker();
+            public override string Name => nameof(DBTable.Indexes);
+
+            public override bool CanWrite => true;
+
+            public override DBIndexList GetValue(DBTable target) => target.Indexes;
+
+            public override void SetValue(DBTable target, DBIndexList value) => target.Indexes = value;
+        }
+
+        [Invoker(typeof(DBTable), nameof(DBTable.Foreigns))]
+        public class ForeignsInvoker : Invoker<DBTable, DBForeignList>
+        {
+            public static readonly ForeignsInvoker Instance = new ForeignsInvoker();
+            public override string Name => nameof(DBTable.Foreigns);
+
+            public override bool CanWrite => true;
+
+            public override DBForeignList GetValue(DBTable target) => target.Foreigns;
+
+            public override void SetValue(DBTable target, DBForeignList value) => target.Foreigns = value;
+        }
+
+        [Invoker(typeof(DBTable), nameof(DBTable.Constraints))]
+        public class ConstraintsInvoker : Invoker<DBTable, DBConstraintList<DBConstraint>>
+        {
+            public static readonly ConstraintsInvoker Instance = new ConstraintsInvoker();
+            public override string Name => nameof(DBTable.Constraints);
+
+            public override bool CanWrite => true;
+
+            public override DBConstraintList<DBConstraint> GetValue(DBTable target) => target.Constraints;
+
+            public override void SetValue(DBTable target, DBConstraintList<DBConstraint> value) => target.Constraints = value;
         }
     }
 }

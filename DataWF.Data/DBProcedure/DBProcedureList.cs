@@ -168,10 +168,7 @@ namespace DataWF.Data
     public class DBProcedureGroupNameInvoker : Invoker<DBProcedure, string>
     {
         public static readonly DBProcedureGroupNameInvoker Instance = new DBProcedureGroupNameInvoker();
-        public DBProcedureGroupNameInvoker()
-        {
-            Name = nameof(DBProcedure.GroupName);
-        }
+        public override string Name => nameof(DBProcedure.GroupName);
 
         public override bool CanWrite => true;
 
@@ -184,10 +181,7 @@ namespace DataWF.Data
     public class DBProcedureDataNameInvoker : Invoker<DBProcedure, string>
     {
         public static readonly DBProcedureDataNameInvoker Instance = new DBProcedureDataNameInvoker();
-        public DBProcedureDataNameInvoker()
-        {
-            Name = nameof(DBProcedure.DataName);
-        }
+        public override string Name => nameof(DBProcedure.DataName);
 
         public override bool CanWrite => true;
 
@@ -200,10 +194,7 @@ namespace DataWF.Data
     public class DBProcedureProcedureTypeInvoker : Invoker<DBProcedure, ProcedureTypes>
     {
         public static readonly DBProcedureProcedureTypeInvoker Instance = new DBProcedureProcedureTypeInvoker();
-        public DBProcedureProcedureTypeInvoker()
-        {
-            Name = nameof(DBProcedure.ProcedureType);
-        }
+        public override string Name => nameof(DBProcedure.ProcedureType);
 
         public override bool CanWrite => true;
 

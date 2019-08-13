@@ -64,10 +64,7 @@ namespace DataWF.Data
     public class DBColumnReferenceColumnNameInvoker : Invoker<DBColumnReference, string>
     {
         public static readonly DBColumnReferenceColumnNameInvoker Instance = new DBColumnReferenceColumnNameInvoker();
-        public DBColumnReferenceColumnNameInvoker()
-        {
-            Name = nameof(DBColumnReference.ColumnName);
-        }
+        public override string Name => nameof(DBColumnReference.ColumnName);
 
         public override bool CanWrite => true;
 

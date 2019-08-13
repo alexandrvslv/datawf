@@ -51,10 +51,7 @@ namespace DataWF.Web.Common
     public class WebNotifyConnectionSocketInvoker : Invoker<WebNotifyConnection, WebSocket>
     {
         public static readonly WebNotifyConnectionSocketInvoker Instance = new WebNotifyConnectionSocketInvoker();
-        public WebNotifyConnectionSocketInvoker()
-        {
-            Name = nameof(WebNotifyConnection.Socket);
-        }
+        public override string Name => nameof(WebNotifyConnection.Socket);
 
         public override bool CanWrite => true;
 
@@ -67,10 +64,7 @@ namespace DataWF.Web.Common
     public class WebNotifyConnectionUserInvoker : Invoker<WebNotifyConnection, User>
     {
         public static readonly WebNotifyConnectionUserInvoker Instance = new WebNotifyConnectionUserInvoker();
-        public WebNotifyConnectionUserInvoker()
-        {
-            Name = nameof(WebNotifyConnection.User);
-        }
+        public override string Name => nameof(WebNotifyConnection.User);
 
         public override bool CanWrite => true;
 

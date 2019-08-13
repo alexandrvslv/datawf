@@ -23,7 +23,6 @@ using DataWF.Common;
 
 namespace DataWF.Data
 {
-
     public abstract class DBUserReg : DBGroupItem, IUserReg
     {
         [Column("unid", Keys = DBColumnKeys.Primary)]

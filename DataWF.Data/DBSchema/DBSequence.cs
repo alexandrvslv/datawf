@@ -169,5 +169,65 @@ namespace DataWF.Data
                 Current = temp;
             }
         }
+
+        [Invoker(typeof(DBSequence), nameof(DBSequence.Current))]
+        public class CurrentInvoker : Invoker<DBSequence, long>
+        {
+            public override string Name => nameof(DBSequence.Current);
+
+            public override bool CanWrite => true;
+
+            public override long GetValue(DBSequence target) => target.Current;
+
+            public override void SetValue(DBSequence target, long value) => target.Current = value;
+        }
+
+        [Invoker(typeof(DBSequence), nameof(DBSequence.Increment))]
+        public class IncrementInvoker : Invoker<DBSequence, int>
+        {
+            public override string Name => nameof(DBSequence.Increment);
+
+            public override bool CanWrite => true;
+
+            public override int GetValue(DBSequence target) => target.Increment;
+
+            public override void SetValue(DBSequence target, int value) => target.Increment = value;
+        }
+
+        [Invoker(typeof(DBSequence), nameof(DBSequence.Size))]
+        public class SizeInvoker : Invoker<DBSequence, int>
+        {
+            public override string Name => nameof(DBSequence.Size);
+
+            public override bool CanWrite => true;
+
+            public override int GetValue(DBSequence target) => target.Size;
+
+            public override void SetValue(DBSequence target, int value) => target.Size = value;
+        }
+
+        [Invoker(typeof(DBSequence), nameof(DBSequence.Scale))]
+        public class ScaleInvoker : Invoker<DBSequence, int>
+        {
+            public override string Name => nameof(DBSequence.Scale);
+
+            public override bool CanWrite => true;
+
+            public override int GetValue(DBSequence target) => target.Scale;
+
+            public override void SetValue(DBSequence target, int value) => target.Scale = value;
+        }
+
+        [Invoker(typeof(DBSequence), nameof(DBSequence.DBDataType))]
+        public class DBDataTypeInvoker : Invoker<DBSequence, DBDataType>
+        {
+            public override string Name => nameof(DBSequence.DBDataType);
+
+            public override bool CanWrite => true;
+
+            public override DBDataType GetValue(DBSequence target) => target.DBDataType;
+
+            public override void SetValue(DBSequence target, DBDataType value) => target.DBDataType = value;
+        }
     }
 }

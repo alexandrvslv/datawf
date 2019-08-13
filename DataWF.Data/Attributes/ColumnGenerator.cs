@@ -159,10 +159,7 @@ namespace DataWF.Data
     public class ColumnGeneratorColumnNameInvoker : Invoker<ColumnGenerator, string>
     {
         public static readonly ColumnGeneratorColumnNameInvoker Instance = new ColumnGeneratorColumnNameInvoker();
-        public ColumnGeneratorColumnNameInvoker()
-        {
-            Name = nameof(ColumnGenerator.ColumnName);
-        }
+        public override string Name => nameof(ColumnGenerator.ColumnName);
 
         public override bool CanWrite => true;
 
@@ -176,10 +173,7 @@ namespace DataWF.Data
     {
         public static readonly ColumnGeneratorPropertyNameInvoker Instance = new ColumnGeneratorPropertyNameInvoker();
 
-        public ColumnGeneratorPropertyNameInvoker()
-        {
-            Name = nameof(ColumnGenerator.PropertyName);
-        }
+        public override string Name => nameof(ColumnGenerator.PropertyName);
 
         public override bool CanWrite => true;
 

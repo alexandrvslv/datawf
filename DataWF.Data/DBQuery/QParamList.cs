@@ -37,10 +37,7 @@ namespace DataWF.Data
     public class QParamGroupInvoker : Invoker<QParam, QParam>
     {
         public static readonly QParamGroupInvoker Instance = new QParamGroupInvoker();
-        public QParamGroupInvoker()
-        {
-            Name = nameof(QParam.Group);
-        }
+        public override string Name => nameof(QParam.Group);
 
         public override bool CanWrite => true;
 
@@ -53,10 +50,7 @@ namespace DataWF.Data
     public class QParamColumnNameInvoker : Invoker<QParam, string>
     {
         public static readonly QParamColumnNameInvoker Instance = new QParamColumnNameInvoker();
-        public QParamColumnNameInvoker()
-        {
-            Name = "Column.Name";
-        }
+        public override string Name => "Column.Name";
 
         public override bool CanWrite => false;
 

@@ -34,7 +34,7 @@ namespace DataWF.Web.CodeGenerator
             if (map.TryGetValue("-m", out var modeText) || map.TryGetValue("--mode", out modeText))
             {
                 if (!Enum.TryParse<CodeGeneratorMode>(modeText, out mode))
-                    throw new ArgumentException("Mode missing, expect -m|--mode Controllers|,|Logs");
+                    throw new ArgumentException("Mode missing, expect -m|--mode Controllers|,|Logs|,|Invokers");
             }
 
             var generator = new CodeGenerator(path, output, nameSpace);

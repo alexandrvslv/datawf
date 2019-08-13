@@ -45,16 +45,16 @@ namespace DataWF.Data
             }
             Attribute = referencingAttribuite;
             Table = table;
-            Property = property;
+            PropertyInfo = property;
             ReferenceTable = referenceTable;
             ReferenceColumn = referenceColumn;
-            PropertyInvoker = EmitInvoker.Initialize(property);
+            PropertyInvoker = EmitInvoker.Initialize(property, true);
         }
 
         public ReferencingAttribute Attribute { get; set; }
         public TableGenerator Table { get; set; }
-        public PropertyInfo Property { get; set; }
-        public string PropertyName { get { return Property.Name; } }
+        public PropertyInfo PropertyInfo { get; set; }
+        public string PropertyName { get { return PropertyInfo.Name; } }
         public TableGenerator ReferenceTable { get; set; }
         public ColumnGenerator ReferenceColumn { get; set; }
         public IInvoker PropertyInvoker { get; set; }
@@ -69,10 +69,7 @@ namespace DataWF.Data
     public class ReferencingGeneratorPropertyNameInvoker : Invoker<ReferencingGenerator, string>
     {
         public static readonly ReferencingGeneratorPropertyNameInvoker Instance = new ReferencingGeneratorPropertyNameInvoker();
-        public ReferencingGeneratorPropertyNameInvoker()
-        {
-            Name = nameof(ReferencingGenerator.PropertyName);
-        }
+        public override string Name => nameof(ReferencingGenerator.PropertyName);
 
         public override bool CanWrite => false;
 

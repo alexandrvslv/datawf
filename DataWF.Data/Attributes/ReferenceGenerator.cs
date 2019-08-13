@@ -110,7 +110,7 @@ namespace DataWF.Data
             ForeignKey.PropertyInfo = PropertyInfo;
             if (ForeignKey.PropertyInvoker == null)
             {
-                ForeignKey.PropertyInvoker = EmitInvoker.Initialize(PropertyInfo);
+                ForeignKey.PropertyInvoker = EmitInvoker.Initialize(PropertyInfo, true);
             }
             return ForeignKey;
         }
@@ -120,10 +120,7 @@ namespace DataWF.Data
     public class ReferenceGeneratorPropertyNameInvoker : Invoker<ReferenceGenerator, string>
     {
         public static readonly ReferenceGeneratorPropertyNameInvoker Instance = new ReferenceGeneratorPropertyNameInvoker();
-        public ReferenceGeneratorPropertyNameInvoker()
-        {
-            Name = nameof(ReferenceGenerator.PropertyName);
-        }
+        public override string Name => nameof(ReferenceGenerator.PropertyName);
 
         public override bool CanWrite => false;
 

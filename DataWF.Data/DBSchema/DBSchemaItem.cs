@@ -189,5 +189,47 @@ namespace DataWF.Data
         public abstract object Clone();
 
         #endregion
+
+        [Invoker(typeof(DBSchemaItem), nameof(DBSchemaItem.Name))]
+        public class NameInvoker<T> : Invoker<T, string> where T : DBSchemaItem
+        {
+            public static readonly NameInvoker<T> Instance = new NameInvoker<T>();
+
+            public override string Name => nameof(DBSchemaItem.Name);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(T target) => target.Name;
+
+            public override void SetValue(T target, string value) => target.Name = value;
+        }
+
+        [Invoker(typeof(DBSchemaItem), nameof(DBSchemaItem.DisplayName))]
+        public class DisplayNameInvoker<T> : Invoker<T, string> where T : DBSchemaItem
+        {
+            public static readonly DisplayNameInvoker<T> Instance = new DisplayNameInvoker<T>();
+
+            public override string Name => nameof(DBSchemaItem.DisplayName);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(T target) => target.DisplayName;
+
+            public override void SetValue(T target, string value) => target.DisplayName = value;
+        }
+
+        [Invoker(typeof(DBSchemaItem), nameof(DBSchemaItem.OldName))]
+        public class OldNameInvoker<T> : Invoker<T, string> where T : DBSchemaItem
+        {
+            public static readonly OldNameInvoker<T> Instance = new OldNameInvoker<T>();
+
+            public override string Name => nameof(DBSchemaItem.OldName);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(T target) => target.OldName;
+
+            public override void SetValue(T target, string value) => target.OldName = value;
+        }
     }
 }

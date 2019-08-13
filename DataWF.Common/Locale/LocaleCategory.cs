@@ -61,9 +61,9 @@ namespace DataWF.Common
         public class NameInvoker : Invoker<LocaleCategory, string>
         {
             public static readonly NameInvoker Instance = new NameInvoker();
-            public NameInvoker()
+            public override string Name
             {
-                Name = nameof(LocaleCategory.Name);
+                get => nameof(LocaleCategory.Name);
             }
 
             public override bool CanWrite => true;

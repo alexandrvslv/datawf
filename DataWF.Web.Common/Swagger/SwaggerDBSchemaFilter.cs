@@ -92,13 +92,13 @@ namespace DataWF.Web.Common
             }
             if (table.Referencings != null)
             {
-                foreach (var refing in table.Referencings.Where(p => p.Property.DeclaringType == type))
+                foreach (var refing in table.Referencings.Where(p => p.PropertyInfo.DeclaringType == type))
                 {
-                    var refingSchema = context.SchemaRegistry.GetOrRegister(refing.Property.PropertyType);
-                    var itemType = TypeHelper.GetItemType(refing.Property.PropertyType);
+                    var refingSchema = context.SchemaRegistry.GetOrRegister(refing.PropertyInfo.PropertyType);
+                    var itemType = TypeHelper.GetItemType(refing.PropertyInfo.PropertyType);
                     //refingSchema.Extensions.Add("x-ref-client", itemType.Name);
                     refingSchema.Extensions.Add("x-ref-key", refing.ReferenceColumn.PropertyName);
-                    schema.Properties.Add(refing.Property.Name, refingSchema);
+                    schema.Properties.Add(refing.PropertyInfo.Name, refingSchema);
                 }
             }
         }

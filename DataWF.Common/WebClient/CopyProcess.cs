@@ -192,10 +192,7 @@ namespace DataWF.Common
         public class CategoryInvoker : Invoker<CopyProcess, CopyProcessCategory>
         {
             public static readonly CategoryInvoker Instance = new CategoryInvoker();
-            public CategoryInvoker()
-            {
-                Name = nameof(CopyProcess.Category);
-            }
+            public override string Name => nameof(CopyProcess.Category);
 
             public override bool CanWrite => false;
 
@@ -208,10 +205,7 @@ namespace DataWF.Common
         public class DateInvoker : Invoker<CopyProcess, DateTime>
         {
             public static readonly DateInvoker Instance = new DateInvoker();
-            public DateInvoker()
-            {
-                Name = nameof(CopyProcess.Date);
-            }
+            public override string Name => nameof(CopyProcess.Date);
 
             public override bool CanWrite => false;
 
@@ -224,10 +218,7 @@ namespace DataWF.Common
         public class FileNameInvoker : Invoker<CopyProcess, string>
         {
             public static readonly FileNameInvoker Instance = new FileNameInvoker();
-            public FileNameInvoker()
-            {
-                Name = nameof(CopyProcess.FileName);
-            }
+            public override string Name => nameof(CopyProcess.FileName);
 
             public override bool CanWrite => true;
 
@@ -240,10 +231,7 @@ namespace DataWF.Common
         public class FileInvoker : Invoker<CopyProcess, IFileModel>
         {
             public static readonly FileInvoker Instance = new FileInvoker();
-            public FileInvoker()
-            {
-                Name = nameof(CopyProcess.File);
-            }
+            public override string Name => nameof(CopyProcess.File);
 
             public override bool CanWrite => true;
 
@@ -256,10 +244,7 @@ namespace DataWF.Common
         public class ProgressInvoker : Invoker<CopyProcess, double>
         {
             public static readonly ProgressInvoker Instance = new ProgressInvoker();
-            public ProgressInvoker()
-            {
-                Name = nameof(CopyProcess.Progress);
-            }
+            public override string Name => nameof(CopyProcess.Progress);
 
             public override bool CanWrite => true;
 
@@ -272,10 +257,7 @@ namespace DataWF.Common
         public class FileSizeInvoker : Invoker<CopyProcess, long>
         {
             public static readonly FileSizeInvoker Instance = new FileSizeInvoker();
-            public FileSizeInvoker()
-            {
-                Name = nameof(CopyProcess.Progress);
-            }
+            public override string Name => nameof(CopyProcess.Progress);
 
             public override bool CanWrite => true;
 
@@ -288,10 +270,7 @@ namespace DataWF.Common
         public class SpeedInvoker : Invoker<CopyProcess, double>
         {
             public static readonly SpeedInvoker Instance = new SpeedInvoker();
-            public SpeedInvoker()
-            {
-                Name = nameof(CopyProcess.Speed);
-            }
+            public override string Name => nameof(CopyProcess.Speed);
 
             public override bool CanWrite => true;
 
@@ -304,10 +283,7 @@ namespace DataWF.Common
         public class SpeedFormatInvoker : Invoker<CopyProcess, string>
         {
             public static readonly SpeedFormatInvoker Instance = new SpeedFormatInvoker();
-            public SpeedFormatInvoker()
-            {
-                Name = nameof(CopyProcess.SpeedFormat);
-            }
+            public override string Name => nameof(CopyProcess.SpeedFormat);
 
             public override bool CanWrite => true;
 
@@ -320,10 +296,7 @@ namespace DataWF.Common
         public class FinishedInvoker : Invoker<CopyProcess, bool>
         {
             public static readonly FinishedInvoker Instance = new FinishedInvoker();
-            public FinishedInvoker()
-            {
-                Name = nameof(CopyProcess.SpeedFormat);
-            }
+            public override string Name => nameof(CopyProcess.SpeedFormat);
 
             public override bool CanWrite => true;
 

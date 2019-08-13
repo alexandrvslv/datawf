@@ -11,6 +11,8 @@ namespace DataWF.Common
             Name = name;
         }
 
+        public override string Name { get; }
+
         public override bool CanWrite { get { return SetAction != null; } }
 
         public Func<T, V> GetAction { get; protected set; }

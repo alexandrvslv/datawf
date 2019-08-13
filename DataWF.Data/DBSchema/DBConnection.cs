@@ -19,7 +19,7 @@ namespace DataWF.Data
     {
         public DBConnectionList()
         {
-            Indexes.Add(DBConnectionNameInvoker.Instance);
+            Indexes.Add(DBConnection.NameInvoker.Instance);
         }
 
         public DBConnection this[string name]
@@ -27,23 +27,6 @@ namespace DataWF.Data
             get { return SelectOne(nameof(DBConnection.Name), CompareType.Equal, name); }
         }
     }
-
-    [Invoker(typeof(DBConnection), nameof(DBConnection.Name))]
-    public class DBConnectionNameInvoker : Invoker<DBConnection, string>
-    {
-        public static readonly DBConnectionNameInvoker Instance = new DBConnectionNameInvoker();
-        public DBConnectionNameInvoker()
-        {
-            Name = nameof(DBConnection.Name);
-        }
-
-        public override bool CanWrite => true;
-
-        public override string GetValue(DBConnection target) => target.Name;
-
-        public override void SetValue(DBConnection target, string value) => target.Name = value;
-    }
-
     public class DBConnection : INotifyPropertyChanged, IDisposable
     {
         private string name = "";
@@ -542,5 +525,123 @@ namespace DataWF.Data
         {
             ClearConnectionCache();
         }
+
+        [Invoker(typeof(DBConnection), nameof(DBConnection.Name))]
+        public class NameInvoker : Invoker<DBConnection, string>
+        {
+            public static readonly NameInvoker Instance = new NameInvoker();
+            public override string Name => nameof(DBConnection.Name);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(DBConnection target) => target.Name;
+
+            public override void SetValue(DBConnection target, string value) => target.Name = value;
+        }
+
+        [Invoker(typeof(DBConnection), nameof(DBConnection.SystemName))]
+        public class SystemNameInvoker : Invoker<DBConnection, string>
+        {
+            public static readonly SystemNameInvoker Instance = new SystemNameInvoker();
+            public override string Name => nameof(DBConnection.SystemName);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(DBConnection target) => target.SystemName;
+
+            public override void SetValue(DBConnection target, string value) => target.SystemName = value;
+        }
+
+        [Invoker(typeof(DBConnection), nameof(DBConnection.Host))]
+        public class HostInvoker : Invoker<DBConnection, string>
+        {
+            public static readonly HostInvoker Instance = new HostInvoker();
+            public override string Name => nameof(DBConnection.Host);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(DBConnection target) => target.Host;
+
+            public override void SetValue(DBConnection target, string value) => target.Host = value;
+        }
+
+        [Invoker(typeof(DBConnection), nameof(DBConnection.Port))]
+        public class PortInvoker : Invoker<DBConnection, uint>
+        {
+            public static readonly PortInvoker Instance = new PortInvoker();
+            public override string Name => nameof(DBConnection.Port);
+
+            public override bool CanWrite => true;
+
+            public override uint GetValue(DBConnection target) => target.Port;
+
+            public override void SetValue(DBConnection target, uint value) => target.Port = value;
+        }
+
+        [Invoker(typeof(DBConnection), nameof(DBConnection.DataBase))]
+        public class DataBaseInvoker : Invoker<DBConnection, string>
+        {
+            public static readonly DataBaseInvoker Instance = new DataBaseInvoker();
+            public override string Name => nameof(DBConnection.DataBase);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(DBConnection target) => target.DataBase;
+
+            public override void SetValue(DBConnection target, string value) => target.DataBase = value;
+        }
+
+        [Invoker(typeof(DBConnection), nameof(DBConnection.Schema))]
+        public class SchemaInvoker : Invoker<DBConnection, string>
+        {
+            public static readonly SchemaInvoker Instance = new SchemaInvoker();
+            public override string Name => nameof(DBConnection.Schema);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(DBConnection target) => target.Schema;
+
+            public override void SetValue(DBConnection target, string value) => target.Schema = value;
+        }
+
+        [Invoker(typeof(DBConnection), nameof(DBConnection.User))]
+        public class UserInvoker : Invoker<DBConnection, string>
+        {
+            public static readonly UserInvoker Instance = new UserInvoker();
+            public override string Name => nameof(DBConnection.User);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(DBConnection target) => target.User;
+
+            public override void SetValue(DBConnection target, string value) => target.User = value;
+        }
+
+        [Invoker(typeof(DBConnection), nameof(DBConnection.Password))]
+        public class PasswordInvoker : Invoker<DBConnection, string>
+        {
+            public static readonly PasswordInvoker Instance = new PasswordInvoker();
+            public override string Name => nameof(DBConnection.Password);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(DBConnection target) => target.Password;
+
+            public override void SetValue(DBConnection target, string value) => target.Password = value;
+        }
+
+        [Invoker(typeof(DBConnection), nameof(DBConnection.Path))]
+        public class PathInvoker : Invoker<DBConnection, string>
+        {
+            public static readonly PathInvoker Instance = new PathInvoker();
+            public override string Name => nameof(DBConnection.Path);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(DBConnection target) => target.Path;
+
+            public override void SetValue(DBConnection target, string value) => target.Path = value;
+        }
+
     }
 }

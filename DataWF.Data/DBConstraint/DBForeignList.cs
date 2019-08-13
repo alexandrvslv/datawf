@@ -85,10 +85,7 @@ namespace DataWF.Data
     public class DBForeignKeyReferenceNameInvoker : Invoker<DBForeignKey, string>
     {
         public static readonly DBForeignKeyReferenceNameInvoker Instance = new DBForeignKeyReferenceNameInvoker();
-        public DBForeignKeyReferenceNameInvoker()
-        {
-            Name = nameof(DBForeignKey.ReferenceName);
-        }
+        public override string Name => nameof(DBForeignKey.ReferenceName);
 
         public override bool CanWrite => true;
 
@@ -104,10 +101,7 @@ namespace DataWF.Data
 
         public override bool CanWrite => throw new System.NotImplementedException();
 
-        public DBForeignKeyPropertyInvoker()
-        {
-            Name = nameof(DBForeignKey.Property);
-        }
+        public override string Name => nameof(DBForeignKey.Property);
 
         public override string GetValue(DBForeignKey target) => target.Property;
 
@@ -119,10 +113,7 @@ namespace DataWF.Data
     {
         public static readonly DBForeignKeyReferenceTableNameInvoker Instance = new DBForeignKeyReferenceTableNameInvoker();
 
-        public DBForeignKeyReferenceTableNameInvoker()
-        {
-            Name = nameof(DBForeignKey.ReferenceTableName);
-        }
+        public override string Name => nameof(DBForeignKey.ReferenceTableName);
 
         public override bool CanWrite => false;
 

@@ -966,13 +966,17 @@ namespace DataWF.Web.ClientGenerator
                               argumentList: null,
                               initializer: SF.EqualsValueClause(SF.ParseExpression($"new {name}<T>()"))))));
 
-            yield return SF.ConstructorDeclaration(
-                         attributeLists: SF.List<AttributeListSyntax>(),
-                         modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
-                         identifier: SF.Identifier(name),
-                         parameterList: SF.ParameterList(),
-                         initializer: null,
-                         body: SF.Block(SF.ParseStatement($@"Name = nameof({definitionName}.{propertyName});")));
+            //public override string Name { get; }
+            yield return SF.PropertyDeclaration(
+                   attributeLists: SF.List<AttributeListSyntax>(),
+                   modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.OverrideKeyword)),
+                   type: SF.ParseTypeName("string"),
+                   explicitInterfaceSpecifier: null,
+                   identifier: SF.Identifier(nameof(IInvoker.Name)),
+                   accessorList: null,
+                   expressionBody: SF.ArrowExpressionClause(SF.ParseExpression($"nameof({definitionName}.{propertyName})")),
+                   initializer: null,
+                   semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
 
             //public override bool CanWrite => true;
             yield return SF.PropertyDeclaration(

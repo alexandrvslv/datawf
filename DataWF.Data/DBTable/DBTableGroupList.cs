@@ -44,10 +44,7 @@ namespace DataWF.Data
     public class DBTableGroupGroupNameInvoker : Invoker<DBTableGroup, string>
     {
         public static readonly DBTableGroupGroupNameInvoker Instance = new DBTableGroupGroupNameInvoker();
-        public DBTableGroupGroupNameInvoker()
-        {
-            Name = nameof(DBTableGroup.GroupName);
-        }
+        public override string Name => nameof(DBTableGroup.GroupName);
 
         public override bool CanWrite => true;
 

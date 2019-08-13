@@ -37,10 +37,7 @@ namespace DataWF.Common
     public class EndPointReferenceEndPoint<T> : Invoker<EndPointReference<T>, IPEndPoint>
     {
         public static readonly EndPointReferenceEndPoint<T> Instance = new EndPointReferenceEndPoint<T>();
-        public EndPointReferenceEndPoint()
-        {
-            Name = nameof(EndPointReference<T>.EndPoint);
-        }
+        public override string Name => nameof(EndPointReference<T>.EndPoint);
 
         public override bool CanWrite => true;
 

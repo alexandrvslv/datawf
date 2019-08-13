@@ -1,17 +1,20 @@
 ﻿using System;
+using Newtonsoft.Json.Serialization;
 
 namespace DataWF.Common
 {
 
     public abstract class Invoker<T, V> : IInvoker<T, V>
     {
-        public string Name { get; set; }
+        public abstract string Name { get; }
 
         public Type DataType { get { return typeof(V); } }
 
         public Type TargetType { get { return typeof(T); } }
 
         public abstract bool CanWrite { get; }
+
+        string INamed.Name { get => Name; set { } }
 
         public IListIndex CreateIndex()
         {
@@ -41,6 +44,5 @@ namespace DataWF.Common
         {
             return $"{typeof(T).Name}.{Name} {typeof(V).Name}";
         }
-
     }
 }

@@ -37,12 +37,17 @@ namespace DataWF.Web.CodeGenerator
         {
             var @namespace = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(nameSpace))
                                              .AddMembers(@class);
+            return GenUnit(@namespace, usings);
+        }
+
+        public static CompilationUnitSyntax GenUnit(NamespaceDeclarationSyntax @namespace, IEnumerable<UsingDirectiveSyntax> usings)
+        {
             return SyntaxFactory.CompilationUnit(
-                externs: SyntaxFactory.List<ExternAliasDirectiveSyntax>(),
-                usings: SyntaxFactory.List(usings),
-                attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
-                members: SyntaxFactory.List<MemberDeclarationSyntax>(new[] { @namespace }))
-                                        .NormalizeWhitespace("    ", true);
+                            externs: SyntaxFactory.List<ExternAliasDirectiveSyntax>(),
+                            usings: SyntaxFactory.List(usings),
+                            attributeLists: SyntaxFactory.List<AttributeListSyntax>(),
+                            members: SyntaxFactory.List<MemberDeclarationSyntax>(new[] { @namespace }))
+                                                    .NormalizeWhitespace("    ", true);
         }
 
         public static IEnumerable<CompilationUnitSyntax> LoadResources(Assembly assembly, string path, string newNameSpace, string output)

@@ -146,7 +146,7 @@ namespace DataWF.Common
                 {
                     return invoker;
                 }
-                else if (!baseInfo.IsGeneric())
+                else// if (!baseInfo.IsGeneric())
                 {
                     token = baseToken;
                     info = baseInfo;

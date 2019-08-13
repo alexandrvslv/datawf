@@ -64,10 +64,7 @@ namespace DataWF.Data
     public class IndexGeneratorNameInvoker : Invoker<IndexGenerator, string>
     {
         public static readonly IndexGeneratorNameInvoker Instance = new IndexGeneratorNameInvoker();
-        public IndexGeneratorNameInvoker()
-        {
-            Name = nameof(IndexGenerator.IndexName);
-        }
+        public override string Name => nameof(IndexGenerator.IndexName);
 
         public override bool CanWrite => false;
 

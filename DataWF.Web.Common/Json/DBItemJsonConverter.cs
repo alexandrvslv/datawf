@@ -82,7 +82,7 @@ namespace DataWF.Web.Common
                             continue;
                         if (refing.PropertyInvoker.GetValue(item) is IEnumerable<DBItem> refs)
                         {
-                            writer.WritePropertyName(refing.Property.Name);
+                            writer.WritePropertyName(refing.PropertyInfo.Name);
                             serializer.Serialize(writer, refs);
                         }
                     }

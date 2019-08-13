@@ -7,7 +7,8 @@ namespace DataWF.Web.CodeGenerator
     {
         None = 0,
         Controllers = 1,
-        Logs = 2
+        Logs = 2,
+        Invokers = 4
     }
 
 }

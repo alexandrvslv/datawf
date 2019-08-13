@@ -31,7 +31,7 @@ namespace DataWF.Data
 
         public DBTableList(DBSchema schema) : base(schema)
         {
-            Indexes.Add(DBTableGroupNameInvoker.Instance);
+            Indexes.Add(DBTable.GroupNameInvoker.Instance);
             ApplyDefaultSort();
         }
 
@@ -54,21 +54,5 @@ namespace DataWF.Data
         {
             ApplySort(new DBTableComparer());
         }
-    }
-
-    [Invoker(typeof(DBTable), nameof(DBTable.GroupName))]
-    public class DBTableGroupNameInvoker : Invoker<DBTable, string>
-    {
-        public static readonly DBTableGroupNameInvoker Instance = new DBTableGroupNameInvoker();
-        public DBTableGroupNameInvoker()
-        {
-            Name = nameof(DBTable.GroupName);
-        }
-
-        public override bool CanWrite => true;
-
-        public override string GetValue(DBTable target) => target.GroupName;
-
-        public override void SetValue(DBTable target, string value) => target.GroupName = value;
     }
 }

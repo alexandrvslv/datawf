@@ -96,5 +96,31 @@ namespace DataWF.Data
             get { return BaseColumn?.Access; }
             set { base.Access = value; }
         }
+
+        [Invoker(typeof(DBLogColumn), nameof(DBLogColumn.BaseName))]
+        public class BaseNameInvoker<T> : Invoker<T, string> where T : DBLogColumn
+        {
+            public static readonly BaseNameInvoker<T> Instance = new BaseNameInvoker<T>();
+            public override string Name => nameof(DBLogColumn.BaseName);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(T target) => target.BaseName;
+
+            public override void SetValue(T target, string value) => target.BaseName = value;
+        }
+
+        [Invoker(typeof(DBLogColumn), nameof(DBLogColumn.BaseColumn))]
+        public class BaseColumnInvoker<T> : Invoker<T, DBColumn> where T : DBLogColumn
+        {
+            public static readonly BaseColumnInvoker<T> Instance = new BaseColumnInvoker<T>();
+            public override string Name => nameof(DBLogColumn.BaseColumn);
+
+            public override bool CanWrite => true;
+
+            public override DBColumn GetValue(T target) => target.BaseColumn;
+
+            public override void SetValue(T target, DBColumn value) => target.BaseColumn = value;
+        }
     }
 }

@@ -36,10 +36,14 @@ namespace DataWF.Module.Common
         private static DBColumn procedureKey = DBColumn.EmptyKey;
         private static DBColumn dateExecuteKey = DBColumn.EmptyKey;
         private static DBColumn companyKey = DBColumn.EmptyKey;
+        private static DBColumn nameENKey = DBColumn.EmptyKey;
+        private static DBColumn nameRUKey = DBColumn.EmptyKey;
         private static DBTable<Scheduler> dbTable;
         private Company company;
 
         public static DBColumn OrderKey => DBTable.ParseProperty(nameof(Order), ref orderKey);
+        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
+        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
         public static DBColumn IntervalKey => DBTable.ParseProperty(nameof(Interval), ref intervalKey);
         public static DBColumn ProcedureKey => DBTable.ParseProperty(nameof(ProcedureName), ref procedureKey);
         public static DBColumn DateExecuteKey => DBTable.ParseProperty(nameof(DateExecute), ref dateExecuteKey);
@@ -82,6 +86,18 @@ namespace DataWF.Module.Common
         {
             get { return GetName(); }
             set { SetName(value); }
+        }
+
+        public string NameEN
+        {
+            get { return GetValue<string>(NameENKey); }
+            set { SetValue(value, NameENKey); }
+        }
+
+        public string NameRU
+        {
+            get { return GetValue<string>(NameRUKey); }
+            set { SetValue(value, NameRUKey); }
         }
 
         [DataMember, Column("orderid")]

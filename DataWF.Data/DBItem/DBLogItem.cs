@@ -301,5 +301,89 @@ namespace DataWF.Data
                 transaction.Commit();
             }
         }
+
+        [Invoker(typeof(DBLogItem), nameof(DBLogItem.LogId))]
+        public class LogIdInvoker<T> : Invoker<T, long?> where T : DBLogItem
+        {
+            public override string Name => nameof(DBLogItem.LogId);
+
+            public override bool CanWrite => true;
+
+            public override long? GetValue(T target) => target.LogId;
+
+            public override void SetValue(T target, long? value) => target.LogId = value;
+        }
+
+        [Invoker(typeof(DBLogItem), nameof(DBLogItem.LogType))]
+        public class LogTypeInvoker<T> : Invoker<T, DBLogType?> where T : DBLogItem
+        {
+            public override string Name => nameof(DBLogItem.LogType);
+
+            public override bool CanWrite => true;
+
+            public override DBLogType? GetValue(T target) => target.LogType;
+
+            public override void SetValue(T target, DBLogType? value) => target.LogType = value;
+        }
+
+        [Invoker(typeof(DBLogItem), nameof(DBLogItem.UserRegId))]
+        public class UserRegIdInvoker<T> : Invoker<T, long?> where T : DBLogItem
+        {
+            public override string Name => nameof(DBLogItem.UserRegId);
+
+            public override bool CanWrite => true;
+
+            public override long? GetValue(T target) => target.UserRegId;
+
+            public override void SetValue(T target, long? value) => target.UserRegId = value;
+        }
+
+        [Invoker(typeof(DBLogItem), nameof(DBLogItem.UserReg))]
+        public class UserRegInvoker<T> : Invoker<T, DBUserReg> where T : DBLogItem
+        {
+            public override string Name => nameof(DBLogItem.UserReg);
+
+            public override bool CanWrite => true;
+
+            public override DBUserReg GetValue(T target) => target.UserReg;
+
+            public override void SetValue(T target, DBUserReg value) => target.UserReg = value;
+        }
+
+        [Invoker(typeof(DBLogItem), nameof(DBLogItem.LogUserId))]
+        public class LogUserIdInvoker<T> : Invoker<T, int?> where T : DBLogItem
+        {
+            public override string Name => nameof(DBLogItem.LogUserId);
+
+            public override bool CanWrite => false;
+
+            public override int? GetValue(T target) => target.LogUserId;
+
+            public override void SetValue(T target, int? value) { }
+        }
+
+        [Invoker(typeof(DBLogItem), nameof(DBLogItem.BaseId))]
+        public class BaseIdInvoker<T> : Invoker<T, string> where T : DBLogItem
+        {
+            public override string Name => nameof(DBLogItem.BaseId);
+
+            public override bool CanWrite => false;
+
+            public override string GetValue(T target) => target.BaseId;
+
+            public override void SetValue(T target, string value) { }
+        }
+
+        [Invoker(typeof(DBLogItem), nameof(DBLogItem.BaseItem))]
+        public class BaseItemInvoker<T> : Invoker<T, DBItem> where T : DBLogItem
+        {
+            public override string Name => nameof(DBLogItem.BaseItem);
+
+            public override bool CanWrite => false;
+
+            public override DBItem GetValue(T target) => target.BaseItem;
+
+            public override void SetValue(T target, DBItem value) => target.BaseItem = value;
+        }
     }
 }

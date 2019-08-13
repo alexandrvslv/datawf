@@ -139,10 +139,8 @@ namespace DataWF.Common
         public class ValueInvoker : Invoker<EnumItem, object>
         {
             public static readonly ValueInvoker Instance = new ValueInvoker();
-            public ValueInvoker()
-            {
-                Name = nameof(EnumItem.Value);
-            }
+
+            public override string Name => nameof(EnumItem.Value);
 
             public override bool CanWrite => false;
 
@@ -156,10 +154,7 @@ namespace DataWF.Common
         public class NameInvoker : Invoker<EnumItem, string>
         {
             public static readonly NameInvoker Instance = new NameInvoker();
-            public NameInvoker()
-            {
-                Name = nameof(EnumItem.Name);
-            }
+            public override string Name => nameof(EnumItem.Name);
 
             public override bool CanWrite => true;
 
@@ -172,10 +167,7 @@ namespace DataWF.Common
         public class TextInvoker : Invoker<EnumItem, string>
         {
             public static readonly TextInvoker Instance = new TextInvoker();
-            public TextInvoker()
-            {
-                Name = nameof(EnumItem.Text);
-            }
+            public override string Name => nameof(EnumItem.Text);
 
             public override bool CanWrite => true;
 
@@ -188,10 +180,7 @@ namespace DataWF.Common
         public class IndexInvoker : Invoker<EnumItem, int>
         {
             public static readonly IndexInvoker Instance = new IndexInvoker();
-            public IndexInvoker()
-            {
-                Name = nameof(EnumItem.Index);
-            }
+            public override string Name => nameof(EnumItem.Index);
 
             public override bool CanWrite => true;
 

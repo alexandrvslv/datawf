@@ -102,9 +102,9 @@ namespace DataWF.Common
         public class KeyInvoker : Invoker<LocaleImage, string>
         {
             public static readonly KeyInvoker Instance = new KeyInvoker();
-            public KeyInvoker()
+            public override string Name
             {
-                Name = nameof(LocaleImage.Key);
+                get => nameof(LocaleImage.Key);
             }
 
             public override bool CanWrite => true;
@@ -119,9 +119,9 @@ namespace DataWF.Common
         public class FileNameInvoker : Invoker<LocaleImage, string>
         {
             public static readonly FileNameInvoker Instance = new FileNameInvoker();
-            public FileNameInvoker()
+            public override string Name
             {
-                Name = nameof(LocaleImage.FileName);
+                get => nameof(LocaleImage.FileName);
             }
 
             public override bool CanWrite => true;
@@ -135,9 +135,9 @@ namespace DataWF.Common
         public class DataInvoker : Invoker<LocaleImage, byte[]>
         {
             public static readonly DataInvoker Instance = new DataInvoker();
-            public DataInvoker()
+            public override string Name
             {
-                Name = nameof(LocaleImage.Data);
+                get => nameof(LocaleImage.Data);
             }
 
             public override bool CanWrite => true;

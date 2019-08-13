@@ -106,10 +106,7 @@ namespace DataWF.Data
     {
         public static readonly QItemTextInvoker<T> Instance = new QItemTextInvoker<T>();
 
-        public QItemTextInvoker()
-        {
-            Name = nameof(QItem.Text);
-        }
+        public override string Name => nameof(QItem.Text);
 
         public override bool CanWrite => true;
 
@@ -122,10 +119,7 @@ namespace DataWF.Data
     public class QItemOrderInvoker<T> : Invoker<T, int> where T : QItem
     {
         public static readonly QItemOrderInvoker<T> Instance = new QItemOrderInvoker<T>();
-        public QItemOrderInvoker()
-        {
-            Name = nameof(QItem.Order);
-        }
+        public override string Name => nameof(QItem.Order);
 
         public override bool CanWrite => true;
 

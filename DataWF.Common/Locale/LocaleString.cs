@@ -120,9 +120,9 @@ namespace DataWF.Common
         public class CultureNameInvoker : Invoker<LocaleString, string>
         {
             public static readonly CultureNameInvoker Instance = new CultureNameInvoker();
-            public CultureNameInvoker()
+            public override string Name
             {
-                Name = nameof(LocaleString.CultureName);
+                get => nameof(LocaleString.CultureName);
             }
 
             public override bool CanWrite => true;
@@ -136,9 +136,9 @@ namespace DataWF.Common
         public class ValueInvoker : Invoker<LocaleString, string>
         {
             public static readonly ValueInvoker Instance = new ValueInvoker();
-            public ValueInvoker()
+            public override string Name
             {
-                Name = nameof(LocaleString.Value);
+                get => nameof(LocaleString.Value);
             }
 
             public override bool CanWrite => true;
@@ -152,9 +152,9 @@ namespace DataWF.Common
         public class DescriptionInvoker : Invoker<LocaleString, string>
         {
             public static readonly DescriptionInvoker Instance = new DescriptionInvoker();
-            public DescriptionInvoker()
+            public override string Name
             {
-                Name = nameof(LocaleString.Description);
+                get => nameof(LocaleString.Description);
             }
 
             public override bool CanWrite => true;

@@ -5,9 +5,9 @@
     {
         public static readonly NamedNameInvoker<T> Instance = new NamedNameInvoker<T>();
 
-        public NamedNameInvoker()
+        public override string Name
         {
-            Name = "Name";
+            get => nameof(INamed.Name);
         }
 
         public override bool CanWrite => true;

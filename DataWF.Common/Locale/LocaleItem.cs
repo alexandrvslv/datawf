@@ -189,9 +189,9 @@ namespace DataWF.Common
         public class NameInvoker : Invoker<LocaleItem, string>
         {
             public static readonly NameInvoker Instance = new NameInvoker();
-            public NameInvoker()
+            public override string Name
             {
-                Name = nameof(LocaleItem.Name);
+                get => nameof(LocaleItem.Name);
             }
 
             public override bool CanWrite => true;
@@ -205,9 +205,9 @@ namespace DataWF.Common
         public class GlyphInvoker : Invoker<LocaleItem, GlyphType>
         {
             public static readonly GlyphInvoker Instance = new GlyphInvoker();
-            public GlyphInvoker()
+            public override string Name
             {
-                Name = nameof(LocaleItem.Glyph);
+                get => nameof(LocaleItem.Glyph);
             }
 
             public override bool CanWrite => true;
@@ -221,9 +221,9 @@ namespace DataWF.Common
         public class ImageKeyInvoker : Invoker<LocaleItem, string>
         {
             public static readonly ImageKeyInvoker Instance = new ImageKeyInvoker();
-            public ImageKeyInvoker()
+            public override string Name
             {
-                Name = nameof(LocaleItem.ImageKey);
+                get => nameof(LocaleItem.ImageKey);
             }
 
             public override bool CanWrite => true;
@@ -237,9 +237,9 @@ namespace DataWF.Common
         public class ValueInvoker : Invoker<LocaleItem, string>
         {
             public static readonly ValueInvoker Instance = new ValueInvoker();
-            public ValueInvoker()
+            public override string Name
             {
-                Name = nameof(LocaleItem.Value);
+                get => nameof(LocaleItem.Value);
             }
 
             public override bool CanWrite => true;

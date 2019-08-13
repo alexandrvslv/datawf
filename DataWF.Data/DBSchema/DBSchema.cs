@@ -561,5 +561,122 @@ namespace DataWF.Data
             }
             return dBTable.ChildRelations;
         }
+
+        [Invoker(typeof(DBSchema), nameof(DBSchema.DataBase))]
+        public class DataBaseInvoker<T> : Invoker<T, string> where T : DBSchema
+        {
+            public static readonly DataBaseInvoker<T> Instance = new DataBaseInvoker<T>();
+            public override string Name => nameof(DBSchema.DataBase);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(T target) => target.DataBase;
+
+            public override void SetValue(T target, string value) => target.DataBase = value;
+        }
+
+        [Invoker(typeof(DBSchema), nameof(DBSchema.ConnectionName))]
+        public class ConnectionNameInvoker<T> : Invoker<T, string> where T: DBSchema
+        {
+            public static readonly ConnectionNameInvoker<T> Instance = new ConnectionNameInvoker<T>();
+            public override string Name => nameof(DBSchema.ConnectionName);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(T target) => target.ConnectionName;
+
+            public override void SetValue(T target, string value) => target.ConnectionName = value;
+        }
+
+        [Invoker(typeof(DBSchema), nameof(DBSchema.Connection))]
+        public class ConnectionInvoker<T> : Invoker<T, DBConnection> where T : DBSchema
+        {
+            public static readonly ConnectionInvoker<T> Instance = new ConnectionInvoker<T>();
+            public override string Name => nameof(DBSchema.Connection);
+
+            public override bool CanWrite => true;
+
+            public override DBConnection GetValue(T target) => target.Connection;
+
+            public override void SetValue(T target, DBConnection value) => target.Connection = value;
+        }
+
+        [Invoker(typeof(DBSchema), nameof(DBSchema.LogSchemaName))]
+        public class LogSchemaNameInvoker<T> : Invoker<T, string> where T : DBSchema
+        {
+            public static readonly LogSchemaNameInvoker<T> Instance = new LogSchemaNameInvoker<T>();
+            public override string Name => nameof(DBSchema.LogSchemaName);
+
+            public override bool CanWrite => true;
+
+            public override string GetValue(T target) => target.LogSchemaName;
+
+            public override void SetValue(T target, string value) => target.LogSchemaName = value;
+        }
+
+        [Invoker(typeof(DBSchema), nameof(DBSchema.LogSchema))]
+        public class LogSchemaInvoker<T> : Invoker<T, DBLogSchema> where T : DBSchema
+        {
+            public static readonly LogSchemaInvoker<T> Instance = new LogSchemaInvoker<T>();
+            public override string Name => nameof(DBSchema.LogSchema);
+
+            public override bool CanWrite => true;
+
+            public override DBLogSchema GetValue(T target) => target.LogSchema;
+
+            public override void SetValue(T target, DBLogSchema value) => target.LogSchema = value;
+        }
+
+        [Invoker(typeof(DBSchema), nameof(DBSchema.Tables))]
+        public class TablesInvoker<T> : Invoker<T, DBTableList> where T : DBSchema
+        {
+            public static readonly TablesInvoker<T> Instance = new TablesInvoker<T>();
+            public override string Name => nameof(DBSchema.Tables);
+
+            public override bool CanWrite => true;
+
+            public override DBTableList GetValue(T target) => target.Tables;
+
+            public override void SetValue(T target, DBTableList value) => target.Tables = value;
+        }
+
+        [Invoker(typeof(DBSchema), nameof(DBSchema.TableGroups))]
+        public class TableGroupsInvoker<T> : Invoker<T, DBTableGroupList> where T : DBSchema
+        {
+            public static readonly TableGroupsInvoker<T> Instance = new TableGroupsInvoker<T>();
+            public override string Name => nameof(DBSchema.TableGroups);
+
+            public override bool CanWrite => true;
+
+            public override DBTableGroupList GetValue(T target) => target.TableGroups;
+
+            public override void SetValue(T target, DBTableGroupList value) => target.TableGroups = value;
+        }
+
+        [Invoker(typeof(DBSchema), nameof(DBSchema.Procedures))]
+        public class ProceduresInvoker<T> : Invoker<T, DBProcedureList> where T : DBSchema
+        {
+            public static readonly ProceduresInvoker<T> Instance = new ProceduresInvoker<T>();
+            public override string Name => nameof(DBSchema.Procedures);
+
+            public override bool CanWrite => true;
+
+            public override DBProcedureList GetValue(T target) => target.Procedures;
+
+            public override void SetValue(T target, DBProcedureList value) => target.Procedures = value;
+        }
+
+        [Invoker(typeof(DBSchema), nameof(DBSchema.Sequences))]
+        public class SequencesInvoker<T> : Invoker<T, DBSequenceList> where T : DBSchema
+        {
+            public static readonly SequencesInvoker<T> Instance = new SequencesInvoker<T>();
+            public override string Name => nameof(DBSchema.Sequences);
+
+            public override bool CanWrite => true;
+
+            public override DBSequenceList GetValue(T target) => target.Sequences;
+
+            public override void SetValue(T target, DBSequenceList value) => target.Sequences = value;
+        }
     }
 }

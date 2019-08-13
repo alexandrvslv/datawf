@@ -124,10 +124,7 @@ namespace DataWF.Common
     {
         public static readonly PropertySaveInfoIsAttributeInvoker Instance = new PropertySaveInfoIsAttributeInvoker();
 
-        public PropertySaveInfoIsAttributeInvoker()
-        {
-            Name = nameof(PropertySerializationInfo.IsAttribute);
-        }
+        public override string Name => nameof(PropertySerializationInfo.IsAttribute);
 
         public override bool CanWrite => false;
 

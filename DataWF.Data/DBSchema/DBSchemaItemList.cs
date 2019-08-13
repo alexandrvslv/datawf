@@ -37,7 +37,7 @@ namespace DataWF.Data
         public DBSchemaItemList(DBSchema schema)
             : base()
         {
-            Indexes.Add(DBSchemaItemNameInvoker<T>.Instance);
+            Indexes.Add(DBSchemaItem.NameInvoker<T>.Instance);
             Schema = schema;
         }
 
@@ -138,22 +138,5 @@ namespace DataWF.Data
             item.Schema = Schema;
             return item;
         }
-    }
-
-    [Invoker(typeof(DBSchemaItem), nameof(DBSchemaItem.Name))]
-    public class DBSchemaItemNameInvoker<T> : Invoker<T, string> where T : DBSchemaItem
-    {
-        public static readonly DBSchemaItemNameInvoker<T> Instance = new DBSchemaItemNameInvoker<T>();
-
-        public DBSchemaItemNameInvoker()
-        {
-            Name = nameof(DBSchemaItem.Name);
-        }
-
-        public override bool CanWrite => true;
-
-        public override string GetValue(T target) => target.Name;
-
-        public override void SetValue(T target, string value) => target.Name = value;
     }
 }

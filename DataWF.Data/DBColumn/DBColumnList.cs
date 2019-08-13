@@ -32,12 +32,12 @@ namespace DataWF.Data
         public DBColumnList(DBTable table)
             : base(table)
         {
-            Indexes.Add(DBColumnGroupNameInvoker<T>.Instance);
-            Indexes.Add(DBColumnPropertyInvoker<T>.Instance);
-            Indexes.Add(DBColumnReferencePropertyInvoker<T>.Instance);
-            Indexes.Add(DBColumnIsViewInvoker<T>.Instance);
-            Indexes.Add(DBColumnIsReferenceInvoker<T>.Instance);
-            Indexes.Add(DBColumnReferenceTableInvoker<T>.Instance);
+            Indexes.Add(DBColumn.GroupNameInvoker<T>.Instance);
+            Indexes.Add(DBColumn.PropertyNameInvoker<T>.Instance);
+            Indexes.Add(DBColumn.ReferencePropertyNameInvoker<T>.Instance);
+            Indexes.Add(DBColumn.IsViewInvoker<T>.Instance);
+            Indexes.Add(DBColumn.IsReferenceInvoker<T>.Instance);
+            Indexes.Add(DBColumn.ReferenceTableInvoker<T>.Instance);
         }
 
         protected override void OnPropertyChanged(string property)
@@ -139,27 +139,27 @@ namespace DataWF.Data
 
         public IEnumerable<DBColumn> GetByGroup(string groupName)
         {
-            return string.IsNullOrEmpty(groupName) ? null : Select(DBColumnGroupNameInvoker<T>.Instance, CompareType.Equal, groupName);
+            return string.IsNullOrEmpty(groupName) ? null : Select(DBColumn.GroupNameInvoker<T>.Instance, CompareType.Equal, groupName);
         }
 
         public IEnumerable<DBColumn> GetByReference(DBTable table)
         {
-            return Select(DBColumnReferenceTableInvoker<T>.Instance, CompareType.Equal, table.Name);
+            return Select(DBColumn.ReferenceTableInvoker<T>.Instance, CompareType.Equal, table.Name);
         }
 
         public IEnumerable<DBColumn> GetIsReference()
         {
-            return Select(DBColumnIsReferenceInvoker<T>.Instance, CompareType.Equal, true);
+            return Select(DBColumn.IsReferenceInvoker<T>.Instance, CompareType.Equal, true);
         }
 
         public IEnumerable<DBColumn> GetIsView()
         {
-            return Select(DBColumnIsViewInvoker<T>.Instance, CompareType.Equal, true);
+            return Select(DBColumn.IsViewInvoker<T>.Instance, CompareType.Equal, true);
         }
 
         public DBColumn GetByProperty(string property)
         {
-            var columns = Select(DBColumnPropertyInvoker<T>.Instance, CompareType.Equal, property);
+            var columns = Select(DBColumn.PropertyNameInvoker<T>.Instance, CompareType.Equal, property);
             if (columns.Count() > 1)
             {
                 return columns.Where(p => p.Culture == Locale.Instance.Culture).FirstOrDefault();
@@ -169,7 +169,7 @@ namespace DataWF.Data
 
         public DBColumn GetByReferenceProperty(string property)
         {
-            var columns = Select(DBColumnReferencePropertyInvoker<T>.Instance, CompareType.Equal, property);
+            var columns = Select(DBColumn.ReferencePropertyNameInvoker<T>.Instance, CompareType.Equal, property);
             if (columns.Count() > 1)
             {
                 return columns.Where(p => p.Culture == Locale.Instance.Culture).FirstOrDefault();
@@ -190,105 +190,5 @@ namespace DataWF.Data
         }
     }
 
-    [Invoker(typeof(DBColumn), nameof(DBColumn.GroupName))]
-    public class DBColumnGroupNameInvoker<T> : Invoker<T, string> where T : DBColumn
-    {
-        public static readonly DBColumnGroupNameInvoker<T> Instance = new DBColumnGroupNameInvoker<T>();
-
-        public DBColumnGroupNameInvoker()
-        {
-            Name = nameof(DBColumn.GroupName);
-        }
-
-        public override bool CanWrite => true;
-
-        public override string GetValue(T target) => target.GroupName;
-
-        public override void SetValue(T target, string value) => target.GroupName = value;
-    }
-
-    [Invoker(typeof(DBColumn), nameof(DBColumn.Property))]
-    public class DBColumnPropertyInvoker<T> : Invoker<T, string> where T : DBColumn
-    {
-        public static readonly DBColumnPropertyInvoker<T> Instance = new DBColumnPropertyInvoker<T>();
-
-        public DBColumnPropertyInvoker()
-        {
-            Name = nameof(DBColumn.Property);
-        }
-
-        public override bool CanWrite => true;
-
-        public override string GetValue(T target) => target.Property;
-
-        public override void SetValue(T target, string value) => target.Property = value;
-    }
-
-    [Invoker(typeof(DBColumn), nameof(DBColumn.ReferenceProperty))]
-    public class DBColumnReferencePropertyInvoker<T> : Invoker<T, string> where T : DBColumn
-    {
-        public static readonly DBColumnReferencePropertyInvoker<T> Instance = new DBColumnReferencePropertyInvoker<T>();
-
-        public DBColumnReferencePropertyInvoker()
-        {
-            Name = nameof(DBColumn.ReferenceProperty);
-        }
-
-        public override bool CanWrite => true;
-
-        public override string GetValue(T target) => target.ReferenceProperty;
-
-        public override void SetValue(T target, string value) => target.ReferenceProperty = value;
-    }
-
-    [Invoker(typeof(DBColumn), nameof(DBColumn.ReferenceTable))]
-    public class DBColumnReferenceTableInvoker<T> : Invoker<T, string> where T : DBColumn
-    {
-        public static readonly DBColumnReferenceTableInvoker<T> Instance = new DBColumnReferenceTableInvoker<T>();
-
-        public DBColumnReferenceTableInvoker()
-        {
-            Name = nameof(DBColumn.ReferenceTable);
-        }
-
-        public override bool CanWrite => false;
-
-        public override string GetValue(T target) => target.ReferenceTable?.Name;
-
-        public override void SetValue(T target, string value) { }
-    }
-
-    [Invoker(typeof(DBColumn), nameof(DBColumn.IsView))]
-    public class DBColumnIsViewInvoker<T> : Invoker<T, bool> where T : DBColumn
-    {
-        public static readonly DBColumnIsViewInvoker<T> Instance = new DBColumnIsViewInvoker<T>();
-
-        public DBColumnIsViewInvoker()
-        {
-            Name = nameof(DBColumn.IsView);
-        }
-
-        public override bool CanWrite => false;
-
-        public override bool GetValue(T target) => target.IsView;
-
-        public override void SetValue(T target, bool value) { }
-    }
-
-    [Invoker(typeof(DBColumn), nameof(DBColumn.IsReference))]
-    public class DBColumnIsReferenceInvoker<T> : Invoker<T, bool> where T : DBColumn
-    {
-        public static readonly DBColumnIsReferenceInvoker<T> Instance = new DBColumnIsReferenceInvoker<T>();
-
-        public DBColumnIsReferenceInvoker()
-        {
-            Name = nameof(DBColumn.IsReference);
-        }
-
-        public override bool CanWrite => false;
-
-        public override bool GetValue(T target) => target.IsReference;
-
-        public override void SetValue(T target, bool value) { }
-    }
+   
 }

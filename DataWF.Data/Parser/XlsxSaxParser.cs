@@ -977,10 +977,7 @@ namespace DataWF.Data
     public class StringKeyKeyInvoker : Invoker<StringKey, String>
     {
         public static readonly StringKeyKeyInvoker Instance = new StringKeyKeyInvoker();
-        public StringKeyKeyInvoker()
-        {
-            Name = nameof(StringKey.Key);
-        }
+        public override string Name => nameof(StringKey.Key);
 
         public override bool CanWrite => true;
 

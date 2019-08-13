@@ -56,10 +56,7 @@ namespace DataWF.Data
     public class DBConstraintColumnNameInvoker<T> : Invoker<T, string> where T : DBConstraint
     {
         public static readonly DBConstraintColumnNameInvoker<T> Instance = new DBConstraintColumnNameInvoker<T>();
-        public DBConstraintColumnNameInvoker()
-        {
-            Name = nameof(DBConstraint.ColumnName);
-        }
+        public override string Name => nameof(DBConstraint.ColumnName);
 
         public override bool CanWrite => true;
 
@@ -72,10 +69,7 @@ namespace DataWF.Data
     public class DBConstraintValueInvoker<T> : Invoker<T, string> where T : DBConstraint
     {
         public static readonly DBConstraintValueInvoker<T> Instance = new DBConstraintValueInvoker<T>();
-        public DBConstraintValueInvoker()
-        {
-            Name = nameof(DBConstraint.Value);
-        }
+        public override string Name => nameof(DBConstraint.Value);
 
         public override bool CanWrite => true;
 

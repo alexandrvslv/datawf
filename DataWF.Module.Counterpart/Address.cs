@@ -35,11 +35,15 @@ namespace DataWF.Module.Counterpart
     {
         private static DBColumn locationKey = DBColumn.EmptyKey;
         private static DBColumn postIndexKey = DBColumn.EmptyKey;
+        private static DBColumn streetENKey = DBColumn.EmptyKey;
+        private static DBColumn streetRUKey = DBColumn.EmptyKey;
         private static DBTable<Address> dbTable;
         private Location location;
 
         public static DBColumn LocationKey => DBTable.ParseProperty(nameof(LocationId), ref locationKey);
         public static DBColumn PostIndexKey => DBTable.ParseProperty(nameof(PostIndex), ref postIndexKey);
+        public static DBColumn StreetENKey => DBTable.ParseProperty(nameof(StreetEN), ref streetENKey);
+        public static DBColumn StreetRUKey => DBTable.ParseProperty(nameof(StreetRU), ref streetRUKey);
         public static DBTable<Address> DBTable => dbTable ?? (dbTable = GetTable<Address>());
 
         public Address()
@@ -86,5 +90,18 @@ namespace DataWF.Module.Counterpart
             get { return GetName(); }
             set { SetName(value); }
         }
+
+        public string StreetEN
+        {
+            get => GetValue<string>(StreetENKey);
+            set => SetValue(value, StreetENKey);
+        }
+
+        public string StreetRU
+        {
+            get => GetValue<string>(StreetRUKey);
+            set => SetValue(value, StreetRUKey);
+        }
+
     }
 }
