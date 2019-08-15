@@ -231,7 +231,7 @@ namespace DataWF.Web.CodeGenerator
         {
             if (!table.Attribute.IsLoging)
                 return null;
-            var baseName = $"DBLogItem";           
+            var baseName = $"DBLogItem";
 
             var baseType = itemType.BaseType;
             while (baseType.IsGenericType)
@@ -545,9 +545,10 @@ namespace DataWF.Web.CodeGenerator
 
             if (table.Attribute.IsLoging)
             {
-                var logItemType = TypeHelper.ParseType(itemType.Name + "Log");
+                var logItemName = itemType.Name + "Log";
+                var logItemType = TypeHelper.ParseType(logItemName)?.FullName ?? logItemName;
                 //AddUsing(logItemType, usings);
-                baseName = $"Base{(table.FileKey != null ? "File" : "Logged")}Controller<{itemType.Name}, {primaryKeyType.Name}, {logItemType.FullName}>";
+                baseName = $"Base{(table.FileKey != null ? "File" : "Logged")}Controller<{itemType.Name}, {primaryKeyType.Name}, {logItemType}>";
             }
             var baseType = itemType;
 

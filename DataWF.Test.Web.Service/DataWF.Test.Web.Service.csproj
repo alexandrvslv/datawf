@@ -29,7 +29,7 @@
     <Folder Include="wwwroot\" />
   </ItemGroup>
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="dotnet $(ProjectDir)../DataWF.Web.CodeGenerator/$(OutDir)DataWF.Web.CodeGenerator.dll -t controller -p $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Common.dll $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Counterpart.dll $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Messanger.dll $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Flow.dll -o $(ProjectDir)Controllers" />
+    <Exec Command="dotnet $(ProjectDir)../DataWF.Web.CodeGenerator/$(OutDir)DataWF.Web.CodeGenerator.dll -m Controllers, Logs, Invokers -p $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Common.dll $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Counterpart.dll $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Messanger.dll $(ProjectDir)../DataWF.Module.Flow/bin/Debug/netstandard2.0/DataWF.Module.Flow.dll -o $(ProjectDir)Controllers" />
   </Target>  
    <Target Name="SwaggerToFile" AfterTargets="AfterBuild">
     <Exec Command="dotnet swagger tofile --output $(ProjectDir)wwwroot/swagger.json $(OutputPath)$(AssemblyName).dll v1" />
