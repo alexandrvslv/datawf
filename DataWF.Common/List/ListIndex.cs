@@ -51,7 +51,7 @@ namespace DataWF.Common
         {
             if (!Dictionary.TryGetValue(key, out var refs))
             {
-                Dictionary[key] = refs = new ThreadSafeList<T>();
+                Dictionary[key] = refs = new ThreadSafeList<T>(1);
             }
             refs.Add(item);
         }
