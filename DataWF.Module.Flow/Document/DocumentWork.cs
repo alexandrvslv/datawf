@@ -94,8 +94,9 @@ namespace DataWF.Module.Flow
     }
 
     [DataContract, Table("ddocument_work", "Document", BlockSize = 400)]
-    public class DocumentWork : DocumentDetail<DocumentWork>
+    public class DocumentWork : DBItem, IDocumentDetail
     {
+        private static DBTable<DocumentWork> dbTable;
         private static DBColumn stageIdKey = DBColumn.EmptyKey;
         private static DBColumn workKey = DBColumn.EmptyKey;
         private static DBColumn userKey = DBColumn.EmptyKey;
@@ -110,6 +111,7 @@ namespace DataWF.Module.Flow
         private static DBColumn isStopKey = DBColumn.EmptyKey;
         private static DBColumn isSystemKey = DBColumn.EmptyKey;
         private static DBColumn descriptionKey = DBColumn.EmptyKey;
+        private static DBColumn documentKey = DBColumn.EmptyKey;
 
         public static DBColumn StageIdKey => DBTable.ParseProperty(nameof(StageId), ref stageIdKey);
         public static DBColumn WorkKey => DBTable.ParseProperty(nameof(WorkId), ref workKey);
@@ -125,6 +127,8 @@ namespace DataWF.Module.Flow
         public static DBColumn IsStopKey => DBTable.ParseProperty(nameof(IsStop), ref isStopKey);
         public static DBColumn IsSystemKey => DBTable.ParseProperty(nameof(IsSystem), ref isSystemKey);
         public static DBColumn DescriptionKey => DBTable.ParseProperty(nameof(Description), ref descriptionKey);
+        public static DBColumn DocumentKey => DBTable.ParseProperty(nameof(DocumentId), ref documentKey);
+        public static DBTable<DocumentWork> DBTable => dbTable ?? (dbTable = GetTable<DocumentWork>());
 
         public static DocumentWork Empty = new DocumentWork();
         private Stage stage;
@@ -137,6 +141,31 @@ namespace DataWF.Module.Flow
         {
         }
 
+        private Document document;
+        [Browsable(false)]
+        [DataMember, Column("document_id"), Index("ddocument_work_document_id")]
+        public virtual long? DocumentId
+        {
+            get { return GetValue<long?>(DocumentKey); }
+            set { SetValue(value, DocumentKey); }
+        }
+
+        [Reference(nameof(DocumentId))]
+        public Document Document
+        {
+            get { return GetReference(DocumentKey, ref document); }
+            set { SetReference(document = value, DocumentKey); }
+        }
+
+        public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)
+        {
+            base.OnPropertyChanged(property, column, value);
+            if (Attached)
+            {
+                GetReference<Document>(DocumentKey, ref document, DBLoadParam.None)?.OnReferenceChanged(this);
+            }
+        }
+
         [Browsable(false)]
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
@@ -144,9 +173,6 @@ namespace DataWF.Module.Flow
             get { return GetValue<long?>(Table.PrimaryKey); }
             set { SetValue(value, Table.PrimaryKey); }
         }
-
-        [Index("ddocument_work_document_id")]
-        public override long? DocumentId { get => base.DocumentId; set => base.DocumentId = value; }
 
         [Browsable(false)]
         [DataMember, Column("stage_id", Keys = DBColumnKeys.View), Index("ddocument_work_stage_id")]

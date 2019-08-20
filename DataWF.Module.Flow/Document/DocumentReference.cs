@@ -103,17 +103,38 @@ namespace DataWF.Module.Flow
     }
 
     [DataContract, Table("ddocument_reference", "Document", BlockSize = 400)]
-    public class DocumentReference : DocumentDetail<DocumentReference>
+    public class DocumentReference : DBItem, IDocumentDetail
     {
+        private static DBTable<DocumentReference> dbTable;
         private static DBColumn referenceKey = DBColumn.EmptyKey;
+        private static DBColumn documentKey = DBColumn.EmptyKey;
 
         public static DBColumn ReferenceKey => DBTable.ParseProperty(nameof(ReferenceId), ref referenceKey);
+        public static DBColumn DocumentKey => DBTable.ParseProperty(nameof(DocumentId), ref documentKey);
+        public static DBTable<DocumentReference> DBTable => dbTable ?? (dbTable = GetTable<DocumentReference>());
 
         private Document reference;
 
         public DocumentReference()
         {
         }
+
+        private Document document;
+        [Browsable(false)]
+        [DataMember, Column("document_id"), Index("ddocument_reference_unique", true)]
+        public virtual long? DocumentId
+        {
+            get { return GetValue<long?>(DocumentKey); }
+            set { SetValue(value, DocumentKey); }
+        }
+
+        [Reference(nameof(DocumentId))]
+        public Document Document
+        {
+            get { return GetReference(DocumentKey, ref document); }
+            set { SetReference(document = value, DocumentKey); }
+        }
+
         [Browsable(false)]
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
@@ -121,9 +142,6 @@ namespace DataWF.Module.Flow
             get { return GetValue<long?>(Table.PrimaryKey); }
             set { SetValue(value, Table.PrimaryKey); }
         }
-
-        [Index("ddocument_reference_unique", true)]
-        public override long? DocumentId { get => base.DocumentId; set => base.DocumentId = value; }
 
         [Browsable(false)]
         [DataMember, Column("reference_id", Keys = DBColumnKeys.View)]

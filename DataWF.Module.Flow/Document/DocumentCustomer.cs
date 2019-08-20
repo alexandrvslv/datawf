@@ -26,17 +26,24 @@ using System.Runtime.Serialization;
 namespace DataWF.Module.Flow
 {
     [DataContract, Table("ddocument_customer", "Document", BlockSize = 400)]
-    public class DocumentCustomer : DocumentDetail<DocumentCustomer>
+    public class DocumentCustomer : DBItem, IDocumentDetail
     {
         private static DBColumn customerKey = DBColumn.EmptyKey;
         private static DBColumn addressKey = DBColumn.EmptyKey;
         private static DBColumn eMailKey = DBColumn.EmptyKey;
         private static DBColumn phoneKey = DBColumn.EmptyKey;
+        private static DBColumn documentKey = DBColumn.EmptyKey;
 
         public static DBColumn CustomerKey => DBTable.ParseProperty(nameof(CustomerId), ref customerKey);
         public static DBColumn AddressKey => DBTable.ParseProperty(nameof(AddressId), ref addressKey);
         public static DBColumn EMailKey => DBTable.ParseProperty(nameof(EMail), ref eMailKey);
         public static DBColumn PhoneKey => DBTable.ParseProperty(nameof(Phone), ref phoneKey);
+        public static DBColumn DocumentKey => DBTable.ParseProperty(nameof(DocumentId), ref documentKey);
+
+        private static DBTable<DocumentCustomer> dbTable;
+
+        public static DBTable<DocumentCustomer> DBTable => dbTable ?? (dbTable = GetTable<DocumentCustomer>());
+
 
         private Customer customer;
         private Address address;
@@ -44,15 +51,37 @@ namespace DataWF.Module.Flow
         public DocumentCustomer()
         { }
 
+        private Document document;
+        [Browsable(false)]
+        [DataMember, Column("document_id"), Index("ddocument_customer_document_id")]
+        public virtual long? DocumentId
+        {
+            get { return GetValue<long?>(DocumentKey); }
+            set { SetValue(value, DocumentKey); }
+        }
+
+        [Reference(nameof(DocumentId))]
+        public Document Document
+        {
+            get { return GetReference(DocumentKey, ref document); }
+            set { SetReference(document = value, DocumentKey); }
+        }
+
+        public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)
+        {
+            base.OnPropertyChanged(property, column, value);
+            if (Attached)
+            {
+                GetReference<Document>(DocumentKey, ref document, DBLoadParam.None)?.OnReferenceChanged(this);
+            }
+        }
+
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
         {
             get { return GetValue<long?>(Table.PrimaryKey); }
             set { SetValue(value, Table.PrimaryKey); }
         }
-
-        [Index("ddocument_customer_document_id")]
-        public override long? DocumentId { get => base.DocumentId; set => base.DocumentId = value; }
 
         [Browsable(false)]
         [DataMember, Column("customer_id", Keys = DBColumnKeys.View)]

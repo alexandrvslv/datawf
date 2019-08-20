@@ -88,13 +88,19 @@ namespace DataWF.Module.Flow
     }
 
     [DataContract, Table("ddocument_data", "Document", BlockSize = 400)]
-    public class DocumentData : DocumentDetail<DocumentData>
+    public class DocumentData : DBItem, IDocumentDetail
     {
         private static DBColumn templateDataKey = DBColumn.EmptyKey;
         private static DBColumn fileUrlKey = DBColumn.EmptyKey;
+        private static DBColumn documentKey = DBColumn.EmptyKey;
 
         public static DBColumn TemplateDataKey => DBTable.ParseProperty(nameof(TemplateDataId), ref templateDataKey);
         public static DBColumn FileUrlKey => DBTable.ParseProperty(nameof(FileUrl), ref fileUrlKey);
+        public static DBColumn DocumentKey => DBTable.ParseProperty(nameof(DocumentId), ref documentKey);
+
+        private static DBTable<DocumentData> dbTable;
+
+        public static DBTable<DocumentData> DBTable => dbTable ?? (dbTable = GetTable<DocumentData>());
 
         private byte[] buf;
         private User currentUser;
@@ -102,6 +108,31 @@ namespace DataWF.Module.Flow
 
         public DocumentData()
         { }
+
+        private Document document;
+        [Browsable(false)]
+        [DataMember, Column("document_id"), Index("ddocument_data_document_id")]
+        public virtual long? DocumentId
+        {
+            get { return GetValue<long?>(DocumentKey); }
+            set { SetValue(value, DocumentKey); }
+        }
+
+        [Reference(nameof(DocumentId))]
+        public Document Document
+        {
+            get { return GetReference(DocumentKey, ref document); }
+            set { SetReference(document = value, DocumentKey); }
+        }
+
+        public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)
+        {
+            base.OnPropertyChanged(property, column, value);
+            if (Attached)
+            {
+                GetReference<Document>(DocumentKey, ref document, DBLoadParam.None)?.OnReferenceChanged(this);
+            }
+        }
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
@@ -112,9 +143,6 @@ namespace DataWF.Module.Flow
 
         [Index("ddocument_data_item_type", false)]
         public override int? ItemType { get => base.ItemType; set => base.ItemType = value; }
-
-        [Index("ddocument_data_document_id")]
-        public override long? DocumentId { get => base.DocumentId; set => base.DocumentId = value; }
 
         [Column("template_data_id")]
         public int? TemplateDataId
