@@ -35,7 +35,7 @@ namespace DataWF.Data
         public static DBTable UserLogTable { get; set; }
         public static readonly string UserLogKeyName = "userlog_id";
 
-        private DBItem baseItem = DBItem.EmptyItem;
+        private DBItem baseItem;
         private DBUserReg userLog;
 
         public DBLogItem()
@@ -110,7 +110,7 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore]
         public DBItem BaseItem
         {
-            get { return baseItem == DBItem.EmptyItem ? (baseItem = BaseTable.LoadItemById(GetValue(LogTable.BaseKey))) : baseItem; }
+            get { return baseItem ?? (baseItem = BaseTable.LoadItemById(GetValue(LogTable.BaseKey)) ?? DBItem.EmptyItem); }
             set
             {
                 baseItem = value;
@@ -134,7 +134,7 @@ namespace DataWF.Data
 
         public async Task<DBItem> Redo(DBTransaction transaction)
         {
-            if (BaseItem == null)
+            if (BaseItem == DBItem.EmptyItem)
                 baseItem = BaseTable.NewItem(DBUpdateState.Insert, false, (int)GetValue<int?>(BaseTable.ItemTypeKey.LogColumn));
             Upload(BaseItem);
             await BaseItem.Save(transaction);
@@ -198,9 +198,7 @@ namespace DataWF.Data
             var baseItem = BaseItem;
             if (item != null)
             {
-                transaction.NoLogs = true;
                 baseItem = await item.Redo(transaction);
-                transaction.NoLogs = false;
                 if (baseItem != null && LogType == DBLogType.Delete)
                 {
                     foreach (var tableReference in BaseTable.GetChildRelations()
@@ -219,7 +217,6 @@ namespace DataWF.Data
                     }
                 }
             }
-            await Delete(logtransaction);
             return baseItem;
         }
 

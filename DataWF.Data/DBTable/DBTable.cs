@@ -952,7 +952,6 @@ namespace DataWF.Data
 
             if (!transaction.NoLogs && LogTable != null)
             {
-
                 args.LogItem = (DBLogItem)LogTable.NewItem(DBUpdateState.Insert, false, item.ItemType ?? 0);
                 args.LogItem.BaseItem = item;
                 DBService.OnLogItem(args);
