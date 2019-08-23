@@ -26,7 +26,7 @@ namespace DataWF.Test.Module.Common
             Assert.IsNotNull(GroupPermission.DBTable);
             Assert.IsNotNull(User.DBTable);
             Assert.IsNotNull(Position.DBTable);
-            Assert.IsNotNull(UserLog.DBTable);
+            Assert.IsNotNull(UserReg.DBTable);
             Assert.IsNotNull(Company.DBTable);
             DBService.Save();
             schema.Connection = new DBConnection

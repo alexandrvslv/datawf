@@ -796,7 +796,7 @@ namespace DataWF.Module.FlowGui
                 {
                     if (!TypeBinding.TryGetValue(type, out var widgetType))
                     {
-                        widgetType = typeof(DocumentDetailView<,>);
+                        widgetType = typeof(DocumentDetailView<>);
                     }
                     if (widgetType.IsGenericType)
                     {

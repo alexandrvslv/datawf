@@ -116,7 +116,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void PropertyAction()
         {
-            TestProperty(new Invoker<TestClass, int>("X",
+            TestProperty(new ActionInvoker<TestClass, int>("X",
                                                         (item) => item.X,
                                                         (item, value) => item.X = value));
         }
@@ -156,7 +156,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void BenchmarkPropertyAction()
         {
-            Benchmark("Property", "Action", new Invoker<TestClass, int>("X",
+            Benchmark("Property", "Action", new ActionInvoker<TestClass, int>("X",
                                                                (item) => item.X,
                                                                (item, value) => item.X = value));
         }
@@ -176,7 +176,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void BenchmarkBoxingPropertyAction()
         {
-            BenchmarkBoxing("Property", "Action", new Invoker<TestClass, int>("X",
+            BenchmarkBoxing("Property", "Action", new ActionInvoker<TestClass, int>("X",
                                                                                  (item) => item.X,
                                                                                  (item, value) => item.X = value));
         }
@@ -204,7 +204,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void InlinePropertyAction()
         {
-            TestInlineProperty(new Invoker<TestClass, int>("Group.Struct.Width",
+            TestInlineProperty(new ActionInvoker<TestClass, int>("Group.Struct.Width",
                                                               (item) => item.Group?.Struct.Width ?? 0,
                                                               (item, value) =>
                                                               {
@@ -252,7 +252,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void BenchmarkInlinePropertyAction()
         {
-            Benchmark("Inline Property", "Action", new Invoker<TestClass, int>("Group.Struct.Width",
+            Benchmark("Inline Property", "Action", new ActionInvoker<TestClass, int>("Group.Struct.Width",
                                                               (item) => item.Group?.Struct.Width ?? 0,
                                                               (item, value) =>
                                                               {
@@ -280,7 +280,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void BenchmarkBoxingInlinePropertyAction()
         {
-            BenchmarkBoxing("Inline Property", "Action", new Invoker<TestClass, int>("Group.Struct.Width",
+            BenchmarkBoxing("Inline Property", "Action", new ActionInvoker<TestClass, int>("Group.Struct.Width",
                                                               (item) => item.Group?.Struct.Width ?? 0,
                                                               (item, value) =>
                                                               {
@@ -317,7 +317,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void FieldAction()
         {
-            TestField(new Invoker<TestClass, int>("Field",
+            TestField(new ActionInvoker<TestClass, int>("Field",
                                                   (item) => item.Field,
                                                   (item, value) => item.Field = value));
         }
@@ -357,7 +357,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void BenchmarkFieldAction()
         {
-            Benchmark("Field", "Action", new Invoker<TestClass, int>("Field",
+            Benchmark("Field", "Action", new ActionInvoker<TestClass, int>("Field",
                                                                      (item) => item.Field,
                                                                      (item, value) => item.Field = value));
         }
@@ -377,7 +377,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void BenchmarkBoxingFieldAction()
         {
-            BenchmarkBoxing("Field", "Action", new Invoker<TestClass, int>("Field",
+            BenchmarkBoxing("Field", "Action", new ActionInvoker<TestClass, int>("Field",
                                                                               (item) => item.Field,
                                                                               (item, value) => item.Field = value));
         }
@@ -405,7 +405,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void InlineFieldAction()
         {
-            TestInlineField(new Invoker<TestClass, int>("Struct.Field",
+            TestInlineField(new ActionInvoker<TestClass, int>("Struct.Field",
                                                         (item) => item.Struct.Field,
                                                         (item, value) => { var temp = item.Struct; temp.Field = value; item.Struct = temp; }));
         }
@@ -445,7 +445,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void BenchmarkInlineFieldAction()
         {
-            Benchmark("Inline Field", "Action", new Invoker<TestClass, int>("Struct.Field",
+            Benchmark("Inline Field", "Action", new ActionInvoker<TestClass, int>("Struct.Field",
                                                         (item) => item.Struct.Field,
                                                         (item, value) => { var temp = item.Struct; temp.Field = value; item.Struct = temp; }));
         }
@@ -465,7 +465,7 @@ namespace DataWF.Test.Common
         [Test()]
         public void BenchmarkBoxingInlineFieldAction()
         {
-            BenchmarkBoxing("Inline Field", "Action", new Invoker<TestClass, int>("Field",
+            BenchmarkBoxing("Inline Field", "Action", new ActionInvoker<TestClass, int>("Field",
                                                         (item) => item.Struct.Field,
                                                         (item, value) => { var temp = item.Struct; temp.Field = value; item.Struct = temp; }));
         }

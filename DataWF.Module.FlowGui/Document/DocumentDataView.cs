@@ -10,7 +10,7 @@ using Xwt.Drawing;
 
 namespace DataWF.Module.FlowGui
 {
-    public class DocumentDataView<T> : DocumentDetailView<T, DocumentData> where T : DocumentData, new()
+    public class DocumentDataView<T> : DocumentDetailView<T> where T : DocumentData, new()
     {
         private ToolItem toolTemplate;
         private ToolItem toolInsertTemplate;

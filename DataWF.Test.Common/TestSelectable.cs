@@ -13,7 +13,7 @@ namespace DataWF.Test.Common
         public void Setup()
         {
             list = new SelectableList<TestClass>();
-            list.Indexes.Add(new Invoker<TestClass, int>(nameof(TestClass.Field),
+            list.Indexes.Add(new ActionInvoker<TestClass, int>(nameof(TestClass.Field),
                         (item) => item.Field,
                         (item, value) => item.Field = value));
             list.AddRange(new[]{
