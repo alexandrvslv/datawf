@@ -109,6 +109,11 @@ namespace DataWF.Common
             Parameters.Clear();
         }
 
+        public QueryParameter<T> Add(string property, object value)
+        {
+            return Parameters.Add(property, value);
+        }
+
         public void Add(IQueryParameter parameter)
         {
             Add((QueryParameter<T>)parameter);
@@ -142,6 +147,11 @@ namespace DataWF.Common
             parameter.Value = value;
             parameter.Group = group;
             return parameter;
+        }
+
+        IQueryParameter IQuery.Add(string property, object value)
+        {
+            return Add(property, value);
         }
 
         IQueryParameter IQuery.Add(LogicType logic, IInvoker invoker, CompareType comparer, object value)

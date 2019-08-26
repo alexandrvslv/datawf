@@ -12,6 +12,8 @@ namespace DataWF.Common
 
         bool Suspending { get; set; }
 
+        IQueryParameter Add(string property, object value);
+
         IQueryParameter Add(LogicType logic, IInvoker invoker, CompareType comparer, object value);
 
         IQueryParameter AddOrUpdate(LogicType logic, IInvoker invoker, CompareType comparer, object value);

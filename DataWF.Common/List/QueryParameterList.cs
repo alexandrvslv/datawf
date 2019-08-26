@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 
@@ -21,6 +22,12 @@ namespace DataWF.Common
         }
 
         public Query<T> Query { get; set; }
+
+        public QueryParameter<T> Add(string property, object value)
+        {
+            var parameter = new QueryParameter<T>(property) { Value = value };
+            return parameter;
+        }
 
         public QueryParameter<T> Add(LogicType logic, IInvoker invoker, CompareType comparer, object value, QueryGroup group = QueryGroup.None)
         {
@@ -86,6 +93,8 @@ namespace DataWF.Common
         {
             return GetEnumerator();
         }
+
+
     }
 }
 
