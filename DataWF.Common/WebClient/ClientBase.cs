@@ -166,6 +166,27 @@ namespace DataWF.Common
             }
             return urlBuilder;
         }
+        
+        public string GetFilePath(IFileModel fileModel, string commandUrl)
+        {
+            if (fileModel is IPrimaryKey key)
+            {
+                return GetFilePath(fileModel.FileName, commandUrl, key.PrimaryKey);
+            }
+            return null;
+        }
+
+        public string GetFilePath(string fileName, string commandUrl, params object[] parameters)
+        {
+            var uri = new Uri(ParseUrl(commandUrl, parameters).ToString(), UriKind.RelativeOrAbsolute);
+            return GetFilePath(fileName, uri);
+        }
+
+        public string GetFilePath(string fileName, Uri uri)
+        {
+            var indentifier = uri.LocalPath.Replace("/", "");
+            return Helper.GetDocumentsFullPath(fileName, indentifier);
+        }
 
         public virtual async Task<R> Request<R>(ProgressToken progressToken,
             string httpMethod = "GET",
@@ -192,7 +213,6 @@ namespace DataWF.Common
                                 }
                                 using (var responseStream = response.Content == null ? null : await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
                                 {
-
                                     using (var encodedStream = GetEncodedStream(response, responseStream))
                                     using (var reader = new StreamReader(encodedStream))
                                     {
@@ -200,8 +220,7 @@ namespace DataWF.Common
                                         {
                                             var headers = GetHeaders(response);
                                             (string fileName, int fileSize) = GetFileInfo(headers);
-                                            var indentifier = request.RequestUri.LocalPath.Replace("/", "") + (parameters?.FirstOrDefault()?.ToString() ?? "");
-                                            var filePath = Helper.GetDocumentsFullPath(fileName, indentifier);
+                                            var filePath = GetFilePath(fileName, request.RequestUri);
                                             var fileStream = (FileStream)null;
                                             try
                                             {
@@ -211,7 +230,7 @@ namespace DataWF.Common
                                             {
                                                 if (ioex.HResult == -2147024864)
                                                 {
-                                                    filePath = Path.Combine(Path.GetTempPath(), Path.GetFileNameWithoutExtension(fileName) + "~" + Path.GetExtension(fileName));
+                                                    filePath = Path.Combine(Path.GetDirectoryName(filePath), Path.GetFileNameWithoutExtension(fileName) + "~" + Path.GetExtension(fileName));
                                                     fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
                                                 }
                                                 else

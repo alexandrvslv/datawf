@@ -94,6 +94,7 @@ namespace DataWF.Common
 
     public interface IFileClient
     {
+        string GetFilePath(IFileModel model);
         Task<Stream> DownloadFileAsync(object id, ProgressToken progressToken);
         Task<string> UploadFileAsync(object id, string fileName, Stream file, ProgressToken progressToken);
     }

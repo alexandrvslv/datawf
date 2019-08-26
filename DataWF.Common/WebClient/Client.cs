@@ -426,6 +426,11 @@ namespace DataWF.Common
 
         public async Task<IEnumerable> GetAsync() => await GetAsync(ProgressToken.None);
 
+        public string GetFilePath(IFileModel fileModel)
+        {
+            return GetFilePath(fileModel, $"/api/{nameof(T)}/DownloadFile/{{id}}");
+        }
+
         public LoadProgress<T> Load(string filter, IProgressable progressable)
         {
             if (loadProgress == null || loadProgress.Task.IsCompleted || loadProgress.Filter != filter)
