@@ -44,11 +44,13 @@ namespace DataWF.Module.Common
     {
         private object target;
         private static DBColumn objectNameKey = DBColumn.EmptyKey;
+        private static DBColumn typeKey = DBColumn.EmptyKey;
         private static DBTable<GroupPermission> dbTable;
 
         public static DBTable<GroupPermission> DBTable => dbTable ?? (dbTable = GetTable<GroupPermission>());
 
         public static DBColumn ObjectNameKey => DBTable.ParseProperty(nameof(ObjectName), ref objectNameKey);
+        public static DBColumn TypeKey => DBTable.ParseProperty(nameof(Type), ref typeKey);
 
         public static PermissionType GetPermissionType(object value, out string key, out string name)
         {
@@ -216,14 +218,28 @@ namespace DataWF.Module.Common
         [ControllerMethod]
         public static GroupPermission GetByName(string name)
         {
-            return DBTable.SelectOne(ObjectNameKey, name);
+            return GetByName(name, PermissionType.GTable);
+        }
+
+        public static GroupPermission GetByName(string name, PermissionType type)
+        {
+            using (var query = new QQuery(DBTable))
+            {
+                query.BuildParam(ObjectNameKey, name);
+                query.BuildParam(TypeKey, type);
+                return DBTable.Select(query).FirstOrDefault();
+            }
         }
 
         [ControllerMethod]
         public static IEnumerable<GroupPermission> GetGroupByName(string name)
         {
-            var item = DBTable.SelectOne(ObjectNameKey, name);
-            return item.GetSubGroups<GroupPermission>(DBLoadParam.None);
+            return GetGroupByName(name, PermissionType.GTable);
+        }
+        public static IEnumerable<GroupPermission> GetGroupByName(string name, PermissionType type)
+        {
+            var item = GetByName(name, type);
+            return item?.GetSubGroups<GroupPermission>(DBLoadParam.None) ?? Enumerable.Empty<GroupPermission>();
         }
 
         public static void BeginHandleSchema()
