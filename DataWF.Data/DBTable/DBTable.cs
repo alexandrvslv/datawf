@@ -881,16 +881,16 @@ namespace DataWF.Data
             if (item.UpdateState == DBUpdateState.Insert)
             {
                 if (StampKey != null)
-                    item.Stamp = DateTime.Now;
+                    item.Stamp = DateTime.UtcNow;
                 if (DateKey != null)
-                    item.DateCreate = DateTime.Now;
+                    item.DateCreate = DateTime.UtcNow;
                 if (IsLoging && StatusKey != null && !item.Changed(StatusKey))
                     item.Status = DBStatus.New;
             }
             else if ((item.UpdateState & DBUpdateState.Update) == DBUpdateState.Update)
             {
                 if (StampKey != null)
-                    item.Stamp = DateTime.Now;
+                    item.Stamp = DateTime.UtcNow;
                 if (IsLoging && StatusKey != null && item.Status == DBStatus.Actual && !item.Changed(StatusKey) && !item.Changed(AccessKey))
                     item.Status = DBStatus.Edit;
             }

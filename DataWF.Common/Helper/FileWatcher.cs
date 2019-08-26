@@ -15,7 +15,8 @@ namespace DataWF.Common
         public FileWatcher(string filePath, IFileModel model, IFileModelView modelView, bool enabled = true, FileWatcherService service = null)
         {
             Model = model;
-            Stamp = model is IStampKey stamp ? (stamp.Stamp ?? DateTime.UtcNow) : DateTime.UtcNow;
+            Stamp = model is IStampKey stamp ? (stamp.Stamp ?? File.GetLastWriteTimeUtc(filePath)) : File.GetLastWriteTimeUtc(filePath);
+
             ModelView = modelView;
             FilePath = filePath;
             Service = service ?? FileWatcherService.Instance;

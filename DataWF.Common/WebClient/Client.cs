@@ -428,7 +428,7 @@ namespace DataWF.Common
 
         public string GetFilePath(IFileModel fileModel)
         {
-            return GetFilePath(fileModel, $"/api/{nameof(T)}/DownloadFile/{{id}}");
+            return GetFilePath(fileModel, $"/api/{typeof(T).Name}/DownloadFile/{{id}}");
         }
 
         public LoadProgress<T> Load(string filter, IProgressable progressable)
