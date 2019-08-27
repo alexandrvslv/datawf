@@ -26,6 +26,7 @@ namespace DataWF.Common
         public QueryParameter<T> Add(string property, object value)
         {
             var parameter = new QueryParameter<T>(property) { Value = value };
+            Add(parameter);
             return parameter;
         }
 
