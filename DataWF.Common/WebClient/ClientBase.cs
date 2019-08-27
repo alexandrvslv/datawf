@@ -512,7 +512,10 @@ namespace DataWF.Common
                         && synched.SyncStatus == SynchronizedStatus.Load)
                     {
 
-                        client.Remove(item);
+                        if (!client.Remove(item))
+                        {
+                            referenceList.RemoveAt(i);
+                        }
                         i--;
                     }
                 }
