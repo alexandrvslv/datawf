@@ -90,6 +90,9 @@ namespace DataWF.Data
         [XmlIgnore, JsonIgnore, Browsable(false)]
         public override string Property { get => BaseColumn.Property; set => base.Property = value; }
 
+        [XmlIgnore, JsonIgnore, Browsable(false)]
+        public override string ReferenceProperty { get => BaseColumn.ReferenceProperty; set => base.Property = value; }
+
         [XmlIgnore, JsonIgnore]
         public override DBColumnKeys Keys { get => BaseColumn.Keys; set => base.Keys = value; }
 
