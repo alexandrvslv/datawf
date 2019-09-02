@@ -637,7 +637,7 @@ namespace DataWF.Common
 
         public void CopyTo(T[] array, int index)
         {
-            items.CopyTo(array, index);
+            items.CopyTo(0, array, index, Math.Min(array.Length - index, Count));
         }
 
         void ICollection.CopyTo(Array array, int index)
@@ -679,6 +679,6 @@ namespace DataWF.Common
             }
         }
 
-        
+
     }
 }

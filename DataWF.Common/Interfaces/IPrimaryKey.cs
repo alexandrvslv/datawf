@@ -15,15 +15,11 @@ namespace DataWF.Common
     public interface IStampKey
     {
         DateTime? Stamp { get; set; }
-
-        DateTime? StampLocal { get; }
     }
 
     public interface IDateKey
     {
         DateTime? DateCreate { get; set; }
-
-        DateTime? DateCreateLocal { get; }
     }
 }
 
