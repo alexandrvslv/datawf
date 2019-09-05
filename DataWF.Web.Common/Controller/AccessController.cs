@@ -145,5 +145,47 @@ namespace DataWF.Web.Common
                 }
             }
         }
+
+        [HttpPut("ClearAccess/{name}/{id}")]
+        public async Task<ActionResult<IEnumerable<AccessItem>>> ClearAccess([FromRoute]string name, [FromRoute]string id)
+        {
+            var table = GetTable(name);
+            if (table == null)
+            {
+                return NotFound();
+            }
+            var accessColumn = table.AccessKey;
+            if (accessColumn == null)
+            {
+                return BadRequest($"Table {table} is not Accessable!");
+            }
+            using (var transaction = new DBTransaction(table.Connection, CurrentUser))
+            {
+                try
+                {
+                    var value = table.LoadItemById(id, DBLoadParam.Load, null, transaction);
+                    if (value == null)
+                    {
+                        return NotFound();
+                    }
+                    if (!accessColumn.Access.GetFlag(AccessType.Admin, CurrentUser)
+                        && !value.Access.GetFlag(AccessType.Admin, CurrentUser)
+                        && !table.Access.GetFlag(AccessType.Admin, CurrentUser))
+                    {
+                        return Forbid();
+                    }
+
+                    value.Access = null;
+                    await value.Save(transaction);
+                    transaction.Commit();
+                    return GetAccessItems(name, id);
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    return BadRequest(ex);
+                }
+            }
+        }
     }
 }
