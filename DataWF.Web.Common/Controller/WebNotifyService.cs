@@ -233,7 +233,7 @@ namespace DataWF.Web.Common
                 var connection = connections[i];
                 try
                 {
-                    if (connection.Socket == null
+                    if (connection?.Socket == null
                         || (connection.State != WebSocketState.Open
                         && connection.State != WebSocketState.Connecting))
                     {
