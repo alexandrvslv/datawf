@@ -166,7 +166,7 @@ namespace DataWF.Common
             }
             return urlBuilder;
         }
-        
+
         public string GetFilePath(IFileModel fileModel, string commandUrl)
         {
             if (fileModel is IPrimaryKey key)
@@ -230,8 +230,7 @@ namespace DataWF.Common
                                             {
                                                 if (ioex.HResult == -2147024864)
                                                 {
-                                                    filePath = Path.Combine(Path.GetDirectoryName(filePath), Path.GetFileNameWithoutExtension(fileName) + "~" + Path.GetExtension(fileName));
-                                                    fileStream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+                                                    throw new Exception($"File {fileName} is already open!\r\nPlease close the application that is blocking the file.\r\n And try to download again.");
                                                 }
                                                 else
                                                 {
