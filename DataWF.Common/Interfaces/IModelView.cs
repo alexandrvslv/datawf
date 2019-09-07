@@ -8,5 +8,7 @@ namespace DataWF.Common
         ICollection Items { get; set; }
         object SelectedItem { get; set; }
         Task Save(object item);
+        Task Save(object item, ProgressToken token);
+
     }
 }

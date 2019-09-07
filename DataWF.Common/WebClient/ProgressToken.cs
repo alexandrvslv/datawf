@@ -53,6 +53,8 @@ namespace DataWF.Common
 
         public IFileModel File { get; set; }
 
+        public Exception Error { get; private set; }
+
         public void Cancel()
         {
             if (CancellationTokenSource != null)
@@ -68,6 +70,12 @@ namespace DataWF.Common
                 CancellationTokenSource.Dispose();
                 CancellationTokenSource = null;
             }
+        }
+
+        public void OnException(Exception ex)
+        {
+            if (this != ProgressToken.None)
+                Error = ex;
         }
     }
 
