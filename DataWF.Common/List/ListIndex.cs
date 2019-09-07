@@ -87,8 +87,11 @@ namespace DataWF.Common
 
         protected T SelectOneInternal(K key)
         {
-            Dictionary.TryGetValue(key, out var list);
-            return list == null ? default(T) : list.FirstOrDefault();
+            if (Dictionary.TryGetValue(key, out var list))
+            {
+                return (list?.Count ?? 0) > 0 ? list[0] : default(T);
+            }
+            return default(T);
         }
 
         public IEnumerable Scan(IQueryParameter param)
