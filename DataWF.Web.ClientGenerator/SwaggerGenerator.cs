@@ -30,7 +30,7 @@ namespace DataWF.Web.CodeGenerator
                 OperationNameGenerator = new MultipleClientsOperationNameGenerator(),
                 GenerateBaseUrlProperty = false,
                 UseHttpClientCreationMethod = true,
-               
+
             };
             var destinationPath = Path.GetFullPath(@"..\..\..\");
             var generator = new CSharpClientGenerator(document, settings);
@@ -86,7 +86,7 @@ namespace DataWF.Web.CodeGenerator
         public override SyntaxNode VisitPropertyDeclaration(PropertyDeclarationSyntax node)
         {
             var typeInfo = SemanticModel.GetTypeInfo(node.Type);
-            if (typeInfo.Type.ContainingAssembly == SemanticModel.Compilation.Assembly)
+            if (typeInfo.Type.ContainingAssembly.Equals(SemanticModel.Compilation.Assembly))
             {
                 return base.VisitPropertyDeclaration(node);
             }
