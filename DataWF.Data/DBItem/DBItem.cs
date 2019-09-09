@@ -1383,7 +1383,7 @@ namespace DataWF.Data
             }
         }
 
-        public async Task SaveReferenced(DBTransaction transaction)
+        public virtual async Task SaveReferenced(DBTransaction transaction)
         {
             if ((UpdateState & DBUpdateState.Delete) == DBUpdateState.Delete)
             {

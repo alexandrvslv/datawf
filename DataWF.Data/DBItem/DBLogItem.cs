@@ -174,6 +174,11 @@ namespace DataWF.Data
             }
         }
 
+        public override Task SaveReferenced(DBTransaction transaction)
+        {
+            return Task.CompletedTask;
+        }
+
         public override void Reject(IUserIdentity user)
         {
             base.Reject(user);
