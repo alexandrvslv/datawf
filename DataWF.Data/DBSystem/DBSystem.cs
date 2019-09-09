@@ -916,6 +916,10 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             {
                 if (transaction.Reader.Read())
                 {
+                    if (transaction.Reader.IsDBNull(0))
+                    {
+                        throw new Exception("No Data Found!");
+                    }
                     var buffer = new byte[bufferSize];
                     int position = 0;
                     int readed;
