@@ -135,10 +135,34 @@ namespace DataWF.Data
         public async Task<DBItem> Redo(DBTransaction transaction)
         {
             if (BaseItem == DBItem.EmptyItem)
+            {
                 baseItem = BaseTable.NewItem(DBUpdateState.Insert, false, (int)GetValue<int?>(BaseTable.ItemTypeKey.LogColumn));
+            }
+
             Upload(BaseItem);
-            await BaseItem.Save(transaction);
+            BaseItem.Attach();
+            await UploadReferences(transaction, baseItem);
+            await BaseTable.SaveItem(BaseItem, transaction);
+            await RedoFile(transaction);
+
             return baseItem;
+        }
+
+        private async Task RedoFile(DBTransaction transaction)
+        {
+            if (Table.FileKey != null
+                  && BaseTable.FileLOBKey != null
+                  && BaseItem.GetValue(BaseTable.FileLOBKey) == null)
+            {
+                try
+                {
+                    using (var stream = GetMemoryStream(Table.FileKey, transaction))
+                    {
+                        await BaseItem.SetLOB(stream, BaseTable.FileLOBKey, transaction);
+                    }
+                }
+                catch { }
+            }
         }
 
         public void Upload(DBItem value)
@@ -204,25 +228,60 @@ namespace DataWF.Data
             if (item != null)
             {
                 baseItem = await item.Redo(transaction);
+
                 if (baseItem != null && LogType == DBLogType.Delete)
                 {
-                    foreach (var tableReference in BaseTable.GetChildRelations()
-                        .Where(p => !(p.Table is IDBVirtualTable)
-                                  && p.Table.IsLoging
-                                  && p.Column.LogColumn != null))
-                    {
-                        using (var query = new QQuery((DBTable)tableReference.Table.LogTable))
-                        {
-                            query.BuildParam(tableReference.Column.LogColumn, CompareType.Equal, item.BaseId);
-                            query.BuildParam(tableReference.Table.LogTable.ElementTypeKey, CompareType.Equal, DBLogType.Delete);
-                            foreach (var refed in tableReference.Table.LogTable.LoadItems(query).Cast<DBLogItem>().ToList())
-                                await refed.Undo(transaction);
-                        }
-
-                    }
+                    await UndoReferencing(transaction, item);
                 }
             }
             return baseItem;
+        }
+
+        private async Task UndoReferencing(DBTransaction transaction, DBLogItem item)
+        {
+            foreach (var tableReference in BaseTable.GetChildRelations()
+                                    .Where(p => !(p.Table is IDBVirtualTable)
+                                              && p.Table.IsLoging
+                                              && p.Column.LogColumn != null))
+            {
+                using (var query = new QQuery((DBTable)tableReference.Table.LogTable))
+                {
+                    query.BuildParam(tableReference.Column.LogColumn, CompareType.Equal, item.BaseId);
+                    query.BuildParam(tableReference.Table.LogTable.ElementTypeKey, CompareType.Equal, DBLogType.Delete);
+                    var logItems = tableReference.Table.LogTable.LoadItems(query).Cast<DBLogItem>().ToList();
+                    foreach (var refed in logItems)
+                        await refed.Undo(transaction);
+                }
+
+            }
+        }
+
+        private async Task UploadReferences(DBTransaction transaction, DBItem baseItem)
+        {
+            foreach (var column in BaseTable.Columns.GetIsReference())
+            {
+                var value = baseItem.GetValue(column);
+                if (value != null && baseItem.GetReference(column) == null)
+                {
+                    if (column.ReferenceTable.IsLoging)
+                    {
+                        using (var query = new QQuery((DBTable)column.ReferenceTable.LogTable))
+                        {
+                            query.BuildParam(column.ReferenceTable.LogTable.BaseKey, CompareType.Equal, value);
+                            query.BuildParam(column.ReferenceTable.LogTable.ElementTypeKey, CompareType.Equal, DBLogType.Delete);
+                            var logItem = column.ReferenceTable.LogTable.LoadItems(query).Cast<DBLogItem>().FirstOrDefault();
+                            if (logItem != null)
+                            {
+                                await logItem.Undo(transaction);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        baseItem.SetValue(null, column);
+                    }
+                }
+            }
         }
 
         public static async Task Reject(IEnumerable<DBLogItem> redo, IUserIdentity user)
