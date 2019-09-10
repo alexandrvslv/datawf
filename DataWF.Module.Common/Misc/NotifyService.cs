@@ -25,9 +25,9 @@ namespace DataWF.Module.Common
         private static readonly object loadLock = new object();
 
         private Instance instance;
-        private ConcurrentBag<NotifyMessageItem> buffer = new ConcurrentBag<NotifyMessageItem>();
+        private ConcurrentQueue<NotifyMessageItem> buffer = new ConcurrentQueue<NotifyMessageItem>();
         private ManualResetEvent runEvent = new ManualResetEvent(false);
-        private const int timer = 3000;
+        private const int timer = 2000;
 
         public User User { get; private set; }
 
@@ -41,19 +41,6 @@ namespace DataWF.Module.Common
         }
 
         public event Action<EndPointMessage> MessageLoad;
-
-        protected override void OnDataLoad(UdpServerEventArgs arg)
-        {
-            base.OnDataLoad(arg);
-            //arg.Point
-            var message = EndPointMessage.Read(arg.Data);
-            if (message != null)
-            {
-                message.RecivedEndPoint = arg.Point;
-                try { OnMessageLoad(message); }
-                catch (Exception e) { Helper.OnException(e); }
-            }
-        }
 
         public override void Dispose()
         {
@@ -73,7 +60,7 @@ namespace DataWF.Module.Common
 
             DBService.RowAccept = OnCommit;
             runEvent.Reset();
-            new Task(SendData, TaskCreationOptions.LongRunning).Start();
+            new Task(SendChangesRunner, TaskCreationOptions.LongRunning).Start();
         }
 
         public async void Logout()
@@ -82,11 +69,34 @@ namespace DataWF.Module.Common
                 return;
             runEvent.Set();
             DBService.RowAccept = null;
-            Send((byte[])null, null, SocketMessageType.Logout);
+            Send(null, null, SocketMessageType.Logout);
             StopListener();
             instance.Delete();
             await instance.Save(User);
             instance = null;
+        }
+
+        public void Send(NotifyMessageItem[] items, Instance address = null)
+        {
+            var buffer = (byte[])null;
+
+            foreach (Instance item in Instance.DBTable)
+            {
+                if (CheckAddress(item, address))
+                {
+                    if (buffer == null)
+                    {
+                        buffer = EndPointMessage.Write(new EndPointMessage
+                        {
+                            SenderName = instance.Id.ToString(),
+                            SenderEndPoint = endPoint,
+                            Type = SocketMessageType.Data,
+                            Data = Serialize(items)
+                        });
+                    }
+                    Send(buffer, item.EndPoint);
+                }
+            }
         }
 
         public void Send(byte[] data, Instance address = null, SocketMessageType type = SocketMessageType.Data)
@@ -106,14 +116,20 @@ namespace DataWF.Module.Common
 
             foreach (Instance item in Instance.DBTable)
             {
-                if (address == null || item == address)
+                if (CheckAddress(item, address))
                 {
-                    if (item.Active.Value && item.EndPoint != null && !item.EndPoint.Equals(endPoint) && !IPAddress.Loopback.Equals(item.EndPoint.Address))
-                    {
-                        Send(buffer, item.EndPoint);
-                    }
+                    Send(buffer, item.EndPoint);
                 }
             }
+        }
+
+        private bool CheckAddress(Instance item, Instance address)
+        {
+            return (address == null || item == address)
+                && item.Active.Value
+                && item.EndPoint != null
+                && !item.EndPoint.Equals(endPoint)
+                && !IPAddress.Loopback.Equals(item.EndPoint.Address);
         }
 
         private void OnCommit(DBItemEventArgs arg)
@@ -122,20 +138,29 @@ namespace DataWF.Module.Common
 
             if (!(item is UserReg) && !(item is DBLogItem) && item.Table.Type == DBTableType.Table && item.Table.IsLoging)
             {
-                var type = DBLogType.None;
-                if ((arg.State & DBUpdateState.Delete) == DBUpdateState.Delete)
-                    type = DBLogType.Delete;
-                else if ((arg.State & DBUpdateState.Insert) == DBUpdateState.Insert)
-                    type = DBLogType.Insert;
-                else
-                    type = DBLogType.Update;
-                buffer.Add(new NotifyMessageItem()
+                var type = (arg.State & DBUpdateState.Delete) == DBUpdateState.Delete ? DBLogType.Delete
+                    : (arg.State & DBUpdateState.Insert) == DBUpdateState.Insert ? DBLogType.Insert
+                    : DBLogType.Update;
+                buffer.Enqueue(new NotifyMessageItem()
                 {
                     Table = item.Table,
                     ItemId = item.PrimaryId,
                     Type = type,
                     UserId = arg.User?.Id ?? 0
                 });
+            }
+        }
+
+        protected override void OnDataLoad(UdpServerEventArgs arg)
+        {
+            base.OnDataLoad(arg);
+            //arg.Point
+            var message = EndPointMessage.Read(arg.Data);
+            if (message != null)
+            {
+                message.RecivedEndPoint = arg.Point;
+                try { OnMessageLoad(message); }
+                catch (Exception e) { Helper.OnException(e); }
             }
         }
 
@@ -160,13 +185,13 @@ namespace DataWF.Module.Common
                     sender.Detach();
                     break;
                 case (SocketMessageType.Data):
-                    LoadData(message.Data);
+                    Deserialize(message.Data);
                     break;
             }
             MessageLoad?.Invoke(message);
         }
 
-        private void SendData()
+        private void SendChangesRunner()
         {
             while (!runEvent.WaitOne(timer))
             {
@@ -179,7 +204,7 @@ namespace DataWF.Module.Common
 
                     for (int i = 0; i < list.Length; i++)
                     {
-                        if (buffer.TryTake(out var item))
+                        if (buffer.TryDequeue(out var item))
                         {
                             list[i] = item;
                         }
@@ -193,32 +218,7 @@ namespace DataWF.Module.Common
                         return res != 0 ? res : x.Type.CompareTo(y.Type);
                     });
 
-                    var stream = new MemoryStream();
-                    using (var writer = new BinaryWriter(stream))
-                    {
-                        DBTable table = null;
-                        object id = null;
-                        foreach (var log in list)
-                        {
-                            if (log.Table != table)
-                            {
-                                id = null;
-                                table = log.Table;
-                                writer.Write((char)1);
-                                writer.Write(table.Name);
-                            }
-                            if (!log.ItemId.Equals(id))
-                            {
-                                id = log.ItemId;
-                                writer.Write((char)2);
-                                writer.Write((int)log.Type);
-                                writer.Write((int)log.UserId);
-                                Helper.WriteBinary(writer, id, true);
-                            }
-                        }
-                        writer.Flush();
-                        Send(stream.ToArray());
-                    }
+
                     OnSendChanges(list);
                 }
                 catch (Exception e)
@@ -230,10 +230,48 @@ namespace DataWF.Module.Common
 
         protected virtual void OnSendChanges(NotifyMessageItem[] list)
         {
+            Send(list);
             SendChanges?.Invoke(this, new NotifyEventArgs(list));
         }
 
-        public static void LoadData(byte[] buffer)
+        private static byte[] Serialize(NotifyMessageItem[] list)
+        {
+            using (var stream = new MemoryStream())
+            {
+                Serialize(list, stream);
+                return stream.ToArray();
+            }
+        }
+
+        private static void Serialize(NotifyMessageItem[] list, MemoryStream stream)
+        {
+            using (var writer = new BinaryWriter(stream))
+            {
+                DBTable table = null;
+                object id = null;
+                foreach (var log in list)
+                {
+                    if (log.Table != table)
+                    {
+                        id = null;
+                        table = log.Table;
+                        writer.Write((char)1);
+                        writer.Write(table.Name);
+                    }
+                    if (!log.ItemId.Equals(id))
+                    {
+                        id = log.ItemId;
+                        writer.Write((char)2);
+                        writer.Write((int)log.Type);
+                        writer.Write((int)log.UserId);
+                        Helper.WriteBinary(writer, id, true);
+                    }
+                }
+                writer.Flush();
+            }
+        }
+
+        public static void Deserialize(byte[] buffer)
         {
             lock (loadLock)
             {
