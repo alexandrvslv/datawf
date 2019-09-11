@@ -47,8 +47,7 @@ namespace DataWF.Web.Common
                             ValidateIssuerSigningKey = true,
                             ValidIssuer = jwtConfig.ValidIssuer,
                             ValidAudience = jwtConfig.ValidAudience,
-                            IssuerSigningKey = jwtConfig.SymmetricSecurityKey,
-                            ClockSkew = TimeSpan.FromMinutes(1)
+                            IssuerSigningKey = jwtConfig.SymmetricSecurityKey
                         };
                     });
             services.AddAuthorization(options =>
@@ -63,7 +62,8 @@ namespace DataWF.Web.Common
                 options.CacheProfiles.Add("Never", new CacheProfile()
                 {
                     Location = ResponseCacheLocation.None,
-                    NoStore = true
+                    NoStore = true,
+                    Duration = 0
                 });
                 options.OutputFormatters.RemoveType<JsonOutputFormatter>();
                 var settings = new JsonSerializerSettings() { ContractResolver = DBItemContractResolver.Instance };
