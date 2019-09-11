@@ -1297,15 +1297,7 @@ namespace DataWF.Data
 
         public Task Merge(List<string> ids, DBTransaction transaction)
         {
-            var items = new List<DBItem>();
-            foreach (var id in ids)
-            {
-                var item = Table.LoadItemById(id, DBLoadParam.Referencing, null, transaction);
-                if (item != null)
-                {
-                    items.Add(item);
-                }
-            }
+            var items = Table.LoadItemsById(ids, transaction);
             return Merge(items, transaction);
         }
 

@@ -833,6 +833,21 @@ namespace DataWF.Data
         //    return rows;
         //}
 
+        public List<DBItem> LoadItemsById(List<string> ids, DBTransaction transaction)
+        {
+            var items = new List<DBItem>();
+            foreach (var id in ids)
+            {
+                var item = LoadItemById(id, DBLoadParam.Referencing, null, transaction);
+                if (item != null)
+                {
+                    items.Add(item);
+                }
+            }
+
+            return items;
+        }
+
         public event EventHandler<DBItemEventArgs> RowUpdating;
 
         public bool OnUpdating(DBItemEventArgs e)

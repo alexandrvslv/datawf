@@ -91,13 +91,16 @@ namespace DataWF.Web.Common
                     {
                         throw new InvalidOperationException("Some deserialization problem!");
                     }
-                    if (((value.UpdateState & DBUpdateState.Insert) == DBUpdateState.Insert
-                        && !value.Access.GetFlag(AccessType.Create, transaction.Caller))
-                        || ((value.UpdateState & DBUpdateState.Update) == DBUpdateState.Update
-                        && !value.Access.GetFlag(AccessType.Update, transaction.Caller)))
+                    if (!value.Access.GetFlag(AccessType.Admin, transaction.Caller))
                     {
-                        value.Reject(transaction.Caller);
-                        return Forbid();
+                        if (((value.UpdateState & DBUpdateState.Insert) == DBUpdateState.Insert
+                            && !value.Access.GetFlag(AccessType.Create, transaction.Caller))
+                            || ((value.UpdateState & DBUpdateState.Update) == DBUpdateState.Update
+                            && !value.Access.GetFlag(AccessType.Update, transaction.Caller)))
+                        {
+                            value.Reject(transaction.Caller);
+                            return Forbid();
+                        }
                     }
                     await value.Save(transaction);
                     transaction.Commit();
@@ -122,10 +125,14 @@ namespace DataWF.Web.Common
                     {
                         throw new InvalidOperationException("Some deserialization problem!");
                     }
-                    if (((value.UpdateState & DBUpdateState.Update) == DBUpdateState.Update && !value.Access.GetFlag(AccessType.Update, transaction.Caller)))
+                    if (!value.Access.GetFlag(AccessType.Admin, transaction.Caller))
                     {
-                        value.Reject(transaction.Caller);
-                        return Forbid();
+                        if (((value.UpdateState & DBUpdateState.Update) == DBUpdateState.Update
+                        && !value.Access.GetFlag(AccessType.Update, transaction.Caller)))
+                        {
+                            value.Reject(transaction.Caller);
+                            return Forbid();
+                        }
                     }
                     await value.Save(transaction);
                     transaction.Commit();
@@ -151,7 +158,15 @@ namespace DataWF.Web.Common
                     {
                         return NotFound();
                     }
-                    await idValue.Merge(ids, transaction);
+                    var items = table.LoadItemsById(ids, transaction);
+                    foreach (var item in items)
+                    {
+                        if (!item.Access.GetFlag(AccessType.Delete, transaction.Caller))
+                        {
+                            return Forbid();
+                        }
+                    }
+                    await idValue.Merge(items, transaction);
                     transaction.Commit();
                     return idValue;
                 }
