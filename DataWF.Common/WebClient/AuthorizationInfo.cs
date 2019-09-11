@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace DataWF.Common
 {
@@ -18,13 +19,15 @@ namespace DataWF.Common
             }
         }
 
-        public event EventHandler<CancelEventArgs> UnauthorizedError;
+        public Func<Task<bool>> UnauthorizedError;
 
-        public bool OnUnauthorizedError()
+        public async Task<bool> OnUnauthorizedError()
         {
-            var cancel = new CancelEventArgs(true);
-            UnauthorizedError?.Invoke(this, cancel);
-            return !cancel.Cancel;
+            if (UnauthorizedError != null)
+            {
+                return await UnauthorizedError();
+            }
+            return false;
         }
     }
 }

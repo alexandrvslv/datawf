@@ -275,7 +275,7 @@ namespace DataWF.Common
                                 }
                                 break;
                             case System.Net.HttpStatusCode.Unauthorized:
-                                if (Provider?.Authorization?.OnUnauthorizedError() ?? false)
+                                if (await Provider?.Authorization?.OnUnauthorizedError())
                                 {
                                     return await Request<R>(progressToken, httpMethod, commandUrl, mediaType, value, parameters).ConfigureAwait(false);
                                 }
@@ -403,7 +403,7 @@ namespace DataWF.Common
                                 }
                                 break;
                             case System.Net.HttpStatusCode.Unauthorized:
-                                if (Provider?.Authorization?.OnUnauthorizedError() ?? false)
+                                if (await Provider?.Authorization?.OnUnauthorizedError())
                                 {
                                     return await RequestArray<R, I>(progressToken, httpMethod, commandUrl, mediaType, value, parameters).ConfigureAwait(false);
                                 }

@@ -48,6 +48,7 @@ namespace DataWF.Web.Common
                             ValidIssuer = jwtConfig.ValidIssuer,
                             ValidAudience = jwtConfig.ValidAudience,
                             IssuerSigningKey = jwtConfig.SymmetricSecurityKey,
+                            ClockSkew = TimeSpan.FromMinutes(1)
                         };
                     });
             services.AddAuthorization(options =>
