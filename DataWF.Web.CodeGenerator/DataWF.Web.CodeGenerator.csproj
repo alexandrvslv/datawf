@@ -20,7 +20,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.2.1" />
-    <PackageReference Include="NSwag.CodeGeneration.CSharp" Version="13.0.4" />
+    <PackageReference Include="NSwag.CodeGeneration.CSharp" Version="13.0.6" />
   </ItemGroup>
 
   <ItemGroup>
