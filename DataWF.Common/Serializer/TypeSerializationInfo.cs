@@ -50,20 +50,17 @@ namespace DataWF.Common
 
             foreach (var property in properties)
             {
+                var exist = GetProperty(property.Name);
                 if (TypeHelper.IsNonSerialize(property))
                 {
-                    var exist = GetProperty(property.Name);
                     if (exist != null)
                         Properties.Remove(exist);
                     continue;
                 }
-                var info = new PropertySerializationInfo(property);
-                {
-                    var exist = GetProperty(info.Name);
-                    if (exist != null)
-                        Properties.Remove(exist);
-                    Properties.Add(info);
-                }
+                var method = property.GetGetMethod() ?? property.GetSetMethod();
+                if (exist != null && method.Equals(method.GetBaseDefinition()))
+                    Properties.Remove(exist);
+                Properties.Add(new PropertySerializationInfo(property));
             }
         }
 
