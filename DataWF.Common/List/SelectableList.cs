@@ -311,18 +311,21 @@ namespace DataWF.Common
 
         public void ClearInternal()
         {
-            if (propertyHandler != null)
+            lock (lockObject)
             {
-                foreach (var item in this)
+                if (propertyHandler != null)
                 {
-                    if (item is INotifyPropertyChanged notify)
+                    foreach (var item in this)
                     {
-                        notify.PropertyChanged -= propertyHandler;
+                        if (item is INotifyPropertyChanged notify)
+                        {
+                            notify.PropertyChanged -= propertyHandler;
+                        }
                     }
                 }
+                indexes.Clear();
+                items.Clear();
             }
-            indexes.Clear();
-            items.Clear();
         }
 
         public virtual void Clear()
@@ -451,11 +454,14 @@ namespace DataWF.Common
 
         public virtual bool Remove(T item)
         {
-            int index = IndexOf(item);
-            if (index == -1)
-                return false;
-            Remove(item, index);
-            return true;
+            lock (lockObject)
+            {
+                int index = IndexOf(item);
+                if (index == -1)
+                    return false;
+                Remove(item, index);
+                return true;
+            }
         }
 
         public void RemoveAt(int index)
@@ -532,9 +538,12 @@ namespace DataWF.Common
 
         public virtual void ApplySortInternal(IComparer<T> comparer)
         {
-            this.comparer = comparer;
-            ListHelper.QuickSort<T>(items, this.comparer);
-            //_items.Sort(comparer);
+            lock (lockObject)
+            {
+                this.comparer = comparer;
+                ListHelper.QuickSort<T>(items, this.comparer);
+                //_items.Sort(comparer);
+            }
         }
 
         public void ApplySort(IComparer comparer)
