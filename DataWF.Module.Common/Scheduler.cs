@@ -164,10 +164,10 @@ namespace DataWF.Module.Common
         [ControllerMethod]
         public async Task<StateInfo> Execute(DBTransaction transaction)
         {
-            object rez = null;
             if (Procedure == null)
+            {
                 throw new Exception("Procedure not specified!");
-
+            }
             var task = Procedure.GetExecutor(null, transaction);
             var result = task.Execute();
 
@@ -177,6 +177,9 @@ namespace DataWF.Module.Common
                 Message = Name ?? task.Name,
                 Tag = result
             };
+
+            DateExecute = DateTime.Now;
+            await Save();
 
             if (result is Exception exception)
             {
@@ -188,23 +191,26 @@ namespace DataWF.Module.Common
             }
             else
             {
-                if (result is decimal && Statistic.DBTable != null)
+                if (result is decimal rez && Statistic.DBTable != null)
                 {
                     var stat = new Statistic
                     {
                         Scheduler = this,
                         Result = (decimal)rez
                     };
-                    await stat.Save(transaction);
+                    await stat.Save();
                 }
 
                 info.Description = string.Format("Completed in {0:n} {1}", task.Time.TotalMilliseconds / 1000, result);
                 info.Type = StatusType.Information;
             }
-            DateExecute = DateTime.Now;
-            await Save(transaction);
 
             Helper.Logs.Add(info);
+
+            if (result is Exception)
+            {
+                throw (Exception)result;
+            }
 
             return info;
         }
