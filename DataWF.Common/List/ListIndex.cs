@@ -70,7 +70,11 @@ namespace DataWF.Common
                 foreach (var entry in Dictionary)
                 {
                     if (entry.Value.Remove(item))
+                    {
+                        key = entry.Key;
+                        refs = entry.Value;
                         break;
+                    }
                 }
             }
             if (refs != null && refs.Count == 0)
