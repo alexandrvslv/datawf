@@ -60,6 +60,8 @@ namespace DataWF.Common
                 var method = property.GetGetMethod() ?? property.GetSetMethod();
                 if (exist != null && method.Equals(method.GetBaseDefinition()))
                     Properties.Remove(exist);
+                else
+                    continue;
                 Properties.Add(new PropertySerializationInfo(property));
             }
         }
