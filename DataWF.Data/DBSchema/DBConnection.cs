@@ -289,8 +289,11 @@ namespace DataWF.Data
                         }
                         catch (Exception ex)
                         {
+                            if (connection.State == ConnectionState.Open)
+                                continue;
+                            Buffer.Remove(connection);
                             Helper.OnException(ex);
-                            continue;
+                            throw (ex);
                         }
                         return connection;
                     }
