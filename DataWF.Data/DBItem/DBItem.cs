@@ -1410,22 +1410,14 @@ namespace DataWF.Data
 
         public IEnumerable<DBItem> GetPropertyReferencing()
         {
-            if (Table.TableAttribute == null)
+            foreach (var referencing in Table.GetPropertyReferencing(GetType()))
             {
-                yield break;
-            }
-
-            foreach (var referencing in Table.TableAttribute.Referencings)
-            {
-                if (TypeHelper.IsBaseType(GetType(), referencing.PropertyInvoker.TargetType))
+                var references = (IEnumerable)referencing.PropertyInvoker.GetValue(this);
+                if (references != null)
                 {
-                    var references = (IEnumerable)referencing.PropertyInvoker.GetValue(this);
-                    if (references != null)
+                    foreach (DBItem item in references)
                     {
-                        foreach (DBItem item in references)
-                        {
-                            yield return item;
-                        }
+                        yield return item;
                     }
                 }
             }

@@ -1331,6 +1331,22 @@ namespace DataWF.Data
             return Schema?.GetChildRelations(this) ?? Enumerable.Empty<DBForeignKey>();
         }
 
+        public IEnumerable<ReferencingGenerator> GetPropertyReferencing(Type type)
+        {
+            if (TableAttribute == null)
+            {
+                yield break;
+            }
+
+            foreach (var referencing in TableAttribute.Referencings)
+            {
+                if (TypeHelper.IsBaseType(type, referencing.PropertyInvoker.TargetType))
+                {
+                    yield return referencing;
+                }
+            }
+        }
+
         public void GetAllParentTables(List<DBTable> parents)
         {
             foreach (DBTable table in GetParentTables())

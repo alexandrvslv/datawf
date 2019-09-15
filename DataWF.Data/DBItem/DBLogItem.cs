@@ -234,26 +234,34 @@ namespace DataWF.Data
 
                 if (baseItem != null && LogType == DBLogType.Delete)
                 {
-                    await UndoReferencing(transaction);
+                    await UndoReferencing(transaction, baseItem);
                 }
             }
             return baseItem;
         }
 
-        private async Task UndoReferencing(DBTransaction transaction)
+        private async Task UndoReferencing(DBTransaction transaction, DBItem baseItem)
         {
-            foreach (var tableReference in BaseTable.GetChildRelations()
-                                    .Where(p => !(p.Table is IDBVirtualTable)
-                                              && p.Table.IsLoging
-                                              && p.Column.LogColumn != null))
+            foreach (var reference in BaseTable.GetPropertyReferencing(baseItem.GetType()))
             {
-                using (var query = new QQuery((DBTable)tableReference.Table.LogTable))
+                var referenceTable = reference.ReferenceTable?.Table;
+                var referenceColumn = reference.ReferenceColumn?.Column;
+
+                if (referenceTable?.LogTable == null || referenceColumn?.LogColumn == null)
+                    continue;
+
+                using (var query = new QQuery((DBTable)referenceTable.LogTable))
                 {
-                    query.BuildParam(tableReference.Column.LogColumn, CompareType.Equal, BaseId);
-                    query.BuildParam(tableReference.Table.LogTable.ElementTypeKey, CompareType.Equal, DBLogType.Delete);
-                    var logItems = tableReference.Table.LogTable.LoadItems(query).Cast<DBLogItem>().ToList();
+                    query.BuildParam(referenceColumn.LogColumn, CompareType.Equal, BaseId);
+                    query.BuildParam(referenceTable.LogTable.ElementTypeKey, CompareType.Equal, DBLogType.Delete);
+                    var logItems = referenceTable.LogTable.LoadItems(query).Cast<DBLogItem>().ToList();
                     foreach (var refed in logItems)
-                        await refed.Undo(transaction);
+                    {
+                        if ((refed.DateCreate.Value - this.DateCreate.Value).TotalMinutes < 2)
+                        {
+                            await refed.Undo(transaction);
+                        }
+                    }
                 }
 
             }
