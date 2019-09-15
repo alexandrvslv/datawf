@@ -21,6 +21,7 @@ using DataWF.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 
 namespace DataWF.Data
@@ -161,6 +162,18 @@ namespace DataWF.Data
                 }
             }
             return gprocedure;
+        }
+
+        public void CheckDeleted()
+        {
+            foreach (var procedure in this.ToList())
+            {
+                if (procedure.ProcedureType == ProcedureTypes.Assembly
+                    && procedure.TempAssembly == null)
+                {
+                    Remove(procedure);
+                }
+            }
         }
     }
 

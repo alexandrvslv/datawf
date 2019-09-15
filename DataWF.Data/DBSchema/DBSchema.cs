@@ -531,6 +531,8 @@ namespace DataWF.Data
             {
                 tableAttribute.Generate(this);
             }
+
+            Procedures.CheckDeleted();
         }
 
         public string GeneretePatch(IEnumerable<DBItem> items)
