@@ -12,6 +12,7 @@ namespace DataWF.Module.Common
         Interval,
         DayTime,
         WeekDay,
+        Manual
     }
 
     public class SchedulerService : IDisposable
