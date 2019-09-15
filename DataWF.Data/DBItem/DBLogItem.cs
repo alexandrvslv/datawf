@@ -263,6 +263,8 @@ namespace DataWF.Data
         {
             foreach (var column in BaseTable.Columns.GetIsReference())
             {
+                if (column.ReferenceTable == null)
+                    continue;
                 var value = BaseItem.GetValue(column);
                 if (value != null && BaseItem.GetReference(column) == null)
                 {
