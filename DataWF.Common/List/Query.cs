@@ -109,6 +109,11 @@ namespace DataWF.Common
             Parameters.Clear();
         }
 
+        public QueryParameter<T> Add(IInvoker invoker, CompareType compare, object value)
+        {
+            return Parameters.Add(invoker, compare, value);
+        }
+
         public QueryParameter<T> Add(string property, object value)
         {
             return Parameters.Add(property, value);

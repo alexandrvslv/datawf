@@ -23,6 +23,18 @@ namespace DataWF.Common
 
         public Query<T> Query { get; set; }
 
+        public QueryParameter<T> Add(IInvoker invoker, CompareType compare, object value)
+        {
+            var parameter = new QueryParameter<T>()
+            {
+                Invoker = invoker,
+                Comparer = compare,
+                Value = value
+            };
+            Add(parameter);
+            return parameter;
+        }
+
         public QueryParameter<T> Add(string property, object value)
         {
             var parameter = new QueryParameter<T>(property) { Value = value };
