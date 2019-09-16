@@ -105,7 +105,7 @@ namespace DataWF.Data
                     var sheet = split[0].Trim('\'');
                     if (!cacheNames.TryGetValue(sheet, out var names))
                     {
-                        cacheNames[sheet] = names = new Dictionary<string, DefinedName>();
+                        cacheNames[sheet] = names = new Dictionary<string, DefinedName>(StringComparer.Ordinal);
                     }
                     var defName = new DefinedName
                     {
@@ -180,7 +180,7 @@ namespace DataWF.Data
                                 //var newWorksheetPart = newWorkbookPart.AddNewPart<WorksheetPart>(sheet.Id);
 
                                 if (!cacheNames.TryGetValue(sheet.Name.Value, out var sheetNames))
-                                    cacheNames[sheet.Name.Value] = sheetNames = new Dictionary<string, DefinedName>();
+                                    cacheNames[sheet.Name.Value] = sheetNames = new Dictionary<string, DefinedName>(StringComparer.Ordinal);
                                 var newWorksheetPart = (WorksheetPart)newWorkbookPart.GetPartById(sheet.Id);
                                 foreach (var sheetPart in worksheetPart.Parts)
                                 {
@@ -283,7 +283,7 @@ namespace DataWF.Data
                                 {
                                     if (!cacheNames.TryGetValue(sheet, out var names))
                                     {
-                                        cacheNames[sheet] = names = new Dictionary<string, DefinedName>();
+                                        cacheNames[sheet] = names = new Dictionary<string, DefinedName>(StringComparer.Ordinal);
                                     }
                                     var defName = new DefinedName
                                     {

@@ -537,7 +537,7 @@ namespace DataWF.Module.FlowGui
             var td = new Doc.Odf.TextDocument();//FlowEnvir.Config.PersonalSetting.RegTemplate.Data);
             OdtProcessor op = new OdtProcessor(td);
 
-            Dictionary<string, object> elements = new Dictionary<string, object>();
+            Dictionary<string, object> elements = new Dictionary<string, object>(StringComparer.Ordinal);
 
             DocumentWork firstDoc = (DocumentWork)listDocuments.ListSource[0];
             DateTime dt = DateTime.Now;
@@ -560,12 +560,12 @@ namespace DataWF.Module.FlowGui
                 users += ((User)ss.Item).Name + "; ";
             elements.Add("Получатель", users);
 
-            var subparam = new Dictionary<string, object>();
+            var subparam = new Dictionary<string, object>(StringComparer.Ordinal);
             var param = new List<Dictionary<string, object>>();
 
             foreach (DocumentWork row in (IEnumerable)listDocuments.ListSource)
             {
-                subparam = new Dictionary<string, object>
+                subparam = new Dictionary<string, object>(StringComparer.Ordinal)
                 {
                     { "numberio", row.Document["INOUTNUM"] },
                     { "number", row.Document.PrimaryCode }

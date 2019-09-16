@@ -7,7 +7,7 @@ namespace DataWF.Web.ClientGenerator
     {
         static void Main(string[] args)
         {
-            var map = new Dictionary<string, string>();
+            var map = new Dictionary<string, string>(StringComparer.Ordinal);
             var key = (string)null;
             foreach (var item in args)
             {

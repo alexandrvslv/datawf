@@ -30,8 +30,8 @@ namespace DataWF.Web.ClientGenerator
             "RemoveLogAsync",
             "UndoLogAsync"
         };
-        private Dictionary<string, CompilationUnitSyntax> cacheModels = new Dictionary<string, CompilationUnitSyntax>();
-        private Dictionary<string, ClassDeclarationSyntax> cacheClients = new Dictionary<string, ClassDeclarationSyntax>();
+        private Dictionary<string, CompilationUnitSyntax> cacheModels = new Dictionary<string, CompilationUnitSyntax>(StringComparer.Ordinal);
+        private Dictionary<string, ClassDeclarationSyntax> cacheClients = new Dictionary<string, ClassDeclarationSyntax>(StringComparer.Ordinal);
         private List<UsingDirectiveSyntax> usings = new List<UsingDirectiveSyntax>();
         private Dictionary<JsonSchema, List<RefField>> referenceFields = new Dictionary<JsonSchema, List<RefField>>();
         private OpenApiDocument document;

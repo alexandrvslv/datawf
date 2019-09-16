@@ -1821,7 +1821,7 @@ namespace Mono.TextEditor
 
         public IEnumerable<Hunk> Diff(TextDocument changedDocument, bool includeEol = true)
         {
-            var codeDictionary = new Dictionary<string, int>();
+            var codeDictionary = new Dictionary<string, int>(StringComparer.Ordinal);
             int codeCounter = 0;
             return Mono.TextEditor.Utils.Diff.GetDiff<int>(this.GetDiffCodes(ref codeCounter, codeDictionary, includeEol),
                 changedDocument.GetDiffCodes(ref codeCounter, codeDictionary, includeEol));

@@ -741,7 +741,7 @@ namespace DataWF.Data
 
         public static Dictionary<string, object> CreateParams(DBItem document, object userid = null)
         {
-            var parameters = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
+            var parameters = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
             if (document != null)
             {
                 parameters.Add(":documentid", document.PrimaryId);

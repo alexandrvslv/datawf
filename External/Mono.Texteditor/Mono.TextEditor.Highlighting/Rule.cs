@@ -42,7 +42,7 @@ namespace Mono.TextEditor.Highlighting
 		
 		public List<SemanticRule> SemanticRules = new List<SemanticRule> ();
 		
-		protected Dictionary<string, List<string>> properties = new Dictionary<string, List<string>> ();
+		protected Dictionary<string, List<string>> properties = new Dictionary<string, List<string>> (StringComparer.Ordinal);
 		
 		public Dictionary<string, List<string>> Properties {
 			get {
@@ -232,7 +232,7 @@ namespace Mono.TextEditor.Highlighting
 			foreach (string word in keywords.Words) {
 				if (keywords.IgnoreCase) {
 					if (keywordTableIgnoreCase == null)
-						keywordTableIgnoreCase = new Dictionary<string, Keywords> (StringComparer.InvariantCultureIgnoreCase);
+						keywordTableIgnoreCase = new Dictionary<string, Keywords> (StringComparer.OrdinalIgnoreCase);
 					if (keywordTableIgnoreCase.ContainsKey (word)) {
 						Console.WriteLine ("Error: duplicate keyword " + word);
 						continue;
@@ -240,7 +240,7 @@ namespace Mono.TextEditor.Highlighting
 					keywordTableIgnoreCase.Add (word, keywords);
 				} else {
 					if (keywordTable == null)
-						keywordTable = new Dictionary<string, Keywords> ();
+						keywordTable = new Dictionary<string, Keywords> (StringComparer.Ordinal);
 					if (keywordTable.ContainsKey (word)) {
 						Console.WriteLine ("Error: duplicate keyword " + word);
 						continue;

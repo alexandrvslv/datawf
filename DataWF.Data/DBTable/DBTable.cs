@@ -1404,7 +1404,7 @@ namespace DataWF.Data
                     }
                 }
 
-                if (select.ToString() == "select ")
+                if (select.ToString()?.Equals("select ", StringComparison.Ordinal) ?? false)
                     select.Append(" * ");
             }
             string vquery = Query;

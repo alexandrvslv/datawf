@@ -138,7 +138,7 @@ namespace DataWF.Module.FlowGui
             var td = new Doc.Odf.TextDocument(prm.Data);
             TemplateParser op = new TemplateParser(td);
 
-            Dictionary<string, object> elements = new Dictionary<string, object>();
+            Dictionary<string, object> elements = new Dictionary<string, object>(StringComparer.Ordinal);
             DateTime dt = DateTime.Now;
 
             elements.Add("Дата", dt.ToString("D", Common.Localize.Data.Culture));
@@ -146,7 +146,7 @@ namespace DataWF.Module.FlowGui
             elements.Add("Пользователь", User.CurrentUser);
             elements.Add("Параметры", prm.LabelText);
 
-            Dictionary<string, object> subparam = new Dictionary<string, object>();
+            Dictionary<string, object> subparam = new Dictionary<string, object>(StringComparer.Ordinal);
             List<Dictionary<string, object>> param = new List<Dictionary<string, object>>();
             foreach (DocumentListColumn colum in prm.PrintColumns)
                 subparam.Add(colum.ColumnName, colum.DisplayName);
@@ -156,7 +156,7 @@ namespace DataWF.Module.FlowGui
             //     rows = SelectedValues;
             foreach (DBItem row in rows)
             {
-                subparam = new Dictionary<string, object>();
+                subparam = new Dictionary<string, object>(StringComparer.Ordinal);
                 foreach (DocumentListColumn colum in prm.PrintColumns)
                 {
                     if (this.ListInfo.Columns.Contains(colum.ColumnName))

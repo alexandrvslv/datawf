@@ -30,7 +30,7 @@ namespace DataWF.Data.Gui
             td.BodyText.Add(pr);
             pr.Add(new Placeholder(td, "таблица", PlaceholdeType.Table));
 
-            var elements = new Dictionary<string, object>();
+            var elements = new Dictionary<string, object>(StringComparer.Ordinal);
 
             DateTime dt = DateTime.Now;
 
@@ -39,14 +39,14 @@ namespace DataWF.Data.Gui
             string filename = Path.Combine(Helper.GetDirectory(Environment.SpecialFolder.LocalApplicationData), fields.FieldSource.ToString() + DateTime.Now.ToString("yyyyMMddHHmss") + ".odt");
             // File.WriteAllBytes(filename, td.UnLoad());
 
-            var subparam = new Dictionary<string, object>();
+            var subparam = new Dictionary<string, object>(StringComparer.Ordinal);
             var prms = new List<Dictionary<string, object>>();
 
             foreach (LayoutField field in fields.Fields)
             {
                 if (!field.Visible)
                     continue;
-                subparam = new Dictionary<string, object>
+                subparam = new Dictionary<string, object>(StringComparer.Ordinal)
                 {
                     { "header", field.Text },
                     { "value", field.ReadValue(fields.FieldSource) }

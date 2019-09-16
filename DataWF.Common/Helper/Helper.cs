@@ -1337,16 +1337,18 @@ namespace DataWF.Common
                 {
                     string s = value.Replace(",", ".").Replace(" ", "").Replace(" ", "").Replace("%", "");
                     decimal.TryParse(s, NumberStyles.Number, CultureInfo.InvariantCulture.NumberFormat, out var d);
-                    result = format == "p" ? d / 100 : d;
+                    result = format?.Equals("p", StringComparison.OrdinalIgnoreCase) ?? false ? d / 100 : d;
                 }
             }
             else if (type == typeof(TimeSpan))
                 result = TimeSpan.TryParse(value, CultureInfo.InvariantCulture, out var timeSpan) ? timeSpan : TimeSpan.MinValue;
             else if (type.IsEnum)
-                result = EnumItem.Parse(type, value);
+            {
+                result = value.Equals("null", StringComparison.Ordinal) ? null : EnumItem.Parse(type, value);
+            }
             else if (type == typeof(DateTime))
             {
-                if (format == "binary")
+                if (format?.Equals("binary", StringComparison.Ordinal) ?? false)
                     result = DateTime.FromBinary(long.Parse(value));
                 else
                 {
@@ -1387,7 +1389,7 @@ namespace DataWF.Common
             return result;
         }
 
-        private static Dictionary<string, string> words = new Dictionary<string, string>();
+        private static Dictionary<string, string> words = new Dictionary<string, string>(StringComparer.Ordinal);
         //http://devoid.com.ua/csharp/win-forms/transliter-na-c-sharp.html
         public static string Translit(string p)
         {

@@ -37,7 +37,7 @@ namespace DataWF.Data
 
             var procedures = new List<string>();
             var fields = processor.GetFields();
-            var elements = new Dictionary<string, object>();
+            var elements = new Dictionary<string, object>(StringComparer.Ordinal);
             foreach (string documentField in fields)
             {
                 // adding group

@@ -64,7 +64,7 @@ namespace DataWF.Data.Gui
             return true;
         }
 
-        public Dictionary<string, object> localParameters = new Dictionary<string, object>();
+        public Dictionary<string, object> localParameters = new Dictionary<string, object>(StringComparer.Ordinal);
         private TableLayoutList propertyes = new TableLayoutList();
 
         public FormParam()

@@ -268,7 +268,7 @@ namespace Mono.TextEditor.Vi
             throw new FormatException("Unknown char '" + charName + "'");
         }
 
-        static Dictionary<string, char> stringCharMaps = new Dictionary<string, char>() {
+        static Dictionary<string, char> stringCharMaps = new Dictionary<string, char>(StringComparer.Ordinal) {
             { "Nul",     '\0' },
             { "Space",   ' '  },
             { "CR",      '\r' },
@@ -288,7 +288,7 @@ namespace Mono.TextEditor.Vi
             return (Key)0;
         }
 
-        static Dictionary<string, Key> stringKeyMaps = new Dictionary<string, Key>() {
+        static Dictionary<string, Key> stringKeyMaps = new Dictionary<string, Key>(StringComparer.Ordinal) {
             { "BS",        Key.BackSpace    },
             { "Tab",       Key.Tab          },
             { "CR",        Key.Return       },

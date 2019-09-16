@@ -59,7 +59,7 @@ namespace Doc.Odf
 
         private void AddFile(string type, string path, byte[] data)
         {
-            files.Add(path, new Dictionary<string, object>
+            files.Add(path, new Dictionary<string, object>(StringComparer.Ordinal)
             {
                 { "IsDirectory", false },
                 { "Data", data }
@@ -411,7 +411,7 @@ namespace Doc.Odf
                 xmlMeta = new XmlDocument();
                 xmlSettings = new XmlDocument();
 
-                files = new Dictionary<string, Dictionary<string, object>>();
+                files = new Dictionary<string, Dictionary<string, object>>(StringComparer.Ordinal);
                 foreach (ZipEntry zipEntry in zipfile)
                 {
                     Stream streamOfFile = zipfile.GetInputStream(zipEntry);
@@ -437,7 +437,7 @@ namespace Doc.Odf
 
                     }
                     streamOfFile.Close();
-                    files.Add(zipEntry.Name, new Dictionary<string, object>
+                    files.Add(zipEntry.Name, new Dictionary<string, object>(StringComparer.Ordinal)
                     {
                         { "ZipFileIndex", zipEntry.ZipFileIndex },
                         { "IsDirectory", zipEntry.IsDirectory },

@@ -47,7 +47,7 @@ namespace Mono.TextEditor.Utils
             }
         }
 
-        static Dictionary<string, Settings> settingStore = new Dictionary<string, Settings>();
+        static Dictionary<string, Settings> settingStore = new Dictionary<string, Settings>(StringComparer.Ordinal);
 
         public static bool TryGetValue(string contentName, out Settings settings)
         {

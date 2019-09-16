@@ -40,10 +40,10 @@ namespace Mono.TextEditor.Highlighting
 {
     public static class SyntaxModeService
     {
-        static Dictionary<string, ISyntaxModeProvider> syntaxModes = new Dictionary<string, ISyntaxModeProvider>();
-        static Dictionary<string, ColorScheme> styles = new Dictionary<string, ColorScheme>();
-        static Dictionary<string, IStreamProvider> syntaxModeLookup = new Dictionary<string, IStreamProvider>();
-        static Dictionary<string, IStreamProvider> styleLookup = new Dictionary<string, IStreamProvider>();
+        static Dictionary<string, ISyntaxModeProvider> syntaxModes = new Dictionary<string, ISyntaxModeProvider>(StringComparer.Ordinal);
+        static Dictionary<string, ColorScheme> styles = new Dictionary<string, ColorScheme>(StringComparer.Ordinal);
+        static Dictionary<string, IStreamProvider> syntaxModeLookup = new Dictionary<string, IStreamProvider>(StringComparer.Ordinal);
+        static Dictionary<string, IStreamProvider> styleLookup = new Dictionary<string, IStreamProvider>(StringComparer.Ordinal);
 
         public static string[] Styles
         {

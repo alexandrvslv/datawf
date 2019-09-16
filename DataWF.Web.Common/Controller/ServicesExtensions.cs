@@ -120,7 +120,7 @@ namespace DataWF.Web.Common
                   apiKey.Extensions.Add("TokenPath", "/api/Auth");
 
                   c.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, apiKey);
-                  c.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>>
+                  c.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>>(StringComparer.Ordinal)
                   {
                       { JwtBearerDefaults.AuthenticationScheme, new string[] { } }
                   });

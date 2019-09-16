@@ -520,7 +520,7 @@ namespace Mono.TextEditor.Highlighting
             }
         }
 
-        static Dictionary<string, PropertyDecsription> textColors = new Dictionary<string, PropertyDecsription>();
+        static Dictionary<string, PropertyDecsription> textColors = new Dictionary<string, PropertyDecsription>(StringComparer.Ordinal);
 
         public static IEnumerable<PropertyDecsription> TextColors
         {
@@ -530,7 +530,7 @@ namespace Mono.TextEditor.Highlighting
             }
         }
 
-        static Dictionary<string, PropertyDecsription> ambientColors = new Dictionary<string, PropertyDecsription>();
+        static Dictionary<string, PropertyDecsription> ambientColors = new Dictionary<string, PropertyDecsription>(StringComparer.Ordinal);
 
         public static IEnumerable<PropertyDecsription> AmbientColors
         {
@@ -888,7 +888,7 @@ namespace Mono.TextEditor.Highlighting
             result.Description = "Imported color scheme";
             result.Originator = "Imported from " + fileName;
 
-            var colors = new Dictionary<string, VSSettingColor>();
+            var colors = new Dictionary<string, VSSettingColor>(StringComparer.Ordinal);
             using (var reader = XmlReader.Create(stream))
             {
                 while (reader.Read())

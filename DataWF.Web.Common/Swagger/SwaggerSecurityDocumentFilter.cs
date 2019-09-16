@@ -1,5 +1,6 @@
 ﻿using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using System;
 using System.Collections.Generic;
 
 namespace DataWF.Web.Common
@@ -10,7 +11,7 @@ namespace DataWF.Web.Common
         {
             document.Security = new List<IDictionary<string, IEnumerable<string>>>()
             {
-                new Dictionary<string, IEnumerable<string>>()
+                new Dictionary<string, IEnumerable<string>>(StringComparer.Ordinal)
                 {
                     { "Bearer", new string[]{ } },
                 }
