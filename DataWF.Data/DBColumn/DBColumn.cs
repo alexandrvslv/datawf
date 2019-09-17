@@ -1136,7 +1136,7 @@ namespace DataWF.Data
             return buf;
         }
 
-        public IListIndex CreateIndex()
+        public IListIndex CreateIndex(bool concurrent)
         {
             throw new NotImplementedException();
         }
