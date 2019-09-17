@@ -18,8 +18,8 @@ namespace DataWF.Common
         private IInvoker invoker;
         private object typedValue;
         private bool isEnabled = true;
-        private QueryGroup group = QueryGroup.None;
         private bool emptyFormat;
+        private QueryGroup group = QueryGroup.None;
 
         public QueryParameter()
         { }

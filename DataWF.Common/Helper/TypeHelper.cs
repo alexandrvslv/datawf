@@ -99,9 +99,10 @@ namespace DataWF.Common
         //}
         public static Type CheckNullable(Type type)
         {
-            return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>)
-                ? type.GetGenericArguments()[0]
-                : type;
+            return Nullable.GetUnderlyingType(type) ?? type;
+            //type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>)
+            //   ? type.GetGenericArguments()[0]
+            //   : type
         }
 
         public static bool IsDictionary(Type type)

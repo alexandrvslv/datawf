@@ -258,7 +258,7 @@ namespace DataWF.Common
                     yield return typed;
             }
         }
-
+        
         public static bool CheckItem(object x, object y, CompareType compare, IComparer comparer)
         {
             bool result = false;
