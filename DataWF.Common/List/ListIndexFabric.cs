@@ -6,6 +6,24 @@ namespace DataWF.Common
 {
     public static class ListIndexFabric
     {
+        private static readonly Dictionary<Type, object> nullKeys = new Dictionary<Type, object>
+        {
+            { typeof(string), "\u0000" },
+            { typeof(bool), false },
+            { typeof(long), long.MinValue },
+            { typeof(int), int.MinValue },
+            { typeof(short), short.MinValue },
+            { typeof(char), char.MinValue },
+            { typeof(sbyte), sbyte.MinValue },
+            { typeof(ulong), ulong.MinValue },
+            { typeof(uint), uint.MinValue },
+            { typeof(ushort), uint.MinValue },
+            { typeof(byte), byte.MinValue },
+            { typeof(decimal), decimal.MinValue },
+            { typeof(double), double.MinValue },
+            { typeof(float), float.MinValue }
+        };
+
         public static N? GetNullableKey<N>() where N : struct
         {
             return (N?)GetNullKey<N>();
@@ -19,67 +37,15 @@ namespace DataWF.Common
         public static object GetNullKey(Type type)
         {
             type = TypeHelper.CheckNullable(type);
-            if (type == typeof(string))
-            {
-                return "magic ZeRo String Va!@#;)(*&ue";//, (IEqualityComparer<K>)StringComparer.OrdinalIgnoreCase);
-            }
-
             if (type.IsEnum)
             {
                 return Enum.ToObject(type, int.MinValue);
             }
-            if (type == typeof(bool))
+            if (nullKeys.TryGetValue(type, out var value))
             {
-                return false;
+                return value;
             }
-            if (type == typeof(long))
-            {
-                return long.MinValue;
-            }
-            else if (type == typeof(int))
-            {
-                return int.MinValue;
-            }
-            else if (type == typeof(short))
-            {
-                return short.MinValue;
-            }
-            else if (type == typeof(char))
-            {
-                return char.MinValue;
-            }
-            else if (type == typeof(sbyte))
-            {
-                return sbyte.MinValue;
-            }
-            else if (type == typeof(ulong))
-            {
-                return ulong.MinValue;
-            }
-            else if (type == typeof(uint))
-            {
-                return uint.MinValue;
-            }
-            else if (type == typeof(ushort))
-            {
-                return uint.MinValue;
-            }
-            else if (type == typeof(byte))
-            {
-                return byte.MinValue;
-            }
-            else if (type == typeof(decimal))
-            {
-                return decimal.MinValue;
-            }
-            else if (type == typeof(double))
-            {
-                return double.MinValue;
-            }
-            else if (type == typeof(float))
-            {
-                return float.MinValue;
-            }
+
             return FormatterServices.GetUninitializedObject(type);
         }
 

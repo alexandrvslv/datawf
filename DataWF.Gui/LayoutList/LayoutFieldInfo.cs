@@ -44,9 +44,9 @@ namespace DataWF.Gui
 
         public object Source { get; set; }
 
-        public IListIndex CreateIndex()
+        public IListIndex CreateIndex(bool concurrent)
         {
-            return new ListIndex<LayoutField, object>(this, null);
+            return ListIndexFabric.Create<LayoutField, object>(this, concurrent);
         }
 
         public object GetValue(LayoutField target)

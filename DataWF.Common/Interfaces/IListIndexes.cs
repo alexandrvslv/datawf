@@ -2,7 +2,7 @@
 {
     public interface IListIndexes
     {
-        void Add(IInvoker invoker);
+        IListIndex Add(IInvoker invoker);
         void AddItem(object item);
         void Clear();
         IListIndex GetIndex(string property);

@@ -89,7 +89,7 @@ namespace DataWF.Common
         {
             if (Dictionary.TryGetValue(key, out var list))
             {
-                return (list?.Count ?? 0) > 0 ? list[0] : default(T);
+                return list.Count > 0 ? list[0] : default(T);
             }
             return default(T);
         }
@@ -248,7 +248,6 @@ namespace DataWF.Common
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void CheckNull(ref K key)
         {
             if (Comparer.Equals(key, default(K)))

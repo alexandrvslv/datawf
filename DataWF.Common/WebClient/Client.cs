@@ -18,6 +18,7 @@ namespace DataWF.Common
         public Client(Invoker<T, K?> idInvoker, Invoker<T, int?> typeInvoker, int typeId = 0)
         {
             IdInvoker = idInvoker;
+            Items.Indexes.Concurrent = true;
             Items.Indexes.Add(IdInvoker);
             TypeInvoker = typeInvoker;
             TypeId = typeId;

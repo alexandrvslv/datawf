@@ -9,17 +9,19 @@ namespace DataWF.Common
 
         public bool Concurrent { get; set; }
 
-        public void Add(IInvoker invoker)
+        public void Add(string name, IListIndex<T> index)
+        {
+            indexes[name] = index;
+        }
+
+        public IListIndex Add(IInvoker invoker)
         {
             if (!indexes.TryGetValue(invoker.Name, out var index))
             {
                 index = (IListIndex<T>)invoker.CreateIndex(Concurrent);
                 indexes.Add(invoker.Name, index);
             }
-            //else
-            //{
-            //    throw new ArgumentException($"Index with name {invoker.Name} allreaby in list!");
-            //}
+            return index;
         }
 
         public IListIndex<T> GetIndex(string property)

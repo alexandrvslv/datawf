@@ -1,18 +1,30 @@
 ﻿
+using System;
 using System.Collections.Generic;
 
 namespace DataWF.Common
 {
     public class NamedList<T> : SelectableList<T>, INamedList where T : INamed, new()
     {
+        private ListIndex<T, string> nameIndex;
+
         public NamedList(int capacity) : base(capacity)
         {
-            Indexes.Add(NamedNameInvoker<T>.Instance);
+            AddIndex();
         }
 
         public NamedList()
         {
-            Indexes.Add(NamedNameInvoker<T>.Instance);
+            AddIndex();
+        }
+
+        private void AddIndex()
+        {
+            nameIndex = new ListIndex<T, string>(
+                NamedNameInvoker<T>.Instance,
+                ListIndexFabric.GetNullKey<string>(),
+                StringComparer.Ordinal);
+            Indexes.Add(nameof(INamed.Name), nameIndex);
         }
 
         public NamedList(IEnumerable<T> items) : this()
@@ -22,7 +34,7 @@ namespace DataWF.Common
 
         public T this[string param]
         {
-            get { return SelectOne(nameof(INamed.Name), param); }
+            get { return nameIndex.SelectOne(param); }
             set
             {
                 var exists = this[param];

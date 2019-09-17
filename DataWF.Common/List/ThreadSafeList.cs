@@ -7,7 +7,7 @@ namespace DataWF.Common
     {
         private List<T> list;
 
-        public ThreadSafeList() : this(3)
+        public ThreadSafeList() : this(2)
         { }
 
         public ThreadSafeList(int capacity)

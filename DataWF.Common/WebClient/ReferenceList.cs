@@ -8,9 +8,11 @@ namespace DataWF.Common
     public class ReferenceList<T> : SelectableList<T>, IReferenceList where T : SynchronizedItem
     {
         public ReferenceList()
-        { }
+        {
+            Indexes.Concurrent = true;
+        }
 
-        public ReferenceList(SynchronizedItem owner, string ownerProperty)
+        public ReferenceList(SynchronizedItem owner, string ownerProperty) : this()
         {
             Owner = owner;
             OwnerProperty = ownerProperty;
