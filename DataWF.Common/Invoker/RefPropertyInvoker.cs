@@ -34,7 +34,7 @@ namespace DataWF.Common
 
         internal SetHandler<T, V> SetAction { get; private set; }
 
-        public IListIndex CreateIndex()
+        public IListIndex CreateIndex(bool concurrent)
         {
             throw new NotImplementedException();
         }

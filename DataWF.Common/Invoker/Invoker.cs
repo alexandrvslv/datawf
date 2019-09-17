@@ -16,9 +16,9 @@ namespace DataWF.Common
 
         string INamed.Name { get => Name; set { } }
 
-        public IListIndex CreateIndex()
+        public IListIndex CreateIndex(bool concurrent)
         {
-            return ListIndexFabric.Create<T, V>(this);
+            return ListIndexFabric.Create<T, V>(this, concurrent);
         }
 
         public QueryParameter<T> CreateParameter()

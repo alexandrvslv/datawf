@@ -15,7 +15,7 @@ namespace DataWF.Common
 
         public string Name { get => nameof(IGroup.Group); set { } }
 
-        public virtual IListIndex CreateIndex()
+        public virtual IListIndex CreateIndex(bool concurrent)
         {
             throw new NotImplementedException();
         }
@@ -40,9 +40,9 @@ namespace DataWF.Common
 
         public override Type TargetType { get { return typeof(T); } }
 
-        public override IListIndex CreateIndex()
+        public override IListIndex CreateIndex(bool concurrent)
         {
-            return ListIndexFabric.Create<T, IGroup>(this);
+            return ListIndexFabric.Create<T, IGroup>(this, concurrent);
         }
 
         public IGroup GetValue(T target)

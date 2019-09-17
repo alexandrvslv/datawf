@@ -11,7 +11,7 @@ namespace DataWF.Common
 
         bool CanWrite { get; }
 
-        IListIndex CreateIndex();
+        IListIndex CreateIndex(bool concurrent);
     }
 
     public interface IInvoker<T, V> : IInvoker

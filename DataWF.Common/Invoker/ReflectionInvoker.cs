@@ -90,7 +90,7 @@ namespace DataWF.Common
             return null;
         }
 
-        public IListIndex CreateIndex()
+        public IListIndex CreateIndex(bool concurrent)
         {
             throw new NotImplementedException();
         }

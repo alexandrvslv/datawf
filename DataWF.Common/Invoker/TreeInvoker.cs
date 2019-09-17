@@ -12,7 +12,7 @@ namespace DataWF.Common
 
         public string Name { get => nameof(IGroup.IsExpanded); set { } }
 
-        public virtual IListIndex CreateIndex()
+        public virtual IListIndex CreateIndex(bool concurrent)
         {
             throw new NotImplementedException();
         }
@@ -37,9 +37,9 @@ namespace DataWF.Common
 
         public override Type TargetType { get { return typeof(T); } }
 
-        public override IListIndex CreateIndex()
+        public override IListIndex CreateIndex(bool concurrent)
         {
-            return ListIndexFabric.Create<T, bool>(this);
+            return ListIndexFabric.Create<T, bool>(this, concurrent);
         }
 
         public bool GetValue(T target)

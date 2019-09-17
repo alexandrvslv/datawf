@@ -39,22 +39,17 @@ namespace DataWF.Data
     public class PullIndex<T, K> : PullIndex, IDisposable where T : class, IPullHandler
     {
         private ConcurrentDictionary<K, ThreadSafeList<T>> store;
-        private readonly IComparer<T> comparer;
+        private readonly IComparer<T> valueComparer;
+        private readonly IEqualityComparer<K> keyComparer;
         private readonly K nullKey;
 
         public PullIndex(Pull pull, object nullKey, IComparer valueComparer = null, IEqualityComparer keyComparer = null)
         {
             Pull = (Pull<K>)pull;
             this.nullKey = (K)nullKey;
-            comparer = valueComparer as IComparer<T>;
-            if (keyComparer is IEqualityComparer<K> typedKeyComparer)
-            {
-                store = new ConcurrentDictionary<K, ThreadSafeList<T>>(typedKeyComparer);//(IEqualityComparer<DBNullable<K>>)DBNullableComparer.StringOrdinalIgnoreCase
-            }
-            else
-            {
-                store = new ConcurrentDictionary<K, ThreadSafeList<T>>();
-            }
+            this.valueComparer = (valueComparer as IComparer<T>) ?? Comparer<T>.Default;
+            this.keyComparer = (keyComparer as IEqualityComparer<K>) ?? EqualityComparer<K>.Default;
+            this.store = new ConcurrentDictionary<K, ThreadSafeList<T>>(this.keyComparer);
         }
 
         public override Pull BasePull => Pull;
@@ -113,7 +108,7 @@ namespace DataWF.Data
                 }
                 else
                 {
-                    var index = list.BinarySearch(item, comparer);
+                    var index = list.BinarySearch(item, valueComparer);
                     if (index < 0)
                         list.Insert(-index - 1, item);
                 }
@@ -148,7 +143,7 @@ namespace DataWF.Data
                     }
                     else
                     {
-                        var index = val.BinarySearch(item, comparer);
+                        var index = val.BinarySearch(item, valueComparer);
                         if (index < 0)
                         {
                             index = val.IndexOf(item);
@@ -187,10 +182,10 @@ namespace DataWF.Data
             var key = ReadItem(item);
             if (store.TryGetValue(key, out var val))
             {
-                var index = val.BinarySearch(item, comparer);
+                var index = val.BinarySearch(item, valueComparer);
                 if (index < 0 || val[index] != item)
                 {
-                    val.Sort(comparer);
+                    val.Sort(valueComparer);
                 }
             }
         }
@@ -205,7 +200,7 @@ namespace DataWF.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void CheckNull(ref K key)
         {
-            if (EqualityComparer<K>.Default.Equals(key, default(K)))
+            if (keyComparer.Equals(key, default(K)))
             {
                 key = nullKey;
             }
@@ -214,9 +209,15 @@ namespace DataWF.Data
         public K CheckNull(object value)
         {
             if (value == null)
+            {
                 return nullKey;
+            }
+
             if (value is K typed)
-                return EqualityComparer<K>.Default.Equals(typed, default(K)) ? nullKey : typed;
+            {
+                return keyComparer.Equals(typed, default(K)) ? nullKey : typed;
+            }
+
             return (K)Helper.Parse(value, typeof(K));
         }
 

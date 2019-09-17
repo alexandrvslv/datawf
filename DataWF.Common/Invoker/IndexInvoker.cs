@@ -72,9 +72,9 @@ namespace DataWF.Common
             SetValue((T)target, (K)index, (V)value);
         }
 
-        public IListIndex CreateIndex()
+        public IListIndex CreateIndex(bool concurrent)
         {
-            return ListIndexFabric.Create<T, V>(this);
+            return ListIndexFabric.Create<T, V>(this, concurrent);
         }
     }
 }

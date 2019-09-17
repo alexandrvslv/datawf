@@ -35,9 +35,9 @@ namespace DataWF.Common
             throw new NotImplementedException();
         }
 
-        public IListIndex CreateIndex()
+        public IListIndex CreateIndex(bool concurrent)
         {
-            return ListIndexFabric.Create<object, string>(this);
+            return ListIndexFabric.Create<object, string>(this, concurrent);
         }
     }
 }

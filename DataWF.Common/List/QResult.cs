@@ -16,9 +16,9 @@ namespace DataWF.Common
         public string Name { get; set; }
         object IIndexInvoker.Index { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
-        public IListIndex CreateIndex()
+        public IListIndex CreateIndex(bool concurrent)
         {
-            return ListIndexFabric.Create<object[], object>(this);
+            return ListIndexFabric.Create<object[], object>(this, concurrent);
         }
 
         public object GetValue(object[] target, int index)
@@ -50,7 +50,6 @@ namespace DataWF.Common
         {
             SetValue((object[])target, value);
         }
-
 
         public void SetValue(object[] target, int index, object value)
         {

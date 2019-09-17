@@ -83,14 +83,13 @@ namespace DataWF.Common
             return FormatterServices.GetUninitializedObject(type);
         }
 
-        public static ListIndex<T, K> Create<T, K>(IInvoker<T, K> accessor)
+        public static ListIndex<T, K> Create<T, K>(IInvoker<T, K> accessor, bool concurrent)
         {
-            IEqualityComparer<K> comparer = null;
-            if (accessor.DataType == typeof(string))
-            {
-                comparer = (IEqualityComparer<K>)StringComparer.OrdinalIgnoreCase;
-            }
-            return new ListIndex<T, K>(accessor, GetNullKey<K>(), comparer);
+            var comparer = accessor.DataType == typeof(string)
+                ? (IEqualityComparer<K>)StringComparer.OrdinalIgnoreCase
+                : EqualityComparer<K>.Default;
+
+            return new ListIndex<T, K>(accessor, GetNullKey<K>(), comparer, concurrent);
         }
     }
 }

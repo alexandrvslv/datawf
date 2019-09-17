@@ -9,22 +9,18 @@ namespace DataWF.Common
 {
     public class ListIndex<T, K> : IListIndex<T, K>
     {
-        protected ConcurrentDictionary<K, ThreadSafeList<T>> Dictionary;
-
+        protected IDictionary<K, ThreadSafeList<T>> Dictionary;
+        protected IEqualityComparer<K> Comparer;
         protected readonly K NullKey;
 
-        public ListIndex(IInvoker<T, K> invoker, K nullKey, IEqualityComparer<K> comparer = null)
+        public ListIndex(IInvoker<T, K> invoker, K nullKey, IEqualityComparer<K> comparer = null, bool concurrent = false)
         {
             NullKey = nullKey;
             Invoker = invoker;
-            if (comparer != null)
-            {
-                Dictionary = new ConcurrentDictionary<K, ThreadSafeList<T>>(comparer);//(IEqualityComparer<DBNullable<K>>)DBNullableComparer.StringOrdinalIgnoreCase
-            }
-            else
-            {
-                Dictionary = new ConcurrentDictionary<K, ThreadSafeList<T>>();
-            }
+            Comparer = comparer ?? EqualityComparer<K>.Default;
+            Dictionary = concurrent
+                ? (IDictionary<K, ThreadSafeList<T>>)new ConcurrentDictionary<K, ThreadSafeList<T>>(Comparer)
+                : new Dictionary<K, ThreadSafeList<T>>(Comparer);
         }
 
         public IInvoker<T, K> Invoker { get; }
@@ -79,7 +75,7 @@ namespace DataWF.Common
             }
             if (refs != null && refs.Count == 0)
             {
-                Dictionary.TryRemove(key, out refs);
+                Dictionary.Remove(key);
             }
         }
 
@@ -255,16 +251,20 @@ namespace DataWF.Common
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void CheckNull(ref K key)
         {
-            if (EqualityComparer<K>.Default.Equals(key, default(K)))
+            if (Comparer.Equals(key, default(K)))
                 key = NullKey;
         }
 
         private K CheckNull(object key)
         {
             if (key == null)
+            {
                 return NullKey;
+            }
             if (key is K typed)
-                return EqualityComparer<K>.Default.Equals(typed, default(K)) ? NullKey : typed;
+            {
+                return Comparer.Equals(typed, default(K)) ? NullKey : typed;
+            }
             return (K)Helper.Parse(key, typeof(K));
         }
 

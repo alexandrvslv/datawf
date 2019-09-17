@@ -7,11 +7,13 @@ namespace DataWF.Common
     {
         protected Dictionary<string, IListIndex<T>> indexes = new Dictionary<string, IListIndex<T>>(StringComparer.OrdinalIgnoreCase);
 
+        public bool Concurrent { get; set; }
+
         public void Add(IInvoker invoker)
         {
             if (!indexes.TryGetValue(invoker.Name, out var index))
             {
-                index = (IListIndex<T>)invoker.CreateIndex();
+                index = (IListIndex<T>)invoker.CreateIndex(Concurrent);
                 indexes.Add(invoker.Name, index);
             }
             //else

@@ -12,6 +12,7 @@ namespace DataWF.Common
         public PropertySerializationInfo(PropertyInfo property)
         {
             Property = property;
+            DataType = Property.PropertyType;
             IsText = TypeHelper.IsXmlText(property);
             IsAttribute = TypeHelper.IsXmlAttribute(property) && !IsText;
             Invoker = EmitInvoker.Initialize(property, true);
@@ -29,7 +30,7 @@ namespace DataWF.Common
 
         public string Name { get; set; }
 
-        public Type DataType { get { return Property.PropertyType; } }
+        public Type DataType { get; set; }
 
         public bool IsAttribute { get; }
 
