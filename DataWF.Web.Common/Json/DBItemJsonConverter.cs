@@ -53,9 +53,10 @@ namespace DataWF.Web.Common
                 var valueType = value.GetType();
                 var includeReference = claimsWriter?.IncludeReferences ?? false;
 
-                foreach (var column in table.Columns.Where(p => TypeHelper.IsBaseType(valueType, p.PropertyInvoker.TargetType)))
+                foreach (var column in table.Columns)
                 {
-                    if (!IsSerializeableColumn(column))
+                    if (!column.PropertyInvoker.TargetType.IsAssignableFrom(valueType)
+                        || !IsSerializeableColumn(column))
                         continue;
                     writer.WritePropertyName(column.Property);
                     var propertyValue = column.PropertyInvoker.GetValue(item);
@@ -78,7 +79,7 @@ namespace DataWF.Web.Common
                 {
                     foreach (var refing in table.TableAttribute.Referencings)
                     {
-                        if (!TypeHelper.IsBaseType(valueType, refing.PropertyInvoker.TargetType))
+                        if (!refing.PropertyInvoker.TargetType.IsAssignableFrom(valueType))
                             continue;
                         if (refing.PropertyInvoker.GetValue(item) is IEnumerable<DBItem> refs)
                         {

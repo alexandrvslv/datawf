@@ -51,7 +51,8 @@ namespace DataWF.Data
                 {
                     ProcedureCategory = value.CodeCategory;
                     var type = document.GetType();
-                    Codes = new SelectableList<CodeAttributeCache>(document?.Table.TableAttribute.Codes.Where(p => TypeHelper.IsBaseType(type, p.MemberInvoker.TargetType)));
+                    Codes = new SelectableList<CodeAttributeCache>(document?.Table.TableAttribute.Codes
+                        .Where(p => p.MemberInvoker.TargetType.IsAssignableFrom(type)));
                 }
             }
         }

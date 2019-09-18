@@ -1340,7 +1340,7 @@ namespace DataWF.Data
 
             foreach (var referencing in TableAttribute.Referencings)
             {
-                if (TypeHelper.IsBaseType(type, referencing.PropertyInvoker.TargetType))
+                if (referencing.PropertyInvoker.TargetType.IsAssignableFrom(type))
                 {
                     yield return referencing;
                 }

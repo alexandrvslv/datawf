@@ -1387,7 +1387,7 @@ namespace DataWF.Data
                 var invoker = column.ReferencePropertyInvoker;
                 if (column.ColumnType == DBColumnTypes.Default
                     && invoker != null
-                    && TypeHelper.IsBaseType(GetType(), invoker.TargetType))
+                    && invoker.TargetType.IsAssignableFrom(GetType()))
                 {
                     var item = invoker.GetValue(this) as DBItem;
 

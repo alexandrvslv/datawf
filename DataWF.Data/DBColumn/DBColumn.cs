@@ -966,14 +966,14 @@ namespace DataWF.Data
         public object GetValue(DBItem target)
         {
             return Pull != null ? Pull.Get(target.block, target.blockIndex)
-                : PropertyInvoker == this || !TypeHelper.IsBaseType(target.GetType(), PropertyInvoker.TargetType) ? null
+                : PropertyInvoker == this || !PropertyInvoker.TargetType.IsAssignableFrom(target.GetType()) ? null
                 : PropertyInvoker.GetValue(target);
         }
 
         public T GetValue<T>(DBItem target)
         {
             return Pull != null ? Pull.GetValue<T>(target.block, target.blockIndex)
-                : PropertyInvoker == this || !TypeHelper.IsBaseType(target.GetType(), PropertyInvoker.TargetType) ? default(T)
+                : PropertyInvoker == this || !PropertyInvoker.TargetType.IsAssignableFrom(target.GetType()) ? default(T)
                 : (T)PropertyInvoker.GetValue(target);
         }
 

@@ -35,9 +35,13 @@ namespace DataWF.Web.Common
                         Converter = DBItemConverter
                     };
 
-                    foreach (var column in table.Columns.Where(p => TypeHelper.IsBaseType(p.PropertyInfo?.DeclaringType, objectType)))
-                    // && (p.Attribute.Keys & DBColumnKeys.System) != DBColumnKeys.System
+                    foreach (var column in table.Columns)
                     {
+                        if (column.PropertyInfo == null
+                            || !TypeHelper.IsBaseType(objectType, column.PropertyInfo.DeclaringType))
+                        {
+                            continue;
+                        }
                         if (column.PropertyInfo.PropertyType == typeof(AccessValue))
                         {
                             var accessProperty = new JsonProperty

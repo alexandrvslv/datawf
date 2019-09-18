@@ -143,13 +143,7 @@ namespace DataWF.Common
 
         public static bool IsBaseType(Type type, Type filterType)
         {
-            while (type != null)
-            {
-                if (type == filterType)
-                    return true;
-                type = type.BaseType;
-            }
-            return false;
+            return type == filterType || type.IsSubclassOf(filterType);
         }
 
         public static bool IsIndex(PropertyInfo property)
