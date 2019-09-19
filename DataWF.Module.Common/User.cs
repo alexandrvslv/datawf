@@ -108,7 +108,7 @@ namespace DataWF.Module.Common
         public static async Task<User> StartSession(string email)
         {
             var user = GetByEmail(email);
-            if (user == null)
+            if (user == null || user.Status == DBStatus.Archive || user.Status == DBStatus.Error)
                 throw new KeyNotFoundException("User not found!");
             await StartSession(user);
             return user;
