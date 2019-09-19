@@ -190,7 +190,7 @@ namespace DataWF.Module.Common
                 message += Locale.Get("Login", " Should contain a uppercase.");
             if (PasswordSpec.HasFlag(UserPasswordSpec.CharLowercase) && !Regex.IsMatch(password, @"(?=.*[a-z])^.*", RegexOptions.CultureInvariant))
                 message += Locale.Get("Login", " Should contain a lowercase letters.");
-            if (PasswordSpec.HasFlag(UserPasswordSpec.CharSpecial) && !Regex.IsMatch(password, @"(?=.*[^A-Za-z0-9])^.*", RegexOptions.CultureInvariant))
+            if (PasswordSpec.HasFlag(UserPasswordSpec.CharSpecial) && !Regex.IsMatch(password, @"(?=.*[^\w\s])^.*", RegexOptions.CultureInvariant))
                 message += Locale.Get("Login", " Should contain a special character.");
             if (PasswordSpec.HasFlag(UserPasswordSpec.CharRepet) && Regex.IsMatch(password, @"(.)\1{2,}", RegexOptions.CultureInvariant))
                 message += Locale.Get("Login", " Remove repeted characters.");
