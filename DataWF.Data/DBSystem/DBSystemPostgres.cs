@@ -62,10 +62,11 @@ namespace DataWF.Data
                 nConnection.Pooling = (bool)connection.Pool;
             }
             //performance
-            nConnection.ReadBufferSize = 81920;
-            nConnection.WriteBufferSize = 81920;
-            nConnection.SocketReceiveBufferSize = 8192 * 3;
-            nConnection.SocketSendBufferSize = 8192 * 3;
+            nConnection.ReadBufferSize = 40960;
+            nConnection.WriteBufferSize = 40960;
+            //nConnection.SocketReceiveBufferSize = 40960;
+            //nConnection.SocketSendBufferSize = 40960;
+            nConnection.NoResetOnClose = true;
             nConnection.Enlist = false;
             return nConnection;
         }
@@ -286,14 +287,51 @@ namespace DataWF.Data
             return builder.ToString();
         }
 
+        public async Task<uint> SetLOBBuffered(Stream value, DBTransaction transaction)
+        {
+            if (value.CanSeek)
+            {
+                value.Position = 0;
+            }
+            var count = 0;
+            var bufferSize = 81920;
+            var buffer = new byte[bufferSize];
+            var tempFileName = Helper.GetDocumentsFullPath(Path.GetRandomFileName(), "Temp");
+            try
+            {
+                using (var tempStream = new FileStream(tempFileName, FileMode.Create, FileAccess.ReadWrite))
+                {
+                    while ((count = value.Read(buffer, 0, bufferSize)) != 0)
+                    {
+                        tempStream.Write(buffer, 0, count);
+                    }
+                }
+
+                var manager = new NpgsqlLargeObjectManager((NpgsqlConnection)transaction.Connection);
+
+                var result = await (Task<object>)manager.ImportRemoteAsync(tempFileName, 0, CancellationToken.None);
+
+                return (uint)result;
+            }
+            finally
+            {
+                File.Delete(tempFileName);
+            }
+        }
+
         public override async Task<uint> SetLOB(Stream value, DBTransaction transaction)
+        {
+            return await SetLOBBuffered(value, transaction);
+        }
+
+        private static async Task<uint> SetLOBDirect(Stream value, DBTransaction transaction)
         {
             if (value.CanSeek)
             {
                 value.Position = 0;
             }
             var manager = new NpgsqlLargeObjectManager((NpgsqlConnection)transaction.Connection);
-            var bufferSize = 81920 * 2;
+            var bufferSize = 81920;
             var buffer = new byte[bufferSize];
 
             var oid = await manager.CreateAsync(0, CancellationToken.None);

@@ -36,6 +36,7 @@ namespace DataWF.Common
         public ProgressToken Token = null;
 
         private double speed;
+        private Stopwatch stopWatch;
 
         public DateTime Date { get; }
 
@@ -88,7 +89,7 @@ namespace DataWF.Common
 
         public string SpeedFormat
         {
-            get => Helper.LenghtFormat(speed);
+            get => Helper.LenghtFormat(speed) + "/s";
         }
 
         public bool Finished => length == fileSize;
@@ -108,18 +109,21 @@ namespace DataWF.Common
 
             try
             {
-                listen = new ManualResetEventSlim(false);
-                _ = ListenAsync();
                 DownloadStart?.Invoke(this);
+                stopWatch = new Stopwatch();
+                listen = new ManualResetEventSlim(false);
+                _ = Task.Run(() => Listen());
+
                 int count;
                 var buffer = new byte[BufferSize];
 
+                stopWatch.Start();
                 while ((count = sourceStream.Read(buffer, 0, BufferSize)) != 0 && !(Token?.IsCancelled ?? false))
                 {
                     targetStream.Write(buffer, 0, count);
                     length += count;
                 }
-
+                stopWatch.Stop();
             }
             catch (Exception ex)
             {
@@ -165,16 +169,10 @@ namespace DataWF.Common
 
         }
 
-        private async Task ListenAsync()
-        {
-            await Task.Run(() => Listen());
-        }
-
         private void Listen()
         {
             Progress = 0;
-            var stopWatch = new Stopwatch();
-            stopWatch.Start();
+
             while (!listen.Wait(50))
             {
                 long currentLength = length;
@@ -183,7 +181,8 @@ namespace DataWF.Common
                 if (Progress == 1)
                     break;
             }
-            stopWatch.Stop();
+            speed = length / stopWatch.Elapsed.TotalSeconds;
+
             listen.Dispose();
             listen = null;
             Progress = (length / percent) / 100;

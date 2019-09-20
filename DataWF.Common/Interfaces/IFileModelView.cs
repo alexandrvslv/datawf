@@ -9,6 +9,6 @@ namespace DataWF.Common
         Task<FileWatcher> Edit(IFileModel item);
         Task<Stream> Open(IFileModel item);
         Task<object> Save(IFileModel item);
-        Task Upload(IFileModel item);
+        Task<bool> Upload(IFileModel item);
     }
 }

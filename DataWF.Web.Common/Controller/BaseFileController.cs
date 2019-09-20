@@ -121,6 +121,62 @@ namespace DataWF.Web.Common
             }
         }
 
+        [HttpPost("UploadFile/{id}")]
+        [DisableFormValueModelBinding]
+        [DisableRequestSizeLimit]
+        public async Task<ActionResult> UploadFile([FromRoute]K id)
+        {
+            if (table.FileNameKey == null)
+            {
+                return BadRequest("No file columns presented!");
+            }
+            if (!MultipartRequestHelper.IsMultipartContentType(Request.ContentType))
+            {
+                return BadRequest($"Expected a multipart request, but got {Request.ContentType}");
+            }
+            using (var transaction = new DBTransaction(table.Connection, CurrentUser))
+            {
+                try
+                {
+                    var item = table.LoadById(id, DBLoadParam.Load | DBLoadParam.Referencing, null, transaction);
+                    if (item == null)
+                    {
+                        return NotFound();
+                    }
+                    if (!(item.Access?.GetFlag(AccessType.Update, transaction.Caller) ?? true)
+                        && !(item.Access?.GetFlag(AccessType.Create, transaction.Caller) ?? true))
+                    {
+                        return Forbid();
+                    }
+
+                    var upload = await Upload();
+                    if (upload != null)
+                    {
+                        if (string.IsNullOrEmpty(item.GetValue<string>(table.FileNameKey)))
+                        {
+                            item.SetValue(upload.FileName, table.FileNameKey);
+                        }
+
+                        if (table.FileLOBKey != null)
+                        {
+                            await item.SetLOB(upload.Stream, table.FileLOBKey, transaction);
+                        }
+                        else if (table.FileKey != null)
+                        {
+                            await item.SetStream(upload.Stream, table.FileKey, transaction);
+                        }
+                        transaction.Commit();
+                    }
+                    return Ok();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    return BadRequest(ex);
+                }
+            }
+        }
+
         [HttpGet("DownloadLogFile/{logId}")]
         public async Task<ActionResult<Stream>> DownloadLogFile([FromRoute]long logId)
         {
