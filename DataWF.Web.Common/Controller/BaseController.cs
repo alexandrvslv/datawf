@@ -263,14 +263,15 @@ namespace DataWF.Web.Common
             return BadRequest(error, null);
         }
 
-        protected IEnumerable<UploadModel> Upload()
+        protected async Task<UploadModel> Upload()
         {
             var formAccumulator = new KeyValueAccumulator();
-            var boundary = MultipartRequestHelper.GetBoundary(MediaTypeHeaderValue.Parse(Request.ContentType), formOptions.MultipartBoundaryLengthLimit);
+            var boundary = MultipartRequestHelper.GetBoundary(
+                MediaTypeHeaderValue.Parse(Request.ContentType), 
+                formOptions.MultipartBoundaryLengthLimit);
             var reader = new MultipartReader(boundary, HttpContext.Request.Body);
-
-            var section = reader.ReadNextSectionAsync().GetAwaiter().GetResult();
-            while (section != null)
+            var section = (MultipartSection)null;
+            while ((section = await reader.ReadNextSectionAsync()) != null)
             {
                 if (ContentDispositionHeaderValue.TryParse(section.ContentDisposition, out var contentDisposition))
                 {
@@ -281,7 +282,7 @@ namespace DataWF.Web.Common
                             FileName = contentDisposition.FileName.ToString(),
                             Stream = section.Body
                         };
-                        yield return result;
+                        return result;
                     }
                     else if (MultipartRequestHelper.HasFormDataContentDisposition(contentDisposition))
                     {
@@ -312,8 +313,8 @@ namespace DataWF.Web.Common
                         }
                     }
                 }
-                section = reader.ReadNextSectionAsync().GetAwaiter().GetResult();
             }
+            return null;
         }
 
         protected async Task<UploadModel> Upload(bool inMemory)

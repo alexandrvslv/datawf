@@ -93,7 +93,8 @@ namespace DataWF.Web.Common
                         return Forbid();
                     }
 
-                    foreach (var upload in Upload())
+                    var upload = await Upload();
+                    if (upload != null)
                     {
                         if (string.IsNullOrEmpty(fileName) && !string.IsNullOrEmpty(upload.FileName))
                         {
