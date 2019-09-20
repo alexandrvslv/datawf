@@ -24,7 +24,7 @@ namespace DataWF.Common
         private long length;
         private double progress;
         private long fileSize;
-        private ManualResetEvent listen;
+        private ManualResetEventSlim listen;
 
         public CopyProcess(CopyProcessCategory category, int bufferSize = 81920)
         {
@@ -108,20 +108,18 @@ namespace DataWF.Common
 
             try
             {
-                listen = new ManualResetEvent(false);
+                listen = new ManualResetEventSlim(false);
                 _ = ListenAsync();
                 DownloadStart?.Invoke(this);
                 int count;
                 var buffer = new byte[BufferSize];
-                var stopWatch = new Stopwatch();
-                stopWatch.Start();
+
                 while ((count = sourceStream.Read(buffer, 0, BufferSize)) != 0 && !(Token?.IsCancelled ?? false))
                 {
                     targetStream.Write(buffer, 0, count);
-                    Interlocked.Exchange(ref length, length + count);
-                    Interlocked.Exchange(ref speed, length / (stopWatch.ElapsedMilliseconds / 1000D));
+                    length += count;
                 }
-                stopWatch.Stop();
+
             }
             catch (Exception ex)
             {
@@ -175,14 +173,17 @@ namespace DataWF.Common
         private void Listen()
         {
             Progress = 0;
-
-            while (!listen.WaitOne(50))
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
+            while (!listen.Wait(50))
             {
-                long currentLength = Interlocked.Read(ref length);
+                long currentLength = length;
+                speed = currentLength / stopWatch.Elapsed.TotalSeconds;
                 Progress = (currentLength / percent) / 100;
                 if (Progress == 1)
                     break;
             }
+            stopWatch.Stop();
             listen.Dispose();
             listen = null;
             Progress = (length / percent) / 100;
