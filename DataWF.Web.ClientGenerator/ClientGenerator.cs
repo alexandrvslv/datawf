@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using SF = Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace DataWF.Web.ClientGenerator
@@ -208,7 +209,7 @@ namespace DataWF.Web.ClientGenerator
             list.Add(provider.SyntaxTree);
             if (save)
             {
-                File.WriteAllText(Path.Combine(Output, "Provider.cs"), provider.ToFullString());
+                WriteFile(Path.Combine(Output, "Provider.cs"), provider);
             }
 
             var modelPath = Path.Combine(Output, "Models");
@@ -217,7 +218,7 @@ namespace DataWF.Web.ClientGenerator
             {
                 if (save)
                 {
-                    File.WriteAllText(Path.Combine(modelPath, entry.Key + ".cs"), entry.Value.ToFullString());
+                    WriteFile(Path.Combine(modelPath, entry.Key + ".cs"), entry.Value);
                 }
                 list.Add(entry.Value.SyntaxTree);
             }
@@ -229,12 +230,39 @@ namespace DataWF.Web.ClientGenerator
                 var unit = SyntaxHelper.GenUnit(entry.Value, Namespace, usings);
                 if (save)
                 {
-                    File.WriteAllText(Path.Combine(clientPath, entry.Key + "Client.cs"), unit.ToFullString());
+                    WriteFile(Path.Combine(clientPath, entry.Key + "Client.cs"), unit);
                 }
                 list.Add(unit.SyntaxTree);
             }
 
             return list;
+        }
+
+        private void WriteFile(string name, CompilationUnitSyntax unit)
+        {
+            int tryCount = 6;
+            for (int i = 1; i < tryCount; i++)
+            {
+                if (TryWriteFile(name, unit))
+                    break;
+                Console.WriteLine($"Can not access file {name}, try {i}");
+                Thread.Sleep(200);
+            }
+        }
+
+        private static bool TryWriteFile(string name, CompilationUnitSyntax unit)
+        {
+            try
+            {
+                using (var fileStream = new FileStream(name, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
+                using (var writer = new StreamWriter(fileStream))
+                    unit.WriteTo(writer);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public virtual string GetClientName(OpenApiOperationDescription decriptor)
