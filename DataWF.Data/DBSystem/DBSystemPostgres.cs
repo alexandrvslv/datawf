@@ -61,6 +61,9 @@ namespace DataWF.Data
             {
                 nConnection.Pooling = (bool)connection.Pool;
             }
+            nConnection.MaxPoolSize = 400;
+            nConnection.ConnectionIdleLifetime = 200;
+            nConnection.Timeout = 60;
             //performance
             nConnection.ReadBufferSize = 40960;
             nConnection.WriteBufferSize = 40960;
