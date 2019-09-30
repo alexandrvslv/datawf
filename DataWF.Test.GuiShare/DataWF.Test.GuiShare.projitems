@@ -9,11 +9,7 @@
     <Import_RootNamespace>DataWF.Test.GuiShare</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)DocTest.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="$(MSBuildThisFileDirectory)FormTest.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)DocTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FormTest.cs" />
   </ItemGroup>
 </Project>

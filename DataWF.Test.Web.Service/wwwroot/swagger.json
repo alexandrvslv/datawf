@@ -164,6 +164,46 @@
         }
       }
     },
+    "/api/Access/ClearAccess/{name}/{id}": {
+      "put": {
+        "tags": [
+          "Access"
+        ],
+        "operationId": "ClearAccess",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AccessItem"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Address/GetLogs/{filter}": {
       "get": {
         "tags": [
@@ -6954,6 +6994,39 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "file",
+            "in": "formData",
+            "description": "Upload File",
+            "required": true,
+            "type": "file"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/DocumentData/UploadFile/{id}": {
+      "post": {
+        "tags": [
+          "DocumentData"
+        ],
+        "operationId": "UploadFile",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "produces": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
           },
           {
             "name": "file",
@@ -17294,6 +17367,39 @@
         }
       }
     },
+    "/api/TemplateFile/UploadFile/{id}": {
+      "post": {
+        "tags": [
+          "TemplateFile"
+        ],
+        "operationId": "UploadFile",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "produces": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "file",
+            "in": "formData",
+            "description": "Upload File",
+            "required": true,
+            "type": "file"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/TemplateFile/DownloadLogFile/{logId}": {
       "get": {
         "tags": [
@@ -19199,6 +19305,39 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "file",
+            "in": "formData",
+            "description": "Upload File",
+            "required": true,
+            "type": "file"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/UserFile/UploadFile/{id}": {
+      "post": {
+        "tags": [
+          "UserFile"
+        ],
+        "operationId": "UploadFile",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "produces": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
           },
           {
             "name": "file",
@@ -24097,7 +24236,8 @@
       "enum": [
         "Interval",
         "DayTime",
-        "WeekDay"
+        "WeekDay",
+        "Manual"
       ],
       "type": "string"
     },

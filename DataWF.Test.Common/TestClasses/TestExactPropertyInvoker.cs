@@ -19,7 +19,7 @@ namespace DataWF.Test.Common
 
         public string Name { get; set; }
 
-        public IListIndex CreateIndex()
+        public IListIndex CreateIndex(bool concurrent)
         {
             return new ListIndex<TestClass, int>(this, int.MinValue);
         }
