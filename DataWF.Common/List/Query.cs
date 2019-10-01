@@ -136,8 +136,13 @@ namespace DataWF.Common
 
         public QueryParameter<T> AddOrUpdate(IInvoker invoker, object value)
         {
+            return AddOrUpdate(invoker, CompareType.Equal, value);
+        }
+
+        public QueryParameter<T> AddOrUpdate(IInvoker invoker, CompareType comparer, object value)
+        {
             var parameter = Parameters[invoker.Name];
-            return AddOrUpdate(parameter?.Logic ?? LogicType.And, invoker, parameter?.Comparer ?? CompareType.Equal, value);
+            return AddOrUpdate(parameter?.Logic ?? LogicType.And, invoker, parameter?.Comparer ?? comparer, value);
         }
 
         public QueryParameter<T> AddOrUpdate(LogicType logic, IInvoker invoker, CompareType comparer, object value, QueryGroup group = QueryGroup.None)
