@@ -94,9 +94,9 @@ namespace DataWF.Common
 
         public void Write(BinaryWriter writer)
         {
-            writer.Write(items.Values.Where(p => !p.IsEmpty).Distinct().Count());
+            writer.Write(items.Values.Where(p => !p.IsEmpty).Count());
 
-            foreach (AccessItem item in items.Values.Where(p => !p.IsEmpty).Distinct())
+            foreach (AccessItem item in items.Values.Where(p => !p.IsEmpty))
             {
                 item.BinaryWrite(writer);
             }
@@ -121,20 +121,38 @@ namespace DataWF.Common
                 {
                     var item = new AccessItem();
                     item.BinaryRead(reader);
-                    if (item.Group != null)
+                    if (!item.IsEmpty)
+                    {
                         items[item.Group] = item;
+                    }
                 }
             }
         }
 
-        public bool Contains(IAccessGroup group)
+        public bool DeleteGroupDublicat()
         {
-            return items.TryGetValue(group, out var item);
+            var flag = false;
+            foreach (var item in items.Values.ToList())
+            {
+                if (item.Group?.Group != null
+                    && items.TryGetValue((IAccessGroup)item.Group.Group, out var value)
+                    && value.Access == item.Access)
+                {
+                    items.Remove(item.Group);
+                    flag = true;
+                }
+            }
+            return flag;
         }
 
         public AccessItem Get(IAccessGroup group)
         {
-            return items.TryGetValue(group, out var item) ? item : AccessItem.Empty;
+            var item = AccessItem.Empty;
+            while (group != null && !items.TryGetValue(group, out item))
+            {
+                group = (IAccessGroup)group.Group;
+            }
+            return item;
         }
 
         public AccessItem GetOrAdd(IAccessGroup group)
