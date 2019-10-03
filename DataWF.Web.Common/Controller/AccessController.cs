@@ -131,9 +131,7 @@ namespace DataWF.Web.Common
                     {
                         return Forbid();
                     }
-                    var buffer = value.Access?.Clone();
-                    buffer.Add(accessItems);
-                    value.Access = buffer;
+                    value.Access = new AccessValue(accessItems);
                     await value.Save(transaction);
                     transaction.Commit();
                     return true;
