@@ -772,7 +772,7 @@ namespace DataWF.Web.CodeGenerator
                           parameterList: SF.ParameterList(SF.SeparatedList(GenControllerMethodParameters(method, table, parametersInfo))),
                           constraintClauses: SF.List<TypeParameterConstraintClauseSyntax>(),
                           body: SF.Block(GenControllerMethodBody(method, parametersInfo, returning)),
-                          semicolonToken: SF.Token(SyntaxKind.SemicolonToken));
+                          semicolonToken: SF.Token(SyntaxKind.None));
             // Annotate that this node should be formatted
             //.WithAdditionalAnnotations(Formatter.Annotation);
         }
