@@ -68,7 +68,7 @@ namespace DataWF.Data
 
     public class DBColumn : DBTableItem, IComparable, IComparable<DBColumn>, ICloneable, IInvoker<DBItem, object>
     {
-        public static DBColumn EmptyKey = new DBColumn();
+        public static readonly DBColumn EmptyKey = new DBColumn();
 
 
         #region Variable

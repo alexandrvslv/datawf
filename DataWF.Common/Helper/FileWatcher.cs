@@ -14,8 +14,7 @@ namespace DataWF.Common
         //https://stackoverflow.com/a/721743
         public FileWatcher(string filePath, IFileModel model, IFileModelView modelView, bool enabled = true, FileWatcherService service = null)
         {
-            Model = model;
-            Stamp = model is IStampKey stamp ? (stamp.Stamp ?? File.GetLastWriteTimeUtc(filePath)) : File.GetLastWriteTimeUtc(filePath);
+            Model = model;            
 
             ModelView = modelView;
             FilePath = filePath;
@@ -54,7 +53,7 @@ namespace DataWF.Common
 
         public string FilePath { get; set; }
 
-        public DateTime Stamp { get; set; }
+        public DateTime GetLastWrite() => File.GetLastWriteTimeUtc(FilePath);
 
         public FileSystemWatcher Watcher { get; private set; }
 
@@ -136,6 +135,8 @@ namespace DataWF.Common
                     }
                     OnPropertyChanged();
                 }
+                
+                
             }
         }
 

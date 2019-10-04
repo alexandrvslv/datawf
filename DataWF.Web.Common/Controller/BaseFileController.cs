@@ -101,6 +101,12 @@ namespace DataWF.Web.Common
                             fileName = upload.FileName;
                         }
                         item.SetValue(fileName, table.FileNameKey);
+
+                        if (table.FileLastWriteKey != null)
+                        {
+                            item.SetValue<DateTime?>(upload.ModificationDate, table.FileLastWriteKey);
+                        }
+
                         if (table.FileLOBKey != null)
                         {
                             await item.SetLOB(upload.Stream, table.FileLOBKey, transaction);
@@ -155,6 +161,11 @@ namespace DataWF.Web.Common
                         if (string.IsNullOrEmpty(item.GetValue<string>(table.FileNameKey)))
                         {
                             item.SetValue(upload.FileName, table.FileNameKey);
+                        }
+
+                        if (table.FileLastWriteKey != null)
+                        {
+                            item.SetValue<DateTime?>(upload.ModificationDate, table.FileLastWriteKey);
                         }
 
                         if (table.FileLOBKey != null)

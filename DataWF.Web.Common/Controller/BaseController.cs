@@ -4,9 +4,11 @@ using DataWF.Module.Common;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Primitives;
 using Microsoft.Net.Http.Headers;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -265,9 +267,10 @@ namespace DataWF.Web.Common
 
         protected async Task<UploadModel> Upload()
         {
+            var result = new UploadModel() { ModificationDate = DateTime.UtcNow };
             var formAccumulator = new KeyValueAccumulator();
             var boundary = MultipartRequestHelper.GetBoundary(
-                MediaTypeHeaderValue.Parse(Request.ContentType), 
+                MediaTypeHeaderValue.Parse(Request.ContentType),
                 formOptions.MultipartBoundaryLengthLimit);
             var reader = new MultipartReader(boundary, HttpContext.Request.Body);
             var section = (MultipartSection)null;
@@ -277,11 +280,8 @@ namespace DataWF.Web.Common
                 {
                     if (MultipartRequestHelper.HasFileContentDisposition(contentDisposition))
                     {
-                        var result = new UploadModel
-                        {
-                            FileName = contentDisposition.FileName.ToString(),
-                            Stream = section.Body
-                        };
+                        result.FileName = contentDisposition.FileName.ToString();
+                        result.Stream = section.Body;
                         return result;
                     }
                     else if (MultipartRequestHelper.HasFormDataContentDisposition(contentDisposition))
@@ -304,6 +304,11 @@ namespace DataWF.Web.Common
                             {
                                 value = String.Empty;
                             }
+                            if (StringSegment.Equals(key, "LastWriteTime", StringComparison.OrdinalIgnoreCase)
+                                && DateTime.TryParseExact(value, "o", CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var lastWriteTime))
+                            {
+                                result.ModificationDate = lastWriteTime;
+                            }
                             formAccumulator.Append(key.ToString(), value);
 
                             if (formAccumulator.ValueCount > formOptions.ValueCountLimit)
@@ -314,7 +319,7 @@ namespace DataWF.Web.Common
                     }
                 }
             }
-            return null;
+            return result;
         }
 
         protected async Task<UploadModel> Upload(bool inMemory)

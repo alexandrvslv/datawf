@@ -155,6 +155,7 @@ namespace DataWF.Data
         protected DBColumn fileKey = DBColumn.EmptyKey;
         protected DBColumn fileNameKey = DBColumn.EmptyKey;
         protected DBColumn fileLOBKey = DBColumn.EmptyKey;
+        protected DBColumn fileLastWriteKey = DBColumn.EmptyKey;
         protected DBColumn dateKey = DBColumn.EmptyKey;
         protected DBColumn stampKey = DBColumn.EmptyKey;
         protected DBColumn codeKey = DBColumn.EmptyKey;
@@ -182,6 +183,7 @@ namespace DataWF.Data
         protected List<IDBVirtualTable> virtualTables = new List<IDBVirtualTable>(0);
         private DBItemType itemType;
         private int itemTypeIndex = 0;
+
 
         protected DBTable(string name = null) : base(name)
         {
@@ -376,173 +378,46 @@ namespace DataWF.Data
         }
 
         [Browsable(false), Category("Keys")]
-        public DBColumn AccessKey
-        {
-            get
-            {
-                if (accessKey == DBColumn.EmptyKey)
-                {
-                    accessKey = Columns.GetByKey(DBColumnKeys.Access);
-                }
-                return accessKey;
-            }
-        }
+        public DBColumn AccessKey => accessKey == DBColumn.EmptyKey ? (accessKey = Columns.GetByKey(DBColumnKeys.Access)) : accessKey;
 
         [Browsable(false), Category("Keys")]
-        public DBColumn PrimaryKey
-        {
-            get
-            {
-                if (primaryKey == DBColumn.EmptyKey)
-                {
-                    primaryKey = Columns.GetByKey(DBColumnKeys.Primary);
-                }
-                return primaryKey;
-            }
-        }
+        public DBColumn PrimaryKey => primaryKey == DBColumn.EmptyKey ? (primaryKey = Columns.GetByKey(DBColumnKeys.Primary)) : primaryKey;
 
         [Browsable(false), Category("Keys")]
-        public DBColumn FileLOBKey
-        {
-            get
-            {
-                if (fileLOBKey == DBColumn.EmptyKey)
-                {
-                    fileLOBKey = Columns.GetByKey(DBColumnKeys.FileLOB);
-                }
-                return fileLOBKey;
-            }
-        }
+        public DBColumn FileLOBKey => fileLOBKey == DBColumn.EmptyKey ? (fileLOBKey = Columns.GetByKey(DBColumnKeys.FileLOB)) : fileLOBKey;
 
         [Browsable(false), Category("Keys")]
-        public DBColumn FileKey
-        {
-            get
-            {
-                if (fileKey == DBColumn.EmptyKey)
-                {
-                    fileKey = Columns.GetByKey(DBColumnKeys.File);
-                }
-                return fileKey;
-            }
-        }
+        public DBColumn FileKey => fileKey == DBColumn.EmptyKey ? (fileKey = Columns.GetByKey(DBColumnKeys.File)) : fileKey;
 
         [Browsable(false), Category("Keys")]
-        public DBColumn FileNameKey
-        {
-            get
-            {
-                if (fileNameKey == DBColumn.EmptyKey)
-                {
-                    fileNameKey = Columns.GetByKey(DBColumnKeys.FileName);
-                }
-                return fileNameKey;
-            }
-        }
+        public DBColumn FileNameKey => fileNameKey == DBColumn.EmptyKey ? (fileNameKey = Columns.GetByKey(DBColumnKeys.FileName)) : fileNameKey;
 
         [Browsable(false), Category("Keys")]
-        public DBColumn StampKey
-        {
-            get
-            {
-                if (stampKey == DBColumn.EmptyKey)
-                {
-                    stampKey = Columns.GetByKey(DBColumnKeys.Stamp);
-                }
-                return stampKey;
-            }
-        }
+        public DBColumn FileLastWriteKey => fileLastWriteKey == DBColumn.EmptyKey ? (fileLastWriteKey = Columns.GetByKey(DBColumnKeys.FileLastWrite)) : fileLastWriteKey;
 
         [Browsable(false), Category("Keys")]
-        public DBColumn DateKey
-        {
-            get
-            {
-                if (dateKey == DBColumn.EmptyKey)
-                {
-                    dateKey = Columns.GetByKey(DBColumnKeys.Date);
-                }
-                return dateKey;
-            }
-        }
+        public DBColumn StampKey => stampKey == DBColumn.EmptyKey ? (stampKey = Columns.GetByKey(DBColumnKeys.Stamp)) : stampKey;
 
         [Browsable(false), Category("Keys")]
-        public DBColumn GroupKey
-        {
-            get
-            {
-                if (groupKey == DBColumn.EmptyKey)
-                {
-                    groupKey = Columns.GetByKey(DBColumnKeys.Group);
-                }
-                return groupKey;
-            }
-        }
+        public DBColumn DateKey => dateKey == DBColumn.EmptyKey ? (dateKey = Columns.GetByKey(DBColumnKeys.Date)) : dateKey;
 
         [Browsable(false), Category("Keys")]
-        public DBColumn ElementTypeKey
-        {
-            get
-            {
-                if (typeKey == DBColumn.EmptyKey)
-                {
-                    typeKey = Columns.GetByKey(DBColumnKeys.ElementType);
-                }
-                return typeKey;
-            }
-        }
+        public DBColumn GroupKey => groupKey == DBColumn.EmptyKey ? (groupKey = Columns.GetByKey(DBColumnKeys.Group)) : groupKey;
 
         [Browsable(false), Category("Keys")]
-        public DBColumn StatusKey
-        {
-            get
-            {
-                if (stateKey == DBColumn.EmptyKey)
-                {
-                    stateKey = Columns.GetByKey(DBColumnKeys.State);
-                }
-                return stateKey;
-            }
-        }
+        public DBColumn ElementTypeKey => typeKey == DBColumn.EmptyKey ? (typeKey = Columns.GetByKey(DBColumnKeys.ElementType)) : typeKey;
 
         [Browsable(false), Category("Keys")]
-        public DBColumn ItemTypeKey
-        {
-            get
-            {
-                if (itemTypeKey == DBColumn.EmptyKey)
-                {
-                    itemTypeKey = Columns.GetByKey(DBColumnKeys.ItemType);
-                }
-                return itemTypeKey;
-            }
-        }
+        public DBColumn StatusKey => stateKey == DBColumn.EmptyKey ? (stateKey = Columns.GetByKey(DBColumnKeys.State)) : stateKey;
 
         [Browsable(false), Category("Keys")]
-        public DBColumn CodeKey
-        {
-            get
-            {
-                if (codeKey == DBColumn.EmptyKey)
-                {
-                    codeKey = Columns.GetByKey(DBColumnKeys.Code);
-                }
-                return codeKey;
-            }
-        }
+        public DBColumn ItemTypeKey => itemTypeKey == DBColumn.EmptyKey ? (itemTypeKey = Columns.GetByKey(DBColumnKeys.ItemType)) : itemTypeKey;
 
-        [Category("Keys")]
-        public DBColumn ImageKey
-        {
-            get
-            {
-                if (imageKey == DBColumn.EmptyKey)
-                {
-                    imageKey = Columns.GetByKey(DBColumnKeys.Image);
-                }
-                return imageKey;
-            }
-        }
+        [Browsable(false), Category("Keys")]
+        public DBColumn CodeKey => codeKey == DBColumn.EmptyKey ? (codeKey = Columns.GetByKey(DBColumnKeys.Code)) : codeKey;
+
+        [Browsable(false), Category("Keys")]
+        public DBColumn ImageKey => imageKey == DBColumn.EmptyKey ? (imageKey = Columns.GetByKey(DBColumnKeys.Image)) : imageKey;
 
         public DBTableType Type
         {
