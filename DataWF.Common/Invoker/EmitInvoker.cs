@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Security.Cryptography;
 using System.Threading;
 
 namespace DataWF.Common
@@ -21,8 +22,8 @@ namespace DataWF.Common
     /// </summary>
     public static class EmitInvoker
     {
-        private static Dictionary<long, IInvoker> cacheInvokers = new Dictionary<long, IInvoker>(1000);
-        private static Dictionary<long, EmitConstructor> cacheCtors = new Dictionary<long, EmitConstructor>(1000);
+        private static Dictionary<MetadataToken, IInvoker> cacheInvokers = new Dictionary<MetadataToken, IInvoker>(500);
+        private static Dictionary<MetadataToken, EmitConstructor> cacheCtors = new Dictionary<MetadataToken, EmitConstructor>(500);
 
         static EmitInvoker()
         {
@@ -60,12 +61,46 @@ namespace DataWF.Common
             cacheInvokers.Remove(token);
         }
 
-        //https://stackoverflow.com/questions/6219614/convert-a-long-to-two-int-for-the-purpose-of-reconstruction
-        public static long GetToken(MemberInfo info)
+      
+        public static MetadataToken GetToken(MemberInfo info)
         {
-            return Helper.TwoToOneShift(info.GetHashCode(), info.Module.GetHashCode());
+            return new MetadataToken(info.Module.GetHashCode(), info.DeclaringType.GetHashCode(), info.GetHashCode());
         }
 
+        public struct MetadataToken : IComparable<MetadataToken>
+        {
+            public readonly int Module;
+            public readonly int Type;
+            public readonly int Member;
+            public MetadataToken(int module, int type, int member)
+            {
+                Module = module;
+                Type = type;
+                Member = member;
+            }
+
+            public override int GetHashCode()
+            {
+                return Module ^ Type ^ Member;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (obj is MetadataToken metadataToken)
+                    return Module == metadataToken.Module
+                            && Type == metadataToken.Type
+                            && Member == metadataToken.Member;
+                return false;
+            }
+
+            public int CompareTo(MetadataToken other)
+            {
+                var rezult = Module.CompareTo(other.Module);
+                rezult = rezult == 0 ? Type.CompareTo(other.Type) : rezult;
+                rezult = rezult == 0 ? Member.CompareTo(other.Member) : rezult;
+                return rezult;
+            }
+        }
         public static IInvoker Initialize<T>(string property)
         {
             return Initialize(typeof(T), property);
