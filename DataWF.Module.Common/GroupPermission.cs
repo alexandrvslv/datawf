@@ -48,7 +48,6 @@ namespace DataWF.Module.Common
         private static DBTable<GroupPermission> dbTable;
 
         public static DBTable<GroupPermission> DBTable => dbTable ?? (dbTable = GetTable<GroupPermission>());
-
         public static DBColumn ObjectNameKey => DBTable.ParseProperty(nameof(ObjectName), ref objectNameKey);
         public static DBColumn TypeKey => DBTable.ParseProperty(nameof(Type), ref typeKey);
 
@@ -117,7 +116,10 @@ namespace DataWF.Module.Common
                 };
                 permission.Attach();
             }
-            permission.ObjectName = name;
+            if (string.IsNullOrEmpty(permission.ObjectName))
+            {
+                permission.ObjectName = name;
+            }
             item.Access = permission.Access;
 
             if (group != null)
