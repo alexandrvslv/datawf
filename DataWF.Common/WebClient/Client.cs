@@ -68,7 +68,15 @@ namespace DataWF.Common
                 }
                 else
                 {
-                    var currentValue = item == null ? null : property?.Invoker.GetValue(item);
+                    if (property == null)
+                    {
+                        DeserializeValue(serializer, jreader, null, null, null);
+                        continue;
+                    }
+                    var currentValue = item != null && property.DataType != typeof(string) && !property.DataType.IsValueType
+                        ? property.Invoker.GetValue(item)
+                        : null;
+
                     if (currentValue is IList listValue && synchItem != null && synchItem.SyncStatus == SynchronizedStatus.Load)
                     {
                         foreach (var listItem in listValue)
@@ -79,9 +87,8 @@ namespace DataWF.Common
                             }
                         }
                     }
-                    object value = DeserializeValue(serializer, jreader, property?.DataType, currentValue, null);
-                    if (property == null)
-                        continue;
+                    object value = DeserializeValue(serializer, jreader, property.DataType, currentValue, null);
+
 
                     if (property.Name == TypeInvoker?.Name && value != null)
                     {
