@@ -145,6 +145,20 @@ namespace DataWF.Common
             return flag;
         }
 
+        public bool DeleteNoneAccess()
+        {
+            var flag = false;
+            foreach (var item in items.Values.ToList())
+            {
+                if (item.Access == AccessType.None)
+                {
+                    items.Remove(item.Group);
+                    flag = true;
+                }
+            }
+            return flag;
+        }
+
         public AccessItem Get(IAccessGroup group)
         {
             var item = AccessItem.Empty;
