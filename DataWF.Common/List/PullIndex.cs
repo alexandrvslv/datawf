@@ -274,7 +274,7 @@ namespace DataWF.Data
 
             if (compare.Type.Equals(CompareTypes.Is))
             {
-                compare.Type = CompareTypes.Equal;
+                compare = new CompareType(CompareTypes.Equal, compare.Not);
                 value = nullKey;
             }
             if (compare.Type.Equals(CompareTypes.Equal))
