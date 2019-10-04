@@ -13,13 +13,15 @@ namespace DataWF.Module.Common
 
         private static DBColumn idKey = DBColumn.EmptyKey;
         private static DBColumn dataNameKey = DBColumn.EmptyKey;
+        private static DBColumn dataLastWriteKey = DBColumn.EmptyKey;
         private static DBColumn userKey = DBColumn.EmptyKey;
         private static DBColumn isAvatarKey = DBColumn.EmptyKey;
 
         public static DBColumn IdKey => DBTable.ParseProperty(nameof(Id), ref idKey);
         public static DBColumn DataNameKey => DBTable.ParseProperty(nameof(DataName), ref dataNameKey);
         public static DBColumn UserKey => DBTable.ParseProperty(nameof(UserId), ref userKey);
-        public static DBColumn IsAvatarKey = DBTable.ParseProperty(nameof(IsAvatar), ref isAvatarKey);
+        public static DBColumn IsAvatarKey => DBTable.ParseProperty(nameof(IsAvatar), ref isAvatarKey);
+        public static DBColumn DataLastWriteKey => DBTable.ParseProperty(nameof(DataLastWrite), ref dataLastWriteKey);
 
         public UserFile()
         {
@@ -37,8 +39,8 @@ namespace DataWF.Module.Common
         [Column("user_file", Keys = DBColumnKeys.File)]
         public byte[] Data
         {
-            get { return GetValue<byte[]>(Table.FileKey); }
-            set { SetValue(value, Table.FileKey); }
+            get => GetValue<byte[]>(Table.FileKey);
+            set => SetValue(value, Table.FileKey);
         }
 
         [Column("user_file_name", 1024, Keys = DBColumnKeys.FileName | DBColumnKeys.View | DBColumnKeys.Code)]
@@ -46,6 +48,13 @@ namespace DataWF.Module.Common
         {
             get => GetValue<string>(Table.CodeKey);
             set => SetValue(value, Table.CodeKey);
+        }
+
+        [Column("user_file_last_write", Keys = DBColumnKeys.FileLastWrite)]
+        public DateTime? DataLastWrite
+        {
+            get => GetValue<DateTime?>(DataLastWriteKey) ?? Stamp;
+            set => SetValue(value, DataLastWriteKey);
         }
 
         [Column("user_id")]

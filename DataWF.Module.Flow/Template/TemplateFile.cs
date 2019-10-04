@@ -20,6 +20,7 @@
 
 using DataWF.Common;
 using DataWF.Data;
+using System;
 using System.IO;
 using System.Runtime.Serialization;
 
@@ -28,34 +29,40 @@ namespace DataWF.Module.Flow
     [DataContract, Table("rtemplate_file", "Template", BlockSize = 100)]
     public class TemplateFile : DBItem
     {
-        public static DBTable<TemplateFile> DBTable
-        {
-            get { return GetTable<TemplateFile>(); }
-        }
+        public static readonly DBTable<TemplateFile> DBTable = GetTable<TemplateFile>();
+        public static readonly DBColumn DataLastWriteKey = DBTable.ParseProperty(nameof(DataLastWrite));
+
 
         public TemplateFile()
         {
         }
 
-        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
+        [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get { return GetValue<int?>(Table.PrimaryKey); }
-            set { SetValue(value, Table.PrimaryKey); }
+            get => GetValue<int?>(Table.PrimaryKey);
+            set => SetValue(value, Table.PrimaryKey);
         }
 
-        [DataMember, Column("template_file", Keys = DBColumnKeys.File)]
+        [Column("template_file", Keys = DBColumnKeys.File)]
         public byte[] Data
         {
-            get { return GetValue<byte[]>(Table.FileKey); }
-            set { SetValue(value, Table.FileKey); }
+            get => GetValue<byte[]>(Table.FileKey);
+            set => SetValue(value, Table.FileKey);
         }
 
-        [DataMember, Column("template_file_name", 1024, Keys = DBColumnKeys.FileName | DBColumnKeys.View | DBColumnKeys.Code)]
+        [Column("template_file_name", 1024, Keys = DBColumnKeys.FileName | DBColumnKeys.View | DBColumnKeys.Code)]
         public string DataName
         {
-            get { return GetValue<string>(Table.FileNameKey); }
-            set { SetValue(value, Table.FileNameKey); }
+            get => GetValue<string>(Table.FileNameKey);
+            set => SetValue(value, Table.FileNameKey);
+        }
+
+        [Column("template_last_write", Keys = DBColumnKeys.FileLastWrite)]
+        public DateTime? DataLastWrite
+        {
+            get => GetValue<DateTime?>(DataLastWriteKey) ?? Stamp;
+            set => SetValue(value, DataLastWriteKey);
         }
 
         public string FileType

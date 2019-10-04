@@ -92,10 +92,12 @@ namespace DataWF.Module.Flow
     {
         private static DBColumn templateDataKey = DBColumn.EmptyKey;
         private static DBColumn fileUrlKey = DBColumn.EmptyKey;
+        private static DBColumn fileLastWriteKey = DBColumn.EmptyKey;
         private static DBColumn documentKey = DBColumn.EmptyKey;
 
         public static DBColumn TemplateDataKey => DBTable.ParseProperty(nameof(TemplateDataId), ref templateDataKey);
         public static DBColumn FileUrlKey => DBTable.ParseProperty(nameof(FileUrl), ref fileUrlKey);
+        public static DBColumn FileLastWriteKey => DBTable.ParseProperty(nameof(FileLastWrite), ref fileLastWriteKey);
         public static DBColumn DocumentKey => DBTable.ParseProperty(nameof(DocumentId), ref documentKey);
 
         private static DBTable<DocumentData> dbTable;
@@ -114,15 +116,15 @@ namespace DataWF.Module.Flow
         [DataMember, Column("document_id"), Index("ddocument_data_document_id")]
         public virtual long? DocumentId
         {
-            get { return GetValue<long?>(DocumentKey); }
-            set { SetValue(value, DocumentKey); }
+            get => GetValue<long?>(DocumentKey);
+            set => SetValue(value, DocumentKey);
         }
 
         [Reference(nameof(DocumentId))]
         public Document Document
         {
-            get { return GetReference(DocumentKey, ref document); }
-            set { SetReference(document = value, DocumentKey); }
+            get => GetReference(DocumentKey, ref document);
+            set => SetReference(document = value, DocumentKey);
         }
 
         public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)
@@ -137,8 +139,8 @@ namespace DataWF.Module.Flow
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
         {
-            get { return GetValue<long?>(Table.PrimaryKey); }
-            set { SetValue(value, Table.PrimaryKey); }
+            get => GetValue<long?>(Table.PrimaryKey);
+            set => SetValue(value, Table.PrimaryKey);
         }
 
         [Index("ddocument_data_item_type", false)]
@@ -147,58 +149,65 @@ namespace DataWF.Module.Flow
         [Column("template_data_id")]
         public int? TemplateDataId
         {
-            get { return GetValue<int?>(TemplateDataKey); }
-            set { SetValue(value, TemplateDataKey); }
+            get => GetValue<int?>(TemplateDataKey);
+            set => SetValue(value, TemplateDataKey);
         }
 
         [Reference(nameof(TemplateDataId))]
         public TemplateData TemplateData
         {
-            get { return GetReference(TemplateDataKey, ref template); }
-            set { SetReference(template = value, TemplateDataKey); }
+            get => GetReference(TemplateDataKey, ref template);
+            set => SetReference(template = value, TemplateDataKey);
         }
 
         [Column("file_name", 1024, Keys = DBColumnKeys.View | DBColumnKeys.FileName)]
         public string FileName
         {
-            get { return GetValue<string>(Table.FileNameKey); }
-            set { SetValue(value, Table.FileNameKey); }
+            get => GetValue<string>(Table.FileNameKey);
+            set => SetValue(value, Table.FileNameKey);
         }
 
         [Column("file_url", 1024)]
         public string FileUrl
         {
-            get { return GetValue<string>(FileUrlKey); }
-            set { SetValue(value, FileUrlKey); }
+            get => GetValue<string>(FileUrlKey);
+            set => SetValue(value, FileUrlKey);
+        }
+
+        [Column("file_last_write", Keys = DBColumnKeys.FileLastWrite)]
+        public DateTime? FileLastWrite
+        {
+            get => GetValue<DateTime?>(FileLastWriteKey) ?? Stamp;
+            set => SetValue(value, FileLastWriteKey);
         }
 
         [Column("file_data", Keys = DBColumnKeys.File)]
         public virtual byte[] FileData
         {
-            get { return buf ?? (buf = GetZip(Table.FileKey)); }
-            set { SetValue(value, Table.FileKey); }
+            get => buf ?? (buf = GetZip(Table.FileKey));
+            set => SetValue(value, Table.FileKey);
         }
 
         [Column("file_lob", DBDataType = DBDataType.LargeObject, Keys = DBColumnKeys.FileLOB)]
         public virtual uint? FileLOB
         {
-            get { return GetValue<uint?>(Table.FileLOBKey); }
-            set { SetValue(value, Table.FileLOBKey); }
+            get => GetValue<uint?>(Table.FileLOBKey);
+            set => SetValue(value, Table.FileLOBKey);
         }
 
         [Browsable(false)]
         [Column("current_user_id", ColumnType = DBColumnTypes.Code)]
         public int? CurrentUserId
         {
-            get { return currentUser?.Id; }
-            set { CurrentUser = User.DBTable.LoadById(value); }
+            get => currentUser?.Id;
+            set => CurrentUser = User.DBTable.LoadById(value);
         }
 
         [Browsable(false)]
         [Reference(nameof(CurrentUserId))]
         public User CurrentUser
         {
-            get { return currentUser; }
+            get => currentUser;
             set
             {
                 currentUser = value;
@@ -359,7 +368,7 @@ namespace DataWF.Module.Flow
             worker.RunWorkerAsync(param);
             return worker;
             //worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(worker_RunWorkerCompleted);
-        }        
+        }
 
         public virtual string RefreshName()
         {
