@@ -3,7 +3,7 @@
 namespace DataWF.Common
 {
     public struct LogicType
-    {        
+    {
         public static readonly LogicType Undefined = new LogicType(LogicTypes.Undefined);
         public static readonly LogicType And = new LogicType(LogicTypes.And);
         public static readonly LogicType AndNot = new LogicType(LogicTypes.And, true);
@@ -20,14 +20,14 @@ namespace DataWF.Common
             return !x.Equals(y);
         }
 
-        public LogicType(LogicTypes type = LogicTypes.Undefined, bool not = false)
+        public LogicType(LogicTypes type, bool not = false)
         {
             Type = type;
             Not = not;
         }
 
-        public LogicTypes Type;
-        public bool Not;
+        public readonly LogicTypes Type;
+        public readonly bool Not;
 
         public string Format()
         {
@@ -53,7 +53,7 @@ namespace DataWF.Common
 
         public override bool Equals(object obj)
         {
-            return obj is LogicType && Equals((LogicType)obj);
+            return obj is LogicType logic && Equals(logic);
         }
 
         public override int GetHashCode()

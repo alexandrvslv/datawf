@@ -35,11 +35,10 @@ namespace DataWF.Common
             return !typeLeft.Equals(typeRight);
         }
 
-        public CompareTypes Type;
-        public bool Not;
+        public readonly CompareTypes Type;
+        public readonly bool Not;
 
-
-        public CompareType(CompareTypes type = CompareTypes.Undefined, bool not = false)
+        public CompareType(CompareTypes type, bool not = false)
         {
             Type = type;
             Not = not;
@@ -92,7 +91,7 @@ namespace DataWF.Common
 
         public override bool Equals(object obj)
         {
-            return obj is CompareType && Equals((CompareType)obj);
+            return obj is CompareType compare && Equals(compare);
         }
 
         public override int GetHashCode()
