@@ -125,7 +125,7 @@ namespace DataWF.Common
 
                 var contentText = JsonConvert.SerializeObject(value, JsonSerializerSettings);
                 var content = new StringContent(contentText, Encoding.UTF8);
-                content.Headers.ContentType = MediaTypeHeaderValue.Parse(mediaType);
+                content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
                 request.Content = content;
             }
             if (httpMethod.Equals("GET", StringComparison.OrdinalIgnoreCase))
