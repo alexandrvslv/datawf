@@ -288,44 +288,44 @@ namespace DataWF.Module.Common
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get { return GetValue<int?>(Table.PrimaryKey); }
-            set { SetValue(value, Table.PrimaryKey); }
+            get => GetValue<int?>(Table.PrimaryKey);
+            set => SetValue(value, Table.PrimaryKey);
         }
 
         [DataMember, Column("parent_id", Keys = DBColumnKeys.Group), Index("rgroup_permission_parent_id"), Browsable(false)]
         public int? ParentId
         {
-            get { return GetGroupValue<int?>(); }
-            set { SetGroupValue(value); }
+            get => GetGroupValue<int?>();
+            set => SetGroupValue(value);
         }
 
         [Reference(nameof(ParentId))]
         public GroupPermission Parent
         {
-            get { return GetGroupReference<GroupPermission>(); }
-            set { SetGroupReference(value); }
+            get => GetGroupReference<GroupPermission>();
+            set => SetGroupReference(value);
         }
 
         [DataMember, DefaultValue(PermissionType.GTable), Column("type_id", Keys = DBColumnKeys.ElementType)]
         public PermissionType? Type
         {
-            get { return GetValue<PermissionType?>(Table.ElementTypeKey); }
-            set { SetValue(value, Table.ElementTypeKey); }
+            get => GetValue<PermissionType?>(Table.ElementTypeKey);
+            set => SetValue(value, Table.ElementTypeKey);
         }
 
         [DataMember, Column("code", 512, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing)]
         [Index("rgroup_permission_code", true)]
         public string Code
         {
-            get { return GetValue<string>(Table.CodeKey); }
-            set { SetValue(value, Table.CodeKey); }
+            get => GetValue<string>(Table.CodeKey);
+            set => SetValue(value, Table.CodeKey);
         }
 
         [Column("object_name", 1024, Keys = DBColumnKeys.Indexing)]
         public string ObjectName
         {
-            get { return GetValue<string>(ObjectNameKey); }
-            set { SetValue(value, ObjectNameKey); }
+            get => GetValue<string>(ObjectNameKey);
+            set => SetValue(value, ObjectNameKey);
         }
 
         public object Target
@@ -363,12 +363,14 @@ namespace DataWF.Module.Common
         [Column(nameof(AccessItems), ColumnType = DBColumnTypes.Code)]
         public IEnumerable<AccessItem> AccessItems
         {
-            get { return Access.Items; }
+            get => Access.Items;
+            set => Access = new AccessValue(value);
         }
 
         public override AccessValue Access
         {
-            get { return base.Access; }
+            get => base.Access != Table.Access ? base.Access
+                  : Parent?.Access ?? Table.Access;
             set
             {
                 base.Access = value;
