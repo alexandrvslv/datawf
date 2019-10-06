@@ -1,7 +1,10 @@
 ﻿using DataWF.Common;
 using DataWF.Data;
+using ICSharpCode.SharpZipLib.Core;
+using ICSharpCode.SharpZipLib.Zip;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -22,47 +25,97 @@ namespace DataWF.Web.Common
             var transaction = new DBTransaction(table.Connection, CurrentUser);
             try
             {
-                var item = table.LoadById(id, DBLoadParam.Load | DBLoadParam.Referencing, null, transaction);
-                if (item == null)
-                {
-                    return NotFound();
-                }
-                if (!(item.Access?.GetFlag(AccessType.Download, transaction.Caller) ?? true)
-                    && !(item.Access?.GetFlag(AccessType.Update, transaction.Caller) ?? true))
-                {
-                    return Forbid();
-                }
-                if (table.FileNameKey == null)
-                {
-                    return BadRequest("No file columns presented!");
-                }
-                var fileName = item.GetValue<string>(table.FileNameKey);
-                if (string.IsNullOrEmpty(fileName))
-                {
-                    return BadRequest("File name was not specified!");
-                }
-                var stream = (Stream)null;
-                if (table.FileLOBKey != null && item.GetValue(table.FileLOBKey) != null)
-                {
-                    stream = await item.GetLOB(table.FileLOBKey, transaction);
-                }
-                else if (table.FileKey != null)
-                {
-                    stream = item.GetZipMemoryStream(table.FileKey, transaction);
-                }
-                else
-                {
-                    return BadRequest("No file columns presented!");
-                }
-                return new TransactFileStreamResult(stream,
+                var streamResult = await GetStream(id, transaction);
+                if (streamResult.Value.Stream == null)
+                    return streamResult.Result;
+                return new TransactFileStreamResult(streamResult.Value.Stream,
                     System.Net.Mime.MediaTypeNames.Application.Octet,
-                    transaction, fileName);
+                    transaction, streamResult.Value.FileName);
             }
             catch (Exception ex)
             {
                 transaction.Dispose();
                 return BadRequest(ex);
             }
+        }
+
+        [HttpPost("DownloadFiles")]
+        [ProducesResponseType(typeof(FileStreamResult), 200)]
+        public async Task<ActionResult<Stream>> DownloadFiles([FromBody]List<K> ids)
+        {
+            try
+            {
+                var zipName = "Package" + DateTime.UtcNow.ToString("o").Replace(":", "-") + ".zip";
+                var zipPath = Helper.GetDocumentsFullPath(zipName, zipName);
+                var fileStream = System.IO.File.Create(zipPath);
+                using (var transaction = new DBTransaction(table.Connection, CurrentUser))
+                using (var zipStream = new ZipOutputStream(fileStream))
+                {
+                    zipStream.IsStreamOwner = false;
+                    foreach (var id in ids)
+                    {
+                        var streamResult = await GetStream(id, transaction);
+                        if (streamResult.Value.Stream == null)
+                            return streamResult.Result;
+
+                        using (var stream = streamResult.Value.Stream)
+                        {
+                            var entry = new ZipEntry(streamResult.Value.FileName);
+                            zipStream.PutNextEntry(entry);
+                            StreamUtils.Copy(stream, zipStream, new byte[8048]);
+                            stream.Dispose();
+                        }
+                    }
+                    zipStream.Flush();
+                }
+                fileStream.Position = 0;
+                return new TransactFileStreamResult(fileStream,
+                        System.Net.Mime.MediaTypeNames.Application.Octet,
+                        null, zipName)
+                { DeleteFile = true };
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
+        }
+
+        private async Task<ActionResult<(Stream Stream, string FileName)>> GetStream(K id, DBTransaction transaction)
+        {
+            if (table.FileNameKey == null)
+            {
+                return BadRequest("No file columns presented!");
+            }
+
+            var item = table.LoadById(id, DBLoadParam.Load | DBLoadParam.Referencing, null, transaction);
+            if (item == null)
+            {
+                return NotFound();
+            }
+            if (!(item.Access?.GetFlag(AccessType.Download, transaction.Caller) ?? true)
+                && !(item.Access?.GetFlag(AccessType.Update, transaction.Caller) ?? true))
+            {
+                return Forbid();
+            }
+            var fileName = item.GetValue<string>(table.FileNameKey);
+            if (string.IsNullOrEmpty(fileName))
+            {
+                return BadRequest("File name was not specified!");
+            }
+            var stream = (Stream)null;
+            if (table.FileLOBKey != null && item.GetValue(table.FileLOBKey) != null)
+            {
+                stream = await item.GetLOB(table.FileLOBKey, transaction);
+            }
+            else if (table.FileKey != null)
+            {
+                stream = item.GetZipMemoryStream(table.FileKey, transaction);
+            }
+            else
+            {
+                return BadRequest("No file columns presented!");
+            }
+            return (stream, fileName);
         }
 
         [HttpPost("UploadFile/{id}/{fileName}")]
@@ -247,7 +300,9 @@ namespace DataWF.Web.Common
             if (table.LogTable.FileLOBKey != null)
             {
                 var lob = logItem.GetValue<uint?>(table.LogTable.FileLOBKey);
-                if (lob != null && lob == logItem.BaseItem?.GetValue<uint?>(table.FileLOBKey))
+                if (lob != null
+                    && logItem.BaseItem != DBItem.EmptyItem
+                    && lob == logItem.BaseItem?.GetValue<uint?>(table.FileLOBKey))
                 {
                     return BadRequest($"Latest log entry. Deletion Canceled!");
                 }

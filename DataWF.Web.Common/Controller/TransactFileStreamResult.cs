@@ -1,5 +1,7 @@
-﻿using DataWF.Data;
+﻿using DataWF.Common;
+using DataWF.Data;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -14,7 +16,17 @@ namespace DataWF.Web.Common
             FileDownloadName = fileName;
         }
 
+        public bool DeleteFile { get; set; }
         public DBTransaction Transaction { get; }
+
+        private void OnFileDelete()
+        {
+            if (DeleteFile && FileStream is FileStream fileStream)
+            {
+                try { File.Delete(fileStream.Name); }
+                catch (Exception ex) { Helper.OnException(ex); }
+            }
+        }
 
         public override void ExecuteResult(ActionContext context)
         {
@@ -22,24 +34,29 @@ namespace DataWF.Web.Common
             {
 
                 base.ExecuteResult(context);
-                Transaction.Commit();
+                base.FileStream.Close();
+                Transaction?.Commit();
+                OnFileDelete();
             }
             finally
             {
-                Transaction.Dispose();
+                Transaction?.Dispose();
             }
         }
+
 
         public override async Task ExecuteResultAsync(ActionContext context)
         {
             try
             {
                 await base.ExecuteResultAsync(context);
-                Transaction.Commit();
+                base.FileStream.Close();
+                Transaction?.Commit();
+                OnFileDelete();
             }
             finally
             {
-                Transaction.Dispose();
+                Transaction?.Dispose();
             }
         }
 
