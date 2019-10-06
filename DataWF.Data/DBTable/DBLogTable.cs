@@ -157,7 +157,7 @@ namespace DataWF.Data
                 && item is DBLogItem logItem && FileLOBKey is DBLogColumn logColumn)
             {
                 var lob = item.GetValue<uint?>(logColumn);
-                var current = logItem.BaseItem?.GetValue<uint?>(logColumn.BaseColumn);
+                var current = logItem.BaseItem == DBItem.EmptyItem ? null : logItem.BaseItem.GetValue<uint?>(logColumn.BaseColumn);
                 if (lob != null && lob != current)
                 {
                     var qquery = new QQuery(this);
