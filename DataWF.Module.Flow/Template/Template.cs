@@ -299,7 +299,7 @@ namespace DataWF.Module.Flow
             if (parent != null)
             {
                 document.Parent = parent;
-                parent.CreateReference(document);
+                parent.CreateReference(document, null);
             }
 
             if (fileNames != null)

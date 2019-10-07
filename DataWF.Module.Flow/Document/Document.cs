@@ -606,13 +606,13 @@ namespace DataWF.Module.Flow
         }
 
         [ControllerMethod]
-        public virtual DocumentReference CreateReference(Document document)
+        public virtual DocumentReference CreateReference(Document document, DBTransaction transaction)
         {
             if (document == null)
                 return null;
 
             var reference = new DocumentReference { Document = this, Reference = document };
-            reference.GenerateId();
+            reference.GenerateId(transaction);
             reference.Attach();
             return reference;
         }
