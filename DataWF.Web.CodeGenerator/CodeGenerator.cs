@@ -901,6 +901,12 @@ namespace DataWF.Web.CodeGenerator
                     post = true;
                     continue;
                 }
+                if (parameter.Type != typeof(string)
+                    && !parameter.Type.IsValueType)
+                {
+                    post = true;
+                    continue;
+                }
                 parameters += $"/{{{parameter.Info.Name}}}";
             }
             var attributeArgument = SF.AttributeArgument(
@@ -1049,7 +1055,7 @@ namespace DataWF.Web.CodeGenerator
             {
                 yield return SF.Parameter(attributeLists: SF.List(GenParameterAttributes()),
                                                              modifiers: SF.TokenList(),
-                                                             type: SF.ParseTypeName((table.PrimaryKey?.GetDataType() ?? typeof(int)).Name),
+                                                             type: SF.ParseTypeName(TypeHelper.FormatCode(table.PrimaryKey?.GetDataType() ?? typeof(int))),
                                                              identifier: SF.Identifier("id"),
                                                              @default: null);
             }
@@ -1061,21 +1067,28 @@ namespace DataWF.Web.CodeGenerator
                 {
                     continue;
                 }
-                yield return SF.Parameter(attributeLists: SF.List(GenParameterAttributes()),
+                yield return SF.Parameter(attributeLists: SF.List(GenParameterAttributes(methodParameter)),
                                                          modifiers: SF.TokenList(),
-                                                         type: SF.ParseTypeName(methodParameter.Type.Name),
+                                                         type: SF.ParseTypeName(TypeHelper.FormatCode(methodParameter.Type)),
                                                          identifier: SF.Identifier(methodParameter.Info.Name),
                                                          @default: null);
             }
         }
 
-        private IEnumerable<AttributeListSyntax> GenParameterAttributes()
+        private IEnumerable<AttributeListSyntax> GenParameterAttributes(MethodParametrInfo methodParameter = null)
         {
-            //yield break;
-            yield return SF.AttributeList(
-                         SF.SingletonSeparatedList(
-                         SF.Attribute(
-                         SF.IdentifierName("FromRoute"))));
+            if (methodParameter == null
+                || methodParameter.Type.IsValueType
+                || methodParameter.Type == typeof(string))
+                yield return SF.AttributeList(
+                             SF.SingletonSeparatedList(
+                             SF.Attribute(
+                             SF.IdentifierName("FromRoute"))));
+            else
+                yield return SF.AttributeList(
+                             SF.SingletonSeparatedList(
+                             SF.Attribute(
+                             SF.IdentifierName("FromBody"))));
         }
 
         private void AddUsing(Type type, Dictionary<string, UsingDirectiveSyntax> usings)
