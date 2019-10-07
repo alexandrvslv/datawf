@@ -16,10 +16,13 @@ namespace DataWF.Common
             {
                 return list.Contains(value);
             }
-            foreach (var item in enumerable)
+            else if (enumerable != null)
             {
-                if (item?.Equals(value) ?? false)
-                    return true;
+                foreach (var item in enumerable)
+                {
+                    if (item?.Equals(value) ?? false)
+                        return true;
+                }
             }
             return false;
         }
@@ -258,7 +261,7 @@ namespace DataWF.Common
                     yield return typed;
             }
         }
-        
+
         public static bool CheckItem(object x, object y, CompareType compare, IComparer comparer)
         {
             bool result = false;
