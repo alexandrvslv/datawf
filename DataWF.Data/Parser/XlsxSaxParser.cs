@@ -349,6 +349,7 @@ namespace DataWF.Data
             {
                 int ind, dif = 0;
                 writer.WriteStartDocument(true);
+                var sharedFormuls = new Dictionary<uint, Excel.Cell>();
 
                 while (reader.Read())
                 {
@@ -411,7 +412,7 @@ namespace DataWF.Data
                                         int col = sref.Col;
                                         foreach (object itemValue in dataRow)
                                         {
-                                            GetCell(tableRow, itemValue, col, sref.Row, 0, sharedStrings);
+                                            GetCell(tableRow, itemValue, col, sref.Row, 0, sharedStrings, sharedFormuls);
                                             col++;
                                         }
                                         sref.Row++;
@@ -712,6 +713,7 @@ namespace DataWF.Data
         {
             if (row.RowIndex != (uint)r)
             {
+                var oldRow = row.RowIndex;
                 row.RowIndex = (uint)r;
 
                 foreach (Excel.Cell cell in row.Descendants<Excel.Cell>())
@@ -719,10 +721,18 @@ namespace DataWF.Data
                     var reference = CellReference.Parse(cell.CellReference);
                     reference.Row = r;
                     cell.CellReference = reference.ToString();
-                    //if (cell.CellFormula != null)
-                    //{
-                    //   cell.CellValue = null;
-                    //}
+
+                    if (cell.CellFormula!=null)
+                    {
+                        if (cell.CellValue != null)
+                        {
+                            cell.CellValue.Remove();
+                        }
+                        if(cell.CellFormula.FormulaType == null || cell.CellFormula.FormulaType == Excel.CellFormulaValues.Normal)
+                        {
+                            cell.CellFormula.Text = Regex.Replace(cell.CellFormula.Text, "[A-Z]" + oldRow.ToString(), (m)=>m.Value.Replace(oldRow.ToString(), r.ToString()));
+                        }
+                    }
                 }
             }
         }
@@ -765,18 +775,18 @@ namespace DataWF.Data
             return value;
         }
 
-        public Excel.Cell GetCell(object value, int c, int r, uint styleIndex, StringKeyList sharedStrings)
-        {
-            Excel.Cell cell = new Excel.Cell()
-            {
-                CellReference = Helper.IntToChar(c) + (r).ToString(),
-                StyleIndex = styleIndex,
-            };
-            WriteCell(cell, value, sharedStrings);
-            return cell;
-        }
+        //public Excel.Cell GetCell(object value, int c, int r, uint styleIndex, StringKeyList sharedStrings)
+        //{
+        //    Excel.Cell cell = new Excel.Cell()
+        //    {
+        //        CellReference = Helper.IntToChar(c) + (r).ToString(),
+        //        StyleIndex = styleIndex,
+        //    };
+        //    WriteCell(cell, value, sharedStrings);
+        //    return cell;
+        //}
 
-        public Excel.Cell GetCell(OpenXmlCompositeElement row, object value, int c, int r, uint styleIndex, StringKeyList sharedStrings)
+        public Excel.Cell GetCell(OpenXmlCompositeElement row, object value, int c, int r, uint styleIndex, StringKeyList sharedStrings, Dictionary<uint, Excel.Cell> sharedFormuls)
         {
             string reference = Helper.IntToChar(c) + r.ToString();
             Excel.Cell cell = null;
@@ -805,7 +815,31 @@ namespace DataWF.Data
                 if (row != null)
                     row.AppendChild<Excel.Cell>(cell);
             }
-
+            if (cell.CellFormula != null)
+            {
+                if (cell.CellValue != null)
+                {
+                    cell.CellValue.Remove();
+                }
+                if (cell.CellFormula.FormulaType != null && cell.CellFormula.FormulaType == Excel.CellFormulaValues.Shared)
+                {
+                    if (!string.IsNullOrEmpty(cell.CellFormula.Text))
+                    {
+                        sharedFormuls[cell.CellFormula.SharedIndex] = cell;
+                        cell.CellFormula.FormulaType = null;
+                        cell.CellFormula.SharedIndex = null;
+                        cell.CellFormula.Reference = null;
+                    }
+                    else if (sharedFormuls.TryGetValue(cell.CellFormula.SharedIndex, out var masterCell))
+                    {
+                        var masterReference = CellReference.Parse(masterCell.CellReference);
+                        cell.CellFormula.FormulaType = null;
+                        cell.CellFormula.SharedIndex = null;
+                        cell.CellFormula.Text = Regex.Replace(masterCell.CellFormula.Text, "[A-Z]" + masterReference.Row.ToString(), (m) => m.Value.Replace(masterReference.Row.ToString(), r.ToString()));
+                    }
+                }
+                
+            }
             WriteCell(cell, value, sharedStrings);
 
             return cell;

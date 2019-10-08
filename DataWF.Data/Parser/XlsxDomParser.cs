@@ -21,6 +21,7 @@
 using DataWF.Common;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using Excel = DocumentFormat.OpenXml.Spreadsheet;
@@ -41,6 +42,7 @@ namespace DataWF.Data
                 foreach (WorksheetPart part in xl.WorkbookPart.WorksheetParts)
                 {
                     var sharedStrings = ReadStringTable(xl.WorkbookPart.SharedStringTablePart);
+                    var sharedFormuls = new Dictionary<uint, Excel.Cell>();
                     Excel.Worksheet worksheet = part.Worksheet;
                     Excel.SheetData sd = worksheet.GetFirstChild<Excel.SheetData>();
                     var results = FindParsedCells(sharedStrings, sd);
@@ -68,7 +70,7 @@ namespace DataWF.Data
                                         newRow = GetRow(sd, sref.Row, newRow == null, cell.Parent as Excel.Row);
                                         foreach (object kvp in dataRow)
                                         {
-                                            Excel.Cell ncell = GetCell(newRow, kvp, col, sref.Row, 0, sharedStrings);
+                                            Excel.Cell ncell = GetCell(newRow, kvp, col, sref.Row, 0, sharedStrings, sharedFormuls);
                                             if (ncell.Parent == null)
                                                 newRow.Append(ncell);
                                             col++;
