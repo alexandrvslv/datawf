@@ -249,6 +249,28 @@ namespace DataWF.Web.Common
             }
         }
 
+        [HttpGet("GenerateIds/{count}")]
+        public ActionResult<List<K>> GenerateIds([FromRoute]int count)
+        {
+            try
+            {
+                var list = new List<K>();
+                using (var transaction = new DBTransaction(table.Connection))
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        list.Add((K)table.PrimaryKey.ParseValue(table.Sequence.Next(transaction)));
+                    }
+                    transaction.Commit();
+                }
+                return list;
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex, null);
+            }
+        }
+
         [NonAction]
         public BadRequestObjectResult BadRequest(object error, DBItem item)
         {
