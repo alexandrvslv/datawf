@@ -19,18 +19,18 @@ namespace DataWF.Common
     public static class TypeHelper
     {
         private static readonly Type[] typeOneArray = { typeof(string) };
-        private static Dictionary<string, MemberInfo> casheNames = new Dictionary<string, MemberInfo>(200, StringComparer.Ordinal);
-        private static Dictionary<string, Type> cacheTypes = new Dictionary<string, Type>(200, StringComparer.Ordinal);
-        private static Dictionary<MemberInfo, bool> cacheIsXmlText = new Dictionary<MemberInfo, bool>(200);
-        private static Dictionary<Type, TypeConverter> cacheTypeConverter = new Dictionary<Type, TypeConverter>(200);
-        private static Dictionary<PropertyInfo, ValueSerializer> cachePropertyValueSerializer = new Dictionary<PropertyInfo, ValueSerializer>(200);
-        private static Dictionary<Type, ValueSerializer> cacheValueSerializer = new Dictionary<Type, ValueSerializer>(200);
-        private static Dictionary<Type, PropertyInfo[]> cacheTypeProperties = new Dictionary<Type, PropertyInfo[]>(200);
-        private static Dictionary<MemberInfo, bool> cacheIsXmlAttribute = new Dictionary<MemberInfo, bool>(200);
-        private static Dictionary<Type, bool> cacheTypeIsXmlAttribute = new Dictionary<Type, bool>(200);
-        private static Dictionary<MemberInfo, bool> cacheIsXmlSerialize = new Dictionary<MemberInfo, bool>(200);
-        private static Dictionary<MemberInfo, object> cacheDefault = new Dictionary<MemberInfo, object>(200);
-        private static Dictionary<Type, object> cacheTypeDefault = new Dictionary<Type, object>(200);
+        private static readonly Dictionary<string, MemberInfo> casheNames = new Dictionary<string, MemberInfo>(200, StringComparer.Ordinal);
+        private static readonly Dictionary<string, Type> cacheTypes = new Dictionary<string, Type>(200, StringComparer.Ordinal);
+        private static readonly Dictionary<MemberInfo, bool> cacheIsXmlText = new Dictionary<MemberInfo, bool>(200);
+        private static readonly Dictionary<Type, TypeConverter> cacheTypeConverter = new Dictionary<Type, TypeConverter>(200);
+        private static readonly Dictionary<PropertyInfo, ValueSerializer> cachePropertyValueSerializer = new Dictionary<PropertyInfo, ValueSerializer>(200);
+        private static readonly Dictionary<Type, ValueSerializer> cacheValueSerializer = new Dictionary<Type, ValueSerializer>(200);
+        private static readonly Dictionary<Type, PropertyInfo[]> cacheTypeProperties = new Dictionary<Type, PropertyInfo[]>(200);
+        private static readonly Dictionary<MemberInfo, bool> cacheIsXmlAttribute = new Dictionary<MemberInfo, bool>(200);
+        private static readonly Dictionary<Type, bool> cacheTypeIsXmlAttribute = new Dictionary<Type, bool>(200);
+        private static readonly Dictionary<MemberInfo, bool> cacheIsXmlSerialize = new Dictionary<MemberInfo, bool>(200);
+        private static readonly Dictionary<MemberInfo, object> cacheDefault = new Dictionary<MemberInfo, object>(200);
+        private static readonly Dictionary<Type, object> cacheTypeDefault = new Dictionary<Type, object>(200);
 
         public static PropertyInfo GetIndexProperty(Type itemType)
         {
@@ -408,12 +408,12 @@ namespace DataWF.Common
 
         public static Type GetMemberType(MemberInfo info)
         {
-            if (info is FieldInfo)
-                return ((FieldInfo)info).FieldType;
-            if (info is PropertyInfo)
-                return ((PropertyInfo)info).PropertyType;
-            if (info is MethodInfo)
-                return ((MethodInfo)info).ReturnType;
+            if (info is FieldInfo fieldInfo)
+                return fieldInfo.FieldType;
+            if (info is PropertyInfo propertyInfo)
+                return propertyInfo.PropertyType;
+            if (info is MethodInfo methodInfo)
+                return methodInfo.ReturnType;
             return info.ReflectedType;
         }
 
@@ -422,11 +422,13 @@ namespace DataWF.Common
             if (type == null || name == null)
                 return null;
             string cachename = string.Format("{0}.{1}", type.FullName, name);
-            PropertyInfo info = null;
-            if (casheNames.TryGetValue(cachename, out var minfo))
-                return (PropertyInfo)minfo;
-            casheNames[cachename] = info = type.GetProperty(name, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-            return info;
+
+            if (!casheNames.TryGetValue(cachename, out var minfo))
+            {
+                casheNames[cachename] = minfo = type.GetProperty(name, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+            }
+
+            return (PropertyInfo)minfo;
         }
 
         public static MemberInfo GetMemberInfo(Type type, string name, bool generic = false, params Type[] types)

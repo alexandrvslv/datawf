@@ -29,8 +29,8 @@ namespace DataWF.Data
     {
         private readonly DBItem row;
         private readonly DBTable list;
-        private List<DBItem> index = new List<DBItem>();
-        private IComparer comparer;
+        private readonly List<DBItem> index = new List<DBItem>();
+        private readonly IComparer comparer;
         private readonly DBColumn column;
         //private string property;
         public SortIndex(DBTable list, string property)

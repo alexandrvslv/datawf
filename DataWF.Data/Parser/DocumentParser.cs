@@ -30,7 +30,7 @@ namespace DataWF.Data
 {
     public abstract class DocumentParser
     {
-        static Dictionary<string, DocumentParser> cache = new Dictionary<string, DocumentParser>(3, StringComparer.OrdinalIgnoreCase);
+        static readonly Dictionary<string, DocumentParser> cache = new Dictionary<string, DocumentParser>(3, StringComparer.OrdinalIgnoreCase);
 
         static DocumentParser()
         {

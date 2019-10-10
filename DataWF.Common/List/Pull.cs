@@ -11,15 +11,9 @@ namespace DataWF.Common
 
         public static Pull Fabric(Type type, int blockSize)
         {
-            Type gtype = null;
-            if (type.IsValueType || type.IsEnum)
-            {
-                gtype = typeof(NullablePull<>).MakeGenericType(type);
-            }
-            else
-            {
-                gtype = typeof(Pull<>).MakeGenericType(type);
-            }
+            Type gtype = type.IsValueType || type.IsEnum
+                ? typeof(NullablePull<>).MakeGenericType(type)
+                : typeof(Pull<>).MakeGenericType(type);
             return (Pull)EmitInvoker.CreateObject(gtype, ctorTypes, new object[] { blockSize }, true);
         }
 
@@ -176,7 +170,7 @@ namespace DataWF.Common
 
     public class Pull<T> : Pull, IEnumerable<T>
     {
-        private List<T[]> array = new List<T[]>();
+        private readonly List<T[]> array = new List<T[]>();
         private short maxIndex;
 
         public Pull(int blockSize) : base(blockSize)

@@ -22,8 +22,8 @@ namespace DataWF.Common
     /// </summary>
     public static class EmitInvoker
     {
-        private static Dictionary<MetadataToken, IInvoker> cacheInvokers = new Dictionary<MetadataToken, IInvoker>(500);
-        private static Dictionary<MetadataToken, EmitConstructor> cacheCtors = new Dictionary<MetadataToken, EmitConstructor>(500);
+        private static readonly Dictionary<MetadataToken, IInvoker> cacheInvokers = new Dictionary<MetadataToken, IInvoker>(500);
+        private static readonly Dictionary<MetadataToken, EmitConstructor> cacheCtors = new Dictionary<MetadataToken, EmitConstructor>(500);
 
         static EmitInvoker()
         {

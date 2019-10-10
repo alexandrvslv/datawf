@@ -60,7 +60,7 @@ namespace DataWF.Data
     {
         private DBItem row;
         private List<DBLogItem> logs = new List<DBLogItem>();
-        private SelectableList<LogEntry> changes = new SelectableList<LogEntry>();
+        private readonly SelectableList<LogEntry> changes = new SelectableList<LogEntry>();
         private string user;
         private DBTable table;
         private string text;

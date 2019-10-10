@@ -34,9 +34,9 @@ namespace DataWF.Common
     public static class Helper
     {
         public static string AppName = "DataWF";
-        private static StateInfoList logs = new StateInfoList();
-        public static List<IModuleInitialize> ModuleInitializer = new List<IModuleInitialize>();
-
+        private static readonly StateInfoList logs = new StateInfoList();
+        public static readonly List<IModuleInitialize> ModuleInitializer = new List<IModuleInitialize>();
+        private static readonly Dictionary<string, string> words = new Dictionary<string, string>(StringComparer.Ordinal);
         static Helper()
         {
             AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
@@ -159,7 +159,6 @@ namespace DataWF.Common
         public static long TwoToOneStruct(int a, int b)
         {
             var itnToLong = new ItnToLong { Low = a, High = b };
-            a = itnToLong.Low;
             return itnToLong.Value;
         }
 
@@ -232,7 +231,7 @@ namespace DataWF.Common
                 culture = CultureInfo.InvariantCulture;
             }
 
-            string f = string.Empty;
+            string f;
             if (stamp.Year != date.Year)
                 f = date.ToString("yyyy", culture);
             else if (stamp.Month != date.Month)
@@ -283,11 +282,11 @@ namespace DataWF.Common
         public static string IntToChar(int val)
         {
             var sb = new StringBuilder();
-            val = val + 1;
-            var mod = 0;
+            val += 1;
+
             while (val > 0)
             {
-                mod = (val - 1) % 26;
+                var mod = (val - 1) % 26;
                 sb.Insert(0, (char)((int)'A' + mod));
                 val = (val - mod) / 26;
             }
@@ -298,9 +297,8 @@ namespace DataWF.Common
         public static int CharToInt(string val)
         {
             int rez = 0;
-            int i = 0;
             var diff = (int)'A' - 1;
-            for (i = 0; i < val.Length; i++)
+            for (var i = 0; i < val.Length; i++)
             {
                 rez += ((int)val[i] - diff) * (int)Math.Pow(26, val.Length - (i + 1));
             }
@@ -866,7 +864,7 @@ namespace DataWF.Common
         /// </param>
         public static object ReadBinary(BinaryReader reader, Type type)
         {
-            object val = null;
+            object val;
 
             if (type == typeof(decimal))
                 val = reader.ReadDecimal();
@@ -1077,13 +1075,15 @@ namespace DataWF.Common
         {
             if (value == null || value == DBNull.Value)
                 return null;
-            string result = null;
+            string result;
             if (format != null && format.Equals("size", StringComparison.OrdinalIgnoreCase))
             {
                 result = LenghtFormat(value);
             }
             else if (value is CultureInfo cultureInfo)
+            {
                 result = cultureInfo.Name;
+            }
             else if (value is Type typeValue)
             {
                 result = Locale.Get(typeValue);
@@ -1126,11 +1126,11 @@ namespace DataWF.Common
         {
             if (value == null || value == DBNull.Value)
                 return null;
-            string result = null;
+            string result;
 
-            if (value is string)
+            if (value is string stringValue)
             {
-                result = (string)value;
+                result = stringValue;
             }
             if (value is CultureInfo cultureInfo)
             {
@@ -1197,7 +1197,7 @@ namespace DataWF.Common
             var i = ByteSize.B;
             while (Math.Abs(l) >= 1024 && (int)i < 4)
             {
-                l = l / 1024;
+                l /= 1024;
                 i = (ByteSize)((int)i + 1);
             }
             return $"{l:0.00} {i}";
@@ -1208,7 +1208,7 @@ namespace DataWF.Common
             var i = ByteSize.B;
             while (Math.Abs(l) >= 1024 && (int)i < 4)
             {
-                l = l / 1024;
+                l /= 1024;
                 i = (ByteSize)((int)i + 1);
             }
             return $"{l:0.00} {i}";
@@ -1299,7 +1299,7 @@ namespace DataWF.Common
 
         public static object TextParse(string value, Type type, string format = "binary")
         {
-            object result = null;
+            object result;
             type = TypeHelper.CheckNullable(type);
             if (type == typeof(string) || type == null)
                 result = value;
@@ -1358,12 +1358,12 @@ namespace DataWF.Common
                     if (value.Equals("getdate()", StringComparison.OrdinalIgnoreCase)
                         || value.Equals("current_timestamp", StringComparison.OrdinalIgnoreCase))
                         result = DateTime.Now;
-                    if (DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime date))
+                    else if (DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime date))
                         result = date;
                     else if (DateTime.TryParseExact(value, new string[] { "yyyyMMdd", "yyyyMM" }, CultureInfo.InvariantCulture.DateTimeFormat, DateTimeStyles.None, out date))
                         result = date;
-
-                    result = DateTime.Parse(value, CultureInfo.InvariantCulture);
+                    else
+                        result = DateTime.Parse(value, CultureInfo.InvariantCulture);
                 }
             }
             else if (type == typeof(DateInterval))
@@ -1384,12 +1384,13 @@ namespace DataWF.Common
                     var typeConverter = TypeHelper.GetTypeConverter(type);
                     if (typeConverter != null && typeConverter.CanConvertFrom(typeof(string)))
                         result = typeConverter.ConvertFrom(value);
+                    else
+                        result = null;
                 }
             }
             return result;
         }
 
-        private static Dictionary<string, string> words = new Dictionary<string, string>(StringComparer.Ordinal);
         //http://devoid.com.ua/csharp/win-forms/transliter-na-c-sharp.html
         public static string Translit(string p)
         {
@@ -1513,7 +1514,7 @@ namespace DataWF.Common
 
         public static bool IsDecimal(string p)
         {
-            return decimal.TryParse(p, out var buf);
+            return decimal.TryParse(p, out _);
         }
 
         public static void OnSerializeNotify(object sender, SerializationNotifyEventArgs arg)

@@ -26,7 +26,7 @@ namespace DataWF.Common
             if (typeId == 0)
                 downloads = new ConcurrentDictionary<K, T>();
         }
-        private ConcurrentDictionary<K, T> downloads;
+        private readonly ConcurrentDictionary<K, T> downloads;
         private ICRUDClient baseClient;
         private LoadProgress<T> loadProgress;
         private SemaphoreSlim getActionSemaphore;
@@ -178,7 +178,7 @@ namespace DataWF.Common
         public bool RemoveDownloads(K id)
         {
             return downloads != null
-                ? downloads.TryRemove(id, out var item)
+                ? downloads.TryRemove(id, out _)
                 : (GetBaseClient()?.RemoveDownloads(id) ?? false);
         }
 

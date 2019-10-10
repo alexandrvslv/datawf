@@ -78,7 +78,7 @@ namespace DataWF.Module.Flow
             return DBTable.Load(filter, DBLoadParam.Load).FirstOrDefault();
         }
 
-        private static List<Document> saving = new List<Document>();
+        private static readonly List<Document> saving = new List<Document>();
 
         public static object ExecuteProcedures(DocumentExecuteArgs param, IEnumerable<StageProcedure> enumer)
         {

@@ -72,8 +72,8 @@ namespace DataWF.Data
         //private static Type[] param = new Type[] { typeof(DBItem) };
         //private static Type[] param2 = new Type[] { typeof(DBRow) };
         public static char[] DotSplit = { '.' };
-        private static DBConnectionList connections = new DBConnectionList();
-        private static DBSchemaList schems = new DBSchemaList();
+        private static readonly DBConnectionList connections = new DBConnectionList();
+        private static readonly DBSchemaList schems = new DBSchemaList();
 
         public static ActionInvoker<DBSchemaChange, DBSchemaItem> DBSchemaChangeItemInvoker = new ActionInvoker<DBSchemaChange, DBSchemaItem>(
             nameof(DBSchemaChange.Item), p => p.Item, (p, v) => p.Item = v);
@@ -221,7 +221,6 @@ namespace DataWF.Data
         public static DBConnectionList Connections
         {
             get { return connections; }
-            set { connections = value; }
         }
 
         public static DBSchemaList Schems

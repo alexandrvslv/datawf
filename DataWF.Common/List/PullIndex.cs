@@ -237,8 +237,7 @@ namespace DataWF.Data
             {
                 foreach (var item in list)
                 {
-                    var fitem = item as F;
-                    if (fitem != null)
+                    if (item is F fitem)
                     {
                         yield return fitem;
                     }
@@ -258,8 +257,7 @@ namespace DataWF.Data
                 {
                     foreach (var item in entry.Value)
                     {
-                        var fitem = item as F;
-                        if (fitem != null)
+                        if (item is F fitem)
                         {
                             yield return fitem;
                         }

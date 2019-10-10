@@ -270,7 +270,7 @@ namespace DataWF.Data
 
         public void LoadFromReader(DBTransaction transaction, DBItem row, int i)
         {
-            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out object oldValue))
+            if (row.Attached && row.UpdateState != DBUpdateState.Default && row.GetOld(this, out _))
             {
                 return;
             }
@@ -947,7 +947,7 @@ namespace DataWF.Data
 
         public virtual void RemoveOld(int hindex)
         {
-            olds?.TryRemove(hindex, out var value);
+            olds?.TryRemove(hindex, out _);
         }
 
         public virtual void SetOld(int hindex, object value)

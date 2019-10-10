@@ -15,7 +15,7 @@ namespace DataWF.Common
             return new AccessValue(value);
         }
 
-        private Dictionary<IAccessGroup, AccessItem> items = new Dictionary<IAccessGroup, AccessItem>(1);
+        private readonly Dictionary<IAccessGroup, AccessItem> items = new Dictionary<IAccessGroup, AccessItem>(1);
 
         public AccessValue()
         { }
@@ -107,11 +107,11 @@ namespace DataWF.Common
             var stream = new MemoryStream(buffer);
             using (var reader = new BinaryReader(stream))
             {
-                Read(reader, buffer);
+                Read(reader);
             }
         }
 
-        public void Read(BinaryReader reader, byte[] buffer)
+        public void Read(BinaryReader reader)
         {
             items.Clear();
             var capacity = reader.ReadInt32();
@@ -159,11 +159,13 @@ namespace DataWF.Common
             return flag;
         }
 
-        public AccessItem Get(IAccessGroup group)
+        public AccessItem Get(IAccessGroup group, bool hierarchy = true)
         {
             var item = AccessItem.Empty;
             while (group != null && !items.TryGetValue(group, out item))
             {
+                if (!hierarchy)
+                    break;
                 group = (IAccessGroup)group.Group;
             }
             return item;
@@ -223,9 +225,18 @@ namespace DataWF.Common
             return cache;
         }
 
-        public bool IsEqual(AccessValue accessCache)
+        public bool IsEqual(AccessValue accessValue)
         {
-            throw new NotImplementedException();
+            if (items.Count != accessValue.items.Count)
+                return false;
+            foreach (var item in accessValue.Items)
+            {
+                if (!items.TryGetValue(item.Group, out var thisItem) || thisItem.Access != item.Access)
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         public IEnumerator<AccessItem> GetEnumerator()

@@ -244,44 +244,44 @@ namespace DataWF.Test.Data
             [Column("id", Keys = DBColumnKeys.Primary)]
             public int? Id
             {
-                get { return GetProperty<int?>(); }
-                set { SetProperty(value); }
+                get => GetProperty<int?>();
+                set => SetProperty(value);
             }
 
             [Column("code", 20, Keys = DBColumnKeys.Code | DBColumnKeys.Unique | DBColumnKeys.Indexing)]
             [Index("positioncode", true)]
             public string Code
             {
-                get { return GetProperty<string>(); }
-                set { SetProperty(value); }
+                get => GetProperty<string>();
+                set => SetProperty(value);
             }
 
             [Column("parentid", Keys = DBColumnKeys.Group)]
             public int? ParentId
             {
-                get { return GetProperty<int?>(); }
-                set { SetProperty(value); }
+                get => GetProperty<int?>();
+                set => SetProperty(value);
             }
 
             [Reference(nameof(ParentId))]
             public Position Parent
             {
-                get { return GetPropertyReference<Position>(ref parent); }
-                set { parent = SetPropertyReference(value); }
+                get => GetPropertyReference<Position>(ref parent);
+                set => parent = SetPropertyReference(value);
             }
 
             [Column("name", 200, Keys = DBColumnKeys.Culture)]
             public string Name
             {
-                get { return GetName(); }
-                set { SetName(value); }
+                get => GetName();
+                set => SetName(value);
             }
 
             [Column("description")]
             public string Description
             {
-                get { return GetProperty<string>(); }
-                set { SetProperty(value); }
+                get => GetProperty<string>();
+                set => SetProperty(value);
             }
         }
 
@@ -307,92 +307,92 @@ namespace DataWF.Test.Data
             [Column("id", Keys = DBColumnKeys.Primary)]
             public int? Id
             {
-                get { return GetProperty<int?>(); }
-                set { SetProperty(value); }
+                get => GetProperty<int?>();
+                set => SetProperty(value);
             }
 
             [Column("identifier", 20, Keys = DBColumnKeys.Code), Index("employeridentifier", true)]
             public string Identifier
             {
-                get { return GetProperty<string>(); }
-                set { SetProperty(value); }
+                get => GetProperty<string>();
+                set => SetProperty(value);
             }
 
             [Column("positionid")]
             public int? PositionId
             {
-                get { return GetProperty<int?>(); }
-                set { SetProperty(value); }
+                get => GetProperty<int?>();
+                set => SetProperty(value);
             }
 
             [Reference(nameof(PositionId))]
             public Position Position
             {
-                get { return GetPropertyReference<Position>(ref position); }
-                set { position = SetPropertyReference(value); }
+                get => GetPropertyReference<Position>(ref position);
+                set => SetPropertyReference(position = value);
             }
 
             [Column("typeid", Keys = DBColumnKeys.ElementType), DefaultValue(EmployerType.Type2)]
             public EmployerType? Type
             {
-                get { return GetProperty<EmployerType?>(); }
-                set { SetProperty(value); }
+                get => GetProperty<EmployerType?>();
+                set => SetProperty(value);
             }
 
             [Column("longid")]
             public long? LongId
             {
-                get { return GetProperty<long?>(); }
-                set { SetProperty(value); }
+                get => GetProperty<long?>();
+                set => SetProperty(value);
             }
 
             [Column("height")]
             public short? Height
             {
-                get { return GetProperty<short?>(); }
-                set { SetProperty(value); }
+                get => GetProperty<short?>();
+                set => SetProperty(value);
             }
 
             [Column("weight")]
             public float? Weight
             {
-                get { return GetProperty<float?>(); }
-                set { SetProperty(value); }
+                get => GetProperty<float?>();
+                set => SetProperty(value);
             }
 
             [Column("dweight")]
             public double? DWeight
             {
-                get { return GetProperty<double?>(); }
-                set { SetProperty(value); }
+                get => GetProperty<double?>();
+                set => SetProperty(value);
             }
 
             [Column("salary", 23, 3)]
             public decimal? Salary
             {
-                get { return GetProperty<decimal?>(); }
-                set { SetProperty(value); }
+                get => GetProperty<decimal?>();
+                set => SetProperty(value);
             }
 
             [Column("age")]
             public byte? Age
             {
-                get { return GetProperty<byte?>(); }
-                set { SetProperty(value); }
+                get => GetProperty<byte?>();
+                set => SetProperty(value);
             }
 
             [Column("lodar")]
             public bool? Lodar
             {
-                get { return GetProperty<bool?>(); }
-                set { SetProperty(value); }
+                get => GetProperty<bool?>();
+                set => SetProperty(value);
             }
 
             [Column("name", 20, Keys = DBColumnKeys.Culture)]
             public string Name
             {
-                get { return GetName(); }
-                set { SetName(value); }
+                get => GetName();
+                set => SetName(value);
             }
         }
     }
@@ -402,10 +402,26 @@ namespace DataWF.Test.Data
         public int Id { get; set; }
 
         public string Name { get; set; }
+        public bool Expand { get; set; }
+        public IGroup Group { get; set; }
+
+        public bool IsCompaund => false;
+
+        public bool IsExpanded => true;
+
+        public int CompareTo(object obj)
+        {
+            throw new NotImplementedException();
+        }
 
         public bool ContainsUser(IUserIdentity user)
         {
             return true;
+        }
+
+        public IEnumerable<IGroup> GetGroups()
+        {
+            return Enumerable.Empty<IGroup>();
         }
     }
 }

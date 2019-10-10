@@ -4,7 +4,7 @@ namespace DataWF.Common
 {
     public class IndexedList<T, K> : SelectableList<T>
     {
-        private Dictionary<K, int> cache;
+        private readonly Dictionary<K, int> cache;
 
         public IndexedList(IEqualityComparer<K> comparer, IInvoker<T, K> keyInvoker)
         {

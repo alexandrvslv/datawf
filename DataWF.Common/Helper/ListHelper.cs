@@ -10,6 +10,11 @@ namespace DataWF.Common
 
     public static class ListHelper
     {
+        public static event Action<QuickSortEventArgs> QuickSortFinished;
+        private static readonly AsyncCallback callback = new AsyncCallback(QuickSortFinish);
+        private static readonly Action<IList, int, int, IComparer> action = new Action<IList, int, int, IComparer>(QuickSort1);
+
+
         public static bool Contains(IEnumerable enumerable, object value)
         {
             if (enumerable is IList list)
@@ -728,7 +733,7 @@ namespace DataWF.Common
         public static void LinearSort<T>(IList<T> x, int s, int n, IComparer<T> comp)
         {
             int i, j;
-            n = n + 1;
+            n += 1;
             for (i = s + 1; i < n; i++)
             {
                 T t = x[i];
@@ -742,7 +747,7 @@ namespace DataWF.Common
         public static void LinearSort(IList x, int s, int n, IComparer comp)
         {
             int i, j;
-            n = n + 1;
+            n += 1;
             for (i = s + 1; i < n; i++)
             {
                 object t = x[i];
@@ -765,10 +770,6 @@ namespace DataWF.Common
             arg.Result = action.BeginInvoke(arg.List, arg.Min, arg.Max, arg.Comparer, callback, arg);
             return arg.Result;
         }
-
-        public static event Action<QuickSortEventArgs> QuickSortFinished;
-        private static readonly AsyncCallback callback = new AsyncCallback(QuickSortFinish);
-        private static Action<IList, int, int, IComparer> action = new Action<IList, int, int, IComparer>(QuickSort1);
 
         public static void QuickSortFinish(IAsyncResult result)
         {
@@ -833,7 +834,7 @@ namespace DataWF.Common
 
         public static int CompareT<T>(T x, T y, IComparer<T> comp, bool hash)
         {
-            int result = 0;
+            int result;
             if (comp != null)
             {
                 result = comp.Compare(x, y);
@@ -882,7 +883,7 @@ namespace DataWF.Common
 
         public static int Compare(object x, object y, IComparer comp, bool hash)
         {
-            int result = 0;
+            int result;
             if (comp != null)
             {
                 result = comp.Compare(x, y);

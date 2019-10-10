@@ -49,7 +49,7 @@ namespace DataWF.Data
         public ListSortDirection Direction;
         public CompareType Comparer;
         public K Value;
-        private DBColumn property;
+        private readonly DBColumn property;
         public readonly bool buffered;
         private readonly bool refernce;
         public bool Hash;
@@ -128,7 +128,7 @@ namespace DataWF.Data
 
         public int Compare(T x, T y)
         {
-            int rez = 0;
+            int rez;
             if (x == null)
                 rez = (y == null) ? 0 : -1;
             else if (y == null)

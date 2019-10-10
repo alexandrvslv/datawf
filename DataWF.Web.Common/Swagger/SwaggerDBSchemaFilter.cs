@@ -12,7 +12,7 @@ namespace DataWF.Web.Common
 {
     public class SwaggerDBSchemaFilter : ISchemaFilter
     {
-        private Stack<TableGenerator> tables = new Stack<TableGenerator>();
+        private readonly Stack<TableGenerator> tables = new Stack<TableGenerator>();
 
         public void Apply(Schema schema, SchemaFilterContext context)
         {

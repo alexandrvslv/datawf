@@ -18,11 +18,11 @@ namespace DataWF.Module.Common
     public class SchedulerService : IDisposable
     {
         public static SchedulerService Instance;
-        private ManualResetEvent delayEvent = new ManualResetEvent(false);
-        private ManualResetEvent stopEvent = new ManualResetEvent(true);
-        private ManualResetEvent pauseEvent = new ManualResetEvent(true);
+        private readonly ManualResetEventSlim delayEvent = new ManualResetEventSlim(false);
+        private readonly ManualResetEventSlim stopEvent = new ManualResetEventSlim(true);
+        private readonly ManualResetEventSlim pauseEvent = new ManualResetEventSlim(true);
         private Scheduler item;
-        private SchedulerList items = new SchedulerList();
+        private readonly SchedulerList items = new SchedulerList();
         private bool running = false;
         private readonly int timer = 0;
         private readonly int startH = 8;
@@ -57,8 +57,8 @@ namespace DataWF.Module.Common
                        while (running)
                        {
                            Execute();
-                           delayEvent.WaitOne(timer);
-                           pauseEvent.WaitOne();
+                           delayEvent.Wait(timer);
+                           pauseEvent.Wait();
                        }
                        stopEvent.Set();
                    });
@@ -71,7 +71,7 @@ namespace DataWF.Module.Common
             {
                 running = false;
                 delayEvent.Set();
-                stopEvent.WaitOne(timer);
+                stopEvent.Wait(timer);
             }
         }
 

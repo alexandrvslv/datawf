@@ -5,7 +5,7 @@ namespace DataWF.Common
 {
     public class ThreadSafeList<T> : ICollection<T>
     {
-        private List<T> list;
+        private readonly List<T> list;
 
         public ThreadSafeList() : this(2)
         { }

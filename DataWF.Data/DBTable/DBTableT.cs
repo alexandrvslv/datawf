@@ -16,13 +16,13 @@ namespace DataWF.Data
 {
     public class DBTable<T> : DBTable, ICollection<T> where T : DBItem, new()
     {
-        protected List<T> items = new List<T>();
-        protected List<T> insertItems = new List<T>();
-        protected List<IDBTableView> queryViews = new List<IDBTableView>(1);
-        private ConcurrentDictionary<string, QQuery> queryChache = new ConcurrentDictionary<string, QQuery>();
+        protected readonly List<T> items = new List<T>();
+        protected readonly List<T> insertItems = new List<T>();
+        protected readonly List<IDBTableView> queryViews = new List<IDBTableView>(1);
+        private readonly ConcurrentDictionary<string, QQuery> queryChache = new ConcurrentDictionary<string, QQuery>();
 
         public DBTable()
-        {
+        {            
             SetItemType(typeof(T));
         }
 

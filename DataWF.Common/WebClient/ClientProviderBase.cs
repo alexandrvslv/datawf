@@ -5,9 +5,9 @@ namespace DataWF.Common
 {
     public class ClientProviderBase : IClientProvider
     {
-        Dictionary<Type, ICRUDClient> crudClients = new Dictionary<Type, ICRUDClient>();
-        Dictionary<Type, Dictionary<int, ICRUDClient>> crudTypedClients = new Dictionary<Type, Dictionary<int, ICRUDClient>>();
-        private SelectableList<IClient> clients = new SelectableList<IClient>();
+        private readonly Dictionary<Type, ICRUDClient> crudClients = new Dictionary<Type, ICRUDClient>();
+        private readonly Dictionary<Type, Dictionary<int, ICRUDClient>> crudTypedClients = new Dictionary<Type, Dictionary<int, ICRUDClient>>();
+        private readonly SelectableList<IClient> clients = new SelectableList<IClient>();
 
         public ClientProviderBase()
         {

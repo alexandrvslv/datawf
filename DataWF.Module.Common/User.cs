@@ -67,6 +67,9 @@ namespace DataWF.Module.Common
         public static DBTable<User> DBTable => dbTable ?? (dbTable = GetTable<User>());
         private static SmtpSetting config;
 
+        private static readonly UserPasswordSpec PasswordSpec = UserPasswordSpec.Lenght6 | UserPasswordSpec.CharSpecial | UserPasswordSpec.CharNumbers;
+
+
         public static User GetByEmail(string email)
         {
             return DBTable.SelectOne(EmailKey, email);
@@ -170,8 +173,6 @@ namespace DataWF.Module.Common
 
             return user;
         }
-
-        private static UserPasswordSpec PasswordSpec = UserPasswordSpec.Lenght6 | UserPasswordSpec.CharSpecial | UserPasswordSpec.CharNumbers;
 
         public static string ValidateText(User User, string password, bool checkOld)
         {

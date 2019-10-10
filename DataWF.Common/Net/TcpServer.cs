@@ -78,11 +78,11 @@ namespace DataWF.Common
         static readonly int TimeoutTick = 5000;
 
         protected bool online = true;
-        protected SelectableList<TcpSocket> clients = new SelectableList<TcpSocket>();
+        protected readonly SelectableList<TcpSocket> clients = new SelectableList<TcpSocket>();
         protected TcpListener listener;
         protected IPEndPoint localPoint;
-        protected ManualResetEvent acceptEvent = new ManualResetEvent(true);
-        protected ManualResetEvent timeoutEvent = new ManualResetEvent(true);
+        protected readonly ManualResetEventSlim acceptEvent = new ManualResetEventSlim(true);
+        protected readonly ManualResetEventSlim timeoutEvent = new ManualResetEventSlim(true);
         public event EventHandler<TcpServerEventArgs> DataLoad;
         public event EventHandler<TcpServerEventArgs> DataSend;
         public event EventHandler<TcpSocketEventArgs> ClientTimeout;
@@ -141,7 +141,7 @@ namespace DataWF.Common
                     {
                         acceptEvent.Reset();
                         listener.BeginAcceptSocket(AcceptCallback, new TcpSocketEventArgs());
-                        acceptEvent.WaitOne();
+                        acceptEvent.Wait();
                     }
                 });
 
@@ -160,7 +160,7 @@ namespace DataWF.Common
                                 i--;
                             }
                         }
-                        timeoutEvent.WaitOne(TimeoutTick);
+                        timeoutEvent.Wait(TimeoutTick);
                     }
                 });
         }

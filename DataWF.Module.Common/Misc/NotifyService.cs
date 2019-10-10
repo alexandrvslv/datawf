@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 
 namespace DataWF.Module.Common
 {
-
     public class NotifyService : UdpServer
     {
         public static void Intergate(Action<EndPointMessage> onLoad, User user)
@@ -25,8 +24,8 @@ namespace DataWF.Module.Common
         private static readonly object loadLock = new object();
 
         private Instance instance;
-        private ConcurrentQueue<NotifyMessageItem> buffer = new ConcurrentQueue<NotifyMessageItem>();
-        private ManualResetEvent runEvent = new ManualResetEvent(false);
+        private readonly ConcurrentQueue<NotifyMessageItem> buffer = new ConcurrentQueue<NotifyMessageItem>();
+        private readonly ManualResetEventSlim runEvent = new ManualResetEventSlim(false);
         private const int timer = 2000;
 
         public User User { get; private set; }
@@ -193,7 +192,7 @@ namespace DataWF.Module.Common
 
         private void SendChangesRunner()
         {
-            while (!runEvent.WaitOne(timer))
+            while (!runEvent.Wait(timer))
             {
                 try
                 {

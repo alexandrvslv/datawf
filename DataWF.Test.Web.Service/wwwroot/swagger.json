@@ -660,6 +660,42 @@
         }
       }
     },
+    "/api/Address/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "Address"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Authorize/LoginIn": {
       "post": {
         "tags": [
@@ -1308,6 +1344,42 @@
         }
       }
     },
+    "/api/Book/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "Book"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/City/GetLogs/{filter}": {
       "get": {
         "tags": [
@@ -1759,6 +1831,42 @@
             "schema": {
               "format": "int32",
               "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "/api/City/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "City"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
             }
           }
         }
@@ -2220,6 +2328,42 @@
         }
       }
     },
+    "/api/Company/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "Company"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Continent/GetLogs/{filter}": {
       "get": {
         "tags": [
@@ -2671,6 +2815,42 @@
             "schema": {
               "format": "int32",
               "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "/api/Continent/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "Continent"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
             }
           }
         }
@@ -3132,6 +3312,42 @@
         }
       }
     },
+    "/api/Country/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "Country"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Currency/GetLogs/{filter}": {
       "get": {
         "tags": [
@@ -3583,6 +3799,42 @@
             "schema": {
               "format": "int32",
               "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "/api/Currency/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "Currency"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
             }
           }
         }
@@ -4044,6 +4296,42 @@
         }
       }
     },
+    "/api/Customer/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "Customer"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/CustomerAddress/GetLogs/{filter}": {
       "get": {
         "tags": [
@@ -4500,6 +4788,42 @@
         }
       }
     },
+    "/api/CustomerAddress/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "CustomerAddress"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/CustomerReference/GetLogs/{filter}": {
       "get": {
         "tags": [
@@ -4951,6 +5275,42 @@
             "schema": {
               "format": "int32",
               "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "/api/CustomerReference/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "CustomerReference"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
             }
           }
         }
@@ -5477,6 +5837,42 @@
             "schema": {
               "format": "int32",
               "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "/api/Department/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "Department"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
             }
           }
         }
@@ -6163,6 +6559,42 @@
         }
       }
     },
+    "/api/Document/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "Document"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int64",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/DocumentComment": {
       "get": {
         "tags": [
@@ -6452,6 +6884,42 @@
             "schema": {
               "format": "int64",
               "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "/api/DocumentComment/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "DocumentComment"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int64",
+                "type": "integer"
+              }
             }
           }
         }
@@ -6913,6 +7381,42 @@
         }
       }
     },
+    "/api/DocumentCustomer/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "DocumentCustomer"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int64",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/DocumentData/RefreshData/{id}": {
       "get": {
         "tags": [
@@ -6959,6 +7463,46 @@
             "required": true,
             "type": "integer",
             "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "file"
+            }
+          }
+        }
+      }
+    },
+    "/api/DocumentData/DownloadFiles": {
+      "post": {
+        "tags": [
+          "DocumentData"
+        ],
+        "operationId": "DownloadFiles",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "application/octet-stream"
+        ],
+        "parameters": [
+          {
+            "name": "ids",
+            "in": "body",
+            "required": false,
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int64",
+                "type": "integer"
+              }
+            }
           }
         ],
         "responses": {
@@ -7528,6 +8072,42 @@
         }
       }
     },
+    "/api/DocumentData/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "DocumentData"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int64",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/DocumentReference/GetLogs/{filter}": {
       "get": {
         "tags": [
@@ -7984,6 +8564,42 @@
         }
       }
     },
+    "/api/DocumentReference/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "DocumentReference"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int64",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/DocumentWork/GetLogs/{filter}": {
       "get": {
         "tags": [
@@ -8435,6 +9051,42 @@
             "schema": {
               "format": "int64",
               "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "/api/DocumentWork/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "DocumentWork"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int64",
+                "type": "integer"
+              }
             }
           }
         }
@@ -8960,6 +9612,42 @@
         }
       }
     },
+    "/api/GroupPermission/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "GroupPermission"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Instance/GetLogs/{filter}": {
       "get": {
         "tags": [
@@ -9416,6 +10104,42 @@
         }
       }
     },
+    "/api/Instance/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Location/GetLogs/{filter}": {
       "get": {
         "tags": [
@@ -9867,6 +10591,42 @@
             "schema": {
               "format": "int32",
               "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "/api/Location/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "Location"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
             }
           }
         }
@@ -10342,6 +11102,42 @@
         }
       }
     },
+    "/api/Message/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "Message"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int64",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/MessageAddress": {
       "get": {
         "tags": [
@@ -10636,6 +11432,42 @@
         }
       }
     },
+    "/api/MessageAddress/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "MessageAddress"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/MessageData": {
       "get": {
         "tags": [
@@ -10925,6 +11757,42 @@
             "schema": {
               "format": "int32",
               "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "/api/MessageData/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "MessageData"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
             }
           }
         }
@@ -11386,6 +12254,42 @@
         }
       }
     },
+    "/api/Persone/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "Persone"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/PersoneIdentify/GetLogs/{filter}": {
       "get": {
         "tags": [
@@ -11837,6 +12741,42 @@
             "schema": {
               "format": "int32",
               "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "/api/PersoneIdentify/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "PersoneIdentify"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
             }
           }
         }
@@ -12328,6 +13268,42 @@
             "schema": {
               "format": "int32",
               "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "/api/Position/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "Position"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
             }
           }
         }
@@ -12932,6 +13908,42 @@
             "schema": {
               "format": "int32",
               "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "/api/Scheduler/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "Scheduler"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
             }
           }
         }
@@ -13576,6 +14588,42 @@
         }
       }
     },
+    "/api/Stage/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "Stage"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/StageForeign/GetLogs/{filter}": {
       "get": {
         "tags": [
@@ -14027,6 +15075,42 @@
             "schema": {
               "format": "int32",
               "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "/api/StageForeign/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "StageForeign"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
             }
           }
         }
@@ -14488,6 +15572,42 @@
         }
       }
     },
+    "/api/StageParam/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "StageParam"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/StageProcedure/GetLogs/{filter}": {
       "get": {
         "tags": [
@@ -14939,6 +16059,42 @@
             "schema": {
               "format": "int32",
               "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "/api/StageProcedure/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "StageProcedure"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
             }
           }
         }
@@ -15400,6 +16556,42 @@
         }
       }
     },
+    "/api/StageReference/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "StageReference"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/StageTemplate/GetLogs/{filter}": {
       "get": {
         "tags": [
@@ -15856,6 +17048,42 @@
         }
       }
     },
+    "/api/StageTemplate/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "StageTemplate"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Statistic/GetLogs/{filter}": {
       "get": {
         "tags": [
@@ -16307,6 +17535,42 @@
             "schema": {
               "format": "int32",
               "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "/api/Statistic/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "Statistic"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
             }
           }
         }
@@ -16843,6 +18107,42 @@
         }
       }
     },
+    "/api/Template/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "Template"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/TemplateData/GetLogs/{filter}": {
       "get": {
         "tags": [
@@ -17299,6 +18599,42 @@
         }
       }
     },
+    "/api/TemplateData/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "TemplateData"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/TemplateFile/DownloadFile/{id}": {
       "get": {
         "tags": [
@@ -17316,6 +18652,46 @@
             "required": true,
             "type": "integer",
             "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "file"
+            }
+          }
+        }
+      }
+    },
+    "/api/TemplateFile/DownloadFiles": {
+      "post": {
+        "tags": [
+          "TemplateFile"
+        ],
+        "operationId": "DownloadFiles",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "application/octet-stream"
+        ],
+        "parameters": [
+          {
+            "name": "ids",
+            "in": "body",
+            "required": false,
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
+            }
           }
         ],
         "responses": {
@@ -17885,6 +19261,42 @@
         }
       }
     },
+    "/api/TemplateFile/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "TemplateFile"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/TemplateProperty/GetLogs/{filter}": {
       "get": {
         "tags": [
@@ -18336,6 +19748,42 @@
             "schema": {
               "format": "int32",
               "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "/api/TemplateProperty/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "TemplateProperty"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
             }
           }
         }
@@ -18797,6 +20245,42 @@
         }
       }
     },
+    "/api/TemplateReference/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "TemplateReference"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/User/GetLogs/{filter}": {
       "get": {
         "tags": [
@@ -19253,6 +20737,42 @@
         }
       }
     },
+    "/api/User/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/UserFile/DownloadFile/{id}": {
       "get": {
         "tags": [
@@ -19270,6 +20790,46 @@
             "required": true,
             "type": "integer",
             "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "file"
+            }
+          }
+        }
+      }
+    },
+    "/api/UserFile/DownloadFiles": {
+      "post": {
+        "tags": [
+          "UserFile"
+        ],
+        "operationId": "DownloadFiles",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "application/octet-stream"
+        ],
+        "parameters": [
+          {
+            "name": "ids",
+            "in": "body",
+            "required": false,
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
+            }
           }
         ],
         "responses": {
@@ -19839,6 +21399,42 @@
         }
       }
     },
+    "/api/UserFile/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "UserFile"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/UserGroup/GetUsers/{id}": {
       "get": {
         "tags": [
@@ -20330,6 +21926,42 @@
         }
       }
     },
+    "/api/UserGroup/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "UserGroup"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/UserLog": {
       "get": {
         "tags": [
@@ -20624,6 +22256,42 @@
         }
       }
     },
+    "/api/UserLog/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "UserLog"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int64",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/UserReg": {
       "get": {
         "tags": [
@@ -20913,6 +22581,42 @@
             "schema": {
               "format": "int64",
               "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "/api/UserReg/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "UserReg"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int64",
+                "type": "integer"
+              }
             }
           }
         }
@@ -21571,6 +23275,42 @@
             "schema": {
               "format": "int32",
               "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "/api/Work/GenerateIds/{count}": {
+      "get": {
+        "tags": [
+          "Work"
+        ],
+        "operationId": "GenerateIds",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "format": "int32",
+                "type": "integer"
+              }
             }
           }
         }
@@ -23044,6 +24784,10 @@
         "DataName": {
           "maxLength": 1024,
           "type": "string"
+        },
+        "DataLastWrite": {
+          "format": "date-time",
+          "type": "string"
         }
       },
       "x-id": "Id",
@@ -23213,6 +24957,10 @@
         },
         "FileUrl": {
           "maxLength": 1024,
+          "type": "string"
+        },
+        "FileLastWrite": {
+          "format": "date-time",
           "type": "string"
         },
         "FileLOB": {
@@ -23528,6 +25276,10 @@
           "maxLength": 1024,
           "type": "string"
         },
+        "FileLastWrite": {
+          "format": "date-time",
+          "type": "string"
+        },
         "FileData": {
           "format": "byte",
           "type": "string"
@@ -23709,8 +25461,7 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/AccessItem"
-          },
-          "readOnly": true
+          }
         }
       },
       "x-id": "Id",
@@ -24686,6 +26437,10 @@
         "DataName": {
           "maxLength": 1024,
           "type": "string"
+        },
+        "DataLastWrite": {
+          "format": "date-time",
+          "type": "string"
         }
       },
       "x-type-id": 0
@@ -24852,6 +26607,10 @@
           "maxLength": 1024,
           "type": "string"
         },
+        "DataLastWrite": {
+          "format": "date-time",
+          "type": "string"
+        },
         "UserId": {
           "format": "int32",
           "type": "integer"
@@ -24885,6 +26644,10 @@
           "maxLength": 1024,
           "type": "string"
         },
+        "DataLastWrite": {
+          "format": "date-time",
+          "type": "string"
+        },
         "UserId": {
           "format": "int32",
           "type": "integer"
@@ -24911,6 +26674,14 @@
         "Id": {
           "format": "int32",
           "type": "integer"
+        },
+        "ParentId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "Parent": {
+          "$ref": "#/definitions/UserGroup",
+          "x-id": "ParentId"
         },
         "CompanyId": {
           "format": "int32",
@@ -24940,13 +26711,21 @@
       "type": "object",
       "allOf": [
         {
-          "$ref": "#/definitions/DBItem"
+          "$ref": "#/definitions/DBGroupItem"
         }
       ],
       "properties": {
         "Id": {
           "format": "int32",
           "type": "integer"
+        },
+        "ParentId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "Parent": {
+          "$ref": "#/definitions/UserGroup",
+          "x-id": "ParentId"
         },
         "CompanyId": {
           "format": "int32",

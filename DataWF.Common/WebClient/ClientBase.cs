@@ -26,7 +26,7 @@ namespace DataWF.Common
     {
         private const string fileNameUTFToken = "filename*=UTF-8";
         private const string fileNameToken = "filename=";
-        private Lazy<JsonSerializerSettings> serializeSettings;
+        private readonly Lazy<JsonSerializerSettings> serializeSettings;
         private string baseUrl;
         private IClientProvider provider;
         private static HttpClient client;

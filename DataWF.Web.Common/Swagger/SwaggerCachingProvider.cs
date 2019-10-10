@@ -7,7 +7,7 @@ namespace DataWF.Web.Common
     //https://stackoverflow.com/a/36597735
     public class SwaggerCachingProvider : ISwaggerProvider
     {
-        private static ConcurrentDictionary<string, SwaggerDocument> _cache =
+        private static readonly ConcurrentDictionary<string, SwaggerDocument> _cache =
             new ConcurrentDictionary<string, SwaggerDocument>(StringComparer.Ordinal);
 
         private readonly ISwaggerProvider _swaggerProvider;

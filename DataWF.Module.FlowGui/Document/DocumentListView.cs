@@ -445,7 +445,7 @@ namespace DataWF.Module.FlowGui
                     {
                         foreach (var document in buffer)
                         {
-                            document.CreateReference(reference);
+                            document.CreateReference(reference, null);
                         }
                     }
                     documents.AddRange(buffer);
@@ -460,7 +460,7 @@ namespace DataWF.Module.FlowGui
                     {
                         if (!document.ContainsReference(reference))
                         {
-                            document.CreateReference(reference);
+                            document.CreateReference(reference, null);
                         }
                     }
                 }

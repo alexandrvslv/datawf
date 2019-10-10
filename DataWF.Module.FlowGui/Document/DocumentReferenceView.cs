@@ -115,7 +115,7 @@ namespace DataWF.Module.FlowGui
                 {
                     if (document.ContainsReference(selected) || document == selected)
                         continue;
-                    document.CreateReference(selected);
+                    document.CreateReference(selected, null);
                 }
                 window.Dispose();
             };

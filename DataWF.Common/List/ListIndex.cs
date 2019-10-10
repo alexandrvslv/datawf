@@ -177,7 +177,7 @@ namespace DataWF.Common
                         var key = CheckNull(param.TypedValue);
                         foreach (var entry in index)
                         {
-                            if (((IComparable)entry.Key).CompareTo(param.TypedValue) <= 0)
+                            if (((IComparable)entry.Key).CompareTo(key) <= 0)
                             {
                                 foreach (var item in entry.Value)
                                     yield return item;

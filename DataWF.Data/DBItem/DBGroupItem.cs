@@ -149,8 +149,7 @@ namespace DataWF.Data
 
         public string GetParentIds()
         {
-            string rez = "";
-            rez = PrimaryId.ToString();
+            string rez = PrimaryId.ToString();
             foreach (var item in GroupHelper.GetAllParent<DBGroupItem>(this))
             {
                 rez += "," + item.PrimaryId;

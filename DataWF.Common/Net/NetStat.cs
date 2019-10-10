@@ -6,7 +6,7 @@ namespace DataWF.Common
 {
     public static class NetStat
     {
-        private static SelectableList<NetStatItem> items = new SelectableList<NetStatItem>();
+        private static readonly SelectableList<NetStatItem> items = new SelectableList<NetStatItem>();
 
         static NetStat()
         {

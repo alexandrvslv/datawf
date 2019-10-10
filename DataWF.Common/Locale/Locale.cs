@@ -65,7 +65,7 @@ namespace DataWF.Common
         {
             var categoryItem = GetByName(category);
             var nameItem = categoryItem.GetByName(name);
-            var value = nameItem.Value;
+            _ = nameItem.Value;
             return nameItem;
         }
 

@@ -26,7 +26,7 @@ namespace DataWF.Data
 {
     public class QExpression : QEnum
     {
-        private List<QMathType> types = new List<QMathType>();
+        private readonly List<QMathType> types = new List<QMathType>();
 
         public QExpression()
         {

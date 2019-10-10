@@ -43,7 +43,7 @@ namespace DataWF.Common
         protected UdpClient listener;
         protected UdpClient sender;
         private IPEndPoint listenerEndPoint;
-        private ManualResetEvent receiveEvent = new ManualResetEvent(false);
+        private readonly ManualResetEventSlim receiveEvent = new ManualResetEventSlim(false);
 
         public event EventHandler<ExceptionEventArgs> DataException;
         public event EventHandler<UdpServerEventArgs> DataLoad;
@@ -98,7 +98,7 @@ namespace DataWF.Common
                 {
                     receiveEvent.Reset();
                     listener.BeginReceive(ReceiveCallback, new UdpServerEventArgs());
-                    receiveEvent.WaitOne();
+                    receiveEvent.Wait();
                 }
             }, TaskCreationOptions.LongRunning).Start();
         }

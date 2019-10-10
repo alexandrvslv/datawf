@@ -37,7 +37,7 @@ namespace DataWF.Data
 {
     public class XlsxSaxParser : DocumentParser
     {
-        private static Regex excelRegex = new Regex("#.[^#]*#", RegexOptions.IgnoreCase);
+        private static readonly Regex excelRegex = new Regex("#.[^#]*#", RegexOptions.IgnoreCase);
 
         public override string Parse(Stream stream, string fileName, ExecuteArgs param)
         {
@@ -775,16 +775,16 @@ namespace DataWF.Data
             return value;
         }
 
-        //public Excel.Cell GetCell(object value, int c, int r, uint styleIndex, StringKeyList sharedStrings)
-        //{
-        //    Excel.Cell cell = new Excel.Cell()
-        //    {
-        //        CellReference = Helper.IntToChar(c) + (r).ToString(),
-        //        StyleIndex = styleIndex,
-        //    };
-        //    WriteCell(cell, value, sharedStrings);
-        //    return cell;
-        //}
+        public Excel.Cell GetCell(object value, int c, int r, uint styleIndex, StringKeyList sharedStrings)
+        {
+            Excel.Cell cell = new Excel.Cell()
+            {
+                CellReference = Helper.IntToChar(c) + (r).ToString(),
+                StyleIndex = styleIndex,
+            };
+            WriteCell(cell, value, sharedStrings);
+            return cell;
+        }
 
         public Excel.Cell GetCell(OpenXmlCompositeElement row, object value, int c, int r, uint styleIndex, StringKeyList sharedStrings, Dictionary<uint, Excel.Cell> sharedFormuls)
         {

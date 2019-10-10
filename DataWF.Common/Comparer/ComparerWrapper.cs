@@ -5,7 +5,7 @@ namespace DataWF.Common
 {
     public class ComparerWrapper<T> : IComparer<T>, IComparer
     {
-        private IComparer _comparer;
+        private readonly IComparer _comparer;
 
         public ComparerWrapper(IComparer comparer)
         {

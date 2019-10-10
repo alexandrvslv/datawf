@@ -29,7 +29,7 @@ namespace DataWF.Data
     public class DBProcedureList : DBSchemaItemList<DBProcedure>
     {
 
-        private Dictionary<string, Dictionary<string, DBProcedure>> codeIndex = new Dictionary<string, Dictionary<string, DBProcedure>>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, Dictionary<string, DBProcedure>> codeIndex = new Dictionary<string, Dictionary<string, DBProcedure>>(StringComparer.OrdinalIgnoreCase);
 
         public DBProcedureList(DBSchema schema) : base(schema)
         {

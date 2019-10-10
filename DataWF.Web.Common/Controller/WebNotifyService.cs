@@ -17,8 +17,8 @@ namespace DataWF.Web.Common
 {
     public class WebNotifyService : NotifyService
     {
-        private SelectableList<WebNotifyConnection> connections = new SelectableList<WebNotifyConnection>();
-        private JsonSerializerSettings jsonSettings;
+        private readonly SelectableList<WebNotifyConnection> connections = new SelectableList<WebNotifyConnection>();
+        private readonly JsonSerializerSettings jsonSettings;
 
         public static WebNotifyService Instance { get; private set; }
 
