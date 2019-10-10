@@ -346,6 +346,26 @@ namespace DataWF.Common
             }
         }
 
+        public static void CopyStream(Stream input, Stream output, int bufferSize)
+        {
+            var buffer = new byte[bufferSize];
+            int count;
+            while ((count = input.Read(buffer, 0, bufferSize)) != 0)
+            {
+                output.Write(buffer, 0, count);
+            }
+        }
+
+        public static async Task CopyStreamAsync(Stream input, Stream output, int bufferSize)
+        {
+            var buffer = new byte[bufferSize];
+            int count;
+            while ((count = await input.ReadAsync(buffer, 0, bufferSize)) != 0)
+            {
+                await output.WriteAsync(buffer, 0, count);
+            }
+        }
+
         /// <summary>
         /// Count occurrences of strings.
         /// from http://www.dotnetperls.com/string-occurrence
