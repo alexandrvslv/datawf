@@ -5,7 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace DataWF.Data
 {
@@ -98,6 +100,13 @@ namespace DataWF.Data
                 ddl.Append($" execute immediate 'grant create sequence to {schema.Name}';\n");
                 ddl.Append($" execute immediate 'grant create any procedure to {schema.Name}';\n");
                 ddl.Append($" execute immediate 'grant unlimited tablespace to {schema.Name}';\n");
+                if (!schema.Sequences.Contains("db_lob_seq"))
+                {
+                    var lobSequence = new DBSequence("db_lob_seq");
+                    schema.Sequences.Add(lobSequence);
+                    Format(ddl, lobSequence, DDLType.Create);
+                }
+                ddl.AppendLine($"create table db_lob(oid number(18) not null primary key, lob_data blob);");
                 ddl.Append($"end;");
             }
             else if (ddlType == DDLType.Drop)
@@ -330,6 +339,60 @@ namespace DataWF.Data
                 else if (type == typeof(OracleClob))
                     ((OracleClob)parameter.Value).Dispose();
             }
+        }
+
+        public override async Task DeleteLOB(uint oid, DBTransaction transaction)
+        {
+            var command = (OracleCommand)transaction.AddCommand($"delete from db_lob where oid = :oid");
+            command.Parameters.Add($":oid", (long)oid);
+            await transaction.ExecuteQueryAsync(command);
+        }
+
+        public override async Task<Stream> GetLOB(uint oid, DBTransaction transaction, int bufferSize = 81920)
+        {
+            var command = (OracleCommand)transaction.AddCommand($"select oid, lob_data from db_lob where oid = :oid");
+            command.Parameters.Add($"@oid", (long)oid);
+            transaction.Reader = (IDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
+            if (transaction.Reader.Read())
+            {
+                return ((OracleDataReader)transaction.Reader).GetStream(1);
+            }
+            throw new Exception("No Data Found!");
+        }
+
+        public override async Task<uint> SetLOB(Stream value, DBTransaction transaction)
+        {
+            using (var blob = new OracleBlob((OracleConnection)transaction.Connection))
+            {
+                value.CopyTo(blob);
+                var command = (OracleCommand)transaction.AddCommand(@"begin
+select db_lob_seq.nextval into :oid = next from dual;
+insert into db_lob (oid, lob_data) values (:oid, :lob_data);
+select :oid;");
+                var oidParameter = command.Parameters.Add(":oid", OracleDbType.Long);
+                oidParameter.Direction = ParameterDirection.Output;
+                command.Parameters.Add(":lob_data", OracleDbType.Blob, -1).Value = blob;
+                await transaction.ExecuteQueryAsync(command, DBExecuteType.NoReader);
+
+                var oid = (long)oidParameter.Value;
+
+                return (uint)oid;
+            }
+        }
+
+        public override async Task<object> ExecuteQueryAsync(IDbCommand command, DBExecuteType type, CommandBehavior behavior)
+        {
+            var oracleCommand = (OracleCommand)command;
+            switch (type)
+            {
+                case DBExecuteType.Scalar:
+                    return await oracleCommand.ExecuteScalarAsync();
+                case DBExecuteType.Reader:
+                    return await oracleCommand.ExecuteReaderAsync(behavior);
+                case DBExecuteType.NoReader:
+                    return await oracleCommand.ExecuteNonQueryAsync();
+            }
+            return null;
         }
     }
 }

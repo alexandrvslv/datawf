@@ -691,7 +691,7 @@ namespace DataWF.Data
         {
             command = transaction.AddCommand(Source);
             //UpdateCommand(command, parameters);
-            return transaction.ExecuteListDictionary();
+            return transaction.ExecuteListDictionary(command);
         }
 
 

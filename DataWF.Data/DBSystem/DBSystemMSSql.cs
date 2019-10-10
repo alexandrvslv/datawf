@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace DataWF.Data
 {
@@ -107,6 +109,13 @@ namespace DataWF.Data
                 ddl.AppendLine($"filename = '{dataFile}',");
                 ddl.AppendLine("size = 10, maxsize = unlimited, filegrowth = 5MB);");
                 ddl.AppendLine($"alter database {schema.DataBase} set recovery simple;");
+                if (!schema.Sequences.Contains("db_lob_seq"))
+                {
+                    var lobSequence = new DBSequence("db_lob_seq");
+                    schema.Sequences.Add(lobSequence);
+                    Format(ddl, lobSequence, DDLType.Create);
+                }
+                ddl.AppendLine($"create table [db_lob]([oid] bigint not null primary key, [lob_data] varbinary(max));");
             }
             else if (ddlType == DDLType.Drop)
             {
@@ -183,6 +192,54 @@ namespace DataWF.Data
                 return $"[{schema}].[{table.SqlName}] {alias}";
             }
             return $"[{table.SqlName}] {alias}";
+        }
+
+        public override async Task DeleteLOB(uint oid, DBTransaction transaction)
+        {
+            var command = (SqlCommand)transaction.AddCommand($"delete from db_lob where oid = @oid");
+            command.Parameters.AddWithValue($"@oid", (long)oid);
+            await transaction.ExecuteQueryAsync(command);
+        }
+
+        public override async Task<Stream> GetLOB(uint oid, DBTransaction transaction, int bufferSize = 81920)
+        {
+            var command = (SqlCommand)transaction.AddCommand($"select oid, lob_data from db_lob where oid = @oid");
+            command.Parameters.AddWithValue($"@oid", (long)oid);
+            transaction.Reader = (IDataReader) await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
+            if (transaction.Reader.Read())
+            {
+                return ((SqlDataReader)transaction.Reader).GetStream(1);
+            }
+            throw new Exception("No Data Found!");
+        }
+
+        public override async Task<uint> SetLOB(Stream value, DBTransaction transaction)
+        {
+            var command = (SqlCommand)transaction.AddCommand(@"select @oid = next value for db_lob_seq;
+insert into db_lob (oid, lob_data) values (@oid, @lob_data);
+select @oid;");
+            command.Parameters.Add("@lob_data", SqlDbType.Binary, -1).Value = value;
+            var oid = (long)await transaction.ExecuteQueryAsync(command, DBExecuteType.Scalar);
+
+            //command = (SqlCommand)transaction.AddCommand("select current_value from sys.sequences where name = 'db_lob_seq'");
+            //transaction.ExecuteQuery(command, DBExecuteType.Scalar);
+
+            return (uint)oid;
+        }
+
+        public override async Task<object> ExecuteQueryAsync(IDbCommand command, DBExecuteType type, CommandBehavior behavior)
+        {
+            var sqlCommand = (SqlCommand)command;
+            switch (type)
+            {
+                case DBExecuteType.Scalar:
+                    return await sqlCommand.ExecuteScalarAsync();
+                case DBExecuteType.Reader:
+                    return await sqlCommand.ExecuteReaderAsync(behavior);
+                case DBExecuteType.NoReader:
+                    return await sqlCommand.ExecuteNonQueryAsync();
+            }
+            return null;
         }
     }
 }

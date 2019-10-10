@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace DataWF.Data
 {
@@ -31,20 +32,10 @@ namespace DataWF.Data
     {
         public static EventHandler Commited;
 
-        //public static DBTransaction GetTransaction(object owner, DBConnection connection, bool noTransaction = false, DBLoadParam param = DBLoadParam.None, IDBTableView synch = null)
-        //{
-        //    var transaction = Current?.GetSubTransaction(connection, true, noTransaction) ?? new DBTransaction(owner, connection, noTransaction);
-        //    if (transaction.View == null)
-        //        transaction.View = synch;
-        //    if (transaction.ReaderParam == DBLoadParam.None)
-        //        transaction.ReaderParam = param;
-        //    return transaction;
-        //}
-
-        private List<IDbCommand> commands = new List<IDbCommand>();
+        private readonly List<IDbCommand> commands = new List<IDbCommand>();
         private IDbCommand command;
         private IDbTransaction transaction;
-        private HashSet<DBItem> items = new HashSet<DBItem>();
+        private readonly HashSet<DBItem> items = new HashSet<DBItem>();
         private Dictionary<DBConnection, DBTransaction> subTransactions;
 
         public DBTransaction()
@@ -226,7 +217,6 @@ namespace DataWF.Data
                     transaction = null;
                     Connection = null;
                     command = null;
-                    commands = null;
                     ReaderColumns = null;
                     items.Clear();
                 }
@@ -393,10 +383,10 @@ namespace DataWF.Data
             }
         }
 
-        public List<Dictionary<string, object>> ExecuteListDictionary()
+        public List<Dictionary<string, object>> ExecuteListDictionary(IDbCommand command)
         {
             var list = new List<Dictionary<string, object>>();
-            using (var reader = ExecuteQuery(DBExecuteType.Reader) as IDataReader)
+            using (var reader = ExecuteQuery(command, DBExecuteType.Reader) as IDataReader)
             {
                 int fCount = reader.FieldCount;
                 while (reader.Read())
@@ -411,14 +401,9 @@ namespace DataWF.Data
             return list;
         }
 
-        public object ExecuteQuery(DBExecuteType type = DBExecuteType.Scalar)
+        public object ExecuteQuery(string commandText, DBExecuteType type = DBExecuteType.Scalar, CommandBehavior behavior = CommandBehavior.Default)
         {
-            return ExecuteQuery(Command, type);
-        }
-
-        public object ExecuteQuery(string commandText, DBExecuteType type = DBExecuteType.Scalar)
-        {
-            return ExecuteQuery(AddCommand(commandText), type);
+            return ExecuteQuery(AddCommand(commandText), type, behavior);
         }
 
         public object ExecuteQuery(IDbCommand command, DBExecuteType type = DBExecuteType.Scalar, CommandBehavior behavior = CommandBehavior.Default)
@@ -443,6 +428,37 @@ namespace DataWF.Data
                         break;
                 }
 
+                watch.Stop();
+            }
+            catch (Exception ex)
+            {
+                Rollback();
+                buf = ex;
+            }
+            finally
+            {
+                OnExecute(type, command.CommandText, watch.Elapsed, buf);
+                if (buf is Exception)
+                {
+                    throw (Exception)buf;
+                }
+            }
+            return buf;
+        }
+
+        public Task<object> ExecuteQueryAsync(string commandText, DBExecuteType type = DBExecuteType.Scalar, CommandBehavior behavior = CommandBehavior.Default)
+        {
+            return ExecuteQueryAsync(AddCommand(commandText), type, behavior);
+        }
+
+        public async Task<object> ExecuteQueryAsync(IDbCommand command, DBExecuteType type = DBExecuteType.Scalar, CommandBehavior behavior = CommandBehavior.Default)
+        {
+            object buf = null;
+            var watch = new Stopwatch();
+            try
+            {
+                watch.Start();
+                buf = await DbConnection.System.ExecuteQueryAsync(command, type, behavior);
                 watch.Stop();
             }
             catch (Exception ex)

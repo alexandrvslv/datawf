@@ -1550,6 +1550,19 @@ namespace DataWF.Data
             this[column] = value;
         }
 
+        public async Task<Stream> GetStream(DBTransaction transaction, int bufferSize = 81920)
+        {
+            if (Table.FileLOBKey != null && GetValue(table.FileLOBKey) != null)
+            {
+                return await GetLOB(Table.FileLOBKey, transaction);
+            }
+            else if (Table.FileKey != null)
+            {
+                return GetZipMemoryStream(table.FileKey, transaction, bufferSize);
+            }
+            return null;
+        }
+
         public async Task SetStream(string filepath, DBColumn column, DBTransaction transaction, int bufferSize = 81920)
         {
             using (var stream = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
@@ -1641,12 +1654,17 @@ namespace DataWF.Data
             await Save(transaction);
         }
 
-        public Task<Stream> GetLOB(DBColumn column, DBTransaction transaction)
+        public Task<Stream> GetLOB(DBTransaction transaction, int bufferSize = 81920)
+        {
+            return GetLOB(Table.FileLOBKey, transaction, bufferSize);
+        }
+
+        public Task<Stream> GetLOB(DBColumn column, DBTransaction transaction, int bufferSize = 81920)
         {
             var oid = GetValue<uint?>(column);
             if (oid == null)
                 return null;
-            return Table.System.GetLOB(oid.Value, transaction);
+            return Table.System.GetLOB(oid.Value, transaction, bufferSize);
         }
 
         public async Task<FileStream> GetLOBFileStream(DBColumn column, string path, int bufferSize = 81920)

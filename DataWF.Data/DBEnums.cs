@@ -45,8 +45,6 @@ namespace DataWF.Data
     {
         Scalar,
         Reader,
-        CreateConnection,
-        CheckConnection,
         NoReader
     }
 

@@ -1,13 +1,25 @@
 using System;
 using System.Data;
 using System.Data.Common;
+using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace DataWF.Data
 {
     public class DBSystemDefault : DBSystem
     {
         public override IDbConnection CreateConnection(DBConnection connection)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override Task DeleteLOB(uint oid, DBTransaction transaction)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override Task<object> ExecuteQueryAsync(IDbCommand command, DBExecuteType type, CommandBehavior behavior)
         {
             throw new NotImplementedException();
         }
@@ -37,6 +49,11 @@ namespace DataWF.Data
             throw new NotImplementedException();
         }
 
+        public override Task<Stream> GetLOB(uint oid, DBTransaction transaction, int bufferSize = 81920)
+        {
+            throw new NotImplementedException();
+        }
+
         public override string SequenceCurrentValue(DBSequence sequence)
         {
             throw new NotImplementedException();
@@ -48,6 +65,11 @@ namespace DataWF.Data
         }
 
         public override string SequenceNextValue(DBSequence sequence)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override Task<uint> SetLOB(Stream value, DBTransaction transaction)
         {
             throw new NotImplementedException();
         }

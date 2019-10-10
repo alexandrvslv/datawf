@@ -67,8 +67,6 @@ namespace DataWF.Data
             //performance
             nConnection.ReadBufferSize = 40960;
             nConnection.WriteBufferSize = 40960;
-            //nConnection.SocketReceiveBufferSize = 40960;
-            //nConnection.SocketSendBufferSize = 40960;
             nConnection.NoResetOnClose = true;
             nConnection.Enlist = false;
             return nConnection;
@@ -290,6 +288,11 @@ namespace DataWF.Data
             return builder.ToString();
         }
 
+        public override async Task<uint> SetLOB(Stream value, DBTransaction transaction)
+        {
+            return await SetLOBBuffered(value, transaction);
+        }
+
         public async Task<uint> SetLOBBuffered(Stream value, DBTransaction transaction)
         {
             if (value.CanSeek)
@@ -322,12 +325,7 @@ namespace DataWF.Data
             }
         }
 
-        public override async Task<uint> SetLOB(Stream value, DBTransaction transaction)
-        {
-            return await SetLOBBuffered(value, transaction);
-        }
-
-        private static async Task<uint> SetLOBDirect(Stream value, DBTransaction transaction)
+        public static async Task<uint> SetLOBDirect(Stream value, DBTransaction transaction)
         {
             if (value.CanSeek)
             {
@@ -351,13 +349,13 @@ namespace DataWF.Data
             return oid;
         }
 
-        public override async Task<Stream> GetLOB(uint oid, DBTransaction transaction)
+        public override async Task<Stream> GetLOB(uint oid, DBTransaction transaction, int bufferSize = 81920)
         {
             var manager = new NpgsqlLargeObjectManager((NpgsqlConnection)transaction.Connection);
             return await manager.OpenReadAsync(oid, CancellationToken.None);
         }
 
-        public async Task<Stream> GetLOBBuffering(uint oid, DBTransaction transaction)
+        public async Task<Stream> GetLOBBuffered(uint oid, DBTransaction transaction)
         {
             var outStream = new MemoryStream();
             var manager = new NpgsqlLargeObjectManager((NpgsqlConnection)transaction.Connection);
@@ -379,6 +377,21 @@ namespace DataWF.Data
         {
             var manager = new NpgsqlLargeObjectManager((NpgsqlConnection)transaction.Connection);
             await manager.UnlinkAsync(oid, CancellationToken.None);
+        }
+
+        public override async Task<object> ExecuteQueryAsync(IDbCommand command, DBExecuteType type, CommandBehavior behavior)
+        {
+            var npgsqlCommand = (NpgsqlCommand)command;
+            switch (type)
+            {
+                case DBExecuteType.Scalar:
+                    return await npgsqlCommand.ExecuteScalarAsync();
+                case DBExecuteType.Reader:
+                    return await npgsqlCommand.ExecuteReaderAsync(behavior);
+                case DBExecuteType.NoReader:
+                    return await npgsqlCommand.ExecuteNonQueryAsync();
+            }
+            return null;
         }
 
         //public override void ReadSequential(DBItem item, DBColumn column, Stream stream, int bufferSize = 81920)

@@ -1,8 +1,12 @@
-﻿using MySql.Data.MySqlClient;
+﻿using DataWF.Common;
+using MySql.Data.MySqlClient;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace DataWF.Data
 {
@@ -17,7 +21,7 @@ namespace DataWF.Data
                     {DBDataType.Clob, "text"},
                     {DBDataType.DateTime, "datetime"},
                     {DBDataType.ByteArray, "varbinary{0}"},
-                    {DBDataType.Blob, "blob"},
+                    {DBDataType.Blob, "longblob"},
                     {DBDataType.LargeObject, "integer"},
                     {DBDataType.BigInt, "bigint"},
                     {DBDataType.Int, "integer"},
@@ -113,7 +117,50 @@ select seq from db_sequence where name = '{sequence.Name}';";
             {
                 ddl.AppendLine($"use {schema.DataBase};");
                 ddl.AppendLine($"create table db_sequence(name varchar(512) not null primary key, seq long);");
+                ddl.AppendLine($"create table db_lob(oid bigint not null primary key AUTO_INCREMENT, lob_data largeblob);");
             }
+        }
+
+        public override async Task DeleteLOB(uint oid, DBTransaction transaction)
+        {
+            var command = (MySqlCommand)transaction.AddCommand($"delete from db_lob where oid = @oid");
+            command.Parameters.AddWithValue($"@oid", (long)oid);
+            await transaction.ExecuteQueryAsync(command);
+        }
+
+        public override async Task<Stream> GetLOB(uint oid, DBTransaction transaction, int bufferSize = 81920)
+        {
+            var command = (MySqlCommand)transaction.AddCommand($"select oid, lob_data from db_lob where oid = @oid");
+            command.Parameters.AddWithValue($"@oid", (long)oid);
+            transaction.Reader = (IDataReader)await transaction.ExecuteQueryAsync(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
+            if (transaction.Reader.Read())
+            {
+                return ((MySqlDataReader)transaction.Reader).GetStream(1);
+            }
+            throw new Exception("No Data Found!");
+        }
+
+        public override async Task<uint> SetLOB(Stream value, DBTransaction transaction)
+        {
+            var command = (MySqlCommand)transaction.AddCommand(@"insert into db_lob (lob_data) values (@lob_data);");
+            command.Parameters.Add("@lob_data", MySqlDbType.LongBlob).Value = Helper.GetBytes(value);
+            await transaction.ExecuteQueryAsync(command);
+            return (uint)command.LastInsertedId;
+        }
+
+        public override async Task<object> ExecuteQueryAsync(IDbCommand command, DBExecuteType type, CommandBehavior behavior)
+        {
+            var mysqlCommand = (MySqlCommand)command;
+            switch (type)
+            {
+                case DBExecuteType.Scalar:
+                    return await mysqlCommand.ExecuteScalarAsync();
+                case DBExecuteType.Reader:
+                    return await mysqlCommand.ExecuteReaderAsync(behavior);
+                case DBExecuteType.NoReader:
+                    return await mysqlCommand.ExecuteNonQueryAsync();
+            }
+            return null;
         }
     }
 }

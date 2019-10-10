@@ -157,20 +157,11 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             }
         }
 
-        public virtual Task DeleteLOB(uint oid, DBTransaction transaction)
-        {
-            return null;
-        }
+        public abstract Task DeleteLOB(uint oid, DBTransaction transaction);
 
-        public virtual Task<Stream> GetLOB(uint oid, DBTransaction transaction)
-        {
-            return null;
-        }
+        public abstract Task<Stream> GetLOB(uint oid, DBTransaction transaction, int bufferSize = 81920);
 
-        public virtual Task<uint> SetLOB(Stream value, DBTransaction transaction)
-        {
-            return null;
-        }
+        public abstract Task<uint> SetLOB(Stream value, DBTransaction transaction);
 
         public virtual void CreateDatabase(DBSchema schema, DBConnection connection)
         {
@@ -405,6 +396,8 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             }
             ddl.AppendLine();
         }
+
+        public abstract Task<object> ExecuteQueryAsync(IDbCommand command, DBExecuteType type, CommandBehavior behavior);
 
         public virtual void Format(StringBuilder ddl, DBForeignKey constraint)
         {
@@ -896,7 +889,7 @@ where a.table_name='{tableInfo.Name}'{(string.IsNullOrEmpty(tableInfo.Schema) ? 
             transaction.Reader = (IDataReader)transaction.ExecuteQuery(command, DBExecuteType.Reader, CommandBehavior.SequentialAccess);
             if (transaction.Reader.Read())
             {
-                return new DataReaderStream(transaction.Reader);
+                return new DataReaderStream(transaction.Reader, false);
             }
             return null;
         }

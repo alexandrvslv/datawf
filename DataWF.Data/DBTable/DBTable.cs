@@ -41,9 +41,9 @@ namespace DataWF.Data
 {
     public abstract class DBTable : DBSchemaItem, IComparable, IDBTable
     {
-        private static Dictionary<Type, DBTable> cacheTables = new Dictionary<Type, DBTable>();
-        private static Dictionary<Type, TableGenerator> cacheTableAttributes = new Dictionary<Type, TableGenerator>();
-        private static Dictionary<Type, ItemTypeGenerator> cacheItemTypeAttributes = new Dictionary<Type, ItemTypeGenerator>();
+        private static readonly Dictionary<Type, DBTable> cacheTables = new Dictionary<Type, DBTable>();
+        private static readonly Dictionary<Type, TableGenerator> cacheTableAttributes = new Dictionary<Type, TableGenerator>();
+        private static readonly Dictionary<Type, ItemTypeGenerator> cacheItemTypeAttributes = new Dictionary<Type, ItemTypeGenerator>();
 
         public static void ClearAttributeCache()
         {
@@ -832,7 +832,7 @@ namespace DataWF.Data
             var command = transaction.AddCommand(dmlCommand.Text, dmlCommand.Type);
             dmlCommand.FillCommand(command, item);
 
-            var result = transaction.ExecuteQuery(command, dmlCommand == dmlInsertSequence ? DBExecuteType.Scalar : DBExecuteType.NoReader);
+            var result = await transaction.ExecuteQueryAsync(command, dmlCommand == dmlInsertSequence ? DBExecuteType.Scalar : DBExecuteType.NoReader);
             transaction.DbConnection.System.UploadCommand(item, command);
             if (PrimaryKey != null && item.PrimaryId == null)
             {

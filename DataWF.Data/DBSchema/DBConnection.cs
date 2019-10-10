@@ -42,7 +42,7 @@ namespace DataWF.Data
         private bool encrypt;
         private bool integrSec;
         private IsolationLevel level = IsolationLevel.ReadUncommitted;
-        private object _locker = new object();
+        private readonly object _locker = new object();
         private string systemName;
         private DBSystem system;
         internal HashSet<IDbConnection> Buffer = new HashSet<IDbConnection>();
@@ -396,8 +396,8 @@ namespace DataWF.Data
                 return buffer;
             }
 
-            private static byte[] vector = Encoding.ASCII.GetBytes("Ke9d&4Jv@d0barh+");
-            private static byte[] key = Encoding.ASCII.GetBytes("Jdv837rf;&G0dfj&");
+            private static readonly byte[] vector = Encoding.ASCII.GetBytes("Ke9d&4Jv@d0barh+");
+            private static readonly byte[] key = Encoding.ASCII.GetBytes("Jdv837rf;&G0dfj&");
         }
 
         public DBConnection Clone()
@@ -484,8 +484,8 @@ namespace DataWF.Data
         {
             using (var transaction = new DBTransaction(this, null, true))
             {
-                transaction.AddCommand(query);
-                return transaction.ExecuteListDictionary();
+                var command = transaction.AddCommand(query);
+                return transaction.ExecuteListDictionary(command);
             }
         }
 

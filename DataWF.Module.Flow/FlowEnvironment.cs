@@ -46,7 +46,7 @@ namespace DataWF.Module.Flow
 
         public static void OnDBServiceExecute(DBExecuteEventArg arg)
         {
-            if (Config.LogExecute || arg.Rezult is Exception || arg.Type == DBExecuteType.CreateConnection)
+            if (Config.LogExecute || arg.Rezult is Exception)
             {
                 string message = string.Format("in {0} ms ({1})", arg.Time.TotalMilliseconds, arg.Rezult is IDataReader
                                                ? ((IDataReader)arg.Rezult).RecordsAffected + "*" + ((IDataReader)arg.Rezult).FieldCount : (arg.Rezult is Exception
