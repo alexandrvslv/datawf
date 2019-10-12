@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 
@@ -11,6 +12,8 @@ namespace DataWF.Common
         ICollection<IComparer> Orders { get; }
 
         bool Suspending { get; set; }
+
+        event EventHandler ParametersChanged;
 
         IQueryParameter Add(string property, object value);
 
