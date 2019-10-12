@@ -175,7 +175,10 @@ namespace DataWF.Common
             }
             else if (Value is IEnumerable enumerable)
             {
-                return string.Concat('(', string.Join(", ", enumerable.Cast<object>().Select(p => p is string ps ? $"'{ps}'" : p?.ToString())), ')');
+                var casted = enumerable.Cast<object>();
+                return casted.Count() == 0
+                    ? string.Empty
+                    : string.Concat('(', string.Join(", ", casted.Select(p => p is string ps ? $"'{ps}'" : p?.ToString())), ')');
             }
             else
             {
