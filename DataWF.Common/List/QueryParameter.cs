@@ -95,7 +95,7 @@ namespace DataWF.Common
             get
             {
                 return emptyFormat ? true : Comparer.Type != CompareTypes.Is
-                  && (Value == null || (Value is string strFilter && strFilter.Length == 0) || string.IsNullOrEmpty(FormatValue()));
+                  && (Value == null || (Value is string strFilter && strFilter.Length == 0) || string.IsNullOrEmpty(FormatValue(Value, Comparer)));
             }
             set { emptyFormat = value; }
         }
@@ -143,47 +143,51 @@ namespace DataWF.Common
             {
                 builder.Append($" {Logic.Format()} ");
             }
-            builder.Append($"{((Group & QueryGroup.Begin) != 0 ? "(" : "")}{FormatName ?? Name} {Comparer.Format()} {FormatValue()}{((Group & QueryGroup.End) != 0 ? ")" : "")}");
+            builder.Append($"{((Group & QueryGroup.Begin) != 0 ? "(" : "")}{FormatName ?? Name} {Comparer.Format()} {FormatValue(Value, Comparer)}{((Group & QueryGroup.End) != 0 ? ")" : "")}");
         }
 
-        private string FormatValue()
+        private string FormatValue(object value, CompareType comparer)
         {
+            string result; 
             if (Invoker == null)
             {
-                return Value.ToString();
+                result = value.ToString();
             }
-            if (Value == null)
+            else if (value == null)
             {
-                return "null";
+                result = "null";
             }
-            if (Value is IQueryFormatable formatable)
+            else if (value is IQueryFormatable formatable)
             {
-                return formatable.Format();
+                result = formatable.Format();
             }
-            if (Value is DateTime date)
+            else if (value is DateTime date)
             {
-                return $"'{date.ToString("yyyy.MM.dd")}'";
-            }
-            var type = TypeHelper.CheckNullable(Invoker.DataType);
-            if (Value is string stringValue)
+                result = $"'{date.ToString("yyyy.MM.dd")}'";
+            }            
+            else if (value is string stringValue)
             {
-                if (Comparer.Type == CompareTypes.Like && stringValue.IndexOf('%') < 0)
-                    return $"'%{stringValue}%'";
-                else if (Comparer.Type == CompareTypes.In)
-                    return stringValue;
-                return $"'{stringValue}'";
+                if (comparer.Type == CompareTypes.Like && stringValue.IndexOf('%') < 0)
+                    result = $"'%{stringValue}%'";                
+                else
+                    result = $"'{stringValue}'";
             }
-            else if (Value is IEnumerable enumerable)
+            else if (value is IEnumerable enumerable)
             {
                 var casted = enumerable.Cast<object>();
-                return casted.Count() == 0
+                result = casted.Count() == 0
                     ? string.Empty
-                    : string.Concat('(', string.Join(", ", casted.Select(p => p is string ps ? $"'{ps}'" : p?.ToString())), ')');
+                    : string.Join(", ", casted.Select(p => FormatValue(p, CompareType.Equal)));
             }
             else
             {
-                return Value.ToString();
+                result = value.ToString();
             }
+            if (comparer.Type == CompareTypes.In)
+            {
+                result = string.Concat('(', result, ')');
+            }
+            return result;
         }
 
         public LogicType Logic
