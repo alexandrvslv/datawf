@@ -136,7 +136,7 @@ namespace DataWF.Common
             {
                 if (item.Group?.Group != null
                     && items.TryGetValue((IAccessGroup)item.Group.Group, out var value)
-                    && value.Access == item.Access)
+                    && (value.Access & item.Access) == item.Access)
                 {
                     items.Remove(item.Group);
                     flag = true;
