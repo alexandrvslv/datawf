@@ -122,7 +122,7 @@ namespace DataWF.Module.Common
         {
             foreach (User user in User.DBTable)
             {
-                if (user.Access.Get(this).Create
+                if (user.Access.Get(this, false).Create
                     && user.Access.GetFlag(AccessType.Read, transaction.Caller))
                 {
                     yield return user;
