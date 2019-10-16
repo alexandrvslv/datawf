@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -12,6 +13,7 @@ using System.Net.Http.Headers;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace DataWF.Common
@@ -81,94 +83,11 @@ namespace DataWF.Common
             return client;
         }
 
-        protected virtual HttpRequestMessage CreateRequest(ProgressToken progressToken,
-            string httpMethod = "GET",
-            string commandUrl = "/api",
-            string mediaType = "application/json",
-            object value = null,
-            params object[] parameters)
-        {
-            Status =
-                httpMethod.Equals("POST", StringComparison.OrdinalIgnoreCase) ? ClientStatus.Post :
-                httpMethod.Equals("PUT", StringComparison.OrdinalIgnoreCase) ? ClientStatus.Put :
-                httpMethod.Equals("DELETE", StringComparison.OrdinalIgnoreCase) ? ClientStatus.Delete :
-                ClientStatus.Get;
-
-            var request = new HttpRequestMessage()
-            {
-                RequestUri = new Uri(ParseUrl(commandUrl, parameters).ToString(), UriKind.RelativeOrAbsolute),
-                Method = new HttpMethod(httpMethod)
-            };
-
-            Provider?.Authorization?.FillRequest(request);
-
-            if (value is Stream stream)
-            {
-                var fileStream = stream as FileStream;
-                var fileName = parameters.Length > 1 ? (string)parameters[1]
-                    : fileStream != null ? Path.GetFileName(fileStream.Name)
-                    : "somefile.ext";
-                var lastWriteTime = fileStream != null ? File.GetLastWriteTimeUtc(fileStream.Name) : DateTime.UtcNow;
-                var content = new MultipartFormDataContent
-                {
-                    { new StringContent(lastWriteTime.ToString("o")), "LastWriteTime" },
-                    { new ProgressStreamContent(progressToken, stream, 81920), Path.GetFileNameWithoutExtension(fileName), fileName }
-                    //File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                };
-
-                // content.Headers.ContentType = MediaTypeHeaderValue.Parse(mediaType);
-                request.Content = content;
-            }
-            else if (value != null)
-            {
-                Validation(value);
-
-                var contentText = JsonConvert.SerializeObject(value, JsonSerializerSettings);
-                var content = new StringContent(contentText, Encoding.UTF8);
-                content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
-                request.Content = content;
-            }
-            if (httpMethod.Equals("GET", StringComparison.OrdinalIgnoreCase))
-            {
-                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(mediaType));
-            }
-            if (mediaType.Equals("application/json", StringComparison.OrdinalIgnoreCase))
-            {
-                request.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("br"));
-            }
-            return request;
-        }
-
         protected virtual void Validation(object value)
         {
             var vc = new ValidationContext(value);
             //var results = new List<ValidationResult>(); 
             Validator.ValidateObject(value, vc, true);
-        }
-
-        protected virtual StringBuilder ParseUrl(string url, params object[] parameters)
-        {
-            var urlBuilder = new StringBuilder();
-            urlBuilder.Append(BaseUrl?.TrimEnd('/') ?? "");
-            int i = 0;
-            foreach (var item in url.Split('/'))
-            {
-                if (item.Length == 0)
-                    continue;
-                urlBuilder.Append('/');
-                if (item.StartsWith("{", StringComparison.Ordinal))
-                {
-                    if (parameters == null || parameters.Length <= i)
-                        throw new ArgumentException();
-                    urlBuilder.Append(Uri.EscapeDataString(ConvertToString(parameters[i], System.Globalization.CultureInfo.InvariantCulture)));
-                    i++;
-                }
-                else
-                {
-                    urlBuilder.Append(item);
-                }
-            }
-            return urlBuilder;
         }
 
         public string GetFilePath(IFileModel fileModel, string commandUrl)
@@ -197,12 +116,12 @@ namespace DataWF.Common
             string commandUrl = "/api",
             string mediaType = "application/json",
             object value = null,
-            params object[] parameters)
+            params object[] routeParams)
         {
             var client = CreateHttpClient();
             try
             {
-                using (var request = CreateRequest(progressToken, httpMethod, commandUrl, mediaType, value, parameters))
+                using (var request = CreateRequest(progressToken, httpMethod, commandUrl, mediaType, value, routeParams))
                 {
                     using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, progressToken.CancellationToken).ConfigureAwait(false))
                     {
@@ -281,7 +200,7 @@ namespace DataWF.Common
                             case System.Net.HttpStatusCode.Unauthorized:
                                 if (await Provider?.Authorization?.OnUnauthorizedError())
                                 {
-                                    return await Request<R>(progressToken, httpMethod, commandUrl, mediaType, value, parameters).ConfigureAwait(false);
+                                    return await Request<R>(progressToken, httpMethod, commandUrl, mediaType, value, routeParams).ConfigureAwait(false);
                                 }
                                 else
                                 {
@@ -617,32 +536,103 @@ namespace DataWF.Common
             return headers;
         }
 
+        protected virtual HttpRequestMessage CreateRequest(ProgressToken progressToken,
+            string httpMethod = "GET",
+            string commandUrl = "/api",
+            string mediaType = "application/json",
+            object value = null,
+            params object[] parameters)
+        {
+            Status =
+                httpMethod.Equals("POST", StringComparison.OrdinalIgnoreCase) ? ClientStatus.Post :
+                httpMethod.Equals("PUT", StringComparison.OrdinalIgnoreCase) ? ClientStatus.Put :
+                httpMethod.Equals("DELETE", StringComparison.OrdinalIgnoreCase) ? ClientStatus.Delete :
+                ClientStatus.Get;
+
+            var request = new HttpRequestMessage()
+            {
+                RequestUri = new Uri(ParseUrl(commandUrl, parameters).ToString(), UriKind.RelativeOrAbsolute),
+                Method = new HttpMethod(httpMethod)
+            };
+
+            Provider?.Authorization?.FillRequest(request);
+
+            if (value is Stream stream)
+            {
+                var fileStream = stream as FileStream;
+                var fileName = parameters.Length > 1 ? (string)parameters[1]
+                    : fileStream != null ? Path.GetFileName(fileStream.Name)
+                    : "somefile.ext";
+                var lastWriteTime = fileStream != null ? File.GetLastWriteTimeUtc(fileStream.Name) : DateTime.UtcNow;
+                var content = new MultipartFormDataContent
+                {
+                    { new StringContent(lastWriteTime.ToString("o")), "LastWriteTime" },
+                    { new ProgressStreamContent(progressToken, stream, 81920), Path.GetFileNameWithoutExtension(fileName), fileName }
+                };
+                request.Content = content;
+            }
+            else if (value != null)
+            {
+                Validation(value);
+
+                var contentText = JsonConvert.SerializeObject(value, JsonSerializerSettings);
+                var content = new StringContent(contentText, Encoding.UTF8);
+                content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
+                request.Content = content;
+            }
+            if (httpMethod.Equals("GET", StringComparison.OrdinalIgnoreCase))
+            {
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(mediaType));
+            }
+            if (mediaType.Equals("application/json", StringComparison.OrdinalIgnoreCase))
+            {
+                request.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("br"));
+            }
+            return request;
+        }
+
+        protected virtual StringBuilder ParseUrl(string url, params object[] parameters)
+        {
+            var urlBuilder = new StringBuilder();
+            urlBuilder.Append(BaseUrl?.TrimEnd('/') ?? "");
+            int i = 0;
+            int c = 0;
+            foreach (Match m in Regex.Matches(url, @"{.[^}]*}", RegexOptions.Compiled))
+            {
+                if (m.Index > c)
+                {
+                    urlBuilder.Append(url.Substring(c, m.Index - c));
+                }
+                if (parameters.Length <= i)
+                {
+                    throw new ArgumentException();
+                }
+
+                urlBuilder.Append(Uri.EscapeDataString(ConvertToString(parameters[i++], CultureInfo.InvariantCulture)));
+
+                c = m.Index + m.Length;
+            }
+            if (c < url.Length)
+            {
+                urlBuilder.Append(url.Substring(c));
+            }
+            return urlBuilder;
+        }
+
         protected string ConvertToString(object value, System.Globalization.CultureInfo cultureInfo)
         {
             if (value is Enum)
             {
-                string name = Enum.GetName(value.GetType(), value);
-                if (name != null)
-                {
-                    var field = IntrospectionExtensions.GetTypeInfo(value.GetType()).GetDeclaredField(name);
-                    if (field != null)
-                    {
-                        var attribute = field.GetCustomAttribute<EnumMemberAttribute>();
-                        if (attribute != null)
-                        {
-                            return attribute.Value;
-                        }
-                    }
-                }
+                return EnumItem.Format(value);
             }
             else if (value is byte[])
             {
                 return Convert.ToBase64String((byte[])value);
             }
-            else if (value.GetType().IsArray)
+            else if (TypeHelper.IsEnumerable(value.GetType()))
             {
-                var array = Enumerable.OfType<object>((System.Array)value);
-                return string.Join(",", Enumerable.Select(array, o => ConvertToString(o, cultureInfo)));
+                var array = value as IEnumerable;
+                return string.Join(",", array.Cast<object>().Select(o => ConvertToString(o, cultureInfo)));
             }
 
             return Convert.ToString(value, cultureInfo);

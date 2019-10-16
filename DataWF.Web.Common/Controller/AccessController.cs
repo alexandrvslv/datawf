@@ -144,6 +144,53 @@ namespace DataWF.Web.Common
             }
         }
 
+        [HttpPut("SetItemsList/{name}")]
+        public async Task<ActionResult<bool>> SetAccessItemsList([FromRoute]string name, [FromQuery(Name = "ids")]List<string> ids, [FromBody]List<AccessItem> accessItems)
+        {
+            var table = GetTable(name);
+            if (table == null)
+            {
+                return NotFound();
+            }
+            var accessColumn = table.AccessKey;
+            if (accessColumn == null)
+            {
+                return BadRequest($"Table {table} is not Accessable!");
+            }
+            using (var transaction = new DBTransaction(table.Connection, CurrentUser))
+            {
+                try
+                {
+                    foreach (var idText in ids)
+                    {
+                        foreach (var id in idText.Split(','))
+                        {
+                            var value = table.LoadItemById(id, DBLoadParam.Load, null, transaction);
+                            if (value == null)
+                            {
+                                return NotFound();
+                            }
+                            if (!accessColumn.Access.GetFlag(AccessType.Admin, CurrentUser)
+                                && !value.Access.GetFlag(AccessType.Admin, CurrentUser)
+                                && !table.Access.GetFlag(AccessType.Admin, CurrentUser))
+                            {
+                                return Forbid();
+                            }
+                            value.Access = new AccessValue(accessItems);
+                            await value.Save(transaction);
+                        }
+                    }
+                    transaction.Commit();
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    return BadRequest(ex);
+                }
+            }
+        }
+
         [HttpPut("ClearAccess/{name}/{id}")]
         public async Task<ActionResult<IEnumerable<AccessItem>>> ClearAccess([FromRoute]string name, [FromRoute]string id)
         {

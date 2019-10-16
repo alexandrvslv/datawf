@@ -677,13 +677,26 @@ namespace DataWF.Web.ClientGenerator
         private IEnumerable<StatementSyntax> GenOperationBody(string actualName, OpenApiOperationDescription descriptor, bool isOverride)
         {
             var method = descriptor.Method.ToString().ToUpperInvariant();
-            var path = descriptor.Path;
             var responceSchema = (JsonSchema)null;
             var mediatype = "application/json";
             if (descriptor.Operation.Responses.TryGetValue("200", out var responce))
             {
                 responceSchema = responce.Schema;
                 mediatype = responce.Content.Keys.FirstOrDefault() ?? "application/json";
+            }
+
+            var path = new StringBuilder(descriptor.Path);
+            foreach (var parameter in descriptor.Operation.Parameters.Where(p => p.Kind == OpenApiParameterKind.Query))
+            {
+                if (path.Length == descriptor.Path.Length)
+                {
+                    path.Append("?");
+                }
+                else
+                {
+                    path.Append("&");
+                }
+                path.Append($"{parameter.Name}={{{parameter.Name}}}");
             }
 
             var returnType = GetReturningType(descriptor);
@@ -708,7 +721,7 @@ namespace DataWF.Web.ClientGenerator
             if (responceSchema?.Type == JsonObjectType.Array)
                 requestBuilder.Append($", {GetTypeString(responceSchema.Item, false, "List")}");
             requestBuilder.Append($">(progressToken, \"{method}\", \"{path}\", \"{mediatype}\"");
-            var bodyParameter = descriptor.Operation.Parameters.FirstOrDefault(p => p.Kind != OpenApiParameterKind.Path);
+            var bodyParameter = descriptor.Operation.Parameters.FirstOrDefault(p => p.Kind == OpenApiParameterKind.Body || p.Kind == OpenApiParameterKind.FormData);
             if (bodyParameter == null)
             {
                 requestBuilder.Append(", null");
@@ -717,7 +730,7 @@ namespace DataWF.Web.ClientGenerator
             {
                 requestBuilder.Append($", {bodyParameter.Name}");
             }
-            foreach (var parameter in descriptor.Operation.Parameters.Where(p => p.Kind == OpenApiParameterKind.Path))
+            foreach (var parameter in descriptor.Operation.Parameters.Where(p => p.Kind == OpenApiParameterKind.Path || p.Kind == OpenApiParameterKind.Query))
             {
                 requestBuilder.Append($", {parameter.Name}");
             }
