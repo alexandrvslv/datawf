@@ -32,7 +32,7 @@ namespace DataWF.Web.Common
         public User CurrentUser => User.GetCommonUser();
 
         [HttpGet("Get/{name}")]
-        public ActionResult<AccessValue> GetAccess([FromRoute]string name)
+        public ActionResult<AccessValue> Get([FromRoute]string name)
         {
             try
             {
@@ -50,7 +50,7 @@ namespace DataWF.Web.Common
         }
 
         [HttpGet("GetProperty/{name}/{property}")]
-        public ActionResult<AccessValue> GetPropertyAccess([FromRoute]string name, [FromRoute]string property)
+        public ActionResult<AccessValue> GetProperty([FromRoute]string name, [FromRoute]string property)
         {
             try
             {
@@ -69,7 +69,7 @@ namespace DataWF.Web.Common
         }
 
         [HttpGet("GetItems/{name}/{id}")]
-        public ActionResult<IEnumerable<AccessItem>> GetAccessItems([FromRoute]string name, [FromRoute]string id)
+        public ActionResult<IEnumerable<AccessItem>> Get([FromRoute]string name, [FromRoute]string id)
         {
             var table = GetTable(name);
             if (table == null)
@@ -104,7 +104,7 @@ namespace DataWF.Web.Common
         }
 
         [HttpPut("SetItems/{name}/{id}")]
-        public async Task<ActionResult<bool>> SetAccessItems([FromRoute]string name, [FromRoute]string id, [FromBody]List<AccessItem> accessItems)
+        public async Task<ActionResult<bool>> Set([FromRoute]string name, [FromRoute]string id, [FromBody]List<AccessItem> accessItems)
         {
             var table = GetTable(name);
             if (table == null)
@@ -144,9 +144,13 @@ namespace DataWF.Web.Common
             }
         }
 
-        [HttpPut("SetItemsList/{name}")]
-        public async Task<ActionResult<bool>> SetAccessItemsList([FromRoute]string name, [FromQuery(Name = "ids")]List<string> ids, [FromBody]List<AccessItem> accessItems)
+        [HttpPut("SetItems/{name}")]
+        public async Task<ActionResult<bool>> Set([FromRoute]string name, [FromBody]AccessUpdatePackage accessPack)
         {
+            if (accessPack == null)
+            {
+                return BadRequest("Missing body parameter: AccessUpdatePack");
+            }
             var table = GetTable(name);
             if (table == null)
             {
@@ -157,28 +161,26 @@ namespace DataWF.Web.Common
             {
                 return BadRequest($"Table {table} is not Accessable!");
             }
+            var temp = new AccessValue(accessPack.Items);
             using (var transaction = new DBTransaction(table.Connection, CurrentUser))
             {
                 try
                 {
-                    foreach (var idText in ids)
+                    foreach (var id in accessPack.Ids)
                     {
-                        foreach (var id in idText.Split(','))
+                        var value = table.LoadItemById(id, DBLoadParam.Load, null, transaction);
+                        if (value == null)
                         {
-                            var value = table.LoadItemById(id, DBLoadParam.Load, null, transaction);
-                            if (value == null)
-                            {
-                                return NotFound();
-                            }
-                            if (!accessColumn.Access.GetFlag(AccessType.Admin, CurrentUser)
-                                && !value.Access.GetFlag(AccessType.Admin, CurrentUser)
-                                && !table.Access.GetFlag(AccessType.Admin, CurrentUser))
-                            {
-                                return Forbid();
-                            }
-                            value.Access = new AccessValue(accessItems);
-                            await value.Save(transaction);
+                            return NotFound();
                         }
+                        if (!accessColumn.Access.GetFlag(AccessType.Admin, CurrentUser)
+                            && !value.Access.GetFlag(AccessType.Admin, CurrentUser)
+                            && !table.Access.GetFlag(AccessType.Admin, CurrentUser))
+                        {
+                            return Forbid();
+                        }
+                        value.Access = temp;
+                        await value.Save(transaction);
                     }
                     transaction.Commit();
                     return true;
@@ -192,7 +194,7 @@ namespace DataWF.Web.Common
         }
 
         [HttpPut("ClearAccess/{name}/{id}")]
-        public async Task<ActionResult<IEnumerable<AccessItem>>> ClearAccess([FromRoute]string name, [FromRoute]string id)
+        public async Task<ActionResult<IEnumerable<AccessItem>>> Clear([FromRoute]string name, [FromRoute]string id)
         {
             var table = GetTable(name);
             if (table == null)
@@ -223,7 +225,57 @@ namespace DataWF.Web.Common
                     value.Access = null;
                     await value.Save(transaction);
                     transaction.Commit();
-                    return GetAccessItems(name, id);
+                    return new ActionResult<IEnumerable<AccessItem>>(value.Access.Items);
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    return BadRequest(ex);
+                }
+            }
+        }
+
+        [HttpPut("ClearAccess/{name}")]
+        public async Task<ActionResult<IEnumerable<AccessItem>>> Clear([FromRoute]string name, [FromBody]List<string> ids)
+        {
+            var table = GetTable(name);
+            if (table == null)
+            {
+                return NotFound();
+            }
+            var accessColumn = table.AccessKey;
+            if (accessColumn == null)
+            {
+                return BadRequest($"Table {table} is not Accessable!");
+            }
+            using (var transaction = new DBTransaction(table.Connection, CurrentUser))
+            {
+                try
+                {
+                    var firstItem = (DBItem)null;
+                    foreach (var id in ids)
+                    {
+                        var value = table.LoadItemById(id, DBLoadParam.Load, null, transaction);
+                        if (value == null)
+                        {
+                            return NotFound();
+                        }
+                        if (firstItem == null)
+                        {
+                            firstItem = value;
+                        }
+                        if (!accessColumn.Access.GetFlag(AccessType.Admin, CurrentUser)
+                            && !value.Access.GetFlag(AccessType.Admin, CurrentUser)
+                            && !table.Access.GetFlag(AccessType.Admin, CurrentUser))
+                        {
+                            return Forbid();
+                        }
+
+                        value.Access = null;
+                        await value.Save(transaction);
+                    }
+                    transaction.Commit();
+                    return new ActionResult<IEnumerable<AccessItem>>(firstItem.Access.Items);
                 }
                 catch (Exception ex)
                 {
