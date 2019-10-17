@@ -188,11 +188,15 @@ namespace DataWF.Data
                     foreach (var item in commands)
                     {
                         //TODO CHECK item.Cancel();
-                        foreach (IDataParameter param in item.Parameters)
+                        try
                         {
-                            if (param.Value is IDisposable dispValue)
-                                dispValue.Dispose();
+                            foreach (IDataParameter param in item.Parameters)
+                            {
+                                if (param.Value is IDisposable dispValue)
+                                    dispValue.Dispose();
+                            }
                         }
+                        catch (Exception ex) { Helper.OnException(ex); }
                         item.Dispose();
                     }
                     commands.Clear();
