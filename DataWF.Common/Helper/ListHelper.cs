@@ -14,6 +14,15 @@ namespace DataWF.Common
         private static readonly AsyncCallback callback = new AsyncCallback(QuickSortFinish);
         private static readonly Action<IList, int, int, IComparer> action = new Action<IList, int, int, IComparer>(QuickSort1);
 
+        public static IEnumerable<object> ToEnumerable(this object obj)
+        {
+            if (obj is IEnumerable<object> enumerableObject)
+                return enumerableObject;
+            else if (obj is IEnumerable enumerable)
+                return enumerable.Cast<object>();
+            else
+                return new[] { obj };
+        }
 
         public static bool Contains(IEnumerable enumerable, object value)
         {
@@ -270,118 +279,77 @@ namespace DataWF.Common
         public static bool CheckItem(object x, object y, CompareType compare, IComparer comparer)
         {
             bool result = false;
-            if (compare.Type == CompareTypes.Equal)
+            switch (compare.Type)
             {
-                result = Equal(x, y, false) ? !compare.Not : compare.Not;
-            }
-            else if (compare.Type == CompareTypes.Is)
-            {
-                result = compare.Not ? (x != null && x != DBNull.Value) : (x == null || x == DBNull.Value);
-            }
-            else if (x != null && y != null && compare.Type == CompareTypes.Like)
-            {
-                y = y.ToString().Trim(new char[] { '%' });
-                if (x.ToString().IndexOf((string)y, 0, StringComparison.OrdinalIgnoreCase) >= 0)
-                    result = !compare.Not;
-                else
-                    result = compare.Not;
-            }
-            else if (compare.Type == CompareTypes.In)
-            {
-                if (!(x is string) && x is IEnumerable xlist)
-                {
-                    x = y;
-                    y = xlist;
-                }
-                object val = x;
-                if (y is string)
-                {
-                    y = ((string)y).Split(',');
-                }
-                if (y is IEnumerable list)
-                {
-                    foreach (object item in list)
+                case CompareTypes.Equal:
+                    result = Equal(x, y, false);
+                    break;
+                case CompareTypes.Is:
+                    result = x == null || x == DBNull.Value;
+                    break;
+                case CompareTypes.Like:
+                    y = (y?.ToString() ?? string.Empty).Trim(new char[] { '%' });
+                    result = (x?.ToString() ?? string.Empty).IndexOf((string)y, 0, StringComparison.OrdinalIgnoreCase) >= 0;
+                    break;
+                case CompareTypes.In:
+                    if (!(x is string) && x is IEnumerable xlist)
                     {
-                        if (item is string && !(val is string))
+                        x = y;
+                        y = xlist;
+                    }
+                    if (y is string)
+                    {
+                        y = ((string)y).Split(',');
+                    }
+                    if (y is Enum && x is Enum)
+                    {
+                        result = ((int)y & (int)x) != 0;
+                    }
+                    else
+                    {
+                        foreach (object item in y?.ToEnumerable() ?? Enumerable.Empty<object>())
                         {
-                            val = x == null ? string.Empty : x.ToString();
-                        }
+                            if (item is string && !(x is string))
+                            {
+                                x = x == null ? string.Empty : x.ToString();
+                            }
 
-                        if (Equals(item, val))
-                        {
-                            result = true;
+                            if (Equals(item, x))
+                            {
+                                result = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    break;
+                case CompareTypes.Contains:
+                    result = x?.ToEnumerable().Contains(y) ?? false;
+                    break;
+                case CompareTypes.Intersect:
+                    result = x?.ToEnumerable().Intersect(y?.ToEnumerable() ?? Enumerable.Empty<object>()).Any() ?? false;
+                    break;
+                default:
+                    int i = Compare(x, y, comparer, false);
+                    switch (compare.Type)
+                    {
+                        case CompareTypes.Greater:
+                            result = i > 0;
                             break;
-                        }
+                        case CompareTypes.Less:
+                            result = i < 0;
+                            break;
+                        case CompareTypes.GreaterOrEqual:
+                            result = i >= 0;
+                            break;
+                        case CompareTypes.LessOrEqual:
+                            result = i <= 0;
+                            break;
                     }
-                    if (compare.Not)
-                    {
-                        result = !result;
-                    }
-                }
-                else if (y is Enum && x is Enum)
-                {
-                    result = ((int)y & (int)x) != 0;
+                    break;
+            }
 
-                    if (compare.Not)
-                    {
-                        result = !result;
-                    }
-                }
-            }
-            else if (compare.Type == CompareTypes.Contains)
-            {
-                if (x is IList xList)
-                {
-                    result = xList.Contains(y);
-                }
-                else if (x is IEnumerable<object> xEnumerableObject)
-                {
-                    result = xEnumerableObject.Contains(y);
-                }
-                else if (x is IEnumerable xEnumerable)
-                {
-                    result = Contains(xEnumerable, y);
-                }
-                if (compare.Not)
-                {
-                    result = !result;
-                }
-            }
-            else if (compare.Type == CompareTypes.Intersect)
-            {
-                if (x is IEnumerable<object> xEnumerableObject && y is IEnumerable<object> yEnumerableObject)
-                {
-                    result = xEnumerableObject.Intersect(yEnumerableObject).Any();
-                }
-                if (x is IEnumerable xEnumerable && y is IEnumerable yEnumerable)
-                {
-                    result = Intersect(xEnumerable, yEnumerable).Any();
-                }
-                if (compare.Not)
-                {
-                    result = !result;
-                }
-            }
-            else
-            {
-                int i = Compare(x, y, comparer, false);
-                switch (compare.Type)
-                {
-                    case CompareTypes.Greater:
-                        result = i > 0;
-                        break;
-                    case CompareTypes.Less:
-                        result = i < 0;
-                        break;
-                    case CompareTypes.GreaterOrEqual:
-                        result = i >= 0;
-                        break;
-                    case CompareTypes.LessOrEqual:
-                        result = i <= 0;
-                        break;
-                }
-            }
-            return result;
+            return compare.Not ? !result : result;
         }
 
         public static IFilterable GetListView(object dataSource)
