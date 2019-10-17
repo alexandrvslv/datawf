@@ -4,14 +4,15 @@ using System.ComponentModel;
 using System.Xml.Serialization;
 
 namespace DataWF.Common
-{    
+{
     public class LocaleCategory : SelectableList<LocaleItem>, ICloneable, IContainerNotifyPropertyChanged
     {
         private string name = "";
 
         public LocaleCategory()
         {
-            Indexes.Add(LocaleItem.NameInvoker.Instance);
+            Indexes.Add(LocaleItem.NameInvoker.Instance.Name,
+                new ListIndex<LocaleItem, string>(LocaleItem.NameInvoker.Instance, ListIndexFabric.GetNullKey<string>(), StringComparer.Ordinal));
         }
 
         [ReadOnly(true), DefaultValue("")]

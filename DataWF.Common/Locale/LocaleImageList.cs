@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 
 namespace DataWF.Common
-{   
+{
     /// <summary>
     /// Images for localization
     /// </summary>
@@ -15,7 +15,8 @@ namespace DataWF.Common
         /// </summary>
         public LocaleImageList()
         {
-            Indexes.Add(LocaleImage.KeyInvoker.Instance);
+            Indexes.Add(LocaleImage.KeyInvoker.Instance.Name,
+                new ListIndex<LocaleImage, string>(LocaleImage.KeyInvoker.Instance, ListIndexFabric.GetNullKey<string>(), StringComparer.Ordinal));
         }
 
         public bool Contains(string name)
