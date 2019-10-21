@@ -7,37 +7,22 @@ namespace DataWF.Common
     {
         public static readonly IInvoker<object, string> Instance = new ToStringInvoker();
 
-        public bool CanWrite { get { return false; } }
+        public bool CanWrite => false;
 
-        public Type DataType { get { return typeof(string); } set { } }
+        public Type DataType => typeof(string);
 
-        public Type TargetType { get { return typeof(object); } }
+        public Type TargetType => typeof(object);
 
-        public string Name { get { return nameof(Object.ToString); } set { } }
+        public string Name { get => nameof(Object.ToString); set { } }
 
-        public string GetValue(object target)
-        {
-            return target?.ToString();
-        }
+        public string GetValue(object target) => target?.ToString();
 
-        object IValueProvider.GetValue(object target)
-        {
-            return GetValue(target);
-        }
+        object IValueProvider.GetValue(object target) => GetValue(target);
 
-        public void SetValue(object target, object value)
-        {
-            throw new NotSupportedException();
-        }
+        public void SetValue(object target, object value) => throw new NotSupportedException();
 
-        public void SetValue(object target, string value)
-        {
-            throw new NotImplementedException();
-        }
+        public void SetValue(object target, string value) => throw new NotImplementedException();
 
-        public IListIndex CreateIndex(bool concurrent)
-        {
-            return ListIndexFabric.Create<object, string>(this, concurrent);
-        }
+        public IListIndex CreateIndex(bool concurrent) => ListIndexFabric.Create<object, string>(this, concurrent);
     }
 }
