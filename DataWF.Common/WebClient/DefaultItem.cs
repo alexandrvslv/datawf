@@ -12,7 +12,7 @@ namespace DataWF.Common
         public static Action<PropertyChangedEventHandler, object, PropertyChangedEventArgs> GlogalChangedHook;
         protected PropertyChangedEventHandler propertyChanged;
 
-        [JsonIgnore, XmlIgnore]
+        [JsonIgnore, XmlIgnore, Browsable(false)]
         public IEnumerable<INotifyListPropertyChanged> Containers => TypeHelper.GetContainers(propertyChanged);
 
         public event PropertyChangedEventHandler PropertyChanged

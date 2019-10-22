@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 
@@ -18,7 +19,7 @@ namespace DataWF.Common
     {
         private SynchronizedStatus syncStatus = SynchronizedStatus.New;
 
-        [JsonIgnore, XmlIgnore]
+        [JsonIgnore, XmlIgnore, Browsable(false)]
         public IDictionary<string, object> Changes { get; } = new Dictionary<string, object>(StringComparer.Ordinal);
 
         [JsonIgnore, XmlIgnore]
