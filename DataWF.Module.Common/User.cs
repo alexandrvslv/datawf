@@ -34,7 +34,7 @@ using System.Threading.Tasks;
 
 namespace DataWF.Module.Common
 {
-    [DataContract, Table("ruser", "User", BlockSize = 100)]
+    [Table("ruser", "User", BlockSize = 100)]
     public class User : DBUser, IComparable, IDisposable
     {
         private static DBColumn abbreviationKey = DBColumn.EmptyKey;
@@ -263,73 +263,73 @@ namespace DataWF.Module.Common
 
         public UserReg LogStart { get; set; }
 
-        
+
         public override int? Id
         {
-            get { return GetValue<int?>(Table.PrimaryKey); }
-            set { SetValue(value, Table.PrimaryKey); }
+            get => GetValue<int?>(Table.PrimaryKey);
+            set => SetValue(value, Table.PrimaryKey);
         }
 
-        [DataMember, Column("company_id"), Browsable(false)]
+        [Column("company_id"), Browsable(false)]
         public int? CompanyId
         {
-            get { return GetValue<int?>(CompanyKey); }
-            set { SetValue(value, CompanyKey); }
+            get => GetValue<int?>(CompanyKey);
+            set => SetValue(value, CompanyKey);
         }
 
         [Reference(nameof(CompanyId))]
         public Company Company
         {
-            get { return GetReference(CompanyKey, ref company); }
-            set { SetReference(company = value, CompanyKey); }
+            get => GetReference(CompanyKey, ref company);
+            set => SetReference(company = value, CompanyKey);
         }
 
         public override string Login
         {
-            get { return GetValue<string>(Table.CodeKey); }
-            set { SetValue(value, Table.CodeKey); }
+            get => GetValue<string>(Table.CodeKey);
+            set => SetValue(value, Table.CodeKey);
         }
 
-        [DataMember, Column("abbreviation", 4, Keys = DBColumnKeys.Indexing), Index("ruser_abbreviation", true)]
+        [Column("abbreviation", 4, Keys = DBColumnKeys.Indexing), Index("ruser_abbreviation", true)]
         public string Abbreviation
         {
-            get { return GetValue<string>(AbbreviationKey); }
-            set { SetValue(value, AbbreviationKey); }
+            get => GetValue<string>(AbbreviationKey);
+            set => SetValue(value, AbbreviationKey);
         }
 
-        [DataMember, Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
+        [Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
         public override string Name
         {
-            get { return GetName(); }
-            set { SetName(value); }
+            get => GetName();
+            set => SetName(value);
         }
 
-        [DataMember, Column("department_id"), Browsable(false)]
+        [Column("department_id"), Browsable(false)]
         public int? DepartmentId
         {
-            get { return GetValue<int?>(DepartmentKey); }
-            set { SetValue(value, DepartmentKey); }
+            get => GetValue<int?>(DepartmentKey);
+            set => SetValue(value, DepartmentKey);
         }
 
 
         [Reference(nameof(DepartmentId))]
         public Department Department
         {
-            get { return GetReference(DepartmentKey, ref department); }
-            set { SetReference(department = value, DepartmentKey); }
+            get => GetReference(DepartmentKey, ref department);
+            set => SetReference(department = value, DepartmentKey);
         }
 
-        [DataMember, Column("position_id"), Browsable(false)]
+        [Column("position_id"), Browsable(false)]
         public int? PositionId
         {
-            get { return GetValue<int?>(PositionKey); }
-            set { SetValue(value, PositionKey); }
+            get => GetValue<int?>(PositionKey);
+            set => SetValue(value, PositionKey);
         }
 
         [Reference(nameof(PositionId))]
         public Position Position
         {
-            get { return GetReference<Position>(PositionKey, ref position); }
+            get => GetReference<Position>(PositionKey, ref position);
             set
             {
                 SetReference(position = value, PositionKey);
@@ -338,17 +338,17 @@ namespace DataWF.Module.Common
         }
 
         [ReadOnly(true)]
-        [DataMember, DefaultValue(false), Column("super")]
+        [DefaultValue(false), Column("super")]
         public bool? Super
         {
-            get { return GetValue<bool?>(SuperKey); }
-            set { SetValue(value, SuperKey); }
+            get => GetValue<bool?>(SuperKey);
+            set => SetValue(value, SuperKey);
         }
 
         [Browsable(false)]
         public bool Online
         {
-            get { return online; }
+            get => online;
             set
             {
                 if (online == value)
@@ -357,30 +357,30 @@ namespace DataWF.Module.Common
                 OnPropertyChanged();
             }
         }
-        
+
         public override string EMail
         {
-            get { return GetValue<string>(EmailKey); }
-            set { SetValue(value, EmailKey); }
+            get => GetValue<string>(EmailKey);
+            set => SetValue(value, EmailKey);
         }
 
-        [DataMember, Column("phone", 1024), Index("ruser_phone", false)]
+        [Column("phone", 1024), Index("ruser_phone", false)]
         public string Phone
         {
-            get { return GetValue<string>(PhoneKey); }
-            set { SetValue(value, PhoneKey); }
+            get => GetValue<string>(PhoneKey);
+            set => SetValue(value, PhoneKey);
         }
 
         public bool IsBlock
         {
-            get { return Status != DBStatus.Actual; }
-            set { Status = value ? DBStatus.Actual : DBStatus.Error; }
+            get => Status != DBStatus.Actual;
+            set => Status = value ? DBStatus.Actual : DBStatus.Error;
         }
 
-        [DataMember, Column("password", 512, Keys = DBColumnKeys.Password), PasswordPropertyText(true)]
+        [Column("password", 512, Keys = DBColumnKeys.Password), PasswordPropertyText(true)]
         public string Password
         {
-            get { return GetValue<string>(PasswordKey); }
+            get => GetValue<string>(PasswordKey);
             set
             {
                 if (value == null || value.Length == 40)
@@ -405,32 +405,32 @@ namespace DataWF.Module.Common
         [Browsable(false)]
         public string AccessToken { get; set; }
 
-        [Browsable(false), DataMember, Column("token_refresh", 2048, Keys = DBColumnKeys.Password | DBColumnKeys.NoLog)]
+        [Browsable(false), Column("token_refresh", 2048, Keys = DBColumnKeys.Password | DBColumnKeys.NoLog)]
         public string RefreshToken
         {
-            get { return GetValue<string>(RefreshTokenKey); }
-            set { SetValue(value, RefreshTokenKey); }
+            get => GetValue<string>(RefreshTokenKey);
+            set => SetValue(value, RefreshTokenKey);
         }
 
         [Column("auth_type")]
         public UserAuthType? AuthType
         {
-            get { return GetValue<UserAuthType?>(AuthTokenKey) ?? UserAuthType.SMTP; }
-            set { SetValue(value, AuthTokenKey); }
+            get => GetValue<UserAuthType?>(AuthTokenKey) ?? UserAuthType.SMTP;
+            set => SetValue(value, AuthTokenKey);
         }
 
-        public override bool IsAuthenticated => string.IsNullOrEmpty(AccessToken);        
+        public override bool IsAuthenticated => string.IsNullOrEmpty(AccessToken);
 
         public string NameRU
         {
-            get { return GetValue<string>(NameRUKey); }
-            set { SetValue(value, NameRUKey); }
+            get => GetValue<string>(NameRUKey);
+            set => SetValue(value, NameRUKey);
         }
 
         public string NameEN
         {
-            get { return GetValue<string>(NameENKey); }
-            set { SetValue(value, NameENKey); }
+            get => GetValue<string>(NameENKey);
+            set => SetValue(value, NameENKey);
         }
 
         public override string AuthenticationType => AuthType?.ToString();
