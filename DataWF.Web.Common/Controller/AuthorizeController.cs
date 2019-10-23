@@ -151,6 +151,21 @@ namespace DataWF.Web.Common
             }
         }
 
+        [AllowAnonymous]
+        [HttpPost("Register/")]
+        public async Task<ActionResult<UserApplication>> Register([FromBody]UserApplication application)
+        {
+            try
+            {
+                await application.Save((IUserIdentity)null);
+                return application;
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
+        }
+
         [HttpGet("Logs/")]
         public ActionResult<Stream> GetLogs()
         {
