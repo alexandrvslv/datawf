@@ -26,11 +26,11 @@ namespace DataWF.Data
         public ControllerMethodAttribute()
         { }
 
-        public ControllerMethodAttribute(bool design)
+        public ControllerMethodAttribute(bool allowAnonymous)
         {
-            Design = design;
+            AllowAnonymous = allowAnonymous;
         }
 
-        public bool Design { get; }
+        public bool AllowAnonymous { get; }
     }
 }
