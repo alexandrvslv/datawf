@@ -692,17 +692,18 @@ namespace DataWF.Web.CodeGenerator
             //    yield break;
             foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.Instance))//BindingFlags.DeclaredOnly
             {
-                if (method.GetCustomAttribute<ControllerMethodAttribute>() != null
-                    && (!method.IsVirtual || method.GetBaseDefinition() == null))
+                var attribute = method.GetCustomAttribute<ControllerMethodAttribute>();
+                if (attribute != null && (!method.IsVirtual || method.GetBaseDefinition() == null))
                 {
-                    yield return GenControllerMethod(method, table, usings);
+                    yield return GenControllerMethod(method, table, usings, attribute);
                 }
             }
             foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.Static))//BindingFlags.DeclaredOnly
             {
-                if (method.GetCustomAttribute<ControllerMethodAttribute>() != null)
+                var attribute = method.GetCustomAttribute<ControllerMethodAttribute>();
+                if (attribute != null)
                 {
-                    yield return GenControllerMethod(method, table, usings);
+                    yield return GenControllerMethod(method, table, usings, attribute);
                 }
             }
         }
@@ -737,7 +738,7 @@ namespace DataWF.Web.CodeGenerator
         }
 
         //https://stackoverflow.com/questions/37710714/roslyn-add-new-method-to-an-existing-class
-        private MethodDeclarationSyntax GenControllerMethod(MethodInfo method, TableGenerator table, Dictionary<string, UsingDirectiveSyntax> usings)
+        private MethodDeclarationSyntax GenControllerMethod(MethodInfo method, TableGenerator table, Dictionary<string, UsingDirectiveSyntax> usings, ControllerMethodAttribute attribute)
         {
             AddUsing(method.DeclaringType, usings);
             AddUsing(method.ReturnType, usings);
@@ -761,7 +762,7 @@ namespace DataWF.Web.CodeGenerator
             }
 
             var parametersInfo = GetParametersInfo(method, table, usings);
-            return SF.MethodDeclaration(attributeLists: SF.List(GenControllerMethodAttributes(method, parametersInfo)),
+            return SF.MethodDeclaration(attributeLists: SF.List(GenControllerMethodAttributes(method, parametersInfo, attribute)),
                           modifiers: SF.TokenList(modifiers.ToArray()),
                           returnType: returning == "void"
                           ? SF.ParseTypeName("IActionResult")
@@ -884,8 +885,15 @@ namespace DataWF.Web.CodeGenerator
             }
         }
 
-        private IEnumerable<AttributeListSyntax> GenControllerMethodAttributes(MethodInfo method, List<MethodParametrInfo> parametersList)
+        private IEnumerable<AttributeListSyntax> GenControllerMethodAttributes(MethodInfo method, List<MethodParametrInfo> parametersList, ControllerMethodAttribute attribute)
         {
+            if (attribute.AllowAnonymous)
+            {
+                yield return SF.AttributeList(
+                         SF.SingletonSeparatedList(
+                             SF.Attribute(
+                                 SF.IdentifierName("AllowAnonymous"))));
+            }
             var parameters = method.Name + (method.IsStatic ? "" : "/{id}");
             var post = false;
             foreach (var parameter in parametersList)
@@ -919,7 +927,7 @@ namespace DataWF.Web.CodeGenerator
             yield return SF.AttributeList(
                          SF.SingletonSeparatedList(
                              SF.Attribute(
-                                 SF.IdentifierName(post ? "HttpPost" : "HttpGet"))));
+                                 SF.IdentifierName(post ? "HttpPost" : "HttpGet"))));            
         }
 
         private ClassDeclarationSyntax GenPropertyInvoker(string name, string definitionName, string propertyName, string propertyType, bool canWrite = true)
