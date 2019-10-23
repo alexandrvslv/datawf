@@ -76,8 +76,8 @@ namespace DataWF.Module.Counterpart
         [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get { return GetValue<int?>(Table.PrimaryKey); }
-            set { SetValue(value, Table.PrimaryKey); }
+            get => GetValue<int?>(Table.PrimaryKey);
+            set => SetValue(value, Table.PrimaryKey);
         }
 
         //[DataMember, Column("typeid", Keys = DBColumnKeys.ElementType), Index("dcustomer_typeid")]
@@ -91,98 +91,98 @@ namespace DataWF.Module.Counterpart
         [Index("dcustomer_inn", true)]
         public string INN
         {
-            get { return GetValue<string>(Table.CodeKey); }
-            set { SetValue(value, Table.CodeKey); }
+            get => GetValue<string>(Table.CodeKey);
+            set => SetValue(value, Table.CodeKey);
         }
 
         [DataMember, Column("code", 40)]
         [Index("dcustomer_code", true)]
         public string Code
         {
-            get { return GetValue<string>(CodeKey); }
-            set { SetValue(value, CodeKey); }
+            get => GetValue<string>(CodeKey);
+            set => SetValue(value, CodeKey);
         }
 
         [DataMember, Column("shortname", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
         public string ShortName
         {
-            get { return GetName(); }
-            set { SetName(value); }
+            get => GetName();
+            set => SetName(value);
         }
 
         public string ShortNameEN
         {
-            get { return GetValue<string>(ShortNameENKey); }
-            set { SetValue(value, ShortNameENKey); }
+            get => GetValue<string>(ShortNameENKey);
+            set => SetValue(value, ShortNameENKey);
         }
 
         public string ShortNameRU
         {
-            get { return GetValue<string>(ShortNameRUKey); }
-            set { SetValue(value, ShortNameRUKey); }
+            get => GetValue<string>(ShortNameRUKey);
+            set => SetValue(value, ShortNameRUKey);
         }
 
         [DataMember, Column("name", 1024, Keys = DBColumnKeys.Culture)]
         public string Name
         {
-            get { return GetName(); }
-            set { SetName(value); }
+            get => GetName();
+            set => SetName(value);
         }
 
         public string NameEN
         {
-            get { return GetValue<string>(NameENKey); }
-            set { SetValue(value, NameENKey); }
+            get => GetValue<string>(NameENKey);
+            set => SetValue(value, NameENKey);
         }
 
         public string NameRU
         {
-            get { return GetValue<string>(NameRUKey); }
-            set { SetValue(value, NameRUKey); }
+            get => GetValue<string>(NameRUKey);
+            set => SetValue(value, NameRUKey);
         }
 
         [DataMember, Column("email", 1024), Index("dcustomer_email")]
         public string EMail
         {
-            get { return GetValue<string>(EMailKey); }
-            set { SetValue(value, EMailKey); }
+            get => GetValue<string>(EMailKey);
+            set => SetValue(value, EMailKey);
         }
 
         [DataMember, Column("phone", 1024)]
         public string Phone
         {
-            get { return GetValue<string>(PhoneKey); }
-            set { SetValue(value, PhoneKey); }
+            get => GetValue<string>(PhoneKey);
+            set => SetValue(value, PhoneKey);
         }
 
         [Browsable(false)]
         [DataMember, Column("country_id")]
         public int? CountryId
         {
-            get { return GetValue<int?>(CountryKey); }
-            set { SetValue(value, CountryKey); }
+            get => GetValue<int?>(CountryKey);
+            set => SetValue(value, CountryKey);
         }
 
         [Reference(nameof(CountryId))]
         public Country Country
         {
-            get { return GetReference(CountryKey, ref country); }
-            set { SetReference(country = value, CountryKey); }
+            get => GetReference(CountryKey, ref country);
+            set => SetReference(country = value, CountryKey);
         }
 
         [Browsable(false)]
         [DataMember, Column("address_id")]
         public int? AddressId
         {
-            get { return GetValue<int?>(AddressKey); }
-            set { SetValue(value, AddressKey); }
+            get => GetValue<int?>(AddressKey);
+            set => SetValue(value, AddressKey);
         }
 
         [Reference(nameof(AddressId))]
         public Address Address
         {
-            get { return GetReference(AddressKey, ref address); }
-            set { SetReference(address = value, AddressKey); }
+            get => GetReference(AddressKey, ref address);
+            set => SetReference(address = value, AddressKey);
         }
 
         //[Browsable(false)]
@@ -205,8 +205,8 @@ namespace DataWF.Module.Counterpart
         [DataMember, Column("sign_key", 1024, Keys = DBColumnKeys.Password | DBColumnKeys.System)]
         public string Key
         {
-            get { return GetValue<string>(KeyKey); }
-            set { SetValue(value, KeyKey); }
+            get => GetValue<string>(KeyKey);
+            set => SetValue(value, KeyKey);
         }
 
 
