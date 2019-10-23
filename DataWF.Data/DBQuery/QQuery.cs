@@ -875,12 +875,13 @@ namespace DataWF.Data
 
         public QParam BuildNameParam(string property, CompareType comparer, object value)
         {
-            var param = new QParam();
+            var parameter = new QParam();
             foreach (var item in Table.Columns.Select(DBColumnGroup.NameInvoker<DBColumn>.Instance, CompareType.Equal, property))
             {
-                param.Parameters.Add(QQuery.CreateParam(LogicType.Or, item, comparer, value));
+                parameter.Parameters.Add(QQuery.CreateParam(LogicType.Or, item, comparer, value));
             }
-            return param;
+            Parameters.Add(parameter);
+            return parameter;
         }
 
         public QParam BuildPropertyParam(string property, CompareType comparer, object value)
