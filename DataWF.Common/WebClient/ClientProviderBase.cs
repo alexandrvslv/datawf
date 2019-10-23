@@ -5,8 +5,8 @@ namespace DataWF.Common
 {
     public class ClientProviderBase : IClientProvider
     {
-        private readonly Dictionary<Type, ICRUDClient> crudClients = new Dictionary<Type, ICRUDClient>();
-        private readonly Dictionary<Type, Dictionary<int, ICRUDClient>> crudTypedClients = new Dictionary<Type, Dictionary<int, ICRUDClient>>();
+        private static readonly Dictionary<Type, ICRUDClient> crudClients = new Dictionary<Type, ICRUDClient>();
+        private static readonly Dictionary<Type, Dictionary<int, ICRUDClient>> crudTypedClients = new Dictionary<Type, Dictionary<int, ICRUDClient>>();
         private readonly SelectableList<IClient> clients = new SelectableList<IClient>();
 
         public ClientProviderBase()
@@ -31,7 +31,7 @@ namespace DataWF.Common
             }
         }
 
-        public void RefreshTypedCache()
+        protected void RefreshTypedCache()
         {
             foreach (var crudClient in clients.TypeOf<ICRUDClient>())
             {
@@ -67,10 +67,6 @@ namespace DataWF.Common
 
         public ICRUDClient GetClient(Type type, int typeId)
         {
-            if (crudTypedClients.Count == 0)
-            {
-                RefreshTypedCache();
-            }
             var baseType = type;
             Dictionary<int, ICRUDClient> types = null;
             while (baseType != null && !crudTypedClients.TryGetValue(baseType, out types))
