@@ -48,6 +48,7 @@ namespace DataWF.Web.ClientGenerator
         public string Output { get; }
         public string Source { get; }
         public string Namespace { get; }
+        public string ProviderName { get; set; } = "ClientProvider";
 
         public void Generate()
         {
@@ -93,7 +94,7 @@ namespace DataWF.Web.ClientGenerator
             return SF.ClassDeclaration(
                     attributeLists: SF.List(ClientAttributeList()),
                     modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
-                    identifier: SF.Identifier($"ClientProvider"),
+                    identifier: SF.Identifier(ProviderName),
                     typeParameterList: null,
                     baseList: SF.BaseList(SF.SingletonSeparatedList<BaseTypeSyntax>(
                         SF.SimpleBaseType(SF.ParseTypeName("ClientProviderBase")))),
@@ -104,13 +105,13 @@ namespace DataWF.Web.ClientGenerator
 
         private IEnumerable<MemberDeclarationSyntax> GenProviderMemebers()
         {
-            yield return SyntaxHelper.GenProperty("ClientProvider", "Default", true, "new ClientProvider()")
+            yield return SyntaxHelper.GenProperty(ProviderName, "Default", false, $"new {ProviderName}()")
                 .AddModifiers(SF.Token(SyntaxKind.StaticKeyword));
 
             yield return SF.ConstructorDeclaration(
                            attributeLists: SF.List(ClientAttributeList()),
                            modifiers: SF.TokenList(SF.Token(SyntaxKind.PublicKeyword)),
-                           identifier: SF.Identifier($"ClientProvider"),
+                           identifier: SF.Identifier(ProviderName),
                            parameterList: SF.ParameterList(),
                            initializer: null,
                            body: SF.Block(GenProviderConstructorBody()));
@@ -197,6 +198,7 @@ namespace DataWF.Web.ClientGenerator
             {
                 yield return SF.ParseStatement($"Add({client} = new {client}Client{{Provider = this}});");
             }
+            yield return SF.ParseStatement("RefreshTypedCache();");
         }
 
         public List<SyntaxTree> GetUnits(bool save)
@@ -383,7 +385,7 @@ namespace DataWF.Web.ClientGenerator
             foreach (var refField in cache)
             {
                 yield return SF.ParseStatement($"if(item.{refField.KeyName} != null){{");
-                yield return SF.ParseStatement($"var item{refField.ValueName} = (item.{refField.ValueFieldName} ?? (item.{refField.ValueFieldName} = ClientProvider.Default.{refField.ValueType}.Select(item.{refField.KeyName}.Value))) as {refField.Definition};");
+                yield return SF.ParseStatement($"var item{refField.ValueName} = (item.{refField.ValueFieldName} ?? (item.{refField.ValueFieldName} = {ProviderName}.Default.{refField.ValueType}.Select(item.{refField.KeyName}.Value))) as {refField.Definition};");
                 yield return SF.ParseStatement($"item{refField.ValueName}?.{refField.PropertyName}.Remove(item);");
                 yield return SF.ParseStatement("}");
             }
@@ -404,7 +406,7 @@ namespace DataWF.Web.ClientGenerator
             foreach (var refField in cache)
             {
                 yield return SF.ParseStatement($"if(item.{refField.KeyName} != null){{");
-                yield return SF.ParseStatement($"var item{refField.ValueName} = (item.{refField.ValueFieldName} ?? (item.{refField.ValueFieldName} = ClientProvider.Default.{refField.ValueType}.Select(item.{refField.KeyName}.Value))) as {refField.Definition};");
+                yield return SF.ParseStatement($"var item{refField.ValueName} = (item.{refField.ValueFieldName} ?? (item.{refField.ValueFieldName} = {ProviderName}.Default.{refField.ValueType}.Select(item.{refField.KeyName}.Value))) as {refField.Definition};");
                 yield return SF.ParseStatement($"item{refField.ValueName}?.{refField.PropertyName}.Add(item);");
                 yield return SF.ParseStatement("}");
             }
