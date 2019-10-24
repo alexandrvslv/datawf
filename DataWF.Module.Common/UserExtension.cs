@@ -18,6 +18,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using DataWF.Data;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace DataWF.Module.Common
@@ -45,11 +46,11 @@ namespace DataWF.Module.Common
         {
             foreach (Position position in Position.DBTable)
             {
-                foreach (var access in item.Access)
+                foreach (var access in position.Access.Items.Where(p => p.Create))
                 {
-                    if (position.Access.Get(access.Group).Create)
+                    if (item.Access.Get(access.Group).Create)
                     {
-                        if (access.Create && (filter == null || filter.Access.Get(access.Group).Update))
+                        if (filter == null || filter.Access.Get(access.Group).Update)
                         {
                             yield return position;
                             break;
@@ -63,11 +64,11 @@ namespace DataWF.Module.Common
         {
             foreach (Department department in Department.DBTable)
             {
-                foreach (var access in item.Access)
+                foreach (var access in department.Access.Items.Where(p => p.Create))
                 {
-                    if (department.Access.Get(access.Group).Create)
+                    if (item.Access.Get(access.Group).Create)
                     {
-                        if (access.Create && (filter == null || filter.Access.Get(access.Group).Update))
+                        if ((filter == null || filter.Access.Get(access.Group).Update))
                         {
                             yield return department;
                             break;
