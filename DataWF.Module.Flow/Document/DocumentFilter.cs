@@ -74,7 +74,7 @@ namespace DataWF.Module.Flow
 
         public DocumentSearchDate DateType
         {
-            get { return dtype; }
+            get => dtype;
             set
             {
                 if (dtype == value)
@@ -90,7 +90,7 @@ namespace DataWF.Module.Flow
 
         public DateInterval? Date
         {
-            get { return date; }
+            get => date;
             set
             {
                 if (date == value)
@@ -121,7 +121,7 @@ namespace DataWF.Module.Flow
 
         public CheckedState IsWork
         {
-            get { return work; }
+            get => work;
             set
             {
                 if (work == value)
@@ -142,7 +142,7 @@ namespace DataWF.Module.Flow
 
         public Document Referencing
         {
-            get { return referencingCache ?? (referencingCache = Document.DBTable.LoadById(referencing)); }
+            get => referencingCache ?? (referencingCache = Document.DBTable.LoadById(referencing));
             set
             {
                 if (Referencing == value)
@@ -171,7 +171,7 @@ namespace DataWF.Module.Flow
         [Browsable(false)]
         public bool IsCurrent
         {
-            get { return Staff == CurrentUser && IsWork == CheckedState.Checked; }
+            get => Staff == CurrentUser && IsWork == CheckedState.Checked;
             set
             {
                 Staff = value ? CurrentUser : null;
@@ -185,7 +185,7 @@ namespace DataWF.Module.Flow
 
         public Customer Customer
         {
-            get { return customerCache ?? (customerCache = Customer.DBTable.LoadById(customer)); }
+            get => customerCache ?? (customerCache = Customer.DBTable.LoadById(customer));
             set
             {
                 if (Customer == value)
@@ -212,7 +212,7 @@ namespace DataWF.Module.Flow
 
         public string Id
         {
-            get { return id; }
+            get => id;
             set
             {
                 if (id == value)
@@ -236,7 +236,7 @@ namespace DataWF.Module.Flow
 
         public string Number
         {
-            get { return number; }
+            get => number;
             set
             {
                 if (value == number)
@@ -264,7 +264,7 @@ namespace DataWF.Module.Flow
 
         public Template Template
         {
-            get { return templateCache ?? (templateCache = Template.DBTable?.LoadById(template)); }
+            get => templateCache ?? (templateCache = Template.DBTable?.LoadById(template));
             set
             {
                 string id = value?.PrimaryId.ToString();
@@ -364,7 +364,7 @@ namespace DataWF.Module.Flow
 
         public string Title
         {
-            get { return title; }
+            get => title;
             set
             {
                 if (title == value)

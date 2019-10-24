@@ -8,26 +8,17 @@ namespace DataWF.Module.Common
     [Table("ruser_file", "User", BlockSize = 100)]
     public class UserFile : DBItem
     {
-        private static DBTable<UserFile> dbTable;
+        public static readonly DBTable<UserFile> DBTable = GetTable<UserFile>();
+        public static readonly DBColumn IdKey = DBTable.ParseProperty(nameof(Id));
+        public static readonly DBColumn DataNameKey = DBTable.ParseProperty(nameof(DataName));
+        public static readonly DBColumn UserKey = DBTable.ParseProperty(nameof(UserId));
+        public static readonly DBColumn IsAvatarKey = DBTable.ParseProperty(nameof(IsAvatar));
+        public static readonly DBColumn DataLastWriteKey = DBTable.ParseProperty(nameof(DataLastWrite));
+
         private User user;
 
-        private static DBColumn idKey = DBColumn.EmptyKey;
-        private static DBColumn dataNameKey = DBColumn.EmptyKey;
-        private static DBColumn dataLastWriteKey = DBColumn.EmptyKey;
-        private static DBColumn userKey = DBColumn.EmptyKey;
-        private static DBColumn isAvatarKey = DBColumn.EmptyKey;
-
-        public static DBColumn IdKey => DBTable.ParseProperty(nameof(Id), ref idKey);
-        public static DBColumn DataNameKey => DBTable.ParseProperty(nameof(DataName), ref dataNameKey);
-        public static DBColumn UserKey => DBTable.ParseProperty(nameof(UserId), ref userKey);
-        public static DBColumn IsAvatarKey => DBTable.ParseProperty(nameof(IsAvatar), ref isAvatarKey);
-        public static DBColumn DataLastWriteKey => DBTable.ParseProperty(nameof(DataLastWrite), ref dataLastWriteKey);
-
         public UserFile()
-        {
-        }
-
-        public static DBTable<UserFile> DBTable => dbTable ?? (dbTable = GetTable<UserFile>());
+        { }
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
@@ -67,8 +58,8 @@ namespace DataWF.Module.Common
         [Reference(nameof(UserId))]
         public User User
         {
-            get { return GetReference(UserKey, ref user); }
-            set { SetReference(user = value, UserKey); }
+            get => GetReference(UserKey, ref user);
+            set => SetReference(user = value, UserKey);
         }
 
         [Column("is_avatar")]

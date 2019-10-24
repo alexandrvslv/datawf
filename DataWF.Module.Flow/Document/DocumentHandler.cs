@@ -40,7 +40,7 @@ namespace DataWF.Module.Flow
 
         public DateTime Date
         {
-            get { return date; }
+            get => date;
             set
             {
                 if (date == value)
@@ -52,7 +52,7 @@ namespace DataWF.Module.Flow
 
         public string Id
         {
-            get { return id; }
+            get => id;
             set
             {
                 if (id == value)

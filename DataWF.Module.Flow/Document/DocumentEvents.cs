@@ -55,8 +55,8 @@ namespace DataWF.Module.Flow
 
         public Document Document
         {
-            get { return document; }
-            set { document = value; }
+            get => document;
+            set => document = value;
         }
 
         public DocumentEventArgs()
@@ -85,14 +85,14 @@ namespace DataWF.Module.Flow
 
         public Template Template
         {
-            get { return template; }
-            set { template = value; }
+            get => template;
+            set => template = value;
         }
 
         public Document Parent
         {
-            get { return parent; }
-            set { parent = value; }
+            get => parent;
+            set => parent = value;
         }
     }
 
@@ -111,8 +111,8 @@ namespace DataWF.Module.Flow
 
         public DocInitType Type
         {
-            get { return type; }
-            set { type = value; }
+            get => type;
+            set => type = value;
         }
     }
 }

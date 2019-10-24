@@ -34,8 +34,8 @@ namespace DataWF.Module.Counterpart
 
         public Continent Continent
         {
-            get { return Parent as Continent; }
-            set { Parent = value; }
+            get => Parent as Continent;
+            set => Parent = value;
         }
     }
 }

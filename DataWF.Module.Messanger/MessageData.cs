@@ -43,11 +43,9 @@ namespace DataWF.Module.Messanger
     [DataContract, Table("dmessage_data", "Message", IsLoging = false)]
     public class MessageData : MessageDetail
     {
-        private static DBColumn dataNameKey = DBColumn.EmptyKey;
-        private static DBColumn dataKey = DBColumn.EmptyKey;
-        public static DBTable<MessageData> DBTable => GetTable<MessageData>();
-        public static DBColumn DataNameKey => DBTable.ParseProperty(nameof(DataName), ref dataNameKey);
-        public static DBColumn DataKey => DBTable.ParseProperty(nameof(Data), ref dataKey);
+        public static readonly DBTable<MessageData> DBTable = GetTable<MessageData>();
+        public static readonly DBColumn DataNameKey = DBTable.ParseProperty(nameof(DataName));
+        public static readonly DBColumn DataKey = DBTable.ParseProperty(nameof(Data));
 
         public MessageData()
         {

@@ -40,7 +40,7 @@ namespace DataWF.Module.Counterpart
         { }
     }
 
-    [DataContract, Table("rlocation", "Address", BlockSize = 100)]
+    [Table("rlocation", "Address", BlockSize = 100)]
     public class Location : DBGroupItem
     {
         private static DBTable<Location> dbTable;
@@ -57,11 +57,11 @@ namespace DataWF.Module.Counterpart
         {
         }
 
-        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
+        [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get { return GetValue<int?>(Table.PrimaryKey); }
-            set { SetValue(value, Table.PrimaryKey); }
+            get => GetValue<int?>(Table.PrimaryKey);
+            set => SetValue(value, Table.PrimaryKey);
         }
 
         public LocationType LocationType
@@ -69,53 +69,53 @@ namespace DataWF.Module.Counterpart
             get { return ItemType == null ? LocationType.Default : (LocationType)ItemType; }
         }
 
-        [DataMember, Column("code", 40, Keys = DBColumnKeys.Code | DBColumnKeys.Indexing), Index("rlocation_typeid_code", false)]
+        [Column("code", 40, Keys = DBColumnKeys.Code | DBColumnKeys.Indexing), Index("rlocation_typeid_code", false)]
         public string Code
         {
-            get { return GetValue<string>(Table.CodeKey); }
-            set { SetValue(value, Table.CodeKey); }
+            get => GetValue<string>(Table.CodeKey);
+            set => SetValue(value, Table.CodeKey);
         }
 
-        [DataMember, Column("codei", 40)]
+        [Column("codei", 40)]
         [Index("rlocation_codei")]
         public string CodeI
         {
-            get { return GetValue<string>(CodeIKey); }
-            set { SetValue(value, CodeIKey); }
+            get => GetValue<string>(CodeIKey);
+            set => SetValue(value, CodeIKey);
         }
 
         [Browsable(false)]
-        [DataMember, Column("parent_id", Keys = DBColumnKeys.Group), Index("rlocation_parentid")]
+        [Column("parent_id", Keys = DBColumnKeys.Group), Index("rlocation_parentid")]
         public int? ParentId
         {
-            get { return GetGroupValue<int?>(); }
-            set { SetGroupValue(value); }
+            get => GetGroupValue<int?>();
+            set => SetGroupValue(value);
         }
 
         [Reference(nameof(ParentId))]
         public Location Parent
         {
-            get { return GetGroupReference<Location>(); }
-            set { SetGroupReference(value); }
+            get => GetGroupReference<Location>();
+            set => SetGroupReference(value);
         }
 
-        [DataMember, Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
+        [Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
         public string Name
         {
-            get { return GetName(); }
-            set { SetName(value); }
+            get => GetName();
+            set => SetName(value);
         }
 
         public string NameRU
         {
-            get { return GetValue<string>(NameRUKey); }
-            set { SetValue(value, NameRUKey); }
+            get => GetValue<string>(NameRUKey);
+            set => SetValue(value, NameRUKey);
         }
 
         public string NameEN
         {
-            get { return GetValue<string>(NameENKey); }
-            set { SetValue(value, NameENKey); }
+            get => GetValue<string>(NameENKey);
+            set => SetValue(value, NameENKey);
         }
 
         public Location GetParent(LocationType parenttype)

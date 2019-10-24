@@ -60,8 +60,7 @@ namespace DataWF.Module.FlowGui
                 foreach (var method in documentType.GetMethods())
                 {
                     var controller = method.GetCustomAttribute<ControllerMethodAttribute>();
-                    if ((controller?.Design ?? false)
-                        && method.ReturnType.IsGenericType
+                    if (method.ReturnType.IsGenericType
                         && method.GetParameters().Length == 0
                         && TypeHelper.IsInterface(method.ReturnType, typeof(IEnumerable))
                         && TypeHelper.GetBrowsable(method))

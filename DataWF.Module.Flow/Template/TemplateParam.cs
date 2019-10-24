@@ -47,7 +47,7 @@ namespace DataWF.Module.Flow
     //    }
     //}
 
-    //[DataContract, Table("rtemplate_param", "Template", BlockSize = 200)]
+    //[Table("rtemplate_param", "Template", BlockSize = 200)]
     //public class TemplateParam : ParamBase, IInvoker
     //{
     //    public static DBTable<TemplateParam> DBTable
@@ -66,7 +66,7 @@ namespace DataWF.Module.Flow
     //        get { return Template; }
     //    }
 
-    //    [DataMember, Column("code", Keys = DBColumnKeys.Code)]
+    //    [Column("code", Keys = DBColumnKeys.Code)]
     //    public override string ParamCode
     //    {
     //        get { return GetValue<string>(table.CodeKey); }
@@ -74,7 +74,7 @@ namespace DataWF.Module.Flow
     //    }
 
     //    [Browsable(false)]
-    //    [DataMember, Column("template_id")]
+    //    [Column("template_id")]
     //    public int? TemplateId
     //    {
     //        get { return GetProperty<int?>(); }
@@ -88,14 +88,14 @@ namespace DataWF.Module.Flow
     //        set { SetPropertyReference(value); }
     //    }
 
-    //    [DataMember, Column("orderid")]
+    //    [Column("orderid")]
     //    public int? Order
     //    {
     //        get { return GetProperty<int?>(); }
     //        set { SetProperty(value); }
     //    }
 
-    //    [DataMember, Column("default_value")]
+    //    [Column("default_value")]
     //    public string Default
     //    {
     //        get { return GetProperty<string>(); }

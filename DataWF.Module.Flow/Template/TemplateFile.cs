@@ -26,12 +26,11 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Module.Flow
 {
-    [DataContract, Table("rtemplate_file", "Template", BlockSize = 100)]
+    [Table("rtemplate_file", "Template", BlockSize = 100)]
     public class TemplateFile : DBItem
     {
         public static readonly DBTable<TemplateFile> DBTable = GetTable<TemplateFile>();
         public static readonly DBColumn DataLastWriteKey = DBTable.ParseProperty(nameof(DataLastWrite));
-
 
         public TemplateFile()
         {
@@ -65,10 +64,7 @@ namespace DataWF.Module.Flow
             set => SetValue(value, DataLastWriteKey);
         }
 
-        public string FileType
-        {
-            get { return Path.GetExtension(DataName); }
-        }
+        public string FileType => Path.GetExtension(DataName);
 
         public Stream GetMemoryStream(DBTransaction transaction)
         {

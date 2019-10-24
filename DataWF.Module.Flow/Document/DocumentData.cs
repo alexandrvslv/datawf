@@ -87,33 +87,25 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [DataContract, Table("ddocument_data", "Document", BlockSize = 400)]
+    [Table("ddocument_data", "Document", BlockSize = 400)]
     public class DocumentData : DBItem, IDocumentDetail
     {
-        private static DBColumn templateDataKey = DBColumn.EmptyKey;
-        private static DBColumn fileUrlKey = DBColumn.EmptyKey;
-        private static DBColumn fileLastWriteKey = DBColumn.EmptyKey;
-        private static DBColumn documentKey = DBColumn.EmptyKey;
-
-        public static DBColumn TemplateDataKey => DBTable.ParseProperty(nameof(TemplateDataId), ref templateDataKey);
-        public static DBColumn FileUrlKey => DBTable.ParseProperty(nameof(FileUrl), ref fileUrlKey);
-        public static DBColumn FileLastWriteKey => DBTable.ParseProperty(nameof(FileLastWrite), ref fileLastWriteKey);
-        public static DBColumn DocumentKey => DBTable.ParseProperty(nameof(DocumentId), ref documentKey);
-
-        private static DBTable<DocumentData> dbTable;
-
-        public static DBTable<DocumentData> DBTable => dbTable ?? (dbTable = GetTable<DocumentData>());
-
+        public static readonly DBTable<DocumentData> DBTable = GetTable<DocumentData>();
+        public static readonly DBColumn TemplateDataKey = DBTable.ParseProperty(nameof(TemplateDataId));
+        public static readonly DBColumn FileUrlKey = DBTable.ParseProperty(nameof(FileUrl));
+        public static readonly DBColumn FileLastWriteKey = DBTable.ParseProperty(nameof(FileLastWrite));
+        public static readonly DBColumn DocumentKey = DBTable.ParseProperty(nameof(DocumentId));
+        
         private byte[] buf;
         private User currentUser;
         private TemplateData template;
+        private Document document;
 
         public DocumentData()
         { }
 
-        private Document document;
         [Browsable(false)]
-        [DataMember, Column("document_id"), Index("ddocument_data_document_id")]
+        [Column("document_id"), Index("ddocument_data_document_id")]
         public virtual long? DocumentId
         {
             get => GetValue<long?>(DocumentKey);
@@ -125,15 +117,6 @@ namespace DataWF.Module.Flow
         {
             get => GetReference(DocumentKey, ref document);
             set => SetReference(document = value, DocumentKey);
-        }
-
-        public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)
-        {
-            base.OnPropertyChanged(property, column, value);
-            if (Attached)
-            {
-                GetReference<Document>(DocumentKey, ref document, DBLoadParam.None)?.OnReferenceChanged(this);
-            }
         }
 
         [Column("unid", Keys = DBColumnKeys.Primary)]
@@ -233,6 +216,15 @@ namespace DataWF.Module.Flow
         public bool IsTemplate
         {
             get { return TemplateDataId != null; }
+        }
+
+        public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)
+        {
+            base.OnPropertyChanged(property, column, value);
+            if (Attached)
+            {
+                GetReference<Document>(DocumentKey, ref document, DBLoadParam.None)?.OnReferenceChanged(this);
+            }
         }
 
         public async Task<string> GetDataPath(DBTransaction trnasaction)

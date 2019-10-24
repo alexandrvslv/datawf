@@ -25,13 +25,9 @@ namespace DataWF.Module.Flow
     [Table("rtemplate_property", "Template")]
     public class TemplateProperty : DBItem
     {
-        private static DBTable<TemplateProperty> dbTable;
-        private static DBColumn templateKey = DBColumn.EmptyKey;
-        private static DBColumn propertyNameKey = DBColumn.EmptyKey;
-
-        public static DBTable<TemplateProperty> DBTable => dbTable ?? (dbTable = GetTable<TemplateProperty>());
-        public static DBColumn TemplateKey => DBTable.ParseProperty(nameof(TemplateId), ref templateKey);
-        public static DBColumn PropertyNameKey => DBTable.ParseProperty(nameof(PropertyName), ref propertyNameKey);
+        public static readonly DBTable<TemplateProperty> DBTable = GetTable<TemplateProperty>();
+        public static readonly DBColumn TemplateKey = DBTable.ParseProperty(nameof(TemplateId));
+        public static readonly DBColumn PropertyNameKey = DBTable.ParseProperty(nameof(PropertyName));
 
         private Template template;
 
@@ -41,29 +37,29 @@ namespace DataWF.Module.Flow
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get { return GetValue<int?>(Table.PrimaryKey); }
-            set { SetValue(value, Table.PrimaryKey); }
+            get => GetValue<int?>(Table.PrimaryKey);
+            set => SetValue(value, Table.PrimaryKey);
         }
 
         [Column("template_id"), Index("rtemplate_property_index", true)]
         public int? TemplateId
         {
-            get { return GetValue<int?>(TemplateKey); }
-            set { SetValue(value, TemplateKey); }
+            get => GetValue<int?>(TemplateKey);
+            set => SetValue(value, TemplateKey);
         }
 
         [Reference(nameof(TemplateId))]
         public Template Template
         {
-            get { return GetReference(TemplateKey, ref template); }
-            set { SetReference(template = value, TemplateKey); }
+            get => GetReference(TemplateKey, ref template);
+            set => SetReference(template = value, TemplateKey);
         }
 
         [Column("property_name", 1024), Index("rtemplate_property_index", true)]
         public string PropertyName
         {
-            get { return GetValue<string>(PropertyNameKey); }
-            set { SetValue(value, PropertyNameKey); }
+            get => GetValue<string>(PropertyNameKey);
+            set => SetValue(value, PropertyNameKey);
         }
 
     }

@@ -49,22 +49,18 @@ namespace DataWF.Module.Common
     [DataContract, Table("duser_log", "User", BlockSize = 500, IsLoging = false)]
     public class UserReg : DBUserReg
     {
-        private static DBColumn userKey = DBColumn.EmptyKey;
-        private static DBColumn regTypeKey = DBColumn.EmptyKey;
-        private static DBColumn redoKey = DBColumn.EmptyKey;
-        private static DBColumn textDataKey = DBColumn.EmptyKey;
-        private static DBTable<UserReg> dbTable;
         public static UserRegStrategy LogStrategy = UserRegStrategy.BySession;
-        private User user;
-        private UserReg redo;
-
-        public static DBColumn UserKey => DBTable.ParseProperty(nameof(UserId), ref userKey);
-        public static DBColumn RegTypeKey => DBTable.ParseProperty(nameof(RegType), ref regTypeKey);
-        public static DBColumn RedoKey => DBTable.ParseProperty(nameof(RedoId), ref redoKey);
-        public static DBColumn TextDataKey => DBTable.ParseProperty(nameof(TextData), ref textDataKey);
-        public static DBTable<UserReg> DBTable => dbTable ?? (dbTable = GetTable<UserReg>());
+        
+        public static readonly DBTable<UserReg> DBTable = GetTable<UserReg>();
+        public static readonly DBColumn UserKey = DBTable.ParseProperty(nameof(UserId));
+        public static readonly DBColumn RegTypeKey = DBTable.ParseProperty(nameof(RegType));
+        public static readonly DBColumn RedoKey = DBTable.ParseProperty(nameof(RedoId));
+        public static readonly DBColumn TextDataKey = DBTable.ParseProperty(nameof(TextData));
         public static event EventHandler<DBItemEventArgs> RowLoging;
         public static event EventHandler<DBItemEventArgs> RowLoged;
+
+        private User user;
+        private UserReg redo;
 
         public static async void OnDBItemLoging(DBItemEventArgs arg)
         {
@@ -107,68 +103,68 @@ namespace DataWF.Module.Common
         
         public override long? Id
         {
-            get { return GetValue<long?>(Table.PrimaryKey); }
-            set { SetValue(value, Table.PrimaryKey); }
+            get => GetValue<long?>(Table.PrimaryKey);
+            set => SetValue(value, Table.PrimaryKey);
         }
-        
+
         public override int? UserId
         {
-            get { return GetValue<int?>(UserKey); }
-            set { SetValue(value, UserKey); }
+            get => GetValue<int?>(UserKey);
+            set => SetValue(value, UserKey);
         }
 
         [Reference(nameof(UserId))]
         public User User
         {
-            get { return GetReference(UserKey, ref user); }
-            set { SetReference(user = value, UserKey); }
+            get => GetReference(UserKey, ref user);
+            set => SetReference(user = value, UserKey);
         }
 
         public override DBUser DBUser { get => User; set => User = (User)value; }
 
 
-        [DataMember, Column("type_id", Keys = DBColumnKeys.ElementType | DBColumnKeys.View)]
+        [Column("type_id", Keys = DBColumnKeys.ElementType | DBColumnKeys.View)]
         public UserRegType? RegType
         {
-            get { return GetValue<UserRegType?>(RegTypeKey); }
-            set { SetValue(value, RegTypeKey); }
+            get => GetValue<UserRegType?>(RegTypeKey);
+            set => SetValue(value, RegTypeKey);
         }
 
         [Browsable(false)]
-        [DataMember, Column("parent_id", Keys = DBColumnKeys.Group)]
+        [Column("parent_id", Keys = DBColumnKeys.Group)]
         public long? ParentId
         {
-            get { return GetGroupValue<long?>(); }
-            set { SetGroupValue(value); }
+            get => GetGroupValue<long?>();
+            set => SetGroupValue(value);
         }
 
         [Reference(nameof(ParentId))]
         public UserReg Parent
         {
-            get { return GetGroupReference<UserReg>(); }
-            set { SetGroupReference(value); }
+            get => GetGroupReference<UserReg>();
+            set => SetGroupReference(value);
         }
 
         [Browsable(false)]
-        [DataMember, Column("redo_id")]
+        [Column("redo_id")]
         public long? RedoId
         {
-            get { return GetValue<long?>(RedoKey); }
-            set { SetValue(value, RedoKey); }
+            get => GetValue<long?>(RedoKey);
+            set => SetValue(value, RedoKey);
         }
 
         [Reference(nameof(RedoId))]
         public UserReg Redo
         {
-            get { return GetReference(RedoKey, ref redo); }
-            set { SetReference(redo = value, RedoKey); }
+            get => GetReference(RedoKey, ref redo);
+            set => SetReference(redo = value, RedoKey);
         }
 
-        [DataMember, Column("text_data")]
+        [Column("text_data")]
         public string TextData
         {
-            get { return GetValue<string>(TextDataKey); }
-            set { SetValue(value, TextDataKey); }
+            get => GetValue<string>(TextDataKey);
+            set => SetValue(value, TextDataKey);
         }
 
         public List<UserRegItem> Items { get; set; }

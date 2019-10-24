@@ -42,9 +42,9 @@ namespace DataWF.Module.Common
         public static readonly DBColumn DepartmentKey = DBTable.ParseProperty(nameof(Department));
         public static readonly DBColumn PositionKey = DBTable.ParseProperty(nameof(Position));
         public static readonly DBColumn UserKey = DBTable.ParseProperty(nameof(UserId));
-        public static event Func<UserApplication, Task> ApplicationCreated;
-        public static event Func<UserApplication, Task> ApplicationAccepted;
-        public static event Func<UserApplication, Task> ApplicationEmailVerified;
+        public static event Func<UserApplication, Task> Created;
+        public static event Func<UserApplication, Task> Approved;
+        public static event Func<UserApplication, Task> Verified;
         private User user;
 
         public UserApplication()
@@ -223,17 +223,17 @@ namespace DataWF.Module.Common
 
         private Task OnApplicationEmailVerified()
         {
-            return ApplicationEmailVerified?.Invoke(this);
+            return Verified?.Invoke(this);
         }
 
         private Task OnApplicationAccepted()
         {
-            return ApplicationAccepted?.Invoke(this);
+            return Approved?.Invoke(this);
         }
 
         private Task OnApplicationCreated()
         {
-            return ApplicationCreated?.Invoke(this);
+            return Created?.Invoke(this);
         }
 
         private (Company company, Department department, Position position) CheckValues(DBTransaction transaction)

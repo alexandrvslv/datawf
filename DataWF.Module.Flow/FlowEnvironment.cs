@@ -155,8 +155,8 @@ namespace DataWF.Module.Flow
 
         public static FlowEnvironment Config
         {
-            get { return instance; }
-            set { instance = value; }
+            get => instance;
+            set => instance = value;
         }
 
         public void Initialize()
@@ -181,8 +181,8 @@ namespace DataWF.Module.Flow
 
         public string SchemaCode
         {
-            get { return schemaCode; }
-            set { schemaCode = value; }
+            get => schemaCode;
+            set => schemaCode = value;
         }
 
         //public DBSchema Schema

@@ -59,24 +59,16 @@ namespace DataWF.Module.Flow
         AutoComplete = 16
     }
 
-    [DataContract, Table("rstage", "Template", BlockSize = 100)]
+    [Table("rstage", "Template", BlockSize = 100)]
     public class Stage : DBItem, IDisposable
     {
-        private static DBTable<Stage> dbTable;
-        private static DBColumn exportCodeKey = DBColumn.EmptyKey;
-        private static DBColumn nameENKey = DBColumn.EmptyKey;
-        private static DBColumn nameRUKey = DBColumn.EmptyKey;
-        private static DBColumn workKey = DBColumn.EmptyKey;
-        private static DBColumn keysKey = DBColumn.EmptyKey;
-        private static DBColumn timeLimitKey = DBColumn.EmptyKey;
-
-        public static DBTable<Stage> DBTable => dbTable ?? (dbTable = GetTable<Stage>());
-        public static DBColumn ExportCodeKey => DBTable.ParseProperty(nameof(ExportCode), ref exportCodeKey);
-        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
-        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
-        public static DBColumn WorkKey => DBTable.ParseProperty(nameof(WorkId), ref workKey);
-        public static DBColumn KeysKey => DBTable.ParseProperty(nameof(Keys), ref keysKey);
-        public static DBColumn TimeLimitKey => DBTable.ParseProperty(nameof(TimeLimit), ref timeLimitKey);
+        public static readonly DBTable<Stage> DBTable = GetTable<Stage>();
+        public static readonly DBColumn ExportCodeKey = DBTable.ParseProperty(nameof(ExportCode));
+        public static readonly DBColumn NameENKey = DBTable.ParseProperty(nameof(NameEN));
+        public static readonly DBColumn NameRUKey = DBTable.ParseProperty(nameof(NameRU));
+        public static readonly DBColumn WorkKey = DBTable.ParseProperty(nameof(WorkId));
+        public static readonly DBColumn KeysKey = DBTable.ParseProperty(nameof(Keys));
+        public static readonly DBColumn TimeLimitKey = DBTable.ParseProperty(nameof(TimeLimit));
 
         private Work work;
 
@@ -84,34 +76,34 @@ namespace DataWF.Module.Flow
         {
         }
 
-        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
+        [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get { return GetValue<int?>(table.PrimaryKey); }
-            set { SetValue(value, table.PrimaryKey); }
+            get => GetValue<int?>(table.PrimaryKey);
+            set => SetValue(value, table.PrimaryKey);
         }
 
-        [DataMember, Column("code", 512, Keys = DBColumnKeys.Code)]
+        [Column("code", 512, Keys = DBColumnKeys.Code)]
         public string Code
         {
-            get { return GetValue<string>(table.CodeKey); }
-            set { SetValue(value, table.CodeKey); }
+            get => GetValue<string>(table.CodeKey);
+            set => SetValue(value, table.CodeKey);
         }
 
-        [DataMember, Column("export_code", 512)]
+        [Column("export_code", 512)]
         public string ExportCode
         {
-            get { return GetValue<string>(ExportCodeKey); }
-            set { SetValue(value, ExportCodeKey); }
+            get => GetValue<string>(ExportCodeKey);
+            set => SetValue(value, ExportCodeKey);
         }
 
-        [DataMember, Column("name", 512, Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
+        [Column("name", 512, Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
         public string Name
         {
-            get { return GetName(); }
-            set { SetName(value); }
+            get => GetName();
+            set => SetName(value);
         }
-
+        
         public string NameEN
         {
             get => GetValue<string>(NameENKey);
@@ -125,32 +117,32 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [DataMember, Column("work_id")]
+        [Column("work_id")]
         public int? WorkId
         {
-            get { return GetValue<int?>(WorkKey); }
-            set { SetValue(value, WorkKey); }
+            get => GetValue<int?>(WorkKey);
+            set => SetValue(value, WorkKey);
         }
 
         [Reference(nameof(WorkId))]
         public Work Work
         {
-            get { return GetReference(WorkKey, ref work); }
-            set { SetReference(work = value, WorkKey); }
+            get => GetReference(WorkKey, ref work);
+            set => SetReference(work = value, WorkKey);
         }
 
-        [DataMember, Column("keys")]
+        [Column("keys")]
         public StageKey? Keys
         {
-            get { return GetValue<StageKey?>(KeysKey); }
-            set { SetValue(value, KeysKey); }
+            get => GetValue<StageKey?>(KeysKey);
+            set => SetValue(value, KeysKey);
         }
 
-        [DataMember, Column("time_limit")]
+        [Column("time_limit")]
         public TimeSpan? TimeLimit
         {
-            get { return GetValue<TimeSpan?>(TimeLimitKey); }
-            set { SetValue(value, TimeLimitKey); }
+            get => GetValue<TimeSpan?>(TimeLimitKey);
+            set => SetValue(value, TimeLimitKey);
         }
 
         public IEnumerable<T> GetParams<T>() where T : StageParam

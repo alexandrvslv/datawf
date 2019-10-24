@@ -38,56 +38,43 @@ namespace DataWF.Module.Counterpart
         Persone = 2,
     }
 
-    [DataContract, Table("dcustomer", "Customer", BlockSize = 100)]
+    [Table("dcustomer", "Customer", BlockSize = 100)]
     public class Customer : DBItem, IDisposable
     {
-        private static DBTable<Customer> dbTable;
-        private static DBColumn codeKey = DBColumn.EmptyKey;
-        private static DBColumn nameENKey = DBColumn.EmptyKey;
-        private static DBColumn nameRUKey = DBColumn.EmptyKey;
-        private static DBColumn shortNameENKey = DBColumn.EmptyKey;
-        private static DBColumn shortNameRUKey = DBColumn.EmptyKey;
-        private static DBColumn emailKey = DBColumn.EmptyKey;
-        private static DBColumn phoneKey = DBColumn.EmptyKey;
-        private static DBColumn countryKey = DBColumn.EmptyKey;
-        private static DBColumn addressKey = DBColumn.EmptyKey;
-        private static DBColumn keyKey = DBColumn.EmptyKey;
+        public static readonly DBTable<Customer> DBTable = GetTable<Customer>();
+        public static readonly DBColumn CodeKey = DBTable.ParseProperty(nameof(Code));
+        public static readonly DBColumn NameENKey = DBTable.ParseProperty(nameof(NameEN));
+        public static readonly DBColumn NameRUKey = DBTable.ParseProperty(nameof(NameRU));
+        public static readonly DBColumn ShortNameENKey = DBTable.ParseProperty(nameof(ShortNameEN));
+        public static readonly DBColumn ShortNameRUKey = DBTable.ParseProperty(nameof(ShortNameRU));
+        public static readonly DBColumn EMailKey = DBTable.ParseProperty(nameof(EMail));
+        public static readonly DBColumn PhoneKey = DBTable.ParseProperty(nameof(Phone));
+        public static readonly DBColumn CountryKey = DBTable.ParseProperty(nameof(CountryId));
+        public static readonly DBColumn AddressKey = DBTable.ParseProperty(nameof(AddressId));
+        public static readonly DBColumn KeyKey = DBTable.ParseProperty(nameof(Key));
+        //public static DBColumn UserKey => DBTable.ParseProperty(nameof(UserId), ref userKey);
+
         private Address address;
         private Country country;
-
-        //private static DBColumn userKey = DBColumn.EmptyKey;
-
-        public static DBColumn CodeKey => DBTable.ParseProperty(nameof(Code), ref codeKey);
-        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
-        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
-        public static DBColumn ShortNameENKey => DBTable.ParseProperty(nameof(ShortNameEN), ref shortNameENKey);
-        public static DBColumn ShortNameRUKey => DBTable.ParseProperty(nameof(ShortNameRU), ref shortNameRUKey);
-        public static DBColumn EMailKey => DBTable.ParseProperty(nameof(EMail), ref emailKey);
-        public static DBColumn PhoneKey => DBTable.ParseProperty(nameof(Phone), ref phoneKey);
-        public static DBColumn CountryKey => DBTable.ParseProperty(nameof(CountryId), ref countryKey);
-        public static DBColumn AddressKey => DBTable.ParseProperty(nameof(AddressId), ref addressKey);
-        public static DBColumn KeyKey => DBTable.ParseProperty(nameof(Key), ref keyKey);
-        //public static DBColumn UserKey => DBTable.ParseProperty(nameof(UserId), ref userKey);
-        public static DBTable<Customer> DBTable => dbTable ?? (dbTable = GetTable<Customer>());
 
         public Customer()
         { }
 
-        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
+        [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
             get => GetValue<int?>(Table.PrimaryKey);
             set => SetValue(value, Table.PrimaryKey);
         }
 
-        //[DataMember, Column("typeid", Keys = DBColumnKeys.ElementType), Index("dcustomer_typeid")]
+        //[Column("typeid", Keys = DBColumnKeys.ElementType), Index("dcustomer_typeid")]
         //public CustomerType? CustomerType
         //{
         //    get { return GetValue<CustomerType?>(Table.ElementTypeKey); }
         //    set { SetValue(value, Table.ElementTypeKey); }
         //}
 
-        [DataMember, Column("innr", 40, Keys = DBColumnKeys.Code)]
+        [Column("innr", 40, Keys = DBColumnKeys.Code)]
         [Index("dcustomer_inn", true)]
         public string INN
         {
@@ -95,7 +82,7 @@ namespace DataWF.Module.Counterpart
             set => SetValue(value, Table.CodeKey);
         }
 
-        [DataMember, Column("code", 40)]
+        [Column("code", 40)]
         [Index("dcustomer_code", true)]
         public string Code
         {
@@ -103,7 +90,7 @@ namespace DataWF.Module.Counterpart
             set => SetValue(value, CodeKey);
         }
 
-        [DataMember, Column("shortname", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
+        [Column("shortname", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
         public string ShortName
         {
             get => GetName();
@@ -122,7 +109,7 @@ namespace DataWF.Module.Counterpart
             set => SetValue(value, ShortNameRUKey);
         }
 
-        [DataMember, Column("name", 1024, Keys = DBColumnKeys.Culture)]
+        [Column("name", 1024, Keys = DBColumnKeys.Culture)]
         public string Name
         {
             get => GetName();
@@ -141,14 +128,14 @@ namespace DataWF.Module.Counterpart
             set => SetValue(value, NameRUKey);
         }
 
-        [DataMember, Column("email", 1024), Index("dcustomer_email")]
+        [Column("email", 1024), Index("dcustomer_email")]
         public string EMail
         {
             get => GetValue<string>(EMailKey);
             set => SetValue(value, EMailKey);
         }
 
-        [DataMember, Column("phone", 1024)]
+        [Column("phone", 1024)]
         public string Phone
         {
             get => GetValue<string>(PhoneKey);
@@ -156,7 +143,7 @@ namespace DataWF.Module.Counterpart
         }
 
         [Browsable(false)]
-        [DataMember, Column("country_id")]
+        [Column("country_id")]
         public int? CountryId
         {
             get => GetValue<int?>(CountryKey);
@@ -171,7 +158,7 @@ namespace DataWF.Module.Counterpart
         }
 
         [Browsable(false)]
-        [DataMember, Column("address_id")]
+        [Column("address_id")]
         public int? AddressId
         {
             get => GetValue<int?>(AddressKey);
@@ -186,7 +173,7 @@ namespace DataWF.Module.Counterpart
         }
 
         //[Browsable(false)]
-        //[DataMember, Column("user_id")]
+        //[Column("user_id")]
         //public int? UserId
         //{
         //    get { return GetValue<int?>(UserKey); }
@@ -202,7 +189,7 @@ namespace DataWF.Module.Counterpart
         //}
 
         [Browsable(false)]
-        [DataMember, Column("sign_key", 1024, Keys = DBColumnKeys.Password | DBColumnKeys.System)]
+        [Column("sign_key", 1024, Keys = DBColumnKeys.Password | DBColumnKeys.System)]
         public string Key
         {
             get => GetValue<string>(KeyKey);

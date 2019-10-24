@@ -25,46 +25,36 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Module.Flow
 {
-    [DataContract, Table("ddocument_customer", "Document", BlockSize = 400)]
+    [Table("ddocument_customer", "Document", BlockSize = 400)]
     public class DocumentCustomer : DBItem, IDocumentDetail
     {
-        private static DBColumn customerKey = DBColumn.EmptyKey;
-        private static DBColumn addressKey = DBColumn.EmptyKey;
-        private static DBColumn eMailKey = DBColumn.EmptyKey;
-        private static DBColumn phoneKey = DBColumn.EmptyKey;
-        private static DBColumn documentKey = DBColumn.EmptyKey;
-
-        public static DBColumn CustomerKey => DBTable.ParseProperty(nameof(CustomerId), ref customerKey);
-        public static DBColumn AddressKey => DBTable.ParseProperty(nameof(AddressId), ref addressKey);
-        public static DBColumn EMailKey => DBTable.ParseProperty(nameof(EMail), ref eMailKey);
-        public static DBColumn PhoneKey => DBTable.ParseProperty(nameof(Phone), ref phoneKey);
-        public static DBColumn DocumentKey => DBTable.ParseProperty(nameof(DocumentId), ref documentKey);
-
-        private static DBTable<DocumentCustomer> dbTable;
-
-        public static DBTable<DocumentCustomer> DBTable => dbTable ?? (dbTable = GetTable<DocumentCustomer>());
-
+        public static readonly DBTable<DocumentCustomer> DBTable = GetTable<DocumentCustomer>();
+        public static readonly DBColumn CustomerKey = DBTable.ParseProperty(nameof(CustomerId));
+        public static readonly DBColumn AddressKey = DBTable.ParseProperty(nameof(AddressId));
+        public static readonly DBColumn EMailKey = DBTable.ParseProperty(nameof(EMail));
+        public static readonly DBColumn PhoneKey = DBTable.ParseProperty(nameof(Phone));
+        public static readonly DBColumn DocumentKey = DBTable.ParseProperty(nameof(DocumentId));
 
         private Customer customer;
         private Address address;
+        private Document document;
 
         public DocumentCustomer()
         { }
 
-        private Document document;
         [Browsable(false)]
-        [DataMember, Column("document_id"), Index("ddocument_customer_document_id")]
+        [Column("document_id"), Index("ddocument_customer_document_id")]
         public virtual long? DocumentId
         {
-            get { return GetValue<long?>(DocumentKey); }
-            set { SetValue(value, DocumentKey); }
+            get => GetValue<long?>(DocumentKey);
+            set => SetValue(value, DocumentKey);
         }
 
         [Reference(nameof(DocumentId))]
         public Document Document
         {
-            get { return GetReference(DocumentKey, ref document); }
-            set { SetReference(document = value, DocumentKey); }
+            get => GetReference(DocumentKey, ref document);
+            set => SetReference(document = value, DocumentKey);
         }
 
         public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)
@@ -76,25 +66,25 @@ namespace DataWF.Module.Flow
             }
         }
 
-        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
+        [Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
         {
-            get { return GetValue<long?>(Table.PrimaryKey); }
-            set { SetValue(value, Table.PrimaryKey); }
+            get => GetValue<long?>(Table.PrimaryKey);
+            set => SetValue(value, Table.PrimaryKey);
         }
 
         [Browsable(false)]
-        [DataMember, Column("customer_id", Keys = DBColumnKeys.View)]
+        [Column("customer_id", Keys = DBColumnKeys.View)]
         public int? CustomerId
         {
-            get { return GetValue<int?>(CustomerKey); }
-            set { SetValue(value, CustomerKey); }
+            get => GetValue<int?>(CustomerKey);
+            set => SetValue(value, CustomerKey);
         }
 
         [Reference(nameof(CustomerId))]
         public Customer Customer
         {
-            get { return GetReference(CustomerKey, ref customer); }
+            get => GetReference(CustomerKey, ref customer);
             set
             {
                 SetReference(customer = value, CustomerKey);
@@ -105,32 +95,32 @@ namespace DataWF.Module.Flow
         }
 
         [Browsable(false)]
-        [DataMember, Column("address_id")]
+        [Column("address_id")]
         public int? AddressId
         {
-            get { return GetValue<int?>(AddressKey); }
-            set { SetValue(value, AddressKey); }
+            get => GetValue<int?>(AddressKey);
+            set => SetValue(value, AddressKey);
         }
 
         [Reference(nameof(AddressId))]
         public Address Address
         {
-            get { return GetReference(AddressKey, ref address); }
-            set { SetReference(address = value, AddressKey); }
+            get => GetReference(AddressKey, ref address);
+            set => SetReference(address = value, AddressKey);
         }
 
-        [DataMember, Column("email", 1024)]
+        [Column("email", 1024)]
         public string EMail
         {
-            get { return GetValue<string>(EMailKey); }
-            set { SetValue(value, EMailKey); }
+            get => GetValue<string>(EMailKey);
+            set => SetValue(value, EMailKey);
         }
 
-        [DataMember, Column("phone", 1024)]
+        [Column("phone", 1024)]
         public string Phone
         {
-            get { return GetValue<string>(PhoneKey); }
-            set { SetValue(value, PhoneKey); }
+            get => GetValue<string>(PhoneKey);
+            set => SetValue(value, PhoneKey);
         }
 
     }

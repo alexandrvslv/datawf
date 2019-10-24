@@ -25,18 +25,13 @@ using System.Runtime.Serialization;
 namespace DataWF.Module.Flow
 {
 
-    [DataContract, Table("rtemplate_data", "Template", BlockSize = 100)]
+    [Table("rtemplate_data", "Template", BlockSize = 100)]
     public class TemplateData : DBItem
     {
-        private static DBTable<TemplateData> dbTable;
-        private static DBColumn templateKey = DBColumn.EmptyKey;
-        private static DBColumn fileKey = DBColumn.EmptyKey;
-        private static DBColumn autoGenerateKey = DBColumn.EmptyKey;
-
-        public static DBTable<TemplateData> DBTable => dbTable ?? (dbTable = GetTable<TemplateData>());
-        public static DBColumn TemplateKey => DBTable.ParseProperty(nameof(TemplateId), ref templateKey);
-        public static DBColumn FileKey => DBTable.ParseProperty(nameof(FileId), ref fileKey);
-        public static DBColumn AutoGenerateKey => DBTable.ParseProperty(nameof(AutoGenerate), ref autoGenerateKey);
+        public static readonly DBTable<TemplateData> DBTable = GetTable<TemplateData>();
+        public static readonly DBColumn TemplateKey = DBTable.ParseProperty(nameof(TemplateId));
+        public static readonly DBColumn FileKey = DBTable.ParseProperty(nameof(FileId));
+        public static readonly DBColumn AutoGenerateKey = DBTable.ParseProperty(nameof(AutoGenerate));
 
         private Template template;
         private TemplateFile templateFile;
@@ -45,48 +40,48 @@ namespace DataWF.Module.Flow
         {
         }
 
-        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
+        [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get { return GetValue<int?>(Table.PrimaryKey); }
-            set { SetValue(value, Table.PrimaryKey); }
+            get => GetValue<int?>(Table.PrimaryKey);
+            set => SetValue(value, Table.PrimaryKey);
         }
 
         [Browsable(false)]
-        [DataMember, Column("template_id"), Index("rtemplate_data_index", true)]
+        [Column("template_id"), Index("rtemplate_data_index", true)]
         public int? TemplateId
         {
-            get { return GetValue<int?>(TemplateKey); }
-            set { SetValue(value, TemplateKey); }
+            get => GetValue<int?>(TemplateKey);
+            set => SetValue(value, TemplateKey);
         }
 
         [Reference(nameof(TemplateId))]
         public Template Template
         {
-            get { return GetReference(TemplateKey, ref template); }
-            set { SetReference(template = value, TemplateKey); }
+            get => GetReference(TemplateKey, ref template);
+            set => SetReference(template = value, TemplateKey);
         }
 
         [Browsable(false)]
         [Column("file_id", Keys = DBColumnKeys.View), Index("rtemplate_data_index", true)]
         public int? FileId
         {
-            get { return GetValue<int?>(FileKey); }
-            set { SetValue(value, FileKey); }
+            get => GetValue<int?>(FileKey);
+            set => SetValue(value, FileKey);
         }
 
         [Reference(nameof(FileId))]
         public TemplateFile File
         {
-            get { return GetReference(FileKey, ref templateFile); }
-            set { SetReference(templateFile = value, FileKey); }
+            get => GetReference(FileKey, ref templateFile);
+            set => SetReference(templateFile = value, FileKey);
         }
 
         [Column("auto_generate")]
         public bool? AutoGenerate
         {
-            get { return GetValue<bool?>(AutoGenerateKey); }
-            set { SetValue(value, AutoGenerateKey); }
+            get => GetValue<bool?>(AutoGenerateKey);
+            set => SetValue(value, AutoGenerateKey);
         }
     }
 }

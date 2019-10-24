@@ -43,13 +43,9 @@ namespace DataWF.Module.Common
     public class GroupPermission : DBGroupItem
     {
         private object target;
-        private static DBColumn objectNameKey = DBColumn.EmptyKey;
-        private static DBColumn typeKey = DBColumn.EmptyKey;
-        private static DBTable<GroupPermission> dbTable;
-
-        public static DBTable<GroupPermission> DBTable => dbTable ?? (dbTable = GetTable<GroupPermission>());
-        public static DBColumn ObjectNameKey => DBTable.ParseProperty(nameof(ObjectName), ref objectNameKey);
-        public static DBColumn TypeKey => DBTable.ParseProperty(nameof(Type), ref typeKey);
+        public static readonly DBTable<GroupPermission> DBTable = GetTable<GroupPermission>();
+        public static readonly DBColumn ObjectNameKey = DBTable.ParseProperty(nameof(ObjectName));
+        public static readonly DBColumn TypeKey = DBTable.ParseProperty(nameof(Type));
 
         public static PermissionType GetPermissionType(object value, out string key, out string name)
         {
@@ -285,14 +281,14 @@ namespace DataWF.Module.Common
         {
         }
 
-        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
+        [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
             get => GetValue<int?>(Table.PrimaryKey);
             set => SetValue(value, Table.PrimaryKey);
         }
 
-        [DataMember, Column("parent_id", Keys = DBColumnKeys.Group), Index("rgroup_permission_parent_id"), Browsable(false)]
+        [Column("parent_id", Keys = DBColumnKeys.Group), Index("rgroup_permission_parent_id"), Browsable(false)]
         public int? ParentId
         {
             get => GetGroupValue<int?>();
@@ -306,14 +302,14 @@ namespace DataWF.Module.Common
             set => SetGroupReference(value);
         }
 
-        [DataMember, DefaultValue(PermissionType.GTable), Column("type_id", Keys = DBColumnKeys.ElementType)]
+        [DefaultValue(PermissionType.GTable), Column("type_id", Keys = DBColumnKeys.ElementType)]
         public PermissionType? Type
         {
             get => GetValue<PermissionType?>(Table.ElementTypeKey);
             set => SetValue(value, Table.ElementTypeKey);
         }
 
-        [DataMember, Column("code", 512, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing)]
+        [Column("code", 512, Keys = DBColumnKeys.Code | DBColumnKeys.View | DBColumnKeys.Indexing)]
         [Index("rgroup_permission_code", true)]
         public string Code
         {

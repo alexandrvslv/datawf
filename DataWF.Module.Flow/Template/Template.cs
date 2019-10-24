@@ -72,7 +72,7 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [DataContract, Table("rtemplate", "Template", BlockSize = 100)]
+    [Table("rtemplate", "Template", BlockSize = 100)]
     public class Template : DBGroupItem, IDisposable
     {
         private static DBTable<Template> dbTable;
@@ -105,8 +105,8 @@ namespace DataWF.Module.Flow
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get { return GetValue<int?>(Table.PrimaryKey); }
-            set { SetValue(value, Table.PrimaryKey); }
+            get => GetValue<int?>(Table.PrimaryKey);
+            set => SetValue(value, Table.PrimaryKey);
         }
 
         [Index("rtemplate_item_type", false)]
@@ -115,7 +115,7 @@ namespace DataWF.Module.Flow
         [Column("code", 250, Keys = DBColumnKeys.Code)]
         public virtual string Code
         {
-            get { return GetValue<string>(Table.CodeKey); }
+            get => GetValue<string>(Table.CodeKey);
             set
             {
                 SetValue(value, Table.CodeKey);
@@ -126,8 +126,8 @@ namespace DataWF.Module.Flow
         [Column("name", 512, Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
         public string Name
         {
-            get { return GetName(); }
-            set { SetName(value); }
+            get => GetName();
+            set => SetName(value);
         }
 
         public virtual string NameEN
@@ -166,22 +166,22 @@ namespace DataWF.Module.Flow
         [DefaultValue(0), Column("document_type", 250)]
         public int? DocumentType
         {
-            get { return GetValue<int?>(DocumentTypeKey); }
-            set { SetValue(value, DocumentTypeKey); }
+            get => GetValue<int?>(DocumentTypeKey);
+            set => SetValue(value, DocumentTypeKey);
         }
 
         [Browsable(false)]
         [Column("group_id", Keys = DBColumnKeys.Group)]
         public int? ParentId
         {
-            get { return GetGroupValue<int?>(); }
-            set { SetGroupValue(value); }
+            get => GetGroupValue<int?>();
+            set => SetGroupValue(value);
         }
 
         [Reference(nameof(ParentId))]
         public virtual Template Parent
         {
-            get { return GetGroupReference<Template>(); }
+            get => GetGroupReference<Template>();
             set
             {
                 SetGroupReference(value);
@@ -196,15 +196,15 @@ namespace DataWF.Module.Flow
         [Column("work_id")]
         public int? WorkId
         {
-            get { return GetValue<int?>(WorkKey); }
-            set { SetValue(value, WorkKey); }
+            get => GetValue<int?>(WorkKey);
+            set => SetValue(value, WorkKey);
         }
 
         [Reference(nameof(WorkId))]
         public Work Work
         {
-            get { return GetReference(WorkKey, ref work); }
-            set { SetReference(work = value, WorkKey); }
+            get => GetReference(WorkKey, ref work);
+            set => SetReference(work = value, WorkKey);
         }
 
         //public IEnumerable<TemplateParam> GetParams()
@@ -215,29 +215,29 @@ namespace DataWF.Module.Flow
         [Referencing(nameof(TemplateData.TemplateId))]
         public IEnumerable<TemplateData> Datas
         {
-            get { return GetReferencing(TemplateData.DBTable, TemplateData.TemplateKey, DBLoadParam.None); }
-            set { SetReferencing(value, TemplateData.TemplateKey); }
+            get => GetReferencing(TemplateData.DBTable, TemplateData.TemplateKey, DBLoadParam.None);
+            set => SetReferencing(value, TemplateData.TemplateKey);
         }
 
         [Referencing(nameof(TemplateReference.TemplateId))]
         public IEnumerable<TemplateReference> References
         {
-            get { return GetReferencing(TemplateReference.DBTable, TemplateReference.TemplateKey, DBLoadParam.None); }
-            set { SetReferencing(value, TemplateReference.TemplateKey); }
+            get => GetReferencing(TemplateReference.DBTable, TemplateReference.TemplateKey, DBLoadParam.None);
+            set => SetReferencing(value, TemplateReference.TemplateKey);
         }
 
         [Referencing(nameof(TemplateProperty.TemplateId))]
         public IEnumerable<TemplateProperty> Properties
         {
-            get { return GetReferencing(TemplateProperty.DBTable, TemplateProperty.TemplateKey, DBLoadParam.None); }
-            set { SetReferencing(value, TemplateProperty.TemplateKey); }
+            get => GetReferencing(TemplateProperty.DBTable, TemplateProperty.TemplateKey, DBLoadParam.None);
+            set => SetReferencing(value, TemplateProperty.TemplateKey);
         }
 
         [DefaultValue(false), Column("is_file")]
         public bool? IsFile
         {
-            get { return GetValue<bool?>(IsFileKey); }
-            set { SetValue(value, IsFileKey); }
+            get => GetValue<bool?>(IsFileKey);
+            set => SetValue(value, IsFileKey);
         }
 
         public override AccessValue Access

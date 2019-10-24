@@ -102,61 +102,57 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [DataContract, Table("ddocument_reference", "Document", BlockSize = 400)]
+    [Table("ddocument_reference", "Document", BlockSize = 400)]
     public class DocumentReference : DBItem, IDocumentDetail
     {
-        private static DBTable<DocumentReference> dbTable;
-        private static DBColumn referenceKey = DBColumn.EmptyKey;
-        private static DBColumn documentKey = DBColumn.EmptyKey;
-
-        public static DBColumn ReferenceKey => DBTable.ParseProperty(nameof(ReferenceId), ref referenceKey);
-        public static DBColumn DocumentKey => DBTable.ParseProperty(nameof(DocumentId), ref documentKey);
-        public static DBTable<DocumentReference> DBTable => dbTable ?? (dbTable = GetTable<DocumentReference>());
+        public static readonly DBTable<DocumentReference> DBTable = GetTable<DocumentReference>();
+        public static readonly DBColumn ReferenceKey = DBTable.ParseProperty(nameof(ReferenceId));
+        public static readonly DBColumn DocumentKey = DBTable.ParseProperty(nameof(DocumentId));
 
         private Document reference;
+        private Document document;
 
         public DocumentReference()
         {
         }
 
-        private Document document;
         [Browsable(false)]
-        [DataMember, Column("document_id"), Index("ddocument_reference_unique", true)]
+        [Column("document_id"), Index("ddocument_reference_unique", true)]
         public virtual long? DocumentId
         {
-            get { return GetValue<long?>(DocumentKey); }
-            set { SetValue(value, DocumentKey); }
+            get => GetValue<long?>(DocumentKey);
+            set => SetValue(value, DocumentKey);
         }
 
         [Reference(nameof(DocumentId))]
         public Document Document
         {
-            get { return GetReference(DocumentKey, ref document); }
-            set { SetReference(document = value, DocumentKey); }
+            get => GetReference(DocumentKey, ref document);
+            set => SetReference(document = value, DocumentKey);
         }
 
         [Browsable(false)]
-        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
+        [Column("unid", Keys = DBColumnKeys.Primary)]
         public long? Id
         {
-            get { return GetValue<long?>(Table.PrimaryKey); }
-            set { SetValue(value, Table.PrimaryKey); }
+            get => GetValue<long?>(Table.PrimaryKey);
+            set => SetValue(value, Table.PrimaryKey);
         }
 
         [Browsable(false)]
-        [DataMember, Column("reference_id", Keys = DBColumnKeys.View)]
+        [Column("reference_id", Keys = DBColumnKeys.View)]
         [Index("ddocument_reference_unique", true)]
         public long? ReferenceId
         {
-            get { return GetValue<long?>(ReferenceKey); }
-            set { SetValue(value, ReferenceKey); }
+            get => GetValue<long?>(ReferenceKey);
+            set => SetValue(value, ReferenceKey);
         }
 
         [Reference(nameof(ReferenceId))]
         public Document Reference
         {
-            get { return GetReference(ReferenceKey, ref reference); }
-            set { SetReference(reference = value, ReferenceKey); }
+            get => GetReference(ReferenceKey, ref reference);
+            set => SetReference(reference = value, ReferenceKey);
         }
 
         public override void OnPropertyChanged(string property, DBColumn column = null, object value = null)

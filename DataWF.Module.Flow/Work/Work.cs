@@ -37,41 +37,37 @@ namespace DataWF.Module.Flow
 
     }
 
-    [DataContract, Table("rwork", "Template", BlockSize = 20)]
+    [Table("rwork", "Template", BlockSize = 20)]
     public class Work : DBItem, IDisposable
     {
-        private static DBColumn nameENKey = DBColumn.EmptyKey;
-        private static DBColumn nameRUKey = DBColumn.EmptyKey;
-        private static DBTable<Work> dbTable;
+        public static readonly DBTable<Work> DBTable = GetTable<Work>();
 
-        public static DBTable<Work> DBTable => dbTable ?? (dbTable = GetTable<Work>());
-
-        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
-        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
+        public static readonly DBColumn NameENKey = DBTable.ParseProperty(nameof(NameEN));
+        public static readonly DBColumn NameRUKey = DBTable.ParseProperty(nameof(NameRU));
 
         public Work()
         {
         }
 
-        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
+        [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get { return GetValue<int?>(Table.PrimaryKey); }
-            set { SetValue(value, Table.PrimaryKey); }
+            get => GetValue<int?>(Table.PrimaryKey);
+            set => SetValue(value, Table.PrimaryKey);
         }
 
-        [DataMember, Column("code", Keys = DBColumnKeys.Code)]
+        [Column("code", Keys = DBColumnKeys.Code)]
         public string Code
         {
-            get { return GetValue<string>(Table.CodeKey); }
-            set { SetValue(value, Table.CodeKey); }
+            get => GetValue<string>(Table.CodeKey);
+            set => SetValue(value, Table.CodeKey);
         }
 
-        [DataMember, Column("name", Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
+        [Column("name", Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
         public string Name
         {
-            get { return GetName(); }
-            set { SetName(value); }
+            get => GetName();
+            set => SetName(value);
         }
 
         public string NameEN

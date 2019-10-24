@@ -37,36 +37,21 @@ namespace DataWF.Module.Common
     [Table("ruser", "User", BlockSize = 100)]
     public class User : DBUser, IComparable, IDisposable
     {
-        private static DBColumn abbreviationKey = DBColumn.EmptyKey;
-        private static DBColumn departmentKey = DBColumn.EmptyKey;
-        private static DBColumn positionKey = DBColumn.EmptyKey;
-        private static DBColumn emailKey = DBColumn.EmptyKey;
-        private static DBColumn phoneKey = DBColumn.EmptyKey;
-        private static DBColumn passwordKey = DBColumn.EmptyKey;
-        private static DBColumn superKey = DBColumn.EmptyKey;
-        private static DBColumn refreshTokenKey = DBColumn.EmptyKey;
-        private static DBColumn nameENKey = DBColumn.EmptyKey;
-        private static DBColumn nameRUKey = DBColumn.EmptyKey;
-        private static DBColumn companyKey = DBColumn.EmptyKey;
-        private static DBColumn authTypeKey = DBColumn.EmptyKey;
-        private static DBTable<User> dbTable;
+        public static readonly DBTable<User> DBTable = GetTable<User>();
+        public static readonly DBColumn AbbreviationKey = DBTable.ParseProperty(nameof(Abbreviation));
+        public static readonly DBColumn DepartmentKey = DBTable.ParseProperty(nameof(DepartmentId));
+        public static readonly DBColumn PositionKey = DBTable.ParseProperty(nameof(PositionId));
+        public static readonly DBColumn EmailKey = DBTable.ParseProperty(nameof(EMail));
+        public static readonly DBColumn PhoneKey = DBTable.ParseProperty(nameof(Phone));
+        public static readonly DBColumn PasswordKey = DBTable.ParseProperty(nameof(Password));
+        public static readonly DBColumn SuperKey = DBTable.ParseProperty(nameof(Super));
+        public static readonly DBColumn RefreshTokenKey = DBTable.ParseProperty(nameof(RefreshToken));
+        public static readonly DBColumn NameENKey = DBTable.ParseProperty(nameof(NameEN));
+        public static readonly DBColumn NameRUKey = DBTable.ParseProperty(nameof(NameRU));
+        public static readonly DBColumn CompanyKey = DBTable.ParseProperty(nameof(Company));
+        public static readonly DBColumn AuthTokenKey = DBTable.ParseProperty(nameof(AuthType));
 
-        public static DBColumn AbbreviationKey => DBTable.ParseProperty(nameof(Abbreviation), ref abbreviationKey);
-        public static DBColumn DepartmentKey => DBTable.ParseProperty(nameof(DepartmentId), ref departmentKey);
-        public static DBColumn PositionKey => DBTable.ParseProperty(nameof(PositionId), ref positionKey);
-        public static DBColumn EmailKey => DBTable.ParseProperty(nameof(EMail), ref emailKey);
-        public static DBColumn PhoneKey => DBTable.ParseProperty(nameof(Phone), ref phoneKey);
-        public static DBColumn PasswordKey => DBTable.ParseProperty(nameof(Password), ref passwordKey);
-        public static DBColumn SuperKey => DBTable.ParseProperty(nameof(Super), ref superKey);
-        public static DBColumn RefreshTokenKey => DBTable.ParseProperty(nameof(RefreshToken), ref refreshTokenKey);
-        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
-        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
-        public static DBColumn CompanyKey => DBTable.ParseProperty(nameof(Company), ref companyKey);
-        public static DBColumn AuthTokenKey => DBTable.ParseProperty(nameof(AuthType), ref authTypeKey);
-
-        public static DBTable<User> DBTable => dbTable ?? (dbTable = GetTable<User>());
         private static SmtpSetting config;
-
         private static readonly UserPasswordSpec PasswordSpec = UserPasswordSpec.Lenght6 | UserPasswordSpec.CharSpecial | UserPasswordSpec.CharNumbers;
 
 

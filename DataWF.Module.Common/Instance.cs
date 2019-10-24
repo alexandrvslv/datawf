@@ -32,17 +32,11 @@ namespace DataWF.Module.Common
     [DataContract, Table("rinstance", "User", BlockSize = 100)]
     public class Instance : DBItem
     {
-        private static DBColumn userKey = DBColumn.EmptyKey;
-        private static DBColumn hostKey = DBColumn.EmptyKey;
-        private static DBColumn portKey = DBColumn.EmptyKey;
-        private static DBColumn activeKey = DBColumn.EmptyKey;
-        private static DBTable<Instance> dbTable;
-
-        public static DBColumn UserKey => DBTable.ParseProperty(nameof(UserId), ref userKey);
-        public static DBColumn HostKey => DBTable.ParseProperty(nameof(Host), ref hostKey);
-        public static DBColumn PortKey => DBTable.ParseProperty(nameof(Port), ref portKey);
-        public static DBColumn ActiveKey => DBTable.ParseProperty(nameof(Active), ref activeKey);
-        public static DBTable<Instance> DBTable => dbTable ?? (dbTable = GetTable<Instance>());
+        public static readonly DBTable<Instance> DBTable = GetTable<Instance>();
+        public static readonly DBColumn UserKey = DBTable.ParseProperty(nameof(UserId));
+        public static readonly DBColumn HostKey = DBTable.ParseProperty(nameof(Host));
+        public static readonly DBColumn PortKey = DBTable.ParseProperty(nameof(Port));
+        public static readonly DBColumn ActiveKey = DBTable.ParseProperty(nameof(Active));
 
         public static async Task<Instance> GetByNetId(IPEndPoint endPoint, User user, bool create)
         {
@@ -71,51 +65,51 @@ namespace DataWF.Module.Common
         public Instance()
         { }
 
-        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
+        [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get { return GetValue<int?>(Table.PrimaryKey); }
-            set { SetValue(value, Table.PrimaryKey); }
+            get => GetValue<int?>(Table.PrimaryKey);
+            set => SetValue(value, Table.PrimaryKey);
         }
 
-        [DataMember, Column("user_id"), Browsable(false)]
+        [Column("user_id"), Browsable(false)]
         public int? UserId
         {
-            get { return GetValue<int?>(UserKey); }
-            set { SetValue(value, UserKey); }
+            get => GetValue<int?>(UserKey);
+            set => SetValue(value, UserKey);
         }
 
         [Reference(nameof(UserId))]
         public User User
         {
-            get { return GetReference(UserKey, ref user); }
-            set { SetReference(user = value, UserKey); }
+            get => GetReference(UserKey, ref user);
+            set => SetReference(user = value, UserKey);
         }
 
-        [DataMember, Column("instance_host")]
+        [Column("instance_host")]
         public string Host
         {
-            get { return GetValue<string>(HostKey); }
-            set { SetValue(value, HostKey); }
+            get => GetValue<string>(HostKey);
+            set => SetValue(value, HostKey);
         }
 
-        [DataMember, Column("instance_port")]
+        [Column("instance_port")]
         public int? Port
         {
-            get { return GetValue<int?>(PortKey); }
-            set { SetValue(value, PortKey); }
+            get => GetValue<int?>(PortKey);
+            set => SetValue(value, PortKey);
         }
 
-        [DataMember, Column("instance_active")]
+        [Column("instance_active")]
         public bool? Active
         {
-            get { return GetValue<bool?>(ActiveKey); }
-            set { SetValue(value, ActiveKey); }
+            get => GetValue<bool?>(ActiveKey);
+            set => SetValue(value, ActiveKey);
         }
 
         public IPEndPoint EndPoint
         {
-            get { return ipEndPoint ?? (ipEndPoint = Host == null ? null : new IPEndPoint(IPAddress.Parse(Host), Port.GetValueOrDefault())); }
+            get => ipEndPoint ?? (ipEndPoint = Host == null ? null : new IPEndPoint(IPAddress.Parse(Host), Port.GetValueOrDefault()));
             set
             {
                 ipEndPoint = value;

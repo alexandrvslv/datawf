@@ -11,6 +11,8 @@ namespace DataWF.Data
 
         DBLogColumn GetLogColumn(DBColumn column);
         IEnumerable<DBLogColumn> GetLogColumns();
+
+        DBColumn ParseLogProperty(string name);
         DBColumn ParseLogProperty(string name, ref DBColumn column);
     }
 }

@@ -31,14 +31,14 @@ namespace DataWF.Module.Counterpart
         [Browsable(false)]
         public int? CountryId
         {
-            get { return ParentId; }
-            set { ParentId = value; }
+            get => ParentId;
+            set => ParentId = value;
         }
 
         public Country Country
         {
-            get { return Parent as Country; }
-            set { Parent = value; }
+            get => Parent as Country;
+            set => Parent = value;
         }
 
     }

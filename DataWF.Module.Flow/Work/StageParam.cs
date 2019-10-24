@@ -62,19 +62,14 @@ namespace DataWF.Module.Flow
         }
     }
 
-    [DataContract, Table("rstage_param", "Template", BlockSize = 200)]
+    [Table("rstage_param", "Template", BlockSize = 200)]
     public class StageParam : DBItem
     {
-        private static DBTable<StageParam> dbTable;
-        private static DBColumn stageKey = DBColumn.EmptyKey;
-        private static DBColumn paramCodeKey = DBColumn.EmptyKey;
-        private static DBColumn nameKey = DBColumn.EmptyKey;
+        public static readonly DBTable<StageParam> DBTable = GetTable<StageParam>();
 
-        public static DBTable<StageParam> DBTable => dbTable ?? (dbTable = GetTable<StageParam>());
-
-        public static DBColumn StageKey => DBTable.ParseProperty(nameof(StageId), ref stageKey);
-        public static DBColumn ParamCodeKey => DBTable.ParseProperty(nameof(ParamCode), ref paramCodeKey);
-        public static DBColumn NameKey => DBTable.ParseProperty(nameof(Name), ref nameKey);
+        public static readonly DBColumn StageKey = DBTable.ParseProperty(nameof(StageId));
+        public static readonly DBColumn ParamCodeKey = DBTable.ParseProperty(nameof(ParamCode));
+        public static readonly DBColumn NameKey = DBTable.ParseProperty(nameof(Name));
 
         private object _cache;
         private Stage stage;
@@ -86,37 +81,37 @@ namespace DataWF.Module.Flow
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get { return GetValue<int?>(Table.PrimaryKey); }
-            set { SetValue(value, Table.PrimaryKey); }
+            get => GetValue<int?>(Table.PrimaryKey);
+            set => SetValue(value, Table.PrimaryKey);
         }
 
         [Browsable(false)]
         [Column("stage_id")]
         public int? StageId
         {
-            get { return GetValue<int?>(StageKey); }
-            set { SetValue(value, StageKey); }
+            get => GetValue<int?>(StageKey);
+            set => SetValue(value, StageKey);
         }
 
         [Reference(nameof(StageId))]
         public Stage Stage
         {
-            get { return GetReference(StageKey, ref stage); }
-            set { SetReference(stage = value, StageKey); }
+            get => GetReference(StageKey, ref stage);
+            set => SetReference(stage = value, StageKey);
         }
 
         [Column("code", 1024)]
         public string ParamCode
         {
-            get { return GetValue<string>(ParamCodeKey); }
-            set { SetValue(value, ParamCodeKey); }
+            get => GetValue<string>(ParamCodeKey);
+            set => SetValue(value, ParamCodeKey);
         }
 
         [Column("name", 1024)]
         public string Name
         {
-            get { return GetValue<string>(NameKey); }
-            set { SetValue(value, NameKey); }
+            get => GetValue<string>(NameKey);
+            set => SetValue(value, NameKey);
         }
 
         [Browsable(false)]
@@ -193,15 +188,15 @@ namespace DataWF.Module.Flow
 
         public DBProcedure Procedure
         {
-            get { return Param as DBProcedure; }
-            set { Param = value; }
+            get => Param as DBProcedure;
+            set => Param = value;
         }
 
         [Column("procedure_type")]
         public StageParamProcudureType? ProcedureType
         {
-            get { return GetValue<StageParamProcudureType?>(ProcedureTypeKey); }
-            set { SetValue(value, ProcedureTypeKey); }
+            get => GetValue<StageParamProcudureType?>(ProcedureTypeKey);
+            set => SetValue(value, ProcedureTypeKey);
         }
     }
 
@@ -218,8 +213,8 @@ namespace DataWF.Module.Flow
 
         public Stage ReferenceStage
         {
-            get { return Param as Stage; }
-            set { Param = value; }
+            get => Param as Stage;
+            set => Param = value;
         }
 
         [Column("is_next")]
@@ -240,8 +235,8 @@ namespace DataWF.Module.Flow
 
         public Template Template
         {
-            get { return Param as Template; }
-            set { Param = value; }
+            get => Param as Template;
+            set => Param = value;
         }
     }
 
@@ -255,8 +250,8 @@ namespace DataWF.Module.Flow
 
         public DBForeignKey Foreign
         {
-            get { return Param as DBForeignKey; }
-            set { Param = value; }
+            get => Param as DBForeignKey;
+            set => Param = value;
         }
     }
 }

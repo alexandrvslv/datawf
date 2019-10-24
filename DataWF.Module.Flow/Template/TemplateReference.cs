@@ -26,13 +26,9 @@ namespace DataWF.Module.Flow
     [Table("rtemplate_reference", "Template")]
     public class TemplateReference : DBItem
     {
-        private static DBTable<TemplateReference> dbTable;
-        private static DBColumn templateKey = DBColumn.EmptyKey;
-        private static DBColumn referenceKey = DBColumn.EmptyKey;
-
-        public static DBTable<TemplateReference> DBTable => dbTable ?? (dbTable = GetTable<TemplateReference>());
-        public static DBColumn TemplateKey => DBTable.ParseProperty(nameof(TemplateId), ref templateKey);
-        public static DBColumn ReferenceKey => DBTable.ParseProperty(nameof(ReferenceId), ref referenceKey);
+        public static readonly DBTable<TemplateReference> DBTable = GetTable<TemplateReference>();
+        public static readonly DBColumn TemplateKey = DBTable.ParseProperty(nameof(TemplateId));
+        public static readonly DBColumn ReferenceKey = DBTable.ParseProperty(nameof(ReferenceId));
 
         private Template template;
         private Template reference;
@@ -43,38 +39,38 @@ namespace DataWF.Module.Flow
         [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get { return GetValue<int?>(Table.PrimaryKey); }
-            set { SetValue(value, Table.PrimaryKey); }
+            get => GetValue<int?>(Table.PrimaryKey);
+            set => SetValue(value, Table.PrimaryKey);
         }
 
         [Column("template_id"), Index("rtemplate_reference_index", true)]
         public int? TemplateId
         {
-            get { return GetValue<int?>(TemplateKey); }
-            set { SetValue(value, TemplateKey); }
+            get => GetValue<int?>(TemplateKey);
+            set => SetValue(value, TemplateKey);
         }
 
         [Reference(nameof(TemplateId))]
         public Template Template
         {
-            get { return GetReference(TemplateKey, ref template); }
-            set { SetReference(template = value, TemplateKey); }
+            get => GetReference(TemplateKey, ref template);
+            set => SetReference(template = value, TemplateKey);
         }
 
         [Column("reference_id"), Index("rtemplate_reference_index", true)]
         public int? ReferenceId
         {
-            get { return GetValue<int?>(ReferenceKey); }
-            set { SetValue(value, ReferenceKey); }
+            get => GetValue<int?>(ReferenceKey);
+            set => SetValue(value, ReferenceKey);
         }
 
         [Reference(nameof(ReferenceId))]
         public Template Reference
         {
-            get { return GetReference(ReferenceKey, ref reference); }
-            set { SetReference(reference = value, ReferenceKey); }
+            get => GetReference(ReferenceKey, ref reference);
+            set => SetReference(reference = value, ReferenceKey);
         }
 
-        
+
     }
 }

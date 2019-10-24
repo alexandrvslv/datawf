@@ -31,115 +31,107 @@ namespace DataWF.Module.Common
     [DataContract, Table("rscheduler", "Reference Book", BlockSize = 20)]
     public class Scheduler : DBItem//, IComparable
     {
-        private static DBColumn orderKey = DBColumn.EmptyKey;
-        private static DBColumn intervalKey = DBColumn.EmptyKey;
-        private static DBColumn procedureKey = DBColumn.EmptyKey;
-        private static DBColumn dateExecuteKey = DBColumn.EmptyKey;
-        private static DBColumn companyKey = DBColumn.EmptyKey;
-        private static DBColumn nameENKey = DBColumn.EmptyKey;
-        private static DBColumn nameRUKey = DBColumn.EmptyKey;
-        private static DBTable<Scheduler> dbTable;
-        private Company company;
+        public static readonly DBTable<Scheduler> DBTable = GetTable<Scheduler>();
+        public static readonly DBColumn OrderKey = DBTable.ParseProperty(nameof(Order));
+        public static readonly DBColumn NameENKey = DBTable.ParseProperty(nameof(NameEN));
+        public static readonly DBColumn NameRUKey = DBTable.ParseProperty(nameof(NameRU));
+        public static readonly DBColumn IntervalKey = DBTable.ParseProperty(nameof(Interval));
+        public static readonly DBColumn ProcedureKey = DBTable.ParseProperty(nameof(ProcedureName));
+        public static readonly DBColumn DateExecuteKey = DBTable.ParseProperty(nameof(DateExecute));
+        public static readonly DBColumn CompanyKey = DBTable.ParseProperty(nameof(Company));
 
-        public static DBColumn OrderKey => DBTable.ParseProperty(nameof(Order), ref orderKey);
-        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
-        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
-        public static DBColumn IntervalKey => DBTable.ParseProperty(nameof(Interval), ref intervalKey);
-        public static DBColumn ProcedureKey => DBTable.ParseProperty(nameof(ProcedureName), ref procedureKey);
-        public static DBColumn DateExecuteKey => DBTable.ParseProperty(nameof(DateExecute), ref dateExecuteKey);
-        public static DBColumn CompanyKey => DBTable.ParseProperty(nameof(Company), ref companyKey);
-        public static DBTable<Scheduler> DBTable => dbTable ?? (dbTable = GetTable<Scheduler>());
+        private Company company;
 
         public Scheduler()
         { }
 
-        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
+        [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get { return GetValue<int?>(Table.PrimaryKey); }
-            set { SetValue(value, Table.PrimaryKey); }
+            get => GetValue<int?>(Table.PrimaryKey);
+            set => SetValue(value, Table.PrimaryKey);
         }
 
-        [DataMember, Column("company_id"), Browsable(false)]
+        [Column("company_id"), Browsable(false)]
         public int? CompanyId
         {
-            get { return GetValue<int?>(CompanyKey); }
-            set { SetValue(value, CompanyKey); }
+            get => GetValue<int?>(CompanyKey);
+            set => SetValue(value, CompanyKey);
         }
 
         [Reference(nameof(CompanyId))]
         public Company Company
         {
-            get { return GetReference(CompanyKey, ref company); }
-            set { SetReference(company = value, CompanyKey); }
+            get => GetReference(CompanyKey, ref company);
+            set => SetReference(company = value, CompanyKey);
         }
 
-        [DataMember, Column("code", Keys = DBColumnKeys.Code)]
+        [Column("code", Keys = DBColumnKeys.Code)]
         public string Code
         {
-            get { return GetValue<string>(Table.CodeKey); }
-            set { SetValue(value, Table.CodeKey); }
+            get => GetValue<string>(Table.CodeKey);
+            set => SetValue(value, Table.CodeKey);
         }
 
-        [DataMember, Column("name", Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
+        [Column("name", Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
         public string Name
         {
-            get { return GetName(); }
-            set { SetName(value); }
+            get => GetName();
+            set => SetName(value);
         }
 
         public string NameEN
         {
-            get { return GetValue<string>(NameENKey); }
-            set { SetValue(value, NameENKey); }
+            get => GetValue<string>(NameENKey);
+            set => SetValue(value, NameENKey);
         }
 
         public string NameRU
         {
-            get { return GetValue<string>(NameRUKey); }
-            set { SetValue(value, NameRUKey); }
+            get => GetValue<string>(NameRUKey);
+            set => SetValue(value, NameRUKey);
         }
 
-        [DataMember, Column("orderid")]
+        [Column("orderid")]
         public int? Order
         {
-            get { return GetValue<int?>(OrderKey); }
-            set { SetValue(value, OrderKey); }
+            get => GetValue<int?>(OrderKey);
+            set => SetValue(value, OrderKey);
         }
 
-        [DataMember, DefaultValue(SchedulerType.Interval), Column("type_id", Keys = DBColumnKeys.ElementType | DBColumnKeys.Notnull)]
+        [DefaultValue(SchedulerType.Interval), Column("type_id", Keys = DBColumnKeys.ElementType | DBColumnKeys.Notnull)]
         public SchedulerType? Type
         {
-            get { return GetValue<SchedulerType?>(Table.ElementTypeKey); }
-            set { SetValue(value, Table.ElementTypeKey); }
+            get => GetValue<SchedulerType?>(Table.ElementTypeKey);
+            set => SetValue(value, Table.ElementTypeKey);
         }
 
-        [DataMember, Column("run_interval", Keys = DBColumnKeys.Notnull)]
+        [Column("run_interval", Keys = DBColumnKeys.Notnull)]
         public TimeSpan? Interval
         {
-            get { return GetValue<TimeSpan?>(IntervalKey); }
-            set { SetValue(value, IntervalKey); }
+            get => GetValue<TimeSpan?>(IntervalKey);
+            set => SetValue(value, IntervalKey);
         }
 
         [Browsable(false)]
-        [DataMember, Column("procedure_name")]
+        [Column("procedure_name")]
         public string ProcedureName
         {
-            get { return GetValue<string>(ProcedureKey); }
-            set { SetValue(value, ProcedureKey); }
+            get => GetValue<string>(ProcedureKey);
+            set => SetValue(value, ProcedureKey);
         }
 
         public DBProcedure Procedure
         {
-            get { return DBService.Schems.ParseProcedure(ProcedureName); }
-            set { ProcedureName = value?.Name; }
+            get => DBService.Schems.ParseProcedure(ProcedureName);
+            set => ProcedureName = value?.Name;
         }
 
-        [DataMember, Column("date_execute")]
+        [Column("date_execute")]
         public DateTime? DateExecute
         {
-            get { return GetValue<DateTime?>(DateExecuteKey); }
-            set { SetValue(value, DateExecuteKey); }
+            get => GetValue<DateTime?>(DateExecuteKey);
+            set => SetValue(value, DateExecuteKey);
         }
 
         public async Task<StateInfo> Execute()

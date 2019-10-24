@@ -46,17 +46,11 @@ namespace DataWF.Module.Messanger
     [DataContract, Table("dmessage_address", "Message", IsLoging = false)]
     public class MessageAddress : MessageDetail
     {
-        private static DBTable<MessageAddress> dbTable;
-        private static DBColumn userKey = DBColumn.EmptyKey;
-        private static DBColumn positionKey = DBColumn.EmptyKey;
-        private static DBColumn departmentKey = DBColumn.EmptyKey;
-        private static DBColumn dateReadKey = DBColumn.EmptyKey;
-
-        public static DBTable<MessageAddress> DBTable => dbTable ?? (dbTable = GetTable<MessageAddress>());
-        public static DBColumn UserKey => DBTable.ParseProperty(nameof(UserId), ref userKey);
-        public static DBColumn PositionKey => DBTable.ParseProperty(nameof(PositionId), ref positionKey);
-        public static DBColumn DepartmentKey => DBTable.ParseProperty(nameof(DepartmentId), ref departmentKey);
-        public static DBColumn DateReadKey => DBTable.ParseProperty(nameof(DateRead), ref dateReadKey);
+        public static readonly DBTable<MessageAddress> DBTable = GetTable<MessageAddress>();
+        public static readonly DBColumn UserKey = DBTable.ParseProperty(nameof(UserId));
+        public static readonly DBColumn PositionKey = DBTable.ParseProperty(nameof(PositionId));
+        public static readonly DBColumn DepartmentKey = DBTable.ParseProperty(nameof(DepartmentId));
+        public static readonly DBColumn DateReadKey = DBTable.ParseProperty(nameof(DateRead));
 
         private User user;
         private Position position;

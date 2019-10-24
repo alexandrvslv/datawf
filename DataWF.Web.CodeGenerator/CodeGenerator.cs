@@ -299,26 +299,26 @@ namespace DataWF.Web.CodeGenerator
                 AddUsing(table.ItemType, usings);
                 yield return SF.FieldDeclaration(
                attributeLists: SF.List<AttributeListSyntax>(),
-               modifiers: SF.TokenList(new[] { SF.Token(SyntaxKind.PrivateKeyword), SF.Token(SyntaxKind.StaticKeyword) }),
+               modifiers: SF.TokenList(new[] { SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.StaticKeyword), SF.Token(SyntaxKind.ReadOnlyKeyword) }),
                declaration: SF.VariableDeclaration(
                    type: SF.ParseTypeName(nameof(IDBLogTable)),
                    variables: SF.SingletonSeparatedList(
                        SF.VariableDeclarator(
-                           identifier: SF.Identifier("_dbLogTable"),
+                           identifier: SF.Identifier("DBLogTable"),
                            argumentList: null,
-                           initializer: null))));
-                yield return SF.PropertyDeclaration(
-                    attributeLists: SF.List<AttributeListSyntax>(),
-                    modifiers: SF.TokenList(new[] { SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.StaticKeyword) }),
-                    type: SF.ParseTypeName(nameof(IDBLogTable)),
-                    explicitInterfaceSpecifier: null,
-                    identifier: SF.Identifier("DBLogTable"),
-                    accessorList: null,
-                    expressionBody: SF.ArrowExpressionClause(
-                        SF.ParseExpression($"_dbLogTable ?? (_dbLogTable = GetTable<{table.ItemType.Name}>().LogTable)")),
-                    initializer: null,
-                    semicolonToken: SF.Token(SyntaxKind.SemicolonToken)
-                   );
+                           initializer: SF.EqualsValueClause(SF.ParseExpression($"GetTable<{table.ItemType.Name}>().LogTable"))))));
+                //yield return SF.PropertyDeclaration(
+                //    attributeLists: SF.List<AttributeListSyntax>(),
+                //    modifiers: SF.TokenList(new[] { SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.StaticKeyword) }),
+                //    type: SF.ParseTypeName(nameof(IDBLogTable)),
+                //    explicitInterfaceSpecifier: null,
+                //    identifier: SF.Identifier("DBLogTable"),
+                //    accessorList: null,
+                //    expressionBody: SF.ArrowExpressionClause(
+                //        SF.ParseExpression($"_dbLogTable ?? (_dbLogTable = GetTable<{table.ItemType.Name}>().LogTable)")),
+                //    initializer: null,
+                //    semicolonToken: SF.Token(SyntaxKind.SemicolonToken)
+                //   );
             }
             var columns = GetLogColumns(table, itemType);
 
@@ -326,10 +326,10 @@ namespace DataWF.Web.CodeGenerator
             {
                 yield return GenKeyField(column, table, itemType);
             }
-            foreach (var column in columns)
-            {
-                yield return GenKeyProperty(column, table, itemType);
-            }
+            //foreach (var column in columns)
+            //{
+            //    yield return GenKeyProperty(column, table, itemType);
+            //}
             foreach (var column in columns)
             {
                 foreach (var property in GenLogProperty(column, table, itemType, usings))
@@ -468,14 +468,14 @@ namespace DataWF.Web.CodeGenerator
         {
             return SF.FieldDeclaration(
                 attributeLists: SF.List<AttributeListSyntax>(),
-                modifiers: SF.TokenList(new[] { SF.Token(SyntaxKind.PrivateKeyword), SF.Token(SyntaxKind.StaticKeyword) }),
+                modifiers: SF.TokenList(new[] { SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.StaticKeyword), SF.Token(SyntaxKind.ReadOnlyKeyword) }),
                 declaration: SF.VariableDeclaration(
                     type: SF.ParseTypeName(nameof(DBColumn)),
                     variables: SF.SingletonSeparatedList(
                         SF.VariableDeclarator(
-                            identifier: SF.Identifier(GetKeyFieldName(column)),
+                            identifier: SF.Identifier(GetKeyName(column)),
                             argumentList: null,
-                            initializer: SF.EqualsValueClause(SF.ParseExpression($"DBColumn.EmptyKey"))))));
+                            initializer: SF.EqualsValueClause(SF.ParseExpression($"DBLogTable.ParseLogProperty(nameof({column.PropertyName}))"))))));
         }
 
         private string GetKeyFieldName(ColumnGenerator column)
@@ -927,7 +927,7 @@ namespace DataWF.Web.CodeGenerator
             yield return SF.AttributeList(
                          SF.SingletonSeparatedList(
                              SF.Attribute(
-                                 SF.IdentifierName(post ? "HttpPost" : "HttpGet"))));            
+                                 SF.IdentifierName(post ? "HttpPost" : "HttpGet"))));
         }
 
         private ClassDeclarationSyntax GenPropertyInvoker(string name, string definitionName, string propertyName, string propertyType, bool canWrite = true)

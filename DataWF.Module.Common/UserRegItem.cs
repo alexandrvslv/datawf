@@ -37,7 +37,7 @@ namespace DataWF.Module.Common
         [XmlIgnore]
         public DBTable Table
         {
-            get { return cacheTargetTable ?? (cacheTargetTable = DBService.Schems.ParseTable(TableName)); }
+            get => cacheTargetTable ?? (cacheTargetTable = DBService.Schems.ParseTable(TableName));
             set
             {
                 cacheTargetTable = value;
@@ -51,7 +51,7 @@ namespace DataWF.Module.Common
         [XmlIgnore]
         public DBItem Item
         {
-            get { return cacheTarget ?? (cacheTarget = (Table?.LoadItemById(ItemId) ?? DBItem.EmptyItem)); }
+            get => cacheTarget ?? (cacheTarget = (Table?.LoadItemById(ItemId) ?? DBItem.EmptyItem));
             set
             {
                 cacheTarget = value;
@@ -71,7 +71,7 @@ namespace DataWF.Module.Common
         [XmlIgnore]
         public DBLogItem LogItem
         {
-            get { return cacheLogItem ?? (cacheLogItem = (DBLogItem)LogTable?.LoadItemById(LogId)); }
+            get => cacheLogItem ?? (cacheLogItem = (DBLogItem)LogTable?.LoadItemById(LogId));
             set
             {
                 cacheLogItem = value;

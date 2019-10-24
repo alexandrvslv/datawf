@@ -133,6 +133,11 @@ namespace DataWF.Data
             return ParseColumn(column.Name + "_log") as DBLogColumn;
         }
 
+        public DBColumn ParseLogProperty(string name)
+        {
+            return BaseTable?.ParseProperty(name)?.LogColumn;
+        }
+
         public DBColumn ParseLogProperty(string name, ref DBColumn column)
         {
             if (column != DBColumn.EmptyKey)

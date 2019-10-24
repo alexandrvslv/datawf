@@ -30,16 +30,12 @@ namespace DataWF.Module.Common
     [DataContract, Table("rgroup", "User", BlockSize = 10)]
     public class UserGroup : DBGroupItem, IDisposable, IAccessGroup
     {
-        private static DBColumn nameENKey = DBColumn.EmptyKey;
-        private static DBColumn nameRUKey = DBColumn.EmptyKey;
-        private static DBColumn companyKey = DBColumn.EmptyKey;
-        private static DBTable<UserGroup> dbTable;
-        private Company company;
+        public static readonly DBTable<UserGroup> DBTable = GetTable<UserGroup>();
+        public static readonly DBColumn NameENKey = DBTable.ParseProperty(nameof(NameEN));
+        public static readonly DBColumn NameRUKey = DBTable.ParseProperty(nameof(NameRU));
+        public static readonly DBColumn CompanyKey = DBTable.ParseProperty(nameof(Company));
 
-        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
-        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
-        public static DBColumn CompanyKey => DBTable.ParseProperty(nameof(Company), ref companyKey);
-        public static DBTable<UserGroup> DBTable => dbTable ?? (dbTable = GetTable<UserGroup>());
+        private Company company;
 
         internal static void SetCurrent()
         {
@@ -91,14 +87,14 @@ namespace DataWF.Module.Common
             set => SetReference(company = value, CompanyKey);
         }
 
-        [DataMember, Column("group_number", 512, Keys = DBColumnKeys.Code), Index("rgroup_group_number")]
+        [Column("group_number", 512, Keys = DBColumnKeys.Code), Index("rgroup_group_number")]
         public string Number
         {
             get => GetValue<string>(Table.CodeKey);
             set => SetValue(value, Table.CodeKey);
         }
 
-        [DataMember, Column("name", Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
+        [Column("name", Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
         public string Name
         {
             get => GetName();

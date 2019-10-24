@@ -30,44 +30,40 @@ namespace DataWF.Module.Counterpart
         { }
     }
 
-    [DataContract, Table("daddress", "Address", BlockSize = 100)]
+    [Table("daddress", "Address", BlockSize = 100)]
     public class Address : DBItem
     {
-        private static DBColumn locationKey = DBColumn.EmptyKey;
-        private static DBColumn postIndexKey = DBColumn.EmptyKey;
-        private static DBColumn streetENKey = DBColumn.EmptyKey;
-        private static DBColumn streetRUKey = DBColumn.EmptyKey;
-        private static DBTable<Address> dbTable;
-        private Location location;
+        public static readonly DBTable<Address> DBTable = GetTable<Address>();
 
-        public static DBColumn LocationKey => DBTable.ParseProperty(nameof(LocationId), ref locationKey);
-        public static DBColumn PostIndexKey => DBTable.ParseProperty(nameof(PostIndex), ref postIndexKey);
-        public static DBColumn StreetENKey => DBTable.ParseProperty(nameof(StreetEN), ref streetENKey);
-        public static DBColumn StreetRUKey => DBTable.ParseProperty(nameof(StreetRU), ref streetRUKey);
-        public static DBTable<Address> DBTable => dbTable ?? (dbTable = GetTable<Address>());
+        public static readonly DBColumn LocationKey = DBTable.ParseProperty(nameof(LocationId));
+        public static readonly DBColumn PostIndexKey = DBTable.ParseProperty(nameof(PostIndex));
+        public static readonly DBColumn StreetENKey = DBTable.ParseProperty(nameof(StreetEN));
+        public static readonly DBColumn StreetRUKey = DBTable.ParseProperty(nameof(StreetRU));
+
+        private Location location;
 
         public Address()
         { }
 
-        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
+        [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get { return GetValue<int?>(Table.PrimaryKey); }
-            set { SetValue(value, Table.PrimaryKey); }
+            get => GetValue<int?>(Table.PrimaryKey);
+            set => SetValue(value, Table.PrimaryKey);
         }
 
         [Browsable(false)]
-        [DataMember, Column("location_id", Keys = DBColumnKeys.View), Index("daddress_location_id")]
+        [Column("location_id", Keys = DBColumnKeys.View), Index("daddress_location_id")]
         public int? LocationId
         {
-            get { return GetValue<int?>(LocationKey); }
-            set { SetValue(value, LocationKey); }
+            get => GetValue<int?>(LocationKey);
+            set => SetValue(value, LocationKey);
         }
 
         [Reference(nameof(LocationId))]
         public Location Location
         {
-            get { return GetReference(LocationKey, ref location); }
+            get => GetReference(LocationKey, ref location);
             set
             {
                 if (value?.LocationType != LocationType.Region
@@ -77,18 +73,18 @@ namespace DataWF.Module.Counterpart
             }
         }
 
-        [DataMember, Column("post_index", 20, Keys = DBColumnKeys.View), Index("daddress_post_index")]
+        [Column("post_index", 20, Keys = DBColumnKeys.View), Index("daddress_post_index")]
         public string PostIndex
         {
-            get { return GetValue<string>(PostIndexKey); }
-            set { SetValue(value, PostIndexKey); }
+            get => GetValue<string>(PostIndexKey);
+            set => SetValue(value, PostIndexKey);
         }
 
-        [DataMember, Column("street", 1024, Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
+        [Column("street", 1024, Keys = DBColumnKeys.Culture | DBColumnKeys.View)]
         public string Street
         {
-            get { return GetName(); }
-            set { SetName(value); }
+            get => GetName();
+            set => SetName(value);
         }
 
         public string StreetEN

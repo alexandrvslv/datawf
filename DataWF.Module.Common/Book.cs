@@ -25,71 +25,66 @@ namespace DataWF.Module.Common
     [DataContract, Table("rbook", "Reference Book", BlockSize = 100)]
     public class Book : DBGroupItem
     {
-        private static DBColumn valueKey = DBColumn.EmptyKey;
-        private static DBColumn nameENKey = DBColumn.EmptyKey;
-        private static DBColumn nameRUKey = DBColumn.EmptyKey;
-        private static DBTable<Book> dbTable;
-
-        public static DBColumn ValueKey => DBTable.ParseProperty(nameof(Value), ref valueKey);
-        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
-        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
-        public static DBTable<Book> DBTable => dbTable ?? (dbTable = GetTable<Book>());
+        public static readonly DBTable<Book> DBTable = GetTable<Book>();
+        public static readonly DBColumn ValueKey = DBTable.ParseProperty(nameof(Value));
+        public static readonly DBColumn NameENKey = DBTable.ParseProperty(nameof(NameEN));
+        public static readonly DBColumn NameRUKey = DBTable.ParseProperty(nameof(NameRU));
 
         public Book()
         { }
 
-        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
+        [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get { return GetValue<int?>(Table.PrimaryKey); }
-            set { SetValue(value, Table.PrimaryKey); }
+            get => GetValue<int?>(Table.PrimaryKey);
+            set => SetValue(value, Table.PrimaryKey);
         }
 
-        [DataMember, Column("code", 512, Keys = DBColumnKeys.Code)]
+        [Column("code", 512, Keys = DBColumnKeys.Code)]
         public string Code
         {
-            get { return GetValue<string>(Table.CodeKey); }
-            set { SetValue(value, Table.CodeKey); }
+            get => GetValue<string>(Table.CodeKey);
+            set => SetValue(value, Table.CodeKey);
         }
 
-        [DataMember, Column("group_id", Keys = DBColumnKeys.Group)]
+        [Column("group_id", Keys = DBColumnKeys.Group)]
         public int? ParentId
         {
-            get { return GetGroupValue<int?>(); }
-            set { SetGroupValue(value); }
+            get => GetGroupValue<int?>();
+            set => SetGroupValue(value);
         }
 
         [Reference(nameof(ParentId))]
         public Book Parent
         {
-            get { return GetGroupReference<Book>(); }
-            set { SetGroupReference(value); }
+            get => GetGroupReference<Book>();
+            set => SetGroupReference(value);
         }
 
-        [DataMember, Column("name", 1024, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
+        [Column("name", 1024, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
         public string Name
         {
-            get { return GetName(); }
-            set { SetName(value); }
+            get => GetName();
+            set => SetName(value);
         }
 
         public string NameEN
         {
-            get { return GetValue<string>(NameENKey); }
-            set { SetValue(value, NameENKey); }
+            get => GetValue<string>(NameENKey);
+            set => SetValue(value, NameENKey);
         }
 
         public string NameRU
         {
-            get { return GetValue<string>(NameRUKey); }
-            set { SetValue(value, NameRUKey); }
+            get => GetValue<string>(NameRUKey);
+            set => SetValue(value, NameRUKey);
         }
 
-        [DataMember, Column("book_value")]
+        [Column("book_value")]
         public string Value
         {
-            get { return GetValue<string>(ValueKey); }
-            set { SetValue(value, ValueKey); }
+            get => GetValue<string>(ValueKey);
+            set => SetValue(value, ValueKey);
         }
     }
 }

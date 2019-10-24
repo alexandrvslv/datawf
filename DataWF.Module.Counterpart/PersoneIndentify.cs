@@ -26,6 +26,73 @@ using System.Runtime.Serialization;
 
 namespace DataWF.Module.Counterpart
 {
+    [Table("dpersone_indentify", "Customer", BlockSize = 100)]
+    public class PersoneIdentify : DBItem
+    {
+        public static readonly DBTable<PersoneIdentify> DBTable = GetTable<PersoneIdentify>();
+        public static readonly DBColumn PersoneKey = DBTable.ParseProperty(nameof(PersoneId));
+        public static readonly DBColumn NumberKey = DBTable.ParseProperty(nameof(Number));
+        public static readonly DBColumn DateIssueKey = DBTable.ParseProperty(nameof(DateIssue));
+        public static readonly DBColumn DateExpireKey = DBTable.ParseProperty(nameof(DateExpire));
+        public static readonly DBColumn IssuedByKey = DBTable.ParseProperty(nameof(IssuedBy));
+
+        private Persone persone;
+
+        public PersoneIdentify()
+        {
+        }
+
+        [Column("unid", Keys = DBColumnKeys.Primary)]
+        public int? Id
+        {
+            get => GetValue<int?>(Table.PrimaryKey);
+            set => SetValue(value, Table.PrimaryKey);
+        }
+
+        [Browsable(false)]
+        [Column("persone_id")]
+        public int? PersoneId
+        {
+            get => GetValue<int?>(PersoneKey);
+            set => SetValue(value, PersoneKey);
+        }
+
+        [Reference(nameof(PersoneId))]
+        public Persone Persone
+        {
+            get => GetReference(PersoneKey, ref persone);
+            set => SetReference(persone = value, PersoneKey);
+        }
+
+        [Column("identify_number", 30)]
+        public string Number
+        {
+            get => GetValue<string>(NumberKey);
+            set => SetValue(value, NumberKey);
+        }
+
+        [Column("date_issue")]
+        public DateTime? DateIssue
+        {
+            get => GetValue<DateTime?>(DateIssueKey);
+            set => SetValue(value, DateIssueKey);
+        }
+
+        [Column("date_expire")]
+        public DateTime? DateExpire
+        {
+            get => GetValue<DateTime?>(DateExpireKey);
+            set => SetValue(value, DateExpireKey);
+        }
+
+        [Column("issued_by")]
+        public string IssuedBy
+        {
+            get => GetValue<string>(IssuedByKey);
+            set => SetValue(value, IssuedByKey);
+        }
+    }
+
     public class PersoneIdentifyList : DBTableView<PersoneIdentify>
     {
         public PersoneIdentifyList() : base("")
@@ -53,77 +120,6 @@ namespace DataWF.Module.Counterpart
         }
     }
 
-    [DataContract, Table("dpersone_indentify", "Customer", BlockSize = 100)]
-    public class PersoneIdentify : DBItem
-    {
-        private static DBColumn personeKey = DBColumn.EmptyKey;
-        private static DBColumn numberKey = DBColumn.EmptyKey;
-        private static DBColumn dateIssueKey = DBColumn.EmptyKey;
-        private static DBColumn dateExpireKey = DBColumn.EmptyKey;
-        private static DBColumn issyedByKey = DBColumn.EmptyKey;
-        private static DBTable<PersoneIdentify> dbTable;
-        private Persone persone;
 
-        public static DBColumn PersoneKey => DBTable.ParseProperty(nameof(PersoneId), ref personeKey);
-        public static DBColumn NumberKey => DBTable.ParseProperty(nameof(Number), ref numberKey);
-        public static DBColumn DateIssueKey => DBTable.ParseProperty(nameof(DateIssue), ref dateIssueKey);
-        public static DBColumn DateExpireKey => DBTable.ParseProperty(nameof(DateExpire), ref dateExpireKey);
-        public static DBColumn IssuedByKey => DBTable.ParseProperty(nameof(IssuedBy), ref issyedByKey);
-        public static DBTable<PersoneIdentify> DBTable => dbTable ?? (dbTable = GetTable<PersoneIdentify>());
-
-        public PersoneIdentify()
-        {
-        }
-
-        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
-        public int? Id
-        {
-            get { return GetValue<int?>(Table.PrimaryKey); }
-            set { SetValue(value, Table.PrimaryKey); }
-        }
-
-        [Browsable(false)]
-        [DataMember, Column("persone_id")]
-        public int? PersoneId
-        {
-            get { return GetValue<int?>(PersoneKey); }
-            set { SetValue(value, PersoneKey); }
-        }
-
-        [Reference(nameof(PersoneId))]
-        public Persone Persone
-        {
-            get { return GetReference(PersoneKey, ref persone); }
-            set { SetReference(persone = value, PersoneKey); }
-        }
-
-        [DataMember, Column("identify_number", 30)]
-        public string Number
-        {
-            get { return GetValue<string>(NumberKey); }
-            set { SetValue(value, NumberKey); }
-        }
-
-        [DataMember, Column("date_issue")]
-        public DateTime? DateIssue
-        {
-            get { return GetValue<DateTime?>(DateIssueKey); }
-            set { SetValue(value, DateIssueKey); }
-        }
-
-        [DataMember, Column("date_expire")]
-        public DateTime? DateExpire
-        {
-            get { return GetValue<DateTime?>(DateExpireKey); }
-            set { SetValue(value, DateExpireKey); }
-        }
-
-        [DataMember, Column("issued_by")]
-        public string IssuedBy
-        {
-            get { return GetValue<string>(IssuedByKey); }
-            set { SetValue(value, IssuedByKey); }
-        }
-    }
 }
 

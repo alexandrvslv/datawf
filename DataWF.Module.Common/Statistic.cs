@@ -26,33 +26,30 @@ namespace DataWF.Module.Common
     [DataContract, Table("dstats", "Reference Book")]
     public class Statistic : DBItem//, IComparable
     {
-        private static DBColumn schedulerKey = DBColumn.EmptyKey;
-        private static DBColumn resultKey = DBColumn.EmptyKey;
-        private static DBTable<Statistic> dbTable;
-        private Scheduler scheduler;
+        public static readonly DBTable<Statistic> DBTable = GetTable<Statistic>();
+        public static readonly DBColumn SchedulerKey = DBTable.ParseProperty(nameof(SchedulerId));
+        public static readonly DBColumn ResultKey = DBTable.ParseProperty(nameof(Result));
 
-        public static DBColumn SchedulerKey => DBTable.ParseProperty(nameof(SchedulerId), ref schedulerKey);
-        public static DBColumn ResultKey => DBTable.ParseProperty(nameof(Result), ref resultKey);
-        public static DBTable<Statistic> DBTable => dbTable ?? (dbTable = GetTable<Statistic>());
+        private Scheduler scheduler;
 
         public Statistic()
         { }
 
-        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
+        [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get { return GetValue<int?>(Table.PrimaryKey); }
-            set { SetValue(value, Table.PrimaryKey); }
+            get => GetValue<int?>(Table.PrimaryKey);
+            set => SetValue(value, Table.PrimaryKey);
         }
 
-        //[DataMember, Column("code", Keys = DBColumnKeys.Code)]
+        //[Column("code", Keys = DBColumnKeys.Code)]
         //public string Code
         //{
         //    get { return GetValue<string>(Table.CodeKey); }
         //    set { SetValue(value, Table.CodeKey); }
         //}
 
-        //[DataMember, Column("name", Keys = DBColumnKeys.Culture)]
+        //[Column("name", Keys = DBColumnKeys.Culture)]
         //public override string Name
         //{
         //    get { return GetName("name"); }
@@ -60,25 +57,25 @@ namespace DataWF.Module.Common
         //}
 
         [Browsable(false)]
-        [DataMember, Column("scheduler_id")]
+        [Column("scheduler_id")]
         public int? SchedulerId
         {
-            get { return GetValue<int?>(SchedulerKey); }
-            set { SetValue(value, SchedulerKey); }
+            get => GetValue<int?>(SchedulerKey);
+            set => SetValue(value, SchedulerKey);
         }
 
         [Reference(nameof(SchedulerId))]
         public Scheduler Scheduler
         {
-            get { return GetReference(SchedulerKey, ref scheduler); }
-            set { SetReference(scheduler = value, SchedulerKey); }
+            get => GetReference(SchedulerKey, ref scheduler);
+            set => SetReference(scheduler = value, SchedulerKey);
         }
 
-        [DataMember, Column("stat_result")]
+        [Column("stat_result")]
         public decimal? Result
         {
-            get { return GetValue<decimal?>(ResultKey); }
-            set { SetValue(value, ResultKey); }
+            get => GetValue<decimal?>(ResultKey);
+            set => SetValue(value, ResultKey);
         }
     }
 }

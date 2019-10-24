@@ -31,79 +31,75 @@ namespace DataWF.Module.Common
     [DataContract, Table("rdepartment", "User", BlockSize = 100)]
     public class Department : DBGroupItem, IComparable, IDisposable
     {
-        private static DBColumn nameENKey = DBColumn.EmptyKey;
-        private static DBColumn nameRUKey = DBColumn.EmptyKey;
-        private static DBColumn companyKey = DBColumn.EmptyKey;
-        private static DBTable<Department> dbTable;
-        private Company company;
+        public static readonly DBTable<Department> DBTable = GetTable<Department>();
+        public static readonly DBColumn NameENKey = DBTable.ParseProperty(nameof(NameEN));
+        public static readonly DBColumn NameRUKey = DBTable.ParseProperty(nameof(NameRU));
+        public static readonly DBColumn CompanyKey = DBTable.ParseProperty(nameof(Company));
 
-        public static DBColumn NameENKey => DBTable.ParseProperty(nameof(NameEN), ref nameENKey);
-        public static DBColumn NameRUKey => DBTable.ParseProperty(nameof(NameRU), ref nameRUKey);
-        public static DBColumn CompanyKey => DBTable.ParseProperty(nameof(Company), ref companyKey);
-        public static DBTable<Department> DBTable => dbTable ?? (dbTable = GetTable<Department>());
+        private Company company;
 
         public Department()
         { }
 
-        [DataMember, Column("unid", Keys = DBColumnKeys.Primary)]
+        [Column("unid", Keys = DBColumnKeys.Primary)]
         public int? Id
         {
-            get { return GetValue<int?>(Table.PrimaryKey); }
-            set { SetValue(value, Table.PrimaryKey); }
+            get => GetValue<int?>(Table.PrimaryKey);
+            set => SetValue(value, Table.PrimaryKey);
         }
 
-        [DataMember, Column("company_id"), Browsable(false)]
+        [Column("company_id"), Browsable(false)]
         public int? CompanyId
         {
-            get { return GetValue<int?>(CompanyKey); }
-            set { SetValue(value, CompanyKey); }
+            get => GetValue<int?>(CompanyKey);
+            set => SetValue(value, CompanyKey);
         }
 
         [Reference(nameof(CompanyId))]
         public Company Company
         {
-            get { return GetReference(CompanyKey, ref company); }
-            set { SetReference(company = value, CompanyKey); }
+            get => GetReference(CompanyKey, ref company);
+            set => SetReference(company = value, CompanyKey);
         }
 
-        [DataMember, Column("parent_id", Keys = DBColumnKeys.Group), Index("rdepartment_parent_id"), Browsable(false)]
+        [Column("parent_id", Keys = DBColumnKeys.Group), Index("rdepartment_parent_id"), Browsable(false)]
         public int? ParentId
         {
-            get { return GetGroupValue<int?>(); }
-            set { SetGroupValue(value); }
+            get => GetGroupValue<int?>();
+            set => SetGroupValue(value);
         }
 
         [Reference(nameof(ParentId))]
         public Department Parent
         {
-            get { return GetGroupReference<Department>(); }
-            set { SetGroupReference(value); }
+            get => GetGroupReference<Department>();
+            set => SetGroupReference(value);
         }
 
-        [DataMember, Column("code", 256, Keys = DBColumnKeys.Code | DBColumnKeys.Indexing), Index("rdepartment_code", false)]
+        [Column("code", 256, Keys = DBColumnKeys.Code | DBColumnKeys.Indexing), Index("rdepartment_code", false)]
         public string Code
         {
-            get { return GetValue<string>(Table.CodeKey); }
-            set { SetValue(value, Table.CodeKey); }
+            get => GetValue<string>(Table.CodeKey);
+            set => SetValue(value, Table.CodeKey);
         }
 
-        [DataMember, Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
+        [Column("name", 512, Keys = DBColumnKeys.View | DBColumnKeys.Culture)]
         public string Name
         {
-            get { return GetName(); }
-            set { SetName(value); }
+            get => GetName();
+            set => SetName(value);
         }
 
         public string NameEN
         {
-            get { return GetValue<string>(NameENKey); }
-            set { SetValue(value, NameENKey); }
+            get => GetValue<string>(NameENKey);
+            set => SetValue(value, NameENKey);
         }
 
         public string NameRU
         {
-            get { return GetValue<string>(NameRUKey); }
-            set { SetValue(value, NameRUKey); }
+            get => GetValue<string>(NameRUKey);
+            set => SetValue(value, NameRUKey);
         }
 
         public override AccessValue Access

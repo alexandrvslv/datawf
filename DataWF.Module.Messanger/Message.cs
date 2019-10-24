@@ -55,13 +55,9 @@ namespace DataWF.Module.Messanger
     [DataContract, Table("dmessage", "Message", IsLoging = false)]
     public class Message : DBItem, IDisposable
     {
-        private static DBTable<Message> dbTable;
-        private static DBColumn userKey;
-        private static DBColumn dataKey;
-
-        public static DBTable<Message> DBTable => dbTable ?? (dbTable = GetTable<Message>());
-        private static DBColumn UserKey => DBTable.ParseProperty(nameof(User), ref userKey);
-        private static DBColumn DataKey => DBTable.ParseProperty(nameof(Data), ref dataKey);
+        public static readonly DBTable<Message> DBTable = GetTable<Message>();
+        public static readonly DBColumn UserKey = DBTable.ParseProperty(nameof(User));
+        public static readonly DBColumn DataKey = DBTable.ParseProperty(nameof(Data));
 
         [ControllerMethod]
         public static Task<Message> SendToGroup(User from, UserGroup group, string data)
